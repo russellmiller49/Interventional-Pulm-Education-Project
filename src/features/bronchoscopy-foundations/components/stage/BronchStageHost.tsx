@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ArrowRight, Check, Circle, LocateFixed } from 'lucide-react'
 
 import type { ClinicalLearningItem } from '@/features/learning-module/activity'
@@ -64,7 +64,18 @@ import {
 } from '../../engine/selfPacedProgress'
 import { NEUTRAL_LOCATION_CAPTION, scopeLocationCaption } from '../../engine/scope/scopeCaption'
 import type { ScopeCase } from '../../engine/scope/scopeCase'
-import { scopeGoalStatuses } from '../../engine/scope/scopeGoalEvaluation'
+import {
+  scopeGoalClaim,
+  scopeGoalsClaim,
+  scopeGoalStatuses,
+} from '../../engine/scope/scopeGoalEvaluation'
+import {
+  GOAL_CLAIM_TAG,
+  GOAL_MODEL_LIMIT,
+  goalListHeading,
+  scopeDoneLead,
+  scopeNowLine,
+} from '../../engine/scope/goalPresentation'
 import type { ScopeRuntimeState } from '../../engine/scope/scopeRuntime'
 import {
   deriveStageProgress,
@@ -281,6 +292,7 @@ function BronchStageSessionView({
     },
     [],
   )
+  const goalHeadingId = useId()
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
   const completionRecorded = useRef(false)
@@ -521,8 +533,12 @@ function BronchStageSessionView({
   const activeScopeState = session.scope[activeStep.id]
   const goalStatuses = activeScopeState
     ? scopeGoalStatuses(goals, activeScopeState)
-    : goals.map((goal) => ({ goal, met: false }))
+    : goals.map((goal) => ({ goal, met: false, claim: scopeGoalClaim(goal.test) }))
   const goalsMetNow = goalStatuses.map((status) => status.met)
+  const goalsClaim = scopeGoalsClaim(goals)
+  /** Where the tip is now, so a met goal is never read as a statement about the present view. */
+  const liveLocationLine =
+    goals.length > 0 && activeScopeState ? scopeNowLine(activeScopeState) : null
   const firstUnmetKey = (() => {
     const index = goalsMetNow.findIndex((met) => !met)
     if (index < 0 || !goalInteraction || activeStep.learn) return null
@@ -746,7 +762,7 @@ function BronchStageSessionView({
           return {
             ...base,
             status: workDone
-              ? (activeStep.learn?.success ?? 'Done. Every goal is met.')
+              ? (activeStep.learn?.success ?? scopeDoneLead(goalsClaim))
               : activeScopeState?.events.includes('bench-advanced-off-target')
                 ? 'You advanced before centering the target. Reset this attempt, establish the aim, and keep it centered as you advance.'
                 : 'Use the controls beside the views. The goal checks the resulting movement or view; reset starts a fresh attempt.',
@@ -767,7 +783,7 @@ function BronchStageSessionView({
         if (workDone)
           return {
             ...base,
-            status: 'Done. Every goal on this card is met.',
+            status: scopeDoneLead(goalsClaim),
             primary: isLastStep ? finishAction : continueAction,
           }
         return {
@@ -786,7 +802,11 @@ function BronchStageSessionView({
         }
       case 'observe':
         if (workDone)
-          return { ...base, status: 'Done.', primary: isLastStep ? finishAction : continueAction }
+          return {
+            ...base,
+            status: scopeDoneLead(goalsClaim),
+            primary: isLastStep ? finishAction : continueAction,
+          }
         return {
           ...base,
           status: !activeScopeState
@@ -810,14 +830,40 @@ function BronchStageSessionView({
    * The Now card's body
    * ---------------------------------------------------------------- */
   const goalList = (
-    <ul className={stageStyles.taskList} data-step-goals aria-label="The goals on this card">
-      {goalStatuses.map(({ goal, met }) => (
-        <li key={goal.id} data-goal={goal.id} data-met={met}>
-          {met ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
-          <span>{goal.label}</span>
-        </li>
-      ))}
-    </ul>
+    <>
+      {goals.length > 0 ? (
+        <p className={styles.goalGroupHeading} id={goalHeadingId} data-goal-group={goalsClaim}>
+          {goalListHeading(goalsClaim, goalsMetNow.every(Boolean))}
+        </p>
+      ) : null}
+      <ul
+        className={stageStyles.taskList}
+        data-step-goals
+        aria-labelledby={goals.length > 0 ? goalHeadingId : undefined}
+        aria-label={goals.length > 0 ? undefined : 'The goals on this card'}
+      >
+        {goalStatuses.map(({ goal, met, claim }) => (
+          <li key={goal.id} data-goal={goal.id} data-met={met} data-goal-claim={claim}>
+            {met ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
+            <span>
+              {/* Only a card that carries both kinds needs to mark them apart row by row. */}
+              {goalsClaim === 'mixed' ? (
+                <span className={styles.goalClaimTag} data-goal-claim-tag={claim}>
+                  {GOAL_CLAIM_TAG[claim]}
+                </span>
+              ) : null}
+              {goal.label}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {goals.length > 0 ? (
+        <p className={styles.goalLimit} data-goal-basis={goalsClaim} data-goal-now>
+          {liveLocationLine ? `${liveLocationLine} ` : ''}
+          {GOAL_MODEL_LIMIT}
+        </p>
+      ) : null}
+    </>
   )
 
   function policiesLine(stage: BronchStageItem) {

@@ -1,4 +1,9 @@
-import type { CordsState } from '../../components/scope/types'
+import type {
+  CordsState,
+  ScopeCommand,
+  ScopeScriptId,
+  ScopeViewSpec,
+} from '../../components/scope/types'
 
 /**
  * The teaching model's authored geometry and scripted timings.
@@ -14,6 +19,31 @@ export const LARYNX_GLOTTIS_MM = 30
 export const LARYNX_LENGTH_MM = 45
 /** The tip must be roughly straight at the glottis; a strongly bent tip is refused, not guided. */
 export const GLOTTIS_ALIGN_LIMIT_DEG = 30
+
+/**
+ * The scripts whose scene carries a clock of its own: a patient breathing, an assistant waiting.
+ *
+ * Their model moves on simulated time rather than on anything the learner does, so the pane is
+ * allowed to hand the host `tick` while the step is ready, enabled and on screen. This is the one
+ * list both sides read (`components/scope/useScopePlayback.ts` produces the ticks,
+ * `engine/stageSession.ts` accepts them), so the producer and the consumer cannot drift apart.
+ *
+ * Environment time is not learner work. A `tick` records no input mode (`reduceScope`), so it can
+ * never make an untouched start state count as something the learner did, and every other scripted
+ * command stays refused on an authored step.
+ */
+export const ENVIRONMENT_CLOCK_SCRIPTS: ReadonlySet<ScopeScriptId> = new Set<ScopeScriptId>([
+  'breathing-cords',
+  'assistant-interrupt',
+])
+
+/** Whether this command is the scripted scene's own clock on a view that runs one. */
+export function isEnvironmentClockCommand(
+  view: Pick<ScopeViewSpec, 'script'>,
+  command: ScopeCommand,
+): boolean {
+  return command.type === 'tick' && !!view.script && ENVIRONMENT_CLOCK_SCRIPTS.has(view.script)
+}
 
 /** The scripted breath: expiration first, so crossing needs a wait; a cough every third breath. */
 export const BREATH_CYCLE_SEC = 4

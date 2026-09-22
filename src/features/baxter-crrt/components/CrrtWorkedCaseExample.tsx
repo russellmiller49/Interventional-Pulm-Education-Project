@@ -264,7 +264,13 @@ function PressureLocations() {
   )
 }
 
-function FilterDomains({
+/**
+ * The domain table. It describes the current run and what the run can and cannot
+ * verify, so it belongs with the task rather than behind "Explain this case": a
+ * learner planning a response to recurrent filter loss needs to know which
+ * contributors this run can speak to before choosing one (F-05).
+ */
+function FilterDomainTable({
   session,
   example,
 }: {
@@ -284,54 +290,67 @@ function FilterDomains({
     .map((id) => demonstration.filterTermLabels[id])
 
   return (
-    <>
-      <section>
-        <h5>Contributors, domain by domain</h5>
-        <div
-          className={styles.tableRegion}
-          role="region"
-          aria-label="Filter-loss domains; horizontally scrollable"
-          tabIndex={0}
-        >
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Domain</th>
-                <th scope="col">This run now</th>
-                <th scope="col">Can the run verify it?</th>
-                <th scope="col">Decided by</th>
+    <section>
+      <h5>Contributors, domain by domain</h5>
+      <div
+        className={styles.tableRegion}
+        role="region"
+        aria-label="Filter-loss domains; horizontally scrollable"
+        tabIndex={0}
+      >
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Domain</th>
+              <th scope="col">This run now</th>
+              <th scope="col">Can the run verify it?</th>
+              <th scope="col">Decided by</th>
+            </tr>
+          </thead>
+          <tbody>
+            {demonstration.domains.map((domain) => (
+              <tr key={domain.id}>
+                <th scope="row">{domain.label}</th>
+                <td>{domain.thisRun(context)}</td>
+                <td>{domain.canVerify}</td>
+                <td>{domain.decidedBy}</td>
               </tr>
-            </thead>
-            <tbody>
-              {demonstration.domains.map((domain) => (
-                <tr key={domain.id}>
-                  <th scope="row">{domain.label}</th>
-                  <td>{domain.thisRun(context)}</td>
-                  <td>{domain.canVerify}</td>
-                  <td>{domain.decidedBy}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {terms ? (
-          <p className={styles.caption}>
-            Filter-burden terms active in the simulator now:{' '}
-            {activeLabels.length > 0 ? activeLabels.join(', ') : 'none'}. Inactive:{' '}
-            {inactiveLabels.length > 0 ? inactiveLabels.join(', ') : 'none'}. This is the
-            simulator&apos;s weighting, not a clinical ranking.
-          </p>
-        ) : null}
-      </section>
-      <section>
-        <h5>Worked team summary from this run</h5>
-        <ul>
-          {demonstration.teamSummary(context).map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-      </section>
-    </>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {terms ? (
+        <p className={styles.caption}>
+          Filter-burden terms active in the simulator now:{' '}
+          {activeLabels.length > 0 ? activeLabels.join(', ') : 'none'}. Inactive:{' '}
+          {inactiveLabels.length > 0 ? inactiveLabels.join(', ') : 'none'}. This is the
+          simulator&apos;s weighting, not a clinical ranking.
+        </p>
+      ) : null}
+    </section>
+  )
+}
+
+/** The authored summary itself, which stays with the worked explanation. */
+function FilterDomainTeamSummary({
+  session,
+  example,
+}: {
+  session: CrrtLearningSessionState
+  example: CrrtWorkedCaseExample
+}) {
+  const demonstration = example.domainDemonstration
+  if (!demonstration) return null
+  const context = runContext(session)
+  return (
+    <section>
+      <h5>Worked team summary from this run</h5>
+      <ul>
+        {demonstration.teamSummary(context).map((line) => (
+          <li key={line}>{line}</li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
@@ -471,7 +490,7 @@ function WorkedExampleBody({
       <ModeledComparison session={session} example={example} />
       {example.demonstration === 'pressure-locations' ? <PressureLocations /> : null}
       {example.demonstration === 'filter-domains' ? (
-        <FilterDomains session={session} example={example} />
+        <FilterDomainTeamSummary session={session} example={example} />
       ) : null}
       <CrrtWorkedRunComparison session={session} example={example} />
       <section>
@@ -566,6 +585,9 @@ export function CrrtWorkedCaseGuide({
             ))}
           </ol>
         </div>
+        {example.demonstration === 'filter-domains' ? (
+          <FilterDomainTable session={session} example={example} />
+        ) : null}
         {example.check ? (
           <WorkedCheck check={example.check} idBase={scopedId(example.check.id)} />
         ) : null}

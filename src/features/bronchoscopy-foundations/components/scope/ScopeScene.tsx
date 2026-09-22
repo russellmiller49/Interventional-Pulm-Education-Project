@@ -12,7 +12,7 @@ import { ObserverView } from './ObserverView'
 import { ControlHeadCloseup, DistalTipCloseup } from './BronchoscopeCloseup'
 import { useBenchPresentation } from './useBenchPresentation'
 import { loadSceneAssets, type ScopeSceneAssets } from './scopeSceneAssets'
-import { layoutOpticalLabels, projectScenePins, VIEW_DESCRIPTION } from './scopeSceneModel'
+import { layoutOpticalLabels, opticalViewName, projectScenePins } from './scopeSceneModel'
 import { treeChoiceInputId, type ScopePaneProps, type AirwayLabel } from './types'
 import styles from './scope-scene.module.css'
 
@@ -205,7 +205,7 @@ export default function ScopeScene(props: SceneProps) {
               ref={opticalRoot}
               role="group"
               tabIndex={0}
-              aria-label={VIEW_DESCRIPTION[state.signals.view]}
+              aria-label={opticalViewName(state.signals.view)}
               data-view-signal={state.signals.view}
             >
               <View className={styles.opticalViewport} index={1}>

@@ -7,6 +7,7 @@ export default defineConfig({
     'baxter-crrt-self-paced.spec.ts',
     'baxter-crrt-operations.spec.ts',
     'baxter-crrt-advanced.spec.ts',
+    'baxter-crrt-sanity-review.spec.ts',
   ],
   workers: 1,
   retries: 0,

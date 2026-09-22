@@ -435,3 +435,97 @@ test('the debrief separates the worked example, the actual run and what is not m
   await assertUngraded(page)
   expect(errors).toEqual([])
 })
+
+test('the CRRT-04 case cards cannot prime, review or start around the machine workflow', async ({
+  page,
+}, info) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+
+  await page.goto('/en/baxter-crrt/practice?case=CRRT-04')
+  const card = (label: string) =>
+    page.getByRole('article').filter({ has: page.getByText(label, { exact: true }) })
+
+  for (const label of [
+    'Define the solute and acid-base treatment goal',
+    'Enter the case blood-flow rate first',
+    'Enter the case machine PFR',
+  ]) {
+    await card(label).getByRole('button').first().click()
+  }
+
+  // The declaration is refused while the machine has recorded neither step, and
+  // the start that depends on it never reaches the engine.
+  await card('Confirm prime and prescription review on the machine')
+    .getByRole('button')
+    .first()
+    .click()
+  await page.getByRole('tab', { name: 'Debrief', exact: true }).click()
+  await page.getByRole('button', { name: 'End run and review debrief', exact: true }).click()
+  const actual = page.getByRole('heading', { name: 'What you did in this run' }).locator('..')
+  await expect(actual).toContainText('· not applied')
+  await expect(actual).toContainText('the machine has not recorded Prime or Review')
+
+  // Nothing started, so the setting exists and the circuit carries no blood.
+  await expect(actual).toContainText('Blood flow set')
+  await expect(actual).toContainText('Blood flow through the circuit at the end of this run')
+  const circuitFlow = actual
+    .getByRole('term')
+    .filter({ hasText: 'Blood flow through the circuit at the end of this run' })
+    .locator('xpath=following-sibling::dd[1]')
+  await expect(circuitFlow).toHaveText('0 mL/min')
+
+  await noOverflow(page)
+  await page.screenshot({ path: info.outputPath('crrt04-refused-declaration.png'), fullPage: true })
+  expect(errors).toEqual([])
+})
+
+test('the debrief says where the simulated time came from and what stayed static', async ({
+  page,
+}, info) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+
+  await page.goto('/en/baxter-crrt/practice?case=CRRT-11')
+
+  // The evidence scope is in the task, before any reveal.
+  const scope = page.getByRole('region', { name: 'What this case can show you' })
+  await expect(scope).toContainText('never writes mean arterial pressure')
+
+  for (const label of [
+    'Complete the initial clinical assessment',
+    'Reduce machine fluid removal and observe',
+  ]) {
+    await page
+      .getByRole('article')
+      .filter({ has: page.getByText(label, { exact: true }) })
+      .getByRole('button')
+      .first()
+      .click()
+  }
+  await page.getByRole('button', { name: '+1 hr', exact: true }).click()
+  await page.getByRole('tab', { name: 'Debrief', exact: true }).click()
+  await page.getByRole('button', { name: 'End run and review debrief', exact: true }).click()
+
+  const actual = page.getByRole('heading', { name: 'What you did in this run' }).locator('..')
+  await expect(actual).toContainText('Advanced by you')
+  await expect(actual).toContainText('Carried by the case actions you performed')
+  await expect(actual).toContainText('carried its own 1 hr observation interval')
+  await expect(actual).toContainText('Tolerance-stress index')
+  await expect(actual).toContainText('Mean arterial pressure (supplied, held)')
+  await expect(actual).toContainText('models no blood-pressure or vasopressor response')
+  await expect(actual).toContainText('Blood flow through the circuit at the end of this run')
+
+  await noOverflow(page)
+  await page.screenshot({ path: info.outputPath('crrt11-time-accounting.png'), fullPage: true })
+  await page.setViewportSize({ width: 390, height: 844 })
+  const bounds = await actual.boundingBox()
+  expect(bounds).not.toBeNull()
+  expect(bounds!.x).toBeGreaterThanOrEqual(0)
+  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390)
+  await noOverflow(page)
+  await page.setViewportSize({ width: 1440, height: 900 })
+
+  await assertUngraded(page)
+  expect(errors).toEqual([])
+})

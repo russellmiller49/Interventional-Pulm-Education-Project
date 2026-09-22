@@ -11,6 +11,12 @@ import {
   type CrrtPressureSignalKind,
 } from '../../content/circuitModel'
 import { prismaxDeviceProfile } from '../../content/deviceProfiles'
+import {
+  selectCrrtBloodFlowState,
+  selectCrrtCalculatedPressureValidity,
+  type CrrtBloodFlowState,
+  type CrrtCalculatedPressureValidity,
+} from '../circuitDelivery'
 import { CRRT_TREND_INTERVAL_SECONDS } from '../simulation'
 import { prismaxCalculationAdapter } from './calculations'
 import type {
@@ -219,6 +225,11 @@ export interface PrismaxPilotInterfaceState {
   readonly completedStepIds: readonly PrismaxSetupStepId[]
   readonly prescriptionDraft: PrismaxPrescriptionDraft
   readonly committedPrescription: ConfiguredPrescriptionState | null
+  /** Current engine values to review; never replaces the committed history. */
+  readonly prescriptionInUse?: ConfiguredPrescriptionState | null
+  readonly prescriptionReviewStale?: boolean
+  /** Operational resume does not replay initial setup. */
+  readonly treatmentStarted?: boolean
   readonly primeState: 'not-started' | 'in-progress' | 'complete'
   readonly treatmentState: 'idle' | 'running' | 'ended'
   readonly stopDialogOpen: boolean
@@ -297,6 +308,13 @@ export interface CrrtDevicePressureSignalView {
   readonly unit: 'mmHg'
   readonly availability: CrrtPressureAvailability
   readonly unavailableReason: string | null
+  /**
+   * Whether the number still describes the circuit. Only the two calculated
+   * relationships can lose support, and only while no blood flows; see
+   * `engine/circuitDelivery.ts`. A measured site is always `supported`.
+   */
+  readonly validity: CrrtCalculatedPressureValidity
+  readonly validityReason: string | null
   /** The circuit node this value is read at. Null for calculated relationships. */
   readonly nodeId: CrrtCircuitNodeId | null
   /** Nodes a calculated relationship is computed from. Empty for modelled sites. */
@@ -333,6 +351,12 @@ export interface CrrtDeviceTreatmentContextView {
    * engine keeps publishing plausible zero-flow numbers either way.
    */
   readonly bloodFlowContributesToPressures: boolean
+  /**
+   * The blood-flow setting, the blood flow the circuit model actually carries,
+   * and why they differ. `bloodFlowMlMin` above is the setting only; a surface
+   * must not present it as delivered flow.
+   */
+  readonly bloodFlow: CrrtBloodFlowState
   readonly accessConnected: boolean
   readonly returnConnected: boolean
   readonly simulationTimeSeconds: number
@@ -421,7 +445,9 @@ export function createInitialPrismaxPilotInterfaceState(): PrismaxPilotInterface
 }
 
 function activeSetupStep(state: PrismaxPilotInterfaceState): SetupStepDefinition | null {
-  return prismaxSetupSteps[state.completedStepIds.length] ?? null
+  return state.prescriptionReviewStale
+    ? prismaxSetupSteps.find((step) => step.id === 'review')!
+    : (prismaxSetupSteps.find((step) => !state.completedStepIds.includes(step.id)) ?? null)
 }
 
 function isActiveSetupStep(state: PrismaxPilotInterfaceState, stepId: PrismaxSetupStepId): boolean {
@@ -487,7 +513,8 @@ function configuredPrescriptionFromDraft(
 export function canStartPrismaxTreatment(state: PrismaxPilotInterfaceState): boolean {
   return (
     state.treatmentState === 'idle' &&
-    state.completedStepIds.length === prismaxSetupSteps.length &&
+    prismaxSetupSteps.every((step) => state.completedStepIds.includes(step.id)) &&
+    (!state.prescriptionReviewStale || state.treatmentStarted === true) &&
     state.committedPrescription !== null &&
     state.primeState === 'complete'
   )
@@ -542,10 +569,14 @@ export function prismaxPilotInterfaceReducer(
       return { ...state, primeState: 'complete' }
     case 'COMPLETE_SETUP_STEP':
       if (!canCompleteActiveSetupStep(state, action.stepId)) return state
-      return { ...state, completedStepIds: [...state.completedStepIds, action.stepId] }
+      return {
+        ...state,
+        completedStepIds: [...new Set([...state.completedStepIds, action.stepId])],
+        ...(action.stepId === 'review' ? { prescriptionReviewStale: false } : {}),
+      }
     case 'START_TREATMENT':
       if (!canStartPrismaxTreatment(state)) return state
-      return { ...state, screen: 'operations', treatmentState: 'running' }
+      return { ...state, screen: 'operations', treatmentState: 'running', treatmentStarted: true }
     case 'OPEN_STOP_DIALOG':
       return state.treatmentState === 'running' ? { ...state, stopDialogOpen: true } : state
     case 'CLOSE_STOP_DIALOG':
@@ -570,11 +601,12 @@ export function selectPrismaxPilotInterface(
       prismaxSetupSteps.map((step) =>
         Object.freeze({
           step,
-          status: completed.has(step.id)
-            ? ('complete' as const)
-            : step.id === activeStep?.id
-              ? ('current' as const)
-              : ('pending' as const),
+          status:
+            completed.has(step.id) && !(step.id === 'review' && state.prescriptionReviewStale)
+              ? ('complete' as const)
+              : step.id === activeStep?.id
+                ? ('current' as const)
+                : ('pending' as const),
         }),
       ),
     ),
@@ -663,7 +695,9 @@ function pressureSignalView(
   valueMmHg: number | null,
   availability: CrrtPressureAvailability,
   trends: readonly TrendSample[],
+  bloodFlow: CrrtBloodFlowState,
 ): CrrtDevicePressureSignalView {
+  const pressureValidity = selectCrrtCalculatedPressureValidity(detail.kind, bloodFlow)
   const trendField = trendFieldBySignalId[detail.id]
   const history =
     trendField === null
@@ -691,6 +725,8 @@ function pressureSignalView(
         : availability === 'no-case-attached'
           ? NO_CASE_REASON
           : NO_PRESSURE_MODEL_REASON,
+    validity: pressureValidity.validity,
+    validityReason: pressureValidity.reason,
     nodeId: detail.nodeId,
     derivedFromNodeIds: detail.derivedFromNodeIds,
     derivedFromSignalIds: Object.freeze(
@@ -712,6 +748,7 @@ function pressureSignalView(
 function pressureSignalViews(
   pressures: CrrtPressureState | null,
   trends: readonly TrendSample[],
+  bloodFlow: CrrtBloodFlowState,
 ): readonly CrrtDevicePressureSignalView[] {
   return Object.freeze(
     crrtPressureSignalDetails.map((detail) => {
@@ -727,6 +764,7 @@ function pressureSignalViews(
         typeof value === 'number' ? value : null,
         availability,
         trends,
+        bloodFlow,
       )
     }),
   )
@@ -830,10 +868,23 @@ function historyTimeDomain(
   return Object.freeze({ startSeconds: first.timeSeconds, endSeconds: last.timeSeconds })
 }
 
+/** No engine is attached, so nothing is delivering and nothing has been set there. */
+const detachedBloodFlow = (setMlMin: number | null): CrrtBloodFlowState =>
+  Object.freeze({
+    status: setMlMin === null ? ('not-set' as const) : ('not-delivering' as const),
+    setMlMin,
+    actualMlMin: setMlMin === null ? null : 0,
+    bloodPumpRunning: false,
+    accessConnected: false,
+    returnConnected: false,
+    deliveryState: 'idle' as const,
+  })
+
 export function selectPrismaxPilotOperationsDisplay(
   state: PrismaxPilotInterfaceState,
 ): PrismaxPilotOperationsDisplay {
   const prescription = state.committedPrescription
+  const bloodFlow = detachedBloodFlow(prescription?.flows.bloodFlowMlMin ?? null)
   return Object.freeze({
     treatmentState: state.treatmentState,
     modality: prescription?.modality ?? null,
@@ -848,7 +899,7 @@ export function selectPrismaxPilotOperationsDisplay(
     cumulativeFluid: cumulativeFluidView(null),
     activeAlarmCodes: Object.freeze([]),
     pressures: nullPressures,
-    pressureSignals: pressureSignalViews(null, []),
+    pressureSignals: pressureSignalViews(null, [], bloodFlow),
     treatmentContext: Object.freeze({
       deliveryState: state.treatmentState === 'running' ? ('running' as const) : ('idle' as const),
       treatmentState: state.treatmentState,
@@ -860,6 +911,7 @@ export function selectPrismaxPilotOperationsDisplay(
       postReplacementFlowMlHour: prescription?.flows.postReplacementFlowMlHour ?? null,
       patientFluidRemovalMlHour: prescription?.flows.patientFluidRemovalMlHour ?? null,
       bloodFlowContributesToPressures: false,
+      bloodFlow,
       accessConnected: false,
       returnConnected: false,
       simulationTimeSeconds: 0,
@@ -887,6 +939,7 @@ export function selectPrismaxPilotCaseOperationsDisplay(
   const configured = prescription.status === 'configured'
   const setting = (value: number) => (configured ? value : null)
   const cumulativeFluid = cumulativeFluidView(simulation)
+  const bloodFlow = selectCrrtBloodFlowState(simulation)
   return Object.freeze({
     treatmentState: interfaceState.treatmentState,
     modality: prescription.status === 'configured' ? prescription.modality : null,
@@ -911,7 +964,7 @@ export function selectPrismaxPilotCaseOperationsDisplay(
       transmembranePressureMmHg: pressure.prismaxTransmembranePressureMmHg,
       filterPressureDropMmHg: pressure.prismaxFilterPressureDropMmHg,
     }),
-    pressureSignals: pressureSignalViews(pressure, simulation.trends),
+    pressureSignals: pressureSignalViews(pressure, simulation.trends, bloodFlow),
     treatmentContext: Object.freeze({
       deliveryState: simulation.device.deliveryState,
       treatmentState: interfaceState.treatmentState,
@@ -926,6 +979,7 @@ export function selectPrismaxPilotCaseOperationsDisplay(
       // feeds blood flow into the pressure model only under these three.
       bloodFlowContributesToPressures:
         simulation.device.bloodPumpRunning && accessConnected && returnConnected,
+      bloodFlow,
       accessConnected,
       returnConnected,
       simulationTimeSeconds: simulation.simulationTimeSeconds,

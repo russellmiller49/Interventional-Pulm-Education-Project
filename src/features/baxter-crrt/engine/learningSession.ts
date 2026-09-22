@@ -14,6 +14,11 @@ import { createInitialCrrtSimulationState } from './initialState'
 import { selectCrrtMasteryCapstoneId, selectTriggeredCriticalErrorIds } from './outcomes'
 import { crrtSimulationReducer } from './reducer'
 import { deriveDeterministicSeed } from './seededRandom'
+import {
+  crrtActionStartsDelivery,
+  crrtUnmetMachineStepAssertions,
+  selectCrrtMachineStartReadiness,
+} from './setupWorkflow'
 import { applyScheduledEventAction, recomputeCrrtDerivedState } from './simulation'
 import {
   crrtEngineFaultIds,
@@ -435,6 +440,8 @@ function createCaseInitialInterfaceState(
         }
       : fresh.prescriptionDraft,
     committedPrescription,
+    prescriptionInUse: committedPrescription,
+    treatmentStarted: phase === 'operations' || phase === 'stop',
     primeState:
       phase === 'review' || phase === 'connect' || phase === 'operations' || phase === 'stop'
         ? 'complete'
@@ -848,13 +855,34 @@ function syncEngineDeliveryToInterface(
   previousSimulation: CrrtSimulationState,
   nextSimulation: CrrtSimulationState,
 ): PrismaxPilotInterfaceState {
-  if (nextSimulation.device.deliveryState === previousSimulation.device.deliveryState) {
-    return previousInterface
+  const before = previousSimulation.prescription
+  const after = nextSimulation.prescription
+  const changed =
+    before.status !== after.status ||
+    (before.status === 'configured' &&
+      after.status === 'configured' &&
+      (before.modality !== after.modality ||
+        before.anticoagulation !== after.anticoagulation ||
+        Object.keys(before.flows).some(
+          (key) =>
+            before.flows[key as keyof typeof before.flows] !==
+            after.flows[key as keyof typeof after.flows],
+        )))
+  let next = previousInterface
+  if (changed) {
+    next = {
+      ...next,
+      prescriptionInUse: after.status === 'configured' ? after : null,
+      prescriptionReviewStale:
+        next.prescriptionReviewStale || next.completedStepIds.includes('review'),
+    }
   }
+  if (nextSimulation.device.deliveryState === previousSimulation.device.deliveryState) return next
   return {
-    ...previousInterface,
+    ...next,
     screen: 'operations',
     treatmentState: interfaceTreatmentStateForDeliveryState(nextSimulation.device.deliveryState),
+    treatmentStarted: next.treatmentStarted || nextSimulation.device.deliveryState === 'running',
     stopDialogOpen: false,
   }
 }
@@ -939,6 +967,53 @@ export function crrtLearningSessionReducer(
           }),
         }
       }
+      // A case card cannot claim a machine step the facsimile has not recorded.
+      // Prime, review and connection are completed on the device workflow; this
+      // action only declares them, so an unmet declaration is refused rather
+      // than written into the case as a completed step.
+      const unmetAssertions = crrtUnmetMachineStepAssertions(intervention, state.interfaceState)
+      if (unmetAssertions.length > 0) {
+        return {
+          ...state,
+          timeline: appendTimeline(state, 'intervention-performed', intervention.id, {
+            outcome: 'refused',
+            details: [
+              {
+                label: 'Refused because',
+                value: `the machine has not recorded ${unmetAssertions
+                  .map((assertion) => assertion.label)
+                  .join(
+                    ' or ',
+                  )}; complete ${unmetAssertions.length === 1 ? 'it' : 'them'} on the machine first`,
+              },
+            ],
+          }),
+        }
+      }
+      // No host or sidebar control may start delivery around the machine's own
+      // start interlock. The facsimile's condition stays authoritative; this only
+      // stops an authored effect from bypassing it. An action that resumes a run
+      // already delivering bypasses nothing, so it is left alone.
+      if (
+        crrtActionStartsDelivery(intervention) &&
+        state.interfaceState.treatmentState !== 'running'
+      ) {
+        const readiness = selectCrrtMachineStartReadiness(state.interfaceState)
+        if (!readiness.ready) {
+          return {
+            ...state,
+            timeline: appendTimeline(state, 'intervention-performed', intervention.id, {
+              outcome: 'refused',
+              details: [
+                {
+                  label: 'Refused because',
+                  value: `the machine is not ready to start delivery: ${readiness.missing.join('; ')}`,
+                },
+              ],
+            }),
+          }
+        }
+      }
       const simulation = executeCrrtInterventionEffects(state.simulation, intervention.effects)
       const interfaceState = syncEngineDeliveryToInterface(
         state.interfaceState,
@@ -962,8 +1037,19 @@ export function crrtLearningSessionReducer(
       if (action.action.type === 'RESET_INTERFACE') {
         throw new Error('Reset the complete CRRT learning session instead of only the interface.')
       }
-      const interfaceState = prismaxPilotInterfaceReducer(state.interfaceState, action.action)
-      const details = deviceActionDetails(action.action)
+      let interfaceState = prismaxPilotInterfaceReducer(state.interfaceState, action.action)
+      const details = [
+        ...deviceActionDetails(action.action),
+        ...(interfaceState !== state.interfaceState &&
+        action.action.type === 'COMPLETE_SETUP_STEP' &&
+        action.action.stepId === 'review' &&
+        state.simulation.prescription.status === 'configured'
+          ? Object.entries(state.simulation.prescription.flows).map(([key, value]) => ({
+              label: `Reviewed ${effectTargetLabels[`prescription.flows.${key}`]?.[0] ?? key}`,
+              value: `${value} ${effectTargetLabels[`prescription.flows.${key}`]?.[1] ?? ''}`,
+            }))
+          : []),
+      ]
       if (interfaceState === state.interfaceState) {
         return {
           ...state,
@@ -978,6 +1064,12 @@ export function crrtLearningSessionReducer(
         interfaceState,
         state.simulation,
       )
+      if (action.action.type === 'COMMIT_PRESCRIPTION') {
+        interfaceState = {
+          ...interfaceState,
+          prescriptionInUse: interfaceState.committedPrescription,
+        }
+      }
       if (
         action.action.type === 'START_TREATMENT' &&
         interfaceState.treatmentState === 'running' &&
