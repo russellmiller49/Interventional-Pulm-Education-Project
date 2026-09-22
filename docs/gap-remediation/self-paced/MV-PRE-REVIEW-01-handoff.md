@@ -728,7 +728,7 @@ PEEP-response bin, gas coefficient, source, review status or MV-03 exclusion cha
 | Head reviewed in this round             | `93fcf8602bd7d8948b98731e2517cef8b14e4f9e` |
 | `origin/main` at the start of this pass | `745146f6e40bd536c201313f0480ddde2ee03ca3` |
 | `origin/main` at the end of this pass   | `745146f6e40bd536c201313f0480ddde2ee03ca3` |
-| Repaired head                           | recorded in the commit that follows        |
+| Repaired head                           | `7f08458d89b4e6573b7311407979ecd828b82f1e` |
 
 `git merge-tree --write-tree origin/main HEAD` is clean. None of the 255 files main has changed
 since the merge base are under `mechanical-ventilation`, and `package.json` and the lockfile are
