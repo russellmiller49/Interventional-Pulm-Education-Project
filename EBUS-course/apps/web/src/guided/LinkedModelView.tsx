@@ -3,6 +3,7 @@ import {
   LANDMARK_NAMES,
   LANDMARK_HINTS,
   STRUCTURE_FEATURES,
+  type LinkedSweepEvent,
 } from '../../../../../src/lib/ebus-linked-contract'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import * as THREE from 'three'
@@ -26,10 +27,28 @@ import {
 } from './linkedModels'
 import { ModelSection } from './ModelSection'
 import { canDiscoverImage } from './imageDiscoveryPixels'
-import { createStructureCallouts } from './structureCallouts'
+import {
+  createStructureCallouts,
+  surfaceAnchor,
+  type StructureCalloutHandle,
+} from './structureCallouts'
+import { compassDirections, fitSphereDistance } from './observerCamera'
+import { attachObserverControls, OBSERVER_CAPTION } from './observerControls'
+import { describeLinkedSweep, SWEEP_TOLERANCE_NOTE } from './sweepStatus'
 
 type Mode = 'scope' | 'anatomy' | 'section'
-type Controller = { update: () => void; orbit: (angle: number) => void; reset: () => void }
+type Controller = {
+  update: () => void
+  orbit: (angle: number) => void
+  zoom: (factor: number) => void
+  reset: () => void
+  release: () => void
+}
+/** What the sampler last did, reported by the workbench that owns the sweep state. */
+export interface LinkedSweepReport {
+  event: LinkedSweepEvent | null
+  resetProgress: { samples: number; span: number } | null
+}
 interface Props {
   ultrasound: ReactNode
   config: EbusWorkbenchConfig
@@ -42,11 +61,40 @@ interface Props {
   onEvidence: (value: Partial<EbusLinkedEvidence>) => void
   onApproach: (approach: 'rms' | 'lms') => void
   onDemo: (action: 'roll' | 'flexion' | 'reset') => void
+  /** Current rendered frame: whether the model target is in this plane (EBUS-PRE-REVIEW-03). */
+  targetVisible?: boolean
+  frameReady?: boolean
+  /** The model target's name, from the preset the workbench was configured with. */
+  targetName?: string
+  sweepReport?: LinkedSweepReport
 }
 const labelFor = (mesh: THREE.Object3D, reveal: boolean) =>
   mesh.userData.role === 'node' && !reveal
     ? 'Example node'
     : String(mesh.userData.label ?? mesh.name).replace(/_/g, ' ')
+/**
+ * Short names for the marker legend. Landmarks use the contract's names; the other candidates
+ * are named from the model's own labels, shortened for a pill. Names are presentation only and
+ * never enter the evidence.
+ */
+const SHORT_NAMES: Record<string, string> = {
+  ...LANDMARK_NAMES,
+  optical_lens: 'optical lens',
+  channel_outlet: 'working-channel outlet',
+  legacy_distal_body: 'distal body',
+  brachiocephalic_trunk: 'brachiocephalic trunk',
+  aorta: 'aorta',
+}
+/*
+ * Colours with one meaning each (L3-4 / L3-9). Gold was both the optical-direction arrow and
+ * the selection highlight, so selecting a part turned it the colour of the lens direction.
+ * Selection is now violet everywhere — marker, leader, mesh emissive, section cross — and hover
+ * is teal; the arrow keeps gold and the fan keeps cyan. Shape carries the state too: a selected
+ * marker is filled and pressed, a hovered one is ringed.
+ */
+const SELECT_EMISSIVE = '#5a2d86'
+const HOVER_EMISSIVE = '#1e6360'
+const SELECT_MARKER = '#d9a5ff'
 
 export function LinkedModelView(props: Props) {
   const { config, volume, pose, evidence, onEvidence } = props
@@ -55,7 +103,11 @@ export function LinkedModelView(props: Props) {
   const [mode, setMode] = useState<Mode>(
     config.linkedLesson === 'scope-orientation' || config.linkedLesson === 'acoustic-contact'
       ? 'scope'
-      : 'anatomy',
+      : // The ct-map demonstration is titled "Compare the model section and ultrasound plane";
+        // it opens on that view instead of an isolated carina in an empty panel (L11-4).
+        config.demonstration && config.linkedLesson === 'ct-map'
+        ? 'section'
+        : 'anatomy',
   )
   const [wholeScope, setWholeScope] = useState(false)
   const [selection, setSelection] = useState(
@@ -69,6 +121,13 @@ export function LinkedModelView(props: Props) {
   const [isolate, setIsolate] = useState(
     !!config.demonstration && config.linkedLesson !== 'acoustic-contact',
   )
+  // Presentation state only: which marker is hovered or focused, whether the legend shows names,
+  // whether the anatomy camera frames the whole model or the landmark region, and whether the
+  // canvas currently owns the wheel. None of it reaches the evidence.
+  const [hovered, setHovered] = useState<string | null>(null)
+  const [showNames, setShowNames] = useState(false)
+  const [wholeAnatomy, setWholeAnatomy] = useState(false)
+  const [engaged, setEngaged] = useState(false)
   const roots = useMemo(
     () => (models ? (mode === 'scope' ? [models.scope] : [models.anatomy, models.nodes]) : []),
     [models, mode === 'scope'],
@@ -119,6 +178,10 @@ export function LinkedModelView(props: Props) {
     wholeScope,
     identifying,
     unnamedCandidates,
+    hovered,
+    showNames,
+    wholeAnatomy,
+    landmarkTarget,
   })
   const callback = useRef(onEvidence)
   useEffect(() => {
@@ -153,9 +216,13 @@ export function LinkedModelView(props: Props) {
       wholeScope,
       identifying,
       unnamedCandidates,
+      hovered,
+      showNames,
+      wholeAnatomy,
+      landmarkTarget,
     }
     controller.current?.update()
-  }, [props, mode, selection, regions, isolate, wholeScope])
+  }, [props, mode, selection, regions, isolate, wholeScope, hovered, showNames, wholeAnatomy, landmarkTarget])
   const choose = useCallback((id: string, point?: THREE.Vector3) => {
     if (latest.current.config.locked) return
     setSelection(id)
@@ -236,6 +303,8 @@ export function LinkedModelView(props: Props) {
       depthWrite: false,
     })
     const fan = new THREE.Mesh(fanGeometry, fanMaterial)
+    // Drawn after the example nodes so the plane is not hidden behind them (L3-11).
+    fan.renderOrder = 5
     scene.add(fan)
     const optical = new THREE.ArrowHelper(
       new THREE.Vector3(0, 1, 0),
@@ -248,37 +317,46 @@ export function LinkedModelView(props: Props) {
     scene.add(optical)
     const marker = new THREE.Mesh(
       new THREE.SphereGeometry(1.2, 12, 8),
-      new THREE.MeshBasicMaterial({ color: '#f6c96c', depthTest: false }),
+      new THREE.MeshBasicMaterial({ color: SELECT_MARKER, depthTest: false }),
     )
     marker.renderOrder = 10
     scene.add(marker)
-    const orientation = new THREE.Group()
-    const orientationTextures: THREE.CanvasTexture[] = []
-    const orientationMaterials: THREE.SpriteMaterial[] = []
-    for (const [label, position] of [
-      ['R', [-80, 1210, 160]],
-      ['L', [65, 1210, 160]],
-      ['S', [-10, 1300, 160]],
-    ] as const) {
-      const canvas = document.createElement('canvas')
-      canvas.width = 64
-      canvas.height = 48
-      const ctx = canvas.getContext('2d')!
-      ctx.fillStyle = '#edf6f5'
-      ctx.font = 'bold 36px system-ui'
-      ctx.textAlign = 'center'
-      ctx.fillText(label, 32, 37)
-      const texture = new THREE.CanvasTexture(canvas)
-      const material = new THREE.SpriteMaterial({ map: texture, depthTest: false })
-      const sprite = new THREE.Sprite(material)
-      sprite.position.set(position[0], position[1], position[2])
-      sprite.scale.set(18, 13.5, 1)
-      sprite.renderOrder = 12
-      orientation.add(sprite)
-      orientationTextures.push(texture)
-      orientationMaterials.push(material)
+    /*
+     * Model-frame compass (L3-11). Three letters used to sit at fixed world positions, so "S"
+     * clipped at the top of the canvas and "R" collided with a marker's leader. This is a
+     * screen-space overlay whose directions are projected from the camera basis and the verified
+     * model axes (see `MODEL_FRAME_AXES`). It names the model coordinate frame only; it is not a
+     * claim about how any clinical image is displayed.
+     */
+    const compass = document.createElement('div')
+    compass.className = 'linked-compass'
+    compass.setAttribute('role', 'img')
+    compass.setAttribute(
+      'aria-label',
+      'Model frame compass: R right, L left, S superior, I inferior, A anterior, P posterior, in the model coordinate frame',
+    )
+    compass.title = 'Model coordinate frame — not a clinical image convention'
+    const compassLabels = new Map<string, HTMLSpanElement>()
+    for (const key of ['R', 'L', 'S', 'I', 'A', 'P']) {
+      const span = document.createElement('span')
+      span.textContent = key
+      compass.appendChild(span)
+      compassLabels.set(key, span)
     }
-    scene.add(orientation)
+    const compassCaption = document.createElement('small')
+    compassCaption.textContent = 'model frame'
+    compass.appendChild(compassCaption)
+    element.appendChild(compass)
+    const renderCompass = () => {
+      const radius = 27
+      for (const axis of compassDirections(camera)) {
+        const span = compassLabels.get(axis.key)!
+        span.style.left = `${40 + axis.dx * radius}px`
+        span.style.top = `${40 + axis.dy * radius}px`
+        span.style.opacity = String(0.45 + 0.55 * (0.5 + 0.5 * -axis.toward))
+        span.style.zIndex = axis.toward < 0 ? '2' : '1'
+      }
+    }
     // Discovery labels are local to the observer view and never supply activity evidence.
     const tooltip = document.createElement('div')
     tooltip.className = 'linked-model-tooltip'
@@ -294,6 +372,7 @@ export function LinkedModelView(props: Props) {
     const hideHover = () => {
       tooltip.hidden = true
       tooltip.textContent = ''
+      if (hovered && latest.current.hovered === hovered.name) setHovered(null)
       hovered = null
     }
     const stopHover = () => {
@@ -349,6 +428,7 @@ export function LinkedModelView(props: Props) {
       }
       dismissed = null
       hovered = object
+      if (latest.current.hovered !== object.name) setHovered(object.name)
       tooltip.textContent = state.identifying
         ? 'Structure ' +
           String.fromCharCode(
@@ -365,37 +445,118 @@ export function LinkedModelView(props: Props) {
     const queueHover = () => {
       if (hoverPosition && !hoverFrame) hoverFrame = requestAnimationFrame(refreshHover)
     }
-    const reset = () => {
-      const state = latest.current
-      if (state.mode === 'scope') {
-        const basis = teachingScopeMatrix(state.pose, true)
-        const focus = new THREE.Vector3(
-          state.wholeScope ? 99 : 12,
-          state.wholeScope ? -1 : 10,
-          0,
-        ).applyMatrix4(basis)
-        const eye = new THREE.Vector3(12, state.wholeScope ? 180 : 50, state.wholeScope ? 255 : 66)
-          .transformDirection(basis)
-          .multiplyScalar(state.wholeScope ? 415 : 82)
-        orbit.target.copy(focus)
-        camera.position.copy(focus).add(eye)
-        camera.up.copy(cephalicImageAxis(state.pose))
-      } else {
-        orbit.target.set(-10, 1222, 161)
-        camera.position.set(135, 1275, 340)
-        camera.up.set(0, 1, 0)
-      }
+    /*
+     * Observer camera framing (L3-2 / L3-11 / L11-3 / L11-4 / L13-3). The scope view opened on
+     * the transducer face at a fixed offset and the whole-scope view at a fixed 415 mm, which made
+     * the tip "a teal wedge and an oval" and the whole scope "a tiny fan and dot"; the anatomy view
+     * opened on the whole mediastinum, where eight markers landed within ~120 px of each other.
+     * Each view now frames the actual bounds of what it is for — the distal parts, the whole
+     * device, the landmark region (marker anchors, the example node and the scope tip), an
+     * isolated demonstration structure — from the same viewing direction as before, with the
+     * whole model one control away. The camera is an observer; nothing about the pose, the
+     * geometry or the evidence moves with it.
+     */
+    const WHOLE_TARGET = new THREE.Vector3(-10, 1222, 161)
+    const WHOLE_EYE = new THREE.Vector3(135, 1275, 340)
+    const frameBox = (
+      box: THREE.Box3,
+      direction: THREE.Vector3,
+      up: THREE.Vector3,
+      padding: number,
+      minDistance: number,
+    ) => {
+      const center = box.getCenter(new THREE.Vector3())
+      const radius = box.getSize(new THREE.Vector3()).length() / 2
+      const aspect = element.clientHeight ? element.clientWidth / element.clientHeight : 4 / 3
+      const distance = Math.max(minDistance, fitSphereDistance(radius, camera.fov, aspect, padding))
+      orbit.target.copy(center)
+      camera.up.copy(up)
+      camera.position.copy(center).addScaledVector(direction.clone().normalize(), distance)
       orbit.update()
     }
-    let callouts: ReturnType<typeof createStructureCallouts> | undefined
+    const reset = () => {
+      const state = latest.current
+      scene.updateMatrixWorld(true)
+      if (state.mode === 'scope') {
+        const basis = teachingScopeMatrix(state.pose, true)
+        const distalRoles = ['transducer', 'optical', 'channel', 'distal-body', 'bending', 'balloon']
+        const box = new THREE.Box3()
+        scope.traverse((object) => {
+          if (
+            object instanceof THREE.Mesh &&
+            object.visible &&
+            (state.wholeScope || distalRoles.includes(object.userData.role))
+          )
+            box.expandByObject(object)
+        })
+        const direction = new THREE.Vector3(
+          12,
+          state.wholeScope ? 180 : 50,
+          state.wholeScope ? 255 : 66,
+        ).transformDirection(basis)
+        if (box.isEmpty()) {
+          const focus = new THREE.Vector3(state.wholeScope ? 99 : 12, state.wholeScope ? -1 : 10, 0).applyMatrix4(basis)
+          orbit.target.copy(focus)
+          camera.position.copy(focus).addScaledVector(direction, state.wholeScope ? 415 : 82)
+          camera.up.copy(cephalicImageAxis(state.pose))
+          orbit.update()
+          return
+        }
+        frameBox(
+          box,
+          direction,
+          cephalicImageAxis(state.pose),
+          state.wholeScope ? 0.95 : 0.85,
+          state.wholeScope ? 60 : 28,
+        )
+        return
+      }
+      const up = new THREE.Vector3(0, 1, 0)
+      const direction = WHOLE_EYE.clone().sub(WHOLE_TARGET).normalize()
+      const isolatedDemo = !!(state.config.demonstration && state.isolate && state.selection)
+      if (state.wholeAnatomy && !isolatedDemo) {
+        orbit.target.copy(WHOLE_TARGET)
+        camera.position.copy(WHOLE_EYE)
+        camera.up.copy(up)
+        orbit.update()
+        return
+      }
+      const box = new THREE.Box3()
+      if (isolatedDemo) {
+        const isolated = anatomy.getObjectByName(state.selection)
+        if (isolated) box.expandByObject(isolated)
+      } else {
+        for (const candidate of state.unnamedCandidates) {
+          const mesh = anatomy.getObjectByName(candidate.name)
+          if (mesh instanceof THREE.Mesh) box.expandByPoint(surfaceAnchor(mesh, WHOLE_TARGET))
+        }
+        nodes.traverse((object) => {
+          if (object instanceof THREE.Mesh && object.visible) box.expandByObject(object)
+        })
+        box.expandByPoint(state.pose.position)
+      }
+      if (box.isEmpty()) {
+        orbit.target.copy(WHOLE_TARGET)
+        camera.position.copy(WHOLE_EYE)
+        camera.up.copy(up)
+        orbit.update()
+        return
+      }
+      box.expandByScalar(isolatedDemo ? 6 : 10)
+      frameBox(box, direction, up, isolatedDemo ? 1.1 : 0.9, 40)
+    }
+    let callouts: StructureCalloutHandle | undefined
     const render = () => {
       renderer.render(scene, camera)
       const state = latest.current
-      callouts?.render(
-        camera,
-        state.identifying && !state.config.locked && state.mode !== 'section',
-        state.selection,
-      )
+      // Markers appear for an active identification task, or on request as a named reference —
+      // not during an acquisition that has no landmark task (L4-4), and never while locked.
+      const markersOn =
+        !state.config.locked &&
+        state.mode !== 'section' &&
+        (state.identifying ? !!state.landmarkTarget || state.showNames : state.showNames)
+      callouts?.render(camera, markersOn, state.selection, state.hovered, state.showNames ? SHORT_NAMES : null)
+      renderCompass()
       element.dataset.modelTriangles = String(renderer.info.render.triangles)
       queueHover()
     }
@@ -404,7 +565,6 @@ export function LinkedModelView(props: Props) {
         deviceView = state.mode === 'scope',
         showSelection = !state.config.locked || state.config.reveal
       anatomy.visible = !deviceView
-      orientation.visible = !deviceView
       nodes.visible = !deviceView
       aids.visible = !deviceView && state.regions && state.config.reveal
       scope.visible = deviceView || !state.isolate || state.config.locked
@@ -418,7 +578,8 @@ export function LinkedModelView(props: Props) {
       anatomy.traverse((object) => {
         if (!(object instanceof THREE.Mesh)) return
         const role = object.userData.role,
-          selected = showSelection && object.name === state.selection
+          selected = showSelection && object.name === state.selection,
+          hot = !selected && state.hovered === object.name
         object.visible =
           state.isolate && showSelection
             ? selected
@@ -448,10 +609,10 @@ export function LinkedModelView(props: Props) {
                   : '#d67672',
           )
           material.transparent = true
-          material.opacity = selected ? 1 : role === 'airway' ? 0.48 : 0.38
+          material.opacity = selected ? 1 : hot ? 0.82 : role === 'airway' ? 0.48 : 0.38
           material.depthWrite = selected
           material.needsUpdate = true
-          material.emissive?.set(selected ? '#70551c' : '#000000')
+          material.emissive?.set(selected ? SELECT_EMISSIVE : hot ? HOVER_EMISSIVE : '#000000')
         })
       })
       nodes.traverse((object) => {
@@ -490,10 +651,10 @@ export function LinkedModelView(props: Props) {
         ).forEach((material) => {
           material.emissive?.set(
             showSelection && state.selection === object.name
-              ? state.identifying
-                ? '#70551c'
-                : '#306c69'
-              : '#000000',
+              ? SELECT_EMISSIVE
+              : state.hovered === object.name
+                ? HOVER_EMISSIVE
+                : '#000000',
           )
         })
       })
@@ -617,17 +778,26 @@ export function LinkedModelView(props: Props) {
     renderer.domElement.addEventListener('pointerleave', leave)
     renderer.domElement.addEventListener('pointercancel', leave)
     window.addEventListener('keydown', dismiss)
+    const observer = attachObserverControls(orbit, camera, renderer.domElement, {
+      render,
+      reset: () => {
+        reset()
+        render()
+      },
+      onEngagement: setEngaged,
+    })
     controller.current = {
       update,
-      reset,
-      orbit: (angle) => {
-        const offset = camera.position.clone().sub(orbit.target).applyAxisAngle(camera.up, angle)
-        camera.position.copy(orbit.target).add(offset)
-        orbit.update()
+      reset: () => {
+        reset()
+        render()
       },
+      orbit: observer.orbit,
+      zoom: observer.zoom,
+      release: observer.release,
     }
-    reset()
     update()
+    reset()
     const calloutRoots = mode === 'scope' ? [scope] : [anatomy, nodes]
     const calloutMeshes = unnamedCandidates.map(
       (candidate) =>
@@ -635,7 +805,7 @@ export function LinkedModelView(props: Props) {
           .map((root) => root.getObjectByName(candidate.name))
           .find(Boolean) as THREE.Mesh,
     )
-    callouts = createStructureCallouts(element, calloutMeshes, orbit.target, choose)
+    callouts = createStructureCallouts(element, calloutMeshes, orbit.target, choose, setHovered)
     render()
     return () => {
       cancelAnimationFrame(hoverFrame)
@@ -647,6 +817,7 @@ export function LinkedModelView(props: Props) {
       renderer.domElement.removeEventListener('pointerleave', leave)
       renderer.domElement.removeEventListener('pointercancel', leave)
       controller.current = null
+      observer.dispose()
       resize.disconnect()
       orbit.dispose()
       renderer.dispose()
@@ -659,15 +830,30 @@ export function LinkedModelView(props: Props) {
       marker.geometry.dispose()
       ;(marker.material as THREE.Material).dispose()
       optical.dispose()
-      orientationTextures.forEach((texture) => texture.dispose())
-      orientationMaterials.forEach((material) => material.dispose())
+      compass.remove()
     }
   }, [models, choose, mode === 'scope', wholeScope])
+  // Re-frame without rebuilding the scene when the framing choice or the isolated demo changes.
+  useEffect(() => {
+    controller.current?.reset()
+  }, [wholeAnatomy, isolate])
   const sweep = evidence.sweeps?.[evidence.approach]
+  const letterOf = (id: string) => {
+    const index = unnamedCandidates.findIndex((object) => object.name === id)
+    return index < 0 ? '' : String.fromCharCode(65 + index)
+  }
   function checkLandmark() {
     if (config.locked || !landmarkTarget || !selection) return
     if (selection !== landmarkTarget) {
-      setLandmarkFeedback('Try another structure. ' + LANDMARK_HINTS[landmarkTarget])
+      const letter = letterOf(selection)
+      setLandmarkFeedback(
+        (letter ? 'Structure ' + letter + ' is the ' : 'That is the ') +
+          (SHORT_NAMES[selection] ?? 'structure shown') +
+          ', not the ' +
+          LANDMARK_NAMES[landmarkTarget] +
+          '. ' +
+          LANDMARK_HINTS[landmarkTarget],
+      )
       return
     }
     onEvidence({
@@ -743,8 +929,8 @@ export function LinkedModelView(props: Props) {
         </div>
         <p className="guided-label">
           {mode === 'scope'
-            ? 'Cyan fan: ultrasound plane. Gold arrow: optical direction. Added mechanical parts are illustrative.'
-            : 'Anatomy and ultrasound share one scope pose. Example nodes remain visible through surrounding structures for orientation.'}
+            ? 'Cyan fan: ultrasound plane. Gold arrow: optical direction. Violet: your selected structure; teal: the structure under the pointer. Added mechanical parts are illustrative.'
+            : 'Anatomy and ultrasound share one scope pose; the scope tip and cyan fan are drawn where that pose places them. Example nodes remain visible through surrounding structures for orientation. Violet: your selected structure; teal: the structure under the pointer. The compass names the model frame.'}
         </p>
         {config.linkedLesson === 'station-seven' && config.linkedVariant !== 'changed-window' && (
           <div className="guided-tabs" role="group" aria-label="Bronchial approach">
@@ -779,8 +965,10 @@ export function LinkedModelView(props: Props) {
         <div className="linked-landmark-task">
           <h3>Find the {LANDMARK_NAMES[landmarkTarget]}</h3>
           <p>
-            Letters mark structures on the 3D {landmarkMode} model. Click a letter or choose its
-            matching option, then check your selection.
+            Letters mark structures on the 3D {landmarkMode} model. Click or tap a letter, choose
+            it from the list, or Tab to a letter and press Enter; hovering or focusing a letter
+            highlights its structure. Then check your selection. Names are available at any time
+            from “Show structure names” — using them is allowed and nothing here is scored.
           </p>
           {mode !== landmarkMode && (
             <button
@@ -802,7 +990,8 @@ export function LinkedModelView(props: Props) {
           )}
           {selectedIndex >= 0 && mode === landmarkMode && (
             <p className="linked-selection" aria-live="polite">
-              Structure {String.fromCharCode(65 + selectedIndex)} selected — highlighted in gold.
+              Structure {String.fromCharCode(65 + selectedIndex)} selected — highlighted in violet
+              {showNames && SHORT_NAMES[selection] ? ` (${SHORT_NAMES[selection]})` : ''}.
             </p>
           )}
           {landmarkFeedback && <p role="status">{landmarkFeedback}</p>}
@@ -828,19 +1017,45 @@ export function LinkedModelView(props: Props) {
           <div className="guided-tabs" role="group" aria-label="Observer camera">
             <button onClick={() => controller.current?.orbit(-0.3)}>Orbit left</button>
             <button onClick={() => controller.current?.orbit(0.3)}>Orbit right</button>
+            <button onClick={() => controller.current?.zoom(1.3)}>Zoom in</button>
+            <button onClick={() => controller.current?.zoom(1 / 1.3)}>Zoom out</button>
             <button onClick={() => controller.current?.reset()}>Reset view</button>
             {mode === 'scope' && (
               <button aria-pressed={wholeScope} onClick={() => setWholeScope((v) => !v)}>
                 {wholeScope ? 'Show distal tip' : 'Show whole scope'}
               </button>
             )}
+            {mode === 'anatomy' && (
+              <button aria-pressed={wholeAnatomy} onClick={() => setWholeAnatomy((v) => !v)}>
+                {wholeAnatomy ? 'Frame the landmark region' : 'Show whole model'}
+              </button>
+            )}
+            {mode !== 'section' && (
+              <button
+                aria-pressed={showNames}
+                data-structure-names
+                onClick={() => setShowNames((v) => !v)}
+              >
+                {showNames ? 'Hide structure names' : 'Show structure names'}
+              </button>
+            )}
+            {engaged && (
+              <button data-release-observer onClick={() => controller.current?.release()}>
+                Release wheel control
+              </button>
+            )}
           </div>
-          <p className="guided-label">
-            {config.reveal && mode !== 'section' && 'Hover to name a structure. '}
+          <p className="guided-label" data-observer-caption>
+            {config.reveal && mode !== 'section' && 'Hover, tap or focus a marker to name a structure. '}
             {identifying &&
               mode !== 'section' &&
-              'Letters refer to the 3D model. Hover to see a matching letter. '}
-            Drag to orbit; scroll to zoom. Observer controls change your viewpoint only.
+              'Letters refer to the 3D model: hovering a letter highlights its structure, and hovering the model highlights its letter. '}
+            {OBSERVER_CAPTION} Observer controls change your viewpoint only.
+          </p>
+          <p className="guided-label" data-observer-engaged={engaged} role="status">
+            {engaged
+              ? 'Wheel and one-finger control are on for the model. Press Escape or click elsewhere to release them; the page scrolls normally once released.'
+              : 'The page scrolls normally over the model. Click, tap or focus the model to turn on wheel and one-finger control.'}
           </p>
         </div>
       )}
@@ -875,24 +1090,56 @@ export function LinkedModelView(props: Props) {
         </>
       )}
       {identifying && !config.locked && !landmarkTarget && landmarkIds.length > 0 && (
-        <p role="status">Landmarks identified. Acquire the required ultrasound sweep.</p>
+        <p role="status" data-landmarks-identified>
+          Landmarks identified:{' '}
+          {landmarkIds
+            .map((id) => LANDMARK_NAMES[id] + (letterOf(id) ? ` (${letterOf(id)})` : ''))
+            .join(' · ')}
+          . Acquire the required ultrasound sweep.
+        </p>
       )}
-      {identifying && config.linkedLesson !== 'acoustic-contact' && !config.locked && (
-        <div className="linked-sweep" role="status">
-          <strong>
-            {sweep?.phase === 'complete'
-              ? 'Sweep recorded'
-              : sweep?.phase === 'crossing'
-                ? 'Keep sweeping across the target'
-                : 'Find a plane just beyond the target'}
-          </strong>
-          <p>
-            {sweep?.phase === 'complete'
-              ? 'Return to a plane with the target visible. This bounded sweep does not establish complete clinical survey coverage.'
-              : 'Use small rotation changes and pause for each image. Move from a plane without the target, across several sections of it, until it leaves on the far side. Reversing early or skipping across the target requires another sweep.'}
-          </p>
-        </div>
-      )}
+      {identifying &&
+        config.linkedLesson !== 'acoustic-contact' &&
+        !config.locked &&
+        (() => {
+          const status = describeLinkedSweep({
+            sweep,
+            targetVisible: !!props.targetVisible,
+            frameReady: !!props.frameReady,
+            contact: props.contactQuality,
+            lastEvent: props.sweepReport?.event ?? null,
+            lastResetProgress: props.sweepReport?.resetProgress ?? null,
+            targetName: props.targetName ?? 'The model target',
+          })
+          return (
+            <div
+              className="linked-sweep"
+              data-sweep-state={status.state}
+              data-sweep-in-plane={props.frameReady ? String(!!props.targetVisible) : 'pending'}
+              data-sweep-samples={sweep?.samples ?? 0}
+              data-sweep-span={sweep?.span ?? 0}
+            >
+              <div role="status">
+                <strong>{status.heading}</strong>
+                <p data-sweep-in-plane-text>{status.inPlane}</p>
+              </div>
+              <p>{status.waiting}</p>
+              {status.resetReason && <p data-sweep-reset-reason>{status.resetReason}</p>}
+              {status.progress && (
+                <p data-sweep-progress>
+                  This pass so far: {status.progress.samples} of {status.progress.minSamples}{' '}
+                  paused frames with the target, {status.progress.span}° of{' '}
+                  {status.progress.minSpanDeg}° rotation. These are transient model samples for
+                  this pass — not a score, a mastery measure or course progress.
+                </p>
+              )}
+              <details>
+                <summary>How this exercise counts a sweep</summary>
+                <p>{SWEEP_TOLERANCE_NOTE}</p>
+              </details>
+            </div>
+          )
+        })()}
       {config.demonstration && (
         <div className="linked-demo">
           <strong>Worked demonstration</strong>
