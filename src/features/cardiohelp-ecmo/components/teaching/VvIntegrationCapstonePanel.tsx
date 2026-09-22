@@ -421,11 +421,19 @@ export function VvIntegrationCapstonePanel({ state }: { readonly state: EcmoSimu
           page is compatible with that number, which is exactly why it is the wrong place to act
           from. Work instead from what each explanation predicts somewhere else.
         </p>
+        {/*
+         * S17-5 (ECMO-FELLOW-02): this used to ask the learner to name what "has actually gone wrong
+         * in front of you" while the held case in front of them still read its opening values. It
+         * now separates the presentation from the reading, and says what an unchanged reading means.
+         */}
         <p className="mt-2 text-sm leading-6">
-          Begin by naming what has actually gone wrong in front of you: oxygenation, ventilation, or
-          both. Patient SpO₂ is {patient.spo2.toFixed(1)}, the arterial carbon dioxide value is{' '}
-          {patient.paCO2.toFixed(1)} mmHg and the pH is {patient.pH.toFixed(2)}. The gas source is{' '}
-          {gas.sourceConnected ? 'connected' : 'interrupted'}.
+          Begin with the presentation this section describes and name whether it is a problem of
+          oxygenation, ventilation, or both. Then read what the simulator shows now: patient SpO₂ is{' '}
+          {patient.spo2.toFixed(1)}, the arterial carbon dioxide value is {patient.paCO2.toFixed(1)}{' '}
+          mmHg and the pH is {patient.pH.toFixed(2)}. The gas source is{' '}
+          {gas.sourceConnected ? 'connected' : 'interrupted'}. If these are still the values the
+          case started from, its change has not arrived yet; the observe step reveals how it
+          evolves.
         </p>
       </section>
 

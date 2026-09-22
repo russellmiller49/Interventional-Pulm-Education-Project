@@ -12,7 +12,9 @@ import type {
   EcmoSimulationState,
   FaultId,
   GasState,
+  PatientFieldAnchor,
   PatientState,
+  RateLimitedPatientField,
   ScenarioDefinition,
   ScenarioRuntime,
   TrendSample,
@@ -182,6 +184,7 @@ export const defaultPatientState: PatientState = {
 function createReferenceRuntime(profileId: string): ScenarioRuntime {
   return {
     activityStarted: false,
+    historySerial: 1,
     scenarioId: profileId,
     family: 'orientation',
     baselineRpmSetpoint:
@@ -210,6 +213,7 @@ function createReferenceRuntime(profileId: string): ScenarioRuntime {
 function createScenarioRuntime(definition: ScenarioDefinition): ScenarioRuntime {
   return {
     activityStarted: false,
+    historySerial: 1,
     scenarioId: definition.id,
     family: definition.family,
     baselineRpmSetpoint:
@@ -230,6 +234,8 @@ function createScenarioRuntime(definition: ScenarioDefinition): ScenarioRuntime 
     completedObjectiveIds: [],
     attempts: 1,
     causeCorrectedAt: null,
+    sweepStoppedAt:
+      (definition.initialState.gas?.sweepLpm ?? defaultGasState.sweepLpm) === 0 ? 0 : null,
     clinical: definition.clinicalCase
       ? {
           supportStatus: definition.clinicalCase.initialSupportStatus,
@@ -283,7 +289,173 @@ export function createInitialSimulationState(
   // so the shape is complete before the first derivation; recording it would write a reference
   // circuit's pressures into t=0 of a scenario that starts with the pump stopped. The derivation
   // below writes the first sample from state that has actually been computed.
-  return deriveSimulation({ ...base, trends: [] })
+  return settleLoadedState(
+    { ...base, trends: [] },
+    {
+      patientFields: Object.keys(definition.initialState.patient ?? {}),
+      postOxygenatorSaturation:
+        definition.initialState.circuit?.postOxygenatorSaturation !== undefined,
+    },
+    // The cases that present an authored patient: the clinical Practice cases and the two
+    // integrated cases. Learn drills and reference circuits are teaching previews of the engine's
+    // own relationships and carry no ownership record.
+    definition.clinicalCase || definition.challengeBrief
+      ? definition.expectation.correctiveFault
+      : null,
+  )
+}
+
+/**
+ * The one derivation a freshly loaded state receives (ECMO-FELLOW-02).
+ *
+ * Three rules, applied in order, and nothing else:
+ *
+ * 1. **Loading is not a second of the clock.** The patient is exactly what the case authored at
+ *    t = 0. It used to be advanced one rate-limited step by this derivation, so a brief reading
+ *    MAP 46, CVP 20 and pulse pressure 6 opened on a monitor reading 45, 21 and 8.
+ * 2. **A value nobody authored starts where the model puts it.** A patient field the scenario does
+ *    not author used to inherit the VV default patient and drift from there — PaCO₂ 42 → 46 in the
+ *    first three seconds of every case, and a VA case opening on the VV default's pulse pressure 35,
+ *    native output 4.5 and saturations of 93. There is no authored value to preserve, so the field
+ *    starts at the model's own target for the opening state and has nothing to drift from. Same for
+ *    the membrane outlet saturation. In VV the patient's saturation and its two regional readings are
+ *    one quantity, and in VA the headline saturation is the right-arm reading, so an authored value
+ *    for one seeds the other rather than being settled independently.
+ * 3. **A clinical case owns what it authored.** Its authored rate-limited values are recorded as
+ *    anchors (see `resolvePatientTargets`), so the generic relationships move them only by what
+ *    changes after load.
+ */
+function settleLoadedState(
+  base: EcmoSimulationState,
+  authored: {
+    readonly patientFields: readonly string[]
+    readonly postOxygenatorSaturation: boolean
+  },
+  presentingFault: FaultId | null,
+): EcmoSimulationState {
+  const authoredFields = new Set(authored.patientFields)
+  const aliases: Partial<Record<RateLimitedPatientField, RateLimitedPatientField>> =
+    base.supportMode === 'vv'
+      ? { rightRadialSpo2: 'spo2', femoralArterialSpo2: 'spo2' }
+      : { spo2: 'rightRadialSpo2', rightRadialSpo2: 'spo2' }
+  const seeded: Partial<PatientState> = {}
+  for (const [field, source] of Object.entries(aliases) as [
+    RateLimitedPatientField,
+    RateLimitedPatientField,
+  ][]) {
+    if (!authoredFields.has(field) && authoredFields.has(source)) {
+      seeded[field] = base.patient[source]
+      authoredFields.add(field)
+    }
+  }
+  const loaded = deriveSimulation(
+    { ...base, patient: { ...base.patient, ...seeded } },
+    { advancePatient: false, atLoad: true },
+  )
+
+  const loadGeneric = genericPatientTargets(loaded, loaded.circuit.bloodFlow)
+  const loadStory = faultPatientTargets(loaded.supportMode, loaded.scenario.activeFaults)
+  const settledPatient: Partial<PatientState> = {}
+  for (const field of RATE_LIMITED_PATIENT_FIELDS) {
+    // A field an active fault's story is moving keeps its default: the story moves it from there.
+    // The gas case's saturation "initially remains near baseline" and falls later; the tension
+    // case's urine output falls with the shock. Settling those would erase the story.
+    if (authoredFields.has(field) || loadStory[field] !== undefined) continue
+    settledPatient[field] = round(loadGeneric[field], PATIENT_FIELD_DYNAMICS[field].places)
+  }
+  const patient = { ...loaded.patient, ...settledPatient }
+  // Respiratory rate follows work of breathing only when the scenario did not author a rate. An
+  // authored "high" work of breathing beside the default patient's rate of 18 is a combination no
+  // case described (the VA hypercapnia drill's stem reads 32).
+  if (!authoredFields.has('respiratoryRate')) {
+    patient.respiratoryRate = RESPIRATORY_RATE_BY_WORK_OF_BREATHING[patient.workOfBreathing]
+  }
+  // pH is arithmetic on bicarbonate and PaCO₂. A scenario that authors pH and PaCO₂ but not
+  // bicarbonate implies the bicarbonate that makes its own pH true; without it the first tick
+  // recomputed the authored pH from the default bicarbonate — upward, on a patient getting worse.
+  if (authoredFields.has('pH') && !authoredFields.has('bicarbonate')) {
+    patient.bicarbonate = round(0.03 * patient.paCO2 * 10 ** (patient.pH - 6.1), 2)
+  } else if (!authoredFields.has('pH')) {
+    patient.pH = round(
+      clamp(6.1 + Math.log10(patient.bicarbonate / (0.03 * Math.max(patient.paCO2, 1))), 6.8, 7.7),
+      2,
+    )
+  }
+  let settled: EcmoSimulationState = deriveSimulation(
+    { ...loaded, patient },
+    { advancePatient: false, atLoad: true },
+  )
+  settled = {
+    ...settled,
+    scenario: {
+      ...settled.scenario,
+      bicarbonateSource: authoredFields.has('bicarbonate')
+        ? 'case-supplied'
+        : authoredFields.has('pH')
+          ? 'calculated'
+          : 'model-default',
+    },
+  }
+  if (!authored.postOxygenatorSaturation) {
+    const postOxygenatorSaturation = round(
+      derivePostOxygenatorTarget(settled, settled.patient.systemicVenousSaturationEstimate),
+      1,
+    )
+    settled = deriveSimulation(
+      { ...settled, circuit: { ...settled.circuit, postOxygenatorSaturation } },
+      { advancePatient: false, atLoad: true },
+    )
+  }
+
+  if (!presentingFault || !hasFault(settled, presentingFault)) return settled
+  const generic = genericPatientTargets(settled, settled.circuit.bloodFlow)
+  /*
+   * A case that opens with support interrupted — the pump not turning, or no sweep gas reaching the
+   * membrane — has authored the moment of interruption, and the loss of support is an event the
+   * model does represent. There the patient may still move toward the model's no-support value, if
+   * that is worse: the VV air case's saturation is "84% and falling off support", the gas case's
+   * CO₂ is still accumulating. Nowhere does an untreated patient drift toward a better value, and
+   * where support is running the authored values simply hold: a case whose brief says the values
+   * sit where the team wants them no longer climbs away from them on its own.
+   */
+  const supportInterrupted =
+    !settled.device.pumpRunning ||
+    settled.circuit.bloodFlow <= 0 ||
+    !(settled.gas.sourceConnected && settled.gas.sweepLpm > 0)
+  const anchors: Partial<Record<RateLimitedPatientField, PatientFieldAnchor>> = {}
+  for (const field of RATE_LIMITED_PATIENT_FIELDS) {
+    if (!authoredFields.has(field)) continue
+    const authoredValue = settled.patient[field]
+    const better = supportInterrupted ? PATIENT_FIELD_DYNAMICS[field].better : undefined
+    const level =
+      better === 'higher'
+        ? Math.min(authoredValue, generic[field])
+        : better === 'lower'
+          ? Math.max(authoredValue, generic[field])
+          : authoredValue
+    anchors[field] = {
+      level,
+      reference: generic[field],
+      source: 'case-authored',
+      setAt: settled.simulationTime,
+    }
+  }
+  const postOxygenator = authored.postOxygenatorSaturation
+    ? {
+        level: settled.circuit.postOxygenatorSaturation,
+        reference: derivePostOxygenatorTarget(
+          settled,
+          settled.patient.systemicVenousSaturationEstimate,
+        ),
+      }
+    : undefined
+  return {
+    ...settled,
+    scenario: {
+      ...settled.scenario,
+      patientOwnership: { presentingFault, anchors, ...(postOxygenator ? { postOxygenator } : {}) },
+    },
+  }
 }
 
 /**
@@ -332,7 +504,11 @@ export function createReferenceSimulationState(
   // No seeded sample, for the same reason as `createInitialSimulationState`: the first trend frame
   // is written by the derivation below, from pressures this profile actually produced rather than
   // from the placeholder readouts on `defaultCircuitState`.
-  return deriveSimulation({ ...base, trends: [] })
+  return settleLoadedState(
+    { ...base, trends: [] },
+    { patientFields: Object.keys(profile.inputs.patient), postOxygenatorSaturation: false },
+    null,
+  )
 }
 
 export function hasFault(state: EcmoSimulationState, fault: FaultId): boolean {
@@ -938,6 +1114,7 @@ function applyPressureIntervention(
   state: EcmoSimulationState,
   device: DeviceState,
   circuit: CircuitState,
+  clockAdvanced: boolean,
 ): DeviceState {
   if (!device.pressureInterventionEnabled || device.globalOverride) return device
   const belowBy = device.limits.pVenAlarmLow - circuit.pVen
@@ -949,10 +1126,18 @@ function applyPressureIntervention(
   if (belowBy > 10 || aboveBy > 10) {
     return { ...device, pumpRunning: false }
   }
+  // The protective stop above acts on any recomputation, as it always has on the clamp path: a
+  // circuit asked for more than the interlock allows stops in the second it is asked. The speed trim
+  // and the automatic restart below are per-second processes and step with the clock
+  // (ECMO-FELLOW-02), so a setpoint change is a request the model acts on at the next second — the
+  // orientation tours' settling step depends on exactly that.
   if ((belowBy > 0 || aboveBy > 0) && device.pumpRunning) {
-    return { ...device, rpmSetpoint: clamp(device.rpmSetpoint - 75, 0, 5000) }
+    return clockAdvanced
+      ? { ...device, rpmSetpoint: clamp(device.rpmSetpoint - 75, 0, 5000) }
+      : device
   }
   if (
+    clockAdvanced &&
     !circuit.bubbleResetRequired &&
     !device.zeroFlowActive &&
     !circuit.drainageClampClosed &&
@@ -1186,148 +1371,338 @@ export function deriveDrainageSaturation(
   )
 }
 
-function patientTargets(state: EcmoSimulationState, flow: number) {
+/**
+ * How each rate-limited patient field moves: the most it may change in one modeled second, the
+ * precision it is held at, and — for the fields where "worse" has one meaning in this model —
+ * which direction is the better one.
+ *
+ * The rates are the engine's existing ones, gathered into one table rather than re-typed at each
+ * call site. `better` is used for one decision only: once a clinical case's presenting problem is
+ * corrected, the case's authored values on directional fields hand back to the model (see
+ * `patientAnchorApplies`). Pulse pressure, native output and CVP have no single better direction
+ * here — a narrow pulse pressure is the tamponade finding, a wide one the recovering ventricle — so
+ * they carry none.
+ *
+ * Evidence boundary: bounded-educational-model. Model step sizes, not physiological rate constants.
+ */
+export const PATIENT_FIELD_DYNAMICS: Readonly<
+  Record<
+    RateLimitedPatientField,
+    {
+      readonly maxChangePerSecond: number
+      readonly places: number
+      readonly better?: 'higher' | 'lower'
+      readonly range?: { readonly low: number; readonly high: number }
+    }
+  >
+> = Object.freeze({
+  paCO2: { maxChangePerSecond: 1.4, places: 1, better: 'lower', range: { low: 20, high: 100 } },
+  spo2: { maxChangePerSecond: 0.7, places: 1, better: 'higher', range: { low: 65, high: 100 } },
+  rightRadialSpo2: {
+    maxChangePerSecond: 0.7,
+    places: 1,
+    better: 'higher',
+    range: { low: 65, high: 100 },
+  },
+  femoralArterialSpo2: {
+    maxChangePerSecond: 0.7,
+    places: 1,
+    better: 'higher',
+    range: { low: 65, high: 100 },
+  },
+  nativeCardiacOutputLpm: { maxChangePerSecond: 0.15, places: 1 },
+  pulsePressure: { maxChangePerSecond: 2, places: 0 },
+  meanArterialPressure: { maxChangePerSecond: 1.2, places: 0, better: 'higher' },
+  centralVenousPressure: { maxChangePerSecond: 0.8, places: 0 },
+  lactate: { maxChangePerSecond: 0.12, places: 1, better: 'lower' },
+  urineOutputMlHr: { maxChangePerSecond: 2, places: 0, better: 'higher' },
+  airwayPressure: { maxChangePerSecond: 1, places: 0, better: 'lower' },
+  distalLimbNirs: { maxChangePerSecond: 1.5, places: 0, better: 'higher' },
+})
+
+export const RATE_LIMITED_PATIENT_FIELDS = Object.freeze(
+  Object.keys(PATIENT_FIELD_DYNAMICS) as RateLimitedPatientField[],
+)
+
+type PatientTargetMap = Record<RateLimitedPatientField, number>
+
+/**
+ * The engine's generic relationships: what a patient on this circuit, with these gas settings and
+ * these circuit faults, reads when nothing about the patient's own story is overriding it.
+ *
+ * Includes the relationships a circuit fault acts through (recirculation and a resisted membrane
+ * reduce the circuit's oxygen contribution; the hypercapnia drills change how PaCO₂ follows sweep;
+ * differential hypoxemia sets the right-arm level the VA model reads). Excludes the story targets in
+ * `faultPatientTargets`. Numbers are the engine's existing ones, unchanged.
+ */
+export function genericPatientTargets(state: EcmoSimulationState, flow: number): PatientTargetMap {
   const gasAvailable = state.gas.sourceConnected && state.gas.sweepLpm > 0
   const recirculationAdjustedFlow = deriveRecirculationAdjustedCircuitFlow(
     flow,
     deriveRecirculationFraction(state),
   )
   const oxygenatorContribution = gasAvailable ? recirculationAdjustedFlow * state.gas.fio2 : 0
-  let targetSpo2 = 82 + oxygenatorContribution * 4
-  let targetPaCO2 = gasAvailable ? 76 - state.gas.sweepLpm * 7.5 : 90
-
-  if (hasFault(state, 'acute-hypercapnia'))
-    targetPaCO2 = gasAvailable ? 78 - state.gas.sweepLpm * 8 : 94
+  let spo2 = 82 + oxygenatorContribution * 4
+  let paCO2 = gasAvailable ? 76 - state.gas.sweepLpm * 7.5 : 90
+  if (hasFault(state, 'acute-hypercapnia')) paCO2 = gasAvailable ? 78 - state.gas.sweepLpm * 8 : 94
   if (hasFault(state, 'compensated-hypercapnia')) {
-    targetPaCO2 = state.gas.sweepLpm === 0 ? 64 : 72 - state.gas.sweepLpm * 4
+    paCO2 = state.gas.sweepLpm === 0 ? 64 : 72 - state.gas.sweepLpm * 4
   }
-  // Recirculation reaches arterial saturation through effective flow above, and only there. It
-  // used to be charged a second time here as a flat penalty, so the same fault was counted twice.
-  if (hasFault(state, 'gas-source-interruption')) targetSpo2 = 82
-  if (hasFault(state, 'oxygenator-resistance')) targetSpo2 -= 8
-  if (hasFault(state, 'ecmo-not-initiated')) {
-    targetSpo2 = state.supportMode === 'va' ? 82 : 74
-    targetPaCO2 = state.supportMode === 'va' ? 58 : 76
-  }
+  // Recirculation reaches arterial saturation through effective flow above, and only there.
+  if (hasFault(state, 'oxygenator-resistance')) spo2 -= 8
 
-  let rightRadialSpo2 = targetSpo2
-  let femoralArterialSpo2 = targetSpo2
-
-  if (state.supportMode === 'va') {
-    const supportNotStarted = hasFault(state, 'ecmo-not-initiated')
-    femoralArterialSpo2 = supportNotStarted ? 82 : gasAvailable ? 98.5 : 78
-    rightRadialSpo2 = supportNotStarted
+  const va = state.supportMode === 'va'
+  const rightRadialSpo2 = va
+    ? hasFault(state, 'differential-hypoxemia')
       ? 82
-      : hasFault(state, 'differential-hypoxemia')
-        ? 82
-        : gasAvailable
-          ? 96
-          : 80
-    targetSpo2 = rightRadialSpo2
-  }
-
+      : gasAvailable
+        ? 96
+        : 80
+    : spo2
+  const femoralArterialSpo2 = va ? (gasAvailable ? 98.5 : 78) : spo2
   return {
-    spo2: clamp(targetSpo2, 65, 100),
-    rightRadialSpo2: clamp(rightRadialSpo2, 65, 100),
-    femoralArterialSpo2: clamp(femoralArterialSpo2, 65, 100),
-    paCO2: clamp(targetPaCO2, 20, 100),
+    paCO2,
+    spo2: va ? rightRadialSpo2 : spo2,
+    rightRadialSpo2,
+    femoralArterialSpo2,
+    nativeCardiacOutputLpm: va ? 2.4 : 4.5,
+    pulsePressure: va ? 18 : 35,
+    meanArterialPressure: va
+      ? clamp(55 + flow * 4, 60, 80)
+      : // VV has no generic MAP relationship: MAP stays where it is unless a story target moves it.
+        state.patient.meanArterialPressure,
+    centralVenousPressure: 8,
+    lactate: 1.8,
+    urineOutputMlHr: 50,
+    airwayPressure: 24,
+    distalLimbNirs: 68,
   }
 }
 
-function derivePatient(state: EcmoSimulationState, flow: number): PatientState {
-  const targets = patientTargets(state, flow)
-  const paCO2 = round(moveToward(state.patient.paCO2, targets.paCO2, 1.4), 1)
-  const spo2 = round(moveToward(state.patient.spo2, targets.spo2, 0.7), 1)
-  const rightRadialSpo2 = round(
-    moveToward(state.patient.rightRadialSpo2, targets.rightRadialSpo2, 0.7),
-    1,
-  )
-  const femoralArterialSpo2 = round(
-    moveToward(state.patient.femoralArterialSpo2, targets.femoralArterialSpo2, 0.7),
-    1,
-  )
+/**
+ * The story targets: where an untreated fault takes the patient.
+ *
+ * Deterioration endpoints (a bleeding patient's MAP, a tension pneumothorax's CVP and airway
+ * pressure, the shock faults' lactate and urine output, an unstarted circuit's gas exchange) and the
+ * two faults that fix a value outright (LV loading's pulsatility, the ischemic limb's NIRS). Keyed
+ * on the support mode and the active faults only, so `faultPatientTargets(mode, [fault])` also
+ * answers which fields a single fault owns. Precedence where two faults target one field is the
+ * engine's existing precedence. Numbers are the engine's existing ones, unchanged.
+ */
+export function faultPatientTargets(
+  supportMode: EcmoSimulationState['supportMode'],
+  activeFaults: readonly FaultId[],
+): Partial<PatientTargetMap> {
+  const has = (fault: FaultId) => activeFaults.includes(fault)
+  const va = supportMode === 'va'
+  const targets: Partial<PatientTargetMap> = {}
+  if (!va && has('gas-source-interruption')) {
+    targets.spo2 = 82
+    targets.rightRadialSpo2 = 82
+    targets.femoralArterialSpo2 = 82
+  }
+  if (has('ecmo-not-initiated')) {
+    const saturation = va ? 82 : 74
+    targets.spo2 = saturation
+    targets.rightRadialSpo2 = saturation
+    targets.femoralArterialSpo2 = saturation
+    targets.paCO2 = va ? 58 : 76
+  }
+  if (va && has('lv-loading')) {
+    targets.nativeCardiacOutputLpm = 0.8
+    targets.pulsePressure = 5
+  }
+  // Mean arterial pressure: the last applicable fault wins, as it always has.
+  if (has('hemorrhagic-hypovolemia')) targets.meanArterialPressure = 46
+  if (has('tension-pneumothorax')) targets.meanArterialPressure = 42
+  if (has('tamponade')) targets.meanArterialPressure = 40
+  if (has('vasoplegia')) targets.meanArterialPressure = 48
+  if (has('ecmo-not-initiated')) targets.meanArterialPressure = va ? 38 : 68
+  // Central venous pressure: the first applicable fault wins, as it always has.
+  if (has('hemorrhagic-hypovolemia')) targets.centralVenousPressure = 2
+  else if (has('tension-pneumothorax')) targets.centralVenousPressure = 20
+  else if (has('tamponade')) targets.centralVenousPressure = 22
+  const shock =
+    has('hemorrhagic-hypovolemia') ||
+    has('tension-pneumothorax') ||
+    has('tamponade') ||
+    has('vasoplegia') ||
+    (has('ecmo-not-initiated') && va)
+  if (shock) {
+    targets.lactate = 8
+    targets.urineOutputMlHr = 8
+  }
+  if (has('tension-pneumothorax')) targets.airwayPressure = 40
+  if (has('distal-limb-ischemia')) targets.distalLimbNirs = 28
+  return targets
+}
+
+/** Where a field's target came from, in the words the causal manifest uses. */
+export type PatientTargetOwner =
+  | 'generic-model'
+  | 'fault-story'
+  | 'case-authored'
+  | 'intervention-held'
+
+export interface ResolvedPatientTargets {
+  readonly targets: PatientTargetMap
+  readonly owners: Readonly<Record<RateLimitedPatientField, PatientTargetOwner>>
+}
+
+/**
+ * Whether a clinical case's anchor on this field still holds.
+ *
+ * Anchors hold while the case's presenting problem is active — including a recognition-only
+ * problem, which this engine keeps active after it is recognised. Once the presenting problem is
+ * corrected, the anchors on directional fields hand back to the model, because the case's authored
+ * abnormal values there (a low saturation, a low MAP, a high lactate) belong to the problem that was
+ * just treated; and so does any anchor on a field the presenting problem's own story targets. What
+ * remains held is the patient's background that the model has no relationship for — a recovered
+ * ventricle's native output and pulse pressure, a tamponade's narrow pulse pressure.
+ */
+export function patientAnchorApplies(
+  state: EcmoSimulationState,
+  field: RateLimitedPatientField,
+): boolean {
+  const ownership = state.scenario.patientOwnership
+  if (!ownership?.anchors[field]) return false
+  if (hasFault(state, ownership.presentingFault)) return true
+  if (PATIENT_FIELD_DYNAMICS[field].better) return false
+  return faultPatientTargets(state.supportMode, [ownership.presentingFault])[field] === undefined
+}
+
+/**
+ * The target every rate-limited patient field moves toward this second, and who owns it.
+ *
+ * One precedence rule for every field, in this order:
+ *
+ * 1. A newly active fault's story target (`fault-story`) can move a field despite an older held
+ *    intervention. Otherwise a non-temporizing intervention holds what it bought against faults
+ *    already present when it landed (`intervention-held`); only a temporizing patch fades back
+ *    toward the original story.
+ * 2. A clinical case's anchor (`case-authored` or `intervention-held`): the held level, moved only by
+ *    the change in the generic target since the level was set. A learner who raises the pump speed
+ *    against recirculation still watches saturation fall; a case left alone no longer drifts toward
+ *    a generic patient it was never describing.
+ * 3. Otherwise the generic relationship (`generic-model`).
+ *
+ * Scenarios without a clinical case carry no anchors, so for every Learn drill, reference circuit
+ * and integrated case this reduces exactly to "story target, else generic target" — the engine's
+ * behaviour before this function existed.
+ */
+export function resolvePatientTargets(
+  state: EcmoSimulationState,
+  flow: number,
+): ResolvedPatientTargets {
+  const generic = genericPatientTargets(state, flow)
+  const story = faultPatientTargets(state.supportMode, state.scenario.activeFaults)
+  const targets = {} as PatientTargetMap
+  const owners = {} as Record<RateLimitedPatientField, PatientTargetOwner>
+  for (const field of RATE_LIMITED_PATIENT_FIELDS) {
+    const anchor = patientAnchorApplies(state, field)
+      ? state.scenario.patientOwnership?.anchors[field]
+      : undefined
+    const storyTarget = story[field]
+    const newFaultStoryTarget =
+      anchor?.source === 'intervention'
+        ? faultPatientTargets(
+            state.supportMode,
+            state.scenario.activeFaults.filter(
+              (fault) => !anchor.activeFaultsAtSet?.includes(fault),
+            ),
+          )[field]
+        : undefined
+    let target: number
+    if (newFaultStoryTarget !== undefined) {
+      target = newFaultStoryTarget
+      owners[field] = 'fault-story'
+    } else if (storyTarget !== undefined) {
+      if (anchor?.source === 'intervention') {
+        target = anchor.level
+        owners[field] = 'intervention-held'
+      } else {
+        target = storyTarget
+        owners[field] = 'fault-story'
+      }
+    } else if (anchor) {
+      target = anchor.level + (generic[field] - anchor.reference)
+      owners[field] = anchor.source === 'intervention' ? 'intervention-held' : 'case-authored'
+    } else {
+      target = generic[field]
+      owners[field] = 'generic-model'
+    }
+    const range = PATIENT_FIELD_DYNAMICS[field].range
+    targets[field] = range ? clamp(target, range.low, range.high) : target
+  }
+  return { targets, owners }
+}
+
+/**
+ * Work of breathing, for the one relationship this model has for it: a VV patient who has been off
+ * sweep for twenty modeled seconds starts to breathe harder. Timed from when the sweep stopped, not
+ * from the case clock. Everywhere else the authored value stands — the model couples neither
+ * respiratory rate nor work of breathing to PaCO₂, pH or oxygenation, and says so where it matters.
+ */
+function deriveWorkOfBreathing(
+  state: EcmoSimulationState,
+  paCO2: number,
+): PatientState['workOfBreathing'] {
+  const stoppedAt = state.scenario.sweepStoppedAt
+  const offSweepSeconds =
+    state.gas.sweepLpm === 0 && stoppedAt !== undefined && stoppedAt !== null
+      ? state.simulationTime - stoppedAt
+      : null
+  if (state.supportMode === 'vv' && offSweepSeconds !== null && offSweepSeconds >= 20) {
+    return paCO2 > 55 ? 'high' : 'moderate'
+  }
+  return state.patient.workOfBreathing
+}
+
+const RESPIRATORY_RATE_BY_WORK_OF_BREATHING: Readonly<
+  Record<PatientState['workOfBreathing'], number>
+> = Object.freeze({ high: 32, moderate: 24, low: 18 })
+
+function derivePatient(
+  state: EcmoSimulationState,
+  flow: number,
+  landedFields: ReadonlySet<string>,
+): PatientState {
+  const { targets } = resolvePatientTargets(state, flow)
+  const moved = {} as PatientTargetMap
+  for (const field of RATE_LIMITED_PATIENT_FIELDS) {
+    const dynamics = PATIENT_FIELD_DYNAMICS[field]
+    // A patch that landed this second is what this second shows; it starts moving on the next.
+    moved[field] = landedFields.has(field)
+      ? state.patient[field]
+      : round(
+          moveToward(state.patient[field], targets[field], dynamics.maxChangePerSecond),
+          dynamics.places,
+        )
+  }
   const pH = round(
-    clamp(6.1 + Math.log10(state.patient.bicarbonate / (0.03 * Math.max(paCO2, 1))), 6.8, 7.7),
+    clamp(
+      6.1 + Math.log10(state.patient.bicarbonate / (0.03 * Math.max(moved.paCO2, 1))),
+      6.8,
+      7.7,
+    ),
     2,
   )
-  const workOfBreathing =
-    state.supportMode === 'vv' && state.gas.sweepLpm === 0 && state.simulationTime >= 20
-      ? paCO2 > 55
-        ? 'high'
-        : 'moderate'
-      : state.patient.workOfBreathing
+  const workOfBreathing = deriveWorkOfBreathing(state, moved.paCO2)
   const lvLoading = state.supportMode === 'va' && hasFault(state, 'lv-loading')
-  const nativeCardiacOutputLpm = round(
-    moveToward(
-      state.patient.nativeCardiacOutputLpm,
-      state.supportMode === 'va' ? (lvLoading ? 0.8 : 2.4) : 4.5,
-      0.15,
-    ),
-    1,
-  )
-  const pulsePressure = round(
-    moveToward(
-      state.patient.pulsePressure,
-      state.supportMode === 'va' ? (lvLoading ? 5 : 18) : 35,
-      2,
-    ),
-    0,
-  )
-  let targetMap =
-    state.supportMode === 'va' ? clamp(55 + flow * 4, 60, 80) : state.patient.meanArterialPressure
-  if (hasFault(state, 'hemorrhagic-hypovolemia')) targetMap = 46
-  if (hasFault(state, 'tension-pneumothorax')) targetMap = 42
-  if (hasFault(state, 'tamponade')) targetMap = 40
-  if (hasFault(state, 'vasoplegia')) targetMap = 48
-  if (hasFault(state, 'ecmo-not-initiated')) targetMap = state.supportMode === 'va' ? 38 : 68
-  const meanArterialPressure = round(
-    moveToward(state.patient.meanArterialPressure, targetMap, 1.2),
-    0,
-  )
-  const shockFault =
-    hasFault(state, 'hemorrhagic-hypovolemia') ||
-    hasFault(state, 'tension-pneumothorax') ||
-    hasFault(state, 'tamponade') ||
-    hasFault(state, 'vasoplegia') ||
-    (hasFault(state, 'ecmo-not-initiated') && state.supportMode === 'va')
-  const targetCvp = hasFault(state, 'hemorrhagic-hypovolemia')
-    ? 2
-    : hasFault(state, 'tension-pneumothorax')
-      ? 20
-      : hasFault(state, 'tamponade')
-        ? 22
-        : 8
-  const targetLactate = shockFault ? 8 : 1.8
-  const targetUrineOutput = shockFault ? 8 : 50
 
   return {
     ...state.patient,
-    paCO2,
-    spo2,
-    rightRadialSpo2,
-    femoralArterialSpo2,
+    ...moved,
     pH,
     workOfBreathing,
-    respiratoryRate: workOfBreathing === 'high' ? 32 : workOfBreathing === 'moderate' ? 24 : 18,
-    meanArterialPressure,
-    pulsePressure,
-    nativeCardiacOutputLpm,
+    // Respiratory rate follows work of breathing only when work of breathing changes. An authored
+    // rate stands until then; it used to be snapped to 18/24/32 on the first tick of every case.
+    respiratoryRate:
+      workOfBreathing === state.patient.workOfBreathing
+        ? state.patient.respiratoryRate
+        : RESPIRATORY_RATE_BY_WORK_OF_BREATHING[workOfBreathing],
     aorticValveOpening: state.supportMode === 'va' ? !lvLoading : true,
     pulmonaryCongestion: state.supportMode === 'va' ? (lvLoading ? 'marked' : 'mild') : 'none',
-    centralVenousPressure: round(
-      moveToward(state.patient.centralVenousPressure, targetCvp, 0.8),
-      0,
-    ),
-    lactate: round(moveToward(state.patient.lactate, targetLactate, 0.12), 1),
-    urineOutputMlHr: round(moveToward(state.patient.urineOutputMlHr, targetUrineOutput, 2), 0),
-    airwayPressure: round(
-      moveToward(
-        state.patient.airwayPressure,
-        hasFault(state, 'tension-pneumothorax') ? 40 : 24,
-        1,
-      ),
-      0,
-    ),
     lungSliding: hasFault(state, 'tension-pneumothorax')
       ? state.patient.lungSliding === 'absent-left'
         ? 'absent-left'
@@ -1338,15 +1713,24 @@ function derivePatient(state: EcmoSimulationState, flow: number): PatientState {
         ? 'critical'
         : 'threatened'
       : 'normal',
-    distalLimbNirs: round(
-      moveToward(
-        state.patient.distalLimbNirs,
-        hasFault(state, 'distal-limb-ischemia') ? 28 : 68,
-        1.5,
-      ),
-      0,
-    ),
   }
+}
+
+/**
+ * The saturation blood leaves the membrane at, once it has had time to settle (B6-007). With sweep
+ * flowing the oxygen fraction sets it; with no sweep it leaves at the saturation it arrived with; a
+ * resisted membrane is authored at 88. Approached at a bounded rate while the clock advances.
+ */
+export function derivePostOxygenatorTarget(
+  state: EcmoSimulationState,
+  systemicVenousSaturationEstimate: number,
+): number {
+  const gasDelivered = state.gas.sourceConnected && state.gas.sweepLpm > 0
+  return hasFault(state, 'oxygenator-resistance')
+    ? 88
+    : gasDelivered
+      ? round(96 + state.gas.fio2 * 3, 1)
+      : systemicVenousSaturationEstimate
 }
 
 export interface DeriveSimulationOptions {
@@ -1358,6 +1742,17 @@ export interface DeriveSimulationOptions {
    * unchanged simulation time (B6-012).
    */
   readonly advancePatient?: boolean
+  /**
+   * Patient fields an authored patch set at the start of this second. They show the patched value
+   * for this second and start moving on the next, so a patch is never eroded before it is seen.
+   */
+  readonly landedPatientFields?: ReadonlySet<string>
+  /**
+   * The one derivation a freshly built state receives. The patient is not advanced — loading a case
+   * is not a second of the clock — but the latent venous-saturation estimate, which is arithmetic on
+   * the loaded state rather than a physiological change, is computed so it does not start stale.
+   */
+  readonly atLoad?: boolean
 }
 
 export function deriveSimulation(
@@ -1365,7 +1760,19 @@ export function deriveSimulation(
   derivationOptions: DeriveSimulationOptions = {},
 ): EcmoSimulationState {
   const options = { advancePatient: true, ...derivationOptions }
-  let device = applyLpmControl(state)
+  const isNewClockSample = state.simulationTime > (state.trends.at(-1)?.time ?? -1)
+  /*
+   * Whether this derivation is a second of the clock, as opposed to a recomputation at an unchanged
+   * time — loading a case, or a control, clamp or correction applied at the current second.
+   *
+   * Everything that is a per-second process runs only here: the patient, the membrane outlet, the
+   * battery draining, haemoglobin drifting, the LPM loop trimming the speed, the backflow counter and
+   * the interlock's speed trim. Before ECMO-FELLOW-02 the battery, haemoglobin and LPM loop ran on
+   * every derivation, so the one derivation at load and every action-time recomputation spent a
+   * second of battery and moved haemoglobin without any time passing.
+   */
+  const clockAdvanced = options.advancePatient && isNewClockSample
+  let device = clockAdvanced ? applyLpmControl(state) : state.device
   const clinicalSupportInactive =
     state.scenario.clinical !== null && state.scenario.clinical.supportStatus !== 'on-ecmo'
   if (clinicalSupportInactive) device = { ...device, pumpRunning: false }
@@ -1374,17 +1781,16 @@ export function deriveSimulation(
     device = { ...device, pumpMode: 'rpm', displayedSetpoint: device.rpmSetpoint }
   }
 
-  if (device.powerSource === 'battery') {
+  if (clockAdvanced && device.powerSource === 'battery') {
     device = { ...device, batteryPercent: round(clamp(device.batteryPercent - 0.35, 0, 100), 1) }
   }
 
   let flow = calculateBloodFlow({ ...state, device }, device.rpmSetpoint)
-  const isNewClockSample = state.simulationTime > (state.trends.at(-1)?.time ?? -1)
   const backflowSeconds =
     device.zeroFlowActive && state.circuit.backflowSeconds >= 6
       ? state.circuit.backflowSeconds
       : flow < -0.1
-        ? state.circuit.backflowSeconds + (isNewClockSample ? 1 : 0)
+        ? state.circuit.backflowSeconds + (clockAdvanced ? 1 : 0)
         : 0
   if (backflowSeconds >= 6 && !device.zeroFlowActive && !device.globalOverride) {
     device = { ...device, zeroFlowActive: true }
@@ -1411,16 +1817,25 @@ export function deriveSimulation(
    * clock advances, so an action at an unchanged time cannot move it (B6-012), and so a value that
    * used to sit at 99 while the patient desaturated now falls with the trial that removed the gas.
    */
-  const gasDelivered = state.gas.sourceConnected && state.gas.sweepLpm > 0
-  const postOxygenatorTarget = hasFault(state, 'oxygenator-resistance')
-    ? 88
-    : gasDelivered
-      ? round(96 + state.gas.fio2 * 3, 1)
-      : systemicVenousSaturationEstimate
-  const postOxygenatorSaturation =
-    options.advancePatient && isNewClockSample
-      ? round(moveToward(state.circuit.postOxygenatorSaturation, postOxygenatorTarget, 2), 1)
-      : state.circuit.postOxygenatorSaturation
+  const ownership = state.scenario.patientOwnership
+  const modelPostOxygenatorTarget = derivePostOxygenatorTarget(
+    state,
+    systemicVenousSaturationEstimate,
+  )
+  // An authored membrane-outlet saturation holds like any other authored value while the presenting
+  // problem stands, moving only by what changes after load.
+  const postOxygenatorTarget =
+    ownership?.postOxygenator && hasFault(state, ownership.presentingFault)
+      ? clamp(
+          ownership.postOxygenator.level +
+            (modelPostOxygenatorTarget - ownership.postOxygenator.reference),
+          0,
+          100,
+        )
+      : modelPostOxygenatorTarget
+  const postOxygenatorSaturation = clockAdvanced
+    ? round(moveToward(state.circuit.postOxygenatorSaturation, postOxygenatorTarget, 2), 1)
+    : state.circuit.postOxygenatorSaturation
   const deltaP = round(pressures.pInt - pressures.pArt, 0)
   const venousLineSaturation = round(
     deriveDrainageSaturation(
@@ -1484,18 +1899,20 @@ export function deriveSimulation(
       pressures.pVen < -75,
     preOxygenatorSaturation: venousLineSaturation,
     postOxygenatorSaturation,
-    hemoglobin: round(
-      moveToward(
-        state.circuit.hemoglobin,
-        hasFault(state, 'hemorrhagic-hypovolemia') ? 6 : Math.max(9, state.circuit.hemoglobin),
-        hasFault(state, 'hemorrhagic-hypovolemia') ? 0.12 : 0.05,
-      ),
-      1,
-    ),
+    hemoglobin: clockAdvanced
+      ? round(
+          moveToward(
+            state.circuit.hemoglobin,
+            hasFault(state, 'hemorrhagic-hypovolemia') ? 6 : Math.max(9, state.circuit.hemoglobin),
+            hasFault(state, 'hemorrhagic-hypovolemia') ? 0.12 : 0.05,
+          ),
+          1,
+        )
+      : state.circuit.hemoglobin,
   }
 
   const deviceBeforeProtection = device
-  device = applyPressureIntervention(state, device, circuit)
+  device = applyPressureIntervention(state, device, circuit, clockAdvanced)
   /*
    * The model's protective stop, recorded as an event of the model's.
    *
@@ -1511,17 +1928,33 @@ export function deriveSimulation(
     circuit = { ...circuit, bloodFlow: 0 }
   }
 
-  // B6-012: at an unchanged clock the patient is exactly what it was. Only a tick may move it.
-  const patient: PatientState = options.advancePatient
+  // B6-012: at an unchanged clock the patient is exactly what it was. Only a tick may move it —
+  // including the load, which used to advance every patient one second at t = 0 (ECMO-FELLOW-02).
+  const patient: PatientState = clockAdvanced
     ? {
-        ...derivePatient({ ...state, device, circuit }, flow),
+        ...derivePatient(
+          { ...state, device, circuit },
+          flow,
+          options.landedPatientFields ?? new Set<string>(),
+        ),
         // Latent, estimated, and kept on the patient rather than the circuit so it can never be
         // mistaken for the console's venous-probe reading.
         systemicVenousSaturationEstimate: round(systemicVenousSaturationEstimate, 1),
       }
-    : state.patient
+    : options.atLoad
+      ? {
+          ...state.patient,
+          systemicVenousSaturationEstimate: round(systemicVenousSaturationEstimate, 1),
+        }
+      : state.patient
   const intermediate: EcmoSimulationState = {
     ...state,
+    scenario: protectionStoppedPump
+      ? {
+          ...state.scenario,
+          historySerial: (state.scenario.historySerial ?? state.history.length) + 1,
+        }
+      : state.scenario,
     device,
     circuit,
     patient,
@@ -1529,7 +1962,7 @@ export function deriveSimulation(
       ? [
           ...state.history,
           {
-            id: `system-${state.simulationTime}-${state.history.length}`,
+            id: `system-${state.simulationTime}-${state.scenario.historySerial ?? state.history.length}`,
             time: state.simulationTime,
             kind: 'system' as const,
             label:

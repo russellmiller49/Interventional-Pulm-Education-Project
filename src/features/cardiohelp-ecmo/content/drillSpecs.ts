@@ -301,7 +301,8 @@ const authored: readonly EcmoDrillSpec[] = [
         'Pump speed — not this setting. Sweep — this is the setting, and it goes up, in a small step. Oxygen fraction — not this setting. Clamps — not for this. Then let the response appear, and reassess the gas and the patient before the next step.',
     },
     transferPrinciple:
-      'One control for one axis, moved in bounded steps and reassessed, because the response is neither instant nor linear.',
+      // S11-2 (ECMO-FELLOW-02): the bedside claim now says what the simulation draws beside it.
+      'One control for one axis, moved in bounded steps and reassessed, because at the bedside the response is neither instant nor linear, even though this simulation draws it as a straight line over compressed modeled seconds.',
     precommitDenyPatterns: DENY.acuteCarbonDioxide,
     sourceIds: ['ecmo-book-ch16', 'ecmo-book-ch18', MODEL],
   }),

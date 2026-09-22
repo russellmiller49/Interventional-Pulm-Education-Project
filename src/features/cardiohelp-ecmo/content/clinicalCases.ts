@@ -310,6 +310,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         femoralArterialSpo2: 78,
         paCO2: 63,
         pH: 7.18,
+        meanArterialPressure: 70,
         respiratoryRate: 34,
         workOfBreathing: 'high',
         airwayPressure: 34,
@@ -1598,7 +1599,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           description: 'Attempt to correct vascular tone by escalating circuit flow.',
           effect: 'harmful',
           response:
-            'pVen becomes more negative and chatter begins without meaningful MAP improvement.',
+            'Flow rises and MAP does not: in this simulation pressure stays at the level the vascular-tone problem sets, and drainage pressure moves only slightly. At the bedside more speed in a vasodilated patient can also pull drainage pressure negative enough to start line chatter.',
           patch: { device: { rpmSetpoint: 4200 } },
           penalty: { id: 'unsafe-clinical-shortcut', points: 40, critical: true },
           simulatorAction: {

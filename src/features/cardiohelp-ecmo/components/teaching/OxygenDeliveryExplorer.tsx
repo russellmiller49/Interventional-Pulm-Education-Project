@@ -94,7 +94,8 @@ const CONTROLS: readonly ControlSpec[] = [
   {
     key: 'saturation',
     label: 'Arterial oxygen saturation',
-    unit: '',
+    // S1-5 (ECMO-FELLOW-02): a saturation carries its unit, as it does on the comparison table.
+    unit: '%',
     min: 65,
     max: 100,
     step: 1,
@@ -117,6 +118,12 @@ interface Preset {
   readonly key: keyof DeliveryInputs
   /** The value this comparison needs, before the control's own range is consulted. */
   readonly target: (opening: DeliveryInputs) => number
+  /**
+   * For a halving preset, the exact half. The control moves in fixed steps, so the preset sets the
+   * nearest step — 4.5 L/min halves to 2.3, not 2.25 — and the panel then says so and shows the
+   * delivery it actually produced, rather than letting "halve" promise an exact half (S1-5).
+   */
+  readonly exact?: (opening: DeliveryInputs) => number
 }
 
 /**
@@ -143,12 +150,14 @@ const PRESETS: readonly Preset[] = [
     label: 'Halve the hemoglobin',
     key: 'hemoglobin',
     target: (opening) => Math.round(opening.hemoglobin * 5) / 10,
+    exact: (opening) => opening.hemoglobin / 2,
   },
   {
     id: 'halve-cardiac-output',
     label: 'Halve the cardiac output',
     key: 'cardiacOutput',
     target: (opening) => Math.round(opening.cardiacOutput * 5) / 10,
+    exact: (opening) => opening.cardiacOutput / 2,
   },
 ]
 
@@ -208,6 +217,11 @@ export function OxygenDeliveryExplorer({
 
   const now = oxygenDeliveryFigures(inputs)
   const base = oxygenDeliveryFigures(opening)
+  const appliedPresetSpec = PRESETS.find((preset) => preset.id === appliedPresetId)
+  const appliedPreset = appliedPresetSpec
+    ? { ...resolvePreset(appliedPresetSpec, opening), exact: appliedPresetSpec.exact }
+    : null
+  const appliedExact = appliedPreset?.exact ? appliedPreset.exact(opening) : null
   const changed =
     inputs.hemoglobin !== opening.hemoglobin ||
     inputs.saturation !== opening.saturation ||
@@ -233,8 +247,8 @@ export function OxygenDeliveryExplorer({
         Move one component and watch the rest
       </h3>
       <p className="mt-2 text-sm leading-6">
-        These start at this patient&rsquo;s own values. Change any one of them and the two figures
-        below follow.
+        These start at the values of the simulated patient on the circuit beside you. Change any one
+        of them and the two figures below follow.
       </p>
 
       <div className="mt-3 grid gap-3">
@@ -264,7 +278,7 @@ export function OxygenDeliveryExplorer({
                 onChange={(event) => set(control.key, Number(event.target.value))}
               />
               <p className="text-xs leading-5 text-muted-foreground">
-                This patient opened at {format(openingValue, control.precision)}
+                Opened at {format(openingValue, control.precision)}
                 {control.unit ? ` ${control.unit}` : ''}.
               </p>
             </div>
@@ -281,8 +295,9 @@ export function OxygenDeliveryExplorer({
             {format(now.content, 1)} mL/dL
           </p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            {comparison(now.content, base.content, 0.05)} the {format(base.content, 1)} mL/dL this
-            patient opened with.
+            {comparison(now.content, base.content, 0.05)} the {format(base.content, 1)} mL/dL at the
+            opening values
+            {changed ? ` (${format((now.content / base.content) * 100, 0)}% of it)` : ''}.
           </p>
         </div>
         <div className="rounded-xl border p-3">
@@ -293,12 +308,30 @@ export function OxygenDeliveryExplorer({
             {format(now.delivery, 0)} mL/min
           </p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            {comparison(now.delivery, base.delivery, 5)} the {format(base.delivery, 0)} mL/min this
-            patient opened with.
+            {comparison(now.delivery, base.delivery, 5)} the {format(base.delivery, 0)} mL/min at
+            the opening values
+            {changed ? ` (${format((now.delivery / base.delivery) * 100, 0)}% of it)` : ''}.
           </p>
         </div>
       </div>
 
+      {appliedPreset?.exact && appliedPreset.inputs[appliedPreset.preset.key] !== appliedExact ? (
+        <p className="mt-2 text-xs leading-5 text-muted-foreground" data-delivery-nearest-step>
+          This control moves in steps of {CONTROL_BY_KEY[appliedPreset.preset.key].step}{' '}
+          {CONTROL_BY_KEY[appliedPreset.preset.key].unit}, so half of{' '}
+          {format(
+            opening[appliedPreset.preset.key],
+            CONTROL_BY_KEY[appliedPreset.preset.key].precision,
+          )}{' '}
+          is set to the nearest step,{' '}
+          {format(
+            appliedPreset.inputs[appliedPreset.preset.key],
+            CONTROL_BY_KEY[appliedPreset.preset.key].precision,
+          )}
+          , and delivery is {format((now.delivery / base.delivery) * 100, 0)}% of the opening value
+          rather than exactly half.
+        </p>
+      ) : null}
       <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Comparisons to try">
         {PRESETS.map((preset) => {
           const resolved = resolvePreset(preset, opening)
@@ -332,7 +365,7 @@ export function OxygenDeliveryExplorer({
           disabled={!changed}
           onClick={reset}
         >
-          <RotateCcw aria-hidden="true" className="size-3" /> Back to this patient
+          <RotateCcw aria-hidden="true" className="size-3" /> Back to the opening values
         </button>
       </div>
 
@@ -346,14 +379,15 @@ export function OxygenDeliveryExplorer({
 
       <TextEquivalent>
         With a hemoglobin of {format(inputs.hemoglobin, 1)} g/dL, an arterial saturation of{' '}
-        {format(inputs.saturation, 0)} and a cardiac output of {format(inputs.cardiacOutput, 1)}{' '}
+        {format(inputs.saturation, 0)}% and a cardiac output of {format(inputs.cardiacOutput, 1)}{' '}
         L/min, each decilitre of arterial blood carries {format(now.content, 1)} mL of oxygen and{' '}
-        {format(now.delivery, 0)} mL of oxygen reaches the tissues each minute. This patient opened
-        with {format(opening.hemoglobin, 1)} g/dL, a saturation of {format(opening.saturation, 0)}{' '}
+        {format(now.delivery, 0)} mL of oxygen reaches the tissues each minute. The opening values
+        were {format(opening.hemoglobin, 1)} g/dL, a saturation of {format(opening.saturation, 0)}%{' '}
         and {format(opening.cardiacOutput, 1)} L/min, giving {format(base.content, 1)} mL/dL and{' '}
         {format(base.delivery, 0)} mL/min. In this arithmetic the saturation enters as a fraction,
         so taking ten off it near the top of the scale moves delivery by about a tenth, while
         hemoglobin and flow each enter as themselves — halve either one and delivery halves with it.
+        Each control moves in fixed steps, so a halving button sets the nearest step to half.
       </TextEquivalent>
 
       <ModelBoundary>

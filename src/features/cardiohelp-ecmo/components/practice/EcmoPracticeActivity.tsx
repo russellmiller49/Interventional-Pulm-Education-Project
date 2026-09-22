@@ -35,6 +35,8 @@ import {
   ActionPanel,
   ClinicalCaseBrief,
   PredictionPanel,
+  MODELED_TIME_NOTE,
+  PRESENTATION_DATA_NOTE,
   ReassessmentPanel,
   advanceSimulation,
 } from '../PracticeCasePlayer'
@@ -725,7 +727,11 @@ export function EcmoPracticeCaseView({
             }
           >
             {clinicalCase && (briefAcknowledged || facts.planComplete) ? (
-              <dl className={styles.caseData} aria-label="Case data">
+              <dl className={styles.caseData} aria-label="Case data at presentation">
+                <div data-presentation-note>
+                  <dt>Case data</dt>
+                  <dd>{PRESENTATION_DATA_NOTE}</dd>
+                </div>
                 {clinicalCase.data.map((item) => (
                   <div key={item.label} data-trend={item.trend ?? 'stable'}>
                     <dt>{item.label}</dt>
@@ -863,10 +869,16 @@ export function EcmoPracticeCaseView({
             <div className={styles.clockStrip} aria-label="Simulation clock" role="group">
               <Clock3 aria-hidden="true" />
               <span>
-                <strong>{state.simulationTime} s</strong> {state.paused ? 'paused' : 'running'}
+                <strong>{state.simulationTime} modeled s</strong>{' '}
+                {state.scenario.phase === 'complete'
+                  ? 'stopped at the reveal'
+                  : state.paused
+                    ? 'paused'
+                    : 'running'}
               </span>
               <button
                 type="button"
+                disabled={state.scenario.phase === 'complete'}
                 onClick={() => dispatch({ type: 'SET_PAUSED', paused: !state.paused })}
               >
                 {state.paused ? (
@@ -876,9 +888,14 @@ export function EcmoPracticeCaseView({
                 )}
                 {state.paused ? 'Run clock' : 'Pause clock'}
               </button>
-              <button type="button" onClick={() => dispatch({ type: 'STEP' })}>
-                <StepForward aria-hidden="true" /> Step 1 second
+              <button
+                type="button"
+                disabled={state.scenario.phase === 'complete'}
+                onClick={() => dispatch({ type: 'STEP' })}
+              >
+                <StepForward aria-hidden="true" /> Step 1 modeled second
               </button>
+              <small data-time-scale>{MODELED_TIME_NOTE}</small>
             </div>
           </div>
           {activeStage === 'manage' || activeStage === 'reassess' ? (

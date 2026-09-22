@@ -638,7 +638,7 @@ const rows: readonly MatrixRow[] = [
         discriminator:
           'A falling mean pressure with circuit flow maintained is what makes tone the explanation rather than flow.',
         limitation:
-          'None of the VA states this lesson loads carries vasoplegia, and in this simulation the modeled mean arterial pressure is generated from circuit flow, so it barely moves across those states. This column is authored teaching the states here cannot demonstrate.',
+          'None of the VA states this lesson loads carries vasoplegia, and in those states this simulation generates the modeled mean arterial pressure from circuit flow, so it barely moves across them. In the Practice vasoplegia case the model instead holds pressure at the level the tone problem sets, and more circuit flow does not move it at all; neither is a bedside relationship. This column is authored teaching the states here cannot demonstrate.',
       },
     },
   },
@@ -765,7 +765,7 @@ const rows: readonly MatrixRow[] = [
 const modelLimitations: readonly { readonly id: string; readonly text: string }[] = [
   {
     id: 'no-vasoplegia-state',
-    text: 'None of the VA states this lesson loads carries vasoplegia. The modeled mean arterial pressure here is generated from circuit flow, so it barely moves across those states, and nothing you can load will show you a pressure falling while circuit flow is maintained. The vasoplegia column is authored teaching supported by the sources rather than a preview you can open — which also means the reflex it warns against, reaching for pump speed when the pressure falls, cannot be played out here.',
+    text: 'None of the VA states this lesson loads carries vasoplegia. In those states the modeled mean arterial pressure is generated from circuit flow, so it barely moves across them, and nothing you can load here will show you a pressure falling while circuit flow is maintained. The Practice vasoplegia case does, and there the model sets pressure from the tone problem alone, so more circuit flow does not move it at all — a simplification in the other direction, not a bedside relationship. The vasoplegia column is authored teaching supported by the sources rather than a preview you can open here.',
   },
   {
     id: 'limb-fixed-across-states',

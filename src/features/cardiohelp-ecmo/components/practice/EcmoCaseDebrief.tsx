@@ -19,10 +19,10 @@ import type {
   ReassessmentQuestion,
   ScenarioDefinition,
   SupportMode,
-  TrendSample,
 } from '../../engine/types'
 import { EcmoSourceList } from '../evidence/EcmoSourceList'
 import styles from '../cardiohelp-ecmo.module.css'
+import { buildDebriefTimeline, changesAtAction, describeSignalChange } from './debriefTimeline'
 import { describeSafetyEvents } from './safetyLabels'
 
 /**
@@ -99,45 +99,16 @@ function planRows(state: EcmoSimulationState, scenario: ScenarioDefinition): rea
   ]
 }
 
-function sampleAt(trends: readonly TrendSample[], time: number): TrendSample | undefined {
-  let best: TrendSample | undefined
-  for (const sample of trends) {
-    if (sample.time <= time) best = sample
-    else break
-  }
-  return best
-}
-
-function delta(before: number | undefined, after: number | undefined, digits: number): string {
-  if (before === undefined || after === undefined) return 'no sample'
-  const change = after - before
-  if (Math.abs(change) < 10 ** -digits / 2) return 'unchanged'
-  return `${change > 0 ? '+' : '−'}${Math.abs(change).toFixed(digits)}`
-}
-
-function patientConsequence(
-  trends: readonly TrendSample[],
-  from: number,
-  to: number,
-): readonly { readonly label: string; readonly value: string }[] {
-  const before = sampleAt(trends, from)
-  const after = sampleAt(trends, to)
-  return [
-    { label: 'Circuit flow', value: `${delta(before?.flow, after?.flow, 2)} L/min` },
-    { label: 'SpO₂', value: `${delta(before?.spo2, after?.spo2, 1)} %` },
-    { label: 'PaCO₂', value: `${delta(before?.paCO2, after?.paCO2, 0)} mm Hg` },
-    { label: 'MAP', value: `${delta(before?.map, after?.map, 0)} mm Hg` },
-  ]
-}
-
 function DomainComparison({
   domain,
   question,
   selectedId,
+  modelBoundary,
 }: {
   domain: ReassessmentDomain
   question: ReassessmentQuestion
   selectedId: string
+  modelBoundary?: string
 }) {
   const selected = question.options.find((option) => option.id === selectedId)
   const expected = question.options.find((option) => option.id === question.correctOptionId)
@@ -151,16 +122,24 @@ function DomainComparison({
   return (
     <li data-domain={domain} data-matched={matched}>
       <strong>{label}</strong>
+      {/*
+       * ECMO-FELLOW-02: the key is the response this case expects — an authored teaching
+       * expectation — and it used to be labelled "the modeled response", a claim that the monitor
+       * had shown it. Where the case names a finding this model does not produce, it says so here.
+       */}
       <span>
         You recorded: {selected?.label ?? 'nothing recorded'}
-        {matched ? ' · this is the modeled response.' : ''}
+        {matched ? ' · this is the response this case expects.' : ''}
       </span>
       {selected?.rationale ? <small>{selected.rationale}</small> : null}
       {!matched && expected ? (
         <>
-          <span>Modeled response: {expected.label}</span>
+          <span>The response this case expects: {expected.label}</span>
           {expected.rationale ? <small>{expected.rationale}</small> : null}
         </>
+      ) : null}
+      {modelBoundary ? (
+        <small data-model-boundary="response">Not shown by this simulation: {modelBoundary}</small>
       ) : null}
     </li>
   )
@@ -239,27 +218,8 @@ export function EcmoCaseDebrief({
   const concepts = (assumedConceptIds ?? [])
     .map((id) => criticalCareConceptById.get(id))
     .filter((concept): concept is NonNullable<typeof concept> => Boolean(concept))
-  const actionEntries = clinical
-    ? clinical.appliedInterventions.map((record, index, all) => ({
-        id: record.id,
-        time: record.time,
-        label: record.label,
-        immediate: record.response,
-        effect: record.effect,
-        until: all[index + 1]?.time ?? state.simulationTime,
-      }))
-    : state.history
-        .filter(
-          (entry) => entry.kind === 'action' && !/prediction|reassessment|clue/i.test(entry.label),
-        )
-        .map((entry, index, all) => ({
-          id: entry.id,
-          time: entry.time,
-          label: entry.label,
-          immediate: null,
-          effect: null,
-          until: all[index + 1]?.time ?? state.simulationTime,
-        }))
+  const timeline = buildDebriefTimeline(state)
+  const actionCount = timeline.reduce((total, group) => total + group.entries.length, 0)
 
   return (
     <div className={styles.debriefPanel} data-case-debrief>
@@ -294,14 +254,23 @@ export function EcmoCaseDebrief({
       </Block>
 
       <Block heading="What you did">
-        {actionEntries.length === 0 ? (
+        {actionCount === 0 ? (
           <p>No action was recorded in this run.</p>
         ) : (
           <ol className={styles.debriefTimeline}>
-            {actionEntries.map((entry) => (
-              <li key={entry.id} data-effect={entry.effect ?? undefined}>
-                <time>{entry.time} s</time>
-                <span>{entry.label}</span>
+            {timeline.map((group) => (
+              <li key={group.time} data-debrief-second={group.time}>
+                <time>{group.time} s</time>
+                <span>
+                  {group.entries.map((entry) => entry.label).join(' · ')}
+                  {group.entries.length > 1 ? (
+                    <small data-same-second>
+                      {' '}
+                      — {group.entries.length} actions in the same modeled second; the clock did not
+                      advance between them.
+                    </small>
+                  ) : null}
+                </span>
               </li>
             ))}
           </ol>
@@ -309,28 +278,72 @@ export function EcmoCaseDebrief({
       </Block>
 
       <Block heading="Action, response, and what the patient did">
-        {actionEntries.length === 0 ? (
+        {actionCount === 0 ? (
           <p>Nothing to compare: no action was applied before the reveal.</p>
         ) : (
-          <ol className={styles.consequenceList}>
-            {actionEntries.map((entry) => (
-              <li key={entry.id}>
-                <strong>
-                  {entry.time} s · {entry.label}
-                </strong>
-                {entry.immediate ? <span>Immediate: {entry.immediate}</span> : null}
-                <dl aria-label="Patient and circuit change until the next action">
-                  {patientConsequence(state.trends, entry.time, entry.until).map((item) => (
-                    <div key={item.label}>
-                      <dt>{item.label}</dt>
-                      <dd>{item.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-                <small data-badge>Simulated values from the bounded teaching model</small>
-              </li>
-            ))}
-          </ol>
+          <>
+            <p className={styles.debriefNote}>
+              Each comparison names its own pair of readings. Circuit, device, and external gas
+              settings can change at an action without advancing the clock; a patient change an
+              action earns appears from the next modeled second. Modeled seconds are compressed:
+              they are not a bedside time course.
+            </p>
+            <ol className={styles.consequenceList}>
+              {timeline.map((group) => (
+                <li key={group.time} data-debrief-group={group.time}>
+                  <strong>At {group.time} s</strong>
+                  {group.entries.map((entry) => {
+                    const atAction = entry.observation ? changesAtAction(entry.observation) : null
+                    return (
+                      <div key={entry.id} className={styles.debriefAction} data-debrief-action>
+                        <span>{entry.label}</span>
+                        {entry.authoredResponse ? (
+                          <small>Case description: {entry.authoredResponse}</small>
+                        ) : null}
+                        <small data-at-action>
+                          {atAction === null
+                            ? 'No reading was recorded at this action.'
+                            : atAction.length === 0
+                              ? 'At the action: no change in the pump, flow, pressure, or settings compared here.'
+                              : `At the action: ${atAction.map(describeSignalChange).join('; ')}.`}
+                        </small>
+                      </div>
+                    )
+                  })}
+                  {group.intervalSeconds === 0 ? (
+                    <small data-interval="none">
+                      No modeled time passed before{' '}
+                      {group === timeline.at(-1) ? 'the reveal' : 'the next action'}, so no later
+                      response could appear.
+                    </small>
+                  ) : (
+                    <dl className={styles.debriefChips} data-interval={group.intervalSeconds}>
+                      <div>
+                        <dt>
+                          This run, {group.time} → {group.intervalEndTime} s (
+                          {group.intervalSeconds} modeled s)
+                        </dt>
+                        <dd>
+                          {group.interval
+                            ? group.interval.map(describeSignalChange).join('; ')
+                            : 'No reading was recorded for this interval.'}
+                        </dd>
+                      </div>
+                      <div data-untreated>
+                        <dt>Same case left untreated from the start, same seconds</dt>
+                        <dd>
+                          {group.untreated
+                            ? group.untreated.map(describeSignalChange).join('; ')
+                            : 'Not available.'}
+                        </dd>
+                      </div>
+                    </dl>
+                  )}
+                  <small data-badge>Simulated values from the bounded teaching model</small>
+                </li>
+              ))}
+            </ol>
+          </>
         )}
         {clinical && clinicalCase ? (
           <p>
@@ -395,6 +408,7 @@ export function EcmoCaseDebrief({
               domain="patient"
               question={reassessment.patient}
               selectedId={submitted.patientOptionId}
+              modelBoundary={reassessment.modelBoundary}
             />
           </ul>
         ) : null}
