@@ -86,34 +86,44 @@ export function McsUnloadingComparison() {
                 Filling input: {preloadPercent}% of the model reference. This input is not a
                 measured blood volume or a clinical target.
               </p>
-              <table>
-                <caption>
-                  Provided outputs at {changed.timeSeconds.toFixed(2)} simulated seconds
-                </caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Modeled quantity</th>
-                    <th scope="col">P5 control</th>
-                    <th scope="col">P{level}</th>
-                    <th scope="col">Difference at the same instant</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mcsUnloadingSignals.map(([key, name, unit, digits]) => (
-                    <tr key={key} data-unloading-signal={key}>
-                      <th scope="row">
-                        {name}
-                        <small>{unit}</small>
-                      </th>
-                      <td>{control.metrics[key].toFixed(digits)}</td>
-                      <td>{changed.metrics[key].toFixed(digits)}</td>
-                      <td data-unloading-delta={key}>
-                        {deltaText(control.metrics[key], changed.metrics[key], unit, digits)}
-                      </td>
+              <p className={styles.tableHint}>
+                Scroll the table horizontally if all columns are not visible.
+              </p>
+              <div
+                className={styles.tableScroll}
+                role="region"
+                aria-label={`${label} pressure and flow comparison`}
+                tabIndex={0}
+              >
+                <table>
+                  <caption>
+                    Provided outputs at {changed.timeSeconds.toFixed(2)} simulated seconds
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Modeled quantity</th>
+                      <th scope="col">P5 control</th>
+                      <th scope="col">P{level}</th>
+                      <th scope="col">Difference at the same instant</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {mcsUnloadingSignals.map(([key, name, unit, digits]) => (
+                      <tr key={key} data-unloading-signal={key}>
+                        <th scope="row">
+                          {name}
+                          <small>{unit}</small>
+                        </th>
+                        <td>{control.metrics[key].toFixed(digits)}</td>
+                        <td>{changed.metrics[key].toFixed(digits)}</td>
+                        <td data-unloading-delta={key}>
+                          {deltaText(control.metrics[key], changed.metrics[key], unit, digits)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
               <p data-unloading-delta-caption>{MCS_UNLOADING_DELTA_CAPTION}</p>
               <p data-unloading-interpretation>
                 Compared with continued P5, LV volume{' '}
