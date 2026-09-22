@@ -72,11 +72,17 @@ export function scopeGoalTestMet(test: ScopeGoalTest, state: ScopeState): boolea
 /**
  * What a met goal is a statement about: something that happened, or something that is true now.
  *
- * A goal written over events (`event`, `event-sequence`, `without`) records the attempt — it stays
- * met after the tip has moved on, and after the picture has stopped being the one the goal was met
- * in. A goal written over the state (`location`, `metric`, `ledger`, `bench-target`) is a live
- * reading and stops holding when the state changes. The Now card says which kind it is showing, so
- * a row of ticks beside a lost view is not read as a statement about the present (A4, A5).
+ * `history` is anything that stays met once it has been earned, whatever the tip does next — the
+ * events of the attempt (`event`, `event-sequence`, `without`) and the inspection record
+ * (`ledger`, `ledger-complete`), which keeps every declaration and observation after the scope has
+ * left the airway they were made in. `current` is a live reading that stops holding when the state
+ * changes: where the tip is (`location`), what a control or the geometry reads (`metric`,
+ * `bench-target`). The card says which kind it is showing, so a row of ticks beside a lost view is
+ * not read as a statement about the present (A4, A5).
+ *
+ * The distinction is what the predicate can still establish later, not which syntax it uses: a
+ * cumulative record is history even though it is read out of the current state object (BF
+ * PR-254 independent review, finding 2).
  *
  * Neither kind is evidence that the image shows an open lumen: this model counts contacts, lost
  * views and positions, and has no measure of what the picture looks like.
@@ -88,11 +94,11 @@ export function scopeGoalClaim(test: ScopeGoalTest): ScopeGoalClaim {
     case 'event':
     case 'event-sequence':
     case 'without':
+    case 'ledger':
+    case 'ledger-complete':
       return 'history'
     case 'location':
     case 'metric':
-    case 'ledger':
-    case 'ledger-complete':
     case 'bench-target':
       return 'current'
     case 'all': {
