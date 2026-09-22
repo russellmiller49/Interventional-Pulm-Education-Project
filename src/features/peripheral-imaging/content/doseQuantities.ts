@@ -36,7 +36,7 @@ export const DOSE_QUANTITIES: readonly DoseQuantityRow[] = [
     name: 'Kerma–area product (KAP, also called DAP)',
     unit: 'Gy·cm²',
     tells:
-      'Air kerma multiplied by the beam area at the same plane. It stays the same along the beam, because the area grows as the kerma falls.',
+      'Air kerma integrated over the beam area. In this model’s uniform free-air field, it is air kerma multiplied by area and is equal at the two displayed planes.',
     doesNot:
       'It is not skin dose or organ dose. Collimation can lower it while automatic exposure regulation raises the air kerma in the remaining field.',
     sourceIds: ['wabip', 'aapm12', 'tg125'],

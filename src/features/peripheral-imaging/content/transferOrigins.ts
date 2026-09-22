@@ -91,8 +91,8 @@ export function transferReviewTitle(origin: TransferOrigin): string {
 }
 
 /**
- * The instruction under that heading: which section the question belongs to, whether the learner
- * has met it before, and that it is optional — answer, show the explanation, or continue.
+ * The instruction under that heading: which section the question belongs to, where the course
+ * presents it, and that it is optional — answer, show the explanation, or continue.
  */
 export function transferReviewInstruction(origin: TransferOrigin): string {
   const belongs = `Section ${origin.origin.number} (${origin.origin.title})`
@@ -102,7 +102,7 @@ export function transferReviewInstruction(origin: TransferOrigin): string {
       ? `This question reviews ${belongs}.`
       : first.sectionId === origin.origin.sectionId
         ? `This is the check question from ${belongs}, asked again.`
-        : `This question reviews ${belongs}; you first met it at the end of Section ${first.number} (${first.title}).`
+        : `This question reviews ${belongs}; it first appears at the end of Section ${first.number} (${first.title}).`
   return `${met} It is optional review: answer it, show the explanation, or continue without answering.`
 }
 

@@ -82,7 +82,7 @@ export const RECONSTRUCTION_ACCOUNTS: readonly ReconstructionAccount[] = [
     name: 'Cone-beam CT (CBCT)',
     inShort: 'Projections from a wide rotation, and a volume comes back.',
     analogy:
-      'Think of a sculptor working from photographs taken all the way around: with every direction acquired, nothing inside the reconstruction volume has to be inferred, and the picture simply stops at its edge.',
+      'Think of a sculptor working from photographs taken from many directions: projections from a wide rotation are reconstructed into a volume.',
     measured:
       'Hundreds of projections acquired as the C-arm rotates around the patient during the CBCT spin, so the same tissue is seen from directions that differ by a large angle.',
     built: [

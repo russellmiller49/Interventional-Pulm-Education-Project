@@ -385,8 +385,9 @@ export function ImagingQuestionPanels() {
                           strokeWidth="0.8"
                         />
                         <text
-                          x="96"
+                          x="120"
                           y="104"
+                          textAnchor="middle"
                           fill="#8de7d1"
                           fontSize="9"
                           data-figure-label="sampling-component"
@@ -480,6 +481,12 @@ function ProvenanceFlow({ modality }: { readonly modality: 'dts' | 'cbct' }) {
       data-provenance-modality={modality}
     >
       <p className={styles.kicker}>From acquisition to guidance</p>
+      {modality === 'cbct' ? (
+        <p role="note" data-cbct-provenance-review>
+          Draft CBCT provenance account — awaiting source-owner review for the platform and protocol
+          described. Image review, navigation target update and overlay are separate capabilities.
+        </p>
+      ) : null}
       <ol>
         <li>
           <strong>Acquired now</strong>
@@ -490,11 +497,11 @@ function ProvenanceFlow({ modality }: { readonly modality: 'dts' | 'cbct' }) {
           </span>
         </li>
         <li>
-          <strong>Prior anatomy</strong>
+          <strong>{modality === 'dts' ? 'Prior anatomy' : 'Separate capabilities'}</strong>
           <span>
             {modality === 'dts'
               ? 'Planning CT may contribute prior anatomical information in some reconstruction methods.'
-              : 'The planning CT is not part of a CBCT reconstruction; it enters only through registration for navigation or an overlay, which has to be verified separately.'}
+              : 'Do not assume that viewing or exporting a volume updates the navigation target or provides an augmented-fluoroscopy overlay.'}
           </span>
         </li>
         <li>

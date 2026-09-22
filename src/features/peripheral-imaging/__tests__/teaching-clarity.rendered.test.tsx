@@ -4,6 +4,8 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { ImagingIntegratedCaseActivity } from '../components/ImagingIntegratedCaseActivity'
 import { PeripheralImagingIntegratedCasesLanding } from '../components/PeripheralImagingIntegratedCasesLanding'
 import { PeripheralImagingLearnLanding } from '../components/PeripheralImagingLearnLanding'
+import { ChainWalkCard } from '../components/stage/ChainWalkCard'
+import { SectionGlossary } from '../components/stage/SectionGlossary'
 import { LabDock } from '../components/suite/LabDock'
 import { DosePanels } from '../components/suite/views/DoseView'
 import { SignalReadout } from '../components/suite/views/SignalView'
@@ -182,7 +184,7 @@ describe('report CW1 — a reused closing question is labelled review, links its
     expect(link.getAttribute('href')).toBe(sectionHref('projection'))
     expect(link.textContent).toContain(`Section ${origin.origin.number}`)
     expect(document.querySelector('[data-now-focus] p')?.textContent).toMatch(
-      /you first met it at the end of Section 6/,
+      /it first appears at the end of Section 6/,
     )
     const step = lesson.steps[lesson.transferStepIndex]
     if (step.interaction.kind !== 'prediction') throw new Error('unreachable')
@@ -367,7 +369,7 @@ describe('reports 4.1 and 5.1 — the reconstruction comparison leads with the a
     )!
     expect(comparison).not.toBeNull()
     expect(comparison.querySelector('[data-reconstruction-analogy]')?.textContent).toMatch(
-      /every direction acquired/,
+      /projections from a wide rotation/,
     )
     expect(
       comparison
@@ -391,6 +393,11 @@ describe('report 5.4 — the provenance flow speaks the modality of the section 
     expect(flow.getAttribute('data-provenance-modality')).toBe('cbct')
     expect(flow.textContent).toMatch(/projections from the CBCT spin/)
     expect(flow.textContent).not.toMatch(/limited-angle/)
+    expect(flow.querySelector('[data-cbct-provenance-review]')?.textContent).toMatch(
+      /awaiting source-owner review/,
+    )
+    expect(flow.textContent).not.toMatch(/planning CT is not part|enters only/)
+    expect(flow.textContent).toMatch(/Do not assume that viewing or exporting/)
     cleanup()
     localStorage.clear()
     mountSection('dts-interpretation')
@@ -522,5 +529,29 @@ describe('reports IC4 and O2 — the Safety decision tag is explained, and the m
     expect(document.querySelector('[data-learn-lede]')?.textContent).toMatch(
       /digital tomosynthesis \(DTS\) and cone-beam CT \(CBCT\)/,
     )
+  })
+})
+
+describe('independent review — owner holds stay visible', () => {
+  it.each(['source', 'detector'] as const)(
+    'marks the %s ownership account as a draft',
+    (stopId) => {
+      render(<ChainWalkCard stopId={stopId} stepId="review" />)
+      const note = document.querySelector('[data-pulse-ownership-review]')!
+      expect(note.textContent).toMatch(
+        /Draft control-ownership account.*awaiting source-owner review/,
+      )
+      expect(note.closest('dd')?.textContent).toMatch(/generator/)
+    },
+  )
+
+  it.each([
+    ['field', 'binning'],
+    ['current-anatomy', 'stored-contour'],
+  ] as const)('renders the held definition in %s with its review status', (sectionId, term) => {
+    render(<SectionGlossary sectionId={sectionId} variant="teaching" />)
+    const entry = document.querySelector(`[data-glossary-term="${term}"]`)!
+    expect(entry.getAttribute('data-glossary-status')).toBe('drafted')
+    expect(entry.querySelector('small')?.textContent).toMatch(/awaiting the owner’s review/)
   })
 })

@@ -314,7 +314,7 @@ export const GLOSSARY_TERMS: readonly GlossaryTerm[] = Object.freeze([
     term: 'Iterative reconstruction',
     pattern: /iterative reconstruction/i,
     definition:
-      'A reconstruction that compares the acquired projections with projections predicted from an estimated volume, and revises the estimate until they agree.',
+      'A reconstruction that compares the acquired projections with projections predicted from an estimated volume.',
     provenance: {
       kind: 'section-teaching',
       sectionId: 'dts-interpretation',

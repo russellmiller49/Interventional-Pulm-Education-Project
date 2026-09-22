@@ -1213,7 +1213,16 @@ async function helpTextReachability(page: Page) {
       if (!text.textContent?.trim()) continue
       // Text inside a closed disclosure is collapsed by design, not clipped: Chrome still reports
       // layout rectangles for it. The open state is checked by the tests that open it.
-      if (text.parentElement?.closest('details:not([open])')) continue
+      let ancestor = text.parentElement
+      let collapsed = false
+      while (ancestor) {
+        if (ancestor.matches('details:not([open])')) {
+          const summary = ancestor.querySelector(':scope > summary')
+          if (!summary?.contains(text)) collapsed = true
+        }
+        ancestor = ancestor.parentElement
+      }
+      if (collapsed) continue
       const range = document.createRange()
       range.selectNodeContents(text)
       const count = range.getClientRects().length
@@ -1376,6 +1385,16 @@ test('Help keeps longer existing content reachable and keyboard navigation modal
     })
     expect(visible).toBe(true)
     await capture(page, info, `help-long-${colorScheme}-bottom.png`)
+    await page.keyboard.press('Tab')
+    const terms = dialog.locator('[data-section-glossary="help"]')
+    await expect(terms.locator(':scope > summary')).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(terms).toHaveAttribute('open', '')
+    expect((await helpTextReachability(page)).failures).toEqual([])
+    await page.keyboard.press('Enter')
+    await expect(terms).not.toHaveAttribute('open', '')
+    await page.keyboard.press('Shift+Tab')
+    await expect(locate).toBeFocused()
     await page.keyboard.press('Shift+Tab')
     await expect(close).toBeFocused()
     await settleHelp(page)
@@ -2640,7 +2659,11 @@ test('report CW3, O2 and CW4: a deep-linked section defines its own terms, shows
       return Boolean(nav.compareDocumentPosition(terms) & Node.DOCUMENT_POSITION_FOLLOWING)
     }),
   ).toBe(true)
-  await dialog.locator('[data-section-glossary="help"] summary').click()
+  const termsSummary = dialog.locator('[data-section-glossary="help"] > summary')
+  await termsSummary.focus()
+  await expect(termsSummary).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(dialog.locator('[data-section-glossary="help"]')).toHaveAttribute('open', '')
   await expect(dialog.locator('[data-glossary-term="dts"]')).toBeVisible()
   await expect(dialog.locator('[data-help-models]')).toBeVisible()
   await settleHelp(page)
@@ -2666,7 +2689,7 @@ test('report CW1: a reused closing question is labelled optional review with a l
   const origin = page.locator('[data-transfer-origin="projection"] [data-transfer-origin-link]')
   await expect(origin).toHaveAttribute('href', /section=projection/)
   await expect(page.locator('[data-now-focus]')).toContainText(
-    'you first met it at the end of Section 6',
+    'it first appears at the end of Section 6',
   )
   await capture(page, info, 'fellow3-cw1-review-1440.png')
   // The explanation opens before any answer.
@@ -2739,6 +2762,7 @@ test('report PR4 and CW5: the eccentric rEBUS case is offered from Section 1 and
 
 for (const condition of [
   { name: '1440x900', width: 1440, height: 900, root: 100 },
+  { name: '1280x900', width: 1280, height: 900, root: 100 },
   { name: '1024x768', width: 1024, height: 768, root: 100 },
   { name: '390x844', width: 390, height: 844, root: 100 },
   { name: '320x740', width: 320, height: 740, root: 100 },
@@ -2765,6 +2789,12 @@ for (const condition of [
       comparison.locator('[data-reconstruction-figure="tomosynthesis"] svg'),
     ).toBeVisible()
     await expect(comparison.locator('[data-reconstruction-table]')).toBeVisible()
+    if (condition.width <= 640) {
+      await expect(comparison.locator('[data-reconstruction-table] tbody td').first()).toHaveCSS(
+        'display',
+        'block',
+      )
+    }
     expect(await fitsViewport(page, '[data-reconstruction-table]')).toBe(true)
     expect(await fitsViewport(page, '[data-reconstruction-figure="cone-beam"]')).toBe(true)
     await stageFitsViewport(page, condition.root)
@@ -2772,7 +2802,11 @@ for (const condition of [
     // Help, with the terms opened, stays reachable.
     await page.getByRole('button', { name: 'Help', exact: true }).click()
     const dialog = page.getByRole('dialog', { name: 'What do I do now?', exact: true })
-    await dialog.locator('[data-section-glossary="help"] summary').click()
+    const termsSummary = dialog.locator('[data-section-glossary="help"] > summary')
+    await termsSummary.focus()
+    await expect(termsSummary).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(dialog.locator('[data-section-glossary="help"]')).toHaveAttribute('open', '')
     await settleHelp(page)
     const text = await helpTextReachability(page)
     expect(text.failures, 'clipped or unreachable Help text').toEqual([])
@@ -2807,6 +2841,15 @@ for (const condition of [
       /section=tool-confirmation/,
     )
     await expect(page.locator('[data-figure-label="sampling-component"]')).toBeVisible()
+    const labelBounds = await page
+      .locator('[data-figure-label="sampling-component"]')
+      .evaluate((node) => {
+        const box = (node as SVGGraphicsElement).getBBox()
+        const view = (node.closest('svg') as SVGSVGElement).viewBox.baseVal
+        return { left: box.x, right: box.x + box.width, width: view.width }
+      })
+    expect(labelBounds.left).toBeGreaterThanOrEqual(0)
+    expect(labelBounds.right).toBeLessThanOrEqual(labelBounds.width)
     await expect(page.locator('[data-figure-legend]')).toBeVisible()
     await stageFitsViewport(page, condition.root)
     await capture(page, info, `fellow3-s1-${condition.name}.png`)

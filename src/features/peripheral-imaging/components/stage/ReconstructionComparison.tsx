@@ -95,7 +95,11 @@ function LeadComparison({ lead }: { readonly lead: ReconstructionAccount['id'] |
             <tr key={row.label}>
               <th scope="row">{row.label}</th>
               {ordered.map((account) => (
-                <td key={account.id} data-emphasis={account.id === lead ? 'true' : undefined}>
+                <td
+                  key={account.id}
+                  data-label={account.name}
+                  data-emphasis={account.id === lead ? 'true' : undefined}
+                >
                   {row.cell(account)}
                 </td>
               ))}

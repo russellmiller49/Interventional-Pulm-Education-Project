@@ -74,9 +74,9 @@ export function DosePanels({
       <p className={styles.leadRule} data-dose-rule>
         <strong>Same product on both planes.</strong> KAP is air kerma multiplied by beam area. As
         the beam spreads, the area grows and the air kerma falls by the same factor, so the product
-        is the same at every plane on the beam: {shared.toFixed(2)} Gy·cm² at both planes here.
-        Reference air kerma is a point index at one reference position; neither quantity is peak
-        skin dose or effective dose.
+        is the same at the two free-air planes in this model: {shared.toFixed(2)} Gy·cm² at both
+        planes here. Reference air kerma is a point index at one reference position; neither
+        quantity is peak skin dose or effective dose.
       </p>
       <div className={styles.mprGrid}>
         {model.planes.map((plane) => (

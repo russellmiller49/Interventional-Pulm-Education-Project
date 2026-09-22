@@ -260,7 +260,7 @@ describe('report CW1 — a reused closing question is labelled as the optional r
       // A question Section 5 never rendered is not said to have been asked by Section 5.
       if (origin.seenIn.length === 0) expect(step.instruction).not.toMatch(/asked again/)
       if (origin.seenIn[0] && origin.seenIn[0].sectionId !== origin.origin.sectionId)
-        expect(step.instruction).toMatch(/you first met it at the end of Section/)
+        expect(step.instruction).toMatch(/it first appears at the end of Section/)
     }
   })
 
@@ -311,7 +311,9 @@ describe('reports 3.3, 4.4, 2.14 and 2.11 — the rule or the worked example lea
       /Image-intensifier electronic magnification generally required increased exposure/,
     )
     expect(block.detail?.body).toMatch(/needs local characterization/)
-    expect(block.detail?.body).toMatch(/binning \(combining adjacent detector pixels at readout\)/)
+    expect(block.detail?.body).toMatch(
+      /binning \(see the draft definition.*awaiting owner review\)/,
+    )
   })
 
   it('puts the worked example first where the walkthrough asked (Sections 4, 10 and 11)', () => {
@@ -467,7 +469,9 @@ describe('reports 7.1, 7.2, 5.3, 3.11, PR4, IC4 — supported distinctions first
     const dts = RECONSTRUCTION_ACCOUNTS.find((a) => a.id === 'tomosynthesis')!
     const cbct = RECONSTRUCTION_ACCOUNTS.find((a) => a.id === 'cone-beam')!
     expect(dts.analogy).toMatch(/sliding a stack of transparencies/)
-    expect(cbct.analogy).toMatch(/every direction acquired/)
-    expect(cbct.analogy).toMatch(/stops at its edge/)
+    expect(cbct.analogy).toMatch(/projections from a wide rotation/)
+    expect(cbct.analogy).not.toMatch(/nothing.*inferred/)
+    expect(glossaryTerm('iterative-reconstruction').definition).not.toMatch(/until they agree/)
+    expect(DOSE_QUANTITIES.find((row) => row.id === 'kap')?.tells).toMatch(/uniform free-air field/)
   })
 })

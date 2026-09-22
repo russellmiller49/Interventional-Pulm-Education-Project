@@ -1,9 +1,10 @@
 # PI-FELLOW — decisions held for the source owner
 
 Prepared September 21, 2026 with PI-FELLOW-03. Each packet gives the exact current wording, the
-exact proposed wording, the evidence, and the decision needed from Russell. Nothing here blocks the
-PI-FELLOW-03 PR: every item is a copy change on data a test already covers, and the safe part of
-each finding is already applied and noted. Decisions taken here should be applied by editing the
+exact proposed wording, the evidence, and the decision needed from Russell. These decisions remain open. Technical tests are not source approval. The independent review
+made the pulse-ownership and CBCT accounts visibly provisional, removed an unsupported categorical
+prior-CT exclusion, and corrected the handoff accounting. Merge readiness concerns safe presentation
+of these holds, not approval of their clinical content. Decisions taken here should be applied by editing the
 named file and re-running `jest src/features/peripheral-imaging`.
 
 ## 1.3 / 3.10 — what a concentric radial EBUS view establishes
@@ -150,3 +151,28 @@ Two glossary entries have no verbatim local source and are marked `status: 'draf
   The presets and their default are PI-FELLOW-02's design (each preset states what it shows) and
   are out of this batch's scope; the meaning half of 3.6 is applied. If you want a different
   default for Section 6, name the preset.
+
+## Independent-review clarification (September 22)
+
+- **1.3 / 3.10:** the forwarded Section 9 limitation remains; the optional new interpretation is not applied.
+- **2.6 / 3.2:** model signs remain descriptive; the proposed RAO/LAO mapping is not applied.
+- **2.7:** both source and detector control accounts now begin “Draft control-ownership account —
+  awaiting source-owner review.” Confirm the map before removing that visible status. The original
+  packet's wording is the candidate account, not a resolved clinical assertion.
+- **5.4:** the entire CBCT flow is now labelled “Draft CBCT provenance account — awaiting
+  source-owner review for the platform and protocol described.” The added sentence “The planning CT
+  is not part of a CBCT reconstruction; it enters only through registration for navigation or an
+  overlay…” was not documented in the original packet and is removed. It is replaced with Section 14's
+  existing caution against assuming that viewing/exporting a volume updates navigation or supplies
+  an overlay. No universal prior-CT exclusion is approved. Confirm the “every direction” and
+  truncation wording for the intended platform/protocol; this review does not decide it.
+- **6.5:** local PMID 35803302 independently supports the bundle, comparator, outcome timing and
+  complication statement. Effect-size additions remain unapplied; choosing whether to add the
+  comparator/effect size is still the owner's editorial decision.
+- **CW3:** both glossary entries already displayed their draft status. Section 7's additional,
+  unqualified inline binning definition is now a reference to that visibly provisional entry.
+
+The new CBCT analogy's “nothing ... has to be inferred” and iterative-reconstruction gloss's “until
+they agree” were stronger than their cited existing passages; the reviewer removed those additions
+and retained the source-preserving account. This makes no new reconstruction claim. The original
+“exactly two drafted definitions” contract still holds; neither definition is silently approved.

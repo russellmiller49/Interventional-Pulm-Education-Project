@@ -583,3 +583,34 @@
   font-size: 0.85rem;
   color: var(--stage-muted, var(--muted));
 }
+
+/* Keep the comparison readable when three columns would fragment words on a phone. */
+@media (max-width: 40rem) {
+  .reconstructionTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .reconstructionTable tr,
+  .reconstructionTable th,
+  .reconstructionTable td {
+    display: block;
+  }
+  .reconstructionTable tbody tr {
+    border-top: 1px solid var(--line);
+    padding: 0.4rem 0;
+  }
+  .reconstructionTable th,
+  .reconstructionTable td {
+    border: 0;
+  }
+  .reconstructionTable td::before {
+    content: attr(data-label) ': ';
+    display: block;
+    font-weight: 650;
+    color: var(--cyan-bright, #71e1e5);
+  }
+}

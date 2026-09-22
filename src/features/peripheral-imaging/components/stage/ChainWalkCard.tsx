@@ -63,7 +63,14 @@ export function ChainWalkCard({
         {control ? (
           <div>
             <dt>What you control here</dt>
-            <dd>{control}.</dd>
+            <dd>
+              {stopId === 'source' || stopId === 'detector' ? (
+                <strong data-pulse-ownership-review>
+                  Draft control-ownership account — awaiting source-owner review.{' '}
+                </strong>
+              ) : null}
+              {control}.
+            </dd>
           </div>
         ) : null}
       </dl>

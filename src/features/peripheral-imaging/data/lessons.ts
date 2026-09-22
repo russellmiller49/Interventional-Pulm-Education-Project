@@ -437,7 +437,7 @@ export const LESSONS: Lesson[] = [
         sources: ['tg272', 'tg125'],
         detail: {
           title: 'Device-dependent limits of magnification modes',
-          body: 'Image-intensifier electronic magnification generally required increased exposure. Flat-panel acquisition field and readout modes may change detector sampling, binning (combining adjacent detector pixels at readout), processing and automatic exposure behavior, or may simply crop; their effect on detail and dose needs local characterization.',
+          body: 'Image-intensifier electronic magnification generally required increased exposure. Flat-panel acquisition field and readout modes may change detector sampling, binning (see the draft definition in this section’s terms, awaiting owner review), processing and automatic exposure behavior, or may simply crop; their effect on detail and dose needs local characterization.',
         },
       },
       {
@@ -670,7 +670,7 @@ export const LESSONS: Lesson[] = [
       },
       {
         title: 'A prior CT can improve the reconstruction and bias it',
-        body: 'Iterative reconstruction compares acquired projections with projections predicted from an estimated volume, and revises the estimate until they agree. A prior CT, or regularization — an added rule that favours one solution — can guide an incomplete problem toward a useful answer. If the anatomy has changed, the prior can also pull the result toward the older anatomy.',
+        body: 'Iterative reconstruction compares acquired projections with projections predicted from an estimated volume. A prior CT, or regularization — an added rule that favours one solution — can guide an incomplete problem toward a useful answer. If the anatomy has changed, the prior can also pull the result toward the older anatomy.',
         sources: ['saad'],
         detail: {
           title: 'What the reconstruction study established',
