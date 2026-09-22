@@ -955,6 +955,17 @@ export function VaNormalStatePanel({
             Volume state, temperature, hemoglobin, sedation and the afterload the returning circuit
             blood imposes all sit inside this picture, and every one of them changes how the numbers
             above should be read.
+            {/*
+             * VA5-1 (ECMO-FELLOW-02): the circuit equations have no arterial-pressure term, so the VA
+             * and VV references read identical circuit numbers by construction. Said where the
+             * pushback is taught; the physiology to represent is ECMO-OWNER-05's decision.
+             */}
+            <span className="mt-1 block" data-local-model-boundary="no-arterial-afterload">
+              This simulation does not carry the patient&apos;s arterial pressure into the circuit:
+              at the same speed, the VA and VV reference circuits read the same flow and the same
+              circuit pressures here. The pushback on the return limb is real at the bedside; this
+              model does not show it.
+            </span>
           </li>
           <li className="rounded-xl border px-3 py-2 text-sm leading-6">
             A measurement can also be wrong, and in venoarterial support it can be right about

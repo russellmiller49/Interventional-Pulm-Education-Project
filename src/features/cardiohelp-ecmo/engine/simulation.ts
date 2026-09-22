@@ -362,6 +362,12 @@ function settleLoadedState(
     settledPatient[field] = round(loadGeneric[field], PATIENT_FIELD_DYNAMICS[field].places)
   }
   const patient = { ...loaded.patient, ...settledPatient }
+  // Respiratory rate follows work of breathing only when the scenario did not author a rate. An
+  // authored "high" work of breathing beside the default patient's rate of 18 is a combination no
+  // case described (the VA hypercapnia drill's stem reads 32).
+  if (!authoredFields.has('respiratoryRate')) {
+    patient.respiratoryRate = RESPIRATORY_RATE_BY_WORK_OF_BREATHING[patient.workOfBreathing]
+  }
   // pH is arithmetic on bicarbonate and PaCO₂. A scenario that authors pH and PaCO₂ but not
   // bicarbonate implies the bicarbonate that makes its own pH true; without it the first tick
   // recomputed the authored pH from the default bicarbonate — upward, on a patient getting worse.
