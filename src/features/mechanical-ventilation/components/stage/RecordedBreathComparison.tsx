@@ -1,5 +1,5 @@
 import type { LabEvidence } from '../../engine/learningLab'
-import { completedBreath, waveformAxes } from '../../engine/teachingBreath'
+import { anchorBreathVolume, completedBreath, waveformAxes } from '../../engine/teachingBreath'
 import { CapturedBreath } from './CapturedBreath'
 import styles from './task-flow.module.css'
 
@@ -13,7 +13,14 @@ export function RecordedBreathComparison({
   const before = evidence.baseline,
     after = evidence.response
   if (!before || !after) return null
-  const axes = waveformAxes([...before.waveforms, ...after.waveforms])
+  /*
+   * The shared scale is built from what the two figures actually draw. Both re-anchor volume to
+   * their own breath start, so an axis taken from the raw samples would leave the comparison
+   * squeezed into the top of a range set by retained gas neither trace shows.
+   */
+  const axes = waveformAxes(
+    [before, after].flatMap((record) => [...anchorBreathVolume(completedBreath(record.waveforms))]),
+  )
   const duration = Math.max(
     ...[before, after].map((record) => {
       const breath = completedBreath(record.waveforms)

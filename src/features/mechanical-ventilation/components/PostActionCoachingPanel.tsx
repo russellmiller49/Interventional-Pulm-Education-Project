@@ -89,6 +89,12 @@ export function PostActionCoachingPanel({ coaching }: { coaching: PostActionCoac
         </span>
       </div>
 
+      <p className={styles.coachingWindow} data-coaching-window>
+        Compared from {coaching.observedFromSeconds.toFixed(0)} s, when the action was performed, to{' '}
+        {coaching.observedToSeconds.toFixed(0)} s, when this observation closed. These are the
+        readings over that interval and they are not updated afterwards; the console shows the
+        patient now.
+      </p>
       <dl className={styles.coachingReadings} aria-label="Readings before and after this action">
         {coaching.observed.map((reading) => (
           <ReadingRow key={reading.id} reading={reading} />

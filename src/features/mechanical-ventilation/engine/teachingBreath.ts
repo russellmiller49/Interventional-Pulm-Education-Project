@@ -35,6 +35,20 @@ export function inspectionWindow(
     if (samples[i].phase === 'inspiration' && samples[i - 1].phase === 'expiration') start = i
   return samples.slice(start)
 }
+/**
+ * The same breath with volume measured from its own start.
+ *
+ * `volumeMl` on a sample is lung volume above the trace baseline and carries retained gas, so a
+ * figure that calls its volume row "breath-relative" has to subtract the breath's own starting
+ * volume — and only when the slice is a verified breath, which `completedBreath` is and a paused
+ * partial is not. The raw samples are never modified: this returns copies, at the rendering
+ * boundary, so the engine keeps the trapped volume the auto-PEEP model depends on.
+ */
+export function anchorBreathVolume(breath: readonly WaveformSample[]): readonly WaveformSample[] {
+  if (breath.length === 0) return breath
+  const anchor = breath[0].volumeMl
+  return breath.map((sample) => ({ ...sample, volumeMl: sample.volumeMl - anchor }))
+}
 export const waveformFields = ['pawCmH2O', 'flowLMin', 'volumeMl'] as const
 export type WaveformAxes = Record<(typeof waveformFields)[number], readonly [number, number]>
 export function waveformAxes(samples: readonly WaveformSample[]): WaveformAxes {

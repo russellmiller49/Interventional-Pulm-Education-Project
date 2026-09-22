@@ -4,19 +4,45 @@ import { useEffect, useId, useRef, useState } from 'react'
 import type { WaveformSample } from '../../engine/types'
 import type { BreathStopId } from '../../content/breathSpine'
 import {
+  anchorBreathVolume,
   breathStopIndex,
   completedBreath,
   waveformAxes,
   waveformFields,
   type WaveformAxes,
 } from '../../engine/teachingBreath'
+import {
+  MARKER_UNAVAILABLE_NOTE,
+  markerEvidence,
+  markerEvidenceSentence,
+  type VentilationReferenceMarker,
+} from '../../content/referenceEvidence'
 import styles from './ventilation-stage.module.css'
 
 const labels = {
   pawCmH2O: 'Airway pressure (cmH₂O)',
   flowLMin: 'Flow (L/min)',
-  volumeMl: 'Breath-relative volume (mL)',
+  volumeMl: 'Volume (mL)',
   pmusCmH2O: 'Effort · model (cmH₂O)',
+}
+/**
+ * Two volume rows, because there are two quantities and the figure used to print one label over
+ * whichever it happened to be drawing.
+ *
+ * The engine's `volumeMl` is lung volume above the trace baseline: it carries trapped gas, so on
+ * the obstructive patient in Section 7 the row labelled "Breath-relative volume" started at
+ * 486 mL, peaked near 917 and ended at 518, next to an exhaled volume of 426 mL. It was read, as
+ * the report said, as a 900-mL breath.
+ *
+ * When the figure has a *verified* breath start — `completedBreath` found two real inspiration
+ * onsets, so sample 0 is the start of this breath — the row is drawn relative to that anchor and
+ * says so, and the raw offset is kept in the caption. When it does not (a paused partial breath, a
+ * hold slice), the raw signal is drawn under its own name. Nothing is subtracted from the engine:
+ * this is a rendering choice at the boundary, and expiration is never forced back to zero.
+ */
+const volumeLabels = {
+  anchored: 'Volume from breath start (mL)',
+  raw: 'Raw lung volume (mL)',
 }
 const stopNames: Record<BreathStopId, string> = {
   trigger: 'Trigger',
@@ -31,6 +57,7 @@ export function CapturedBreath({
   guided = false,
   stop,
   fixedIndex,
+  marker,
   axes,
   whole = true,
   onInspect,
@@ -42,6 +69,11 @@ export function CapturedBreath({
   guided?: boolean
   stop?: BreathStopId
   fixedIndex?: number
+  /**
+   * The authored identification marker for this item — "interval A". Fixed: it is resolved from
+   * the samples once and does not move when the learner moves the exploration cursor.
+   */
+  marker?: VentilationReferenceMarker
   axes?: WaveformAxes
   whole?: boolean
   onInspect?: (sample: WaveformSample, previous: WaveformSample) => void
@@ -52,6 +84,7 @@ export function CapturedBreath({
   const id = useId()
   const figureRef = useRef<HTMLElement>(null)
   const [width, setWidth] = useState(360)
+  const [labelsHidden, setLabelsHidden] = useState(false)
   const breath = whole ? completedBreath(samples) : samples
   const hasCompleteBreath = breath.length >= 4
   useEffect(() => {
@@ -74,13 +107,23 @@ export function CapturedBreath({
         A complete breath is not yet available. Run or advance one breath, then capture again.
       </p>
     )
-  const bounds = { ...(axes ?? waveformAxes(breath)), pmusCmH2O: [-25, 5] as const }
+  /*
+   * A verified anchor, not an assumed one: `completedBreath` slices between two real inspiration
+   * onsets, so only then is sample 0 the start of a breath.
+   */
+  const anchored = whole
+  const anchorMl = anchored ? breath[0].volumeMl : 0
+  const plotted = anchored ? anchorBreathVolume(breath) : breath
+  const evidence = marker ? markerEvidence(breath, marker) : null
+  const bounds = { ...(axes ?? waveformAxes(plotted)), pmusCmH2O: [-25, 5] as const }
   const fields = effort ? [...waveformFields, 'pmusCmH2O' as const] : waveformFields
   const first = breath[0].time
   const duration = breath.at(-1)!.time - first
   const timeRange = Math.max(duration, durationSeconds ?? 0)
-  const sample = breath[index]
-  const previous = breath[Math.max(0, index - 1)]
+  const sample = plotted[index]
+  const previous = plotted[Math.max(0, index - 1)]
+  const rawSample = breath[index]
+  const rawPrevious = breath[Math.max(0, index - 1)]
   const x = (time: number) => 50 + ((time - first) / timeRange) * (width - 70)
   const y = (value: number, field: (typeof fields)[number]) =>
     64 - ((value - bounds[field][0]) / (bounds[field][1] - bounds[field][0])) * 54
@@ -88,13 +131,24 @@ export function CapturedBreath({
   const highlighted = stop === 'trigger' || stop === 'cycling' ? stop : sample.phase
   const from = highlighted === 'expiration' ? breath[cycling]?.time : first
   const to = highlighted === 'inspiration' ? breath[cycling]?.time : breath.at(-1)!.time
-  const text = `Cursor at ${(sample.time - first).toFixed(2)} s. Airway pressure ${sample.pawCmH2O.toFixed(1)} cmH₂O; flow ${sample.flowLMin.toFixed(1)} L/min; volume ${previous.volumeMl.toFixed(0)} to ${sample.volumeMl.toFixed(0)} mL over the preceding ${(sample.time - previous.time).toFixed(2)} s.${effort ? ` Model effort ${sample.pmusCmH2O.toFixed(1)} cmH₂O; machine ${sample.phase}.` : ''}`
+  const volumeClause = anchored
+    ? `volume ${previous.volumeMl.toFixed(0)} to ${sample.volumeMl.toFixed(0)} mL above this breath’s start`
+    : `lung volume ${previous.volumeMl.toFixed(0)} to ${sample.volumeMl.toFixed(0)} mL above the trace baseline`
+  const cursorText = `Cursor at ${(rawSample.time - first).toFixed(2)} s. Airway pressure ${rawSample.pawCmH2O.toFixed(1)} cmH₂O; flow ${rawSample.flowLMin.toFixed(1)} L/min; ${volumeClause} over the preceding ${(rawSample.time - rawPrevious.time).toFixed(2)} s.${effort ? ` Model effort ${rawSample.pmusCmH2O.toFixed(1)} cmH₂O; machine ${rawSample.phase}.` : ''}`
+  const markerText = marker
+    ? evidence
+      ? markerEvidenceSentence(evidence)
+      : `Interval ${marker.markerId}: ${MARKER_UNAVAILABLE_NOTE}`
+    : ''
+  const text = markerText ? `${markerText} ${cursorText}` : cursorText
   return (
     <figure
       className={styles.capturedBreath}
       ref={figureRef}
       data-captured-breath
       data-guided-stop={guided ? stop : undefined}
+      data-marker={marker?.markerId}
+      data-marker-resolved={marker ? (evidence ? 'true' : 'false') : undefined}
     >
       <figcaption id={id}>
         <strong>{label}</strong>
@@ -104,7 +158,7 @@ export function CapturedBreath({
         {fields.map((field, row) => (
           <g key={field} transform={`translate(0 ${row * 85})`}>
             <text x="0" y="12">
-              {labels[field]}
+              {field === 'volumeMl' ? volumeLabels[anchored ? 'anchored' : 'raw'] : labels[field]}
             </text>
             <g transform="translate(0 15)">
               {guided &&
@@ -148,7 +202,7 @@ export function CapturedBreath({
                 </g>
               ) : null}
               <path
-                d={breath
+                d={plotted
                   .map(
                     (s, i) =>
                       `${i ? 'L' : 'M'}${x(s.time).toFixed(2)} ${y(s[field], field).toFixed(2)}`,
@@ -165,13 +219,36 @@ export function CapturedBreath({
                   className={styles.zeroLine}
                 />
               ) : null}
+              {/*
+               * The authored marker, drawn on every row, with its letter beside it. It is a
+               * different element from the cursor below and never follows it.
+               */}
+              {evidence ? (
+                <g data-breath-marker={evidence.marker.markerId}>
+                  <line
+                    x1={x(evidence.sample.time)}
+                    x2={x(evidence.sample.time)}
+                    y1="7"
+                    y2="66"
+                    className={styles.markerLine}
+                  />
+                  <text
+                    x={x(evidence.sample.time) + 3}
+                    y="16"
+                    className={styles.markerLabel}
+                    data-marker-letter={evidence.marker.markerId}
+                  >
+                    {evidence.marker.markerId}
+                  </text>
+                </g>
+              ) : null}
               <line
-                x1={x(sample.time)}
-                x2={x(sample.time)}
+                x1={x(rawSample.time)}
+                x2={x(rawSample.time)}
                 y1="7"
                 y2="66"
                 className={styles.cursor}
-                data-time-cursor={sample.time}
+                data-time-cursor={rawSample.time}
               />
             </g>
           </g>
@@ -192,17 +269,42 @@ export function CapturedBreath({
           ? 'Shared comparison time and signal scales'
           : 'One time axis for all signals'}
       </p>
+      {anchored ? (
+        <p className={styles.quickNote} data-volume-anchor={anchorMl.toFixed(0)}>
+          Volume is drawn from this breath’s start. The lung held {anchorMl.toFixed(0)} mL above the
+          trace baseline when the breath began and {breath.at(-1)!.volumeMl.toFixed(0)} mL when it
+          ended; gas that has not left is still in the raw signal, and the trace is not forced back
+          to zero. A rise from the start and the ventilator’s exhaled volume are different
+          quantities and need not agree.
+        </p>
+      ) : (
+        <p className={styles.quickNote}>
+          This slice has no verified breath start, so the raw lung-volume signal is drawn under its
+          own name rather than re-zeroed.
+        </p>
+      )}
       {effort ? (
         <p className={styles.quickNote}>
           Effort is a teaching model signal, not routine measured ventilator data. Read the onset
           and end of effort separately from machine inspiration.
         </p>
       ) : null}
+      {marker ? (
+        <p className={styles.quickNote} data-marker-note={marker.markerId}>
+          {markerText}
+        </p>
+      ) : null}
       {fixedIndex === undefined && !stop ? (
         <label className={styles.cursorControl}>
-          Inspect time in this captured trace
+          {marker
+            ? `Explore this trace (interval ${marker.markerId} stays where it is)`
+            : 'Inspect time in this captured trace'}
           <input
-            aria-label="Captured breath time cursor"
+            aria-label={
+              marker
+                ? `Exploration cursor, separate from interval ${marker.markerId}`
+                : 'Captured breath time cursor'
+            }
             type="range"
             min="0"
             max={breath.length - 2}
@@ -226,20 +328,32 @@ export function CapturedBreath({
           ))}
         </div>
       ) : null}
-      <p className={styles.quickNote}>{text}</p>
+      <p className={styles.quickNote}>{cursorText}</p>
       {guided ? (
-        <p>
-          {sample.phase === 'inspiration'
-            ? 'Inspiration: positive flow adds volume.'
-            : 'Expiration: negative flow accompanies falling volume.'}{' '}
-          The volume reference is not total lung volume.
-        </p>
+        <>
+          {labelsHidden ? null : (
+            <p data-phase-label>
+              {rawSample.phase === 'inspiration'
+                ? 'Inspiration: positive flow adds volume.'
+                : 'Expiration: negative flow accompanies falling volume.'}{' '}
+              The volume reference is not total lung volume.
+            </p>
+          )}
+          <button
+            type="button"
+            className={styles.toolButton}
+            aria-pressed={labelsHidden}
+            onClick={() => setLabelsHidden((hidden) => !hidden)}
+          >
+            {labelsHidden ? 'Show the phase label again' : 'Hide the phase label on this figure'}
+          </button>
+        </>
       ) : null}
       {onInspect ? (
         <button
           type="button"
           className={styles.toolButton}
-          onClick={() => onInspect(sample, previous)}
+          onClick={() => onInspect(rawSample, rawPrevious)}
         >
           Use this captured interval
         </button>

@@ -10,6 +10,7 @@ import {
   deriveEffectiveVentilationRate,
   deriveMeasurements,
 } from './physics'
+import { latchOpenHoldConditionChange } from './measurementConditions'
 import { advanceSimulation, applyIntervention, createInitialSimulationState } from './simulation'
 import type {
   MechanicalVentilationCommonSettings,
@@ -490,7 +491,21 @@ function performConsoleHold(
   }
 }
 
+/**
+ * Every state transition, with the open-hold condition latch applied once at the exit.
+ *
+ * One place, rather than a check inside each action that happens to touch a setting: the latch
+ * compares the measurement fingerprint this module already defines, so an action that changes a
+ * relevant condition is caught whether or not anyone thought about holds when writing it.
+ */
 export function ventilationSimulationReducer(
+  state: VentilationSimulationState,
+  action: VentilationAction,
+): VentilationSimulationState {
+  return latchOpenHoldConditionChange(reduceVentilationSimulation(state, action))
+}
+
+function reduceVentilationSimulation(
   state: VentilationSimulationState,
   action: VentilationAction,
 ): VentilationSimulationState {
