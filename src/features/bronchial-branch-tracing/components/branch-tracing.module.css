@@ -722,19 +722,26 @@
 .pairedViews .nativeImage {
   max-width: 100%;
 }
+/* A column, not a square with the canvas laid over it: the sentence that explains a wall label
+ * the view intentionally suppresses is a sibling of the camera and needs its own visible space.
+ * An absolutely positioned canvas painted over that sentence hid it at every width. */
 .pairedScope {
   width: 100%;
-  aspect-ratio: 1;
-  position: relative;
+  display: flex;
+  flex-direction: column;
   background: #020507;
 }
 .pairedScope .clinicalCanvas {
   width: 100%;
-  height: 100%;
-  position: absolute;
-  inset: 0;
+  height: auto;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  /* Containing block for the opening-letter overlay, which still covers the camera exactly. */
+  position: relative;
 }
-.pairedScope > p {
+/* Loading, surface-error and 3D-boundary states reserve the square the camera will fill. */
+.pairedScope > p[role] {
+  aspect-ratio: 1;
   padding: 1rem;
   font-size: 0.8rem;
 }

@@ -17,7 +17,11 @@ import { LOCAL_DRAFT_ALIASES } from '../engine/local-draft-migration'
 import { orientationName, sameOrientation, STANDARD_ORIENTATION } from '../geometry/orientation'
 import { pairedScope } from '../geometry/paired-scope'
 import { divisionIdentities, sourceNamingNote } from '../engine/branch-identity'
-import { courseLocatorNote, modelCourseLocators } from '../engine/model-course'
+import {
+  courseLocatorNote,
+  demonstrationFrameIndex,
+  modelCourseLocators,
+} from '../engine/model-course'
 import { localExercise, MODEL_REFERENCE_LABEL } from '../content/local-exercises'
 import {
   browserStorage,
@@ -254,11 +258,10 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
       setSession((current) => {
         const exercise = exercises[current.exercise]
         const key = exercise.id
-        const matchedFrame = exercise.frames.findIndex((frame) => frame.slice === view.slice)
-        const frame =
-          exercise.frames[current.frame].slice === view.slice || matchedFrame < 0
-            ? current.frame
-            : matchedFrame
+        // Browsing to another plane moves the demonstration to the occurrence nearest the step
+        // the learner is on, so leaving a pass and returning cannot rewind them into an earlier one.
+        const matchedFrame = demonstrationFrameIndex(exercise.frames, current.frame, view.slice)
+        const frame = matchedFrame < 0 ? current.frame : matchedFrame
         return JSON.stringify(current.views[key]) === JSON.stringify(view) &&
           frame === current.frame
           ? current
@@ -471,17 +474,18 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                     : `Trace ${displayLabel(s.slot)} from ${identities?.parent.display ?? exercise.trace.anchor.airway.code} to slice ${slot.slice}, then click inside its lumen. You can also record Lumen unresolved here, show the reference, or continue without marking.`
   // Model points appear in the demonstration, the comparison, and whenever the learner shows the reference.
   const viewSlice = s.views[exercise.id]?.slice ?? exercise.trace.anchor.slice
-  const frame = showingWalkthrough
-    ? exercise.frames[s.frame]?.slice === viewSlice
-      ? exercise.frames[s.frame]
-      : exercise.frames.find((f) => f.slice === viewSlice)
-    : undefined
+  // A plane is demonstrated once per daughter pass, so the step the learner is on is the frame
+  // index and never the slice number: resolving either the overlays or the caption by slice
+  // alone hands a later pass the first pass's branch identity.
+  const frameIndex = showingWalkthrough
+    ? demonstrationFrameIndex(exercise.frames, s.frame, viewSlice)
+    : -1
+  const frame = frameIndex < 0 ? undefined : exercise.frames[frameIndex]
   const showAnchor = Boolean(guide) || (s.phase === 'attempt' && s.hints < 3 && !referenceShown)
-  const displayedFrameIndex = exercise.frames.findIndex((f) => f.slice === displayedSlice)
-  const displayedFrame = exercise.frames[displayedFrameIndex]
+  const displayedFrameIndex = demonstrationFrameIndex(exercise.frames, s.frame, displayedSlice)
+  const displayedFrame = displayedFrameIndex < 0 ? undefined : exercise.frames[displayedFrameIndex]
   // Model course locators for the demonstration's intermediate planes (BBTF-26): only where a
   // source edge of this division crosses the displayed plane, drawn dotted and unlabelled.
-  const frameIndex = frame ? exercise.frames.indexOf(frame) : -1
   const courseLocators = useMemo(
     () =>
       frameIndex < 0

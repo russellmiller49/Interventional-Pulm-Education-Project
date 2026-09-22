@@ -33,6 +33,31 @@ function passIndexAt(frames: LocalCtExercise['frames'], start: number, frameInde
   return visits - 1
 }
 
+/**
+ * Which authored demonstration step the learner is on. A CT plane is walked once per daughter
+ * pass, so a step is identified by its index in `frames`, never by its slice number alone: a
+ * search by slice answers with the first pass and gives every later visit that pass's branch
+ * identity. The current step wins whenever its plane is the one on screen; when the learner has
+ * browsed off the demonstration, the occurrence nearest the current step does, so stepping away
+ * and back cannot drop them into an earlier pass. Returns -1 when no step shows that plane.
+ */
+export function demonstrationFrameIndex(
+  frames: readonly { slice: number }[],
+  currentIndex: number,
+  slice: number | null | undefined,
+): number {
+  if (slice === null || slice === undefined) return -1
+  if (frames[currentIndex]?.slice === slice) return currentIndex
+  let nearest = -1
+  for (let i = 0; i < frames.length; i++)
+    if (
+      frames[i].slice === slice &&
+      (nearest < 0 || Math.abs(i - currentIndex) < Math.abs(nearest - currentIndex))
+    )
+      nearest = i
+  return nearest
+}
+
 export function modelCourseLocators(
   exercise: LocalCtExercise,
   frameIndex: number,

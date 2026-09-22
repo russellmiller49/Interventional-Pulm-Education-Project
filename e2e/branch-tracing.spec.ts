@@ -1322,6 +1322,123 @@ test('the RB1 source naming is stated before marking and repeated names are told
   await capture(page, 'bbt03-L7-identities')
 })
 
+// BBT-PRE-REVIEW-03 sanity repair, finding 1. A demonstration walks the same CT plane once per
+// daughter pass. Resolving the caption by slice number returned the first pass, so Daughter B's
+// pass inherited the lead-in's approach caption and Daughter A's course-locator names.
+test('a demonstration plane reached twice keeps the identity of the pass the learner is in', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  const short = localExercise(LESSONS.find((l) => l.id === 'orientation-changes')!.exercises![0])
+  const transport = page.getByRole('region', { name: 'CT demonstration controls' })
+  await page.goto(`${base}/learn?lesson=orientation-changes`)
+  await ctReady(page)
+  await button(page, 'Replay from parent').click()
+  await expect(transport).toContainText(`Demonstration slice 332 · 1 of ${short.frames.length}`)
+  await expect(transport).toContainText('Approach context, slice 332')
+  const step = async (to: number, from: number) => {
+    for (let i = from; i < to; i++) await button(page, 'Next demonstration slice').click()
+    await expect(transport).toContainText(
+      `Demonstration slice ${short.frames[to].slice} · ${to + 1} of ${short.frames.length}`,
+    )
+  }
+  // The declared LLL lead-in, where the approach and the parent both cross this plane.
+  await step(5, 0)
+  await expect(transport).toContainText(
+    'the model centreline of Approach · LLL and Parent · LB6 crosses this plane',
+  )
+  await expect(page.locator('[data-course-locator]')).toHaveCount(2)
+  await capture(page, 'bbt03r-L8-lead-in-327')
+  // Daughter B's pass crosses both planes again; nothing of the lead-in may survive.
+  await step(21, 5)
+  await expect(transport).toContainText('the model centreline of Parent · LB6 crosses this plane')
+  await expect(transport).not.toContainText('Approach · LLL')
+  await expect(page.locator('[data-course-locator]')).toHaveCount(1)
+  await step(26, 21)
+  await expect(transport).not.toContainText('Approach context, slice 332')
+  await expect(transport).toContainText(short.frames[26].caption)
+  await expect(page.locator('[data-course-locator]')).toHaveCount(0)
+  await capture(page, 'bbt03r-L8-daughter-b-pass-332')
+  expect((await draft(page, 'orientation-changes')).marks).toEqual([null, null])
+})
+
+// BBT-PRE-REVIEW-03 sanity repair, finding 2. The paired view suppresses a wall label whose
+// projected point is behind the wall and says so in a sentence beside the camera. That sentence
+// was laid out underneath an absolutely positioned, opaque canvas and could not be read.
+async function secondLb6ParentView(page: Page) {
+  const lesson = LESSONS.find((l) => l.id === 'orientation-changes')!
+  await startLocal(page, lesson.id)
+  await markLocal(page, localExercise(lesson.exercises![0]))
+  await button(page, /^Next example/).click()
+  await finishPendingIntroduction(page)
+  await ctReady(page)
+  await markLocal(page, localExercise(lesson.exercises![1]))
+  await openParentViewIfHidden(page)
+  await button(page, 'Go to B · LB6 · slice 345').click()
+  await ctReady(page)
+  await expect(scopeCanvas(page)).toBeVisible({ timeout: 60000 })
+  await expect(page.locator('[data-scope-annotations]')).toBeVisible({ timeout: 60000 })
+}
+
+for (const [width, height] of [
+  [1427, 1226],
+  [390, 844],
+  [320, 740],
+])
+  test(`the reason an occluded daughter carries no wall label is readable at ${width}×${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height })
+    await secondLb6ParentView(page)
+    // Daughter B stays off the wall: the ray cast is unchanged and only Daughter A is drawn.
+    await expect(page.locator('[data-scope-annotations-drawn]')).toHaveAttribute(
+      'data-scope-annotations-drawn',
+      '1',
+    )
+    expect(await page.locator('[data-scope-annotations-drawn] text').allTextContents()).toEqual([
+      'A · LB6',
+    ])
+    const note = page.locator('[data-scope-annotations]')
+    await expect(note).toContainText(
+      'B · LB6 is not in line of sight from this camera position (it lies behind the wall), so it is not marked.',
+    )
+    await note.scrollIntoViewIfNeeded()
+    // Rendered evidence, not a class assertion: the canvas must not answer a hit test anywhere
+    // down the sentence, and the sentence must sit inside the viewport.
+    const measured = await page.evaluate(() => {
+      const element = document.querySelector('[data-scope-annotations]') as HTMLElement
+      const rect = element.getBoundingClientRect()
+      const canvas = document.querySelector('[data-paired-scope-column] canvas')!
+      const x = rect.x + rect.width / 2
+      return {
+        rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+        canvas: canvas.getBoundingClientRect().bottom,
+        hits: [0.15, 0.5, 0.85].map((fraction) => {
+          const hit = document.elementFromPoint(x, rect.y + rect.height * fraction)
+          return Boolean(hit) && (hit === element || element.contains(hit))
+        }),
+        viewport: { width: innerWidth, height: innerHeight },
+      }
+    })
+    expect(measured.hits).toEqual([true, true, true])
+    expect(measured.rect.height).toBeGreaterThan(24)
+    expect(measured.rect.width).toBeGreaterThan(100)
+    expect(measured.rect.y).toBeGreaterThanOrEqual(0)
+    expect(measured.rect.y + measured.rect.height).toBeLessThanOrEqual(measured.viewport.height + 1)
+    // The camera keeps its own space above the sentence rather than covering it.
+    expect(measured.canvas).toBeLessThanOrEqual(measured.rect.y + 1)
+    // Reading the reason moved neither the CT nor the recorded responses.
+    await expect(
+      page.getByText('Slice 345 · patient directions', { exact: false }).first(),
+    ).toBeVisible()
+    expect(
+      (await draft(page, 'orientation-changes')).history[
+        'left-lower-returning.junction-25.integration'
+      ],
+    ).toHaveLength(1)
+    await capture(page, `bbt03r-occlusion-reason-${width}x${height}`)
+  })
+
 test('a lost WebGL context in the paired view leaves the CT and the lesson usable', async ({
   page,
 }) => {
