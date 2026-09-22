@@ -1,0 +1,345 @@
+{
+  "batch": "EBUS-PRE-REVIEW-03",
+  "title": "Model landmarks, camera control and sweep feedback",
+  "preparedOn": "2026-09-21",
+  "scope": "model presentation and interaction-state truth; no anatomical recalibration, clinical reinterpretation, sweep-threshold change, Doppler behaviour, patient-image annotation, measurement calibration, teaching rewrite (04) or clinical/media review (05)",
+  "repository": {
+    "smokeTestedMain": "f01e43e2410e96f8f77a0db6814a4853749add24",
+    "smokeResult": "POST-MERGE MAIN SMOKE: PASS WITH DOCUMENTED BASELINE FAILURE (BBT case_manifest.json access assertion, unrelated)",
+    "implementationBaseline": "2124cd0f3483db6534ab65bf6dd3730b59fee463",
+    "baselineRelationship": "smoke SHA is an ancestor of the baseline; four intervening commits (#255, #257, #256 and its docs follow-up), none touching EBUS; integrated by branching from current main",
+    "branch": "claude/ebus-anatomy-sweep-9-21",
+    "worktree": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-ebus-2-9-21",
+    "finalHead": "b3a16dd31b23c3a107f056feb5b077719c80885c",
+    "pullRequest": "https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/261 (#261, open, not merged)",
+    "priorBatches": {
+      "EBUS-PRE-REVIEW-01": "#249 merged",
+      "EBUS-PRE-REVIEW-02": "#251 merged"
+    },
+    "finalHeadNote": "b3a16dd3 is the last implementation/test commit; the docs commit that follows is the PR head; the production build ran at 4fdf76ee, which differs only by a type annotation in the e2e spec"
+  },
+  "canonicalIdsUsed": {
+    "anatomyCandidates": [
+      "carina",
+      "right_main_bronchus",
+      "left_main_bronchus",
+      "azygous",
+      "superior_vena_cava",
+      "left_brachiocephalic_vein",
+      "brachiocephalic_trunk",
+      "aorta"
+    ],
+    "scopeCandidates": ["transducer_face", "optical_lens", "channel_outlet", "legacy_distal_body"],
+    "landmarks": "LINKED_LANDMARKS in src/lib/ebus-linked-contract.ts (unchanged)",
+    "letterMapping": "index in glTF traversal order of the candidate meshes, shared by selector, picker and markers (unchanged)",
+    "exampleNodes": ["node_station_7", "node_station_4r"],
+    "routeStructuresLabelled": [
+      "trachea",
+      "carina",
+      "left_main_bronchus",
+      "right_main_bronchus",
+      "esophagus",
+      "aorta",
+      "pulmonary_artery",
+      "azygous",
+      "node_station_*",
+      "*_window_*"
+    ]
+  },
+  "transformSources": {
+    "scopePose": "teachingScopeMatrix(pose) — origin basis in the scope view, pose.position in the anatomy view (EBUS-course/apps/web/src/guided/linkedModels.ts)",
+    "fan": "pose.depthAxis and cephalicImageAxis(pose), sector angle from the case manifest",
+    "modelFrame": "web [x,y,z] = patient [L,S,-P] (src/lib/bronchoscopy-core/devices.ts): +x left, +y superior, +z anterior; the compass names this model frame only",
+    "opticalAxis": "opticalRay(pose, resolveEndoscopeCameraCalibration(manifest.endoscope_camera)); wall distance by raycast against the channel mesh",
+    "routeArrow": "model-contract.json routes[].airway|esophageal -> target (unchanged); observer placed 62 deg off the approach about an axis perpendicular to it",
+    "registration": "anatomy, nodes and scope GLBs are integrity-checked against the acoustic volume sourceGeometrySha256 (loadLinkedModels)"
+  },
+  "baselineReproductions": {
+    "viewport": "1246x1021, headless Chromium (SwiftShader), bridge events read from the host window",
+    "L3-2": "scope view opened on a fixed 82 mm focus; whole-scope view a 4x9 px endpoint cluster (closest 1.5 px)",
+    "L3-3": "four leader endpoints in a 17x43 px box, closest 6.9 px; columns swapped between roll +85 and +40..-85; hover/focus changed nothing",
+    "L3-4": "gold selection ('highlighted in gold') and gold optical arrow",
+    "L3-5": "success text named nothing; wrong check said 'Try another structure.'",
+    "L3-13": "wheel over the canvas captured by the model in one run and scrolled the page in another (canvas mid-viewport); touch-action none; canvas tabIndex -1; caption promised 'scroll to zoom'",
+    "L4-4": "four letter markers in the lesson-4 acquisition with no landmark task",
+    "L11-3_L13-3": "eight letters, closest endpoints 11.3 px (C-E), spread 120x123 px, 'S' sprite clipped; identical layouts in lessons 11 and 13",
+    "L11-4": "demo opened on the Anatomy tab with an isolated 590-triangle carina about 30 px across",
+    "L12-4": "LMS start +85 in plane; twelve paused steps to -40 all find-edge with 0 samples and the generic status",
+    "L19-1": "caption 'Arrows show viewing direction'; arrow projected 4.5 / 11.8 / 16.8 / 17.9 px (7 airway, 7 esophagus, 4L airway, 4L esophagus) with the camera 3.3-10.9 deg off its axis; no labels",
+    "inPlaneWindowsBrowser": {
+      "station_7_node_a::rms": "-71..+49",
+      "station_7_node_a::lms": "-60..+89 (out at +90)"
+    },
+    "inPlaneWindowsOffline1deg": {
+      "station_7_node_a::rms (offset 0)": "-71..49",
+      "station_7_node_a::lms (offset 0)": "-60..90",
+      "station_7_node_a::lms (offset 3)": "-54..77",
+      "station_4r_node_a::default (offset 0)": "-32..57",
+      "station_4r_node_a::default (offset 3)": "-29..53",
+      "note": "model observations at 80 beams/100 samples; not clinical benchmarks; unchanged"
+    }
+  },
+  "sourceIdDispositions": {
+    "L3-2": "fixed — framed distal tip; whole device framed",
+    "L3-3": "fixed — 6.9 -> 12.7 px closest endpoints, stable columns, hover/focus <-> mesh highlight",
+    "L3-4": "fixed — violet selection, teal hover, gold arrow only",
+    "L3-5": "fixed — wrong check names the chosen structure; success names each landmark; names reference on request",
+    "L3-6": "fixed — target, in-plane state, waiting, transient progress, reset reason, tolerances disclosed; sampler unchanged",
+    "L3-7": "held — measured windows to the owner queue (05)",
+    "L3-9": "fixed (presentation) — section uses the 3D colour code with a kind legend; violet cross; names remain withheld during acquisition by design",
+    "L3-11": "fixed — 360 px canvas, regional framing with whole-model toggle, fan over nodes, model-frame compass",
+    "L3-12": "implemented from scene state — optical-axis wall distance and contact index; no contact claim from pixels",
+    "L3-13": "fixed — engagement model, explicit zoom, keyboard, pan-y touch, truthful caption",
+    "L3-14": "held — 05 draft; compass is model frame only",
+    "L3-15": "held — 05 draft",
+    "L4-3": "fixed — close-up labels from sampled labels",
+    "L4-4": "fixed — markers only during a landmark task or on request",
+    "L5-3": "fixed — condition captions and origin labels; no mechanism asserted",
+    "L11-3": "fixed — 11.3 -> 17.6 px, spread 120x123 -> 165x175, zero overlaps",
+    "L11-4": "fixed — demo opens on Model section; isolated structure framed",
+    "L11-6": "held — owner queue (05)",
+    "L12-3": "adapted — stable letters kept, no shuffle; names optional",
+    "L12-4": "fixed (truthful status) / held (window) — start pose unchanged",
+    "L12-5": "addressed — tip and fan visible in the framed anatomy view; registration is the existing geometry hash",
+    "L13-3": "fixed — 11.3 -> 18.5 px",
+    "L19-1": "fixed — arrows 46.6-68.3 px, solid mesh, canvas labels, caption corrected; developer phrasing left for 04",
+    "L5-1": "hold preserved — data contract intact; question/evidence alignment remains 04/05"
+  },
+  "filesChanged": [
+    "src/lib/ebus-linked-contract.ts",
+    "EBUS-course/apps/web/src/guided/observerCamera.ts",
+    "EBUS-course/apps/web/src/guided/observerControls.ts",
+    "EBUS-course/apps/web/src/guided/sweepStatus.ts",
+    "EBUS-course/apps/web/src/guided/structureCallouts.ts",
+    "EBUS-course/apps/web/src/guided/LinkedModelView.tsx",
+    "EBUS-course/apps/web/src/guided/ModelSection.tsx",
+    "EBUS-course/apps/web/src/guided/ContactComparison.tsx",
+    "EBUS-course/apps/web/src/guided/models/ModelViewport.tsx",
+    "EBUS-course/apps/web/src/guided/models/ModelImage.tsx",
+    "EBUS-course/apps/web/src/guided/guided.css",
+    "EBUS-course/apps/web/src/guided/models/models.css",
+    "EBUS-course/apps/web/src/features/simulator/SimulatorPage.tsx",
+    "EBUS-course/apps/web/src/guided/observerCamera.test.ts",
+    "EBUS-course/apps/web/src/guided/sweepStatus.test.ts",
+    "src/features/ebus-guided/__tests__/pre-review-03.test.tsx",
+    "e2e/ebus-anatomy-sweep.spec.ts",
+    "scripts/ebus-guided/browser-anatomy-sweep.ts",
+    "scripts/ebus-guided/browser-anatomy-matrix.ts",
+    ".claude/launch.json",
+    "docs/gap-remediation/fellow-walkthrough/ebus/EBUS-PRE-REVIEW-03-handoff.md",
+    "docs/gap-remediation/fellow-walkthrough/ebus/EBUS-PRE-REVIEW-03-status.json"
+  ],
+  "protocol": {
+    "bridgeSchemaChanged": false,
+    "newPersistentState": false,
+    "newFields": "none on the bridge; sweep event reporting is embedded-only React state",
+    "oldPayloadTested": true
+  },
+  "thresholdsAndGeometry": {
+    "sweepTolerances": {
+      "minContact": 0.45,
+      "maxStepDeg": 12,
+      "minSamples": 5,
+      "minSpanDeg": 20
+    },
+    "changed": false,
+    "initialRoll": "unchanged (85 / -75)",
+    "meshesOrContractJson": "unchanged",
+    "assertedBy": [
+      "pre-review-03.test.tsx (legacy sampler equivalence + tolerance constants)",
+      "acquisitionWindows.test.ts (unchanged, passing)"
+    ]
+  },
+  "measurements": {
+    "lesson3ScopeDefault": {
+      "before": {
+        "closestEndpointsPx": 6.9,
+        "spreadPx": [17, 43],
+        "canvas": [399, 300]
+      },
+      "after": {
+        "closestEndpointsPx": 12.7,
+        "spreadPx": [34, 77],
+        "canvas": [399, 360],
+        "overlaps": 0,
+        "outside": 0,
+        "columnsAcrossRoll": "constant"
+      }
+    },
+    "lesson3WholeScope": {
+      "before": {
+        "closestEndpointsPx": 1.5,
+        "spreadPx": [4, 9]
+      },
+      "after": {
+        "closestEndpointsPx": 2.0,
+        "spreadPx": [5, 13],
+        "note": "tip is small against the device; framed tip is the default"
+      }
+    },
+    "lesson11Anatomy": {
+      "before": {
+        "closestEndpointsPx": 11.3,
+        "spreadPx": [120, 123]
+      },
+      "after": {
+        "closestEndpointsPx": 17.6,
+        "spreadPx": [165, 175],
+        "overlaps": 0,
+        "outside": 0
+      },
+      "wholeModelToggle": {
+        "closestEndpointsPx": 13.6,
+        "spreadPx": [141, 148]
+      }
+    },
+    "lesson13Anatomy": {
+      "before": {
+        "closestEndpointsPx": 11.3,
+        "spreadPx": [120, 123]
+      },
+      "after": {
+        "closestEndpointsPx": 18.5,
+        "spreadPx": [173, 179]
+      }
+    },
+    "lesson19ArrowPx": {
+      "before": {
+        "7:airway": 4.5,
+        "7:esophageal": 11.8,
+        "4L:airway": 16.8,
+        "4L:esophageal": 17.9
+      },
+      "after": {
+        "7:airway": 63.8,
+        "7:esophageal": 46.6,
+        "4L:airway": 66.9,
+        "4L:esophageal": 68.3
+      },
+      "canvas": [473.5, 355.1]
+    },
+    "leaderCrossings": {
+      "before": 0,
+      "after": 0
+    }
+  },
+  "sweepSequences": {
+    "J1_outside_cross_exit_rms": "+85..+55 outside; +45 started; ... -65 crossing 12/110; -75 complete",
+    "J2_start_inside_lms": "+85 in plane (not yet sampled); +80..-40 inside, samples 0; panel inside-start",
+    "J2b_leave_return_lms": "-65 outside; -60 started; -20 crossing 9/40",
+    "J3_reverse_rms": "crossing 4/25 at +20; +30 reset-reversed; panel names the reversal",
+    "J4_jump_rms": "+80 outside; +30 entered-too-fast; panel names the >12 deg step",
+    "J5_reset_change_repeat": "reboot: new session, actionCount 0, sweeps {}; LMS +90 outside, +85 started, +60 crossing 6/25",
+    "J6_demo_then_real": "demonstration observations ready:false, actionCount 0, sweeps {}, no sweep panel, host drops them (Jest); first real observation actionCount 0, sweeps {}",
+    "J7_skip": "held-missing evidence on the next step",
+    "before": "same sampler states with three generic headings and no reason (reports baseline, baseline-v2)"
+  },
+  "validation": {
+    "hostBatchTests": "npx jest src/features/ebus-guided/__tests__/pre-review-03.test.tsx — 12 passed",
+    "hostEbus": "npx jest src/features/ebus-guided — 13 suites, 167 tests",
+    "hostEbusAndLearningModule": "npx jest src/features/ebus-guided src/features/learning-module — 28 suites, 305 tests",
+    "embedded": "npm --prefix EBUS-course/apps/web test — 38 files, 276 tests",
+    "embeddedTypes": "npm --prefix EBUS-course/apps/web run typecheck — clean",
+    "rootTypes": "NODE_OPTIONS=--max-old-space-size=8192 npx tsc --noEmit — exit 0",
+    "lint": "eslint on changed host/script/e2e paths — exit 0",
+    "format": "prettier --check changed paths; git diff --check — clean",
+    "build": "npm run build — exit 0; standalone serves SimulatorPage-DVXMz9I1.js and guided-D1YybrBv.js (built at 4fdf76ee)",
+    "e2e": "e2e/ebus-anatomy-sweep.spec.ts against the production standalone on 3132 — 6 passed",
+    "uniqueNewTests": {
+      "host": 12,
+      "embedded": 11,
+      "browser": 6
+    },
+    "wholeHostSuite": "not run beyond the EBUS and learning-module scopes",
+    "buildHead": "4fdf76eec0fc6cd8900fc22c4c41a275d2c33381 (differs from the final head only by a type annotation in the e2e spec)"
+  },
+  "browserConditions": [
+    {
+      "name": "1246x1021",
+      "kind": "viewport emulation (report)",
+      "result": "0 overlaps, 0 outside, closest 17.6 px, no overflow, arrow 66.9 px"
+    },
+    {
+      "name": "1440x900",
+      "kind": "viewport emulation",
+      "result": "closest 17.6 px, arrow 79.1 px"
+    },
+    {
+      "name": "1024x768",
+      "kind": "viewport emulation",
+      "result": "closest 17.6 px, arrow 77.6 px"
+    },
+    {
+      "name": "390x844 / 320x740",
+      "kind": "viewport emulation with touch",
+      "result": "host desktop/tablet fallback (unchanged); no overflow"
+    },
+    {
+      "name": "1246x1021 @2x",
+      "kind": "device-pixel-ratio emulation",
+      "result": "backing store 674x608 for 399x360 css (1.7x cap)"
+    },
+    {
+      "name": "1440x900 html 200%",
+      "kind": "root-font enlargement",
+      "result": "host reflows; workbench text size pre-existing; markers unchanged"
+    },
+    {
+      "name": "1246x1021 body zoom 1.5",
+      "kind": "CSS zoom stress",
+      "result": "canvas 435x375 css; closest 12.2 css px; nothing clipped"
+    },
+    {
+      "name": "light / dark",
+      "kind": "site theme class",
+      "result": "identical inside the workbench (own palette, pre-existing)"
+    },
+    {
+      "name": "768x1024 touch",
+      "kind": "viewport emulation with emulated CDP touch",
+      "result": "released drag scrolls the page (693->878) without engaging; tap engages (touch-action none); engaged drag does not scroll (878->878); earlier misses were the tap landing on the ~300 px sticky lesson chrome at this width and a tap during a scroll fling (emulation findings, not product defects)"
+    }
+  ],
+  "notRun": [
+    "native browser zoom",
+    "physical phone or tablet",
+    "Safari, Firefox",
+    "human usability, clinical, source or media review",
+    "whole host Jest suite",
+    "whole Playwright suite"
+  ],
+  "evidencePaths": {
+    "reports": "/private/tmp/claude-501/-Users-russellmiller-Projects-Interventional-Pulm-Education-Worktrees-claude-ebus-2-9-21/f859295f-8072-4df1-8f20-66dde56533f6/scratchpad/evidence/{baseline,baseline-v2,after-dev,after-prod,after-final}/report.json",
+    "matrix": ".../scratchpad/evidence/matrix/matrix.json",
+    "offlineWindows": ".../scratchpad/measure/sweep-windows.json",
+    "note": "outside Git; real-GPU pane captures were viewed, not stored"
+  },
+  "holds": {
+    "clinicalModelMedia": [
+      "in-plane window realism (L3-7, L11-6, L12-4)",
+      "model zero and per-image orientation (L3-14, L3-15)",
+      "4R blue disc",
+      "4L node vs vessel",
+      "Doppler interpretation",
+      "patient-image borders/calipers",
+      "pixel-to-mm",
+      "clinical sweep calibration",
+      "staging/report semantics",
+      "specimen/needle sequencing",
+      "guideline/source claims",
+      "media rights"
+    ],
+    "L5-1": "data contract preserved; reflector question vs held image remains 04/05",
+    "ultrasoundTargetOutline": "not added — would undo the deliberate withholding of image interpretation during acquisition; queued for 04/05"
+  },
+  "limitations": [
+    "phone widths show the existing desktop/tablet fallback for these labs",
+    "the workbench keeps its own palette and text size under theme and root-text changes (pre-existing)",
+    "whole-scope view keeps the tip endpoints clustered by geometry",
+    "a first-action jump into the target reads as 'already in this plane' because the sampler sees frames only after a roll action",
+    "hidden tabs suspend requestAnimationFrame (pre-existing)"
+  ],
+  "observations": [
+    "At 768 px wide the host's sticky lesson chrome is about 300 px tall, so content directly beneath it is not tappable; this is the shared lesson chrome (Prompt 01 handled focus clearance for it), not this batch's surface; recorded, not changed."
+  ]
+}

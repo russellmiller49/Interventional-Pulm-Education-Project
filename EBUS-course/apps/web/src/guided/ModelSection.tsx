@@ -35,16 +35,25 @@ export function ModelSection({
     const up = new THREE.Vector3(0, plane === 'axial' ? 0 : 1, plane === 'axial' ? 1 : 0)
     const normal = new THREE.Vector3().crossVectors(right, up)
     origin.addScaledVector(normal, offset)
+    /*
+     * The section uses the 3D model's colour code (EBUS-PRE-REVIEW-03, L3-9): veins blue,
+     * arteries red, heart chambers mauve, the esophagus tan, example nodes yellow, other tissue
+     * grey and air dark. Kinds come from the volume's own label metadata; nothing is renamed.
+     */
     const palette = volume.metadata.labels.map((label) =>
       label.kind === 'air'
         ? [14, 29, 38]
         : label.kind === 'node'
-          ? [194, 185, 99]
+          ? [200, 189, 121]
           : label.kind === 'blood'
-            ? [133, 96, 119]
+            ? /vena|vein|azyg|venous/.test(label.key)
+              ? [113, 155, 223]
+              : /atri|ventric/.test(label.key)
+                ? [150, 104, 134]
+                : [214, 118, 114]
             : label.kind === 'wall'
-              ? [201, 143, 101]
-              : [41, 57, 68],
+              ? [190, 147, 111]
+              : [64, 78, 88],
     )
     for (let row = 0; row < size; row++)
       for (let col = 0; col < size; col++) {
@@ -64,7 +73,7 @@ export function ModelSection({
       return [size / 2 + (d.dot(right) * size) / span, size / 2 - (d.dot(up) * size) / span]
     }
     const cross = project(point)
-    ctx.strokeStyle = '#f6c96c'
+    ctx.strokeStyle = '#d9a5ff'
     ctx.lineWidth = 1
     ctx.beginPath()
     ctx.moveTo(cross[0] - 8, cross[1])
@@ -107,8 +116,9 @@ export function ModelSection({
     <section className="linked-section" aria-label="Model section">
       <h3>Model section</h3>
       <p className="guided-label">
-        Sections of the ultrasound anatomy label volume. This is not CT. Amber: selected position.
-        Cyan: scan-plane intersection.
+        Sections of the ultrasound anatomy label volume. This is not CT. Violet cross: selected
+        position. Cyan: scan-plane intersection. Colours follow the 3D model: veins blue, arteries
+        red, heart chambers mauve, esophagus tan, example nodes yellow, other tissue grey, air dark.
       </p>
       <div className="guided-tabs">
         {(['axial', 'coronal', 'sagittal'] as const).map((p) => (

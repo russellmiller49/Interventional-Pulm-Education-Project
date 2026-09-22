@@ -129,6 +129,23 @@
       "env": {
         "PORT": "3130"
       }
+    },
+    {
+      "name": "claude-ebus-03",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/dev-with-training-apps.mjs", "--port", "3131"],
+      "port": 3131,
+      "autoPort": false
+    },
+    {
+      "name": "claude-ebus-03-prod",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [".next/standalone/server.js"],
+      "port": 3132,
+      "autoPort": false,
+      "env": {
+        "PORT": "3132"
+      }
     }
   ]
 }
