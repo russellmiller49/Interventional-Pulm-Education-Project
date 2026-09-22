@@ -373,14 +373,14 @@ export const LAB_CONTROLS: Readonly<Record<LabId, readonly LabControlSpec[]>> = 
       unit: ' mm',
       default: 0,
     },
-    { key: 'overlay', kind: 'toggle', label: 'Show stored augmented contour', default: true },
+    { key: 'overlay', kind: 'toggle', label: 'Show the stored contour', default: true },
     {
       key: 'showCurrent',
       kind: 'toggle',
       label: 'Show the current lesion position (teaching ground truth)',
       default: true,
     },
-    { key: 'capture', kind: 'action', label: 'Capture a new teaching contour', default: false },
+    { key: 'capture', kind: 'action', label: 'Capture a new stored contour', default: false },
   ],
   safety: [
     {
@@ -585,6 +585,51 @@ export const LAB_METRICS: Readonly<Record<LabMetricId, LabMetricSpec>> = {
   },
   kapGyCm2: { label: 'Calculated KAP', unit: ' Gy·cm²', digits: 2 },
   kapMicroGyM2: { label: 'Equivalent unit expression', unit: ' µGy·m²', digits: 0 },
+}
+
+/**
+ * What each displayed readout is, in one sentence, read from the arithmetic in `labReadouts` below.
+ *
+ * Report 2.11 (fellow walkthrough, PDF p.20): three readouts arrived with no explanation. These are
+ * statements about the model's quantities, not clinical meanings; where a value cannot be anything
+ * but one answer (display zoom never adds exposure) the sentence says so.
+ */
+export const LAB_METRIC_MEANINGS: Readonly<Record<LabMetricId, string>> = {
+  separationMm:
+    'The distance on the detector between where the tool tip and the target project in this projection. Zero means they are superimposed, however far apart they are in depth.',
+  depthMm:
+    'How far the tool tip sits from the target along the initial X-ray path: the depth a single projection collapses.',
+  irradiatedAreaPct:
+    'The collimated field’s area as a share of the full detector field, from the field width squared. Geometry, not dose.',
+  contextRetained:
+    'Whether the modeled target, both numbered landmarks and the whole dashed planned excursion fall inside the field.',
+  zoomAddsExposure: 'Always no: display zoom re-displays acquired pixels and delivers no X-rays.',
+  pulseRate: 'How often a new image is acquired.',
+  masPerSecond:
+    'Pulse rate × pulse width × a fixed 20 mA: the output the tube is asked for each second. Not patient dose.',
+  inFrameBlurMm:
+    'How far the tool travels during one pulse at the authored speed: the blur within one frame.',
+  interFrameTravelMm: 'How far the tool travels between one acquired frame and the next.',
+  intervalMs: 'The time between acquired frames: one second divided by the pulse rate.',
+  sweepDeg: 'The authored angular width of the DTS arc.',
+  planeMm: 'The depth of the reconstructed plane relative to the target plane.',
+  centered: 'Whether the lesion lies within the teaching tolerance of centre on both scout images.',
+  ready: 'Centered, with every readiness check declared.',
+  captured: 'Whether the checked model setup was captured before the spin.',
+  windowLabel:
+    'Where the modeled side-cutting window lies relative to the modeled lesion: geometry only.',
+  windowIntersects: 'Whether any part of the modeled window lies inside the modeled lesion.',
+  windowFull: 'Whether the whole modeled window lies inside the modeled lesion.',
+  tipInside:
+    'Whether the modeled tip lies inside the modeled lesion, which is a different question from the window.',
+  storedShiftMm: 'The displacement at which the stored contour was captured.',
+  currentShiftMm: 'The displacement the current anatomy sits at now.',
+  contourStale:
+    'Yes when the stored contour was captured at a different displacement from the current anatomy.',
+  inverseSquareRatio:
+    'One over the distance squared, relative to one metre: the idealized point-source trend, not a staff dose.',
+  kapGyCm2: 'Air kerma × beam area at the chosen plane.',
+  kapMicroGyM2: 'The same kerma–area product in µGy·m²: 1 Gy·cm² is 100 µGy·m².',
 }
 
 export function formatReadout(metric: LabMetricId, value: LabValue | undefined): string {

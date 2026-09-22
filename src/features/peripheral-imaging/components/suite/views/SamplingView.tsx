@@ -79,8 +79,11 @@ export function SamplingPanels({ inputs, revealed }: { inputs: SuiteInputs; reve
       className={styles.signalProfile}
       data-sampling-state={revealed ? 'revealed' : 'exploring'}
     >
-      <p>
-        Linked CT context and analytic sections · green: sampling window · white: shaft and tip.
+      {/* Report 6.3: one name for the lesion, and what the coarse CT behind it is for. */}
+      <p data-sampling-legend>
+        Amber sphere: the modeled lesion · green: the modeled sampling window · white: shaft and
+        tip. The CT behind them is low-resolution context for orientation, not the thing being
+        measured.
       </p>
       <p>
         {inputs.slab

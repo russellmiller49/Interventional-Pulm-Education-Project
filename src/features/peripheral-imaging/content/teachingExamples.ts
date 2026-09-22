@@ -15,7 +15,7 @@ export interface TeachingDemonstration {
 const projection: readonly TeachingExample[] = [
   {
     title: 'Baseline · frontal overlap',
-    look: 'The fictional tool and lesion are stationary, separated by 30 mm along the initial X-ray path. Their projections overlap: depth is collapsed onto the detector.',
+    look: 'The modeled tool and lesion are stationary, separated by 30 mm along the initial X-ray path. Their projections overlap: depth is collapsed onto the detector.',
     values: { orbit: 0, tilt: 0, depth: 30 },
   },
   {
@@ -69,7 +69,7 @@ const time: readonly TeachingExample[] = [
   },
   {
     title: 'Static localization',
-    look: 'With the fictional tool stationary, the motion terms vanish. Select temporal settings for the task and use stored images to deliberate; the lowest setting is not automatically adequate during movement.',
+    look: 'With the modeled tool stationary, the motion terms vanish. Select temporal settings for the task and use stored images to deliberate; the lowest setting is not automatically adequate during movement.',
     values: { rate: 3.75, width: 5, speed: 0 },
   },
 ]
@@ -80,13 +80,13 @@ const registration: readonly TeachingExample[] = [
     values: { shift: 0, previous: 0, overlay: false, showCurrent: true },
   },
   {
-    title: 'Saved contour · acquisition A',
+    title: 'Stored contour · acquisition A',
     look: 'The teal contour was saved from acquisition A at zero displacement. Turning it on does not acquire a new image.',
     values: { shift: 0, previous: 0, overlay: true, showCurrent: true },
   },
   {
     title: 'Subsequent change · contour on',
-    look: 'A rigid 20 mm displacement moves the current anatomy while the saved contour remains at acquisition A. This illustrates mismatch; it models neither atelectasis nor recruitment.',
+    look: 'A rigid 20 mm displacement moves the current anatomy while the stored contour remains at acquisition A. This illustrates mismatch; it models neither atelectasis nor recruitment.',
     values: { shift: 20, previous: 0, overlay: true, showCurrent: true },
   },
   {
@@ -120,7 +120,7 @@ const acquisition: readonly TeachingExample[] = [
 const sampling: readonly TeachingExample[] = [
   {
     title: 'Trace the actual sampling component',
-    look: 'Follow the amber intended lesion and green fictional side window across linked thin axial, coronal and sagittal planes. The white tip is a different part of the tool.',
+    look: 'Follow the amber intended lesion and green modeled side window across linked thin axial, coronal and sagittal planes. The white tip is a different part of the tool.',
     values: {
       tipX: 10,
       tipY: 0,
@@ -253,12 +253,12 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
             values: { sweep: 30, plane: 0 },
           },
           {
-            title: 'Scroll through the fictional tool',
+            title: 'Scroll through the modeled tool',
             look: 'This demonstration uses a tool at −18 mm in the parallel teaching model. Its focus changes with the selected plane; out-of-plane structures blur.',
             values: { sweep: 30, plane: -18 },
           },
           {
-            title: 'Scroll through the fictional lesion',
+            title: 'Scroll through the modeled lesion',
             look: 'The demonstration lesion is centered at zero. Limited-angle depth uncertainty remains. Finer voxel spacing is not evidence of finer measured resolution.',
             values: { sweep: 30, plane: 0 },
           },
@@ -270,7 +270,7 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
         examples: [
           {
             title: 'Patient, source and exposure path',
-            look: 'Inspect the patient as the scatter source, the tube side and staff position. Rings illustrate an idealized point-source distance relationship, not calibrated staff dose or a safe-distance boundary.',
+            look: 'The patient is the scatter source. In lateral projections, positions on the detector side often receive less than the beam-entrance (tube) side, but a CBCT spin changes directions throughout. Rings illustrate an idealized point-source distance relationship, not calibrated staff dose or a safe-distance boundary.',
             values: { distance: 1.3, orbit: 0, shield: false },
           },
           {
@@ -286,12 +286,12 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
         examples: [
           {
             title: 'Worked KAP arithmetic',
-            look: 'The fictional uniform field has 10 mGy air kerma over 100 cm²: 1 Gy·cm² KAP. This is not peak skin dose or effective dose.',
+            look: 'The modeled uniform field has 10 mGy air kerma over 100 cm²: 1 Gy·cm² KAP. This is not peak skin dose or effective dose.',
             values: { kerma: 10, area: 100 },
           },
           {
             title: 'Same kerma · different area',
-            look: 'Doubling the fictional field area doubles the arithmetic product at fixed kerma. Real automatic exposure response and patient dose are not represented.',
+            look: 'Doubling the modeled field area doubles the arithmetic product at fixed kerma. Real automatic exposure response and patient dose are not represented.',
             values: { kerma: 10, area: 200 },
           },
         ],

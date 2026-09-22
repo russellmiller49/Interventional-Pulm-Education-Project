@@ -802,3 +802,259 @@ test('the course remains readable at 200 percent zoom', async ({ page }, info) =
   )
   await page.screenshot({ path: info.outputPath('course-200-percent.png') })
 })
+
+/**
+ * BF-PRE-REVIEW-01: the worked example, the scripted clock and a finished card, in a real browser.
+ *
+ * These are the three things the fellow walkthrough found disagreeing with the model. They are
+ * exercised here with native pointer and keyboard actions on the real route, because the engine
+ * fixtures already passed while the page did not: the fixtures send the scripted clock as a
+ * learner input mode, and the pane sends it as `scripted`.
+ */
+const readout = (page: Page, id: string) => page.locator('[data-readout="' + id + '"]')
+
+test('the worked accessory exchange keeps its false report and still ends protected', async ({
+  page,
+}) => {
+  await reachAct(page, 'protected-accessories')
+  await ready(page)
+  const caption = page.locator('[data-demonstration-caption]')
+  const message = page.locator('[data-scope-message]')
+  const accessory = control(page, 'accessory')
+  await primary(page).click()
+  await expect(caption).toContainText('protected brush enters the channel')
+  const captions: string[] = []
+  for (let i = 0; i < 7; i++) {
+    await primary(page).click()
+    captions.push((await caption.textContent()) ?? '')
+    // The assistant's false report is the teaching moment; it must still be here.
+    if (/reports it done/.test(captions[i])) {
+      await expect(message).toContainText('back in its sheath')
+      await expect(accessory).toHaveValue('brush-exposed')
+    }
+    if (/report does not hold/.test(captions[i])) {
+      await expect(message).toContainText('disagree')
+      await expect(accessory).toHaveValue('brush-exposed')
+    }
+  }
+  expect(captions.some((text) => /reports it done/.test(text))).toBe(true)
+  expect(captions.some((text) => /report does not hold/.test(text))).toBe(true)
+  // The example ends in the state its last line narrates, with no refusal on the way.
+  await expect(caption).toContainText('protected brush returns into the channel')
+  await expect(accessory).toHaveValue('brush-sheathed')
+  await expect(control(page, 'accessory-move')).toHaveValue('in-channel')
+  await expect(message).toHaveCount(0)
+  // Watching it is not doing it: the learner's own attempt starts from nothing.
+  await page.getByRole('button', { name: 'Try with guidance' }).click()
+  await expect(accessory).toHaveValue('brush-sheathed')
+  await expect(control(page, 'accessory-move')).toHaveValue('none')
+  expect(await page.locator('[data-step-goals] li[data-met="true"]').count()).toBe(0)
+  expect((await record(page)).reviewedSectionIds).toEqual([])
+  // Replaying starts the example again from its first movement, on its own state.
+  await page.getByRole('button', { name: 'Replay the example' }).click()
+  await expect(caption).toContainText('protected brush enters the channel')
+  await expect(control(page, 'accessory-move')).toHaveValue('in-channel')
+  await page.getByRole('button', { name: 'Try with guidance' }).click()
+  await expect(control(page, 'accessory-move')).toHaveValue('none')
+  expect(await page.locator('[data-step-goals] li[data-met="true"]').count()).toBe(0)
+  expect((await record(page)).reviewedSectionIds).toEqual([])
+})
+
+test.describe('the scripted scene runs on its own clock', () => {
+  // The module config holds motion reduced for the pixel journeys; these two need it running.
+  test.use({ contextOptions: { reducedMotion: 'no-preference' } })
+
+  test('the authored breath moves on its own, and the crossing becomes reachable', async ({
+    page,
+  }) => {
+    test.setTimeout(240_000)
+    await reachAct(page, 'larynx-and-entry')
+    await ready(page)
+    expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(
+      false,
+    )
+    const folds = readout(page, 'cordsState')
+    const crossed = page.locator('[data-goal="cross-glottis-open"]')
+    // Nothing is pressed here: the patient breathes whether or not the learner acts.
+    await expect(folds).toContainText('breath out', { timeout: 20_000 })
+    await expect(folds).toContainText('breath in', { timeout: 20_000 })
+    await expect(folds).toContainText('breath out', { timeout: 20_000 })
+    // With the folds opening, a crossing timed to the opening is reachable at last.
+    for (let i = 0; i < 25 && (await crossed.getAttribute('data-met')) !== 'true'; i++) {
+      await expect(folds).toContainText('breath in', { timeout: 20_000 })
+      await control(page, 'advance').press('Enter')
+    }
+    await expect(crossed).toHaveAttribute('data-met', 'true')
+  })
+
+  test('the carina hold runs down on its own and finishes on the learner’s actions', async ({
+    page,
+  }) => {
+    const lesson = await openSection(page, 'branch-entry')
+    for (const step of lesson.steps) {
+      if (step.course?.id === 'hold-view') break
+      const leave = skip(page)
+      if (await leave.count()) await leave.click()
+      else await primary(page).click()
+    }
+    await ready(page)
+    const hold = readout(page, 'holdRemaining')
+    await expect(hold).toContainText('scripted seconds still to run')
+    // The clock runs with no learner action at all — and running out is not the hold.
+    await expect(hold).toContainText('the assistant is still waiting', { timeout: 30_000 })
+    for (const id of ['acknowledge', 'capture', 'hold', 'no-drift'])
+      await expect(page.locator('[data-goal="' + id + '"]')).toHaveAttribute('data-met', 'false')
+    await control(page, 'acknowledge').press('Enter')
+    await expect(page.locator('[data-goal="hold"]')).toHaveAttribute('data-met', 'false')
+    await control(page, 'capture').press('Enter')
+    await expect(hold).toContainText('finished')
+    for (const id of ['acknowledge', 'capture', 'hold', 'no-drift'])
+      await expect(page.locator('[data-goal="' + id + '"]')).toHaveAttribute('data-met', 'true')
+    await expect(primary(page)).toBeEnabled()
+    // The lead reports the record and the live readings; it never approves the image.
+    await expect(page.locator('[data-now-status]')).toHaveText(
+      'Recorded: every step this card asks for, and its live readings hold.',
+    )
+    await expect(page.locator('[data-goal-group]')).toHaveAttribute('data-goal-group', 'mixed')
+  })
+})
+
+test('closed folds still refuse the advance, and the manual step is the reduced-motion way on', async ({
+  page,
+}) => {
+  // The module config holds motion reduced; the scene then exposes Step one second, and the
+  // authored breath moves only when the learner moves it. That makes this check exact.
+  test.setTimeout(240_000)
+  await reachAct(page, 'larynx-and-entry')
+  await ready(page)
+  expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(
+    true,
+  )
+  await expect(page.locator('[data-scripted-scene="held"]')).toBeVisible()
+  const folds = readout(page, 'cordsState')
+  const crossed = page.locator('[data-goal="cross-glottis-open"]')
+  const refusal = page.locator('[data-scope-message]', { hasText: 'not apart' })
+  await control(page, 'reset').click()
+  await expect(folds).toContainText('breath out')
+  // The folds stay where the clock left them, so every press at the glottis meets them closed.
+  let refused = false
+  for (let i = 0; i < 20 && !refused; i++) {
+    await control(page, 'advance').press('Enter')
+    refused = await refusal.waitFor({ state: 'attached', timeout: 1000 }).then(
+      () => true,
+      () => false,
+    )
+  }
+  expect(refused).toBe(true)
+  await expect(folds).toContainText('breath out')
+  await expect(crossed).toHaveAttribute('data-met', 'false')
+  await expect(page.locator('[data-goal="no-advance-against-closure"]')).toHaveAttribute(
+    'data-met',
+    'false',
+  )
+  // Stepping the same authored cycle by hand opens the folds, and the same press then crosses.
+  for (let i = 0; i < 8 && !(await folds.textContent())?.includes('breath in'); i++)
+    await control(page, 'step').press('Enter')
+  await expect(folds).toContainText('breath in')
+  await control(page, 'advance').press('Enter')
+  await expect(crossed).toHaveAttribute('data-met', 'true')
+  await expect(refusal).toHaveCount(0)
+})
+
+// The report's own desktop viewport, and a phone: the bounded card has to read on both.
+for (const viewport of [
+  { width: 1204, height: 987 },
+  { width: 390, height: 844 },
+]) {
+  test(
+    'a finished card after an overshoot reports a record and not a view at ' + viewport.width,
+    async ({ page }) => {
+      test.setTimeout(240_000)
+      await page.setViewportSize(viewport)
+      await reachAct(page, 'view-loss')
+      await ready(page)
+      await control(page, 'withdraw').press('Enter')
+      await expect(page.locator('[data-view-signal]')).toHaveAttribute('data-view-signal', 'clear')
+      const carina = page.locator('[data-goal="on-to-the-carina"]')
+      for (let i = 0; i < 40 && (await carina.getAttribute('data-met')) !== 'true'; i++)
+        await control(page, 'advance').press('Enter')
+      await expect(carina).toHaveAttribute('data-met', 'true')
+      const status = page.locator('[data-now-status]')
+      const heading = page.locator('[data-goal-group]')
+      const limit = page.locator('[data-goal-now]')
+      await expect(status).toHaveText('Recorded: every step this card asks for.')
+      await expect(heading).toHaveText('On the record for this attempt')
+      await expect(limit).toContainText('does not judge the bronchoscope image')
+      // Keep going past the target, the way the walkthrough did.
+      for (let i = 0; i < 12; i++) await control(page, 'advance').press('Enter')
+      // The events happened, so the ticks stay; the headline still reports only the record.
+      await expect(carina).toHaveAttribute('data-met', 'true')
+      await expect(status).toHaveText('Recorded: every step this card asks for.')
+      await expect(page.locator('[data-now-card]')).not.toContainText(
+        'Every goal on this card is met',
+      )
+      // Where the tip is now stays visible, and separate from the record.
+      await expect(limit).toContainText('Where the tip is now:')
+      await expect(limit).not.toContainText('Where the tip is now: Trachea.')
+      expect(await page.locator('[data-step-goals] li[data-goal-claim="history"]').count()).toBe(3)
+      // The pane's own green list carries the same framing, not a bare row of ticks.
+      await expect(page.locator('[data-scope-goals-group]')).toHaveText(
+        'On the record for this attempt',
+      )
+      await expect(page.locator('[data-scope-goals-limit]')).toContainText(
+        'does not judge the bronchoscope image',
+      )
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+      ).toBe(true)
+      const themeOf = () =>
+        page.evaluate(() =>
+          document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        )
+      const shot = async (theme: string) =>
+        page.locator('[data-now-card]').screenshot({
+          path:
+            'test-results/bronchoscopy-foundations/overshoot-card-' +
+            viewport.width +
+            '-' +
+            theme +
+            '.png',
+        })
+      const first = await themeOf()
+      await shot(first)
+      // The same card in the other theme: the heading and the limit are the learner's only
+      // protection against reading the ticks as approval, so neither may disappear. The site's
+      // theme control sits inside the collapsed navigation at phone width, which is this module's
+      // chrome rather than its card, so the theme pass runs at the desktop width.
+      if (viewport.width >= 1024) {
+        const themeToggle = page.locator('button[aria-label="Toggle dark mode"]').first()
+        await expect(themeToggle).toBeVisible({ timeout: 15_000 })
+        await themeToggle.click()
+        await expect.poll(themeOf, { timeout: 10_000 }).not.toBe(first)
+        await expect(heading).toBeVisible()
+        await expect(limit).toBeVisible()
+        await expect(status).toHaveText('Recorded: every step this card asks for.')
+        await expect(page.locator('[data-scope-goals-limit]')).toBeVisible()
+        await shot(await themeOf())
+      }
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+      ).toBe(true)
+    },
+  )
+}
+
+test('a completed inspection record stays a record after the scope leaves those airways', async ({
+  page,
+}) => {
+  test.setTimeout(240_000)
+  await reachAct(page, 'systematic-survey')
+  await ready(page)
+  // Every goal on this card reads the attempt: the sequences it walked and the record it wrote.
+  const rows = page.locator('[data-step-goals] li')
+  await expect(rows).toHaveCount(5)
+  expect(await page.locator('[data-step-goals] li[data-goal-claim="history"]').count()).toBe(5)
+  await expect(page.locator('[data-goal-group]')).toHaveAttribute('data-goal-group', 'history')
+  await expect(page.locator('[data-now-card]')).not.toContainText('Read from the scope right now')
+  await expect(page.locator('[data-goal-now]')).toContainText('Where the tip is now:')
+})

@@ -817,18 +817,28 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 onSource={setSource}
                 hidden={view.monitor === 'hidden'}
               />
-              <p className={styles.monitorCaption}>
-                At frontal: screen right = patient left; top = superior. Zero-angle beam travels
-                posterior to anterior. Orbit and tilt use the model’s signed angles.
+              {/* Reports 2.6 and 3.2: the same words as the sliders, and the model's own signed
+                  convention stated in patient terms and pinned by a geometry test. It is not a
+                  console's LAO/RAO or cranial/caudal labelling, which the owner has not adopted. */}
+              <p className={styles.monitorCaption} data-orientation-caption>
+                At frontal: screen right = patient left; top = superior. The zero-angle beam travels
+                from the tube behind the patient to the detector in front. C-arm obliquity and beam
+                tilt are the model’s signed angles: positive obliquity swings the detector toward
+                the patient’s right, and positive tilt swings it toward the head. They are not a
+                console’s LAO/RAO or cranial/caudal labels, whose conventions vary by system.
               </p>
-              <p className={styles.monitorCaption}>
+              {/* Report 2.11: the numbered crosses and the dashed line were on the image and not in
+                  the legend. */}
+              <p className={styles.monitorCaption} data-projection-legend>
                 {view.mode === 'time'
                   ? timeModel.sampleIndex < 0
                     ? 'Waiting for the first completed pulse.'
                     : `Frame ${timeModel.sampleIndex + 1} · held between pulses. Amber: pulse travel; white: sampled tool.`
                   : isRegistration
                     ? 'Amber: current target · teal: stored contour · white: authored tool'
-                    : 'Amber contour: authored target · white mark: tool tip'}
+                    : fieldVisible
+                      ? 'Amber contour: authored target · white mark: tool tip · numbered crosses: modeled landmarks 1 and 2 · dashed teal line: planned tool excursion'
+                      : 'Amber contour: authored target · white mark: tool tip'}
               </p>
             </section>
           )}

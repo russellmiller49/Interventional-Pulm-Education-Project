@@ -374,6 +374,43 @@
   color: var(--stage-muted, var(--muted));
 }
 
+/**
+ * The goal rows say what they are, beside the ticks rather than under them (A4, A5).
+ *
+ * The heading names what the rows establish, and the limit paragraph carries the same weight as the
+ * rows themselves — a completed card must not read as approval of the bronchoscope image.
+ */
+.goalGroupHeading {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--stage-muted, var(--muted));
+  overflow-wrap: anywhere;
+}
+.goalLimit {
+  margin: 0.55rem 0 0;
+  padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--stage-accent, #75d9d0);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.goalClaimTag {
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: baseline;
+  opacity: 0.85;
+}
+
 .thumb {
   max-width: 18rem;
 }

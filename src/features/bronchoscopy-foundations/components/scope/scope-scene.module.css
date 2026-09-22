@@ -318,6 +318,18 @@
   color: #b1c3d2;
   font-size: 0.78rem;
 }
+.commandNote {
+  margin: 0 0 0.35rem;
+  color: #b1c3d2;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+.scriptClock {
+  margin: 0.45rem 0 0;
+  color: #b1c3d2;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
 .help p {
   line-height: 1.5;
 }

@@ -330,6 +330,28 @@ export const interventionDefinitionSchema = z
     effects: z.array(stateEffectSchema),
     prerequisites: z.array(identifierSchema),
     repeatable: z.boolean(),
+    /**
+     * Machine setup steps this action only *claims* to have completed. An action
+     * whose effects do not touch the device workflow cannot complete a step on
+     * it; naming the steps here lets the runtime check the claim against the
+     * facsimile's own record instead of recording a declaration as prime,
+     * review or connection. Mirrors `prismaxSetupSteps` ids, checked by
+     * `engine/__tests__/setupWorkflow.test.ts`.
+     */
+    assertsCompletedMachineSteps: z
+      .array(
+        z.enum([
+          'patient',
+          'therapy',
+          'prescription',
+          'sets',
+          'fluids',
+          'prime',
+          'review',
+          'connect-patient',
+        ]),
+      )
+      .optional(),
     sourceIds: sourceIdListSchema,
     reviewStatus: crrtReviewStatusSchema,
   })

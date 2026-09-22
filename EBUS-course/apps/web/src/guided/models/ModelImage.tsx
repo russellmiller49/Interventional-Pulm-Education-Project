@@ -6,9 +6,23 @@ import {
   phantomSections,
   routeDefinition,
   routeSupported,
+  type ContactMode,
   type ModelState,
   type ModelAction,
 } from '../../../../../../src/lib/ebus-model-contract'
+/*
+ * Condition-specific captions for the contact schematic (EBUS-PRE-REVIEW-03, L5-3). Each names
+ * the modelled origin of the dark band in the state the learner has selected — the same
+ * geometry the schematic already draws — and says nothing about mechanism or interpretation of
+ * any recorded image. The 3D viewport's concealed part names are untouched.
+ */
+const CONTACT_CAPTIONS: Record<ContactMode, string> = {
+  gap: 'Air gap: the transducer face is separated from the wall by the modelled air gap, so the drawn path ends at the interface and no tissue echoes are drawn beyond it.',
+  direct: 'Direct contact: the transducer face touches the wall and the drawn path continues into tissue.',
+  balloon: 'Fluid-balloon contact: the fluid-filled balloon bridges the transducer and the wall, and the drawn path continues into tissue.',
+  bubble: 'Balloon with a bubble: a focal air interface sits at the balloon–wall contact (labelled on the image); the dark band begins at that interface, at the top of the field.',
+  shadow: 'Contact with a reflector: a bright modelled focus lies within tissue (labelled on the image); the dark band begins behind that focus, not at the transducer.',
+}
 export function ModelImage({
   state: s,
   reveal,
@@ -49,8 +63,9 @@ export function ModelImage({
         </p>
         <p>{r?.source}</p>
         <p className="model-caption">
-          Arrows show viewing direction. They do not establish a clear needle path. Station 9 is not
-          modeled; hilar/interlobar regions still require an appropriate examination.
+          In the 3D view an arrow runs from the selected orientation locator to the fixed target;
+          it shows viewing direction only and does not establish a clear needle path. Station 9 is
+          not modeled; hilar/interlobar regions still require an appropriate examination.
         </p>
       </section>
     )
@@ -319,8 +334,52 @@ export function ModelImage({
             <path d="M-2 21L-5 43H5L2 21Z" fill="#0b111b" />
           </g>
         )}
+        {/* Labels at the modelled origin of the dark band for the selected condition (L5-3).
+            Text sits inside the 60-unit viewBox: left-anchored labels start at x = -28.5 and
+            right-anchored ones at x = 8.4, at a size that keeps every string within the field. */}
+        <g
+          className="contact-origin-labels"
+          fill="#9ef0e2"
+          stroke="none"
+          fontSize="1.7"
+          data-contact-origin={s.mode}
+        >
+          {s.mode === 'gap' && (
+            <>
+              <path d="M-6 8L-10 4.6" stroke="#9ef0e2" strokeWidth=".2" />
+              <text x="-28.5" y="4.2">air gap at the transducer face</text>
+            </>
+          )}
+          {s.mode === 'bubble' && (
+            <>
+              <path d="M3.4 8L9 4.6" stroke="#9ef0e2" strokeWidth=".2" />
+              <text x="9.4" y="4.2">focal air interface (bubble)</text>
+              <path d="M-9 30L-13 30" stroke="#9ef0e2" strokeWidth=".2" />
+              <text x="-28.5" y="30.6">shadow starts at the interface</text>
+            </>
+          )}
+          {s.mode === 'shadow' && (
+            <>
+              <path d="M2.2 19.6L8 16" stroke="#9ef0e2" strokeWidth=".2" />
+              <text x="8.4" y="15.7">modelled reflector</text>
+              <path d="M-4.5 34L-8.5 34" stroke="#9ef0e2" strokeWidth=".2" />
+              <text x="-28.5" y="34.6">dark band begins behind it</text>
+            </>
+          )}
+          {(s.mode === 'direct' || s.mode === 'balloon') && (
+            <>
+              <path d="M-6 8L-10 4.6" stroke="#9ef0e2" strokeWidth=".2" />
+              <text x="-28.5" y="4.2">
+                {s.mode === 'direct' ? 'direct transducer–wall contact' : 'fluid-balloon contact'}
+              </text>
+            </>
+          )}
+        </g>
       </svg>
       {reveal && hover && <p role="tooltip">{hover}</p>}
+      <p className="model-caption" data-contact-caption={s.mode}>
+        {CONTACT_CAPTIONS[s.mode]}
+      </p>
       <p className="model-caption">
         Qualitative authored echoes. Brightness is illustrative. Gain cannot restore the absent
         window in the air-gap condition.

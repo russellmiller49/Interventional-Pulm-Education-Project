@@ -1,5 +1,7 @@
-import { LINKED_TASK_VERSION, linkedSetup, linkedTaskId, emptyLinkedSweep, sampleLinkedSweep, type LinkedRenderedFrame } from '../../../../../../src/lib/ebus-linked-contract';
-import { LinkedModelView } from '../../guided/LinkedModelView';
+import { LINKED_TASK_VERSION, linkedSetup, linkedTaskId, emptyLinkedSweep, stepLinkedSweep, type LinkedRenderedFrame } from '../../../../../../src/lib/ebus-linked-contract';
+import { LinkedModelView, type LinkedSweepReport } from '../../guided/LinkedModelView';
+import { opticalRay } from '../../guided/linkedModels';
+import * as THREE from 'three';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useCourseShellText } from '@/i18n/courseShell';
@@ -25,7 +27,7 @@ import {
   constrainedPathAdvance,
   maxDrivableSMm,
 } from './channelExtent';
-import { clamp, computeSimulatorPose, projectToSector, type SimulatorProbePose } from './pose';
+import { clamp, computeSimulatorPose, projectToSector, resolveEndoscopeCameraCalibration, type SimulatorProbePose } from './pose';
 import { QuestHud } from './QuestHud';
 import {
   beginQuest,
@@ -1246,6 +1248,9 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
   const processedRollAction = useRef(0);
   const guidedActions = useRef({ count: 0, last: '', used: [] as EbusControl[] });
   const [guidedView, setGuidedView] = useState<'sector'|'bronch'|'anatomy'>(guided?.config.view ?? 'sector');
+  // Presentation only (EBUS-PRE-REVIEW-03): which branch the sweep sampler took last, so the
+  // workbench can say why a pass reset. It is not sent over the bridge and never affects evidence.
+  const [sweepReport, setSweepReport] = useState<LinkedSweepReport>({ event: null, resetProgress: null });
   const onGuidedFrame = useCallback((frame: typeof guidedFrame) => setGuidedFrame(frame), []);
   const guidedAction = (name: string, apply: () => void) => {
     if (!guided || guided.config.locked || !guided.config.controls.includes(name as EbusControl) || (guided.config.linkedLesson === 'acoustic-contact' && !guidedFrame.baselineFrameId)) return;
@@ -1586,11 +1591,23 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
     const acquisition = rollAcquisition.current;
     if (acquisition.approach !== linkedEvidence.approach || acquisition.count <= processedRollAction.current) return;
     processedRollAction.current = acquisition.count;
-    setLinkedEvidence(previous => {
-      const sweep = sampleLinkedSweep(previous.sweeps?.[acquisition.approach] ?? emptyLinkedSweep(), { roll: rollTrimDeg, frameId: guidedFrame.frameId, visible: guidedFrame.targetVisible, contact: sectorContactQuality });
-      return { ...previous, sweeps: { ...previous.sweeps, [acquisition.approach]: sweep }, scannedApproaches: sweep.phase === 'complete' ? [...new Set([...previous.scannedApproaches, acquisition.approach])] : previous.scannedApproaches };
-    });
-  }, [guided, guidedFrame, guidedPoseKey, sectorContactQuality, linkedEvidence.approach, rollTrimDeg]);
+    const before = linkedEvidence.sweeps?.[acquisition.approach] ?? emptyLinkedSweep();
+    // The same sampler as before, with its branch named (stepLinkedSweep === sampleLinkedSweep + event).
+    const { sweep, event } = stepLinkedSweep(before, { roll: rollTrimDeg, frameId: guidedFrame.frameId, visible: guidedFrame.targetVisible, contact: sectorContactQuality });
+    if (event !== 'unchanged') setSweepReport({ event, resetProgress: event.startsWith('reset') ? { samples: before.samples, span: before.span } : null });
+    setLinkedEvidence(previous => ({ ...previous, sweeps: { ...previous.sweeps, [acquisition.approach]: sweep }, scannedApproaches: sweep.phase === 'complete' ? [...new Set([...previous.scannedApproaches, acquisition.approach])] : previous.scannedApproaches }));
+  }, [guided, guidedFrame, guidedPoseKey, sectorContactQuality, linkedEvidence, rollTrimDeg]);
+  // Scene geometry for the Bronchoscopy caption (L3-12): distance from the calibrated lens origin
+  // along the optical axis to the first airway-wall hit. Read from the same pose, camera
+  // calibration and channel mesh the views render from; not an interpretation of any image.
+  const opticalWallDistanceMm = useMemo(() => {
+    if (!guided || !pose || !channelRaycastMesh || !caseData) return null;
+    const calibration = resolveEndoscopeCameraCalibration(caseData.endoscope_camera);
+    const ray = opticalRay(pose, calibration);
+    const raycaster = new THREE.Raycaster(ray.origin, ray.direction.clone().normalize(), 0, 400);
+    const hit = raycaster.intersectObject(channelRaycastMesh, false)[0];
+    return { distance: hit ? hit.distance : null, contactClearanceMm: calibration.contact_min_distance_mm ?? null, fovDeg: calibration.fov_deg, obliqueDeg: calibration.optical_axis_offset_deg };
+  }, [guided, pose, channelRaycastMesh, caseData]);
   useEffect(() => {
     if (!guided) return;
     const matching = guidedFrame.ready && guidedFrame.poseKey === guidedPoseKey;
@@ -2107,6 +2124,7 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       const preset = caseData.presets.find(p => p.preset_key === 'station_7_node_a::' + approach);
       if (!preset) return;
       rollAcquisition.current = null;
+      setSweepReport({ event: null, resetProgress: null });
       setSelectedKey(preset.preset_key); setLineIndex(preset.line_index); setSMm(preset.centerline_s_mm); setRollTrimDeg(config.initialRoll); setFlexionDeg(0);
       onLinkedEvidence({ approach });
     };
@@ -2116,7 +2134,10 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       {config.linkedLesson && <p className="guided-label">{config.linkedVariant === 'changed-window' ? 'Changed-position check: a different assisted start in the same anatomy model. Acquire new planes; the prior sweep does not count.' : 'Assisted start: airway position is supplied. Your scope movements acquire the ultrasound planes.'}</p>}
       {baselinePending && <p role="status">Loading the initial contact comparison before movement controls open.</p>}
       {config.linkedLesson && scopeControls}
-      {config.linkedLesson && acoustic.volume && <LinkedModelView ultrasound={sector} config={config} pose={pose} volume={acoustic.volume} caseData={caseData} contactQuality={sectorContactQuality} flexion={flexionDeg} evidence={linkedEvidence} onEvidence={onLinkedEvidence} onApproach={chooseApproach} onDemo={action => {
+      {config.linkedLesson && acoustic.volume && <LinkedModelView ultrasound={sector} config={config} pose={pose} volume={acoustic.volume} caseData={caseData} contactQuality={sectorContactQuality} flexion={flexionDeg} evidence={linkedEvidence} onEvidence={onLinkedEvidence} onApproach={chooseApproach}
+        targetVisible={guidedFrame.targetVisible} frameReady={guidedFrame.ready && guidedFrame.poseKey === guidedPoseKey} sweepReport={sweepReport}
+        targetName={(() => { const label = acoustic.volume.metadata.labels.find(l => l.key === selectedPreset?.station_key)?.label; return config.reveal && label ? `The example node (${label})` : 'The example node (yellow in the Anatomy model)'; })()}
+        onDemo={action => {
         if (!config.demonstration) return;
         if (action === 'roll') setRollTrimDeg(v => v === 25 ? 0 : 25);
         else if (action === 'flexion') setFlexionDeg(v => v === 15 ? 0 : 15);
@@ -2131,6 +2152,13 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       </div>
       {guidedView === 'anatomy' && <div className="guided-anatomy"><AnatomyScene activeStructure={null} assets={assets} cameraPose={cameraPose} caseData={caseData} hiddenStructureIds={hiddenSceneStructureSet} intersectedStructureIds={new Set()} layers={layers} lockView={false} pose={pose} selectedPreset={config.reveal ? selectedPreset : null} teachingView={false} /></div>}
       {guidedView === 'bronch' && <div className="guided-anatomy"><BronchoscopyView assets={assets} balloonInflated={bronchBalloonInflated} camera={caseData.endoscope_camera} caseData={caseData} focusStationKey={null} pose={pose} seeThroughWall={false} structures={[]} /></div>}
+      {guidedView === 'bronch' && opticalWallDistanceMm && <p className="guided-label" data-optical-caption>
+        Model optical view from the lens ({opticalWallDistanceMm.obliqueDeg}° forward-oblique, {opticalWallDistanceMm.fovDeg}° field).{' '}
+        {opticalWallDistanceMm.distance === null
+          ? 'No airway wall lies within 400 mm along the optical axis in this model.'
+          : `Along the optical axis the nearest airway wall is ${opticalWallDistanceMm.distance.toFixed(1)} mm from the lens${opticalWallDistanceMm.contactClearanceMm !== null && opticalWallDistanceMm.distance <= opticalWallDistanceMm.contactClearanceMm ? `, within the calibrated contact clearance of ${opticalWallDistanceMm.contactClearanceMm} mm, so the centre of this view is wall rather than lumen` : ''}.`}{' '}
+        Transducer contact index {sectorContactQuality.toFixed(2)}. This describes the model scene at the current pose; it is not an interpretation of a patient image.
+      </p>}
       </div>
       {!config.linkedLesson && <div hidden={guidedView !== 'sector'}>{sector}</div>}
       </div>

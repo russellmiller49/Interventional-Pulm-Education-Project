@@ -58,6 +58,39 @@ export interface LinkedSweep {
   span: number
   startRoll: number
 }
+/**
+ * The authored exercise tolerances the sampler has always applied, named so the workbench can
+ * report them (EBUS-PRE-REVIEW-03, L3-6 / L12-4). The values are unchanged and are not clinical
+ * thresholds; a test holds them to their historical numbers.
+ */
+export const LINKED_SWEEP_TOLERANCES = {
+  /** Below this contact index a frame carries no window and the sweep restarts. */
+  minContact: 0.45,
+  /** The largest rotation between two paused frames that still counts as one continuous sweep. */
+  maxStepDeg: 12,
+  /** Frames with the target in plane that one pass must collect before it can complete. */
+  minSamples: 5,
+  /** Rotation, in degrees, that one pass must cover before it can complete. */
+  minSpanDeg: 20,
+} as const
+/**
+ * What one sampled frame did to the sweep. `sampleLinkedSweep` is unchanged in behaviour; this
+ * is the same decision path with its branch named, so the workbench can say why a sweep reset
+ * instead of silently returning to "find a plane".
+ */
+export type LinkedSweepEvent =
+  | 'unchanged'
+  | 'already-complete'
+  | 'reset-contact'
+  | 'reset-reversed'
+  | 'reset-step'
+  | 'reset-early-exit'
+  | 'complete'
+  | 'sample'
+  | 'outside'
+  | 'started'
+  | 'entered-too-fast'
+  | 'inside'
 export const emptyLinkedSweep = (): LinkedSweep => ({
   phase: 'find-edge',
   lastRoll: null,
@@ -68,45 +101,76 @@ export const emptyLinkedSweep = (): LinkedSweep => ({
   span: 0,
   startRoll: 0,
 })
-export function sampleLinkedSweep(
+export function stepLinkedSweep(
   previous: LinkedSweep,
   frame: { roll: number; frameId: string; visible: boolean; contact: number },
-): LinkedSweep {
-  if (!frame.frameId || frame.frameId === previous.lastFrameId) return previous
-  if (previous.phase === 'complete') return previous
+): { sweep: LinkedSweep; event: LinkedSweepEvent } {
+  const T = LINKED_SWEEP_TOLERANCES
+  if (!frame.frameId || frame.frameId === previous.lastFrameId)
+    return { sweep: previous, event: 'unchanged' }
+  if (previous.phase === 'complete') return { sweep: previous, event: 'already-complete' }
   const delta = previous.lastRoll === null ? 0 : frame.roll - previous.lastRoll
-  if (frame.contact < 0.45)
-    return { ...emptyLinkedSweep(), lastFrameId: frame.frameId, lastRoll: frame.roll }
-  const continuous = Math.abs(delta) > 0 && Math.abs(delta) <= 12
+  if (frame.contact < T.minContact)
+    return {
+      sweep: { ...emptyLinkedSweep(), lastFrameId: frame.frameId, lastRoll: frame.roll },
+      event: 'reset-contact',
+    }
+  const continuous = Math.abs(delta) > 0 && Math.abs(delta) <= T.maxStepDeg
   const next = { ...previous, lastRoll: frame.roll, lastFrameId: frame.frameId }
   if (previous.phase === 'crossing') {
     if (!continuous || Math.sign(delta) !== previous.direction)
       return {
-        ...emptyLinkedSweep(),
-        lastRoll: frame.roll,
-        lastFrameId: frame.frameId,
-        outside: !frame.visible,
+        sweep: {
+          ...emptyLinkedSweep(),
+          lastRoll: frame.roll,
+          lastFrameId: frame.frameId,
+          outside: !frame.visible,
+        },
+        event: !continuous ? 'reset-step' : 'reset-reversed',
       }
     if (!frame.visible)
-      return previous.samples >= 5 && previous.span >= 20
-        ? { ...next, phase: 'complete' }
-        : { ...emptyLinkedSweep(), lastRoll: frame.roll, lastFrameId: frame.frameId, outside: true }
+      return previous.samples >= T.minSamples && previous.span >= T.minSpanDeg
+        ? { sweep: { ...next, phase: 'complete' }, event: 'complete' }
+        : {
+            sweep: {
+              ...emptyLinkedSweep(),
+              lastRoll: frame.roll,
+              lastFrameId: frame.frameId,
+              outside: true,
+            },
+            event: 'reset-early-exit',
+          }
     return {
-      ...next,
-      samples: previous.samples + 1,
-      span: Math.abs(frame.roll - previous.startRoll),
+      sweep: {
+        ...next,
+        samples: previous.samples + 1,
+        span: Math.abs(frame.roll - previous.startRoll),
+      },
+      event: 'sample',
     }
   }
-  if (!frame.visible) return { ...next, outside: true }
+  if (!frame.visible) return { sweep: { ...next, outside: true }, event: 'outside' }
   if (previous.outside && continuous)
     return {
-      ...next,
-      phase: 'crossing',
-      direction: Math.sign(delta),
-      samples: 1,
-      startRoll: frame.roll,
+      sweep: {
+        ...next,
+        phase: 'crossing',
+        direction: Math.sign(delta),
+        samples: 1,
+        startRoll: frame.roll,
+      },
+      event: 'started',
     }
-  return { ...next, outside: false }
+  return {
+    sweep: { ...next, outside: false },
+    event: previous.outside ? 'entered-too-fast' : 'inside',
+  }
+}
+export function sampleLinkedSweep(
+  previous: LinkedSweep,
+  frame: { roll: number; frameId: string; visible: boolean; contact: number },
+): LinkedSweep {
+  return stepLinkedSweep(previous, frame).sweep
 }
 export const linkedTaskId = (lesson: LinkedLesson, variant: LinkedVariant) => `${lesson}:${variant}`
 export const linkedTaskKey = (lesson: LinkedLesson, variant: LinkedVariant) =>

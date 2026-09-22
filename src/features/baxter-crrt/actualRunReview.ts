@@ -4,6 +4,7 @@ import type {
   CrrtLearningTimelineDetail,
   CrrtLearningTimelineEntry,
 } from './engine/learningSession'
+import { selectCrrtBloodFlowState } from './engine/circuitDelivery'
 import { hasCrrtRunActivity } from './engine/learningSession'
 import type { ActiveAlarm, CrrtEngineFaultId } from './engine/types'
 
@@ -51,6 +52,72 @@ export interface CrrtUnresolvedCause {
   readonly acknowledged: boolean
 }
 
+/**
+ * Where this run's simulated minutes came from.
+ *
+ * The clock moves in exactly two ways: the learner advances it, or a case action
+ * the learner performed carries its own authored observation interval
+ * (`simulation.advanceTimeSeconds`). Authored timed events fire *during* an
+ * advance and add no time of their own. Two paths that reached different clocks
+ * are not comparable, and the safe arm of a tolerance case reaches a later clock
+ * than the no-action arm precisely because its action carries an interval — so
+ * the split has to be visible rather than inferred.
+ *
+ * `reconciled` is a conservation check on that claim, not a caveat: it is false
+ * only if some other mechanism moved the clock.
+ */
+export interface CrrtRunTimeAccounting {
+  readonly totalElapsedSeconds: number
+  readonly advancedByLearnerSeconds: number
+  readonly advancedByCaseActionsSeconds: number
+  readonly reconciled: boolean
+  /** Actions performed in this run that carried their own observation interval. */
+  readonly intervalActions: readonly CrrtRunIntervalAction[]
+}
+
+export interface CrrtRunIntervalAction {
+  readonly actionId: string
+  readonly label: string
+  readonly atSeconds: number
+  readonly advanceSeconds: number
+}
+
+/**
+ * Delivery interruptions, kept separate from elapsed time and from downtime.
+ *
+ * A pause and a resume recorded at the same simulated timestamp genuinely
+ * accumulate no downtime, because no simulated time passed between them. That
+ * is the engine's accounting, not an omission: downtime accrues while the clock
+ * moves and delivery is not running. Nothing here charges time to a choice.
+ */
+export interface CrrtDeliveryInterruptionRecord {
+  readonly pauseCount: number
+  readonly resumeCount: number
+  readonly downtimeSeconds: number
+  readonly treatmentTimeSeconds: number
+  readonly deliveryState: string
+  /** True when a pause and resume happened without the clock moving between them. */
+  readonly pausedWithoutElapsedTime: boolean
+}
+
+/**
+ * The two bounded patient indices the engine actually advances, and the explicit
+ * statement that blood pressure is not one of them.
+ *
+ * `engine/patientModel.ts` advances an abstract tolerance-stress index, draws
+ * down an intravascular reserve and carries the fluid-overload total. It never
+ * writes mean arterial pressure, heart rate or vasopressor support — those stay
+ * at the supplied case values for the whole run. Showing the indices is what
+ * lets a learner tell a safer path from a harmful one at the same clock; naming
+ * the held blood pressure is what stops a static number from reading as
+ * tolerance.
+ */
+export interface CrrtModelIndexObservation {
+  readonly label: string
+  readonly value: string
+  readonly note: string
+}
+
 export interface CrrtActualRunReview {
   readonly hasRun: boolean
   /** Describes what the learner did on this page. It never asserts safe or successful care. */
@@ -62,7 +129,24 @@ export interface CrrtActualRunReview {
   readonly unsafeActionsPerformed: readonly CrrtSafetyReviewEntry[]
   readonly unresolvedCauses: readonly CrrtUnresolvedCause[]
   readonly elapsedSeconds: number
+  readonly timeAccounting: CrrtRunTimeAccounting
+  readonly interruptions: CrrtDeliveryInterruptionRecord
+  readonly modelIndices: readonly CrrtModelIndexObservation[]
+  /** Patient signals this exercise holds at their supplied value for the whole run. */
+  readonly heldPatientSignals: readonly CrrtActualObservation[]
 }
+
+export const CRRT_TIME_ACCOUNTING_CAPTION =
+  'Simulated minutes come from the time you advanced plus the observation interval carried by the case actions you performed. Two runs can only be compared at the same elapsed time.' as const
+
+export const CRRT_INTERRUPTION_CAPTION =
+  'Pausing and resuming is recorded separately from elapsed time and from downtime. Downtime accrues only while the clock moves and delivery is not running, so a pause and resume at the same timestamp add none.' as const
+
+export const CRRT_MODEL_INDEX_CAPTION =
+  'These are bounded model indices, not measurements. They are the signals this exercise actually advances, so they are what separates one path from another at the same elapsed time.' as const
+
+export const CRRT_HELD_PATIENT_SIGNAL_CAPTION =
+  'This exercise models no blood-pressure or vasopressor response to treatment. These stay at the value the case supplied for the whole run, so an unchanged number here is not evidence that a change was tolerated.' as const
 
 const timelineEventLabels: Readonly<Record<CrrtLearningTimelineEntry['type'], string>> =
   Object.freeze({
@@ -157,10 +241,170 @@ function formatNumber(value: number | null | undefined, digits: number, unit: st
   return `${value.toFixed(digits)} ${unit}`
 }
 
+/**
+ * The observation interval an authored action carries, read from the action's own
+ * `simulation.advanceTimeSeconds` effects. This is the interval the engine
+ * actually applies. The content model also carries a separate `latencySeconds`
+ * field that nothing consumes, so it is deliberately not read here: reporting it
+ * would claim an interval the run never takes.
+ */
+export function crrtActionObservationIntervalSeconds(
+  intervention: RuntimeCrrtCase['interventions'][number],
+): number {
+  return intervention.effects.reduce(
+    (total, effect) =>
+      effect.target === 'simulation.advanceTimeSeconds' && effect.valueType === 'number'
+        ? total + effect.value
+        : total,
+    0,
+  )
+}
+
+function selectTimeAccounting(session: CrrtLearningSessionState): CrrtRunTimeAccounting {
+  const interventionById = new Map(
+    session.caseDefinition.interventions.map((intervention) => [intervention.id, intervention]),
+  )
+  let advancedByLearnerSeconds = 0
+  const intervalActions: CrrtRunIntervalAction[] = []
+  for (const entry of session.timeline) {
+    if (entry.outcome === 'refused') continue
+    if (entry.type === 'time-advanced') {
+      const seconds = Number(entry.referenceId)
+      if (Number.isFinite(seconds)) advancedByLearnerSeconds += seconds
+      continue
+    }
+    if (entry.type !== 'intervention-performed' || entry.referenceId === null) continue
+    const intervention = interventionById.get(entry.referenceId)
+    if (!intervention) continue
+    const advanceSeconds = crrtActionObservationIntervalSeconds(intervention)
+    if (advanceSeconds > 0) {
+      intervalActions.push({
+        actionId: intervention.id,
+        label: intervention.label,
+        atSeconds: entry.atSeconds,
+        advanceSeconds,
+      })
+    }
+  }
+  const advancedByCaseActionsSeconds = intervalActions.reduce(
+    (total, action) => total + action.advanceSeconds,
+    0,
+  )
+  const totalElapsedSeconds = session.simulation.simulationTimeSeconds
+  return Object.freeze({
+    totalElapsedSeconds,
+    advancedByLearnerSeconds,
+    advancedByCaseActionsSeconds,
+    reconciled:
+      Math.abs(totalElapsedSeconds - (advancedByLearnerSeconds + advancedByCaseActionsSeconds)) <
+      1e-6,
+    intervalActions: Object.freeze(intervalActions),
+  })
+}
+
+const pausingDeliveryStates = new Set(['paused', 'ended', 'idle'])
+
+/**
+ * Counts delivery-state changes the learner actually caused in this run, from the
+ * authored effects of the actions they performed and their own console actions.
+ * It does not read the engine's final state back as a history.
+ */
+function selectInterruptions(session: CrrtLearningSessionState): CrrtDeliveryInterruptionRecord {
+  const interventionById = new Map(
+    session.caseDefinition.interventions.map((intervention) => [intervention.id, intervention]),
+  )
+  let pauseCount = 0
+  let resumeCount = 0
+  let pausedWithoutElapsedTime = false
+  let pausedAtSeconds: number | null = null
+  for (const entry of session.timeline) {
+    if (entry.outcome === 'refused') continue
+    let target: string | null = null
+    if (entry.type === 'intervention-performed' && entry.referenceId !== null) {
+      const intervention = interventionById.get(entry.referenceId)
+      const deliveryEffect = intervention?.effects.find(
+        (effect) => effect.target === 'device.deliveryState' && effect.valueType === 'enum',
+      )
+      target = deliveryEffect && deliveryEffect.valueType === 'enum' ? deliveryEffect.value : null
+    } else if (entry.type === 'device-action' && entry.referenceId === 'END_TREATMENT') {
+      target = 'ended'
+    } else if (entry.type === 'device-action' && entry.referenceId === 'START_TREATMENT') {
+      target = 'running'
+    }
+    if (target === null) continue
+    if (pausingDeliveryStates.has(target)) {
+      pauseCount += 1
+      pausedAtSeconds = entry.atSeconds
+      continue
+    }
+    if (target === 'running') {
+      if (pausedAtSeconds !== null) {
+        resumeCount += 1
+        if (pausedAtSeconds === entry.atSeconds) pausedWithoutElapsedTime = true
+        pausedAtSeconds = null
+      }
+    }
+  }
+  return Object.freeze({
+    pauseCount,
+    resumeCount,
+    downtimeSeconds: session.simulation.deliveredTherapy.cumulativeDowntimeSeconds,
+    treatmentTimeSeconds: session.simulation.deliveredTherapy.treatmentTimeSeconds,
+    deliveryState: session.simulation.device.deliveryState,
+    pausedWithoutElapsedTime,
+  })
+}
+
+function selectModelIndices(
+  session: CrrtLearningSessionState,
+): readonly CrrtModelIndexObservation[] {
+  const patient = session.simulation.patient
+  if (patient.status !== 'configured') return []
+  return Object.freeze([
+    {
+      label: 'Tolerance-stress index',
+      value: patient.hemodynamicStressIndex.toFixed(2),
+      note: 'A bounded 0-1 model index. It rises while machine removal outruns the supplied refill capacity and the reserve is exhausted, and recovers only while removal no longer outruns it. It is not a blood pressure, a lactate, or a shock score.',
+    },
+    {
+      label: 'Intravascular reserve remaining',
+      value: `${Math.round(patient.intravascularReserveMl)} mL of ${Math.round(patient.initialIntravascularReserveMl)} mL supplied`,
+      note: 'A bounded model buffer that is drawn down and never refilled during a run. A path that still has reserve did not spend it, rather than having recovered it.',
+    },
+    {
+      label: 'Total fluid overload carried',
+      value: `${Math.round(patient.totalFluidOverloadMl)} mL`,
+      note: "The supplied starting overload plus this run's whole-patient balance. It is an accounting total, not an assessed volume status.",
+    },
+  ])
+}
+
+function selectHeldPatientSignals(
+  session: CrrtLearningSessionState,
+): readonly CrrtActualObservation[] {
+  const patient = session.simulation.patient
+  if (patient.status !== 'configured') return []
+  return Object.freeze([
+    {
+      label: 'Mean arterial pressure (supplied, held)',
+      value: `${Math.round(patient.meanArterialPressureMmHg)} mmHg`,
+    },
+    {
+      label: 'Heart rate (supplied, held)',
+      value: `${Math.round(patient.heartRatePerMinute)} /min`,
+    },
+    {
+      label: 'Vasopressor support index (supplied, held)',
+      value: patient.vasopressorSupportIndex.toFixed(2),
+    },
+  ])
+}
+
 export function selectCrrtActualRunReview(session: CrrtLearningSessionState): CrrtActualRunReview {
   const definition = session.caseDefinition
   const simulation = session.simulation
   const hasRun = hasCrrtRunActivity(session)
+  const bloodFlow = selectCrrtBloodFlowState(simulation)
 
   const actions = session.timeline.map((entry) => {
     const details = entry.details ?? []
@@ -242,6 +486,15 @@ export function selectCrrtActualRunReview(session: CrrtLearningSessionState): Cr
       value: formatCrrtRunClock(simulation.deliveredTherapy.cumulativeDowntimeSeconds),
     },
     {
+      label: 'Blood flow set',
+      value: bloodFlow.setMlMin === null ? 'Not set' : `${Math.round(bloodFlow.setMlMin)} mL/min`,
+    },
+    {
+      label: 'Blood flow through the circuit at the end of this run',
+      value:
+        bloodFlow.actualMlMin === null ? 'Not set' : `${Math.round(bloodFlow.actualMlMin)} mL/min`,
+    },
+    {
       label: 'Access pressure now',
       value: formatNumber(simulation.circuit.pressures.accessPressureMmHg, 0, 'mmHg'),
     },
@@ -273,5 +526,9 @@ export function selectCrrtActualRunReview(session: CrrtLearningSessionState): Cr
     unsafeActionsPerformed,
     unresolvedCauses,
     elapsedSeconds: simulation.simulationTimeSeconds,
+    timeAccounting: selectTimeAccounting(session),
+    interruptions: selectInterruptions(session),
+    modelIndices: selectModelIndices(session),
+    heldPatientSignals: selectHeldPatientSignals(session),
   }
 }

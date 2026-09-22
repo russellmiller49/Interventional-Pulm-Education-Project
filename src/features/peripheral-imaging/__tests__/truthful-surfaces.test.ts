@@ -13,6 +13,7 @@ import {
   fixedExampleEvidence,
   illustrativeOnlyExampleIdentities,
 } from '../content/teachingExamples'
+import { transferOrigin } from '../content/transferOrigins'
 import { LESSONS } from '../data/lessons'
 
 /*
@@ -27,7 +28,12 @@ describe('report 1.2 — a prompt names the evidence the screen actually carries
       for (const step of lesson.steps) {
         if (step.interaction.kind !== 'prediction') continue
         const { round } = step.interaction
-        if (step.activity.visual === 'case') {
+        if (round === 1 && transferOrigin(sectionId)) {
+          // PI-FELLOW-03 (report CW1): a reused closing question is named as optional review of
+          // the section it belongs to, and never as a new situation or an image to inspect.
+          expect(step.instruction).not.toMatch(/inspect the image|different situation/i)
+          expect(step.instruction).toMatch(/optional review/i)
+        } else if (step.activity.visual === 'case') {
           // No visual at all: a written scenario, and it says so.
           expect(step.instruction).not.toMatch(/inspect the image/i)
           expect(step.instruction).toMatch(/read the scenario|stated evidence/i)

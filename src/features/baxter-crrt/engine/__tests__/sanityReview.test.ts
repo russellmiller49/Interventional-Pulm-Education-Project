@@ -8,6 +8,7 @@ import {
   selectCrrtSoluteDynamicsValidityMap,
 } from '../soluteValidity'
 import { advanceSolutePool } from '../soluteModel'
+import { completeCrrtMachineSetup } from '../testSupport/machineWorkflow'
 
 function start(caseId: 'CRRT-02' | 'CRRT-04' | 'CRRT-11' | 'CRRT-13' | 'CRRT-15') {
   return createCrrtLearningSession({
@@ -162,7 +163,15 @@ describe('independent Batch 01 sanity regressions', () => {
   )
 
   it('contains the configured CRRT-04 six-hour removal-only trajectory as well', () => {
-    let run = start('CRRT-04')
+    // The run now starts on the machine, because a case card can no longer prime,
+    // review, connect or start around the facsimile's interlock (F-17). The
+    // removal-only arithmetic this pins is unchanged: the same supplied example
+    // prescription reaches the engine, by the only route that can start it.
+    let run = completeCrrtMachineSetup(start('CRRT-04'), {
+      bloodFlowMlMin: 120,
+      dialysateFlowMlHour: 1_800,
+      patientFluidRemovalMlHour: 100,
+    })
     for (const suffix of [
       'assess-goal',
       'enter-blood-flow',

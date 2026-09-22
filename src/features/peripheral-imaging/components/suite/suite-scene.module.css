@@ -968,10 +968,52 @@
   background: color-mix(in srgb, var(--amber, #d9a554) 14%, var(--suite-card-inset));
 }
 .readouts > div[data-readout-changed='true'] dd::after {
-  content: ' · changed';
+  content: ' · moved by your last change';
   font-weight: 500;
   font-size: 12px;
   color: var(--suite-card-muted);
+}
+
+/* PI-FELLOW-03: readout meanings (report 2.11), the KAP lead (7.1) and the exact-value details (7.1). */
+.readoutMeanings {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--suite-card-muted);
+}
+.readoutMeanings summary {
+  cursor: pointer;
+  color: var(--suite-card-ink);
+}
+.readoutMeanings dl {
+  margin: 6px 0 0;
+  display: grid;
+  gap: 4px;
+}
+.readoutMeanings dt {
+  font-weight: 650;
+  color: var(--suite-card-ink);
+}
+.readoutMeanings dd {
+  margin: 0 0 4px;
+}
+.leadRule {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-left: 3px solid var(--cyan, #367e83);
+  background: var(--suite-card-inset);
+  color: var(--suite-card-ink);
+}
+.exactValues {
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+.exactValues summary {
+  cursor: pointer;
+}
+.exactValues ul {
+  margin: 6px 0;
+  padding-left: 1.1rem;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Both the R3F Canvas wrapper and the orbit controls set touch-action inline. The browser

@@ -514,7 +514,7 @@ export function TomosynthesisPanels({
       <p>
         {prior
           ? 'The display colour-codes the image source: gray from the thirteen DTS projections, teal from the planning CT.'
-          : '13 parallel teaching projections · cone arc for orientation. Dashed arc: unsampled directions. Bars on the focal plane: out-of-plane spreading.'}
+          : '13 parallel teaching projections; the cone arc is drawn for orientation. Dashed arc: the directions the arc never sampled, the missing wedge. Bars on the focal plane: how far each object spreads out of plane.'}
       </p>
       {prior && (
         <fieldset disabled={!enabled} className={styles.controls}>
@@ -548,10 +548,19 @@ export function TomosynthesisPanels({
         </fieldset>
       )}
       <ProjectionFilmstrip model={model} />
-      <p>
+      <p data-spread-readout>
         Tool-plane spread:{' '}
         {smearWidth(DTS.toolPlaneRelativeMm, inputs.planeDepth, inputs.sweepDeg).toFixed(1)} mm ·
         target-plane spread: {smearWidth(0, inputs.planeDepth, inputs.sweepDeg).toFixed(1)} mm.
+      </p>
+      {/* Report 4.6: the readout defined from the arithmetic that prints it (`smearWidth`), not
+          from a guess. */}
+      <p data-spread-definition>
+        Spread is how far across the image the model smears each object at the selected plane: the
+        difference between where it lands at the two ends of the arc once the images are shifted for
+        that depth. It is zero when the plane passes through the object and grows with the object’s
+        distance from the plane and with the arc, so the plane where an object’s spread reaches zero
+        is the plane it lies in.
       </p>
     </section>
   )

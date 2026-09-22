@@ -31,6 +31,7 @@ import {
   PRISMAX_TMP_HYDROSTATIC_OFFSET_MMHG,
   PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG,
 } from '../engine/pressureModel'
+import type { CrrtBloodFlowState } from '../engine/circuitDelivery'
 import type { CrrtFlowRates } from '../engine/types'
 import styles from './crrt-pilot-circuit.module.css'
 
@@ -48,6 +49,7 @@ export interface CrrtPilotCircuitProps {
   setReady: boolean
   fluidsReady: boolean
   bloodFlowMlMin: number | null
+  bloodFlow?: CrrtBloodFlowState
   dialysateFlowMlHour: number | null
   patientFluidRemovalMlHour: number | null
   pressure: CrrtPilotPressureSignals
@@ -429,6 +431,7 @@ export function CrrtPilotCircuit({
   setReady,
   fluidsReady,
   bloodFlowMlMin,
+  bloodFlow,
   dialysateFlowMlHour,
   patientFluidRemovalMlHour,
   pressure,
@@ -492,8 +495,11 @@ export function CrrtPilotCircuit({
       ? 'Static teaching diagram; no live patient run.'
       : `Circuit state: ${running ? 'running' : 'stopped'}.`,
     `Training set ${setReady ? 'ready' : 'not ready'}; fluids ${fluidsReady ? 'ready' : 'not ready'}.`,
-    `Blood flow ${accessibleSignal(bloodFlowMlMin, 'milliliters per minute')}; dialysate flow ${accessibleSignal(dialysateFlowMlHour, 'milliliters per hour')}; patient fluid removal ${accessibleSignal(patientFluidRemovalMlHour, 'milliliters per hour')}.`,
+    `Blood flow set ${accessibleSignal(bloodFlowMlMin, 'milliliters per minute')}; dialysate flow ${accessibleSignal(dialysateFlowMlHour, 'milliliters per hour')}; patient fluid removal ${accessibleSignal(patientFluidRemovalMlHour, 'milliliters per hour')}.`,
     `Pressure state: access ${accessibleSignal(pressure.access, 'millimeters of mercury')}; filter ${accessibleSignal(pressure.filter, 'millimeters of mercury')}; return ${accessibleSignal(pressure.return, 'millimeters of mercury')}; effluent ${accessibleSignal(pressure.effluent, 'millimeters of mercury')}; transmembrane pressure ${accessibleSignal(pressure.TMP, 'millimeters of mercury')}; filter pressure drop ${accessibleSignal(pressure.filterDrop, 'millimeters of mercury')}.`,
+    bloodFlow
+      ? `Actual blood flow ${accessibleSignal(bloodFlow.actualMlMin, 'milliliters per minute')}. ${bloodFlow.status !== 'delivering' ? 'Calculated TMP and filter drop are not interpretable without blood flow.' : ''}`
+      : '',
     selectedPressureSummary,
   ].join(' ')
 
@@ -585,7 +591,7 @@ export function CrrtPilotCircuit({
               <strong>{fluidsReady ? 'Ready' : 'Not ready'}</strong>
             </div>
             <div>
-              <span>Blood flow</span>
+              <span>Blood flow set</span>
               <SignalValue value={bloodFlowMlMin} unit="mL/min" />
             </div>
             <div>
@@ -598,6 +604,15 @@ export function CrrtPilotCircuit({
             </div>
           </div>
         </>
+      ) : null}
+      {bloodFlow ? (
+        <p className={styles.panelNote}>
+          Blood flow set: {bloodFlow.setMlMin ?? 'Not set'} mL/min; actual blood flow:{' '}
+          {bloodFlow.actualMlMin ?? 'Not set'} mL/min.{' '}
+          {bloodFlow.status !== 'delivering'
+            ? 'Calculated TMP and filter drop are not interpretable without blood flow.'
+            : ''}
+        </p>
       ) : null}
       <p className={focused ? styles.visuallyHidden : styles.textSummary} id={summaryId}>
         {textEquivalent}
@@ -774,7 +789,9 @@ export function CrrtPilotCircuit({
                     <em data-kind={detail.kind}>
                       {detail.kind === 'directly-modelled-site'
                         ? 'Directly modelled site'
-                        : 'Calculated relationship'}
+                        : bloodFlow && bloodFlow.status !== 'delivering'
+                          ? 'Calculated relationship · not interpretable without blood flow'
+                          : 'Calculated relationship'}
                     </em>
                   </div>
                 ))}

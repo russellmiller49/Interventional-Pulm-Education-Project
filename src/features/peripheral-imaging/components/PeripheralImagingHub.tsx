@@ -59,9 +59,15 @@ export function PeripheralImagingHub() {
           <h1 className="mt-3 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">
             See the target. Understand the image.
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
-            Learn to optimize fluoroscopy, interpret DTS and CBCT, and assess the biopsy tool’s
-            relationship to a peripheral lung lesion.
+          {/* Report O2: both modalities spelled out where they are first met. */}
+          <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground" data-hub-lede>
+            Learn to optimize fluoroscopy, interpret digital tomosynthesis (DTS) and cone-beam CT
+            (CBCT), and assess the biopsy tool’s relationship to a peripheral lung lesion. Terms are
+            defined in the{' '}
+            <a href="#glossary" className="font-semibold text-primary">
+              glossary
+            </a>{' '}
+            below and at the start of each section.
           </p>
           <p className="mt-3 text-sm text-muted-foreground">
             {imagingMicroCasesInPathwayOrder().length} practice cases are available on the{' '}

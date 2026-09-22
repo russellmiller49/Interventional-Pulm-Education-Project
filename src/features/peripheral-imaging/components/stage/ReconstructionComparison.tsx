@@ -8,9 +8,130 @@ import {
   type ReconstructionAccount,
 } from '../../content/reconstruction'
 import { imagingSectionLinkTarget } from '../../content/pathwayResolver'
-import { imagingLesson } from '../../content/pathway'
+import { imagingLesson, peripheralImagingSectionIds } from '../../content/pathway'
 import { Link } from '@/i18n/navigation'
 import styles from './imaging-stage.module.css'
+
+function firstSentence(text: string): string {
+  const match = text.match(/^[^.!?]*[.!?]/)
+  return (match ? match[0] : text).trim()
+}
+
+const LEAD_ROWS: readonly {
+  readonly label: string
+  readonly cell: (a: ReconstructionAccount) => string
+}[] = [
+  { label: 'In short', cell: (a) => a.inShort },
+  { label: 'What is collected', cell: (a) => firstSentence(a.measured) },
+  { label: 'What comes out', cell: (a) => firstSentence(a.comesOut) },
+  { label: 'How much of it was acquired', cell: (a) => firstSentence(a.provenance) },
+  { label: 'Its visible limit', cell: (a) => firstSentence(a.cannotAsk[0]) },
+]
+
+/**
+ * Reports 4.1 and 5.1: on the demonstration step the analogy comes first, then one readable figure
+ * per modality, then a short table; the full two-column account, with what each answers and does
+ * not and its model boundary, is one disclosure away. A section that builds one of the two leads
+ * with that one and says where the other is taught, rather than repeating every paragraph.
+ */
+function LeadComparison({ lead }: { readonly lead: ReconstructionAccount['id'] | 'both' }) {
+  const ordered = [...RECONSTRUCTION_ACCOUNTS].sort((a, b) =>
+    a.id === lead ? -1 : b.id === lead ? 1 : 0,
+  )
+  const emphasised = lead === 'both' ? null : ordered[0]
+  const other = lead === 'both' ? null : ordered[1]
+  return (
+    <div className={styles.reconstruction} data-reconstruction-comparison data-lead={lead}>
+      <p className={styles.reconstructionAnalogy} data-reconstruction-analogy>
+        <strong>Think of it this way.</strong> {(emphasised ?? ordered[0]).analogy}
+      </p>
+      <div className={styles.reconstructionPair}>
+        {ordered.map((account) => (
+          <figure
+            key={account.id}
+            className={styles.reconstructionFigure}
+            data-reconstruction-figure={account.id}
+            data-emphasis={account.id === lead ? 'true' : undefined}
+          >
+            <figcaption>
+              <strong>{account.name}.</strong> {account.inShort}
+            </figcaption>
+            <ReconstructionDiagram account={account.id} />
+            <ul className={styles.reconstructionLegend} aria-label="Legend">
+              {account.id === 'tomosynthesis' ? (
+                <>
+                  <li>Shaded band: acquired, across the image.</li>
+                  <li>Dashed block: inferred along the beam, from an older scan or a model.</li>
+                </>
+              ) : (
+                <>
+                  <li>Gridded block: acquired, in every direction.</li>
+                  <li>Block edge: where the volume is truncated.</li>
+                </>
+              )}
+            </ul>
+          </figure>
+        ))}
+      </div>
+      <table className={styles.reconstructionTable} data-reconstruction-table>
+        <thead>
+          <tr>
+            <th scope="col">
+              <span className="sr-only">Aspect</span>
+            </th>
+            {ordered.map((account) => (
+              <th
+                key={account.id}
+                scope="col"
+                data-emphasis={account.id === lead ? 'true' : undefined}
+              >
+                {account.name}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {LEAD_ROWS.map((row) => (
+            <tr key={row.label}>
+              <th scope="row">{row.label}</th>
+              {ordered.map((account) => (
+                <td
+                  key={account.id}
+                  data-label={account.name}
+                  data-emphasis={account.id === lead ? 'true' : undefined}
+                >
+                  {row.cell(account)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {other ? (
+        <p className={styles.reconstructionWhere} data-reconstruction-elsewhere={other.id}>
+          The {other.name} side is taught in{' '}
+          <Link href={imagingSectionLinkTarget(other.shownIn)}>
+            Section {peripheralImagingSectionIds.indexOf(other.shownIn) + 1},{' '}
+            {imagingLesson(other.shownIn).title}
+          </Link>
+          ; it is kept here for the comparison.
+        </p>
+      ) : null}
+      <details className={styles.reconstructionFull} data-reconstruction-full>
+        <summary>
+          Full account: how each picture is built, what it answers and what it does not, and its
+          model boundary
+        </summary>
+        <p className={styles.reconstructionLede}>{RECONSTRUCTION_CONTRAST}</p>
+        <div className={styles.reconstructionPair}>
+          {ordered.map((account) => (
+            <AccountCard key={account.id} account={account} dense={false} />
+          ))}
+        </div>
+      </details>
+    </div>
+  )
+}
 
 /**
  * How a reconstruction is made: the two acquisitions side by side.
@@ -25,7 +146,15 @@ import styles from './imaging-stage.module.css'
  * drawing that gave them different shapes would teach the wrong difference. What differs is which
  * part of that shape was measured.
  */
-export function ReconstructionComparison({ dense = false }: { readonly dense?: boolean }) {
+export function ReconstructionComparison({
+  dense = false,
+  lead,
+}: {
+  readonly dense?: boolean
+  /** Lead with the analogy, figures and a short table; the full account folds (reports 4.1, 5.1). */
+  readonly lead?: ReconstructionAccount['id'] | 'both'
+}) {
+  if (lead) return <LeadComparison lead={lead} />
   return (
     <div
       className={styles.reconstruction}

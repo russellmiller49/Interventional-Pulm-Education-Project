@@ -69,6 +69,8 @@ export interface TeachingBlock {
   points?: string[]
   sources: SourceId[]
   detail?: { title: string; body: string }
+  /** One sentence set apart as an immediate safety callout, printed before the body (report 7.4). */
+  callout?: string
 }
 export interface Lesson {
   id: string

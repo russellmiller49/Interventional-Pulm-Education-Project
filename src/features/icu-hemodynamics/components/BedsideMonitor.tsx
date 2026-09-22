@@ -8,10 +8,11 @@ import type {
   PressureWaveformField,
 } from '../engine'
 import {
-  latestEndExpiratoryCvpCursor,
+  monitorPressureReadouts,
   recentTracePressureMetrics,
   thermodilutionAcceptedAverage,
 } from '../engine'
+import { catheterSimulationNotice } from '../engine/catheterSafety'
 import { CARDIAC_PHASE } from '../engine/waveformMorphology'
 import { WaveformStrip, type WaveformLandmark, type WaveformPhaseCursor } from './WaveformStrip'
 import styles from './icu-hemodynamics.module.css'
@@ -116,16 +117,17 @@ export function BedsideMonitor({
   const measurements = state.measurements
   const withheld = chamberLabel === 'withheld'
   const thermodilutionAverage = thermodilutionAcceptedAverage(state.thermodilutionTrials)
-  const endExpiratoryCvpCursor = useMemo(
-    () =>
-      latestEndExpiratoryCvpCursor(
-        state.waveforms,
-        state.measurements.heartRateBpm,
-        state.parameters.respiratoryRateBpm,
-      ),
-    [state.measurements.heartRateBpm, state.parameters.respiratoryRateBpm, state.waveforms],
-  )
-  const endExpiratoryRap = endExpiratoryCvpCursor?.value ?? measurements.rapMmHg
+  /*
+   * The rail's pressures come from one selector, which the decision record reads too.
+   *
+   * They used to be derived here and, separately, from `state.measurements` in the record's
+   * provenance adapter, which then described the model's estimate as the displayed value; the two
+   * disagreed (sanity review of HD-PRE-REVIEW-01, blocker 3). `monitorPressureReadouts` is now the
+   * only implementation, so "displayed" means this.
+   */
+  const readouts = useMemo(() => monitorPressureReadouts(state), [state])
+  const endExpiratoryCvpCursor = readouts.rightAtrial.cursor
+  const endExpiratoryRap = readouts.rightAtrial.displayedMmHg
   const endExpirationMarker: WaveformPhaseCursor | undefined = endExpiratoryCvpCursor
     ? {
         time: endExpiratoryCvpCursor.time,
@@ -136,7 +138,8 @@ export function BedsideMonitor({
     ? {
         time: endExpiratoryCvpCursor.time,
         value: endExpiratoryCvpCursor.value,
-        label: `end-exp · c-base ${endExpiratoryCvpCursor.value.toFixed(0)}`,
+        // The tag prints the rail's number, so the trace and the rail cannot disagree by a digit.
+        label: `end-exp · c-base ${value(endExpiratoryRap)}`,
       }
     : undefined
   const activeAlarms = state.alarms.filter(
@@ -149,8 +152,12 @@ export function BedsideMonitor({
         state.catheter.position === 'wedge'),
   )
   const cvpScaleMaximum = lowPressureScaleMaximum(measurements.rapMmHg + 10)
+  const falseWedge = state.measurementSystem.artifact === 'false-wedge'
+  // What the simulation itself is restricting, named as a simulation notice rather than smuggled
+  // into the device alarm bar (report L9-02).
+  const simulationNotice = catheterSimulationNotice(state)
   const wedgeScaleMaximum = lowPressureScaleMaximum(
-    state.measurementSystem.artifact === 'false-wedge'
+    falseWedge
       ? measurements.papSystolicMmHg + 5
       : (measurements.pawpMmHg ?? measurements.papDiastolicMmHg) + 8,
   )
@@ -180,13 +187,19 @@ export function BedsideMonitor({
         : state.catheter.position === 'wedge'
           ? {
               field: 'pcwpMmHg',
-              label: 'PAWP',
+              // A channel is named for what it is carrying. Under the false-wedge artifact the
+              // engine deliberately draws this channel from the pulmonary-artery waveform, because
+              // retained pulsatility is what an incomplete occlusion looks like — so naming it
+              // PAWP asserted the one thing the tracing denies (report L9-01).
+              label: falseWedge ? 'PAC distal' : 'PAWP',
               minimum: 0,
               maximum: wedgeScaleMaximum,
               color: '#ffd166',
-              landmarks: WEDGE_LANDMARKS,
-              referenceValue: measurements.pawpMmHg ?? measurements.papDiastolicMmHg,
-              referenceLabel: 'end-exp mean',
+              landmarks: falseWedge ? PA_LANDMARKS : WEDGE_LANDMARKS,
+              referenceValue: falseWedge
+                ? measurements.meanPapMmHg
+                : (measurements.pawpMmHg ?? measurements.papDiastolicMmHg),
+              referenceLabel: falseWedge ? 'trace mean' : 'end-exp mean',
               transitionFrom:
                 state.catheter.wedgeStartedAt === null
                   ? undefined
@@ -225,10 +238,6 @@ export function BedsideMonitor({
     : namedPacTrace
   // Labels would smear across a sweeping trace, so they appear only on a frozen strip.
   const annotate = state.frozen
-  const artTraceMetrics = useMemo(
-    () => recentTracePressureMetrics(state.waveforms, 'artMmHg', state.measurements.heartRateBpm),
-    [state.measurements.heartRateBpm, state.waveforms],
-  )
   const pacTraceMetrics = useMemo(
     () =>
       state.catheter.position === 'introducer' || state.catheter.position === 'ra'
@@ -240,9 +249,9 @@ export function BedsideMonitor({
           ),
     [pacTrace.field, state.catheter.position, state.measurements.heartRateBpm, state.waveforms],
   )
-  const artSystolic = Math.round(artTraceMetrics?.systolic ?? measurements.artSystolicMmHg)
-  const artDiastolic = Math.round(artTraceMetrics?.diastolic ?? measurements.artDiastolicMmHg)
-  const artMean = Math.round(artTraceMetrics?.mean ?? measurements.mapMmHg)
+  const artSystolic = readouts.arterial.systolicMmHg
+  const artDiastolic = readouts.arterial.diastolicMmHg
+  const artMean = readouts.arterial.mean.displayedMmHg
   const acceptedCardiacIndex =
     thermodilutionAverage === null
       ? null
@@ -288,11 +297,27 @@ export function BedsideMonitor({
                 )}/${value(pacTraceMetrics?.diastolic ?? measurements.papDiastolicMmHg)}`,
                 detail: `mPAP ${value(pacTraceMetrics?.mean ?? measurements.meanPapMmHg)}`,
               }
-            : {
-                label: 'PAC · PAWP',
-                value: value(pacTraceMetrics?.mean ?? measurements.pawpMmHg),
-                detail: 'live occlusion mean · mmHg',
-              }
+            : falseWedge
+              ? {
+                  label: 'PAC · distal',
+                  value: value(pacTraceMetrics?.mean ?? measurements.pawpMmHg),
+                  // Not an occlusion mean: the tracing has kept its pulmonary-artery pulsatility,
+                  // which is what an incomplete occlusion looks like. The balloon state is printed
+                  // because the contradiction the report found was between a claimed live
+                  // occlusion and a balloon that was down (L9-01, Figure 37 callout 3).
+                  detail: `trace mean · balloon ${
+                    state.catheter.balloonInflated ? 'up' : 'down'
+                  } · not a validated occlusion · mmHg`,
+                }
+              : {
+                  label: 'PAC · PAWP',
+                  value: value(pacTraceMetrics?.mean ?? measurements.pawpMmHg),
+                  detail: `${
+                    state.catheter.balloonInflated
+                      ? 'balloon occlusion'
+                      : 'occluded branch, balloon down'
+                  } · live mean · mmHg`,
+                }
 
   if (focus !== 'all') {
     const arterial = focus === 'arterial'
@@ -373,6 +398,12 @@ export function BedsideMonitor({
         </div>
         <time>{state.timeSeconds.toFixed(1)} s</time>
       </header>
+
+      {simulationNotice && !withheld ? (
+        <p className={styles.simulationNotice} role="status" data-simulation-safety-notice>
+          {simulationNotice}
+        </p>
+      ) : null}
 
       <div className={styles.alarmBar} role="status" aria-live="polite">
         {activeAlarms.length === 0 ? (
@@ -504,7 +535,11 @@ export function BedsideMonitor({
               {state.catheter.storedWedgeMmHg !== null
                 ? 'stored end-exp · mmHg'
                 : state.catheter.position === 'wedge'
-                  ? 'live trace visible · not stored'
+                  ? // "A live trace is visible" said nothing about whether that trace is an
+                    // occlusion pressure. Under the false-wedge artifact it is not (report L9-01).
+                    falseWedge
+                    ? 'nothing stored · the distal trace is not a valid occlusion'
+                    : 'live occlusion trace visible · not stored'
                   : 'not captured'}
             </small>
           </div>

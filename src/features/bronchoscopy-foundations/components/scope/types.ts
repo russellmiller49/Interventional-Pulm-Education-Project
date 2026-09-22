@@ -369,6 +369,8 @@ export type ScopeMetricId =
   | 'annularAreaMm2'
   | 'cordsState'
   | 'accessoryState'
+  /** What the scripted hold's own clock has left to run, from the state the goal reads. */
+  | 'holdRemaining'
   | 'ledgerSummary'
   | 'inputMode'
   | 'assistsUsed'
@@ -386,6 +388,7 @@ export const SCOPE_METRIC_IDS: readonly ScopeMetricId[] = [
   'annularAreaMm2',
   'cordsState',
   'accessoryState',
+  'holdRemaining',
   'ledgerSummary',
   'inputMode',
   'assistsUsed',
@@ -573,7 +576,16 @@ export interface ScopePaneProps {
   /** Printed on the scene when the controls are locked (deciding) or paused (looking back). */
   readonly lockedReason?: string
   readonly pausedReason?: string
-  readonly goals: readonly { readonly goal: ScopeGoal; readonly met: boolean }[]
+  /**
+   * What the step is waiting for, and — once met — what each row has established: `history` for a
+   * record of the attempt that survives the tip moving on, `current` for a live reading. The pane
+   * frames its own list with it, so a row of green ticks is never read as approval of the image.
+   */
+  readonly goals: readonly {
+    readonly goal: ScopeGoal
+    readonly met: boolean
+    readonly claim?: 'history' | 'current' | 'mixed'
+  }[]
   /** `locationCaption(state)`, printed verbatim. */
   readonly caption: string
   readonly treeAnswer?: TreeAnswer

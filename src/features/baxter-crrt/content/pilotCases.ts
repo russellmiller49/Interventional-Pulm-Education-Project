@@ -659,6 +659,10 @@ const crrt04 = {
       response: 'The device workflow is ready for a reviewed educational start.',
       latencySeconds: 0,
       effects: [],
+      // This card has no device effects: prime and review happen on the machine
+      // facsimile. Naming the steps it asserts keeps it a confirmation of the
+      // machine's own record instead of a substitute for it.
+      assertsCompletedMachineSteps: ['prime', 'review'],
       prerequisites: ['crrt04-enter-blood-flow', 'crrt04-enter-machine-pfr'],
       repeatable: false,
       sourceIds: ['DEV-PM-005', 'SYNTH-CRRT-04'],

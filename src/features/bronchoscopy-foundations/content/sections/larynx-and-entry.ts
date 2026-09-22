@@ -295,6 +295,7 @@ export const section: BronchSectionDefinition = {
       start: { kind: 'larynx' },
       controls: ['advance', 'withdraw', 'rotate', 'deflect', 'declare', 'recenter', 'reset'],
       assists: { recenter: true },
+      readouts: ['cordsState', 'deflectionDeg'],
       ledger: { expected: ['TR'] },
       script: 'breathing-cords',
       litAirways: ['TR'],

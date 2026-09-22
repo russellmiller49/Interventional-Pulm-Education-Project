@@ -401,10 +401,15 @@ export function ConeBeamPanels({
       data-cbct-state={a.failed ? 'failed' : a.complete ? 'complete' : 'ready'}
       data-gantry-variant={inputs.variant}
     >
-      <p>
-        {inputs.variant === 'mobile' ? 'Mobile cart' : 'Fixed support'} · teal cylinder: authored
-        field of view · small box: teaching centre tolerance · blue shell: drawn swept envelope, not
-        a clearance test.
+      {/* Report 5.3: a plain-language legend that keeps its limits. The tolerance is this exercise's,
+          not a device's, and the shell is drawn for orientation and is no clearance check. */}
+      <p data-scout-legend>
+        {inputs.variant === 'mobile' ? 'Mobile cart' : 'Fixed support'}. Teal cylinder: the volume
+        this modeled spin would reconstruct, its field of view; a lesion outside it is not imaged.
+        Small box: how close to centre the lesion has to be for this exercise to count it as
+        centred, a teaching tolerance and not a device specification. Blue shell: the space the
+        modeled C-arm sweeps through, drawn for orientation only; it is not a collision or clearance
+        check.
       </p>
       <div className={styles.sequenceToolbar}>
         <button
