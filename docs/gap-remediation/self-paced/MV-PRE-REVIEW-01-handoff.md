@@ -320,7 +320,7 @@ batch: scope, holds and exclusions are unchanged, and nothing assigned to batch 
 | Original batch base                        | `c717c9ffae09cb67e19b06a56d37c75487a5605a`                              |
 | Head reviewed by Codex                     | `4ee81a508964851250aa793f7426e24c229c82d1`                              |
 | `origin/main` when the repair pass started | `f01e43e2410e96f8f77a0db6814a4853749add24` (merges of PR #255 and #257) |
-| Repaired head                              | the repair commit on `claude/mechanical-vent-9-21`, pushed to PR #259   |
+| Repaired head                              | `6a37a26b5429c31e09d75dfaec3c1544554ebe37`                              |
 
 **Current main integrates cleanly.** `git merge-tree --write-tree origin/main HEAD` produced a tree
 with no conflicts, and the files main changed since `c717c9ff` do not intersect this branch's change
