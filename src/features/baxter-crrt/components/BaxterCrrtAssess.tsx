@@ -40,15 +40,10 @@ export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }
     return () => window.clearTimeout(hydrationTimer)
   }, [])
 
+  // The role lens is presentational. Reloading the capstone case for it would
+  // discard the learner's run, so only the lens itself changes (X-08).
   useEffect(() => {
-    dispatch({
-      type: 'LOAD_CASE',
-      caseDefinition: capstoneCase,
-      experience: 'mastery',
-      roleLens,
-      attempt: 1,
-      deviceId: baxterCrrtMasteryManifest.deviceId,
-    })
+    dispatch({ type: 'SET_ROLE_LENS', roleLens })
   }, [roleLens])
 
   function chooseRole(nextRole: CrrtRoleLens) {

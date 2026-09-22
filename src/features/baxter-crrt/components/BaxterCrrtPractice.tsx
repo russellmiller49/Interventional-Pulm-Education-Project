@@ -28,6 +28,15 @@ function validPracticeCaseId(value: string | undefined): value is CrrtCaseId {
   return value !== undefined && (baxterCrrtPracticeCaseIds as readonly string[]).includes(value)
 }
 
+/**
+ * One validated case identity for the URL, the rendered case, the session and
+ * the visit record. An unknown or missing `?case=` falls back to the first core
+ * case rather than mixing a requested title with another case's data.
+ */
+function resolvePracticeCaseId(requested: string | undefined): CrrtCaseId {
+  return validPracticeCaseId(requested) ? requested : baxterCrrtCoreCaseIds[0]
+}
+
 export function BaxterCrrtPractice({
   locale = 'en',
   initialCaseId,
@@ -36,15 +45,18 @@ export function BaxterCrrtPractice({
   readonly initialCaseId?: string
 }) {
   const router = useRouter()
-  const firstCaseId = validPracticeCaseId(initialCaseId) ? initialCaseId : baxterCrrtCoreCaseIds[0]
-  const [selectedCaseId, setSelectedCaseId] = useState<CrrtCaseId>(firstCaseId)
+  const routeCaseId = resolvePracticeCaseId(initialCaseId)
+  const requestedCaseUnavailable =
+    initialCaseId !== undefined && !validPracticeCaseId(initialCaseId)
+  const [selectedCaseId, setSelectedCaseId] = useState<CrrtCaseId>(routeCaseId)
+  const [lastRouteCaseId, setLastRouteCaseId] = useState<CrrtCaseId>(routeCaseId)
   const [roleLens, setRoleLens] = useState<CrrtRoleLens>('integrated')
   const [progress, setProgress] = useState(() => readCrrtSelfPacedProgress(null))
   const [hydrated, setHydrated] = useState(false)
   const [session, dispatch] = useReducer(
     crrtLearningSessionReducer,
     {
-      caseDefinition: getBaxterCrrtCase(firstCaseId),
+      caseDefinition: getBaxterCrrtCase(routeCaseId),
       experience: 'practice' as const,
       roleLens: 'integrated' as const,
       attempt: 1,
@@ -52,6 +64,14 @@ export function BaxterCrrtPractice({
     },
     createCrrtLearningSession,
   )
+
+  // The address bar is the case identity. A route change — Next recommended,
+  // a direct link, reload, back or forward — moves the rendered case with it.
+  // A same-case or unrelated query update changes nothing, so the run survives.
+  if (routeCaseId !== lastRouteCaseId) {
+    setLastRouteCaseId(routeCaseId)
+    setSelectedCaseId(routeCaseId)
+  }
 
   const selectedDefinition = getBaxterCrrtCase(selectedCaseId)
   const selectedCatalogEntry = getBaxterCrrtCaseCatalogEntry(selectedCaseId)
@@ -61,16 +81,20 @@ export function BaxterCrrtPractice({
       (caseId) => caseId !== selectedCaseId && !progress.visitedCaseIds.includes(caseId),
     ) ?? null
 
+  // The visit record follows the case actually shown, so an unrelated query
+  // update cannot record a visit for a case the learner never saw.
   useEffect(() => {
     const hydrationTimer = window.setTimeout(() => {
-      recordCrrtVisit({ section: 'practice', id: firstCaseId })
+      recordCrrtVisit({ section: 'practice', id: selectedCaseId })
       const stored = readCrrtSelfPacedProgress()
       setProgress(stored)
       setHydrated(true)
     }, 0)
     return () => window.clearTimeout(hydrationTimer)
-  }, [firstCaseId, initialCaseId])
+  }, [selectedCaseId])
 
+  // `getBaxterCrrtCase` returns one frozen definition per ID, so this fires
+  // exactly once per real case change and never on a role change or re-render.
   useEffect(() => {
     dispatch({
       type: 'LOAD_CASE',
@@ -80,14 +104,25 @@ export function BaxterCrrtPractice({
       attempt: 1,
       deviceId: 'prismax-aw8035-2xx',
     })
-  }, [roleLens, selectedDefinition])
+    // The role lens is applied through SET_ROLE_LENS below; reloading the case
+    // for a presentational change would discard the run (X-08).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDefinition])
+
+  useEffect(() => {
+    dispatch({ type: 'SET_ROLE_LENS', roleLens })
+  }, [roleLens])
 
   function chooseCase(caseId: CrrtCaseId) {
     if (!(baxterCrrtPracticeCaseIds as readonly string[]).includes(caseId)) return
+    if (caseId === selectedCaseId) return
+    // `lastRouteCaseId` mirrors the route only. Leaving it alone here is what
+    // lets the local choice stand until the router catches up, and still lets a
+    // later back/forward route change win.
     setSelectedCaseId(caseId)
-
-    recordCrrtVisit({ section: 'practice', id: caseId })
-    setProgress(readCrrtSelfPacedProgress())
+    // Keep the shareable URL on the case actually shown, including the
+    // additional cases, so a link, reload, back and forward all agree.
+    router.push({ pathname: `${baxterCrrtNavBase}/practice`, query: { case: caseId } })
   }
 
   function chooseRole(nextRole: CrrtRoleLens) {
@@ -111,6 +146,12 @@ export function BaxterCrrtPractice({
         }}
         currentTaskExtras={
           <div className={styles.workspaceCasePicker} data-hydrated={hydrated}>
+            {requestedCaseUnavailable ? (
+              <p role="status" aria-label="Requested practice case unavailable">
+                That practice case link is not available, so {selectedCatalogEntry.title} is open
+                instead. Choose a case below to change it.
+              </p>
+            ) : null}
             <label>
               <span>Practice case</span>
               <select

@@ -17,7 +17,6 @@ import { useRef, useState, type Dispatch, type KeyboardEvent } from 'react'
 import type { CriticalCareActivityPhase } from '@/features/learning-module/activity'
 import { ActivityStepper } from '@/features/learning-module/components/ActivityStepper'
 
-import type { RuntimeCrrtCase } from '../content/schema'
 import { getCrrtWorkedCaseExample } from '../content/workedCaseExamples'
 import { selectCrrtConsoleControls } from '../engine/consoleControls'
 import { selectSecondsUntilNextScheduledEvent } from '../engine/selectors'
@@ -28,7 +27,15 @@ import type {
   CrrtReasoningPhase,
 } from '../engine/learningSession'
 import { hasCrrtRunActivity } from '../engine/learningSession'
-import { crrtSoluteIds, type CrrtRoleLens } from '../engine/types'
+import type { CrrtRoleLens } from '../engine/types'
+import { selectCrrtActualRunReview } from '../actualRunReview'
+import {
+  CRRT_LAB_TEACHING_SCOPE,
+  CRRT_SUPPLIED_BASELINE_CAPTION,
+  CRRT_UNMODELED_LAB_CAPTION,
+  formatCrrtSuppliedLabValue,
+  selectCrrtLabEvidence,
+} from '../labEvidence'
 import { selectCrrtWorkedRetiredIds } from '../workedCaseModel'
 import { PrismaxPilotInterface, type PrismaxPilotCaseContext } from './PrismaxPilotInterface'
 import { CrrtWorkedCaseGuide, CrrtWorkedRunComparison } from './CrrtWorkedCaseExample'
@@ -75,19 +82,6 @@ const simulationTimeAdvanceOptions = [
   { seconds: 3_600, label: '+1 hr' },
   { seconds: 21_600, label: '+6 hr' },
 ] as const
-
-const timelineEventLabels: Readonly<
-  Record<CrrtLearningSessionState['timeline'][number]['type'], string>
-> = {
-  'prediction-committed': 'Prediction committed',
-  'intervention-performed': 'Intervention performed',
-  'device-action': 'Device action',
-  'alarm-acknowledged': 'Alarm acknowledged',
-  'time-advanced': 'Time advanced',
-  'hint-used': 'Hint used',
-  'reassessment-committed': 'Reassessment committed',
-  'debrief-revealed': 'Debrief revealed',
-}
 
 export type CrrtMobileSurface = 'case' | 'machine' | 'patient' | 'debrief'
 
@@ -151,23 +145,6 @@ function formatTrendValue(value: number | null | undefined, unit: string): strin
   return `${rounded} ${unit}`
 }
 
-function timelineReferenceLabel(
-  definition: RuntimeCrrtCase,
-  entry: CrrtLearningSessionState['timeline'][number],
-): string | null {
-  const referenceId = entry.referenceId
-  if (referenceId === null) return null
-  if (entry.type === 'time-advanced') {
-    const seconds = Number(referenceId)
-    return Number.isFinite(seconds) ? `+${formatSimulationTime(seconds)}` : referenceId
-  }
-  const intervention = definition.interventions.find(({ id }) => id === referenceId)
-  if (intervention) return intervention.label
-  const hint = definition.hintLadder.find(({ id }) => id === referenceId)
-  if (hint) return `Hint ${hint.sequence}`
-  return referenceId.replaceAll('-', ' ')
-}
-
 function toggleId(current: readonly string[], id: string): string[] {
   return current.includes(id) ? current.filter((value) => value !== id) : [...current, id]
 }
@@ -181,12 +158,9 @@ const mobileSurfaces: readonly { readonly id: CrrtMobileSurface; readonly label:
 
 export function CrrtCasePlayer(props: CrrtCasePlayerProps) {
   const { session } = props
-  const playerKey = [
-    session.caseDefinition.id,
-    session.experience,
-    session.roleLens,
-    session.attempt,
-  ].join(':')
+  // The role lens is presentational. Keying on it would remount the player and
+  // discard the run's local state, which is the defect X-08 describes.
+  const playerKey = [session.caseDefinition.id, session.experience, session.attempt].join(':')
   return <CrrtCasePlayerContent key={playerKey} {...props} />
 }
 
@@ -199,7 +173,6 @@ function CrrtCasePlayerContent({
   showSharedStepper = true,
 }: CrrtCasePlayerProps) {
   const definition = session.caseDefinition
-  const isMastery = session.experience === 'mastery'
   // Worked cases retire generic options from the learner surface; their records stay for history.
   const workedExample = getCrrtWorkedCaseExample(definition.id)
   const retiredIds = selectCrrtWorkedRetiredIds(definition, workedExample)
@@ -227,6 +200,8 @@ function CrrtCasePlayerContent({
   const usedHintSet = new Set(session.usedHintIds)
   const performedSet = new Set(session.performedInterventionIds)
   const hasRun = hasCrrtRunActivity(session)
+  const runReview = selectCrrtActualRunReview(session)
+  const labEvidence = selectCrrtLabEvidence(session)
   const firstTrend = session.simulation.trends[0]
   const latestTrend = session.simulation.trends.at(-1)
   const trendEvidenceRows =
@@ -267,23 +242,10 @@ function CrrtCasePlayerContent({
             first: formatTrendValue(firstTrend.transmembranePressureMmHg, 'mmHg'),
             latest: formatTrendValue(latestTrend.transmembranePressureMmHg, 'mmHg'),
           },
-          ...crrtSoluteIds.flatMap((id) => {
-            const first = firstTrend.soluteConcentrationsPerLiter[id]
-            const latest = latestTrend.soluteConcentrationsPerLiter[id]
-            if (first === undefined && latest === undefined) return []
-            const pool =
-              session.simulation.patient.status === 'configured'
-                ? session.simulation.patient.solutes[id]
-                : undefined
-            const unit = pool?.concentrationUnit ?? 'per L'
-            return [
-              {
-                label: id.replaceAll('-', ' '),
-                first: formatTrendValue(first, unit),
-                latest: formatTrendValue(latest, unit),
-              },
-            ]
-          }),
+          // Solute concentrations are deliberately absent from this table.
+          // They are advanced by delivered clearance alone, so they are not a
+          // measured laboratory trend; the supplied baseline and the explicit
+          // not-modeled statement below carry that evidence honestly.
         ]
       : []
   const nextHint = definition.hintLadder
@@ -814,65 +776,65 @@ function CrrtCasePlayerContent({
           </>
         ) : debrief ? (
           <div className={styles.debriefBody}>
-            <h5>Worked debrief explanation</h5>
-            <p>This describes the example. Actual session observations are listed below.</p>
-            <p className={styles.debriefSummary}>{debrief.summary}</p>
-            <section className={styles.scoreCard} aria-label="Teaching debrief status">
+            <section className={styles.scoreCard} aria-label="Debrief status">
               <div>
                 <span>Causal debrief</span>
-                <strong>{hasRun ? 'Run reviewed' : 'Example reviewed · no run performed'}</strong>
-                <small>
-                  Compare the teaching explanation with any actions and observations from this
-                  session.
-                </small>
+                <strong>{runReview.statusLabel}</strong>
+                <small>{runReview.statusDetail}</small>
               </div>
+            </section>
+
+            <section aria-labelledby={scopedId('crrt-supplied-teaching-path')}>
+              <h5 id={scopedId('crrt-supplied-teaching-path')}>
+                Supplied teaching path · worked example
+              </h5>
+              <p>
+                This is the authored explanation for this case. It describes the example, not what
+                you did in this run.
+              </p>
+              <p className={styles.debriefSummary}>{debrief.summary}</p>
             </section>
 
             <section
               className={styles.attemptEvidence}
               aria-labelledby={scopedId('crrt-actual-attempt-evidence')}
             >
-              <h5 id={scopedId('crrt-actual-attempt-evidence')}>This session</h5>
+              <h5 id={scopedId('crrt-actual-attempt-evidence')}>What you did in this run</h5>
+              {runReview.actions.length === 0 ? (
+                <p>No action, console entry, or time advance was recorded in this run.</p>
+              ) : (
+                <ol className={styles.attemptTimeline}>
+                  {runReview.actions.map((entry) => (
+                    <li key={entry.sequence}>
+                      <time>{formatSimulationTime(entry.atSeconds)}</time>
+                      <span>
+                        {entry.label}
+                        {entry.outcome === 'refused' ? ' · not applied' : ''}
+                      </span>
+                      {entry.valueNote ? <small>{entry.valueNote}</small> : null}
+                    </li>
+                  ))}
+                </ol>
+              )}
+
+              <h6>Actual reassessment</h6>
+              <p>
+                {runReview.reassessmentLabels.length > 0
+                  ? runReview.reassessmentLabels.join('; ')
+                  : 'Not recorded. The recommended reassessment below is the authored answer, not something you entered.'}
+              </p>
+
+              <h6>What this run recorded</h6>
               <dl className={styles.attemptEvidenceGrid}>
-                <div>
-                  <dt>Performed interventions</dt>
-                  <dd>
-                    {session.performedInterventionIds.length > 0
-                      ? session.performedInterventionIds
-                          .map((id) => selectedLabel(definition.interventions, id))
-                          .join('; ')
-                      : 'None'}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Actual reassessment</dt>
-                  <dd>
-                    {session.reassessment.optionIds.length > 0
-                      ? session.reassessment.optionIds
-                          .map((id) => selectedLabel(definition.reassessmentOptions, id))
-                          .join('; ')
-                      : 'None'}
-                  </dd>
-                </div>
+                {runReview.observations.map((observation) => (
+                  <div key={observation.label}>
+                    <dt>{observation.label}</dt>
+                    <dd>{observation.value}</dd>
+                  </div>
+                ))}
               </dl>
 
-              <h6>Recorded action timeline</h6>
-              <ol className={styles.attemptTimeline}>
-                {session.timeline
-                  .filter((entry) => entry.type !== 'hint-used')
-                  .map((entry) => {
-                    const referenceLabel = timelineReferenceLabel(definition, entry)
-                    return (
-                      <li key={entry.sequence}>
-                        <time>{formatSimulationTime(entry.atSeconds)}</time>
-                        <span>{timelineEventLabels[entry.type]}</span>
-                        {referenceLabel ? <small>{referenceLabel}</small> : null}
-                      </li>
-                    )
-                  })}
-              </ol>
-
-              <h6>Sampled pressure, dose, fluid, and laboratory evidence</h6>
+              <h6>Sampled pressure, dose, and fluid evidence</h6>
               {firstTrend && latestTrend ? (
                 <div
                   className={styles.trendEvidenceRegion}
@@ -906,6 +868,78 @@ function CrrtCasePlayerContent({
               )}
             </section>
 
+            <section aria-labelledby={scopedId('crrt-actual-safety-review')}>
+              <h5 id={scopedId('crrt-actual-safety-review')}>Safety review of this run</h5>
+              {runReview.unsafeActionsPerformed.length === 0 ? (
+                <p>
+                  This run recorded none of the actions this case flags as unsafe. That is a record
+                  of what you did, not a judgement that the run was clinically adequate.
+                </p>
+              ) : (
+                <ul className={styles.unsafeActionList}>
+                  {runReview.unsafeActionsPerformed.map((entry) => (
+                    <li key={entry.actionId}>
+                      <strong>{entry.actionLabel}</strong>
+                      <p>{entry.explanation}</p>
+                      {entry.criticalErrorLabel ? (
+                        <p>
+                          <em>{entry.criticalErrorLabel}:</em> {entry.criticalErrorExplanation}
+                        </p>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <h6>Modeled cause at the end of this run</h6>
+              {runReview.unresolvedCauses.length === 0 ? (
+                <p>No simulated fault was still active when the run ended.</p>
+              ) : (
+                <ul>
+                  {runReview.unresolvedCauses.map((cause) => (
+                    <li key={cause.faultId}>
+                      <strong>{cause.label}</strong> is still active
+                      {cause.alarmLabel ? ` with the ${cause.alarmLabel} alert showing` : ''}.
+                      {cause.acknowledged
+                        ? ' This run recorded an acknowledgement of that alert.'
+                        : ''}{' '}
+                      Seeing or acknowledging an alert does not correct its cause; the simulated
+                      cause stays in place until it is corrected.
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section aria-labelledby={scopedId('crrt-lab-evidence')}>
+              <h5 id={scopedId('crrt-lab-evidence')}>Laboratory values in this case</h5>
+              <p>{CRRT_SUPPLIED_BASELINE_CAPTION}</p>
+              <dl className={styles.attemptEvidenceGrid}>
+                {labEvidence.suppliedBaseline.map((entry) => (
+                  <div key={entry.id}>
+                    <dt>{entry.label}</dt>
+                    <dd>{formatCrrtSuppliedLabValue(entry)}</dd>
+                  </div>
+                ))}
+              </dl>
+              {labEvidence.unmodeledGroups.length > 0 ? (
+                <>
+                  <h6>Not modeled in this exercise</h6>
+                  <p>{CRRT_UNMODELED_LAB_CAPTION}</p>
+                  <ul>
+                    {labEvidence.unmodeledGroups.map((group) => (
+                      <li key={group.key}>
+                        <strong>{group.soluteLabels.join(', ')}</strong> — this exercise has no
+                        reviewed specification for {group.missingInputText}, so it cannot represent
+                        how these values would move during treatment.
+                      </li>
+                    ))}
+                  </ul>
+                  <p>{CRRT_LAB_TEACHING_SCOPE}</p>
+                </>
+              ) : null}
+            </section>
+
             {workedExample ? (
               <CrrtWorkedRunComparison
                 session={session}
@@ -914,7 +948,7 @@ function CrrtCasePlayerContent({
               />
             ) : null}
 
-            {isMastery && session.performedInterventionIds.length > 0 ? (
+            {session.performedInterventionIds.length > 0 ? (
               <section aria-labelledby={scopedId('crrt-deferred-action-feedback')}>
                 <h5 id={scopedId('crrt-deferred-action-feedback')}>
                   Action teaching notes from this run

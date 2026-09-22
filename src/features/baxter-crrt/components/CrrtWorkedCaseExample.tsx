@@ -429,6 +429,13 @@ export function CrrtWorkedRunComparison({
         Modeled difference: {comparison.armLabels[1]} compared with {comparison.armLabels[0]}.{' '}
         {example.comparison.runNote}
       </p>
+      {example.comparison.signalIds.includes('urea-marker') ? (
+        <p className={styles.caption}>
+          The small-solute marker is a model pool advanced by delivered clearance alone. It is not a
+          measured patient laboratory value, and this exercise does not model how a patient&rsquo;s
+          chemistry would actually respond.
+        </p>
+      ) : null}
     </section>
   )
 }
