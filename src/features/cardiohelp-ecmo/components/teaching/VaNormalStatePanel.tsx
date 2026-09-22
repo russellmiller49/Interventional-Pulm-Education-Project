@@ -206,7 +206,14 @@ function windowStart(
   }
   const first = state.trends[0]
   return {
-    label: 'this circuit’s starting state',
+    // S5-1 (ECMO-FELLOW-02): name the reading this change is measured from, and when it was taken.
+    // It used to be an unsettled first frame labelled as the starting state; the load now shows the
+    // settled circuit, and the oldest retained reading moves once the trend buffer is full.
+    label: first
+      ? first.time === 0
+        ? 'this circuit’s starting state, as it read at 0 modeled s'
+        : `the earliest reading this circuit has retained, at ${first.time} modeled s`
+      : 'this circuit’s starting state',
     seconds: first ? Math.max(0, state.simulationTime - first.time) : 0,
     values: first
       ? {

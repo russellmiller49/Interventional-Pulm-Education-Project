@@ -247,7 +247,10 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
           {
             id: 'flow-down-more-suction',
             label: 'Lower circuit flow with more negative drainage pressure.',
-            plausibility: 'reasonable-but-incomplete',
+            // S3-3 (ECMO-FELLOW-02): graded "partly correct" while its own rationale and the item's
+            // explanation both say the pressure direction — the thing this item teaches — is
+            // reversed. Category only; the key and every choice's wording are unchanged.
+            plausibility: 'incorrect-mechanism',
             rationale:
               'Lower flow fits, but the reference has unchanged drainage availability. Reducing speed reduces, rather than increases, the suction demand in this comparison.',
           },

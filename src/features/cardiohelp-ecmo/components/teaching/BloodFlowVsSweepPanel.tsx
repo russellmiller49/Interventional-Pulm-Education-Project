@@ -116,6 +116,12 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
               recirculation, native circulation, and patient demand.
             </p>
             <p className="mt-2 text-sm leading-6">{ecmoControlKnob('pump-speed').doesNotMove}</p>
+            {/* S4-4 (ECMO-FELLOW-02): the model's PaCO₂ has no blood-flow term at all. */}
+            <p className="mt-2 text-sm leading-6" data-local-model-boundary="co2-flow-independent">
+              In this simulation PaCO₂ follows sweep alone, so a speed change leaves it exactly
+              where it was. The bedside limit that blood flow places on CO₂ removal is real and is
+              not represented here.
+            </p>
             {state.supportMode === 'va' ? (
               <p className="mt-2 text-sm leading-6" data-comparison-limitation>
                 The VA reference fixes regional patient saturations for this comparison. A higher
@@ -152,6 +158,12 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
               Rapid CO₂ correction can cause harm. The comparison demonstrates a relationship, not a
               titration rate or treatment instruction.
             </p>
+            {/* S4-3 (ECMO-FELLOW-02): the model's seconds are its own steps, not a bedside rate. */}
+            <p className="mt-2 text-sm leading-6" data-local-model-boundary="compressed-time">
+              The model settles a sweep change within seconds. Those are compressed modeled seconds,
+              not a bedside time course, and a reading taken at the end of a comparison can still be
+              moving.
+            </p>
           </section>
         </FoundationTeachingBlock>
         <FoundationTeachingBlock id="control-oxygen" title="Review sweep-gas oxygen fraction">
@@ -164,9 +176,27 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
               does not change the sweep flow or ventilator FiO₂.
             </p>
             <p className="mt-2 text-sm leading-6">
-              The comparison lowers the fraction with blood flow and sweep unchanged. Watch the
-              simulated post-oxygenator sample; it is not a measured CARDIOHELP console channel.
+              The comparison lowers the fraction with blood flow and sweep unchanged. Read the
+              simulated post-oxygenator sample and the patient&apos;s saturation separately; the
+              sample is not a measured CARDIOHELP console channel.
             </p>
+            {/*
+             * S4-2 (ECMO-FELLOW-02): the two saturations come from two separate bounded formulas and
+             * there is no dissolved-oxygen or PO₂ term anywhere in this model. The gap between them
+             * is therefore not a physiological explanation, and ECMO-OWNER-04 holds the physiology.
+             */}
+            {state.supportMode === 'vv' ? (
+              <p
+                className="mt-2 text-sm leading-6"
+                data-local-model-boundary="separate-saturations"
+              >
+                In this simulation the two are computed separately: the post-oxygenator sample moves
+                on a short scale near full saturation, while the patient&apos;s saturation scales
+                with the flow reaching the patient times the oxygen fraction. This model has no
+                dissolved-oxygen or post-oxygenator PO₂ term, so the difference in how far they move
+                is not an explanation of physiology.
+              </p>
+            ) : null}
             <p className="mt-2 text-sm leading-6" data-comparison-limitation>
               {state.supportMode === 'va'
                 ? 'This model changes post-oxygenator saturation but holds VA regional patient saturations fixed in this preview. Their unchanged values do not show that gas oxygen fraction is clinically unimportant.'

@@ -1368,8 +1368,15 @@ export function GasBlenderPanel({
           */}
           {controlsEnabled ? null : (
             <p id="cardiohelp-restore-gas-reason" role="status">
-              Reading only in this section. Use the named lesson action to restore the source; this
-              panel&rsquo;s own controls are off here.
+              {/*
+               * ECMO-FELLOW-02 (S17-4): this used to point at "the named lesson action", and no
+               * lesson action in these reading sections restores the gas source. The correction is
+               * practised where the controls are live.
+               */}
+              Reading only in this section: this panel&rsquo;s own controls are off here, and no
+              step in this section restores the source. The gas-path correction is practised in the
+              sweep-gas interruption drill and the gas-disconnection case, where these controls
+              work.
             </p>
           )}
         </>
