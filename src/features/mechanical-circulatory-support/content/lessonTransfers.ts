@@ -102,7 +102,16 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
     contextItems: [
       { label: 'Phenotype', value: 'LV-dominant shock with pulmonary congestion' },
       { label: 'Current support', value: 'IABP with technically acceptable timing' },
-      { label: 'Hemodynamics', value: 'High PCWP with low native output' },
+      {
+        label: 'Hemodynamics',
+        // Measured on this model at the settled transfer state: wedge 26 mm Hg against the
+        // reference patient's 20, end-diastolic volume 149 mL against 133 — and native flow
+        // 4.46 L/min against the reference's 4.51. The card used to say "low native output",
+        // which sent a reader looking for a number that is not there and is not the point of
+        // the comparison (F14). The output is unchanged; the loading is what moved.
+        value:
+          'High wedge pressure and a large end-diastolic volume, at the reference patient’s output',
+      },
       { label: 'Variant', value: 'Compare augmentation with direct LV unloading' },
     ],
     setupDevice: 'iabp',
@@ -134,7 +143,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       clinicalContextId: 'mcs-transfer-lv-congestion-mechanism',
       visualAssetIds: ['mcs-anatomy', 'mcs-monitor'],
       transferVariantId: 'mcs-counterpulsation-to-direct-unloading',
-      stem: 'A patient has persistent LV distension and pulmonary congestion despite well-timed counterpulsation. Which comparison best tests a different support mechanism?',
+      stem: 'A patient has persistent LV distension and pulmonary congestion despite well-timed counterpulsation, at an output no better than the reference patient’s. Which comparison best tests a different support mechanism?',
       choices: [
         {
           id: 'compare-direct-lv-unloading',
@@ -566,7 +575,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
     title: 'Transfer selection: the same low output, a different limiting problem',
     contextItems: [
       { label: 'Phenotype', value: 'Low output with a rising RAP and a falling PAPi' },
-      { label: 'Filling', value: 'PCWP is only modestly elevated' },
+      { label: 'Filling', value: 'RAP has risen to about the wedge pressure; both are elevated' },
       { label: 'Current support', value: 'Left-sided support is being considered' },
       { label: 'Variant', value: 'RV delivery is the limiting problem, not LV filling pressure' },
     ],
@@ -587,13 +596,13 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       clinicalContextId: 'mcs-transfer-rv-limited-selection',
       visualAssetIds: ['mcs-monitor', 'mcs-anatomy'],
       transferVariantId: 'mcs-rv-limited-device-selection',
-      stem: 'Output is low, RAP is rising and PAPi falling, and PCWP is only modestly elevated. Which reasoning best selects the next mechanism?',
+      stem: 'Output is low, RAP is rising to meet an already elevated PCWP, and PAPi is falling. Which reasoning best selects the next mechanism?',
       choices: [
         {
           id: 'name-rv-limitation-first',
           label: 'Name right-sided delivery as the limit and evaluate right-sided support',
           rationale:
-            'A rising RAP with a falling PAPi and only modest LV filling pressure indicates a delivery problem upstream of the left heart rather than at LV unloading. Adding left-sided support to an RV-limited circulation raises effective systemic flow only a little and leaves the suction pattern in place.',
+            'A right atrial pressure climbing to meet the wedge pressure, with a falling PAPi, places the limitation upstream of the left heart rather than at LV unloading — not because the wedge pressure is low, but because relieving the left ventricle does not answer a delivery problem. Adding left-sided support to an RV-limited circulation raises effective systemic flow only a little and leaves the suction pattern in place.',
           plausibility: 'best',
         },
         {

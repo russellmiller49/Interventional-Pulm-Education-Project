@@ -25,14 +25,65 @@ import {
   mcsCongestionProfileId,
   type McsCongestionProfileId,
 } from '../../content/congestionProfile'
-import { deriveIabpCycleState } from '../../engine/model'
+import { deriveIabpCycleState, LVAD_HIGH_AFTERLOAD_MAP_MMHG } from '../../engine/model'
 import type {
   McsAlarm,
   McsDerivedMetrics,
+  McsLeftPreloadLimiter,
   McsSimulationState,
   McsTrendSample,
   McsWaveformSample,
 } from '../../engine/types'
+
+/* ------------------------------------------------------------------ *
+ * The model's own limiting term
+ * ------------------------------------------------------------------ */
+
+/**
+ * Which term the model used to limit left-sided inflow, ready to print.
+ *
+ * Read straight off `state.supportDiagnostics`, which carries the unrounded intermediates of the
+ * computation that produced the current effect. Nothing is recomputed here.
+ *
+ * This exists because of one screen. Section 6 opens with a suction alarm beside a wedge pressure
+ * of 20 mm Hg and the largest end-diastolic volume in the module, and a fellow reasonably read
+ * that as the simulation contradicting itself (F25). It is not: the predicate turns on the
+ * smallest of three terms feeding the inlet, and across every state measured for
+ * MCS-PRE-REVIEW-02 the smallest was right-sided delivery — a quantity the monitor never showed.
+ * Showing it is the difference between a contradiction and a mechanism.
+ */
+export interface McsInflowLimitView {
+  readonly limiter: McsLeftPreloadLimiter
+  readonly label: string
+  readonly note: string
+  /** The unrounded value of the smallest term, on the model's own 0–1 scale. */
+  readonly value: number
+  /** Below this the modeled suction state is raised. */
+  readonly threshold: number
+  readonly suction: boolean
+}
+
+const inflowLimiterLabels: Readonly<Record<McsLeftPreloadLimiter, string>> = {
+  'rv-delivery': 'right-sided delivery to the left heart',
+  'lv-compartment-filling': 'the modeled volume in the left ventricle',
+  'circulating-volume': 'the modeled circulating volume',
+}
+
+export function inflowLimitView(state: McsSimulationState): McsInflowLimitView | null {
+  const diagnostics = state.supportDiagnostics
+  if (diagnostics.kind !== 'impella') return null
+  return {
+    limiter: diagnostics.leftPreloadLimiter,
+    label: inflowLimiterLabels[diagnostics.leftPreloadLimiter],
+    note:
+      diagnostics.leftPreloadLimiter === 'rv-delivery'
+        ? 'The smallest of the three terms is upstream of the left ventricle, so the filling pressure and the end-diastolic volume on the monitor can both be high while the pump is still short of blood. They are answering a different question.'
+        : 'The smallest of the three terms is the left ventricle’s own modeled loading, so the filling numbers on the monitor and this limit are telling the same story.',
+    value: diagnostics.leftPreloadFactor,
+    threshold: diagnostics.leftSuctionThreshold,
+    suction: diagnostics.leftSuction,
+  }
+}
 
 /* ------------------------------------------------------------------ *
  * Value kinds
@@ -634,10 +685,20 @@ const landmarkLabels: Readonly<Record<McsIabpLandmarkId, string>> = {
  * Returns null while the buffer is too short to draw, so a caller renders a waiting state instead of
  * an empty figure.
  */
+/**
+ * @param arterialDomain Optional fixed pressure domain for the arterial trace, in mm Hg.
+ *
+ * Without it each window is normalized to its own minimum and maximum, which is fine for one
+ * strip and wrong for a set: Section 3's five timing demonstrations were each drawn to their own
+ * scale, so an eye moving between them could not compare contours (F17). Passing the shared
+ * domain draws them all against the same pressures. It changes no sample — only the mapping from
+ * a pressure to a y coordinate — and values outside the domain are clamped to its edges.
+ */
 export function iabpStripView(
   state: McsSimulationState,
   timing: McsIabpTimingView,
   beats = 3,
+  arterialDomain?: { readonly minMmHg: number; readonly maxMmHg: number },
 ): McsIabpStripView | null {
   const cycleSeconds = 60 / Math.max(25, state.patient.heartRateBpm)
   const windowSeconds = cycleSeconds * beats
@@ -650,15 +711,18 @@ export function iabpStripView(
   )
   if (window.length < 16) return null
 
-  const normalize = (read: (sample: McsWaveformSample) => number): McsTraceView => {
+  const normalize = (
+    read: (sample: McsWaveformSample) => number,
+    domain?: { readonly minMmHg: number; readonly maxMmHg: number },
+  ): McsTraceView => {
     const values = window.map(read)
-    const minimum = Math.min(...values)
-    const maximum = Math.max(...values)
+    const minimum = domain ? domain.minMmHg : Math.min(...values)
+    const maximum = domain ? domain.maxMmHg : Math.max(...values)
     const span = maximum - minimum || 1
     return {
       points: window.map((sample) => ({
         x: (sample.time - start) / windowSeconds,
-        y: 1 - (read(sample) - minimum) / span,
+        y: 1 - Math.min(1, Math.max(0, (read(sample) - minimum) / span)),
       })),
       minimum,
       maximum,
@@ -708,7 +772,7 @@ export function iabpStripView(
 
   return {
     ecg: normalize((sample) => sample.ecgMv),
-    arterial: normalize((sample) => sample.arterialMmHg),
+    arterial: normalize((sample) => sample.arterialMmHg, arterialDomain),
     landmarks,
     beats: beatBands,
     windowSeconds,
@@ -981,6 +1045,54 @@ export const MCS_UNMODELED_ORGAN_SIGNALS: readonly McsUnmodeledSignal[] = Object
 
 export const MCS_OXYGEN_DELIVERY_BOUNDARY =
   'This simulation does not calculate whole-body oxygen delivery. Hemoglobin and arterial oxygen content are not modeled, so no oxygen-delivery figure exists here. The mixed venous saturation beside it is a modeled delivery–consumption balance signal, influenced by the modeled balance among blood flow, oxygen availability assumptions, and tissue consumption and extraction assumptions. It is not a measurement of delivery, not a calculation of delivery, not proof that delivery is adequate, and not a value to drive a patient toward.'
+
+/**
+ * What the durable pump's afterload loading actually costs it, read from the model's own terms.
+ *
+ * Section 8 asks a learner to raise the simulated resistance at a fixed speed and watch the flow
+ * fall, and the flow does fall — but nothing on screen said by how much of the request the outlet
+ * pressure was taking, and the module's one alarm about afterload is gated on a different
+ * quantity entirely (F27). Measured for MCS-PRE-REVIEW-02: at the durable reference the monitor
+ * reads a mean arterial pressure near 103 mm Hg, the alarm's own input reads 67.5, and the factor
+ * below reads 0.94; at a simulated resistance of 1900 the monitor reads 140, the alarm's input
+ * reads 87.2 and still does not raise, and this factor reads 0.77. The factor is the one that
+ * moved with the flow.
+ */
+export interface McsAfterloadCostView {
+  /** 0–1. The share of the speed's target flow that survives the modeled outlet pressure. */
+  readonly factor: number
+  /** Whole percent of the request the outlet pressure is taking. */
+  readonly costPercent: number
+  /** The input the `lvad-high-afterload` predicate reads, which is not the displayed mean. */
+  readonly alarmInputMmHg: number
+  readonly alarmThresholdMmHg: number
+  readonly alarmRaised: boolean
+}
+
+export function afterloadCostView(state: McsSimulationState): McsAfterloadCostView | null {
+  const diagnostics = state.supportDiagnostics
+  if (diagnostics.kind !== 'lvad') return null
+  return {
+    factor: diagnostics.afterloadFactor,
+    costPercent: Math.round((1 - Math.min(1, diagnostics.afterloadFactor)) * 100),
+    alarmInputMmHg: diagnostics.highAfterloadPredicateInput,
+    alarmThresholdMmHg: LVAD_HIGH_AFTERLOAD_MAP_MMHG,
+    alarmRaised: diagnostics.highAfterloadPredicateMet,
+  }
+}
+
+/**
+ * The three flow quantities this module keeps apart, said once, for the durable pump.
+ *
+ * F28 asked whether the module teaches a controller's estimator backwards. It does not teach a
+ * controller's estimator at all, and saying so plainly is more useful than any disclaimer: the
+ * number on the durable display here *is* the model's own transfer from ventricle to aorta,
+ * rounded — the same litres the conserved compartments move — and power is computed from it
+ * afterwards. A real HeartMate 3 controller runs the other way round, and Abbott's parameter card
+ * names its inputs without giving the equation, so no estimator is reproduced and none is claimed.
+ */
+export const MCS_DURABLE_FLOW_IDENTITY =
+  'Three quantities, kept apart. The modeled pump transfer is what this simulation actually moves from the ventricle to the aorta. The displayed pump flow is that same transfer, rounded — this model has no separate estimator, so nothing is biased, and nothing estimated is ever fed back as if it were blood moving. Effective systemic delivery is the transfer plus what the native ventricle still ejects, minus any modeled regurgitant return. On a HeartMate 3 the displayed flow is not the first of these: Abbott’s parameter card states it is an estimate calculated from fixed speed, power and the patient’s hematocrit, which is the reverse of the direction here. That card names the inputs and gives no equation, so no controller estimator is reproduced in this module and none is claimed; the product-identity decision is open as OD-02.'
 
 export const MCS_ESTIMATED_FLOW_BOUNDARY =
   'Like the devices represented here, displayed pump flow is estimated rather than measured directly. This simulation does not reproduce each controller’s proprietary calculation or display. Nothing here reads blood with a probe: the figure depends on modeled pump behavior and modeled loading.'

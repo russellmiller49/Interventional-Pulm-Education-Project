@@ -2,7 +2,9 @@ import { mcsDerivedValueGuides } from '../../content/derivedValueGuides'
 import type { McsTeachingPanelProps } from './panelProps'
 import { mcsComparesAgainstActionBaseline, mcsMechanismDisclosed } from './revealStage'
 import {
+  MCS_DURABLE_FLOW_IDENTITY,
   MCS_ESTIMATED_FLOW_BOUNDARY,
+  afterloadCostView,
   activeAlarms,
   beforeAfterReadings,
   directionOf,
@@ -56,6 +58,7 @@ export function LvadParametersAssessmentPanel({
   const controller = lvadView(state)
   const account = flowAccountView(state)
   const alarms = activeAlarms(state)
+  const afterloadCost = afterloadCostView(state)
   const gradient = displaySignalNumber(state, 'pressureGradientMmHg')
   const rows = beforeAfterReadings(
     [
@@ -212,6 +215,7 @@ export function LvadParametersAssessmentPanel({
           electrical power and PI are derived. None is a clinical measurement here.
         </TextEquivalent>
 
+        <ModelBoundary>{MCS_DURABLE_FLOW_IDENTITY}</ModelBoundary>
         <ModelBoundary>{MCS_ESTIMATED_FLOW_BOUNDARY}</ModelBoundary>
         <p className="mt-2 text-xs leading-5" data-no-published-targets>
           This module publishes no universal speed, power, pulsatility-index, or alarm target.
@@ -242,6 +246,14 @@ export function LvadParametersAssessmentPanel({
             digits={0}
             kind="modeled"
           />
+          {afterloadCost ? (
+            <LiveSetting
+              label="What the outlet pressure is costing the pump"
+              value={`${afterloadCost.costPercent}% of what this speed is asking for`}
+              kind="modeled"
+              note={`This model's own afterload factor, ${afterloadCost.factor.toFixed(2)} of one, computed from the pressure across the pump in the conserved compartments. It is the term that moves the flow when you change the resistance. The module's high-afterload alarm does not read it and does not read the mean pressure above either: its input is this patient's modeled mean pressure with no support running, ${afterloadCost.alarmInputMmHg.toFixed(0)} mm Hg against a threshold of ${afterloadCost.alarmThresholdMmHg}, so it is ${afterloadCost.alarmRaised ? 'raised' : 'not raised'} here. That mismatch is authored, unchanged, and open for review as OD-02.`}
+            />
+          ) : null}
           <LiveValue
             label="Right atrial pressure"
             value={metrics.rapMmHg}

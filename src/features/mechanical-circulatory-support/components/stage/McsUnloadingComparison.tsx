@@ -2,12 +2,36 @@ import { useState } from 'react'
 import {
   MCS_UNLOADING_BASE_LEVEL,
   MCS_UNLOADING_COMPARISON_LEVELS,
+  MCS_UNLOADING_DELTA_CAPTION,
   mcsUnloadingSignals,
   type McsUnloadingLevel,
 } from '../../content/unloadingExamples'
 import { mcsObservedDirection } from '../../engine/learningSession'
 import { replayMcsUnloadingComparison } from '../../engine/unloadingComparison'
+import { deadbandFor } from '../teaching/selectors'
 import styles from './mcs-unloading.module.css'
+
+/**
+ * One matched-time difference, said against this model's own resolution for that quantity.
+ *
+ * `deadbandFor` returns the display deadband the module measured from the engine's idle drift, so
+ * a difference under it is one the model cannot resolve rather than one that did not happen. That
+ * distinction is the whole of F24: the P5-to-P6 wedge pressure moves, and it moves less than the
+ * noise, and a table that printed 18 and 18 said neither of those things.
+ */
+function deltaText(
+  metric: (typeof mcsUnloadingSignals)[number][0],
+  before: number,
+  after: number,
+  unit: string,
+  digits: number,
+): string {
+  const difference = after - before
+  const deadband = deadbandFor(metric)
+  if (Math.abs(difference) < deadband)
+    return `${difference >= 0 ? '+' : '−'}${Math.abs(difference).toFixed(digits)} ${unit} · below this model’s resolution`
+  return `${difference >= 0 ? '+' : '−'}${Math.abs(difference).toFixed(digits)} ${unit}`
+}
 
 /** A replay of provided examples; it never dispatches into a learner's live session. */
 export function McsUnloadingComparison() {
@@ -87,6 +111,7 @@ export function McsUnloadingComparison() {
                     <th scope="col">Modeled quantity</th>
                     <th scope="col">P5 control</th>
                     <th scope="col">P{level}</th>
+                    <th scope="col">Difference at the same instant</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -98,16 +123,31 @@ export function McsUnloadingComparison() {
                       </th>
                       <td>{control.metrics[key].toFixed(digits)}</td>
                       <td>{changed.metrics[key].toFixed(digits)}</td>
+                      <td data-unloading-delta={key}>
+                        {deltaText(key, control.metrics[key], changed.metrics[key], unit, digits)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              <p data-unloading-delta-caption>{MCS_UNLOADING_DELTA_CAPTION}</p>
               <p data-unloading-interpretation>
                 Compared with continued P5, LV volume{' '}
                 {mcsObservedDirection(control.metrics.lvedvMl, changed.metrics.lvedvMl, 0)} by{' '}
                 {Math.abs(changed.metrics.lvedvMl - control.metrics.lvedvMl)} mL. Wedge pressure{' '}
                 {mcsObservedDirection(control.metrics.pcwpMmHg, changed.metrics.pcwpMmHg, 0)} (
-                {control.metrics.pcwpMmHg} → {changed.metrics.pcwpMmHg} mm Hg).
+                {control.metrics.pcwpMmHg} → {changed.metrics.pcwpMmHg} mm Hg). Left pump flow{' '}
+                {mcsObservedDirection(
+                  control.metrics.leftDeviceFlowLMin,
+                  changed.metrics.leftDeviceFlowLMin,
+                  2,
+                )}{' '}
+                by{' '}
+                {Math.abs(
+                  changed.metrics.leftDeviceFlowLMin - control.metrics.leftDeviceFlowLMin,
+                ).toFixed(2)}{' '}
+                L/min — the setting change lands on the pump before it lands on the chamber, and the
+                pressure is the last of the three to move.
               </p>
               <details>
                 <summary>Starting state and model assumptions</summary>

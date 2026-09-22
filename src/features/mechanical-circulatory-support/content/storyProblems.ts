@@ -184,8 +184,21 @@ const authored: readonly McsStoryProblem[] = [
     baselineId: 'mcs-story-low-preload-suction-v1',
     baselineNote:
       'A constructed low-preload illustration built for this pair, and not the section’s patient: here the right ventricle is at its reference contractility and the circulating volume is low, while the section around it is a failing right ventricle at a normal volume. “The same starting point” means this baseline, shared by both stories in the pair — not the patient on the monitor.',
+    /*
+     * Why the response in this story is so large (F26).
+     *
+     * The control does not add a quantity to the circulation; it rescales the whole circulation.
+     * `patientToCirculationParameters` turns the preload percentage into the solver's
+     * `circulatingVolumeFraction`, and the solver holds the total at `4100 × fraction + 260` mL,
+     * so 55 to 100 per cent moves the simulation's entire circulating volume in a single step.
+     * That is why the mean pressure in this story moves tens of millimetres of mercury, and it is
+     * exactly what a learner must not carry to a bedside fluid challenge. The magnitude is
+     * recorded in the MCS-PRE-REVIEW-02 handoff and the OD-03 packet; the sentence below stays
+     * free of any figure that could be read as a dose, which is the guard MCS-PRE-REVIEW-01 put
+     * on this surface and this slice keeps.
+     */
     changeScope:
-      'The one change is this model’s preload control, 55 per cent to 100 per cent — the whole circulating volume of the simulation, moved in one step. It is not a specified bolus, it has no dose and no rate, and nothing here says what volume a real patient should receive or whether they should receive any.',
+      'The one change is this model’s preload control, 55 per cent to 100 per cent — the whole circulating volume of the simulation, moved in one step. It is not a specified bolus, it has no dose and no rate, and nothing here says what volume a real patient should receive or whether they should receive any. Because that control rescales the entire circulation rather than adding a measured quantity to it, the response you are about to see is larger than a fluid challenge at a bedside would produce: read it as which axis moved, not as the size of an intervention.',
     sectionId: 'impella-suction-purge-rv',
     title: 'Story problem: volume for the same alarm',
     device: 'impella',

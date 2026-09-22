@@ -313,6 +313,14 @@ export interface McsSimulationState {
   parameters: CirculationParameters
   compartments: CirculationCompartmentState
   supportEffect: MechanicalSupportEffect
+  /**
+   * Unrounded intermediates of the same support computation that produced `supportEffect`.
+   *
+   * Carried on the state rather than recomputed by a caller, so a panel, a test or the replay
+   * harness reads the very numbers the reducer used. Read-only: nothing derives a displayed value
+   * from this, and the reducer never reads it back.
+   */
+  supportDiagnostics: McsSupportDiagnostics
   metrics: McsDerivedMetrics
   alarms: readonly McsAlarm[]
   waveforms: readonly McsWaveformSample[]
@@ -395,3 +403,78 @@ export type McsAction =
    * count as the learner's work. Learn-only; no scored surface dispatches it.
    */
   | { type: 'CLEAR_ACTION_LOG' }
+
+/**
+ * Unrounded intermediates of one support computation, for inspection only.
+ *
+ * MCS-PRE-REVIEW-02 needed to answer "what limited support in this state" from the production
+ * model rather than from a second hand-written simulator. These fields are the same local values
+ * the flow formulas already use, published so a replay harness, a test, or a teaching surface can
+ * read them without recomputing physiology. Nothing here feeds back into the model: every
+ * consumer is read-only, and no displayed quantity is derived from a diagnostic.
+ */
+export interface McsIabpDiagnostics {
+  readonly kind: 'iabp'
+  readonly rhythmTriggerQuality: number
+  readonly inflationQuality: number
+  readonly deflationQuality: number
+  readonly timingQuality: number
+  readonly assistFraction: number
+  readonly efficacy: number
+  readonly earlyInflationHarm: number
+  readonly lateDeflationHarm: number
+  readonly inflationStartPhase: number
+  readonly deflationEndPhase: number
+  readonly assistedBeat: boolean
+  readonly balloonInflated: boolean
+}
+
+/** Which of the three terms in the left-sided preload minimum is actually the smallest. */
+export type McsLeftPreloadLimiter = 'rv-delivery' | 'lv-compartment-filling' | 'circulating-volume'
+
+export interface McsImpellaDiagnostics {
+  readonly kind: 'impella'
+  readonly nativeRvDelivery: number
+  readonly rpDeliveryGain: number
+  readonly rvDeliveryToLeftHeart: number
+  readonly lvCompartmentFilling: number
+  readonly circulatingVolumeFactor: number
+  readonly leftPreloadFactor: number
+  readonly leftPreloadLimiter: McsLeftPreloadLimiter
+  readonly leftAfterloadFactor: number
+  readonly leftPositionFactor: number
+  readonly leftTargetFlow: number
+  readonly leftDeviceFlow: number
+  readonly leftSuction: boolean
+  readonly leftSuctionThreshold: number
+  readonly rightVenousFilling: number
+  readonly rightAfterloadFactor: number
+  readonly rightPositionFactor: number
+  readonly rightTargetFlow: number
+  readonly rightDeviceFlow: number
+  readonly rightSuction: boolean
+  readonly leftVentricularCompartmentVolumeMl: number
+}
+
+export type McsLvadFillingLimiter = 'rv-delivery' | 'lv-compartment-filling'
+
+export interface McsLvadDiagnostics {
+  readonly kind: 'lvad'
+  readonly targetFlow: number
+  readonly rvDelivery: number
+  readonly lvCompartmentFilling: number
+  readonly fillingLimiter: McsLvadFillingLimiter
+  readonly afterloadFactor: number
+  readonly pressureGradientFactor: number
+  readonly baselineMapMmHg: number
+  readonly highAfterloadPredicateInput: number
+  readonly highAfterloadPredicateMet: boolean
+  readonly deviceFlow: number
+  readonly pumpPower: number
+  readonly thrombosisPowerAdditionW: number
+  readonly pulsatilityIndex: number
+  readonly suction: boolean
+  readonly leftVentricularCompartmentVolumeMl: number
+}
+
+export type McsSupportDiagnostics = McsIabpDiagnostics | McsImpellaDiagnostics | McsLvadDiagnostics
