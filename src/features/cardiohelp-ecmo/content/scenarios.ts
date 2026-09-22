@@ -652,7 +652,16 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     initialState: {
       device: { selfTest: 'pending', rpmSetpoint: 0, pumpRunning: false },
       circuit: { circuitInspected: false },
-      patient: { rightRadialSpo2: 96, femoralArterialSpo2: 99, pulsePressure: 18 },
+      // The VA reference patient this tour's stem quotes (ECMO-FELLOW-02). The femoral value was 99,
+      // which the stem, the model and the VA reference circuit all read as 98.5; and MAP was left to
+      // the VV default, which a stopped VA circuit would settle to its no-flow floor, not the 71 the
+      // stem describes.
+      patient: {
+        rightRadialSpo2: 96,
+        femoralArterialSpo2: 98.5,
+        pulsePressure: 18,
+        meanArterialPressure: 71,
+      },
       activeFaults: ['startup-inspection'],
       paused: true,
     },

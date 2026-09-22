@@ -765,8 +765,14 @@ describe('CARDIOHELP ECMO learner interface', () => {
     })
     const { view } = renderCaseView(state, { activityMode: 'challenge' })
 
-    // The Now card becomes the safety alert: the authored label, never the identifier.
-    const interruption = screen.getByRole('alert')
+    // The Now card becomes the safety alert: the authored label, never the identifier. It is not the
+    // only alert on screen: this case opens at the authored pH of 7.18, which the independent
+    // monitor's acidemia alarm reports from the first second (ECMO-FELLOW-02 stopped the load from
+    // nudging it to 7.21 before anyone looked).
+    const interruption = screen
+      .getAllByRole('alert')
+      .find((element) => element.hasAttribute('data-now-card'))!
+    expect(interruption).toBeDefined()
     expect(interruption).toHaveTextContent(/Safety feedback/i)
     expect(interruption).toHaveTextContent(unsafe.response)
     for (const errorId of state.scenario.criticalErrors) {

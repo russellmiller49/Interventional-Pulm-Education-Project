@@ -414,6 +414,37 @@ export interface ClinicalCaseDefinition {
   deteriorationResponse: string
 }
 
+/**
+ * An immutable reading of the signals a debrief compares, taken at one simulation time.
+ *
+ * Recorded by the reducer on the transition that performed an action: `before` is the state the
+ * action was taken in, `after` the state it produced at the same simulation time. Neither is ever
+ * recomputed, so a later clock tick or a later action at the same second cannot rewrite what an
+ * action found or did (C1-3). A pressure the console could not show is `null`, never a number.
+ */
+export interface EcmoObservation {
+  readonly time: number
+  readonly bloodFlow: number
+  readonly pumpRunning: boolean
+  readonly rpmSetpoint: number
+  readonly pVen: number | null
+  /** VV: patient SpO₂. VA: right-arm (right-radial) SpO₂, the upper-body reading. */
+  readonly spo2: number
+  /** VA only: femoral arterial SpO₂. */
+  readonly femoralArterialSpo2: number | null
+  readonly paCO2: number
+  readonly pH: number
+  readonly meanArterialPressure: number
+  readonly centralVenousPressure: number
+  readonly lactate: number
+}
+
+/** The pair of observations bracketing one learner action at an unchanged simulation time. */
+export interface EcmoActionObservation {
+  readonly before: EcmoObservation
+  readonly after: EcmoObservation
+}
+
 export interface ClinicalInterventionRecord {
   id: string
   interventionId: string
@@ -421,6 +452,66 @@ export interface ClinicalInterventionRecord {
   effect: ClinicalInterventionEffect
   response: string
   time: number
+  /** Written once by the reducer on the transition that applied this record. */
+  observation?: EcmoActionObservation
+}
+
+/**
+ * Patient fields the engine moves toward a target by a bounded amount per modeled second.
+ *
+ * Everything else on `PatientState` is either algebraic (pH, respiratory rate, valve and congestion
+ * flags) or authored and never modeled (heart rate, bicarbonate, temperature).
+ */
+export type RateLimitedPatientField =
+  | 'paCO2'
+  | 'spo2'
+  | 'rightRadialSpo2'
+  | 'femoralArterialSpo2'
+  | 'nativeCardiacOutputLpm'
+  | 'pulsePressure'
+  | 'meanArterialPressure'
+  | 'centralVenousPressure'
+  | 'lactate'
+  | 'urineOutputMlHr'
+  | 'airwayPressure'
+  | 'distalLimbNirs'
+
+/**
+ * Who set the level a patient field is held at, in a clinical case (ECMO-FELLOW-02).
+ *
+ * `case-authored` — the case's own opening value, captured at load.
+ * `intervention` — a non-temporizing intervention's patient patch, captured when it landed.
+ */
+export type PatientAnchorSource = 'case-authored' | 'intervention'
+
+export interface PatientFieldAnchor {
+  /** The level the field is held at. */
+  readonly level: number
+  /**
+   * The engine's generic target for this field at the moment the level was set. The field moves
+   * only by the change in that generic target since then — the model's response to something that
+   * actually changed — never toward the generic value itself.
+   */
+  readonly reference: number
+  readonly source: PatientAnchorSource
+  readonly setAt: number
+}
+
+/**
+ * The ownership record of a clinical case's patient, captured at load.
+ *
+ * A clinical case authors where its patient is. The engine's generic relationships — saturation
+ * from flow reaching the patient, PaCO₂ from sweep, the VA model's single native output and pulse
+ * pressure — describe a generic patient, and without this record they pulled every authored value
+ * toward that generic patient within seconds of load, whatever the learner did (the September 2026
+ * walkthrough's "the monitor moves on its own"). See `resolvePatientTargets`.
+ */
+export interface PatientOwnership {
+  /** The case's corrective fault: the presenting problem the authored values belong to. */
+  readonly presentingFault: FaultId
+  readonly anchors: Readonly<Partial<Record<RateLimitedPatientField, PatientFieldAnchor>>>
+  /** An authored membrane-outlet saturation, held on the same terms as the patient anchors. */
+  readonly postOxygenator?: { readonly level: number; readonly reference: number }
 }
 
 export interface ClinicalRuntime {
@@ -550,6 +641,24 @@ export interface ScenarioRuntime {
    * from a corrected fault or a clinical intervention waits here and lands on the next second.
    */
   pendingPatientPatch?: Partial<PatientState>
+  /**
+   * The queued patient fields that came from a non-temporizing intervention.
+   *
+   * When they land, a clinical case holds them there (an `intervention` anchor) instead of letting
+   * the next generic target erase them. A temporizing patch is deliberately absent from this list:
+   * transient is what temporizing means in this engine, and it still fades.
+   */
+  pendingPersistentPatientFields?: readonly RateLimitedPatientField[]
+  /** Present on clinical cases only. */
+  patientOwnership?: PatientOwnership
+  /**
+   * The simulation time the sweep was last turned to zero, or `null` while sweep is flowing.
+   *
+   * The off-sweep work-of-breathing response is timed from this event. It used to be timed from
+   * the case clock (`simulationTime >= 20`), so a trial started late flipped the breathing after one
+   * second and one started early after the full delay.
+   */
+  sweepStoppedAt?: number | null
   reassessment: ReassessmentSubmission | null
   credit: ScenarioCredit
   penalties: number
@@ -567,6 +676,8 @@ export interface HistoryEntry {
   time: number
   kind: 'action' | 'alarm' | 'fault' | 'system'
   label: string
+  /** Learner actions only: written once by the reducer on the transition that recorded the entry. */
+  observation?: EcmoActionObservation
 }
 
 export interface EcmoSimulationState {
