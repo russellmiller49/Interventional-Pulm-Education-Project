@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import sharp from 'sharp'
 import { bronchStageLesson } from '../src/features/bronchoscopy-foundations/content/stageLessons'
 import {
@@ -10,6 +10,16 @@ import { capstoneStageItem } from '../src/features/bronchoscopy-foundations/cont
 import { BRONCH_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/learnProgress'
 import { BRONCH_SELF_PACED_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/selfPacedProgress'
 import { scopeControlId } from '../src/features/bronchoscopy-foundations/components/scope/types'
+import {
+  BRONCH_GRAMMAR,
+  grammarRowControl,
+} from '../src/features/bronchoscopy-foundations/content/grammar'
+import { bronchSection } from '../src/features/bronchoscopy-foundations/content/pathway'
+import { bronchStageSources } from '../src/features/bronchoscopy-foundations/content/stageSources'
+import {
+  SOURCE_BY_ID,
+  TRANSCRIPT_SENTENCE,
+} from '../src/features/bronchoscopy-foundations/data/sources'
 
 // Opt in to the module's isolated local server; never write a test record on a deployed site.
 test.skip(!process.env.BRONCH_FOUNDATIONS_BASE_URL, 'Use the dedicated config and a local server.')
@@ -1057,4 +1067,529 @@ test('a completed inspection record stays a record after the scope leaves those 
   await expect(page.locator('[data-goal-group]')).toHaveAttribute('data-goal-group', 'history')
   await expect(page.locator('[data-now-card]')).not.toContainText('Read from the scope right now')
   await expect(page.locator('[data-goal-now]')).toContainText('Where the tip is now:')
+})
+
+/**
+ * BF-PRE-REVIEW-02: the sources, Reading the view, the activities' own actions and the feedback
+ * after them, on the real route with native pointer and keyboard input (fellow walkthrough A8–A10,
+ * A12–A13, A15–A16, the module's part of A43, SUP-02, SUP-17). Each case fails against a build of
+ * the unchanged baseline.
+ */
+test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
+  const CYAN = 'rgb(113, 225, 229)'
+
+  async function stepTo(
+    page: Page,
+    id: BronchSectionId,
+    kind: string,
+    options: { readonly grammar?: boolean } = {},
+  ) {
+    const lesson = await openSection(page, id)
+    const index = lesson.steps.findIndex((step) =>
+      options.grammar
+        ? step.course?.grammar === true
+        : step.interaction.kind === kind && step.course?.kind !== 'transfer',
+    )
+    for (let i = 0; i < index; i += 1) {
+      if (await skip(page).count()) await skip(page).click()
+      else await primary(page).click()
+      await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[i + 1].id)
+    }
+    return { lesson, step: lesson.steps[index], index }
+  }
+
+  /** The element, scrolled to its start, is what the browser hits there and is not under chrome. */
+  async function startReadable(locator: Locator) {
+    return locator.evaluate((element) => {
+      element.scrollIntoView({ block: 'start' })
+      const header = document.getElementById('main-content')?.previousElementSibling
+      const headerBottom = header ? header.getBoundingClientRect().bottom : 0
+      const rect = element.getBoundingClientRect()
+      const hit = document.elementFromPoint(
+        rect.left + Math.min(16, rect.width / 2),
+        rect.top + Math.min(10, rect.height / 2),
+      )
+      return {
+        top: Math.round(rect.top),
+        headerBottom: Math.round(headerBottom),
+        hitSelf: !!hit && (hit === element || element.contains(hit)),
+      }
+    })
+  }
+
+  /** The focused element is on screen, below the header, and nothing is painted over it. */
+  async function focusUncovered(page: Page) {
+    return page.evaluate(() => {
+      const element = document.activeElement as HTMLElement
+      const header = document.getElementById('main-content')?.previousElementSibling
+      const headerBottom = header ? header.getBoundingClientRect().bottom : 0
+      const rect = element.getBoundingClientRect()
+      const hit = document.elementFromPoint(
+        (rect.left + rect.right) / 2,
+        (rect.top + rect.bottom) / 2,
+      )
+      return {
+        label: element.getAttribute('aria-label') ?? element.textContent?.trim().slice(0, 40),
+        inView: rect.top >= headerBottom - 1 && rect.bottom <= innerHeight + 1,
+        hitSelf: !!hit && (hit === element || element.contains(hit)),
+      }
+    })
+  }
+
+  /**
+   * Whether the course itself fits the viewport width. At 200% root text the site's own header and
+   * footer links overflow the page on unchanged main too (not this module's), so the enlarged-text
+   * cases check the course region and record the page separately.
+   */
+  async function courseFits(page: Page) {
+    return page.evaluate(() => {
+      const course = document.querySelector<HTMLElement>(
+        '[data-module="bronchoscopy-foundations"]',
+      )!
+      const rect = course.getBoundingClientRect()
+      return (
+        course.scrollWidth <= course.clientWidth + 1 &&
+        rect.left >= -1 &&
+        rect.right <= document.documentElement.clientWidth + 1
+      )
+    })
+  }
+
+  /** The continuation bar, pinned or not, and the open list, in the same viewport coordinates. */
+  async function barAndList(page: Page) {
+    return page.evaluate(() => {
+      const bar = [...document.querySelectorAll('[data-now-card] *')].find(
+        (element) => getComputedStyle(element).position === 'sticky',
+      )
+      const list = document.querySelector('[data-stage-sources] > div')!
+      const rect = (element: Element | undefined) => {
+        if (!element) return null
+        const box = element.getBoundingClientRect()
+        return { top: Math.round(box.top), bottom: Math.round(box.bottom) }
+      }
+      return { bar: rect(bar), list: rect(list), position: getComputedStyle(list).position }
+    })
+  }
+
+  test('each source is labelled as what it is, and copy and open keep its identity', async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+    await page.setViewportSize({ width: 1204, height: 987 })
+    for (const sectionId of ['shared-airway', 'sedation-and-monitoring', 'view-loss'] as const) {
+      await openSection(page, sectionId)
+      const summary = page.locator('[data-stage-sources] summary')
+      await summary.scrollIntoViewIfNeeded()
+      await summary.click()
+      for (const { source } of bronchStageSources(sectionId).records) {
+        const row = page.locator(`[data-stage-sources] [data-evidence-id="${source.id}"]`)
+        await expect(row).toHaveAttribute('data-source-class', source.sourceClass)
+        await expect(row.locator('[data-source-kind]')).toHaveText(source.kindLabel)
+        const text = (await row.textContent()) ?? ''
+        expect([source.id, text.split(TRANSCRIPT_SENTENCE).length - 1]).toEqual([
+          source.id,
+          source.sourceClass === 'transcript' ? 1 : 0,
+        ])
+      }
+    }
+    // Textbook, manuals and guidelines, by id, on the real route.
+    await openSection(page, 'shared-airway')
+    await page.locator('[data-stage-sources] summary').click()
+    for (const id of ['S1', 'S2', 'S3', 'U1'])
+      await expect(page.locator(`[data-stage-sources] [data-evidence-id="${id}"]`)).toHaveAttribute(
+        'data-source-class',
+        'reference',
+      )
+    await expect(
+      page.locator('[data-stage-sources] [data-evidence-id="S1"] [data-source-locator-note]'),
+    ).toBeVisible()
+    await page.getByRole('button', { name: 'Copy citation for S2' }).click()
+    await expect(page.getByRole('button', { name: 'Citation for S2 copied' })).toBeVisible()
+    const s2 = SOURCE_BY_ID.get('S2')!
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+      `${s2.byline}. ${s2.title} (${s2.year}).`,
+    )
+    const open = page.getByRole('link', { name: /Open source U1/ })
+    await expect(open).toHaveAttribute('href', SOURCE_BY_ID.get('U1')!.url!)
+    await expect(open).toHaveAttribute('target', '_blank')
+  })
+
+  for (const viewport of [
+    { width: 1204, height: 987 },
+    { width: 1440, height: 900 },
+    { width: 1024, height: 768 },
+    { width: 390, height: 844 },
+    { width: 320, height: 740 },
+  ])
+    for (const text of [100, 200] as const)
+      test(`the open source list clears the continuation bar at ${viewport.width}×${viewport.height}, ${text}% text`, async ({
+        page,
+      }, info) => {
+        await page.setViewportSize(viewport)
+        // The longest list the course has, so first and last are far apart.
+        const longest = [...(['shared-airway', 'bleeding-priorities', 'view-loss'] as const)].sort(
+          (a, b) => bronchStageSources(b).records.length - bronchStageSources(a).records.length,
+        )[0]
+        await openSection(page, longest)
+        if (text === 200)
+          await page.evaluate(() => {
+            document.documentElement.style.fontSize = '200%'
+          })
+        const summary = page.locator('[data-stage-sources] summary')
+        await summary.scrollIntoViewIfNeeded()
+        await summary.click()
+        await expect(page.locator('[data-stage-sources]')).toHaveAttribute('open', '')
+        const opened = await barAndList(page)
+        const items = page.locator('[data-stage-sources] [data-evidence-id]')
+        const first = await startReadable(items.first())
+        const firstBar = await barAndList(page)
+        const last = await startReadable(items.last())
+        const lastBar = await barAndList(page)
+        const measured = { opened, first, firstBar, last, lastBar }
+        await info.attach('measurements', {
+          body: JSON.stringify(measured, null, 1),
+          contentType: 'application/json',
+        })
+        for (const state of [opened, firstBar, lastBar])
+          if (state.bar && state.list)
+            expect(state.bar.bottom <= state.list.top || state.bar.top >= state.list.bottom).toBe(
+              true,
+            )
+        for (const edge of [first, last]) {
+          expect(edge.hitSelf).toBe(true)
+          expect(edge.top).toBeGreaterThanOrEqual(edge.headerBottom - 1)
+        }
+        // Keyboard: every control in the list is reached in view and uncovered, then Escape
+        // closes the list and returns to its summary.
+        await summary.focus()
+        const stops: Awaited<ReturnType<typeof focusUncovered>>[] = []
+        for (let guard = 0; guard < 40; guard += 1) {
+          await page.keyboard.press('Tab')
+          const inside = await page.evaluate(
+            () => !!document.activeElement?.closest('[data-stage-sources] > div'),
+          )
+          if (!inside) break
+          stops.push(await focusUncovered(page))
+        }
+        expect(stops.length).toBeGreaterThanOrEqual(await items.count())
+        for (const stop of stops)
+          expect([stop.label, stop.inView, stop.hitSelf]).toEqual([stop.label, true, true])
+        await page.keyboard.press('Shift+Tab')
+        await page.keyboard.press('Escape')
+        await expect(page.locator('[data-stage-sources]')).not.toHaveAttribute('open', '')
+        await expect(summary).toBeFocused()
+        expect(await courseFits(page)).toBe(true)
+        if (text === 100)
+          expect(
+            await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+          ).toBe(true)
+      })
+
+  const GRAMMAR_SECTIONS = [
+    'branch-entry',
+    'view-loss',
+    'larynx-and-entry',
+    'right-side',
+    'left-side',
+    'systematic-survey',
+    'poor-return',
+    'protected-accessories',
+    'deterioration',
+    'bleeding-priorities',
+    'scope-in-a-tube',
+  ] as const
+
+  async function expectGrammarRows(table: Locator, rowIds: readonly string[]) {
+    await expect(table.locator('tbody tr[data-grammar-row]')).toHaveCount(rowIds.length)
+    for (const id of rowIds) {
+      const row = BRONCH_GRAMMAR.find((entry) => entry.id === id)!
+      const tr = table.locator(`tr[data-grammar-row="${id}"]`)
+      await expect(tr.locator('th[scope="row"]')).toContainText(row.see)
+      await expect(tr.locator('[data-grammar-cell="lives"]')).toContainText(row.lives)
+      await expect(tr.locator('[data-grammar-cell="shortlist"] li')).toHaveText([...row.shortlist])
+      await expect(tr.locator('[data-grammar-cell="control"]')).toContainText(
+        grammarRowControl(row),
+      )
+    }
+  }
+
+  test('Reading the view is a table at every lesson occurrence and matches the Reference', async ({
+    page,
+  }) => {
+    test.setTimeout(300_000)
+    await page.setViewportSize({ width: 1204, height: 987 })
+    let occurrences = 0
+    for (const id of GRAMMAR_SECTIONS) {
+      const lesson = await openSection(page, id)
+      const rowIds = bronchSection(id).grammarRowIds
+      for (const [index, step] of lesson.steps.entries()) {
+        if (step.course?.grammar) {
+          const table = page.getByRole('table', { name: 'Connect the observation to the problem' })
+          await expect(table).toBeVisible()
+          await expect(table.locator('thead th')).toHaveText([
+            'You see',
+            'Where it lives',
+            'Shortlist',
+            'Which control, if any',
+          ])
+          await expectGrammarRows(table, rowIds)
+          occurrences += 1
+        }
+        if (index === lesson.steps.length - 1) break
+        if (await skip(page).count()) await skip(page).click()
+        else await primary(page).click()
+        await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[index + 1].id)
+      }
+    }
+    // Eleven sections, thirteen places: view-loss and poor-return show the rows twice.
+    expect(occurrences).toBe(13)
+    await page.goto(base + '/reference')
+    const reference = page.locator('#reading-the-view table[data-grammar]')
+    await expect(reference.locator('thead th')).toHaveText([
+      'You see',
+      'Where it lives',
+      'Shortlist',
+      'Which control, if any',
+      'Taught in',
+    ])
+    await expectGrammarRows(
+      reference,
+      BRONCH_GRAMMAR.map((row) => row.id),
+    )
+  })
+
+  for (const viewport of [
+    { width: 390, height: 844, text: 100 },
+    { width: 320, height: 740, text: 100 },
+    { width: 1204, height: 987, text: 200 },
+  ])
+    test(`Reading the view stacks into labelled rows at ${viewport.width}px, ${viewport.text}% text`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      await stepTo(page, 'view-loss', 'read', { grammar: true })
+      if (viewport.text === 200)
+        await page.evaluate(() => {
+          document.documentElement.style.fontSize = '200%'
+        })
+      const table = page.getByRole('table', { name: 'Connect the observation to the problem' })
+      await table.scrollIntoViewIfNeeded()
+      const firstRow = table.locator('tbody tr').first()
+      await expect(firstRow.locator('[data-grammar-cell-label]').first()).toBeVisible()
+      await expect(firstRow.locator('[data-grammar-cell-label]')).toHaveText([
+        'You see',
+        'Where it lives',
+        'Shortlist',
+        'Which control, if any',
+      ])
+      expect((await table.locator('thead').boundingBox())?.width ?? 0).toBeLessThanOrEqual(1)
+      const fits = await table.evaluate(
+        (element) => element.scrollWidth <= element.parentElement!.clientWidth + 1,
+      )
+      expect(fits).toBe(true)
+      expect(await courseFits(page)).toBe(true)
+      if (viewport.text === 100)
+        expect(
+          await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+        ).toBe(true)
+      // The browser's own accessibility tree keeps the observation as each row's header.
+      const cdp = await page.context().newCDPSession(page)
+      const { nodes } = (await cdp.send('Accessibility.getFullAXTree')) as {
+        nodes: { role?: { value: string }; name?: { value: string } }[]
+      }
+      const rowHeaders = nodes
+        .filter((node) => node.role?.value === 'rowheader')
+        .map((node) => node.name?.value ?? '')
+      for (const id of bronchSection('view-loss').grammarRowIds)
+        expect(
+          rowHeaders.some((name) =>
+            name.includes(BRONCH_GRAMMAR.find((row) => row.id === id)!.see),
+          ),
+        ).toBe(true)
+    })
+
+  test('the S4 ledger is checked with a visible primary Check, by keyboard, without new dose rules', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1204, height: 987 })
+    const { step } = await stepTo(page, 'sedation-and-monitoring', 'ledger')
+    if (step.interaction.kind !== 'ledger') throw new Error('not a ledger')
+    const { ledger } = step.interaction
+    const check = page.locator('[data-ledger-answer]')
+    await expect(check).toHaveText('Check this answer')
+    await expect(check).toBeDisabled()
+    const box = (await check.boundingBox())!
+    expect(box.height).toBeGreaterThanOrEqual(44)
+    expect(box.width).toBeLessThan(400)
+    // Disabled stays readable: the course's disabled primary, not a missing control.
+    await expect(check).toHaveCSS('opacity', '1')
+    await expect(check).toHaveCSS('background-color', 'rgb(31, 66, 73)')
+    await expect(skip(page)).toHaveText('Continue without completing')
+    // A false total: every entry off by the same amount is flagged, and the question can still be
+    // checked — the entries carry no dose judgement.
+    for (const row of ledger.rows)
+      if (row.kind === 'measured') {
+        const input = page.locator(`[data-ledger-row="${row.id}"] input[type="number"]`)
+        await input.focus()
+        await page.keyboard.type(String(row.concentrationMgPerMl * row.volumeMl + 7))
+      }
+    await expect(page.locator('[data-ledger-check="recheck"]')).toHaveCount(
+      ledger.rows.filter((row) => row.kind === 'measured').length,
+    )
+    await expect(page.locator('[data-ledger-check-reason]')).toHaveText(
+      'Choose a statement, then check it.',
+    )
+    const unsafe = ledger.totalChoices.find((choice) => choice.plausibility === 'unsafe')!
+    await page.locator(`[data-ledger-total] input[value="${unsafe.id}"]`).check()
+    await page.keyboard.press('Tab')
+    await expect(check).toBeFocused()
+    await expect(check).toHaveCSS('outline-style', 'solid')
+    await expect(check).toHaveCSS('background-color', CYAN)
+    await page.keyboard.press('Enter')
+    await expect(page.locator('[data-ledger-outcome="refused"]')).toContainText(
+      'Not correct, and unsafe.',
+    )
+    await expect(page.locator('[data-now-status]')).toHaveText(
+      'Choose another statement and check it, open the worked arithmetic, or continue without completing it.',
+    )
+    await expect(primary(page)).toHaveCount(0)
+    const best = ledger.totalChoices.find((choice) => choice.plausibility === 'best')!
+    await page.locator(`[data-ledger-total] input[value="${best.id}"]`).check()
+    await page.keyboard.press('Tab')
+    await expect(check).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(page.locator('[data-ledger-outcome="held"]')).toBeFocused()
+    await expect(page.locator('[data-ledger-outcome="held"] strong')).toHaveText('Correct.')
+    await expect(primary(page)).toBeEnabled()
+  })
+
+  for (const id of ['poor-return', 'deterioration', 'bleeding-priorities'] as const)
+    test(`the ${id} case refuses the unsafe move and shows a visible way to the next observation`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1204, height: 987 })
+      const { step } = await stepTo(page, id, 'scenario')
+      if (step.interaction.kind !== 'scenario') throw new Error('not a scenario')
+      const { frames } = step.interaction.scenario
+      const decide = page.locator('[data-scenario-decide]')
+      const status = page.locator('[data-now-status]')
+      // The unsafe move on the first frame: refused, the frame stays, reveal and skip remain.
+      const first = frames[0]
+      const unsafe = first.choices.find((choice) => choice.plausibility === 'unsafe')!
+      await page.locator(`[data-scenario-frame="${first.id}"] input[value="${unsafe.id}"]`).check()
+      await decide.click()
+      await expect(page.locator('[data-scenario-outcome="refused"]')).toContainText(
+        'Not correct, and unsafe.',
+      )
+      await expect(page.locator('[data-scenario-frame]')).toHaveAttribute(
+        'data-scenario-frame',
+        first.id,
+      )
+      await expect(status).toHaveText(
+        'Decide again on this observation, open its reasoning, or continue without completing the case.',
+      )
+      await page.getByRole('button', { name: 'Show the reasoning' }).click()
+      await expect(page.locator(`[data-scenario-explanation="${first.id}"]`)).toBeVisible()
+      await expect(skip(page)).toBeVisible()
+      for (const [index, frame] of frames.entries()) {
+        const best = frame.choices.find((choice) => choice.plausibility === 'best')!
+        await page.locator(`[data-scenario-frame="${frame.id}"] input[value="${best.id}"]`).check()
+        await page.keyboard.press('Tab')
+        await expect(decide).toBeFocused()
+        await page.keyboard.press('Enter')
+        if (index === frames.length - 1) break
+        // No automatic advance: the feedback is on screen and the next frame is not.
+        await expect(page.locator('[data-scenario-feedback]')).toContainText('Correct.')
+        await expect(page.locator('[data-scenario-frame]')).toHaveCount(0)
+        await expect(page.locator('[data-scenario-feedback-open]')).toBeFocused()
+        await expect(status).toHaveText(
+          'Read the feedback on your decision, then continue to the next observation. You can also continue without completing the case.',
+        )
+        const next = page.getByRole('button', { name: 'Continue to the next observation' })
+        await next.scrollIntoViewIfNeeded()
+        await expect(next).toBeVisible()
+        await expect(next).toHaveCSS('background-color', CYAN)
+        expect((await next.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+        expect(
+          await next.evaluate((element) => {
+            const rect = element.getBoundingClientRect()
+            const hit = document.elementFromPoint(
+              (rect.left + rect.right) / 2,
+              (rect.top + rect.bottom) / 2,
+            )
+            return hit === element || element.contains(hit)
+          }),
+        ).toBe(true)
+        await page.keyboard.press('Tab')
+        await expect(next).toBeFocused()
+        await page.keyboard.press('Enter')
+        await expect(page.locator('[data-scenario-frame]')).toHaveAttribute(
+          'data-scenario-frame',
+          frames[index + 1].id,
+        )
+      }
+      await expect(page.locator('[data-scenario-done]')).toBeVisible()
+      await expect(status).toHaveText('Done. You worked the case to its end.')
+      await expect(primary(page)).toBeEnabled()
+    })
+
+  for (const viewport of [
+    { width: 1204, height: 987 },
+    { width: 390, height: 844 },
+  ])
+    test(`the S1 question stays in view after a wrong answer at ${viewport.width}px, and can be tried again`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport)
+      const { step } = await stepTo(page, 'shared-airway', 'prediction')
+      if (step.interaction.kind !== 'prediction') throw new Error('not a prediction')
+      const { item } = step.interaction.stage
+      const wrong = item.choices.find((choice) => choice.plausibility === 'incorrect-mechanism')!
+      await page.locator(`[data-prediction-choices] input[value="${wrong.id}"]`).check()
+      await primary(page).click()
+      const context = page.locator('[data-question-context]')
+      await expect(context.locator('[data-question-stem]')).toHaveText(item.stem)
+      await expect(context.locator('[data-chosen]')).toContainText(wrong.label)
+      await expect(page.locator('[data-verdict-outcome-label]')).toHaveText('Not correct.')
+      const comparison = page.locator('[data-answer-verdict] details summary')
+      await expect(comparison).toHaveText('How the other answers compare')
+      await comparison.click()
+      await expect(page.locator('[data-keyed-answer-label]')).toBeVisible()
+      await expect(page.locator('[data-answer-verdict]')).not.toContainText(
+        'Why the other answers do not fit',
+      )
+      await page.getByRole('button', { name: 'Try this check again' }).click()
+      await expect(page.locator('[data-prediction-choices] input:checked')).toHaveCount(0)
+      await expect(page.locator('[data-question-context]')).toHaveCount(0)
+    })
+
+  test('the S1 matching set names the authored category, explanation first and after a wrong match', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1204, height: 987 })
+    const { step } = await stepTo(page, 'shared-airway', 'sort')
+    if (step.interaction.kind !== 'sort') throw new Error('not a sort')
+    const { sort } = step.interaction
+    const label = (id: string) => sort.origins.find((origin) => origin.id === id)!.label
+    await page.getByRole('button', { name: 'Show the worked matches' }).click()
+    await expect(
+      page.locator('[data-sort-row="lavage-returned"] [data-sort-explanation]'),
+    ).toContainText(`Belongs with: ${label('result')}`)
+    await expect(page.locator('[data-bronch-sort]')).not.toContainText('?.')
+    await page.getByRole('button', { name: 'Hide the explanation' }).click()
+    for (const row of sort.rows)
+      await page
+        .locator(`[data-sort-row="${row.id}"] select`)
+        .selectOption(row.id === 'lavage-returned' ? 'what' : row.origin)
+    await primary(page).click()
+    const verdict = page.locator('[data-sort-row="lavage-returned"] [data-sort-verdict]')
+    await expect(verdict).toContainText('Not correct.')
+    await expect(verdict).toContainText(`You chose: ${label('what')}`)
+    await expect(verdict).toContainText(`Belongs with: ${label('result')}`)
+    await expect(page.locator('[data-bronch-sort]')).not.toContainText('Did not hold')
+    expect(await page.locator('[data-bronch-sort]').textContent()).not.toMatch(
+      /\b\d+\s*(?:of|out of|\/)\s*\d+\b/,
+    )
+  })
 })
