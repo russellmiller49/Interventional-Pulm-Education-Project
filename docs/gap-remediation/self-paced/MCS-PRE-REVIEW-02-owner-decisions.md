@@ -374,10 +374,12 @@ therefore moves the simulation's circulating volume from **2515 mL to 4360 mL �
 step**. That is why the response is as large as the walkthrough found it (MAP 59 → 97 and effective
 delivery 3.74 → 6.15 L/min at matched times, with suction clearing).
 
-The learner-facing sentence says the control rescales the entire circulation and that the response
-is larger than a bedside fluid challenge would produce, and **still carries no figure that could be
-read as a dose** — MCS-PRE-REVIEW-01's guard on that surface is intact and tested. The number above
-lives here and in the handoff.
+The learner-facing sentence says the control rescales the entire circulation and **still carries no
+figure that could be read as a dose** — MCS-PRE-REVIEW-01's guard on that surface is intact and
+tested. The original head also said the response is larger than a bedside fluid challenge would
+produce; the sanity review removed that as an unsupported clinical comparison, and the shipped
+sentence now states that the magnitude cannot be translated into a bedside fluid-challenge response
+at all. The number above lives here and in the handoff, not on the learner's screen.
 
 **A reviewed right-ventricular-failure contrast is ready to specify, and is not shipped.** Measured
 on the section's own patient (RV contractility 0.36, CP at level 7), matched times:
