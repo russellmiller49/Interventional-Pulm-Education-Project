@@ -266,6 +266,20 @@ function near(a: number, b: number): boolean {
   return Math.abs(a - b) < CRRT_BALANCE_TOLERANCE_ML
 }
 
+/** A cached balance cannot establish availability when a required ledger term is absent. */
+function availableBalance(chart: CrrtBalanceChart): number | null {
+  return [
+    chart.externalInputMl,
+    chart.urineMl,
+    chart.otherOutputMl,
+    chart.removalMl,
+    chart.additionalDeviceGainMl,
+    chart.balanceMl,
+  ].every((value) => value !== null && Number.isFinite(value))
+    ? chart.balanceMl
+    : null
+}
+
 /**
  * Only a value that exactly one listed slip produces — and that the correct arithmetic does not —
  * earns a specific statement. Every other wrong value gets the general hint.
@@ -275,10 +289,12 @@ export function diagnoseCrrtBalanceEntry(
   chart: CrrtBalanceChart,
   context: CrrtBalanceRunContext,
 ): CrrtBalanceDiagnosis | null {
-  const recorded = chart.balanceMl
+  const recorded = availableBalance(chart)
   if (recorded === null || near(enteredMl, recorded)) return null
   const matching = variants(chart, recorded, context).filter(
-    (variant) => !near(variant.valueMl, recorded) && near(variant.valueMl, enteredMl),
+    // Count every candidate near the entry, including one also near the correct balance.
+    // Tolerance neighborhoods can overlap; excluding that candidate falsely creates uniqueness.
+    (variant) => near(variant.valueMl, enteredMl),
   )
   if (matching.length === 1) {
     return { kind: 'specific', errorId: matching[0].id, text: matching[0].text }
@@ -292,7 +308,7 @@ export function selectCrrtBalanceFeedback(
   context: CrrtBalanceRunContext,
 ): CrrtBalanceFeedback {
   const ledger = ledgerLines(chart)
-  const recorded = chart.balanceMl
+  const recorded = availableBalance(chart)
   const unitsAndWindow = `Every term is a recorded total in mL over the same ${context.windowHours}-hour charting window. An hourly rate, a liter value or a total from another window does not belong in this sum.`
   const base = {
     ledger,
