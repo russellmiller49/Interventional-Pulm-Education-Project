@@ -19,7 +19,7 @@ export const coupling: Lesson = {
   minutes: 8,
   objective: 'Distinguish loss of acoustic contact from an image-brightness problem.',
   recall:
-    'The transducer is on one side of the distal scope. Rotating the scope changes which airway wall it faces.',
+    'The transducer is on one side of the distal scope. Rotating the scope changes which airway wall it faces; tip flexion and advancement also change its relationship to the wall. This activity uses tip flexion.',
   concept: 'Ultrasound needs an acoustic window',
   paragraphs: [
     'Air between the transducer and the airway wall reflects most of the incident ultrasound. A usable window requires contact between the transducer or fluid-filled balloon and the wall. Gain amplifies received echoes; it cannot replace missing contact.',

@@ -191,6 +191,29 @@ export const LANDMARK_NAMES: Record<string, string> = {
   superior_vena_cava: 'superior vena cava',
   left_brachiocephalic_vein: 'left brachiocephalic vein',
 }
+/**
+ * Learner-facing names for structures whose model labels are spelled or ordered differently from
+ * the course (EBUS-PRE-REVIEW-04, L3-10): "azygous", "Left Atrium", "atrial appendage left",
+ * "11RI". Display only. The keys are the models' semantic ids, which stay exactly as they are —
+ * `azygous` included — because landmark answers, stored observations, the acoustic volume and the
+ * Prompt-03 marker identity all key on them. Names follow the course text (`LANDMARK_NAMES`,
+ * the station names in `locate.ts`).
+ */
+export const STRUCTURE_DISPLAY_NAMES: Record<string, string> = {
+  azygous: 'azygos vein',
+  left_atrium: 'left atrium',
+  right_atrium: 'right atrium',
+  left_ventricle: 'left ventricle',
+  right_ventricle: 'right ventricle',
+  atrial_appendage_left: 'left atrial appendage',
+  superior_vena_cava: 'superior vena cava',
+  node_station_11ri: 'Example node 11Ri',
+  node_station_11rs: 'Example node 11Rs',
+}
+/** The name to show for a structure: the course's spelling where it differs, else the model's. */
+export function structureDisplayName(id: string, label?: string) {
+  return STRUCTURE_DISPLAY_NAMES[id] ?? String(label ?? id).replace(/_/g, ' ')
+}
 export const LANDMARK_HINTS: Record<string, string> = {
   transducer_face:
     'Look on the scan-facing side of the distal scope, beside the projecting tip. The optical lens has a different direction.',

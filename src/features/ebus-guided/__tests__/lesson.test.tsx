@@ -329,7 +329,10 @@ it('jumps ahead from the outline; a record task without a current acquisition re
   fireEvent.click(screen.getByRole('button', { name: /Record what this window establishes/ }))
   expect(heading('Record what this window establishes')).toBeInTheDocument()
   fireEvent.click(screen.getByText('Check and save record'))
-  expect(screen.getByRole('alert')).toHaveTextContent('The current acquisition is unavailable')
+  // EBUS-PRE-REVIEW-04 (L22-5) reworded the refusal into learner language; it still refuses.
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    'No current acquisition is available for this record',
+  )
   expect(primary()).toHaveTextContent('Finish lesson without completing this record')
   next()
   const summary = document.querySelector('[data-session-summary]')!

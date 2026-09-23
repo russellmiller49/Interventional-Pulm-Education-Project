@@ -26,22 +26,25 @@ export const prepareLessons: Lesson[] = [
       reasoning:
         'Station 7 may provide a diagnosis, but sampling it alone does not establish the status of other relevant stations. Plan a systematic survey and label each sampling site separately.',
     },
-    question: q(
-      'purpose-predict',
-      'A malignant station 7 aspirate establishes lung carcinoma. The contralateral mediastinum has not been examined. Which question remains unresolved?',
-      [
-        'Whether disease involves other relevant nodal stations',
-        'Histology from one station does not supply the rest of the nodal map.',
-      ],
-      [
-        'Whether the ultrasound probe was linear',
-        'Probe type is known from the procedure and does not resolve nodal extent.',
-      ],
-      [
-        'Whether the same station should be renamed after cytology',
-        'Station identity is anatomical; pathology does not change its name.',
-      ],
-    ),
+    question: {
+      ...q(
+        'purpose-predict',
+        'A malignant station 7 aspirate establishes lung carcinoma. The contralateral mediastinum has not been examined. Which question remains unresolved?',
+        [
+          'Whether disease involves other relevant nodal stations',
+          'A result from one station does not supply the rest of the nodal map.',
+        ],
+        [
+          'Whether the ultrasound probe was linear',
+          'Probe type is known from the procedure and does not resolve nodal extent.',
+        ],
+        [
+          'Whether the same station should be renamed after cytology',
+          'Station identity is anatomical; pathology does not change its name.',
+        ],
+      ),
+      hint: 'A diagnostic procedure asks what the lesion is. A staging procedure asks where tumor has spread.',
+    },
     matching: matching(
       'Match each clinical request with its immediate information need.',
       [
@@ -60,39 +63,61 @@ export const prepareLessons: Lesson[] = [
       ],
       'These requests can coexist. A complete plan accounts for each question before sampling.',
     ),
-    observation: q(
-      'purpose-observe',
-      'Why does stating the tissue-testing request before bronchoscopy matter?',
-      [
-        'It guides specimen allocation',
-        'A sample sufficient for one diagnostic stain may not satisfy all ancillary tests.',
-      ],
-      [
-        'It eliminates the need to label the station',
-        'Every sample still needs an anatomical source.',
-      ],
-      [
-        'It determines the diagnosis before acquisition',
-        'Planning preserves options; it does not establish pathology.',
-      ],
-    ),
-    transfer: q(
-      'purpose-transfer',
-      'For isolated adenopathy, lymphoma and granulomatous disease are both being considered. What should be discussed before sampling?',
-      [
-        'Specimen requirements and diagnostic limitations',
-        'Flow cytometry, microbiology, or additional tissue may be needed; agree on handling before obtaining material.',
-      ],
-      [
-        'Assigning a lung-cancer N category to every enlarged node',
-        'N classification describes regional tumor involvement in the relevant cancer context, not all adenopathy.',
-      ],
-      [
-        'Treating a negative aspirate as exclusion of every possible diagnosis',
-        'Negative sampling has diagnosis-specific limits, especially when architecture or additional testing is needed.',
-      ],
-    ),
-    diagram: 'workflow',
+    observation: {
+      ...q(
+        'purpose-observe',
+        'Why does stating the tissue-testing request before bronchoscopy matter?',
+        [
+          'It guides specimen allocation',
+          'A sample sufficient for one diagnostic stain may not satisfy all ancillary tests.',
+        ],
+        [
+          'It eliminates the need to label the station',
+          'Every sample still needs an anatomical source.',
+        ],
+        [
+          'It determines the diagnosis before acquisition',
+          'Planning preserves options; it does not establish pathology.',
+        ],
+      ),
+      hint: 'Review the CT and PET findings, possible alternative diagnoses, the safest useful target, and the tissue requirements with the team. Match the examination to the decision that follows the result.',
+    },
+    transfer: {
+      ...q(
+        'purpose-transfer',
+        'For isolated adenopathy, lymphoma and granulomatous disease are both being considered. What should be discussed before sampling?',
+        [
+          'Specimen requirements and diagnostic limitations',
+          'Flow cytometry, microbiology, or additional tissue may be needed; agree on handling before obtaining material.',
+        ],
+        [
+          'Assigning a lung-cancer N category to every enlarged node',
+          'N classification describes regional tumor involvement in the relevant cancer context, not all adenopathy.',
+        ],
+        [
+          'Treating a negative aspirate as exclusion of every possible diagnosis',
+          'Negative sampling has diagnosis-specific limits, especially when architecture or additional testing is needed.',
+        ],
+      ),
+      hint: 'Review the CT and PET findings, possible alternative diagnoses, the safest useful target, and the tissue requirements with the team. Match the examination to the decision that follows the result.',
+    },
+    refreshers: [
+      {
+        href: '/learn/anatomy/branch-tracing/learn?lesson=orientation',
+        label: 'Relate CT to the parent airway view (begins with standard axial CT)',
+        course: 'Bronchial Branch Tracing',
+      },
+      {
+        href: '/bronchoscopy-foundations/learn?section=right-side',
+        label: 'The right bronchial tree',
+        course: 'Bronchoscopy Foundations',
+      },
+      {
+        href: '/bronchoscopy-foundations/learn?section=left-side',
+        label: 'The left airways',
+        course: 'Bronchoscopy Foundations',
+      },
+    ],
     takeaways: [
       'A positive sample and a complete examination answer different questions.',
       'Plan tissue handling before the first pass.',
@@ -185,7 +210,6 @@ export const prepareLessons: Lesson[] = [
         'Labeling is separate and does not solve the airway constraint.',
       ],
     ),
-    diagram: 'workflow',
     takeaways: [
       'Unresolved readiness issues require a pause.',
       'Medication and airway plans are patient-specific.',

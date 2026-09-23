@@ -1,5 +1,6 @@
 import type { AcousticLabel } from '@bronchoscopy-core/acoustic'
 import type { EbusWorkbenchConfig } from '../../../../../src/lib/ebus-guided-bridge'
+import { structureDisplayName } from '../../../../../src/lib/ebus-linked-contract'
 
 export interface LabelImage {
   width: number
@@ -41,6 +42,7 @@ export function imageLabelAt(image: LabelImage, labels: AcousticLabel[], x: numb
   if (!id) return null
   const label = labels.find((entry) => entry.id === id)
   if (!label) return null
-  const name = label.label.replace(/_/g, ' ')
+  // The course's spelling where the volume's label differs (EBUS-PRE-REVIEW-04, L3-10).
+  const name = structureDisplayName(label.key, label.label)
   return label.kind === 'node' ? `${name} example node` : name
 }

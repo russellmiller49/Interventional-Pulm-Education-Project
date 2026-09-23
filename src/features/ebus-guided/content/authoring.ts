@@ -22,6 +22,20 @@ export const sequence = (prompt: string, steps: string[], explanation: string): 
   steps: steps.map((text, i) => ({ id: 'step-' + i, text })),
   explanation,
 })
+/**
+ * A sequence whose steps carry a worked label the learner may choose to hide (EBUS-PRE-REVIEW-04,
+ * L17-3). The label is removed from the display text only; step ids, their order and the
+ * explanation are untouched, so what is checked does not change.
+ */
+export const withBareSteps = (
+  item: Sequence,
+  label: RegExp,
+  tryItYourself: NonNullable<Sequence['tryItYourself']>,
+): Sequence => ({
+  ...item,
+  steps: item.steps.map((step) => ({ ...step, bare: step.text.replace(label, '') })),
+  tryItYourself,
+})
 export const matching = (
   prompt: string,
   pairs: [string, string][],

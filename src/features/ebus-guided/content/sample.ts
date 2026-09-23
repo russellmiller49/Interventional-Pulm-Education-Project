@@ -58,7 +58,7 @@ export const sampleLessons: Lesson[] = [
       'needle-observe',
       'Why confirm retraction before removing the assembly through the channel?',
       [
-        'An exposed tip can cause damage',
+        'An exposed tip can harm the patient or the equipment',
         'Retraction and securing the assembly follow the current device instructions.',
       ],
       ['Retraction determines nodal histology', 'It is a safety maneuver, not a diagnostic test.'],

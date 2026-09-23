@@ -3,6 +3,7 @@ import {
   LANDMARK_NAMES,
   LANDMARK_HINTS,
   STRUCTURE_FEATURES,
+  structureDisplayName,
   type LinkedSweepEvent,
 } from '../../../../../src/lib/ebus-linked-contract'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
@@ -72,7 +73,11 @@ interface Props {
 const labelFor = (mesh: THREE.Object3D, reveal: boolean) =>
   mesh.userData.role === 'node' && !reveal
     ? 'Example node'
-    : String(mesh.userData.label ?? mesh.name).replace(/_/g, ' ')
+    : // The course's spelling for a displayed name (EBUS-PRE-REVIEW-04, L3-10); ids unchanged.
+      structureDisplayName(
+        String(mesh.userData.semanticId || mesh.name),
+        mesh.userData.label as string | undefined,
+      )
 /**
  * Short names for the marker legend. Landmarks use the contract's names; the other candidates
  * are named from the model's own labels, shortened for a pill. Names are presentation only and

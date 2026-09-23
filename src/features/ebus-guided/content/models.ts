@@ -146,6 +146,7 @@ export const contactModel: Lesson = {
       ],
     ),
     imagePolicy: 'retained-acquisition',
+    namesContactMode: 'shadow',
   },
   transfer: question(
     'cutaway-transfer',

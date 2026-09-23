@@ -161,17 +161,23 @@ export function PracticePage({ locale = 'en' }: { locale?: string }) {
                * link text did not say (EBUS-PRE-REVIEW-01, PR-5). They are free exploration: no
                * lesson, no check and no course record.
                */}
+              {/*
+               * The destination needs a site account; this course does not (EBUS-PRE-REVIEW-04,
+               * part D). `/ebus-training` is outside the public-unlisted paths in
+               * `site-auth/access.ts`, so a visitor without a session is sent to sign in.
+               */}
               <p>
-                These open the separate EBUS training tools, outside this course. They are free
-                exploration — no lesson, no checks and nothing recorded here. Use the browser Back
-                button or the course tabs above to return.
+                These open the separate EBUS training tools, outside this course. They ask you to
+                sign in to the site; this course does not. They are free exploration — no lesson, no
+                checks and nothing recorded here. Use the browser Back button or the course tabs
+                above to return.
               </p>
               <div className={styles.actions}>
                 <Link className={styles.secondary} href="/ebus-training/simulator">
-                  Open the full EBUS simulator (separate tool)
+                  Open the full EBUS simulator (separate tool, sign-in required)
                 </Link>
                 <Link className={styles.secondary} href="/ebus-training/knobology">
-                  Open the full knobology tools (separate tool)
+                  Open the full knobology tools (separate tool, sign-in required)
                 </Link>
               </div>
             </section>

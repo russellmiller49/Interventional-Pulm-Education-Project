@@ -262,7 +262,9 @@ describe('leaving a case', () => {
   it('says the separate EBUS tools are separate', () => {
     render(<PracticePage />)
     expect(
-      screen.getByRole('link', { name: /Open the full EBUS simulator \(separate tool\)/ }),
+      // EBUS-PRE-REVIEW-04 added ", sign-in required" to the same label; the contract is that it
+      // says it is a separate tool.
+      screen.getByRole('link', { name: /Open the full EBUS simulator \(separate tool/ }),
     ).toHaveAttribute('href', '/ebus-training/simulator')
     expect(screen.getByText(/outside this course/)).toBeVisible()
   })

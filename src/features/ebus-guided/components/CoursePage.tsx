@@ -12,8 +12,9 @@ import {
 import { legacyRecordPresent, recommendedLesson } from '../engine/selfPacedProgress'
 import { EbusModuleFrame } from './ModuleFrame'
 import { useCourseProgress } from './useCourseProgress'
-import { TeachingDiagram } from './Diagram'
 import { StorageNotice } from './StorageNotice'
+import { GlossaryTerms } from './Glossary'
+import { GLOSSARY } from '../content/glossary'
 import styles from './course.module.css'
 
 /**
@@ -78,10 +79,10 @@ export function CoursePage({
                 and interpret what the result can tell you.
               </p>
               <p className={styles.muted}>
-                For early pulmonary fellows with basic flexible bronchoscopy and chest CT knowledge.{' '}
-                {GUIDED_MINUTES} minutes of guided lessons plus about 25 minutes of integrated
-                cases, in any order and over several sittings. Selected labs require a desktop or
-                tablet with WebGL 2.
+                For early pulmonary fellows with basic flexible bronchoscopy and chest CT knowledge.
+                About {GUIDED_MINUTES} minutes of guided lessons plus about 25 minutes of integrated
+                cases, in any order and over several sittings; the times are estimates, not measured
+                study times. Selected labs require a desktop or tablet with WebGL 2.
               </p>
               <div className={styles.actions}>
                 <Link
@@ -100,11 +101,40 @@ export function CoursePage({
                 </Link>
               </div>
               <p className={styles.muted} data-course-marks>
-                {reviewed} of {LESSONS.length} lessons reviewed · {opened} opened ·{' '}
-                {remainingMinutes} guided minutes in lessons not yet reviewed
+                {reviewed} of {LESSONS.length} lessons reviewed · {opened} opened · about{' '}
+                {remainingMinutes} estimated minutes in lessons not yet reviewed
               </p>
             </div>
-            <TeachingDiagram kind="workflow" />
+            {/*
+             * The course map, once (EBUS-PRE-REVIEW-04, OV-1 / OV-2). A five-box "clinical
+             * question → result" schematic stood here beside the seven chapter cards below: two
+             * organizing schemes on one page, and selecting one of its labels lit a number and
+             * located nothing. This is the same chapter registry as the cards, summarized, each
+             * chapter linking to its card. No second registry, no phase-to-lesson mapping.
+             */}
+            <nav className={styles.mapSummary} aria-labelledby="ebus-map-summary">
+              <h2 id="ebus-map-summary">The course in {CHAPTERS.length} chapters</h2>
+              <p className={styles.muted}>
+                {LESSONS.length} lessons. Open any chapter; the order is a recommendation, not a
+                requirement.
+              </p>
+              <ol>
+                {CHAPTERS.map((chapter) => (
+                  <li key={chapter.id}>
+                    <a href={'#chapter-' + chapter.id}>{chapter.title}</a>{' '}
+                    <span className={styles.muted}>
+                      · {chapter.lessons.length} lessons ·{' '}
+                      {
+                        chapter.lessons.filter((lesson) =>
+                          progress.reviewedLessonIds.includes(lesson.id),
+                        ).length
+                      }{' '}
+                      reviewed
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </nav>
           </div>
         ) : (
           <>
@@ -113,9 +143,9 @@ export function CoursePage({
               From the clinical question to a defensible report.
             </h1>
             <p className={styles.muted}>
-              The order below is the recommended route; open any lesson in any order. Finishing a
-              lesson marks it reviewed in this browser. Reopening an unfinished lesson starts it at
-              its first task.
+              The order below is the recommended route; open any lesson in any order. Reaching the
+              end of a lesson marks it reviewed in this browser, whether or not you completed its
+              tasks. Reopening an unfinished lesson starts it at its first task.
             </p>
             {next && (
               <p>
@@ -148,12 +178,22 @@ export function CoursePage({
             opened, finished or saved for later, and the cases you have opened.
           </p>
         )}
+        {/*
+         * What the marks mean (EBUS-PRE-REVIEW-04, NAV-1). "Reviewed" was read as evidence of work
+         * done; it is a navigation mark. The record and its undo are unchanged.
+         */}
+        <p className={styles.muted} data-course-marks-legend>
+          <strong>What the marks mean.</strong> Opened: you have started the lesson. Reviewed: you
+          reached its end, or marked it yourself; it does not record which tasks you completed,
+          skipped or answered, and you can unmark it at the end of the lesson. Saved for later: your
+          own reminder. Lesson times are estimates. None of these marks grades your answers.
+        </p>
         <div className={styles.map}>
           {CHAPTERS.map((chapter, chapterIndex) => {
             const lessons = chapter.lessons
             if (!lessons.length) return null
             return (
-              <section className={styles.card} key={chapter.id}>
+              <section className={styles.card} key={chapter.id} id={'chapter-' + chapter.id}>
                 <h2>
                   {chapterIndex + 1}. {chapter.title}
                 </h2>
@@ -162,7 +202,7 @@ export function CoursePage({
                     <li key={l.id}>
                       <Link href={lessonHref(l.id)}>{l.title}</Link>{' '}
                       <span className={styles.muted}>
-                        · {l.minutes} min {mark(l.id) ? '· ' + mark(l.id) : ''}
+                        · about {l.minutes} min {mark(l.id) ? '· ' + mark(l.id) : ''}
                       </span>
                     </li>
                   ))}
@@ -171,6 +211,16 @@ export function CoursePage({
             )
           })}
         </div>
+        {mode === 'Overview' && (
+          <section className={styles.card}>
+            <GlossaryTerms
+              entries={GLOSSARY}
+              heading="Course glossary"
+              intro="Definitions taken from the course’s own teaching, with the lesson each comes from. Terms the course uses without defining are not listed. The same glossary is under Help in every lesson."
+              level={2}
+            />
+          </section>
+        )}
         <p className={styles.notice}>
           Reviewed and opened marks record where you have been in the course, not procedural
           competence. Continue with supervised simulation and workplace teaching. This development

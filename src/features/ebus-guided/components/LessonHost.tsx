@@ -24,6 +24,10 @@ import { Workbench } from './Workbench'
 import { ExaminationWorkspace } from './ExaminationWorkspace'
 import { useCourseProgress } from './useCourseProgress'
 import { useLessonChromeClearance } from './useLessonChromeClearance'
+import { GlossaryTerms } from './Glossary'
+import { CaseSpecimens } from './CaseSpecimens'
+import { TroubleshootingFlow } from './TroubleshootingFlow'
+import { GLOSSARY, glossaryForLesson } from '../content/glossary'
 import styles from './course.module.css'
 
 /**
@@ -55,6 +59,20 @@ export function LessonHost({ lesson, locale = 'en' }: { lesson: Lesson; locale?:
 }
 type TaskOutcome = 'completed' | 'shown' | 'skipped'
 const TASK_INTERACTIONS = ['matching', 'sequence', 'record']
+/**
+ * What each kind of activity is, in the learner's words (EBUS-PRE-REVIEW-04, part H). The eyebrow
+ * printed the internal kind ("transfer", "application", "interpretation"); a check that sits beside
+ * the lesson's key points now says it is guided practice instead of looking like an examination.
+ */
+const KIND_LABELS: Record<LessonActivity['kind'], string> = {
+  briefing: 'Teaching',
+  demonstration: 'Worked demonstration',
+  application: 'Guided task',
+  acquisition: 'Your acquisition',
+  interpretation: 'Check',
+  transfer: 'Guided practice · new situation',
+  record: 'Case record',
+}
 
 function LessonSession({
   lesson,
@@ -281,6 +299,8 @@ function LessonSession({
     setActiveId(current.transitions.next)
   }, [holdRequested, current, observation, labDone])
   const showRuntime = !reviewId && ['live', 'held'].includes(current.image)
+  /** The lesson's figure, when this activity shows one (EBUS-PRE-REVIEW-04: none for four lessons). */
+  const figure = current.image === 'diagram' ? lesson.diagram : undefined
   const showDemo = !runtimeActivity && !reviewId && current.image === 'demonstration'
   /*
    * What the evidence beside the task actually is (EBUS-PRE-REVIEW-01: L3-8, L5-1, L9-4, L11-5).
@@ -309,8 +329,13 @@ function LessonSession({
   const heldContactMode =
     retained?.model?.package === 'contact' ? retained.model.contactMode : undefined
   const evidenceLabel: Record<NonNullable<typeof evidenceKind>, string> = {
+    /*
+     * What counts, said once (EBUS-PRE-REVIEW-04, L5-2). The embedded demonstration also carried
+     * "exploration does not complete your activity" beside a step counter that looked like
+     * tracking. The counter now says it records nothing; this says what does.
+     */
     demonstration:
-      'Authored demonstration. This is a worked example, not an acquisition of yours; you acquire your own next.',
+      'Worked demonstration, not an acquisition of yours: nothing you do here is recorded. Your own acquisition is the next task, and it counts once you hold it. Continuing without one is allowed; the lesson summary then lists that task as “No image held”.',
     held:
       'Your held acquisition, from this session in this workbench.' +
       /*
@@ -336,6 +361,21 @@ function LessonSession({
    */
   const checkUsesHeldImage = question?.imagePolicy === 'retained-acquisition'
   const scenarioCheckBesideHeldImage = !!question && evidenceKind === 'held' && !checkUsesHeldImage
+  /*
+   * L5-1, presentation only (EBUS-PRE-REVIEW-04). A check that reads the held frame can name one
+   * modelled contact condition while the learner held another: lesson 5's second check names the
+   * reflector whatever was selected when the frame was held. The frame is not replaced, relabelled
+   * or reconstructed, and the question is not reworded (that alignment is held for owner review).
+   * What is said is only what is true: which condition is held, which one the check names, and
+   * that the named one was inspected in this session — the activity cannot be held until all five
+   * conditions have been inspected (`MODEL_STEPS.contact`, checked by `labGoalMet`).
+   */
+  const namedContactMode = checkUsesHeldImage ? question?.namesContactMode : undefined
+  const heldConditionDiffers =
+    evidenceKind === 'held' &&
+    !!heldContactMode &&
+    !!namedContactMode &&
+    heldContactMode !== namedContactMode
   const reveal =
     current.image === 'held' && (!!committed || !!(question && explanationOpen[question.id]))
   const instruction =
@@ -351,9 +391,15 @@ function LessonSession({
          */
         evidenceKind === 'held-missing'
         ? 'No image of yours is held for this task. The checks below stay open: go back to the acquisition to hold one, read the explanation, or continue.'
-        : scenarioCheckBesideHeldImage
-          ? 'The image you acquired stays beside this check. This one describes a situation in words, so answer it from the description.'
-          : current.instruction
+        : heldConditionDiffers
+          ? 'This check names a different contact condition (' +
+            CONTACT_MODE_LABELS[namedContactMode!] +
+            ') from the one your held image shows (' +
+            CONTACT_MODE_LABELS[heldContactMode!] +
+            '). Your held image stays as you acquired it. You inspected the condition the check names in the workbench before holding, so answer from that inspection.'
+          : scenarioCheckBesideHeldImage
+            ? 'The image you acquired stays beside this check. This one describes a situation in words, so answer it from the description.'
+            : current.instruction
   const unavailableReason = !question
     ? undefined
     : !missingImage
@@ -398,9 +444,20 @@ function LessonSession({
       }
     }
   }
+  /*
+   * The hint for the check on screen (EBUS-PRE-REVIEW-04, L1-9). A check that carries a passage
+   * from this lesson's teaching shows that passage; the lesson's recall — which in lesson 1 is a
+   * course prerequisite, not help with any check — is used only where no passage is authored.
+   */
   const hint = (
     <>
-      <p>{lesson.recall}</p>
+      {question?.hint ? (
+        <p data-hint-excerpt>
+          <strong>From this lesson:</strong> {question.hint}
+        </p>
+      ) : (
+        <p>{lesson.recall}</p>
+      )}
       <ul>
         {lesson.checklist.map((item) => (
           <li key={item}>{item}</li>
@@ -521,8 +578,8 @@ function LessonSession({
         )}
         <section className={styles.taskSurface} data-now-card aria-labelledby="ebus-task-title">
           <div className={styles.taskHeading}>
-            <p className={styles.eyebrow}>
-              {reviewId ? 'Review · Current activity paused' : current.kind}
+            <p className={styles.eyebrow} data-activity-kind={current.kind}>
+              {reviewId ? 'Review · Current activity paused' : KIND_LABELS[current.kind]}
             </p>
             <h2 id="ebus-task-title" ref={heading} tabIndex={-1}>
               {finished ? 'Lesson finished' : current.title}
@@ -534,11 +591,16 @@ function LessonSession({
               }
             >
               {finished
-                ? 'This lesson is marked as reviewed in this browser. That records where you have been, not what you answered and not procedural competence.'
+                ? 'This lesson is now marked reviewed in this browser. Reviewed means you reached the end of the lesson, whether you completed, skipped or only read its tasks; the list below shows which, for this session only. It does not grade your answers and is not a record of procedural competence.'
                 : reviewId
                   ? 'Read the earlier task without repeating its actions. Your current acquisition remains paused.'
                   : instruction}
             </p>
+            {!finished && !reviewId && current.purpose && (
+              <p className={styles.purpose} data-activity-purpose>
+                {current.purpose}
+              </p>
+            )}
           </div>
           <div
             className={styles.taskComposition}
@@ -556,7 +618,7 @@ function LessonSession({
                 finished ||
                 (runtimeActivity
                   ? !showRuntime
-                  : !showDemo && !['reference', 'diagram'].includes(current.image))
+                  : !showDemo && !(current.image === 'reference' || !!figure))
               }
             >
               {evidenceKind && (
@@ -591,8 +653,12 @@ function LessonSession({
                 />
               ) : current.image === 'reference' && lesson.station ? (
                 <StationFigure key={lesson.station} station={lesson.station} allowSelect />
-              ) : current.image === 'diagram' ? (
-                <TeachingDiagram kind={lesson.diagram} />
+              ) : figure === 'specimens' ? (
+                <CaseSpecimens />
+              ) : figure === 'troubleshooting' ? (
+                <TroubleshootingFlow />
+              ) : figure ? (
+                <TeachingDiagram kind={figure} />
               ) : null}
             </div>
             <div className={styles.taskContent}>
@@ -646,6 +712,21 @@ function LessonSession({
                   <p>
                     <strong>Recall.</strong> {lesson.recall}
                   </p>
+                  {lesson.refreshers?.length ? (
+                    <p className={styles.refreshers} data-refreshers>
+                      Optional refreshers in separate courses, also in development (each opens in a
+                      new tab; nothing here requires them):{' '}
+                      {lesson.refreshers.map((item, index) => (
+                        <span key={item.href}>
+                          {index ? ' · ' : ''}
+                          <Link href={item.href} target="_blank" rel="noopener">
+                            {item.label}
+                          </Link>{' '}
+                          ({item.course})
+                        </span>
+                      ))}
+                    </p>
+                  ) : null}
                   <h3>{lesson.concept}</h3>
                   {current.note && <p className={styles.notice}>{current.note}</p>}
                   {lesson.paragraphs.map((paragraph) => (
@@ -656,6 +737,13 @@ function LessonSession({
                       <li key={item}>{item}</li>
                     ))}
                   </ul>
+                  {/* First-use definitions from the course's own teaching (NAV-3, L1-4, L15-4). */}
+                  <GlossaryTerms
+                    entries={glossaryForLesson(lesson.id)}
+                    heading="Terms used in this lesson"
+                    intro="Open a term for the course’s own definition. The full course glossary is under Help."
+                    currentLessonId={lesson.id}
+                  />
                 </div>
               )}
               {!finished && current.teaching.includes('worked') && (
@@ -757,9 +845,28 @@ function LessonSession({
                 retained?.recorded && (
                   <section className={styles.recordCard}>
                     <h3>Capture record</h3>
-                    <p>
-                      Recorded example {retained.recorded.segmentId} · Selected depth{' '}
-                      {retained.depth / 10} cm · Two calipers saved in this activity.
+                    {/*
+                     * The internal clip name ("Depth4_Gain_4") is replaced by what the recording
+                     * is (EBUS-PRE-REVIEW-04, L10-4), read from the example the frame carries. An
+                     * older frame without that description says only that it is a recorded
+                     * teaching example. Either way it is a library recording, not the learner's
+                     * patient image.
+                     */}
+                    <p data-capture-example>
+                      {retained.recorded.example
+                        ? 'Recorded teaching example at ' +
+                          retained.recorded.example.depthCm +
+                          ' cm depth, ' +
+                          (retained.recorded.example.control === 'flow'
+                            ? 'a flow-mode recording'
+                            : retained.recorded.example.control +
+                              ' example ' +
+                              retained.recorded.example.index +
+                              ' of ' +
+                              retained.recorded.example.levels)
+                        : 'Recorded teaching example'}{' '}
+                      · Selected depth {retained.depth / 10} cm · Two calipers saved in this
+                      activity.
                     </p>
                     <p>
                       Station identity and clinical borders are not validated by this control
@@ -966,6 +1073,12 @@ function LessonSession({
                 keeps your place; the unfinished lesson starts over when reopened.
               </p>
               <p>{lesson.boundary}</p>
+              <GlossaryTerms
+                entries={GLOSSARY}
+                heading="Course glossary"
+                intro="Definitions taken from the course’s own teaching. Terms the course uses without defining are not listed."
+                currentLessonId={lesson.id}
+              />
             </>
           )}
         </HelpDialog>

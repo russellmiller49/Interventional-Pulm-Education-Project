@@ -1,5 +1,5 @@
 import type { Lesson } from './types'
-import { question as q, matching, sequence } from './authoring'
+import { question as q, matching, sequence, withBareSteps } from './authoring'
 export const planLessons: Lesson[] = [
   {
     id: 'node-characterization',
@@ -88,7 +88,6 @@ export const planLessons: Lesson[] = [
         'Metastasis is not confined to the largest node.',
       ],
     ),
-    diagram: 'ultrasound',
     station: '7',
     takeaways: [
       'Describe what is seen before inferring what it means.',
@@ -130,14 +129,22 @@ export const planLessons: Lesson[] = [
       ['11L', 'Ipsilateral interlobar involvement is N1.'],
       ['7', 'Subcarinal involvement is N2 for either primary side.'],
     ),
-    sequence: sequence(
-      'For a left lung primary with targets at 4R, 7, and 11L, order their sampling from highest to lowest N category.',
-      [
-        'Sample the confirmed 4R target (N3)',
-        'Sample the confirmed station 7 target (N2)',
-        'Sample the confirmed 11L target (N1)',
-      ],
-      'For this primary side, 4R → 7 → 11L follows N3 → N2 → N1. Each target still requires an acceptable path.',
+    sequence: withBareSteps(
+      sequence(
+        'For a left lung primary with targets at 4R, 7, and 11L, order their sampling from highest to lowest N category.',
+        [
+          'Sample the confirmed 4R target (N3)',
+          'Sample the confirmed station 7 target (N2)',
+          'Sample the confirmed 11L target (N1)',
+        ],
+        'For this primary side, 4R → 7 → 11L follows N3 → N2 → N1. Each target still requires an acceptable path.',
+      ),
+      / \(N[123]\)$/,
+      {
+        hide: 'Try it yourself: hide the N categories',
+        show: 'Show the N categories again',
+        note: 'Each step names its N category as worked help. Hiding the categories is your choice; the order that is checked is the same, and Show the sequence and the explanation stay available.',
+      },
     ),
     observation: q(
       'staging-observe',

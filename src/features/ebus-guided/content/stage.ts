@@ -34,6 +34,14 @@ export interface ActivitySpec {
   task?: 'guided' | 'changed-window'
   companion?: string
   note?: string
+  /**
+   * What the activity is for, said plainly where the task is scaffolded (EBUS-PRE-REVIEW-04, part
+   * H). A check shown beside the lesson's key points, an acquisition whose instruction names the
+   * example settings, a record whose supplied instruction states the handling: each is guided
+   * practice, and says so instead of looking like an examination. Nothing is hidden to make it
+   * one. Transfers and key-point checks take the default in `activitiesForLesson`.
+   */
+  purpose?: string
   recordTask?: RecordTask
   caseData?: ExaminationCase
 }
@@ -172,11 +180,27 @@ const record = (
     'Reconcile the supplied evidence with your entries. The record distinguishes plans, observations, specimens and unresolved findings.',
 })
 
+/*
+ * Purposes shared by more than one activity (EBUS-PRE-REVIEW-04, H and N). Each says what the
+ * activity asks and why, from the lab's own instruction and gate; none adds a clinical claim.
+ */
+const EXAMPLE_SETTINGS_PURPOSE =
+  'Guided acquisition: the instruction names the teaching example’s settings to stop on. Compare the views on the way there. The numbers belong to this recorded teaching library, not to a patient.'
+const CHANGED_WINDOW_PURPOSE =
+  'Repeated on purpose, from a changed scope position: the same modeled target and landmarks, a different start. The landmark checks and the sweep are asked again because this is a new acquisition; the check that follows asks whether the station assignment changes.'
+/** Checks shown beside the lesson's key points are guided practice, and say so (L1-10 and others). */
+const KEY_POINTS_PURPOSE: Record<'transfer' | 'review', string> = {
+  transfer:
+    'Guided practice: the lesson’s key points stay beside this check on purpose. Use them to reason through a situation the lesson has not shown you yet.',
+  review:
+    'Guided practice: the lesson’s key points stay beside this check on purpose. Use them with the evidence beside you.',
+}
+
 /** Deliberate lesson flows, not a positional seven-stage adapter. Missing coverage is an error. */
 export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
   'clinical-question': [
     {
-      ...brief('clinical-request', 'Define what the examination must answer', 'briefing'),
+      ...brief('clinical-request', 'Define what the examination must answer', 'briefing', 'none'),
       note: 'An examination record connects the clinical request, planned coverage, specimens and unanswered questions. Sampling one target may provide a diagnosis while leaving staging or ancillary-testing needs unresolved. A non-lung-cancer adenopathy case does not automatically receive an N category.',
     },
     apply('information-needs', 'State the information needed', 'matching'),
@@ -203,10 +227,21 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
   'station-seven': [
     brief('subcarinal-region', 'Locate the subcarinal region', 'regional', 'reference', false),
     demo('assisted-window', 'Compare the two bronchial approaches', 'linked'),
-    decide('station-decision', 'Separate approach from station', ['question']),
-    acquire('bronchial-sweeps', 'Acquire both bronchial windows', 'linked'),
+    {
+      ...decide('station-decision', 'Separate approach from station', ['question']),
+      purpose:
+        'This check separates the approach from the station. The stem names the node’s compartment; what it asks is whether the bronchus the scope is in changes the station you record.',
+    },
+    {
+      ...acquire('bronchial-sweeps', 'Acquire both bronchial windows', 'linked'),
+      purpose:
+        'Two approaches, one target: this acquisition asks for your own rotation sweep from each main bronchus, so you can compare the two windows onto the same subcarinal node.',
+    },
     held('Interpret the acquired window'),
-    acquire('changed-position', 'Compare another window', 'ultrasound', 'changed-window'),
+    {
+      ...acquire('changed-position', 'Compare another window', 'ultrasound', 'changed-window'),
+      purpose: CHANGED_WINDOW_PURPOSE,
+    },
     transfer('Interpret the changed window', 'held', 'ultrasound'),
     record(
       'record-window',
@@ -218,7 +253,7 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
   ],
   preparation: [
     {
-      ...brief('readiness', 'Resolve the readiness issue', 'briefing'),
+      ...brief('readiness', 'Resolve the readiness issue', 'briefing', 'none'),
       note: 'A readiness checklist records a team declaration; it does not certify patient safety. Pausing to resolve an unanswered medication, airway, equipment or specimen question is an appropriate outcome.',
     },
     apply('team-check', 'Agree on the next safe step', 'sequence'),
@@ -241,14 +276,20 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
   'image-depth': [
     brief('depth-example', 'Compare the displayed fields', 'ultrasound', 'demonstration'),
     decide('field-decision', 'Choose the control for the field', ['question']),
-    acquire('depth-comparison', 'Frame the target and surrounding tissue', 'ultrasound'),
+    {
+      ...acquire('depth-comparison', 'Frame the target and surrounding tissue', 'ultrasound'),
+      purpose: EXAMPLE_SETTINGS_PURPOSE,
+    },
     held('Interpret the two recorded fields'),
     transfer('Preserve the anatomy beyond another target'),
   ],
   'gain-contrast': [
     brief('detail-example', 'Compare brightness and tissue detail', 'ultrasound', 'demonstration'),
     decide('brightness-decision', 'Explain a brightness change', ['question']),
-    acquire('detail-comparison', 'Adjust one image control at a time', 'ultrasound'),
+    {
+      ...acquire('detail-comparison', 'Adjust one image control at a time', 'ultrasound'),
+      purpose: EXAMPLE_SETTINGS_PURPOSE,
+    },
     held('Compare the retained detail'),
     transfer('Distinguish poor contact from low gain'),
   ],
@@ -291,7 +332,7 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     demo('section-comparison', 'Compare the model section and ultrasound plane', 'linked'),
     decide('map-decision', 'Identify the basis of a station assignment', ['question']),
     acquire('section-sweep', 'Check landmarks and acquire a section', 'linked'),
-    held('Explain the model and clinical CT distinction'),
+    held('Identify what determines a station name'),
     transfer('Reconsider a target near a boundary'),
   ],
   'right-paratracheal': [
@@ -306,12 +347,15 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     decide('right-boundary', 'Identify the relevant boundary', ['question']),
     acquire('right-sweep', 'Acquire the right paratracheal window', 'linked'),
     held('Interpret the acquired compartment'),
-    acquire(
-      'right-changed',
-      'Acquire a changed right paratracheal position',
-      'ultrasound',
-      'changed-window',
-    ),
+    {
+      ...acquire(
+        'right-changed',
+        'Acquire a changed right paratracheal position',
+        'ultrasound',
+        'changed-window',
+      ),
+      purpose: CHANGED_WINDOW_PURPOSE,
+    },
     transfer('Compare the changed window', 'held', 'ultrasound'),
   ],
   'left-paratracheal': [
@@ -338,7 +382,7 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     ),
     apply(
       'regional-identity',
-      'Separate station anatomy from case side',
+      'Match bronchial relationships to interlobar stations',
       'matching',
       ['question', 'observation'],
       'regional',
@@ -346,10 +390,15 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     transfer('Apply the primary side to another case'),
   ],
   'node-characterization': [
-    brief('description-evidence', 'Describe the appearance before its implications', 'briefing'),
+    brief(
+      'description-evidence',
+      'Describe the appearance before its implications',
+      'briefing',
+      'none',
+    ),
     record(
       'node-description',
-      'Write a bounded node description',
+      'Choose the description the vignette supports',
       'node-description',
       DESCRIPTION_CASE,
     ),
@@ -359,7 +408,11 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
   'systematic-staging': [
     brief('staging-purpose', 'Define the coverage needed for staging', 'case'),
     record('case-plan', 'Plan the examination for this primary side', 'plan', EXAMINATION_CASE),
-    apply('sampling-order', 'Reconcile order with the examination plan', 'sequence'),
+    {
+      ...apply('sampling-order', 'Reconcile order with the examination plan', 'sequence'),
+      purpose:
+        'Guided ordering: each step names that target’s N category for this left lung primary. The task is to put the targets in the order the lesson describes; you can choose to hide the categories and try it yourself.',
+    },
     transfer('Count stations and nodes separately'),
   ],
   'eus-b': [
@@ -402,7 +455,7 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
       ['question', 'observation'],
       'sampling',
     ),
-    transfer('Respond when the tip leaves the image'),
+    transfer('Respond to resistance at a calcified target'),
   ],
   'needle-assembly-model': [
     {
@@ -419,7 +472,7 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
       ...held('Interpret the live-tip limitation', 'sampling'),
       questions: ['question', 'observation'],
     },
-    transfer('Recover when live visibility is lost'),
+    transfer('Respond to resistance with the tip visible'),
   ],
   'adequacy-rose': [
     brief(
@@ -444,7 +497,11 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
   ],
   'specimen-triage': [
     brief('specimen-request', 'Connect each specimen to the requested studies', 'sampling'),
-    record('allocation-plan', 'Allocate the case specimens', 'allocation', EXAMINATION_CASE),
+    {
+      ...record('allocation-plan', 'Allocate the case specimens', 'allocation', EXAMINATION_CASE),
+      purpose:
+        'Guided record: each requested study shows the laboratory’s instruction for it, or says that none was supplied. Record the handling plan each one supports.',
+    },
     apply(
       'traceability',
       'Preserve the source through processing',
@@ -452,20 +509,29 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
       ['question', 'observation'],
       'sampling',
     ),
-    transfer('Resolve an unspecified laboratory requirement'),
+    transfer('Discuss granulomas when microbiology was not sent'),
   ],
   'difficult-acquisition': [
     brief('acquisition-problem', 'Classify the problem before changing controls', 'case'),
-    apply('problem-action', 'Choose the first response to each problem', 'matching'),
+    {
+      ...apply('problem-action', 'Choose the first response to each problem', 'matching'),
+      purpose:
+        'Guided task: the troubleshooting flow in the briefing shows these pairings. Match them here; Back rereads the flow at any time.',
+    },
     transfer('Recognize the limit of the current window'),
   ],
   'complications-recovery': [
-    brief('patient-response', 'Respond to the patient and communicate the limitation', 'case'),
+    brief(
+      'patient-response',
+      'Respond to the patient and communicate the limitation',
+      'case',
+      'none',
+    ),
     apply('recovery-sequence', 'Prioritize the patient during deterioration', 'sequence'),
     transfer('Plan recovery and escalation'),
   ],
   'results-reporting': [
-    brief('report-evidence', 'Build the conclusion from the evidence', 'record'),
+    brief('report-evidence', 'Build the conclusion from the evidence', 'record', 'none'),
     record('reconciled-report', 'Construct the case report', 'report', EXAMINATION_CASE),
     apply('result-meaning', 'Reconcile the result with the clinical question', 'matching'),
     transfer('Close the loop on unresolved findings'),
@@ -483,14 +549,25 @@ export function activitiesForLesson(lesson: Lesson): LessonActivity[] {
     objective: lesson.objective,
     sourceIds: lesson.sources,
     limitation: lesson.boundary,
+    purpose:
+      spec.purpose ??
+      (spec.teaching.includes('takeaways') && spec.questions.length
+        ? KEY_POINTS_PURPOSE[spec.kind === 'transfer' ? 'transfer' : 'review']
+        : undefined),
+    /*
+     * A check with the key points beside it, or with a stated purpose, is guided: it used to be
+     * called independent whenever it had questions (EBUS-PRE-REVIEW-04, H). Descriptive only.
+     */
     support:
       spec.image === 'demonstration'
         ? 'worked'
-        : spec.image === 'held' && lesson.lab?.kind === 'model'
+        : spec.purpose || spec.teaching.includes('takeaways')
           ? 'guided'
-          : spec.questions.length
-            ? 'independent'
-            : 'guided',
+          : spec.image === 'held' && lesson.lab?.kind === 'model'
+            ? 'guided'
+            : spec.questions.length
+              ? 'independent'
+              : 'guided',
     completion: { action: spec.interaction, responses: spec.questions },
     transitions: {
       next: specs[index + 1] ? lesson.id + ':' + specs[index + 1].id : null,
