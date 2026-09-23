@@ -1,0 +1,319 @@
+{
+  "task": "BBT-PRE-REVIEW-04",
+  "title": "Teaching clarity and coherent optional route flow",
+  "status": "READY FOR INDEPENDENT REVIEW",
+  "date": "2026-09-23",
+  "repository": {
+    "implementation_base_sha": "a306d8250ec10207c750f46407f151c06d487707",
+    "implementation_commit": "276710b552ab01aa3bb2711ad5528e0d51a61994",
+    "test_only_commit": "4b26a3206ef539af3ff5e0f94fec532122411aed",
+    "final_head": "documents commit on top of 4b26a320; recorded on the PR",
+    "branch": "claude/bbt-04",
+    "worktree": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-bbt-04",
+    "open_prs_overlapping_bbt": [],
+    "merged": false,
+    "deployed": false
+  },
+  "server": {
+    "mode": "next-server standalone production",
+    "build_id": "IH5OxvSXqGFtsMupcx28t",
+    "pid": 86090,
+    "cwd": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-bbt-04/.next/standalone",
+    "base_url": "http://127.0.0.1:3001",
+    "env": "public .env.example placeholders as process environment only"
+  },
+  "findings": [
+    {
+      "id": "BBTF-02",
+      "reproduction": "reproduced on base (L4/L5 worked captions and locators before the try; no mode labels)",
+      "disposition": "repaired within policy",
+      "implemented": "Worked example / Try tracing / Compare with reference kicker labels, worked-example note, try note naming guided practice; nothing withheld",
+      "tests": [
+        "__tests__/teaching-route-flow.test.tsx › Lesson 4 bright-ring cue … mode labels",
+        "e2e/branch-tracing.spec.ts › try note keyboard"
+      ]
+    },
+    {
+      "id": "BBTF-07",
+      "reproduction": "reproduced (packet divergence/continuity only after Check)",
+      "disposition": "repaired",
+      "implemented": "Before-you-mark primer: source levels vs model node, change-of-direction note with Lesson 8 primer, packet text verbatim; Lesson 4 bright-ring cue before marking",
+      "held": "Lesson reorder is OD-04 (H5)",
+      "tests": ["__tests__/teaching-route-flow.test.tsx"]
+    },
+    {
+      "id": "BBTF-08",
+      "reproduction": "reproduced (only 'Trace this airway'; map showed 'Your route map · 0 of 9 stops recorded · Partial' built from the LS9 record during the RS8 worked route)",
+      "disposition": "repaired",
+      "implemented": "Next worked junction (RS8 route) / Start your own trace: LS9 / Skip to your own trace: LS9; routes-in-lesson list; role in context strip; separate worked route map; worked junction panel poses no question",
+      "tests": [
+        "__tests__/teaching-route-flow.test.tsx › worked route seeds nothing",
+        "e2e/branch-tracing.spec.ts › Lesson 9 keeps … apart"
+      ]
+    },
+    {
+      "id": "BBTF-09",
+      "reproduction": "reproduced (Explain step with no input; action 'Trace another airway')",
+      "disposition": "repaired",
+      "implemented": "Optional unrecorded reflection with a Compare-with-the-reference block; 'Continue to another trace: LS5'; no text box, no token choice",
+      "held": "Optional local note not added (H7)",
+      "tests": ["__tests__/teaching-route-flow.test.tsx", "e2e/branch-tracing.spec.ts"]
+    },
+    {
+      "id": "BBTF-15",
+      "reproduction": "reproduced",
+      "disposition": "repaired; one term held",
+      "implemented": "Action-oriented objectives with UI terms; local course reference terms",
+      "held": "'Spur angle' has no source definition (H4, Prompt 05)",
+      "tests": ["__tests__/teaching-route-flow.test.tsx"]
+    },
+    {
+      "id": "BBTF-16",
+      "reproduction": "reproduced (key only in the route Airway names panel)",
+      "disposition": "repaired",
+      "implemented": "B/S key on overview (with RS5 → RB5 → RB5b), Lesson 1 and the course reference",
+      "tests": ["__tests__/teaching-route-flow.test.tsx", "e2e/branch-tracing.spec.ts"]
+    },
+    {
+      "id": "BBTF-18",
+      "reproduction": "reproduced",
+      "disposition": "repaired",
+      "implemented": "One Learn/Practice/More routes map; counts and overlaps from registries; estimate labelled as the authors' planning aid",
+      "tests": ["__tests__/teaching-route-flow.test.tsx", "e2e/branch-tracing.spec.ts"]
+    },
+    {
+      "id": "BBTF-19",
+      "reproduction": "reproduced (no pattern reference)",
+      "disposition": "reference added; figure held",
+      "implemented": "Four-pattern reference quoted from Lessons 4–7, mapping proved by lesson text, names from clinical-review.md, existing page pointers labelled pending review",
+      "held": "Figure and book-verified definitions (H1, Prompt 05); book not in Local-Data this session",
+      "tests": ["__tests__/teaching-route-flow.test.tsx"]
+    },
+    {
+      "id": "BBTF-27",
+      "reproduction": "reproduced (no statement)",
+      "disposition": "repaired",
+      "implemented": "Lesson 1 dataset-specific slice-direction note from the native-v1 manifest",
+      "tests": ["__tests__/teaching-route-flow.test.tsx"]
+    },
+    {
+      "id": "BBTF-30",
+      "reproduction": "reproduced",
+      "disposition": "reframed; replacement held",
+      "implemented": "Same-airway/different-display framing and an unrecorded reflection; regional display comparison offered in Lesson 2",
+      "held": "Asymmetric replacement example (H3; Prompt 03 candidates junction-10/3/6)",
+      "tests": ["__tests__/teaching-route-flow.test.tsx"]
+    },
+    {
+      "id": "BBTF-31",
+      "reproduction": "reproduced in disclosures",
+      "disposition": "repaired",
+      "implemented": "'Reset to standard' → 'Return to standard axial' (Lesson 2 worked text; route display-convention panel)",
+      "tests": ["__tests__/teaching-route-flow.test.tsx"]
+    },
+    {
+      "id": "BBTF-33",
+      "reproduction": "reproduced (later examples open in the try; branch buttons jump)",
+      "disposition": "repaired",
+      "implemented": "Optional Watch/Replay worked walkthrough and Start from the parent (record nothing); branch buttons described as jumps",
+      "tests": ["__tests__/teaching-route-flow.test.tsx", "e2e/branch-tracing.spec.ts"]
+    },
+    {
+      "id": "BBTF-41",
+      "reproduction": "reproduced from base code path (baseline capture of this state failed on the display guide)",
+      "disposition": "repaired",
+      "implemented": "Optional revisit label and reason; pattern defined in the reference",
+      "tests": ["__tests__/teaching-route-flow.test.tsx"]
+    },
+    {
+      "id": "BBTF-43",
+      "reproduction": "reproduced ('Which branch would you follow toward LLL?')",
+      "disposition": "repaired",
+      "implemented": "Question names LS6 from the target registry, approach LB6, neutral daughter identities",
+      "tests": ["__tests__/teaching-route-flow.test.tsx", "e2e/branch-tracing.spec.ts"]
+    },
+    {
+      "id": "BBTF-45",
+      "reproduction": "reproduced",
+      "disposition": "relocated; wider placement held",
+      "implemented": "Upper-division sentences moved verbatim to Lesson 8's optional reference with a Lesson 7 link",
+      "held": "Adding the 'left superior segment' note to Lesson 7 (H2)",
+      "tests": ["__tests__/teaching-route-flow.test.tsx", "e2e/branch-tracing.spec.ts"]
+    },
+    {
+      "id": "BBTF-48",
+      "reproduction": "reproduced ('Return to overview' only)",
+      "disposition": "repaired",
+      "implemented": "Continue to Practice + Return to overview; outline and overview name Practice and More routes as optional next steps",
+      "tests": ["__tests__/teaching-route-flow.test.tsx", "e2e/branch-tracing.spec.ts"]
+    },
+    {
+      "id": "BBTF-49",
+      "reproduction": "reproduced",
+      "disposition": "explained; redesign held",
+      "implemented": "Nav, overview and landing explain an optional revisit set in the same CT with per-route overlaps",
+      "held": "Merge or re-scope (H6, OD-07)",
+      "tests": ["__tests__/teaching-route-flow.test.tsx", "e2e/branch-tracing.spec.ts"]
+    },
+    {
+      "id": "BBTF-50",
+      "reproduction": "reproduced",
+      "disposition": "repaired",
+      "implemented": "Plain wording under the CT and in the Lesson 9 footer; version and review status in a Source details disclosure; Lesson 1 pointer 'exact page not yet confirmed'",
+      "tests": ["e2e/branch-tracing.spec.ts"]
+    },
+    {
+      "id": "BBTF-51",
+      "reproduction": "reproduced",
+      "disposition": "repaired",
+      "implemented": "Save for later vs Mark reviewed; same stored fields",
+      "tests": ["__tests__/teaching-route-flow.test.tsx"]
+    },
+    {
+      "id": "BBTF-52",
+      "reproduction": "reproduced",
+      "disposition": "repaired",
+      "implemented": "Plurals by count; display-only sentence case for seven title-case source names and the doubled 'daughters daughter' label; stored data unchanged",
+      "tests": ["__tests__/teaching-route-flow.test.tsx"]
+    },
+    {
+      "id": "BBTF-53",
+      "reproduction": "reproduced",
+      "disposition": "repaired",
+      "implemented": "Estimates visible after Reviewed; overview notes saved Practice/More routes drafts by key presence only",
+      "tests": ["__tests__/teaching-route-flow.test.tsx", "e2e/branch-tracing.spec.ts"]
+    },
+    {
+      "id": "BBTF-54",
+      "reproduction": "reproduced",
+      "disposition": "repaired",
+      "implemented": "'Optional: full-route Practice and source limits'; suggested next lesson named",
+      "tests": ["__tests__/teaching-route-flow.test.tsx"]
+    }
+  ],
+  "held": [
+    {
+      "id": "H1",
+      "finding": "BBTF-19",
+      "proposal": "Four-pattern figure and book-verified definitions",
+      "for": "Prompt 05 / owner"
+    },
+    {
+      "id": "H2",
+      "finding": "BBTF-45",
+      "proposal": "'Left superior segment' note in Lesson 7's LUL example",
+      "for": "owner/source"
+    },
+    {
+      "id": "H3",
+      "finding": "BBTF-30",
+      "proposal": "Asymmetric fork replaces tracheal Lesson 2 example",
+      "for": "owner"
+    },
+    {
+      "id": "H4",
+      "finding": "BBTF-15",
+      "proposal": "Define 'spur angle'",
+      "for": "Prompt 05"
+    },
+    {
+      "id": "H5",
+      "finding": "BBTF-07",
+      "proposal": "Reorder lessons so direction change precedes Lessons 3 and 6",
+      "for": "owner (OD-04)"
+    },
+    {
+      "id": "H6",
+      "finding": "BBTF-49",
+      "proposal": "Merge More routes into Practice or make it an independent set",
+      "for": "owner (OD-07)"
+    },
+    {
+      "id": "H7",
+      "finding": "BBTF-09",
+      "proposal": "Optional unsaved local note",
+      "for": "not planned"
+    }
+  ],
+  "owner_holds": {
+    "OD-01": "OPEN",
+    "OD-03": "held",
+    "OD-04": "owner",
+    "OD-05": "held",
+    "OD-07": "owner",
+    "BBT-02 packet": "NOT REVIEWED"
+  },
+  "validation": {
+    "jest_bbt": {
+      "suites": 24,
+      "tests": 160,
+      "passed": 159,
+      "failed": 1,
+      "failure": "known baseline contracts.test.ts:198 isPublicPath('/airway-anatomy/case-001/case_manifest.json')",
+      "log": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-04-2026-09-23/logs/jest-bbt.log"
+    },
+    "playwright_branch_tracing_production": {
+      "passed": 65,
+      "failed": 0,
+      "skipped": 0,
+      "duration": "1.4 min",
+      "log": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-04-2026-09-23/logs/playwright-branch-tracing-production.log"
+    },
+    "playwright_systemic_bbt": {
+      "passed": 3,
+      "log": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-04-2026-09-23/logs/playwright-systemic-bbt-production.log"
+    },
+    "tsc": {
+      "default_heap": "exit 134, JavaScript heap out of memory before any diagnostic (environment limit)",
+      "max_old_space_8192": "exit 0, no diagnostics"
+    },
+    "eslint_changed_paths": "clean",
+    "prettier_changed_paths": "clean",
+    "git_diff_check": "clean",
+    "production_build": {
+      "exit": 0,
+      "duration": "2 min 29 s",
+      "log": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-04-2026-09-23/logs/production-build.log"
+    },
+    "new_tests": {
+      "jest": 18,
+      "playwright": 12
+    },
+    "updated_label_contracts": [
+      "lesson.test.tsx: Lesson 9 action names (6 uses)",
+      "local-lesson.test.tsx: Save for later",
+      "self-paced.test.tsx: Saved for later heading",
+      "e2e/branch-tracing.spec.ts: Lesson 9 action names (2 uses)"
+    ]
+  },
+  "protected_source_integrity": {
+    "result": "unchanged",
+    "hash_lists": [
+      "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-04-2026-09-23/evidence/protected-hashes-before.txt",
+      "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-04-2026-09-23/evidence/protected-hashes-after.txt"
+    ],
+    "difference": "one added line: the new fixture __tests__/fixtures/draft-signatures-baseline.json",
+    "draft_signatures": "all 21 equal to base (fixture-pinned test)",
+    "paired_scope_ts": "identical",
+    "junction_feedback_ts": "identical",
+    "ct_types_ts": "identical",
+    "local_exercises_ts": "identical",
+    "public_trees": "unchanged git tree hashes for native-v1, targets-v1, preview-v1, patient-new, airway-anatomy"
+  },
+  "browser_matrix": {
+    "viewports": ["1427x1226", "1440x900", "1024x768", "390x844", "320x740"],
+    "root_text_200_percent": "CSS root-font probe at 1280x720, not native zoom",
+    "not_tested": [
+      "native browser zoom",
+      "screen readers",
+      "physical devices/touch",
+      "Safari",
+      "Firefox"
+    ]
+  },
+  "ordinary_findings": [
+    "Shared site header link overflows at 200% root text on the overview (outside BBT; not measured on base)",
+    "Carried from Prompt 03: route lessons/Practice gate the paired view on a recorded or revealed junction; scroll-anchoring nudge after toggling paired view"
+  ],
+  "evidence_root": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-04-2026-09-23"
+}
