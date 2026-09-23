@@ -177,6 +177,41 @@ test.each([
   expect(plan.rows[0].membershipHold).toBeTruthy()
   expect(plan.payload.modules[0].memberships[0].state).toBe('held')
 })
+test.each([
+  ['430', '2'],
+  ['090', '3'],
+])(
+  'administrator-approved membership %s/%s is never re-held or demoted by import',
+  (number, series) => {
+    const { inspection, snapshot, mappings } = setup([source(number, series)])
+    const saved = {
+      ...createImportPlan(inspection, snapshot, mappings).payload.updates[0].document,
+      revision: 2,
+    }
+    snapshot.cases = [saved]
+    mappings[0].expectedRevision = 2
+    const approved = {
+      module_id: 'core-srh-orientation',
+      case_id: saved.recordId!,
+      position: 1,
+      source_order: 1,
+      source_key: `case-${Number(number)}-series-${Number(series)}`,
+      release_state: 'approved',
+      decision_note: 'Synthetic administrator decision',
+    }
+    snapshot.memberships = [approved]
+    const repeated = createImportPlan(inspection, snapshot, mappings)
+    expect(repeated.rows[0].status).toBe('no-op')
+    expect(repeated.payload.modules).toHaveLength(0)
+    snapshot.memberships = [{ ...approved, source_order: 5 }]
+    const changed = createImportPlan(inspection, snapshot, mappings)
+    expect(changed.canApply).toBe(false)
+    expect(changed.payload.modules).toHaveLength(0)
+    expect(changed.rows[0].conflicts).toContain(
+      'Approved curriculum membership differs from the source; an administrator must decide the change.',
+    )
+  },
+)
 test('common pitfall, alternate headings and general observations remain verbatim, ambiguous classification held', () => {
   const { inspection, snapshot, mappings } = setup()
   for (const phrase of [

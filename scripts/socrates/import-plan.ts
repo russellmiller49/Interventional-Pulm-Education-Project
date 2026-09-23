@@ -317,9 +317,16 @@ export function createImportPlan(
       member.position === record.sourceValues['Order in Module'] &&
       member.source_order === record.sourceValues['Overall Order'] &&
       member.source_key === key &&
-      (!row.membershipHold || member.release_state === 'held')
+      // An administrator's recorded approval settles a source hold; import never re-holds it.
+      (!row.membershipHold ||
+        member.release_state === 'held' ||
+        member.release_state === 'approved')
     if (!moduleRecord)
       row.conflicts.push('Curriculum module is missing from the protected snapshot.')
+    if (!membershipSame && member?.release_state === 'approved')
+      row.conflicts.push(
+        'Approved curriculum membership differs from the source; an administrator must decide the change.',
+      )
     if (!membershipSame && moduleRecord) {
       row.changedFields.push('curriculumMembership')
       const collision = snapshot.memberships.find(

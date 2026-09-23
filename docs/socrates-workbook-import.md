@@ -110,7 +110,9 @@ flags except content review stay unchanged. Teaching changes clear content revie
 
 Membership references the existing UUID. New membership is pending, or held for
 Case 430 / Series 2 (core versus advanced), Case 357 / Series 2 and Case 436 / Series 1
-(retention decisions). Import never approves membership. The 59 versus approximately
+(retention decisions). Import never approves membership, and never re-holds, demotes
+or rewrites an administrator-approved one; a source change to an approved membership
+is a plan conflict for an administrator. The 59 versus approximately
 50 inventory discrepancy remains an owner decision. A later administrator uses
 `save_socrates_curriculum_memberships(payload)` with the current module revision and
 an explicit decision note to approve or clear a hold. The payload uses

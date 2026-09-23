@@ -221,6 +221,8 @@ begin
     if found and previous.release_state='held' and e->>'state'<>'held' and (not allow_approval or trim(e->>'decision')='') then raise exception 'Held membership needs an administrator decision'; end if;
     if not found or jsonb_build_array(previous.position,previous.source_order,previous.source_key,previous.release_state,previous.decision_note)
       is distinct from jsonb_build_array((e->>'position')::integer,(e->>'sourceOrder')::integer,e->>'sourceKey',e->>'state',e->>'decision') then
+      -- A bulk import may not revoke, re-hold or rewrite an administrator's release decision.
+      if found and previous.release_state='approved' and not allow_approval then raise exception 'Changing an approved membership requires an administrator decision'; end if;
       insert into public.socrates_curriculum_memberships(module_id,case_id,position,source_order,source_key,release_state,decision_note)
         values(m.id,(e->>'caseId')::uuid,(e->>'position')::integer,(e->>'sourceOrder')::integer,e->>'sourceKey',e->>'state',e->>'decision')
         on conflict(module_id,case_id) do update set position=excluded.position,source_order=excluded.source_order,source_key=excluded.source_key,

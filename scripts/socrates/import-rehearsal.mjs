@@ -143,6 +143,60 @@ export async function runImportChecks({ sql, rpc, ids, fixture, assert, rejects,
     noOp.canApply && noOp.payload.updates.length === 0 && noOp.counts['no-op'] === 1,
     'fresh unchanged re-import produces no case or membership writes',
   )
+  const member = snapshot.memberships.find((m) => m.case_id === one.saved.recordId)
+  const moduleRevision = () => snapshot.modules.find((m) => m.id === member.module_id).revision
+  const release = {
+    caseId: member.case_id,
+    position: member.position,
+    sourceOrder: member.source_order,
+    sourceKey: member.source_key,
+  }
+  rpc(ids.admin, 'save_socrates_curriculum_memberships', {
+    payload: {
+      moduleId: member.module_id,
+      expectedRevision: moduleRevision(),
+      memberships: [{ ...release, state: 'approved', decision: 'Synthetic administrator release' }],
+    },
+  })
+  snapshot = protectedSnapshot()
+  const settled = createImportPlan(inspection([one]), snapshot, mappings([one]))
+  assert(
+    settled.counts['no-op'] === 1 && settled.payload.modules.length === 0,
+    'fresh re-import leaves an administrator-approved membership untouched',
+  )
+  const current = snapshot.cases.find((d) => d.recordId === one.saved.recordId)
+  const demotion = {
+    sourceSha256: 'a'.repeat(64),
+    updates: [
+      {
+        sourceKey: member.source_key,
+        expectedRevision: current.revision,
+        expectedImageUrl: current.slide.descriptorUrl,
+        approvedFields: [],
+        document: current,
+      },
+    ],
+    modules: [
+      {
+        moduleId: member.module_id,
+        expectedRevision: moduleRevision(),
+        memberships: [{ ...release, state: 'pending', decision: '' }],
+      },
+    ],
+  }
+  rejects(
+    () =>
+      rpc(ids.admin, 'socrates_apply_workbook_import', {
+        payload: { importId: digest(demotion), ...demotion },
+      }),
+    'import cannot demote or rewrite an administrator-approved membership',
+  )
+  assert(
+    sql(
+      `select release_state||'|'||decision_note from public.socrates_curriculum_memberships where case_id=${lit(one.saved.recordId)}`,
+    ).trim() === 'approved|Synthetic administrator release',
+    'administrator release decision and note survive the rejected import',
+  )
   const two = makeTarget(842, 5),
     three = makeTarget(843, 6)
   const batch = createImportPlan(
