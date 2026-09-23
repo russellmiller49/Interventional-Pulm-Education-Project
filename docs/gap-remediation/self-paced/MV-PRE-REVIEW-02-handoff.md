@@ -41,6 +41,8 @@ companion `MV-PRE-REVIEW-02-causal-matrix.md` has one row per relationship with 
 | Handoff, matrix, inventory, final fixes | `54bb7c5f` (the head every check in §11–12 was run against)                               |
 | Heads recorded; independently reviewed  | `dea2738a` — Codex sanity review: NOT READY TO MERGE, five findings                       |
 | Sanity-repair pass                      | see §15 (every check in §15 was run against it)                                           |
+| Re-review repair pass                   | see §16                                                                                   |
+| Final-gate repair (alarm history)       | see §17                                                                                   |
 | Pull request                            | [#271](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/271) |
 
 `git merge-tree --write-tree origin/main HEAD` is clean; `origin/main` did not move during the work.
@@ -568,7 +570,9 @@ Bedside labels and coaching readings already read `patientReportAvailability`, s
 The probe's other checks: 253/259 → 258/259; the one it still fails, "MV-14/stable 1×/5×/30×", is
 an alarm `startedAt` of 11.8 s at 1× against 12.0 s at 5× and 30× (alarms are stamped once per
 advance call). Patient, measurements and waveforms are identical, and so is the difference on
-`dea2738a`.
+`dea2738a`. **Superseded by §17:** the per-call stamping was also dropping
+alarm-history events; alarms are now evaluated at every fixed step and the stamp is 11.78 s at every
+speed.
 
 ### 15.3 PEEP 13 — containment separated from success
 
@@ -797,6 +801,8 @@ rate/PEEPi on the combined correction: with only the refresh removed it changed 
 with the hold), every change a single-step blip; with the fallback repaired, 13 (11), each lasting a
 breath, as on `dea2738a`. Alarm `startedAt` stamps still differ by call granularity (`reconcileAlarms`
 runs once per call); that is a stamp resolution, identical on the base, and the alarm set is equal.
+**Superseded by §17:** the same once-per-call reconciliation lost MV-01's transient pressure
+limitation at 5× and 30×; the alarm record is now part of the fixed step and identical at every speed.
 
 **Census — every live case, all 22 branches, every scripted arm (82), reducer TICK at 1×, 5×, 30×,
 complete state at 30, 60, 150, 180 s:** `1b52c008` 77/82 invariant (MV-05's three PS/ETS + hold arms,
@@ -945,8 +951,261 @@ Not merged, not deployed; Batch 03 not started.
 - Deployed build; beta-wrapped routes.
 - Any clinical, device, media or source review.
 
+## 17. Final-gate repair — alarm history under coarse outer batching
+
+The independent final gate on `d4d3cef2` confirmed all three §16 repairs (MV-05 speed/batching
+invariance, PEEP reversal, trigger delay as a model estimate) and found one blocker: an alarm-history
+event that the model raises was lost when the same model time was handed to the engine in coarser
+calls. This pass repairs that and nothing else. Prepared 2026-09-23 by an AI authoring assistant
+(Claude). Every check below was run once on the repaired tree; the before values come from the same
+scripts run in a read-only detached checkout of `d4d3cef2` (session scratchpad), and consumer
+baselines from one of `origin/main` `a306d825`; both were removed afterwards.
+
+### Heads
+
+|                                                      | SHA                                                                                                                              |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Previous (gated) head                                | `d4d3cef2b45ceeaa74933554974ec0d09dc22c4c`                                                                                       |
+| `origin/main` at the start and at the end            | `a306d8250ec10207c750f46407f151c06d487707` — the expected SHA, no drift; no mechanical-ventilation file changed since `bf613270` |
+| `origin/claude/mechanical-vent-02-9-22` at the start | `d4d3cef2…` — unmoved                                                                                                            |
+| Repair commit                                        | `5e364e18` (engine and tests)                                                                                                    |
+| This documentation                                   | committed on top of `5e364e18`; the final head is reported in the PR                                                             |
+
+### 17.1 Root cause
+
+`advanceSimulation` ran every fixed 20 ms step of the outer call, built the state it would publish,
+and only then called `reconcileAlarms` once, on that final state. The alarm history was therefore a
+sample of the model taken at call ends — every 0.1 s at 1×, 0.5 s at 5×, 3 s at 30× — and an alarm
+that was active only between two call ends never reached it.
+
+MV-01, fresh epoch, PEEP 5 → 16 at exactly 12 s, stepped at 20 ms (repaired and previous heads alike;
+the model trajectory is the same):
+
+| Step (s) | Peak (cmH₂O, limit 40) | Active alarms                                                                    |
+| -------- | ---------------------- | -------------------------------------------------------------------------------- |
+| 12.02    | 25                     | SpO₂ low                                                                         |
+| 12.86    | 37.6                   | SpO₂ low, **pressure limitation** (the ≥ limit − 3 band)                         |
+| 12.92    | 40.4                   | high pressure, SpO₂ low — high pressure replaces the limitation (same `if/else`) |
+| 25.66    | 42.5                   | high pressure — SpO₂ low clears                                                  |
+
+The limitation lasts three steps (12.86, 12.88, 12.90). The 1× call ending at 12.90 s falls inside
+it; no 5× call end (12.5, 13.0) and no 30× call end (12, 15) does. The same sampling dated every start
+at the first call end after it — high pressure at 13.0 / 13.0 / 15.0 s — which is the
+"`startedAt` variation" §15.2 and §16.1 accepted as a stamp resolution. It was not a separate
+mechanism: MV-14-stable's blood-pressure alarm (11.8 / 12.0 / 12.0 s) and MV-15's low-VT alarm after
+deeper sedation (58.7 / 59.0 / 60.0 s, ids `VT_LOW-58` / `-59` / `-60`) came from it too.
+
+### 17.2 Repair — the alarm record is part of the fixed step
+
+`engine/simulation.ts` `advanceSimulation`: `reconcileAlarms` now runs at **every fixed step**, after
+slow physiology and risk, on the state that step would publish (its time, patient, measurements and
+settings), and the resulting record (`alarms`, `alarmHistory`) is carried into the next step. The call
+publishes the last step's record; nothing is reconciled at call exit any more. The last step is
+evaluated on exactly the state the call-exit evaluation used, so the published active set is unchanged
+by construction. The case-open epoch (t = 0) and `reopenAlarmEpoch` are unchanged.
+
+Not changed: `alarmDescriptors` (codes, thresholds, priorities, messages), the configured limits, any
+physiology, case logic, clinical alarm policy, reducer action or UI. The 82-arm census takes 20.0 s
+against 19.5 s before.
+
+**Fixed-step transition semantics** (documented on `reconcileAlarms`):
+
+- **Newly active** — a code absent at the previous step and present now gets one entry, `startedAt` =
+  this step's model time, id `CODE-⌊t⌋` (unchanged id scheme).
+- **Continuing** — the same entry every step: id, `startedAt` and `acknowledgedAt` kept; no entry per
+  20 ms step.
+- **Cleared** — stays in the history, `active: false`; leaves `alarms`.
+- **Later reactivation** — the existing contract is **one entry per code**, not one per episode, and it
+  is kept: a returning code reuses its entry, with its first `startedAt` and any acknowledgement. The
+  82 arms contain 22 reactivations (low VT on MV-05's PS-only and PS 12 + ETS 40 + hold arms, all
+  three branches, and on MV-08's leak fix), all identical at every speed. Whether a returning alarm should instead open a
+  new, unacknowledged episode is an alarm-policy question (D4), not changed here.
+- **Order and cap** — the history lists the active codes in evaluation order, then the inactive ones
+  in the order the previous record held them; `alarms` is the active set by priority; the history is
+  capped at 20 (eight codes exist, so the live model never reaches it; the test seeds 24 entries).
+  With the record carried per step, the order no longer depends on which states a call end happened
+  to sample.
+- **Acknowledgement** — `ACK_ALARM` acts between calls at its model time, as before, and the entry
+  carries it.
+
+### 17.3 MV-01 — before and after
+
+MV-01, fresh state, reducer ticks to exactly 12 s, PEEP 5 → 16, ticks to exactly 30 s:
+
+| Speed | `d4d3cef2` alarm history at 30 s                                                                    | repaired                                                                                                     |
+| ----- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| 1×    | `HIGH_PRESSURE-12` active 13.00 · `SPO2_LOW-0` inactive 0 · `PRESSURE_LIMITATION-12` inactive 12.90 | `HIGH_PRESSURE-12` active 12.92 · `SPO2_LOW-0` inactive 0 · `PRESSURE_LIMITATION-12` inactive (medium) 12.86 |
+| 5×    | `HIGH_PRESSURE-12` active 13.00 · `SPO2_LOW-0` inactive 0 · **no pressure limitation**              | identical to 1×                                                                                              |
+| 30×   | `HIGH_PRESSURE-14` active 15.00 · `SPO2_LOW-0` inactive 0 · **no pressure limitation**              | identical to 1×                                                                                              |
+
+Active alarms at 30 s: high pressure only, at every speed, on both heads. On the repaired tree the
+three records are identical to the last bit — codes, ids, priorities, active flags, stamps, order, no
+acknowledgement — and so is the record after one 18 s call from 12 s or any 3 / 0.5 / 0.1 / 0.02 s
+split of it.
+
+### 17.4 Complete-state replay with alarm history
+
+Every live case (14), branch (22) and scripted arm (82); reducer `TICK` 0.1 s × speed at 1×, 5×, 30×;
+state at 0, 30, 60, 150 and 180 s compared with deep equality on **every field except `speed`** —
+patient, measurements, the whole waveform buffer, trends, the ventilator (clock, holds), hold records,
+risk, critical errors, interventions, gas samples, and the alarm record whole. Each action is applied
+at its own model time at every speed: a tick that would carry the model past an action or a sample is
+replaced, up to it, by 1× ticks — this is how MV-14's drainage at 28 s (not on the 30× tick) is
+applied at 28 s at 30× too.
+
+| Arms (of 82)                                                     | `d4d3cef2`                                                                                                   | repaired                                                             |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| identical complete state                                         | 76                                                                                                           | **82**                                                               |
+| alarm event missing at a speed                                   | 1 — MV-01 PEEP 16 (pressure limitation at 1× only)                                                           | 0                                                                    |
+| timestamp-only (`startedAt`, and the id derived from it)         | 5 — MV-14 stable ×4 (blood pressure low 11.8 vs 12.0 s), MV-15 deepen sedation (low VT 58.7 / 59.0 / 60.0 s) | **0**                                                                |
+| any other field                                                  | 0                                                                                                            | 0                                                                    |
+| harness action time (actions on the first tick at or after them) | MV-14 decompress ×2 (drainage applied at 30 s at 30×; interventions and trends differ) — as §16.1            | same 2, same classification; identical once the action time is equal |
+
+**No timestamp-only difference remains, not even within a step.** Every speed runs the same 0.02 s
+steps on the same floating-point grid (0.1 / 5, 0.5 / 25 and 3 / 150 are all exactly 0.02), so the
+stamps are bit-identical.
+
+**What the repair changed at 1×**, every arm and sample, `d4d3cef2` against repaired: every field
+outside the alarm record is byte-identical; the active alarm codes are identical in every snapshot,
+and so are the history's codes and active flags; in six arms the stamps moved earlier by at most
+0.08 s (from the end of the 0.1 s call to the step the condition began: MV-01 13.00 → 12.92 and
+12.90 → 12.86, MV-14 stable 11.80 → 11.78, MV-15 58.70 → 58.68), ids unchanged. The causal inventory
+and its `--speeds` form regenerate byte-identical to `d4d3cef2`, so the inventory files are unchanged.
+
+**Episode census** (every arm, 0–180 s, 20 ms): 97 alarm episodes; one is shorter than a 30× call —
+MV-01's 0.06 s pressure limitation; 22 are reactivations (§17.2).
+
+### 17.5 The three §16 repairs and earlier contracts
+
+- **R1** — the 15 MV-05 branch × arm comparisons at 1× / 5× / 30× now include the whole alarm
+  record and the critical errors (the helper used to keep only the active codes); the direct-engine
+  chunking test compares the alarm record too; the no-flicker and harness tests are unchanged. All
+  pass. The fixed-step physiology is byte-identical to `d4d3cef2` (above), so breath timing — no
+  one-sample breaths, onset gaps within the §15.1 bounds — is untouched and its §15 tests pass.
+- **R2** — PEEP reversal returns shunt, compliance, PaO₂ and SpO₂ to the opening values; PEEP 13
+  stays containment, not success. Unchanged, passing.
+- **R3** — the live trigger delay is a model estimate; the measured count stays zero; D5 stays open.
+  Unchanged, passing.
+- Prepared history, `PhysiologyReference`, the CO₂ anchor, gas provenance, reportability, MV-13's
+  alarm wording, Section 13's reference alarms, plateau acquisition, ABG specimens, post-action
+  evidence and A/B markers are untouched and re-verified by the full suite.
+
+### 17.6 Tests
+
+- **New `__tests__/mv-pre-review-02-alarm-history.test.ts`** (25 tests): the gate's MV-01
+  reproduction at 1× / 5× / 30× (codes, ids, priorities, active flags, stamps, order); transitions
+  dated at the step, and one 18 s call equal to any split; an alarm that appears after a control change
+  and stays active (one entry); a limitation replaced by the high alarm inside one coarse call; an
+  opening alarm that clears and stays clear; acknowledgement; blood pressure low from untreated
+  physiologic evolution (MV-14 stable); low VT after an intervention (MV-15); reactivation as one
+  entry per code (MV-05 PS 12, acknowledged at 3 s); cap and order; the 14 / 22 / 82 count; and the
+  complete-state census, one test per live case. Run against `d4d3cef2` (the file copied into the
+  read-only checkout), 11 of the 25 fail: the MV-01 reproduction and step dating, appears-and-stays,
+  limitation inside one call, opening alarm that clears, acknowledgement, MAP low, VT low, and the
+  MV-01, MV-14 and MV-15 census cases. Reactivation, cap and order, the count and the other eleven
+  census cases pass there, because they were already speed-invariant.
+- **`__tests__/mv-pre-review-02-rereview-repairs.test.tsx`** — the R1 complete-state helper includes
+  `alarms`, `alarmHistory` and `criticalErrors` whole; the direct-engine chunking test compares the
+  alarm record. These 31 also pass on `d4d3cef2`: MV-05's arms never carried a differing stamp, so
+  the discriminating guard is the new file's census, not this helper.
+
+### 17.7 Validation (repaired tree; node 26.5.0; `NODE_OPTIONS=--max-old-space-size=8192`)
+
+| Check                                                                                                                                                            | Result                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. New alarm-history regressions (`mv-pre-review-02-alarm-history.test.ts`)                                                                                      | 25 tests, all passing (11 fail on `d4d3cef2`, §17.6)                                                                                                                                                                                                                                                                                                          |
+| 2–3. Complete-state speed invariance with alarm history; 14 cases / 22 branches / 82 arms at equal action times                                                  | jest census (14 per-case tests) and the session census script: **82/82** identical at 1×, 5×, 30× (`d4d3cef2`: 76/82). Tick-granular action times: 80/82, the two MV-14 decompress arms — harness action time only                                                                                                                                            |
+| 4. R1–R3 (`mv-pre-review-02-rereview-repairs.test.tsx`)                                                                                                          | 31 tests, all passing                                                                                                                                                                                                                                                                                                                                         |
+| 5. `npx jest src/features/mechanical-ventilation`                                                                                                                | 42 suites, **1,053 tests, all passing** (1,028 before + 25)                                                                                                                                                                                                                                                                                                   |
+| 6. Batch-01 regressions (within 5)                                                                                                                               | `mv-pre-review-01-evidence` 34, `mv-pre-review-01-sanity-repairs` 37 — all passing                                                                                                                                                                                                                                                                            |
+| 7. Batch-02 causality and sanity (within 5)                                                                                                                      | `mv-pre-review-02-causality` 126, `mv-pre-review-02-sanity-repairs` 43 — all passing                                                                                                                                                                                                                                                                          |
+| 8. Physics and waveforms (within 5)                                                                                                                              | `physics-waveforms` 173, `breath-grammar` 6 — all passing                                                                                                                                                                                                                                                                                                     |
+| 9. Post-action coaching (within 5)                                                                                                                               | `post-action-coaching` 51 — all passing                                                                                                                                                                                                                                                                                                                       |
+| 10. Consumers: MV routes, `hamilton-c6-ventilation` route, `critical-care`, `learning-module`, `icu-simulation` (feature and route), `draft-modules.hamilton-c6` | 53 suites, 479 tests, 476 passing, **3 failing — the same three fail on `origin/main` `a306d825` alone** (read-only checkout, same node_modules; 480 tests there, main carries one more): accessibility (color-coded states), curriculum sequencing (CRRT station order), learner copy. Learner copy flags the same 19 strings on `d4d3cef2` and on this head |
+| 11. `npx tsc --noEmit -p tsconfig.json` (full)                                                                                                                   | clean. The first run failed on the new test (a seeded state inferred with a mutable `alarmHistory`); annotated, re-run clean, and that one test re-run passing — a type-only edit after the suite run                                                                                                                                                         |
+| 12. `npx eslint src/features/mechanical-ventilation scripts/critical-care/mv-causal-inventory.ts`                                                                | clean                                                                                                                                                                                                                                                                                                                                                         |
+| 13. `npx prettier --check` (module, script, this handoff)                                                                                                        | clean                                                                                                                                                                                                                                                                                                                                                         |
+| 14. `git diff --check` (staged, both commits)                                                                                                                    | clean                                                                                                                                                                                                                                                                                                                                                         |
+| 15. `npm run build`                                                                                                                                              | succeeded, 767/767 pages, standalone prepared                                                                                                                                                                                                                                                                                                                 |
+| Causal inventory and `--speeds`                                                                                                                                  | regenerated byte-identical to `d4d3cef2`; inventory files unchanged                                                                                                                                                                                                                                                                                           |
+
+Each check was run once on the repaired tree, apart from the tsc re-run and the one-test re-run noted
+in row 11. The new test file was also run during development, before the validation run.
+
+### 17.8 Chromium
+
+This worktree's production build, `node server.js` on 127.0.0.1:3129 (process cwd verified as this
+worktree's `.next/standalone`; the primary checkout's `.env.local` read into the process environment
+only). The pane was **hidden**, so the page clock did not run and pointer input could not be
+composited: the page's own buttons were activated with DOM `click()`, and engine state was read from
+the React fiber of `[data-device]`. The fiber the DOM node points to can be the stale alternate
+(PEEP read 15 after 16 was committed); the reader takes the fiber in the committed tree.
+
+- **MV-01 Practice, PEEP 5 → 16.** **One breath** ×5 (2.5 s calls) to 12.5 s; PEEP 5 → 16 with the
+  console's own increment control (11 presses, paused, one model time); **One breath** ×7 to 30.0 s.
+  After the first call after the change (12.5 → 15 s, a single coarse call containing the whole
+  episode), the engine record holds `PRESSURE_LIMITATION-12` inactive (12.86), `HIGH_PRESSURE-12`
+  active (12.92) and `SPO2_LOW-0` active; SpO₂ low clears between 25 and 27.5 s; at 30 s the record is
+  the gate reproduction's (§17.3). Replaying the browser's action log in the engine reproduces it
+  exactly; on `d4d3cef2` the same log gives `HIGH_PRESSURE-14` at 15.00 and no pressure limitation.
+- **Console alarm behaviour, unchanged.** The alarm bar shows "HIGH · High pressure" from the first
+  call after the change (the top active alarm, as before); Monitoring at 30 s: Ppeak 43, PEEP/CPAP 16,
+  SpO₂ 85. The Alarms screen lists active messages only — "High pressure · high priority · started
+  13 s" (`startedAt.toFixed(0)`; the same path on `d4d3cef2` prints 15 s, the call end). That start
+  time is the one learner-visible difference: it now dates the transition at every speed.
+- **No alarm-history surface exists** in the module (no component reads `alarmHistory`), so the
+  inactive limitation is visible only in engine state. No UI was added.
+- **MV-13 smoke (secretions branch).** Opens with limit 60, peak 43.7, "No active alarm", and the
+  unchanged opening note. Limit → 40 while paused: the note says the console raises its alarm "when
+  the simulation next runs", and no alarm is shown yet (alarms are evaluated only when time advances —
+  unchanged). One breath (3 s): console "HIGH · High pressure"; note "Now the limit is 40 cmH₂O and the
+  peak, 43.8 cmH₂O, has reached it, so the console's high-pressure alarm is active"; the alarm is dated
+  0.02 s, the first step after the change.
+- Console errors: only `POST /api/analytics` 401s from the unauthenticated local server. The server
+  was stopped by its own PID after checking its cwd; other sessions' servers (3137, 3138, 3151) were
+  not touched.
+
+### 17.9 Seen, not changed
+
+- **Critical errors are still observed at call exit.** `withCriticalErrors` reads the risk indices
+  once, on the state the call publishes — the same outer-call pattern. A risk index that crossed its
+  threshold and fell back within one call would not be recorded at 30× but would be at 1×. It did not
+  happen in any of the 82 arms (critical errors are part of the complete-state census and are
+  identical), it is not alarm history, and it is flagged as a follow-up rather than changed here.
+- **Acknowledging one alarm re-stamps the others.** `ACK_ALARM` with an `alarmId` sets the new
+  `acknowledgedAt` on every history entry that was already acknowledged (MV-01: SpO₂ low acknowledged
+  at 6 s reads 15 s after high pressure is acknowledged at 15 s, and the next step publishes that).
+  Pre-existing, independent of speed (it happens at the action's model time), unchanged.
+- Paused alarm-limit changes still show on the console only once time advances (§16), unchanged.
+- The pre-existing items outside this repair are not worsened and stay open: repeated comfort
+  effects (§16.2), the 4 s hold spanning a cycle, the **One breath** time grid (§16.1), and the
+  mode-change boundary's fixed-grid assumption (§16.1).
+
+### 17.10 D1–D5 — all `NOT REVIEWED`
+
+Unchanged from §16.6. D4 (device-specific alarm policy) now also holds whether a returning alarm
+should be a new, unacknowledged episode.
+
+### 17.11 Integration
+
+`origin/main` `a306d825` did not move during this pass; the branch is not rebased or merged.
+`git merge-tree --write-tree origin/main HEAD` is clean. The repair and documentation commits are
+pushed to `claude/mechanical-vent-02-9-22` as fast-forwards on PR #271. Not merged, not deployed;
+Batch 03 not started; the rest of Batch 02 not reopened.
+
+### 17.12 NOT RUN in this pass
+
+- Pointer-driven input (pane hidden; DOM `click()` used), Firefox, Safari, hardware, assistive
+  technology, zoom / 200 % text / 320 px, dark scheme, es and zh-CN.
+- Real-time playback at 1× / 5× / 30× in the browser: the hidden pane suspends the page clock. Speeds
+  are covered by the engine census; the browser path used **One breath** (2.5 s and 3 s calls), itself
+  a coarse batching.
+- A browser walk of every arm; the deployed build; beta-wrapped routes.
+- Any clinical, device, media or source review; D1–D5.
+
 ## Stop
 
 One PR, opened and stopped. No merge, no deploy, no batch 03, no G02 restart. The sanity-repair pass
 (§15) pushed five bounded repairs to the same PR and stopped there; the re-review pass (§16) pushed
-three more and stopped there.
+three more and stopped there; the final-gate pass (§17) pushed one alarm-history repair and stopped
+there.
