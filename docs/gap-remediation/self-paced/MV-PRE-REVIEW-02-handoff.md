@@ -39,6 +39,8 @@ companion `MV-PRE-REVIEW-02-causal-matrix.md` has one row per relationship with 
 | Base (`origin/main` at start and end)   | `bf613270a37a30cfd31a915a33758b808dfbff89`                                                |
 | Engine, content and test changes        | `470a35dd`                                                                                |
 | Handoff, matrix, inventory, final fixes | `54bb7c5f` (the head every check in §11–12 was run against)                               |
+| Heads recorded; independently reviewed  | `dea2738a` — Codex sanity review: NOT READY TO MERGE, five findings                       |
+| Sanity-repair pass                      | see §15 (every check in §15 was run against it)                                           |
 | Pull request                            | [#271](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/271) |
 
 `git merge-tree --write-tree origin/main HEAD` is clean; `origin/main` did not move during the work.
@@ -183,9 +185,13 @@ the presented patient at t = 0. The Learn lab's own warm-up re-opens its alarm e
 
 ### `BreathClock` (`engine/types.ts`, `advanceBreathClock`)
 
-The breath grid stays absolute — which keeps a patient-triggered breath aligned with the neural
-effort — but a new cycle length is adopted only between breaths, and only when it would not shorten
-the expiration in progress. Constant-rate schedules are bit-identical to base.
+_Revised in the sanity-repair pass (§15.1)._ The clock holds the cycle in progress and the onset
+that will end it. No setting change moves that onset; a new rate becomes authoritative at it — a new
+schedule anchored at that breath — or, when the requested rate is the patient's own rhythm, the
+schedule rejoins the neural effort grid at the first effort after that breath has finished inspiring
+(which is what keeps a patient-triggered breath aligned with the effort, MV-07). Constant-rate
+schedules are the absolute grid and bit-identical to base. The first version kept an absolute grid
+and recomputed it from the newest period, which let repeated changes postpone the next breath.
 
 ### Gas provenance (`presentingGas` in `runtimeCases.ts`; `engine/arterialGas.ts`)
 
@@ -199,18 +205,23 @@ naming what was derived and from what. The authored casebook file is unchanged.
 
 - `measurements.exhaledVtSource`; `content/measurementReadiness.ts`; consoles print `---`, panels
   "Awaiting a completed breath", `VT_LOW` and the coaching VT reading require an exhaled breath.
-- Deep sedation and neuromuscular blockade set `canCommunicate` false. Practice bedside: dyspnea
+- Deep sedation and neuromuscular blockade set `canCommunicate` false, decided from the whole
+  effect set so a communication board cannot restore it (`patientCanCommunicate`, §15.2). Practice
+  bedside: dyspnea
   gated on assessment like pain and delirium, labelled "Patient report · modeled" or "Internal index ·
   not a patient report"; pain labelled likewise; the consciousness boundary printed beside them.
   Section 13 and the dyssynchrony panel follow the same contract; coaching dyspnea/pain readings are
   null when the patient cannot report.
-- PEEP band `ardsPeepBand` (8 ≤ PEEP < 14 recruited) for lung state and resolution.
+- PEEP lung state `ardsLungStateForPeep` (8 ≤ PEEP < 14 recruited, 13 held as containment); case
+  resolution reads the separate authored range `ardsPeepInAuthoredSuccessRange` (8–12) (§15.3).
 - Section 9: time-control sentence computed from the arms (`peepComparisonTimeControl`); live panel
   names its trend window and says "not yet trended" without one. Section 10: the model stated
   (`data-co2-model`), descriptors named as unused. Section 13: MV-14's real opening alarms as a
   labelled separate reference when the live patient has none (`content/referenceAlarmSet.ts`).
-- Practice: MV-13's stem mismatch stated beside it; MV-06/12/14 explanation notes where the authored
-  expected response claims what the model does not do (`content/caseModelNotes.ts`).
+- Practice: MV-13's stem mismatch stated beside it, read from the live console (§15.5); MV-06/12/13/14
+  explanation notes where the authored expected response claims what the model does not do, and on
+  MV-13/MV-14 the same boundary on the action feedback and the coaching card (§15.4)
+  (`content/caseModelNotes.ts`).
 
 ## 5. Repair versus containment
 
@@ -239,11 +250,11 @@ SpO₂ · PaCO₂ · MAP · dyspnea; `†` = index, not a report). Base values f
 | Case             | Arm                                      | Arm @180                                           | No action @180                              |
 | ---------------- | ---------------------------------------- | -------------------------------------------------- | ------------------------------------------- |
 | MV-01            | PEEP 10                                  | 422 · 26.3/15.3 · 0.1 · **92** · 52 · 77 · 1.0     | 422 · 24.9/13.9 · 0 · 84 · 52 · 77 · 3.0    |
-| MV-01            | PEEP 13                                  | 422 · 29.3/18.3 · 0.1 · 92 · 52 · 77 · 1.0         | same control                                |
+| MV-01            | PEEP 13                                  | 422 · 29.3/18.3 · 0.1 · 92 · 52 · 77 · 3.0         | same control                                |
 | MV-01            | PEEP 16                                  | 422 · 42.4/31.4 · 0 · 91 · 52 · **60** · 3.0       | same control                                |
 | MV-01            | FiO₂ 100                                 | 422 · 24.9/13.9 · 0 · 96 · 52 · 77 · 3.0           | same control                                |
 | MV-02            | flow 70 + treat drive                    | 397 · 23.8/5.5 · 1.1 · 94 · 30 · 73 · **5.0**      | 387 · 17.4/6.2 · 1 · 94 · 30 · 73 · 6.0     |
-| MV-05            | PS 12 + ETS 40 (+ hold)                  | **321** · 17/7.1 · **6.1** · 92 · 39 · 97 · 0.4    | 229 · 23/13.3 · 13.5 · 92 · 62 · 88 · 3.0   |
+| MV-05            | PS 12 + ETS 40 (+ hold)                  | **386** · 17/7.3 · **4.8** · 92 · 37 · 97 · 0.4    | 229 · 23/13.3 · 13.5 · 92 · 62 · 88 · 3.0   |
 | MV-05            | PS 24 (harmful)                          | 347 · 29/17.4 · **16.2** · 92 · 49 · **82** · 4.3  | same control                                |
 | MV-06            | bag + bronchodilator + rate 10 + flow 80 | 507 · 62.2/12 · **7.5** · 94 · 86 · 42 · 3.9       | 500 · 70.2/39.3 · 33.9 · 94 · 85 · 42 · 3.0 |
 | MV-06            | rate 30 (harmful)                        | 500 · 80/49.2 · 42.2 · 94 · 75 · **25** · 3.0      | same control                                |
@@ -253,7 +264,7 @@ SpO₂ · PaCO₂ · MAP · dyspnea; `†` = index, not a report). Base values f
 | MV-13 secretions | bronchodilator (wrong branch)            | identical to control                               | —                                           |
 | MV-14 unstable   | decompress + drainage                    | 420 · **28.2/16.2** · 0.1 · 76 · 42 · **68** · 1.0 | 420 · 58/46 · 0 · 76 · 42 · 42 · 3.0        |
 | MV-15            | ask and treat                            | 448 · 16/7.5 · 0.8 · 94 · 39 · 103 · **3.6**       | 392 · 12.9/7.4 · 0.7 · 94 · 42 · 103 · 8.0  |
-| MV-15            | deepen sedation                          | 131 · 12.7/9.8 · 0.4 · 94 · **75** · 103 · 2.1†    | same control                                |
+| MV-15            | deepen sedation                          | 143 · 12.7/9.8 · 0 · 94 · **76** · 103 · 2.1†      | same control                                |
 
 On base, the MV-01 control rose to SpO₂ 94 and MV-14's to 97 — the "response" to PEEP and to
 decompression was mostly waiting — and MV-05's appropriate correction delivered 1 mL breaths while
@@ -313,6 +324,16 @@ is captured the two grids coincide and the effort begins on the same sample as t
 efforts are missed the grids beat against each other. `triggerDelayMs` is a phenotype parameter
 (`80 + 400·missed` for weak trigger; `100 + 450·missed` for COPD), not a consequence of anything on
 the trace. Batch 01's labelling is therefore still the honest one and was not touched.
+
+**Correction (sanity-repair pass, §15.6).** That inspection ran with no action. A census of every
+inventory arm, 0–180 s at 0.1 s, finds `measured` on MV-05's pressure-support and cycling arms
+(`ps-ets`, `ps-only`, `ets-only`, all three branches): 54 distinct onsets at `dea2738a`, 63 on the
+repaired head, the same nine arms. Every other arm, and every no-action or assessment-only arm, has
+none on either head. These are grid coincidences — a machine onset landing while an effort on the
+separate neural grid is still building — so the label is an interval between two events on the
+trace (Batch 01's definition) but not a trigger in the causal sense. "No live case can produce a
+measured trigger interval" was true only without action. Not changed here: it is trigger labelling
+and trigger causality, both D5.
 
 What a model would need before `measured` could be reachable: breath onset determined by the effort
 (onset = the time Pmus, net of trapped-gas threshold load, crosses the configured flow or pressure
@@ -433,11 +454,281 @@ touched, but a wrapper process of theirs may have been ended by it.
 - Slow targets are anchored at `physiologyReference`. Re-introducing an absolute target re-introduces
   untreated drift; an intended untreated process must be added as an explicit, authored term.
 - The CO₂ anchor must be the same definition of minute ventilation the model compares with.
-- A new breath period is adopted only between breaths.
+- The breath clock's next onset is fixed when its cycle begins; a new period takes effect there and
+  nowhere else, and a patient-rhythm schedule sits on the effort grid. Anything that re-bases time
+  moves the clock with it (`shiftBreathClock`).
+- Case resolution reads authored success criteria, never a containment lookup (`isCaseResolved`).
+- Reportability is derived from the whole effect set (`patientCanCommunicate`), never by the order
+  of assignments.
 - `exhaledVtSource: 'predicted'` is never printed as an exhaled volume.
 - `physiologyReference` and `breathClock` stay in-memory; MV-03 stays excluded; the alarm-limit item
   stays held.
 
+## 15. Sanity-repair pass — the independent review of `dea2738a`
+
+An independent Codex sanity review of `dea2738a` returned **SANITY REVIEW: NOT READY TO MERGE** with
+five bounded application defects. This pass repairs those five and nothing else; the work in §1–14
+that the review passed is kept. Prepared 2026-09-22 by an AI authoring assistant (Claude). The
+repeated background-job completion/failure notices at the end of the review transcript came from
+the review harness's polling, not from the application; they are not findings and nothing was
+re-run because of them. Every check below was run once, on the repaired tree.
+
+### Heads and drift
+
+|                                                      | SHA                                                                                                                                         |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Previous (reviewed) head                             | `dea2738adda650bef83415bab0f4770ca0b7996a`                                                                                                  |
+| `origin/main` at the review and at the start         | `bc65b44a73b4de034077d8432c0e78b35f6e45e6`                                                                                                  |
+| `origin/main` at the end (moved during the pass)     | `4bd1368d13cb297b7076f4d7655de849f444e0ff` — PRs #269 (EBUS), #268 (CRRT), #260 (BBT); no mechanical-ventilation file, no dependency change |
+| `origin/claude/mechanical-vent-02-9-22` at the start | `dea2738a…` — unmoved                                                                                                                       |
+| Repair commit                                        | `b6e575a9` (engine, content, components, tests)                                                                                             |
+| This documentation                                   | committed on top of `b6e575a9`; the final head is reported in the PR                                                                        |
+
+Reproduction scripts (read-only against both trees; the review's own `clock.mts` and `probe.mts`
+from its scratch directory, plus two written for this pass) were run against `dea2738a` in the
+session's detached checkout at that SHA and against the repaired tree.
+
+### 15.1 Breath clock — successive rate changes suppressed breaths
+
+**Root cause.** `BreathClock` held only `periodSeconds`, and the phase was still
+`time mod period` on an absolute grid recomputed from whichever period was latched. The adoption
+rule let a new period take over anywhere in an expiration where the new grid's phase was no later
+than the current one, which put the next onset at `time + P_new − phase_new` — up to almost a whole
+new period after the breath that was due. The next change could do the same again, so the onset was
+never a fact the clock held and repeated changes compounded.
+
+**Repair** (`engine/types.ts` `BreathClock`, `engine/simulation.ts` `advanceBreathClock` /
+`breathClockAtOnset`). The clock holds `periodSeconds`, `anchorSeconds` and `nextOnsetSeconds`. The
+next onset is fixed when a cycle begins, and no setting change moves it; it is processed on the first
+step past it, once. At that onset the requested period becomes authoritative: the same period
+continues its own grid (onsets computed as `anchor + k·period`, not accumulated, so a constant rate
+is the absolute grid, sample for sample); the patient's own rhythm (requested period equal to the
+neural effort cycle, with an effort) rejoins the effort grid at the first effort after that breath
+has finished inspiring; any other period starts a new schedule anchored at that onset. Two callers
+follow the clock: the hold-arming limit in the reducer now covers the cycle in progress
+(`PERFORM_HOLD` right after a rate increase otherwise gave up before the boundary), and the Learn
+lab's warm-up re-base moves the clock with the time origin (`shiftBreathClock`). `effortAt`, the
+missed-effort fraction and the trigger delay are untouched.
+
+A first version of the rejoin rule waited for the effort nearest one full cycle after the boundary.
+The all-arm census showed it passing over the patient's effort 2.1 s after the boundary on MV-08
+(cardiogenic oscillation, after the trigger fix) and leaving a 9.66 s gap; it was replaced before
+anything was committed. The rule now bounds the transition to (inspiration, inspiration + one
+effort cycle].
+
+| Scenario (review's `clock.mts`, MV-LAB unless named)                     | `dea2738a` max onset gap                    | repaired                                                                         |
+| ------------------------------------------------------------------------ | ------------------------------------------- | -------------------------------------------------------------------------------- |
+| 16 ↔ 20 every 0.1 / 0.2 / 0.5 / **1** / 2 s                              | 15.00 / 12.00 / 11.24 / **12.02** / 12.00 s | 3.76 s each                                                                      |
+| single late-expiratory change 16 → 20 at 3.6 s                           | **5.98 s**                                  | 3.76 s                                                                           |
+| 16 → 30 / 16 → 40 at 3.6 s                                               | 4.00 / 4.50 s                               | 3.76 s                                                                           |
+| inspiration-time (0.1 s) and early-expiration (0.8 s) changes, all rates | 3.76–7.50 s (period-bound)                  | same                                                                             |
+| MV-05 PS 12 + ETS 40 (168 s)                                             | min VT 220 mL, max gap 5.32 s               | min VT 249 mL, max gap 7.50 s (the 8/min cycle in progress, no longer cut short) |
+
+Minimum inspiratory time is unchanged in every MV-LAB scenario (0.62 s). No one-sample breath
+anywhere: across all 82 inventory arms the shortest inspiration is 0.20 s, MV-09's own no-action
+breath, identical on both heads. No arm's longest onset gap grew except MV-05's authored correction
+with its expiratory hold (9.14 → 11.52 s: the 7.5 s cycle in progress, now not shortened, plus the
+4 s hold, which occludes the next breath — hold behaviour both heads share); several shrank (MV-05
+PS-only 8.50 → 7.50, ETS-only 8.86 → 7.50, MV-06 rate-up 3.50 → 2.52, MV-08 leak fix 8.56 → 7.52,
+MV-15 deepen sedation 3.86 → 3.00 s). Seen, not changed: a 4 s expiratory hold that outlasts the
+cycle leaves a partial inspiration after release on both heads (MV-LAB `expiratory` row, 0.38 s).
+
+Consequences in the inventory (`MV-PRE-REVIEW-02-inventory/after.md`, regenerated): only MV-01 PEEP
+13 (§15.3), MV-05's pressure-support and cycling arms (steadier breaths; the authored correction at
+180 s VT 386, PEEPi 4.8, PaCO₂ 37 — §6 updated), MV-06 rate 30 (MAP 34 → 33 at 30 s), MV-08 leak fix
+(at 60 s the breath the old schedule had already established at 53.6 s, 235 mL, is the last
+completed one and the engine's existing 250 mL rule flags it; at 60 s the schedule is on the effort
+grid) and MV-15 deepen sedation (the post-effect breath lands before 60 s). `speeds-after.md`
+regenerated byte-identical.
+
+### 15.2 Communication board over deep sedation or paralysis
+
+**Root cause.** `deriveEffectivePatient` set `canCommunicate` in three assignments in code order —
+deep sedation false, blockade false, then `communication-board` true — and the effect set carries
+no order, so the board won whichever action came first.
+
+**Repair.** `patientCanCommunicate(authored, effects)` in `engine/physics.ts`, called once after all
+effects: deep sedation or neuromuscular blockade → cannot answer; otherwise the case's authored
+value or a board. No RASS threshold; the two incapacitating states are the same actions as before.
+Bedside labels and coaching readings already read `patientReportAvailability`, so both follow.
+
+| Sequence (review's `probe.mts`; NMB on an MV-15 fixture with MV-04's action)     | `dea2738a`                              | repaired                          |
+| -------------------------------------------------------------------------------- | --------------------------------------- | --------------------------------- |
+| board alone                                                                      | report                                  | report                            |
+| deep sedation alone / NMB alone (MV-04)                                          | index                                   | index                             |
+| deep sedation → board; board → deep sedation; assess → sedation → board → assess | RASS −5, **"Patient report · modeled"** | RASS −5, "Internal symptom index" |
+| NMB → board (fixture)                                                            | `canCommunicate` **true**               | false                             |
+
+The probe's other checks: 253/259 → 258/259; the one it still fails, "MV-14/stable 1×/5×/30×", is
+an alarm `startedAt` of 11.8 s at 1× against 12.0 s at 5× and 30× (alarms are stamped once per
+advance call). Patient, measurements and waveforms are identical, and so is the difference on
+`dea2738a`.
+
+### 15.3 PEEP 13 — containment separated from success
+
+**Root cause.** `isCaseResolved` read the same `ardsPeepBand() === 'recruited'` (8 ≤ PEEP < 14) that
+the lung-state lookup used, so the mechanical hold at 13 also answered "has the authored success
+range been reached".
+
+**Repair.** Two functions for two questions (`engine/physics.ts`): `ardsLungStateForPeep` (the
+mechanical state; 13 still held at the recruited state) and `ardsPeepInAuthoredSuccessRange` (the
+casebook's "PEEP 8-12"), which is all `isCaseResolved` reads. Nothing about the physiology at 13 was
+invented or changed.
+
+| MV-01, 180 s   | 6        | 7        | 8         | 12        | **13**           | 14            |
+| -------------- | -------- | -------- | --------- | --------- | ---------------- | ------------- |
+| lung state     | baseline | baseline | recruited | recruited | recruited (held) | overdistended |
+| resolved       | no / no  | no / no  | yes / yes | yes / yes | **yes → no**     | no / no       |
+| corrective pts | 0 / 0    | 0 / 0    | 30 / 30   | 30 / 30   | **30 → 0**       | 0 / 0         |
+| dyspnea index  | 3 / 3    | 3 / 3    | 1.0 / 1.0 | 1.0 / 1.0 | **1.0 → 3.0**    | 3 / 3         |
+
+(`dea2738a` / repaired.) Compliance 0.032 and shunt 0.20 at 13 are unchanged, as are PEEP 14's
+overdistension (compliance 0.018, MAP 61) and the unrecruited 6–7. A PEEP between 12 and 13 (the
+test uses 12.5) is also outside the authored range. D3 remains `NOT REVIEWED`.
+
+### 15.4 Unsupported response claims, where the learner meets them
+
+**Root cause.** The first repair stated MV-14's oxygenation boundary only in the optional case
+explanation. The action path still carried the authored claims: the feedback printed the moment the
+action is taken (`lastResponse`, from the intervention's authored `response`) and the coaching card
+written once its response has been observed. MV-13 had no equivalent statement anywhere.
+
+**Repair.** `content/caseModelNotes.ts`:
+
+- `interventionSimulatedResponse` + `composeInterventionResponse`, applied when each case's own
+  interventions are built (`runtimeCases.ts`): the feedback keeps the authored expectation, labelled
+  "Clinically expected:", and says in the same line what the simulation shows. MV-14 only, because
+  only its two responses claim something the model does not do.
+- `faultOxygenationBoundary`, a new `modelBoundary` field on the coaching card, rendered as "What
+  this simulation does not model": derived from the card's own readings, it names what moved toward
+  better and what SpO₂ did, and says the model has no link from this fault to oxygenation. It never
+  says oxygenation improved when the saturation did not move, and does not credit the action with a
+  saturation moved by something else (tested with FiO₂ raised during the interval). MV-13's four
+  branch treatments and MV-14's two; identical wording on every MV-13 branch, so no branch leaks.
+- The decompression coaching profile's "expect the improvement to need securing rather than to hold
+  on its own" and "a response that fades is the expected course" now separate the bedside
+  expectation from the model, which has no decay.
+- `caseResponseModelNote`: MV-14's note adds that the improvement does not fade; MV-13 gets a note.
+
+No oxygenation relationship, recovery or decay model was added.
+
+| Surface                               | `dea2738a`                                                                                                                                                    | repaired                                                                                                                                                                                                                                                                               |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MV-14 decompression — action feedback | "Compliance, oxygenation, and blood pressure improve abruptly but temporarily." (SpO₂ 76 → 76)                                                                | "Clinically expected: … In this simulation compliance and blood pressure improve …, and the improvement does not fade — the model has no decay for it. SpO₂ is not linked to the pneumothorax here, so it does not change. …"                                                          |
+| MV-14 decompression — coaching        | "a response that fades is the expected course"; "expect the improvement to need securing rather than to hold on its own"; SpO₂ row "unchanged" with no reason | the bedside expectation and "this simulation does not model that loss"; model boundary "Peak airway pressure, mean arterial pressure and reported breathing discomfort moved toward better …; SpO₂ did not change. In this simulation oxygenation is not linked to the pneumothorax …" |
+| MV-14 drainage — action feedback      | "The compliance and hemodynamic improvement is sustained." (implies it would otherwise fade)                                                                  | expectation kept + "the improvement after decompression does not fade whether or not drainage is placed; drainage adds a further gain in compliance. SpO₂ is not linked …"                                                                                                             |
+| MV-14 expected response / explanation | note: saturation not linked                                                                                                                                   | + the improvement does not fade, so the temporary relief is not shown                                                                                                                                                                                                                  |
+| MV-14 debrief                         | the casebook debrief makes no oxygenation claim; `CaseWorkflow`’s debrief repeats `lastResponse`                                                              | unchanged; repeats the qualified text                                                                                                                                                                                                                                                  |
+| MV-13 treatments — action feedback    | no oxygenation claim in any of the four                                                                                                                       | unchanged                                                                                                                                                                                                                                                                              |
+| MV-13 treatments — coaching           | SpO₂ 88 → 88 "unchanged", no reason                                                                                                                           | model boundary, e.g. secretions + suction: "Peak airway pressure, trapped end-expiratory pressure and reported breathing discomfort moved toward better …; SpO₂ did not change. … not linked to the airway obstruction …"                                                              |
+| MV-13 explanation                     | no note                                                                                                                                                       | note: saturation not linked to the obstruction; the casebook's expected recovery held for faculty review                                                                                                                                                                               |
+
+Reviewed and not changed: MV-13's casebook success criterion "Oxygenation and delivered/exhaled VT
+recover" is not rendered on any learner surface; the answer-key label "Plateau pressure falls while
+oxygenation and MAP recover" is left as authored (the explanation note sits beside it); the
+bronchodilator's "Airway resistance begins to fall over 5–15 simulated minutes" is a timing statement
+(the model applies the whole fall at 300 s) rather than an oxygenation or decay claim, and is noted for
+D1 rather than rewritten.
+
+### 15.5 MV-13's alarm note matches the console
+
+**Root cause.** The note interpolated the current limit into a sentence that always went on to say
+the limit was above the peak and no alarm was active.
+
+**Repair** (option B, with the case-entry context labelled as such). The note has three parts: what
+the case opened with (the fixed opening limit from the case definition), one sentence read from the
+current limit, peak and alarm list — active / will sound when the simulation next runs (a limit
+changed while paused, since alarms are evaluated only when the model advances) / still showing from
+the last evaluated breath / none, naming the pressure-limitation alert when it shows — and the
+unchanged boundary that delivery at the limit is not modeled, held for RT and device review.
+Limits, the alarm predicate, delivery and physiology are unchanged.
+
+| Limit (peak 43.2) | alarms              | `dea2738a`                                                                                 | repaired                                                                                                                          |
+| ----------------- | ------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| 60 (opening)      | —                   | "limit at 60 … above the peak … no active high-pressure alarm"                             | entry sentence only                                                                                                               |
+| 44                | pressure limitation | "limit at 44 … above the peak … no active high-pressure alarm"                             | "Now the limit is 44 cmH₂O, still above the peak of 43.2 cmH₂O, so no high-pressure alarm is active; … pressure-limitation alert" |
+| 43, 40            | **high pressure**   | "limit at 40 cmH₂O — above the peak … the console shows **no active high-pressure alarm**" | "Now the limit is 40 cmH₂O and the peak, 43.2 cmH₂O, has reached it, so the console's high-pressure alarm is active."             |
+
+### 15.6 Found while validating — D5 reachability of `measured`
+
+The census behind §15.1 also counted trigger-evidence status at every 0.1 s of every arm. §8's
+"never `measured`" held only without action: MV-05's pressure-support and cycling arms reach it at
+grid coincidences on both heads (54 onsets at `dea2738a`, 63 repaired, the same nine arms), and no
+other arm does. It is an interval between two events on the trace, not a modeled trigger. The clock
+repair neither creates it nor removes it; changing it is trigger labelling and trigger causality
+(D5), outside this pass. §8 and matrix row 21 are corrected. The new regression test pins only that
+the clock's own transitions (MV-07 and MV-08 rejoins, MV-02 rate changes, MV-LAB alternation) add no
+`measured` event.
+
+### 15.7 Validation (repaired tree; node 26.5.0; `NODE_OPTIONS=--max-old-space-size=8192`)
+
+| Check                                                                                                                               | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| New `__tests__/mv-pre-review-02-sanity-repairs.test.tsx`                                                                            | 43 tests, all passing: the adversarial clock scenarios (exact 16 ↔ 20 alternation; late-expiratory; inspiration-time and early-expiration at 8/20/40; repeated changes before the onset; constant-rate absolute grid incl. 4 modes × 5 rates set at t = 0; MV-05 PS 12 + ETS 40 over 168 s; MV-07 and MV-08 rejoins; no `measured` at clock transitions; hold arming after a rate increase; Learn-lab re-base); all seven board/sedation/NMB orders with bedside and coaching; PEEP 6/7/8/12/13/14 state, resolution, corrective points and relief; MV-14 feedback/coaching/FiO₂ confound/drainage/explanation/rendered Practice page; MV-13 two branches, a missed treatment, explanation; MV-13 note at entry, lowered while paused, active, stale, pressure-limitation, delivery unchanged |
+| `npx jest src/features/mechanical-ventilation`                                                                                      | 40 suites, **997 tests, all passing** (954 before this pass, one assertion in this PR's own suite corrected: it had pinned PEEP 13 as resolved)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Consumers: `src/features/critical-care`, `learning-module`, `icu-simulation`, MV routes, `hamilton-c6`, `draft-modules.hamilton-c6` | 51 suites, 466 tests, 463 passing, **3 failing — the same three failing on current `origin/main` `bc65b44a`**, run in a read-only checkout at that SHA: accessibility (color-coded states), curriculum-sequencing (CRRT order), learner-copy. The learner-copy scanner's flagged strings are identical on main, `dea2738a` and the repaired tree (19); the messages differ only in the checkout path of the stack line                                                                                                                                                                                                                                                                                                                                                                        |
+| Reproductions, both heads                                                                                                           | review's `clock.mts` (35 journeys), review's `probe.mts` (259 checks: 253 → 258), `responses.mts`, `trigger-census.mts` (82 arms, 22 branches, 0–180 s)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Causal inventory, all 14 live cases / 22 branches / every arm, and `--speeds`                                                       | regenerated; differences exactly as §15.1; 1×/5×/30× identical                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `npx tsc --noEmit -p tsconfig.json` (full, tests included)                                                                          | clean, on the final tree                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `npx eslint src/features/mechanical-ventilation scripts/critical-care/mv-causal-inventory.ts`                                       | clean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `npx prettier --check` (module, script, handoff, matrix, inventory)                                                                 | clean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `git diff --check`                                                                                                                  | clean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `npm run build` (primary checkout's configuration read into the process only)                                                       | succeeded, 767/767 pages                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+
+**Chromium** (built-in pane, this worktree's production build, `node server.js` on 127.0.0.1:3126,
+process cwd verified; the pane reported `document.hidden`, so time advanced only through the page's
+own **One breath** control; every setting and action through the page's controls):
+
+- **1** MV-01 Practice: Rate tile 24 ↔ 25 alternated between breaths; the component's waveform
+  buffer (read for inspection) shows onsets 45.0 / 47.4 / 50.0 / 52.4 s — gaps 2.4, 2.6, 2.4 s (the
+  2.6 s cycle is the rejoin to MV-01's own 24/min effort grid), VTE 422 mL, no alarm.
+- **2** MV-15 Practice, both orders: RASS −5; dyspnea and pain "Internal index · not a patient
+  report"; the coaching card after the board lists peak, VTE, SpO₂ and MAP only.
+- **3** MV-01 Practice, PEEP tile to 13 vs 12, bedside at 30 s: SpO₂ 88 in both (held lung state);
+  dyspnea 3.0 at 13, 1.7 at 12 (resolution relief only inside the authored range).
+- **4** MV-14 Practice: decompression status line as in §15.4, monitor SpO₂ 76; coaching card at
+  42.5 s — peak 58 → 31, SpO₂ 76 → 76 unchanged, MAP 42 → 55, the model boundary and the no-fade
+  wording; explanation note beside "Authored expected response". MV-13 secretions: suction card —
+  peak 44 → 25, SpO₂ 88 → 88, the obstruction boundary.
+- **5** MV-13 Practice: opening note; Alarms tab → High pressure tile → 40 while paused: note
+  "…raises its high-pressure alarm when the simulation next runs", no signal yet; after two breaths
+  the console banner "HIGH High pressure" and the note "Now the limit is 40 cmH₂O and the peak,
+  43.8 cmH₂O, has reached it, so the console's high-pressure alarm is active."
+- Console errors: only `POST /api/analytics` 401s from the unauthenticated local server (as in §12); none from these changes. Server stopped by its own PIDs after checking their cwd; the
+  other sessions' servers (3110, 3134, 3254) were not touched.
+
+### 15.8 D1–D5 after this pass — all `NOT REVIEWED`
+
+- **D1** — untreated progression, acute chronology and transient rescue: open. No decay, recovery
+  or progression was added; MV-14's relief is stated as not fading because the model has none.
+- **D2** — intended gases, CO₂/drive, fault-linked oxygenation, consciousness: open. The fault-linked
+  oxygenation boundary is now stated on the action path (§15.4), not settled.
+- **D3** — PEEP 13 and PEEP 6–7 physiology: open. The code no longer resolves the case at 13; what 13
+  should do is unchanged and undecided.
+- **D4** — MV-13 / Section-13 alarm policy: open. The note describes the console; limits unchanged.
+- **D5** — trigger causality: open, with §15.6's correction to what "never measured" covered.
+
+### 15.9 Integration
+
+`origin/main` moved from `bc65b44a` to `4bd1368d` during the pass (three merges, none touching this
+module or its dependencies). `git merge-tree --write-tree origin/main b6e575a9` is clean. The merged
+tree was checked out, detached, in the session scratchpad and the MV plus consumer suites run once:
+91 suites, 1,464 tests, **1,461 passing, 3 failing** — the same accessibility, curriculum-sequencing
+and learner-copy tests, which also fail on `4bd1368d` alone (run in a second detached checkout).
+Both temporary checkouts were removed. The branch itself is not rebased or merged with main; the
+repair and documentation commits are pushed to `claude/mechanical-vent-02-9-22` as fast-forwards on
+PR #271. Not merged, not deployed; Batch 03 not started.
+
+### 15.10 NOT RUN in this pass
+
+- Firefox, Safari, hardware, assistive technology, keyboard-only and screen-reader journeys, native
+  zoom / 200 % text / 320 px on the changed surfaces, dark-scheme screenshots, es and zh-CN.
+- A browser walk of every case and arm (engine replays and the census stand in for them); the MV-05
+  PS 12 + ETS 40 correction and MV-07/MV-08 rejoins were checked in the engine only.
+- Deployed build; beta-wrapped routes.
+- Any clinical, device, media or source review. Nothing here is one.
+
 ## Stop
 
-One PR, opened and stopped. No merge, no deploy, no batch 03, no G02 restart.
+One PR, opened and stopped. No merge, no deploy, no batch 03, no G02 restart. The sanity-repair pass
+(§15) pushed five bounded repairs to the same PR and stopped there.
