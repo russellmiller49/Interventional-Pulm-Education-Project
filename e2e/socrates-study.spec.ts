@@ -362,6 +362,10 @@ test('ordered module journey retains narrative reveal boundaries and module scop
   ]) {
     await page.setViewportSize(viewport)
     await page.goto('/en/socrates')
+    await expect(
+      page.getByRole('heading', { name: 'SOCRATES training modules', exact: true }),
+    ).toBeVisible()
+    await expect(page.getByRole('link', { name: 'ADVANCED CASES', exact: true })).toBeVisible()
     await noOverflow(page)
     await screenshotFromTop(page, `test-results/socrates/modules-${viewport.width}.png`)
     await page.goto('/en/socrates?module=core-srh-orientation')
@@ -439,9 +443,14 @@ for (const viewport of [
     await page.addStyleTag({ content: 'html { font-size: 200% !important; }' })
     await noOverflow(page)
     await screenshotFromTop(page, `test-results/socrates/preview-text-200-${viewport.width}.png`)
-    await page
-      .getByTestId('learner-narrative')
-      .evaluate((element) => element.scrollIntoView({ block: 'start' }))
+    await page.getByTestId('learner-narrative').evaluate((element) => {
+      const headerHeight = document.querySelector('header')?.getBoundingClientRect().height ?? 0
+      window.scrollTo({
+        top: element.getBoundingClientRect().top + window.scrollY - headerHeight - 16,
+        behavior: 'instant',
+      })
+    })
+    await expect(page.getByTestId('learner-narrative')).toBeInViewport({ ratio: 0.02 })
     await page.screenshot({
       path: `test-results/socrates/preview-text-200-detail-${viewport.width}.png`,
     })

@@ -120,16 +120,17 @@ The four runtime files the SoCal EBUS app imports at build time stay tracked in
 
 ### Folders that predate this map
 
-| Local-Data path               | Contents                                                                                    | Mounted into the primary checkout as                                              |
-| ----------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `secrets/.env.local`          | Environment file                                                                            | `.env.local` (symlink)                                                            |
-| `literature/nbib-files/`      | PubMed NBIB corpus for the Literature module                                                | `IP_PubMed/nbib files` (symlink)                                                  |
-| `device-manuals/`             | Critical-care device manuals, preference-card IFUs                                          | `Critical_Care_Reference/Device Manuals`, `Preference_card_module/...` (symlinks) |
-| `gudid/accessgudid-*/`        | AccessGUDID full delimited release (~5.6 GB)                                                | `Preference_card_module/AccessGUDID_Delimited_Full_Release_*` (symlink)           |
-| `Intro_courses/`              | Lecture videos, transcripts, the bronchoscopy-foundations v2 knowledge pack, pre/post tests | read by `scripts/bronchoscopy-foundations/import-manifest.mts`                    |
-| `skills/`                     | Skill sources that are not version-controlled                                               | —                                                                                 |
-| `recovery/`                   | Dated bundles and patches from repository clean-ups                                         | —                                                                                 |
-| `config/worktrees.local.json` | Worktree root, external data root, and named input paths                                    | —                                                                                 |
+| Local-Data path                 | Contents                                                                                    | Mounted into the primary checkout as                                                        |
+| ------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `secrets/.env.local`            | Environment file                                                                            | `.env.local` (symlink)                                                                      |
+| `literature/nbib-files/`        | PubMed NBIB corpus for the Literature module                                                | `IP_PubMed/nbib files` (symlink)                                                            |
+| `device-manuals/`               | Critical-care device manuals, preference-card IFUs                                          | `Critical_Care_Reference/Device Manuals`, `Preference_card_module/...` (symlinks)           |
+| `gudid/accessgudid-*/`          | AccessGUDID full delimited release (~5.6 GB)                                                | `Preference_card_module/AccessGUDID_Delimited_Full_Release_*` (symlink)                     |
+| `Intro_courses/`                | Lecture videos, transcripts, the bronchoscopy-foundations v2 knowledge pack, pre/post tests | read by `scripts/bronchoscopy-foundations/import-manifest.mts`                              |
+| `SOCRATES_Steve_Followup_Pack/` | Original workbook, private staging, unresolved mapping checklist and source audit           | Read by absolute path with `scripts/socrates/workbook-import.ts`; never public or committed |
+| `skills/`                       | Skill sources that are not version-controlled                                               | —                                                                                           |
+| `recovery/`                     | Dated bundles and patches from repository clean-ups                                         | —                                                                                           |
+| `config/worktrees.local.json`   | Worktree root, external data root, and named input paths                                    | —                                                                                           |
 
 Only the primary checkout carries the symlink mounts; worktrees do not. Scripts that need those
 inputs should resolve them through the helpers or `config/worktrees.local.json` rather than the

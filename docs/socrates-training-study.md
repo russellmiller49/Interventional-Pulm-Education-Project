@@ -9,15 +9,15 @@ ON-SITE case is asserted to be ready.
 
 ## Routes and access
 
-| Route                                    | Surface and access                                                                                                                                      |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/[locale]/socrates`                     | Unlisted/noindex catalog; only ready, published training cases grouped by diagnostic category, with selectable titles. Empty/error states are explicit. |
-| `/[locale]/socrates/training/[caseId]`   | Verified account plus active, unexpired `socrates_participant` or `site_admin`; training inspection and teaching review.                                |
-| `/[locale]/socrates/testing`             | Same entitlement plus study enrollment for testing; configured rounds and completion.                                                                   |
-| `/[locale]/socrates/testing/[attemptId]` | Own attempt only, active enrollment/study, ready pinned case.                                                                                           |
-| `/[locale]/admin/socrates`               | `site_admin` only; configuration, enrollment, monitoring, pause/resume and CSV.                                                                         |
-| `/[locale]/socrates-builder`             | Existing `socrates_editor`/`site_admin` authoring; only site administrators publish.                                                                    |
-| `/[locale]/socrates-demo`                | Existing browser demonstration and sandbox remain available.                                                                                            |
+| Route                                    | Surface and access                                                                                                                                                                 |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/[locale]/socrates`                     | Unlisted/noindex module directory; recommended core first, ordered available membership and planned counts; diagnosis browsing remains secondary. Empty/error states are explicit. |
+| `/[locale]/socrates/training/[caseId]`   | Verified account plus active, unexpired `socrates_participant` or `site_admin`; training inspection and teaching review.                                                           |
+| `/[locale]/socrates/testing`             | Same entitlement plus study enrollment for testing; configured rounds and completion.                                                                                              |
+| `/[locale]/socrates/testing/[attemptId]` | Own attempt only, active enrollment/study, ready pinned case.                                                                                                                      |
+| `/[locale]/admin/socrates`               | `site_admin` only; configuration, enrollment, monitoring, pause/resume and CSV.                                                                                                    |
+| `/[locale]/socrates-builder`             | Existing `socrates_editor`/`site_admin` authoring; only site administrators publish.                                                                                               |
+| `/[locale]/socrates-demo`                | Existing browser demonstration and sandbox remain available.                                                                                                                       |
 
 The module is not added to the global homepage or sitemap. Page metadata and API
 headers discourage indexing; this is separate from authorization. Server routes
@@ -37,6 +37,13 @@ relationships, enter/exit zoom thresholds, labels, summaries and explanations.
 vignette, low/high-magnification observation arrays, learning points,
 adequacy/cancer designation and reasoning, optional preliminary diagnosis and
 reasoning, and a reviewed annotation legend with label/color/explanation entries.
+
+The optional canonical `learnerNarrative` preserves complete workbook text after
+reveal. Its explicit classification lines determine structured classification
+fields; validators reject contradictory copies. Protected `curriculumSource`
+metadata preserves original cells, notes, purpose, source row and workbook hash.
+See the [author guide](socrates-author-guide.md) and
+[bounded private importer](socrates-workbook-import.md).
 
 `authorContent` contains internal highlight notes, provenance notes and readiness:
 content review, de-identification and identifier matching verification, imaging/WSI
@@ -64,6 +71,13 @@ sandbox guard. Both also exist in the database. Public sandbox exports stay v1.
 Apply `supabase/migrations/20260922201126_socrates_training_study_v2.sql` before using
 the new routes. The migration does not modify either historical SOCRATES migration
 or seed any cases, participants, entitlements or active study.
+
+The follow-up adds forward migrations
+`20260923040205_socrates_curriculum_narrative_import.sql` and
+`20260923042038_socrates_protected_workbook_import.sql`. They extend protected
+narrative/source persistence and add curriculum modules, UUID memberships and
+atomic import receipts. Six module metadata rows are seeded, with no clinical
+cases or memberships. Module revisions and case revisions are independent.
 
 | Storage                                                             | Purpose                                                                                                |
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -107,7 +121,8 @@ expanded, and the viewer remains mounted. The source-pixel focus and relative zo
 are restored on OpenSeadragon resize; paired panes remain synchronized. Mobile
 pan/pinch and the three image modes remain available.
 
-Legend entries appear only after the author marks an actual key reviewed. Otherwise
+In training, legend entries appear after teaching reveal and only after the author
+marks a complete, non-placeholder key reviewed. Otherwise
 the UI says **Annotation key pending review**. Labels accompany every swatch. No
 medical categories or color meanings are inferred from the image.
 
@@ -165,8 +180,9 @@ URLs. No image tiles are copied into the repository. Responses use private/no-st
 These controls protect application fields and URLs; they cannot determine whether
 an image's pixels or freely authored teaching text contain an identifier. Reviewers
 must inspect both before verifying de-identification, including navigation thumbnails.
-Published training content is intentionally readable via the existing public
-publication RPC; keep testing-only answers unpublished and use disjoint case sets
+The public publication RPC returns only v2 catalog/viewer metadata, with no answer
+narrative, key, teaching arrays or private author metadata. Authenticated training
+reveal remains the answer-bearing path. Use disjoint training/testing case sets
 when the protocol requires preventing prior training exposure. The independent
 public Invenio demo is still public: application authorization cannot revoke public
 source availability. Participant UUIDs are coded identifiers, not a claim of formal
@@ -190,8 +206,9 @@ images and authorizations, the actual reviewed annotation key, diagnostic option
 confidence scale, case sets/order, feedback policy, version, training requirements,
 round scheduling and retention/export procedures. No study is seeded or activated.
 
-The [validation report](socrates-launch-validation.md) records tests and browser
-evidence. Database rehearsal uses isolated PostgreSQL with real migrations, RLS and
+The [original validation report](socrates-launch-validation.md) and
+[follow-up report](socrates-steve-followup.md) record tests and browser evidence.
+Database rehearsal uses isolated PostgreSQL with real migrations, RLS and
 transactions, plus synthetic Auth/PostgREST HTTP adapters for the browser. It is not
 a production Supabase Auth, mail, proxy or load test. Normal staging migration/auth
 verification remains part of a later authorized release. No deployment or remote
