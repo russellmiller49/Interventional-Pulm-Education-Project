@@ -7,12 +7,12 @@
   "package": "Interventional-Pulm-Local-Data/module_update_9_19/HD_Claude_Implementation_Pack",
   "inspectedSha": "c717c9ffae09cb67e19b06a56d37c75487a5605a",
   "baseSha": "9fbdbddc4d7f124c7ac3254f4cb8aa4c15c0233f",
-  "headSha": "585a216155d7e0e4d9cf8867f22f80a83987c6b5",
+  "headSha": "78de3badb22274ddca0f14447868b8f38fcbfc09",
   "branch": "claude/hemodynamics-2-9-22",
   "checkout": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-hemodynamics-2-9-22",
   "handoff": "docs/gap-remediation/fellow-walkthrough/hemodynamics/HD-PRE-REVIEW-02-handoff.md",
   "rawEvidence": "Interventional-Pulm-Local-Data/renders/output/hd-pre-review-02-2026-09-22/",
-  "state": "implemented; pull request open; not merged, not deployed; not independently reviewed",
+  "state": "implemented and sanity-repaired (round 1); pull request #266 open; not merged, not deployed; not independently re-reviewed",
   "claims": {
     "clinicalApproval": false,
     "sourceReview": false,
@@ -297,5 +297,92 @@
     "HD-PRE-REVIEW-03: move value tags out of the trace lane keeping this batch's labels; mark the RA reading point; contrast; optional manual cursor in the case dock.",
     "HD-PRE-REVIEW-04: decide whether before/after tables report monitor readings; Fick comparison table; action-menu design with the owner."
   ],
-  "headShaNote": "The implementation commit. The commit that records this SHA is docs-only and follows it; the PR shows the final head."
+  "headShaNote": "The sanity-repair implementation commit. The Task-02 implementation commit is 585a216155d7e0e4d9cf8867f22f80a83987c6b5 and the independently reviewed head was e5a3096f721b10118221fc8e8419a112808a1d59. The commit that records this SHA is docs-only and follows it; the PR shows the final head.",
+  "reviewedHeadSha": "e5a3096f721b10118221fc8e8419a112808a1d59",
+  "pullRequest": "https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/266",
+  "sanityRepair": {
+    "round": 1,
+    "date": "2026-09-23",
+    "review": "Independent Codex sanity review of e5a3096f: SANITY REVIEW: NOT READY TO MERGE, three Task-02 blockers",
+    "reviewedHeadSha": "e5a3096f721b10118221fc8e8419a112808a1d59",
+    "originMainAtRepair": "a306d8250ec10207c750f46407f151c06d487707",
+    "originMainNote": "74 commits past the execution base, none in ICU Hemodynamics, no dependency or config change; PR #266 merges cleanly, so the branch was neither rebased nor merged",
+    "repairCommit": "78de3badb22274ddca0f14447868b8f38fcbfc09",
+    "rawEvidence": "Interventional-Pulm-Local-Data/renders/output/hd-pre-review-02-sanity-repair-2026-09-23/",
+    "blockers": [
+      {
+        "id": "SR1-B1",
+        "severity": "P1",
+        "title": "Stored wedge stamped with the physiological episode current at Store, not the episode its pressure was acquired in",
+        "reproducedAtReviewedHead": "HD-01: leg raise, occlusion, cursor at 26.7 s (episode 1), waning at 32.0 s, Store -> record episode 2, current true; PVR 1.4 WU from a post-waning series",
+        "disposition": "fixed",
+        "fix": "WedgeCursorReading.acquisition (session, physiological episode, window episodes) from the averaged samples' times via physiologicalEpisodeAt when the cursor is placed; STORE_WEDGE copies it and never reads the current episode; a straddling cycle (physiologicalEpisode null) is refused with the reason",
+        "afterRepair": "record episode 1, current false, PVR not interpretable with the stale-input note; a new occlusion under the current conditions restores PVR"
+      },
+      {
+        "id": "SR1-B2",
+        "severity": "P2",
+        "title": "Physiologically inert (bound-absorbed) interventions and wanings create new episodes",
+        "reproducedAtReviewedHead": "HD-02: 30 norepinephrine tiers, 150 s, series, one more tier -> episode 30 to 31, series historical, effective parameters identical to the no-action path",
+        "disposition": "fixed",
+        "fix": "effectCanChangeEffectiveParameters over the candidate's whole course using the model's own bounds table (EFFECTIVE_PARAMETER_BOUNDS, now shared with deriveEffectiveCirculationParameters) and effect-scale bounds; used by APPLY_INTERVENTION (interventionChangesPhysiology) and the scheduled waning in advanceOneStep; no tolerance",
+        "afterRepair": "absorbed dose accepted, no episode, series stays current, narrated as having no further modeled effect; effective interventions and effective wanings unchanged"
+      },
+      {
+        "id": "SR1-B3",
+        "severity": "P2",
+        "title": "Debrief says no thermodilution series was acquired when a historical series exists",
+        "reproducedAtReviewedHead": "HD-03: fluid, series 3.8 L/min, dobutamine, debrief -> \"No accepted thermodilution series was acquired...\" and, for fluid, \"No thermodilution series was acquired after it...\"",
+        "disposition": "fixed",
+        "fix": "acceptedFlowSeries (a listing of thermodilutionSeriesView with acquisition identity) and flowAroundAction (a series counts as after an action only if it belongs to that action's episode or a later one); flowSentence(state), flowAfterActionSentence, leg-raise row",
+        "afterRepair": "historical series acknowledged with its conditions; current flow reported missing; later series not read as an earlier action's effect"
+      }
+    ],
+    "engineSurfaceAdded": [
+      "WedgeWindowAcquisition, WedgeCursorReading.acquisition (types.ts)",
+      "physiologicalEpisodeAt, WEDGE_WINDOW_STRADDLES_CHANGE (measurementProvenance.ts)",
+      "EFFECTIVE_PARAMETER_BOUNDS (internal), effectCanChangeEffectiveParameters, interventionChangesPhysiology, interventionHasModeledEffect, absorbedInterventionNarration (simulation.ts)",
+      "AcquiredFlow.firstAcquiredAtSeconds, acceptedFlowSeries, flowAroundAction (decisionRecord.ts)"
+    ],
+    "filesChanged": [
+      "src/features/icu-hemodynamics/engine/types.ts",
+      "src/features/icu-hemodynamics/engine/measurementProvenance.ts",
+      "src/features/icu-hemodynamics/engine/reducer.ts",
+      "src/features/icu-hemodynamics/engine/simulation.ts",
+      "src/features/icu-hemodynamics/engine/decisionRecord.ts",
+      "src/features/icu-hemodynamics/components/HemodynamicCaseActivity.tsx",
+      "src/features/icu-hemodynamics/components/PacActionDock.tsx",
+      "src/features/icu-hemodynamics/components/stage/StageDocks.tsx",
+      "src/features/icu-hemodynamics/components/stage/WedgeCursorPicker.tsx",
+      "src/features/icu-hemodynamics/__tests__/hd-pre-review-02-sanity-repair-regressions.test.tsx (new)",
+      "src/features/icu-hemodynamics/__tests__/hd-pre-review-02-sanity-repair-matrix.test.tsx (new)",
+      "docs/gap-remediation/fellow-walkthrough/hemodynamics/HD-PRE-REVIEW-02-handoff.md",
+      "docs/gap-remediation/fellow-walkthrough/hemodynamics/HD-PRE-REVIEW-02-status.json"
+    ],
+    "verification": {
+      "regressionsAtReviewedHead": "hd-pre-review-02-sanity-repair-regressions (9 tests, APIs that existed at e5a3096f only): 9 of 9 fail there on assertions, 9 pass on the repair",
+      "newSuites": "35 pass (9 regressions + 26 matrix)",
+      "jestHd": "46 suites / 626 tests pass (Task-02 head: 44 / 591)",
+      "task01Preservation": "hd-pre-review-01-action-truth, -catheter-safety, -displayed-pressure and h2-h3-reference-and-pac-safety pass unchanged",
+      "routeAndConsumers": "47/50 suites, 432/435 tests; the same three baseline failures by name (CRRT station order; critical-care accessibility surfaces; critical-care learner-copy framing), no ICU Hemodynamics rows",
+      "integrationWithOriginMain": "throwaway worktree at a306d825 with the repair merged (not committed): automatic merge; HD + route + consumers 93/96 suites, 1059/1062 tests, the same three failures; tsc clean with generated content present",
+      "typeCheck": "clean",
+      "lint": "eslint --max-warnings 0 clean on every changed file; prettier --check clean",
+      "build": "npm run build succeeded; third-party warnings only",
+      "browserHeadless": "Chromium against port 3125 at 1204x987 (wedge and debrief also 390x844, no horizontal overflow): wedge provenance HD-01, clamped repeat HD-02, historical-series debrief HD-03; journeys-head.json, journeys-head-390.json, screenshots 01-07",
+      "playwright": "playwright.icu-hemodynamics.config.ts (port 3125): 10 passed / 16 failed; the 16 failing test names are identical to the recorded baseline set (flow 78, 212, 256, 295, 319, 361, 391, 458, 550, 574 x2; targeted 87 x3, 132, 191); not repaired, by instruction"
+    },
+    "holdsChanged": [],
+    "holdsNote": "HD02-H1..H14 and Task-01 R1/R5/R8 unchanged; none of the three repairs depended on a held clinical or source decision",
+    "observationsNotActedOn": [
+      "fluid-250 carries an unbounded stressedVenousVolumeMl delta that this model never reads, so a fluid step always counts as a change of conditions (conservative)",
+      "dark theme: .formulaGrid article draws rgb(239,248,255) text on an rgb(250,251,249) card; untouched since before Task 02; for Task 03 visual work",
+      "the practice catheter disclosure closes itself on deflation (open follows the balloon); existing behaviour",
+      "the Learn-stage picker's straddle and earlier-conditions notes appear only if physiology changes during an occlusion; covered by rendered-surface tests"
+    ],
+    "task03Started": false,
+    "merged": false,
+    "deployed": false,
+    "newPullRequest": false
+  }
 }

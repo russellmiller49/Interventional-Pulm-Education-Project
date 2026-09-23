@@ -1,6 +1,7 @@
 # HD-PRE-REVIEW-02 — measurement provenance and causality
 
-**Status: engineering batch complete, NOT REVIEWED and NOT MERGED.** A clean technical PR is not
+**Status: engineering batch complete and sanity-repaired (round 1, three blockers), NOT REVIEWED
+and NOT MERGED.** A clean technical PR is not
 clinical approval. Every clinical, device and source question this batch touched is listed as an
 open hold at the end, with the exact decision the reviewer has to make.
 
@@ -11,7 +12,8 @@ open hold at the end, with the exact decision the reviewer has to make.
 | Repository                              | `russellmiller49/Interventional-Pulm-Education-Project`                                                                                                                                                                                                                                                                 |
 | Inspected SHA in the package            | `c717c9ffae09cb67e19b06a56d37c75487a5605a` (citation baseline only)                                                                                                                                                                                                                                                     |
 | Execution base (`origin/main` at fetch) | `9fbdbddc4d7f124c7ac3254f4cb8aa4c15c0233f` — contains the merged Task-01 PR #258 (`81145a6d`)                                                                                                                                                                                                                           |
-| Final head                              | implementation commit `585a216155d7e0e4d9cf8867f22f80a83987c6b5`; the docs-only commit recording it follows, and the PR shows the final head                                                                                                                                                                            |
+| Final head                              | Task-02 implementation `585a216155d7e0e4d9cf8867f22f80a83987c6b5`, reviewed at `e5a3096f721b10118221fc8e8419a112808a1d59`; sanity-repair implementation `78de3bad` (see the sanity-repair section); the docs-only commit recording it follows, and the PR shows the final head                                          |
+| `origin/main` at the sanity repair      | `a306d8250ec10207c750f46407f151c06d487707` — 74 commits past the execution base, none in ICU Hemodynamics and no dependency or config change; PR #266 still merges cleanly, so the branch was not rebased or merged                                                                                                     |
 | Branch / worktree                       | `claude/hemodynamics-2-9-22` in `Interventional-Pulm-Education-Worktrees/claude-hemodynamics-2-9-22`, a fresh worktree created from `origin/main` for this task and exclusively owned; not the Task-01 branch                                                                                                           |
 | Pristine comparison checkout            | `/private/tmp/hd02-base`, a detached worktree at the execution base, used only to reproduce and to run the same tests and journeys against the unchanged code; removed at the end                                                                                                                                       |
 | Source report                           | `ICU_Hemodynamics_Learner_Walkthrough.docx` (19 Sept 2026), read in full from `Interventional-Pulm-Local-Data/module_update_9_19/HD_Claude_Implementation_Pack/`, with the pack's start file, common contract, task file 02, source/code notes, coordination note, owner decisions and the fifteen assigned ledger rows |
@@ -21,6 +23,143 @@ open hold at the end, with the exact decision the reviewer has to make.
 No shared learning-module, critical-care, catalog, progress, analytics, auth, deployment or
 `hemodynamics-core` file was changed. The historical HD-01/02/03 handoffs, the HD-03 claim-review
 queue and the Task-01 handoff and status are unchanged.
+
+## Sanity-repair round 1 (2026-09-23)
+
+An independent Codex review of `e5a3096f` returned **SANITY REVIEW: NOT READY TO MERGE** with three
+Task-02 blockers. Only those three were repaired, with the helpers and tests they need. Every
+blocker was reproduced on `e5a3096f` first, with a scratch engine script and then by the regression
+file below run in a detached worktree at that SHA.
+
+| Blocker                                                        | Reproduced at `e5a3096f`                                                                                                                                                                   | Disposition                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1 (P1)** Stored wedge stamped with the wrong episode         | Yes. HD-01: leg raise, occlusion, cursor at 26.7 s (leg-raise episode 1), waning at 32.0 s, Store: record stamped episode 2, `current: true`, and PVR **1.4 WU** from a post-waning series | **Fixed.** The cursor records a `WedgeWindowAcquisition` (session, physiological episode, each episode its averaged samples fall in) worked out from the sample times against the episode timeline when it is placed. `STORE_WEDGE` copies it; it never reads the episode current at Store. A cycle that straddles a boundary gets `physiologicalEpisode: null`, and Store refuses it with the reason. Same path now: episode 1, `current: false`, PVR withheld, drawer names the old wedge |
+| **2 (P2)** Inert/clamped interventions start episodes          | Yes. HD-02: 30 norepinephrine tiers, 150 s, series, one more tier: episode 30 → 31, series went historical, effective parameters identical to the no-action path                           | **Fixed.** An intervention or a scheduled waning starts an episode only if it can change the model's effective parameters at some time in its course, given the other effects and the model's bounds (`effectCanChangeEffectiveParameters`). One bounds table now drives both the derivation and the check. The absorbed dose is still accepted (effect recorded), starts no episode, leaves the series current, and is narrated as having no further modeled effect                        |
+| **3 (P2)** Debrief says no series was acquired when one exists | Yes. HD-03: fluid, series (3.8 L/min), dobutamine, debrief: "No accepted thermodilution series was acquired…" and, for fluid, "No thermodilution series was acquired after it…"            | **Fixed.** The run summary and each action row read every accepted series with its own acquisition identity (`acceptedFlowSeries`, `flowAroundAction`). "None under the final conditions" is kept apart from "none ever"; a series counts as acquired after an action only if it belongs to that action's episode or a later one, and one acquired only after a later change is not read as that action's effect                                                                            |
+
+**Architecture and helper changes (all in `src/features/icu-hemodynamics`).**
+
+- `engine/types.ts`: `WedgeWindowAcquisition`; `WedgeCursorReading.acquisition`; `StoredWedgeRecord`
+  comments now say `storedAtSeconds` is when Store was pressed and `physiologicalEpisode` is the
+  acquisition episode.
+- `engine/measurementProvenance.ts`: `physiologicalEpisodeAt(episodes, time)` (a sample at an
+  episode's start time still belongs to the episode before — an effect's scale is zero at its own
+  start, and a waning effect has not begun to recover at its boundary); `wedgeCursorReadingAt`
+  fills `acquisition`; `WEDGE_WINDOW_STRADDLES_CHANGE`.
+- `engine/reducer.ts`: `PLACE_WEDGE_CURSOR` says when the cycle straddles a change; `STORE_WEDGE`
+  stamps the cursor's acquisition episode and session, refuses a straddling cycle, and says when a
+  stored value belongs to earlier conditions; `APPLY_INTERVENTION` uses
+  `interventionChangesPhysiology` and, for an absorbed dose, `absorbedInterventionNarration`.
+- `engine/simulation.ts`: `EFFECTIVE_PARAMETER_BOUNDS` (the clamps, moved into one table;
+  `deriveEffectiveCirculationParameters` output is unchanged); `effectScaleBounds` (from the shape
+  of `effectScale`: onset only rises towards 1, recovery only falls towards 0);
+  `effectCanChangeEffectiveParameters`; `interventionChangesPhysiology`;
+  `interventionHasModeledEffect`; `absorbedInterventionNarration`. The waning check in
+  `advanceOneStep` skips an effect the bounds absorb from its waning time on.
+- `engine/decisionRecord.ts`: `AcquiredFlow.firstAcquiredAtSeconds`; `acceptedFlowSeries(state)` (a
+  listing of `thermodilutionSeriesView`, oldest first, current marked — not a second history);
+  `flowAroundAction(state, action)`.
+- Components: `HemodynamicCaseActivity` (reduce first, then describe; absorbed-dose feedback and
+  trace row; `flowSentence(state)`; `flowAfterActionSentence`; the leg-raise row uses
+  `flowAroundAction`); `PacActionDock` and `StageDocks` (Store not offered for a straddling cycle;
+  earlier-conditions wording; the one-button dock can re-place a straddling assisted cursor);
+  `WedgeCursorPicker` (`data-cursor-conditions`, straddle and earlier-conditions notes, and the
+  same in the slider's `aria-valuetext`).
+
+**Why the absorption check is exact without a tolerance.** Parameters are summed independently and
+then bounded. For each parameter the effect moves, adding it changes nothing at a given time exactly
+when the sum without it is already at or beyond the bound it pushes towards — both then read the
+bound itself, bit for bit. The check bounds the sum without it over every time from now on, using
+each other effect's lowest and highest possible scale, and calls the effect inert only if that
+holds for every parameter it moves. The bounds are sound, not tight: where they are loose the
+check says "can change" and the Task-02 episode split is kept. The matrix tests compare the
+effective parameters with and without the candidate on the model's own 0.02 s step grid and
+confirm agreement both ways.
+
+**Regression tests added.**
+
+- `__tests__/hd-pre-review-02-sanity-repair-regressions.test.tsx` — **9 tests, written only against
+  APIs that existed at `e5a3096f`.** Run there, all 9 fail on their assertions. Blocker 1:
+  stored episode 2, expected 1 (×2), PVR `"1.4 WU"`, straddling mean `3.64` stored. Blocker 2:
+  episode 31, expected 30; authored "tone rises" narration; absorbed leg raise episode 11,
+  expected 10. Blocker 3: "No accepted thermodilution series was acquired…" and "Flow was acquired
+  after it: … after Dobutamine ↑" for the fluid. On the repair all 9 pass. The end-to-end wedge test
+  goes capture → cursor → waning → Store → deflate → series → the real `FormulaDrawer`. The debrief
+  tests drive the real case host: inject, review and accept through the curve controls.
+- `__tests__/hd-pre-review-02-sanity-repair-matrix.test.tsx` — **26 tests**: same-condition delayed
+  storage with sweep, scale, loops, freeze, alarms, mechanism selection and phase changes in between;
+  a new current wedge restoring PVR; the episode-boundary rule; the cursor's recorded identity;
+  the monitor, stage picker and practice dock surfaces; an effective intervention, a repeat before
+  the bound, refused and empty-effect actions, one waning transition tick by tick and across a
+  60 s TICK, unbounded and at-floor parameters, a transient that cannot mask a later push; the
+  absorbed dose through the case host; and, through the case host, no series anywhere, baseline
+  only, current only, across conditions, several historical series, the leg-raise series built vs
+  after waning, and the engine listing.
+
+**Results.**
+
+| Check                                                                                                                             | Result                                                                                                                                                                                             |
+| --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| New repair suites                                                                                                                 | 35 pass (9 + 26)                                                                                                                                                                                   |
+| Regression file at `e5a3096f`                                                                                                     | 9 of 9 fail on their assertions                                                                                                                                                                    |
+| All Task-02 suites (four original + two repair)                                                                                   | pass                                                                                                                                                                                               |
+| `jest src/features/icu-hemodynamics --runInBand`                                                                                  | **46 suites, 626 tests, all pass** (Task-02 head: 44 / 591)                                                                                                                                        |
+| Task-01 preservation suites (`hd-pre-review-01-*` ×3, `h2-h3-reference-and-pac-safety`)                                           | pass, unchanged                                                                                                                                                                                    |
+| Route + consumers (`src/app/[locale]/icu-hemodynamics`, critical-care, learning-module, module-beta, `src/app/api/critical-care`) | 47 of 50 suites, 432 / 435 tests: the same three baseline failures by name (CRRT station order; critical-care accessibility surfaces; learner-copy framing — no ICU Hemodynamics rows)             |
+| Integration with `origin/main` `a306d825` (throwaway worktree, merge not committed)                                               | merges automatically; HD + route + consumers 93 / 96 suites, 1,059 / 1,062 tests, the same three failures; `tsc --noEmit` clean with generated content present                                     |
+| `tsc --noEmit`                                                                                                                    | clean                                                                                                                                                                                              |
+| `eslint --max-warnings 0` and `prettier --check` on every changed file                                                            | clean                                                                                                                                                                                              |
+| `npm run build`                                                                                                                   | succeeded; only third-party warnings (`vscode-languageserver-types` via mermaid; Vite chunk-size notices in the bundled training apps)                                                             |
+| HD Playwright specs (`playwright.icu-hemodynamics.config.ts`, port 3125)                                                          | 10 passed, 16 failed — the same 16 test names as recorded under “Known failures” (flow 78, 212, 256, 295, 319, 361, 391, 458, 550, 574 ×2; targeted 87 ×3, 132, 191); not repaired, by instruction |
+
+**Browser journeys (headless Chromium, this worktree's server on port 3125, 1204 × 987; wedge and
+debrief also at 390 × 844 with no horizontal overflow).** Evidence:
+`Interventional-Pulm-Local-Data/renders/output/hd-pre-review-02-sanity-repair-2026-09-23/`
+(`journeys-head.json`, `journeys-head-390.json`, screenshots 01–07).
+
+- **Wedge provenance, Practice HD-01.** Zero, leg raise at 12.6 s, inflate at 25.1 s, assisted
+  cursor at 28.5 s, Store at 33.0 s, after the 32.6 s waning. Dock: "PAWP stored. Its cycle was
+  acquired before the modeled physiology last changed, so it is kept as a value from those earlier
+  conditions." Monitor: "stored end-exp · assisted cursor · earlier conditions". After a current
+  series (4.7 L/min), PVR reads **Not interpretable**, and the drawer says "the stored wedge was
+  read after PLR". A new occlusion stored under the current conditions restores **PVR 1.4 WU**, with
+  no stale-input note.
+- **Clamped repeat, Practice HD-02.** 30 tiers, 150 model seconds, series 9.3 L/min, one more tier.
+  The CO rail reads 9.3 L/min before and after. The feedback and the trace row say "no further
+  modeled effect". The debrief keeps the series as current.
+- **Historical-series debrief, Practice HD-03.** Fluid, series 3.8 L/min, dobutamine, debrief. The
+  rail reads "— · thermodilution not established for current conditions · last series 3.8 L/min
+  was acquired after Fluid +250 mL". The run summary says the series was acquired after fluid, that
+  the conditions at the end are those after dobutamine, and that no series was acquired under them.
+  The fluid row says "Flow was acquired after it, under the conditions it created: 3.8 L/min …
+  That series is now historical … so current flow is not measured."
+
+**Preserved.** Immutable series identity and the current-vs-historical split; learner decision vs
+technical quality vs inclusion; manual vs assisted cursor provenance; Task-01 catheter and balloon
+safety (`catheterSafety.ts` untouched); `monitorPressureReadouts` as display truth; automatic vs
+learner release; missing is not zero; line-specific arterial damping and the shared level/zero
+limitation; the Fick provenance rules; model-only leg-raise and counterfactual labelling; the
+self-paced policy (no score, penalty or gate added). No coefficient, bound value, onset or
+recovery time changed.
+
+**Holds.** HD02-H1…H14 and Task-01 R1/R5/R8 are unchanged. None of the three repairs depended on a
+held clinical or source decision.
+
+**Observed, not acted on (this round).**
+
+- Fluid carries a `stressedVenousVolumeMl` delta. That parameter is unbounded, and this model's
+  derivation never reads it. So a fluid step always counts as a change of conditions, even with
+  volume at its bound — the conservative direction. Whether an unread parameter should count is a
+  model-hygiene question for its owner.
+- In dark theme the derived-values cards (`.formulaGrid article`) draw near-white text on a
+  near-white card. Measured: text `rgb(239, 248, 255)` on `rgb(250, 251, 249)`. Only the
+  "Not interpretable" chip and the reason line stay legible. The CSS is untouched since before
+  Task 02; this belongs with the Task-03 visual work.
+- The practice "Catheter actions and acquisition" disclosure closes itself on deflation (its
+  `open` follows the balloon). This is existing behaviour, noted because a second occlusion means
+  reopening it.
+- In the Learn stage the picker's straddle and earlier-conditions notes appear only if the modeled
+  physiology changes during an occlusion. The rendered-surface tests cover them.
 
 ## Disposition of the fifteen assigned findings
 
@@ -355,4 +494,5 @@ All pre-existing; each fails identically on the unchanged base.
 
 ## Stopping rule
 
-One branch, one PR, no merge, no deployment, no Task 03, no G02 re-run, no API purchase.
+One branch, one PR, no merge, no deployment, no Task 03, no G02 re-run, no API purchase. The
+sanity-repair round was pushed to the same PR (#266); no new PR was opened.
