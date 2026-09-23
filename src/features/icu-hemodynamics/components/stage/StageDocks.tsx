@@ -546,7 +546,11 @@ export function WedgeDock({ state, dispatch, enabled }: DockProps) {
             type="button"
             className={styles.dockButton}
             disabled={
-              !occluding || catheter.wedgeCursorTime === null || catheter.storedWedgeMmHg !== null
+              !occluding ||
+              catheter.wedgeCursorTime === null ||
+              catheter.storedWedgeMmHg !== null ||
+              // A cycle that straddles a modeled change describes neither set of conditions.
+              catheter.wedgeCursor?.acquisition.physiologicalEpisode === null
             }
             onClick={() => dispatch({ type: 'STORE_WEDGE' })}
           >

@@ -218,6 +218,13 @@ export function wedgeCursorReadingAt(
   const cycleMean =
     window.reduce((total, candidate) => total + candidate.pcwpMmHg, 0) / Math.max(1, window.length)
   const phase = respiratoryPhaseAt(sample.time, state.parameters.respiratoryRateBpm)
+  const windowEpisodes = [
+    ...new Set(
+      window.map((candidate) =>
+        physiologicalEpisodeAt(state.physiologicalEpisodes, candidate.time),
+      ),
+    ),
+  ].map((episode) => episode.index)
   return {
     placement,
     time: sample.time,
@@ -233,7 +240,40 @@ export function wedgeCursorReadingAt(
     ),
     withinModeledEndExpiratoryWindow: isEndExpiration(phase),
     occlusionEpisode: state.catheter.wedgeEpisodeCount,
+    acquisition: {
+      // Every sample in `state.waveforms` belongs to this session: a reset rebuilds the trace.
+      sessionId: state.sessionId,
+      physiologicalEpisode: windowEpisodes.length === 1 ? windowEpisodes[0] : null,
+      windowEpisodes,
+    },
   }
+}
+
+/**
+ * What the learner is told when a cursor's cardiac cycle straddles a modeled change. Nothing is
+ * stored and nothing is substituted: a new window is needed.
+ */
+export const WEDGE_WINDOW_STRADDLES_CHANGE =
+  'The cardiac cycle under this cursor straddles a change in the modeled physiology — some of its samples were acquired before the change and some after — so its mean describes neither set of conditions and cannot be stored as one wedge. Move the cursor so the whole cycle falls after the change, or place it again at a later end expiration.'
+
+/**
+ * The physiological episode a sample acquired at `time` belongs to (HD-PRE-REVIEW-02 sanity repair).
+ *
+ * An episode that starts at `t` changes the model only after `t`: an intervention's effect is at
+ * zero scale at its own start, and a waning effect has not yet begun to recover at its boundary. So
+ * the sample drawn at exactly `t` still belongs to the episode before, and the first sample of the
+ * new one is the next step. The timeline is append-only, so the answer for a past sample never
+ * changes.
+ */
+export function physiologicalEpisodeAt(
+  episodes: readonly PhysiologicalEpisode[],
+  time: number,
+): PhysiologicalEpisode {
+  let found = episodes[0]
+  for (const episode of episodes) {
+    if (episode.startedAtSeconds < time) found = episode
+  }
+  return found
 }
 
 /**

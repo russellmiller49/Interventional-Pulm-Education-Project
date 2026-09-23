@@ -144,14 +144,40 @@ export interface WedgeCursorReading {
   readonly withinModeledEndExpiratoryWindow: boolean
   /** Which occlusion this cursor was placed on (`CatheterState.wedgeEpisodeCount`). */
   readonly occlusionEpisode: number
+  /** The conditions the averaged samples were acquired under, read from their own times. */
+  readonly acquisition: WedgeWindowAcquisition
+}
+
+/**
+ * Which session and physiological episode a cursor's averaging window belongs to (HD-PRE-REVIEW-02
+ * sanity repair, blocker 1).
+ *
+ * It is worked out from the sample times of the window against the episode timeline when the cursor
+ * is placed, and never again: pressing Store later — after the modeled physiology has changed —
+ * does not move a pressure into the conditions of the moment it was stored.
+ */
+export interface WedgeWindowAcquisition {
+  readonly sessionId: string
+  /**
+   * The physiological episode every averaged sample was acquired in, or `null` when the window
+   * straddles an episode boundary. A mean of samples from two sets of conditions describes neither,
+   * so it is never stored as a wedge.
+   */
+  readonly physiologicalEpisode: number | null
+  /** Each episode the window's samples fall in, earliest first (one entry unless it straddles). */
+  readonly windowEpisodes: readonly number[]
 }
 
 export interface StoredWedgeRecord {
   /** Unrounded; surfaces round it for display. */
   readonly valueMmHg: number
+  /** When Store was pressed. Not when the pressure was acquired — that is `cursor.windowStart`–`windowEnd`. */
   readonly storedAtSeconds: number
   readonly cursor: WedgeCursorReading
-  /** The physiological episode the value belongs to (`PhysiologicalEpisode.index`). */
+  /**
+   * The physiological episode the averaged samples were acquired in
+   * (`cursor.acquisition.physiologicalEpisode`), not the episode current when Store was pressed.
+   */
   readonly physiologicalEpisode: number
   readonly sessionId: string
 }

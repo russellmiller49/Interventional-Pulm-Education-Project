@@ -4,16 +4,20 @@ import {
   currentThermodilutionSeriesIdentity,
   thermodilutionAcquisitionFor,
   thermodilutionSeriesView,
+  WEDGE_WINDOW_STRADDLES_CHANGE,
   wedgeCursorReadingAt,
 } from './measurementProvenance'
 import { lineMeasurementSystem } from './measurementLines'
 import { catheterFlushBlocked } from './pressureObservation'
 import {
+  absorbedInterventionNarration,
   advanceHemodynamicSimulation,
   catheterTransitionDurationSeconds,
   catheterPositionDepth,
   createInitialHemodynamicState,
   deriveHemodynamicMeasurements,
+  interventionChangesPhysiology,
+  interventionHasModeledEffect,
   sessionOrdinalOf,
   withNewPhysiologicalEpisode,
 } from './simulation'
@@ -541,11 +545,21 @@ export function icuHemodynamicsReducer(
           wedgeCursor: reading,
         },
         responseMessage:
-          placement === 'assisted'
-            ? 'Assisted placement: the simulation put the cursor at its own modeled end expiration. It is recorded as assisted, not as a point you identified.'
-            : 'Cursor placed on the sample you chose. Store it, or move it first.',
+          reading.acquisition.physiologicalEpisode === null
+            ? WEDGE_WINDOW_STRADDLES_CHANGE
+            : placement === 'assisted'
+              ? 'Assisted placement: the simulation put the cursor at its own modeled end expiration. It is recorded as assisted, not as a point you identified.'
+              : 'Cursor placed on the sample you chose. Store it, or move it first.',
       }
     }
+    /*
+     * HD-PRE-REVIEW-02 sanity repair (blocker 1). The record used to take the physiological episode
+     * current when Store was pressed, so a pressure captured before a modeled change and stored
+     * after it was relabelled as belonging to the new conditions — and then divided by a flow
+     * acquired under them. The record now takes the acquisition identity the cursor worked out from
+     * its own sample times. Pressing Store changes nothing about which conditions a pressure
+     * describes.
+     */
     case 'STORE_WEDGE': {
       const cursor = state.catheter.wedgeCursor
       if (
@@ -556,6 +570,13 @@ export function icuHemodynamicsReducer(
       ) {
         return state
       }
+      const acquiredIn = cursor.acquisition.physiologicalEpisode
+      if (acquiredIn === null) {
+        return { ...state, responseMessage: `Not stored. ${WEDGE_WINDOW_STRADDLES_CHANGE}` }
+      }
+      const acquiredUnderCurrentConditions =
+        cursor.acquisition.sessionId === state.sessionId &&
+        acquiredIn === state.physiologicalEpisode.index
       // The stored value is the one the cursor reads: the mean of the cardiac cycle centred on the
       // chosen sample, unrounded. Whether it is end-expiratory is whatever the sample is.
       return {
@@ -568,14 +589,20 @@ export function icuHemodynamicsReducer(
             valueMmHg: cursor.cycleMeanMmHg,
             storedAtSeconds: state.timeSeconds,
             cursor,
-            physiologicalEpisode: state.physiologicalEpisode.index,
-            sessionId: state.sessionId,
+            physiologicalEpisode: acquiredIn,
+            sessionId: cursor.acquisition.sessionId,
           },
         },
         signalValidationChecks: [...new Set([...state.signalValidationChecks, 'wedge-stored'])],
-        responseMessage: cursor.withinModeledEndExpiratoryWindow
-          ? 'PAWP stored. Deflate the balloon now and confirm return of the PA waveform.'
-          : 'Value stored — from a point outside the simulation’s modeled end-expiratory window, so it is not recorded as an end-expiratory wedge. Deflate the balloon now and confirm return of the PA waveform.',
+        responseMessage: `${
+          cursor.withinModeledEndExpiratoryWindow
+            ? 'PAWP stored.'
+            : 'Value stored — from a point outside the simulation’s modeled end-expiratory window, so it is not recorded as an end-expiratory wedge.'
+        }${
+          acquiredUnderCurrentConditions
+            ? ''
+            : ' The cycle it averages was acquired before the modeled physiology last changed, so it is kept as a value from those earlier conditions and is not combined with measurements from now.'
+        } Deflate the balloon now and confirm return of the PA waveform.`,
       }
     }
     case 'DEFLATE_WEDGE':
@@ -771,6 +798,13 @@ export function icuHemodynamicsReducer(
               forcedSafetyRecovery: false,
             }
           : state.catheter
+      // An accepted action that changes the model changes the conditions every later measurement is
+      // acquired under. One with no modeled effect does not — and neither does one whose effect the
+      // model's bounds already absorb for its whole course (HD-PRE-REVIEW-02 sanity repair,
+      // blocker 2). Its effect is still recorded; it simply cannot move anything, and the learner
+      // is told so instead of being told what the authored response says usually happens.
+      const changesPhysiology = interventionChangesPhysiology(state, action.intervention)
+      const absorbed = !changesPhysiology && interventionHasModeledEffect(action.intervention)
       const nextState: HemodynamicSimulationState = {
         ...state,
         activeEffects: [
@@ -791,11 +825,10 @@ export function icuHemodynamicsReducer(
         measurementSystem: correctedMeasurementSystem,
         catheter: correctedCatheter,
         phase: 'response',
-        responseMessage: action.intervention.response,
+        responseMessage: absorbed
+          ? absorbedInterventionNarration(action.intervention)
+          : action.intervention.response,
       }
-      // An accepted action that changes the model changes the conditions every later measurement is
-      // acquired under. One with no modeled effect does not.
-      const changesPhysiology = Object.keys(action.intervention.parameterDeltas).length > 0
       return refreshMeasurements(
         changesPhysiology
           ? withNewPhysiologicalEpisode(nextState, state.timeSeconds, {

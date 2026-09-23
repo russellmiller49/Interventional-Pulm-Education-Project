@@ -43,8 +43,9 @@ import {
   type HemodynamicSimulationState,
 } from '../engine'
 import {
-  compareObservedFlow,
+  acceptedFlowSeries,
   describeObservedSystemState,
+  flowAroundAction,
   observedSystemState,
   type AcquiredFlow,
   type ObservedSystemState,
@@ -54,7 +55,11 @@ import {
   physiologicalEpisodeWords,
   thermodilutionSeriesView,
 } from '../engine/measurementProvenance'
-import { latentPhysiologicalEstimates } from '../engine/simulation'
+import {
+  absorbedInterventionNarration,
+  interventionHasModeledEffect,
+  latentPhysiologicalEstimates,
+} from '../engine/simulation'
 import { updateSelfPacedRecord, withCaseOpened } from '../engine/selfPacedProgress'
 import { IcuHemodynamicsModuleFrameV2 } from './IcuHemodynamicsModuleFrameV2'
 import flowStyles from './stage/hemodynamics-flow.module.css'
@@ -331,6 +336,25 @@ export function HemodynamicCaseActivity({
     // A refused request is answered at once whatever the setting: it is the answer to a press, not
     // a teaching verdict on a modeled response.
     const timing = hardInterrupt || preparationOnly || !holdFeedback ? authoredTiming : 'debrief'
+    // Reduce it, then read the result. A dispatch is a request; only the engine says what happened.
+    // A safety interrupt is never reduced: the pre-action state is preserved.
+    const next = hardInterrupt
+      ? state
+      : icuHemodynamicsReducer(state, {
+          type: 'APPLY_INTERVENTION',
+          intervention: selected,
+        })
+    const accepted = next.activeEffects.length > state.activeEffects.length
+    // HD-PRE-REVIEW-02 sanity repair (blocker 2): accepted, but the model's bounds absorb its whole
+    // effect — no new physiological episode. The authored "what happened" describes a change the
+    // model did not make, so it is replaced by what did happen; the teaching around it is kept.
+    const absorbed =
+      accepted &&
+      interventionHasModeledEffect(selected) &&
+      next.physiologicalEpisode.index === state.physiologicalEpisode.index
+    const authoredFeedback = preparationOnly
+      ? preparationFeedbackForHemodynamicAction(selected)
+      : feedbackForHemodynamicAction(definition, selected, hardInterrupt)
     feedbackSequence.current += 1
     const event: ScenarioFeedbackEvent = {
       id: `${caseId}-feedback-${feedbackSequence.current}`,
@@ -339,9 +363,9 @@ export function HemodynamicCaseActivity({
       timeSeconds: state.timeSeconds,
       timing,
       hardInterrupt,
-      feedback: preparationOnly
-        ? preparationFeedbackForHemodynamicAction(selected)
-        : feedbackForHemodynamicAction(definition, selected, hardInterrupt),
+      feedback: absorbed
+        ? { ...authoredFeedback, whatHappened: absorbedInterventionNarration(selected) }
+        : authoredFeedback,
     }
     setFeedbackEvents((current) => [...current, event])
 
@@ -357,16 +381,12 @@ export function HemodynamicCaseActivity({
       return
     }
 
-    // Reduce it, then read the result. A dispatch is a request; only the engine says what happened.
-    const next = icuHemodynamicsReducer(state, {
-      type: 'APPLY_INTERVENTION',
-      intervention: selected,
-    })
-    const accepted = next.activeEffects.length > state.activeEffects.length
     recordDecision(
-      accepted
-        ? `Applied ${selected.label}.`
-        : `Requested ${selected.label}; this case did not perform it from the action list.`,
+      absorbed
+        ? `Applied ${selected.label}; it had no further modeled effect — every quantity it acts on was already at the limit this simulation allows.`
+        : accepted
+          ? `Applied ${selected.label}.`
+          : `Requested ${selected.label}; this case did not perform it from the action list.`,
     )
     if (!baseline) setBaseline(state)
     if (accepted) {
@@ -1181,10 +1201,6 @@ function CaseRunSummary({
   const before = baseline ? observedSystemState(baseline) : null
   const mapChange =
     before === null ? null : observed.arterialMean.displayedMmHg - before.arterialMean.displayedMmHg
-  const flowComparison =
-    before === null
-      ? null
-      : compareObservedFlow(before, observed, state.parameters.bodySurfaceAreaM2)
 
   return (
     <section
@@ -1218,7 +1234,7 @@ function CaseRunSummary({
           {Math.abs(mapChange) < 0.5
             ? 'Displayed MAP has not moved over this run.'
             : `Displayed MAP moved ${mapChange > 0 ? 'up' : 'down'} by ${Math.abs(mapChange).toFixed(0)} mmHg over this run.`}{' '}
-          {flowSentence(flowComparison)}
+          {flowSentence(state)}
         </p>
       ) : null}
       <LegRaiseSummary definition={definition} state={state} actionRecords={actionRecords} />
@@ -1237,22 +1253,36 @@ function CaseRunSummary({
   )
 }
 
-function flowSentence(comparison: ReturnType<typeof compareObservedFlow> | null): string {
-  if (comparison === null || comparison.kind === 'none-acquired') {
+/*
+ * HD-PRE-REVIEW-02 sanity repair (blocker 3). This used to compare only the record before the first
+ * action with the record at the end. When neither held a *current* series it said no series had
+ * been acquired at all — even with an accepted post-fluid series on file, withheld from "now" only
+ * because a later action had changed the conditions. It now reads every accepted series the run
+ * holds, each with the conditions it was acquired under, and keeps "none under the final
+ * conditions" apart from "none ever".
+ */
+function flowSentence(state: HemodynamicSimulationState): string {
+  const series = acceptedFlowSeries(state)
+  if (series.length === 0) {
     return 'No accepted thermodilution series was acquired, so this run holds no flow measurement to say whether perfusion moved with it. A higher displayed pressure on its own is not documented improvement, and not documented resolution of a mechanism.'
   }
-  switch (comparison.kind) {
-    case 'only-before':
-      return `The only accepted series was ${flowWords(comparison.before)}. No series was acquired under the conditions at the end of the run, so this run holds no measurement of whether flow changed after that. The pressure alone does not establish flow.`
-    case 'only-after':
-      return `The accepted thermodilution series here (${comparison.after.trialCount} curves, ${physiologicalEpisodeWords(comparison.after.episode)}) has no earlier counterpart in this run to compare it with.`
-    case 'same-series':
-      return `Both records hold the same accepted series — no modeled change separates them — so no change in flow was measured between them.`
-    case 'across-conditions':
-      return `Two accepted series under different conditions: ${flowWords(comparison.before)}, then ${flowWords(comparison.after)} — a change of ${comparison.cardiacIndexChange >= 0 ? '+' : '−'}${Math.abs(comparison.cardiacIndexChange).toFixed(2)} L/min/m² in cardiac index. They are compared as two series, never averaged. Read them with the pressure; the pressure alone does not establish flow.`
-    default:
-      return ''
+  const current = series.find((item) => item.current)?.flow ?? null
+  const earlier = series.filter((item) => !item.current).map((item) => item.flow)
+  if (current === null) {
+    const listed =
+      earlier.length === 1
+        ? `An accepted thermodilution series was acquired ${physiologicalEpisodeWords(earlier[0].episode)}: ${earlier[0].cardiacOutputLMin.toFixed(1)} L/min (CI ${earlier[0].cardiacIndexLMinM2.toFixed(1)}), from ${earlier[0].trialCount} curves.`
+        : `Accepted thermodilution series were acquired under ${earlier.length} earlier sets of conditions, each kept separate and never averaged: ${earlier.map(flowWords).join('; ')}.`
+    return `${listed} The modeled physiology has changed since — the conditions at the end of the run are those ${physiologicalEpisodeWords(state.physiologicalEpisode)} — and no series was acquired under them, so this run holds no measurement of flow under the final conditions, and none of whether flow changed after ${earlier.length === 1 ? 'that series' : 'the last of those series'} was acquired. ${earlier.length === 1 ? 'It stays a measurement' : 'They stay measurements'} of the earlier conditions. The pressure alone does not establish flow.`
   }
+  if (earlier.length === 0) {
+    return `The accepted thermodilution series here (${current.trialCount} curves, ${physiologicalEpisodeWords(current.episode)}) has no earlier counterpart in this run to compare it with.`
+  }
+  const previous = earlier[earlier.length - 1]
+  const change =
+    (current.cardiacOutputUnroundedLMin - previous.cardiacOutputUnroundedLMin) /
+    state.parameters.bodySurfaceAreaM2
+  return `Accepted series under ${series.length} different sets of conditions: ${series.map((item) => flowWords(item.flow)).join(', then ')}. From the one acquired ${physiologicalEpisodeWords(previous.episode)} to the one under the final conditions, cardiac index changed by ${change >= 0 ? '+' : '−'}${Math.abs(change).toFixed(2)} L/min/m². They are compared as separate series, never averaged. Read them with the pressure; the pressure alone does not establish flow.`
 }
 
 /**
@@ -1271,7 +1301,6 @@ function LegRaiseSummary({
   const record = actionRecords.find(
     (candidate) => candidate.intervention.id === 'passive-leg-raise',
   )
-  const view = thermodilutionSeriesView(state)
   const comparison = useMemo(
     () =>
       record
@@ -1291,19 +1320,26 @@ function LegRaiseSummary({
       </p>
     )
   }
-  const series = [view.current, ...view.earlier].find(
-    (summary) =>
-      summary.identity.episode?.cause.kind === 'intervention' &&
-      summary.identity.episode.cause.interventionId === 'passive-leg-raise' &&
-      Math.abs(summary.identity.episode.startedAtSeconds - record.atSeconds) < 1e-6,
-  )
+  // Which series belongs to the leg raise's own conditions comes from the series' acquisition
+  // identity (HD-PRE-REVIEW-02 sanity repair, blocker 3), the same rule the other debrief rows use.
+  const around = flowAroundAction(state, {
+    interventionId: record.intervention.id,
+    atSeconds: record.atSeconds,
+    episodeBefore: record.before.physiologicalEpisode.index,
+  })
+  const noMeasuredResponse =
+    'The monitor has no continuous flow channel, so this run holds no measured flow response to the leg raise. The expert path below describes one; this run did not measure it.'
   return (
     <div className="grid gap-2" data-leg-raise-summary="performed">
       <p>
         <strong>Leg raise at {record.atSeconds.toFixed(0)} model seconds.</strong>{' '}
-        {series && series.averageLMin !== null
-          ? `A thermodilution series was acquired while its modeled effect was building: ${series.averageLMin.toFixed(1)} L/min from ${series.includedTrialIds.length} curves. That is the measured response in this run.`
-          : 'No thermodilution series was acquired while it lasted, and the monitor has no continuous flow channel, so this run holds no measured flow response to the leg raise. The expert path below describes one; this run did not measure it.'}
+        {around.kind === 'under-its-conditions'
+          ? `A thermodilution series was acquired while its modeled effect was building: ${around.after.cardiacOutputLMin.toFixed(1)} L/min from ${around.after.trialCount} curves. That is the measured response in this run.`
+          : around.kind === 'no-modeled-change'
+            ? 'It changed nothing in the model: every quantity it acts on was already at the limit this simulation allows, so there was no response to measure.'
+            : around.kind === 'only-after-a-later-change'
+              ? `No series was acquired while its modeled effect was building. The first series after it (${flowWords(around.firstAfter)}) came only after a later change in the modeled physiology, so it is not the leg-raise response. ${noMeasuredResponse}`
+              : `No thermodilution series was acquired while it lasted. ${noMeasuredResponse}`}
       </p>
       <ModelOnlyTable comparison={comparison} label="the leg raise" />
     </div>
@@ -1350,7 +1386,11 @@ function UnfavourableActions({
       {comparisons.map(({ record, comparison }) => {
         const concern = authoredConcernForUnfavourableAction(definition, record.intervention.id)
         const atAction = observedSystemState(record.before)
-        const flowAfter = compareObservedFlow(atAction, now, state.parameters.bodySurfaceAreaM2)
+        const flowAround = flowAroundAction(state, {
+          interventionId: record.intervention.id,
+          atSeconds: record.atSeconds,
+          episodeBefore: record.before.physiologicalEpisode.index,
+        })
         return (
           <div
             key={record.id}
@@ -1369,11 +1409,9 @@ function UnfavourableActions({
             <p>
               Afterwards in this run: the monitor’s MAP read {atAction.arterialMean.displayedMmHg}{' '}
               mmHg just before it and {now.arterialMean.displayedMmHg} mmHg now.{' '}
-              {flowAfter.kind === 'across-conditions' || flowAfter.kind === 'only-after'
-                ? `Flow was acquired after it: ${flowWords(flowAfter.after)}.`
-                : 'No thermodilution series was acquired after it, so this run holds no measurement of whether flow changed.'}{' '}
-              A higher displayed MAP afterwards is not by itself benefit, and not by itself a sign
-              the choice was sound.
+              {flowAfterActionSentence(state, record.intervention, flowAround)} A higher displayed
+              MAP afterwards is not by itself benefit, and not by itself a sign the choice was
+              sound.
             </p>
             {record.intervention.id === 'fluid-250' ? (
               <p>
@@ -1389,6 +1427,45 @@ function UnfavourableActions({
       })}
     </div>
   )
+}
+
+/**
+ * What this run measured of flow after one action, from the series' own acquisition identity
+ * (HD-PRE-REVIEW-02 sanity repair, blocker 3). A series from before the action is never offered as
+ * its effect, and a series acquired only after a later change is not read as this action's alone.
+ */
+function flowAfterActionSentence(
+  state: HemodynamicSimulationState,
+  intervention: HemodynamicInterventionDefinition,
+  around: ReturnType<typeof flowAroundAction>,
+): string {
+  const beforeWords = around.before
+    ? ` The series acquired before it (${flowWords(around.before)}) describes the conditions before this choice, not its effect.`
+    : ''
+  switch (around.kind) {
+    case 'no-modeled-change':
+      return interventionHasModeledEffect(intervention)
+        ? 'It changed nothing in the model: every quantity it acts on was already at the limit this simulation allows, so there was no change in flow for a series to measure.'
+        : 'It has no modeled effect on the patient’s physiology, so there was no change in flow for a series to measure.'
+    case 'none-after':
+      return around.before
+        ? `No thermodilution series was acquired after it.${beforeWords} So this run holds no measurement of whether flow changed.`
+        : 'No thermodilution series was acquired after it, so this run holds no measurement of whether flow changed.'
+    case 'only-after-a-later-change':
+      return `No series was acquired under the conditions it created. The first accepted series after it (${flowWords(around.firstAfter)}) came only after a later change in the modeled physiology, so it cannot be read as this choice’s effect alone.${beforeWords}`
+    case 'under-its-conditions':
+      return `Flow was acquired after it, under the conditions it created: ${flowWords(around.after)}.${
+        around.afterIsCurrent
+          ? ''
+          : ` That series is now historical: the modeled physiology has changed since — the conditions now are those ${physiologicalEpisodeWords(state.physiologicalEpisode)} — and ${
+              around.current
+                ? `the series under them is ${flowWords(around.current)}`
+                : 'no series has been acquired under them, so current flow is not measured'
+            }.`
+      }`
+    default:
+      return ''
+  }
 }
 
 function ModelOnlyTable({

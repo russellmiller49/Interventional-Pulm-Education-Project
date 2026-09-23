@@ -53,6 +53,8 @@ export interface AcquiredFlow {
   readonly trialCount: number
   /** Model time of the newest curve in the accepted series. */
   readonly acquiredAtSeconds: number
+  /** Model time of the oldest curve in the accepted series. */
+  readonly firstAcquiredAtSeconds: number
   /** How old that curve was when this record was taken. */
   readonly ageSeconds: number
   /** Which series this is (`ThermodilutionSeriesIdentity.key`). */
@@ -104,38 +106,14 @@ export function observedSystemState(state: HemodynamicSimulationState): Observed
   })
 
   const view = thermodilutionSeriesView(state)
-  const flowFrom = (summary: ThermodilutionSeriesSummary | null): AcquiredFlow | null => {
-    if (!summary || summary.averageLMin === null || summary.averageUnroundedLMin === null) {
-      return null
-    }
-    const included = state.thermodilutionTrials.filter((trial) =>
-      summary.includedTrialIds.includes(trial.id),
-    )
-    const newest = included.reduce<number | null>((latest, trial) => {
-      const at = trial.acquisition?.acquiredAtSeconds ?? trial.generatedAt
-      return latest === null || at > latest ? at : latest
-    }, null)
-    if (newest === null) return null
-    return {
-      method: 'thermodilution',
-      cardiacOutputLMin: summary.averageLMin,
-      cardiacIndexLMinM2: summary.averageLMin / state.parameters.bodySurfaceAreaM2,
-      trialCount: included.length,
-      acquiredAtSeconds: newest,
-      ageSeconds: Math.max(0, state.timeSeconds - newest),
-      seriesKey: summary.identity.key,
-      episode: summary.identity.episode,
-      cardiacOutputUnroundedLMin: summary.averageUnroundedLMin,
-    }
-  }
-  const flow = view.currentEstablished ? flowFrom(view.current) : null
+  const flow = view.currentEstablished ? acquiredFlowFrom(state, view.current) : null
 
   return {
     timeSeconds: state.timeSeconds,
     arterialMean: pressure(readouts.arterial.mean),
     rightAtrialMean: pressure(readouts.rightAtrial),
     flow,
-    earlierFlow: flow === null ? flowFrom(view.latestEarlierEstablished) : null,
+    earlierFlow: flow === null ? acquiredFlowFrom(state, view.latestEarlierEstablished) : null,
     physiologicalEpisode: state.physiologicalEpisode,
     sessionId: state.sessionId,
     zeroed,
@@ -143,6 +121,137 @@ export function observedSystemState(state: HemodynamicSimulationState): Observed
     catheterPosition: state.catheter.position,
     balloonInflated: state.catheter.balloonInflated,
   }
+}
+
+/** One accepted series as acquired flow, or `null` when the series is not established. */
+function acquiredFlowFrom(
+  state: HemodynamicSimulationState,
+  summary: ThermodilutionSeriesSummary | null,
+): AcquiredFlow | null {
+  if (!summary || summary.averageLMin === null || summary.averageUnroundedLMin === null) {
+    return null
+  }
+  const included = state.thermodilutionTrials.filter((trial) =>
+    summary.includedTrialIds.includes(trial.id),
+  )
+  const times = included.map((trial) => trial.acquisition?.acquiredAtSeconds ?? trial.generatedAt)
+  if (times.length === 0) return null
+  const newest = Math.max(...times)
+  return {
+    method: 'thermodilution',
+    cardiacOutputLMin: summary.averageLMin,
+    cardiacIndexLMinM2: summary.averageLMin / state.parameters.bodySurfaceAreaM2,
+    trialCount: included.length,
+    acquiredAtSeconds: newest,
+    firstAcquiredAtSeconds: Math.min(...times),
+    ageSeconds: Math.max(0, state.timeSeconds - newest),
+    seriesKey: summary.identity.key,
+    episode: summary.identity.episode,
+    cardiacOutputUnroundedLMin: summary.averageUnroundedLMin,
+  }
+}
+
+export interface AcceptedFlowSeries {
+  readonly flow: AcquiredFlow
+  /** Whether it is the series for the conditions the patient is in now. */
+  readonly current: boolean
+}
+
+/**
+ * Every accepted thermodilution series the run holds, oldest first (HD-PRE-REVIEW-02 sanity repair,
+ * blocker 3).
+ *
+ * `observedSystemState` answers "what flow is current now?", and when the answer is none it keeps
+ * only the latest earlier series. A debrief has a different question — what did this run measure,
+ * and under which conditions — and "nothing current" is not "nothing acquired". This reads the same
+ * series view, so the series and their identities are exactly the ones every other surface uses;
+ * it is a listing of them, not a second history.
+ */
+export function acceptedFlowSeries(
+  state: HemodynamicSimulationState,
+): readonly AcceptedFlowSeries[] {
+  const view = thermodilutionSeriesView(state)
+  return [
+    { summary: view.current, current: true },
+    ...view.earlier.map((summary) => ({ summary, current: false })),
+  ]
+    .map(({ summary, current }) => {
+      const flow = acquiredFlowFrom(state, summary)
+      return flow ? { flow, current } : null
+    })
+    .filter((series): series is AcceptedFlowSeries => series !== null)
+    .sort((a, b) => a.flow.firstAcquiredAtSeconds - b.flow.firstAcquiredAtSeconds)
+}
+
+/**
+ * What the run measured of flow around one accepted action (HD-PRE-REVIEW-02 sanity repair,
+ * blocker 3).
+ *
+ * A series counts as acquired after the action only if it belongs to the physiological episode the
+ * action started or a later one — the series' own acquisition identity, not a comparison of the
+ * state before the action with the state at the end. A series from before the action stays a
+ * measurement of the conditions before it, however it compares.
+ */
+export type FlowAroundAction =
+  /** The action started no physiological episode: the model's bounds absorbed its whole effect. */
+  | { readonly kind: 'no-modeled-change'; readonly before: AcquiredFlow | null }
+  /** Nothing accepted was acquired under the action's conditions or any later ones. */
+  | { readonly kind: 'none-after'; readonly before: AcquiredFlow | null }
+  /** A series was acquired under the conditions the action created, before anything else changed. */
+  | {
+      readonly kind: 'under-its-conditions'
+      readonly after: AcquiredFlow
+      /** Whether that series is still the current one. */
+      readonly afterIsCurrent: boolean
+      /** The current series, when there is one and it is not `after`. */
+      readonly current: AcquiredFlow | null
+      readonly before: AcquiredFlow | null
+    }
+  /** The first series after the action came only after a later change in the modeled physiology. */
+  | {
+      readonly kind: 'only-after-a-later-change'
+      readonly firstAfter: AcquiredFlow
+      readonly before: AcquiredFlow | null
+    }
+
+export function flowAroundAction(
+  state: HemodynamicSimulationState,
+  action: {
+    readonly interventionId: string
+    readonly atSeconds: number
+    /** The physiological episode in effect just before the action. */
+    readonly episodeBefore: number
+  },
+): FlowAroundAction {
+  const series = acceptedFlowSeries(state).filter((item) => item.flow.episode !== null)
+  const indexOf = (item: AcceptedFlowSeries) => item.flow.episode!.index
+  const created = state.physiologicalEpisodes.find(
+    (episode) =>
+      episode.index > action.episodeBefore &&
+      episode.cause.kind === 'intervention' &&
+      episode.cause.interventionId === action.interventionId &&
+      episode.startedAtSeconds === action.atSeconds,
+  )
+  const boundary = created?.index ?? null
+  const beforeSeries = series.filter((item) =>
+    boundary === null ? indexOf(item) <= action.episodeBefore : indexOf(item) < boundary,
+  )
+  const before = beforeSeries.length > 0 ? beforeSeries[beforeSeries.length - 1].flow : null
+  if (boundary === null) return { kind: 'no-modeled-change', before }
+  const underIts = series.find((item) => indexOf(item) === boundary)
+  if (underIts) {
+    const current = series.find((item) => item.current) ?? null
+    return {
+      kind: 'under-its-conditions',
+      after: underIts.flow,
+      afterIsCurrent: underIts.current,
+      current: current && !underIts.current ? current.flow : null,
+      before,
+    }
+  }
+  const later = series.find((item) => indexOf(item) > boundary)
+  if (later) return { kind: 'only-after-a-later-change', firstAfter: later.flow, before }
+  return { kind: 'none-after', before }
 }
 
 const SAMPLING_WORDS: Readonly<Record<DisplayedPressureSampling, string>> = {

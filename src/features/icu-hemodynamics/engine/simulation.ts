@@ -42,6 +42,7 @@ import type {
   CirculationParameters,
   HemodynamicAlarm,
   HemodynamicCaseDefinition,
+  HemodynamicInterventionDefinition,
   HemodynamicLearningMode,
   HemodynamicMeasurements,
   HemodynamicSimulationState,
@@ -172,6 +173,31 @@ function effectScale(effect: ParameterEffect, timeSeconds: number): number {
   return onset * Math.exp(-recoveryElapsed / Math.max(0.1, effect.recoverySeconds))
 }
 
+/**
+ * The range the model holds each effective parameter to, after every active effect is summed.
+ * Parameters not listed are not bounded. One table, read by the derivation below and by
+ * `effectCanChangeEffectiveParameters`, so the two cannot disagree about where a parameter stops.
+ */
+const EFFECTIVE_PARAMETER_BOUNDS: Readonly<
+  Partial<Record<keyof CirculationParameters, readonly [number, number]>>
+> = {
+  heartRateBpm: [25, 190],
+  respiratoryRateBpm: [4, 45],
+  circulatingVolumeFraction: [0.45, 1.4],
+  systemicVascularResistanceDynSecCm5: [250, 3200],
+  pulmonaryVascularResistanceWU: [0.4, 18],
+  leftVentricularContractility: [0.25, 2],
+  rightVentricularContractility: [0.2, 2],
+  leftVentricularCompliance: [0.25, 2],
+  rightVentricularCompliance: [0.25, 2],
+  pericardialPressureMmHg: [0, 28],
+  peepCmH2O: [0, 22],
+}
+
+function effectDeltas(effect: ParameterEffect): [keyof CirculationParameters, number][] {
+  return Object.entries(effect.deltas) as [keyof CirculationParameters, number][]
+}
+
 export function deriveEffectiveCirculationParameters(
   baseline: CirculationParameters,
   effects: readonly ParameterEffect[],
@@ -180,29 +206,116 @@ export function deriveEffectiveCirculationParameters(
   const next = { ...baseline }
   for (const effect of effects) {
     const scale = effectScale(effect, timeSeconds)
-    for (const [key, delta] of Object.entries(effect.deltas) as [
-      keyof CirculationParameters,
-      number,
-    ][]) {
+    for (const [key, delta] of effectDeltas(effect)) {
       next[key] += delta * scale
     }
   }
-  next.heartRateBpm = clamp(next.heartRateBpm, 25, 190)
-  next.respiratoryRateBpm = clamp(next.respiratoryRateBpm, 4, 45)
-  next.circulatingVolumeFraction = clamp(next.circulatingVolumeFraction, 0.45, 1.4)
-  next.systemicVascularResistanceDynSecCm5 = clamp(
-    next.systemicVascularResistanceDynSecCm5,
-    250,
-    3200,
-  )
-  next.pulmonaryVascularResistanceWU = clamp(next.pulmonaryVascularResistanceWU, 0.4, 18)
-  next.leftVentricularContractility = clamp(next.leftVentricularContractility, 0.25, 2)
-  next.rightVentricularContractility = clamp(next.rightVentricularContractility, 0.2, 2)
-  next.leftVentricularCompliance = clamp(next.leftVentricularCompliance, 0.25, 2)
-  next.rightVentricularCompliance = clamp(next.rightVentricularCompliance, 0.25, 2)
-  next.pericardialPressureMmHg = clamp(next.pericardialPressureMmHg, 0, 28)
-  next.peepCmH2O = clamp(next.peepCmH2O, 0, 22)
+  for (const [key, bounds] of Object.entries(EFFECTIVE_PARAMETER_BOUNDS) as [
+    keyof CirculationParameters,
+    readonly [number, number],
+  ][]) {
+    next[key] = clamp(next[key], bounds[0], bounds[1])
+  }
   return next
+}
+
+/**
+ * The lowest and highest scale an effect can have at any model time from `fromSeconds` on.
+ *
+ * Read from the shape of `effectScale`: the onset term only rises, towards 1; a transient's recovery
+ * term then only falls, towards 0. So a sustained effect never drops below its scale now and never
+ * exceeds 1, and a transient can reach anything between 0 and 1. The bounds are sound rather than
+ * tight: where they are loose, the check below errs towards "can change".
+ */
+function effectScaleBounds(
+  effect: ParameterEffect,
+  fromSeconds: number,
+): { readonly lowest: number; readonly highest: number } {
+  if (effect.recoverySeconds !== null) return { lowest: 0, highest: 1 }
+  return { lowest: effectScale(effect, fromSeconds), highest: 1 }
+}
+
+/**
+ * Whether `effect` can change the model's effective parameters at any model time from `fromSeconds`
+ * on, given the other effects and the model's bounds (HD-PRE-REVIEW-02 sanity repair, blocker 2).
+ *
+ * This compares the same model with and without the effect, over the whole of its course rather
+ * than at the instant it starts (when its scale is zero). Parameters are summed independently and
+ * then bounded, so for each parameter the effect moves, adding it changes nothing at a given time
+ * exactly when the sum without it is already at or beyond the bound the effect pushes towards —
+ * both then read the bound itself. The effect is inert only if that holds for every parameter it
+ * moves at every time from `fromSeconds` on; the range of the sum without it comes from
+ * `effectScaleBounds`. An unbounded parameter it moves, or a range that reaches inside the bound,
+ * means it can change the conditions.
+ *
+ * No tolerance is involved: an inert effect leaves the effective parameters bit-for-bit equal.
+ */
+export function effectCanChangeEffectiveParameters(
+  baseline: CirculationParameters,
+  otherEffects: readonly ParameterEffect[],
+  effect: ParameterEffect,
+  fromSeconds: number,
+): boolean {
+  for (const [key, delta] of effectDeltas(effect)) {
+    if (delta === 0) continue
+    const bounds = EFFECTIVE_PARAMETER_BOUNDS[key]
+    if (!bounds) return true
+    let lowestWithout = baseline[key]
+    let highestWithout = baseline[key]
+    for (const other of otherEffects) {
+      const otherDelta = other.deltas[key]
+      if (!otherDelta) continue
+      const scale = effectScaleBounds(other, fromSeconds)
+      lowestWithout += otherDelta * (otherDelta > 0 ? scale.lowest : scale.highest)
+      highestWithout += otherDelta * (otherDelta > 0 ? scale.highest : scale.lowest)
+    }
+    const masked = delta > 0 ? lowestWithout >= bounds[1] : highestWithout <= bounds[0]
+    if (!masked) return true
+  }
+  return false
+}
+
+/** Whether an intervention is written to change the model at all (any non-zero parameter delta). */
+export function interventionHasModeledEffect(
+  intervention: HemodynamicInterventionDefinition,
+): boolean {
+  return Object.values(intervention.parameterDeltas).some((delta) => delta !== 0)
+}
+
+/**
+ * What an accepted intervention did when the model's bounds absorb its whole effect. Its authored
+ * response ("tone rises over several seconds") describes a change that, in this state, the model
+ * cannot make, so it is not what the learner is told happened.
+ */
+export function absorbedInterventionNarration(
+  intervention: HemodynamicInterventionDefinition,
+): string {
+  return `${intervention.shortLabel}: accepted, with no further modeled effect. Every quantity this step acts on is already at the limit this simulation allows, so the modeled physiology — and the conditions measurements are acquired under — did not change.`
+}
+
+/**
+ * Whether accepting `intervention` now would change the physiology later measurements are acquired
+ * under. An intervention with no modeled effect, or one whose every effect the model's bounds
+ * already absorb (the thirtieth dose of a vasopressor at its ceiling), does not — and so it starts
+ * no new physiological episode and leaves compatible measurements current.
+ */
+export function interventionChangesPhysiology(
+  state: HemodynamicSimulationState,
+  intervention: HemodynamicInterventionDefinition,
+): boolean {
+  return effectCanChangeEffectiveParameters(
+    state.baselineParameters,
+    state.activeEffects,
+    {
+      id: `${intervention.id}-candidate`,
+      interventionId: intervention.id,
+      startedAt: state.timeSeconds,
+      onsetSeconds: intervention.onsetSeconds,
+      recoverySeconds: intervention.recoverySeconds ?? null,
+      deltas: intervention.parameterDeltas,
+    },
+    state.timeSeconds,
+  )
 }
 
 /**
@@ -878,10 +991,16 @@ function advanceOneStep(state: HemodynamicSimulationState): HemodynamicSimulatio
     ? state.waveforms
     : [...state.waveforms, nextSample].filter((sample) => sample.time >= minimumTime)
   // A scheduled change of the model's own: a transient effect starts to wane. Measurements taken
-  // after it describe different physiology from those taken while the effect was building.
+  // after it describe different physiology from those taken while the effect was building — unless
+  // the model's bounds already absorb the effect from here on, in which case its waning changes
+  // nothing and is not a boundary (HD-PRE-REVIEW-02 sanity repair, blocker 2).
   let episodeState: HemodynamicSimulationState = state
   for (const effect of waningEffectsBetween(state, state.timeSeconds, nextTime)) {
     const waning = effectWaningStartsAt(effect) ?? nextTime
+    const others = state.activeEffects.filter((candidate) => candidate !== effect)
+    if (!effectCanChangeEffectiveParameters(state.baselineParameters, others, effect, waning)) {
+      continue
+    }
     episodeState = withNewPhysiologicalEpisode(episodeState, roundTo(waning, 4), {
       kind: 'effect-waning',
       interventionId: effect.interventionId,

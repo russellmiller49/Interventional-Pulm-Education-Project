@@ -6,6 +6,7 @@ import {
   assistedWedgeCursorTime,
   modeledRespiratoryReference,
   occlusionCapture,
+  WEDGE_WINDOW_STRADDLES_CHANGE,
   wedgeCursorReadingAt,
 } from '../../engine/measurementProvenance'
 import { INSPIRATORY_FRACTION } from '../../engine/simulation'
@@ -103,7 +104,13 @@ export function WedgeCursorPicker({
     ).relative
 
   const describe = (reading: WedgeCursorReading) =>
-    `${(reading.time - capture.start).toFixed(1)} s into the occlusion · trace ${reading.sampleMmHg.toFixed(1)} mmHg · mean of the cardiac cycle centred here ${reading.cycleMeanMmHg.toFixed(1)} mmHg · modeled respiratory reference at ${Math.round(relativeAt(reading.time) * 100)}% of its range`
+    `${(reading.time - capture.start).toFixed(1)} s into the occlusion · trace ${reading.sampleMmHg.toFixed(1)} mmHg · mean of the cardiac cycle centred here ${reading.cycleMeanMmHg.toFixed(1)} mmHg · modeled respiratory reference at ${Math.round(relativeAt(reading.time) * 100)}% of its range${
+      reading.acquisition.physiologicalEpisode === null
+        ? ' · this cycle straddles a change in the modeled physiology'
+        : reading.acquisition.physiologicalEpisode !== state.physiologicalEpisode.index
+          ? ' · acquired before the modeled physiology last changed'
+          : ''
+    }`
 
   return (
     <div className={styles.cursorPicker} data-wedge-cursor-picker="ready">
@@ -207,6 +214,14 @@ function PlacedCursorFeedback({
       ? 'on the modeled end expiration'
       : `${Math.abs(seconds).toFixed(2)} s ${seconds < 0 ? 'before' : 'after'} the nearest modeled end expiration`
   const difference = atEndExpiration ? placed.cycleMeanMmHg - atEndExpiration.cycleMeanMmHg : null
+  // HD-PRE-REVIEW-02 sanity repair (blocker 1): which conditions the cycle under the cursor was
+  // acquired in, read from its own sample times — never from the moment Store is pressed.
+  const conditions =
+    placed.acquisition.physiologicalEpisode === null
+      ? 'straddles'
+      : placed.acquisition.physiologicalEpisode === state.physiologicalEpisode.index
+        ? 'current'
+        : 'earlier'
   return (
     <div
       className={styles.dockVerdict}
@@ -214,7 +229,16 @@ function PlacedCursorFeedback({
       aria-live="polite"
       data-cursor-placed={placed.placement}
       data-cursor-in-window={placed.withinModeledEndExpiratoryWindow}
+      data-cursor-conditions={conditions}
     >
+      {conditions === 'straddles' ? <p>{WEDGE_WINDOW_STRADDLES_CHANGE}</p> : null}
+      {conditions === 'earlier' ? (
+        <p>
+          This cycle was acquired before the modeled physiology last changed. A value stored from it
+          is kept as a value from those earlier conditions and is not combined with measurements
+          from now.
+        </p>
+      ) : null}
       {placed.placement === 'assisted' ? (
         <p>
           <strong>Assisted placement.</strong> The simulation put the cursor at its own modeled end
