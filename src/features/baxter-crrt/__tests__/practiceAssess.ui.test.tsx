@@ -7,7 +7,7 @@ import { BaxterCrrtAssess } from '../components/BaxterCrrtAssess'
 import { CrrtActivityWorkspace } from '../components/CrrtActivityWorkspace'
 import { BaxterCrrtLearn } from '../components/BaxterCrrtLearn'
 import { BaxterCrrtPractice } from '../components/BaxterCrrtPractice'
-import { baxterCrrtCoreCaseIds, getBaxterCrrtCase } from '../content'
+import { baxterCrrtAdditionalCaseIds, baxterCrrtCoreCaseIds, getBaxterCrrtCase } from '../content'
 import { createCrrtLearningSession } from '../engine'
 import { createDefaultProgress, writeProgress } from '../engine/progress'
 
@@ -80,23 +80,27 @@ describe('Baxter CRRT Practice curation and open Challenge access', () => {
     expect(mockRecordLifecycleEvent).not.toHaveBeenCalled()
   })
 
-  it('opens the full case workspace first, with ten core cases and seven collapsed extras', () => {
+  it('opens the full case workspace first, with ten core cases and seven optional extras', () => {
     const { container } = render(<BaxterCrrtPractice />)
 
     expect(container.querySelector('[data-critical-care-activity-shell]')).toBeInTheDocument()
     expect(screen.getByRole('navigation', { name: 'CRRT case stages' })).toBeInTheDocument()
     expect(screen.queryByRole('group', { name: 'CRRT shared activity phases' })).toBeNull()
-    const selector = screen.getByRole('combobox', { name: 'Station-grouped core case' })
+    // CRRT-FELLOW-03: one visible Cases control carries the six station groups of core cases and
+    // the optional additional cases, which used to sit in a separate collapsed list.
+    const selector = screen.getByRole('combobox', { name: 'Cases' })
     const values = within(selector)
       .getAllByRole('option')
       .map((option) => (option as HTMLOptionElement).value)
-    expect(values).toEqual(baxterCrrtCoreCaseIds)
+    expect(values).toEqual([...baxterCrrtCoreCaseIds, ...baxterCrrtAdditionalCaseIds])
     expect(values).not.toContain('CRRT-16')
-    expect(selector.querySelectorAll('optgroup')).toHaveLength(6)
-    expect(screen.getByText(/Additional cases \(7\)/)).toBeInTheDocument()
+    const groups = [...selector.querySelectorAll('optgroup')]
+    expect(groups).toHaveLength(7)
+    expect(groups.at(-1)).toHaveAttribute('label', 'Additional cases · optional')
+    expect(within(groups.at(-1)!).getAllByRole('option')).toHaveLength(7)
     expect(screen.getByText('Live patient, prescription, and circuit')).toBeInTheDocument()
     expect(screen.getByText('Supplied labs at case start')).toBeInTheDocument()
-    expect(screen.getByText('Pressure pattern')).toBeInTheDocument()
+    expect(screen.getByText('Access · filter · return · effluent pressure')).toBeInTheDocument()
     expect(screen.queryByText('prismax-aw8035-2xx')).not.toBeInTheDocument()
 
     const viewport = container.querySelector('#crrt-activity-viewport')
@@ -152,9 +156,7 @@ describe('Baxter CRRT Practice curation and open Challenge access', () => {
     learn.unmount()
 
     render(<BaxterCrrtPractice initialCaseId="CRRT-13" />)
-    expect(screen.getByRole('combobox', { name: 'Station-grouped core case' })).toHaveValue(
-      'CRRT-13',
-    )
+    expect(screen.getByRole('combobox', { name: 'Cases' })).toHaveValue('CRRT-13')
     await waitFor(() =>
       expect(getCriticalCareResumeTarget(window.localStorage)?.href).toBe(
         '/baxter-crrt/practice?case=CRRT-13',
@@ -193,7 +195,7 @@ describe('Baxter CRRT Practice curation and open Challenge access', () => {
     expect(screen.getByRole('button', { name: 'Explain this case' })).toBeEnabled()
     expect(screen.getByText('Live patient, prescription, and circuit')).toBeInTheDocument()
     expect(screen.getByText('Supplied labs at case start')).toBeInTheDocument()
-    expect(screen.getByText('Pressure pattern')).toBeInTheDocument()
+    expect(screen.getByText('Access · filter · return · effluent pressure')).toBeInTheDocument()
     const capstone = getBaxterCrrtCase('CRRT-16')
     for (const objective of capstone.learningObjectives) {
       expect(screen.getAllByText(objective)).not.toHaveLength(0)

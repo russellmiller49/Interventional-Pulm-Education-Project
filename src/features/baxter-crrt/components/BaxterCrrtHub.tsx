@@ -14,6 +14,7 @@ import {
   type BaxterCrrtRecommendedActivity,
 } from '../content/curriculum'
 import { baxterCrrtLearnLessonById } from '../content/learnLessons'
+import { crrtLessonNumber } from '../learnSequence'
 import { readCrrtSelfPacedProgress } from '../selfPacedProgress'
 import { BAXTER_CRRT_LEARN_LESSON_IDS } from '../content/learnerRegistry'
 import { BaxterCrrtModuleFrame } from './BaxterCrrtModuleFrame'
@@ -24,7 +25,9 @@ function activityLink(activity: BaxterCrrtRecommendedActivity) {
   if (activity.kind === 'lesson') {
     return {
       href: { pathname: `${baxterCrrtNavBase}/learn`, query: { lesson: activity.id } },
-      label: `Lesson: ${baxterCrrtLearnLessonById.get(activity.id)?.title ?? activity.id}`,
+      label: `Lesson ${crrtLessonNumber(activity.id)}: ${
+        baxterCrrtLearnLessonById.get(activity.id)?.title ?? activity.id
+      }`,
     }
   }
   if (activity.kind === 'case') {
@@ -115,12 +118,46 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
         <section className={styles.curriculumMap} aria-labelledby="crrt-map-heading">
           <div className={styles.sectionHeading}>
             <div>
-              <span className={styles.kicker}>Six stations · ten core cases</span>
+              <span className={styles.kicker}>
+                Eight lessons · six topic stations · ten core cases
+              </span>
               <h2 id="crrt-map-heading">Curriculum map</h2>
             </div>
             <span className={styles.completionSummary}>
               Open in any order · history stays local
             </span>
+          </div>
+
+          {/* F-10: one authored lesson order. The stations below group lessons and cases by
+              topic; they are not a second sequence, so each lesson keeps its number here. */}
+          <div className={styles.learnSequence}>
+            <h3 id="crrt-learn-sequence-heading">Recommended Learn sequence</h3>
+            <ol aria-labelledby="crrt-learn-sequence-heading" data-crrt-learn-sequence>
+              {BAXTER_CRRT_LEARN_LESSON_IDS.map((lessonId) => {
+                const lesson = baxterCrrtLearnLessonById.get(lessonId)
+                const visitedLesson = completedLessons.has(lessonId)
+                return (
+                  <li key={lessonId}>
+                    <Link
+                      href={{
+                        pathname: `${baxterCrrtNavBase}/learn`,
+                        query: { lesson: lessonId },
+                      }}
+                      data-visited={visitedLesson}
+                    >
+                      <span className={styles.lessonIndex}>{crrtLessonNumber(lessonId)}</span>
+                      <span>{lesson?.title ?? lessonId}</span>
+                      {visitedLesson ? <small>visited</small> : null}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ol>
+            <p>
+              The stations below group the same lessons with their practice cases by topic. They are
+              not a required order: each lesson keeps its number from this sequence, and everything
+              stays open.
+            </p>
           </div>
 
           <ol className={styles.stationList}>
@@ -129,12 +166,17 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
               return (
                 <li key={unit.id} className={styles.stationCard} data-complete={complete}>
                   <div className={styles.stationHeading}>
-                    <span>{unit.station}</span>
+                    <span className={styles.stationNumber}>
+                      <span className="sr-only">Topic station </span>
+                      {unit.station}
+                    </span>
                     <div>
                       <h3>{unit.title}</h3>
                       <p>{unit.summary}</p>
                     </div>
-                    {complete ? <span>Topics visited</span> : null}
+                    {complete ? (
+                      <span className={styles.stationVisited}>Topics visited</span>
+                    ) : null}
                   </div>
                   <div className={styles.curriculumChips}>
                     {unit.lessonIds.map((lessonId) => {
@@ -154,7 +196,9 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
                           ) : (
                             <BookOpenCheck aria-hidden="true" />
                           )}
-                          <span>{lesson?.title ?? lessonId}</span>
+                          <span>
+                            Lesson {crrtLessonNumber(lessonId)} · {lesson?.title ?? lessonId}
+                          </span>
                         </Link>
                       )
                     })}

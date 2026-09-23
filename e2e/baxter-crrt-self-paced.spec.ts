@@ -241,22 +241,18 @@ test('the real practice route keeps one case identity and never restarts a run f
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
 
-  const picker = page.getByRole('combobox', { name: 'Station-grouped core case' })
+  // CRRT-FELLOW-03 (F-09): the Cases control is visible above the task; no drawer to open.
+  const picker = page
+    .getByRole('navigation', { name: 'Practice cases' })
+    .getByRole('combobox', { name: 'Cases' })
   const caseTitle = page.getByRole('heading', { level: 2, name: /Set CRRT priorities/ })
-  // The case picker still lives inside the collapsed "Current task" drawer
-  // (F-09, owned by batch 03). Open it to read the current selection.
-  const openTaskDrawer = async () => {
-    const drawer = page.getByRole('group').filter({ hasText: 'Current task' }).first()
-    if (!(await picker.isVisible().catch(() => false))) {
-      await page.getByText('Current task', { exact: true }).first().click()
-    }
+  const expectCasesControl = async () => {
     await expect(picker).toBeVisible()
-    return drawer
   }
 
   await page.goto('/en/baxter-crrt/practice?case=CRRT-01')
   await expect(caseTitle).toBeVisible()
-  await openTaskDrawer()
+  await expectCasesControl()
   await expect(picker).toHaveValue('CRRT-01')
 
   // "Next recommended" changes the actual case, not only the address bar.
@@ -266,7 +262,7 @@ test('the real practice route keeps one case identity and never restarts a run f
     page.getByRole('heading', { level: 2, name: /Prioritize hyperkalemia and acidemia/ }),
   ).toBeVisible()
   await expect(caseTitle).toHaveCount(0)
-  await openTaskDrawer()
+  await expectCasesControl()
   await expect(picker).toHaveValue('CRRT-02')
   // The recommendation moves on instead of repeating the case just opened.
   await expect(page.getByRole('link', { name: /^Next recommended · / })).not.toHaveText(
@@ -276,21 +272,21 @@ test('the real practice route keeps one case identity and never restarts a run f
   await page.goBack()
   await expect(page).toHaveURL(/\?case=CRRT-01$/)
   await expect(caseTitle).toBeVisible()
-  await openTaskDrawer()
+  await expectCasesControl()
   await expect(picker).toHaveValue('CRRT-01')
 
   await page.goForward()
   await expect(page).toHaveURL(/\?case=CRRT-02$/)
-  await openTaskDrawer()
+  await expectCasesControl()
   await expect(picker).toHaveValue('CRRT-02')
 
   await page.reload()
-  await openTaskDrawer()
+  await expectCasesControl()
   await expect(picker).toHaveValue('CRRT-02')
 
   // An unavailable case ID falls back explicitly rather than mixing case data.
   await page.goto('/en/baxter-crrt/practice?case=CRRT-NOPE')
-  await openTaskDrawer()
+  await expectCasesControl()
   await expect(
     page.getByRole('status', { name: 'Requested practice case unavailable' }),
   ).toBeVisible()
@@ -300,14 +296,13 @@ test('the real practice route keeps one case identity and never restarts a run f
   // Selecting an additional case updates the shareable URL with it.
   await page.goto('/en/baxter-crrt/practice?case=CRRT-11')
   await page.getByRole('group', { name: 'Advance simulated time' }).waitFor()
-  await openTaskDrawer()
-  await page.getByText(/Additional cases \(\d+\)/).click()
-  const optional = page.getByRole('button', { name: /Station \d · / }).first()
-  const optionalName = (await optional.textContent()) ?? ''
-  await optional.click()
-  await expect(page).toHaveURL(/\?case=CRRT-\d\d$/)
-  await expect(page.getByRole('option', { name: /^Optional · / })).toHaveCount(1)
-  expect(optionalName.length).toBeGreaterThan(0)
+  await expectCasesControl()
+  const optional = picker.locator('optgroup[label="Additional cases · optional"] option').first()
+  const optionalId = (await optional.getAttribute('value')) ?? ''
+  await picker.selectOption(optionalId)
+  await expect(page).toHaveURL(new RegExp(`\\?case=${optionalId}$`))
+  await expect(page.getByText(/^Additional case \d of 7 · optional$/)).toBeVisible()
+  expect(optionalId).toMatch(/^CRRT-\d\d$/)
 
   // A role change is presentational and must not discard the run.
   await page.goto('/en/baxter-crrt/practice?case=CRRT-11')
@@ -356,7 +351,7 @@ test('the real practice route keeps one case identity and never restarts a run f
   expect((await assertUngraded(page)).selfPaced.visitedCaseIds).toEqual(
     progressBeforeQuery.selfPaced.visitedCaseIds,
   )
-  await page.getByRole('button', { name: 'Integrated', exact: true }).click()
+  await page.getByRole('button', { name: 'Both roles', exact: true }).click()
   await expect(clock).toContainText('60 min')
   await expect(page.getByText('Reassessment recorded for this run.', { exact: true })).toBeVisible()
   await page.screenshot({ path: info.outputPath('case-identity-role-desktop.png'), fullPage: true })

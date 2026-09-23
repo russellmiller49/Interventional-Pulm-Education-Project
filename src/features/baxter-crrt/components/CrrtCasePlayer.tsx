@@ -82,9 +82,23 @@ const semanticPhaseByCrrtPhase: Readonly<Record<CrrtReasoningPhase, CriticalCare
 }
 
 const roleLabels: Readonly<Record<CrrtRoleLens, string>> = {
-  integrated: 'Integrated',
+  integrated: 'Both roles',
   operator: 'Operator',
   prescriber: 'Prescriber',
+}
+
+/**
+ * What the role control actually does (F-22). Traced: `roleLens` is stored on the session and the
+ * simulation and read by nothing else — no case text, value, device control, action, record or
+ * score depends on it. So it is presented as what it is, a reading perspective with a one-line
+ * prompt, and never as a role-specific view, a professional role that is recorded, or a new run.
+ */
+const rolePrompts: Readonly<Record<CrrtRoleLens, string>> = {
+  integrated: 'Both roles: read the prescription and the console together.',
+  prescriber:
+    'Prescriber perspective: as you read, ask what the prescription, delivered dose, and fluid goal should be.',
+  operator:
+    'Operator perspective: as you read, ask what the console, circuit pressures, and alerts are telling you.',
 }
 
 const simulationTimeAdvanceOptions = [
@@ -369,8 +383,13 @@ function CrrtCasePlayerContent({
         data-testid="crrt-case-workflow"
       >
         <div className={styles.contextControls}>
-          <div className={styles.roleToggle} role="group" aria-label="View case through role lens">
-            <span>View as:</span>
+          <div
+            className={styles.roleToggle}
+            role="group"
+            aria-label="Reading perspective"
+            aria-describedby={scopedId('crrt-role-note')}
+          >
+            <span>Reading perspective</span>
             {definition.roleLenses.map((roleLens) => (
               <button
                 key={roleLens}
@@ -381,6 +400,10 @@ function CrrtCasePlayerContent({
                 {roleLabels[roleLens]}
               </button>
             ))}
+            <p className={styles.roleNote} id={scopedId('crrt-role-note')} aria-live="polite">
+              {rolePrompts[session.roleLens]} Switching keeps your run: it changes no patient value,
+              device control, action or record, and it is not scored or saved.
+            </p>
           </div>
           <button type="button" className={styles.resetButton} onClick={onReset}>
             <RefreshCcw aria-hidden="true" /> Reset case

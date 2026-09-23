@@ -1,8 +1,7 @@
 'use client'
 
-import { Fragment, useEffect, useReducer, useRef, useState } from 'react'
+import { Fragment, useEffect, useId, useReducer, useRef, useState, type Ref } from 'react'
 import { LessonShell, NowCard } from '@/features/learning-module/stage'
-import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
 import { Link, useRouter } from '@/i18n/navigation'
 import type { CrrtFoundationTask } from '../content/foundationLessons'
@@ -29,7 +28,8 @@ import {
 } from '../learnController'
 import { sameCrrtLearnIdentity, type CrrtLearnEvidence } from '../learnEvidence'
 import { recordCrrtVisit } from '../selfPacedProgress'
-import { CrrtFoundationToolView } from './CrrtFoundationTools'
+import { crrtLessonOutlineParts, selectCrrtLessonSequence } from '../learnSequence'
+import { CrrtFoundationToolView, type CrrtToolProgress } from './CrrtFoundationTools'
 import { CrrtPressureLocalizationLab } from './CrrtPressureLocalizationLab'
 import { CrrtStagedPrescriptionBuilder } from './CrrtStagedPrescriptionBuilder'
 import { createSyntheticPressureLocalizationResult } from '../pressureLocalizationLabModel'
@@ -56,6 +56,11 @@ export function CrrtFoundationLesson({
     response: string
   } | null>(null)
   const [freeBuilderOpen, setFreeBuilderOpen] = useState(false)
+  const [toolProgress, setToolProgress] = useState<{
+    identity: ReturnType<typeof crrtCurrentTaskIdentity>
+    progress: CrrtToolProgress
+  } | null>(null)
+  const actionsRef = useRef<HTMLDivElement>(null)
   const activeIdentity = crrtCurrentTaskIdentity(attempt)
   const guidedResponse =
     guidedResult && sameCrrtLearnIdentity(guidedResult.identity, activeIdentity)
@@ -213,9 +218,45 @@ export function CrrtFoundationLesson({
       reviewed,
     }
   }
-  const pathway = criticalCareLearningPathway('baxter-crrt')
-  const next =
-    pathway.sections[pathway.sections.findIndex((section) => section.id === lessonId) + 1]
+  // One authored order everywhere (F-10): the picker, the numbers, previous/next and the
+  // end-of-lesson Continue all read `BAXTER_CRRT_LEARN_LESSON_IDS` through this helper.
+  const sequence = selectCrrtLessonSequence(lessonId)
+  const previousLesson = sequence.previousLessonId
+    ? baxterCrrtLearnLessonById.get(sequence.previousLessonId)
+    : undefined
+  const next = sequence.nextLessonId
+    ? baxterCrrtLearnLessonById.get(sequence.nextLessonId)
+    : undefined
+  const currentToolProgress =
+    toolProgress && sameCrrtLearnIdentity(toolProgress.identity, activeIdentity)
+      ? toolProgress.progress
+      : null
+  const guidedPrimary = task.kind === 'guided' && task.tool !== 'known-pressure'
+  const disabledReason = task.operation
+    ? 'Complete the requested actions and read their recorded observations.'
+    : currentToolProgress && currentToolProgress.remaining.length > 0
+      ? `Still to select${currentToolProgress.ordered ? ', in order' : ''}: ${currentToolProgress.remaining.join(', ')}.`
+      : currentToolProgress?.comparisonPending
+        ? 'Select “Compare return-side resistance” to see the changed readings.'
+        : 'Make each requested selection and compare the displayed explanation.'
+  function reportToolProgress(progress: CrrtToolProgress) {
+    setToolProgress((current) =>
+      current &&
+      sameCrrtLearnIdentity(current.identity, activeIdentity) &&
+      current.progress.completed === progress.completed &&
+      current.progress.comparisonPending === progress.comparisonPending
+        ? current
+        : { identity: activeIdentity, progress },
+    )
+  }
+  function goToTaskControls() {
+    const target = actionsRef.current
+    if (!target) return
+    // Focus moves now, so its destination must be visible now, including keyboard activation.
+    // Explicit instant scrolling also avoids inheriting the site's smooth-scroll preference.
+    target.scrollIntoView?.({ block: 'center', behavior: 'instant' })
+    target.focus({ preventScroll: true })
+  }
   return (
     <div className={styles.foundation} data-foundation-lesson={lessonId}>
       <LessonShell
@@ -232,6 +273,9 @@ export function CrrtFoundationLesson({
                 <Link href={`${baxterCrrtNavBase}/practice`}>Practice</Link> ·{' '}
                 <Link href={`${baxterCrrtNavBase}/assess`}>Challenge</Link>
               </nav>
+              <p className={styles.lessonNumber} data-crrt-lesson-number>
+                Lesson {sequence.number} of {sequence.total}
+              </p>
               <h1>{lesson.title}</h1>
             </div>
             <label>
@@ -243,11 +287,35 @@ export function CrrtFoundationLesson({
               >
                 {baxterCrrtLearnLessons.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {item.title}
+                    {selectCrrtLessonSequence(item.id).number}. {item.title}
                   </option>
                 ))}
               </select>
             </label>
+            <nav className={styles.lessonSteps} aria-label="Previous and next lesson">
+              {previousLesson ? (
+                <button
+                  type="button"
+                  aria-label={`Previous lesson: ${sequence.number - 1}. ${previousLesson.title}`}
+                  onClick={() => onNavigate(previousLesson.id)}
+                >
+                  ‹ Previous lesson
+                </button>
+              ) : (
+                <span>First lesson</span>
+              )}
+              {next ? (
+                <button
+                  type="button"
+                  aria-label={`Next lesson: ${sequence.number + 1}. ${next.title}`}
+                  onClick={() => onNavigate(next.id)}
+                >
+                  Next lesson ›
+                </button>
+              ) : (
+                <span>Last lesson</span>
+              )}
+            </nav>
             <button type="button" onClick={onRestart}>
               Restart lesson
             </button>
@@ -277,23 +345,30 @@ export function CrrtFoundationLesson({
             <summary>
               Lesson tasks · {attempt.taskIndex + 1} of {tasks.length}
             </summary>
-            <ol>
-              {tasks.map((item, index) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    aria-current={index === attempt.taskIndex ? 'step' : undefined}
-                    onClick={() => {
-                      taskMapSelection.current = true
-                      dispatch({ type: 'navigate', taskIndex: index })
-                    }}
-                  >
-                    {item.title}
-                    {attempt.completedTaskIds.includes(item.id) ? ' · reviewed' : ''}
-                  </button>
-                </li>
-              ))}
-            </ol>
+            {(crrtLessonOutlineParts[lessonId] ?? [{ title: null, taskIds: null }]).map((part) => (
+              <Fragment key={part.title ?? 'all'}>
+                {part.title ? <p className={styles.mapPart}>{part.title}</p> : null}
+                <ol start={part.taskIds ? tasks.findIndex((t) => t.id === part.taskIds[0]) + 1 : 1}>
+                  {tasks.map((item, index) =>
+                    part.taskIds && !part.taskIds.includes(item.id) ? null : (
+                      <li key={item.id}>
+                        <button
+                          type="button"
+                          aria-current={index === attempt.taskIndex ? 'step' : undefined}
+                          onClick={() => {
+                            taskMapSelection.current = true
+                            dispatch({ type: 'navigate', taskIndex: index })
+                          }}
+                        >
+                          {item.title}
+                          {attempt.completedTaskIds.includes(item.id) ? ' · reviewed' : ''}
+                        </button>
+                      </li>
+                    ),
+                  )}
+                </ol>
+              </Fragment>
+            ))}
           </details>
           {attempt.finished ? (
             <div className={styles.instruction} id="crrt-current-task" ref={instructionRef}>
@@ -303,11 +378,11 @@ export function CrrtFoundationLesson({
                   heading: 'End of this lesson',
                   body: 'Continue, revisit a topic, or repeat an exercise. Only your location and topics visited are saved.',
                   primary: {
-                    label: next ? `Continue to ${next.title}` : 'Continue to practice',
+                    label: next
+                      ? `Continue to lesson ${sequence.number + 1}: ${next.title}`
+                      : 'Continue to practice',
                     onActivate: () =>
-                      next
-                        ? onNavigate(next.id as BaxterCrrtLearnLessonId)
-                        : router.push(`${baxterCrrtNavBase}/practice`),
+                      next ? onNavigate(next.id) : router.push(`${baxterCrrtNavBase}/practice`),
                   },
                   secondary: { label: 'Repeat lesson', onActivate: onRestart },
                 }}
@@ -346,43 +421,36 @@ export function CrrtFoundationLesson({
                                     ? 'Canonical CRRT circuit'
                                     : task.title}
                       , below.
+                      {task.kind !== 'read' ? (
+                        <>
+                          {' '}
+                          <button
+                            type="button"
+                            className={styles.jumpButton}
+                            onClick={goToTaskControls}
+                          >
+                            Go to this task&apos;s continue controls
+                          </button>
+                        </>
+                      ) : null}
                     </span>
                   ),
+                  // A reading task has one thing to do, so its Continue stays on the card. An
+                  // exercise's controls follow the exercise itself (F-13), below.
                   primary:
                     task.kind === 'read'
                       ? { label: 'Continue', onActivate: continueTopic }
-                      : task.kind === 'guided' && task.tool !== 'known-pressure'
-                        ? {
-                            label: 'Review observations and continue',
-                            disabled: !readyResponse,
-                            disabledReason: task.operation
-                              ? 'Complete the requested actions and read their recorded observations.'
-                              : 'Make each requested selection and compare the displayed explanation.',
-                            onActivate: () =>
-                              readyResponse &&
-                              finish(
-                                guidedEvidence(
-                                  readyResponse,
-                                  null,
-                                  attempt.run
-                                    ? crrtOperationalEvidenceInputs(attempt.run)
-                                    : undefined,
-                                ),
-                              ),
-                          }
-                        : undefined,
+                      : undefined,
                 }}
               >
-                {task.kind !== 'read' ? (
-                  <button type="button" onClick={continueTopic}>
-                    Continue without this exercise
-                  </button>
-                ) : null}
                 {!circuitFirst ? teaching : null}
                 {task.tool && task.tool !== 'known-pressure' && task.tool !== 'builder' ? (
-                  <CrrtFoundationToolView tool={task.tool} onReady={ready} />
+                  <CrrtFoundationToolView
+                    tool={task.tool}
+                    onReady={ready}
+                    onProgress={reportToolProgress}
+                  />
                 ) : null}
-                {circuitFirst ? teaching : null}
                 {task.advancedTool ? (
                   <CrrtCitrateDifferential
                     presentation={task.advancedTool === 'citrate-path' ? 'mechanism' : 'comparison'}
@@ -482,6 +550,40 @@ export function CrrtFoundationLesson({
                     }
                   />
                 ) : null}
+                {task.kind !== 'read' ? (
+                  <CrrtTaskActions
+                    ref={actionsRef}
+                    primary={
+                      guidedPrimary
+                        ? {
+                            label: 'Review observations and continue',
+                            disabled: !readyResponse,
+                            disabledReason,
+                            onActivate: () =>
+                              readyResponse &&
+                              finish(
+                                guidedEvidence(
+                                  readyResponse,
+                                  null,
+                                  attempt.run
+                                    ? crrtOperationalEvidenceInputs(attempt.run)
+                                    : undefined,
+                                ),
+                              ),
+                          }
+                        : undefined
+                    }
+                    ownControlsNote={
+                      guidedPrimary
+                        ? null
+                        : 'This exercise has its own check and continue buttons above. Using it is optional.'
+                    }
+                    onSkip={continueTopic}
+                  />
+                ) : null}
+                {/* A circuit exercise's controls follow the drawing directly; its summary prose
+                    follows them, so finishing the exercise does not mean scrolling past it. */}
+                {circuitFirst ? teaching : null}
               </NowCard>
             </div>
           )}
@@ -532,6 +634,75 @@ export function CrrtFoundationLesson({
           </details>
         </div>
       </LessonShell>
+    </div>
+  )
+}
+
+/**
+ * The exercise's own controls, directly after the exercise (F-13).
+ *
+ * Before this, "Continue without this exercise" was the first full-width button in every task
+ * and the real completion button sat about 1,200 px lower, greyed out with a generic reason.
+ * Now the completion button leads, its disabled reason names exactly what is left, and the skip
+ * stays beside it — secondary, full-size and keyboard-reachable. Skipping marks nothing as
+ * reviewed; nothing here counts, grades or requires an answer.
+ */
+function CrrtTaskActions({
+  ref,
+  primary,
+  ownControlsNote,
+  onSkip,
+}: {
+  readonly ref: Ref<HTMLDivElement>
+  readonly primary?: {
+    readonly label: string
+    readonly disabled: boolean
+    readonly disabledReason: string
+    readonly onActivate: () => void
+  }
+  readonly ownControlsNote: string | null
+  readonly onSkip: () => void
+}) {
+  const reasonId = useId()
+  const headingId = useId()
+  return (
+    <div
+      ref={ref}
+      className={styles.taskActions}
+      role="group"
+      aria-labelledby={headingId}
+      tabIndex={-1}
+      data-crrt-task-actions
+    >
+      <p id={headingId} className={styles.taskActionsHeading}>
+        Continue from this task
+      </p>
+      {ownControlsNote ? <p className={styles.taskActionsNote}>{ownControlsNote}</p> : null}
+      <div className={styles.taskActionRow}>
+        {primary ? (
+          <button
+            type="button"
+            className={styles.taskPrimary}
+            disabled={primary.disabled}
+            aria-describedby={primary.disabled ? reasonId : undefined}
+            onClick={primary.onActivate}
+          >
+            {primary.label}
+          </button>
+        ) : null}
+        <button type="button" className={styles.taskSkip} onClick={onSkip}>
+          Continue without this exercise
+        </button>
+      </div>
+      {primary?.disabled ? (
+        <p id={reasonId} className={styles.taskReason} data-crrt-disabled-reason>
+          {primary.disabledReason}
+        </p>
+      ) : null}
+      <p className={styles.taskActionsNote}>
+        Continuing without the exercise marks nothing as reviewed. You can come back to it from
+        Lesson tasks.
+      </p>
     </div>
   )
 }

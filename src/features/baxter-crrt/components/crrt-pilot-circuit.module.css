@@ -1,4 +1,6 @@
-.panel {
+/* The expanded view renders in a dialog portal, outside `.panel`, so it restates the palette. */
+.panel,
+.expandedPanel {
   --circuit-ink: #ecf8fb;
   --circuit-muted: #a8c1c8;
   --circuit-line: rgba(159, 205, 214, 0.24);
@@ -19,7 +21,9 @@
   --effluent-trace: #ffe477;
   --calcium: #a45c22;
   --calcium-trace: #ffbe86;
+}
 
+.panel {
   color: var(--circuit-ink);
   border: 1px solid var(--circuit-line);
   border-radius: 22px;
@@ -1340,6 +1344,15 @@
 .panel[data-presentation='focused'] .circuitSvg,
 .panel[data-presentation='live-focused'] .circuitSvg {
   min-width: 800px;
+  /* F-13: the drawing may now fill the lesson width, but a lesson's controls and the circuit
+     they drive must stay on one screen together (the systemic adjacency contract: the pair spans
+     under 680 px and fits below the site header). The cap leaves room for up to two rows of
+     controls above the drawing; with enlarged text its rem terms grow, so it never falls below
+     half the window. A wide Learn layout puts the controls beside the drawing and relaxes it. */
+  max-height: max(
+    min(520px, calc(100dvh - var(--site-header-height, 5rem) - 13rem)),
+    min(50dvh, 520px)
+  );
 }
 .panel[data-presentation='focused'] .panHint,
 .panel[data-presentation='live-focused'] .panHint {
@@ -1350,4 +1363,116 @@
   font-size: 0.95rem;
   margin: 0.4rem;
   color: var(--circuit-muted);
+}
+
+.focusedTools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.5rem 0.4rem 0;
+}
+
+.expandButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid rgba(175, 222, 215, 0.45);
+  border-radius: 0.6rem;
+  color: #e9f5f5;
+  background: #123138;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.expandButton svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.expandButton:focus-visible,
+.expandedToolbar button:focus-visible,
+.expandedViewport:focus-visible {
+  outline: 3px solid #f5bb65;
+  outline-offset: 2px;
+}
+
+.panel[data-presentation='focused'] .legend,
+.panel[data-presentation='live-focused'] .legend {
+  margin: 0.5rem 0.4rem 0;
+}
+
+.legendNote {
+  margin: 0.35rem 0.4rem 0;
+  color: var(--circuit-muted);
+  font-size: 0.8rem;
+}
+
+/* Expanded view (rendered in a dialog portal, so the circuit palette is restated). */
+.expandedToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.expandedToolbar button {
+  min-height: 44px;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid rgba(175, 222, 215, 0.45);
+  border-radius: 0.6rem;
+  color: #e9f5f5;
+  background: #123138;
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.expandedToolbar button[aria-pressed='true'] {
+  color: #06201f;
+  border-color: #74d7cc;
+  background: #74d7cc;
+  font-weight: 850;
+}
+
+.expandedPanel {
+  color: var(--circuit-ink);
+}
+
+.expandedViewport {
+  max-height: 70dvh;
+  overflow: auto;
+  border: 1px solid rgba(117, 220, 227, 0.25);
+  border-radius: 14px;
+  background: #061a20;
+  overscroll-behavior: contain;
+}
+
+.expandedViewport .circuitSvg {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-height: none;
+}
+
+.expandedViewport[data-zoom='100'] .circuitSvg {
+  width: 1330px;
+}
+
+.expandedViewport[data-zoom='150'] .circuitSvg {
+  width: 1995px;
+}
+
+.expandedViewport[data-zoom='200'] .circuitSvg {
+  width: 2660px;
+}
+
+.expandedSummary {
+  margin: 0.6rem 0 0;
+  color: #c7dce0;
+  font-size: 0.88rem;
+  line-height: 1.5;
 }

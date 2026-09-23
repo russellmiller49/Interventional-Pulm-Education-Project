@@ -51,17 +51,18 @@ describe('Baxter CRRT case player', () => {
       expect(within(sharedPhases).getByText(label)).toBeInTheDocument()
     }
 
-    const roles = screen.getByRole('group', { name: 'View case through role lens' })
-    expect(within(roles).getByRole('button', { name: 'Integrated' })).toHaveAttribute(
+    // CRRT-FELLOW-03 (F-22): the inert lens is presented as what it is, a reading perspective.
+    const roles = screen.getByRole('group', { name: 'Reading perspective' })
+    expect(within(roles).getByRole('button', { name: 'Both roles' })).toHaveAttribute(
       'aria-pressed',
       'true',
     )
+    expect(roles).toHaveAccessibleDescription(/Switching keeps your run/)
     fireEvent.click(within(roles).getByRole('button', { name: 'Operator' }))
     expect(
-      within(screen.getByRole('group', { name: 'View case through role lens' })).getByRole(
-        'button',
-        { name: 'Operator' },
-      ),
+      within(screen.getByRole('group', { name: 'Reading perspective' })).getByRole('button', {
+        name: 'Operator',
+      }),
     ).toHaveAttribute('aria-pressed', 'true')
   })
 

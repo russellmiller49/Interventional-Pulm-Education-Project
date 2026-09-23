@@ -47,7 +47,6 @@ describe('critical-care shared shell convergence', () => {
     for (const path of [
       'src/features/mechanical-circulatory-support/components/mechanical-circulatory-support.module.css',
       'src/features/cardiohelp-ecmo/components/cardiohelp-ecmo.module.css',
-      'src/features/baxter-crrt/components/baxter-crrt.module.css',
       'src/features/mechanical-ventilation/components/mechanical-ventilation-module.module.css',
       'src/features/icu-hemodynamics/components/stage/hemodynamics-stage.module.css',
     ]) {
@@ -56,6 +55,30 @@ describe('critical-care shared shell convergence', () => {
         /\.moduleShell\[data-activity-mode='true'\][\s\S]*height: calc\(100dvh - var\(--site-header-height, 4rem\)\)[\s\S]*overflow: hidden/,
       )
     }
+  })
+
+  it('lets CRRT Practice and Challenge scroll the document instead (CRRT-FELLOW-03)', () => {
+    // CRRT left the fixed-height activity app shell for Practice and Challenge, as its focused
+    // Learn lesson already had: its workbench reflows in the document so evidence, task and case
+    // stay readable at every width and at enlarged text. It declares that scroll owner itself and
+    // returns the shared chrome to normal flow only inside its own module shell. Rendered
+    // behaviour is covered by e2e/baxter-crrt-workbench-wayfinding.spec.ts.
+    const { container } = render(
+      <BaxterCrrtModuleFrame locale="en" activeHref="/baxter-crrt/practice" activityMode>
+        <div>CRRT workbench</div>
+      </BaxterCrrtModuleFrame>,
+    )
+    expect(container.querySelector('main')).toHaveAttribute(
+      'data-learning-scroll-owner',
+      'document',
+    )
+    const crrtStyles = readFileSync(
+      join(process.cwd(), 'src/features/baxter-crrt/components/baxter-crrt.module.css'),
+      'utf8',
+    )
+    expect(crrtStyles).not.toMatch(
+      /\.moduleShell\[data-activity-mode='true'\][^{]*\{[^}]*height: calc\(100dvh/,
+    )
   })
 
   it('keeps the MCS compatibility frame on the light V2 shell', () => {

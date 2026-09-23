@@ -73,7 +73,12 @@ export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }
           router.push(baxterCrrtNavBase)
         }}
         currentTaskExtras={assessmentTaskRules}
-        nextRecommendation={<Link href={baxterCrrtNavBase}>Continue to CRRT topics</Link>}
+        navigation={
+          <nav className={styles.assessReturn} aria-label="Challenge navigation">
+            <Link href={baxterCrrtNavBase}>Continue to CRRT topics</Link>
+            <Link href={`${baxterCrrtNavBase}/practice`}>Practice cases</Link>
+          </nav>
+        }
       >
         <section className={styles.casePlayerSection} aria-labelledby="capstone-heading">
           <div className={styles.casePlayerHeading}>

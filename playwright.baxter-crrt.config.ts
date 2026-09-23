@@ -8,6 +8,8 @@ export default defineConfig({
     'baxter-crrt-operations.spec.ts',
     'baxter-crrt-advanced.spec.ts',
     'baxter-crrt-sanity-review.spec.ts',
+    'baxter-crrt-workbench-wayfinding.spec.ts',
+    'baxter-crrt-batch03-sanity.spec.ts',
   ],
   workers: 1,
   retries: 0,

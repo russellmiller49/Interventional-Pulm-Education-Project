@@ -39,11 +39,12 @@
         },
         {
           "file": "src/features/baxter-crrt/components/CrrtPilotCircuit.tsx",
-          "locator": "Pressure-profile overlay: derivation label on the circuit diagram",
-          "excerpt": "TMP = (FILTER + RETURN)/2 − EFFLUENT {PRISMAX_TMP_HYDROSTATIC_OFFSET_MMHG} mmHg"
+          "locator": "Pressure-profile overlay: derivation label on the circuit diagram (offset bracketed as its own term, CRRT-FELLOW-03)",
+          "excerpt": "TMP = (FILTER + RETURN) ÷ 2 − EFFLUENT + ("
         }
       ],
-      "learnerWording": "What produces it: “The device averages the filter and return pressures, subtracts the effluent pressure, and applies a fixed display offset of -18 mmHg. It describes the pressure difference across the membrane, not a place you can inspect.” Diagram label: “TMP = (FILTER + RETURN)/2 − EFFLUENT -18 mmHg”.",
+      "learnerWording": "What produces it: “The device averages the filter and return pressures, subtracts the effluent pressure, and applies a fixed display offset of -18 mmHg. It describes the pressure difference across the membrane, not a place you can inspect.” Diagram label: “TMP = (FILTER + RETURN) ÷ 2 − EFFLUENT + (−18)” under the caption “CALCULATED FROM MONITORED SITES · mmHg”.",
+      "laterWordingChange": "CRRT-FELLOW-03 (2026-09-22), presentation only: the diagram label was “TMP = (FILTER + RETURN)/2 − EFFLUENT -18 mmHg”, which a learner read as an effluent of −18; the offset is now its own bracketed, signed term, and the current arithmetic is laid out beside the TMP readings. Expression, constant and calculation unchanged. Decision still NOT REVIEWED.",
       "visual": "Derivation label beside the filter on the simulated circuit, bracketed to the filter, return and effluent readouts.",
       "intendedTeachingPoint": "TMP has no sensor. It is calculated from three readings, and the fixed −18 mmHg term in the displayed expression is not an alarm limit.",
       "sourceRecordIds": ["MATH-PM-002"],
@@ -82,8 +83,8 @@
         },
         {
           "file": "src/features/baxter-crrt/components/CrrtPilotCircuit.tsx",
-          "locator": "Pressure-profile overlay: derivation label on the circuit diagram (unchanged)",
-          "excerpt": "FILTER DROP = FILTER − RETURN {PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG} mmHg"
+          "locator": "Pressure-profile overlay: derivation label on the circuit diagram (correction bracketed as its own term, CRRT-FELLOW-03)",
+          "excerpt": "FILTER DROP = FILTER − RETURN + ("
         },
         {
           "file": "src/features/baxter-crrt/content/phase7ReviewSources.ts",
@@ -96,7 +97,8 @@
           "excerpt": "export const PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG = -25"
         }
       ],
-      "learnerWording": "Where it comes from: “Nowhere. Filter pressure drop has no transducer of its own. It is calculated from the filter and return readings.” What produces it: “Filter pressure minus return pressure. The PrisMax AW8035 manual says those two readings are corrected for a -25 mmHg sensor-height bias; this simulation applies the -25 mmHg to the drop itself, which awaits device review. It describes how hard it is to push blood through the filter and the return limb.” Diagram label (unchanged): “FILTER DROP = FILTER − RETURN -25 mmHg”. Citation claim: “PrisMax presents filter pressure drop as filter minus return pressure and documents a sensor-height correction of the filter and return readings.”",
+      "learnerWording": "Where it comes from: “Nowhere. Filter pressure drop has no transducer of its own. It is calculated from the filter and return readings.” What produces it: “Filter pressure minus return pressure. The PrisMax AW8035 manual says those two readings are corrected for a -25 mmHg sensor-height bias; this simulation applies the -25 mmHg to the drop itself, which awaits device review. It describes how hard it is to push blood through the filter and the return limb.” Diagram label: “FILTER DROP = FILTER − RETURN + (−25 · IN REVIEW)”. Citation claim: “PrisMax presents filter pressure drop as filter minus return pressure and documents a sensor-height correction of the filter and return readings.”",
+      "laterWordingChange": "CRRT-FELLOW-03 (2026-09-22), presentation only: the diagram label was “FILTER DROP = FILTER − RETURN -25 mmHg”; the correction is now its own bracketed term marked as in review, and the current arithmetic (filter − return, then the correction applied by this simulation) is laid out beside the filter-drop readings with the placement stated as awaiting device review. The −25 mmHg constant, where the simulation applies it, and the calculation are unchanged; the placement stays held (G01-CRRT-02 / O-04). Decision still NOT REVIEWED.",
       "previousWording": "Where it comes from: “… the difference between the filter and return readings, plus a fixed device display offset.” What produces it: “The device subtracts the return pressure from the filter pressure and applies a fixed display offset of -25 mmHg. …” Citation claim: “… a filter-to-return pressure relationship with a documented display correction.”",
       "visual": "Derivation label on the simulated circuit. The simulated drop readout is (raw filter − raw return) − 25 mmHg.",
       "intendedTeachingPoint": "Filter pressure drop has no sensor. It is calculated from the filter and return readings, rises with blood flow across unchanged resistance, and is watched for clotting or fouling.",

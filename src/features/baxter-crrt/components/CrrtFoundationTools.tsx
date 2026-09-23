@@ -19,6 +19,8 @@ import { createSyntheticPressureLocalizationResult } from '../pressureLocalizati
 import type { CrrtFoundationTool } from '../content/foundationLessons'
 import { CrrtPilotCircuit, type CrrtPilotPressureSignals } from './CrrtPilotCircuit'
 import { CrrtLivePressureStation } from './CrrtLivePressureStation'
+import { CrrtMembraneTransport, type CrrtTransportMechanism } from './CrrtMembraneTransport'
+import { CrrtPressureArithmetic } from './CrrtPressureArithmetic'
 import styles from './crrt-foundations.module.css'
 
 const noPressures: CrrtPilotPressureSignals = {
@@ -137,13 +139,60 @@ function CircuitWorkbench({ controls, children }: { controls: ReactNode; childre
   )
 }
 
+/**
+ * How far a learner has got through one guided tool's own selections — a count of real local
+ * operations ("2 of 6 stops selected"), used to say what is left before "Review observations and
+ * continue" is available. It is not stored, graded or required; skipping stays open.
+ */
+export interface CrrtToolProgress {
+  readonly completed: number
+  readonly total: number
+  readonly noun: string
+  readonly remaining: readonly string[]
+  readonly ordered: boolean
+  /** The pressure-site tool also asks for the changed-resistance comparison. */
+  readonly comparisonPending: boolean
+}
+
+const toolNoun: Partial<Record<CrrtFoundationTool, string>> = {
+  'blood-walk': 'stops',
+  'fluid-walk': 'fluid paths',
+  modalities: 'views',
+  'pressure-sites': 'pressure readouts',
+  mechanisms: 'mechanisms',
+  'transport-comparison': 'changes',
+}
+
+/** Labels per tool: the same id can name different things in two tools (a blood stop "filter"
+    and the "Filter pressure" readout), so labels are never looked up across tools. */
+const toolItemLabels: Partial<Record<CrrtFoundationTool, Readonly<Record<string, string>>>> = {
+  'blood-walk': Object.fromEntries(bloodStops.map((stop) => [stop.id, stop.label])),
+  'fluid-walk': Object.fromEntries(fluidStops.map((stop) => [stop.id, stop.label])),
+  modalities: Object.fromEntries(modalityIds.map((id) => [id, id.toUpperCase()])),
+  'pressure-sites': Object.fromEntries(
+    crrtPressureSignalDetails.map((detail) => [detail.id, detail.label]),
+  ),
+  mechanisms: {
+    diffusion: 'Diffusion',
+    convection: 'Convection',
+    ultrafiltration: 'Ultrafiltration',
+  },
+  'transport-comparison': {
+    dialysate: 'Dialysate +500 mL/h',
+    replacement: 'Post-filter replacement +500 mL/h',
+    removal: 'Net CRRT removal +100 mL/h',
+  },
+}
+
 /** A component-local selection is a guided observation; the parent must explicitly review it. */
 export function CrrtFoundationToolView({
   tool,
   onReady,
+  onProgress,
 }: {
   tool: CrrtFoundationTool
   onReady?: (response: string) => void
+  onProgress?: (progress: CrrtToolProgress) => void
 }) {
   const [selected, setSelected] = useState<string | null>(null)
   const [visited, setVisited] = useState<readonly string[]>([])
@@ -171,24 +220,52 @@ export function CrrtFoundationToolView({
   useEffect(() => {
     if (ready) onReady?.(response)
   }, [ready, response, onReady])
+  const noun = toolNoun[tool]
+  useEffect(() => {
+    if (!noun || ids.length === 0) return
+    onProgress?.({
+      completed: ids.filter((id) => visited.includes(id)).length,
+      total: ids.length,
+      noun,
+      remaining: ids
+        .filter((id) => !visited.includes(id))
+        .map((id) => toolItemLabels[tool]?.[id] ?? id),
+      ordered: tool === 'blood-walk',
+      comparisonPending: tool === 'pressure-sites' && !changed,
+    })
+    // `ids` is derived from `tool`; the progress changes only with the selections themselves.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tool, noun, response, changed, onProgress])
   function select(id: string) {
     setSelected(id)
     setVisited((current) => (current.includes(id) ? current : [...current, id]))
   }
+  const selectedCount = ids.filter((id) => visited.includes(id)).length
   const controls = (items: readonly { id: string; label: string }[], ordered = false) => (
-    <div className={styles.controls} role="group" aria-label="Teaching selections">
-      {items.map((item, index) => (
-        <button
-          key={item.id}
-          type="button"
-          disabled={ordered && index > visited.length}
-          aria-pressed={selected === item.id}
-          onClick={() => select(item.id)}
-        >
-          {item.label}
-          {visited.includes(item.id) ? ' ✓' : ''}
-        </button>
-      ))}
+    // The count sits in the same row as the buttons, so it adds no height between the controls
+    // and the circuit they drive (the pair must stay on one screen).
+    <div className={styles.controlRow}>
+      <div className={styles.controls} role="group" aria-label="Teaching selections">
+        {items.map((item, index) => (
+          <button
+            key={item.id}
+            type="button"
+            disabled={ordered && index > visited.length}
+            aria-pressed={selected === item.id}
+            onClick={() => select(item.id)}
+          >
+            {item.label}
+            {visited.includes(item.id) ? ' ✓' : ''}
+          </button>
+        ))}
+      </div>
+      {noun ? (
+        // A count of this visit's own selections, beside the buttons that make them. Not stored.
+        <p className={styles.toolStatus} aria-live="polite" data-crrt-tool-status>
+          {selectedCount} of {ids.length} {noun} selected
+          {ordered && selectedCount < ids.length ? ' · select them in order' : ''}
+        </p>
+      ) : null}
     </div>
   )
 
@@ -311,6 +388,21 @@ export function CrrtFoundationToolView({
             </div>
           ))}
         </dl>
+        {/* F-14: the two calculated readings above, worked from the same three site readings. */}
+        <div className={styles.arithmeticPair}>
+          {(['tmp', 'filter-drop'] as const).map((signal) => (
+            <CrrtPressureArithmetic
+              key={signal}
+              signal={signal}
+              raw={{
+                filterMmHg: snap.filterPressureMmHg,
+                returnMmHg: snap.returnPressureMmHg,
+                effluentMmHg: snap.effluentPressureMmHg,
+              }}
+              displayedMmHg={signal === 'tmp' ? snap.tmpMmHg : snap.filterPressureDropMmHg}
+            />
+          ))}
+        </div>
         <details onToggle={(event) => setShowRecordedComparison(event.currentTarget.open)}>
           <summary>Engine-generated recorded comparison</summary>
           {showRecordedComparison ? <CrrtLivePressureStation /> : null}
@@ -369,7 +461,9 @@ export function CrrtFoundationToolView({
             node="filter"
           />
         </CircuitWorkbench>
-        <FilterInset mechanism={selected ?? 'diffusion'} />
+        <CrrtMembraneTransport
+          selected={(selected as CrrtTransportMechanism | null) ?? 'diffusion'}
+        />
       </div>
     )
   }
@@ -500,51 +594,4 @@ export function CrrtFoundationToolView({
     )
   }
   return null
-}
-
-function FilterInset({ mechanism }: { mechanism: string }) {
-  const diffusion = mechanism === 'diffusion'
-  const caption = diffusion
-    ? 'Solute moves down its concentration gradient across the membrane. Bulk dialysate remains on the fluid side; solute exchange is not a direct dialysate infusion.'
-    : mechanism === 'convection'
-      ? 'Water carries eligible dissolved solute across the membrane. Replacement enters the blood path to replace part of this filtered water.'
-      : 'Water moves from blood across the membrane. Net patient removal equals that water loss after blood-path infusions are accounted for.'
-  return (
-    <figure className={styles.inset}>
-      <figcaption>
-        <strong>Filter inset · {mechanism}</strong>
-        <p>{caption}</p>
-      </figcaption>
-      <svg viewBox="0 0 640 190" role="img" aria-label={caption}>
-        <rect x="10" y="15" width="280" height="150" rx="12" fill="#702e42" />
-        <rect x="320" y="15" width="310" height="150" rx="12" fill="#224e50" />
-        <path d="M305 10 V175" stroke="#eee" strokeWidth="5" strokeDasharray="8 5" />
-        <text x="35" y="48" fill="white">
-          Blood side
-        </text>
-        <text x="370" y="48" fill="white">
-          Fluid side
-        </text>
-        <text x="260" y="187" fill="white">
-          Membrane
-        </text>
-        <path
-          d="M180 105 H435 l-18 -12 M435 105 l-18 12"
-          stroke="#ffd979"
-          strokeWidth="5"
-          fill="none"
-        />
-        <text x="90" y="145" fill="white">
-          {diffusion
-            ? 'Solute gradient → diffusion'
-            : mechanism === 'convection'
-              ? 'Water + eligible solute → convection'
-              : 'Water → ultrafiltration'}
-        </text>
-      </svg>
-      <p className={styles.caption}>
-        Conceptual inset of the highlighted filter, not a quantitative clearance or patient model.
-      </p>
-    </figure>
-  )
 }

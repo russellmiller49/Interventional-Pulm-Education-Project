@@ -1,0 +1,91 @@
+.arithmetic {
+  display: grid;
+  min-width: 0;
+  gap: 0.45rem;
+  margin: 0.6rem 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(155, 232, 184, 0.35);
+  border-radius: 10px;
+  color: #e9f5f5;
+  background: rgba(6, 30, 34, 0.9);
+  overflow-wrap: anywhere;
+}
+
+.arithmetic h4 {
+  margin: 0;
+  color: #9be8b8;
+  font-size: 0.85rem;
+  font-weight: 850;
+}
+
+.expression {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.expressionLabel {
+  font-weight: 850;
+}
+
+.terms {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+}
+
+.terms > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 0.75rem;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid rgba(175, 222, 215, 0.12);
+}
+
+.terms > div[data-role='correction'] {
+  color: #ffd9a0;
+}
+
+.terms dt {
+  font-size: 0.85rem;
+}
+
+.terms dd {
+  margin: 0;
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.worked {
+  margin: 0;
+  padding: 0.4rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(155, 232, 184, 0.1);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.note,
+.correction,
+.source {
+  margin: 0;
+  color: #c3d6d4;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.correction[data-held='true'] {
+  color: #ffe0a8;
+}
+
+.validity {
+  margin: 0;
+  padding: 0.45rem 0.6rem;
+  border-left: 3px solid #f5bb65;
+  background: rgba(75, 51, 18, 0.45);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}

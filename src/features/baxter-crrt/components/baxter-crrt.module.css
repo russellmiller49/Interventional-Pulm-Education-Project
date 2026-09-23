@@ -23,20 +23,90 @@
   box-sizing: border-box;
 }
 
-@media (min-width: 1024px) and (min-height: 700px) {
-  .moduleShell[data-activity-mode='true'] {
-    height: calc(100dvh - var(--site-header-height, 4rem));
-    min-height: 0;
-    overflow: hidden;
-    padding: 0;
-  }
+/*
+ * Practice and Challenge scroll the document (CRRT-FELLOW-03). The shared activity chrome sizes
+ * itself as a fixed-height, overflow-hidden app shell from 1024 × 700 up; inside that shell the
+ * case scrolled in one inner box while the evidence strip scrolled sideways in another, and at
+ * 200% text the case was left a 247 px window. These rules apply only inside the CRRT module
+ * shell and return that chrome to normal flow, the same way the focused Learn lesson already
+ * does below. The shared components themselves are not changed.
+ */
+.moduleShell[data-activity-mode='true'] {
+  padding: 0;
+}
+
+.moduleShell[data-activity-mode='true'] :global([data-activity-frame='true']) {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+.moduleShell[data-activity-mode='true'] :global([data-activity-frame='true']) > div:last-child {
+  display: block;
+  height: auto;
+  overflow: visible;
+}
+
+.moduleShell[data-activity-mode='true'] :global([data-critical-care-activity-shell]) {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+/* Long case titles wrap instead of running off a phone screen (F-12). */
+.moduleShell :global([data-critical-care-activity-shell]) > header h1 {
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.moduleShell :global([data-critical-care-activity-shell]) > header > div:first-child > div {
+  overflow: visible;
+  white-space: normal;
+}
+
+/* The footer only restates the case; below 1200 px the shared chrome pinned it over the page,
+   taking 144 px of a 390 × 844 screen. In this module it stays in flow at the end. */
+.moduleShell :global([data-critical-care-activity-shell]) > footer {
+  position: static;
+}
+
+:global(html):has(.moduleShell[data-activity-mode='true'] [data-crrt-workbench]) {
+  /* Keyboard focus scrolled into view lands below the sticky site header, not under it. */
+  scroll-padding-top: calc(var(--site-header-height, 5rem) + 0.75rem);
+  /* Now that the document scrolls, the site-wide smooth scrolling would animate every focus
+     move, leaving a just-focused control part-way off screen while it glides. Focus lands at
+     once, as it does in the focused Learn lesson. */
+  scroll-behavior: auto;
+}
+
+.workspaceStack {
+  display: grid;
+  min-width: 0;
 }
 
 .activityViewport {
-  height: 100%;
-  overflow: auto;
-  padding: 0.75rem;
-  scrollbar-gutter: stable;
+  min-width: 0;
+  outline: none;
+}
+
+.assessReturn {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--crrt-line);
+  border-radius: 0.9rem;
+  background: rgba(10, 34, 39, 0.92);
+}
+
+.assessReturn a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--crrt-teal-soft);
+  font-weight: 750;
+  text-underline-offset: 3px;
 }
 
 .moduleShell *,
@@ -582,7 +652,7 @@
   align-items: start;
 }
 
-.stationHeading > span {
+.stationNumber {
   display: grid;
   width: 2.2rem;
   height: 2.2rem;
@@ -591,6 +661,82 @@
   color: var(--crrt-deep);
   background: var(--crrt-teal);
   font-weight: 900;
+}
+
+/* F-20: the visited note is its own pill that wraps, not text squeezed into the 35 px number
+   circle. It still says only "visited" — completion semantics belong to batch 04. */
+.stationVisited {
+  align-self: start;
+  max-width: 100%;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid rgba(87, 208, 193, 0.55);
+  border-radius: 999px;
+  color: var(--crrt-teal-soft);
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.learnSequence {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border: 1px solid var(--crrt-line);
+  border-radius: 1rem;
+  background: rgba(9, 35, 40, 0.78);
+}
+
+.learnSequence h3 {
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+}
+
+.learnSequence ol {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+}
+
+.learnSequence a {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid rgba(175, 222, 215, 0.23);
+  border-radius: 0.7rem;
+  color: #d7e6e4;
+  background: rgba(2, 18, 21, 0.55);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.learnSequence a small {
+  margin-left: auto;
+  color: var(--crrt-teal-soft);
+  font-size: 0.72rem;
+}
+
+.lessonIndex {
+  display: grid;
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--crrt-deep);
+  background: var(--crrt-amber);
+  font-weight: 900;
+}
+
+.learnSequence p {
+  margin: 0.7rem 0 0;
+  color: var(--crrt-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
 }
 
 .stationHeading h3,
@@ -626,7 +772,7 @@
   border-radius: 999px;
   color: #d7e6e4;
   background: rgba(2, 18, 21, 0.55);
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   text-decoration: none;
 }
 

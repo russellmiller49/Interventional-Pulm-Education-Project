@@ -124,7 +124,7 @@ for (const keyboardOnly of [false, true]) {
     await answer(page, /Solute support and zero net CRRT removal/)
     await review(page)
     expect((await progress(page)).learnTaskHistory).toBeUndefined()
-    await click(page, /Continue to Circuit anatomy/)
+    await click(page, /Continue to lesson 2: Circuit anatomy/)
     await selectAll(page, [
       'Patient access',
       'Pre-pump segment',
@@ -182,7 +182,7 @@ for (const keyboardOnly of [false, true]) {
     await review(page)
     await answer(page, /Assess the patient and inspect the return path/)
     await review(page)
-    await click(page, /Continue to Solute and water transport/)
+    await click(page, /Continue to lesson 3: Solute and water transport/)
     await selectAll(page, ['Diffusion', 'Convection', 'Ultrafiltration'])
     await screenshot(page, info, '05-filter-inset')
     await click(page, 'Review observations and continue')
@@ -198,7 +198,7 @@ for (const keyboardOnly of [false, true]) {
     await review(page)
     await answer(page, /More water crosses the membrane with convective/)
     await review(page)
-    await click(page, /Continue to Prescription and delivered dose/)
+    await click(page, /Continue to lesson 4: Prescription and delivered dose/)
     await expect(page.getByText('21.875 mL/kg/h', { exact: true })).toBeVisible()
     await screenshot(page, info, '07-worked-dose')
     await next(page)
