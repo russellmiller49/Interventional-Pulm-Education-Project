@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRight, BookOpenCheck, Check, ClipboardCheck, GraduationCap } from 'lucide-react'
+import { ArrowRight, BookOpen, ClipboardList, Eye, GraduationCap } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
@@ -18,6 +18,7 @@ import { crrtLessonNumber } from '../learnSequence'
 import { readCrrtSelfPacedProgress } from '../selfPacedProgress'
 import { BAXTER_CRRT_LEARN_LESSON_IDS } from '../content/learnerRegistry'
 import { BaxterCrrtModuleFrame } from './BaxterCrrtModuleFrame'
+import { CrrtGlossaryButton } from './CrrtGlossary'
 import { SourcesPanel } from './SourcesPanel'
 import styles from './baxter-crrt.module.css'
 
@@ -54,8 +55,10 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
     return () => window.clearTimeout(hydrationTimer)
   }, [])
 
-  const completedLessons = new Set(progress.visitedLessonIds)
-  const completedCases = new Set(progress.visitedCaseIds.map((id) => id.toUpperCase()))
+  // F-20: these are opened-on-this-device records, never completion. The recommendation helper
+  // still receives them under its historical parameter names; nothing reads them as a result.
+  const visitedLessons = new Set(progress.visitedLessonIds)
+  const visitedCases = new Set(progress.visitedCaseIds.map((id) => id.toUpperCase()))
   const visited = {
     completedLessonIds: progress.visitedLessonIds,
     completedPracticeCaseIds: progress.visitedCaseIds,
@@ -95,7 +98,7 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
           </div>
           <div className={styles.howGrid}>
             <Link href={`${baxterCrrtNavBase}/learn`}>
-              <BookOpenCheck aria-hidden="true" />
+              <BookOpen aria-hidden="true" />
               <strong>1 · Learn</strong>
               <p>
                 {BAXTER_CRRT_LEARN_LESSON_IDS.length} lessons with a prescription lab and
@@ -103,7 +106,7 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
               </p>
             </Link>
             <Link href={`${baxterCrrtNavBase}/practice`}>
-              <ClipboardCheck aria-hidden="true" />
+              <ClipboardList aria-hidden="true" />
               <strong>2 · Practice</strong>
               <p>Read a worked plan, explore the PrisMax simulation, and compare its responses.</p>
             </Link>
@@ -113,6 +116,65 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
               <p>Open a harder PrisMax case from the start and use its causal debrief.</p>
             </Link>
           </div>
+        </section>
+
+        <section className={styles.hubOrientation} aria-labelledby="crrt-orientation-heading">
+          <div className={styles.sectionHeading}>
+            <div>
+              <span className={styles.kicker}>Before you start</span>
+              <h2 id="crrt-orientation-heading">Who this is for and how it works</h2>
+            </div>
+          </div>
+          <dl className={styles.orientationList}>
+            <div>
+              <dt>Who it is for</dt>
+              <dd>
+                Clinicians and trainees who already know what acute kidney injury is and can read a
+                basic acid–base and electrolyte picture. No earlier CRRT machine, circuit or
+                prescription experience is assumed.
+              </dd>
+            </div>
+            <div>
+              <dt>What you will practice</dt>
+              <dd>
+                Tracing one circuit and naming where each pressure sits; building a prescription in
+                stages; separating prescribed intensity from therapy actually delivered; telling a
+                circuit sample from a patient sample; and keeping the machine fluid ledger separate
+                from the whole-patient one.
+              </dd>
+            </div>
+            <div>
+              <dt>Order</dt>
+              <dd>
+                Everything is open. The Learn sequence below is a recommendation, not a requirement,
+                and every exercise, case and drill is an optional try with its worked explanation
+                available at any time.
+              </dd>
+            </div>
+            <div>
+              <dt>What “Visited” means</dt>
+              <dd>
+                You opened that lesson or case on this device. It is not a record of completion or
+                competence: a lesson whose exercises you skipped still shows as visited.
+              </dd>
+            </div>
+            <div>
+              <dt>What is saved</dt>
+              <dd>
+                Only on this device: which lessons and cases you have opened and where you were
+                last. Answers, runs and settings are not saved; each visit starts a fresh
+                simulation.
+              </dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>
+                A draft educational simulation, not yet clinically reviewed. Finishing it does not
+                qualify anyone to prescribe, set up or run CRRT, and it replaces no local protocol.
+              </dd>
+            </div>
+          </dl>
+          <CrrtGlossaryButton />
         </section>
 
         <section className={styles.curriculumMap} aria-labelledby="crrt-map-heading">
@@ -135,7 +197,7 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
             <ol aria-labelledby="crrt-learn-sequence-heading" data-crrt-learn-sequence>
               {BAXTER_CRRT_LEARN_LESSON_IDS.map((lessonId) => {
                 const lesson = baxterCrrtLearnLessonById.get(lessonId)
-                const visitedLesson = completedLessons.has(lessonId)
+                const visitedLesson = visitedLessons.has(lessonId)
                 return (
                   <li key={lessonId}>
                     <Link
@@ -147,7 +209,7 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
                     >
                       <span className={styles.lessonIndex}>{crrtLessonNumber(lessonId)}</span>
                       <span>{lesson?.title ?? lessonId}</span>
-                      {visitedLesson ? <small>visited</small> : null}
+                      {visitedLesson ? <VisitedMarker /> : null}
                     </Link>
                   </li>
                 )
@@ -162,9 +224,9 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
 
           <ol className={styles.stationList}>
             {baxterCrrtCurriculum.map((unit) => {
-              const complete = isCrrtCurriculumUnitComplete(visited, unit)
+              const allOpened = isCrrtCurriculumUnitComplete(visited, unit)
               return (
-                <li key={unit.id} className={styles.stationCard} data-complete={complete}>
+                <li key={unit.id} className={styles.stationCard} data-all-opened={allOpened}>
                   <div className={styles.stationHeading}>
                     <span className={styles.stationNumber}>
                       <span className="sr-only">Topic station </span>
@@ -174,54 +236,51 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
                       <h3>{unit.title}</h3>
                       <p>{unit.summary}</p>
                     </div>
-                    {complete ? (
-                      <span className={styles.stationVisited}>Topics visited</span>
+                    {allOpened ? (
+                      <span className={styles.stationVisited}>
+                        <Eye aria-hidden="true" /> Every lesson and core case here opened
+                        <span className="sr-only"> on this device; not a record of completion</span>
+                      </span>
                     ) : null}
                   </div>
                   <div className={styles.curriculumChips}>
                     {unit.lessonIds.map((lessonId) => {
                       const lesson = baxterCrrtLearnLessonById.get(lessonId)
-                      const completeLesson = completedLessons.has(lessonId)
+                      const visitedLesson = visitedLessons.has(lessonId)
                       return (
                         <Link
                           key={lessonId}
-                          data-complete={completeLesson}
+                          data-visited={visitedLesson}
                           href={{
                             pathname: `${baxterCrrtNavBase}/learn`,
                             query: { lesson: lessonId },
                           }}
                         >
-                          {completeLesson ? (
-                            <Check aria-hidden="true" />
-                          ) : (
-                            <BookOpenCheck aria-hidden="true" />
-                          )}
+                          <BookOpen aria-hidden="true" />
                           <span>
                             Lesson {crrtLessonNumber(lessonId)} · {lesson?.title ?? lessonId}
                           </span>
+                          {visitedLesson ? <VisitedMarker /> : null}
                         </Link>
                       )
                     })}
                     {unit.coreCaseIds.map((caseId) => {
-                      const caseComplete = completedCases.has(caseId)
+                      const visitedCase = visitedCases.has(caseId)
                       const entry = getBaxterCrrtCaseCatalogEntry(caseId)
                       return (
                         <Link
                           key={caseId}
-                          data-complete={caseComplete}
+                          data-visited={visitedCase}
                           href={{
                             pathname: `${baxterCrrtNavBase}/practice`,
                             query: { case: caseId },
                           }}
                         >
-                          {caseComplete ? (
-                            <Check aria-hidden="true" />
-                          ) : (
-                            <ClipboardCheck aria-hidden="true" />
-                          )}
+                          <ClipboardList aria-hidden="true" />
                           <span>
                             {caseId} · {entry.title}
                           </span>
+                          {visitedCase ? <VisitedMarker /> : null}
                         </Link>
                       )
                     })}
@@ -245,5 +304,18 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
         <SourcesPanel />
       </div>
     </BaxterCrrtModuleFrame>
+  )
+}
+
+/**
+ * The one marker a visited lesson or case carries (F-20): an eye and the word "Visited", with
+ * the meaning spelled out for screen readers. No tick, no color-only state, no completion.
+ */
+function VisitedMarker() {
+  return (
+    <small className={styles.visitedMarker} data-visited-marker>
+      <Eye aria-hidden="true" /> Visited
+      <span className="sr-only"> — opened on this device; not a record of completion</span>
+    </small>
   )
 }

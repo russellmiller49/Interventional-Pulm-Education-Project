@@ -84,7 +84,7 @@ export function CrrtCaseNavigator({
         <strong>{formatCrrtCasePosition(position)}</strong>
         <span>
           Station {entry.station} · {baxterCrrtStationLabels[entry.station]}. Any order; this is a
-          place in the list, not a score or a requirement.
+          place in the list, not a measure of progress or a requirement.
         </span>
       </p>
       <div className={styles.controls}>

@@ -333,7 +333,8 @@ test('sanity 03: all eight Learn destinations, end controls and restart retain c
         exact: index === 7,
       }),
     ).toBeVisible()
-    await page.getByRole('button', { name: 'Restart lesson', exact: true }).click()
+    // The header control; the end card offers the same operation under the same words (F-25).
+    await page.getByRole('button', { name: 'Restart lesson', exact: true }).first().click()
     await expect(page.getByText(/^Lesson tasks · 1 of/)).toBeVisible()
     expect(
       await page.evaluate(

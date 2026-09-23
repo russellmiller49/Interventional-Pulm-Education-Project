@@ -568,11 +568,11 @@ export const crrtBloodPathIds: readonly CrrtCircuitPathId[] = Object.freeze([
 ])
 
 /* ------------------------------------------------------------------ *
- * Pressure semantics: directly modelled sites versus calculated relationships
+ * Pressure semantics: directly modeled sites versus calculated relationships
  * ------------------------------------------------------------------ */
 
 /**
- * The distinction this module refuses to blur. Four pressures are modelled at a
+ * The distinction this module refuses to blur. Four pressures are modeled at a
  * physical location. TMP and filter pressure drop are arithmetic over those
  * locations — there is no fifth or sixth transducer to inspect.
  */
@@ -595,7 +595,7 @@ export interface CrrtPressureSignalDetail {
   readonly kind: CrrtPressureSignalKind
   /** Node the value belongs to. Null for calculated relationships — they have no location. */
   readonly nodeId: CrrtCircuitNodeId | null
-  /** Nodes a calculated relationship is computed from. Empty for modelled sites. */
+  /** Nodes a calculated relationship is computed from. Empty for modeled sites. */
   readonly derivedFromNodeIds: readonly CrrtCircuitNodeId[]
   readonly physicalLocation: string
   readonly whatProducesTheValue: string
@@ -850,7 +850,7 @@ export const crrtCircuitOverlays: readonly CrrtCircuitOverlay[] = Object.freeze(
     label: 'CVVHD',
     modality: 'cvvhd',
     summary:
-      'Continuous veno-venous haemodialysis: dialysate runs countercurrent along the fluid side of the membrane, with no replacement fluid.',
+      'Continuous veno-venous hemodialysis: dialysate runs countercurrent along the fluid side of the membrane, with no replacement fluid.',
     activePathIds: [...BLOOD, 'dialysate-supply', ...FLUID_SIDE],
     showsPressureProfile: false,
     showsFluidLedger: true,
@@ -864,7 +864,7 @@ export const crrtCircuitOverlays: readonly CrrtCircuitOverlay[] = Object.freeze(
     label: 'CVVH · pre-filter replacement',
     modality: 'cvvh',
     summary:
-      'Continuous veno-venous haemofiltration with replacement fluid given before the filter.',
+      'Continuous veno-venous hemofiltration with replacement fluid given before the filter.',
     activePathIds: [...BLOOD, 'pre-filter-replacement', ...FLUID_SIDE],
     showsPressureProfile: false,
     showsFluidLedger: true,
@@ -877,8 +877,7 @@ export const crrtCircuitOverlays: readonly CrrtCircuitOverlay[] = Object.freeze(
     id: 'cvvh-post',
     label: 'CVVH · post-filter replacement',
     modality: 'cvvh',
-    summary:
-      'Continuous veno-venous haemofiltration with replacement fluid given after the filter.',
+    summary: 'Continuous veno-venous hemofiltration with replacement fluid given after the filter.',
     activePathIds: [...BLOOD, 'post-filter-replacement', ...FLUID_SIDE],
     showsPressureProfile: false,
     showsFluidLedger: true,
@@ -892,7 +891,7 @@ export const crrtCircuitOverlays: readonly CrrtCircuitOverlay[] = Object.freeze(
     label: 'CVVHDF',
     modality: 'cvvhdf',
     summary:
-      'Continuous veno-venous haemodiafiltration: dialysate and replacement fluid together on the same circuit.',
+      'Continuous veno-venous hemodiafiltration: dialysate and replacement fluid together on the same circuit.',
     activePathIds: [
       ...BLOOD,
       'pre-filter-replacement',
@@ -955,7 +954,7 @@ export const crrtCircuitOverlays: readonly CrrtCircuitOverlay[] = Object.freeze(
     label: 'Pressure profile',
     modality: null,
     summary:
-      'The four directly modelled pressure sites and the two calculated relationships, on the same unchanged circuit.',
+      'The four directly modeled pressure sites and the two calculated relationships, on the same unchanged circuit.',
     activePathIds: [...BLOOD, 'dialysate-supply', ...FLUID_SIDE],
     showsPressureProfile: true,
     showsFluidLedger: false,
@@ -1043,7 +1042,7 @@ export function crrtCircuitTextEquivalent(overlayId: CrrtCircuitOverlayId): stri
 
   if (overlay.showsPressureProfile) {
     lines.push(
-      `Directly modelled pressure sites: ${crrtPressureSignalDetails
+      `Directly modeled pressure sites: ${crrtPressureSignalDetails
         .filter((detail) => detail.kind === 'directly-modelled-site')
         .map((detail) => detail.label)
         .join(

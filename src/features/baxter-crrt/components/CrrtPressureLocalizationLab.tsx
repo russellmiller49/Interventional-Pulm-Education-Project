@@ -3,6 +3,7 @@
 import { useEffect, useId, useState, type ChangeEvent } from 'react'
 
 import {
+  comparePressureLocalizationPrediction,
   createSyntheticPressureLocalizationResult,
   isPressureLocalizationCombinationSupported,
   pressureLocalizationFaults,
@@ -12,6 +13,7 @@ import {
   type PressureLocalizationPrediction,
   type PressureLocalizationSignal,
   type PressureLocalizationSite,
+  type PressureSignalComparisonOutcome,
   type QualitativePressureDirection,
 } from '../pressureLocalizationLabModel'
 import { CrrtPilotCircuit } from './CrrtPilotCircuit'
@@ -54,6 +56,15 @@ function formatSyntheticPressure(value: number): string {
   return `${value.toLocaleString('en-US', { maximumFractionDigits: 1 })} mmHg`
 }
 
+/** Text and a glyph, never color alone (F-23). The glyph is decorative; the words carry it. */
+const comparisonWords: Readonly<
+  Record<PressureSignalComparisonOutcome, { readonly glyph: string; readonly text: string }>
+> = {
+  matches: { glyph: '✓', text: 'Matches' },
+  'does-not-match': { glyph: '✗', text: 'Does not match' },
+  'no-prediction': { glyph: '–', text: 'No prediction made' },
+}
+
 const nodeForSite: Record<PressureLocalizationSite, CrrtCircuitNodeId> = {
   'access-catheter': 'access-lumen',
   'access-line': 'access-pressure',
@@ -91,6 +102,7 @@ export function CrrtPressureLocalizationLab({
   const [revealed, setRevealed] = useState(false)
 
   const result = createSyntheticPressureLocalizationResult(fault, site)
+  const comparisons = comparePressureLocalizationPrediction(result, committedPrediction)
   const displayedSnapshot = revealed ? result.revealed : result.baseline
   const predictionComplete = hasCompletePrediction(prediction)
 
@@ -386,21 +398,26 @@ export function CrrtPressureLocalizationLab({
               <thead>
                 <tr>
                   <th scope="col">Signal</th>
-                  <th scope="col">Submitted prediction</th>
+                  <th scope="col">Your prediction</th>
                   <th scope="col">Observed direction</th>
+                  <th scope="col">Comparison</th>
                   <th scope="col">Pressure trace</th>
                 </tr>
               </thead>
               <tbody>
-                {result.signals.map((signal) => (
-                  <tr key={signal.id}>
+                {comparisons.map((signal) => (
+                  <tr key={signal.id} data-comparison={signal.outcome}>
                     <th scope="row">{signal.label}</th>
                     <td>
-                      {committedPrediction
-                        ? directionLabel(committedPrediction[signal.id])
+                      {signal.predicted
+                        ? directionLabel(signal.predicted)
                         : 'No prediction recorded'}
                     </td>
-                    <td>{directionLabel(signal.direction)}</td>
+                    <td>{directionLabel(signal.observed)}</td>
+                    <td className={styles.comparisonCell} data-comparison={signal.outcome}>
+                      <span aria-hidden="true">{comparisonWords[signal.outcome].glyph}</span>{' '}
+                      {comparisonWords[signal.outcome].text}
+                    </td>
                     <td>
                       {formatSyntheticPressure(signal.baselineMmHg)} →{' '}
                       {formatSyntheticPressure(signal.revealedMmHg)}
@@ -410,6 +427,40 @@ export function CrrtPressureLocalizationLab({
               </tbody>
             </table>
           </div>
+
+          <section
+            className={styles.signalExplanations}
+            aria-labelledby={`${idPrefix}-why-heading`}
+            data-crrt-pressure-explanations
+          >
+            <h5 id={`${idPrefix}-why-heading`}>Why each signal moved</h5>
+            <p>
+              Each signal is compared on its own. The explanations are worked from this
+              pattern&apos;s readings, so they change with the site you choose.
+            </p>
+            <ol>
+              {comparisons.map((signal) => (
+                <li
+                  key={signal.id}
+                  data-crrt-pressure-signal={signal.id}
+                  data-comparison={signal.outcome}
+                >
+                  <p className={styles.signalExplanationHead}>
+                    <strong>{signal.label}</strong>
+                    {' · '}
+                    {signal.predicted
+                      ? `You predicted ${directionLabel(signal.predicted).toLowerCase()}; observed ${directionLabel(signal.observed).toLowerCase()}.`
+                      : `No prediction made; observed ${directionLabel(signal.observed).toLowerCase()}.`}{' '}
+                    <span className={styles.comparisonTag} data-comparison={signal.outcome}>
+                      <span aria-hidden="true">{comparisonWords[signal.outcome].glyph}</span>{' '}
+                      {comparisonWords[signal.outcome].text}
+                    </span>
+                  </p>
+                  <p>{signal.explanation}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
 
           <button
             type="button"

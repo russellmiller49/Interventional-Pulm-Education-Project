@@ -404,7 +404,7 @@ export function CrrtFoundationToolView({
           ))}
         </div>
         <details onToggle={(event) => setShowRecordedComparison(event.currentTarget.open)}>
-          <summary>Engine-generated recorded comparison</summary>
+          <summary>Recorded comparison from the simulation</summary>
           {showRecordedComparison ? <CrrtLivePressureStation /> : null}
         </details>
       </>

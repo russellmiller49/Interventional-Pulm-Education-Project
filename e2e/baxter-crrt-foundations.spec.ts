@@ -117,7 +117,9 @@ for (const keyboardOnly of [false, true]) {
     await next(page)
     await modalityWalk(page)
     await answer(page, /Use the modality with the most mechanisms/)
-    await expect(page.getByRole('heading', { name: 'Reasoning feedback' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Your choice is not the accepted answer' }),
+    ).toBeVisible()
     expect((await progress(page)).completedLessonIds).toEqual([])
     await screenshot(page, info, '02-wrong-feedback')
     await review(page)

@@ -7,3 +7,14 @@
 .list li + li {
   margin-top: 0.15rem;
 }
+
+.record {
+  margin: 0.2rem 0 0.8rem;
+}
+
+.record > summary {
+  min-height: 2.75rem;
+  cursor: pointer;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}

@@ -71,7 +71,12 @@ describe('rendered Batch B lessons', () => {
     expect(screen.queryByText(/Recorded balance:/)).not.toBeInTheDocument()
     fireEvent.change(input, { target: { value: '400' } })
     click('Check recorded balance')
-    expect(screen.getByRole('status')).toHaveTextContent('First answer: 400 mL')
+    // F-21: the outcome is stated, the entry is compared, and there is no "first answer" record.
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Your entry does not match the recorded balance',
+    )
+    expect(screen.getByRole('status')).toHaveTextContent('Your entry: +400 mL')
+    expect(screen.getByRole('status')).not.toHaveTextContent(/first answer/i)
     expect(readProgress().learnTaskHistory).toBeUndefined()
     expect(await axe(view.container)).toHaveNoViolations()
     expect(readProgress().completedLessonIds).not.toContain('crrt-fluid-liberation')
@@ -79,7 +84,11 @@ describe('rendered Batch B lessons', () => {
     expect(screen.getByText('Not recorded in this chart')).toBeVisible()
     expect(screen.queryByText(/Recorded balance:/)).not.toBeInTheDocument()
     answer(/Report that exact balance is unavailable/)
-    expect(screen.getByText(/Net-removal case · CRRT-10 · event 0 · clock 0h 00m/)).toBeVisible()
+    expect(
+      screen.getByText(
+        /Net-removal change · guided version of Practice case CRRT-10 · event 0 · clock 0h 00m/,
+      ),
+    ).toBeVisible()
     click('Review patient tolerance')
     click('Review external intake and output')
     click('Apply the case net-removal adjustment')
@@ -121,7 +130,7 @@ describe('rendered Batch B lessons', () => {
     )
     expect(
       within(screen.getByRole('region', { name: 'Alert and cause record' })).getByText(
-        /active cause/,
+        /cause still active/,
       ),
     ).toBeVisible()
     view.rerender(

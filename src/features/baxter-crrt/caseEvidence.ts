@@ -1,3 +1,4 @@
+import { CRRT_LEARNER_MASS_CONCENTRATION_UNIT } from './content/concentrationUnits'
 import {
   getCrrtCaseEvidenceScope,
   type CrrtAbsentEvidence,
@@ -5,7 +6,7 @@ import {
   type CrrtScopeTeachingPointer,
   type CrrtSuppliedEvidenceFieldId,
 } from './content/caseEvidenceScope'
-import type { RuntimeCrrtCase } from './content/schema'
+import type { RuntimeCrrtCase, SourceReference } from './content/schema'
 
 /**
  * Resolves a case's evidence scope against the case's own supplied values.
@@ -35,6 +36,8 @@ export interface CrrtCaseEvidence {
   readonly furtherTeaching: readonly CrrtScopeTeachingPointer[]
   /** The case's own source records for its supplied patient values. */
   readonly suppliedSourceIds: readonly string[]
+  /** The same records, resolved from the case's own source basis (F-19 plain citations). */
+  readonly suppliedSources: readonly SourceReference[]
 }
 
 export const CRRT_CASE_EVIDENCE_HEADING = 'What this case can show you' as const
@@ -65,14 +68,14 @@ const fieldDescriptors: Readonly<Record<CrrtSuppliedEvidenceFieldId, FieldDescri
     'total-calcium': {
       label: 'Total calcium',
       sampleIdentity: 'Systemic sample — patient blood, not the circuit',
-      unit: 'mg/dL',
+      unit: CRRT_LEARNER_MASS_CONCENTRATION_UNIT,
       decimals: 1,
       read: (patient) => patient.solutes.totalCalciumMgPerDl,
     },
     'creatinine-marker': {
       label: 'Creatinine marker',
       sampleIdentity: 'Systemic sample — a model marker, not a reported laboratory creatinine',
-      unit: 'mg/dL',
+      unit: CRRT_LEARNER_MASS_CONCENTRATION_UNIT,
       decimals: 1,
       read: (patient) => patient.solutes.creatinineMgPerDl,
     },
@@ -146,5 +149,9 @@ export function selectCrrtCaseEvidence(definition: RuntimeCrrtCase): CrrtCaseEvi
     modelDoesNotModel: scope.modelDoesNotModel,
     furtherTeaching: scope.furtherTeaching,
     suppliedSourceIds: [...definition.initialPatient.sourceIds],
+    suppliedSources: definition.initialPatient.sourceIds.flatMap((id) => {
+      const source = definition.sourceBasis.find((candidate) => candidate.id === id)
+      return source ? [source] : []
+    }),
   }
 }

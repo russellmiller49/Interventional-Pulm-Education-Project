@@ -496,7 +496,7 @@ export function CrrtPilotCircuit({
 
   const selectedPressureSummary = highlightedDetail
     ? highlightedDetail.kind === 'directly-modelled-site'
-      ? `Selected pressure: ${highlightedDetail.label}, a directly modelled site, marked on this circuit at ${crrtCircuitNode(highlightedDetail.nodeId!).label}.`
+      ? `Selected pressure: ${highlightedDetail.label}, a directly modeled site, marked on this circuit at ${crrtCircuitNode(highlightedDetail.nodeId!).label}.`
       : `Selected pressure: ${highlightedDetail.label}, a calculated relationship with no site of its own. The sites it is computed from are marked: ${highlightedDetail.derivedFromNodeIds.map((id) => crrtCircuitNode(id).label).join(', ')}.`
     : 'No pressure is currently selected.'
 
@@ -896,7 +896,7 @@ export function CrrtPilotCircuit({
                     />
                     <em data-kind={detail.kind}>
                       {detail.kind === 'directly-modelled-site'
-                        ? 'Directly modelled site'
+                        ? 'Directly modeled site'
                         : bloodFlow && bloodFlow.status !== 'delivering'
                           ? 'Calculated relationship · not interpretable without blood flow'
                           : 'Calculated relationship'}
@@ -911,7 +911,7 @@ export function CrrtPilotCircuit({
                     <summary>
                       {detail.label}
                       <i data-kind={detail.kind}>
-                        {detail.kind === 'directly-modelled-site' ? 'Modelled site' : 'Calculated'}
+                        {detail.kind === 'directly-modelled-site' ? 'Modeled site' : 'Calculated'}
                       </i>
                     </summary>
                     <dl>
@@ -996,7 +996,7 @@ export function CrrtPilotCircuit({
               >
                 <div className={styles.subheading}>
                   <span>Fluid conservation</span>
-                  <h3 id={`${idPrefix}-ledger-heading`}>Where every millilitre goes</h3>
+                  <h3 id={`${idPrefix}-ledger-heading`}>Where every milliliter goes</h3>
                 </div>
                 <p className={styles.panelNote}>
                   {ledgerIsLive
@@ -1067,7 +1067,7 @@ export function CrrtPilotCircuit({
                   </p>
                 ) : (
                   <p className={styles.ledgerHeadline}>
-                    No net fluid is being removed, so every millilitre in the effluent bag came from
+                    No net fluid is being removed, so every milliliter in the effluent bag came from
                     somewhere other than the patient’s own volume.
                   </p>
                 )}

@@ -9,7 +9,7 @@ export const crrtHardwareFunctionTeaching: Record<PrismaxSimulatorHotspotId, str
   'syringe-pump':
     'The syringe-pump position belongs to a separate added-solution pathway. Its connection site and solution must be verified; seeing this hardware does not establish an anticoagulant, dose or operating sequence. Syringe delivery is excluded from the three-control setup exercise.',
   'safety-monitoring':
-    'Pressure connections provide information about their circuit segments; air monitoring and the return-line clamp are safety-related hardware. Their exact alarm responses require the manufacturer instructions. The following run shows only the responses encoded by this educational engine.',
+    'Pressure connections provide information about their circuit segments; air monitoring and the return-line clamp are safety-related hardware. Their exact alarm responses require the manufacturer instructions. The following run shows only the responses this educational simulation models.',
   'fluid-management':
     'Bag scales support fluid accounting as fluid leaves supply bags and accumulates in collection. Trace each bag to its circuit path. Effluent collection includes spent dialysate and ultrafiltered water; it is not the same quantity as net fluid removed from the patient.',
 }
@@ -49,8 +49,8 @@ export const crrtOperationalTasks: Partial<
       instruction:
         'Use New patient and complete the displayed setup steps. Enter the illustrative values: blood flow 120 mL/min, dialysate 1,800 mL/h and patient fluid removal 100 mL/h. Review, prime and start the modeled treatment.',
       teaching: [
-        'This normal reference uses the existing setup workflow and CRRT-04 initial state, with an 80 kg synthetic patient. The values are teaching inputs, not a prescription recommendation.',
-        'An entered draft is not applied. Applying reviewed values configures the engine; priming alone delivers no treatment to the patient. Recorded delivery begins only after the modeled start and an observation interval.',
+        'This normal reference is a guided version of the setup in Practice case CRRT-04, with an 80 kg simulated patient. The values are teaching inputs, not a prescription recommendation.',
+        'An entered draft is not applied. Applying reviewed values configures the simulation; priming alone delivers no treatment to the patient. Recorded delivery begins only after the modeled start and an observation interval.',
       ],
     },
     {
@@ -108,9 +108,9 @@ export const crrtOperationalTasks: Partial<
       instruction:
         'Review the case assessment, then advance to the next event at 30 minutes. Compare the alert, access pressure, pump state and delivered volume.',
       teaching: [
-        'This starts the existing CRRT-13 access case with different applied flows. The reference run has ended for this exercise; none of its volumes carry into this case.',
+        'This starts a guided version of Practice case CRRT-13; its applied flows differ from the reference run. The reference run has ended for this exercise; none of its volumes carry into this case.',
         'At the bedside, assess the patient and the connected circuit promptly and follow the displayed device instructions. An acknowledgement records that an alert was seen; it does not identify or correct its cause.',
-        'This engine emits generic fault alerts. Manufacturer priority and automatic pump responses are not encoded. Read the actual modeled pump flags below: an alert itself does not automatically stop these pumps.',
+        'This simulation raises generic, simulated alerts, not PrisMax alarms. Manufacturer priority and automatic pump responses are not modeled. Read the actual modeled pump flags below: an alert itself does not automatically stop these pumps.',
       ],
     },
     {
@@ -238,7 +238,7 @@ export const crrtOperationalTasks: Partial<
       instruction: 'Read the prepared reference before advancing its clock.',
       teaching: [
         'Use the prior circuit and dose concepts to calculate whole-patient balance from recorded delivery, distinguish a net-removal adjustment from solute-support flows, and plan clinical reassessment when considering liberation.',
-        'This fresh CRRT-04 run is prepared through the same setup reducer: 80 kg, CVVHD, blood 120 mL/min, dialysate 1,800 mL/h and machine patient fluid removal 100 mL/h. No treatment time has elapsed. These are teaching inputs, not a recommended prescription.',
+        'This fresh run is a guided version of Practice case CRRT-04, prepared with the same setup steps: 80 kg, CVVHD, blood 120 mL/min, dialysate 1,800 mL/h and machine patient fluid removal (PFR) 100 mL/h. No treatment time has elapsed. These are teaching inputs, not a recommended prescription.',
         'The case schedules a pause at 2 hours and resumption at 3 hours. These are authored scenario events, not instructions to resume a clinical treatment automatically. Record each event boundary and include external intake and output throughout the same interval.',
       ],
     },
@@ -252,7 +252,7 @@ export const crrtOperationalTasks: Partial<
       instruction:
         'Advance through the four hourly observations. Stop to read the 2-hour pause and the 3-hour resumption; compare recorded volume in each interval.',
       teaching: [
-        'Each row is the difference between actual engine totals at its two endpoints. A rate shown now is not multiplied by all elapsed time. The timeline includes the stopped hour and any physical delivery limits enforced by the existing engine.',
+        'Each row is the difference between the simulation’s recorded totals at its two endpoints. A rate shown now is not multiplied by all elapsed time. The timeline includes the stopped hour and any physical delivery limits the simulation enforces.',
       ],
     },
     {
@@ -276,7 +276,7 @@ export const crrtOperationalTasks: Partial<
       kind: 'question',
       operation: 'missing-chart',
       instruction:
-        'Review a deliberately incomplete chart copy for the same interval. The engine record is intact, but this chart withholds urine output.',
+        'Review a deliberately incomplete chart copy for the same interval. The simulation’s record is intact, but this chart copy withholds urine output.',
       teaching: [],
       question: 'What balance can you report from this incomplete chart?',
       choices: [
@@ -304,7 +304,7 @@ export const crrtOperationalTasks: Partial<
       instruction:
         'Review patient tolerance and the external-fluid ledger, then apply the case’s net-removal adjustment. Compare the immediate settings before advancing time.',
       teaching: [
-        'This starts the existing CRRT-10 fluid case with high external intake. The case action changes patient fluid removal from 250 to 350 mL/h while blood flow and dialysate stay fixed. This is a synthetic case choice, not a universal safe rate or target.',
+        'This starts a guided version of Practice case CRRT-10, which has high external intake. The case action changes patient fluid removal (PFR) from 250 to 350 mL/h while blood flow and dialysate stay fixed. This is a simulated case choice, not a universal safe rate or target.',
         'The applied rate changes immediately. Prior accumulated volume and patient model state do not change until time advances. Net removal affects the patient’s fluid ledger; blood flow and dialysate have different transport and circuit roles.',
       ],
     },
@@ -318,7 +318,7 @@ export const crrtOperationalTasks: Partial<
       instruction:
         'Record 30 minutes and compare accumulated fluid and the model’s limited tolerance indicators with the starting state.',
       teaching: [
-        'The fluid ledger integrates recorded delivery and external flows. The engine’s reserve and stress indices are bounded teaching proxies, not blood-pressure measurements or evidence that a bedside patient tolerates this rate.',
+        'The fluid ledger integrates recorded delivery and external flows. The simulation’s reserve and stress indices are bounded teaching proxies, not blood-pressure measurements or evidence that a bedside patient tolerates this rate.',
         'Clinical reassessment includes perfusion, hemodynamics, fluid goals and the continuing need for solute and acid–base support. This lesson does not infer a potassium or pH trajectory from effluent alone.',
       ],
     },

@@ -83,7 +83,7 @@ const siaarti = {
   revision: null,
   checks: [citrateReadCheck()],
   limitation:
-    'Classed as expert opinion from its own title (joint-commission expert opinion). It was not re-read for this batch.',
+    'Classed as expert opinion from its own title (joint-commission expert opinion). It was not re-read for the September 14, 2026 source check.',
 } as const satisfies CrrtSourceDating
 
 const schneider = {
@@ -93,7 +93,7 @@ const schneider = {
   revision: null,
   checks: [citrateReadCheck()],
   limitation:
-    'Classed as expert opinion from the article type recorded when it was added (expert viewpoint). It was not re-read for this batch.',
+    'Classed as expert opinion from the article type recorded when it was added (expert viewpoint). It was not re-read for the September 14, 2026 source check.',
 } as const satisfies CrrtSourceDating
 
 export const CRRT_SOURCE_DATING: ReadonlyMap<string, CrrtSourceDating> = new Map<
@@ -147,7 +147,7 @@ export const CRRT_SOURCE_DATING: ReadonlyMap<string, CrrtSourceDating> = new Map
       revision: null,
       checks: [citrateReadCheck()],
       limitation:
-        'Recommendation strength and certainty are not recorded in the module and were not checked for this batch.',
+        'Recommendation strength and certainty are not recorded in the module and were not checked in the September 14, 2026 source check.',
     },
   ],
 ])

@@ -81,6 +81,27 @@
   line-height: 1.5;
 }
 
+.footer {
+  flex-wrap: wrap;
+}
+
+/* F-25: the reset says what it clears, beside the button. */
+.resetGroup {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 24rem;
+}
+
+.resetGroup .resetScope {
+  color: #c8d9d7;
+  font-size: 0.85rem;
+}
+
+/* F-07: the chosen response's verdict, in words. */
+.verdict {
+  color: #fff1d7;
+}
+
 .selector {
   display: grid;
   gap: 0.35rem;

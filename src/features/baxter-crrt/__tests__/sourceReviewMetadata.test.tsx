@@ -67,7 +67,8 @@ describe('G01 CRRT source type, dates and document checks', () => {
     expect(drop.getByText('Published: June 2019')).toBeInTheDocument()
     expect(drop.getByText('Revision: AW8035 Rev B · program version 2.XX')).toBeInTheDocument()
     expect(drop.getAllByText(/^Checked against the document on/)).toHaveLength(2)
-    expect(drop.getByText(/\(checker not recorded\)/)).toBeInTheDocument()
+    // F-19: a missing checker is said in plain words; the missing name is still disclosed.
+    expect(drop.getByText(/\(the record does not name who checked\)/)).toBeInTheDocument()
   })
 
   it('renders nothing for a source outside the dated batch', () => {

@@ -237,7 +237,8 @@ for (const compact of [false, true]) {
     expect(progress.learnTaskHistory).toBeUndefined()
     expect(progress.completedLessonIds).toEqual([])
     await capture(page, info, '16-completed-citrate-and-integration')
-    await click(page, 'Repeat lesson')
+    // F-25: the end card says Restart lesson, like the header control it duplicates.
+    await page.getByRole('button', { name: 'Restart lesson', exact: true }).last().click()
     expect((await saved(page)).learnTaskHistory).toEqual(progress.learnTaskHistory)
     await expect(button(page, 'Review patient and treatment')).toBeVisible()
     expect(errors).toEqual([])
@@ -259,7 +260,9 @@ test('Batch C session review, reload and compact reflow keep answers transient a
   await expect(
     page.getByRole('radio', { name: /An isolated access-side limitation/ }),
   ).toBeChecked()
-  await expect(page.getByRole('heading', { name: 'Reasoning feedback' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Your choice is not the accepted answer' }),
+  ).toBeVisible()
   await capture(page, info, '17-review-current-session-answer')
   await review(page)
   await page.getByRole('combobox', { name: 'CRRT lesson' }).selectOption('crrt-anticoagulation')
