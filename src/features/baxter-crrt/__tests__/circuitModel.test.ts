@@ -235,7 +235,7 @@ describe('CRRT circuit overlays', () => {
       // A pressure view must name the measured/calculated split; a citrate view
       // must name both sampling domains.
       if (overlay.showsPressureProfile) {
-        expect(text).toMatch(/directly modelled pressure sites/i)
+        expect(text).toMatch(/directly modeled pressure sites/i)
         expect(text).toMatch(/calculated relationships with no location of their own/i)
       }
       if (overlay.showsSamplingDomains) {

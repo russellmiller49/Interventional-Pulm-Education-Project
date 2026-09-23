@@ -1098,7 +1098,7 @@ const crrtLessonSeeds: readonly ActivitySeed[] = (
     ],
     [
       'crrt-pressure-profile-integration',
-      'Read the pressure profile: where in the circuit is the problem?',
+      'Pressure-profile integration',
       ['crrt-pressure-localization', 'crrt-device-management', 'crrt-fluid-management'],
       'integration',
       1,

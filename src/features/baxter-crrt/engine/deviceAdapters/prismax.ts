@@ -317,7 +317,7 @@ export interface CrrtDevicePressureSignalView {
   readonly validityReason: string | null
   /** The circuit node this value is read at. Null for calculated relationships. */
   readonly nodeId: CrrtCircuitNodeId | null
-  /** Nodes a calculated relationship is computed from. Empty for modelled sites. */
+  /** Nodes a calculated relationship is computed from. Empty for modeled sites. */
   readonly derivedFromNodeIds: readonly CrrtCircuitNodeId[]
   readonly derivedFromSignalIds: readonly CrrtPressureSignalId[]
   /** Node labels, so a component never has to resolve circuit geometry itself. */
@@ -670,7 +670,7 @@ const NO_HISTORY_REASON =
   'Not kept over time by this model. The recorded history covers access, filter, return, and TMP; this channel is a current value only.'
 
 const NO_PRESSURE_MODEL_REASON =
-  'This case has no pressure model loaded, so no site is being modelled. Every pressure reads as unavailable together — this is not a single failed sensor, and it is not a reading of zero.'
+  'This case has no pressure model loaded, so no site is being modeled. Every pressure reads as unavailable together — this is not a single failed sensor, and it is not a reading of zero.'
 
 const NO_CASE_REASON =
   'No case is attached, so the model is not producing pressures. This is not a reading of zero.'

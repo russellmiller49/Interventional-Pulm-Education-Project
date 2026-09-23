@@ -96,7 +96,7 @@ const scopes: readonly CrrtCaseEvidenceScope[] = Object.freeze([
     ],
     furtherTeaching: [
       {
-        text: 'Pre-filter replacement can lower the solute concentration presented to the filter and change clearance per litre of effluent; post-filter replacement preserves that concentration but can concentrate blood inside the filter. Neither split is universally preferred.',
+        text: 'Pre-filter replacement can lower the solute concentration presented to the filter and change clearance per liter of effluent; post-filter replacement preserves that concentration but can concentrate blood inside the filter. Neither split is universally preferred.',
         sourceIds: [CORE_REVIEW],
       },
       {
@@ -126,7 +126,7 @@ const scopes: readonly CrrtCaseEvidenceScope[] = Object.freeze([
       'A bounded tolerance-stress index and the intravascular reserve remaining.',
     ],
     modelDoesNotModel: [
-      'Any haemodynamic response to removing fluid. An unchanged mean arterial pressure after an unsafe removal rate is the model holding a supplied value, not evidence that the rate was tolerated.',
+      'Any hemodynamic response to removing fluid. An unchanged mean arterial pressure after an unsafe removal rate is the model holding a supplied value, not evidence that the rate was tolerated.',
     ],
     furtherTeaching: [
       {
@@ -144,7 +144,7 @@ const scopes: readonly CrrtCaseEvidenceScope[] = Object.freeze([
       {
         label: 'A readable filter-pressure trend within the run',
         reason:
-          'The filter burden coefficients are slow: filter pressure rises well under a millimetre of mercury across six simulated hours, so the run cannot demonstrate a trend you could localize from the number alone. The pressure-location exercise teaches the pattern instead.',
+          'The filter burden coefficients are slow: filter pressure rises well under a millimeter of mercury across six simulated hours, so the run cannot demonstrate a trend you could localize from the number alone. The pressure-location exercise teaches the pattern instead.',
       },
     ],
     modelCalculates: [

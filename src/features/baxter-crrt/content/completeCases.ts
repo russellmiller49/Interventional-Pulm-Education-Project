@@ -969,6 +969,111 @@ function updateOption(
   option.sourceIds = [...sourceIds]
 }
 
+/**
+ * CRRT-FELLOW-04 (F-07): what an action card says before it is performed.
+ *
+ * A card's description says what the action does, not whether it is the right choice. Several
+ * printed their own verdict before the learner chose ("This action is unsafe because…", "This
+ * path intentionally bypasses a required safety or verification step for debriefing", "Use the
+ * explicit accepted pause-correct-resume alternative"), so the case answered itself. Each
+ * replacement describes the same action — its effect in this simulation, or that it only records
+ * a plan — without a verdict, and without making a dangerous action look safe: the labels, which
+ * name what is unsafe about each one, are unchanged. The authored verdicts and explanations still
+ * appear once an action is performed, in "Explain this case" and in the debrief.
+ */
+const ADAPTED_ACTION_DESCRIPTION =
+  'Performing this records it in the case timeline; the simulation changes no setting for it.'
+
+const learnerActionDescriptionById: Readonly<Record<string, string>> = Object.freeze({
+  'crrt01-action-unsafe-candidate':
+    'Raise machine fluid removal now, before hemodynamic tolerance has been assessed and with no reassessment planned.',
+  'crrt02-action-alternative-candidate':
+    'Keep the current settings and ask the multidisciplinary team to review the incomplete treatment context urgently.',
+  'crrt04-enter-dialysate-primary': 'Enter the case’s first example dialysate flow.',
+  'crrt04-enter-dialysate-alternative':
+    'Enter the case’s second example dialysate flow and compare the displayed result.',
+  'crrt04-start-before-review':
+    'Try to start treatment before prime and prescription review are recorded on the machine.',
+  'crrt07-action-safe-candidate':
+    'Replace the weight and hematocrit entries with the values given in the case information.',
+  'crrt07-action-alternative-candidate':
+    'Stop and ask for an independent check of the entries before going on.',
+  'crrt08-action-alternative-candidate':
+    'Stop and ask for an independent check of the entries before going on.',
+  'crrt09-action-alternative-candidate':
+    'Stop and ask for an independent check of the entries before going on.',
+  'crrt10-increase-pfr-without-reassessment':
+    'Raise machine PFR (patient fluid removal) before hemodynamic tolerance has been assessed.',
+  'crrt13-pause-treatment': 'Pause blood and fluid delivery while the access path is corrected.',
+  'crrt13-resume-treatment':
+    'Resume blood and fluid delivery once the access path has been corrected.',
+  'crrt13-escalate-anticoagulation-first':
+    'Escalate anticoagulation before the mechanical access problem is corrected. The simulation applies no medication effect.',
+})
+
+/**
+ * CRRT-FELLOW-04 (F-19): the safety explanations a learner reads in the debrief and in "Explain
+ * this case", restated without build vocabulary ("pending option critical error", "scoring
+ * records", "retained only as…"). Each keeps its meaning and its review status; where the
+ * original gave no reason, none is added — the action's own label names what is unsafe.
+ * Matched on the exact final wording, so a changed source string fails the copy test instead
+ * of passing through silently.
+ */
+const learnerSafetyCopyByText: Readonly<Record<string, string>> = Object.freeze({
+  'This exact unsafe option is simulated, under review, and must not be generalized to patient care.':
+    'This case treats this action as unsafe. The example is simulated, its case rule has not been clinically reviewed, and it must not be generalized to patient care.',
+  'Pending simulated critical-error option': 'Unsafe action in this case',
+  'Clinical exercise scoring option; it is not an approved clinical critical-error rule.':
+    'This exercise flags the action as unsafe. The rule belongs to this exercise and has not been reviewed as a clinical rule.',
+  'Attempting to bypass prime and prescription review is a pending option critical error; the device workflow blocks execution.':
+    'Starting before prime and prescription review skips the setup check; the machine refuses the start.',
+  'Pending clinical/device review; scoring records the unsafe choice even though the simulator blocks the device transition.':
+    'The run records the unsafe choice even though the machine refuses the start. Clinical and device review of this case rule has not been done.',
+  'Pending clinical review; this case requires actual delivered-dose reassessment rather than reliance on the prescription alone.':
+    'This case requires reassessing the dose actually delivered rather than relying on the prescription alone. Clinical review of this case rule has not been done.',
+  'Increasing removal without first assessing the tolerance signal is a pending option critical error.':
+    'Increasing removal without first assessing hemodynamic tolerance skips the assessment this case requires.',
+  'Pending clinical review; the simulator records this unsafe choice but does not generalize its case value to patient care.':
+    'The run records this unsafe choice; its case value is not a patient-care threshold. Clinical review of this case rule has not been done.',
+  'Pending clinical review; visible external inputs and outputs must not be collapsed into the machine PFR setting.':
+    'Visible external inputs and outputs must not be folded into the machine PFR setting. Clinical review of this case rule has not been done.',
+  'Pending clinical/device review; the model demonstrates the directional consequence without creating a universal threshold.':
+    'The simulation shows the direction of the consequence without setting a universal threshold. Clinical and device review of this case rule has not been done.',
+  'Pending clinical/device review; acknowledgement alone leaves the resistance and fault active.':
+    'Acknowledgement alone leaves the resistance and the fault active. Clinical and device review of this case rule has not been done.',
+  'The case authors a mechanical cause; medication escalation is disabled and does not correct it.':
+    'This case sets up a mechanical cause; escalating medication has no effect in the simulation and does not correct it.',
+  'Pending clinical review; the pilot has no active anticoagulation protocol and the mechanical cause remains correctable independently.':
+    'This case has no active anticoagulation protocol, and the mechanical cause can be corrected on its own. Clinical review of this case rule has not been done.',
+})
+
+function plainSafetyCopy(value: string): string {
+  return learnerSafetyCopyByText[value] ?? value
+}
+
+/** Post-action responses that contradicted the laboratory containment (F-19). */
+const learnerActionResponseById: Readonly<Record<string, string>> = Object.freeze({
+  'crrt04-advance-six-hours':
+    'Dose, downtime, and the pressure and fluid trends update as case time passes. Laboratory values are not modeled over time.',
+})
+
+function applyLearnerActionCopy(definition: MutableRuntimeCrrtCase): MutableRuntimeCrrtCase {
+  for (const intervention of definition.interventions) {
+    const description = learnerActionDescriptionById[intervention.id]
+    if (description) intervention.description = description
+    const response = learnerActionResponseById[intervention.id]
+    if (response) intervention.response = response
+  }
+  for (const unsafe of definition.unsafeActions) {
+    unsafe.explanation = plainSafetyCopy(unsafe.explanation)
+  }
+  for (const criticalError of definition.criticalErrors) {
+    criticalError.label = plainSafetyCopy(criticalError.label)
+    criticalError.explanation = plainSafetyCopy(criticalError.explanation)
+  }
+  return definition
+}
+
 function buildAdaptedCase(narrative: CaseNarrative): MutableRuntimeCrrtCase {
   const template = sourceCaseById.get(narrative.templateId)
   if (!template) throw new Error(`Missing CRRT case template ${narrative.templateId}.`)
@@ -1092,8 +1197,7 @@ function buildAdaptedCase(narrative: CaseNarrative): MutableRuntimeCrrtCase {
   )
   if (requiredSafeAction) {
     requiredSafeAction.label = narrative.safeAction
-    requiredSafeAction.description =
-      'Complete the assessment first, then take this action and verify the patient and treatment response.'
+    requiredSafeAction.description = ADAPTED_ACTION_DESCRIPTION
     requiredSafeAction.response = narrative.expectedResponse
     requiredSafeAction.sourceIds = [...narrativeSourceIds]
   }
@@ -1111,22 +1215,21 @@ function buildAdaptedCase(narrative: CaseNarrative): MutableRuntimeCrrtCase {
     )
     if (alternativeIntervention) {
       alternativeIntervention.label = narrative.acceptedAlternative
-      alternativeIntervention.description =
-        'Use this alternative with the same safety checks, team communication, and reassessment.'
+      alternativeIntervention.description = ADAPTED_ACTION_DESCRIPTION
       alternativeIntervention.response = narrative.expectedResponse
       alternativeIntervention.sourceIds = [...narrativeSourceIds]
     }
   }
   if (unsafeIntervention) {
     unsafeIntervention.label = narrative.unsafeAction
-    unsafeIntervention.description =
-      'This path intentionally bypasses a required safety or verification step for debriefing.'
-    unsafeIntervention.response = 'The attempt is stopped and flagged for causal debrief.'
+    unsafeIntervention.description = ADAPTED_ACTION_DESCRIPTION
+    unsafeIntervention.response =
+      'Recorded. The simulation changes nothing for this action; the debrief explains why this case treats it as unsafe.'
     unsafeIntervention.sourceIds = [syntheticId]
   }
   for (const unsafe of cloned.unsafeActions) {
     unsafe.explanation =
-      'The selected action bypasses verification, escalation, or reassessment and is retained only as an educational unsafe path.'
+      'This action bypasses verification, escalation, or reassessment. It stays in the list so its consequences can be explored; it is not a recommended path.'
     unsafe.sourceIds = [syntheticId]
   }
   for (const criticalError of cloned.criticalErrors) {
@@ -1780,6 +1883,7 @@ const promotedCases = sourceCases
 const parsedCases = runtimeCrrtCaseRegistrySchema.parse(
   [...promotedCases, ...adaptedCases]
     .map((definition) => learnerWording(definition) as MutableRuntimeCrrtCase)
+    .map(applyLearnerActionCopy)
     .sort((left, right) => left.id.localeCompare(right.id)),
 )
 const registryIssues = validateCrrtCaseRegistry(parsedCases, {

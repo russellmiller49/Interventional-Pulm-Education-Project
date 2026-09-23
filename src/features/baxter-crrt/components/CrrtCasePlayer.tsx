@@ -40,6 +40,8 @@ import {
   CRRT_TIME_ACCOUNTING_CAPTION,
   formatCrrtRunClock,
   selectCrrtActualRunReview,
+  selectCrrtUnsafeActionTeaching,
+  type CrrtSafetyReviewEntry,
 } from '../actualRunReview'
 import {
   CRRT_LAB_TEACHING_SCOPE,
@@ -48,6 +50,7 @@ import {
   formatCrrtSuppliedLabValue,
   selectCrrtLabEvidence,
 } from '../labEvidence'
+import { crrtModalityLabel } from '../content/stateLabels'
 import { selectCrrtWorkedRetiredIds } from '../workedCaseModel'
 import { PrismaxPilotInterface, type PrismaxPilotCaseContext } from './PrismaxPilotInterface'
 import { CrrtCaseEvidenceScope } from './CrrtCaseEvidenceScope'
@@ -206,6 +209,12 @@ function CrrtCasePlayerContent({
   const visibleInterventions = definition.interventions.filter(
     ({ id }) => !retiredIds.interventionIds.has(id),
   )
+  // F-07: the cards no longer print their own verdict, so what makes an action unsafe is
+  // reachable before a run (Explain this case) and after one (debrief) without performing it.
+  const unsafeTeaching = selectCrrtUnsafeActionTeaching(
+    definition,
+    new Set(visibleInterventions.map(({ id }) => id)),
+  )
   const visibleReassessmentOptions = definition.reassessmentOptions.filter(
     ({ id }) => !retiredIds.reassessmentOptionIds.has(id),
   )
@@ -228,6 +237,10 @@ function CrrtCasePlayerContent({
   const performedSet = new Set(session.performedInterventionIds)
   const hasRun = hasCrrtRunActivity(session)
   const runReview = selectCrrtActualRunReview(session)
+  const performedUnsafeIds = new Set(runReview.unsafeActionsPerformed.map((e) => e.actionId))
+  const notPerformedUnsafe = unsafeTeaching.filter(
+    (entry) => !performedUnsafeIds.has(entry.actionId),
+  )
   const prescriptionRecord = selectCrrtPrescriptionRecord(session)
   const caseEvidence = selectCrrtCaseEvidence(definition)
   const labEvidence = selectCrrtLabEvidence(session)
@@ -402,12 +415,24 @@ function CrrtCasePlayerContent({
             ))}
             <p className={styles.roleNote} id={scopedId('crrt-role-note')} aria-live="polite">
               {rolePrompts[session.roleLens]} Switching keeps your run: it changes no patient value,
-              device control, action or record, and it is not scored or saved.
+              device control, action or record, and it is not judged or saved.
             </p>
           </div>
-          <button type="button" className={styles.resetButton} onClick={onReset}>
-            <RefreshCcw aria-hidden="true" /> Reset case
-          </button>
+          <div className={styles.resetGroup}>
+            <button
+              type="button"
+              className={styles.resetButton}
+              onClick={onReset}
+              aria-describedby={scopedId('crrt-reset-scope')}
+            >
+              <RefreshCcw aria-hidden="true" /> Reset case
+            </button>
+            <p className={styles.resetScope} id={scopedId('crrt-reset-scope')}>
+              Starts a new run of this case: clears this run&apos;s actions, simulated time,
+              settings you entered and reassessment. The case stays open and your visited history
+              stays saved. The Reset button in the header does the same.
+            </p>
+          </div>
         </div>
 
         <header className={styles.caseHeader}>
@@ -510,6 +535,12 @@ function CrrtCasePlayerContent({
                     <li key={id}>{selectedLabel(definition.reassessmentOptions, id)}</li>
                   ))}
                 </ul>
+                {unsafeTeaching.length > 0 ? (
+                  <>
+                    <h5>Actions this case treats as unsafe</h5>
+                    <CrrtUnsafeActionList entries={unsafeTeaching} />
+                  </>
+                ) : null}
                 <p>
                   Viewing this plan records no answer, intervention, or observation. Clinical and
                   device review remains pending.
@@ -531,6 +562,13 @@ function CrrtCasePlayerContent({
             </div>
           </div>
 
+          {unsafeTeaching.length > 0 ? (
+            <p className={styles.actionListNote} data-crrt-action-list-note>
+              This list includes actions this case treats as unsafe. They stay available so you can
+              see what they do, and no card is marked before you choose. Which ones, and why, is in
+              Explain this case, appears after you perform one, and is listed in the debrief.
+            </p>
+          ) : null}
           <div className={styles.actionList}>
             {visibleInterventions.map((intervention) => {
               const performed = performedSet.has(intervention.id)
@@ -703,8 +741,8 @@ function CrrtCasePlayerContent({
                 <p key={id}>{selectedLabel(definition.criticalErrors, id)}</p>
               ))}
               <p>
-                Review the associated action and device warning. These case rules remain pending
-                clinical review.
+                Review the action and its explanation in the debrief. These case rules have not been
+                clinically reviewed.
               </p>
             </div>
           </div>
@@ -751,7 +789,11 @@ function CrrtCasePlayerContent({
           <dl>
             <div>
               <dt>Modality</dt>
-              <dd>{session.simulation.circuit.modality ?? 'Unavailable'}</dd>
+              <dd>
+                {session.simulation.circuit.modality
+                  ? crrtModalityLabel(session.simulation.circuit.modality)
+                  : 'Unavailable'}
+              </dd>
             </div>
             <div>
               <dt>Connected bags</dt>
@@ -1016,23 +1058,17 @@ function CrrtCasePlayerContent({
               {runReview.unsafeActionsPerformed.length === 0 ? (
                 <p>
                   This run recorded none of the actions this case flags as unsafe. That is a record
-                  of what you did, not a judgement that the run was clinically adequate.
+                  of what you did, not a judgment that the run was clinically adequate.
                 </p>
               ) : (
-                <ul className={styles.unsafeActionList}>
-                  {runReview.unsafeActionsPerformed.map((entry) => (
-                    <li key={entry.actionId}>
-                      <strong>{entry.actionLabel}</strong>
-                      <p>{entry.explanation}</p>
-                      {entry.criticalErrorLabel ? (
-                        <p>
-                          <em>{entry.criticalErrorLabel}:</em> {entry.criticalErrorExplanation}
-                        </p>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
+                <CrrtUnsafeActionList entries={runReview.unsafeActionsPerformed} />
               )}
+              {notPerformedUnsafe.length > 0 ? (
+                <>
+                  <h6>Actions this case treats as unsafe that this run did not perform</h6>
+                  <CrrtUnsafeActionList entries={notPerformedUnsafe} />
+                </>
+              ) : null}
 
               <h6>Modeled cause at the end of this run</h6>
               {runReview.unresolvedCauses.length === 0 ? (
@@ -1042,7 +1078,7 @@ function CrrtCasePlayerContent({
                   {runReview.unresolvedCauses.map((cause) => (
                     <li key={cause.faultId}>
                       <strong>{cause.label}</strong> is still active
-                      {cause.alarmLabel ? ` with the ${cause.alarmLabel} alert showing` : ''}.
+                      {cause.alarmLabel ? `, and the ${cause.alarmLabel} is still showing` : ''}.
                       {cause.acknowledged
                         ? ' This run recorded an acknowledgement of that alert.'
                         : ''}{' '}
@@ -1126,5 +1162,24 @@ function CrrtCasePlayerContent({
         ) : null}
       </section>
     </div>
+  )
+}
+
+/** Each unsafe action with its authored explanation and, when linked, its case rule (F-07). */
+function CrrtUnsafeActionList({ entries }: { entries: readonly CrrtSafetyReviewEntry[] }) {
+  return (
+    <ul className={styles.unsafeActionList}>
+      {entries.map((entry) => (
+        <li key={entry.actionId}>
+          <strong>{entry.actionLabel}</strong>
+          <p>{entry.explanation}</p>
+          {entry.criticalErrorLabel ? (
+            <p>
+              <em>{entry.criticalErrorLabel}:</em> {entry.criticalErrorExplanation}
+            </p>
+          ) : null}
+        </li>
+      ))}
+    </ul>
   )
 }

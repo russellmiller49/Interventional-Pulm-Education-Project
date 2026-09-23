@@ -12,17 +12,14 @@ import {
   isResolvableCrrtSourceId,
   resolveCrrtLearnerFacingSource,
 } from '../content/learnerSourceMap'
+import { crrtLearnerCitation } from '../sourcePresentation'
 import styles from './crrt-case-evidence-scope.module.css'
 import playerStyles from './crrt-case-player.module.css'
 
 function citationText(sourceIds: readonly string[]): string {
   return sourceIds
     .filter(isResolvableCrrtSourceId)
-    .map((id) => {
-      const source = resolveCrrtLearnerFacingSource(id)
-      const location = source.pageOrSection?.includes('http') ? null : source.pageOrSection
-      return [source.sourceTitle, source.documentVersion, location].filter(Boolean).join(' · ')
-    })
+    .map((id) => crrtLearnerCitation(resolveCrrtLearnerFacingSource(id)).line)
     .join('; ')
 }
 
@@ -70,9 +67,16 @@ export function CrrtCaseEvidenceScope({
           </dl>
           <p className={styles.caption}>
             {CRRT_SUPPLIED_EVIDENCE_CAPTION}
-            {evidence.suppliedSourceIds.length > 0
-              ? ` Source: ${evidence.suppliedSourceIds.join(', ')}.`
-              : ''}
+            {evidence.suppliedSources.length > 0
+              ? ` Source: ${evidence.suppliedSources
+                  .map((source) => {
+                    const citation = crrtLearnerCitation(source)
+                    return `${citation.line} (record ${source.id}; ${citation.review.toLowerCase()})`
+                  })
+                  .join('; ')}.`
+              : evidence.suppliedSourceIds.length > 0
+                ? ` Source: ${evidence.suppliedSourceIds.join(', ')}.`
+                : ''}
           </p>
         </div>
       ) : null}

@@ -1,3 +1,4 @@
+import { crrtSimulatedAlertPhrase } from './content/alertLabels'
 import type { RuntimeCrrtCase } from './content/schema'
 import type {
   CrrtLearningSessionState,
@@ -43,6 +44,41 @@ export interface CrrtSafetyReviewEntry {
   readonly criticalErrorLabel: string | null
   readonly criticalErrorExplanation: string | null
   readonly sourceIds: readonly string[]
+}
+
+/**
+ * Every action this case treats as unsafe, with its authored explanation (CRRT-FELLOW-04, F-07).
+ *
+ * Action cards no longer print their own verdict before a choice, so the explanation has to be
+ * reachable without performing a harmful action: in "Explain this case" before a run and in the
+ * debrief after one. `visibleInterventionIds` drops actions a worked example retires from the
+ * list, so the teaching never names a card the learner cannot see.
+ */
+export function selectCrrtUnsafeActionTeaching(
+  definition: RuntimeCrrtCase,
+  visibleInterventionIds?: ReadonlySet<string>,
+): readonly CrrtSafetyReviewEntry[] {
+  const criticalErrorById = new Map(definition.criticalErrors.map((error) => [error.id, error]))
+  return definition.unsafeActions
+    .filter(
+      (unsafeAction) =>
+        !visibleInterventionIds || visibleInterventionIds.has(unsafeAction.actionId),
+    )
+    .map((unsafeAction) => {
+      const criticalError = unsafeAction.criticalErrorId
+        ? (criticalErrorById.get(unsafeAction.criticalErrorId) ?? null)
+        : null
+      return {
+        actionId: unsafeAction.actionId,
+        actionLabel:
+          definition.interventions.find(({ id }) => id === unsafeAction.actionId)?.label ??
+          unsafeAction.actionId,
+        explanation: unsafeAction.explanation,
+        criticalErrorLabel: criticalError?.label ?? null,
+        criticalErrorExplanation: criticalError?.explanation ?? null,
+        sourceIds: [...unsafeAction.sourceIds],
+      }
+    })
 }
 
 export interface CrrtUnresolvedCause {
@@ -202,14 +238,6 @@ export function formatCrrtRunClock(seconds: number): string {
   if (seconds % 3_600 === 0) return `${seconds / 3_600} hr`
   if (seconds % 60 === 0) return `${seconds / 60} min`
   return `${seconds} sec`
-}
-
-function humanizeAlarmCode(code: string): string {
-  return code
-    .toLowerCase()
-    .split('_')
-    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
-    .join(' ')
 }
 
 function actionLabel(definition: RuntimeCrrtCase, entry: CrrtLearningTimelineEntry): string {
@@ -431,24 +459,9 @@ export function selectCrrtActualRunReview(session: CrrtLearningSessionState): Cr
       .filter((entry) => entry.type === 'intervention-performed' && entry.outcome !== 'refused')
       .map((entry) => entry.referenceId),
   )
-  const criticalErrorById = new Map(definition.criticalErrors.map((error) => [error.id, error]))
-  const unsafeActionsPerformed = definition.unsafeActions
-    .filter((unsafeAction) => performed.has(unsafeAction.actionId))
-    .map((unsafeAction) => {
-      const criticalError = unsafeAction.criticalErrorId
-        ? (criticalErrorById.get(unsafeAction.criticalErrorId) ?? null)
-        : null
-      return {
-        actionId: unsafeAction.actionId,
-        actionLabel:
-          definition.interventions.find(({ id }) => id === unsafeAction.actionId)?.label ??
-          unsafeAction.actionId,
-        explanation: unsafeAction.explanation,
-        criticalErrorLabel: criticalError?.label ?? null,
-        criticalErrorExplanation: criticalError?.explanation ?? null,
-        sourceIds: [...unsafeAction.sourceIds],
-      }
-    })
+  const unsafeActionsPerformed = selectCrrtUnsafeActionTeaching(definition).filter((entry) =>
+    performed.has(entry.actionId),
+  )
 
   const alarmByCause = new Map<CrrtEngineFaultId, ActiveAlarm>()
   for (const alarm of simulation.alarms) {
@@ -459,7 +472,7 @@ export function selectCrrtActualRunReview(session: CrrtLearningSessionState): Cr
     return {
       faultId,
       label: faultLabels[faultId],
-      alarmLabel: alarm ? humanizeAlarmCode(alarm.code) : null,
+      alarmLabel: alarm ? crrtSimulatedAlertPhrase(alarm.code) : null,
       acknowledged: alarm?.acknowledgedAtSeconds !== undefined,
     }
   })
@@ -518,7 +531,7 @@ export function selectCrrtActualRunReview(session: CrrtLearningSessionState): Cr
       ? `Debrief opened · ${appliedActionCount} recorded ${appliedActionCount === 1 ? 'event' : 'events'} in this run`
       : 'Debrief opened · no run performed',
     statusDetail: hasRun
-      ? 'This lists what this session recorded. It is not a judgement that the care was safe, complete, or successful.'
+      ? 'This lists what this session recorded. It is not a judgment that the care was safe, complete, or successful.'
       : 'You have not performed a case action or advanced simulated time, so there is nothing from this run to review. The explanation below is the authored example.',
     actions,
     observations,

@@ -229,6 +229,21 @@
   cursor: pointer;
 }
 
+/* F-25: Reset case states what it clears, beside the button. */
+.resetGroup {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 24rem;
+  justify-items: start;
+}
+
+.resetScope {
+  margin: 0;
+  color: #c8d9d7;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 .resetButton svg,
 .commitButton svg,
 .hintSection > button svg,
@@ -705,6 +720,26 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.35rem;
   margin: 0;
+}
+
+/* F-07: an honest note above the action list, and the unsafe-action teaching lists. */
+.actionListNote {
+  margin: 0 0 0.75rem;
+  color: #d6e8e6;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.unsafeActionList {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0.4rem 0 0.8rem;
+  padding-left: 1.1rem;
+}
+
+.unsafeActionList p {
+  margin: 0.2rem 0 0;
+  overflow-wrap: anywhere;
 }
 
 .actionList {

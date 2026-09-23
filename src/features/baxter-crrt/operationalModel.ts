@@ -12,6 +12,7 @@ import {
   type PrismaxPilotInterfaceAction,
 } from './engine/deviceAdapters/prismax'
 import { calculateWholePatientNetBalanceMl } from './engine/fluidModel'
+import type { CrrtCaseId } from './content/schema'
 import { crrtIntegrationTaskComplete, nextCrrtIntegrationCommand } from './integrationModel'
 
 export type CrrtLearnRunId = NonNullable<CrrtFoundationTask['run']>
@@ -23,12 +24,21 @@ export interface CrrtOperationalRun {
   readonly snapshots: readonly CrrtLearningSessionState[]
   readonly integrationPlan?: 'correct' | 'defer'
 }
+/** The Practice case each Learn run is built from (X-04). The Learn run is a guided version. */
+export const crrtLearnRunCaseId: Readonly<Record<CrrtLearnRunId, CrrtCaseId>> = Object.freeze({
+  workflow: 'CRRT-04',
+  delivery: 'CRRT-04',
+  access: 'CRRT-13',
+  fluid: 'CRRT-10',
+  integration: 'CRRT-14',
+})
+
 export const crrtLearnRunLabels: Record<CrrtLearnRunId, string> = {
-  workflow: 'CVVHD setup reference · CRRT-04',
-  delivery: 'Delivery and fluid record · CRRT-04',
-  access: 'Access interruption case · CRRT-13',
-  fluid: 'Net-removal case · CRRT-10',
-  integration: 'Integrated case · synthetic engine run',
+  workflow: 'CVVHD setup reference · guided version of Practice case CRRT-04',
+  delivery: 'Delivery and fluid record · guided version of Practice case CRRT-04',
+  access: 'Access interruption · guided version of Practice case CRRT-13',
+  fluid: 'Net-removal change · guided version of Practice case CRRT-10',
+  integration: 'Integrated run · guided version of Practice case CRRT-14',
 }
 /** CRRT-04's immutable idle fixture has structural zero flows. A blank setup draft
  * must use the native setup projection until a reviewed prescription is applied. */
@@ -57,14 +67,7 @@ export const crrtReferenceSetupActions: readonly PrismaxPilotInterfaceAction[] =
   { type: 'START_TREATMENT' },
 ]
 export function createCrrtOperationalRun(id: CrrtLearnRunId): CrrtOperationalRun {
-  const caseId =
-    id === 'integration'
-      ? 'CRRT-14'
-      : id === 'access'
-        ? 'CRRT-13'
-        : id === 'fluid'
-          ? 'CRRT-10'
-          : 'CRRT-04'
+  const caseId = crrtLearnRunCaseId[id]
   let session = createCrrtLearningSession({
     caseDefinition: baxterCrrtLearnerCases.find((c) => c.id === caseId)!,
     experience: 'practice',

@@ -1,3 +1,4 @@
+import { CRRT_LEARNER_MASS_CONCENTRATION_UNIT } from './content/concentrationUnits'
 import type { RuntimeCrrtCase } from './content/schema'
 import type { CrrtLearningSessionState } from './engine/learningSession'
 import {
@@ -127,21 +128,21 @@ function suppliedBaselineValues(definition: RuntimeCrrtCase): CrrtSuppliedLabVal
       id: 'creatinine-marker',
       label: crrtSoluteDisplayLabels['creatinine-marker'],
       value: authored.creatinineMgPerDl,
-      unit: 'mg/dL',
+      unit: CRRT_LEARNER_MASS_CONCENTRATION_UNIT,
       decimals: 1,
     },
     {
       id: 'phosphate',
       label: crrtSoluteDisplayLabels.phosphate,
       value: authored.phosphateMgPerDl,
-      unit: 'mg/dL',
+      unit: CRRT_LEARNER_MASS_CONCENTRATION_UNIT,
       decimals: 1,
     },
     {
       id: 'magnesium',
       label: crrtSoluteDisplayLabels.magnesium,
       value: authored.magnesiumMgPerDl,
-      unit: 'mg/dL',
+      unit: CRRT_LEARNER_MASS_CONCENTRATION_UNIT,
       decimals: 1,
     },
     {

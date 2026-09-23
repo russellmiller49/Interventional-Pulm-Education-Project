@@ -6,6 +6,12 @@ import type { CrrtPressureSignalId } from '../content/circuitModel'
 import { totalExternalInputRateMlHour, totalExternalOutputRateMlHour } from '../engine/fluidModel'
 import { selectPrismaxPilotCaseOperationsDisplay } from '../engine/deviceAdapters/prismax'
 import {
+  crrtAnticoagulationWords,
+  crrtDeliveryStateWords,
+  crrtModalityLabel,
+} from '../content/stateLabels'
+import {
+  crrtLearnRunLabels,
   nextCrrtOperationalCommand,
   selectCrrtOperationalDisplay,
   type CrrtOperationalRun,
@@ -54,8 +60,9 @@ export function CrrtIntegrationTool({
     <section className={styles.operational} aria-label="Current run and recorded observations">
       <h3>Current run and recorded observations</h3>
       <p className={styles.caption}>
-        Integrated case · synthetic engine run · clock {crrtLearnClock(s.simulationTimeSeconds)} ·
-        event {run.session.timeline.length}. This exercise remains draft for clinical/device review.
+        {crrtLearnRunLabels.integration} · clock {crrtLearnClock(s.simulationTimeSeconds)} · event{' '}
+        {run.session.timeline.length}. This exercise is a draft: clinical and device review has not
+        been done.
       </p>
       {balanceTask ? (
         <>
@@ -79,16 +86,17 @@ export function CrrtIntegrationTool({
               starting values, not new measurements after each action.
             </p>
             <p>
-              Applied method: {s.circuit.modality}. Blood flow{' '}
+              Applied modality: {crrtModalityLabel(s.circuit.modality)}. Blood flow{' '}
               {number(flows?.bloodFlowMlMin ?? null)} mL/min; dialysate{' '}
               {number(flows?.dialysateFlowMlHour ?? null)} mL/h; net removal{' '}
               {number(flows?.patientFluidRemovalMlHour ?? null)} mL/h. PBP, replacement, syringe and
               makeup are zero in this case.
             </p>
             <p>
-              Anticoagulation in this prescription: {s.circuit.anticoagulation}. Citrate/calcium
-              dosing remains unavailable without a reviewed local protocol. This run does not model
-              citrate metabolism or linked calcium laboratory trends.
+              Anticoagulation in this prescription:{' '}
+              {crrtAnticoagulationWords[s.circuit.anticoagulation]}. Citrate/calcium dosing remains
+              unavailable without a reviewed local protocol. This run does not model citrate
+              metabolism or linked calcium laboratory trends.
             </p>
             <p>
               External intake {number(totalExternalInputRateMlHour(s.scenario.externalFluidRates))}{' '}
@@ -98,7 +106,7 @@ export function CrrtIntegrationTool({
             </p>
           </details>
           <p data-testid="integration-state">
-            Delivery: {s.device.deliveryState}; blood pump{' '}
+            Delivery: {crrtDeliveryStateWords[s.device.deliveryState]}; blood pump{' '}
             {s.device.bloodPumpRunning ? 'running' : 'stopped'}; fluid pump{' '}
             {s.device.fluidPumpsRunning ? 'running' : 'stopped'}. Active generic alert count:{' '}
             {s.alarms.length}. No manufacturer priority or automatic response is inferred.

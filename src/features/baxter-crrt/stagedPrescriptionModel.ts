@@ -12,12 +12,12 @@
  *   plasma flow, the printed predilution fraction, and the four outputs the evidence does not
  *   support;
  * - `calculateCrrtMachineFluidLedger` and `checkCrrtFluidConservation` (the landed C0/C1 ledger)
- *   supply every fluid-destination quantity and the makeup-attribution behaviour;
+ *   supply every fluid-destination quantity and the makeup-attribution behavior;
  * - `crrtCircuitOverlays`, `crrtCircuitPaths`, and `crrtPressureSignalDetails` (the landed C0/C1
  *   circuit) supply the active paths, their text equivalents, and the pressure implications.
  *
  * The one composition this file performs is time bookkeeping: a treatment window with downtime in
- * it delivers fewer effluent millilitres than the prescription asks for, and the delivered display
+ * it delivers fewer effluent milliliters than the prescription asks for, and the delivered display
  * dose is then the engine's own `calculateEffluentDoseMlPerKgHour` applied to that smaller average
  * rate — the same composition `advanceContinuous` performs in `engine/simulation.ts`. No second
  * dose formula is written here.
@@ -294,7 +294,7 @@ export const CRRT_CLEARANCE_VERSUS_REMOVAL_CONTRAST = Object.freeze({
   clearanceSide:
     'The effluent-based intensity is a prescription proxy, not measured solute clearance. Total effluent combines dialysate and membrane water flow, including the water used to replace infused replacement/PBP fluid.',
   removalSide:
-    'Net patient fluid removal is one entry of its own. It is net removal attributable to CRRT, and it can be nothing at all while effluent runs at litres an hour.',
+    'Net patient fluid removal is one entry of its own. It is net removal attributable to CRRT, and it can be nothing at all while effluent runs at liters an hour.',
   consequence:
     'Changing dialysate flow changes the effluent proxy while net CRRT removal stays fixed. Changing net CRRT removal changes both the machine-removal term and total effluent. Neither calculation alone establishes whole-patient balance or measured clearance.',
   sourceIds: Object.freeze(['MATH-PM-001', 'FLUID-PM-002', 'DOSE-PM-001', 'SYNTH-LAB-FLUID-001']),
@@ -376,7 +376,7 @@ export const crrtConstructionGroups: readonly CrrtConstructionGroup[] = Object.f
     ordinal: 1,
     title: 'Who is being treated',
     causalNote:
-      'These two entries are denominators, not therapy. Weight normalises the effluent display; haematocrit converts blood flow into plasma flow. Neither changes what the circuit does.',
+      'These two entries are denominators, not therapy. Weight normalizes the effluent display; hematocrit converts blood flow into plasma flow. Neither changes what the circuit does.',
     fieldIds: Object.freeze(['simulatedWeightKg', 'hematocritPercent'] as const),
   }),
   Object.freeze({

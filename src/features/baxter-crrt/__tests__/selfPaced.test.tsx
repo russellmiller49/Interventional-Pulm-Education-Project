@@ -168,12 +168,12 @@ it('offers explanation, wrong-answer feedback, retry, and navigation without wri
   click('Continue')
   click('Continue')
   click('Continue without this exercise')
-  click('Show explanation')
+  click('Show worked explanation')
   expect(screen.getByText('Worked explanation · no answer recorded.')).toBeVisible()
   expect(screen.queryByRole('radio', { checked: true })).toBeNull()
   fireEvent.click(screen.getByRole('radio', { name: /Fluid removal alone/ }))
   click('Check reasoning')
-  expect(screen.getByRole('status')).toHaveTextContent('Reasoning feedback')
+  expect(screen.getByRole('status')).toHaveTextContent('Your choice is not the accepted answer')
   click('Try again')
   expect(screen.queryByRole('radio', { checked: true })).toBeNull()
   click('Continue without this exercise')
@@ -205,8 +205,8 @@ it('reveals a pressure example without submitting directions or reporting an obs
 
 it('reveals a rapid-drill example without an answer or cause-correction claim', () => {
   render(<CrrtRapidDrillReview />)
-  click('Show explanation')
-  expect(screen.getByText('No prediction recorded')).toBeVisible()
+  click('Show worked safety example')
+  expect(screen.getByText('No response chosen')).toBeVisible()
   click('Review: Verify that the cause is corrected')
   expect(screen.getByTestId('crrt-rapid-drill-review')).toHaveAttribute(
     'data-correction-verification',

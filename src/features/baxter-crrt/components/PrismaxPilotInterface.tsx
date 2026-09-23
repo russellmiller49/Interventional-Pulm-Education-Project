@@ -29,6 +29,10 @@ import {
   type KeyboardEvent,
 } from 'react'
 
+import {
+  CRRT_SIMULATED_ALERT_BOUNDARY,
+  crrtSimulatedAlertLabelFromCode,
+} from '../content/alertLabels'
 import type { CrrtPressureSignalId } from '../content/circuitModel'
 import {
   prismaxSimulatorArtwork,
@@ -765,11 +769,11 @@ function OperationsScreen({
                 </strong>
                 <small>
                   {signal.valueMmHg === null
-                    ? 'Not being modelled'
+                    ? 'Not being modeled'
                     : signal.validity === 'no-flow-through-circuit'
                       ? 'Calculated relationship · not interpretable without blood flow'
                       : signal.kind === 'directly-modelled-site'
-                        ? 'Directly modelled site'
+                        ? 'Directly modeled site'
                         : 'Calculated relationship'}
                 </small>
               </div>
@@ -832,17 +836,17 @@ function OperationsScreen({
           <span>Alarm window</span>
           <strong id="phase3-alarm-heading">
             {operations.activeAlarmCodes.length > 0
-              ? operations.activeAlarmCodes.join(', ')
-              : 'No active alarms'}
+              ? operations.activeAlarmCodes.map(crrtSimulatedAlertLabelFromCode).join(', ')
+              : 'No active simulated alert'}
           </strong>
         </div>
         <p>
           {operations.activeAlarmCodes.length > 0
-            ? 'A generic training alert is shown. Review the patient and circuit, identify the cause, and verify resolution; acknowledgement alone does not resolve the problem.'
+            ? 'A simulated alert is shown. Review the patient and circuit, identify the cause, and verify resolution; acknowledgement alone does not resolve the problem.'
             : 'This exercise does not reproduce exact alarm names, priorities, thresholds, pump or clamp reactions, or correction steps. Follow current device instructions and local policy.'}
         </p>
         <p className={styles.alarmPriority}>
-          <strong>Priority status:</strong> not mapped — independent device review required.
+          <strong>Priority:</strong> none shown. {CRRT_SIMULATED_ALERT_BOUNDARY}
         </p>
         <button disabled type="button">
           Acknowledge unavailable
@@ -1189,7 +1193,9 @@ export function PrismaxPilotInterface({
                 <RotateCcw aria-hidden="true" />
                 <span>
                   <strong>Run ended</strong>
-                  Reloading creates a fresh interface state and does not invoke Same Patient.
+                  {onReset
+                    ? 'Resetting the case starts a new run with a fresh machine state; it does not invoke Same Patient.'
+                    : 'Reloading creates a fresh interface state and does not invoke Same Patient.'}
                 </span>
               </div>
               <button
@@ -1197,7 +1203,8 @@ export function PrismaxPilotInterface({
                 type="button"
                 onClick={() => (onReset ? onReset() : dispatch({ type: 'RESET_INTERFACE' }))}
               >
-                Reload clean interface
+                {/* F-25: when this resets the whole case run, it says so. */}
+                {onReset ? 'Reset case (start a new run)' : 'Reload clean interface'}
               </button>
             </aside>
           ) : null}

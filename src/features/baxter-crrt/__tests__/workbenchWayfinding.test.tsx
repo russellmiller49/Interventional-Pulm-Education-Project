@@ -211,7 +211,7 @@ describe('CRRT Cases control (F-09)', () => {
     await settle()
     const nav = screen.getByRole('navigation', { name: 'Practice cases' })
     expect(within(nav).getByText('Core case 2 of 10')).toBeInTheDocument()
-    expect(nav).toHaveTextContent('not a score or a requirement')
+    expect(nav).toHaveTextContent('not a measure of progress or a requirement')
     expect(within(nav).getByRole('combobox', { name: 'Cases' })).toHaveValue('CRRT-02')
   })
 
@@ -296,7 +296,7 @@ describe('CRRT role control is a truthful reading perspective (F-22)', () => {
     await settle()
     const roles = screen.getByRole('group', { name: 'Reading perspective' })
     expect(roles).toHaveAccessibleDescription(
-      /Switching keeps your run: it changes no patient value, device control, action or record, and it is not scored or saved\./,
+      /Switching keeps your run: it changes no patient value, device control, action or record, and it is not judged or saved\./,
     )
     // Role change before any action.
     fireEvent.click(within(roles).getByRole('button', { name: 'Prescriber' }))

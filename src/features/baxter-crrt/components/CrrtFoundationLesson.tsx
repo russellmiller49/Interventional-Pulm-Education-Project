@@ -14,7 +14,11 @@ import {
 import { CrrtOperationalTool, CrrtRecordedBalanceQuestion } from './CrrtOperationalTools'
 import { CrrtIntegrationTool } from './CrrtIntegrationTool'
 import { CrrtCitrateDifferential } from './CrrtCitrateDifferential'
+import { CrrtGlossaryButton } from './CrrtGlossary'
 import { CrrtSourceDating } from './CrrtSourceDating'
+import { CrrtSourceRecord } from './CrrtSourceRecord'
+import { crrtSourceDating } from '../content/sourceReviewMetadata'
+import { crrtLearnerCitation } from '../sourcePresentation'
 import { baxterCrrtLearnLessons, baxterCrrtLearnLessonById } from '../content/learnLessons'
 import type { BaxterCrrtLearnLessonId } from '../content/learnerRegistry'
 import { baxterCrrtLearnerFacingSourceById } from '../content/learnerSourceMap'
@@ -61,6 +65,7 @@ export function CrrtFoundationLesson({
     progress: CrrtToolProgress
   } | null>(null)
   const actionsRef = useRef<HTMLDivElement>(null)
+  const restartScopeId = useId()
   const activeIdentity = crrtCurrentTaskIdentity(attempt)
   const guidedResponse =
     guidedResult && sameCrrtLearnIdentity(guidedResult.identity, activeIdentity)
@@ -316,12 +321,19 @@ export function CrrtFoundationLesson({
                 <span>Last lesson</span>
               )}
             </nav>
-            <button type="button" onClick={onRestart}>
-              Restart lesson
-            </button>
-            <button type="button" onClick={() => router.push(baxterCrrtNavBase)}>
-              Save & exit
-            </button>
+            <div className={styles.lessonControls}>
+              <button type="button" onClick={onRestart} aria-describedby={restartScopeId}>
+                Restart lesson
+              </button>
+              <button type="button" onClick={() => router.push(baxterCrrtNavBase)}>
+                Save & exit
+              </button>
+              <CrrtGlossaryButton />
+              <p id={restartScopeId} className={styles.restartScope}>
+                Restart lesson goes back to task 1 and clears this visit&apos;s answers and
+                simulated runs. Visited topics stay saved on this device.
+              </p>
+            </div>
           </div>
         }
         contextStrip={
@@ -384,7 +396,8 @@ export function CrrtFoundationLesson({
                     onActivate: () =>
                       next ? onNavigate(next.id) : router.push(`${baxterCrrtNavBase}/practice`),
                   },
-                  secondary: { label: 'Repeat lesson', onActivate: onRestart },
+                  // Same operation as the header control, so the same words (F-25).
+                  secondary: { label: 'Restart lesson', onActivate: onRestart },
                 }}
               />
             </div>
@@ -397,7 +410,7 @@ export function CrrtFoundationLesson({
             >
               <NowCard
                 model={{
-                  kicker: `Task ${attempt.taskIndex + 1} of ${tasks.length} · ${task.kind === 'question' || task.kind === 'numeric' ? 'Apply' : task.kind === 'read' ? 'Worked explanation' : 'Guided exercise'}`,
+                  kicker: `Task ${attempt.taskIndex + 1} of ${tasks.length} · ${task.kind === 'question' || task.kind === 'numeric' ? 'Apply · optional try' : task.kind === 'read' ? 'Worked explanation' : 'Guided exercise'}`,
                   heading: task.title,
                   body: task.instruction,
                   where: (
@@ -590,20 +603,34 @@ export function CrrtFoundationLesson({
           <details className={styles.sources}>
             <summary>Explanation, sources and limits</summary>
             <p>
-              Clinical/device review remains pending. Reopen any reached task from Lesson tasks to
-              review its explanation without resetting your work.
+              Draft teaching: no clinician or device specialist has reviewed this lesson yet. Reopen
+              any reached task from Lesson tasks to review its explanation without resetting your
+              work.
             </p>
             {lesson.sourceRecordIds.map((id) => {
               const source = baxterCrrtLearnerFacingSourceById.get(id)
-              return source ? (
+              if (!source) return null
+              const citation = crrtLearnerCitation(source)
+              const dated = crrtSourceDating(id) !== undefined
+              return (
                 <Fragment key={id}>
                   <p>
-                    <strong>{source.sourceTitle}</strong> · {source.documentVersion} ·{' '}
-                    {source.pageOrSection}
+                    <strong>{citation.title}</strong>
+                    {citation.edition ? ` · ${citation.edition}` : ''}
+                    {citation.locator ? ` · ${citation.locator}` : ''}
+                    {dated ? null : (
+                      <>
+                        <br />
+                        <small>
+                          {citation.kind} · {citation.review}
+                        </small>
+                      </>
+                    )}
                   </p>
                   <CrrtSourceDating sourceId={id} />
+                  <CrrtSourceRecord citation={citation} />
                 </Fragment>
-              ) : null
+              )
             })}
             {lessonId === 'crrt-fluid-liberation' ? (
               <p>
@@ -616,14 +643,28 @@ export function CrrtFoundationLesson({
                   KDIGO 2012 AKI guideline, chapter 5.2
                 </a>
                 . This supplies conceptual stopping/reassessment guidance, not a device procedure or
-                a universal threshold. Clinical review of this teaching remains pending.
+                a universal threshold. No clinician has reviewed this teaching yet.
               </p>
             ) : null}
             <p>
-              Printed filtration-fraction and blood-flow expressions remain withheld under
-              CONFLICT-001 and CONFLICT-002. The contribution of nonzero makeup to the fluid ledger
-              remains unresolved. Citrate dosing and operating sequences require the current
-              reviewed local protocol and exact manufacturer instructions.
+              <strong>Not calculated here: filtration fraction.</strong> The PrisMax manual&apos;s
+              filtration-fraction display needs a pre-infusion flow, and its printed pre-infusion
+              expression is ambiguous (held as source conflict CONFLICT-002, manual p220); its
+              printed post-filter ultrafiltration expression carries a sign that conflicts with the
+              filtration-fraction numerator beside it (CONFLICT-001, manual p218). The simulation
+              uses neither and carries filtration fraction as a fixed model value, so it does not
+              respond to the flows. Both conflicts await device review.
+            </p>
+            <p>
+              <strong>Unresolved: makeup flow.</strong> The manual counts makeup in the effluent
+              total but not in the patient-fluid-removed total, so where it belongs in the fluid
+              ledger is unresolved (MATH-PM-001, FLUID-PM-002). Worked examples hold makeup at zero;
+              whenever makeup has run, the simulation withholds cumulative machine removal and
+              whole-patient balance rather than guess.
+            </p>
+            <p>
+              Citrate dosing and operating sequences require the current reviewed local protocol and
+              exact manufacturer instructions.
             </p>
             {lessonId === 'crrt-prescription-dosing' ? (
               <details onToggle={(event) => setFreeBuilderOpen(event.currentTarget.open)}>
@@ -726,16 +767,24 @@ function QuestionTask({
 }) {
   const [choiceId, setChoiceId] = useState<string | null>(null)
   const [explanationVisible, setExplanationVisible] = useState(false)
-  const choice = task.choices!.find((c) => c.id === evidence?.response)
+  const choices = task.choices!
+  const choice = choices.find((c) => c.id === evidence?.response)
+  const accepted = choices.filter((c) => c.correct)
+  const severalAccepted = accepted.length > 1
   useEffect(() => {
     if (choice && evidence && !evidence.feedbackDisplayed) onFeedbackDisplayed()
   }, [choice, evidence, onFeedbackDisplayed])
   return (
     <section className={styles.question} aria-label="Application check">
       <h3>Optional application check</h3>
+      <p className={styles.questionMode}>
+        Optional try: choose an answer and check it, or open the worked explanation first — it shows
+        the accepted answer. Nothing here is saved or counted, and you can try again or continue
+        without answering.
+      </p>
       <fieldset disabled={Boolean(evidence)}>
         <legend>{task.question}</legend>
-        {task.choices!.map((option) => (
+        {choices.map((option) => (
           <label key={option.id}>
             <input
               type="radio"
@@ -747,23 +796,52 @@ function QuestionTask({
           </label>
         ))}
       </fieldset>
-      <button type="button" onClick={() => setExplanationVisible((visible) => !visible)}>
-        {explanationVisible ? 'Hide explanation' : 'Show explanation'}
-      </button>
-      {explanationVisible ? (
-        <div className={styles.feedback}>
+      {!choice ? (
+        <button type="button" onClick={() => setExplanationVisible((visible) => !visible)}>
+          {explanationVisible ? 'Hide worked explanation' : 'Show worked explanation'}
+        </button>
+      ) : null}
+      {explanationVisible && !choice ? (
+        <div className={styles.feedback} data-crrt-worked-explanation>
           <p>Worked explanation · no answer recorded.</p>
-          {task.choices!.map((option) => (
-            <p key={option.id}>
-              <strong>{option.label}</strong> {option.feedback}
-            </p>
-          ))}
+          <CrrtOptionComparison choices={choices} />
         </div>
       ) : null}
       {choice ? (
-        <div role="status" className={styles.feedback}>
-          <h3>Reasoning feedback</h3>
+        <div
+          role="status"
+          className={styles.feedback}
+          data-crrt-question-feedback={choice.correct ? 'accepted' : 'not-accepted'}
+        >
+          <h3>
+            {choice.correct
+              ? severalAccepted
+                ? 'Your choice is one of the accepted answers'
+                : 'Your choice matches the accepted answer'
+              : 'Your choice is not the accepted answer'}
+          </h3>
+          <p>
+            <strong>You chose:</strong> {choice.label}
+          </p>
           <p>{choice.feedback}</p>
+          {!choice.correct || severalAccepted ? (
+            <div data-crrt-accepted-answers>
+              <p>
+                <strong>{severalAccepted ? 'Accepted answers' : 'Accepted answer'}</strong>
+              </p>
+              <ul>
+                {accepted.map((option) => (
+                  <li key={option.id}>
+                    {option.label} — {option.feedback}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          <details>
+            <summary>How every option compares</summary>
+            <CrrtOptionComparison choices={choices} />
+          </details>
           <button type="button" onClick={onContinue}>
             Review feedback and continue
           </button>
@@ -794,5 +872,19 @@ function QuestionTask({
         </p>
       ) : null}
     </section>
+  )
+}
+
+/** Every option with its status in words — accepted or not — and its authored rationale. */
+function CrrtOptionComparison({ choices }: { choices: CrrtFoundationTask['choices'] }) {
+  return (
+    <ul className={styles.optionComparison}>
+      {(choices ?? []).map((option) => (
+        <li key={option.id} data-accepted={option.correct}>
+          <strong>{option.correct ? 'Accepted answer:' : 'Not accepted:'}</strong> {option.label}{' '}
+          <span>{option.feedback}</span>
+        </li>
+      ))}
+    </ul>
   )
 }

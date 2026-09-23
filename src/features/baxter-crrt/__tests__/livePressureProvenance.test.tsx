@@ -152,7 +152,7 @@ describe('live pressure profile — provenance', () => {
       /Exactly how a commercial machine displays, groups, or alarms on these values belongs to the manufacturer(?:’|')s instructions and your local training, not to this model/i,
     )
     expect(text).toMatch(
-      /These are modelled device values, not readings from a machine at a bedside/i,
+      /These are modeled device values, not readings from a machine at a bedside/i,
     )
     expect(text).not.toMatch(/the console (?:shows|displays|groups)/i)
     expect(text).not.toMatch(/PrisMax/)

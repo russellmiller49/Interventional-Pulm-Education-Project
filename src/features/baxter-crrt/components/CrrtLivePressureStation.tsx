@@ -36,7 +36,7 @@ export function CrrtLivePressureStation() {
     <section className={styles.station} aria-labelledby="crrt-live-pressure-station-heading">
       <header className={styles.stationHeader}>
         <div>
-          <span>Engine-generated recorded comparison</span>
+          <span>Recorded comparison from the simulation</span>
           <h3 id="crrt-live-pressure-station-heading">Pressure profile and circuit</h3>
         </div>
         <div className={styles.flowControl} role="group" aria-label="Recorded blood-flow snapshots">

@@ -103,7 +103,7 @@ export const crrtFoundationTasks: Partial<
       instruction:
         'Select each of the four modality views and follow the active paths. These are illustrations, not applied prescriptions.',
       teaching: [
-        'Dialysate flows on the fluid side of the membrane. Replacement fluid enters the blood path. Ultrafiltration moves water from blood across the membrane to the effluent path.',
+        'Dialysate flows on the fluid side of the membrane. Replacement fluid enters the blood path. Ultrafiltration moves water from blood across the membrane to the effluent path, which carries everything leaving the fluid side of the filter to collection.',
         'The four names describe which transport paths are used. Combining mechanisms does not establish a better modality; the treatment goal and clinical context still determine the choice. Quantitative settings come later.',
       ],
     },
@@ -201,7 +201,7 @@ export const crrtFoundationTasks: Partial<
       kind: 'guided',
       tool: 'pressure-sites',
       instruction:
-        'Select all six readouts. Find the actual sites used by TMP and filter pressure drop, then compare the isolated return-side change.',
+        'Select all six readouts. Find the actual sites used by TMP (transmembrane pressure) and filter pressure drop, then compare the isolated return-side change.',
       teaching: [
         'Access pressure is measured before the blood pump. Filter pressure is measured upstream of the filter; return pressure describes the return segment; effluent pressure is measured on the fluid path.',
         `TMP and filter pressure drop are calculated from the monitored readings; neither has its own sensor. The PrisMax AW8035 manual prints TMP = (filter + return) / 2 − effluent ${PRISMAX_TMP_HYDROSTATIC_OFFSET_MMHG} mmHg. For filter drop it prints filter − return and says the filter and return readings are corrected for a ${PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG} mmHg sensor-height bias. This simulation applies that ${PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG} mmHg to the drop itself; whether a console's displayed values follow that arithmetic awaits device review. Neither constant is an alarm threshold.`,
@@ -396,7 +396,7 @@ export const crrtFoundationTasks: Partial<
       instruction:
         'Follow the worked calculation from the prescription to the common 24-hour interval.',
       teaching: [
-        'Synthetic example: 80 kg, CVVHD, dialysate 1,900 mL/h and net CRRT removal 100 mL/h. Replacement, PBP, syringe and makeup flows are zero. Total effluent is 2,000 mL/h. These are illustration values, not a treatment target.',
+        'Synthetic example: 80 kg, CVVHD, dialysate 1,900 mL/h and net CRRT removal 100 mL/h. Net CRRT removal is the net ultrafiltration the machine takes from the patient; PrisMax sets it as patient fluid removal (PFR). Replacement, PBP, syringe and makeup flows are zero. Total effluent is 2,000 mL/h. These are illustration values, not a treatment target.',
         'Running dose proxy: 2,000 ÷ 80 = 25 mL/kg/h. With three hours of assumed downtime, 21 of 24 hours run: 2,000 × 21 ÷ 24 ÷ 80 = 21.875 mL/kg/h.',
         'Both values are projected from entered assumptions. Effluent-based intensity is a proxy, not measured solute clearance. Only recorded delivery from a run over the same interval can support a delivered-dose claim.',
       ],

@@ -10,6 +10,8 @@ import {
 import { CRRT_SOURCE_DATING } from '../content/sourceReviewMetadata'
 import styles from './baxter-crrt.module.css'
 import { CrrtSourceDating } from './CrrtSourceDating'
+import { CrrtSourceRecord } from './CrrtSourceRecord'
+import { crrtLearnerCitation } from '../sourcePresentation'
 
 function learnerEvidenceText(value: string): string {
   return value
@@ -136,7 +138,11 @@ export function SourcesPanel() {
                   {synthetic ? 'simulated case values' : source.sourceType.replaceAll('-', ' ')}
                 </span>
                 <h3>{synthetic ? 'Simulated case values' : source.sourceTitle}</h3>
-                <p className={styles.sourceIdentity}>{source.documentVersion}</p>
+                <p className={styles.sourceIdentity}>
+                  {synthetic
+                    ? `${crrtLearnerCitation(source).edition} · ${crrtLearnerCitation(source).review}`
+                    : source.documentVersion}
+                </p>
                 <p>
                   <strong>Relevant section:</strong>{' '}
                   {synthetic
@@ -154,6 +160,7 @@ export function SourcesPanel() {
                     ? 'These values are for education and are not clinical targets, alarm limits, device limits, or patient-specific recommendations.'
                     : learnerEvidenceText(String(source.value ?? 'Not specified.'))}
                 </p>
+                {synthetic ? <CrrtSourceRecord citation={crrtLearnerCitation(source)} /> : null}
               </article>
             )
           })}
