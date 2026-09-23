@@ -254,7 +254,7 @@ SpO₂ · PaCO₂ · MAP · dyspnea; `†` = index, not a report). Base values f
 | MV-01            | PEEP 16                                  | 422 · 42.4/31.4 · 0 · 91 · 52 · **60** · 3.0       | same control                                |
 | MV-01            | FiO₂ 100                                 | 422 · 24.9/13.9 · 0 · 96 · 52 · 77 · 3.0           | same control                                |
 | MV-02            | flow 70 + treat drive                    | 397 · 23.8/5.5 · 1.1 · 94 · 30 · 73 · **5.0**      | 387 · 17.4/6.2 · 1 · 94 · 30 · 73 · 6.0     |
-| MV-05            | PS 12 + ETS 40 (+ hold)                  | **386** · 17/7.3 · **4.8** · 92 · 37 · 97 · 0.4    | 229 · 23/13.3 · 13.5 · 92 · 62 · 88 · 3.0   |
+| MV-05            | PS 12 + ETS 40 (+ hold)                  | **415** · 17/14.9 · **4.7** · 92 · 38 · 97 · 0.4   | 229 · 23/13.3 · 13.5 · 92 · 62 · 88 · 3.0   |
 | MV-05            | PS 24 (harmful)                          | 347 · 29/17.4 · **16.2** · 92 · 49 · **82** · 4.3  | same control                                |
 | MV-06            | bag + bronchodilator + rate 10 + flow 80 | 507 · 62.2/12 · **7.5** · 94 · 86 · 42 · 3.9       | 500 · 70.2/39.3 · 33.9 · 94 · 85 · 42 · 3.0 |
 | MV-06            | rate 30 (harmful)                        | 500 · 80/49.2 · 42.2 · 94 · 75 · **25** · 3.0      | same control                                |
@@ -325,15 +325,14 @@ efforts are missed the grids beat against each other. `triggerDelayMs` is a phen
 (`80 + 400·missed` for weak trigger; `100 + 450·missed` for COPD), not a consequence of anything on
 the trace. Batch 01's labelling is therefore still the honest one and was not touched.
 
-**Correction (sanity-repair pass, §15.6).** That inspection ran with no action. A census of every
-inventory arm, 0–180 s at 0.1 s, finds `measured` on MV-05's pressure-support and cycling arms
-(`ps-ets`, `ps-only`, `ets-only`, all three branches): 54 distinct onsets at `dea2738a`, 63 on the
-repaired head, the same nine arms. Every other arm, and every no-action or assessment-only arm, has
-none on either head. These are grid coincidences — a machine onset landing while an effort on the
-separate neural grid is still building — so the label is an interval between two events on the
-trace (Batch 01's definition) but not a trigger in the causal sense. "No live case can produce a
-measured trigger interval" was true only without action. Not changed here: it is trigger labelling
-and trigger causality, both D5.
+**Correction (sanity-repair pass §15.6, re-corrected in §16.3).** That inspection ran with no action.
+A census of every inventory arm found `measured` on MV-05's pressure-support and cycling arms at
+grid coincidences (54 onsets at `dea2738a`). §15.6 then called those labels "an interval between two
+events on the trace"; that was also wrong. The number printed beside `measured` was always
+`measurements.triggerDelayMs`, the phenotype's assigned delay, and the re-review timed the events it
+fell on at 40–360 ms against a printed 264–315 ms. `measured` has been removed (§16.3): every live
+trigger delay is now a model estimate, not applicable or unavailable, and no live value is a
+measurement.
 
 What a model would need before `measured` could be reachable: breath onset determined by the effort
 (onset = the time Pmus, net of trapped-gas threshold load, crosses the configured flow or pressure
@@ -460,6 +459,13 @@ touched, but a wrapper process of theirs may have been ended by it.
 - Case resolution reads authored success criteria, never a containment lookup (`isCaseResolved`).
 - Reportability is derived from the whole effect set (`patientCanCommunicate`), never by the order
   of assignments.
+- `advanceSimulation` starts each call from the published state and never re-derives it at call
+  entry; anything that changes an input re-derives through the reducer at its own model time.
+  Measurements must not read their own previous output (the expiratory-time fallback reads the
+  breath clock). The trajectory must not depend on how the caller batches time.
+- Parameters of a settings-selected lung state (shunt, like the mechanics) are rebuilt from the case
+  every derivation; only slow running state is copied forward.
+- No live trigger delay is labelled measured; `triggerDelayMs` is the phenotype's assigned value.
 - `exhaledVtSource: 'predicted'` is never printed as an exhaled volume.
 - `physiologyReference` and `breathClock` stay in-memory; MV-03 stays excluded; the alarm-limit item
   stays held.
@@ -652,13 +658,11 @@ Limits, the alarm predicate, delivery and physiology are unchanged.
 ### 15.6 Found while validating — D5 reachability of `measured`
 
 The census behind §15.1 also counted trigger-evidence status at every 0.1 s of every arm. §8's
-"never `measured`" held only without action: MV-05's pressure-support and cycling arms reach it at
+"never `measured`" held only without action: MV-05's pressure-support and cycling arms reached it at
 grid coincidences on both heads (54 onsets at `dea2738a`, 63 repaired, the same nine arms), and no
-other arm does. It is an interval between two events on the trace, not a modeled trigger. The clock
-repair neither creates it nor removes it; changing it is trigger labelling and trigger causality
-(D5), outside this pass. §8 and matrix row 21 are corrected. The new regression test pins only that
-the clock's own transitions (MV-07 and MV-08 rejoins, MV-02 rate changes, MV-LAB alternation) add no
-`measured` event.
+other arm did. **Superseded by §16.3:** this section originally called those labels an interval
+between two events on the trace. They were not — the helper printed the phenotype's assigned
+`triggerDelayMs` — and the status has since been removed.
 
 ### 15.7 Validation (repaired tree; node 26.5.0; `NODE_OPTIONS=--max-old-space-size=8192`)
 
@@ -668,7 +672,7 @@ the clock's own transitions (MV-07 and MV-08 rejoins, MV-02 rate changes, MV-LAB
 | `npx jest src/features/mechanical-ventilation`                                                                                      | 40 suites, **997 tests, all passing** (954 before this pass, one assertion in this PR's own suite corrected: it had pinned PEEP 13 as resolved)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | Consumers: `src/features/critical-care`, `learning-module`, `icu-simulation`, MV routes, `hamilton-c6`, `draft-modules.hamilton-c6` | 51 suites, 466 tests, 463 passing, **3 failing — the same three failing on current `origin/main` `bc65b44a`**, run in a read-only checkout at that SHA: accessibility (color-coded states), curriculum-sequencing (CRRT order), learner-copy. The learner-copy scanner's flagged strings are identical on main, `dea2738a` and the repaired tree (19); the messages differ only in the checkout path of the stack line                                                                                                                                                                                                                                                                                                                                                                        |
 | Reproductions, both heads                                                                                                           | review's `clock.mts` (35 journeys), review's `probe.mts` (259 checks: 253 → 258), `responses.mts`, `trigger-census.mts` (82 arms, 22 branches, 0–180 s)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Causal inventory, all 14 live cases / 22 branches / every arm, and `--speeds`                                                       | regenerated; differences exactly as §15.1; 1×/5×/30× identical                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Causal inventory, all 14 live cases / 22 branches / every arm, and `--speeds`                                                       | regenerated; differences exactly as §15.1. The `--speeds` file covers no-action arms only; **the combined MV-05 PS/ETS arms were not speed-invariant on this head — see §16.1**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `npx tsc --noEmit -p tsconfig.json` (full, tests included)                                                                          | clean, on the final tree                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `npx eslint src/features/mechanical-ventilation scripts/critical-care/mv-causal-inventory.ts`                                       | clean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `npx prettier --check` (module, script, handoff, matrix, inventory)                                                                 | clean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -706,7 +710,8 @@ own **One breath** control; every setting and action through the page's controls
 - **D3** — PEEP 13 and PEEP 6–7 physiology: open. The code no longer resolves the case at 13; what 13
   should do is unchanged and undecided.
 - **D4** — MV-13 / Section-13 alarm policy: open. The note describes the console; limits unchanged.
-- **D5** — trigger causality: open, with §15.6's correction to what "never measured" covered.
+- **D5** — trigger causality: open, with §15.6's correction to what "never measured" covered (itself
+  corrected in §16.3: no live trigger delay is measured).
 
 ### 15.9 Integration
 
@@ -728,7 +733,220 @@ PR #271. Not merged, not deployed; Batch 03 not started.
 - Deployed build; beta-wrapped routes.
 - Any clinical, device, media or source review. Nothing here is one.
 
+## 16. Re-review repair pass — the independent re-review of `1b52c008`
+
+The independent re-review of `1b52c008` returned **SANITY REVIEW: NOT READY TO MERGE** with three
+bounded issues; the five §15 repairs otherwise passed and are kept. Prepared 2026-09-22 by an AI
+authoring assistant (Claude). Every check below was run once, on the repaired tree; before-values
+come from the same scripts run in a read-only detached checkout of `1b52c008`, removed afterwards.
+
+### Heads
+
+|                                                      | SHA                                                   |
+| ---------------------------------------------------- | ----------------------------------------------------- |
+| Previous (re-reviewed) head                          | `1b52c008c31cc4ad11afdb69d8b89f211dd40339`            |
+| `origin/main` at the start and at the end            | `4bd1368d13cb297b7076f4d7655de849f444e0ff` — no drift |
+| `origin/claude/mechanical-vent-02-9-22` at the start | `1b52c008…` — unmoved                                 |
+| Repair commit, then this documentation on top of it  | reported in the PR; pushed as fast-forwards           |
+
+### 16.1 R1 — simulation-speed invariance
+
+**Root cause.** Two things combined.
+
+1. **A per-call refresh.** `advanceSimulation` began every call by re-deriving the patient and the
+   measurements from the state it was handed (`deriveEffectivePatient(state)`,
+   `deriveMeasurements(state)`), although the previous call had just published them from the same
+   fixed steps. One extra derivation per outer call means the number of derivations depended on the
+   caller's batching: 180 in 18 s at 1×, 36 at 5×, 6 at 30×.
+2. **A derivation that fed on itself.** When the 12 s buffer holds no completed expiration,
+   `deriveMeasurements` fell back to `60 / previously reported rate − Ti`, and on pressure support that
+   rate is computed from the missed-effort fraction, which is computed from the trapped pressure this
+   expiratory time sets. After MV-05's combined correction the recurrence alternated 16 ↔ 19/min
+   (PEEPi 6 ↔ 4.2 cmH₂O) on every derivation. The §15 clock made both visible: it completes the 7.5 s
+   cycle in progress, which lengthens the window with no completed expiration in the buffer, and it
+   reads the requested cycle once at each onset, so it adopted whichever parity that onset's step
+   landed on. PS-only and ETS-only never entered the fallback window, so they stayed invariant.
+
+**Repair — one fixed-step order** (`engine/simulation.ts` `advanceSimulation`, `engine/physics.ts`
+`deriveMeasurements`).
+
+1. The step starts from the published state (`state.patient`, `state.measurements`); nothing is
+   re-derived at call entry. Every action that changes an input already re-derives through the
+   reducer at the model time it happens (`refreshMeasurements`, `applyIntervention`, `CONFIRM_MODE`,
+   teaching mechanics), so no input change is missed.
+2. Per step: state entering → effective patient → breath clock (reads the measurements the previous
+   step published) → waveform sample → lung volume → measurements published by this step → slow
+   physiology. Unchanged apart from (1).
+3. The expiratory-time fallback reads the machine's cycle in progress (`breathClock.periodSeconds`,
+   fixed at the onset that began it) instead of the previously reported rate, so no measurement reads
+   its own previous output.
+
+No speed, case or setting is special-cased; nothing is rounded after the fact; the CO₂ anchor
+equation, prepared history and PhysiologyReference are untouched (every opening row of the inventory
+is unchanged).
+
+| MV-05, VTE mL at 30 / 60 / 180 s as 1× · 5× · 30× (all three branches identical) | `1b52c008`                                                      | repaired                                |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------- |
+| PS 12 + ETS 40                                                                   | 438·438·**363** / 344·344·**308** / 386·386·**420**             | 438·438·438 / 344·344·344 / 386·386·386 |
+| PS 12 + ETS 40 + expiratory hold                                                 | 438·**397**·**318** / 344·**252**·**300** / 386·**406**·**409** | 266·266·266 / 275·275·275 / 415·415·415 |
+| PS 12 only · ETS 40 only · unchanged                                             | invariant                                                       | invariant, values unchanged             |
+
+"Identical" is the complete state — patient, measurements, the whole waveform buffer, breath clock,
+hold state and records, risk, trends and the alarm set — compared with deep equality. The published
+rate/PEEPi on the combined correction: with only the refresh removed it changed 89 times in 48 s (333
+with the hold), every change a single-step blip; with the fallback repaired, 13 (11), each lasting a
+breath, as on `dea2738a`. Alarm `startedAt` stamps still differ by call granularity (`reconcileAlarms`
+runs once per call); that is a stamp resolution, identical on the base, and the alarm set is equal.
+
+**Census — every live case, all 22 branches, every scripted arm (82), reducer TICK at 1×, 5×, 30×,
+complete state at 30, 60, 150, 180 s:** `1b52c008` 77/82 invariant (MV-05's three PS/ETS + hold arms,
+MV-14's two decompression arms); repaired 80/82. The two MV-14 arms perform drainage at 28 s, which is
+not on the 30× tick (3 s), so at 30× the harness applies it at 30 s — a different action time, as
+`runInventoryArm` documents. On those arms 1× = 5× as written, and with the drainage at 30 s all three
+speeds are identical. Direct engine calls from the same state (0.02 / 0.1 / 0.5 / 3 s chunks, 48 s,
+with and without the hold) are identical, and so is the causal-inventory harness for every MV-05 arm.
+`speeds-after.md` regenerated byte-identical; `after.md` changed only in MV-05's PS/ETS/hold arm (§6
+updated: 180 s VT 415, PEEPi 4.7, PaCO₂ 38).
+
+Clock stress retained: 16 ↔ 20 alternation (max gap 3.76 s), late-expiratory change, MV-07 and MV-08
+effort-grid rejoins, no gap above the §15.1 bounds, shortest inspiration 0.20 s (MV-09's own, both
+heads); all 43 §15 tests pass unchanged.
+
+Seen, not changed: the page's **One breath** control advances `60 / effective rate` in one call, and
+`advanceSimulation` divides a call into `ceil(seconds / 0.02)` equal steps, so that path runs on a
+slightly different time grid from playback ticks, which are always exactly 0.02 s. It is
+deterministic — the browser run below reproduces exactly — but not the same discretization as 1×
+playback. `CONFIRM_MODE` still finds its breath boundary with `time mod (60 / rate)`, which is exact
+only on the absolute grid.
+
+### 16.2 R2 — PEEP reversal restores the baseline shunt
+
+**Root cause.** `deriveEffectivePatient` rebuilds the mechanics from the case every call but copied
+`gasExchange` from the running patient. The shunt fraction lives in that object, and MV-01's lung-state
+lookup writes it only for the recruited (0.20) and overdistended (0.24) states, so the value of the last
+band visited survived the return to baseline. Compliance returned because it is rebuilt; the shunt did
+not because it was copied.
+
+**Repair.** The shunt is rebuilt from the case on every derivation, like the mechanics
+(`gasExchange: { ...running gases, shuntFraction: case value }`); the band then overrides it as before.
+The three discrete bands are unchanged; no curve, hysteresis or interpolation.
+
+| MV-01, after 180 s at PEEP _n_ and 360 s back at 5 | `1b52c008` shunt · PaO₂ · SpO₂ | repaired shunt · PaO₂ · SpO₂ |
+| -------------------------------------------------- | ------------------------------ | ---------------------------- |
+| 5 → 6 → 5, 5 → 7 → 5                               | 0.30 · 54.0 · 84.0             | 0.30 · 54.0 · 84.0           |
+| 5 → 8 → 5, 5 → 12 → 5, 5 → 13 → 5                  | **0.20 · 72.0 · 90.6**         | 0.30 · 54.0 · 84.0           |
+| 5 → 14 → 5, 5 → 16 → 5                             | **0.24 · 64.8 · 88.7**         | 0.30 · 54.0 · 84.0           |
+
+In every path after the return: compliance 0.025 (as before), not resolved, 0 corrective points,
+dyspnea index 3.0. While set: 8 and 12 resolve (30 points, index 1.0); 13 keeps the recruited
+mechanics (0.032, shunt 0.20) and is not resolved, earns no corrective points and takes no relief; 14
+and 16 keep overdistension. D3 remains `NOT REVIEWED`.
+
+Seen, not changed (same mechanism, outside R2): `human` is also copied from the running patient and
+the comfort effects are relative (`treat-pain` −5, `relieve-bladder` −2, `reorient` −3,
+`reduce-noise` −1), so each is re-applied every step until its floor. On MV-15 pain settles at 1 after
+treatment and 0 after bladder relief, and delirium at 1 after reorientation, where one application
+would give 2, 5 and 4. Identical on `dea2738a` and on the base. Flagged as a follow-up.
+
+### 16.3 R3 — trigger delay is a model estimate, never "measured"
+
+**Root cause.** The helper's `measured` branch printed `measurements.triggerDelayMs`, the delay the
+model assigns the phenotype (`80 + 400·missed`, `100 + 450·missed`). Nothing in the runtime times an
+interval between an effort and a delivery. Reproduced on `1b52c008` (MV-05 corrected arm, the review's
+example first): onset 55.92 s printed **"267 ms"** as measured where the effort had crossed the
+engine's detection floor 140 ms before the onset; the other 20 events on the PS/ETS and PS-only arms
+printed 264–315 ms against 40–360 ms. §8, §15.6, matrix row 21 and the Batch-01 handoff called these
+intervals; each is corrected with a dated note.
+
+**Repair** (`engine/triggerEvidence.ts`). `measured` is removed from `TriggerDelayStatus`. An effort
+building into the onset is still recognised and said ("A modeled effort was already under way … but
+the simulator does not time the interval …"), and the number reads `NNN ms · model estimate`.
+`not-applicable` and `unavailable` are unchanged; zero stays distinct from absent (`delayMs` null with
+"—"). The Timing view loses its "Measured trigger delay is N" sentence; the dyssynchrony integration
+row's bearing is "Not discriminating", since no live value is a measurement. The Batch-01 fixture that
+asserted `measured` with `delayMs === triggerDelayMs` now asserts the estimate. No trigger physiology,
+threshold or event-pair heuristic was added.
+
+**Live classification census** (every 0.1 s tick of every live case, all 22 branches, all 82 arms,
+0–180 s, 1×):
+
+| Status         | `1b52c008` | repaired                                   |
+| -------------- | ---------- | ------------------------------------------ |
+| model estimate | 123,986    | 126,635                                    |
+| not applicable | 21,004     | 20,965                                     |
+| unavailable    | 0          | 0 (the empty-buffer test still returns it) |
+| measured       | **2,610**  | **0** — the status no longer exists        |
+
+### 16.4 Batch-01 and §15 contracts
+
+Unchanged and re-verified by the full suite: acquired plateau identity, `supportsMechanicsClaim`, hold
+change-back invalidation, frozen-waveform hold acquisition, ABG specimen immutability and overlapping
+availability, post-action evidence coverage, A/B markers, absent/unknown/zero trigger distinctions;
+§15's clock bounds, reportability, PEEP-13 success semantics, response-claim containment and MV-13
+alarm wording.
+
+### 16.5 Validation (repaired tree; node 26.5.0; `NODE_OPTIONS=--max-old-space-size=8192`)
+
+| Check                                                                                                             | Result                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| New `__tests__/mv-pre-review-02-rereview-repairs.test.tsx`                                                        | 31 tests, all passing: 15 MV-05 branch × arm complete-state 1×/5×/30× comparisons at 30/60/180 s; direct engine chunking; no single-step flicker; inventory harness for every MV-05 arm; seven PEEP reversal paths (compliance, shunt, PaO₂, SpO₂, resolution, corrective points, dyspnea); PEEP-13 containment; shunt derivation; live trigger census; the building-effort estimate; absent/unknown/zero; Timing and dyssynchrony views |
+| `npx jest src/features/mechanical-ventilation`                                                                    | 41 suites, **1,028 tests, all passing** (997 before; one Batch-01 fixture assertion corrected — it pinned `measured`)                                                                                                                                                                                                                                                                                                                    |
+| Consumers (critical-care, learning-module, icu-simulation, MV routes, `hamilton-c6`, `draft-modules.hamilton-c6`) | 51 suites, 466 tests, 463 passing, **3 failing — the same accessibility, curriculum-sequencing and learner-copy tests that fail on `origin/main` `4bd1368d` alone** (detached checkout at that SHA, this session). The learner-copy scanner's findings are the same 18 as on `1b52c008`                                                                                                                                                  |
+| Census scripts, both heads                                                                                        | 82-arm cross-speed + trigger census; MV-05 arm speeds; reversal paths; the review's measured-vs-trace timing                                                                                                                                                                                                                                                                                                                             |
+| Causal inventory + `--speeds`                                                                                     | regenerated; changes only as §16.1                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `npx tsc --noEmit -p tsconfig.json` (full)                                                                        | clean                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `npx eslint` (module + inventory script)                                                                          | clean                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `npx prettier --check` (module, script, docs)                                                                     | clean                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `git diff --check`                                                                                                | clean                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `npm run build`                                                                                                   | succeeded, 767/767 pages                                                                                                                                                                                                                                                                                                                                                                                                                 |
+
+**Chromium** (built-in pane; this worktree's production build, `node server.js` on 127.0.0.1:3126,
+process cwd verified). The pane was **hidden** throughout this pass, so pointer input could not be
+composited; the page's own buttons were activated with DOM `click()` (the same React handlers, without
+pointer hit-testing) and state was read from the rendered component for inspection.
+
+- **MV-05 Practice**, one playback path: six breaths, ΔPsupport 18 → 12 and ETS 25 → 40 at 12.86 s,
+  eight breaths → 30.0 s: VTE 439 mL, rate 18, PEEPi 4.3, PaCO₂ 58.4. Replaying the identical action log
+  in the engine reproduces the browser's patient, measurements, clock and all 600 waveform samples
+  exactly; from that post-correction state, 18 s at 0.1 / 0.5 / 3 s chunks gives identical complete
+  state (VTE 331 each).
+- **MV-01 Practice**, PEEP 5 → 13 → 5: displayed SpO₂ 84 → 90 over 60 s at 13 (shunt 0.20, compliance
+  0.032); back at 5 the shunt is 0.30 at once and displayed SpO₂ falls 90 → 88 → 86 → 85 → 84 by 240 s
+  (PaO₂ 74.6 → 54.4).
+- **Learn Section 7** (Timing view, MV-07 round): "Trigger delay 330 ms · model estimate" and "Modeled
+  trigger delay for this phenotype is 330 ms, not measured on this breath"; no "Measured trigger delay"
+  anywhere on the page. MV-05 is not the patient of any Learn surface that shows the trigger delay, and
+  Practice shows none, so the corrected-MV-05 rendering is verified by the test that mounts both panels
+  on that state.
+- Console errors: only `POST /api/analytics` 401s from the unauthenticated local server. Server stopped
+  by its own PIDs after checking cwd; other sessions' servers (3110, 3134, 3254) untouched.
+
+### 16.6 D1–D5 — all `NOT REVIEWED`
+
+- **D1** untreated progression, acute chronology, MV-06 transient response: open.
+- **D2** intended gases, CO₂/drive, fault-linked oxygenation, consciousness: open.
+- **D3** PEEP 13 and PEEP 6–7 physiology: open. 13 stays containment, not success; restoring the
+  baseline on return is reversibility, not a hysteresis decision.
+- **D4** device-specific alarm policy: open.
+- **D5** trigger causality and true effort-to-delivery timing: open. No live value is a measured
+  interval; a `measured` status would need the trigger-event model §8 describes.
+
+### 16.7 Integration
+
+`origin/main` `4bd1368d` did not move during this pass; the branch is not rebased or merged. The repair
+and documentation commits are pushed to `claude/mechanical-vent-02-9-22` as fast-forwards on PR #271.
+Not merged, not deployed; Batch 03 not started.
+
+### 16.8 NOT RUN in this pass
+
+- Pointer-driven browser input (pane hidden; DOM `click()` used instead), Firefox, Safari, hardware,
+  assistive technology, zoom / 200 % text / 320 px, dark scheme, es and zh-CN.
+- A browser walk of every arm (the engine census stands in); the MV-05 hold arm in the browser.
+- Deployed build; beta-wrapped routes.
+- Any clinical, device, media or source review.
+
 ## Stop
 
 One PR, opened and stopped. No merge, no deploy, no batch 03, no G02 restart. The sanity-repair pass
-(§15) pushed five bounded repairs to the same PR and stopped there.
+(§15) pushed five bounded repairs to the same PR and stopped there; the re-review pass (§16) pushed
+three more and stopped there.
