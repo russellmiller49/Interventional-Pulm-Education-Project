@@ -37,6 +37,7 @@ import type { ScopeAnnotation } from './ClinicalAirwayView'
 import { nativeImageUrl, sliceZ, targetForTrace, TARGET_CT_BASE } from '../geometry/native-ct'
 import { placeOverlayLabels } from './ctOverlayLabels'
 import { useCtFrame } from './useCtFrame'
+import { displayName } from '../engine/display-text'
 import styles from './branch-tracing.module.css'
 import { resetPaneScroll } from './resetPaneScroll'
 
@@ -135,7 +136,7 @@ export function NativeCtViewer({
   const stationLabel = checkpoint.decision
     ? `${checkpoint.decision.parent.airway.code} junction`
     : 'Distal nodule approach'
-  const stationName = checkpoint.decision?.parent.airway.name ?? checkpoint.airway.name
+  const stationName = displayName(checkpoint.decision?.parent.airway.name ?? checkpoint.airway.name)
   const [sliceState, setSliceState] = useState({
     active,
     levelRequest,

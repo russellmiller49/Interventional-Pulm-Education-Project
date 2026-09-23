@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useRouter } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
 import { draftSignature, readCtDraft, writeCtDraft, freshRouteView } from '../engine/ct-draft'
 import { parsePracticeDraft, type PracticeDraft } from '../engine/practice-draft'
@@ -14,7 +14,7 @@ import { CtRouteWorkspace } from './CtRouteWorkspace'
 import { CourseOutline } from './CourseOutline'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { NowCard } from '@/features/learning-module/stage/NowCard'
-import { BASE_PATH, SOURCE, VERSION } from '../content/lessons'
+import { BASE_PATH, LESSONS, SOURCE, VERSION } from '../content/lessons'
 import { ASSESS_TRACES, PRACTICE_TRACES, SEGMENT_PRACTICE_TRACES } from '../content/practice'
 import {
   type Course,
@@ -50,8 +50,13 @@ import {
 } from './CtTraceControls'
 import { approachReference } from '../engine/model-reference'
 import { TargetCtPreview } from './TargetCtPreview'
+import { courseMap, lessonHref, lessonNumber, moreRoutesSet } from '../content/course-guide'
+import { count } from '../engine/display-text'
 import styles from './branch-tracing.module.css'
 import { resetPaneScroll } from './resetPaneScroll'
+
+/** The route lesson whose worked example and transfer route the More routes set revisits. */
+const ROUTE_LESSON = 'variants-limits'
 
 const RealCtExplorer = dynamic(() => import('./RealCtExplorer').then((m) => m.RealCtExplorer), {
   ssr: false,
@@ -101,9 +106,41 @@ export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' })
         <p className={styles.subtitle}>
           {mode === 'practice'
             ? 'Start with one route, or choose a mixed set.'
-            : 'Four further routes in the same teaching CT, with the same reference and help as Practice.'}{' '}
+            : 'An optional revisit set in the same teaching CT, with the same reference and help as Practice.'}{' '}
           Show the reference at any junction, check what you marked, or continue without recording.
         </p>
+        {mode === 'practice' ? (
+          <p className={styles.small} data-route-set-role="practice">
+            Suggested after the {courseMap().lessons} Learn lessons, and open now. Each target is a
+            simulated nodule in one segment of this CT; the route runs from the trachea through
+            every modeled division.
+          </p>
+        ) : (
+          <section className={styles.notice} data-route-set-role="more-routes">
+            <h2>What this set is</h2>
+            <p>
+              A mixed set of {courseMap().moreRoutes} routes in the same teaching CT. Some repeat
+              targets you may already have traced, so treat it as a revisit, not a new patient case.
+              This address once held a separate assessment; it now works like Practice, the
+              reference stays available and nothing is assessed.
+            </p>
+            <ul>
+              {moreRoutesSet().map((entry) => (
+                <li key={entry.traceId} data-more-route={entry.target.segment.code}>
+                  <strong>{entry.target.segment.code}</strong> · {entry.target.segment.name}
+                  {entry.alsoIn.length ? ` · also ${entry.alsoIn.join(' and ')}` : ''}
+                </li>
+              ))}
+            </ul>
+            <p className={styles.small}>
+              The Lesson {lessonNumber(ROUTE_LESSON)} routes are in{' '}
+              <Link href={lessonHref(ROUTE_LESSON)}>
+                {LESSONS.find((l) => l.id === ROUTE_LESSON)?.title}
+              </Link>
+              .
+            </p>
+          </section>
+        )}
         <div className={styles.introGrid}>
           <section>
             <h2>Follow the airway toward the target</h2>
@@ -525,8 +562,8 @@ function CtPracticeSession({
                       reference={approachReference(trace, targetForTrace(trace))}
                     />
                     <p>
-                      {response.marks.filter((m) => m.pixel === null).length} checkpoints marked
-                      unresolved.
+                      {count(response.marks.filter((m) => m.pixel === null).length, 'checkpoint')}{' '}
+                      marked unresolved.
                     </p>
                     <p>
                       Start with the parent lumen and examine continuity toward each mark. A

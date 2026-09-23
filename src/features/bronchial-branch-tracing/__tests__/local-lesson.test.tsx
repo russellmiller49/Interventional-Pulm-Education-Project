@@ -261,12 +261,12 @@ it('retains keyboard marking, an open outline with a next-lesson link, save for 
     'href',
     '/learn/anatomy/branch-tracing/learn?lesson=orientation',
   )
-  expect(screen.getByRole('button', { name: 'Save for review' })).toHaveAttribute(
+  expect(screen.getByRole('button', { name: 'Save for later' })).toHaveAttribute(
     'aria-pressed',
     'false',
   )
-  click('Save for review')
-  expect(screen.getByRole('button', { name: 'Save for review' })).toHaveAttribute(
+  click('Save for later')
+  expect(screen.getByRole('button', { name: 'Save for later' })).toHaveAttribute(
     'aria-pressed',
     'true',
   )
