@@ -1117,21 +1117,30 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
     })
   }
 
-  /** The focused element is on screen, below the header, and nothing is painted over it. */
+  /**
+   * The focused element is on screen, below the header, and nothing is painted over it. A wrapped
+   * inline control (a link across two lines at enlarged text) is tested at the centre of every
+   * line fragment, since the centre of its union box can fall on the text beside it.
+   */
   async function focusUncovered(page: Page) {
     return page.evaluate(() => {
       const element = document.activeElement as HTMLElement
       const header = document.getElementById('main-content')?.previousElementSibling
       const headerBottom = header ? header.getBoundingClientRect().bottom : 0
       const rect = element.getBoundingClientRect()
-      const hit = document.elementFromPoint(
-        (rect.left + rect.right) / 2,
-        (rect.top + rect.bottom) / 2,
-      )
+      const fragments = [...element.getClientRects()].filter((box) => box.width > 0)
       return {
         label: element.getAttribute('aria-label') ?? element.textContent?.trim().slice(0, 40),
         inView: rect.top >= headerBottom - 1 && rect.bottom <= innerHeight + 1,
-        hitSelf: !!hit && (hit === element || element.contains(hit)),
+        hitSelf:
+          fragments.length > 0 &&
+          fragments.every((box) => {
+            const hit = document.elementFromPoint(
+              (box.left + box.right) / 2,
+              (box.top + box.bottom) / 2,
+            )
+            return !!hit && (hit === element || element.contains(hit))
+          }),
       }
     })
   }
