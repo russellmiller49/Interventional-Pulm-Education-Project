@@ -10,6 +10,7 @@ import { BRONCHOSCOPY_FOUNDATIONS_ATLAS_HREF } from '../../content/routes'
 import { SPINE_STOPS } from '../../content/spine'
 import { SOURCES } from '../../data/sources'
 import styles from '../bronchoscopy-foundations-hub.module.css'
+import { ReadingTheViewTable } from '../ReadingTheViewTable'
 
 const KICKER = 'text-xs font-bold uppercase tracking-[0.18em] text-primary'
 const CARD = 'rounded-3xl border bg-card p-6 shadow-sm lg:p-8'
@@ -170,34 +171,19 @@ export function BronchoscopyFoundationsReference() {
         <p className="mt-2 text-sm leading-6 text-muted-foreground" data-grammar-trend-rule>
           {GRAMMAR_TREND_RULE}
         </p>
-        <div className={`${styles.tableWrap} mt-5`}>
-          <table data-grammar>
-            <thead>
-              <tr>
-                <th scope="col">You see</th>
-                <th scope="col">Where it lives</th>
-                <th scope="col">Shortlist</th>
-                <th scope="col">Taught in</th>
-              </tr>
-            </thead>
-            <tbody>
-              {BRONCH_GRAMMAR.map((row) => (
-                <tr key={row.id} data-grammar-row={row.id}>
-                  <td className="font-semibold">{row.see}</td>
-                  <td>{row.lives}</td>
-                  <td className="text-muted-foreground">{row.shortlist.join(' · ')}</td>
-                  <td>
-                    <Link
-                      className="font-semibold text-primary"
-                      href={bronchSectionLinkTarget(row.taughtIn)}
-                    >
-                      {bronchSection(row.taughtIn).shortTitle}
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-5">
+          <ReadingTheViewTable
+            rows={BRONCH_GRAMMAR}
+            labelledBy="ref-view-heading"
+            taughtIn={(row) => (
+              <Link
+                className="font-semibold text-primary"
+                href={bronchSectionLinkTarget(row.taughtIn)}
+              >
+                {bronchSection(row.taughtIn).shortTitle}
+              </Link>
+            )}
+          />
         </div>
       </section>
 

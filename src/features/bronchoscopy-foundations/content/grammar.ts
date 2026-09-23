@@ -1,6 +1,6 @@
 import type { ScopeControlId } from '../components/scope/types'
 import type { SourceRef } from '../data/sources'
-import type { ControlStripVerdict } from './controlPanel'
+import { scopeControl, type ControlStripVerdict } from './controlPanel'
 import type { BronchSectionId } from './sectionIds'
 
 /**
@@ -284,4 +284,23 @@ export function grammarRow(id: GrammarRowId): GrammarRow {
   const row = BRONCH_GRAMMAR.find((candidate) => candidate.id === id)
   if (!row) throw new Error(`Unknown grammar row ${id}`)
   return row
+}
+
+/**
+ * The "which control, if any" cell of a row, in the words the lesson has always printed: the
+ * control's plain name where one of the five controls is the answer, otherwise what replaces a
+ * control. One function so the lesson excerpt and the Reference table cannot drift (fellow
+ * walkthrough A10); the wording is unchanged from the lesson's.
+ */
+export function grammarRowControl(row: GrammarRow): string {
+  switch (row.verdict) {
+    case 'this-control':
+      return row.thisControl.map((control) => scopeControl(control).plainName).join(', ')
+    case 'no-control-retrace':
+      return 'Stop, name the last certain landmark, retrace'
+    case 'no-control-stop-and-communicate':
+      return 'Stop the provoking action, communicate, get help'
+    case 'no-control-change-the-plan':
+      return 'The plan, the question or the record changes'
+  }
 }
