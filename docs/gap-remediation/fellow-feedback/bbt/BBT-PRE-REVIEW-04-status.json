@@ -1,7 +1,7 @@
 {
   "task": "BBT-PRE-REVIEW-04",
   "title": "Teaching clarity and coherent optional route flow",
-  "status": "READY FOR INDEPENDENT REVIEW",
+  "status": "SANITY REPAIR: READY FOR INDEPENDENT RE-REVIEW",
   "date": "2026-09-23",
   "repository": {
     "implementation_base_sha": "a306d8250ec10207c750f46407f151c06d487707",
@@ -315,5 +315,151 @@
     "Shared site header link overflows at 200% root text on the overview (outside BBT; not measured on base)",
     "Carried from Prompt 03: route lessons/Practice gate the paired view on a recorded or revealed junction; scroll-anchoring nudge after toggling paired view"
   ],
-  "evidence_root": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-04-2026-09-23"
+  "evidence_root": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-04-2026-09-23",
+  "independent_review_repair": {
+    "date": "2026-09-23",
+    "reviewed_head": "6004cd7f61b7802efc7328eab2b0e55a22f8e8ed",
+    "review_result": "SANITY REVIEW: NOT READY TO MERGE (4 blockers; all other Prompt 04 findings cleared)",
+    "repair_commit": "80d4414436dd6acbc01b7fd14fc1cff2aeeb8f3e",
+    "new_pr_head": "documents commit on top of 80d44144; recorded on the PR",
+    "main_at_repair": "85acc113 (CRRT-only commits after a306d825; no BBT overlap; not merged in)",
+    "findings": [
+      {
+        "id": "R1",
+        "severity": "P2",
+        "origin": "introduced by Prompt 04",
+        "title": "Lesson 5 called response slice 307 the node's level; node nearest slice 306",
+        "root_cause": "one-slice tolerance for trend words reused as the sentence 'lies on the node's level'",
+        "repair": "exact signed offsets in DivisionCourse and courseSentences; also 'native slice nearest the model node' and Lesson 8 descent example only for caudal approach",
+        "regression": ["__tests__/division-levels.test.tsx", "e2e: review finding 1"],
+        "old_head": "fails",
+        "repaired": "passes"
+      },
+      {
+        "id": "R2",
+        "severity": "P2",
+        "origin": "inherited, in scope",
+        "title": "RS8 worked route could not be reopened over ongoing LS9 work",
+        "root_cause": "the worked route existed only as step 0 of the learner session",
+        "repair": "'View the worked RS8 route (reference)' at every later step; reopened flag renders the worked route from reference state; 'Return to your trace: LS9' restores the untouched learner route",
+        "regression": [
+          "__tests__/reference-and-route-state.test.tsx › finding 2",
+          "e2e: review findings 2 and 3"
+        ],
+        "old_head": "fails",
+        "repaired": "passes"
+      },
+      {
+        "id": "R3",
+        "severity": "P2",
+        "origin": "inherited, in scope",
+        "title": "Reference browsing wrote the learner draft",
+        "fields_written_on_old_head": [
+          "session.active",
+          "session.orientation",
+          "session.targetViewed",
+          "views['<example>.demo']",
+          "local frame",
+          "local views[exercise].slice/focus"
+        ],
+        "root_cause": "worked route and walkthroughs drove the learner session's cursor fields and view writer",
+        "repair": "reference state is component state (worked junction/furthest/orientation/view; local demonstration cursor and live slice); while a reference is on screen only display choices are saved; no schema or signature change",
+        "regression": [
+          "__tests__/reference-and-route-state.test.tsx › finding 3 (x3)",
+          "e2e: review findings 2 and 3",
+          "e2e: review finding 3"
+        ],
+        "old_head": "fails",
+        "repaired": "passes"
+      },
+      {
+        "id": "R4",
+        "severity": "P2",
+        "origin": "inherited, in scope",
+        "title": "Continue was a no-op after skip then record",
+        "root_cause": "reachableThrough = max(lastUnlocked, reached) ignored a recorded furthest stop; a partial route's last stop offered a Continue with no next stop",
+        "repair": "reachableThrough walks past a recorded furthest stop; 'Continue with this partial route' (Lesson 9) and primary 'Compare all routes'/'Next route without recording' (Practice) at a partial route's last stop; skipped stops stay unrecorded",
+        "regression": [
+          "__tests__/reference-and-route-state.test.tsx › finding 4 (A, B, C, D, E, Practice)",
+          "e2e: review finding 4"
+        ],
+        "old_head": "fails (D invariant passes on both)",
+        "repaired": "passes"
+      }
+    ],
+    "fail_before": {
+      "jest": "24 failed, 2 passed of 26 (2 invariants) with old runtime files and final tests",
+      "browser": "4 of 4 failed on build IH5OxvSXqGFtsMupcx28t",
+      "logs": [
+        "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-04-2026-09-23/review-repair/logs/jest-focused-old-head-final-tests.log",
+        "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-04-2026-09-23/review-repair/logs/playwright-review-findings-old-head-IH5Ox.log"
+      ]
+    },
+    "validation": {
+      "jest_bbt": {
+        "suites": 26,
+        "tests": 186,
+        "passed": 185,
+        "failed": 1,
+        "failure": "known baseline contracts.test.ts:198 case_manifest.json",
+        "new_tests": 26
+      },
+      "playwright_branch_tracing": {
+        "passed": 69,
+        "failed": 0,
+        "skipped": 0,
+        "new": 4
+      },
+      "playwright_systemic_bbt": {
+        "passed": 3
+      },
+      "tsc": {
+        "default_heap": "exit 0, no diagnostics",
+        "max_old_space_8192": "exit 0, no diagnostics"
+      },
+      "eslint": "clean",
+      "prettier": "clean",
+      "git_diff_check": "clean",
+      "production_build": {
+        "exit": 0,
+        "duration": "1 min 58 s",
+        "build_id": "EXc_a98IwiDfLGGPxvPEK"
+      }
+    },
+    "server": {
+      "head": "80d4414436dd6acbc01b7fd14fc1cff2aeeb8f3e",
+      "pid": 53032,
+      "cwd": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-bbt-04/.next/standalone",
+      "build_id": "EXc_a98IwiDfLGGPxvPEK",
+      "base_url": "http://127.0.0.1:3001",
+      "command": "PORT=3001 HOSTNAME=127.0.0.1 node .next/standalone/server.js"
+    },
+    "protected_source_integrity": "identical to Prompt 04 after-list; 21 draft signatures unchanged",
+    "files_changed": [
+      "components/BranchTracingLesson.tsx",
+      "components/BranchTracingPractice.tsx",
+      "components/DivisionPrimer.tsx",
+      "components/LocalCtLesson.tsx",
+      "engine/ct-session.ts",
+      "engine/model-reference.ts",
+      "__tests__/division-levels.test.tsx",
+      "__tests__/reference-and-route-state.test.tsx",
+      "__tests__/teaching-route-flow.test.tsx",
+      "e2e/branch-tracing.spec.ts",
+      "BBT-PRE-REVIEW-04 documents"
+    ],
+    "logged_not_fixed": [
+      "Worked route map two-line heading can partly cover the first row when the pane auto-scrolls (cosmetic, Prompt 04 heading length)"
+    ],
+    "holds_unchanged": {
+      "OD-01": "OPEN",
+      "OD-03": "held",
+      "OD-04": "owner-held",
+      "OD-05": "held",
+      "OD-07": "owner-held",
+      "BBT-02": "NOT REVIEWED",
+      "H1-H7": "held"
+    },
+    "evidence": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-04-2026-09-23/review-repair"
+  }
 }

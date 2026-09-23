@@ -292,3 +292,232 @@ Outside Git at
 
 One bounded PR, then stop. Not merged, not deployed. Prompt 05 not started. OD-01 stays open.
 Nothing here records a faculty or learner review as complete.
+
+## Independent-review repair — 2026-09-23
+
+An independent sanity review of PR [#273](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/273)
+at head **`6004cd7f61b7802efc7328eab2b0e55a22f8e8ed`** returned **SANITY REVIEW: NOT READY TO
+MERGE**. It dispositioned all 22 Prompt 04 findings and cleared everything except four blockers:
+**one defect introduced by Prompt 04** (finding 1) and **three inherited route-flow defects that
+Prompt 04's worked / own / transfer contract brings into scope** (findings 2–4). The sections
+above are the original record and were not rewritten; this section records what was wrong and
+what changed. The review's own validation of `6004cd7f` (Jest 159 + the known baseline, browser 65,
+shared scroll 3, build, TypeScript, lint, formatting) is not re-counted here.
+
+The repair is bounded to those four defects and the regressions they need. It changes no response
+plane, CT or graph geometry, graph id, nomenclature, camera mapping, `paired-scope.ts`, manifest,
+BBT-02 packet, review or publication state, target identity or draft signature. OD-01 stays
+**OPEN**, OD-03 and OD-05 **held**, OD-04 and OD-07 **owner-held**, BBT-02 **NOT REVIEWED**, and
+H1–H7 stay held. The Lesson 5 wording correction is not an anatomy approval.
+
+### Repository
+
+| Field                 | Value                                                                                                                                                                                                                                     |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reviewed failing head | `6004cd7f61b7802efc7328eab2b0e55a22f8e8ed` (confirmed as the PR head after `git fetch` before any edit)                                                                                                                                   |
+| Repair commit         | `80d4414436dd6acbc01b7fd14fc1cff2aeeb8f3e` (runtime and tests)                                                                                                                                                                            |
+| New PR head           | The documents commit on top of `80d44144`; the PR page and the final report give its SHA                                                                                                                                                  |
+| Main                  | Advanced to `85acc113` (CRRT-FELLOW-04, PR #275) after the prompt was written. None of those commits touches a BBT, lesson-stage or Playwright-config path, and the PR stays MERGEABLE, so main was not merged in and nothing was rebased |
+| Worktree / branch     | `…/Worktrees/claude-bbt-04`, `claude/bbt-04`, clean before the repair; no other checkout, server or branch touched                                                                                                                        |
+
+### State model the repair makes explicit
+
+Two state domains, kept apart:
+
+- **The learner's persisted draft** (`branch-tracing.draft.learn.*`, `…practice.*`, `…assess.*`):
+  marks, branch choices, recorded stops, route interpretations, the learner's own route cursor
+  (`session.active`, `reached`), and the learner's own CT position and display choices (`views`,
+  `orientation`). Unchanged schema, unchanged signatures.
+- **Reference viewing** (component state, never written): the Lesson 9 worked RS8 route's junction,
+  divisions viewed, CT display, viewer position and target inspection; the local worked
+  walkthrough cursor; and the CT position while a walkthrough, Show reference or the comparison is
+  on screen.
+- **Presentation phase:** `worked = reopened || step 0` in Lesson 9, and `showingWalkthrough` in
+  local lessons, decide which domain the viewer reports to.
+- **Next learner action:** `reachableThrough` (shared by Lesson 9 and Practice) plus a partial-route
+  end action at the last stop.
+
+Classified as learner navigation and left persisted, as before: Lesson 9 steps 3–4 (reviewing the
+learner's own recorded route beside the reference), the parent-view task, and orientation and
+display preferences in local lessons.
+
+### Finding 1 (P2, introduced) · Lesson 5 source-level wording was false
+
+- **Reproduction.** Lesson 5 example 2 (junction-19) primer on `6004cd7f`: "Daughter A · RB4 · more
+  anterior’s response slice, 307, lies on the node’s level". Raw export: node z −215.440 mm → native
+  index 306.12, nearest slice **306**; parent point 307; response slices 307 and 307.
+- **Root cause.** `divisionCourse` classified any response within one slice of the node as "same
+  level" (a tolerance meant for trend words), and `courseSentences` turned that class into the
+  sentence "lies on the node’s level". The same tolerance produced "at about slice N" and
+  "is on that same native slice" elsewhere.
+- **Repair.** `DivisionCourse` carries exact signed offsets (`parentOffset`, `daughters[].offset`).
+  Sentences now read "The model node lies nearest native slice 306. The parent point (RB4) is on
+  slice 307, 1 slice cranial of the node, … Daughter A · RB4 · more anterior’s response slice, 307,
+  lies 1 slice cranial of the model node". Only the qualitative words ("almost within one axial
+  plane", "turns back") keep the one-slice tolerance, and the in-plane sentence says "within one
+  slice". Reviewing the same generated wording across all 13 local divisions found two related
+  imprecisions, fixed in the same pass:
+  - "is on that same native slice" was ambiguous after the parent's slice had been named; it now
+    reads "is the native slice nearest the model node".
+  - Lesson 8's example sentence ("A route can descend and then turn cranially …") was quoted where
+    the parent itself runs cranially (junction-16, junction-11). There, Lesson 8's general sentence
+    is quoted instead.
+    All wording is in the copy/source comparison (rows 17a–d); the full after-text for every division
+    is in `review-repair/generated-level-wording-after.txt`.
+- **Regression.** `__tests__/division-levels.test.tsx`:
+  - pins junction-19 from the raw export and the native-v1 IJK→LPS matrix (node index 306.121 →
+    306; parent 307; responses 307/307), independent of the display helper;
+  - renders Lesson 5 example 2 and asserts the displayed wording;
+  - recomputes every parent and response offset for all 13 local divisions from the raw export and
+    checks each sentence;
+  - allows the descent example only where the parent is followed caudally.
+    In the browser: `review finding 1 · Lesson 5 states …`.
+
+### Finding 2 (P2, inherited, in scope) · RS8 could not be reopened over ongoing LS9 work
+
+- **Reproduction.** Lesson 9: view RS8 → start LS9 → record junction 1 → there was no way back to
+  the worked route short of Restart, which discards LS9 work. Step 0 was the only home of the worked
+  route, and the reducer has no route back to it.
+- **Root cause.** The worked route was not a separate view. It was step 0 of the learner session,
+  so seeing it again meant changing the learner's step.
+- **Repair.** "View the worked RS8 route (reference)" is offered at every later step and after
+  finishing. It sets a component flag (`reopened`). The same worked presentation then renders from
+  reference state: its own junction, map, CT display and viewer position, with no learner marks.
+  "Return to your trace: LS9" ("another trace: LS5" at step 6, "the finished lesson" after
+  finishing) clears the flag. The learner viewer remounts from the stored `views` and `session`,
+  unchanged. No draft is copied or overwritten, no attempt is created, and no target identity
+  changes.
+- **Regression.**
+  - Jest `finding 2 · …`: view RS8 → LS9 → a genuine keyboard-placed pixel mark and a daughter
+    choice recorded → snapshot → reopen, next ×2, previous, flip → return → the same "Junction 1 of
+    6", the mark visible, stored bytes identical → reopen/return again → remount → equal by value →
+    Continue proceeds.
+  - Browser `review findings 2 and 3 · …`: the same through real UI, with a reload.
+
+### Finding 3 (P2, inherited, in scope) · reference browsing wrote the learner draft
+
+- **Reproduction.** On `6004cd7f`, stepping the worked RS8 route wrote `session.active` (captured
+  `active: 2`). Rotating its CT wrote `session.orientation`, Show target wrote
+  `session.targetViewed`, and its viewer wrote `views['right-lower-basal.demo']`. In local lessons,
+  the walkthrough transport, Show reference and Replay wrote the stored `frame` (captured 21 → 1)
+  and the viewer slice and focus in `views[exercise]`.
+- **Root cause.** The worked route and the walkthroughs were driven through the learner session's
+  own cursor fields and the same view-state writer the learner's navigation uses.
+- **Repair.**
+  - **Lesson 9.** The worked route reads and writes only component state (`workedActive`,
+    `workedFurthest`, `workedOrientation`, `workedView`), and `onTargetReady` is inert while it is
+    shown. An older draft's worked view is still read as the starting view, never written.
+  - **Local lessons.**
+    - The demonstration cursor is component state, seeded from an older draft's stored `frame`, so
+      that `frame` now changes only with lesson transitions.
+    - While a reference is on screen, a viewer report keeps the stored slice and focus and saves
+      only display choices (magnify, full field, paired view).
+    - The overlay and caption lookup uses the viewer's live slice, so the Prompt 03 step identity is
+      unaffected.
+    - `onViewChange` keeps one identity (the viewer re-reports on identity change), reading the
+      reference state from a ref updated at layout time.
+  - No schema, draft byte format or signature change was needed.
+- **Regression** (Jest `finding 3 · …` ×3 and browser ×2).
+  - The Lesson 9 worked route (next ×3, previous, flip, Show target): stored bytes identical, and
+    equal by value after a remount.
+  - The Lesson 4 walkthrough with a partial mark present (Show reference, next, next, previous,
+    close, Replay, next, close): bytes identical, equal after reload; the learner's own later slice
+    step **is** saved.
+  - The Lesson 4 worked example stepped in the demo phase: bytes identical.
+  - A reload writes the draft back in the parser's key order whether or not anything was viewed,
+    so post-reload checks compare by value. Every in-session check compares bytes.
+
+### Finding 4 (P2, inherited, in scope) · Continue did nothing after skip → record
+
+- **Reproduction (reducer trace, before any edit).** LS9: skip junction 1 → `active 1, reached 1`;
+  record junction 2 → `recorded 0100000`; Continue → `active` stays 1, state unchanged.
+  `reachableThrough` returned 1 because `lastUnlocked` stops at the first unrecorded stop (the
+  skipped junction, 0) and `reached` was 1, so index 2 was rejected. Practice uses the same
+  function. A second no-op sat at the last stop: with earlier stops skipped, the route is never
+  "done", so the last stop kept offering "Continue to the next division" with no next stop.
+- **Invariant restored.** Recording the furthest opened stop opens the one after it.
+  `reachableThrough` now walks forward from `max(lastUnlocked, reached)` while that stop is recorded.
+  A recorded last stop with earlier stops skipped is a partial route with nowhere further to go:
+  - Lesson 9 offers "Continue with this partial route" (step 6: "Finish with this partial route"),
+    the existing continue-without-recording transition to the description step, where "Show the
+    comparison without recording" is the truthful next step.
+  - Practice's primary action becomes "Compare all routes" / "Next route without recording", and
+    the duplicate secondary is removed.
+    Skipped stops stay unrecorded, with no mark, branch or history. The fix is generic: no lesson or
+    stop number is special-cased.
+- **Regression.**
+  - Jest reducer A (skip → record → Continue), B (record → skip → record → Continue), C (two skips
+    → record → Continue), D (skipped stays skipped — an invariant, passes on both heads).
+  - Jest component A in Lesson 9; E (partial route's last stop → description step, records
+    unchanged, no duplicate action); Practice A and E via the primary action.
+  - Browser `review finding 4 · …` in Lesson 9 and Practice.
+
+### Fail-before / pass-after evidence
+
+| Regression                                                      | On `6004cd7f`                                                                                                                                                                                                                                                                                            | On `80d44144` |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Jest `division-levels` + `reference-and-route-state` (26 tests) | 24 failed, 2 passed. The 2 are the raw-source pin and "skipped stays skipped", invariants that hold on both heads. Run with the six repaired runtime files restored from `6004cd7f` and the final test text; tree restored clean afterwards (`review-repair/logs/jest-focused-old-head-final-tests.log`) | 26 passed     |
+| Browser: the four `review finding …` tests                      | 4 failed on the reviewed build `IH5OxvSXqGFtsMupcx28t`: 1 old wording; 2+3 `active: 2` written by RS8 browsing; 3 local `frame` rewritten; 4 "Junction 2 of 6" after Continue (`review-repair/logs/playwright-review-findings-old-head-IH5Ox.log`)                                                       | 4 passed      |
+
+### Other tests updated because the contract changed
+
+- `teaching-route-flow.test.tsx`: the Prompt 04 worked-route test asserted that each worked
+  junction advanced the stored `session.active`. That was finding 3 itself. It now asserts the
+  stored draft is byte-identical and only the worked map grows.
+- `teaching-route-flow.test.tsx`: the LB6 primer phrase changed from "of the node" to "of the model
+  node" (finding 1 wording).
+
+### Validation after the final source and test edit (unique runs)
+
+| Check                                                       | Result                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BBT Jest (`src/features/bronchial-branch-tracing`)          | 185 passed, 1 failed across 26 suites (186 tests; 26 new). The failure is the known baseline below (`review-repair/logs/jest-bbt.log`)                                                                                                                                                            |
+| Playwright `e2e/branch-tracing.spec.ts` (repaired build)    | 69 passed, 0 failed, 0 skipped, 1.5 min (65 existing + 4 new). Includes Prompt 01 partial routes, Prompt 02 compact Check ×3 and decoded caption ×3, Prompt 03 repeated-plane identity and occlusion ×3, and all Prompt 04 journeys (`review-repair/logs/playwright-branch-tracing-repaired.log`) |
+| Playwright `systemic-ux-stabilization -g bbt`               | 3 passed (`review-repair/logs/playwright-systemic-bbt-repaired.log`)                                                                                                                                                                                                                              |
+| `npx tsc --noEmit` (repository)                             | Default heap: exit 0, no diagnostics. `NODE_OPTIONS=--max-old-space-size=8192`: exit 0, no diagnostics                                                                                                                                                                                            |
+| ESLint (repair `.ts`/`.tsx` paths), Prettier (repair paths) | Clean                                                                                                                                                                                                                                                                                             |
+| `git diff --check 6004cd7f HEAD`                            | Clean                                                                                                                                                                                                                                                                                             |
+| `npm run build` (production)                                | Passed, exit 0, 1 min 58 s; build ID `EXc_a98IwiDfLGGPxvPEK`; no runtime file changed after the build started                                                                                                                                                                                     |
+
+**Browser and server identity (repaired run).**
+
+- Worktree `…/Worktrees/claude-bbt-04`, branch `claude/bbt-04`, head `80d4414436dd6acbc01b7fd14fc1cff2aeeb8f3e`.
+- `PORT=3001 HOSTNAME=127.0.0.1 node .next/standalone/server.js`, pid 53032, cwd
+  `…/claude-bbt-04/.next/standalone`, `next-server (v16.2.2)`, build ID `EXc_a98IwiDfLGGPxvPEK`
+  (also present in the served HTML), `http://127.0.0.1:3001`.
+- The old-head proof server: pid 51271, same cwd, build ID `IH5OxvSXqGFtsMupcx28t`.
+- Both servers were mine, confirmed free before start and stopped afterwards
+  (`review-repair/server-identity-*.txt`).
+
+**Known baseline failure.** `contracts.test.ts:198`, `isPublicPath('/airway-anatomy/case-001/case_manifest.json')`
+expected `false`, received `true`: materially identical. Access policy not changed.
+
+**Protected-source integrity.** `review-repair/protected-hashes-repair.txt` is identical to
+Prompt 04's after-list (every geometry file including `paired-scope.ts`, manifests, the airway
+graph, the BBT-02 packet, `junction-feedback.ts`, `local-exercises.ts`, `ct-types.ts`, the fixtures,
+and the public tree hashes). All 21 draft signatures equal the base
+(`review-repair/draft-signatures-repair.json`; fixture test passing). Files changed by the repair:
+
+- `components/BranchTracingLesson.tsx`, `components/BranchTracingPractice.tsx`,
+  `components/DivisionPrimer.tsx`, `components/LocalCtLesson.tsx`
+- `engine/ct-session.ts`, `engine/model-reference.ts`
+- `__tests__/division-levels.test.tsx` (new), `__tests__/reference-and-route-state.test.tsx` (new),
+  `__tests__/teaching-route-flow.test.tsx`
+- `e2e/branch-tracing.spec.ts`
+- these documents.
+
+**Logged, not fixed (outside the four blockers).** In the Lesson 9 worked route map, the two-line
+heading "Worked route map · N of 9 stops shown · model reference, not your route" can partly cover
+the first map row when the pane scrolls to the current division
+(`review-repair/screens/L9-RS8-reopened-1427x1226.png`). The row stays reachable by scrolling. It
+is cosmetic and was introduced by Prompt 04's heading length.
+
+**Limitations.** As above: emulated viewports in desktop Chromium, a CSS root-font probe rather
+than native zoom, no screen reader, device, Safari or Firefox. The repair was not re-walked end to
+end beyond the listed journeys, and no G02 was run.
+
+**Evidence.** `…/renders/output/bbt-pre-review-04-2026-09-23/review-repair/` (logs, screens, server
+identities, protected hashes, signatures, generated level wording).
+
+**Status: SANITY REPAIR: READY FOR INDEPENDENT RE-REVIEW.** Not merged, not deployed; Prompt 05 not
+started.
