@@ -74,9 +74,9 @@ export function BronchSortControl({
                 <span data-sort-chosen>You chose: {asSentence(labelOf(committed[row.id]))}</span>{' '}
                 {outcome === 'held' ? null : (
                   <>
-                    <span data-sort-authored>
+                    <strong data-sort-authored>
                       Belongs with: {asSentence(labelOf(row.origin))}
-                    </span>{' '}
+                    </strong>{' '}
                   </>
                 )}
                 {row.rationale}

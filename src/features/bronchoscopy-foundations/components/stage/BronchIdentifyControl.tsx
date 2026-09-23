@@ -78,9 +78,9 @@ export function BronchIdentifyControl({
                 </span>{' '}
                 {outcome === 'held' ? null : (
                   <>
-                    <span data-identify-authored>
+                    <strong data-identify-authored>
                       Name: {asSentence(labelOf(row.answerId))}
-                    </span>{' '}
+                    </strong>{' '}
                   </>
                 )}
                 {row.rationale}
