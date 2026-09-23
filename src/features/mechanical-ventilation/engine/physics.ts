@@ -809,7 +809,15 @@ export function deriveEffectivePatient(
       endExpiratoryVolumeL: state.patient.mechanics.endExpiratoryVolumeL,
     },
     drive: { ...base.drive },
-    gasExchange: { ...state.patient.gasExchange },
+    /*
+     * The gases are running state, advanced by `updateSlowPhysiology`; the shunt fraction beside them
+     * is not — it is a parameter of the lung state the current settings select, exactly like the
+     * mechanics above, so it is rebuilt from the case every time. Copied along with the gases, the
+     * value MV-01's recruited or overdistended state wrote survived the return to PEEP 5: back at
+     * the authored compliance, the patient kept shunt 0.20 and settled at PaO₂ 72 / SpO₂ 91 instead
+     * of 54 / 84 (MV-PRE-REVIEW-02 sanity repair R2).
+     */
+    gasExchange: { ...state.patient.gasExchange, shuntFraction: base.gasExchange.shuntFraction },
     hemodynamics: { ...state.patient.hemodynamics },
     human: { ...state.patient.human },
     airway: { ...state.patient.airway },
@@ -1038,17 +1046,25 @@ export function deriveMeasurements(
    * The cycle the lung is actually living in, not the one the patient is asking for. `rate` above
    * is `deriveEffectiveVentilationRate`, which in pressure support is the *neural* rate — so a
    * patient breathing at 28 against a machine cycling at 8 was credited with 0.64 s of expiratory
-   * time when the trace gives it six full seconds. Preferred order: the trace, then the rate the
-   * machine last reported, then the effective rate at cold start.
+   * time when the trace gives it six full seconds. Preferred order: the trace, then the cycle the
+   * machine is running (`BreathClock`), then the effective rate at cold start.
+   *
+   * The middle term used to be the rate this function itself reported on the previous step
+   * (`state.measurements.totalRatePerMin`). On pressure support that rate is computed from the
+   * missed-effort fraction, which is computed from the trapped pressure this expiratory time sets,
+   * so whenever the buffer held no completed expiration the value fed back into itself one step
+   * later. After MV-05's combined correction it alternated 16 ↔ 19/min (PEEPi 6 ↔ 4.2 cmH₂O) on
+   * every 20 ms step, and the breath clock, which reads the requested cycle once at each onset,
+   * adopted whichever parity that step landed on. The clock's cycle in progress is fixed at the
+   * onset that began it, so it carries no such loop (MV-PRE-REVIEW-02 sanity repair R1).
    */
-  const cycledRate =
-    state.measurements.totalRatePerMin > 0 ? state.measurements.totalRatePerMin : rate
+  const cycleInProgressSeconds =
+    state.ventilator.breathClock.periodSeconds ?? 60 / Math.max(1, rate)
   const expiratoryTime = isTwoLevelMode(settings.deviceMode)
     ? settings.advanced.tLowSeconds
     : Math.max(
         0.08,
-        observedExpiratoryTimeSeconds(state.waveforms) ??
-          60 / Math.max(1, cycledRate) - mechanicalTi,
+        observedExpiratoryTimeSeconds(state.waveforms) ?? cycleInProgressSeconds - mechanicalTi,
       )
   const timeConstant = resistance * compliance
   if (timeConstant > expiratoryTime) {

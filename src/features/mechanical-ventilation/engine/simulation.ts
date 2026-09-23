@@ -1327,8 +1327,23 @@ export function advanceSimulation(
   let volumeL = state.patient.mechanics.endExpiratoryVolumeL
   let waveforms = [...state.waveforms]
   let trends = [...state.trends]
-  let patient = deriveEffectivePatient(state, definition)
-  let measurements = deriveMeasurements(state, definition, patient)
+  /*
+   * The step starts from the state the last step published, not from a fresh derivation of it.
+   *
+   * Each fixed step runs in one order: the state entering the step → the effective patient → the
+   * breath clock, which reads the measurements the previous step published → the waveform sample →
+   * the updated lung volume → the measurements this step publishes → slow physiology. This used to
+   * re-derive the patient and the measurements once more at the top of every *call*, which is an
+   * extra iteration of anything the measurements feed back into — and the number of calls is the
+   * caller's batching, not the model's. On MV-05's combined PS 12 + ETS 40 correction that extra
+   * iteration flipped the reported rate between 16 and 19 per call, the clock read whichever it
+   * got at an onset, and 1×, 5× and 30× produced different patients (VTE 438 / 397 / 318 mL at
+   * 30 s with the hold). Every action that changes an input already re-derives through the reducer
+   * (`refreshMeasurements`, `applyIntervention`), at the model time it happens, so nothing is lost
+   * by trusting the published state here (MV-PRE-REVIEW-02 sanity repair R1).
+   */
+  let patient = state.patient
+  let measurements = state.measurements
   let risk = { ...state.risk }
   let working = state
   let lastTrendSecond = Math.floor(state.simulationTime)

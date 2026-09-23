@@ -322,9 +322,9 @@ describe('1 · the breath clock keeps the onset it has established', () => {
   })
 
   /*
-   * Rate changes and effort-grid rejoins. Not a claim that `measured` is unreachable everywhere:
-   * MV-05's pressure-support and cycling arms reach it at grid coincidences on the reviewed head as
-   * well as here (see the handoff, D5); this pins only that the clock's own transitions add none.
+   * Rate changes and effort-grid rejoins. Since the re-review repair (R3) `measured` is not a status
+   * at all, so this now also guards against its return; the live census is in
+   * `mv-pre-review-02-rereview-repairs.test.tsx`.
    */
   it('creates no measured trigger interval at the transitions the clock now makes', () => {
     const arms: Array<

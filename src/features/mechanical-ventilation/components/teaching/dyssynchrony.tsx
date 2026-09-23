@@ -188,10 +188,11 @@ export function VentilationDyssynchronyDomains({
                 ? '— no effort belongs to this breath'
                 : '— no complete breath on the trace yet',
           /*
-           * Only a delay actually measured between two events on this trace can bear on the
-           * mechanism; the phenotype's modeled value describes the class, not this breath.
+           * Only a delay actually measured between two events on this trace could bear on the
+           * mechanism, and the simulator measures none: every live value is the phenotype's
+           * modeled delay, which describes the class, not this breath (`triggerDelayEvidence`).
            */
-          bearing: trigger.status === 'measured' ? 'supports' : 'neutral',
+          bearing: 'neutral',
         },
         {
           signal: 'Efforts producing no breath',
