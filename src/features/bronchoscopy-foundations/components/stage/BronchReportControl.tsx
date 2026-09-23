@@ -5,6 +5,7 @@ import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
 import type { BronchReport } from '../../content/types'
 import type { ReportCommitment } from '../../engine/stageSession'
 import styles from './bronch-stage.module.css'
+import { MATCHED_WORDS } from './verdictWords'
 import { MediaFigure } from './MediaFigure'
 
 /**
@@ -81,7 +82,7 @@ export function BronchReportControl({
             ) : null}
             {chosenOption ? (
               <p className={styles.verdict} data-report-verdict="held">
-                <strong>Held.</strong> {chosenOption.rationale}
+                <strong>{MATCHED_WORDS}</strong> {chosenOption.rationale}
               </p>
             ) : revealed ? (
               <p className={styles.verdict} data-report-explanation>
