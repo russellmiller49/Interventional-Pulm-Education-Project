@@ -1,9 +1,11 @@
-/* Reserve the actual page scroll for the course task and its sticky continuation.
+/* Reserve the actual page scroll for the course task and its sticky continuation: the site
+ * header's measured height above, the pinned continuation's measured height below
+ * (`BronchCourseLayout`). The fallbacks cover only the first paint before measurement.
  * This selector affects only pages rendering this feature, including reduced-motion users. */
 :global(html):has(.course) {
   scroll-behavior: auto;
   scroll-padding-top: var(--bronch-focus-clear-top, 6rem);
-  scroll-padding-bottom: 19rem;
+  scroll-padding-bottom: var(--bronch-focus-clear-bottom, 19rem);
 }
 .course {
   --stage-type-floor: 0.875rem;
@@ -192,6 +194,25 @@
   font-size: 0.85rem;
   color: var(--muted);
 }
+/* The section's sources open in the page, below the lesson (fellow walkthrough A9).
+ * The shared footer floats its list up over the bottom of the panes, which suits the fixed-height
+ * stage. This course scrolls the document instead, with the continuation bar pinned inside the
+ * lesson section: the floating list slid under that bar (its z-index 10 over the list's 5) and, at
+ * enlarged text or phone width, rose above the viewport under the site header, taking the first
+ * source with it. In flow, the list follows the lesson section the bar is confined to, so the bar
+ * cannot reach it, and the document is its one scroller — the first and last source and every
+ * focused control are reached by ordinary scrolling, with the measured header clearance
+ * (`scroll-padding-top`) still applied. The shared shell and every other consumer are unchanged. */
+.sources :global([data-stage-sources]) > div {
+  position: static;
+  z-index: auto;
+  width: auto;
+  max-height: none;
+  overflow: visible;
+  margin-top: 0.5rem;
+  box-shadow: none;
+  backdrop-filter: none;
+}
 .worked,
 .limit {
   padding: 1rem;
@@ -275,18 +296,6 @@
 }
 .course :global([data-bronch-scenario]) {
   font-size: 1rem;
-}
-.course :global([data-scenario-decide]) {
-  min-height: 44px;
-  padding: 0.5rem 1rem;
-  background: var(--cyan-bright);
-  color: #08292e;
-  border-radius: 0.6rem;
-  justify-content: center;
-}
-.course :global([data-scenario-decide]):disabled {
-  background: var(--panel-3);
-  color: var(--muted);
 }
 @media (max-width: 1050px) {
   .skillGrid {
