@@ -23,7 +23,7 @@ import { mechanicalVentilationCaseById } from '../content/runtimeCases'
 import { baselineGasOrigin } from '../engine/arterialGas'
 import { runPeepComparison } from '../engine/peepComparison'
 import {
-  ardsPeepBand,
+  ardsLungStateForPeep,
   bicarbonateFromPhAndPaCO2,
   isCaseResolved,
   observedTidalVolumeMl,
@@ -520,7 +520,7 @@ describe('C5 · presenting gas coherence and provenance', () => {
 
 describe('S9 · PEEP comparison and the PEEP-13 region', () => {
   it('holds the recruited state at PEEP 13 instead of reverting to the PEEP-5 lung', () => {
-    expect([5, 7, 8, 12, 12.5, 13, 13.5, 14, 18].map(ardsPeepBand)).toEqual([
+    expect([5, 7, 8, 12, 12.5, 13, 13.5, 14, 18].map(ardsLungStateForPeep)).toEqual([
       'baseline',
       'baseline',
       'recruited',
@@ -549,7 +549,10 @@ describe('S9 · PEEP comparison and the PEEP-13 region', () => {
     expect(thirteen.patient.gasExchange.spo2Percent).toBeGreaterThanOrEqual(
       fourteen.patient.gasExchange.spo2Percent - 0.01,
     )
-    expect(isCaseResolved(thirteen, mechanicalVentilationCaseById.get('MV-01')!)).toBe(true)
+    // The held lung state is mechanical containment only. It is not the authored success range
+    // ("PEEP 8-12"), so 13 does not resolve the case (MV-PRE-REVIEW-02 sanity repair; D3 open).
+    expect(isCaseResolved(twelve, mechanicalVentilationCaseById.get('MV-01')!)).toBe(true)
+    expect(isCaseResolved(thirteen, mechanicalVentilationCaseById.get('MV-01')!)).toBe(false)
   })
 
   it('reads the time-control sentence off the arms that were run', () => {

@@ -723,29 +723,70 @@ function treatmentReachesNarrowing(
 }
 
 /**
- * Which of MV-01's authored lung states a PEEP selects.
+ * MV-01 at a PEEP asks two different questions, and each has its own answer here.
  *
- * The casebook authors two responses: "PEEP 8-12: SpO2 rises, shunt falls … compliance improves"
- * and "PEEP 14-18: Pplat rises steeply, compliance falls, and MAP decreases" (its hidden model:
- * "PEEP 5-12 improves aerated fraction; PEEP above 14 causes overdistension"). PEEP 13 is in
- * neither. The engine used to test `8 <= PEEP <= 12` and `PEEP >= 14`, so 13 fell through to the
- * PEEP-5 state: a learner stepping 12 → 13 → 14 watched the lung de-recruit at 13 and then
- * overdistend at 14, a pattern no part of the case describes.
+ * **Which lung state the mechanics use (`ardsLungStateForPeep`).** The casebook authors two
+ * responses: "PEEP 8-12: SpO2 rises, shunt falls … compliance improves" and "PEEP 14-18: Pplat rises
+ * steeply, compliance falls, and MAP decreases" (its hidden model: "PEEP 5-12 improves aerated
+ * fraction; PEEP above 14 causes overdistension"). PEEP 13 is in neither. The engine used to test
+ * `8 <= PEEP <= 12` and `PEEP >= 14`, so 13 fell through to the PEEP-5 state: a learner stepping
+ * 12 → 13 → 14 watched the lung de-recruit at 13 and then overdistend at 14, a pattern no part of the
+ * case describes. The bounded containment is the one that contradicts nothing the case says: at 13
+ * the lung state reached by 12 is held (no further gain, no overdistension, no loss of
+ * recruitment). It is **not** a recruitment curve, an interpolation or a best-PEEP claim; 13 is
+ * still delivered as 13, and only the lung-state lookup is held.
  *
- * The bounded behaviour here is the one that contradicts nothing the case says: at 13 the
- * improvement reached by 12 is held (no further gain, no overdistension, no loss of recruitment).
- * It is **not** a recruitment curve, an interpolation or a best-PEEP claim, and 13 is still
- * delivered as 13 — only the lung-state lookup is held. Whether 13 should instead begin
- * overdistension, or be treated as its own authored state, is owner decision D3.
+ * **Whether the case's authored success range has been reached (`ardsPeepInAuthoredSuccessRange`).**
+ * That range is the casebook's "PEEP 8-12", and it is what case resolution — and so the
+ * corrective-action points and the resolution-linked comfort relief — reads. The first version of
+ * this containment used the lung-state lookup for both, which made PEEP 13 a resolved case worth
+ * the full corrective score: a temporary mechanical hold answering a question it was never meant
+ * to answer. 13 now keeps the held lung state and is outside the success range.
+ *
+ * What PEEP 13 (and 6–7) should actually do is owner decision D3, NOT REVIEWED.
  */
-export type ArdsPeepBand = 'baseline' | 'recruited' | 'overdistended'
+export type ArdsLungState = 'baseline' | 'recruited' | 'overdistended'
 export const ARDS_RECRUITED_FROM_PEEP_CMH2O = 8
 export const ARDS_OVERDISTENDED_FROM_PEEP_CMH2O = 14
+/** The casebook's authored success range, "PEEP 8-12". Not a lung state and not a recommendation. */
+export const ARDS_AUTHORED_SUCCESS_PEEP_CMH2O = { min: 8, max: 12 } as const
 
-export function ardsPeepBand(peepCmH2O: number): ArdsPeepBand {
+/** The authored lung state the mechanics use at this PEEP (13 held at the recruited state). */
+export function ardsLungStateForPeep(peepCmH2O: number): ArdsLungState {
   if (peepCmH2O >= ARDS_OVERDISTENDED_FROM_PEEP_CMH2O) return 'overdistended'
   if (peepCmH2O >= ARDS_RECRUITED_FROM_PEEP_CMH2O) return 'recruited'
   return 'baseline'
+}
+
+/** Whether this PEEP is inside the case's authored success range, whatever the lung state. */
+export function ardsPeepInAuthoredSuccessRange(peepCmH2O: number): boolean {
+  return (
+    peepCmH2O >= ARDS_AUTHORED_SUCCESS_PEEP_CMH2O.min &&
+    peepCmH2O <= ARDS_AUTHORED_SUCCESS_PEEP_CMH2O.max
+  )
+}
+
+/**
+ * Whether the patient can answer a question, decided from the whole set of effects in place.
+ *
+ * Deep sedation is modeled as RASS −5, which the scale itself defines as no response to voice or to
+ * physical stimulation; neuromuscular blockade removes the means of responding at all. Either one
+ * leaves a patient who cannot answer, whatever the case said before. A communication aid gives a
+ * patient who *can* respond a way to do it; it does not give a response to a patient who cannot.
+ *
+ * This used to be three assignments in `deriveEffectivePatient`, run in the order the code happened
+ * to list them — sedation, blockade, then the board — so establishing a board, before or after deep
+ * sedation or blockade, set the flag back to true: RASS −5 beside "Patient report · modeled", and the
+ * coaching card printed the symptom scores as reported. Deciding it here, once, from the effect set,
+ * makes the order of the actions irrelevant by construction. No threshold is introduced: both
+ * incapacitating states follow from the action that produces them, as before.
+ */
+export function patientCanCommunicate(
+  authoredCanCommunicate: boolean,
+  effects: ReadonlySet<InterventionEffectId>,
+): boolean {
+  if (effects.has('deepen-sedation') || effects.has('neuromuscular-blockade')) return false
+  return authoredCanCommunicate || effects.has('communication-board')
 }
 
 export function deriveEffectivePatient(
@@ -838,24 +879,18 @@ export function deriveEffectivePatient(
       patient.drive.neuralRatePerMin += 4
     }
   }
-  /*
-   * Both of these leave a patient who cannot answer a question, whatever the case said before.
-   * Deep sedation is modeled as RASS −5, which the scale itself defines as no response to voice or
-   * to physical stimulation; neuromuscular blockade removes the means of responding at all. The
-   * symptom scores are still kept — the model uses them — but nobody can report them, so they must
-   * stop being presented as a report. No threshold is introduced: this follows from the action.
-   */
   if (effects.has('deepen-sedation')) {
     patient.human.sedationScore = -5
-    patient.human.canCommunicate = false
     patient.drive.effortAmplitudeCmH2O *= 0.2
     patient.drive.neuralRatePerMin *= 0.65
   }
   if (effects.has('neuromuscular-blockade')) {
     patient.drive.effortAmplitudeCmH2O = 0
-    patient.human.canCommunicate = false
   }
-  if (effects.has('communication-board')) patient.human.canCommunicate = true
+  patient.human.canCommunicate = patientCanCommunicate(
+    definition.initialPatient.human.canCommunicate,
+    effects,
+  )
   if (effects.has('treat-pain')) patient.human.painScore = Math.max(1, patient.human.painScore - 5)
   if (effects.has('relieve-bladder'))
     patient.human.painScore = Math.max(0, patient.human.painScore - 2)
@@ -869,11 +904,11 @@ export function deriveEffectivePatient(
   }
 
   if (definition.phenotype === 'ards-recruitment') {
-    const band = ardsPeepBand(settings.peepCmH2O)
-    if (band === 'recruited') {
+    const lungState = ardsLungStateForPeep(settings.peepCmH2O)
+    if (lungState === 'recruited') {
       patient.mechanics.complianceLPerCmH2O = 0.032
       patient.gasExchange.shuntFraction = 0.2
-    } else if (band === 'overdistended') {
+    } else if (lungState === 'overdistended') {
       patient.mechanics.complianceLPerCmH2O = 0.018
       patient.gasExchange.shuntFraction = 0.24
     }
@@ -1179,9 +1214,11 @@ export function isCaseResolved(
     case 'normal-supported-breath':
       return false // Exploratory fixture: its learning task, not a clinical outcome, defines completion.
     case 'ards-recruitment':
-      // The same band the lung state is looked up in (`ardsPeepBand`), so 13 cannot hold the
-      // recruited lung while being scored as outside it.
-      return ardsPeepBand(settings.peepCmH2O) === 'recruited' && m.relaxedPlateauPressureCmH2O <= 30
+      // The authored success range, not the lung-state lookup: PEEP 13 holds the recruited lung as
+      // mechanical containment (D3) and is still outside "PEEP 8-12". See `ardsLungStateForPeep`.
+      return (
+        ardsPeepInAuthoredSuccessRange(settings.peepCmH2O) && m.relaxedPlateauPressureCmH2O <= 30
+      )
     case 'flow-starvation':
       return (
         settings.mode !== 'volume-ac' ||

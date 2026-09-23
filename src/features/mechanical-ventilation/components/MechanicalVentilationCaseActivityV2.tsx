@@ -189,9 +189,9 @@ function LiveCase({
           <header className={task.block}>
             <h1>{definition.title}</h1>
             <p>{definition.patientDescription}</p>
-            {casePresentationModelNote(state) ? (
+            {casePresentationModelNote(state, definition) ? (
               <p className={task.note} data-case-model-note>
-                {casePresentationModelNote(state)}
+                {casePresentationModelNote(state, definition)}
               </p>
             ) : null}
             <p>

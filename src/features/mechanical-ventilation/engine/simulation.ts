@@ -13,7 +13,7 @@ import {
   measurementConditionsFingerprint,
 } from './measurementConditions'
 import {
-  ardsPeepBand,
+  ardsLungStateForPeep,
   cardiogenicFlowOscillationLps,
   clamp,
   effectiveBaselinePressureCmH2O,
@@ -45,6 +45,7 @@ import {
 } from './physics'
 import type {
   AlarmEvent,
+  BreathClock,
   CaseOutcome,
   MechanicalVentilationSettings,
   InterventionDefinition,
@@ -186,7 +187,7 @@ function baseState(
       holdType: null,
       holdUntil: null,
       manualBreathUntil: null,
-      breathClock: { periodSeconds: null },
+      breathClock: { periodSeconds: null, anchorSeconds: 0, nextOnsetSeconds: null },
     },
     patient,
     measurements: emptyMeasurements,
@@ -453,33 +454,135 @@ function machineCyclePeriodSeconds(
 }
 
 /**
- * Adopt a new cycle length only between breaths. See `BreathClock`.
+ * Float slack on "has the clock reached the onset it is holding". Sixty seconds of 0.02 s steps
+ * accumulate rounding of order 1e-12 s; this is that, not a physiological interval.
+ */
+const BREATH_ONSET_TOLERANCE_SECONDS = 1e-9
+
+/** Whether two cycle lengths are the same schedule (both are `60 / rate` or `tHigh + tLow`). */
+function sameCycleLength(a: number, b: number): boolean {
+  return Math.abs(a - b) < 1e-9
+}
+
+/**
+ * The neural effort's own cycle, when there is an effort for a breath to stay with.
  *
- * The grid stays the absolute one (`positiveModulo(time, period)`), as it always was: that is what
- * keeps a patient-triggered breath lined up with the neural effort that the model says triggered
- * it whenever the machine rate equals the neural rate. What changes is *when* a new rate takes
- * over — only at an instant where the breath in progress has finished inspiring and the new grid
- * would not drop the patient into the middle of an inspiration. Until then the current period is
- * kept. So no cycle is ever cut into a one-sample breath, and a rate that flickers between two
- * values cannot feed its own flicker back through the measured expiratory time.
+ * `effortAt` draws the effort on the absolute grid `time mod (60 / neural rate)`. When the machine
+ * is asked to cycle at exactly that period — pressure support with every effort captured, or an
+ * assist-control patient breathing above the set rate — the breaths are the patient's own, and the
+ * schedule has to sit on that grid or every later breath would begin away from the effort that is
+ * supposed to be starting it (MV-07 after its trigger is corrected).
+ */
+function effortCycleSeconds(patient: PatientModelState): number | null {
+  if (patient.drive.effortAmplitudeCmH2O <= 0 || patient.drive.neuralRatePerMin <= 0) return null
+  return 60 / Math.max(1, patient.drive.neuralRatePerMin)
+}
+
+/**
+ * The cycle that begins at the onset the clock was holding, and the onset that will end it.
+ *
+ * - **Same length as the cycle just finished:** continue that schedule. Its next onset is read off
+ *   the schedule's own grid (`anchor + (k + 1)·period`), not accumulated, so a constant rate is the
+ *   absolute grid the case opened on, sample for sample.
+ * - **The patient's own rhythm:** rejoin the effort grid (see `effortCycleSeconds`). If this onset
+ *   is already on it, continue on it. Otherwise the next breath is the first effort that begins
+ *   after the breath starting here has finished inspiring (and one sample of expiration), and the
+ *   schedule is on the effort grid from then on. That one transition cycle is therefore longer than
+ *   this breath's inspiration and no longer than that inspiration plus one effort cycle. No effort
+ *   is moved and none that could be captured is skipped: a first version waited for the effort
+ *   nearest one full cycle away, which on MV-08 passed over the patient's effort 2.1 s after the
+ *   boundary and left a 9.7 s gap after the trigger was corrected.
+ * - **Any other new length:** a new schedule anchored at this onset. Its first cycle is exactly the
+ *   requested length, so the interval between the last breath at the old rate and the first at the
+ *   new one is one of the two periods, never more.
+ */
+function breathClockAtOnset(
+  clock: BreathClock,
+  requested: number,
+  effortCycle: number | null,
+  inspiratorySeconds: number,
+): BreathClock {
+  const onset = clock.nextOnsetSeconds as number
+  const period = clock.periodSeconds as number
+  if (sameCycleLength(requested, period)) {
+    const index = Math.round((onset - clock.anchorSeconds) / period)
+    return { ...clock, nextOnsetSeconds: clock.anchorSeconds + (index + 1) * period }
+  }
+  if (effortCycle !== null && sameCycleLength(requested, effortCycle)) {
+    const effortPhase = positiveModulo(onset, effortCycle)
+    if (effortPhase < 1e-6 || effortCycle - effortPhase < 1e-6) {
+      const index = Math.round(onset / effortCycle)
+      return {
+        periodSeconds: effortCycle,
+        anchorSeconds: 0,
+        nextOnsetSeconds: (index + 1) * effortCycle,
+      }
+    }
+    const readyAt = onset + inspiratorySeconds + WAVEFORM_STEP_SECONDS
+    const next = Math.ceil((readyAt - 1e-9) / effortCycle) * effortCycle
+    return { periodSeconds: next - onset, anchorSeconds: onset, nextOnsetSeconds: next }
+  }
+  return { periodSeconds: requested, anchorSeconds: onset, nextOnsetSeconds: onset + requested }
+}
+
+/**
+ * Advance the breath timer to `time`. See `BreathClock`.
+ *
+ * The contract, whatever the settings do in between:
+ *
+ * - **The cycle in progress is never shortened or lengthened.** Its next onset is fixed at the
+ *   moment it began. A rate change during its inspiration, its expiration or in its last sample
+ *   neither cuts it short nor pushes that onset later, and a change made several times before the
+ *   onset is read once, at the onset.
+ * - **A new rate is authoritative from the next onset** (`breathClockAtOnset`). That onset is the
+ *   one breath boundary it can take effect at without truncating a breath or deferring one.
+ * - **Exactly one onset per cycle.** The boundary is processed on the first step past the onset
+ *   the clock was holding, and the cycle that follows is at least the length of the inspiration it
+ *   contains, so there is no one-sample breath, no duplicated onset and no skipped one.
+ *
+ * Nothing here decides whether a breath is triggered by the patient; that is still the grid
+ * coincidence described in the MV-PRE-REVIEW-02 handoff (§8, owner decision D5).
  */
 function advanceBreathClock(
   ventilator: VentilationSimulationState['ventilator'],
-  period: number,
+  requested: number,
+  effortCycle: number | null,
   inspiratorySeconds: number,
   time: number,
 ): VentilationSimulationState['ventilator'] {
-  const latched = ventilator.breathClock.periodSeconds
-  if (latched === null || Math.abs(period - latched) < 1e-9) {
-    return latched === null ? { ...ventilator, breathClock: { periodSeconds: period } } : ventilator
+  const clock = ventilator.breathClock
+  if (clock.periodSeconds === null || clock.nextOnsetSeconds === null) {
+    // The first step of a case: the absolute grid of the case's own cycle.
+    const index = Math.floor(time / requested)
+    return {
+      ...ventilator,
+      breathClock: {
+        periodSeconds: requested,
+        anchorSeconds: 0,
+        nextOnsetSeconds: (index + 1) * requested,
+      },
+    }
   }
-  const currentPhase = positiveModulo(time, latched)
-  const nextPhase = positiveModulo(time, period)
-  // Not mid-breath on either grid, and not so late in the new grid's cycle that its next onset
-  // would come before a whole expiration of the new cycle has passed since this breath ended.
-  if (currentPhase < inspiratorySeconds) return ventilator
-  if (nextPhase < inspiratorySeconds || nextPhase > currentPhase) return ventilator
-  return { ...ventilator, breathClock: { periodSeconds: period } }
+  let next = clock
+  // One step is far shorter than any cycle, so this runs at most once; the bound guards a time jump.
+  for (let guard = 0; guard < 8; guard += 1) {
+    if (time <= (next.nextOnsetSeconds as number) + BREATH_ONSET_TOLERANCE_SECONDS) break
+    next = breathClockAtOnset(next, requested, effortCycle, inspiratorySeconds)
+  }
+  return next === clock ? ventilator : { ...ventilator, breathClock: next }
+}
+
+/**
+ * The same clock with its time origin moved by `offsetSeconds`, for a caller that re-bases
+ * simulated time (the Learn lab's warm-up). The schedule is unchanged; only the numbers move.
+ */
+export function shiftBreathClock(clock: BreathClock, offsetSeconds: number): BreathClock {
+  return {
+    periodSeconds: clock.periodSeconds,
+    anchorSeconds: clock.anchorSeconds + offsetSeconds,
+    nextOnsetSeconds:
+      clock.nextOnsetSeconds === null ? null : clock.nextOnsetSeconds + offsetSeconds,
+  }
 }
 
 function machineTiming(
@@ -495,10 +598,10 @@ function machineTiming(
   triggered: boolean
   spontaneous: boolean
 } {
+  const clock = state.ventilator.breathClock
   const period =
-    state.ventilator.breathClock.periodSeconds ??
-    machineCyclePeriodSeconds(state, definition, patient, measurements)
-  const phase = positiveModulo(time, period)
+    clock.periodSeconds ?? machineCyclePeriodSeconds(state, definition, patient, measurements)
+  const phase = positiveModulo(time - clock.anchorSeconds, period)
   if (isTwoLevelMode(state.ventilator.settings.deviceMode)) {
     const settings = state.ventilator.settings
     return {
@@ -517,7 +620,7 @@ function machineTiming(
     settings.mode !== 'pressure-support' &&
     rate > settings.ratePerMin + 0.5
   ) {
-    const breathIndex = Math.floor(time / period)
+    const breathIndex = Math.floor((time - clock.anchorSeconds) / period)
     const mandatoryFraction = clamp(settings.ratePerMin / rate, 0, 1)
     const mandatoryBefore = Math.floor((breathIndex + 1) * mandatoryFraction)
     const mandatoryAfter = Math.floor((breathIndex + 2) * mandatoryFraction)
@@ -843,7 +946,7 @@ function circulatoryLoadMmHg(
   load += Math.max(0, measurements.meanAirwayPressureCmH2O - 18) * 0.8
   if (
     definition.phenotype === 'ards-recruitment' &&
-    ardsPeepBand(state.ventilator.settings.peepCmH2O) === 'overdistended'
+    ardsLungStateForPeep(state.ventilator.settings.peepCmH2O) === 'overdistended'
   ) {
     load += 15
   }
@@ -1252,6 +1355,7 @@ export function advanceSimulation(
     ventilator = advanceBreathClock(
       ventilator,
       machineCyclePeriodSeconds(working, definition, patient, measurements),
+      effortCycleSeconds(patient),
       machineInspiratorySeconds(working, definition, measurements),
       time,
     )

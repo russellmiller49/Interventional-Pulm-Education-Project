@@ -473,7 +473,12 @@ function performConsoleHold(
    * but the instant the valves close is decided by `advanceSimulation`, not recomputed here.
    * The cap is a little over one breath so a case that never reaches the awaited phase cannot spin.
    */
-  const cycleSeconds = 60 / Math.max(1, advanced.measurements.totalRatePerMin)
+  // The cycle in progress keeps the length it began with after a rate change (`BreathClock`), so
+  // the boundary can be up to one of *those* away rather than one at the new rate.
+  const cycleSeconds = Math.max(
+    60 / Math.max(1, advanced.measurements.totalRatePerMin),
+    advanced.ventilator.breathClock.periodSeconds ?? 0,
+  )
   const limitSeconds = cycleSeconds * 1.6 + 0.4
   for (let elapsed = 0; advanced.ventilator.pendingHold !== null && elapsed < limitSeconds; ) {
     advanced = advanceSimulation(advanced, 0.1, definition)

@@ -307,24 +307,38 @@ export interface MechanicalVentilatorState {
 }
 
 /**
- * The machine's breath timer: the cycle length the breath schedule is currently running on.
+ * The machine's breath timer: the cycle in progress, and the onset that will end it.
  *
- * The breath phase is `time mod period` — an absolute grid, which is what lines a patient-triggered
- * breath up with the neural effort the model says triggered it. It used to take `period` from the
- * delivered rate afresh on every sample, and on pressure support that rate is recomputed from the
- * missed-effort fraction, which depends on the trapped pressure the last breath left. Each change
- * re-gridded the phase instantly, often into the middle of an inspiration for a single sample. On
- * MV-05, lowering support to 12 and raising the cycle threshold to 40 % together set up a loop:
- * the one-sample "breaths" shortened the measured expiratory time, which raised the modeled
- * auto-PEEP, which changed the rate again — and the console reported an exhaled volume of 1–2 mL
- * after the case's own recommended correction.
+ * The base engine took the cycle length from the delivered rate afresh on every sample and read
+ * the phase as `time mod period`. On pressure support that rate is recomputed from the
+ * missed-effort fraction, which depends on the trapped pressure the last breath left, so every
+ * change re-gridded the phase instantly, often into the middle of an inspiration for a single
+ * sample. On MV-05, lowering support to 12 and raising the cycle threshold to 40 % together set up
+ * a loop: the one-sample "breaths" shortened the measured expiratory time, which raised the
+ * modeled auto-PEEP, which changed the rate again — and the console reported an exhaled volume of
+ * 1–2 mL after the case's own recommended correction.
  *
- * Now a new period is adopted only between breaths (see `advanceBreathClock`). While the rate is
- * constant nothing differs from the old schedule.
+ * The first repair (MV-PRE-REVIEW-02) latched the period and let a new one take over only between
+ * breaths, but it still recomputed an absolute `time mod period` grid from whichever period was
+ * newest. The next onset was therefore never a fact the clock held: every change during an
+ * expiration could move it later, and alternating the MV-LAB rate 16 ↔ 20 once a second produced a
+ * 12-second gap between breaths (one late-expiratory change alone, 6 s).
+ *
+ * So the clock now holds the next onset itself. It is fixed when the cycle in progress begins and
+ * no setting change moves it; a change of rate becomes authoritative at that onset, and only there
+ * (see `advanceBreathClock`). While the rate is constant the schedule is the absolute grid the case
+ * opens on, exactly as before.
  */
 export interface BreathClock {
-  /** Null until the first step sets it. */
+  /** Length of the cycle in progress, fixed at the onset that began it. Null until the first step. */
   readonly periodSeconds: number | null
+  /**
+   * The schedule the cycle in progress belongs to: its onsets are `anchorSeconds + k·periodSeconds`
+   * and its phase is `(time − anchorSeconds) mod periodSeconds`. 0 is the absolute grid.
+   */
+  readonly anchorSeconds: number
+  /** The onset that ends the cycle in progress: the next breath. Null until the first step. */
+  readonly nextOnsetSeconds: number | null
 }
 
 export interface PatientModelState {

@@ -16,6 +16,7 @@ import {
   paO2ForSaturation,
   phFromBicarbonateAndPaCO2,
 } from '../engine/physics'
+import { composeInterventionResponse, interventionSimulatedResponse } from './caseModelNotes'
 import { mechanicalVentilationSource, validateRuntimeCaseRegistry } from './schema'
 
 const sourceCaseById = new Map(
@@ -1048,7 +1049,21 @@ const builtCases: VentilationCaseDefinition[] = mechanicalVentilationSource.case
       ...responseDistractors,
     ],
     correctResponseId: profile.responseId,
-    interventions: profile.interventionIds.map((id) => interventionCatalog[id]),
+    /*
+     * The case's own copy of each action. Where the authored response claims something this case's
+     * model does not do, the feedback printed when the action is taken carries both: the clinical
+     * expectation and what the simulation shows (`caseModelNotes`, MV-PRE-REVIEW-02).
+     */
+    interventions: profile.interventionIds.map((id) => {
+      const intervention = interventionCatalog[id]
+      const simulated = interventionSimulatedResponse(source.id, id)
+      return simulated
+        ? {
+            ...intervention,
+            response: composeInterventionResponse(intervention.response, simulated),
+          }
+        : intervention
+    }),
     requiredInterventionIds: profile.requiredInterventionIds,
     requiredReassessmentIds: profile.requiredReassessmentIds,
     successConditions: profile.successConditions,
