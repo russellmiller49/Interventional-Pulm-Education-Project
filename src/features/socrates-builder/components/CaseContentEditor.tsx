@@ -1,6 +1,7 @@
 'use client'
 import type { SocratesSlideDocument } from '../types'
 import {
+  annotationLegendIssues,
   emptyCaseContent,
   emptyAuthorContent,
   testingReadinessIssues,
@@ -34,6 +35,7 @@ export function CaseContentEditor({
       caseContent: content,
       authorContent: { ...author, ...patch },
     })
+  const legendIssues = annotationLegendIssues(content.annotationLegend)
   const readiness = author.readiness
   const issues = testingReadinessIssues(content, author)
   function field(
@@ -73,14 +75,20 @@ export function CaseContentEditor({
           false,
         )}
         <label className={styles.caseField}>
-          Sort order
+          Diagnostic-list order
           <input
+            aria-describedby="diagnostic-order-help"
             type="number"
             min="0"
             value={content.sortOrder}
             onChange={(e) => changeCase({ sortOrder: Number(e.target.value) })}
           />
         </label>
+        <p id="diagnostic-order-help" className={styles.fieldHint}>
+          Lower numbers come first within each diagnostic category; ties use the stable case ID.
+          Categories are alphabetical. This does not set curriculum module order or a case’s
+          position within a module. Existing values keep their meaning.
+        </p>
         <label>
           <input
             type="checkbox"
@@ -160,12 +168,32 @@ export function CaseContentEditor({
         )}
         <h3>Annotation / color key</h3>
         <p className={styles.fieldHint}>
-          Enter the provider’s reviewed key. No categories or colors are assigned by this
-          application.
+          This key explains the provider’s existing color image. It does not create, recolor or
+          classify pixels and is separate from drawing teaching regions. Add an entry, enter its
+          provider-approved label and exact #RRGGBB color, then add the reviewed meaning. Repeat for
+          each relevant entry. Check the actual provider mapping before marking the key reviewed.
+          Save the draft and inspect Preview teaching view; publication is separate.
         </p>
         {content.annotationLegend.entries.map((entry, index) => (
           <fieldset key={index}>
             <legend>Key entry {index + 1}</legend>
+            <label className={styles.caseField}>
+              Key {index + 1} color picker
+              <input
+                type="color"
+                value={/^#[0-9a-fA-F]{6}$/.test(entry.color) ? entry.color : '#808080'}
+                onChange={(event) =>
+                  changeCase({
+                    annotationLegend: {
+                      reviewed: false,
+                      entries: content.annotationLegend.entries.map((e, i) =>
+                        i === index ? { ...e, color: event.target.value } : e,
+                      ),
+                    },
+                  })
+                }
+              />
+            </label>
             {(['label', 'color', 'explanation'] as const).map((key) => (
               <div key={key}>
                 {field(
@@ -219,7 +247,7 @@ export function CaseContentEditor({
           <input
             type="checkbox"
             checked={content.annotationLegend.reviewed}
-            disabled={!content.annotationLegend.entries.length}
+            disabled={legendIssues.length > 0}
             onChange={(e) =>
               changeCase({
                 annotationLegend: { ...content.annotationLegend, reviewed: e.target.checked },
@@ -228,6 +256,22 @@ export function CaseContentEditor({
           />{' '}
           Annotation key reviewed
         </label>
+        <p>
+          {content.annotationLegend.reviewed && !legendIssues.length
+            ? 'Annotation key reviewed against the provider mapping.'
+            : 'Annotation key pending review'}
+        </p>
+        {content.annotationLegend.entries.length > 0 && legendIssues.length > 0 && (
+          <ul aria-label="Annotation key validation">
+            {legendIssues.map((issue) => (
+              <li key={issue}>{issue}</li>
+            ))}
+          </ul>
+        )}
+        <p className={styles.fieldHint}>
+          The initial gray swatch and “Pending label” are placeholders. They have no clinical
+          meaning. Editing any entry resets its review.
+        </p>
       </section>
       {privateEnabled && (
         <section className={styles.formSection} aria-label="Internal and study readiness">

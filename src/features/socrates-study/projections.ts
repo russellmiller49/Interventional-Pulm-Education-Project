@@ -1,6 +1,9 @@
 import type { SocratesCaseDocument } from '@/features/socrates-builder/types'
 import type { DeepZoomSlide, DemoAnnotation } from '@/features/socrates-demo/types'
-import type { AnnotationLegend } from '@/features/socrates-builder/case-content'
+import {
+  annotationLegendIssues,
+  type AnnotationLegend,
+} from '@/features/socrates-builder/case-content'
 import type { StudyAttempt, SurveyItem, TrainingProgress } from './model'
 
 export interface CatalogCase {
@@ -27,6 +30,7 @@ export interface TrainingCase extends CatalogCase {
   progress: TrainingProgress | null
 }
 export interface TrainingReveal {
+  legend: AnnotationLegend
   teaching: TeachingContent
   annotations: DemoAnnotation[]
 }
@@ -39,7 +43,7 @@ export interface TestCase {
   feedback: TeachingContent | null
 }
 export function reviewedLegend(legend: AnnotationLegend): AnnotationLegend {
-  return legend.reviewed && legend.entries.length
+  return legend.reviewed && !annotationLegendIssues(legend).length
     ? {
         reviewed: true,
         entries: legend.entries.map((e) => ({
@@ -106,12 +110,13 @@ export function trainingProjection(
       `/api/socrates/images/training/${document.recordId}/${document.revision}`,
       paired,
     ),
-    legend: reviewedLegend(document.caseContent.annotationLegend),
+    legend: { reviewed: false, entries: [] },
     progress,
   }
 }
 export function revealProjection(document: SocratesCaseDocument): TrainingReveal {
   return {
+    legend: reviewedLegend(document.caseContent.annotationLegend),
     teaching: teachingProjection(document),
     annotations: document.annotations.map((a) => ({
       id: a.id,

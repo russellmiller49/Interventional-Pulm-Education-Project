@@ -18,6 +18,10 @@ export const annotationLegendSchema = z
       .max(40),
   })
   .strict()
+  .refine((legend) => !legend.reviewed || !annotationLegendIssues(legend).length, {
+    message:
+      'A reviewed annotation key needs actual labels, six-digit colors and reviewed meanings.',
+  })
 export const caseContentSchema = z
   .object({
     diagnosticCategory: z.string().max(160),
@@ -104,4 +108,20 @@ export function testingReadinessIssues(content: CaseContent, author: AuthorConte
     !content.cancer.designation.trim() && 'Cancer designation is missing.',
     !content.cancer.reasoning.trim() && 'Cancer reasoning is missing.',
   ].filter((issue): issue is string => Boolean(issue))
+}
+
+/** A placeholder cannot become a reviewed provider key by checking a box. */
+export function annotationLegendIssues(legend: {
+  entries: { label: string; color: string; explanation: string }[]
+}): string[] {
+  if (!legend.entries.length) return ['Add at least one provider-approved key entry.']
+  return legend.entries.flatMap((entry, index) =>
+    [
+      (!entry.label.trim() || /^pending label$/i.test(entry.label.trim())) &&
+        `Key ${index + 1}: enter the provider-approved category label.`,
+      !/^#[0-9a-fA-F]{6}$/.test(entry.color) &&
+        `Key ${index + 1}: use an exact six-digit hex color (#RRGGBB).`,
+      !entry.explanation.trim() && `Key ${index + 1}: add the reviewed meaning.`,
+    ].filter((issue): issue is string => Boolean(issue)),
+  )
 }
