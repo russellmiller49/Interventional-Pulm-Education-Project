@@ -6,7 +6,7 @@ import { LessonShell } from '@/features/learning-module/stage/LessonShell'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
 import { NowCard } from '@/features/learning-module/stage/NowCard'
-import type { CtLesson, CtViewerState } from '../content/ct-types'
+import type { CtLesson, CtViewerState, LocalCtExercise } from '../content/ct-types'
 import { BASE_PATH, LESSONS, SOURCE, lessonAfter, ORIENTATION_CONTRACT } from '../content/lessons'
 import { parentViewTask } from '../content/local-teaching'
 import { CtViewpointComparison } from './CtViewpointComparison'
@@ -117,6 +117,17 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   // Opens the paired parent view for a teaching moment; the learner's own toggle still rules.
   const [scopeRequest, setScopeRequest] = useState<{ show: boolean; serial: number }>()
   const [displayedSlice, setDisplayedSlice] = useState<number | null>(null)
+  // Reference viewing (PR #273 review, finding 3). The demonstration cursor, and any CT movement made
+  // while a worked walkthrough, a reference or the comparison is on screen, live in component state.
+  // The draft keeps the learner's own position; its stored `frame` changes only with lesson
+  // transitions (begin, next example, restart), never because a reference was stepped. An older
+  // draft's frame is still read as the starting cursor.
+  const [demoFrame, setDemoFrame] = useState(() => loaded.value?.frame ?? 0)
+  // The plane the viewer is showing now, which a reference may have moved; the draft's stored
+  // slice is the learner's own position and can differ from it.
+  const [liveSlice, setLiveSlice] = useState<number | null>(null)
+  const referenceViewing = useRef(false)
+  const currentFrames = useRef<LocalCtExercise['frames']>([])
   const exercise = exercises[s.exercise]
   const point = exercise.trace.checkpoints[0]
   const slot = exercise.answerPoints[s.slot]
@@ -188,6 +199,12 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
       s.phase === 'compare' ||
       (s.phase === 'attempt' && (referenceShown || (s.hints === 3 && !attemptReady))))
   const complete = s.phase === 'complete'
+  // Read by onViewChange, which must keep one identity: the viewer re-reports its state whenever
+  // that callback changes, which would save a reference position as the learner's own.
+  useLayoutEffect(() => {
+    referenceViewing.current = showingWalkthrough
+    currentFrames.current = exercise.frames
+  })
   const reviewed = record.reviewedLessonIds.includes(lesson.id)
   const checkedCount = exercises.filter((e) => s.history[e.id]?.length).length
   const packet = junctionFeedbackPacket(exercise.spec.checkpointId)
@@ -237,6 +254,12 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               : 'Lesson finished'
   const goToSlice = (slice: number, focusAirway = false) =>
     setRequest((r) => ({ slice, focusAirway, serial: (r?.serial ?? 0) + 1 }))
+  /** Step the worked walkthrough: reference viewing, so component state only. */
+  function showFrame(index: number) {
+    if (index < 0 || index >= exercise.frames.length) return
+    setDemoFrame(index)
+    goToSlice(exercise.frames[index].slice)
+  }
   function act(action: LocalAction) {
     const next = localSessionReducer(exercises, s, action)
     if (next === s) return s
@@ -253,7 +276,9 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
     }
     // Reaching the end marks the lesson reviewed on this device; nothing about the marks is stored.
     if (next.phase === 'complete' && !complete) setLessonReviewed(lesson.id, true)
-    if (action.type === 'frame') goToSlice(exercise.frames[next.frame].slice)
+    if (action.type === 'begin' || action.type === 'restart' || next.exercise !== s.exercise)
+      setDemoFrame(0)
+    if (action.type === 'restart' || next.exercise !== s.exercise) setLiveSlice(null)
     if (action.type === 'slot') {
       setPlaying(false)
       goToSlice(exercise.answerPoints[next.slot].slice)
@@ -292,19 +317,28 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
     return next
   }
   const onViewChange = useCallback(
-    (view: CtViewerState) =>
+    (view: CtViewerState) => {
+      // Browsing to another plane moves the demonstration to the occurrence nearest the step
+      // the learner is on, so leaving a pass and returning cannot rewind them into an earlier one.
+      setLiveSlice(view.slice)
+      setDemoFrame((current) => {
+        const matched = demonstrationFrameIndex(currentFrames.current, current, view.slice)
+        return matched < 0 ? current : matched
+      })
+      const reference = referenceViewing.current
       setSession((current) => {
-        const exercise = exercises[current.exercise]
-        const key = exercise.id
-        // Browsing to another plane moves the demonstration to the occurrence nearest the step
-        // the learner is on, so leaving a pass and returning cannot rewind them into an earlier one.
-        const matchedFrame = demonstrationFrameIndex(exercise.frames, current.frame, view.slice)
-        const frame = matchedFrame < 0 ? current.frame : matchedFrame
-        return JSON.stringify(current.views[key]) === JSON.stringify(view) &&
-          frame === current.frame
+        const key = exercises[current.exercise].id
+        const stored = current.views[key]
+        // A reference moves the CT without moving the learner: the stored slice and focus stay the
+        // learner's own, while display choices (magnify, full field, paired view) are still theirs.
+        const next = reference
+          ? stored && { ...view, slice: stored.slice, focus: stored.focus }
+          : view
+        return !next || JSON.stringify(stored) === JSON.stringify(next)
           ? current
-          : { ...current, frame, views: { ...current.views, [key]: view } }
-      }),
+          : { ...current, views: { ...current.views, [key]: next } }
+      })
+    },
     [exercises],
   )
   useEffect(() => {
@@ -354,16 +388,16 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   useEffect(() => {
     if (!playing || !imageReady || !showingWalkthrough) return
     const timer = window.setTimeout(() => {
-      if (s.frame === exercise.frames.length - 1) {
+      if (demoFrame === exercise.frames.length - 1) {
         setPlaying(false)
         return
       }
-      const frame = s.frame + 1
-      setSession((current) => ({ ...current, frame }))
+      const frame = demoFrame + 1
+      setDemoFrame(frame)
       setRequest((r) => ({ slice: exercise.frames[frame].slice, serial: (r?.serial ?? 0) + 1 }))
     }, 900)
     return () => window.clearTimeout(timer)
-  }, [playing, imageReady, showingWalkthrough, s.frame, exercise])
+  }, [playing, imageReady, showingWalkthrough, demoFrame, exercise])
   function exit() {
     if (writeCtDraft(browserStorage(), draftKey, signature, s)) router.push(BASE_PATH)
     else {
@@ -511,16 +545,16 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                       : 'Your branch marks are placed. Choose which branch to follow below, then select Check my tracing.'
                     : `Trace ${displayLabel(s.slot)} from ${identities?.parent.display ?? exercise.trace.anchor.airway.code} to slice ${slot.slice}, then click inside its lumen. You can also record Lumen unresolved here, show the reference, or continue without marking.`
   // Model points appear in the demonstration, the comparison, and whenever the learner shows the reference.
-  const viewSlice = s.views[exercise.id]?.slice ?? exercise.trace.anchor.slice
+  const viewSlice = liveSlice ?? s.views[exercise.id]?.slice ?? exercise.trace.anchor.slice
   // A plane is demonstrated once per daughter pass, so the step the learner is on is the frame
   // index and never the slice number: resolving either the overlays or the caption by slice
   // alone hands a later pass the first pass's branch identity.
   const frameIndex = showingWalkthrough
-    ? demonstrationFrameIndex(exercise.frames, s.frame, viewSlice)
+    ? demonstrationFrameIndex(exercise.frames, demoFrame, viewSlice)
     : -1
   const frame = frameIndex < 0 ? undefined : exercise.frames[frameIndex]
   const showAnchor = Boolean(guide) || (s.phase === 'attempt' && s.hints < 3 && !referenceShown)
-  const displayedFrameIndex = demonstrationFrameIndex(exercise.frames, s.frame, displayedSlice)
+  const displayedFrameIndex = demonstrationFrameIndex(exercise.frames, demoFrame, displayedSlice)
   const displayedFrame = displayedFrameIndex < 0 ? undefined : exercise.frames[displayedFrameIndex]
   // Model course locators for the demonstration's intermediate planes (BBTF-26): only where a
   // source edge of this division crosses the displayed plane, drawn dotted and unlabelled.
@@ -566,26 +600,26 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
       <div className={styles.walkthroughControls}>
         <button
           onClick={() => {
-            if (!playing) goToSlice(exercise.frames[s.frame].slice)
+            if (!playing) goToSlice(exercise.frames[demoFrame].slice)
             setPlaying((v) => !v)
           }}
         >
           {playing ? 'Pause walkthrough' : 'Play walkthrough'}
         </button>
         <button
-          disabled={s.frame === 0}
+          disabled={demoFrame === 0}
           onClick={() => {
             setPlaying(false)
-            act({ type: 'frame', index: s.frame - 1 })
+            showFrame(demoFrame - 1)
           }}
         >
           Previous demonstration slice
         </button>
         <button
-          disabled={s.frame === exercise.frames.length - 1}
+          disabled={demoFrame === exercise.frames.length - 1}
           onClick={() => {
             setPlaying(false)
-            act({ type: 'frame', index: s.frame + 1 })
+            showFrame(demoFrame + 1)
           }}
         >
           Next demonstration slice
@@ -593,7 +627,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
         <button
           onClick={() => {
             setPlaying(false)
-            act({ type: 'frame', index: 0 })
+            showFrame(0)
           }}
         >
           Replay from parent
@@ -786,7 +820,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                         // The same transient reference state as Show reference: nothing recorded.
                         setPlaying(false)
                         setReferenceFor(stepKey)
-                        act({ type: 'frame', index: 0 })
+                        showFrame(0)
                       }}
                     >
                       {demonstrated

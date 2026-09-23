@@ -27,6 +27,7 @@ import { traceById, targetForTrace } from '../geometry/native-ct'
 import { STANDARD_ORIENTATION, sameOrientation, type CtOrientation } from '../geometry/orientation'
 import { CtOrientationFeedback } from './CtOrientationTeaching'
 import {
+  atLastStop,
   emptyTraceWork,
   traceComplete,
   junctionReady,
@@ -349,6 +350,9 @@ function CtPracticeSession({
     resetPaneScroll(teachingTop.current)
   }, [active, index, alignment, stationDone])
   const stationTask = Boolean(alignment) && !routeDone
+  // The last stop is recorded but an earlier one was skipped: no stop is left to open, so the
+  // primary action moves this partial route on rather than doing nothing (PR #273 review, finding 4).
+  const partialEnd = stationTask && stationDone && atLastStop(trace, active)
   const maxActive = alignment ? reachableThrough(junctions, reached) : 0
   const ready =
     Boolean(alignment) &&
@@ -663,9 +667,13 @@ function CtPracticeSession({
                   ? 'Use this orientation'
                   : stationTask
                     ? stationDone
-                      ? active + 1 === trace.checkpoints.length - 1
-                        ? 'Inspect the distal airway–nodule relationship'
-                        : 'Continue to the next division'
+                      ? partialEnd
+                        ? lastTrace
+                          ? 'Compare all routes'
+                          : 'Next route without recording'
+                        : active + 1 === trace.checkpoints.length - 1
+                          ? 'Inspect the distal airway–nodule relationship'
+                          : 'Continue to the next division'
                       : trace.checkpoints[active].decision
                         ? 'Check this junction'
                         : 'Record nodule approach'
@@ -683,7 +691,10 @@ function CtPracticeSession({
                     setAlignment({ first, used: { ...orientation } })
                     setLevelRequest((v) => v + 1)
                   } else if (stationTask) {
-                    if (stationDone) selectActive(active + 1)
+                    if (stationDone && partialEnd) {
+                      if (lastTrace) setSubmitted(true)
+                      else open(index + 1)
+                    } else if (stationDone) selectActive(active + 1)
                     else if (junctionReady(trace, active, marks, branches)) {
                       const key = `${trace.id}.${trace.checkpoints[active].id}`
                       // The learner's own response at this fork, kept for review and retry only.
@@ -723,7 +734,7 @@ function CtPracticeSession({
               secondary:
                 stationTask && !stationDone && active < trace.checkpoints.length - 1
                   ? { label: 'Continue without recording', onActivate: skipJunction }
-                  : !upToDate
+                  : !upToDate && !partialEnd
                     ? {
                         label: lastTrace ? 'Compare all routes' : 'Next route without recording',
                         onActivate: () => (lastTrace ? setSubmitted(true) : open(index + 1)),

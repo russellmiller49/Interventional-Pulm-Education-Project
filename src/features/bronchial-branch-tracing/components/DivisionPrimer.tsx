@@ -22,10 +22,26 @@ export function courseFor(exercise: LocalCtExercise) {
   )
 }
 
-/** Sentences that state the division's source levels. Generated from the export, never judged. */
+/** "1 slice cranial of the model node", from an exact signed offset (positive is cranial). */
+const fromTheNode = (offset: number, noun = 'the model node') =>
+  `${count(Math.abs(offset), 'slice')} ${offset > 0 ? 'cranial' : 'caudal'} of ${noun}`
+
+/**
+ * Sentences that state the division's source levels. Generated from the export, never judged.
+ *
+ * Numbers are exact: a response slice one plane from the node is said to be one slice away, never
+ * "on the node's level" (PR #273 review, finding 1: Lesson 5's response slice 307 lies one slice
+ * cranial of a node nearest slice 306). Only the qualitative trend words ("almost within one axial
+ * plane", "turns back") allow a one-slice tolerance, and the in-plane sentence says so.
+ */
 export function courseSentences(course: DivisionCourse, lessonId: string) {
   const sentences = [
-    `The parent point (${course.parentCode}) is on slice ${course.parentSlice} and the model node at about slice ${course.nodeSlice}${
+    `The model node lies nearest native slice ${course.nodeSlice}.`,
+    `The parent point (${course.parentCode}) is on slice ${course.parentSlice}${
+      course.parentOffset === 0
+        ? ', the native slice nearest the node'
+        : `, ${fromTheNode(course.parentOffset, 'the node')}`
+    }${
       course.approach === 'same level'
         ? ', so the parent runs almost within one axial plane here'
         : course.approach === 'cranial'
@@ -36,9 +52,9 @@ export function courseSentences(course: DivisionCourse, lessonId: string) {
       .map(
         (d) =>
           `${d.label}’s response slice, ${d.slice}, ${
-            d.fromNode === 'same level'
-              ? 'lies on the node’s level'
-              : `lies ${count(d.slices, 'slice')} ${d.fromNode} of the node`
+            d.offset === 0
+              ? 'is the native slice nearest the model node'
+              : `lies ${fromTheNode(d.offset)}`
           }`,
       )
       .join('; ')}.`,
@@ -52,7 +68,13 @@ export function courseSentences(course: DivisionCourse, lessonId: string) {
     )
   else if (course.reverses)
     sentences.push(
-      `So at least one daughter turns back against the direction you arrived from. ${DIRECTION_CHANGE.definition[1]}${
+      // Lesson 8's example sentence describes a descent that turns cranially; where the parent itself
+      // runs cranially, its general sentence is the one that fits.
+      `So at least one daughter turns back against the direction you arrived from. ${
+        course.approach === 'caudal'
+          ? DIRECTION_CHANGE.definition[1]
+          : DIRECTION_CHANGE.definition[0]
+      }${
         lessonId === DIRECTION_CHANGE.lessonId
           ? ''
           : ` Lesson ${lessonNumber(DIRECTION_CHANGE.lessonId)} teaches this change in tracing direction in full.`

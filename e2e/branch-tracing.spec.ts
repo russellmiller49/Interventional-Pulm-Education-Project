@@ -1786,3 +1786,154 @@ test('200 percent root text keeps the course map, the try note and the worked-ro
   expect(await noHorizontalOverflow(page)).toBe(true)
   await capture(page, 'bbt04-L4-try-200-percent')
 })
+
+// PR #273 independent review — sanity repair. Each of these failed on the reviewed head 6004cd7f.
+const storedRaw = (page: Page, key: string) =>
+  page.evaluate((k) => localStorage.getItem(`branch-tracing.draft.${k}`), key)
+const nowHeading = (page: Page) => page.locator('[data-now-card] h2')
+
+test('review finding 1 · Lesson 5 states the response slice one slice cranial of a node nearest slice 306', async ({
+  page,
+}) => {
+  await startLocal(page, 'horizontal-horizontal')
+  await button(page, 'Continue without marking').click()
+  await finishPendingIntroduction(page)
+  await button(page, /^Next example: RB4/).click()
+  await ctReady(page)
+  await page.getByText('Before you mark: levels and what decides identity').click()
+  const primer = page.locator('[data-division-primer="junction-19"]')
+  await expect(primer).toContainText('The model node lies nearest native slice 306.')
+  await expect(primer).toContainText(
+    'Daughter B · RB4a’s response slice, 307, lies 1 slice cranial of the model node',
+  )
+  await expect(primer).not.toContainText('on the node’s level')
+})
+
+test('review findings 2 and 3 · the worked RS8 route reopens over real LS9 work and writes nothing', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  const lesson = LESSONS.find((l) => l.id === 'variants-limits')!
+  const [RS8, LS9] = [lesson.example, lesson.prediction].map(
+    (id) => targetForTrace(traceById(id)).segment.code,
+  )
+  await page.goto(`${base}/learn?lesson=${lesson.id}`)
+  await ctReady(page)
+  const fresh = await storedRaw(page, `learn.${lesson.id}`)
+  await button(page, `Next worked junction (${RS8} route)`).click()
+  await ctReady(page)
+  await button(page, `Next worked junction (${RS8} route)`).click()
+  await ctReady(page)
+  expect(await storedRaw(page, `learn.${lesson.id}`)).toBe(fresh)
+  await button(page, `Skip to your own trace: ${LS9}`).click()
+  await orient(page)
+  const point = traceById(lesson.prediction).checkpoints[0]
+  await page.locator(`input[type="radio"][value="${point.sourceEdgeId}"]`).check()
+  await button(page, 'Go to response slice').click()
+  await ctReady(page)
+  await page.getByRole('group', { name: /^CT image\./ }).press('Enter')
+  await button(page, 'Check this junction').click()
+  const snapshot = await storedRaw(page, `learn.${lesson.id}`)
+  expect(JSON.parse(snapshot!).value.session.marks[0].pixel).not.toBeNull()
+  await button(page, `View the worked ${RS8} route (reference)`).click()
+  await ctReady(page)
+  await expect(
+    page.getByRole('heading', { name: `Worked example: the route to ${RS8}` }),
+  ).toBeVisible()
+  await button(page, `Next worked junction (${RS8} route)`).click()
+  await ctReady(page)
+  await button(page, `Next worked junction (${RS8} route)`).click()
+  await ctReady(page)
+  await page.getByRole('button', { name: /^Previous junction/ }).click()
+  await ctReady(page)
+  await button(page, '⇆ Flip left–right').click()
+  expect(await storedRaw(page, `learn.${lesson.id}`)).toBe(snapshot)
+  await button(page, `Return to your trace: ${LS9}`).click()
+  await ctReady(page)
+  await expect(nowHeading(page)).toHaveText(
+    `Junction 1 of ${traceById(lesson.prediction).checkpoints.length - 1}`,
+  )
+  await expect(page.getByLabel('Your mark 1', { exact: true })).toBeVisible()
+  expect(await storedRaw(page, `learn.${lesson.id}`)).toBe(snapshot)
+  await page.reload()
+  await ctReady(page)
+  expect(JSON.parse((await storedRaw(page, `learn.${lesson.id}`))!)).toEqual(JSON.parse(snapshot!))
+  await button(page, 'Continue to the next division').click()
+  await expect(nowHeading(page)).toHaveText(
+    `Junction 2 of ${traceById(lesson.prediction).checkpoints.length - 1}`,
+  )
+})
+
+test('review finding 3 · a local worked walkthrough and Show reference leave the draft untouched', async ({
+  page,
+}) => {
+  await startLocal(page, 'vertical')
+  const ex = localExercise(LESSONS.find((l) => l.id === 'vertical')!.exercises![0])
+  const label = displayAnswerLabel(ex.trace.checkpoints[0], 0, ex.answerPoints[0].label)
+  await button(page, new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} · slice`)).click()
+  await ctReady(page)
+  await button(page, 'Lumen unresolved here').click()
+  const before = await storedRaw(page, 'learn.vertical')
+  await button(page, 'Show reference').click()
+  await ctReady(page)
+  await button(page, 'Next demonstration slice').click()
+  await ctReady(page)
+  await button(page, 'Previous demonstration slice').click()
+  await ctReady(page)
+  await button(page, 'Show reference').click()
+  await button(page, 'Replay the worked walkthrough').click()
+  await ctReady(page)
+  await button(page, 'Show reference').click()
+  expect(await storedRaw(page, 'learn.vertical')).toBe(before)
+  await page.reload()
+  await ctReady(page)
+  expect(JSON.parse((await storedRaw(page, 'learn.vertical'))!)).toEqual(JSON.parse(before!))
+})
+
+test('review finding 4 · Continue works after a skip, and a partial route ends truthfully, in Lesson 9 and Practice', async ({
+  page,
+}) => {
+  const lesson = LESSONS.find((l) => l.id === 'variants-limits')!
+  const own = traceById(lesson.prediction)
+  await page.goto(`${base}/learn?lesson=${lesson.id}`)
+  await ctReady(page)
+  await button(page, `Skip to your own trace: ${targetForTrace(own).segment.code}`).click()
+  await orient(page)
+  await button(page, 'Continue without recording').click()
+  await ctReady(page)
+  await page.locator('input[type="radio"][value="unresolved"]').check()
+  await button(page, 'Go to response slice').click()
+  await ctReady(page)
+  await button(page, 'Lumen unresolved here').click()
+  await button(page, 'Check this junction').click()
+  await button(page, 'Continue to the next division').click()
+  await expect(nowHeading(page)).toHaveText(`Junction 3 of ${own.checkpoints.length - 1}`)
+  const junctions = own.checkpoints.length - 1
+  for (let i = 2; i < junctions; i++) {
+    await button(page, 'Continue without recording').click()
+    await ctReady(page)
+  }
+  await button(page, 'Go to response slice').click()
+  await ctReady(page)
+  await button(page, 'Lumen unresolved here').click()
+  await button(page, 'Record nodule approach').click()
+  await button(page, 'Continue with this partial route').click()
+  await expect(nowHeading(page)).toHaveText('Describe its course')
+  const session = JSON.parse((await storedRaw(page, `learn.${lesson.id}`))!).value.session
+  expect(session.recorded[0]).toBe(false)
+  expect(session.marks[0]).toBeNull()
+
+  const trace = traceById(SEGMENT_PRACTICE_TRACES[2])
+  await page.goto(`${base}/practice`)
+  await button(page, 'Start CT practice').click()
+  await orient(page)
+  await button(page, 'Continue without recording').click()
+  await ctReady(page)
+  await page.locator('input[type="radio"][value="unresolved"]').check()
+  await button(page, 'Go to response slice').click()
+  await ctReady(page)
+  await button(page, 'Lumen unresolved here').click()
+  await button(page, 'Check this junction').click()
+  await button(page, 'Continue to the next division').click()
+  await expect(nowHeading(page)).toHaveText(`Junction 3 of ${trace.checkpoints.length - 1}`)
+})

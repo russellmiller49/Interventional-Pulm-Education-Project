@@ -146,14 +146,19 @@ export function approachReference(trace: CtTrace, target: CtNoduleTarget): Appro
 export interface DivisionCourse {
   parentCode: string
   parentSlice: number
-  /** The model node's plane: round((node z − origin z) / 0.5), the exporter's own slice rule. */
+  /** The native plane nearest the model node: round((node z − origin z) / 0.5). */
   nodeSlice: number
-  /** How the parent runs from its point to the node. */
+  /** Parent point slice minus node slice, exactly; positive is cranial of the node. */
+  parentOffset: number
+  /** How the parent runs from its point to the node (within one slice counts as the same level). */
   approach: LevelRelation
   daughters: {
     label: string
     code: string
     slice: number
+    /** Response slice minus node slice, exactly; positive is cranial of the node. */
+    offset: number
+    /** The daughter's direction from the node (within one slice counts as the same level). */
     fromNode: LevelRelation
     slices: number
   }[]
@@ -185,6 +190,7 @@ export function divisionCourse(
     label: labelFor(i),
     code: option.airway.code,
     slice: option.slice,
+    offset: option.slice - nodeSlice,
     fromNode: near(nodeSlice, option.slice)
       ? ('same level' as const)
       : levelRelation(nodeSlice, option.slice),
@@ -194,6 +200,7 @@ export function divisionCourse(
     parentCode: decision.parent.airway.code,
     parentSlice,
     nodeSlice,
+    parentOffset: parentSlice - nodeSlice,
     approach,
     daughters,
     inPlane: near(parentSlice, nodeSlice) && daughters.every((d) => d.fromNode === 'same level'),

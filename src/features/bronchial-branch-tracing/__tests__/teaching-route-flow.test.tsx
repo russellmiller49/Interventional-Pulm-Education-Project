@@ -229,13 +229,17 @@ describe('Lesson 9: worked route, your route and the transfer route stay distinc
     expect(
       screen.getByRole('button', { name: `Skip to your own trace: ${own.segment.code}` }),
     ).toBeEnabled()
+    // PR #273 review, finding 3: this test first asserted that each worked junction advanced the
+    // stored `session.active`. That was the defect: worked browsing is reference viewing and now
+    // leaves the whole stored draft unchanged; only the worked map grows.
+    const stored = localStorage.getItem(`${DRAFT_PREFIX}learn.${lesson.id}`)
     for (let i = 0; i < junctions - 1; i++) {
       click(`Next worked junction (${example.segment.code} route)`)
-      expect(session().active).toBe(i + 1)
-      expect(session().marks.every((m: unknown) => m === null)).toBe(true)
-      expect(session().recorded.every((r: boolean) => !r)).toBe(true)
-      expect(session().junctionHistory).toEqual({})
+      expect(container.querySelectorAll('[data-map-division]')).toHaveLength(i + 2)
+      expect(localStorage.getItem(`${DRAFT_PREFIX}learn.${lesson.id}`)).toBe(stored)
     }
+    expect(session()).toMatchObject({ step: 0, active: 0, junctionHistory: {} })
+    expect(session().marks.every((m: unknown) => m === null)).toBe(true)
     expect(screen.queryByRole('button', { name: /Skip to your own trace/ })).toBeNull()
     click(`Start your own trace: ${own.segment.code}`)
     expect(session()).toMatchObject({ step: 1, active: 0, junctionHistory: {} })
@@ -337,7 +341,8 @@ describe('local lessons teach before the try', () => {
     const ex = localExercise(lessonById('continuity').exercises![1])
     const sentences = courseSentences(courseFor(ex)!, 'continuity').join(' ')
     expect(sentences).toMatch(
-      /Daughter A · LB6’s response slice, 326, lies 5 slices cranial of the node/,
+      // PR #273 review, finding 1: the node is named as "the model node" in exact-offset wording.
+      /Daughter A · LB6’s response slice, 326, lies 5 slices cranial of the model node/,
     )
     expect(sentences).toMatch(/turns back against the direction you arrived from/)
     expect(sentences).toContain(DIRECTION_CHANGE.definition[1])
