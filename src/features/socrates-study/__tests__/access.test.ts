@@ -4,7 +4,7 @@ jest.mock('@/lib/supabase/server', () => ({ supabaseServer: jest.fn() }))
 jest.mock('@/lib/supabase/admin', () => ({ createSupabaseAdmin: jest.fn() }))
 import { supabaseServer } from '@/lib/supabase/server'
 import { createSupabaseAdmin } from '@/lib/supabase/admin'
-import { requireSocratesUser, allRows } from '../server/service'
+import { requireSocratesUser, allRows, directoryProgress } from '../server/service'
 
 const user = {
   id: '10000000-0000-4000-8000-000000000001',
@@ -72,4 +72,27 @@ test('admin pagination retains records beyond the API cap with stable composite 
   expect(pages.range).toHaveBeenNthCalledWith(2, 1000, 1999)
   expect(pages.order).toHaveBeenCalledWith('study_id')
   expect(pages.order).toHaveBeenCalledWith('id')
+})
+
+test('directory retains own progress beyond the API cap and never presents a partial read', async () => {
+  const pages = { select: jest.fn(), eq: jest.fn(), order: jest.fn(), range: jest.fn() }
+  for (const method of [pages.select, pages.eq, pages.order]) method.mockReturnValue(pages)
+  from.mockImplementation((table) => (table === 'site_entitlements' ? query : pages))
+  pages.range
+    .mockResolvedValueOnce({
+      data: Array.from({ length: 1000 }, (_, i) => ({ case_revision: i + 1 })),
+      error: null,
+    })
+    .mockResolvedValueOnce({
+      data: [{ case_revision: 1001, completed_at: '2026-09-23T00:01:00Z' }],
+      error: null,
+    })
+  expect(await directoryProgress()).toHaveLength(1001)
+  expect(pages.eq).toHaveBeenCalledWith('user_id', user.id)
+  expect(pages.order).toHaveBeenCalledWith('case_id')
+  expect(pages.order).toHaveBeenCalledWith('case_revision')
+  expect(pages.range).toHaveBeenNthCalledWith(2, 1000, 1999)
+  pages.range.mockResolvedValueOnce({ data: null, error: { message: 'unavailable' } })
+  expect(await directoryProgress()).toBeNull()
+  expect(createSupabaseAdmin).not.toHaveBeenCalled()
 })

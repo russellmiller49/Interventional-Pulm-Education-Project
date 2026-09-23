@@ -212,3 +212,28 @@
 :global(body):has(.page) :global(footer) {
   overflow-wrap: anywhere;
 }
+
+.narrative {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
+  margin-block: 1rem;
+}
+.page {
+  overflow-wrap: anywhere;
+}
+
+.caseList {
+  padding-left: 1.75rem;
+  list-style: decimal;
+}
+.caseList li {
+  padding: 0.7rem 0.4rem;
+  line-height: 1.6;
+}
+.page summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 0.6rem 0;
+  font-weight: 700;
+}

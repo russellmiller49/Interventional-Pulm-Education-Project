@@ -68,6 +68,7 @@ import { loadInvenioDziDescriptor, resolveSocratesSlideSource } from '../descrip
 import { databaseCompatibilityError } from '../database-compatibility'
 import { getInvenioPair } from '../invenio-source'
 import type { WebOverlayWorkspace } from '../web-overlay-storage'
+import { DraftLearnerPreview } from './DraftLearnerPreview'
 import { CaseContentEditor } from './CaseContentEditor'
 import { InvenioSlidePicker } from './InvenioSlidePicker'
 import {
@@ -219,6 +220,8 @@ export function SocratesBuilder({
   const [annotationFuture, setAnnotationFuture] = useState<DemoAnnotation[][]>([])
   const [dirty, setDirty] = useState(!initialDocument.recordId)
   const [loadingDescriptor, setLoadingDescriptor] = useState(false)
+  const previewButtonRef = useRef<HTMLButtonElement>(null)
+  const returnViewportRef = useRef<ViewportSnapshot | null>(null)
   const [previewDocument, setPreviewDocument] = useState<SocratesSlideDocument | null>(null)
   const [saving, setSaving] = useState(false)
   const [notice, setNotice] = useState<ActionNotice | null>(null)
@@ -881,19 +884,44 @@ export function SocratesBuilder({
     [setDirtyDocument],
   )
 
+  const onEditorViewerStatus = useCallback((status: DeepZoomViewerStatus) => {
+    setViewerStatus(status)
+    if (status.phase === 'ready' && returnViewportRef.current) {
+      viewerRef.current?.fitImageRect(returnViewportRef.current.visibleImageBounds)
+      returnViewportRef.current = null
+    }
+  }, [])
+
   if (previewDocument) {
     return (
       <div className={`${styles.page} ${embedded ? styles.embedded : ''}`}>
         <div className={styles.previewToolbar}>
           <div>
-            <strong>Learner preview · {previewDocument.title}</strong>
-            <p>Zoom into a region, then select a detail to read its explanation.</p>
+            <strong>Draft learner preview — not published</strong>
+            <p>
+              Inspect the image, then reveal the current teaching content. Nothing is saved by this
+              preview.
+            </p>
           </div>
-          <Button type="button" onClick={() => setPreviewDocument(null)}>
+          <Button
+            type="button"
+            onClick={() => {
+              setPreviewDocument(null)
+              requestAnimationFrame(() => previewButtonRef.current?.focus())
+            }}
+          >
             Return to editing
           </Button>
         </div>
-        <SocratesDemo slide={previewDocument.slide} annotations={previewDocument.annotations} />
+        {previewDocument.schemaVersion === 2 &&
+        previewDocument.caseContent &&
+        previewDocument.authorContent ? (
+          <DraftLearnerPreview
+            document={previewDocument as import('../types').SocratesCaseDocument}
+          />
+        ) : (
+          <SocratesDemo slide={previewDocument.slide} annotations={previewDocument.annotations} />
+        )}
       </div>
     )
   }
@@ -1152,7 +1180,7 @@ export function SocratesBuilder({
               onImageHover={handleImageHover}
               onImageSelect={handleImageSelect}
               onViewportChange={setViewport}
-              onStatusChange={setViewerStatus}
+              onStatusChange={onEditorViewerStatus}
               interactionMode={drawMode === 'navigate' ? 'navigate' : 'draw-rectangle'}
               onDrawRectangle={handleRectangleDrawn}
             />
@@ -1578,7 +1606,11 @@ export function SocratesBuilder({
             type="button"
             variant="outline"
             disabled={loadingDescriptor}
-            onClick={() => setPreviewDocument(cloneDocument(document))}
+            ref={previewButtonRef}
+            onClick={() => {
+              returnViewportRef.current = viewport
+              setPreviewDocument(JSON.parse(JSON.stringify(document)))
+            }}
           >
             <Eye aria-hidden="true" /> Preview teaching view
           </Button>

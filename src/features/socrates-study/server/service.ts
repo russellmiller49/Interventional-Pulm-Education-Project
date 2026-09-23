@@ -1,4 +1,5 @@
 import 'server-only'
+import { curriculumCatalogSchema } from '../curriculum'
 import { supabaseServer } from '@/lib/supabase/server'
 import { createSupabaseAdmin } from '@/lib/supabase/admin'
 import { upgradeSocratesDocument } from '@/features/socrates-builder/schema'
@@ -184,4 +185,33 @@ export async function dashboardData() {
     allRows('socrates_training_progress', ['user_id', 'case_id', 'case_revision']),
   ])
   return { studies, rounds, cases, participants, attempts, training }
+}
+
+export async function curriculumCatalog() {
+  const db = await supabaseServer()
+  const { data, error } = await db.rpc('socrates_curriculum_catalog')
+  if (error) throw new SocratesAccessError('The curriculum is temporarily unavailable.', 503)
+  return curriculumCatalogSchema.parse(data)
+}
+
+/** Optional progress on the public directory, always restricted to the verified user's rows. */
+export async function directoryProgress(): Promise<TrainingProgress[] | null> {
+  try {
+    const session = await requireSocratesUser()
+    const rows: TrainingProgress[] = []
+    for (let offset = 0; ; offset += 1000) {
+      const { data, error } = await session.supabase
+        .from('socrates_training_progress')
+        .select('case_id,case_revision,opened_at,revealed_at,completed_at')
+        .eq('user_id', session.user.id)
+        .order('case_id')
+        .order('case_revision')
+        .range(offset, offset + 999)
+      if (error || !data) return null
+      rows.push(...(data as TrainingProgress[]))
+      if (data.length < 1000) return rows
+    }
+  } catch {
+    return null
+  }
 }

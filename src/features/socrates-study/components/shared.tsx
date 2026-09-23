@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react'
-import type { AnnotationLegend } from '@/features/socrates-builder/case-content'
+import {
+  annotationLegendIssues,
+  type AnnotationLegend,
+} from '@/features/socrates-builder/case-content'
 import type { TeachingContent } from '../projections'
 import styles from './study.module.css'
 export function StudyShell({ locale, children }: { locale: string; children: ReactNode }) {
@@ -21,7 +24,7 @@ export function AnnotationKey({ legend }: { legend: AnnotationLegend }) {
   return (
     <section aria-label="Annotation color key">
       <h3>Annotation / color key</h3>
-      {!legend.reviewed || !legend.entries.length ? (
+      {!legend.reviewed || annotationLegendIssues(legend).length > 0 ? (
         <p>Annotation key pending review</p>
       ) : (
         <div className={styles.legend}>
@@ -44,6 +47,8 @@ export function AnnotationKey({ legend }: { legend: AnnotationLegend }) {
   )
 }
 export function Interpretation({ teaching }: { teaching: TeachingContent }) {
+  if (teaching.learnerNarrative)
+    return <div className={styles.narrative}>{teaching.learnerNarrative}</div>
   return (
     <>
       {(['adequacy', 'cancer', 'preliminaryDiagnosis'] as const).map(
@@ -52,7 +57,7 @@ export function Interpretation({ teaching }: { teaching: TeachingContent }) {
             <section key={key}>
               <h3>{['Adequacy', 'Cancer designation', 'Preliminary diagnosis'][i]}</h3>
               <strong>{teaching[key]!.designation || 'Interpretation pending review'}</strong>
-              <p>{teaching[key]!.reasoning}</p>
+              <p>{teaching[key]!.reasoning || 'Reasoning pending author review.'}</p>
             </section>
           ),
       )}

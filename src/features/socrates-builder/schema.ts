@@ -1,3 +1,4 @@
+import { annotationLegendIssues } from './case-content'
 import { z } from 'zod'
 
 import {
@@ -165,7 +166,17 @@ export function parseSocratesSlideDocument(value: unknown): SocratesSlideDocumen
 }
 
 export function validateSocratesSlideDocument(value: unknown) {
-  return socratesSlideDocumentSchema.safeParse(value)
+  return socratesSlideDocumentSchema
+    .refine(
+      (document) =>
+        !document.caseContent?.annotationLegend.reviewed ||
+        !annotationLegendIssues(document.caseContent.annotationLegend).length,
+      {
+        message:
+          'A reviewed annotation key needs actual labels, six-digit colors and reviewed meanings.',
+      },
+    )
+    .safeParse(value)
 }
 
 /** Legacy parsing stays lossless. Upgrade only on an explicit case edit/save/export. */

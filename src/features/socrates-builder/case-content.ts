@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { narrativeTeaching } from './learner-narrative'
+import { curriculumSourceSchema } from './curriculum-source'
 
 const text = z.string().max(8000)
 const designation = z.object({ designation: z.string().max(300), reasoning: text }).strict()
@@ -18,6 +20,7 @@ export const annotationLegendSchema = z
       .max(40),
   })
   .strict()
+
 export const caseContentSchema = z
   .object({
     diagnosticCategory: z.string().max(160),
@@ -26,6 +29,7 @@ export const caseContentSchema = z
     trainingEligible: z.boolean(),
     testingEligible: z.boolean(),
     vignette: text,
+    learnerNarrative: z.string().min(1).max(32000).optional(),
     lowMagnificationObservations: z.array(text).max(40),
     highMagnificationObservations: z.array(text).max(40),
     keyLearningPoints: z.array(text).max(40),
@@ -35,9 +39,23 @@ export const caseContentSchema = z
     annotationLegend: annotationLegendSchema,
   })
   .strict()
+  .superRefine((content, context) => {
+    if (!content.learnerNarrative) return
+    const derived = narrativeTeaching(content.learnerNarrative)
+    for (const key of Object.keys(derived) as (keyof typeof derived)[]) {
+      if (JSON.stringify(content[key]) !== JSON.stringify(derived[key]))
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [key],
+          message:
+            'Narrative is canonical. Reconcile the conflicting structured teaching field: ' + key,
+        })
+    }
+  })
 const readinessStatus = z.enum(['incomplete', 'ready', 'hold'])
 export const authorContentSchema = z
   .object({
+    curriculumSource: curriculumSourceSchema.optional(),
     internalHighlightNotes: text,
     provenanceNotes: text,
     readiness: z
@@ -104,4 +122,20 @@ export function testingReadinessIssues(content: CaseContent, author: AuthorConte
     !content.cancer.designation.trim() && 'Cancer designation is missing.',
     !content.cancer.reasoning.trim() && 'Cancer reasoning is missing.',
   ].filter((issue): issue is string => Boolean(issue))
+}
+
+/** A placeholder cannot become a reviewed provider key by checking a box. */
+export function annotationLegendIssues(legend: {
+  entries: { label: string; color: string; explanation: string }[]
+}): string[] {
+  if (!legend.entries.length) return ['Add at least one provider-approved key entry.']
+  return legend.entries.flatMap((entry, index) =>
+    [
+      (!entry.label.trim() || /^pending label$/i.test(entry.label.trim())) &&
+        `Key ${index + 1}: enter the provider-approved category label.`,
+      !/^#[0-9a-fA-F]{6}$/.test(entry.color) &&
+        `Key ${index + 1}: use an exact six-digit hex color (#RRGGBB).`,
+      !entry.explanation.trim() && `Key ${index + 1}: add the reviewed meaning.`,
+    ].filter((issue): issue is string => Boolean(issue)),
+  )
 }

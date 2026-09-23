@@ -31,7 +31,8 @@ async function ready(page: Page) {
             performance.getEntriesByType('resource').filter((entry) => {
               const resource = entry as PerformanceResourceTiming
               return (
-                resource.name.includes('/api/socrates/images/') &&
+                (resource.name.includes('/api/socrates/images/') ||
+                  resource.name.includes('/api/socrates-invenio/')) &&
                 /\.jpe?g$/.test(resource.name) &&
                 resource.responseStatus === 200
               )
@@ -109,6 +110,11 @@ async function noOverflow(page: Page) {
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
   ).toBe(true)
 }
+async function screenshotFromTop(page: Page, path: string) {
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+  await page.screenshot({ path, fullPage: true })
+}
 function center(v: {
   visibleImageBounds: { x: number; y: number; width: number; height: number }
 }) {
@@ -129,8 +135,11 @@ test('catalog → training reveal, progress, native fullscreen and viewport pres
   await login(context)
   await page.goto('/en/socrates')
   await expect(
-    page.getByRole('heading', { name: 'Synthetic category A', exact: true }),
+    page.getByRole('heading', { name: 'SOCRATES training modules', exact: true }),
   ).toBeVisible()
+  await expect(page.getByText('2 available / 20 planned cases')).toBeVisible()
+  await page.screenshot({ path: 'test-results/socrates/modules-1440.png', fullPage: true })
+  await page.getByRole('link', { name: 'CORE SRH ORIENTATION', exact: true }).click()
   await page.getByRole('link', { name: 'Synthetic training case', exact: true }).click()
   await expect(
     page.getByRole('heading', { name: 'Synthetic training case', exact: true }),
@@ -340,4 +349,168 @@ test('admin monitoring/export and standalone builder case fields', async ({ page
   await page.reload()
   await expect(page.getByLabel('Case vignette')).toHaveValue('Synthetic edited vignette')
   await expect(page.getByLabel('Internal highlight notes')).toHaveValue('PRIVATE_EDIT_MARKER')
+})
+
+test('ordered module journey retains narrative reveal boundaries and module scope on desktop and mobile', async ({
+  page,
+  context,
+}) => {
+  await login(context)
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport)
+    await page.goto('/en/socrates')
+    await expect(
+      page.getByRole('heading', { name: 'SOCRATES training modules', exact: true }),
+    ).toBeVisible()
+    await expect(page.getByRole('link', { name: 'ADVANCED CASES', exact: true })).toBeVisible()
+    await noOverflow(page)
+    await screenshotFromTop(page, `test-results/socrates/modules-${viewport.width}.png`)
+    await page.goto('/en/socrates?module=core-srh-orientation')
+    await page.getByRole('link', { name: 'Synthetic narrative case', exact: true }).click()
+    await ready(page)
+    expect(await page.content()).not.toMatch(
+      /learnerNarrative|PRIVATE_CURRICULUM|PRIVATE_SOURCE_NOTE|synthetic pitfall/,
+    )
+    const before = await page.request.get(`/api/socrates/training/${fixture.narrativeCaseId}`)
+    expect(await before.text()).not.toMatch(/learnerNarrative|curriculumSource|synthetic pitfall/)
+    await page
+      .getByRole('button', { name: /Reveal teaching interpretation|Continue teaching review/ })
+      .click()
+    await expect(page.getByTestId('learner-narrative')).toContainText('Common pitfall')
+    await expect(page.getByTestId('learner-narrative')).toContainText(
+      'An additional paragraph remains unchanged.',
+    )
+    await expect(page.getByRole('heading', { name: 'Case teaching', exact: true })).toBeFocused()
+    await noOverflow(page)
+    await screenshotFromTop(page, `test-results/socrates/narrative-${viewport.width}.png`)
+    await page.addStyleTag({ content: 'html { font-size: 200% !important; }' })
+    await noOverflow(page)
+    await screenshotFromTop(page, `test-results/socrates/narrative-text-200-${viewport.width}.png`)
+    await page
+      .getByRole('navigation', { name: 'Module case navigation' })
+      .first()
+      .getByRole('link', { name: 'Next case in module' })
+      .click()
+    expect(page.url()).toContain(`/${fixture.cid}?module=core-srh-orientation`)
+    await expect(page.getByRole('link', { name: 'Next case in module' })).toHaveCount(0)
+    await page
+      .getByRole('navigation', { name: 'Module case navigation' })
+      .first()
+      .getByRole('link', { name: 'Back to CORE SRH ORIENTATION' })
+      .click()
+    expect(page.url()).toContain('/socrates?module=core-srh-orientation')
+  }
+  await page.goto(`/en/socrates/training/${fixture.cid}?module=advanced-cases`)
+  await expect(page.getByRole('heading', { name: 'Training case unavailable' })).toBeVisible()
+})
+
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 390, height: 844 },
+]) {
+  test(`protected unsaved preview, no progress writes, and save/reload at ${viewport.width}`, async ({
+    page,
+    context,
+  }) => {
+    await login(context, 'admin')
+    await page.setViewportSize(viewport)
+    await page.goto('/en/socrates-builder')
+    await page
+      .getByLabel('Slide catalog')
+      .getByRole('button', { name: /Synthetic narrative case/ })
+      .click()
+    const narrative =
+      (await page.getByLabel('Learner narrative (after reveal)').inputValue()) +
+      `\n\nSynthetic unsaved final paragraph at ${viewport.width}.`
+    await page.getByLabel('Learner narrative (after reveal)').fill(narrative)
+    const writes: string[] = []
+    page.on('request', (r) => {
+      if (r.method() === 'POST') writes.push(r.url())
+    })
+    await page.getByRole('button', { name: 'Preview teaching view' }).click()
+    await expect(page.getByText('Draft learner preview — not published')).toBeVisible()
+    await ready(page)
+    await expect(page.getByTestId('learner-narrative')).toHaveCount(0)
+    await page.getByRole('button', { name: 'Reveal teaching interpretation' }).click()
+    expect(await page.getByTestId('learner-narrative').textContent()).toBe(narrative)
+    await expect(page.getByText('PRIVATE_SOURCE_NOTE', { exact: true })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Mark case completed' })).toHaveCount(0)
+    await noOverflow(page)
+    await screenshotFromTop(page, `test-results/socrates/preview-${viewport.width}.png`)
+    await page.addStyleTag({ content: 'html { font-size: 200% !important; }' })
+    await noOverflow(page)
+    await screenshotFromTop(page, `test-results/socrates/preview-text-200-${viewport.width}.png`)
+    await page.getByTestId('learner-narrative').evaluate((element) => {
+      const headerHeight = document.querySelector('header')?.getBoundingClientRect().height ?? 0
+      window.scrollTo({
+        top: element.getBoundingClientRect().top + window.scrollY - headerHeight - 16,
+        behavior: 'instant',
+      })
+    })
+    await expect(page.getByTestId('learner-narrative')).toBeInViewport({ ratio: 0.02 })
+    await page.screenshot({
+      path: `test-results/socrates/preview-text-200-detail-${viewport.width}.png`,
+    })
+    await page.getByRole('button', { name: 'Return to editing' }).click()
+    await expect(page.getByRole('button', { name: 'Preview teaching view' })).toBeFocused()
+    await expect(page.getByLabel('Learner narrative (after reveal)')).toHaveValue(narrative)
+    expect(writes).toEqual([])
+    await page.getByRole('button', { name: 'Save draft', exact: true }).click()
+    await expect(page.getByText(/Draft revision \d+ saved/)).toBeVisible()
+    await page.reload()
+    await expect(page.getByLabel('Learner narrative (after reveal)')).toHaveValue(narrative)
+  })
+}
+
+test('browser-only v2 draft preview returns and reloads without participant or protected saves', async ({
+  page,
+}) => {
+  const response = await page.request.post(
+    fixture.url + '/rest/v1/rpc/list_socrates_author_cases',
+    {
+      headers: {
+        apikey: fixture.anon,
+        Authorization: 'Bearer ' + fixture.sessions.admin.access_token,
+      },
+      data: {},
+    },
+  )
+  const doc = (await response.json()).find((d: { recordId: string }) => d.recordId === fixture.cid)
+  doc.annotations = []
+  await page.goto('/en/socrates-demo#builder')
+  await page.evaluate(
+    (document) =>
+      window.localStorage.setItem(
+        'socrates-invenio-web-overlays:v1',
+        JSON.stringify({ version: 1, activeDocument: document, documents: [document] }),
+      ),
+    doc,
+  )
+  await page.reload()
+  await page
+    .getByLabel('Low-magnification observations (one per line)')
+    .fill('Browser unsaved observation')
+  const writes: string[] = []
+  page.on('request', (r) => {
+    const route = new URL(r.url()).pathname
+    // Reload has ordinary site analytics; watch all SOCRATES/database mutations.
+    if (
+      !['GET', 'HEAD'].includes(r.method()) &&
+      (route.startsWith('/api/socrates') || route.startsWith('/rest/v1/'))
+    )
+      writes.push(r.url())
+  })
+  await page.getByRole('button', { name: 'Preview teaching view' }).click()
+  await ready(page)
+  await page.getByRole('button', { name: 'Reveal teaching interpretation' }).click()
+  await expect(page.getByText('Browser unsaved observation')).toBeVisible()
+  await page.getByRole('button', { name: 'Return to editing' }).click()
+  await page.reload()
+  await expect(page.getByLabel('Low-magnification observations (one per line)')).toHaveValue(
+    'Browser unsaved observation',
+  )
+  expect(writes).toEqual([])
 })

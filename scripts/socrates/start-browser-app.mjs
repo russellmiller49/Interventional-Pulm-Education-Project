@@ -2,8 +2,15 @@ import { readFileSync } from 'node:fs'
 import { spawn } from 'node:child_process'
 const fixture = JSON.parse(readFileSync('/tmp/socrates-rehearsal.json', 'utf8'))
 const app = spawn(
-  process.execPath,
-  ['node_modules/next/dist/bin/next', 'dev', '--webpack', '--port', '3119'],
+  process.argv.includes('--build') ? 'npm' : process.execPath,
+  process.argv.includes('--build')
+    ? ['run', 'build']
+    : [
+        'node_modules/next/dist/bin/next',
+        ...(process.argv.includes('--production') ? ['start'] : ['dev', '--webpack']),
+        '--port',
+        '3119',
+      ],
   {
     stdio: 'inherit',
     env: {
