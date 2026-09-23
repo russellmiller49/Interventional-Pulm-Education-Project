@@ -10,7 +10,24 @@ import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { createBronchoscopyMaterial } from '@/lib/airway-anatomy/airway-render'
 import type { Vec3 } from '../geometry/coordinates'
 import { PREVIEW_CT } from '../geometry/clinical-preview'
+import { placeOverlayLabels } from './ctOverlayLabels'
 import styles from './branch-tracing.module.css'
+
+/** A frame-1 point to name in the paired view, e.g. a daughter's model response point. */
+export interface ScopeAnnotation {
+  id: string
+  lps: Vec3
+  text: string
+  ariaLabel: string
+}
+export interface ProjectedAnnotation extends ScopeAnnotation {
+  /** 0–100 across the square view. */
+  x: number
+  y: number
+  visible: boolean
+  reason: 'in-view' | 'occluded' | 'outside'
+}
+const ANNOTATION_FONT = 4.2
 
 const SURFACE_URL = '/branch-tracing/preview-v1/airway.glb'
 async function loadSurface(signal: AbortSignal) {
@@ -116,6 +133,67 @@ function ScopeCamera({
   }, [camera, invalidate, position, direction, roll, referenceUp])
   return null
 }
+/**
+ * Projects frame-1 points with the camera exactly as rendered, then tests line of sight against
+ * the airway surface. A point hidden behind the wall is reported, not drawn on the wall.
+ */
+function AnnotationProjector({
+  annotations,
+  geometry,
+  position,
+  direction,
+  referenceUp,
+  onProject,
+}: {
+  annotations: ScopeAnnotation[]
+  geometry: THREE.BufferGeometry
+  position: Vec3
+  direction: Vec3
+  referenceUp?: Vec3
+  onProject: (results: ProjectedAnnotation[]) => void
+}) {
+  const { camera } = useThree()
+  // Raycasting needs both faces: the camera sits inside a surface drawn on its back side.
+  const probe = useMemo(
+    () => new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })),
+    [geometry],
+  )
+  useEffect(() => () => (probe.material as THREE.Material).dispose(), [probe])
+  useEffect(() => {
+    camera.updateMatrixWorld()
+    camera.matrixWorldInverse.copy(camera.matrixWorld).invert()
+    if (camera instanceof THREE.PerspectiveCamera) camera.updateProjectionMatrix()
+    const origin = camera.position.clone()
+    const forward = new THREE.Vector3(...direction).normalize()
+    const raycaster = new THREE.Raycaster()
+    onProject(
+      annotations.map((annotation) => {
+        const point = new THREE.Vector3(...annotation.lps)
+        const ndc = point.clone().project(camera)
+        const toPoint = point.clone().sub(origin)
+        const distance = toPoint.length()
+        const x = ((ndc.x + 1) / 2) * 100
+        const y = ((1 - ndc.y) / 2) * 100
+        const inFront = toPoint.dot(forward) > 0.1 && ndc.z < 1
+        if (!inFront || x < 0 || x > 100 || y < 0 || y > 100)
+          return { ...annotation, x, y, visible: false, reason: 'outside' as const }
+        raycaster.set(origin, toPoint.normalize())
+        raycaster.far = distance
+        const occluded = raycaster
+          .intersectObject(probe, false)
+          .some((hit) => hit.distance < distance - 0.5)
+        return {
+          ...annotation,
+          x,
+          y,
+          visible: !occluded,
+          reason: occluded ? ('occluded' as const) : ('in-view' as const),
+        }
+      }),
+    )
+  }, [camera, annotations, position, direction, referenceUp, probe, onProject])
+  return null
+}
 function Surface({
   geometry,
   inside,
@@ -192,6 +270,7 @@ export function ClinicalAirwayView({
   slice,
   paired = false,
   referenceUp,
+  annotations,
 }: {
   position: Vec3
   direction: Vec3
@@ -199,8 +278,22 @@ export function ClinicalAirwayView({
   slice: number
   paired?: boolean
   referenceUp?: Vec3
+  /** Paired view only: frame-1 points to name where they are actually in line of sight. */
+  annotations?: ScopeAnnotation[]
 }) {
   const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null)
+  const [projected, setProjected] = useState<ProjectedAnnotation[]>([])
+  const annotationList = useMemo(() => annotations ?? [], [annotations])
+  // Only the text moves; every anchor stays on its projected point. With no annotations requested
+  // nothing is drawn, whatever an earlier projection reported.
+  const placed = annotationList.length
+    ? placeOverlayLabels(
+        projected
+          .filter((a) => a.visible && annotationList.some((n) => n.id === a.id))
+          .map((a) => ({ id: a.id, point: [a.x, a.y], text: a.text })),
+        { fontSize: ANNOTATION_FONT, gap: 8 },
+      )
+    : []
   const [error, setError] = useState('')
   const [view, setView] = useState<'exterior' | 'scope'>(paired ? 'scope' : 'exterior')
   const [opacity, setOpacity] = useState(0.65)
@@ -291,12 +384,24 @@ export function ClinicalAirwayView({
               <directionalLight position={[200, -400, 200]} intensity={2} />
               <Surface geometry={geometry} inside={view === 'scope'} opacity={opacity} />
               {view === 'scope' ? (
-                <ScopeCamera
-                  position={position}
-                  direction={direction}
-                  roll={roll}
-                  referenceUp={referenceUp}
-                />
+                <>
+                  <ScopeCamera
+                    position={position}
+                    direction={direction}
+                    roll={roll}
+                    referenceUp={referenceUp}
+                  />
+                  {paired && annotationList.length > 0 && (
+                    <AnnotationProjector
+                      annotations={annotationList}
+                      geometry={geometry}
+                      position={position}
+                      direction={direction}
+                      referenceUp={referenceUp}
+                      onProject={setProjected}
+                    />
+                  )}
+                </>
               ) : (
                 <>
                   <Plane slice={slice} />
@@ -308,8 +413,65 @@ export function ClinicalAirwayView({
                 </>
               )}
             </Canvas>
+            {paired && placed.length > 0 && (
+              <svg
+                className={styles.scopeAnnotations}
+                viewBox="0 0 100 100"
+                aria-hidden="true"
+                data-scope-annotations-drawn={placed.length}
+              >
+                {placed.map((label) => (
+                  <g key={label.id}>
+                    <circle
+                      cx={label.point[0]}
+                      cy={label.point[1]}
+                      r="1.4"
+                      fill="none"
+                      stroke="#f6c66c"
+                      strokeWidth=".45"
+                    />
+                    <line
+                      x1={label.point[0]}
+                      y1={label.point[1]}
+                      x2={label.leader[0]}
+                      y2={label.leader[1]}
+                      stroke="#f6c66c"
+                      strokeWidth=".3"
+                      opacity=".9"
+                    />
+                    <text
+                      x={label.x}
+                      y={label.y}
+                      textAnchor={label.textAnchor}
+                      fontSize={ANNOTATION_FONT}
+                      fontWeight="650"
+                      fill="#ffe0a1"
+                      stroke="#07151b"
+                      strokeWidth=".6"
+                      paintOrder="stroke"
+                    >
+                      {label.text}
+                    </text>
+                  </g>
+                ))}
+              </svg>
+            )}
           </div>
         </ViewBoundary>
+      )}
+      {paired && annotationList.length > 0 && geometry && !error && !contextLost && (
+        <p className={styles.scopeAnnotationNote} data-scope-annotations>
+          {projected.some((a) => a.visible)
+            ? 'Letters mark where each daughter’s model response point projects in this view: a model locator seen through the opening, not a measured ostium.'
+            : 'No daughter model response point is in line of sight from this camera position, so none is marked.'}
+          {projected
+            .filter((a) => !a.visible)
+            .map(
+              (a) =>
+                ` ${a.text} is ${a.reason === 'occluded' ? 'not in line of sight from this camera position (it lies behind the wall)' : 'outside this view'}, so it is not marked.`,
+            )
+            .join('')}
+        </p>
       )}
       {view === 'exterior' && (
         <label>

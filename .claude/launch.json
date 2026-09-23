@@ -153,6 +153,21 @@
       "env": {
         "PORT": "3132"
       }
+    },
+    {
+      "name": "claude-bbt-03-prod",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [".next/standalone/server.js"],
+      "port": 3136,
+      "autoPort": false,
+      "env": {
+        "PORT": "3136",
+        "HOSTNAME": "127.0.0.1",
+        "NEXT_PUBLIC_SITE_URL": "https://example.com",
+        "NEXT_PUBLIC_SUPABASE_URL": "https://YOUR_PROJECT_REF.supabase.co",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY": "public-anon-key-placeholder",
+        "NEXT_PUBLIC_SUPABASE_PROJECT_REF": "YOUR_PROJECT_REF"
+      }
     }
   ]
 }

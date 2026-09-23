@@ -7,6 +7,7 @@ import {
   SEGMENT_PRACTICE_TRACES,
 } from '../src/features/bronchial-branch-tracing/content/practice'
 import { traceById } from '../src/features/bronchial-branch-tracing/geometry/native-ct'
+import { displayAnswerLabel } from '../src/features/bronchial-branch-tracing/engine/branch-identity'
 
 const base = '/en/learn/anatomy/branch-tracing'
 const evidence = '/tmp/bronchial-flow-evidence'
@@ -66,9 +67,11 @@ async function markLocal(
   firstMark = false,
 ) {
   for (const [i, point] of exercise.answerPoints.entries()) {
+    // BBT-PRE-REVIEW-03: the slot is named by its neutral identity (Daughter A · RMSB).
+    const label = displayAnswerLabel(exercise.trace.checkpoints[0], i, point.label)
     await button(
       page,
-      new RegExp(`^${point.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} · slice`),
+      new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} · slice`),
     ).click()
     // Harness fix (BBT-01): the slot button reaches the viewer one render later, and Enter pressed
     // while the previous slice was still shown placed no mark. The race also fails on baseline
@@ -584,7 +587,9 @@ test('native marks keep their identity across display transforms, zoom and resum
   await page.getByText('Image details, orientation and controls', { exact: true }).click()
   await page.getByRole('slider', { name: 'CT magnification' }).fill('1.6')
   await page.reload()
-  await expect(page.locator('[data-current-task] [data-now-primary]')).toHaveText(/^Mark B/)
+  await expect(page.locator('[data-current-task] [data-now-primary]')).toHaveText(
+    /^Mark Daughter B/,
+  )
   await page.getByText('Image details, orientation and controls', { exact: true }).click()
   await expect(page.getByRole('slider', { name: 'CT magnification' })).toHaveValue('1.6')
   await expect(circle).toBeVisible()
@@ -913,10 +918,11 @@ test('overlay labels stay apart on the crowded first division and can be hidden'
   await page.setViewportSize({ width: 1427, height: 1226 })
   await startLocal(page, 'continuity')
   const exercise = localExercise(LESSONS[2].exercises![0])
-  for (const point of exercise.answerPoints) {
+  for (const [i, point] of exercise.answerPoints.entries()) {
+    const label = displayAnswerLabel(exercise.trace.checkpoints[0], i, point.label)
     await button(
       page,
-      new RegExp(`^${point.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} · slice`),
+      new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} · slice`),
     ).click()
     await expect(
       page.getByText(`Slice ${point.slice} · patient directions`, { exact: false }).first(),
@@ -1044,3 +1050,452 @@ for (const [width, height] of [
       releaseLatest()
     }
   })
+
+// BBT-PRE-REVIEW-03 — CT-to-parent-view teaching: the paired model camera is discoverable from
+// Lesson 2 without an answer, its captions keep the CT display and the modelled camera apart,
+// opening letters are drawn only where a daughter's model point is really in line of sight, the
+// matching diagram is legible with the CT letters, and intermediate demonstration planes carry
+// model course locators. Nothing here records a mark or changes a coordinate.
+const scopeColumn = (page: Page) => page.locator('[data-paired-scope-column]')
+const scopeCanvas = (page: Page) => scopeColumn(page).locator('canvas')
+async function openParentViewIfHidden(page: Page) {
+  const show = button(page, 'Show parent airway view')
+  if (await show.isVisible()) await show.click()
+  await expect(scopeColumn(page)).toBeVisible()
+}
+
+for (const [width, height] of [
+  [1427, 1226],
+  [390, 844],
+])
+  test(`Lesson 2 pairs the CT with the fixed parent airway view before any answer at ${width}×${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height })
+    await page.goto(`${base}/learn?lesson=orientation`)
+    await ctReady(page)
+    await expect(scopeColumn(page)).toBeVisible()
+    await expect(scopeCanvas(page)).toBeVisible({ timeout: 30000 })
+    await expect(page.locator('[data-scope-caption]')).toContainText(
+      'looking caudally along Trachea. Reference roll for this region: anterior at the top of the view.',
+    )
+    await expect(page.locator('[data-display-caption]')).toContainText(
+      'CT display: Standard axial (A up, R screen-left)',
+    )
+    await expect(page.locator('[data-scope-caption]')).not.toContainText(/always/i)
+    await capture(page, `bbt03-L2-context-${width}x${height}`)
+    await focusAirway(page)
+    await expect(page.locator('[data-comparison-scope]')).toBeVisible()
+    await expect(page.locator('[data-comparison-scope] canvas')).toBeVisible({ timeout: 30000 })
+    await expect(page.locator('[data-comparison-scope-caption]')).toContainText(
+      'renders the same whichever CT display you choose',
+    )
+    const before = await page
+      .locator('[data-comparison-copy] image')
+      .evaluateAll((els) => els.map((e) => e.parentElement!.getAttribute('transform')))
+    await button(page, 'Compare with the caudal tracing view').click()
+    await expect(page.locator('[data-comparison-ready]')).toHaveAttribute(
+      'data-comparison-ready',
+      'true',
+    )
+    const after = await page
+      .locator('[data-comparison-copy] image')
+      .evaluateAll((els) => els.map((e) => e.parentElement!.getAttribute('transform')))
+    expect(after[0]).toBe(before[0])
+    expect(after[1]).not.toBe(before[1])
+    await expect(page.locator('[data-comparison-scope] canvas')).toBeVisible()
+    await expect(page.locator('[data-symmetric-note]')).toContainText('nearly round, midline lumen')
+    await capture(page, `bbt03-L2-compare-${width}x${height}`)
+    await button(page, 'Apply this to the same airway').click()
+    await ctReady(page)
+    await expect(scopeColumn(page)).toBeVisible()
+    await expect(page.locator('[data-display-caption]')).toContainText(
+      'CT display: Left–right reflection (A up, L screen-left)',
+    )
+    await expect(page.locator('[data-scope-caption]')).toContainText(
+      'looking caudally along Trachea',
+    )
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+    const saved = await draft(page, 'orientation')
+    expect(saved.marks).toEqual([null])
+    expect(saved.history).toEqual({})
+    await capture(page, `bbt03-L2-demo-${width}x${height}`)
+  })
+
+test('CT transforms leave the modelled parent camera unchanged while a real mark keeps its native pixels', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  await startLocal(page, 'continuity')
+  await openParentViewIfHidden(page)
+  await expect(scopeCanvas(page)).toBeVisible({ timeout: 30000 })
+  await button(page, 'Go to response slice').click()
+  await ctReady(page)
+  await page.getByRole('group', { name: /^CT image\./ }).press('Enter')
+  const placed = (await draft(page, 'continuity')).marks[0]
+  expect(placed.pixel).not.toBeNull()
+  const pose = await scopeColumn(page).getAttribute('data-scope-pose')
+  expect(pose).toMatch(/^[-\d.,]+\|[-\d.,]+\|[-\d.,]+$/)
+  await page.getByText('More orientation controls').click()
+  const preset = () => page.locator('[data-preset]').getAttribute('data-preset')
+  const display = () => page.locator('[data-display-caption]').textContent()
+  const standardCaption = await display()
+  for (const [name, expected] of [
+    [/Rotate 90° left/, 'rul'],
+    [/Rotate 90° right/, 'standard'],
+    [/Rotate 90° right/, 'upper-division'],
+    [/Flip left–right/, 'custom'],
+  ] as const) {
+    await button(page, name).click()
+    expect(await preset()).toBe(expected)
+    expect(await scopeColumn(page).getAttribute('data-scope-pose')).toBe(pose)
+    expect((await draft(page, 'continuity')).marks[0]).toEqual(placed)
+  }
+  expect(await display()).not.toBe(standardCaption)
+  await button(page, 'Return to standard axial').click()
+  expect(await preset()).toBe('standard')
+  expect(await display()).toBe(standardCaption)
+  expect(await scopeColumn(page).getAttribute('data-scope-pose')).toBe(pose)
+  expect((await draft(page, 'continuity')).marks[0]).toEqual(placed)
+  await capture(page, 'bbt03-transform-invariance')
+})
+
+test('opening letters in the paired view follow real line of sight, stay apart and inside the view, and are withheld while a matching try is open', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  await startLocal(page, 'continuity')
+  await markLocal(page, localExercise(LESSONS[2].exercises![0]), true)
+  await parentApplication(page)
+  await expect(scopeColumn(page)).toBeVisible()
+  await expect(scopeCanvas(page)).toBeVisible({ timeout: 30000 })
+  await expect(page.locator('[data-scope-annotations-drawn]')).toBeVisible({ timeout: 30000 })
+  const drawn = await page
+    .locator('[data-scope-annotations-drawn]')
+    .getAttribute('data-scope-annotations-drawn')
+  expect(Number(drawn)).toBeGreaterThan(0)
+  const boxes = await page.evaluate(() => {
+    const svg = document.querySelector('[data-scope-annotations-drawn]')!
+    const host = svg.parentElement!.getBoundingClientRect()
+    return {
+      host: { x: host.x, y: host.y, w: host.width, h: host.height },
+      texts: Array.from(svg.querySelectorAll('text')).map((t) => {
+        const r = t.getBoundingClientRect()
+        return { text: t.textContent, x: r.x, y: r.y, w: r.width, h: r.height }
+      }),
+    }
+  })
+  expect(boxes.texts.length).toBe(Number(drawn))
+  for (const t of boxes.texts) {
+    expect(t.h).toBeGreaterThanOrEqual(12)
+    expect(t.x).toBeGreaterThanOrEqual(boxes.host.x - 1)
+    expect(t.x + t.w).toBeLessThanOrEqual(boxes.host.x + boxes.host.w + 1)
+    expect(t.y).toBeGreaterThanOrEqual(boxes.host.y - 1)
+    expect(t.y + t.h).toBeLessThanOrEqual(boxes.host.y + boxes.host.h + 1)
+  }
+  for (let i = 0; i < boxes.texts.length; i++)
+    for (let j = i + 1; j < boxes.texts.length; j++) {
+      const a = boxes.texts[i],
+        b = boxes.texts[j]
+      const overlap = a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
+      expect(overlap).toBe(false)
+    }
+  await expect(page.locator('[data-scope-annotations]')).toContainText(
+    /model locator seen through the opening|not in line of sight|outside this view/,
+  )
+  // The letters match the CT labels and the diagram letters.
+  expect(boxes.texts.map((t) => t.text).sort()).toEqual(['A · RMSB', 'B · LMSB'])
+  await expect(page.locator('[data-parent-map] [data-opening-letter]')).toHaveCount(2)
+  await capture(page, 'bbt03-L3-parent-view-letters')
+  await button(page, 'Next example: LLL').click()
+  await markLocal(page, localExercise(LESSONS[2].exercises![1]))
+  await button(page, 'Continue to branch matching').click()
+  await finishPendingIntroduction(page)
+  await expect(button(page, 'Opening 1')).toBeVisible()
+  await expect(scopeColumn(page)).toBeVisible()
+  await expect(scopeCanvas(page)).toBeVisible({ timeout: 30000 })
+  await expect(page.locator('[data-scope-annotations-drawn]')).toHaveCount(0)
+  await expect(page.locator('[data-parent-map] [data-opening-letter]')).toHaveCount(0)
+  await button(page, 'Show the labels').click()
+  await expect(page.locator('[data-parent-map] [data-opening-letter]')).toHaveCount(2)
+  await expect(page.locator('[data-scope-annotations]')).toContainText(
+    /model locator seen through the opening|not in line of sight|outside this view/,
+    { timeout: 30000 },
+  )
+  expect((await draft(page, 'continuity')).viewAnswer).toBeNull()
+  await capture(page, 'bbt03-L3-independent-labels')
+})
+
+for (const [width, height] of [
+  [1427, 1226],
+  [390, 844],
+])
+  test(`the branch-matching diagram is legible and names identities at ${width}×${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height })
+    await startLocal(page, 'continuity')
+    await markLocal(page, localExercise(LESSONS[2].exercises![0]))
+    await parentApplication(page)
+    const map = page.locator('[data-parent-map="junction-1"]')
+    await expect(map).toBeVisible()
+    const measured = await map.evaluate((figure) => {
+      const svg = figure.querySelector('svg')!.getBoundingClientRect()
+      const axes = Array.from(figure.querySelectorAll('[data-axis-label]')).map((t) => ({
+        text: t.textContent,
+        h: t.getBoundingClientRect().height,
+      }))
+      const letters = figure.querySelectorAll('[data-opening-letter]').length
+      return { svg: svg.width, axes, letters }
+    })
+    expect(measured.svg).toBeGreaterThanOrEqual(width < 500 ? 280 : 300)
+    expect(measured.letters).toBe(2)
+    expect(measured.axes.map((a) => a.text).sort()).toEqual(['A', 'L', 'P', 'R'])
+    for (const axis of measured.axes) expect(axis.h).toBeGreaterThanOrEqual(16)
+    await expect(map.locator('[data-along-view="S–I"]')).toContainText(
+      'runs along the line of sight',
+    )
+    await expect(map.locator('[data-opening-legend]')).toHaveCount(2)
+    await expect(map).toContainText(
+      /Opening [12] · Daughter A · RMSB \(source label “more right”\)/,
+    )
+    await expect(map).toContainText(/slices caudal of the parent point/)
+    await expect(map.locator('figcaption')).toContainText(
+      'Reference roll for this region: anterior at the top of the view',
+    )
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+    await map.scrollIntoViewIfNeeded()
+    await capture(page, `bbt03-L3-diagram-${width}x${height}`)
+  })
+
+test('intermediate demonstration planes carry dotted model course locators only where the source edge crosses', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  await page.goto(`${base}/learn?lesson=continuity`)
+  await ctReady(page)
+  await finishPendingIntroduction(page)
+  await expect(page.locator('[data-teaching-overlay]')).toHaveCount(1)
+  await expect(page.locator('[data-course-locator]')).toHaveCount(0)
+  await button(page, 'Next demonstration slice').click()
+  await ctReady(page)
+  await button(page, 'Next demonstration slice').click()
+  await ctReady(page)
+  await expect(page.locator('[data-course-locator]').first()).toBeVisible()
+  await expect(page.locator('[data-course-locator] text')).toHaveCount(0)
+  await expect(page.getByRole('region', { name: 'CT demonstration controls' })).toContainText(
+    'Dotted gold crosshair: where the model centreline of Parent · Trachea crosses this plane',
+  )
+  await expect(page.locator('[data-course-legend]')).toBeVisible()
+  await capture(page, 'bbt03-L3-course-locator')
+  await button(page, 'Hide overlays').click()
+  await expect(page.locator('[data-course-locator]')).toHaveCount(0)
+  await button(page, 'Show overlays').click()
+  await expect(page.locator('[data-course-locator]').first()).toBeVisible()
+  expect((await draft(page, 'continuity')).marks).toEqual([null, null])
+})
+
+test('the RB1 source naming is stated before marking and repeated names are told apart by role and direction', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  await startLocal(page, 'vertical')
+  await expect(page.locator('[data-branch-identities="junction-14"]')).toContainText(
+    'Daughter A is labelled RB1b in this source (more anterior); Daughter B is labelled RB1a in this source (more posterior). The a/b letters follow this source’s labelling and are pending nomenclature review',
+  )
+  await expect(button(page, /^Daughter A · RB1b · slice 422/)).toBeVisible()
+  await expect(page.getByRole('heading', { name: '2. Mark Daughter A · RB1b' })).toBeVisible()
+  await capture(page, 'bbt03-L4-naming-before-marking')
+  await startLocal(page, 'horizontal-oblique')
+  await expect(button(page, /^Daughter A · RB3a · more cranial · slice 396/)).toBeVisible()
+  await expect(button(page, /^Daughter B · RB3a · more caudal · slice 384/)).toBeVisible()
+  await expect(page.locator('[data-branch-identities="junction-16"]')).toContainText(
+    'Parent · RB3a',
+  )
+  await expect(page.locator('[data-branch-identities="junction-16"]')).not.toContainText(
+    /RB3a[bc]\b/,
+  )
+  await page.locator('[data-parent-schematic] summary').click()
+  await expect(
+    page.locator('[data-parent-schematic] [data-parent-map="junction-16"]'),
+  ).toBeVisible()
+  await capture(page, 'bbt03-L7-identities')
+})
+
+// BBT-PRE-REVIEW-03 sanity repair, finding 1. A demonstration walks the same CT plane once per
+// daughter pass. Resolving the caption by slice number returned the first pass, so Daughter B's
+// pass inherited the lead-in's approach caption and Daughter A's course-locator names.
+test('a demonstration plane reached twice keeps the identity of the pass the learner is in', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  const short = localExercise(LESSONS.find((l) => l.id === 'orientation-changes')!.exercises![0])
+  const transport = page.getByRole('region', { name: 'CT demonstration controls' })
+  await page.goto(`${base}/learn?lesson=orientation-changes`)
+  await ctReady(page)
+  await button(page, 'Replay from parent').click()
+  await expect(transport).toContainText(`Demonstration slice 332 · 1 of ${short.frames.length}`)
+  await expect(transport).toContainText('Approach context, slice 332')
+  const step = async (to: number, from: number) => {
+    for (let i = from; i < to; i++) await button(page, 'Next demonstration slice').click()
+    await expect(transport).toContainText(
+      `Demonstration slice ${short.frames[to].slice} · ${to + 1} of ${short.frames.length}`,
+    )
+  }
+  // The declared LLL lead-in, where the approach and the parent both cross this plane.
+  await step(5, 0)
+  await expect(transport).toContainText(
+    'the model centreline of Approach · LLL and Parent · LB6 crosses this plane',
+  )
+  await expect(page.locator('[data-course-locator]')).toHaveCount(2)
+  await capture(page, 'bbt03r-L8-lead-in-327')
+  // Daughter B's pass crosses both planes again; nothing of the lead-in may survive.
+  await step(21, 5)
+  await expect(transport).toContainText('the model centreline of Parent · LB6 crosses this plane')
+  await expect(transport).not.toContainText('Approach · LLL')
+  await expect(page.locator('[data-course-locator]')).toHaveCount(1)
+  await step(26, 21)
+  await expect(transport).not.toContainText('Approach context, slice 332')
+  await expect(transport).toContainText(short.frames[26].caption)
+  await expect(page.locator('[data-course-locator]')).toHaveCount(0)
+  await capture(page, 'bbt03r-L8-daughter-b-pass-332')
+  expect((await draft(page, 'orientation-changes')).marks).toEqual([null, null])
+})
+
+// BBT-PRE-REVIEW-03 sanity repair, finding 2. The paired view suppresses a wall label whose
+// projected point is behind the wall and says so in a sentence beside the camera. That sentence
+// was laid out underneath an absolutely positioned, opaque canvas and could not be read.
+async function secondLb6ParentView(page: Page) {
+  const lesson = LESSONS.find((l) => l.id === 'orientation-changes')!
+  await startLocal(page, lesson.id)
+  await markLocal(page, localExercise(lesson.exercises![0]))
+  await button(page, /^Next example/).click()
+  await finishPendingIntroduction(page)
+  await ctReady(page)
+  await markLocal(page, localExercise(lesson.exercises![1]))
+  await openParentViewIfHidden(page)
+  await button(page, 'Go to B · LB6 · slice 345').click()
+  await ctReady(page)
+  await expect(scopeCanvas(page)).toBeVisible({ timeout: 60000 })
+  await expect(page.locator('[data-scope-annotations]')).toBeVisible({ timeout: 60000 })
+}
+
+for (const [width, height] of [
+  [1427, 1226],
+  [390, 844],
+  [320, 740],
+])
+  test(`the reason an occluded daughter carries no wall label is readable at ${width}×${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height })
+    await secondLb6ParentView(page)
+    // Daughter B stays off the wall: the ray cast is unchanged and only Daughter A is drawn.
+    await expect(page.locator('[data-scope-annotations-drawn]')).toHaveAttribute(
+      'data-scope-annotations-drawn',
+      '1',
+    )
+    expect(await page.locator('[data-scope-annotations-drawn] text').allTextContents()).toEqual([
+      'A · LB6',
+    ])
+    const note = page.locator('[data-scope-annotations]')
+    await expect(note).toContainText(
+      'B · LB6 is not in line of sight from this camera position (it lies behind the wall), so it is not marked.',
+    )
+    await note.scrollIntoViewIfNeeded()
+    // Rendered evidence, not a class assertion: the canvas must not answer a hit test anywhere
+    // down the sentence, and the sentence must sit inside the viewport.
+    const measured = await page.evaluate(() => {
+      const element = document.querySelector('[data-scope-annotations]') as HTMLElement
+      const rect = element.getBoundingClientRect()
+      const canvas = document.querySelector('[data-paired-scope-column] canvas')!
+      const x = rect.x + rect.width / 2
+      return {
+        rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+        canvas: canvas.getBoundingClientRect().bottom,
+        hits: [0.15, 0.5, 0.85].map((fraction) => {
+          const hit = document.elementFromPoint(x, rect.y + rect.height * fraction)
+          return Boolean(hit) && (hit === element || element.contains(hit))
+        }),
+        viewport: { width: innerWidth, height: innerHeight },
+      }
+    })
+    expect(measured.hits).toEqual([true, true, true])
+    expect(measured.rect.height).toBeGreaterThan(24)
+    expect(measured.rect.width).toBeGreaterThan(100)
+    expect(measured.rect.y).toBeGreaterThanOrEqual(0)
+    expect(measured.rect.y + measured.rect.height).toBeLessThanOrEqual(measured.viewport.height + 1)
+    // The camera keeps its own space above the sentence rather than covering it.
+    expect(measured.canvas).toBeLessThanOrEqual(measured.rect.y + 1)
+    // Reading the reason moved neither the CT nor the recorded responses.
+    await expect(
+      page.getByText('Slice 345 · patient directions', { exact: false }).first(),
+    ).toBeVisible()
+    expect(
+      (await draft(page, 'orientation-changes')).history[
+        'left-lower-returning.junction-25.integration'
+      ],
+    ).toHaveLength(1)
+    await capture(page, `bbt03r-occlusion-reason-${width}x${height}`)
+  })
+
+test('a lost WebGL context in the paired view leaves the CT and the lesson usable', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  await page.goto(`${base}/learn?lesson=orientation`)
+  await ctReady(page)
+  await expect(scopeCanvas(page)).toBeVisible({ timeout: 30000 })
+  await scopeCanvas(page).dispatchEvent('webglcontextlost', { cancelable: true })
+  await expect(page.getByRole('button', { name: 'Reload 3D view' })).toBeVisible()
+  await expect(page.getByRole('slider', { name: 'CT slice' })).toBeEnabled()
+  await expect(button(page, 'Focus on this airway')).toBeEnabled()
+  await page.getByRole('button', { name: 'Reload 3D view' }).click()
+  await expect(scopeCanvas(page)).toBeVisible({ timeout: 30000 })
+})
+
+test('the paired-view toggle is keyboard reachable with visible focus and records nothing', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  await page.goto(`${base}/learn?lesson=orientation`)
+  await ctReady(page)
+  await page.getByRole('slider', { name: 'CT slice' }).focus()
+  let reached = false
+  for (let i = 0; i < 40 && !reached; i++) {
+    await page.keyboard.press('Tab')
+    reached = await page.evaluate(
+      () => document.activeElement?.textContent?.trim() === 'Hide parent airway view',
+    )
+  }
+  expect(reached).toBe(true)
+  const focusStyle = await page.evaluate(() => {
+    const style = getComputedStyle(document.activeElement!)
+    return { outline: style.outlineStyle, width: style.outlineWidth, shadow: style.boxShadow }
+  })
+  expect(focusStyle.outline !== 'none' || focusStyle.shadow !== 'none').toBe(true)
+  await page.keyboard.press('Enter')
+  await expect(scopeColumn(page)).toHaveCount(0)
+  expect(await page.evaluate(() => document.activeElement?.textContent?.trim())).toBe(
+    'Show parent airway view',
+  )
+  await page.keyboard.press('Space')
+  await expect(scopeColumn(page)).toBeVisible()
+  expect((await draft(page, 'orientation')).marks).toEqual([null])
+})
+
+test('200 percent root text keeps the Lesson 2 comparison and its parent airway view without horizontal overflow', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 720 })
+  await page.goto(`${base}/learn?lesson=orientation`)
+  await ctReady(page)
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '200%'
+  })
+  await expect(page.locator('[data-enlarged-text="true"]')).toBeVisible()
+  await focusAirway(page)
+  await expect(page.locator('[data-comparison-scope]')).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+  await capture(page, 'bbt03-L2-200-percent')
+})

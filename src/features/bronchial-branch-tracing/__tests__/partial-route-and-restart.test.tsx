@@ -217,7 +217,7 @@ describe('BBTF-22 and BBTF-23 · restart asks first and stops claiming a stale d
     imageReady()
     fireEvent.click(screen.getByRole('button', { name: 'Start marking branches' }))
     imageReady()
-    fireEvent.click(screen.getByRole('button', { name: /^A · RMSB · slice 387/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Daughter A · RMSB · slice 387/ }))
     imageReady()
     markOnCt()
     const key = `${DRAFT_PREFIX}learn.continuity`
@@ -250,7 +250,7 @@ describe('BBTF-22 and BBTF-23 · restart asks first and stops claiming a stale d
     imageReady()
     fireEvent.click(screen.getByRole('button', { name: 'Start marking branches' }))
     imageReady()
-    fireEvent.click(screen.getByRole('button', { name: /^A · RMSB · slice 387/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Daughter A · RMSB · slice 387/ }))
     imageReady()
     markOnCt()
     // Reopen with a reflected display saved in the draft, as the reported session did.

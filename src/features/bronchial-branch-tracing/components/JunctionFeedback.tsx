@@ -8,6 +8,7 @@ import {
   type JunctionFeedbackPacket,
 } from '../content/junction-feedback'
 import { compareMarks, type MarkComparison } from '../engine/junction-feedback'
+import { displayAnswerLabel } from '../engine/branch-identity'
 import styles from './branch-tracing.module.css'
 
 const mm = (value: number) => `${value.toFixed(1)} mm`
@@ -73,7 +74,8 @@ export function JunctionFeedback({
           return (
             <li key={c.slot} data-mark-status={c.status}>
               <strong>
-                {c.label} · slice {c.slice}.
+                {displayAnswerLabel(exercise.trace.checkpoints[0], c.slot, c.label)} · slice{' '}
+                {c.slice}.
               </strong>{' '}
               {positionSentence(c)}
               {sibling ? ` ${sibling}` : ''}
@@ -192,9 +194,10 @@ export function JunctionFeedback({
             <button onClick={() => onGoToSlice(anchorSlice)}>
               Go to the parent slice {anchorSlice}
             </button>
-            {exercise.answerPoints.map((p) => (
+            {exercise.answerPoints.map((p, i) => (
               <button key={p.slice} onClick={() => onGoToSlice(p.slice)}>
-                Go to {p.label} · slice {p.slice}
+                Go to {displayAnswerLabel(exercise.trace.checkpoints[0], i, p.label)} · slice{' '}
+                {p.slice}
               </button>
             ))}
           </p>

@@ -1,8 +1,11 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
 import type { CtMark, CtTrace, CtViewerState } from '../content/ct-types'
+import type { Vec3 } from '../geometry/coordinates'
 import { nativeImageUrl } from '../geometry/native-ct'
+import { parentCameraCaption } from '../geometry/reference-frames'
 import {
   orientedPixel,
   orientationLabels,
@@ -12,6 +15,23 @@ import {
   type CtOrientation,
 } from '../geometry/orientation'
 import styles from './branch-tracing.module.css'
+
+const ClinicalAirwayView = dynamic(
+  () => import('./ClinicalAirwayView').then((m) => m.ClinicalAirwayView),
+  {
+    ssr: false,
+    loading: () => <p role="status">Loading virtual bronchoscopy…</p>,
+  },
+)
+
+/** The modelled parent camera at the anchor plane; a fixed reference beside the two CT copies. */
+export interface ComparisonScope {
+  position: Vec3
+  direction: Vec3
+  up: Vec3
+  atJunction: boolean
+  airwayCode: string
+}
 
 /** An explanatory observer reference. It never changes the live camera or patient. */
 export function ObserverReference() {
@@ -62,16 +82,21 @@ export function CtViewpointComparison({
   marks,
   orientation,
   onReadyChange,
+  scope,
 }: {
   trace: CtTrace
   view: CtViewerState
   marks: (CtMark | null)[]
   orientation: CtOrientation
   onReadyChange: (ready: boolean) => void
+  /** When supplied, the fixed parent airway view is shown beside the two CT copies. */
+  scope?: ComparisonScope
 }) {
   const [loaded, setLoaded] = useState<boolean[]>([false, false])
   const [failed, setFailed] = useState(false)
   const [retry, setRetry] = useState(0)
+  const [showScope, setShowScope] = useState(true)
+  const scopeShown = Boolean(scope) && showScope
   const center = view.full ? [255.5, 255.5] : trace.anchor.pixel
   const size = (view.full ? 512 : 110) / view.magnification
   const url = nativeImageUrl(view.slice)
@@ -83,7 +108,7 @@ export function CtViewpointComparison({
       data-comparison-slice={view.slice}
       data-comparison-ready={loaded.every(Boolean) && !failed}
     >
-      <div className={styles.comparisonImages}>
+      <div className={`${styles.comparisonImages} ${scopeShown ? styles.comparisonWithScope : ''}`}>
         {[STANDARD_ORIENTATION, orientation].map((display, i) => {
           const labels = orientationLabels(display)
           return (
@@ -157,7 +182,33 @@ export function CtViewpointComparison({
             </figure>
           )
         })}
+        {scope && scopeShown && (
+          <figure data-comparison-scope>
+            <figcaption>
+              <strong>Parent airway view</strong>
+              <br />
+              Fixed model camera · does not change with the CT display
+            </figcaption>
+            <div className={styles.comparisonScope}>
+              <ClinicalAirwayView
+                paired
+                position={scope.position}
+                direction={scope.direction}
+                referenceUp={scope.up}
+                roll={0}
+                slice={view.slice}
+              />
+            </div>
+          </figure>
+        )}
       </div>
+      {scope && (
+        <p className={styles.walkthroughControls}>
+          <button aria-pressed={scopeShown} onClick={() => setShowScope((value) => !value)}>
+            {scopeShown ? 'Hide parent airway view' : 'Show parent airway view'}
+          </button>
+        </p>
+      )}
       {failed ? (
         <p role="alert">
           The comparison CT could not load.{' '}
@@ -179,6 +230,12 @@ export function CtViewpointComparison({
         model landmark. The comparison changes only the CT display; the patient and virtual camera
         stay fixed.
       </p>
+      {scope && (
+        <p data-comparison-scope-caption>
+          {parentCameraCaption(scope, scope.airwayCode)} It is a CT-derived model surface, not
+          recorded bronchoscopy, and it renders the same whichever CT display you choose.
+        </p>
+      )}
     </section>
   )
 }

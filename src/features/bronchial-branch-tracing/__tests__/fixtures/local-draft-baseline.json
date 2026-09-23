@@ -1,0 +1,111 @@
+{
+  "base": "2124cd0f3483db6534ab65bf6dd3730b59fee463",
+  "signatures": {
+    "follow-one-airway": "c6-local-teaching-r1.95260c11",
+    "orientation": "c6-local-teaching-r1.9fd5eccd",
+    "continuity": "c6-local-teaching-r1.71168219",
+    "vertical": "c6-local-teaching-r1.e1832196",
+    "horizontal-horizontal": "c6-local-teaching-r1.775e75c0",
+    "horizontal-vertical": "c6-local-teaching-r1.c31265d3",
+    "horizontal-oblique": "c6-local-teaching-r1.9cb27899",
+    "orientation-changes": "c6-local-teaching-r1.ed4e2f28"
+  },
+  "answers": {
+    "central-right.junction-1.same-lumen": {
+      "labels": ["Trachea"],
+      "slices": [412],
+      "frames": 5,
+      "range": [409, 419]
+    },
+    "central-left.junction-3.same-lumen": {
+      "labels": ["LMSB"],
+      "slices": [348],
+      "frames": 5,
+      "range": [345, 355]
+    },
+    "central-right.junction-1.viewpoint": {
+      "labels": ["Trachea"],
+      "slices": [412],
+      "frames": 5,
+      "range": [409, 419]
+    },
+    "central-right.junction-1.bifurcation": {
+      "labels": ["A · RMSB", "B · LMSB"],
+      "slices": [387, 387],
+      "frames": 22,
+      "range": [384, 411]
+    },
+    "left-lower-returning.junction-6.bifurcation": {
+      "labels": ["A · LB6", "B · L basal"],
+      "slices": [326, 313],
+      "frames": 34,
+      "range": [310, 335]
+    },
+    "right-upper-apical.junction-14.pattern": {
+      "labels": ["A · RB1b", "B · RB1a"],
+      "slices": [422, 424],
+      "frames": 68,
+      "range": [398, 427]
+    },
+    "right-lower-basal.junction-9.pattern": {
+      "labels": ["A · R basal", "B · RB6"],
+      "slices": [294, 309],
+      "frames": 39,
+      "range": [291, 314]
+    },
+    "middle-lobe-lateral.junction-10.pattern": {
+      "labels": ["A · RB4", "B · RB5"],
+      "slices": [307, 307],
+      "frames": 5,
+      "range": [302, 312]
+    },
+    "middle-lobe-lateral.junction-19.pattern": {
+      "labels": ["A · RB4", "B · RB4a"],
+      "slices": [307, 307],
+      "frames": 5,
+      "range": [302, 312]
+    },
+    "middle-lobe-caudal.junction-20.pattern": {
+      "labels": ["A · RB5a", "B · RB5b"],
+      "slices": [309, 301],
+      "frames": 13,
+      "range": [298, 312]
+    },
+    "middle-lobe-cranial.junction-20.pattern": {
+      "labels": ["A · RB5a", "B · RB5b"],
+      "slices": [309, 301],
+      "frames": 13,
+      "range": [298, 312]
+    },
+    "upper-oblique-lateral.junction-16.pattern": {
+      "labels": ["A · RB3a", "B · RB3a"],
+      "slices": [396, 384],
+      "frames": 25,
+      "range": [381, 399]
+    },
+    "left-upper-anterior.junction-23.pattern": {
+      "labels": ["A · LB3", "B · LB1+2"],
+      "slices": [373, 379],
+      "frames": 60,
+      "range": [353, 382]
+    },
+    "left-lower-returning.junction-11.integration": {
+      "labels": ["A · LB6", "B · LB6"],
+      "slices": [324, 334],
+      "frames": 29,
+      "range": [318, 337]
+    },
+    "left-lower-returning.junction-25.integration": {
+      "labels": ["A · LB6", "B · LB6"],
+      "slices": [337, 345],
+      "frames": 26,
+      "range": [329, 348]
+    },
+    "left-lower-returning.junction-52.integration": {
+      "labels": ["A · LB6", "B · LB6"],
+      "slices": [358, 354],
+      "frames": 44,
+      "range": [340, 361]
+    }
+  }
+}
