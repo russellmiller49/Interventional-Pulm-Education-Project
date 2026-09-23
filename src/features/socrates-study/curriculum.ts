@@ -55,13 +55,13 @@ export function orderedModuleCases(module: CurriculumModule) {
   return [...module.cases].sort((a, b) => a.position - b.position || a.id.localeCompare(b.id))
 }
 export function moduleNavigation(modules: CurriculumModule[], moduleId: string, caseId: string) {
-  const module = modules.find((m) => m.id === moduleId)
-  if (!module) return null
-  const cases = orderedModuleCases(module)
+  const selectedModule = modules.find((m) => m.id === moduleId)
+  if (!selectedModule) return null
+  const cases = orderedModuleCases(selectedModule)
   const index = cases.findIndex((c) => c.id === caseId)
   if (index < 0) return null
   return {
-    module,
+    module: selectedModule,
     current: cases[index],
     previous: cases[index - 1] ?? null,
     next: cases[index + 1] ?? null,

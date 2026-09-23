@@ -20,10 +20,7 @@ export const annotationLegendSchema = z
       .max(40),
   })
   .strict()
-  .refine((legend) => !legend.reviewed || !annotationLegendIssues(legend).length, {
-    message:
-      'A reviewed annotation key needs actual labels, six-digit colors and reviewed meanings.',
-  })
+
 export const caseContentSchema = z
   .object({
     diagnosticCategory: z.string().max(160),

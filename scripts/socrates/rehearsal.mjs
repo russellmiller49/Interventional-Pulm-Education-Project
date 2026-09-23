@@ -1,7 +1,7 @@
 // Disposable PostgreSQL only. Never connects to shared Supabase or a remote database.
 import { execFileSync, execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
@@ -202,6 +202,12 @@ try {
         root,
         'supabase/migrations/20260923040205_socrates_curriculum_narrative_import.sql',
       ),
+      'utf8',
+    ),
+  )
+  sql(
+    readFileSync(
+      path.join(root, 'supabase/migrations/20260923042038_socrates_protected_workbook_import.sql'),
       'utf8',
     ),
   )
@@ -577,6 +583,8 @@ try {
     lit,
     root,
   })
+  const { runImportChecks } = await import('./import-rehearsal.mjs')
+  await runImportChecks({ sql, rpc, asUser, ids, cid, fixture, assert, rejects, lit, root })
   process.stdout.write(`\n${checks} PostgreSQL checks passed.\n`)
   if (!process.argv.includes('--serve')) {
     cleanup()

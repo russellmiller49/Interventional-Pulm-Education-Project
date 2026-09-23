@@ -53,7 +53,15 @@ export function TrainingLesson({
       <div className={styles.grid}>
         <StudyViewer slide={initial.slide} annotations={reveal?.annotations} />
         <aside className={styles.panel} aria-label="Case teaching panel">
-          <div className={styles.eyebrow}>Step {Math.min(step + 1, 5)} of 5</div>
+          <div className={styles.eyebrow}>
+            {step === 0
+              ? 'Image inspection'
+              : narrative
+                ? step === 5
+                  ? 'Review completed'
+                  : 'Teaching review'
+                : `Step ${Math.min(step + 1, 5)} of 5`}
+          </div>
           <h2 ref={heading} tabIndex={-1}>
             {narrative && step > 0 && step < 5 ? 'Case teaching' : titles[step]}
           </h2>

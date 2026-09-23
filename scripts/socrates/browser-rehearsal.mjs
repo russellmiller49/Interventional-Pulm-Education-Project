@@ -73,7 +73,18 @@ try {
   await portFree(3119)
   await start(['scripts/socrates/rehearsal.mjs', '--serve'], 'Synthetic browser fixture listening')
     .readiness
-  await start(['scripts/socrates/start-browser-app.mjs'], 'Ready in').readiness
+  if (process.argv.includes('--production') && !process.argv.includes('--skip-build')) {
+    const build = start(['scripts/socrates/start-browser-app.mjs', '--build'])
+    await build.readiness
+    if (await completed.get(build.child)) throw new Error('Production build failed')
+  }
+  await start(
+    [
+      'scripts/socrates/start-browser-app.mjs',
+      ...(process.argv.includes('--production') ? ['--production'] : []),
+    ],
+    'Ready in',
+  ).readiness
   const test = start([
     'node_modules/@playwright/test/cli.js',
     'test',

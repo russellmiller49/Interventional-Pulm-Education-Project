@@ -58,8 +58,12 @@ test('placeholder, invalid and edited keys cannot appear reviewed; exact hex rem
   fireEvent.click(screen.getByRole('button', { name: 'Add key entry' }))
   expect(screen.getByLabelText('Annotation key reviewed')).toBeDisabled()
   expect(screen.getByText('Annotation key pending review')).toBeVisible()
-  fireEvent.change(screen.getByLabelText('Key 2 label'), { target: { value: 'Synthetic provider label' } })
-  fireEvent.change(screen.getByLabelText('Key 2 explanation'), { target: { value: 'Synthetic reviewed meaning' } })
+  fireEvent.change(screen.getByLabelText('Key 2 label'), {
+    target: { value: 'Synthetic provider label' },
+  })
+  fireEvent.change(screen.getByLabelText('Key 2 explanation'), {
+    target: { value: 'Synthetic reviewed meaning' },
+  })
   fireEvent.change(screen.getByLabelText('Key 2 color'), { target: { value: '#123' } })
   expect(screen.getByLabelText('Annotation key reviewed')).toBeDisabled()
   fireEvent.change(screen.getByLabelText('Key 2 color'), { target: { value: '#1A2b3C' } })

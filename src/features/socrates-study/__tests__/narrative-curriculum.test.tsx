@@ -124,13 +124,17 @@ function moduleFixture(): CurriculumModule {
   }
 }
 test('module order and navigation use memberships, with no cross-module fallback or duplicated case docs', () => {
-  const module = moduleFixture()
-  const other = { ...module, id: 'other', cases: [{ ...module.cases[0], position: 1 }] }
-  expect(orderedModuleCases(module).map((c) => c.position)).toEqual([1, 6])
-  const nav = moduleNavigation([module, other], 'core', module.cases[0].id)!
+  const selectedModule = moduleFixture()
+  const other = {
+    ...selectedModule,
+    id: 'other',
+    cases: [{ ...selectedModule.cases[0], position: 1 }],
+  }
+  expect(orderedModuleCases(selectedModule).map((c) => c.position)).toEqual([1, 6])
+  const nav = moduleNavigation([selectedModule, other], 'core', selectedModule.cases[0].id)!
   expect(nav.next).toBeNull()
   expect(nav.previous?.position).toBe(1)
-  expect(moduleNavigation([module], 'unknown', module.cases[0].id)).toBeNull()
+  expect(moduleNavigation([selectedModule], 'unknown', selectedModule.cases[0].id)).toBeNull()
   render(<ModuleNavigation locale="en" navigation={nav} />)
   expect(screen.getByRole('link', { name: 'Previous case in module' })).toHaveAttribute(
     'href',
@@ -139,13 +143,18 @@ test('module order and navigation use memberships, with no cross-module fallback
   expect(screen.queryByRole('link', { name: 'Next case in module' })).not.toBeInTheDocument()
 })
 test('directory separates planned/available counts and progress distinguishes opened from completed', () => {
-  const module = moduleFixture()
+  const selectedModule = moduleFixture()
   render(
-    <CurriculumDirectory locale="en" modules={[module]} cases={module.cases} progress={null} />,
+    <CurriculumDirectory
+      locale="en"
+      modules={[selectedModule]}
+      cases={selectedModule.cases}
+      progress={null}
+    />,
   )
   expect(screen.getByText('Recommended starting point')).toBeVisible()
   expect(screen.getByText('2 available / 20 planned cases')).toBeVisible()
-  const entry = module.cases[0]
+  const entry = selectedModule.cases[0]
   const progress = {
     case_id: entry.id,
     case_revision: entry.revision,

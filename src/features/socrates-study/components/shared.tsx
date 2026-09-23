@@ -57,7 +57,7 @@ export function Interpretation({ teaching }: { teaching: TeachingContent }) {
             <section key={key}>
               <h3>{['Adequacy', 'Cancer designation', 'Preliminary diagnosis'][i]}</h3>
               <strong>{teaching[key]!.designation || 'Interpretation pending review'}</strong>
-              <p>{teaching[key]!.reasoning}</p>
+              <p>{teaching[key]!.reasoning || 'Reasoning pending author review.'}</p>
             </section>
           ),
       )}

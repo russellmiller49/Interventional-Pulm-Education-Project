@@ -1,10 +1,9 @@
 // Local synthetic identity/HTTP adapter over the real rehearsal PostgreSQL/RLS.
 // No application code branches on this adapter, and no remote database is touched.
 import { createServer } from 'node:http'
-import { createHmac, timingSafeEqual } from 'node:crypto'
+import { createHmac } from 'node:crypto'
 import { writeFileSync } from 'node:fs'
-const { container, ids, cid, testCaseId, studyId, sql, lit, run, root, cleanup } =
-  globalThis.rehearsal
+const { container, ids, cid, testCaseId, studyId, sql, lit, followup } = globalThis.rehearsal
 const secret = 'socrates-disposable-rehearsal-secret-not-a-production-key'
 const base64 = (value) => Buffer.from(JSON.stringify(value)).toString('base64url')
 function token(claims) {
@@ -69,6 +68,9 @@ const allowedTables = new Set([
   'socrates_study_participants',
   'socrates_test_attempts',
   'socrates_training_progress',
+  'socrates_curriculum_modules',
+  'socrates_curriculum_memberships',
+  'socrates_import_receipts',
 ])
 const identifier = (value) => {
   if (!/^[a-z_][a-z0-9_]*$/.test(value)) throw new Error('Invalid identifier')
@@ -198,6 +200,7 @@ writeFileSync(
     testCaseId,
     studyId,
     container,
+    ...followup,
   }),
 )
 process.stdout.write(

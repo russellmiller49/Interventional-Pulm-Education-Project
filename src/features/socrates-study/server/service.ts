@@ -198,12 +198,19 @@ export async function curriculumCatalog() {
 export async function directoryProgress(): Promise<TrainingProgress[] | null> {
   try {
     const session = await requireSocratesUser()
-    const { data, error } = await session.supabase
-      .from('socrates_training_progress')
-      .select('case_id,case_revision,opened_at,revealed_at,completed_at')
-      .eq('user_id', session.user.id)
-    if (error) return null
-    return data as TrainingProgress[]
+    const rows: TrainingProgress[] = []
+    for (let offset = 0; ; offset += 1000) {
+      const { data, error } = await session.supabase
+        .from('socrates_training_progress')
+        .select('case_id,case_revision,opened_at,revealed_at,completed_at')
+        .eq('user_id', session.user.id)
+        .order('case_id')
+        .order('case_revision')
+        .range(offset, offset + 999)
+      if (error || !data) return null
+      rows.push(...(data as TrainingProgress[]))
+      if (data.length < 1000) return rows
+    }
   } catch {
     return null
   }

@@ -271,7 +271,7 @@ export function CaseContentEditor({
         <label>
           <input
             type="checkbox"
-            checked={content.annotationLegend.reviewed}
+            checked={content.annotationLegend.reviewed && !legendIssues.length}
             disabled={legendIssues.length > 0}
             onChange={(e) =>
               changeCase({
