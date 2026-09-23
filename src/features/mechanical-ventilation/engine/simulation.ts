@@ -1271,6 +1271,23 @@ function alarmDescriptors(
   return descriptors
 }
 
+/**
+ * The alarm record after one evaluation of the alarm conditions on `state`, at its
+ * `simulationTime`.
+ *
+ * `advanceSimulation` calls this once per fixed model step, so a transition is dated at the step
+ * it happened on and an alarm that rises and clears within one outer call is still recorded; the
+ * case-open epoch and `reopenAlarmEpoch` call it once at time zero. The record keeps **one entry
+ * per alarm code**, not one per episode:
+ *
+ * - a code not in the history gets an entry stamped with this step's time, its id from that second;
+ * - a code that stays active keeps its entry — id, `startedAt` and `acknowledgedAt` — every step;
+ * - a code that stops is kept in the history marked inactive, and leaves `alarms`;
+ * - a code that returns reuses its entry, first start and acknowledgement included.
+ *
+ * The history lists the active codes in evaluation order, then the inactive ones in the order the
+ * previous record held them; `alarms` is the active set ordered by priority.
+ */
 function reconcileAlarms(
   state: VentilationSimulationState,
   definition: VentilationCaseDefinition,
@@ -1360,6 +1377,18 @@ export function advanceSimulation(
    */
   let holdRecords: PerformedHoldRecord[] = [...state.holdRecords]
   const openHoldIndex = () => holdRecords.findIndex((record) => record.completedAtSeconds === null)
+  /*
+   * The alarm record is carried step to step like the rest of the model, not observed once when the
+   * call returns. It used to be reconciled only on the state this function published, so an alarm
+   * that rose and cleared inside one call was never recorded, and whether it was depended on how
+   * the caller batched time: MV-01 with PEEP 5 → 16 at 12 s raises pressure limitation for three
+   * steps (12.86–12.90 s) before high pressure replaces it — kept in the history at 1× (0.1 s calls),
+   * missing at 5× and 30× (MV-PRE-REVIEW-02 alarm-history repair).
+   */
+  let alarmRecord: Pick<VentilationSimulationState, 'alarms' | 'alarmHistory'> = {
+    alarms: state.alarms,
+    alarmHistory: state.alarmHistory,
+  }
 
   for (let index = 0; index < steps; index += 1) {
     time += actualStep
@@ -1470,6 +1499,9 @@ export function advanceSimulation(
       actualStep,
     )
     risk = boundedRisk(updateRisk(risk, { ...working, patient }, measurements, actualStep))
+    // On the state this step would publish, so the last step's evaluation is the one the call's
+    // published alarms have always come from.
+    alarmRecord = reconcileAlarms({ ...working, patient, measurements, ...alarmRecord }, definition)
     const currentSecond = Math.floor(time)
     if (currentSecond > lastTrendSecond) {
       trends.push({
@@ -1487,7 +1519,7 @@ export function advanceSimulation(
     }
   }
 
-  let next: VentilationSimulationState = {
+  const next: VentilationSimulationState = {
     ...state,
     simulationTime: time,
     patient,
@@ -1496,6 +1528,8 @@ export function advanceSimulation(
     trends,
     risk,
     holdRecords,
+    alarms: alarmRecord.alarms,
+    alarmHistory: alarmRecord.alarmHistory,
     // `ventilator`, not `state.ventilator`: a hold armed inside the loop lives on the local copy.
     ventilator: {
       ...ventilator,
@@ -1509,7 +1543,6 @@ export function advanceSimulation(
           : ventilator.manualBreathUntil,
     },
   }
-  next = { ...next, ...reconcileAlarms(next, definition) }
   return withCriticalErrors(next)
 }
 

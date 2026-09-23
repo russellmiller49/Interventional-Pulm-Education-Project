@@ -106,9 +106,10 @@ const MV05_ARMS: readonly InventoryArm[] = [
 /**
  * Everything the model carries forward, and every published output, at one model time.
  *
- * Alarm start stamps are left out on purpose: `reconcileAlarms` runs once per outer call, so an
- * alarm that starts inside a 3 s call is stamped at the call's end at 30× and within 0.1 s at 1×.
- * That is a stamp resolution, identical on the base; the alarm *set* is compared.
+ * The alarm record is compared whole — ids, start and acknowledgement stamps, active flags, order
+ * and history. It used to be reduced to the active codes because `reconcileAlarms` ran once per
+ * outer call, which dated a start by the call's end and could drop an alarm that cleared inside one
+ * call; it now runs at every fixed step (`mv-pre-review-02-alarm-history.test.ts`).
  */
 function fullState(state: VentilationSimulationState) {
   return {
@@ -121,7 +122,9 @@ function fullState(state: VentilationSimulationState) {
     holdRecords: state.holdRecords,
     risk: state.risk,
     trends: state.trends,
-    alarmCodes: state.alarms.map((alarm) => alarm.code).sort(),
+    alarms: state.alarms,
+    alarmHistory: state.alarmHistory,
+    criticalErrors: state.criticalErrors,
   }
 }
 
@@ -192,6 +195,8 @@ describe('R1 · batching invariance', () => {
         expect(other.waveforms).toEqual(outcomes[0].waveforms)
         expect(other.clock).toEqual(outcomes[0].clock)
         expect(other.holdRecords).toEqual(outcomes[0].holdRecords)
+        expect(other.alarms).toEqual(outcomes[0].alarms)
+        expect(other.alarmHistory).toEqual(outcomes[0].alarmHistory)
       }
     }
   })
