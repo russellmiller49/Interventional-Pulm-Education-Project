@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { narrativeTeaching } from './learner-narrative'
+import { curriculumSourceSchema } from './curriculum-source'
 
 const text = z.string().max(8000)
 const designation = z.object({ designation: z.string().max(300), reasoning: text }).strict()
@@ -30,6 +32,7 @@ export const caseContentSchema = z
     trainingEligible: z.boolean(),
     testingEligible: z.boolean(),
     vignette: text,
+    learnerNarrative: z.string().min(1).max(32000).optional(),
     lowMagnificationObservations: z.array(text).max(40),
     highMagnificationObservations: z.array(text).max(40),
     keyLearningPoints: z.array(text).max(40),
@@ -39,9 +42,23 @@ export const caseContentSchema = z
     annotationLegend: annotationLegendSchema,
   })
   .strict()
+  .superRefine((content, context) => {
+    if (!content.learnerNarrative) return
+    const derived = narrativeTeaching(content.learnerNarrative)
+    for (const key of Object.keys(derived) as (keyof typeof derived)[]) {
+      if (JSON.stringify(content[key]) !== JSON.stringify(derived[key]))
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [key],
+          message:
+            'Narrative is canonical. Reconcile the conflicting structured teaching field: ' + key,
+        })
+    }
+  })
 const readinessStatus = z.enum(['incomplete', 'ready', 'hold'])
 export const authorContentSchema = z
   .object({
+    curriculumSource: curriculumSourceSchema.optional(),
     internalHighlightNotes: text,
     provenanceNotes: text,
     readiness: z

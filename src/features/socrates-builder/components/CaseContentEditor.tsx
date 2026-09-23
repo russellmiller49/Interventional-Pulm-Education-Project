@@ -8,6 +8,7 @@ import {
   type CaseContent,
   type AuthorContent,
 } from '../case-content'
+import { narrativeTeaching, narrativeIssues } from '../learner-narrative'
 import styles from './socrates-builder.module.css'
 
 export function CaseContentEditor({
@@ -98,71 +99,95 @@ export function CaseContentEditor({
           Training eligible
         </label>
         {field('Case vignette', content.vignette, (vignette) => changeCase({ vignette }))}
-        {(
-          [
-            'lowMagnificationObservations',
-            'highMagnificationObservations',
-            'keyLearningPoints',
-          ] as const
-        ).map((key, i) => (
-          <div key={key}>
-            {field(
-              [
-                'Low-magnification observations (one per line)',
-                'High-magnification observations (one per line)',
-                'Key learning points (one per line)',
-              ][i],
-              content[key].join('\n'),
-              (value) => changeCase({ [key]: value ? value.split('\n') : [] }),
-            )}
-          </div>
-        ))}
-        {(['adequacy', 'cancer'] as const).map((key) => (
-          <fieldset key={key}>
-            <legend>{key === 'adequacy' ? 'Adequacy' : 'Cancer'} interpretation</legend>
-            {field(
-              `${key === 'adequacy' ? 'Adequacy' : 'Cancer'} designation`,
-              content[key].designation,
-              (designation) => changeCase({ [key]: { ...content[key], designation } }),
-              false,
-            )}
-            {field(
-              `${key === 'adequacy' ? 'Adequacy' : 'Cancer'} reasoning`,
-              content[key].reasoning,
-              (reasoning) => changeCase({ [key]: { ...content[key], reasoning } }),
-            )}
-          </fieldset>
-        ))}
-        <label>
-          <input
-            type="checkbox"
-            checked={Boolean(content.preliminaryDiagnosis)}
-            onChange={(e) =>
-              changeCase({
-                preliminaryDiagnosis: e.target.checked ? { designation: '', reasoning: '' } : null,
-              })
-            }
-          />{' '}
-          Include preliminary diagnosis
-        </label>
-        {content.preliminaryDiagnosis && (
+        {content.learnerNarrative !== undefined ? (
           <>
+            <h3>Verbatim learner narrative</h3>
+            <p>
+              This complete narrative appears after reveal. Its headings and paragraphs are
+              preserved. Classification fields follow only the explicitly labeled source text. The
+              original workbook cells remain in protected author metadata.
+            </p>
             {field(
-              'Preliminary diagnosis',
-              content.preliminaryDiagnosis.designation,
-              (designation) =>
-                changeCase({
-                  preliminaryDiagnosis: { ...content.preliminaryDiagnosis!, designation },
-                }),
-              false,
+              'Learner narrative (after reveal)',
+              content.learnerNarrative,
+              (learnerNarrative) =>
+                changeCase({ learnerNarrative, ...narrativeTeaching(learnerNarrative) }),
             )}
-            {field(
-              'Preliminary diagnosis reasoning',
-              content.preliminaryDiagnosis.reasoning,
-              (reasoning) =>
-                changeCase({
-                  preliminaryDiagnosis: { ...content.preliminaryDiagnosis!, reasoning },
-                }),
+            {narrativeIssues(content.learnerNarrative).map((issue) => (
+              <p key={issue}>{issue}</p>
+            ))}
+          </>
+        ) : (
+          <>
+            {(
+              [
+                'lowMagnificationObservations',
+                'highMagnificationObservations',
+                'keyLearningPoints',
+              ] as const
+            ).map((key, i) => (
+              <div key={key}>
+                {field(
+                  [
+                    'Low-magnification observations (one per line)',
+                    'High-magnification observations (one per line)',
+                    'Key learning points (one per line)',
+                  ][i],
+                  content[key].join('\n'),
+                  (value) => changeCase({ [key]: value ? value.split('\n') : [] }),
+                )}
+              </div>
+            ))}
+            {(['adequacy', 'cancer'] as const).map((key) => (
+              <fieldset key={key}>
+                <legend>{key === 'adequacy' ? 'Adequacy' : 'Cancer'} interpretation</legend>
+                {field(
+                  `${key === 'adequacy' ? 'Adequacy' : 'Cancer'} designation`,
+                  content[key].designation,
+                  (designation) => changeCase({ [key]: { ...content[key], designation } }),
+                  false,
+                )}
+                {field(
+                  `${key === 'adequacy' ? 'Adequacy' : 'Cancer'} reasoning`,
+                  content[key].reasoning,
+                  (reasoning) => changeCase({ [key]: { ...content[key], reasoning } }),
+                )}
+              </fieldset>
+            ))}
+            <label>
+              <input
+                type="checkbox"
+                checked={Boolean(content.preliminaryDiagnosis)}
+                onChange={(e) =>
+                  changeCase({
+                    preliminaryDiagnosis: e.target.checked
+                      ? { designation: '', reasoning: '' }
+                      : null,
+                  })
+                }
+              />{' '}
+              Include preliminary diagnosis
+            </label>
+            {content.preliminaryDiagnosis && (
+              <>
+                {field(
+                  'Preliminary diagnosis',
+                  content.preliminaryDiagnosis.designation,
+                  (designation) =>
+                    changeCase({
+                      preliminaryDiagnosis: { ...content.preliminaryDiagnosis!, designation },
+                    }),
+                  false,
+                )}
+                {field(
+                  'Preliminary diagnosis reasoning',
+                  content.preliminaryDiagnosis.reasoning,
+                  (reasoning) =>
+                    changeCase({
+                      preliminaryDiagnosis: { ...content.preliminaryDiagnosis!, reasoning },
+                    }),
+                )}
+              </>
             )}
           </>
         )}

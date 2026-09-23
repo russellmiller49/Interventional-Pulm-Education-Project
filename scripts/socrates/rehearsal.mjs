@@ -196,6 +196,15 @@ try {
   )
   // Both historical migrations run unchanged, followed by the additive migration.
   sql(migration)
+  sql(
+    readFileSync(
+      path.join(
+        root,
+        'supabase/migrations/20260923040205_socrates_curriculum_narrative_import.sql',
+      ),
+      'utf8',
+    ),
+  )
   sql(`insert into auth.users(id,email_confirmed_at) values ${Object.values(ids)
     .map((id) => `(${lit(id)},now())`)
     .join(',')};
@@ -555,6 +564,19 @@ try {
     `update public.socrates_case_readiness set technical_hold=false where case_id=${lit(testSaved.recordId)}`,
   )
   rpc(ids.admin, 'socrates_set_study_active', { sid, enabled: true })
+  const { runFollowupChecks } = await import('./followup-rehearsal.mjs')
+  const followup = await runFollowupChecks({
+    sql,
+    rpc,
+    asUser,
+    ids,
+    cid,
+    fixture,
+    assert,
+    rejects,
+    lit,
+    root,
+  })
   process.stdout.write(`\n${checks} PostgreSQL checks passed.\n`)
   if (!process.argv.includes('--serve')) {
     cleanup()
@@ -575,6 +597,7 @@ try {
     fixture,
     cleanup,
     checks,
+    followup,
   }
   await import('./serve-fixture.mjs')
 } catch (error) {

@@ -16,6 +16,7 @@ export interface CatalogCase {
   revision: number
 }
 export interface TeachingContent {
+  learnerNarrative?: string
   lowMagnificationObservations: string[]
   highMagnificationObservations: string[]
   keyLearningPoints: string[]
@@ -89,6 +90,7 @@ export function teachingProjection(document: SocratesCaseDocument): TeachingCont
   const c = document.caseContent
   const result = (d: typeof c.adequacy) => ({ designation: d.designation, reasoning: d.reasoning })
   return {
+    ...(c.learnerNarrative !== undefined ? { learnerNarrative: c.learnerNarrative } : {}),
     lowMagnificationObservations: [...c.lowMagnificationObservations],
     highMagnificationObservations: [...c.highMagnificationObservations],
     keyLearningPoints: [...c.keyLearningPoints],

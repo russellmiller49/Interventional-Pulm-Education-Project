@@ -31,6 +31,7 @@ export function TrainingLesson({
   useEffect(() => {
     if (step > 0) heading.current?.focus()
   }, [step])
+  const narrative = reveal?.teaching.learnerNarrative
   const titles = [
     'Inspect the image',
     'Low magnification',
@@ -54,7 +55,7 @@ export function TrainingLesson({
         <aside className={styles.panel} aria-label="Case teaching panel">
           <div className={styles.eyebrow}>Step {Math.min(step + 1, 5)} of 5</div>
           <h2 ref={heading} tabIndex={-1}>
-            {titles[step]}
+            {narrative && step > 0 && step < 5 ? 'Case teaching' : titles[step]}
           </h2>
           <section>
             <h3>Case vignette</h3>
@@ -69,74 +70,89 @@ export function TrainingLesson({
                 : 'Reveal teaching interpretation'}
             </button>
           )}
-          {reveal && step > 0 && (
-            <>
-              {step === 1 && (
-                <>
-                  {!reveal.teaching.lowMagnificationObservations.some(Boolean) && (
-                    <p>Low-magnification observations pending author review.</p>
-                  )}
-                  <ul>
-                    {reveal.teaching.lowMagnificationObservations.filter(Boolean).map((text, i) => (
-                      <li key={i}>{text}</li>
-                    ))}
-                  </ul>
-                  <button type="button" onClick={() => setStep(2)}>
-                    Continue to high magnification
+          {reveal &&
+            step > 0 &&
+            (narrative ? (
+              <>
+                <div className={styles.narrative} data-testid="learner-narrative">
+                  {narrative}
+                </div>
+                {onComplete && step !== 5 && (
+                  <button type="button" disabled={busy} onClick={onComplete}>
+                    Mark case completed
                   </button>
-                </>
-              )}
-              {step === 2 && (
-                <>
-                  {!reveal.teaching.highMagnificationObservations.some(Boolean) && (
-                    <p>High-magnification observations pending author review.</p>
-                  )}
-                  <ul>
-                    {reveal.teaching.highMagnificationObservations
-                      .filter(Boolean)
-                      .map((text, i) => (
+                )}
+              </>
+            ) : (
+              <>
+                {step === 1 && (
+                  <>
+                    {!reveal.teaching.lowMagnificationObservations.some(Boolean) && (
+                      <p>Low-magnification observations pending author review.</p>
+                    )}
+                    <ul>
+                      {reveal.teaching.lowMagnificationObservations
+                        .filter(Boolean)
+                        .map((text, i) => (
+                          <li key={i}>{text}</li>
+                        ))}
+                    </ul>
+                    <button type="button" onClick={() => setStep(2)}>
+                      Continue to high magnification
+                    </button>
+                  </>
+                )}
+                {step === 2 && (
+                  <>
+                    {!reveal.teaching.highMagnificationObservations.some(Boolean) && (
+                      <p>High-magnification observations pending author review.</p>
+                    )}
+                    <ul>
+                      {reveal.teaching.highMagnificationObservations
+                        .filter(Boolean)
+                        .map((text, i) => (
+                          <li key={i}>{text}</li>
+                        ))}
+                    </ul>
+                    <button type="button" onClick={() => setStep(3)}>
+                      Continue to interpretation
+                    </button>
+                  </>
+                )}
+                {step === 3 && (
+                  <>
+                    <Interpretation teaching={reveal.teaching} />
+                    <button type="button" onClick={() => setStep(4)}>
+                      Review learning points
+                    </button>
+                  </>
+                )}
+                {step >= 4 && (
+                  <>
+                    {!reveal.teaching.keyLearningPoints.some(Boolean) && (
+                      <p>Key learning points pending author review.</p>
+                    )}
+                    <ul>
+                      {reveal.teaching.keyLearningPoints.filter(Boolean).map((text, i) => (
                         <li key={i}>{text}</li>
                       ))}
-                  </ul>
-                  <button type="button" onClick={() => setStep(3)}>
-                    Continue to interpretation
-                  </button>
-                </>
-              )}
-              {step === 3 && (
-                <>
-                  <Interpretation teaching={reveal.teaching} />
-                  <button type="button" onClick={() => setStep(4)}>
-                    Review learning points
-                  </button>
-                </>
-              )}
-              {step >= 4 && (
-                <>
-                  {!reveal.teaching.keyLearningPoints.some(Boolean) && (
-                    <p>Key learning points pending author review.</p>
-                  )}
-                  <ul>
-                    {reveal.teaching.keyLearningPoints.filter(Boolean).map((text, i) => (
-                      <li key={i}>{text}</li>
-                    ))}
-                  </ul>
-                  {step === 4 && onComplete && (
-                    <button type="button" disabled={busy} onClick={() => onComplete?.()}>
-                      Mark case completed
+                    </ul>
+                    {step === 4 && onComplete && (
+                      <button type="button" disabled={busy} onClick={() => onComplete?.()}>
+                        Mark case completed
+                      </button>
+                    )}
+                  </>
+                )}
+                {step > 1 && (
+                  <p>
+                    <button type="button" onClick={() => setStep(step === 5 ? 1 : step - 1)}>
+                      Review previous step
                     </button>
-                  )}
-                </>
-              )}
-              {step > 1 && (
-                <p>
-                  <button type="button" onClick={() => setStep(step === 5 ? 1 : step - 1)}>
-                    Review previous step
-                  </button>
-                </p>
-              )}
-            </>
-          )}
+                  </p>
+                )}
+              </>
+            ))}
           <AnnotationKey legend={reveal?.legend ?? initial.legend} />
           {error && (
             <p role="alert" className={styles.error}>

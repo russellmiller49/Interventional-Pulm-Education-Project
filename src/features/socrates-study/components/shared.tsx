@@ -47,6 +47,8 @@ export function AnnotationKey({ legend }: { legend: AnnotationLegend }) {
   )
 }
 export function Interpretation({ teaching }: { teaching: TeachingContent }) {
+  if (teaching.learnerNarrative)
+    return <div className={styles.narrative}>{teaching.learnerNarrative}</div>
   return (
     <>
       {(['adequacy', 'cancer', 'preliminaryDiagnosis'] as const).map(
