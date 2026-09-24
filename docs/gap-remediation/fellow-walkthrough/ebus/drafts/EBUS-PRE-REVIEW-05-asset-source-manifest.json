@@ -3,7 +3,61 @@
   "task": "EBUS-PRE-REVIEW-05 — documentation-only owner decision preparation",
   "generated": "2026-09-23",
   "baseline": "85acc113be11f9acbd395f49e00fee4b69ceff71",
-  "reviewPolicy": "Every decision object is NOT REVIEWED with reviewer and reviewDate null. Workflow statuses are not clinical approval. The AI walkthrough is an observation source, not clinical validation.",
+  "reviewPolicy": "Most decision objects remain NOT REVIEWED with reviewer and reviewDate null. Two bounded owner decisions were recorded on 2026-09-24 (OWNER-FASTING-REQUIRED; DEPTH3-METADATA). Technical verification of the Depth3 replacement candidate is not rights or provenance clearance. Workflow statuses are not clinical approval. The AI walkthrough is an observation source, not clinical validation.",
+  "amendments": [
+    {
+      "date": "2026-09-24",
+      "summary": "Owner decisions recorded: fasting required before EBUS (interval stays local/anesthesia policy); Depth3 visible date/time finding reviewed; redacted replacement candidate technically verified (not published); historical-blob decision opened; committed screenshots reviewed."
+    }
+  ],
+  "replacementCandidates": [
+    {
+      "id": "depth3-redacted-candidate-2026-09-24",
+      "status": "REDACTED REPLACEMENT CANDIDATE — TECHNICALLY VERIFIED, NOT YET PUBLISHED",
+      "isCurrentRuntimeAsset": false,
+      "inGit": false,
+      "replaces": "EBUS-course/apps/web/public/media/knobology/Depth_segments/Depth3.mp4",
+      "originalSha256": "4d64ef49dbc69b0e170a3fa8ba6d8e99d0f6b78b1d101800a6972b710d8681e8",
+      "attachmentFilename": "Depth3.mp4 (owner-supplied session attachment, Desktop)",
+      "scratchPath": "/private/tmp/claude-501/…/scratchpad/depth3/Depth3_candidate.mp4 (session scratch; not in Git)",
+      "sha256": "9780f54ad86c925d4cd7998f4209c74ea0a91b62ce38bcb6b6df93c09e601e21",
+      "bytes": 34933352,
+      "container": "MP4 (mp42)",
+      "videoCodec": "H.264 Main L4.2",
+      "pixelFormat": "yuv420p",
+      "width": 1920,
+      "height": 1080,
+      "frameRate": "60/1",
+      "durationSeconds": 38.0,
+      "frames": 2280,
+      "audioStreams": 0,
+      "keyframes": {
+        "candidate": "38 I-frames, one per 1.0 s; B-frames present (I 38, P 605, B 1637)",
+        "original": "76 I-frames, one per 0.5 s; I/P only"
+      },
+      "colorTags": {
+        "candidate": "color_range tv, color_space bt709",
+        "original": "untagged"
+      },
+      "containerTags": {
+        "creation_time": "2026-09-24T18:53:56Z",
+        "handler_name": "Mainconcept Video Media Handler",
+        "encoder": "AVC Coding",
+        "xmp": "Adobe XMP packet with editing history: Premiere Pro (Windows beta 2026-04 and macOS 2026.0) creator tools, source clip name Depth3.mp4, project paths on the author workstation, edit dates 2026-04-16 and 2026-09-24. The original carries a comparable packet naming the Premiere source clips (Depth3_Gain.mp4, Depth3_Gain_12.mp4, Depth3_Contrast.mp4, Depth3_Color.mp4). No patient-linked value observed in either."
+      },
+      "verification": {
+        "method": "every frame of both files decoded (ffmpeg rgb24); direct visual inspection of full frames, native-resolution crops and 8x-gain crops; no OCR",
+        "playback": "same 1920x1080 (16:9), 60 fps, 38.000 s, 2,280 frames, H.264 Main/yuv420p MP4, no audio — browser-decodable profile unchanged; differences: 1-s GOP with B-frames and BT.709 colour tags (original untagged)",
+        "redaction": "frames 600–719 (10.000–11.983 s) carry opaque black boxes over the top header and the bottom device footer; every pixel that was header/footer text in the original is ≤5/255 in the candidate; 8x-gain crops show uniform boxes with no ghost text; inspected at 9.5, 10.0, 10.5, 11.0, 11.5, 11.98 and 12.5 s",
+        "residual": "a 4-row sliver (y 1072–1075, x 839–1021) of the storage-indicator bar outline remains below the footer box in the redacted frames: a thin line with no text",
+        "restOfVideo": "no frame outside 600–719 has more than 20 pixels above 60/255 outside the teaching region (whole-video sweep); 1-fps contact sheet shows no header text elsewhere",
+        "wholeFrameView": "redaction is baked into the pixels, so the whole-frame view and held frames show black boxes, not the header",
+        "teachingRegion": "redacted pixels inside x480–1763 / y76–932: at most 7 in any frame (box edges at the region border); PSNR inside the region vs original: median 52.0 dB, minimum 45.2 dB (colour-flow frames); gain-6 window median 48.0 dB; side-by-side native crops of grayscale (frame 630) and colour Doppler (frame 1980) show no visible degradation of speckle, borders, depth scale or colour map",
+        "result": "PASS for visible redaction and teaching-region fidelity; not a de-identification, rights or provenance clearance"
+      },
+      "privateEvidence": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/"
+    }
+  ],
   "nullMeans": "null = genuinely unknown or not applicable; UNKNOWN strings mean no record was found in the searched locations, not that the thing does not exist",
   "searchedLocationsForProvenance": [
     "repo docs/, EBUS-course/, src/features/ebus-guided/, content/",
@@ -186,7 +240,7 @@
       "lane": "05",
       "observedFacts": {
         "encoderTags": "Depth*.mp4: MainConcept AVC export 2026-04-16; lookup \"parsed from Premiere XML timeline\" (Knobology_clean_timeine.xml, not found)",
-        "deviceBanner": "Depth3.mp4 10.000–11.983 s shows demographic field labels (values blank in the inspected frame) and a date-time stamp outside the default crop; unreachable from the guided course; visible in whole-frame view; kept in any held frame",
+        "deviceBanner": "Depth3.mp4 10.000–11.983 s shows a full date/time and NAME/AGE/SEX labels (unpopulated) outside the default crop; unreachable from the guided course; visible in whole-frame view. OWNER REVIEWED 2026-09-24 — see DEPTH3-METADATA, DEPTH3-REPLACEMENT-CANDIDATE, DEPTH3-HISTORICAL-BLOB",
         "existingQueue": "docs/ebus-guided/remaining-work.md R3 (open); docs/ebus-guided/review.md:93 (\"not independently re-cleared\")",
         "trackedDerivatives": "docs/ebus-guided/flow-redesign-evidence/{image-depth-held-recording,capture-held-recording}.png show downscaled recorded frames (committed 2026-09-13, ae7df6f9); two sibling screenshots not opened"
       }
@@ -2440,6 +2494,253 @@
       "lane": "04",
       "carryForward": "Prompt-04 Q15",
       "relatedIds": ["L18-2", "L16-1", "L16-2"]
+    },
+    {
+      "sourceId": "OWNER-FASTING-REQUIRED",
+      "decisionGroup": "G4 clinical and source questions",
+      "currentStatus": "OWNER DECISION RECORDED",
+      "runtimeLocation": "src/features/ebus-guided/content/prepare.ts:139 (\"fasting status\" in the readiness review), prepare.ts:219 (\"fasting intervals … must follow current local guidance\")",
+      "assetPath": null,
+      "sha256": null,
+      "sourceIdentifier": null,
+      "sourceType": "owner decision",
+      "clinicalClaim": "Patients should not eat or drink before EBUS; pre-procedure fasting is required.",
+      "currentCaption": null,
+      "exactSegment": null,
+      "transform": null,
+      "provenanceStatus": null,
+      "deidentificationStatus": null,
+      "rightsStatus": null,
+      "calibrationStatus": null,
+      "sourceVerificationStatus": "owner decision; no private institutional document is used as public evidence",
+      "primarySource": null,
+      "sourceLocation": null,
+      "retrievalDate": null,
+      "missingInputs": [],
+      "proposedChange": "Future runtime concept only (not implemented): \"Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval.\"",
+      "ownerDecisionNeeded": null,
+      "requiredReviewerRole": "owner",
+      "reviewStatus": "OWNER DECIDED",
+      "reviewer": "Russell Miller",
+      "reviewDate": "2026-09-24",
+      "lane": "owner",
+      "decisionScope": "Whether patients may eat or drink before EBUS (closes this question only)",
+      "reviewerRole": "repository owner"
+    },
+    {
+      "sourceId": "LOCAL-FASTING-INTERVAL",
+      "decisionGroup": "G4 clinical and source questions",
+      "currentStatus": "LOCAL PROTOCOL REQUIRED",
+      "runtimeLocation": "src/features/ebus-guided/content/prepare.ts:219",
+      "assetPath": null,
+      "sha256": null,
+      "sourceIdentifier": null,
+      "sourceType": "local / anesthesia policy",
+      "clinicalClaim": "Exact fasting duration: LOCAL / ANESTHESIA POLICY REQUIRED — no universal interval is stated",
+      "currentCaption": null,
+      "exactSegment": null,
+      "transform": null,
+      "provenanceStatus": null,
+      "deidentificationStatus": null,
+      "rightsStatus": null,
+      "calibrationStatus": null,
+      "sourceVerificationStatus": null,
+      "primarySource": null,
+      "sourceLocation": null,
+      "retrievalDate": null,
+      "missingInputs": ["applicable anesthesia/procedural/local fasting policy"],
+      "proposedChange": "None; the course keeps directing the interval to local guidance",
+      "ownerDecisionNeeded": "Supply or point to the governing policy if the course should name it",
+      "requiredReviewerRole": "Owner; anesthesia/procedural policy owner",
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewDate": null,
+      "lane": "owner",
+      "decisionScope": "Exact NPO/fasting interval before EBUS"
+    },
+    {
+      "sourceId": "DEPTH3-METADATA",
+      "decisionGroup": "G1 image identity, provenance, orientation",
+      "currentStatus": "VISIBLE DATE/TIME CONFIRMED — OWNER REVIEWED",
+      "runtimeLocation": null,
+      "assetPath": "EBUS-course/apps/web/public/media/knobology/Depth_segments/Depth3.mp4",
+      "sha256": "4d64ef49dbc69b0e170a3fa8ba6d8e99d0f6b78b1d101800a6972b710d8681e8",
+      "sourceIdentifier": null,
+      "sourceType": "recorded clip (original public asset)",
+      "clinicalClaim": null,
+      "currentCaption": null,
+      "exactSegment": "~10–12 s; frames 600–719 (10.000–11.983 s) carry the device header/footer outside the teaching region",
+      "transform": null,
+      "provenanceStatus": "UNKNOWN — no record found in searched locations",
+      "deidentificationStatus": "VISIBLE DATE/TIME CONFIRMED — OWNER REVIEWED",
+      "rightsStatus": "UNKNOWN — no record found in searched locations",
+      "calibrationStatus": null,
+      "sourceVerificationStatus": null,
+      "primarySource": null,
+      "sourceLocation": null,
+      "retrievalDate": null,
+      "missingInputs": [],
+      "proposedChange": "Replace with the owner-supplied redacted candidate in a separate media-remediation task (not this PR)",
+      "ownerDecisionNeeded": null,
+      "requiredReviewerRole": "owner",
+      "reviewStatus": "OWNER REVIEWED",
+      "reviewer": "Russell Miller",
+      "reviewDate": "2026-09-24",
+      "lane": "owner",
+      "decisionScope": "Visible clinical metadata in the original public Depth3.mp4",
+      "observedFacts": {
+        "ownerFinding": "Owner inspected the complete original clip. The only concerning visible clinical metadata is a full date/time in the device header at ~10–12 s; NAME/AGE/SEX labels are visible but were not populated in the reviewed frame; no other patient information was identified elsewhere.",
+        "sessionCorroboration": "Prompt-05 frame sweep: bright pixels outside the teaching region occur only in frames 600–719; that window (Depth3_Gain_6) is not reachable from the guided course but is visible in whole-frame view and in any held frame",
+        "stillPublic": "The original file remains in the repository and site build at present"
+      },
+      "reviewerRole": "repository owner"
+    },
+    {
+      "sourceId": "DEPTH3-REPLACEMENT-CANDIDATE",
+      "decisionGroup": "G1 image identity, provenance, orientation",
+      "currentStatus": "REDACTED REPLACEMENT CANDIDATE — TECHNICALLY VERIFIED, NOT YET PUBLISHED",
+      "runtimeLocation": null,
+      "assetPath": null,
+      "sha256": "9780f54ad86c925d4cd7998f4209c74ea0a91b62ce38bcb6b6df93c09e601e21",
+      "sourceIdentifier": null,
+      "sourceType": "owner-supplied remediation candidate",
+      "clinicalClaim": null,
+      "currentCaption": null,
+      "exactSegment": "redaction present only in frames 600–719 (10.000–11.983 s)",
+      "transform": null,
+      "provenanceStatus": "UNKNOWN — no record found in searched locations",
+      "deidentificationStatus": "visible header/footer text in the flagged window is opaquely blacked out and baked into the pixels; this does not by itself establish de-identification of the recording",
+      "rightsStatus": "UNKNOWN — no record found in searched locations",
+      "calibrationStatus": null,
+      "sourceVerificationStatus": null,
+      "primarySource": null,
+      "sourceLocation": null,
+      "retrievalDate": null,
+      "missingInputs": [],
+      "proposedChange": "Adopt in a later media-remediation task after owner confirmation; keep the original out of the new build",
+      "ownerDecisionNeeded": "Confirm adoption in the separate remediation task",
+      "requiredReviewerRole": "owner",
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewDate": null,
+      "lane": "owner",
+      "decisionScope": "Owner-prepared redacted Depth3.mp4 (candidate only; not the current runtime asset; not committed)",
+      "technicalVerification": "see replacementCandidates[0].verification"
+    },
+    {
+      "sourceId": "DEPTH3-RIGHTS-PROVENANCE",
+      "decisionGroup": "G1 image identity, provenance, orientation",
+      "currentStatus": "MEDIA / RIGHTS INPUT REQUIRED",
+      "runtimeLocation": null,
+      "assetPath": "EBUS-course/apps/web/public/media/knobology/Depth_segments/Depth3.mp4",
+      "sha256": null,
+      "sourceIdentifier": null,
+      "sourceType": null,
+      "clinicalClaim": null,
+      "currentCaption": null,
+      "exactSegment": null,
+      "transform": null,
+      "provenanceStatus": "UNKNOWN — no record found in searched locations",
+      "deidentificationStatus": "see DEPTH3-METADATA (visible metadata only)",
+      "rightsStatus": "UNKNOWN — no record found in searched locations",
+      "calibrationStatus": null,
+      "sourceVerificationStatus": null,
+      "primarySource": null,
+      "sourceLocation": null,
+      "retrievalDate": null,
+      "missingInputs": ["recording provenance", "consent if applicable", "publication rights"],
+      "proposedChange": null,
+      "ownerDecisionNeeded": "Supply records or decide on use",
+      "requiredReviewerRole": "Owner",
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewDate": null,
+      "lane": "owner",
+      "decisionScope": "Provenance, consent and publication rights of the Depth3 recording",
+      "observedFacts": {
+        "note": "Black-box redaction does not establish ownership, consent, publication rights or source provenance"
+      }
+    },
+    {
+      "sourceId": "DEPTH3-HISTORICAL-BLOB",
+      "decisionGroup": "G1 image identity, provenance, orientation",
+      "currentStatus": "OWNER DECISION REQUIRED",
+      "runtimeLocation": null,
+      "assetPath": null,
+      "sha256": "4d64ef49dbc69b0e170a3fa8ba6d8e99d0f6b78b1d101800a6972b710d8681e8",
+      "sourceIdentifier": null,
+      "sourceType": null,
+      "clinicalClaim": null,
+      "currentCaption": null,
+      "exactSegment": null,
+      "transform": null,
+      "provenanceStatus": null,
+      "deidentificationStatus": null,
+      "rightsStatus": null,
+      "calibrationStatus": null,
+      "sourceVerificationStatus": null,
+      "primarySource": null,
+      "sourceLocation": null,
+      "retrievalDate": null,
+      "missingInputs": [],
+      "proposedChange": "None in this PR (no filter-repo, BFG, force-push, history rewrite or GitHub removal request)",
+      "ownerDecisionNeeded": "A / B / C",
+      "requiredReviewerRole": "Owner",
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewDate": null,
+      "lane": "owner",
+      "decisionScope": "Unredacted Depth3 blob in public Git history",
+      "observedFacts": {
+        "gitBlob": "9bc24d584fd2cf827eb97bf46eb9910ce409293c",
+        "repositoryVisibility": "PUBLIC",
+        "reachableAt": [
+          "public/socal-ebus-course/app/media/knobology/Depth_segments/Depth3.mp4 (commit f75389da, 2026-04-16)",
+          "EBUS-course/apps/web/public/media/knobology/Depth_segments/Depth3.mp4 (commit b6bb89db, 2026-09-10)"
+        ],
+        "effectOfFutureReplacement": "A later commit replacing the file removes it from the current branch and site build but not from history; the blob stays reachable by commit/blob reference, forks and clones unless history is deliberately rewritten or otherwise removed"
+      },
+      "options": {
+        "A": "Replace the current asset only; accept that the old blob remains in public Git history",
+        "B": "Replace the current asset and perform an intentional Git-history purge of the original blob",
+        "C": "Seek another repository/GitHub remediation approach appropriate for sensitive historical content"
+      }
+    },
+    {
+      "sourceId": "PUBLIC-SCREENSHOTS-FLOW-REDESIGN",
+      "decisionGroup": "G1 image identity, provenance, orientation",
+      "currentStatus": "REVIEWED — flagged Depth3 metadata window not present",
+      "runtimeLocation": "docs/ebus-guided/flow-redesign-evidence/*.png (10 files)",
+      "assetPath": null,
+      "sha256": null,
+      "sourceIdentifier": null,
+      "sourceType": null,
+      "clinicalClaim": null,
+      "currentCaption": null,
+      "exactSegment": null,
+      "transform": null,
+      "provenanceStatus": null,
+      "deidentificationStatus": null,
+      "rightsStatus": null,
+      "calibrationStatus": null,
+      "sourceVerificationStatus": null,
+      "primarySource": null,
+      "sourceLocation": null,
+      "retrievalDate": null,
+      "missingInputs": [],
+      "proposedChange": "None; screenshots not modified",
+      "ownerDecisionNeeded": "None unless the owner wants the recorded-frame screenshots reviewed for rights",
+      "requiredReviewerRole": "Owner (rights only)",
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewDate": null,
+      "lane": "owner",
+      "decisionScope": "Committed screenshots under docs/ebus-guided/flow-redesign-evidence/ (technical review by this session, not an owner review)",
+      "observedFacts": {
+        "recordedFrameScreenshots": "image-depth-held-recording.png, capture-held-recording.png, capture-200-percent-text.png, recorded-phone-320.png show Depth8/Depth4 teaching frames; no device header, date/time or NAME/AGE/SEX field is visible",
+        "otherScreenshots": "contact-held-before-response.png (model sector), missing-model.png, reading-390.png, results-reporting-report.png, systematic-staging-case-record.png contain no recorded frame",
+        "method": "each image opened and inspected directly; no OCR"
+      }
     }
   ],
   "assets": [
@@ -2495,10 +2796,24 @@
       "firstAddedDate": "2026-04-16",
       "transform": "none (no flip, rotation or CSS transform); recorded clips cropped to KNOBOLOGY_VIDEO_IMAGE_REGION x480..1763 y76..932 with a whole-frame toggle",
       "provenanceStatus": "UNKNOWN — no record found in searched locations",
-      "deidentificationStatus": "UNKNOWN — no record found in searched locations",
+      "deidentificationStatus": "VISIBLE DATE/TIME CONFIRMED — OWNER REVIEWED (2026-09-24): owner inspected the full clip; a full date/time in the device header is confined to ~10–12 s; NAME/AGE/SEX labels visible but unpopulated in the reviewed frame; no other patient-identifying content identified by the owner. The original remains public in the repository.",
       "rightsStatus": "UNKNOWN — no record found in searched locations",
       "calibrationStatus": "not calibrated (no pixel-to-mm calibration recorded)",
-      "observation": "On-screen header (demographic field labels with blank values in the inspected frame, a date-time stamp) and device footer at 10.000–11.983 s, outside the default crop; visible in whole-frame view"
+      "observation": "On-screen header (demographic field labels with blank values in the inspected frame, a date-time stamp) and device footer at 10.000–11.983 s, outside the default crop; visible in whole-frame view",
+      "gitBlob": "9bc24d584fd2cf827eb97bf46eb9910ce409293c",
+      "historicalPaths": [
+        {
+          "path": "public/socal-ebus-course/app/media/knobology/Depth_segments/Depth3.mp4",
+          "commit": "f75389da",
+          "date": "2026-04-16"
+        },
+        {
+          "path": "EBUS-course/apps/web/public/media/knobology/Depth_segments/Depth3.mp4",
+          "commit": "b6bb89db",
+          "date": "2026-09-10"
+        }
+      ],
+      "remediationCandidate": "see replacementCandidates[0] (not the current runtime asset)"
     },
     {
       "assetPath": "EBUS-course/apps/web/public/media/knobology/Depth_segments/Depth4.mp4",
@@ -4891,6 +5206,156 @@
         "sha256": "65c2cdfbf89c01e6eee551b888ab07d436a48a6433975ce75359a7adc70aebdb",
         "inGit": false,
         "note": "Private review evidence (patient ultrasound pixels). Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/cand_contact_1fps_8x5.png",
+        "sha256": "037df984dbf4f1668d80f48cb64082d3bd8cb6595ad9ce85d21468b632ad24c6",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/cand_f570_t9.5.png",
+        "sha256": "14dafd8b74d6038e94e03f6dc4a80cf3a37da79465f26b272fb16453d17a5a0a",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/cand_f600_t10.0.png",
+        "sha256": "a4bd79dedbe7265a6e84ae30069f110e7d945faad3516aacf60ccbe24346f5e0",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/cand_f630_bottom_crop.png",
+        "sha256": "4f6693a4a1a73b63a4861c2528eb6ad6eb06cf99a8809bfeb7dcee6c01f784db",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/cand_f630_bottom_x8gain.png",
+        "sha256": "1b813992cea615213eb13596d457ff890ee83166188cd8d25167977f4bbfe906",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/cand_f630_bottomedge_zoom.png",
+        "sha256": "6801e479dad6a684d327a369fc6d096ca4719e1740cce164ca9316e87f2f3a94",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/cand_f630_full_small.png",
+        "sha256": "5327f843161f4b6e51947215746ab40b1b8e0351eb1f79dd77c6e1a90afc73ae",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/cand_f630_t10.5.png",
+        "sha256": "7b3c7ac29146278da736b61f9f6a7a4c3b64762c651e6a3a1490147d53e88e2c",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/cand_f630_top_x8gain.png",
+        "sha256": "56707ff71087071511186d32f84f28ab90555076bad337e864550f6b68d801d7",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/cand_f660_t11.0.png",
+        "sha256": "8deefe519e14b3a0780b1acaae069f4d83c8be5b676850bd48145572bdeae1ab",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/cand_f690_t11.5.png",
+        "sha256": "b9e8f50e782b0e630ca2ccbc735a5580b993827bf9d0b1fff4e89f9f5eb8c685",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/cand_f719_t11.98.png",
+        "sha256": "a9d54d14069b4177d6c906e654245ecd75d4cfd5cc0a2539d9b71f593fef1f78",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/cand_f750_t12.5.png",
+        "sha256": "e912ef69c41fede0e46f16bcd915e64b18fc721a285380932785a61aa8987f91",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/orig_f570_t9.5.png",
+        "sha256": "eb3347849f6534f439dc5042e4e204e6ce6bc3631310d5f3002f5e2e4188c5b9",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/orig_f600_t10.0.png",
+        "sha256": "2ac8c361d3afcc77924e371b4407a9701b3b792703222bc9859b4e98d90bf33e",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/orig_f630_bottom_crop.png",
+        "sha256": "dbf8a56a36a774cc10b6b1781c9e364ec3be587b9f07d43ef986f8daadec888f",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/orig_f630_bottomedge_zoom.png",
+        "sha256": "3a9707237e17d0f37debe92af0caa155449baaa44bb5cb83c4a49fb6df489d74",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/orig_f630_full_small.png",
+        "sha256": "f655281025ce733ef37daaec699fb1734643e347decfb4d0a2aa380bce6e9a41",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/orig_f630_t10.5.png",
+        "sha256": "f7410627f3c602b3e12a054c45ec2fcfa0d87d2a87f72a26d204b01aa61c93bf",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/orig_f660_t11.0.png",
+        "sha256": "e0aaea6adaa71d9d6f8b90b81f9e5620363b47a5d53c7e2cd62ce3470e6c8819",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/orig_f690_t11.5.png",
+        "sha256": "fdac0a682fc96c2fc584045d58eff63493dec815be5f3b10549634008556eb87",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/orig_f719_t11.98.png",
+        "sha256": "fcfdc05efa2bbd029727575f8c20e3320c12cbef721d71c9227013e807b64362",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/orig_f750_t12.5.png",
+        "sha256": "60b1eda4312dd98d6bd0acbc84feef2b97398ac94f42146770ceb863301267c6",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/sector_side_by_side_f1980_color.png",
+        "sha256": "1e778bee4f124a240c5aa1389f968cf19319f9f6b6d4af04c93460c08eb3bb99",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
+      },
+      {
+        "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/sector_side_by_side_f630.png",
+        "sha256": "82c5c3ca3b5f552bc24497ecbff73e09f3a89d4d24de97419cc52709ad2b1cf9",
+        "inGit": false,
+        "note": "Depth3 redaction verification (2026-09-24). orig_* frames contain the unredacted device header with a date. Local-Data only; never commit."
       }
     ]
   },

@@ -2,8 +2,19 @@
 
 **What this is:** documentation that prepares owner decisions. **It is not** clinical approval,
 faculty approval, a runtime change or media publication. Nothing in the application, its media,
-schemas, keys, ids, stored state or source-review status was changed. Every clinical decision below
-is **NOT REVIEWED**; reviewer, role and review date are empty and stay empty until a real review.
+schemas, keys, ids, stored state or source-review status was changed.
+
+**Review status (amended 2026-09-24):** most Prompt-05 clinical and media decisions remain **NOT
+REVIEWED**, with reviewer, role and review date empty. The owner has explicitly reviewed two bounded
+matters, recorded in this amendment: **pre-procedure fasting is required for EBUS** (§4a; the exact
+interval stays governed by local/anesthesia policy) and the **Depth3 visible-metadata finding and its
+remediation candidate** (§1c). Technical verification of the Depth3 replacement candidate is not
+rights or provenance clearance. No decision group is marked reviewed because one sub-question in it
+was decided.
+
+- **Amendment 2026-09-24:** PR head before amendment `7d654518`; `origin/main` at amendment
+  `41a34608` — 10 commits past the baseline, none touching any EBUS or drafts path, so the branch was
+  not rebased.
 
 - **Baseline:** `85acc113be11f9acbd395f49e00fee4b69ceff71` = `origin/main` at start (2026-09-23),
   the verified post-Prompt-04 main (Prompt 04 merged as `90cf4cec`; its post-merge smoke passed, as
@@ -17,7 +28,7 @@ is **NOT REVIEWED**; reviewer, role and review date are empty and stay empty unt
   ledger (the existing review queue); the runtime content, engine and embedded workbench code.
 - **Companions:** `EBUS-PRE-REVIEW-05-teaching-drafts.md` (≤10 item revisions, 2 storyboards,
   1 consolidation map, small copy proposals); `EBUS-PRE-REVIEW-05-asset-source-manifest.json`
-  (71 decision objects, 128 asset records with recomputed SHA-256, 16 source records);
+  (78 decision objects, 128 asset records with recomputed SHA-256, 16 source records, one replacement-candidate record);
   `EBUS-PRE-REVIEW-05-status.json` (52 lane-05 IDs + 12 Prompt-04 carry-forward items).
 - **Private evidence (outside Git):**
   `/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/`
@@ -34,15 +45,15 @@ REQUIRED · RETAIN CURRENT BEHAVIOR · INSUFFICIENT EVIDENCE — HOLD.
 
 ## Executive decisions
 
-| Group                                                   | IDs                                                                                                                                | Decision needed                                                                                                                                                                                    | Evidence status                                                                                                                        | Owner / reviewer                                           | Blocking input                                                                              |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| **G1** Image meaning, provenance, orientation           | L6-2, L6-7, L8-1, L8-2, L11-2, L13-2, L13-6, L14-3                                                                                 | What the Doppler recording teaches (A flow / B artifact / C both / D unsuitable); what the 4R/4L disc marks and each view's orientation; whether lesson 14 may name model labels after acquisition | Pixel behaviour measured; **provenance, consent, de-identification, rights: UNKNOWN** for every recording and station image            | Owner; EBUS faculty; thoracic radiology for CT orientation | Expert reading of the clip and images; provenance records                                   |
-| **G2** Missing image-based teaching                     | L5-6, L13-4, L14-5, L15-2, L16-1, L16-2, L18-2, L20-6, L24-3, CS-1 (+ Q14, Q15)                                                    | Which few teaching purposes deserve an image, and from which evidence                                                                                                                              | Model states exist for coupling, shadow, needle and 2R/10R presets; no verified node-feature, needle or station 8/9 images             | Owner; EBUS faculty                                        | Annotated, rights-cleared clinical images; faculty review of 2R/10R model targets           |
-| **G3** Model fidelity, orientation, measurement         | L3-7, L3-14, L3-15, L11-6 (+ L12-4, L9-2/3/4, L10-1, L17-5, L19-2)                                                                 | Keep the wide model windows with an honest limitation, or commission calibration; add model-only orientation marks                                                                                 | Windows recomputed from the repo's own code; all numbers are model-derived or pixel counts                                             | Owner; anatomy/EBUS faculty                                | None for wording; calibration needs real rotation-tolerance evidence (none in repo)         |
-| **G4** Clinical and source questions                    | L2-1, L2-2, L2-7, L17-6, L20-2, L20-3, L22-3, L23-3, L25-2, L25-3, L26-4 (+ L20-4, glossary Q4)                                    | Accept verified wording; decide whether to add anything that needs a local protocol or device IFU                                                                                                  | **2026 ERS/ESGE/ESTS and CHEST 2024/25 read in full and verified**; four items need a local protocol; IFU and AQuIRE full text missing | Owner; thoracic oncology/EBUS faculty; cytopathology       | Local antithrombotic, specimen and bleeding protocols; scope IFU revision; AQuIRE full text |
-| **G5** Running case, provisional staging, report fields | L22-2, L26-2 (+ L12-6, L26-3, L22-6)                                                                                               | Whether to add a learner-declared provisional-N field and how to word "nonrepresentative ≠ negative"                                                                                               | N descriptors verified (IASLC 9th); the course already teaches the nonrepresentative limitation in its report options                  | Owner; thoracic oncology faculty                           | Owner wording                                                                               |
-| **G6** Better questions, less repetition                | L1-5, L1-8, L2-5, L6-4, L7-2, L8-3, L9-5, L16-4, L18-3, L19-4, L21-3, L21-5, L22-4, L25-4, PR-1, CS-2 (+ L2-6, L12-2, L15-3, L5-1) | Accept, revise or retain ten representative drafts (one per defect class) and the L21-3 scenario                                                                                                   | Drafts cite course text; R10 also cites the verified 2026 guideline                                                                    | EBUS faculty                                               | L5-1 needs a choice among A/B/C                                                             |
-| **G7** Consolidation and media delivery                 | L6-5 (+ Q13)                                                                                                                       | Keep four image lessons or plan a progressive workbench; whether to trial reversible clip derivatives                                                                                              | Clip inventory complete; a lossless per-window cut is possible (0.5 s keyframes)                                                       | Owner; EBUS faculty for fidelity                           | G1 before any Doppler consolidation; fidelity review before any derivative                  |
+| Group                                                   | IDs                                                                                                                                | Decision needed                                                                                                                                                                                                                        | Evidence status                                                                                                                                                                                                                  | Owner / reviewer                                           | Blocking input                                                                              |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **G1** Image meaning, provenance, orientation           | L6-2, L6-7, L8-1, L8-2, L11-2, L13-2, L13-6, L14-3                                                                                 | What the Doppler recording teaches (A flow / B artifact / C both / D unsuitable); what the 4R/4L disc marks and each view's orientation; whether lesson 14 may name model labels after acquisition; Depth3 historical Git blob (A/B/C) | Pixel behaviour measured; **provenance, consent, de-identification, rights: UNKNOWN** for every recording and station image — except Depth3's visible metadata, owner-reviewed 2026-09-24 (§1c); its rights stay UNKNOWN         | Owner; EBUS faculty; thoracic radiology for CT orientation | Expert reading of the clip and images; provenance records                                   |
+| **G2** Missing image-based teaching                     | L5-6, L13-4, L14-5, L15-2, L16-1, L16-2, L18-2, L20-6, L24-3, CS-1 (+ Q14, Q15)                                                    | Which few teaching purposes deserve an image, and from which evidence                                                                                                                                                                  | Model states exist for coupling, shadow, needle and 2R/10R presets; no verified node-feature, needle or station 8/9 images                                                                                                       | Owner; EBUS faculty                                        | Annotated, rights-cleared clinical images; faculty review of 2R/10R model targets           |
+| **G3** Model fidelity, orientation, measurement         | L3-7, L3-14, L3-15, L11-6 (+ L12-4, L9-2/3/4, L10-1, L17-5, L19-2)                                                                 | Keep the wide model windows with an honest limitation, or commission calibration; add model-only orientation marks                                                                                                                     | Windows recomputed from the repo's own code; all numbers are model-derived or pixel counts                                                                                                                                       | Owner; anatomy/EBUS faculty                                | None for wording; calibration needs real rotation-tolerance evidence (none in repo)         |
+| **G4** Clinical and source questions                    | L2-1, L2-2, L2-7, L17-6, L20-2, L20-3, L22-3, L23-3, L25-2, L25-3, L26-4 (+ L20-4, glossary Q4)                                    | Accept verified wording; decide whether to add anything that needs a local protocol or device IFU                                                                                                                                      | **2026 ERS/ESGE/ESTS and CHEST 2024/25 read in full and verified**; four items need a local protocol; IFU and AQuIRE full text missing; **fasting required before EBUS — owner decision 2026-09-24** (§4a; interval stays local) | Owner; thoracic oncology/EBUS faculty; cytopathology       | Local antithrombotic, specimen and bleeding protocols; scope IFU revision; AQuIRE full text |
+| **G5** Running case, provisional staging, report fields | L22-2, L26-2 (+ L12-6, L26-3, L22-6)                                                                                               | Whether to add a learner-declared provisional-N field and how to word "nonrepresentative ≠ negative"                                                                                                                                   | N descriptors verified (IASLC 9th); the course already teaches the nonrepresentative limitation in its report options                                                                                                            | Owner; thoracic oncology faculty                           | Owner wording                                                                               |
+| **G6** Better questions, less repetition                | L1-5, L1-8, L2-5, L6-4, L7-2, L8-3, L9-5, L16-4, L18-3, L19-4, L21-3, L21-5, L22-4, L25-4, PR-1, CS-2 (+ L2-6, L12-2, L15-3, L5-1) | Accept, revise or retain ten representative drafts (one per defect class) and the L21-3 scenario                                                                                                                                       | Drafts cite course text; R10 also cites the verified 2026 guideline                                                                                                                                                              | EBUS faculty                                               | L5-1 needs a choice among A/B/C                                                             |
+| **G7** Consolidation and media delivery                 | L6-5 (+ Q13)                                                                                                                       | Keep four image lessons or plan a progressive workbench; whether to trial reversible clip derivatives                                                                                                                                  | Clip inventory complete; a lossless per-window cut is possible (0.5 s keyframes)                                                                                                                                                 | Owner; EBUS faculty for fidelity                           | G1 before any Doppler consolidation; fidelity review before any derivative                  |
 
 ---
 
@@ -81,10 +92,72 @@ which wall the 4R disc marks.
   **field labels** (values blank in the inspected frame) and a **date-time stamp**, plus a device footer —
   outside the default crop, visible in the whole-frame view, kept in any held frame. The guided course
   cannot reach that window; the standalone SoCal lab probably can (not traced). No other clip shows header text.
+  **Owner-reviewed 2026-09-24 — see §1c.**
 - **Other observations for the owner:** two processor-keyboard stills (`eu-me2_main.jpg`,
   `eu-me2_image_enhance.jpg`, standalone lab only) carry Gemini-generated source filenames in XMP;
   `docs/ebus-guided/flow-redesign-evidence/{image-depth-held-recording,capture-held-recording}.png`
-  are already-committed screenshots that include downscaled recorded frames (pre-existing; not changed).
+  are already-committed screenshots that include downscaled recorded frames (pre-existing; not changed;
+  reviewed for the Depth3 header in §1c).
+
+### 1c. Depth3 visible metadata and remediation (owner input 2026-09-24)
+
+Asset: `EBUS-course/apps/web/public/media/knobology/Depth_segments/Depth3.mp4` — SHA-256
+`4d64ef49dbc69b0e170a3fa8ba6d8e99d0f6b78b1d101800a6972b710d8681e8`, 35,315,925 B, 1920×1080, 60 fps,
+38.000 s, H.264 Main, no audio, 2,280 frames (unchanged, still the runtime asset).
+
+| Sub-question                                      | Status                                                                                          | Record                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visible metadata in the **original**              | **VISIBLE DATE/TIME CONFIRMED — OWNER REVIEWED** (Russell Miller, repository owner, 2026-09-24) | The owner inspected the whole clip. The only concerning visible clinical metadata is a full date/time in the device header at ~10–12 s; NAME/AGE/SEX labels are visible there but unpopulated in the reviewed frame; nothing else identifying was found. This session's sweep agrees: only frames 600–719 show anything outside the teaching region. **The original remains public in the repository.**    |
+| Owner-supplied **redacted replacement candidate** | **REDACTED REPLACEMENT CANDIDATE — TECHNICALLY VERIFIED, NOT YET PUBLISHED**                    | `Depth3.mp4` (session attachment), SHA-256 `9780f54ad86c925d4cd7998f4209c74ea0a91b62ce38bcb6b6df93c09e601e21`, 34,933,352 B. Not committed; kept in session scratch. Details below.                                                                                                                                                                                                                        |
+| Provenance, consent, publication rights           | **UNKNOWN**                                                                                     | Black-box redaction does not establish ownership, consent, rights or source provenance.                                                                                                                                                                                                                                                                                                                    |
+| Historical Git blob                               | **OWNER DECISION REQUIRED**                                                                     | See below.                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Committed screenshots                             | **REVIEWED — flagged Depth3 metadata window not present**                                       | All 10 PNGs in `docs/ebus-guided/flow-redesign-evidence/` were opened. The four with recorded frames (`image-depth-held-recording`, `capture-held-recording`, `capture-200-percent-text`, `recorded-phone-320`) show Depth8/Depth4 teaching frames with no device header, date/time or NAME/AGE/SEX field; the other six contain no recorded frame. Technical review by this session, not an owner review. |
+
+**Candidate verification (decoded frames and direct inspection; no OCR):**
+
+- **Playback:** 1920×1080 (16:9), 60 fps, 38.000 s, 2,280 frames, H.264 Main L4.2, yuv420p MP4, no
+  audio — the same browser-decodable profile. Differences: keyframe every 1.0 s with B-frames (original
+  every 0.5 s, I/P only) and BT.709 limited-range colour tags (original untagged). Neither blocks
+  playback; the seek/loop timing (windows start on even seconds) should be re-checked when the file is
+  adopted, and a 1-s GOP still allows a lossless 2-s window cut (§7).
+- **Redaction:** frames 600–719 (10.000–11.983 s) carry opaque black boxes over the top header and the
+  bottom device footer. Every pixel that was header/footer text in the original is ≤ 5/255 in the
+  candidate; 8×-gain crops show uniform boxes with no ghost text. Inspected at 9.5, 10.0, 10.5, 11.0,
+  11.5, 11.98 and 12.5 s. A 4-row sliver of the storage-indicator bar outline (y 1072–1075) remains below
+  the footer box — a thin line with no text.
+- **Rest of the video:** no frame outside 600–719 has more than 20 pixels above 60/255 outside the
+  teaching region; a 1-fps contact sheet shows no header text elsewhere.
+- **Whole-frame view:** the redaction is baked into the pixels, so the whole-frame toggle and any held
+  frame show black boxes — safety does not depend on CSS cropping.
+- **Teaching region fidelity:** at most 7 redacted pixels fall inside x 480–1763 / y 76–932 in any frame
+  (box edges at the region border). PSNR inside the region against the original: median 52.0 dB, minimum
+  45.2 dB (colour-flow frames). Native-resolution side-by-side crops of a grayscale frame (630) and a
+  colour-Doppler frame (1980) show no visible change in speckle, borders, depth scale or colour map. The
+  metric is screening; the visual comparison is the basis for the conclusion.
+- **Container metadata:** creation time 2026-09-24T18:53:56Z; MainConcept/"AVC Coding" handler tags; an
+  Adobe XMP editing history (Premiere Pro creator tools, source clip name, project paths on the author's
+  workstation, edit dates). The original carries a comparable XMP packet naming its Premiere source clips.
+  No patient-linked value was seen in either. None of this establishes de-identification of the
+  recording itself.
+- **Result:** PASS for visible redaction and teaching-region fidelity. Private evidence (includes
+  unredacted original frames with the date):
+  `…/renders/output/ebus-pre-review-05-2026-09-23/depth3-redaction-2026-09-24/` — not committed.
+
+**Historical Git blob — OWNER DECISION REQUIRED.** The repository is public. The original bytes (Git
+blob `9bc24d58…`) are reachable in history at two paths:
+`public/socal-ebus-course/app/media/knobology/Depth_segments/Depth3.mp4` (commit `f75389da`,
+2026-04-16) and the current `EBUS-course/…/Depth3.mp4` (commit `b6bb89db`, 2026-09-10). Replacing
+the file in a future commit would remove the unredacted version from the current branch and site
+build, **not** from public history, forks or existing clones.
+Options: **A.** replace the current asset only and accept that the old blob remains in history ·
+**B.** replace it and intentionally purge the original blob from history · **C.** pursue another
+repository/GitHub remediation route suited to sensitive historical content. No history rewrite,
+filter-repo/BFG run, force-push or GitHub removal request was made in this PR.
+
+**Still unresolved and not generalized from Depth3:** original recording provenance, consent if
+applicable, publication rights, rights/provenance of every other station image and clip, the
+historical-blob decision, and the interpretation/identity of other clinical media. The Depth3 finding
+is about one file.
 
 ### 1a. Doppler clip review sheet (L8-1, L8-2)
 
@@ -275,8 +348,19 @@ naming them in lesson 16 is an owner decision after full-text reading.
 needle-pass protocol has been supplied to this course; no scope/needle IFU revision is on file.
 Institutional interventional-pulmonology unit documents exist in Local-Data
 (`private-references/preference-cards-ucsd/`) — collected for the preference-card module, **not**
-authorized as this course's local protocol, and not reproduced here. The owner decides whether they
-may serve.
+authorized as this course's local protocol, and not reproduced here. They are not used as public
+source evidence. The owner decides whether they may serve.
+
+### 4a. Pre-procedure fasting (owner input 2026-09-24)
+
+| Sub-question                           | Status                                                                                           | Record                                                                                                                                                                                                                                                                                          |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| May patients eat or drink before EBUS? | **OWNER DECISION — fasting required before EBUS** (Russell Miller, repository owner, 2026-09-24) | Patients should not eat or drink before EBUS; pre-procedure fasting is required. This closes the earlier conflict question.                                                                                                                                                                     |
+| Exact fasting interval                 | **LOCAL / ANESTHESIA POLICY REQUIRED** — NOT REVIEWED                                            | No universal interval is set. The course already directs fasting intervals to local guidance (`prepare.ts:219`: "Drug holds, fasting intervals, airway devices, and sedative doses must follow current local guidance…") and lists "fasting status" in the readiness review (`prepare.ts:139`). |
+
+Future runtime concept, documentation only (teaching drafts D10, not implemented): "Patients should
+fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting
+interval."
 
 **Registry corrections (proposed, not applied):** the `ers2026` title (teaching drafts D2); `chest2024`
 issue year 2025 (D3); `combined2015` was read via its ERJ co-publication, not the Thieme PDF the
@@ -412,46 +496,56 @@ retain originals (**RETAIN CURRENT BEHAVIOR** until decided).
 
 ## Owner review checklist
 
-Fill in only after a real review. Leave blank otherwise.
+Fill in only after a real review. Leave blank otherwise. Rows 23–29 were added on 2026-09-24; only
+rows 23 and 25 record actual owner decisions.
 
-| #   | Decision                                                                        | Retain / revise / hold / remove | Rationale | Source or annotation reference | Reviewer | Role | Actual date |
-| --- | ------------------------------------------------------------------------------- | ------------------------------- | --------- | ------------------------------ | -------- | ---- | ----------- |
-| 1   | G1 — Doppler recording purpose (A/B/C/D) and frames                             |                                 |           |                                |          |      |             |
-| 2   | G1 — 4R/4L disc meaning and view orientation; internal id text on CT            |                                 |           |                                |          |      |             |
-| 3   | G1 — recording and station-image provenance, consent, de-identification, rights |                                 |           |                                |          |      |             |
-| 4   | G1 — lesson 14 model-label reveal after acquisition                             |                                 |           |                                |          |      |             |
-| 5   | G2 — storyboard A (2R/4R/10R boundaries)                                        |                                 |           |                                |          |      |             |
-| 6   | G2 — storyboard B (troubleshooting from genuine states) and B4 clip             |                                 |           |                                |          |      |             |
-| 7   | G2 — commission node-feature / needle / station 8–9 images, or hold             |                                 |           |                                |          |      |             |
-| 8   | G3 — wide model windows: limitation wording or calibration                      |                                 |           |                                |          |      |             |
-| 9   | G3 — model-only orientation statements (D4, D5)                                 |                                 |           |                                |          |      |             |
-| 10  | G3 — phantom reference display and reflection question (L9-2/3/4)               |                                 |           |                                |          |      |             |
-| 11  | G3 — L17-5 oval labels; L19-2 per-view anatomy                                  |                                 |           |                                |          |      |             |
-| 12  | G4 — L26-4 wording (verified; optional D1)                                      |                                 |           |                                |          |      |             |
-| 13  | G4 — antithrombotic, specimen-media, bleeding and pass-sequence local protocols |                                 |           |                                |          |      |             |
-| 14  | G4 — device naming and IFU (L2-2, L20-4)                                        |                                 |           |                                |          |      |             |
-| 15  | G4 — AQuIRE benchmark after full-text reading                                   |                                 |           |                                |          |      |             |
-| 16  | G4 — glossary external definitions (D8) and registry corrections (D2, D3)       |                                 |           |                                |          |      |             |
-| 17  | G5 — provisional-N learner field                                                |                                 |           |                                |          |      |             |
-| 18  | G6 — ten item drafts R1–R10 (per item)                                          |                                 |           |                                |          |      |             |
-| 19  | G6 — L5-1 option A/B/C                                                          |                                 |           |                                |          |      |             |
-| 20  | G6 — L21-3 recognition-first scenario                                           |                                 |           |                                |          |      |             |
-| 21  | G7 — progressive workbench (after G1)                                           |                                 |           |                                |          |      |             |
-| 22  | G7 — derivative trial (lossless cut first)                                      |                                 |           |                                |          |      |             |
+| #   | Decision                                                                                                | Retain / revise / hold / remove | Rationale                         | Source or annotation reference        | Reviewer       | Role             | Actual date |
+| --- | ------------------------------------------------------------------------------------------------------- | ------------------------------- | --------------------------------- | ------------------------------------- | -------------- | ---------------- | ----------- |
+| 1   | G1 — Doppler recording purpose (A/B/C/D) and frames                                                     |                                 |                                   |                                       |                |                  |             |
+| 2   | G1 — 4R/4L disc meaning and view orientation; internal id text on CT                                    |                                 |                                   |                                       |                |                  |             |
+| 3   | G1 — recording and station-image provenance, consent, de-identification, rights                         |                                 |                                   |                                       |                |                  |             |
+| 4   | G1 — lesson 14 model-label reveal after acquisition                                                     |                                 |                                   |                                       |                |                  |             |
+| 5   | G2 — storyboard A (2R/4R/10R boundaries)                                                                |                                 |                                   |                                       |                |                  |             |
+| 6   | G2 — storyboard B (troubleshooting from genuine states) and B4 clip                                     |                                 |                                   |                                       |                |                  |             |
+| 7   | G2 — commission node-feature / needle / station 8–9 images, or hold                                     |                                 |                                   |                                       |                |                  |             |
+| 8   | G3 — wide model windows: limitation wording or calibration                                              |                                 |                                   |                                       |                |                  |             |
+| 9   | G3 — model-only orientation statements (D4, D5)                                                         |                                 |                                   |                                       |                |                  |             |
+| 10  | G3 — phantom reference display and reflection question (L9-2/3/4)                                       |                                 |                                   |                                       |                |                  |             |
+| 11  | G3 — L17-5 oval labels; L19-2 per-view anatomy                                                          |                                 |                                   |                                       |                |                  |             |
+| 12  | G4 — L26-4 wording (verified; optional D1)                                                              |                                 |                                   |                                       |                |                  |             |
+| 13  | G4 — antithrombotic, specimen-media, bleeding and pass-sequence local protocols                         |                                 |                                   |                                       |                |                  |             |
+| 14  | G4 — device naming and IFU (L2-2, L20-4)                                                                |                                 |                                   |                                       |                |                  |             |
+| 15  | G4 — AQuIRE benchmark after full-text reading                                                           |                                 |                                   |                                       |                |                  |             |
+| 16  | G4 — glossary external definitions (D8) and registry corrections (D2, D3)                               |                                 |                                   |                                       |                |                  |             |
+| 17  | G5 — provisional-N learner field                                                                        |                                 |                                   |                                       |                |                  |             |
+| 18  | G6 — ten item drafts R1–R10 (per item)                                                                  |                                 |                                   |                                       |                |                  |             |
+| 19  | G6 — L5-1 option A/B/C                                                                                  |                                 |                                   |                                       |                |                  |             |
+| 20  | G6 — L21-3 recognition-first scenario                                                                   |                                 |                                   |                                       |                |                  |             |
+| 21  | G7 — progressive workbench (after G1)                                                                   |                                 |                                   |                                       |                |                  |             |
+| 22  | G7 — derivative trial (lossless cut first)                                                              |                                 |                                   |                                       |                |                  |             |
+| 23  | G4 — Fasting required before EBUS                                                                       | Decided: fasting required       | Owner decision                    | §4a                                   | Russell Miller | Repository owner | 2026-09-24  |
+| 24  | G4 — Exact fasting interval                                                                             | Hold: local/anesthesia policy   |                                   |                                       |                |                  |             |
+| 25  | G1 — Depth3 visible date/time finding (full-video owner review; ~10–12 s only)                          | Reviewed                        | Owner inspected the complete clip | §1c                                   | Russell Miller | Repository owner | 2026-09-24  |
+| 26  | G1 — Depth3 replacement candidate (technically verified; adoption in a separate task)                   |                                 |                                   | §1c, manifest `replacementCandidates` |                |                  |             |
+| 27  | G1 — Depth3 rights/provenance/consent (still unresolved)                                                |                                 |                                   |                                       |                |                  |             |
+| 28  | G1 — Historical Git blob: current-file replacement only (A) / history purge (B) / other remediation (C) |                                 |                                   | §1c                                   |                |                  |             |
+| 29  | G1 — Committed screenshots: reviewed for flagged metadata (window not present); rights not reviewed     |                                 |                                   | §1c                                   |                |                  |             |
 
 ## Accounting
 
 All 52 lane-05 IDs and all 12 Prompt-04 carry-forward items (L20-4, L17-5, L5-1, glossary Q4 with its
 nine terms, L19-2, L2-6, L12-2, L15-3, L22-6, workbench Q13, CT primer Q14, image needs Q15) have a
-decision object in the manifest and a row in the status file. None is marked reviewed.
+decision object in the manifest and a row in the status file. None of them is marked reviewed. The
+2026-09-24 amendment added seven decision objects (fasting requirement, fasting interval, Depth3
+metadata, replacement candidate, Depth3 rights/provenance, historical blob, committed screenshots);
+only `OWNER-FASTING-REQUIRED` and `DEPTH3-METADATA` carry an owner review.
 
 ## Not done / limits
 
-- No human, faculty, clinical, source or media review.
+- No faculty, clinical or source review. Owner review is limited to the two matters in §1c and §4a.
 - No browser re-check of the lesson-14 −14° frame (computed offline through the repo code path).
 - Full text **not** read: AQuIRE, Fujiwara 2010, Canada Lymph Node Score (abstracts only); ESTS 2014
   (automated extraction only). Publisher access for these redirected to institutional sign-in, and no
   credentials were used.
 - Whether the standalone SoCal knobology lab reaches the Depth3 banner window was not traced.
-- The two sibling screenshots in `docs/ebus-guided/flow-redesign-evidence/` that were not opened may
-  also contain recorded frames.
+- The committed screenshots were reviewed only for the flagged Depth3 metadata, not for rights.

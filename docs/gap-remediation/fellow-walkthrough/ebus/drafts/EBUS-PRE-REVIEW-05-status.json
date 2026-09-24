@@ -667,12 +667,14 @@
   "mediaProvenance": {
     "recordedClips": "provenance, consent, de-identification and rights: UNKNOWN (no record found in searched locations)",
     "stationImages": "UNKNOWN",
-    "deviceBanner": "Depth3.mp4 10.000–11.983 s shows demographic field labels (values blank in inspected frame) and a date-time stamp outside the default crop; not reachable from the guided course",
+    "deviceBanner": "Depth3.mp4 ~10–12 s: full date/time visible (NAME/AGE/SEX labels unpopulated) — OWNER REVIEWED 2026-09-24; redacted replacement candidate technically verified, not published; historical-blob decision pending",
     "aiGeneratedStills": "eu-me2_main.jpg and eu-me2_image_enhance.jpg carry Gemini-generated source filenames in XMP (standalone lab only)",
     "trackedDerivativeScreenshots": "docs/ebus-guided/flow-redesign-evidence/*.png include downscaled recorded frames (pre-existing, not changed)",
     "privateEvidence": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/ (outside Git)"
   },
   "unresolvedBlockers": [
+    "Depth3 historical Git blob (owner A/B/C)",
+    "Depth3 replacement adoption (separate media-remediation task)",
     "G1 Doppler clip purpose (A/B/C/D) and any expert frame annotation",
     "4R/4L disc meaning and view orientation",
     "recording/station-image provenance, de-identification and rights",
@@ -689,5 +691,54 @@
     "docs/gap-remediation/fellow-walkthrough/ebus/drafts/EBUS-PRE-REVIEW-05-teaching-drafts.md",
     "docs/gap-remediation/fellow-walkthrough/ebus/drafts/EBUS-PRE-REVIEW-05-status.json"
   ],
-  "reviewPolicy": "Every clinical decision NOT REVIEWED; reviewer, role and review date empty."
+  "reviewPolicy": "Most Prompt-05 clinical/media decisions remain NOT REVIEWED with reviewer, role and review date empty. The owner explicitly reviewed two bounded matters on 2026-09-24 (fasting required before EBUS; the Depth3 metadata finding and remediation candidate). Technical verification of the replacement candidate is not rights/provenance clearance.",
+  "amendment20260924": {
+    "prHeadBefore": "7d6545187fedacd83d496a711cc7a0d6124db470",
+    "originMainAtAmendment": "41a34608ec556a59270b4c3b2b5bbb1c924653be",
+    "mainRelationship": "origin/main advanced 10 commits beyond the Prompt-05 baseline 85acc113; none touches docs/gap-remediation/fellow-walkthrough/ebus/** or any EBUS path; branch not rebased (no overlap)",
+    "ownerReviewedSubdecisions": {
+      "OWNER-FASTING-REQUIRED": {
+        "reviewStatus": "OWNER DECIDED",
+        "reviewer": "Russell Miller",
+        "reviewerRole": "repository owner",
+        "reviewDate": "2026-09-24"
+      },
+      "DEPTH3-METADATA": {
+        "reviewStatus": "OWNER REVIEWED",
+        "reviewer": "Russell Miller",
+        "reviewerRole": "repository owner",
+        "reviewDate": "2026-09-24"
+      }
+    },
+    "fasting": {
+      "decision": "OWNER DECISION — fasting required before EBUS (patients should not eat or drink)",
+      "exactInterval": "LOCAL / ANESTHESIA POLICY REQUIRED (object LOCAL-FASTING-INTERVAL, NOT REVIEWED)",
+      "runtime": "not changed; future wording concept recorded in teaching drafts D10"
+    },
+    "depth3": {
+      "originalAsset": "VISIBLE DATE/TIME CONFIRMED — OWNER REVIEWED (original still public; SHA-256 4d64ef49dbc69b0e170a3fa8ba6d8e99d0f6b78b1d101800a6972b710d8681e8)",
+      "replacementCandidate": "REDACTED REPLACEMENT CANDIDATE — TECHNICALLY VERIFIED, NOT YET PUBLISHED (SHA-256 9780f54ad86c925d4cd7998f4209c74ea0a91b62ce38bcb6b6df93c09e601e21; not committed)",
+      "provenanceRights": "UNKNOWN",
+      "historicalBlob": "OWNER DECISION REQUIRED — options A replace only / B purge history / C other remediation; blob 9bc24d58 reachable at two historical paths in a PUBLIC repository",
+      "publicScreenshots": "REVIEWED — flagged Depth3 metadata window not present (10 files in docs/ebus-guided/flow-redesign-evidence/; technical review, not owner review)"
+    },
+    "unchangedHolds": [
+      "Doppler A/B/C/D",
+      "4R/4L disc meaning",
+      "clinical-image orientation",
+      "2R/10R target review",
+      "Fujiwara full text",
+      "AQuIRE full text",
+      "device IFU",
+      "antithrombotic timing",
+      "specimen-media protocol",
+      "bleeding-response protocol",
+      "needle-pass sequence",
+      "L5-1",
+      "undefined glossary terms",
+      "per-view anatomy",
+      "measurement/calibration",
+      "clinical annotation rights"
+    ]
+  }
 }
