@@ -45,6 +45,26 @@ export const DTS_TOOL_MM = { start: -60, end: 0, radius: 1.8 } as const
 /** The reconstructed plane: `reconstructTeachingPlane` spans 140 mm, centred 20 mm short of the target. */
 export const DTS_PLANE = { spanMm: 140, centreOffsetMm: -20, sizePx: 256 } as const
 
+/**
+ * The planning-CT prior on a reconstructed plane: the world point behind plane pixel (col, row) at
+ * `planeDepth`, and its CT gray. The Section 11 view tints it teal as a teaching cue; practice
+ * case 9 draws the same samples in neutral gray, so the colour cannot give its answer away. Both
+ * read them here, so the two can never disagree about what the prior layer contains: CT only,
+ * acquired before any tool was placed.
+ */
+export function priorPlanePoint(col: number, row: number, planeDepth: number): Point3 {
+  return add(LESION_CENTER, [
+    DTS_PLANE.centreOffsetMm + (col / DTS_PLANE.sizePx - 0.5) * DTS_PLANE.spanMm,
+    planeDepth,
+    (0.5 - row / DTS_PLANE.sizePx) * DTS_PLANE.spanMm,
+  ])
+}
+
+/** The window the prior layer has always used: HU −1350 to +150 onto 0–255. */
+export function priorPlaneGray(hu: number): number {
+  return Math.max(0, Math.min(255, ((hu + 1350) / 1500) * 255))
+}
+
 export interface DtsOverlayObject {
   readonly id: 'tool' | 'target'
   readonly label: string

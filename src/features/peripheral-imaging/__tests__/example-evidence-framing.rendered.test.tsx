@@ -116,7 +116,8 @@ const ILLUSTRATIVE: readonly {
   },
   {
     sectionId: 'changing-anatomy',
-    stemFragment: /motion during the spin/i,
+    // QS-4 (OD4-05): the check now describes the appearance and leaves the cause to the learner.
+    stemFragment: /appear twice/i,
     whatTheModelOmits: 'the same model simulates no motion artifact',
   },
   {

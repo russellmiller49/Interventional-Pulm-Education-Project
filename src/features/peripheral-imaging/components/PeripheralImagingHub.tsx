@@ -177,13 +177,26 @@ export function PeripheralImagingHub() {
             Who this is for, and what it does not claim
           </h2>
         </div>
-        <dl className="grid gap-x-8 gap-y-4 text-sm leading-6 md:grid-cols-2">
+        {/* At 320 px with enlarged text the longest words here ("bronchoscopists,") were wider
+            than the card, and a grid track is as wide as its longest unbreakable word; they may
+            now wrap (the PI-WRAP-01 remedy, applied to this card). */}
+        <dl className="grid gap-x-8 gap-y-4 text-sm leading-6 [overflow-wrap:anywhere] md:grid-cols-2">
           <div>
             <dt className="font-semibold">Who this is for</dt>
-            <dd className="text-muted-foreground">
+            {/* Owner decision OD4-01 (2026-09-22), the owner's wording: the audience stays broad, and
+                the entry line is addressed to physician learners so it does not read as a
+                bronchoscopy requirement for technologists. Nothing is gated on it. */}
+            <dd className="text-muted-foreground" data-hub-audience>
               Pulmonary and interventional pulmonology fellows, bronchoscopists, and the radiologic
-              technologists and imaging team who support them. Chest CT anatomy and bronchoscopy
-              experience are assumed.
+              technologists and imaging team who support them.{' '}
+              {/* The slash-joined word has no break of its own; at 320 px with enlarged text it
+                  was wider than the screen, so a break opportunity follows the slash. */}
+              <span data-hub-prerequisites>
+                For physician learners, basic chest CT anatomy and bronchoscopy/
+                <wbr />
+                navigation experience are helpful. No prior training in fluoroscopy physics,
+                tomosynthesis, or cone-beam CT is assumed.
+              </span>
             </dd>
           </div>
           <div>

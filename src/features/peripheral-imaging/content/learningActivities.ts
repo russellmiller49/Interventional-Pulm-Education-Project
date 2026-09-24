@@ -326,7 +326,7 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     read(
       'case',
       'The tool is visible. What is still uncertain?',
-      ['@purpose', 'A two-axis fluoroscopy technique', '@worked'],
+      ['@purpose', 'A two-axis fluoroscopy technique', '@two-axis-example', '@worked'],
       'suite',
       'comparison',
       [
@@ -413,7 +413,12 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     read(
       'scouts',
       'Check coverage in both scout views',
-      ['Center the lesion in three dimensions', 'Make readiness a team check', '@worked'],
+      [
+        'Center the lesion in three dimensions',
+        'Make readiness a team check',
+        '@team-readiness',
+        '@worked',
+      ],
       'suite',
       'acquisition',
       ['Two scouts · one centered', 'Both scouts centered'],
@@ -427,7 +432,12 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     read(
       'room',
       'Plan a task in the installed room',
-      ['@purpose', 'Plan around the installed room', 'Choose the protocol for the question'],
+      [
+        '@purpose',
+        'Plan around the installed room',
+        'Choose the protocol for the question',
+        '@fixed-mobile-comparison',
+      ],
       'suite',
       'acquisition',
       ['Both scouts centered'],
@@ -449,7 +459,12 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     read(
       'commission',
       'Prepare the scanner, table and room combination',
-      ['@purpose', 'Commission the combination', 'Compare capabilities individually'],
+      [
+        '@purpose',
+        'Commission the combination',
+        'Compare capabilities individually',
+        '@fixed-mobile-comparison',
+      ],
       'suite',
       'acquisition',
       ['Two scouts · one centered'],
@@ -491,7 +506,7 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     read(
       'timeline',
       'Identify which acquisition remains current',
-      ['@purpose', 'Match the artifact to its cause', '@worked'],
+      ['@purpose', 'Match the artifact to its cause', '@artifact-strip', '@worked'],
       'suite',
       'comparison',
       [
@@ -628,6 +643,17 @@ export function imagingLearningActivities(
   }))
 }
 
+/**
+ * Teaching figures and reference aids placed in a reading step's teaching column, beside the block
+ * they illustrate (Prompt 04: OD4-06, OD4-08, OD4-09, OD4-10).
+ */
+export const IMAGING_FIGURE_REFS = [
+  '@two-axis-example',
+  '@artifact-strip',
+  '@fixed-mobile-comparison',
+  '@team-readiness',
+] as const
+
 export function validateImagingLearningActivities(): string[] {
   const errors: string[] = []
   for (const id of peripheralImagingSectionIds) {
@@ -642,7 +668,7 @@ export function validateImagingLearningActivities(): string[] {
     }
     for (const ref of content) {
       if (
-        !['@purpose', '@worked', '@summary', '@controls'].includes(ref) &&
+        !['@purpose', '@worked', '@summary', '@controls', ...IMAGING_FIGURE_REFS].includes(ref) &&
         !lesson.blocks.some((block) => block.title === ref)
       )
         errors.push(`${id}: unknown content ${ref}`)

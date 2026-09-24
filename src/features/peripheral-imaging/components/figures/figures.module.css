@@ -1,0 +1,343 @@
+/*
+ * Prompt 04 teaching and case figures. They sit in the teaching column, the evidence pane or a
+ * case page, so every rule here works at any width the host gives them: panels wrap to one column
+ * on a phone, tables stack inside a narrow container, and nothing sets a width wider than its
+ * parent. Colours read the host palette with the dark shell's values as fallbacks.
+ */
+.figure {
+  container-type: inline-size;
+  display: grid;
+  /* A grid track is as wide as its longest unbreakable word; at 320 px with enlarged text a word
+     like "reconstructed" is wider than the figure, so words may break (the PI-WRAP-01 remedy, which
+     the stage root already carries; case pages sit outside the stage). */
+  overflow-wrap: anywhere;
+  gap: 0.75rem;
+  min-width: 0;
+  margin: 0;
+  /* The inline padding gives way on a narrow screen (a figure cannot query its own width). */
+  padding: 0.85rem min(1rem, 4vw);
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.16));
+  border-radius: 0.75rem;
+  background: var(--panel-2, rgba(255, 255, 255, 0.04));
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.figure p {
+  margin: 0;
+}
+
+.kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--stage-muted, var(--muted, #a9bec3));
+}
+
+/* The model label is read before the image: it is the first thing in the figure, set apart. */
+.modelLabel {
+  margin: 0;
+  padding: 0.45rem 0.65rem;
+  border-left: 3px solid var(--amber, #e9b66e);
+  background: rgba(233, 182, 110, 0.08);
+  font-size: 0.85rem;
+}
+
+.panelGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.panelGridWide {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr));
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.panel {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.panel figcaption,
+.panelCaption {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--stage-muted, var(--muted, #bdd0d3));
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.canvasFrame {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1;
+  background: #05080b;
+  border-radius: 0.4rem;
+  overflow: hidden;
+}
+
+.canvasFrame canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: auto;
+}
+
+.canvasOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.status {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px dashed var(--line, rgba(255, 255, 255, 0.2));
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+}
+
+/* Readouts that state the answer: rendered only after the learner opens the explanation. */
+.readouts {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-left: 3px solid var(--cyan, #58c7c0);
+  background: rgba(88, 199, 192, 0.08);
+  font-size: 0.85rem;
+}
+
+.readouts dt {
+  font-weight: 650;
+}
+
+.readouts dd {
+  margin: 0 0 0.25rem;
+}
+
+.placeholder {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.7rem;
+  border: 1px dashed var(--line, rgba(255, 255, 255, 0.24));
+  border-radius: 0.5rem;
+}
+
+.note {
+  font-size: 0.82rem;
+  color: var(--stage-muted, var(--muted, #bdd0d3));
+}
+
+/* A narrow figure — a phone, or any screen with enlarged text, since the query is in rem — gives
+   the text the inline padding its nested boxes would take. Without this, at 320 px with 200 % text
+   a placeholder's caption wrapped every four or five letters. The boxes keep their edges. */
+@container (max-width: 24rem) {
+  .placeholder {
+    padding-inline: 0;
+    border-inline: 0;
+    border-radius: 0;
+  }
+  .modelLabel,
+  .readouts,
+  .status {
+    padding-inline: 0.45rem;
+  }
+}
+
+.svgFigure {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* A small schematic (the tool views, the floor plan) keeps a readable size instead of filling a
+   wide column. */
+.svgCapped {
+  max-width: 22rem;
+}
+
+.planSvg {
+  max-width: 36rem;
+}
+
+/* Section 6's reference and three look-alikes: two by two while there is room, then one column. */
+.quadGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+@container (max-width: 28rem) {
+  .quadGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Tables: columns while the figure has room, one labelled block per row when it does not. The
+   figure is the query container, so enlarged text (which widens every rem) stacks them sooner. */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.85rem;
+}
+
+.table caption {
+  caption-side: top;
+  text-align: left;
+  margin-bottom: 0.35rem;
+}
+
+.table th,
+.table td {
+  padding: 0.45rem 0.5rem;
+  border-top: 1px solid var(--line, rgba(255, 255, 255, 0.16));
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.table thead th {
+  border-top: 0;
+  color: var(--stage-muted, var(--muted, #a9bec3));
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@container (max-width: 36rem) {
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .table tr,
+  .table th,
+  .table td {
+    display: block;
+  }
+  .table tbody tr {
+    padding: 0.45rem 0;
+    border-top: 1px solid var(--line, rgba(255, 255, 255, 0.16));
+  }
+  .table th,
+  .table td {
+    padding: 0.15rem 0;
+    border-top: 0;
+  }
+  .table td[data-label]::before {
+    content: attr(data-label) ': ';
+    display: block;
+    color: var(--stage-muted, var(--muted, #a9bec3));
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+.roleList {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.roleList h4 {
+  margin: 0 0 0.2rem;
+  font-size: 0.88rem;
+}
+
+.roleList ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.roleList li li {
+  margin-block: 0.15rem;
+}
+
+.basis {
+  font-size: 0.75rem;
+  color: var(--stage-muted, var(--muted, #a9bec3));
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.actions button {
+  min-height: 2.75rem;
+  border: 1px solid var(--line, #8ca8b1);
+  border-radius: 6px;
+  background: var(--panel, #183542);
+  color: var(--ink, #e4f1f1);
+  padding: 0.45rem 0.8rem;
+  font: inherit;
+}
+
+.bars {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.barRow {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.barTrack {
+  display: flex;
+  height: 0.9rem;
+  border-radius: 0.2rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.barLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.78rem;
+}
+
+.swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-inline-end: 0.3rem;
+  border-radius: 0.15rem;
+  vertical-align: -0.1rem;
+}

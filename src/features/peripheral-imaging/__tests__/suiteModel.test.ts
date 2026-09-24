@@ -247,6 +247,7 @@ import {
   cbctOrbitSamples,
   cbctSetup,
   fovCylinder,
+  GANTRY_VARIANTS,
   sweptEnvelope,
 } from '../components/suite/suiteModel'
 import { centeredForTeaching } from '../lib/physics'
@@ -259,8 +260,11 @@ it('CBCT samples include the authored arc endpoints and panel FOV uses cone magn
     expect(samples[1] - samples[0]).toBeCloseTo(200 / (count - 1), 8)
   }
   expect(fovCylinder('fixed').radius).toBe(192)
-  expect(fovCylinder('mobile').radius).toBe(90)
-  expect(fovCylinder('mobile', { sod: 600, sid: 1200, field: 300 }).radius).toBe(75)
+  // Owner decision OD4-09 (2026-09-22): the illustrative field-size difference is equalised. The
+  // cylinder still follows the variant's panel, not a caller's field, under cone magnification.
+  expect(fovCylinder('mobile').radius).toBe(fovCylinder('fixed').radius)
+  expect(fovCylinder('generic').radius).toBe(fovCylinder('fixed').radius)
+  expect(fovCylinder('mobile', { sod: 600, sid: 1200, field: 300 }).radius).toBe(160)
 })
 it('CBCT moves CT and target together; its teaching box is exactly the engine centering predicate', () => {
   for (const offsetX of [-30, -9, -8, 0, 8, 9, 30])
@@ -272,11 +276,14 @@ it('CBCT moves CT and target together; its teaching box is exactly the engine ce
         [offsetX, offsetDepth, 0],
       )
       expect(setup.centered).toBe(centeredForTeaching(offsetX, offsetDepth))
-      expect(setup.geometry.field).toBe(300)
+      expect(setup.geometry.field).toBe(GANTRY_VARIANTS.fixed.panelMm)
     }
+  // OD4-09: nothing about the drawn field, and so nothing about the swept shell derived from it,
+  // separates a fixed from a mobile gantry. The variants differ only in their mount.
   const fixed = sweptEnvelope('fixed', 200),
     mobile = sweptEnvelope('mobile', 200)
   expect(fixed.source).toHaveLength(65)
-  expect(mobile.halfWidth).toBeLessThan(fixed.halfWidth)
-  expect(Math.hypot(...mobile.source[0])).toBeLessThan(Math.hypot(...fixed.source[0]))
+  expect(mobile).toEqual(fixed)
+  expect(GANTRY_VARIANTS.mobile.panelMm).toBe(GANTRY_VARIANTS.fixed.panelMm)
+  expect(GANTRY_VARIANTS.mobile.mount).not.toBe(GANTRY_VARIANTS.fixed.mount)
 })

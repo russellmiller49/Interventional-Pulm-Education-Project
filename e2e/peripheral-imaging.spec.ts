@@ -2855,3 +2855,281 @@ for (const condition of [
     await capture(page, info, `fellow3-s1-${condition.name}.png`)
   })
 }
+
+/*
+ * Prompt 04 runtime (owner decisions of 2026-09-22). The new figures and aids, in a real browser:
+ * each renders from the teaching model and says what it is before anything else, a case figure keeps
+ * the readouts that state its answer until the learner asks, the replaced integrated-case addresses
+ * redirect, and every surface stays inside the viewport at the widths and text sizes the course is
+ * held to. Figures are judged by their own canvases' pixels, not by class names.
+ */
+const PROMPT04_CONDITIONS = [
+  { name: '1440x900', width: 1440, height: 900, root: 100 },
+  { name: '1280x900', width: 1280, height: 900, root: 100 },
+  { name: '1024x768', width: 1024, height: 768, root: 100 },
+  { name: '390x844', width: 390, height: 844, root: 100 },
+  { name: '320x740', width: 320, height: 740, root: 100 },
+  { name: '1280x900-text200', width: 1280, height: 900, root: 200 },
+  { name: '320x740-text200', width: 320, height: 740, root: 200 },
+] as const
+
+/**
+ * Everything inside the figure lies within it, and the figure lies within its case decision.
+ * At 320 px with 200 % root text the case decision itself is wider than the page on every practice
+ * and integrated case, figure or not: the shared answer buttons' padding plus "explanation" set its
+ * width (measured on practice cases 1 and 8, which have no figure). That baseline belongs to the
+ * shared stage buttons, so at enlarged text this holds the figure to its own container instead.
+ */
+async function figureContained(page: Page, selector: string) {
+  return page.evaluate((s) => {
+    const figure = document.querySelector(s)
+    const decision = figure?.closest('[data-case-decision]')
+    if (!figure || !decision) return false
+    const box = figure.getBoundingClientRect()
+    const outer = decision.getBoundingClientRect()
+    if (box.left < outer.left - 1 || box.right > outer.right + 1) return false
+    return [...figure.querySelectorAll('*')].every((node) => {
+      const inner = node.getBoundingClientRect()
+      return inner.width === 0 || (inner.left >= box.left - 1 && inner.right <= box.right + 1)
+    })
+  }, selector)
+}
+
+async function figureReady(page: Page, selector: string) {
+  await expect(page.locator(selector)).toHaveAttribute('data-figure-state', 'ready', {
+    timeout: 60000,
+  })
+}
+
+/**
+ * Every canvas in a figure carries an image, and none is shrunk to a thumbnail: on a phone each
+ * spans its figure's full content width (one column); wider screens may set panels side by side.
+ */
+async function figureCanvasesDrawn(page: Page, selector: string, phone: boolean) {
+  const canvases = page.locator(`${selector} canvas`)
+  const count = await canvases.count()
+  expect(count).toBeGreaterThan(0)
+  const content = await page.locator(selector).evaluate((node) => {
+    const style = getComputedStyle(node)
+    return node.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+  })
+  for (let i = 0; i < count; i++) {
+    await expectImageSignal(canvases.nth(i), false)
+    const width = (await canvases.nth(i).boundingBox())!.width
+    if (phone) expect(width).toBeGreaterThanOrEqual(content * 0.85)
+    else expect(width).toBeGreaterThanOrEqual(110)
+  }
+}
+
+test('prompt 04: practice case 9 draws its model planes and keeps their provenance for the explanation', async ({
+  page,
+}, info) => {
+  await page.goto(`${base()}/en/peripheral-imaging/practice?case=dts-interpretation-practice-1`)
+  const figure = '[data-case-figure="practice:dts-interpretation-practice-1:figure"]'
+  await figureReady(page, figure)
+  await expect(page.locator(`${figure} [data-model-label]`)).toHaveText(
+    'Teaching model: CT-derived images with an authored nodule and a modeled catheter. Not a patient acquisition.',
+  )
+  await figureCanvasesDrawn(page, figure, false)
+  await expect(page.locator(`${figure} canvas`)).toHaveCount(5)
+  await expect(page.locator('[data-case-figure-readouts]')).toHaveCount(0)
+  expect(await page.locator('[data-practice-case]').innerText()).not.toMatch(
+    /right lower lobe|lobulated|\blobe\b/i,
+  )
+  // The projection panel really shows the catheter: a bright line on the frame's centre row.
+  const lineContrast = await page
+    .locator(`${figure} [data-figure-panel="projection"] canvas`)
+    .evaluate((node) => {
+      const canvas = node as HTMLCanvasElement
+      const data = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data
+      const at = (col: number, row: number) => data[(row * canvas.width + col) * 4]
+      const row = canvas.height / 2
+      const col = 110
+      const peak = Math.max(at(col, row - 1), at(col, row), at(col, row + 1))
+      return (peak - at(col, row - 8) + (peak - at(col, row + 8))) / 2
+    })
+  expect(lineContrast).toBeGreaterThanOrEqual(10)
+  await page.locator('[data-show-explanation]').click()
+  await expect(page.locator('[data-case-figure-readouts]')).toContainText(
+    'drawn from the planning CT',
+  )
+  await capture(page, info, 'prompt04-practice9-revealed.png')
+  await page.locator('[data-show-explanation]').click()
+  await expect(page.locator('[data-case-figure-readouts]')).toHaveCount(0)
+})
+
+test('prompt 04: the replaced integrated-case addresses redirect, and case 5 reads the window off its planes', async ({
+  page,
+}, info) => {
+  for (const [legacy, current] of [
+    ['case-4', 'case-4-v2'],
+    ['case-5', 'case-5-v2'],
+    ['case-8', 'case-8-v2'],
+  ]) {
+    const response = await page.goto(`${base()}/en/peripheral-imaging/assess?case=${legacy}`)
+    expect(response?.status()).toBe(200)
+    expect(new URL(page.url()).searchParams.get('case')).toBe(current)
+    await expect(page.locator('[data-integrated-case]')).toHaveAttribute(
+      'data-integrated-case',
+      current,
+    )
+  }
+  const figure = '[data-case-figure="capstone:case-5-v2:figure"]'
+  await expect(page.locator(figure)).toHaveCount(0)
+  await page.goto(`${base()}/en/peripheral-imaging/assess?case=case-5-v2`)
+  await expect(page.locator(`${figure} [data-model-label]`)).toContainText(
+    'Not a patient acquisition',
+  )
+  await expect(page.locator(`${figure} [data-sampling-case-planes] svg[role="img"]`)).toHaveCount(3)
+  await expect(page.locator('[data-case-figure-readouts]')).toHaveCount(0)
+  await page.locator('[data-prediction-choices] input[value="b"]').check()
+  await expect(page.locator('[data-case-figure-readouts]')).toHaveCount(0)
+  await page.locator('[data-now-primary]').click()
+  await expect(page.locator('[data-readout="window"]')).toHaveText(
+    'Sampling window partly intersects the modeled lesion',
+  )
+  await expect(page.locator('[data-readout="tip"]')).toContainText('Outside the modeled lesion')
+  await capture(page, info, 'prompt04-case5-checked.png')
+  await page.locator('[data-answer-again]').click()
+  await expect(page.locator('[data-case-figure-readouts]')).toHaveCount(0)
+})
+
+test('prompt 04: the three changed checks ask their new questions, and each still explains before an answer', async ({
+  page,
+}) => {
+  for (const [sectionId, stem] of [
+    ['imaging-questions', /a faint rounded opacity now overlaps the needle tip/],
+    ['signal', /with the collimator open to the edges of the detector/],
+    ['changing-anatomy', /each appear twice, a few millimetres apart/],
+  ] as const) {
+    await advanceToKind(page, sectionId, 'prediction')
+    await expect(page.locator('[data-prediction-choices] legend')).toHaveText(stem)
+    await secondary(page).click()
+    await expect(page.locator('[data-explanation-reveal]')).toBeVisible()
+    await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+    await expect(skip(page)).toBeVisible()
+  }
+})
+
+for (const condition of PROMPT04_CONDITIONS) {
+  test(`prompt 04 surfaces fit and stay honest at ${condition.name}`, async ({ page }, info) => {
+    test.setTimeout(360_000)
+    await page.setViewportSize({ width: condition.width, height: condition.height })
+    await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' })
+    const phone = condition.width < 500
+
+    // The Overview's entry line.
+    await page.goto(`${base()}/en/peripheral-imaging`)
+    await enlargeRootText(page, condition.root)
+    const audience = page.locator('[data-hub-prerequisites]')
+    await audience.scrollIntoViewIfNeeded()
+    await expect(audience).toContainText('For physician learners')
+    expect(await fitsViewport(page, '[data-hub-audience]')).toBe(true)
+
+    // Case pages: figure, label, and reachable answer controls.
+    for (const [path, figure, root] of [
+      [
+        'practice?case=dts-interpretation-practice-1',
+        '[data-case-figure="practice:dts-interpretation-practice-1:figure"]',
+        '[data-practice-case]',
+      ],
+      [
+        'assess?case=case-5-v2',
+        '[data-case-figure="capstone:case-5-v2:figure"]',
+        '[data-integrated-case]',
+      ],
+      [
+        'practice?case=staff-protection-practice-1',
+        '[data-case-figure="practice:staff-protection-practice-1:figure"]',
+        '[data-practice-case]',
+      ],
+    ] as const) {
+      await page.goto(`${base()}/en/peripheral-imaging/${path}`)
+      await enlargeRootText(page, condition.root)
+      await expect(page.locator(figure)).toHaveAttribute('data-figure-state', 'ready', {
+        timeout: 60000,
+      })
+      const label = page.locator(`${figure} [data-model-label]`)
+      await label.scrollIntoViewIfNeeded()
+      await expect(label).toBeVisible()
+      if (path.includes('dts-interpretation')) await figureCanvasesDrawn(page, figure, phone)
+      await expect(page.locator('[data-case-figure-readouts]')).toHaveCount(0)
+      // Nothing in a figure reaches past the figure, and the figure is no wider than the decision
+      // it sits in: the figure adds no overflow of its own at any text size.
+      expect(await figureContained(page, figure)).toBe(true)
+      if (condition.root === 100) {
+        expect(await fitsViewport(page, figure)).toBe(true)
+        expect(await fitsViewport(page, root)).toBe(true)
+        await noHorizontalOverflow(page)
+      }
+      // The answer controls can be reached and are not covered.
+      const check = page.locator('[data-now-primary]')
+      await check.scrollIntoViewIfNeeded()
+      const hit = await check.evaluate((node) => {
+        const rect = node.getBoundingClientRect()
+        const top = document.elementFromPoint(
+          rect.left + rect.width / 2,
+          rect.top + rect.height / 2,
+        )
+        return top === node || node.contains(top)
+      })
+      expect(hit).toBe(true)
+      const slug = path.replace(/[^a-z0-9]+/g, '-')
+      await capture(page, info, `prompt04-${slug}-${condition.name}.png`)
+      await page.locator(figure).screenshot({
+        path: info.outputPath(`prompt04-${slug}-figure-${condition.name}.png`),
+      })
+    }
+
+    // Learn pages: each figure or aid on the reading step that places it.
+    for (const [sectionId, selector, advance] of [
+      ['signal', '[data-teaching-figure="signal:conspicuity-set"]', 0],
+      ['two-dimensional', '[data-teaching-figure="two-dimensional:two-axis-example"]', 0],
+      ['changing-anatomy', '[data-teaching-figure="changing-anatomy:artifact-strip"]', 0],
+      ['cbct-acquisition', '[data-team-readiness]', 1],
+      ['fixed-suite', '[data-fixed-mobile-comparison]', 0],
+      ['mobile-suite', '[data-fixed-mobile-comparison]', 0],
+    ] as const) {
+      await openSection(page, sectionId)
+      await enlargeRootText(page, condition.root)
+      for (let step = 0; step < advance; step++) {
+        await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+        await primary(page).click()
+      }
+      const node = page.locator(selector)
+      await node.scrollIntoViewIfNeeded()
+      await expect(node).toBeVisible()
+      if (selector.includes('data-teaching-figure')) {
+        await figureReady(page, selector)
+        await expect(page.locator(`${selector} [data-model-label]`)).toBeVisible()
+        if (!selector.includes('artifact-strip')) await figureCanvasesDrawn(page, selector, phone)
+      }
+      // Tables stay inside their figure: columns when there is room, labelled blocks when not.
+      for (const table of await page.locator(`${selector} table`).all()) {
+        const [tableBox, figureBox] = await Promise.all([table.boundingBox(), node.boundingBox()])
+        expect(tableBox!.x + tableBox!.width).toBeLessThanOrEqual(
+          figureBox!.x + figureBox!.width + 1,
+        )
+      }
+      expect(await fitsViewport(page, selector)).toBe(true)
+      await stageFitsViewport(page, condition.root)
+      await node.scrollIntoViewIfNeeded()
+      await capture(page, info, `prompt04-${sectionId}-${condition.name}.png`)
+      await node.screenshot({
+        path: info.outputPath(`prompt04-${sectionId}-figure-${condition.name}.png`),
+      })
+    }
+
+    // Help stays usable on a step that carries a new figure.
+    await openSection(page, 'two-dimensional')
+    await enlargeRootText(page, condition.root)
+    await page.getByRole('button', { name: 'Help', exact: true }).click()
+    const dialog = page.getByRole('dialog', { name: 'What do I do now?', exact: true })
+    await expect(dialog).toBeVisible()
+    await settleHelp(page)
+    const text = await helpTextReachability(page)
+    expect(text.failures, 'clipped or unreachable Help text').toEqual([])
+    await page.keyboard.press('Escape')
+    await expect(dialog).not.toBeVisible()
+  })
+}
