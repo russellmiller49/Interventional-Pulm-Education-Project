@@ -1,3 +1,4 @@
+import { exhaledVolumeReading } from './measurementReadiness'
 import type {
   VentilationSimulationState,
   VentilatorControlKey,
@@ -66,6 +67,14 @@ export function formatMonitorField(
   state: VentilationSimulationState,
   field: VentilatorMonitorField,
 ): string {
+  // No exhaled volume until one has been exhaled (see `exhaledVolumeReading`); dashes, as a
+  // ventilator prints before its first measured breath.
+  if (
+    (field.metric === 'exhaledTidalVolume' || field.metric === 'minuteVolume') &&
+    !exhaledVolumeReading(state).observed
+  ) {
+    return '---'
+  }
   const value = resolveMonitorMetric(state, field.metric)
   if (field.metric === 'ieRatio') return `1:${value.toFixed(field.precision ?? 1)}`
   return value.toFixed(field.precision ?? 0)

@@ -459,6 +459,15 @@ associated with _this_ inspiration, using the engine's own floor and the model's
 - `not-applicable` — no appreciable modeled effort belongs to this breath. Never zero.
 - `unavailable` — no breath boundary on the trace yet.
 
+> **Correction (MV-PRE-REVIEW-02 re-review repair R3, 2026-09-22).** The `measured` branch printed
+> `measurements.triggerDelayMs`, which is the delay the model assigns the phenotype
+> (`80 + 400·missed` for a weak trigger, `100 + 450·missed` for COPD), not an interval computed from
+> the trace. The statement above that it was "an interval between two events on this trace" was
+> wrong. On MV-05's corrected arm the independent review found "267 ms" printed as measured where
+> the effort had crossed the detection floor 140 ms before the onset. `measured` has been removed;
+> every live trigger delay is a model estimate, not applicable, or unavailable. See
+> `MV-PRE-REVIEW-02-handoff.md` §16.3.
+
 This exposed something worth recording for the owner: in this engine `effortAt` is a neural
 oscillator entrained to the machine period, and on the cases that carry effort the effort rises from
 zero **at the same sample the inspiration begins**. No live case currently produces a `measured`
@@ -660,6 +669,13 @@ Batch 01's requirement is honest labelling only. Whether the model should repres
 physiology, and derive an actual interval from it, is for **batch 02 / owner group D5**. The
 `measured` branch is kept and is exercised by a fixture with a genuinely building pre-inspiratory
 effort; nothing was manufactured in the engine to make it reachable.
+
+> **Correction (MV-PRE-REVIEW-02 re-review repair R3, 2026-09-22).** That fixture carried a building
+> effort but no measured interval: its `measured` result printed the phenotype's assigned
+> `triggerDelayMs`. The branch has been removed and the fixture now asserts `model-estimate`. Batch 02
+> also found that MV-05's pressure-support and cycling arms did reach `measured` at grid
+> coincidences; none of those numbers was an observed interval either. See
+> `MV-PRE-REVIEW-02-handoff.md` §16.3.
 
 ## Tests
 

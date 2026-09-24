@@ -15,20 +15,32 @@
  *
  * ## What association means here
  *
- * In this engine `effortAt` is a neural oscillator entrained to the machine period; the machine
- * does not start a breath *because* of an effort. On the cases that carry effort at all, the
- * effort rises from zero at the same sample the inspiration begins. So there are three honest
- * answers and the helper returns whichever the trace supports:
+ * In this engine `effortAt` is a neural oscillator on its own grid; the machine does not start a
+ * breath *because* of an effort. So there are three honest answers and the helper returns
+ * whichever the trace supports:
  *
- * - **`measured`** — an effort that is *still building into* this onset: appreciable at the sample
- *   immediately before it and no smaller at the onset itself. Then, and only then, an effort
- *   genuinely preceded delivery and the number is an interval between two events on this trace.
- * - **`model-estimate`** — this inspiration has an appreciable effort of its own, but nothing
- *   precedes it, so the delay is the phenotype's modeled value rather than something measured
- *   here. The number stays useful and stops being called a measurement.
+ * - **`model-estimate`** — an appreciable modeled effort belongs to this breath: one that is still
+ *   building into the onset (appreciable at the sample immediately before it and no smaller at the
+ *   onset) or one that begins with the inspiration. Either way the number is
+ *   `measurements.triggerDelayMs`, the delay the model *assigns* this phenotype, and it is labelled
+ *   as that.
  * - **`not-applicable`** — this breath has no appreciable modeled effort associated with it at
  *   all. Not a delay of zero, and no claim about the next breath.
  * - **`unavailable`** — the buffer holds no breath boundary yet.
+ *
+ * ## Why there is no `measured` any more
+ *
+ * Batch 01 kept a fourth answer, `measured`, for an effort still building into the onset, and
+ * printed `triggerDelayMs` beside it. But that number is never computed from the trace: it is
+ * `80 + 400·missed` (weak trigger) or `100 + 450·missed` (COPD), whatever the waveform shows. The
+ * independent review of PR #271 timed the events the label fell on: on MV-05's corrected arm the
+ * breath at 55.92 s printed "267 ms" (measured) where the effort had crossed the engine's own
+ * detection floor 140 ms before the onset; others on the same arm were 40 to 360 ms against a
+ * printed 264–267. The events are also coincidences of two independent grids, not breaths the
+ * effort caused (handoff §8, owner decision D5). Nothing in the runtime produces an interval
+ * between a trigger event and a delivery, so no live breath can honestly be called measured, and
+ * the status no longer exists. Timing one would need the trigger-event model D5 describes; it would
+ * not be recovered by picking an event pair off the trace here.
  *
  * ## Why there is no look-back window any more
  *
@@ -44,14 +56,14 @@
  * at the onset, which is what "an effort was under way and the machine answered it" looks like on
  * a trace. An effort on its way down fails it by construction.
  *
- * Everything is measured against the engine's own `EFFORT_DETECTION_FLOOR_CMH2O`. No new clinical
+ * Everything is compared against the engine's own `EFFORT_DETECTION_FLOOR_CMH2O`. No new clinical
  * cutoff is introduced, no interval is scanned for a historical effort to borrow, and the
- * phenotype's assigned number is never labelled measured on evidence it does not have.
+ * phenotype's assigned number is never labelled measured.
  */
 import { EFFORT_DETECTION_FLOOR_CMH2O } from './physics'
 import type { VentilationSimulationState, WaveformSample } from './types'
 
-export type TriggerDelayStatus = 'measured' | 'model-estimate' | 'not-applicable' | 'unavailable'
+export type TriggerDelayStatus = 'model-estimate' | 'not-applicable' | 'unavailable'
 
 export interface TriggerDelayEvidence {
   readonly status: TriggerDelayStatus
@@ -117,14 +129,14 @@ export function triggerDelayEvidence(state: VentilationSimulationState): Trigger
 
   if (precedingEffortCmH2O >= EFFORT_DETECTION_FLOOR_CMH2O && stillBuilding)
     return {
-      status: 'measured',
+      status: 'model-estimate',
       delayMs: state.measurements.triggerDelayMs,
       breathEffortCmH2O,
       precedingEffortCmH2O,
       onsetSeconds: onsetSample.time,
-      display: `${state.measurements.triggerDelayMs.toFixed(0)} ms`,
+      display: `${state.measurements.triggerDelayMs.toFixed(0)} ms · model estimate`,
       detail:
-        'An effort was already under way when this breath was delivered, so the interval between that effort and the delivery is what the delay describes.',
+        'A modeled effort was already under way when this breath began, but the simulator does not time the interval between an effort and the breath it meets. The value is what the model assigns this phenotype, not a delay measured on this trace.',
     }
 
   if (breathEffortCmH2O >= EFFORT_DETECTION_FLOOR_CMH2O)

@@ -54,12 +54,20 @@ describe('MV-02 matched PEEP comparisons through the unchanged engine', () => {
     },
   )
 
-  it('retains improvement while waiting and the adverse higher-PEEP result', () => {
+  it('keeps the wait-only arm where it was, and retains the adverse higher-PEEP result', () => {
     const a = runPeepComparison(10, 45),
       b = runPeepComparison(15, 45)
-    expect(a.unchanged.patient.gasExchange.spo2Percent).toBeGreaterThan(
-      a.baseline.patient.gasExchange.spo2Percent,
-    )
+    /*
+     * The wait-only arm used to *rise* — "Oxygenation also rises while waiting" — because MV-01's
+     * presenting PaO₂ (54 mmHg) was not the equilibrium of the model's oxygenation target at its
+     * own FiO₂, PEEP and shunt (77 mmHg). MV-PRE-REVIEW-02 anchors that target at the case's
+     * presentation, so waiting at PEEP 5 changes nothing and the arms differ by PEEP alone.
+     */
+    expect(
+      Math.abs(
+        a.unchanged.patient.gasExchange.spo2Percent - a.baseline.patient.gasExchange.spo2Percent,
+      ),
+    ).toBeLessThan(0.5)
     expect(a.changed.patient.gasExchange.spo2Percent).toBeGreaterThan(
       a.unchanged.patient.gasExchange.spo2Percent,
     )
@@ -144,7 +152,12 @@ describe('MV-02 matched PEEP comparisons through the unchanged engine', () => {
     expect(passive.reason).toBeNull()
   })
 
-  it('preserves the documented discrete boundaries, including the intermediate reversal', () => {
+  /*
+   * PEEP 13 used to fall back to the PEEP-5 state — 12 → 13 → 14 read 32 → 25 → 18 — a reversal no
+   * part of the case describes (S9-2). The bounded behaviour holds the 8–12 state at 13; see
+   * `ardsPeepBand`. 5 and 7 remain the unrecruited state and 14+ the overdistended one.
+   */
+  it('keeps the authored discrete boundaries and holds the recruited state at PEEP 13', () => {
     const baseline = createPeepComparisonBaseline()
     const outputs = [5, 7, 8, 10, 12, 13, 14, 15].map((value) => {
       const state = ventilationSimulationReducer(baseline, {
@@ -154,7 +167,7 @@ describe('MV-02 matched PEEP comparisons through the unchanged engine', () => {
       })
       return peepComparisonSnapshot(advanceSimulation(state, 45)).modelCompliance
     })
-    expect(outputs).toEqual([25, 25, 32, 32, 32, 25, 18, 18])
+    expect(outputs).toEqual([25, 25, 32, 32, 32, 32, 18, 18])
   })
 
   it('replays the exact baseline and result after a different comparison without accumulated history', () => {

@@ -17,7 +17,12 @@ import {
 import { resolveVentilationSimulationCase } from '../content/learningPatient'
 import { ventilationLessonAttempt } from '../content/lessonRuntime'
 import { plateauReadingValidity } from '../content/plateauValidity'
-import { advanceSimulation, createInitialSimulationState } from './simulation'
+import {
+  advanceSimulation,
+  createInitialSimulationState,
+  reopenAlarmEpoch,
+  shiftBreathClock,
+} from './simulation'
 import { ventilationSimulationReducer } from './reducer'
 import {
   ventilatorDeviceIds,
@@ -203,9 +208,20 @@ export function createLabSimulation(
   // Fill a full window with this baseline, including any authored setup changes.
   const warmup = (4 * 60) / simulation.measurements.totalRatePerMin
   simulation = advanceSimulation({ ...simulation, paused: false }, warmup)
-  return {
+  /*
+   * The clock is set back by `warmup` — a whole number of breaths, so the breath schedule is
+   * continuous across zero — and the alarm epoch with it: alarms raised during the warm-up used to
+   * keep start times several seconds into a round that had not begun. The breath timer holds its
+   * next onset as a time, so it moves by the same amount; left alone it would wait `warmup` seconds
+   * for an onset that had already been re-based to zero.
+   */
+  return reopenAlarmEpoch({
     ...simulation,
     simulationTime: 0,
+    ventilator: {
+      ...simulation.ventilator,
+      breathClock: shiftBreathClock(simulation.ventilator.breathClock, -warmup),
+    },
     prediction: { ...simulation.prediction, committed: false },
     waveforms: simulation.waveforms.map((sample) => ({ ...sample, time: sample.time - warmup })),
     trends: [],
@@ -219,7 +235,7 @@ export function createLabSimulation(
     },
     criticalErrors: [],
     paused: false,
-  }
+  })
 }
 export function createLabSession(
   unitId: string,

@@ -1,4 +1,5 @@
 import type {
+  ArterialGasProvenance,
   MechanicalVentilationSettings,
   InterventionDefinition,
   InterventionEffectId,
@@ -10,6 +11,12 @@ import type {
   VentilationCaseDefinition,
 } from '../engine/types'
 import { createDefaultAdvancedVentilationSettings } from '../engine/modes'
+import {
+  bicarbonateFromPhAndPaCO2,
+  paO2ForSaturation,
+  phFromBicarbonateAndPaCO2,
+} from '../engine/physics'
+import { composeInterventionResponse, interventionSimulatedResponse } from './caseModelNotes'
 import { mechanicalVentilationSource, validateRuntimeCaseRegistry } from './schema'
 
 const sourceCaseById = new Map(
@@ -783,11 +790,85 @@ function buildSettings(sourceId: string): MechanicalVentilationSettings {
   }
 }
 
+/**
+ * The presenting blood gas, with where each value came from (MV-PRE-REVIEW-02, C5).
+ *
+ * The casebook prints a full gas for two cases, a partial one for six, and nothing for seven. The
+ * runtime used to fill every gap with a fixed default — bicarbonate 24, PaCO₂ 42, and PaO₂ from
+ * `30 + 0.6 × SpO₂` — beside whatever the casebook did print, so MV-05 opened as pH 7.33 / PaCO₂ 62
+ * / HCO₃⁻ 24, which the engine's own Henderson–Hasselbalch turns into 7.21 on its first step, and
+ * MV-14 as SpO₂ 76 % beside PaO₂ 76 mmHg, which the engine's own saturation curve puts at 96 %.
+ *
+ * Where the casebook supplies two of pH, PaCO₂ and bicarbonate, the third now comes from the same
+ * equation the model applies on every step; where it supplies a saturation and no PaO₂, the PaO₂ is
+ * the one the model's own curve puts at that saturation. Neither is a new observation or a clinical
+ * inference — no compensation, temperature correction or co-oximetry is assumed — only the tuple
+ * the model would itself have produced. Where the casebook supplies nothing, the simulator's
+ * default stays and is labelled as the simulator's.
+ */
+function presentingGas(sourceId: string): {
+  pH: number
+  paCO2MmHg: number
+  bicarbonateMmolL: number
+  paO2MmHg: number
+  provenance: ArterialGasProvenance
+} {
+  const source = sourceCaseById.get(sourceId)!
+  const abg: Record<string, unknown> = source.patient.abg ?? {}
+  const suppliedNumber = (key: string): number | undefined => {
+    const value = abg[key]
+    return typeof value === 'number' && Number.isFinite(value) ? value : undefined
+  }
+  const suppliedPh = suppliedNumber('pH')
+  const suppliedPaCO2 = suppliedNumber('PaCO2_mmHg')
+  const suppliedBicarbonate = suppliedNumber('HCO3_mEq_L')
+  const suppliedPaO2 = suppliedNumber('PaO2_mmHg')
+  const suppliedSpo2 = numeric(source.patient.vitals, 'SpO2', Number.NaN)
+
+  const paCO2MmHg = suppliedPaCO2 ?? 42
+  const bicarbonateMmolL =
+    suppliedBicarbonate ??
+    (suppliedPh !== undefined && suppliedPaCO2 !== undefined
+      ? bicarbonateFromPhAndPaCO2(suppliedPh, suppliedPaCO2)
+      : 24)
+  const pH = suppliedPh ?? phFromBicarbonateAndPaCO2(bicarbonateMmolL, paCO2MmHg)
+  const paO2MmHg =
+    suppliedPaO2 ?? paO2ForSaturation(Number.isFinite(suppliedSpo2) ? suppliedSpo2 : 94)
+
+  const bicarbonateOrigin =
+    suppliedBicarbonate !== undefined
+      ? 'case-source'
+      : suppliedPh !== undefined && suppliedPaCO2 !== undefined
+        ? 'derived'
+        : 'model-default'
+  return {
+    pH,
+    paCO2MmHg,
+    bicarbonateMmolL,
+    paO2MmHg,
+    provenance: {
+      pH:
+        suppliedPh !== undefined
+          ? 'case-source'
+          : suppliedPaCO2 !== undefined && suppliedBicarbonate !== undefined
+            ? 'derived'
+            : 'model-default',
+      paCO2MmHg: suppliedPaCO2 !== undefined ? 'case-source' : 'model-default',
+      bicarbonateMmolL: bicarbonateOrigin,
+      paO2MmHg:
+        suppliedPaO2 !== undefined
+          ? 'case-source'
+          : Number.isFinite(suppliedSpo2)
+            ? 'derived'
+            : 'model-default',
+    },
+  }
+}
+
 function buildPatient(sourceId: string): PatientModelState {
   const source = sourceCaseById.get(sourceId)!
   const hidden = source.hidden_model
   const vitals = source.patient.vitals
-  const abg = source.patient.abg ?? {}
   const bloodPressure = parseBloodPressure(vitals.BP)
   const phenotype = caseProfiles[sourceId].phenotype
   const complianceMl = numeric(
@@ -812,10 +893,8 @@ function buildPatient(sourceId: string): PatientModelState {
   const effort = Math.abs(
     numeric(hidden, 'Pmus_peak_cmH2O', phenotype === 'weak-trigger' ? -3.5 : -8),
   )
-  const paCO2 = numeric(abg, 'PaCO2_mmHg', 42)
-  const bicarbonate = numeric(abg, 'HCO3_mEq_L', 24)
-  const pH = numeric(abg, 'pH', 6.1 + Math.log10(bicarbonate / (0.03 * paCO2)))
   const spo2 = numeric(vitals, 'SpO2', 94)
+  const gas = presentingGas(sourceId)
   const map = Math.round((bloodPressure.systolic + bloodPressure.diastolic * 2) / 3)
   const initialPeep = numeric(hidden, 'intrinsic_PEEP_cmH2O', 0)
   const dyspnea =
@@ -858,10 +937,10 @@ function buildPatient(sourceId: string): PatientModelState {
         : 0.3,
       co2ProductionMlMin: phenotype === 'flow-starvation' ? 260 : 200,
       oxygenConsumptionMlMin: phenotype === 'flow-starvation' ? 300 : 250,
-      paO2MmHg: numeric(abg, 'PaO2_mmHg', Math.max(45, 30 + spo2 * 0.6)),
-      paCO2MmHg: paCO2,
-      bicarbonateMmolL: bicarbonate,
-      pH,
+      paO2MmHg: gas.paO2MmHg,
+      paCO2MmHg: gas.paCO2MmHg,
+      bicarbonateMmolL: gas.bicarbonateMmolL,
+      pH: gas.pH,
       spo2Percent: spo2,
     },
     hemodynamics: {
@@ -970,7 +1049,21 @@ const builtCases: VentilationCaseDefinition[] = mechanicalVentilationSource.case
       ...responseDistractors,
     ],
     correctResponseId: profile.responseId,
-    interventions: profile.interventionIds.map((id) => interventionCatalog[id]),
+    /*
+     * The case's own copy of each action. Where the authored response claims something this case's
+     * model does not do, the feedback printed when the action is taken carries both: the clinical
+     * expectation and what the simulation shows (`caseModelNotes`, MV-PRE-REVIEW-02).
+     */
+    interventions: profile.interventionIds.map((id) => {
+      const intervention = interventionCatalog[id]
+      const simulated = interventionSimulatedResponse(source.id, id)
+      return simulated
+        ? {
+            ...intervention,
+            response: composeInterventionResponse(intervention.response, simulated),
+          }
+        : intervention
+    }),
     requiredInterventionIds: profile.requiredInterventionIds,
     requiredReassessmentIds: profile.requiredReassessmentIds,
     successConditions: profile.successConditions,
@@ -986,6 +1079,7 @@ const builtCases: VentilationCaseDefinition[] = mechanicalVentilationSource.case
     branchOptions: profile.branchOptions,
     baselineSeconds: profile.baselineSeconds,
     deviceAdaptationNotes: adaptationNotes(source.id),
+    initialGasProvenance: presentingGas(source.id).provenance,
   }
 })
 

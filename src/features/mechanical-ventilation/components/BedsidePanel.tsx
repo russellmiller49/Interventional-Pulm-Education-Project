@@ -3,10 +3,13 @@
 import { ClipboardPlus, HeartPulse, Stethoscope, TestTube2, UserRound } from 'lucide-react'
 
 import { classifyCaseFindings, examinationBranchEvidence } from '../content/caseFindings'
+import { CONSCIOUSNESS_MODEL_BOUNDARY, patientReportAvailability } from '../content/patientReport'
 import {
   arterialGasSampleIsPending,
   arterialGasSampleLabel,
   arterialGasView,
+  baselineGasOrigin,
+  baselineGasProvenanceNote,
 } from '../engine/arterialGas'
 import type { VentilationCaseDefinition, VentilationSimulationState } from '../engine'
 import styles from './mechanical-ventilation.module.css'
@@ -29,7 +32,11 @@ function bedsideFindings(state: VentilationSimulationState): string[] {
   if (state.measurements.intrinsicPeepCmH2O > 8) {
     findings.push('Expiration is prolonged and the next breath begins before full emptying.')
   }
-  if (state.patient.human.dyspneaScore >= 6) {
+  // Only a patient who can answer reports anything; the model's index is not what they said.
+  if (
+    state.patient.human.dyspneaScore >= 6 &&
+    patientReportAvailability(state).availability === 'reported'
+  ) {
     findings.push('The patient reports severe breathing discomfort when given a way to respond.')
   }
   return findings
@@ -74,7 +81,31 @@ export function BedsidePanel({
     ? (differentialFindings.find((finding) => finding.branch === narrowed.branch) ?? null)
     : null
   const gas = arterialGasView(state.arterialGasSamples, state.simulationTime)
+  const gasOrigin = gas.current.kind === 'baseline' ? baselineGasOrigin(gas.current) : null
+  const gasProvenance = baselineGasProvenanceNote(gas.current)
   const mean = state.patient.hemodynamics.mapMmHg
+  /*
+   * The dyspnea score is the patient's to report, so it is shown the way pain and delirium already
+   * were: after the learner has actually asked (assessed), and only as a report when the patient
+   * can give one. It used to be printed unconditionally as "3.0 / 10" beside the vitals — on MV-04
+   * at RASS −4, and on MV-15 after deep sedation to RASS −5 — as if someone had said it.
+   */
+  const report = patientReportAvailability(state)
+  const dyspnea =
+    !requireAssessment || assessed
+      ? `${state.patient.human.dyspneaScore.toFixed(1)} / 10`
+      : 'Assess patient'
+  const dyspneaIdentity =
+    !requireAssessment || assessed
+      ? report.availability === 'reported'
+        ? 'Patient report · modeled'
+        : 'Internal index · not a patient report'
+      : null
+  // Pain is self-reported too; on a patient who cannot answer, the number is the model's index.
+  const painIdentity =
+    (!requireAssessment || assessed) && report.availability === 'index-only'
+      ? 'Internal index · not a patient report'
+      : null
 
   return (
     <section
@@ -126,9 +157,12 @@ export function BedsidePanel({
 
       {compact ? (
         <dl className={styles.compactComfortGrid} aria-label="Current comfort and sedation">
-          <div>
+          <div data-report-availability={report.availability}>
             <dt>Dyspnea</dt>
-            <dd>{state.patient.human.dyspneaScore.toFixed(1)} / 10</dd>
+            <dd>
+              {dyspnea}
+              {dyspneaIdentity ? <small> · {dyspneaIdentity}</small> : null}
+            </dd>
           </div>
           <div>
             <dt>Sedation</dt>
@@ -140,6 +174,7 @@ export function BedsidePanel({
               {!requireAssessment || assessed
                 ? `${state.patient.human.painScore.toFixed(0)} / 10`
                 : 'Assess patient'}
+              {painIdentity ? <small> · {painIdentity}</small> : null}
             </dd>
           </div>
           <div>
@@ -151,6 +186,11 @@ export function BedsidePanel({
             </dd>
           </div>
         </dl>
+      ) : null}
+      {compact ? (
+        <p className={styles.orderStatus} data-consciousness-boundary>
+          {CONSCIOUSNESS_MODEL_BOUNDARY}
+        </p>
       ) : null}
 
       <div className={styles.bedsideSections}>
@@ -250,9 +290,12 @@ export function BedsidePanel({
             )}
             {!compact ? (
               <dl className={styles.comfortGrid}>
-                <div>
+                <div data-report-availability={report.availability}>
                   <dt>Dyspnea</dt>
-                  <dd>{state.patient.human.dyspneaScore.toFixed(1)} / 10</dd>
+                  <dd>
+                    {dyspnea}
+                    {dyspneaIdentity ? <small> · {dyspneaIdentity}</small> : null}
+                  </dd>
                 </div>
                 <div>
                   <dt>Sedation</dt>
@@ -264,6 +307,7 @@ export function BedsidePanel({
                     {!requireAssessment || assessed
                       ? `${state.patient.human.painScore.toFixed(0)} / 10`
                       : 'Assess patient'}
+                    {painIdentity ? <small> · {painIdentity}</small> : null}
                   </dd>
                 </div>
                 <div>
@@ -275,6 +319,11 @@ export function BedsidePanel({
                   </dd>
                 </div>
               </dl>
+            ) : null}
+            {!compact ? (
+              <p className={styles.orderStatus} data-consciousness-boundary>
+                {CONSCIOUSNESS_MODEL_BOUNDARY}
+              </p>
             ) : null}
           </div>
         </details>
@@ -311,9 +360,18 @@ export function BedsidePanel({
             <p className={styles.orderStatus} data-abg-kind={gas.current.kind}>
               <ClipboardPlus aria-hidden="true" /> {arterialGasSampleLabel(gas.current)}.{' '}
               {gas.currentIsBaseline
-                ? 'It is history supplied with the case and does not change as the simulated patient does. Order a repeat ABG through a bedside review action to sample the patient now.'
+                ? gasOrigin === 'simulator-start'
+                  ? 'The casebook gives no blood gas for this patient, so these are the simulator’s starting values — not a result anyone obtained. They do not change as the simulated patient does. Order a repeat ABG through a bedside review action to sample the patient now.'
+                  : gasOrigin === 'partly-supplied'
+                    ? 'It is history supplied with the case, with the values the casebook left out filled in by the simulator, and it does not change as the simulated patient does. Order a repeat ABG through a bedside review action to sample the patient now.'
+                    : 'It is history supplied with the case and does not change as the simulated patient does. Order a repeat ABG through a bedside review action to sample the patient now.'
                 : 'The values were frozen when the specimen was drawn; the patient has gone on changing since.'}
             </p>
+            {gas.currentIsBaseline && gasProvenance ? (
+              <p className={styles.orderStatus} data-abg-provenance={gasOrigin ?? undefined}>
+                {gasProvenance}
+              </p>
+            ) : null}
             {gas.pending ? (
               <p className={styles.orderStatus} data-abg-pending={gas.pending.id}>
                 Repeat gas drawn at {gas.pending.collectedAtSeconds.toFixed(0)} s is processing:{' '}

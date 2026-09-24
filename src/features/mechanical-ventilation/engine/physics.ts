@@ -26,6 +26,68 @@ export function round(value: number, places = 1): number {
   return Math.round(value * scale) / scale
 }
 
+/**
+ * `value mod period`, always in `[0, period)`.
+ *
+ * Every periodic signal in this engine — the machine's breath clock, the neural effort, the
+ * secretion ripple — is a function of absolute simulated time, and the prepared mechanical history
+ * a case opens with runs at negative time (`createInitialSimulationState`). JavaScript's `%` keeps
+ * the sign of the dividend, so `-3.5 % 2.5` is `-1`, which every `phase < Ti` test reads as
+ * inspiration. For `value >= 0` this is exactly `%`, so nothing after the case opens moves.
+ */
+export function positiveModulo(value: number, period: number): number {
+  const remainder = value % period
+  return remainder < 0 ? remainder + period : remainder
+}
+
+/**
+ * The engine's oxygen saturation curve: a Hill equation with P50 26.8 mmHg and n 2.7.
+ *
+ * The one saturation–tension relationship this model has. It does not shift with pH, temperature
+ * or 2,3-DPG, and nothing here pretends it does.
+ */
+export const SATURATION_CURVE_P50_MMHG = 26.8
+export const SATURATION_CURVE_HILL_COEFFICIENT = 2.7
+
+export function spo2FromPaO2(paO2: number): number {
+  const numerator = Math.max(0, paO2) ** SATURATION_CURVE_HILL_COEFFICIENT
+  return clamp(
+    (100 * numerator) /
+      (numerator + SATURATION_CURVE_P50_MMHG ** SATURATION_CURVE_HILL_COEFFICIENT),
+    50,
+    100,
+  )
+}
+
+/**
+ * The inverse of `spo2FromPaO2`: the arterial tension this model's own curve puts at a saturation.
+ *
+ * Used only where a case supplies a saturation and no arterial tension. The runtime used to fill
+ * that gap with `30 + 0.6 × SpO₂`, a line that crosses this curve nowhere useful — it put PaO₂ 76
+ * beside SpO₂ 76 % on MV-14, where the curve says 96 %, so the saturation climbed twenty points in
+ * the first minute on the curve's say-so alone.
+ */
+export function paO2ForSaturation(spo2Percent: number): number {
+  const saturation = clamp(spo2Percent, 1, 99.5)
+  return (
+    SATURATION_CURVE_P50_MMHG *
+    (saturation / (100 - saturation)) ** (1 / SATURATION_CURVE_HILL_COEFFICIENT)
+  )
+}
+
+/**
+ * Henderson–Hasselbalch as this engine already writes it in `updateSlowPhysiology`: pK 6.1 and CO₂
+ * solubility 0.03 mmol/L per mmHg. Exposed so a case that supplies two of the three values gets the
+ * third from the same equation the model will apply on its first step, rather than from a default.
+ */
+export function bicarbonateFromPhAndPaCO2(pH: number, paCO2MmHg: number): number {
+  return 0.03 * paCO2MmHg * 10 ** (pH - 6.1)
+}
+
+export function phFromBicarbonateAndPaCO2(bicarbonateMmolL: number, paCO2MmHg: number): number {
+  return 6.1 + Math.log10(bicarbonateMmolL / (0.03 * Math.max(10, paCO2MmHg)))
+}
+
 export function moveTowardExp(
   value: number,
   target: number,
@@ -308,7 +370,7 @@ export function observedPeakAirwayPressureCmH2O(
 export function secretionFlowDisturbanceLps(timeSeconds: number, flowLps: number): number {
   const frequencyHz = 6.4
   const amplitudeLps = 0.06
-  const phase = (timeSeconds * frequencyHz) % 1
+  const phase = positiveModulo(timeSeconds * frequencyHz, 1)
   const sawtooth = phase * 2 - 1
   const moving = Math.min(1, Math.abs(flowLps) / 0.25)
   return sawtooth * amplitudeLps * moving
@@ -660,6 +722,73 @@ function treatmentReachesNarrowing(
   return true
 }
 
+/**
+ * MV-01 at a PEEP asks two different questions, and each has its own answer here.
+ *
+ * **Which lung state the mechanics use (`ardsLungStateForPeep`).** The casebook authors two
+ * responses: "PEEP 8-12: SpO2 rises, shunt falls … compliance improves" and "PEEP 14-18: Pplat rises
+ * steeply, compliance falls, and MAP decreases" (its hidden model: "PEEP 5-12 improves aerated
+ * fraction; PEEP above 14 causes overdistension"). PEEP 13 is in neither. The engine used to test
+ * `8 <= PEEP <= 12` and `PEEP >= 14`, so 13 fell through to the PEEP-5 state: a learner stepping
+ * 12 → 13 → 14 watched the lung de-recruit at 13 and then overdistend at 14, a pattern no part of the
+ * case describes. The bounded containment is the one that contradicts nothing the case says: at 13
+ * the lung state reached by 12 is held (no further gain, no overdistension, no loss of
+ * recruitment). It is **not** a recruitment curve, an interpolation or a best-PEEP claim; 13 is
+ * still delivered as 13, and only the lung-state lookup is held.
+ *
+ * **Whether the case's authored success range has been reached (`ardsPeepInAuthoredSuccessRange`).**
+ * That range is the casebook's "PEEP 8-12", and it is what case resolution — and so the
+ * corrective-action points and the resolution-linked comfort relief — reads. The first version of
+ * this containment used the lung-state lookup for both, which made PEEP 13 a resolved case worth
+ * the full corrective score: a temporary mechanical hold answering a question it was never meant
+ * to answer. 13 now keeps the held lung state and is outside the success range.
+ *
+ * What PEEP 13 (and 6–7) should actually do is owner decision D3, NOT REVIEWED.
+ */
+export type ArdsLungState = 'baseline' | 'recruited' | 'overdistended'
+export const ARDS_RECRUITED_FROM_PEEP_CMH2O = 8
+export const ARDS_OVERDISTENDED_FROM_PEEP_CMH2O = 14
+/** The casebook's authored success range, "PEEP 8-12". Not a lung state and not a recommendation. */
+export const ARDS_AUTHORED_SUCCESS_PEEP_CMH2O = { min: 8, max: 12 } as const
+
+/** The authored lung state the mechanics use at this PEEP (13 held at the recruited state). */
+export function ardsLungStateForPeep(peepCmH2O: number): ArdsLungState {
+  if (peepCmH2O >= ARDS_OVERDISTENDED_FROM_PEEP_CMH2O) return 'overdistended'
+  if (peepCmH2O >= ARDS_RECRUITED_FROM_PEEP_CMH2O) return 'recruited'
+  return 'baseline'
+}
+
+/** Whether this PEEP is inside the case's authored success range, whatever the lung state. */
+export function ardsPeepInAuthoredSuccessRange(peepCmH2O: number): boolean {
+  return (
+    peepCmH2O >= ARDS_AUTHORED_SUCCESS_PEEP_CMH2O.min &&
+    peepCmH2O <= ARDS_AUTHORED_SUCCESS_PEEP_CMH2O.max
+  )
+}
+
+/**
+ * Whether the patient can answer a question, decided from the whole set of effects in place.
+ *
+ * Deep sedation is modeled as RASS −5, which the scale itself defines as no response to voice or to
+ * physical stimulation; neuromuscular blockade removes the means of responding at all. Either one
+ * leaves a patient who cannot answer, whatever the case said before. A communication aid gives a
+ * patient who *can* respond a way to do it; it does not give a response to a patient who cannot.
+ *
+ * This used to be three assignments in `deriveEffectivePatient`, run in the order the code happened
+ * to list them — sedation, blockade, then the board — so establishing a board, before or after deep
+ * sedation or blockade, set the flag back to true: RASS −5 beside "Patient report · modeled", and the
+ * coaching card printed the symptom scores as reported. Deciding it here, once, from the effect set,
+ * makes the order of the actions irrelevant by construction. No threshold is introduced: both
+ * incapacitating states follow from the action that produces them, as before.
+ */
+export function patientCanCommunicate(
+  authoredCanCommunicate: boolean,
+  effects: ReadonlySet<InterventionEffectId>,
+): boolean {
+  if (effects.has('deepen-sedation') || effects.has('neuromuscular-blockade')) return false
+  return authoredCanCommunicate || effects.has('communication-board')
+}
+
 export function deriveEffectivePatient(
   state: VentilationSimulationState,
   definition: VentilationCaseDefinition,
@@ -680,7 +809,15 @@ export function deriveEffectivePatient(
       endExpiratoryVolumeL: state.patient.mechanics.endExpiratoryVolumeL,
     },
     drive: { ...base.drive },
-    gasExchange: { ...state.patient.gasExchange },
+    /*
+     * The gases are running state, advanced by `updateSlowPhysiology`; the shunt fraction beside them
+     * is not — it is a parameter of the lung state the current settings select, exactly like the
+     * mechanics above, so it is rebuilt from the case every time. Copied along with the gases, the
+     * value MV-01's recruited or overdistended state wrote survived the return to PEEP 5: back at
+     * the authored compliance, the patient kept shunt 0.20 and settled at PaO₂ 72 / SpO₂ 91 instead
+     * of 54 / 84 (MV-PRE-REVIEW-02 sanity repair R2).
+     */
+    gasExchange: { ...state.patient.gasExchange, shuntFraction: base.gasExchange.shuntFraction },
     hemodynamics: { ...state.patient.hemodynamics },
     human: { ...state.patient.human },
     airway: { ...state.patient.airway },
@@ -758,7 +895,10 @@ export function deriveEffectivePatient(
   if (effects.has('neuromuscular-blockade')) {
     patient.drive.effortAmplitudeCmH2O = 0
   }
-  if (effects.has('communication-board')) patient.human.canCommunicate = true
+  patient.human.canCommunicate = patientCanCommunicate(
+    definition.initialPatient.human.canCommunicate,
+    effects,
+  )
   if (effects.has('treat-pain')) patient.human.painScore = Math.max(1, patient.human.painScore - 5)
   if (effects.has('relieve-bladder'))
     patient.human.painScore = Math.max(0, patient.human.painScore - 2)
@@ -772,10 +912,11 @@ export function deriveEffectivePatient(
   }
 
   if (definition.phenotype === 'ards-recruitment') {
-    if (settings.peepCmH2O >= 8 && settings.peepCmH2O <= 12) {
+    const lungState = ardsLungStateForPeep(settings.peepCmH2O)
+    if (lungState === 'recruited') {
       patient.mechanics.complianceLPerCmH2O = 0.032
       patient.gasExchange.shuntFraction = 0.2
-    } else if (settings.peepCmH2O >= 14) {
+    } else if (lungState === 'overdistended') {
       patient.mechanics.complianceLPerCmH2O = 0.018
       patient.gasExchange.shuntFraction = 0.24
     }
@@ -876,6 +1017,14 @@ export function deriveMeasurements(
   if (observedVt !== undefined) {
     vtMl = observedVt * (1 - patient.mechanics.airwayLeakFraction)
   }
+  /*
+   * Which of the two it is travels with the number. The predicted value is the equilibrium a
+   * pressure-targeted breath would reach if it were allowed to, and it is clamped at 1400 mL:
+   * MV-05 opened reading "VTE 1400" and MV-12 "VTE 1021" for exactly that reason, before any breath
+   * had been completed in the buffer. A surface that says "exhaled" must be able to tell.
+   */
+  const exhaledVtSource: VentilatorMeasurements['exhaledVtSource'] =
+    observedVt === undefined ? 'predicted' : 'trace'
 
   // Dynamic PEEPi is recomputed from the case baseline and the current expiratory
   // time on every fixed step. Feeding the prior derived value back into this
@@ -897,17 +1046,25 @@ export function deriveMeasurements(
    * The cycle the lung is actually living in, not the one the patient is asking for. `rate` above
    * is `deriveEffectiveVentilationRate`, which in pressure support is the *neural* rate — so a
    * patient breathing at 28 against a machine cycling at 8 was credited with 0.64 s of expiratory
-   * time when the trace gives it six full seconds. Preferred order: the trace, then the rate the
-   * machine last reported, then the effective rate at cold start.
+   * time when the trace gives it six full seconds. Preferred order: the trace, then the cycle the
+   * machine is running (`BreathClock`), then the effective rate at cold start.
+   *
+   * The middle term used to be the rate this function itself reported on the previous step
+   * (`state.measurements.totalRatePerMin`). On pressure support that rate is computed from the
+   * missed-effort fraction, which is computed from the trapped pressure this expiratory time sets,
+   * so whenever the buffer held no completed expiration the value fed back into itself one step
+   * later. After MV-05's combined correction it alternated 16 ↔ 19/min (PEEPi 6 ↔ 4.2 cmH₂O) on
+   * every 20 ms step, and the breath clock, which reads the requested cycle once at each onset,
+   * adopted whichever parity that step landed on. The clock's cycle in progress is fixed at the
+   * onset that began it, so it carries no such loop (MV-PRE-REVIEW-02 sanity repair R1).
    */
-  const cycledRate =
-    state.measurements.totalRatePerMin > 0 ? state.measurements.totalRatePerMin : rate
+  const cycleInProgressSeconds =
+    state.ventilator.breathClock.periodSeconds ?? 60 / Math.max(1, rate)
   const expiratoryTime = isTwoLevelMode(settings.deviceMode)
     ? settings.advanced.tLowSeconds
     : Math.max(
         0.08,
-        observedExpiratoryTimeSeconds(state.waveforms) ??
-          60 / Math.max(1, cycledRate) - mechanicalTi,
+        observedExpiratoryTimeSeconds(state.waveforms) ?? cycleInProgressSeconds - mechanicalTi,
       )
   const timeConstant = resistance * compliance
   if (timeConstant > expiratoryTime) {
@@ -1044,6 +1201,7 @@ export function deriveMeasurements(
     endInspiratoryEffortCmH2O: round(endInspiratoryEffort),
     plateauIsInterpretable: endInspiratoryEffort < EFFORT_DETECTION_FLOOR_CMH2O,
     exhaledVtMl: round(vtMl, 0),
+    exhaledVtSource,
     minuteVentilationLMin: round((vtMl / 1000) * observedRate),
     totalRatePerMin: round(observedRate, 0),
     observedPatientRatePerMin: round(patient.drive.neuralRatePerMin, 0),
@@ -1072,8 +1230,10 @@ export function isCaseResolved(
     case 'normal-supported-breath':
       return false // Exploratory fixture: its learning task, not a clinical outcome, defines completion.
     case 'ards-recruitment':
+      // The authored success range, not the lung-state lookup: PEEP 13 holds the recruited lung as
+      // mechanical containment (D3) and is still outside "PEEP 8-12". See `ardsLungStateForPeep`.
       return (
-        settings.peepCmH2O >= 8 && settings.peepCmH2O <= 12 && m.relaxedPlateauPressureCmH2O <= 30
+        ardsPeepInAuthoredSuccessRange(settings.peepCmH2O) && m.relaxedPlateauPressureCmH2O <= 30
       )
     case 'flow-starvation':
       return (

@@ -78,6 +78,8 @@ import {
   WAVEFORM_WINDOW_SECONDS,
 } from '../engine/physics'
 import { latestResultedRepeat } from '../engine/arterialGas'
+import { faultOxygenationBoundary } from './caseModelNotes'
+import { patientReportAvailability } from './patientReport'
 import { plateauAcquisition } from './plateauAcquisition'
 import { plateauReadingValidity, plateauWithheldNote } from './plateauValidity'
 
@@ -269,6 +271,7 @@ export function coachingReadingSnapshot(
    * result vanish from the card. Both go away by reading the specimen list.
    */
   const resultedRepeat = latestResultedRepeat(state.arterialGasSamples, state.simulationTime)
+  const reportable = patientReportAvailability(state).availability === 'reported'
   return {
     'peak-pressure': measurements.peakPressureCmH2O,
     /*
@@ -280,13 +283,19 @@ export function coachingReadingSnapshot(
       ? measurements.peakPressureCmH2O - (acquisition.valueCmH2O ?? acquisition.estimateCmH2O)
       : null,
     'intrinsic-peep': measurements.intrinsicPeepCmH2O,
-    'exhaled-vt': measurements.exhaledVtMl,
+    // Only a breath that was exhaled; the cold-buffer prediction is not a reading.
+    'exhaled-vt': measurements.exhaledVtSource === 'trace' ? measurements.exhaledVtMl : null,
     'total-rate': measurements.totalRatePerMin,
     'patient-rate': measurements.observedPatientRatePerMin,
     spo2: state.patient.gasExchange.spo2Percent,
     map: state.patient.hemodynamics.mapMmHg,
-    dyspnea: state.patient.human.dyspneaScore,
-    pain: state.patient.human.painScore,
+    /*
+     * Breathing discomfort and pain are the patient's to report ("Reported …" on the card). On a
+     * patient who cannot answer — deeply sedated, paralysed, or authored that way — they are the
+     * model's internal index, not a report, and the card does not print them as one.
+     */
+    dyspnea: reportable ? state.patient.human.dyspneaScore : null,
+    pain: reportable ? state.patient.human.painScore : null,
     delirium: state.patient.human.deliriumScore,
     sedation: state.patient.human.sedationScore,
     paco2: resultedRepeat ? resultedRepeat.values.paCO2MmHg : null,
@@ -635,10 +644,15 @@ const interventionCoachingProfiles: Readonly<
       'the circulation was being obstructed rather than merely underfilled, and relieving it is what moved the blood pressure',
     whenTargetHeld:
       'the response does not support obstruction of cardiac filling as what is holding the blood pressure down over this interval',
+    /*
+     * Clinical expectation and model kept apart. At the bedside the relief from an emergency
+     * decompression can be lost until drainage is in place; the model has no decay for it, so the
+     * card must not tell the learner to expect a modeled response to fade (MV-PRE-REVIEW-02).
+     */
     reassess:
-      'Watch blood pressure, oxygenation, and chest movement together, and expect the improvement to need securing rather than to hold on its own.',
+      'Watch blood pressure, oxygenation, and chest movement together, and secure the space with definitive drainage: at the bedside the improvement cannot be relied on to hold on its own, although in this simulation it does not fade.',
     notDemonstratedWhenMoved:
-      'An emergency decompression is a rescue. It does not establish definitive treatment, and a response that fades is the expected course rather than a new problem.',
+      'An emergency decompression is a rescue. It does not establish definitive treatment: at the bedside its relief can be lost until drainage is in place. This simulation does not model that loss, so an improvement that holds here is not evidence that drainage is unnecessary.',
     notDemonstratedWhenHeld:
       'A blood pressure that did not move is evidence against obstruction being the dominant limit on it. It does not exclude a pneumothorax this did not reach, and it does not exclude a second cause holding the pressure down alongside it.',
   },
@@ -1041,6 +1055,13 @@ export interface PostActionCoaching {
   /** What this observation has not shown. */
   readonly notDemonstrated: string
   readonly reassess: string
+  /**
+   * What this simulation does not model about the response just read, derived from the readings on
+   * this card — or `null` where the action's response is represented. See
+   * `faultOxygenationBoundary`: on MV-13 and MV-14 the model has no link from the fault to
+   * oxygenation, so the card says what did and did not move and why SpO₂ is not a verdict on it.
+   */
+  readonly modelBoundary: string | null
   readonly stabilizationRequired: boolean
   readonly stabilization: string
   /**
@@ -1422,6 +1443,7 @@ export function ventilationPostActionCoaching(
     ),
     notDemonstrated: notDemonstrated(profile, readings, response, baseline, state),
     reassess: profile.reassess,
+    modelBoundary: faultOxygenationBoundary(state.caseId, baseline.effectId, readings),
     stabilizationRequired: stabilization.required,
     stabilization: stabilization.text,
     observedFromSeconds: baseline.actionSeconds,

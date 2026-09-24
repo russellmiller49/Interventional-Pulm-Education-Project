@@ -539,7 +539,17 @@ describe('R3 · every ABG consumer reads a specimen', () => {
   }
 
   it('reports the resulted specimen in coaching, not the live gas state', () => {
-    const resulted = advanceSimulation(twoOrders(), 60)
+    // Capturing every effort (trigger 4 → 1.5 L/min) moves the modeled CO₂ after both specimens
+    // were drawn. This used to lean on MV-07's untreated PaCO₂ rising from 48 toward the 110 mmHg
+    // ceiling, which MV-PRE-REVIEW-02 traced to a minute-ventilation anchor mismatch.
+    const resulted = advanceSimulation(
+      ventilationSimulationReducer(twoOrders(), {
+        type: 'SET_CONTROL',
+        control: 'triggerThreshold',
+        value: 1.5,
+      }),
+      60,
+    )
     const view = arterialGasView(resulted.arterialGasSamples, resulted.simulationTime)
     const specimen = view.current
     expect(specimen.kind).toBe('repeat')
@@ -808,11 +818,13 @@ describe('R6 · trigger delay needs an associated event', () => {
     expect(evidence.status).not.toBe('measured')
   })
 
-  it('still reports measured where an effort is genuinely building into the onset', () => {
+  it('names an effort building into the onset a model estimate, not a measurement', () => {
     /*
-     * The branch stays reachable and honest. No live case currently produces this shape — the
-     * model's effort rises at the same sample the breath begins — so it is demonstrated on a
-     * fixture rather than manufactured in the engine. See the D5 note in the handoff.
+     * MV-PRE-REVIEW-02 sanity repair R3. This used to assert `measured` here, with `delayMs` equal
+     * to `measurements.triggerDelayMs` — which is the phenotype's assigned delay, not an interval
+     * timed on this trace, so the fixture was pinning the mislabel. The shape is kept: an effort
+     * under way before the onset is still recognised (and said), and the number is still called
+     * what it is. No live breath is labelled measured; see D5 in the handoff.
      */
     const base = advanceSimulation(
       { ...createInitialSimulationState('MV-01', 'learn', 1, DEVICE), paused: false },
@@ -827,20 +839,24 @@ describe('R6 · trigger delay needs an associated event', () => {
           : sample,
     )
     const evidence = triggerDelayEvidence({ ...base, waveforms: building })
-    expect(evidence.status).toBe('measured')
+    expect(evidence.status).toBe('model-estimate')
+    expect(evidence.precedingEffortCmH2O).toBeCloseTo(4, 1)
     expect(evidence.delayMs).toBe(base.measurements.triggerDelayMs)
+    expect(evidence.display).toMatch(/model estimate/)
+    expect(evidence.detail).toMatch(/already under way/)
+    expect(evidence.detail).toMatch(/not a delay measured on this trace/)
   })
 
-  it('never renders a measured trigger delay without a preceding effort, on any live case', () => {
+  it('never renders a measured trigger delay on any live case', () => {
     for (const caseId of mechanicalVentilationCaseById.keys()) {
       const state = advanceSimulation(
         { ...createInitialSimulationState(caseId, 'practice', 1, DEVICE), paused: false },
         18,
       )
       const evidence = triggerDelayEvidence(state)
-      if (evidence.status === 'measured')
-        expect(evidence.precedingEffortCmH2O).toBeGreaterThanOrEqual(1.5)
+      expect(evidence.status).not.toBe('measured')
       if (evidence.delayMs === null) expect(evidence.display).toBe('—')
+      else expect(evidence.display).toMatch(/model estimate/)
     }
   })
 

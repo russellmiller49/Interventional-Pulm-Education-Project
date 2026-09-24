@@ -138,9 +138,19 @@ describe('device-independent fixed-step physiology and waveform engine', () => {
       control: 'pressureSupportCmH2O',
       value: 11,
     })
-    expect(state.measurements.exhaledVtMl).not.toBe(vtBefore)
+    /*
+     * The exhaled volume is a breath that was exhaled, so it changes on the next delivered breath,
+     * not on the key press. This used to assert the change at the key press, which only held
+     * because MV-12 opened on the analytic prediction ("VTE 1021") rather than on a breath
+     * (MV-PRE-REVIEW-02, C4).
+     */
+    expect(state.measurements.exhaledVtMl).toBe(vtBefore)
     expect(state.patient.gasExchange.paCO2MmHg).toBe(paCO2Before)
-    state = advanceSimulation(state, 180)
+    state = advanceSimulation(state, 8)
+    expect(state.measurements.exhaledVtSource).toBe('trace')
+    expect(state.measurements.exhaledVtMl).not.toBe(vtBefore)
+    expect(state.patient.gasExchange.paCO2MmHg).toBeCloseTo(paCO2Before, 0)
+    state = advanceSimulation(state, 172)
     expect(state.patient.gasExchange.paCO2MmHg).not.toBeCloseTo(paCO2Before, 1)
   })
 
