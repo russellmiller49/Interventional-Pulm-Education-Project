@@ -166,7 +166,9 @@ describe('B5: the active route keeps a readable, unique console when the task ne
         expect(screen.getByRole('button', { name: 'Begin case' })).toBeEnabled()
       } else {
         // Challenge's existing initial stage is Plan; no extra briefing gate is introduced.
-        expect(screen.getByRole('button', { name: 'Compare this prediction' })).toBeDisabled()
+        expect(
+          screen.getByRole('button', { name: 'Record prediction for the debrief' }),
+        ).toBeDisabled()
         expect(screen.getByRole('combobox', { name: 'Goal' })).toBeEnabled()
       }
       const ids = Array.from(document.querySelectorAll('[id^="cardiohelp-"]')).map((el) => el.id)
