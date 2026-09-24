@@ -145,7 +145,7 @@ export function EcmoCircuit3D({
   }, [webglReady])
 
   return (
-    <div className={styles.circuit3dShell}>
+    <div className={styles.circuit3dShell} data-scene-label-host>
       {/* Decorative only while the canvas is live (text equivalents live in the
           HUD-adjacent DOM); when WebGL is missing or the context is lost the
           viewport holds real text and a focusable reload button, and hiding a
@@ -212,7 +212,7 @@ export function EcmoCircuit3D({
             Loading bedside models… {Math.round(assetProgress)}%
           </div>
         ) : null}
-        <div className={styles.circuit3dHud}>
+        <div className={styles.circuit3dHud} data-scene-label-obstacle>
           <span data-state={flowState}>{flowState}</span>
           <span data-mode={state.supportMode}>{state.supportMode.toUpperCase()}</span>
           {drainageChattering ? <span data-state="CHATTER">DRAINAGE CHATTER</span> : null}
@@ -237,6 +237,7 @@ export function EcmoCircuit3D({
         <button
           type="button"
           className={styles.circuit3dLabelsToggle}
+          data-scene-label-obstacle
           aria-pressed={labelsOn}
           onClick={() => setLabelsOn((current) => !current)}
         >

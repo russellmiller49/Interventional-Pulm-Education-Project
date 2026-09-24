@@ -6362,7 +6362,14 @@
 .circuit3dSceneLabel {
   position: relative;
   display: inline-block;
+  /*
+   * drei's wrapper is 0 px wide, so a pill shrinks to its min-content. The Learn flow sets
+   * overflow-wrap: anywhere for narrow text, which made that one letter; the pill takes its own
+   * line length instead and wraps only at spaces.
+   */
+  width: max-content;
   max-width: 11rem;
+  overflow-wrap: normal;
   padding: 0.2rem 0.55rem;
   border: 1px solid rgba(113, 225, 229, 0.45);
   border-radius: 8px;
@@ -6376,7 +6383,11 @@
   text-align: center;
   text-transform: uppercase;
   opacity: 1;
-  transform: translateY(calc(-50% - 0.9rem));
+  /*
+   * At rest the pill sits above its anchor on a 0.9 rem leader. SceneLabels replaces the offset and
+   * the leader when the pill would land on another pill or under the HUD (placeSceneLabels).
+   */
+  transform: translateY(var(--scene-label-offset, calc(-50% - 0.9rem)));
   transition: opacity 0.25s ease;
 }
 
@@ -6386,8 +6397,14 @@
   top: 100%;
   left: 50%;
   width: 1px;
-  height: 0.9rem;
+  height: var(--scene-label-leader, 0.9rem);
   background: rgba(113, 225, 229, 0.55);
+}
+
+/* Placed below its anchor: the leader runs up from the pill's top edge. */
+.circuit3dSceneLabel[data-leader='below']::after {
+  top: auto;
+  bottom: 100%;
 }
 
 .circuit3dSceneLabel[data-dimmed] {

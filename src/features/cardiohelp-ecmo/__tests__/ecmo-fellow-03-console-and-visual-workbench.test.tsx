@@ -20,6 +20,11 @@ import {
 } from '../components/practice/surfaceDisclosure'
 import { EcmoSectionHeader } from '../components/shell/EcmoSectionHeader'
 import { ecmoTaskPresentation } from '../components/stage/activityPresentation'
+import {
+  SCENE_LABEL_GAP_PX,
+  SCENE_LABEL_MAX_SHIFT_PX,
+  placeSceneLabels,
+} from '../components/ecmo-circuit/sceneLabelLayout'
 import { buildFoundationStageLesson } from '../components/stage/adapters/foundationStageAdapter'
 import { capstoneMatrixMinimumRem } from '../components/teaching/CapstoneHypothesisMatrix'
 import { EcmoFoundationTeachingPanel } from '../components/teaching/EcmoFoundationTeachingPanel'
@@ -541,6 +546,89 @@ describe('D. drawings that stay true', () => {
       'background: rgba(3, 20, 24, 0.95)',
     )
     expect(ruleBody(ecmoCss, '.circuit3dHud small')).toContain('font-size: 0.75rem')
+  })
+
+  it('S2-3: a pill keeps whole words inside drei’s zero-width wrapper, whatever the flow sets', () => {
+    // The Learn flow's overflow-wrap: anywhere reaches the scene; inside a 0 px wrapper it broke
+    // every pill into one letter per line on the real WebGL path.
+    const pill = ruleBody(ecmoCss, '.circuit3dSceneLabel')
+    expect(pill).toContain('overflow-wrap: normal')
+    expect(pill).toContain('width: max-content')
+    expect(pill).toContain('translateY(var(--scene-label-offset, calc(-50% - 0.9rem)))')
+    expect(ruleBody(ecmoCss, '.circuit3dSceneLabel::after')).toContain(
+      'height: var(--scene-label-leader, 0.9rem)',
+    )
+    expect(ruleBody(ecmoCss, ".circuit3dSceneLabel[data-leader='below']::after")).toContain(
+      'bottom: 100%',
+    )
+  })
+
+  it('S2-3: moves a pill along its own leader until it clears pills and overlays, never its anchor', () => {
+    const pill = { width: 120, height: 24 }
+    const leader = 14
+    const top = (placement: { offsetY: number } | undefined) => placement!.offsetY - pill.height / 2
+    // Apart: every pill rests above its anchor on the resting leader.
+    const apart = placeSceneLabels(
+      [
+        { id: 'a', x: 100, y: 300, ...pill },
+        { id: 'b', x: 400, y: 300, ...pill },
+      ],
+      { restingLeader: leader },
+    )
+    for (const placement of apart.values()) {
+      expect(placement).toEqual({ side: 'above', leader, offsetY: -(leader + pill.height / 2) })
+    }
+    // Crowded: the lower anchor keeps its rest; the other takes the shorter clear move.
+    const crowded = placeSceneLabels(
+      [
+        { id: 'upper', x: 160, y: 290, ...pill },
+        { id: 'lower', x: 150, y: 300, ...pill },
+      ],
+      { restingLeader: leader, bounds: { width: 600, height: 600 } },
+    )
+    expect(crowded.get('lower')).toMatchObject({ side: 'above', leader })
+    const upper = crowded.get('upper')!
+    const lowerTop = 300 - leader - pill.height
+    const upperTop = 290 + top(upper)
+    const clear =
+      upperTop + pill.height <= lowerTop - SCENE_LABEL_GAP_PX + 1 ||
+      upperTop >= 300 - leader + SCENE_LABEL_GAP_PX - 1
+    expect(clear).toBe(true)
+    // It moved: to the free side of its own anchor, or further up its leader.
+    expect(upper.side === 'below' || upper.leader > leader).toBe(true)
+    // The pill a teaching step points at is placed first, so it is the one that stays put.
+    const emphasised = placeSceneLabels(
+      [
+        { id: 'upper', x: 160, y: 290, ...pill },
+        { id: 'lower', x: 150, y: 300, ...pill },
+      ],
+      { priorityIds: ['upper'], restingLeader: leader },
+    )
+    expect(emphasised.get('upper')).toMatchObject({ side: 'above', leader })
+    const lower = emphasised.get('lower')!
+    expect(lower.side === 'below' || lower.leader > leader).toBe(true)
+    // An overlay over the resting place (the HUD) sends the pill below its anchor when above would
+    // leave the canvas.
+    const underHud = placeSceneLabels([{ id: 'site', x: 150, y: 60, ...pill }], {
+      restingLeader: leader,
+      obstacles: [{ left: 0, right: 300, top: 0, bottom: 50 }],
+      bounds: { width: 600, height: 400 },
+    })
+    expect(underHud.get('site')).toMatchObject({ side: 'below', leader })
+    // A leader never grows past the cap.
+    const many = placeSceneLabels(
+      Array.from({ length: 16 }, (_, index) => ({ id: `p${index}`, x: 150, y: 300, ...pill })),
+      { restingLeader: leader },
+    )
+    expect(Math.max(...[...many.values()].map((placement) => placement.leader))).toBe(
+      leader + SCENE_LABEL_MAX_SHIFT_PX,
+    )
+  })
+
+  it('S2-3: the HUD and the labels toggle are the overlays a pill steers around', () => {
+    const source = read('src/features/cardiohelp-ecmo/components/EcmoCircuit3D.tsx')
+    expect(source).toContain('data-scene-label-host')
+    expect(source.match(/data-scene-label-obstacle/g)).toHaveLength(2)
   })
 
   it('S6-1: draws the VV series loop with its recirculation short-circuit, labelled schematic', () => {
