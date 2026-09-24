@@ -783,5 +783,20 @@ describe('phone chrome', () => {
     expect(ruleBody(flowCss, '.flow')).toContain('overflow-wrap: anywhere')
     expect(ruleBody(ecmoCss, '.trackToggle')).toContain('max-width: 100%')
     expect(ruleBody(ecmoCss, '.trackToggle')).toContain('flex-wrap: wrap')
+    // The surfaces column never grows past its box, and the attribution selects take their row's
+    // width rather than their longest option's.
+    expect(ruleBody(shellCss, '.surfaces')).toContain('grid-template-columns: minmax(0, 1fr)')
+    const stageCss = read(
+      'src/features/cardiohelp-ecmo/components/stage/EcmoLessonStage.module.css',
+    )
+    expect(ruleBody(stageCss, '.attributionRow select')).toContain('width: 100%')
+    // The flow's word breaking stops at the shared launch gate, which scrolls in its own host
+    // when it cannot fit instead of breaking every word letter by letter.
+    const bedside = ruleBody(ecmoCss, '.bedsideView')
+    expect(bedside).toContain('overflow-wrap: normal')
+    expect(bedside).toContain('overflow-x: auto')
+    expect(read('src/features/cardiohelp-ecmo/components/CircuitAndMonitors.tsx')).toMatch(
+      /id="cardiohelp-bedside-view"\s+className=\{styles\.bedsideView\}/,
+    )
   })
 })

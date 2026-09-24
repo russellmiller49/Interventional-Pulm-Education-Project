@@ -589,6 +589,8 @@
 
 .surfaces {
   display: grid;
+  /* One column that never grows past its box: a wide child scrolls or wraps inside its own surface. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.75rem;
   min-width: 0;
 }

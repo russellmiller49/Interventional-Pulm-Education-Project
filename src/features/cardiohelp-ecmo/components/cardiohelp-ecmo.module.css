@@ -4082,6 +4082,21 @@
 }
 
 /*
+ * The bedside tab hosts the shared SimulationLaunchGate. The Learn flow's overflow-wrap: anywhere
+ * must not reach it: squeezed by its own padding at 320 px with 200% text, the gate broke every word
+ * letter by letter. Whole words come back, and when the gate still cannot fit the panel it scrolls
+ * here instead of widening the page.
+ */
+.bedsideView {
+  min-width: 0;
+  /* Room inside the scroller for a 3 px focus ring at its edges, with no change to the layout. */
+  margin: -5px;
+  padding: 5px;
+  overflow-x: auto;
+  overflow-wrap: normal;
+}
+
+/*
  * The full-width toggle only changes anything where the task is two columns (≥1100 px viewport, the
  * flowing layout's own breakpoint), so it is offered only there.
  */

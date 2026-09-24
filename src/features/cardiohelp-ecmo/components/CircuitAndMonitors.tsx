@@ -536,6 +536,7 @@ export function CircuitSchematic({
 
       <div
         id="cardiohelp-bedside-view"
+        className={styles.bedsideView}
         role="tabpanel"
         aria-labelledby="cardiohelp-bedside-view-tab"
         hidden={circuitView !== 'bedside'}
