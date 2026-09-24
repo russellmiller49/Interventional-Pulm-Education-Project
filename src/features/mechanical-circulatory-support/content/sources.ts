@@ -106,6 +106,23 @@ export const mcsSources: readonly McsSource[] = [
       'Manufacturer education, not the operating instructions for a specific console revision.',
   },
   {
+    /*
+     * Added by MCS-PRE-REVIEW-02 for F17, and read first-hand from the local copy rather than
+     * taken from a secondary description. What it establishes is the vocabulary and the intended
+     * relationships of the assisted arterial trace — nothing about this simulation's amplitudes.
+     */
+    id: 'getinge-iabp-numbers-game',
+    title: 'The IABP Numbers Game',
+    citation:
+      'Getinge. The IABP Numbers Game, booklet 83440-EN. Educational booklet; landmark naming and timing relationships on printed page 3. Read 2026-09-22 from the local reference copy; file SHA-256 2870fecd9fb6d8d605e323fe9352e9040e23462431a00e9837e60a342a8e2580.',
+    sourceType: 'manufacturer',
+    year: 2020,
+    intendedUse:
+      'Names the five landmarks of an assisted arterial trace — unassisted systole, diastolic augmentation, assisted systole, unassisted end-diastolic pressure and assisted end-diastolic pressure — and states the relationships to look for: inflation at the dicrotic notch appearing as a sharp V, diastolic augmentation that ideally rises above systole, and deflation just before ejection that reduces the assisted end-diastolic and assisted systolic pressures.',
+    limitation:
+      'An educational booklet, not operating instructions and not a specification. It gives no millimetre-of-mercury magnitude for any of those reductions, says augmentation rises above systole ideally rather than always, and describes a real patient on a real console — not this simulation. Its figures are the manufacturer’s and are not reproduced here; the module’s reference diagram is drawn from the text relationships and its rights question is open as OD-06.',
+  },
+  {
     id: 'fda-impella-cp-labeling',
     title: 'Impella ventricular support systems labeling',
     citation: 'FDA PMA P140003 labeling and current supplements for Impella CP with SmartAssist.',

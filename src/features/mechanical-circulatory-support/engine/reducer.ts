@@ -239,7 +239,7 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
                 ? `Device: left pump ${state.metrics.leftDeviceFlowLMin.toFixed(1)} L/min · RP ${state.metrics.rightDeviceFlowLMin.toFixed(1)} L/min · ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min effective systemic flow.`
                 : state.device.kind === 'iabp'
                   ? `IABP: no separate pump-flow stream · ${state.metrics.nativeFlowLMin.toFixed(1)} L/min modeled concurrent native flow.`
-                  : `Device: ${state.metrics.deviceFlowLMin.toFixed(1)} L/min estimated device flow · ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min effective flow.`,
+                  : `Device: ${state.metrics.deviceFlowLMin.toFixed(1)} L/min modeled device flow · ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min effective flow.`,
       }
     }
     case 'SELECT_PREDICTION':

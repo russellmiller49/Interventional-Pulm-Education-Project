@@ -46,13 +46,19 @@ function compareVisibleOutputs(level: 6 | 8) {
     expect(within(card).getByRole('table')).toHaveAccessibleName(
       `Provided outputs at ${example.changed.timeSeconds.toFixed(2)} simulated seconds`,
     )
-    for (const [key, , , digits] of mcsUnloadingSignals) {
+    for (const [key, , unit, digits] of mcsUnloadingSignals) {
       const cells = within(
         card.querySelector(`[data-unloading-signal="${key}"]`) as HTMLElement,
       ).getAllByRole('cell')
+      const difference = Number(
+        (example.changed.metrics[key] - example.control.metrics[key]).toFixed(digits),
+      )
       expect(cells.map((cell) => cell.textContent)).toEqual([
         example.control.metrics[key].toFixed(digits),
         example.changed.metrics[key].toFixed(digits),
+        difference === 0
+          ? 'No resolvable displayed change'
+          : `${difference > 0 ? '+' : '−'}${Math.abs(difference).toFixed(digits)} ${unit}`,
       ])
     }
   }

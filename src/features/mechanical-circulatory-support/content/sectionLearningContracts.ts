@@ -751,7 +751,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         label: 'The wedge pressure rising as the left ventricle backs up',
         correct: false,
         feedback:
-          'A wedge pressure that keeps rising points at the left side. When the right ventricle is the limitation, the left heart tends to be underfilled rather than congested.',
+          'In this reference comparison, reducing modeled RV contractility from 0.85 to 0.20 leaves the rounded displayed wedge at 20 mm Hg at matched times, while right atrial pressure doubles and the pulmonary pulse narrows. The displayed wedge has a small indirect response through the LV compartment contribution, but it rounds away here. This does not show that wedge pressure cannot change with RV failure. Read the large right-sided pressure and flow changes in this example; these endpoints do not establish which response happened first.',
       },
     ],
     predictionPrompt:
@@ -1355,7 +1355,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       whatYouAreSeeing:
         'The controller block of a durable continuous-flow pump: pump power and pulsatility index beside the flow the controller displays.',
       whatTheTargetRepresents:
-        'A speed setting, estimated flow, electrical power and PI. Here flow is generated from speed and loading; power and PI are derived afterwards. The patient measurements are a separate assessment.',
+        'A speed setting, modeled pump transfer, electrical power and PI. Here flow is generated from speed and loading; power and PI are derived afterwards. The patient measurements are a separate assessment.',
       howTheActionAffectsTheModel:
         'Raising systemic vascular resistance raises the pressure at the outlet, which lowers the volume crossing the pump at an unchanged speed.',
       flowAccountNote:
@@ -1520,7 +1520,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       howTheActionAffectsTheModel:
         'The high-power pattern makes the pump draw substantially more power at an unchanged speed while the computed flow stays where it was.',
       flowAccountNote:
-        'The displayed flow estimate here is generated from loading and speed; the fault adds power afterwards, and the flow number does not move. That is a property of this model, and it is the reverse of the device it resembles: Abbott’s HeartMate 3 pump-parameter card states that power is a direct measurement and that the displayed flow is calculated from fixed speed, power and hematocrit, so on that controller a power change is an input to the flow estimate rather than something the estimate ignores. What a real controller’s displayed flow does in this state is not reproduced here and is not claimed — the card names the inputs and gives no estimator equation. Carry the lesson that power and a computed flow can come apart; do not carry this model’s particular arrow to a bedside. Held for device review (OD-02).',
+        'The displayed modeled pump transfer here is generated from loading and speed; the fault adds power afterwards, and the flow number does not move. That is a property of this model, and it is the reverse of the device it resembles: Abbott’s HeartMate 3 pump-parameter card states that power is a direct measurement and that the displayed flow is calculated from fixed speed, power and hematocrit, so on that controller a power change is an input to the flow estimate rather than something the estimate ignores. What a real controller’s displayed flow does in this state is not reproduced here and is not claimed — the card names the inputs and gives no estimator equation. Carry the lesson that power and a computed flow can come apart; do not carry this model’s particular arrow to a bedside. Held for device review (OD-02).',
     },
   },
 
@@ -1532,7 +1532,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     clinicalQuestion:
       'Output is low on left-sided support. Is the limiting problem the left ventricle, or what is reaching it?',
     startingContext:
-      'A left-sided pump at performance level five in a patient with a high right atrial pressure, a modestly elevated wedge pressure and a low pulmonary pulsatility ratio. Suction and low-flow alarms are already active.',
+      'A left-sided pump at performance level five in a patient whose right atrial pressure and wedge pressure are both elevated and sitting at about the same number, with a low pulmonary pulsatility ratio. Suction and low-flow alarms are already active. The congestion panel further down this screen reads both pressures against the consensus description and calls the pattern biventricular; that is a separate question from which side is limiting the pump, and this section is about the second one.',
     patientProblem:
       'Low output whose limitation sits upstream of the left heart, presenting as a left-sided device that is not delivering.',
     supportPathway:
@@ -1551,10 +1551,11 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
     recognizeOptions: [
       {
         id: 'right-sided',
-        label: 'The right side: a high right atrial pressure with only a modest wedge pressure',
+        label:
+          'The right side: a right atrial pressure that has risen to meet the wedge pressure, with the pump in suction and gaining almost nothing from more level',
         correct: true,
         feedback:
-          'High pressure behind the right ventricle with an under-filled left heart is a delivery problem upstream of the left ventricle. Left-sided unloading is not what this profile is asking for.',
+          'Both filling pressures are elevated here, and the congestion panel says so. What makes the right side the limit is not the wedge pressure being low — it is not — but the relationship and what the pump does: right atrial pressure has risen to about the wedge pressure, the pulmonary pulsatility ratio is 0.5, and this model reports right-sided delivery as the smallest term feeding the inlet. Three extra levels buy about a quarter of a litre and leave the suction in place. Raising the left-pump level alone does not resolve this model’s right-sided-delivery limit; this comparison does not decide whether a patient needs left-heart unloading.',
       },
       {
         id: 'left-sided',
@@ -1562,7 +1563,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
           'The left side: an elevated wedge pressure, so the left ventricle is congested and needs unloading',
         correct: false,
         feedback:
-          'A modest wedge pressure alongside a high right atrial pressure points the other way. In a left-limited profile the wedge pressure is the one that dominates.',
+          'Half right, and worth separating. The wedge pressure is elevated — the congestion panel on this screen calls the pattern biventricular, and it is correct. But a filling pressure says where pressure is high, not what is limiting the pump. In a left-limited profile the wedge pressure dominates the right atrial pressure and unloading the left ventricle relieves it; here the two are about equal, the pump is in suction, and more of it buys almost nothing.',
       },
       {
         id: 'afterload',
@@ -1583,7 +1584,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       contextRequirement: 'patient',
       clinicalContextId: 'mcs-integration-rv-limited-escalation',
       visualAssetIds: ['mcs-monitor', 'mcs-anatomy'],
-      stem: 'Right atrial pressure is high, the wedge pressure is only modestly raised, and the left-sided pump is in suction at level five. You raise it to level eight. What do you expect?',
+      stem: 'Right atrial pressure and wedge pressure are both elevated and about equal, and the left-sided pump is in suction at level five. You raise it to level eight. What do you expect?',
       choices: [
         {
           id: 'small-gain-suction-persists',
@@ -1642,7 +1643,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       signal('svo2Percent', 'Simulated mixed venous saturation', '%', 0, 'oxygen-balance'),
     ],
     beforeStateLabels: [
-      'A high right atrial pressure with a modestly raised wedge pressure',
+      'A right atrial pressure and a wedge pressure both elevated and about equal',
       'A left-sided pump in suction at level five, delivering about half a litre per minute',
       'A low mean pressure and a low mixed venous saturation',
     ],
@@ -1652,7 +1653,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
       'The same suction and low-flow alarms still active',
     ],
     explanation:
-      'Three levels of extra support bought a fraction of what the same change buys in a delivering circulation, and it bought it while the pump stayed in suction. The limitation was never the setting, and the profile said so before the change was made: a high right atrial pressure with a modest wedge pressure is a delivery problem upstream of the left ventricle.',
+      'Three levels of extra support bought a fraction of what the same change buys in a delivering circulation, and it bought it while the pump stayed in suction. The limitation was never the setting, and the profile said so before the change was made: a right atrial pressure that has risen to meet the wedge pressure, a low pulmonary pulsatility ratio, and a pump already in suction are a delivery problem upstream of the left ventricle. Both pressures being high is a congestion pattern; which side is limiting the pump is a different reading of the same two numbers.',
     pressureLevelExplanation:
       'Mean pressure moved a few mm Hg and right atrial pressure did not move at all. The pressure behind the failing chamber is unchanged because nothing was done for that chamber.',
     flowLevelExplanation:

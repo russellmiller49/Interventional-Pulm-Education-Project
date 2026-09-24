@@ -1,3 +1,4 @@
+import { MCS_IABP_PRESSURE_SCALE } from '../../content/iabpWaveformReference'
 import type { McsTeachingPanelProps } from './panelProps'
 import { mcsComparesAgainstActionBaseline, mcsMechanismDisclosed } from './revealStage'
 import {
@@ -58,7 +59,9 @@ export function IabpTimingTriggeringPanel({
 }: McsTeachingPanelProps) {
   const disclosed = mcsMechanismDisclosed(reveal)
   const timing = iabpTimingView(state)
-  const strip = timing ? iabpStripView(state, timing) : null
+  // Same fixed pressure domain as every other timing figure, so the panel's strip and Section 3's
+  // five demonstrations are drawn against the same pressures (F17).
+  const strip = timing ? iabpStripView(state, timing, 3, MCS_IABP_PRESSURE_SCALE) : null
   const alarms = activeAlarms(state)
   const rows = beforeAfterReadings(
     [

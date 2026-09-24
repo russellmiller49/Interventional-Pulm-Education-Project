@@ -17,6 +17,9 @@ import {
 import { MCS_AF_TRIGGER_LIMIT, mcsAfTriggerLimitAppliesTo } from '../content/afTriggerLimit'
 import type {
   IabpDeviceState,
+  McsLeftPreloadLimiter,
+  McsLvadFillingLimiter,
+  McsSupportDiagnostics,
   ImpellaDeviceState,
   LvadDeviceState,
   McsAlarm,
@@ -33,6 +36,24 @@ import type {
 
 const MAX_WAVEFORM_SECONDS = 8
 const MAX_TREND_SECONDS = 120
+
+/**
+ * Authored model constants, named where they were previously inline literals.
+ *
+ * None of these values changed in MCS-PRE-REVIEW-02. They are named so the replay harness, the
+ * tests and the owner-decision packet can refer to one definition instead of a line number, and
+ * so a future reviewed change has a single place to land. They carry no clinical source.
+ */
+/** `leftPreloadFactor` below this turns on the modeled left-sided suction state. Authored. */
+export const LEFT_IMPELLA_SUCTION_PRELOAD_THRESHOLD = 0.58
+/** Baseline MAP above which the modeled durable-support afterload alarm is raised. Authored. */
+export const LVAD_HIGH_AFTERLOAD_MAP_MMHG = 100
+/** Flat power added by the suspected-thrombosis flag. Authored; it never enters the flow formula. */
+export const LVAD_SUSPECTED_THROMBOSIS_POWER_W = 2.8
+/** Either durable-support filling term below this raises the modeled inflow-suction state. Authored. */
+export const LVAD_SUCTION_FILLING_THRESHOLD = 0.42
+/** The modeled inflow-suction state needs the pump to be moving at least this much. Authored. */
+export const LVAD_SUCTION_MINIMUM_FLOW_LMIN = 2.5
 
 export function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value))
@@ -236,7 +257,24 @@ export function deriveBaselineMeasurements(patient: McsPatientState): Hemodynami
   }
 }
 
-interface SupportComputation {
+/**
+ * What a left-sided inflow-limitation alarm is actually reporting, in this model's own terms.
+ *
+ * The alarm a learner meets said "available LV blood volume is inadequate", and a fellow checked
+ * that against the monitor beside it: wedge 20 mm Hg, displayed end-diastolic volume 134 mL — the
+ * largest in the module (F25). Both readings were right. The alarm's predicate is not a chamber
+ * volume at all: it turns on the smallest of three terms feeding the inlet, and in every state
+ * measured for MCS-PRE-REVIEW-02 that smallest term was right-sided delivery. The sentence now
+ * names the term the model used, so the two numbers stop contradicting each other.
+ */
+export function mcsLeftPreloadLimiterPhrase(limiter: McsLeftPreloadLimiter): string {
+  if (limiter === 'rv-delivery')
+    return 'right-sided delivery to the left heart — so this state can stand beside a left ventricle the monitor still shows as full, and the filling pressure beside it is not the quantity that raised it'
+  if (limiter === 'lv-compartment-filling') return 'the modeled volume in the left ventricle itself'
+  return 'the modeled circulating volume'
+}
+
+export interface SupportComputation {
   effect: MechanicalSupportEffect
   nativeFlowLMin: number
   leftDeviceFlowLMin: number
@@ -250,6 +288,7 @@ interface SupportComputation {
   pumpPowerW: number | null
   pulsatilityIndex: number | null
   alarms: readonly McsAlarm[]
+  diagnostics: McsSupportDiagnostics
 }
 
 function alarm(
@@ -400,6 +439,21 @@ function computeIabpSupport(
     pumpPowerW: null,
     pulsatilityIndex: null,
     alarms,
+    diagnostics: {
+      kind: 'iabp',
+      rhythmTriggerQuality,
+      inflationQuality,
+      deflationQuality,
+      timingQuality,
+      assistFraction,
+      efficacy,
+      earlyInflationHarm,
+      lateDeflationHarm,
+      inflationStartPhase: iabpCycle.inflationStart,
+      deflationEndPhase: iabpCycle.deflationEnd,
+      assistedBeat: iabpCycle.assistedBeat,
+      balloonInflated: diastolicInflation,
+    },
   }
 }
 
@@ -460,11 +514,23 @@ function computeImpellaSupport(
   const rpDeliveryGain = (rightDeviceFlow / 4) * clamp(1 - nativeRvDelivery, 0, 0.75) * 0.78
   const rvDeliveryToLeftHeart = clamp(nativeRvDelivery + rpDeliveryGain, 0.25, 1.2)
   const lvFilling = clamp((compartments.leftVentricularVolumeMl - 25) / 85, 0.18, 1.2)
-  const leftPreloadFactor = Math.min(
-    rvDeliveryToLeftHeart,
-    lvFilling,
-    clamp(patient.preloadPercent / 90, 0.25, 1.15),
-  )
+  const circulatingVolumeFactor = clamp(patient.preloadPercent / 90, 0.25, 1.15)
+  const leftPreloadFactor = Math.min(rvDeliveryToLeftHeart, lvFilling, circulatingVolumeFactor)
+  /*
+   * Which of the three terms is the smallest, in the order the minimum is written.
+   *
+   * The suction predicate below turns on `leftPreloadFactor`, so "the left ventricle is empty" is
+   * not what this alarm always means: right-sided delivery can be the smallest term while the
+   * displayed LV end-diastolic volume — a separate educational surrogate derived in
+   * `deriveMcsMetrics` — stays high (F25). Naming the limiter is inspection only; it changes no
+   * flow, no alarm and no displayed number.
+   */
+  const leftPreloadLimiter: McsLeftPreloadLimiter =
+    leftPreloadFactor === rvDeliveryToLeftHeart
+      ? 'rv-delivery'
+      : leftPreloadFactor === lvFilling
+        ? 'lv-compartment-filling'
+        : 'circulating-volume'
   const leftPressureGradientMmHg = clamp(
     compartments.systemicArterialPressureMmHg - compartments.pulmonaryVenousPressureMmHg,
     20,
@@ -485,8 +551,13 @@ function computeImpellaSupport(
   const leftTargetFlow = leftRunning
     ? leftMaximumFlow * (clamp(left.performanceLevel, 0, 9) / 9) ** 0.86
     : 0
-  const leftSuction = leftRunning && left.performanceLevel >= 5 && leftPreloadFactor < 0.58
-  const leftSuctionFactor = leftSuction ? clamp(leftPreloadFactor / 0.58, 0.2, 0.9) : 1
+  const leftSuction =
+    leftRunning &&
+    left.performanceLevel >= 5 &&
+    leftPreloadFactor < LEFT_IMPELLA_SUCTION_PRELOAD_THRESHOLD
+  const leftSuctionFactor = leftSuction
+    ? clamp(leftPreloadFactor / LEFT_IMPELLA_SUCTION_PRELOAD_THRESHOLD, 0.2, 0.9)
+    : 1
   const leftDeviceFlow = clamp(
     leftTargetFlow *
       leftPreloadFactor *
@@ -539,7 +610,7 @@ function computeImpellaSupport(
         'impella-left-suction',
         'Left Impella suction detected',
         'critical',
-        'Available LV blood volume is inadequate or restricted for the selected support.',
+        `With the left pump running at P5 or above, this model raises suction when its left-preload minimum is below ${LEFT_IMPELLA_SUCTION_PRELOAD_THRESHOLD}. Here a minimum term is ${mcsLeftPreloadLimiterPhrase(leftPreloadLimiter)}. This is an authored modeled state, not a device's own suction logic.`,
       ),
     )
   if (left.enabled && left.position !== 'correct')
@@ -679,6 +750,29 @@ function computeImpellaSupport(
     pumpPowerW: null,
     pulsatilityIndex: null,
     alarms,
+    diagnostics: {
+      kind: 'impella',
+      nativeRvDelivery,
+      rpDeliveryGain,
+      rvDeliveryToLeftHeart,
+      lvCompartmentFilling: lvFilling,
+      circulatingVolumeFactor,
+      leftPreloadFactor,
+      leftPreloadLimiter,
+      leftAfterloadFactor,
+      leftPositionFactor,
+      leftTargetFlow,
+      leftDeviceFlow,
+      leftSuction,
+      leftSuctionThreshold: LEFT_IMPELLA_SUCTION_PRELOAD_THRESHOLD,
+      rightVenousFilling,
+      rightAfterloadFactor,
+      rightPositionFactor,
+      rightTargetFlow,
+      rightDeviceFlow,
+      rightSuction,
+      leftVentricularCompartmentVolumeMl: compartments.leftVentricularVolumeMl,
+    },
   }
 }
 
@@ -712,6 +806,8 @@ function computeLvadSupport(
     pressureGradientFactor,
   )
   const tamponadeFactor = patient.tamponade ? 0.52 : 1
+  const fillingLimiter: McsLvadFillingLimiter =
+    Math.min(rvDelivery, lvFilling) === rvDelivery ? 'rv-delivery' : 'lv-compartment-filling'
   const deviceFlow = clamp(
     targetFlow * Math.min(rvDelivery, lvFilling) * afterloadFactor * tamponadeFactor,
     0,
@@ -724,12 +820,15 @@ function computeLvadSupport(
     10,
   )
   const effectiveFlow = clamp(nativeFlow + deviceFlow - recirculatingFlow, 0.12, 12)
-  const suction = running && deviceFlow > 2.5 && (lvFilling < 0.42 || rvDelivery < 0.42)
+  const suction =
+    running &&
+    deviceFlow > LVAD_SUCTION_MINIMUM_FLOW_LMIN &&
+    (lvFilling < LVAD_SUCTION_FILLING_THRESHOLD || rvDelivery < LVAD_SUCTION_FILLING_THRESHOLD)
   const pumpPower = running
     ? 2.1 +
       deviceFlow * 0.66 +
       (device.speedRpm - 4600) / 1700 +
-      (device.suspectedPumpThrombosis ? 2.8 : 0)
+      (device.suspectedPumpThrombosis ? LVAD_SUSPECTED_THROMBOSIS_POWER_W : 0)
     : 0
   const pi = running
     ? clamp((nativeFlow / Math.max(0.5, deviceFlow)) * 3.4 + patient.preloadPercent / 70, 0.7, 8)
@@ -771,13 +870,27 @@ function computeLvadSupport(
         'Differentiate preload, RV failure, tamponade, afterload, obstruction, and recirculation.',
       ),
     )
-  if (running && baseline.mapMmHg > 100)
+  /*
+   * This predicate does not read the mean pressure on the monitor, and it is not the model's
+   * measure of how much the outlet is costing the pump.
+   *
+   * Measured for MCS-PRE-REVIEW-02 at the durable reference state: the monitor reads a mean
+   * arterial pressure of about 103 mm Hg while `baseline.mapMmHg` — this patient's modeled
+   * circulation with no support running — is 67.5. Raising the simulated resistance to 1900
+   * dyn·s·cm⁻⁵ takes the displayed mean to 140 and cuts modeled pump flow from 3.93 to 3.22
+   * L/min, and this alarm still does not raise, because 87.2 is not above 100. What actually
+   * limits the flow above is `pressureGradientFactor`, computed from the conserved arterial and
+   * pulmonary-venous compartments. So the label names the patient property the predicate tests,
+   * the explanation says which number it is not, and it points at the quantity that does carry
+   * the limitation. The threshold and the input are unchanged and are held for OD-02/OD-04 (F27).
+   */
+  if (running && baseline.mapMmHg > LVAD_HIGH_AFTERLOAD_MAP_MMHG)
     alarms.push(
       alarm(
         'lvad-high-afterload',
-        'Afterload-limited flow',
+        'High modeled unsupported arterial pressure',
         'warning',
-        'Elevated aortic pressure reduces continuous-flow pump output.',
+        `Raised when this patient's modeled circulation without support would run a mean arterial pressure above ${LVAD_HIGH_AFTERLOAD_MAP_MMHG} mm Hg. That is a property of the modeled patient, not the mean pressure on the monitor and not a measure of what the outlet pressure is currently costing the pump — read the modeled afterload limitation beside the flow for that. Authored, with no clinical source; open for review as OD-02.`,
       ),
     )
   if (suction)
@@ -786,7 +899,14 @@ function computeLvadSupport(
         'lvad-suction',
         'Inflow suction pattern',
         'critical',
-        'The LV is underfilled relative to the selected speed and available RV delivery.',
+        `Inflow is below what the selected speed is asking for. This model raises it when either right-sided delivery or the modeled left-ventricular filling term falls below ${LVAD_SUCTION_FILLING_THRESHOLD}; here ${[
+          rvDelivery < LVAD_SUCTION_FILLING_THRESHOLD ? 'right-sided delivery' : null,
+          lvFilling < LVAD_SUCTION_FILLING_THRESHOLD
+            ? 'the modeled left-ventricular filling term'
+            : null,
+        ]
+          .filter(Boolean)
+          .join(' and ')} is. A modeled state, not a controller's own suction detection.`,
       ),
     )
   if (device.suspectedPumpThrombosis)
@@ -832,6 +952,26 @@ function computeLvadSupport(
     pumpPowerW: roundTo(pumpPower, 1),
     pulsatilityIndex: roundTo(pi, 1),
     alarms,
+    diagnostics: {
+      kind: 'lvad',
+      targetFlow,
+      rvDelivery,
+      lvCompartmentFilling: lvFilling,
+      fillingLimiter,
+      afterloadFactor,
+      pressureGradientFactor,
+      baselineMapMmHg: baseline.mapMmHg,
+      highAfterloadPredicateInput: baseline.mapMmHg,
+      highAfterloadPredicateMet: running && baseline.mapMmHg > LVAD_HIGH_AFTERLOAD_MAP_MMHG,
+      deviceFlow,
+      pumpPower,
+      thrombosisPowerAdditionW: device.suspectedPumpThrombosis
+        ? LVAD_SUSPECTED_THROMBOSIS_POWER_W
+        : 0,
+      pulsatilityIndex: pi,
+      suction,
+      leftVentricularCompartmentVolumeMl: compartments.leftVentricularVolumeMl,
+    },
   }
 }
 
@@ -1076,6 +1216,7 @@ export function createInitialMcsState(
     parameters,
     compartments,
     supportEffect: support.effect,
+    supportDiagnostics: support.diagnostics,
     metrics,
     alarms: support.alarms,
     waveforms,
@@ -1108,6 +1249,7 @@ export function advanceMcsSimulation(
   let compartments = state.compartments
   let parameters = state.parameters
   let supportEffect = state.supportEffect
+  let supportDiagnostics = state.supportDiagnostics
   let metrics = state.metrics
   let alarms = state.alarms
   let waveforms = [...state.waveforms]
@@ -1142,6 +1284,7 @@ export function advanceMcsSimulation(
     metrics = deriveMcsMetrics(state.patient, compartments, baseline, support)
     alarms = support.alarms
     supportEffect = support.effect
+    supportDiagnostics = support.diagnostics
     waveforms.push(generateMcsWaveformSample(timeSeconds, state.patient, state.device, metrics))
 
     const previousTrendBucket = Math.floor((timeSeconds - stepSeconds) * 4)
@@ -1159,6 +1302,7 @@ export function advanceMcsSimulation(
     parameters,
     compartments,
     supportEffect,
+    supportDiagnostics,
     metrics,
     alarms,
     waveforms,

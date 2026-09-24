@@ -45,7 +45,22 @@
   border-radius: 0.75rem;
 }
 
+.tableScroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.tableScroll:focus-visible {
+  outline: 3px solid #71e1e5;
+  outline-offset: 2px;
+}
+
+.tableHint {
+  font-size: 0.875rem;
+}
+
 .example table {
+  min-width: 28rem;
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
@@ -101,4 +116,8 @@
 .controls button:focus-visible {
   outline: 3px solid #71e1e5;
   outline-offset: 3px;
+}
+
+.example td:last-child {
+  white-space: normal;
 }

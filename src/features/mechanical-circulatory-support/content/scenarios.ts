@@ -600,9 +600,22 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
       },
     ],
     guidedPrompt: 'Use RAP, PCWP, PAPi, and the LV size together.',
+    /*
+     * The PAPi line is here because the two statements a learner meets about PAPi look like a
+     * contradiction and are not one (F35).
+     *
+     * Section 9 says the pulmonary pulsatility ratio moves only weakly with right-sided *support*,
+     * and on this model it does: starting the right-sided pump in that section takes it from 0.5
+     * to 0.6. This case changes the modeled right ventricle itself, and there it moves a long way:
+     * 0.5 to 2.1, with right atrial pressure 20 to 8 and modeled pump flow 1.16 to 3.66 L/min at
+     * matched times. Same index, two different interventions. The condition list already pairs it
+     * with a flow condition rather than standing it alone, and the debrief now says which of the
+     * two situations this case is.
+     */
     debrief: [
       'A durable LVAD still depends on right-sided delivery.',
       'Raising speed cannot create preload and may worsen suction.',
+      'In the worked comparison that restores modeled RV contractility, the pulmonary pulsatility ratio rises; this is not a claim about which actions you took. Section 9 separately shows the same index barely moving when right-sided support is what changes. It is one observation alongside right atrial pressure and modeled pump flow, and this module does not treat it as a response measure on its own. The case condition requires both PAPi at least 1 and modeled pump flow at least 2.8 L/min; these are authored case criteria, not universal treatment targets.',
     ],
     sourceIds: lvadSources,
     evidenceSourceIds: lvadSources,

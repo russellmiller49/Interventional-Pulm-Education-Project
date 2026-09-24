@@ -539,7 +539,7 @@ describe('durable-LVAD controller values are described accurately', () => {
 
 describe('the estimated-flow and oxygen-delivery boundaries say what they mean', () => {
   it('does not claim to reproduce a real controller', () => {
-    expect(MCS_ESTIMATED_FLOW_BOUNDARY).toMatch(/estimated rather than measured directly/i)
+    expect(MCS_ESTIMATED_FLOW_BOUNDARY).toMatch(/modeled transfer, rounded for display/i)
     expect(MCS_ESTIMATED_FLOW_BOUNDARY).toMatch(
       /does not reproduce each controller’s proprietary calculation or display/i,
     )
