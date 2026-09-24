@@ -10,9 +10,29 @@ import type { EcmoPracticeStage } from './stages'
  * A prompted machine task or a clue that lives on a surface opens it as well. The learner can
  * open the rest at any time; nothing closes mid-stage.
  */
+/**
+ * Cases whose learning target is the patient's own oxygenation, so the patient monitor is open —
+ * and first — while the learner acts (C5-2).
+ *
+ * A fellow walkthrough opened the recirculation case's management stage with the bedside monitor
+ * collapsed, although the case is about patient SpO₂ against the circuit's saturations. Each listed
+ * case's authored brief names a patient saturation as its critical finding (checked by test), and
+ * its learning objectives are read off that saturation. Display only: nothing is cloned or restarted,
+ * and the learner can still close or reopen any surface.
+ */
+export const PRACTICE_PATIENT_OXYGENATION_FOCUS_CASES: readonly string[] = Object.freeze([
+  'clinical-vv-recirculation-migration',
+  'va-clinical-differential-hypoxemia',
+])
+
+export function practiceCaseLeadsWithPatientOxygenation(caseId: string): boolean {
+  return PRACTICE_PATIENT_OXYGENATION_FOCUS_CASES.includes(caseId)
+}
+
 export function surfacesForStage(
   stage: EcmoPracticeStage,
   extras: readonly GuidedTarget[] = [],
+  options: { readonly patientOxygenationFocus?: boolean } = {},
 ): readonly StageSurfaceId[] {
   const base: StageSurfaceId[] =
     stage === 'brief'
@@ -20,7 +40,9 @@ export function surfacesForStage(
       : stage === 'plan'
         ? ['circuit', 'monitor']
         : stage === 'manage'
-          ? ['circuit']
+          ? options.patientOxygenationFocus
+            ? ['monitor', 'circuit']
+            : ['circuit']
           : ['monitor', 'trends']
   for (const target of extras) {
     const surface = surfaceForTarget(target)

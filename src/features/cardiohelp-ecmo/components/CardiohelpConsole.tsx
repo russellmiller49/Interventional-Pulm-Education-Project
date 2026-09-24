@@ -902,10 +902,6 @@ export function CardiohelpConsole({
               <AlertTriangle aria-hidden="true" />
               Zero flow
             </button>
-            <p className={styles.safetyChordHint} id="cardiohelp-safety-chord-hint">
-              Touch: hold Safety with one pointer. Keyboard: hold Space, then press Z for zero flow
-              or G for Global Override.
-            </p>
             <button
               type="button"
               className={styles.physicalButton}
@@ -1054,12 +1050,6 @@ export function CardiohelpConsole({
                 <ChevronUp aria-hidden="true" />
               </button>
             </div>
-            <p className={styles.safetyChordHint} id="cardiohelp-rotary-hold-hint">
-              Tap to step the setpoint, or press and hold to ramp it. Keyboard: focus the dial and
-              hold an arrow key. How fast a hold moves the number is this interface&rsquo;s own
-              repeat rate, not a statement about how any pump ramps, and the value it moves is the
-              speed being requested.
-            </p>
 
             <button
               type="button"
@@ -1076,6 +1066,45 @@ export function CardiohelpConsole({
             </button>
           </aside>
         </div>
+      </div>
+
+      {/*
+        How to read and operate the facsimile, said beside it rather than printed on it.
+
+        The two operating hints used to sit inside the physical-control column at nine pixels, and
+        a fellow walkthrough (S4-1) could not read them or tell what PARAM, BLOOD, TRANS and INTERV
+        stood for. The device keeps its own short labels — they are what the real screen shows — and
+        the explanation sits under the device at reading size. The hint ids are unchanged, so the
+        controls that cite them through `aria-describedby` still do.
+      */}
+      <div className={styles.consoleNotes} data-console-notes>
+        <p id="cardiohelp-safety-chord-hint">
+          <strong>Hold Safety.</strong> Touch: hold Safety with one pointer. Keyboard: hold Space,
+          then press Z for zero flow or G for Global Override.
+        </p>
+        <p id="cardiohelp-rotary-hold-hint">
+          <strong>Rotary dial.</strong> Tap to step the setpoint, or press and hold to ramp it.
+          Keyboard: focus the dial and hold an arrow key. How fast a hold moves the number is this
+          interface&rsquo;s own repeat rate, not a statement about how any pump ramps, and the value
+          it moves is the speed being requested.
+        </p>
+        <p data-console-tab-key>
+          <strong>Screen tabs.</strong>{' '}
+          {screenTabs.map((tab, index) => (
+            <span key={tab.id}>
+              {index > 0 ? ' · ' : null}
+              <abbr title={tab.label}>{tab.short}</abbr> {tab.label}
+            </span>
+          ))}
+          . The menu button (≡) opens Settings and the Alarm list.
+        </p>
+        <p data-console-paux>
+          <strong>pAux</strong> on the Parameter list is an additional pressure channel, read from a
+          separate external pressure sensor (IFU revision 2.3, pages 45 and 110); the device raises
+          pAux alarms only in its &ldquo;MECC&rdquo; application (page 91). This simulation does not
+          model a pAux sensor, so the channel shows no value and is not one of the pressures these
+          lessons teach.
+        </p>
       </div>
     </section>
   )

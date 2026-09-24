@@ -99,7 +99,16 @@ export function FitWidthSurface({
     const inlineTransform = content.style.transform
     content.style.transform = 'none'
     content.style.width = 'min-content'
-    const intrinsicWidth = content.getBoundingClientRect().width
+    const minContentWidth = content.getBoundingClientRect().width
+    /*
+     * The console is a size container (it reflows by its own width), and size containment makes an
+     * element's min-content width ignore its content — so min-content alone would always say "fits".
+     * Laid out at the available width, the content's scroll width is what actually overflows, if
+     * anything still does after the reflow.
+     */
+    content.style.width = `${availableWidth}px`
+    const overflowWidth = content.scrollWidth
+    const intrinsicWidth = Math.max(minContentWidth, overflowWidth)
     const layoutWidth = Math.max(availableWidth, intrinsicWidth)
     content.style.width = `${layoutWidth}px`
     const intrinsicHeight = content.getBoundingClientRect().height
@@ -163,6 +172,15 @@ export function FitWidthSurface({
 
   const scale = metrics?.scale ?? 1
   const scaled = scale < 1
+  /*
+   * An actual-size surface is a keyboard-scrollable region only while something in it is wider than
+   * the box. A focus stop that scrolls nothing, labelled "scroll horizontally", is a broken promise
+   * to a keyboard user — and since the console reflows to its box, that is now the ordinary case.
+   */
+  const scrollable =
+    mode === 'actual' &&
+    metrics !== null &&
+    metrics.intrinsicWidth > metrics.availableWidth + MEASUREMENT_EPSILON
   const outerStyle: CSSProperties | undefined =
     metrics && scaled ? { height: `${metrics.intrinsicHeight * scale}px` } : undefined
   /*
@@ -180,17 +198,16 @@ export function FitWidthSurface({
   return (
     <div
       ref={outerRef}
-      tabIndex={mode === 'actual' ? 0 : undefined}
-      role={mode === 'actual' ? 'region' : undefined}
+      tabIndex={scrollable ? 0 : undefined}
+      role={scrollable ? 'region' : undefined}
       aria-label={
-        mode === 'actual'
-          ? 'Console viewport. Scroll horizontally to inspect all controls.'
-          : undefined
+        scrollable ? 'Console viewport. Scroll horizontally to inspect all controls.' : undefined
       }
       className={[styles.fitSurface, className].filter(Boolean).join(' ')}
       style={outerStyle}
       data-fit-width-surface=""
       data-fit-mode={mode}
+      data-fit-scrollable={scrollable ? 'true' : 'false'}
       data-fit-measured={metrics ? 'true' : 'false'}
       data-fit-scale={scale.toFixed(4)}
       data-intrinsic-width={Math.round(metrics?.intrinsicWidth ?? 0)}

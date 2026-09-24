@@ -75,3 +75,26 @@ export function scrollEcmoTargetIntoView(
     })
   }
 }
+
+/**
+ * Bring a node into view only as far as it is not already in view, through the same scroll owner.
+ *
+ * For a result that appears right under the control that produced it: a node already on screen is
+ * left where it is, and one that runs past the bottom edge is scrolled up just far enough to show its
+ * end (or its top, when it is taller than the view) — never a jump that takes the control off screen.
+ */
+export function revealEcmoTargetIfNeeded(node: HTMLElement): void {
+  if (typeof window === 'undefined') return
+  const owner = ecmoScrollOwner(node)
+  const rect = node.getBoundingClientRect()
+  const top = owner ? owner.getBoundingClientRect().top : siteHeaderHeight()
+  const bottom = owner ? owner.getBoundingClientRect().bottom : window.innerHeight
+  const margin = 16
+  let delta = 0
+  if (rect.top < top + margin) delta = rect.top - top - margin
+  else if (rect.bottom > bottom - margin)
+    delta = Math.min(rect.bottom - bottom + margin, rect.top - top - margin)
+  if (Math.abs(delta) < 1) return
+  if (owner) owner.scrollTo({ top: owner.scrollTop + delta, behavior: 'auto' })
+  else if (documentCanScroll()) window.scrollTo({ top: window.scrollY + delta, behavior: 'auto' })
+}

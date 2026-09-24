@@ -21,6 +21,7 @@ import {
 } from './ecmo-circuit/constants'
 import { drainageChatterActive } from './ecmo-circuit/chatter'
 import { BedsideScene } from './ecmo-circuit/BedsideScene'
+import { buildCircuitLayout } from './ecmo-circuit/layout'
 import { WebGLContextGuard } from './ecmo-circuit/WebGLContextGuard'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoCircuitControls } from './EcmoCircuitControls'
@@ -116,6 +117,14 @@ export function EcmoCircuit3D({
   const [contextLost, setContextLost] = useState(false)
   const [canvasEpoch, setCanvasEpoch] = useState(0)
   const [labelsOn, setLabelsOn] = useState(true)
+  /*
+   * A label the learner asked to find, from the keyboard list under the scene (S2-3). It takes
+   * over the step's own emphasis while set and is released by pressing it again; nothing moves the
+   * camera, so a learner who has orbited keeps the view they chose.
+   */
+  const [foundLabelId, setFoundLabelId] = useState<string | null>(null)
+  const sceneLabels = buildCircuitLayout(state.supportMode).labels
+  const shownEmphasis = foundLabelId ? [foundLabelId] : emphasisSceneLabelIds
   const { active: assetsLoading, progress: assetProgress } = useProgress()
   const closedClampCount =
     Number(state.circuit.drainageClampClosed) + Number(state.circuit.returnClampClosed)
@@ -187,7 +196,7 @@ export function EcmoCircuit3D({
                   controlsEnabled={clampControlsEnabled}
                   reduceMotion={reduceMotion}
                   labelsVisible={!compactViewport && labelsOn}
-                  emphasisSceneLabelIds={emphasisSceneLabelIds}
+                  emphasisSceneLabelIds={shownEmphasis}
                 />
               </Suspense>
             </Canvas>
@@ -233,6 +242,31 @@ export function EcmoCircuit3D({
         >
           {labelsOn ? 'Hide labels' : 'Show labels'}
         </button>
+      ) : null}
+      {webglReady && !contextLost && !compactViewport && labelsOn ? (
+        <div
+          className={styles.circuit3dFind}
+          role="group"
+          aria-label="Find on the bedside model"
+          data-scene-label-finder
+        >
+          <p className={styles.circuit3dFindLabel}>Find on the model</p>
+          <div className={styles.circuit3dFindButtons}>
+            {sceneLabels.map((label) => (
+              <button
+                key={label.id}
+                type="button"
+                aria-pressed={foundLabelId === label.id}
+                data-find-scene-label={label.id}
+                onClick={() =>
+                  setFoundLabelId((current) => (current === label.id ? null : label.id))
+                }
+              >
+                {label.text}
+              </button>
+            ))}
+          </div>
+        </div>
       ) : null}
 
       {showControls ? (

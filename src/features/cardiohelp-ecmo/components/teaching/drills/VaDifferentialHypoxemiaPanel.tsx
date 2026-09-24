@@ -3,6 +3,7 @@ import {
   ecmoDerivedValueGuides,
 } from '../../../content/ecmoValueGuides'
 import type { EcmoSimulationState } from '../../../engine/types'
+import { VaAorticStreamsDiagram } from '../VaAorticStreamsDiagram'
 import { GuidedValue, TextEquivalent, VaConfigurationLabel, styles } from '../shared'
 import {
   AfterCommitment,
@@ -71,6 +72,18 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
           site it was taken from, because in this configuration the site is part of what the number
           is.
         </p>
+      </section>
+
+      {/*
+        VA11-1: the meeting place, as two hand-placed illustrations the learner can switch between.
+        The map's marker does not move because nothing in this simulation computes where the streams
+        meet; this comparison says so, and names its states by the balance, not by any value here.
+      */}
+      <section className={styles.section} aria-labelledby="va-streams-heading">
+        <h3 id="va-streams-heading" className={styles.heading}>
+          Where the two streams meet — a conceptual comparison
+        </h3>
+        <VaAorticStreamsDiagram />
       </section>
 
       <SignalRegister

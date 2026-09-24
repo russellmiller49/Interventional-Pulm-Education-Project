@@ -79,6 +79,25 @@ export interface CircuitMapGeometry {
   readonly accessPoint: { readonly cx: number; readonly cy: number }
 }
 
+/**
+ * The patient panel is an anterior view: the patient faces the viewer, so the patient's right is the
+ * viewer's left. This is the body's drawn midline (the head is centred on it); a site on the
+ * patient's right has `x` below it.
+ */
+export const CIRCUIT_MAP_BODY_MIDLINE_X = 164
+
+/**
+ * The right-arm (right-radial) monitoring site on the VA map, on the patient's right arm — the arm
+ * drawn on the viewer's left (VA7-2). It was at x 258, on the patient's left arm.
+ */
+export const VA_RIGHT_ARM_SITE = Object.freeze({ cx: 72, cy: 223 })
+
+/**
+ * The native stream's cue from the heart to the upper body, ending at the right-arm site. The mirror
+ * of the path that used to run to the patient's left arm, across the midline.
+ */
+export const VA_NATIVE_EJECTION_PATH = 'M163 151 C139 140 114 136 90 151 C78 166 75 193 76 200'
+
 export function circuitMapGeometry(supportMode: SupportMode): CircuitMapGeometry {
   const isVa = supportMode === 'va'
   const returnPortX = isVa ? 244 : 214
@@ -94,9 +113,15 @@ export function circuitMapGeometry(supportMode: SupportMode): CircuitMapGeometry
     // The seam between the two is the corner after the run, a feature the drawing actually has.
     postMembraneRun: 'M825 385 H1000',
     returnRun: `M1000 385 Q1042 385 1042 427 V512 Q1042 540 1014 540 H${returnPortX + 28} Q${returnPortX} 540 ${returnPortX} 512 V455`,
+    /*
+     * VV: the oxygenated return is still venous return. It enters the other femoral vein and runs up
+     * the iliac vein and the inferior vena cava to the right atrium, beside the drainage cannula. It
+     * used to be drawn straight up the arterial side of the trunk, next to the ARTERIAL label, which
+     * read as VA at a glance (S2-2). Its red is oxygen content, not an artery; the legend says so.
+     */
     returnCannula: isVa
       ? 'M244 447 C226 411 207 379 197 335 C195 299 194 247 193 213'
-      : 'M214 447 C199 384 181 291 170 185',
+      : 'M214 447 C194 424 170 398 160 368 C156 330 157 260 162 190',
     membraneGasPath: 'M762 462 V310',
     pump: { cx: 455, cy: 385, r: 53 },
     oxygenator: { x: 700, y: 292, width: 125, height: 186 },
