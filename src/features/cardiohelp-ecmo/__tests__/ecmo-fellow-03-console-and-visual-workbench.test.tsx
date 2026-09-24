@@ -29,8 +29,10 @@ import { buildFoundationStageLesson } from '../components/stage/adapters/foundat
 import { capstoneMatrixMinimumRem } from '../components/teaching/CapstoneHypothesisMatrix'
 import { EcmoFoundationTeachingPanel } from '../components/teaching/EcmoFoundationTeachingPanel'
 import { VA_MIXING_ILLUSTRATIONS } from '../components/teaching/VaAorticStreamsDiagram'
+import { FoundationComparison } from '../components/teaching/FoundationComparison'
 import { VaDifferentialHypoxemiaPanel } from '../components/teaching/drills/VaDifferentialHypoxemiaPanel'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
+import { ecmoFoundationSnapshot } from '../session/foundationSession'
 import {
   createInitialSimulationState,
   createReferenceSimulationState,
@@ -404,6 +406,29 @@ describe('C. comparisons that fit the room they have', () => {
       expect(sentences?.querySelector('[data-text-equivalent]')).not.toBeNull()
       cleanup()
     }
+  })
+
+  it('S3-1: keeps the before/after comparison a table where it fits and restacks it where it does not', () => {
+    // At 320 px with 200% text the whole-word headers overflowed their fixed columns and widened
+    // the page (baseline scrollWidth 380 px). Below 20 rem of its own width each reading becomes its
+    // name over three labelled values.
+    const stageCss = read(
+      'src/features/cardiohelp-ecmo/components/stage/EcmoLessonStage.module.css',
+    )
+    expect(ruleBody(stageCss, '.comparison')).toContain('container: ecmo-comparison / inline-size')
+    const narrow = mediaBlock(stageCss, '@container ecmo-comparison (max-width: 20rem)')
+    expect(narrow).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))')
+    expect(narrow).toContain('content: attr(data-column-label)')
+    const snapshot = ecmoFoundationSnapshot(settled('vv-reference'))
+    const view = render(
+      <FoundationComparison baseline={snapshot} actionId="increase-rpm" supportMode="vv" />,
+    )
+    const labels = [...view.container.querySelectorAll('tbody td')].map((cell) =>
+      cell.getAttribute('data-column-label'),
+    )
+    expect(labels.length).toBeGreaterThan(0)
+    expect(new Set(labels)).toEqual(new Set(['Before', 'After', 'Change']))
+    cleanup()
   })
 
   it('lets the learner compare any explanations, with reasoning on request, and hides nothing for good', () => {
