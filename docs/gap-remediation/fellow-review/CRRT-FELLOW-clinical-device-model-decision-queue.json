@@ -1,0 +1,2839 @@
+{
+  "queue": "CRRT-FELLOW-05",
+  "title": "CRRT clinical, device and model decisions (CRRT-FELLOW-05 decision packet)",
+  "status": "NOT REVIEWED. No reviewer decision is recorded. An empty decision is not approval.",
+  "preparedOn": "2026-09-23",
+  "preparedBy": "AI authoring assistant (Claude), at the owner's request, for prompt 05 of the CRRT fellow-review package. It gathered and checked sources only. It is not a reviewer.",
+  "module": "baxter-crrt",
+  "moduleContentVersion": "1.1.0-sme-review.1",
+  "engineVersion": "1.0.0",
+  "baseCommit": "85acc113be11f9acbd395f49e00fee4b69ceff71",
+  "packet": "docs/gap-remediation/fellow-review/CRRT-FELLOW-clinical-device-model-decision-packet.md",
+  "decisionValues": ["NOT REVIEWED", "APPROVE AS SCOPED", "REVISE", "REJECT", "UNCERTAIN"],
+  "howToRecordADecision": "Replace status NOT REVIEWED only with your own decision, and fill reviewer, reviewerRole, reviewDate (the actual date) and the content version or commit you reviewed in requiredChange or unresolvedDisagreement as needed. A decision covers the item's stated scope only. A later wording or model change re-opens the item.",
+  "sourceIdResolution": "sourceIds resolve against baxterCrrtLearnerFacingSourceById (content/learnerSourceMap.ts), baxterCrrtSourceDocuments (content/provenance.ts), or the runtime case registry for SYNTH-CRRT-nn. Outside documents that are not registered records appear only in externalSources.",
+  "unchangedRelatedRecords": [
+    "docs/gap-remediation/self-paced/G01-crrt-source-review-queue.json (all ten items NOT REVIEWED; not edited)",
+    "docs/gap-remediation/self-paced/CRRT-02-faculty-packet.md (reviewer records blank; not edited)",
+    "CONFLICT-001, CONFLICT-002, CONFLICT-CRRT-MAKEUP-001, CONFLICT-010 (unresolved)"
+  ],
+  "items": [
+    {
+      "id": "CRRT-F05-O01",
+      "ownerDecisionIds": ["O-01"],
+      "contentTopicIds": [],
+      "findingIds": ["F-01", "F-24"],
+      "title": "Clinical chemistry model: keep suppressed, or authorize a reviewed pilot",
+      "packetSection": "§4 and Artifact A",
+      "currentImplementation": "engine/soluteModel.ts: correct constant-volume mass balance, removal-only in practice. All 18 cases: production 0, input 0, pool residual clearance 0, one 40 or 42 L volume for all seven pools, filter-inlet fraction 1. BagState has no composition field; cases carrying solutionProfileIds are rejected. soluteValidity.ts marks every pool unsupported; evolving values are shown on no learner surface and cannot be scored. Patient-level residual kidney clearance (2 mL/min in CRRT-10) is not read by the solute step.",
+      "sourceIds": ["SYNTH-CRRT-02", "REVIEW-CKRT-CORE-2025"],
+      "sourceLocators": [
+        {
+          "sourceId": "SYNTH-CRRT-02",
+          "type": "synthetic-teaching-fixture",
+          "locator": "CRRT-02 authored reviewer fixture",
+          "version": "v1 authored teaching calibration · no clinical review recorded",
+          "registrySourceType": "synthetic-calibration",
+          "registryLocator": "CRRT-02 authored reviewer fixture",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "REVIEW-CKRT-CORE-2025",
+          "type": "expert-opinion (narrative review)",
+          "locator": "DOI 10.1053/j.ajkd.2024.09.015 (transport concepts only)",
+          "version": "Am J Kidney Dis. 2025;85:767–786",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "DOI 10.1053/j.ajkd.2024.09.015 · https://www.sciencedirect.com/science/article/pii/S027263862401120X · erratum DOI 10.1053/j.ajkd.2025.06.004",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": [
+        "draft-guideline",
+        "expert-opinion (narrative review)",
+        "synthetic-teaching-fixture"
+      ],
+      "externalSources": [
+        {
+          "citation": "KDIGO 2026 Clinical Practice Guideline for AKI and AKD — Public Review Draft, March 2026 (kdigo.org), Table 53 (representative commercial dialysate and replacement solutions)",
+          "type": "draft-guideline",
+          "locator": "PDF p312",
+          "publicationStatus": "Draft (public review closed 2026-05-11; no final publication found on 2026-09-23)",
+          "howRead": "Text extraction of the public-review draft; table noted, not copied"
+        }
+      ],
+      "missingEvidence": [
+        "Exact solution product records (manufacturer, product, label revision)",
+        "Distribution volume per solute",
+        "Endogenous production per marker",
+        "External solute inputs tied to the fluid ledger",
+        "Residual renal clearance linked to pools",
+        "Sieving/saturation per solute and membrane",
+        "A named source for the flux equation form",
+        "Molar-mass reference for any mg↔mmol conversion",
+        "Case endpoints and conservation tests"
+      ],
+      "proposedMinimalChange": "None now. If option B: a reviewed potassium/bicarbonate pilot in CRRT-02 only, behind the conservation, equilibrium, zero-flux, segmentation and matched-time tests in Artifact A; every other solute and every case stays suppressed.",
+      "affectedActivities": [
+        "CRRT-02",
+        "CRRT-03",
+        "CRRT-12",
+        "all Practice debrief laboratory sections",
+        "CRRT-05 worked comparison (small-solute marker)"
+      ],
+      "ownerDecisionRequired": "Option A (keep all evolving chemistry suppressed) or option B (reviewed K/HCO3 pilot in CRRT-02). If B, name the exact dialysate product and who supplies its composition record.",
+      "recommendedReviewerRole": "Nephrologist + CRRT pharmacist (model reviewer)",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-O02",
+      "ownerDecisionIds": ["O-02"],
+      "contentTopicIds": ["G-08"],
+      "findingIds": ["F-02", "X-05"],
+      "title": "Tolerance cases: planning exercise or reviewed response",
+      "packetSection": "§5",
+      "currentImplementation": "engine/patientModel.ts advances an intravascular reserve and a bounded stress index; MAP, heart rate and vasopressor index are never written. CRRT-11 matched at 2 h: stress 0.760 (no action), 0.480 (reduce, includes authored 1 h), 0.872 (increase); MAP 59 on every path. CRRT-12/17/18 share the CRRT-11 seed.",
+      "sourceIds": ["SYNTH-CRRT-11", "GUID-RRT-ICU-2026", "GONEUTRAL-2024", "FLUID-PM-001"],
+      "sourceLocators": [
+        {
+          "sourceId": "SYNTH-CRRT-11",
+          "type": "synthetic-teaching-fixture",
+          "locator": "CRRT-11 authored reviewer fixture",
+          "version": "v1 authored teaching calibration · no clinical review recorded",
+          "registrySourceType": "synthetic-calibration",
+          "registryLocator": "CRRT-11 authored reviewer fixture",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GUID-RRT-ICU-2026",
+          "type": "guideline",
+          "locator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, 5.1 (registered)",
+          "version": "Critical Care. 2026;30:46",
+          "registrySourceType": "guideline",
+          "registryLocator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, and 5.1 · DOI 10.1186/s13054-025-05817-6 · https://link.springer.com/article/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GONEUTRAL-2024",
+          "type": "trial",
+          "locator": "DOI 10.1007/s00134-024-07676-1",
+          "version": "Intensive Care Med. 2024;50:2061–2072",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "DOI 10.1007/s00134-024-07676-1",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "FLUID-PM-001",
+          "type": "manufacturer-manual",
+          "locator": "Manual p219 · PDF p220",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual p219 · PDF p220",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": ["guideline", "manufacturer-manual", "synthetic-teaching-fixture", "trial"],
+      "externalSources": [],
+      "missingEvidence": [
+        "Any source-backed blood-pressure or vasopressor response coefficient",
+        "Any perfusion marker",
+        "Reviewed authored series values, if option B"
+      ],
+      "proposedMinimalChange": "Option A: retitle/reframe CRRT-11 as a planning exercise (copy only). No coefficient is proposed.",
+      "affectedActivities": [
+        "CRRT-11",
+        "CRRT-12",
+        "CRRT-17",
+        "CRRT-18",
+        "Learn Lesson 7 net-observe (wording only)"
+      ],
+      "ownerDecisionRequired": "A (planning exercise), B (reviewed synthetic authored trend for named paths and times, values supplied by whom), or C (defer until a physiology source exists).",
+      "recommendedReviewerRole": "Nephrologist/ICU faculty + CRRT nurse",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-O02-CRRT13",
+      "ownerDecisionIds": ["O-02"],
+      "contentTopicIds": [],
+      "findingIds": ["F-02"],
+      "title": "CRRT-13: should the corrective pause–reposition–resume carry an authored elapsed interval",
+      "packetSection": "§5",
+      "currentImplementation": "Only crrt13-advance-to-pattern carries a time effect (+30 min). Pause, reposition, resume and confirm land on one timestamp, so zero downtime is correct accounting; advancing 10 min while paused yields 10 min downtime and 16.61 mL/kg/h. latencySeconds is authored but read by nothing.",
+      "sourceIds": ["SYNTH-CRRT-13"],
+      "sourceLocators": [
+        {
+          "sourceId": "SYNTH-CRRT-13",
+          "type": "synthetic-teaching-fixture",
+          "locator": "CRRT-13 authored fixture",
+          "version": "Phase 5 draft.1",
+          "registrySourceType": "synthetic-calibration",
+          "registryLocator": "CRRT-13 authored fixture",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": ["synthetic-teaching-fixture"],
+      "externalSources": [],
+      "missingEvidence": ["An approved authored duration for the corrective sequence"],
+      "proposedMinimalChange": "None unless an authored duration is approved; then a single explicit time effect on the resume or reposition action.",
+      "affectedActivities": ["CRRT-13", "Learn Lesson 5 tasks 5–9 (guided version)"],
+      "ownerDecisionRequired": "Keep same-time correction (zero downtime) or approve an authored interval (value and which action carries it).",
+      "recommendedReviewerRole": "Experienced CRRT nurse + faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-O03",
+      "ownerDecisionIds": ["O-03"],
+      "contentTopicIds": ["G-03"],
+      "findingIds": ["F-03", "F-05"],
+      "title": "Predilution and filtration fraction: which concept or expression to teach",
+      "packetSection": "§6 and Artifact C",
+      "currentImplementation": "Filtration fraction is a fixed authored coefficient (0.1 or 0.2) used only as a filter-burden weight; filter-inlet concentration fraction is 1. PrisMax total-predilution and FF functions exist in engine/clinicalMath.ts but are unwired. CRRT-05 split changes only the two flow terms (bit-identical otherwise).",
+      "sourceIds": [
+        "MATH-PM-003",
+        "MATH-PM-004",
+        "MATH-PM-005",
+        "MATH-PM-006",
+        "REVIEW-CKRT-CORE-2025",
+        "SYNTH-CRRT-05"
+      ],
+      "sourceLocators": [
+        {
+          "sourceId": "MATH-PM-003",
+          "type": "manufacturer-manual",
+          "locator": "Manual p218 · PDF p219 (PRE%tot, FF Blood %, FF Plasma %)",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual p218 · PDF p219",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "MATH-PM-004",
+          "type": "manufacturer-manual",
+          "locator": "Manual p218 · PDF p219 (Qufpost; CONFLICT-001)",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual p218 · PDF p219",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "MATH-PM-005",
+          "type": "manufacturer-manual",
+          "locator": "Manual pp218–219 · PDF pp219–220 (Qplasma; two definitions)",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pp218–219 · PDF pp219–220",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "MATH-PM-006",
+          "type": "manufacturer-manual",
+          "locator": "Manual p220 · PDF p221 (Qpre; CONFLICT-002)",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual p220 · PDF p221",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "REVIEW-CKRT-CORE-2025",
+          "type": "expert-opinion (narrative review)",
+          "locator": "Audited claim topic: solute-transport mechanisms",
+          "version": "Am J Kidney Dis. 2025;85:767–786",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "DOI 10.1053/j.ajkd.2024.09.015 · https://www.sciencedirect.com/science/article/pii/S027263862401120X · erratum DOI 10.1053/j.ajkd.2025.06.004",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "SYNTH-CRRT-05",
+          "type": "synthetic-teaching-fixture",
+          "locator": "CRRT-05 authored reviewer fixture",
+          "version": "v1 authored teaching calibration · no clinical review recorded",
+          "registrySourceType": "synthetic-calibration",
+          "registryLocator": "CRRT-05 authored reviewer fixture",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": [
+        "draft-guideline",
+        "expert-opinion (narrative review)",
+        "manufacturer-manual",
+        "synthetic-teaching-fixture"
+      ],
+      "externalSources": [
+        {
+          "citation": "KDIGO 2026 Clinical Practice Guideline for AKI and AKD — Public Review Draft, March 2026 (kdigo.org), Practice Point 5.6.2 (non-pharmacologic strategies for circuit life, including predilution)",
+          "type": "draft-guideline",
+          "locator": "PDF p305",
+          "publicationStatus": "Draft (public review closed 2026-05-11; no final publication found on 2026-09-23)",
+          "howRead": "Text extraction; ungraded draft practice point"
+        }
+      ],
+      "missingEvidence": [
+        "Resolution of CONFLICT-001 and CONFLICT-002",
+        "Which Qplasma definition FF Plasma uses",
+        "Whether FF Plasma's Qeff numerator intends to include dialysate",
+        "A registered source for any generic FF definition or ceiling"
+      ],
+      "proposedMinimalChange": "None until a concept/expression is chosen. Option A keeps the qualitative contrast; B/C wire one PrisMax expression only after CONFLICT-002 is resolved; D adds a sourced generic FF beside the device display.",
+      "affectedActivities": ["CRRT-05", "Learn Lessons 3–4", "CRRT-15", "CRRT-16"],
+      "ownerDecisionRequired": "A (concept only), B (PrisMax FF Blood %), C (PrisMax FF Plasma %) or D (a named textbook definition); and whether any is calculated live.",
+      "recommendedReviewerRole": "Nephrology/device SME",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-O04",
+      "ownerDecisionIds": ["O-04"],
+      "contentTopicIds": [],
+      "findingIds": ["F-14"],
+      "title": "PrisMax −25 mmHg filter-drop correction placement and no-flow display",
+      "packetSection": "§7 and Artifact D part 1",
+      "currentImplementation": "Site tiles show raw pressures; displayed filter drop = (raw filter − raw return) − 25 (engine/pressureModel.ts). With zero flow raw filter equals raw return by construction, so the drop reads −25 and is labeled not interpretable without blood flow (selectCrrtCalculatedPressureValidity). G01-CRRT-02 hold unchanged.",
+      "sourceIds": ["DEV-PM-010", "PRISMAX-AW8035-RB"],
+      "sourceLocators": [
+        {
+          "sourceId": "DEV-PM-010",
+          "type": "manufacturer-manual",
+          "locator": "Manual pp201–202 · PDF pp202–203 (∆Pfil = Pfil − Pret; readings corrected for a −25 mmHg hydrostatic bias)",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pp201–202 · PDF pp202–203",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "PRISMAX-AW8035-RB",
+          "type": "manufacturer-manual",
+          "locator": "SHA-256 204543b8…34f1ff; 353 pages",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "sourceDocument"
+        }
+      ],
+      "sourceType": ["manufacturer-manual"],
+      "externalSources": [],
+      "missingEvidence": [
+        "Console observation on program 2.XX (or the program the module should describe)",
+        "Baxter documentation stating which reading carries the correction"
+      ],
+      "proposedMinimalChange": "None until the console question is answered. If the console shows displayed drop = displayed filter − displayed return, change pressureModel.ts, the arithmetic layout, circuit chip, glossary and pinned tests.",
+      "affectedActivities": [
+        "Learn Lesson 2 pressure lab",
+        "Learn Lessons 5 and 8 live profile",
+        "CRRT-13",
+        "CRRT-14",
+        "CRRT-15",
+        "CRRT-16",
+        "PrisMax facsimile pressure grid"
+      ],
+      "ownerDecisionRequired": "Answer: (1) does the displayed filter drop equal displayed filter minus displayed return, or differ by 25 mmHg; (2) what is displayed for filter drop and TMP when the blood pump is stopped.",
+      "recommendedReviewerRole": "Experienced PrisMax operator/device SME + nephrology",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-O04-TMP",
+      "ownerDecisionIds": ["O-04"],
+      "contentTopicIds": [],
+      "findingIds": ["F-14"],
+      "title": "PrisMax TMP −18 mmHg: display-formula term or correction of the filter and effluent readings (kept separate)",
+      "packetSection": "§7",
+      "currentImplementation": "Displayed TMP = (raw filter + raw return)/2 − raw effluent − 18 (engine/pressureModel.ts). Learner wording calls −18 a fixed display offset. G01-CRRT-01 records that the manual prints −18 without naming it; PDF p219's first sentence names it as a correction of filter and effluent pressures. G01-CRRT-01 is not edited.",
+      "sourceIds": ["MATH-PM-002", "PRISMAX-AW8035-RB"],
+      "sourceLocators": [
+        {
+          "sourceId": "MATH-PM-002",
+          "type": "manufacturer-manual",
+          "locator": "Manual p217 · PDF p218 (TMP expression); manual p218 · PDF p219 first sentence (−18 mmHg correction of filter and effluent pressures)",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual p217 · PDF p218",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "PRISMAX-AW8035-RB",
+          "type": "manufacturer-manual",
+          "locator": "SHA-256 204543b8…34f1ff",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "sourceDocument"
+        }
+      ],
+      "sourceType": ["manufacturer-manual"],
+      "externalSources": [],
+      "missingEvidence": [
+        "Console observation: whether displayed TMP equals [(displayed filter + displayed return)/2] − displayed effluent − 18"
+      ],
+      "proposedMinimalChange": "None until answered; the two readings of the manual are not algebraically the same.",
+      "affectedActivities": ["Learn Lesson 2", "live pressure profile", "glossary TMP entry"],
+      "ownerDecisionRequired": "Answer the TMP console question; confirm or revise the wording 'fixed display offset'.",
+      "recommendedReviewerRole": "Experienced PrisMax operator/device SME",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-O05-CITRATE",
+      "ownerDecisionIds": ["O-05"],
+      "contentTopicIds": ["G-05"],
+      "findingIds": ["F-04", "F-16"],
+      "title": "Minimum evidence for the citrate-safety case (CRRT-17)",
+      "packetSection": "§8.1 and Storyboard B1",
+      "currentImplementation": "CRRT-17 supplies one systemic ionized calcium (1.05 mmol/L, case start), total calcium not supplied, bicarbonate and pH; five absent items are named before any reveal. Engine anticoagulation is 'none' for every case and has no citrate method; linkedTrendDirections is dead state; no circuit-sample field exists.",
+      "sourceIds": [
+        "SYNTH-CRRT-17",
+        "CITRATE-SIAARTI-2023-MECHANISM",
+        "CITRATE-SIAARTI-2023-SAMPLING",
+        "CITRATE-SCHNEIDER-2017-METABOLISM",
+        "CITRATE-SCHNEIDER-2017-PATTERNS",
+        "CITRATE-ICU-GUIDE-2026-SAFETY"
+      ],
+      "sourceLocators": [
+        {
+          "sourceId": "SYNTH-CRRT-17",
+          "type": "synthetic-teaching-fixture",
+          "locator": "CRRT-17 adapted runtime case (template CRRT-11)",
+          "registrySourceType": "synthetic-calibration",
+          "registryReviewStatus": "not a registry record (runtime case source)",
+          "resolvedBy": "runtimeCase"
+        },
+        {
+          "sourceId": "CITRATE-SIAARTI-2023-MECHANISM",
+          "type": "expert-opinion (position statement)",
+          "locator": "Section 1 Rationale ('During RCA'); Section 2",
+          "version": "J Anesth Analg Crit Care. 2023;3:7",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "Section 1, Rationale, paragraph beginning “During RCA”; Section 2 modality context · https://doi.org/10.1186/s44158-023-00091-w",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "CITRATE-SIAARTI-2023-SAMPLING",
+          "type": "expert-opinion (position statement)",
+          "locator": "Section 4 Rationale; Section 5 Rationale",
+          "version": "J Anesth Analg Crit Care. 2023;3:7",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "Section 4, Rationale, monitoring discussion after the accumulation triad; Section 5, Rationale, calcium mass balance · https://doi.org/10.1186/s44158-023-00091-w",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "CITRATE-SCHNEIDER-2017-METABOLISM",
+          "type": "expert-opinion (viewpoint)",
+          "locator": "General principles; Citrate clearance and metabolism; Citrate and acid-base balance",
+          "version": "Crit Care. 2017;21:281",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "General principles: Principles of citrate anticoagulation (calcium infusion sites); Citrate clearance and metabolism; Citrate and acid-base balance · https://doi.org/10.1186/s13054-017-1880-1",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "CITRATE-SCHNEIDER-2017-PATTERNS",
+          "type": "expert-opinion (viewpoint)",
+          "locator": "Citrate accumulation and alternative diagnoses; Table 1",
+          "version": "Crit Care. 2017;21:281",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "Citrate accumulation and alternative diagnoses: Citrate accumulation, Net citrate overload, Insufficient trisodium-citrate delivery; Table 1 · https://doi.org/10.1186/s13054-017-1880-1",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "CITRATE-ICU-GUIDE-2026-SAFETY",
+          "type": "guideline",
+          "locator": "Section 4 recommendations 4.4–4.6",
+          "version": "Critical Care. 2026;30:46",
+          "registrySourceType": "guideline",
+          "registryLocator": "Section 4 recommendations 4.4–4.6; Adverse events in RCA; RCA in liver failure · https://doi.org/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": [
+        "expert-opinion (position statement)",
+        "expert-opinion (viewpoint)",
+        "guideline",
+        "synthetic-teaching-fixture"
+      ],
+      "externalSources": [
+        {
+          "citation": "Meersch-Dini et al. Multidisciplinary guidelines on RRT in intensive care medicine. Crit Care 2026;30:46 (PMID 41535952), Recs 4.4 (Grade 0, ⊕⊕⊝⊝), 4.5 (Grade A, ⊕⊕⊝⊝), 4.6 (Grade B, ⊕⊕⊝⊝)",
+          "type": "guideline",
+          "locator": "Section 4",
+          "publicationStatus": "Published 2026-01-14",
+          "howRead": "PMC full text via retrieval tool; grades to be confirmed by reviewer"
+        }
+      ],
+      "missingEvidence": [
+        "Serial systemic and post-filter ionized calcium",
+        "Total calcium and its unit",
+        "Ratio definition",
+        "Citrate delivery and calcium replacement records",
+        "Local protocol",
+        "Molar-mass reference for any unit conversion"
+      ],
+      "proposedMinimalChange": "Option A: rename so CRRT-17 promises recognition over the single supplied value. Option B: a reviewed authored evidence series (Storyboard B1) as supplied case evidence, not a model output.",
+      "affectedActivities": ["CRRT-17", "Learn Lesson 6 (unchanged)"],
+      "ownerDecisionRequired": "A or B; if B, sample sites, units, time points, whether the ratio is shown, and who supplies each value.",
+      "recommendedReviewerRole": "Nephrology + CRRT pharmacist",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-O05-RECOVERY",
+      "ownerDecisionIds": ["O-05"],
+      "contentTopicIds": [],
+      "findingIds": ["F-16"],
+      "title": "Minimum evidence for the renal-recovery and liberation case (CRRT-18)",
+      "packetSection": "§8.2 and Storyboard B2",
+      "currentImplementation": "CRRT-18 supplies one creatinine marker (2.9 mg/dL), constant urine output 5 mL/h, residual clearance 0. No recovery model. The case teaches the clinical decision as separate from the machine stop/end workflow.",
+      "sourceIds": ["SYNTH-CRRT-18", "GUID-KDIGO-AKI-2012", "DEV-PM-006"],
+      "sourceLocators": [
+        {
+          "sourceId": "SYNTH-CRRT-18",
+          "type": "synthetic-teaching-fixture",
+          "locator": "CRRT-18 adapted runtime case (template CRRT-11)",
+          "registrySourceType": "synthetic-calibration",
+          "version": "v1 authored teaching calibration · no clinical review recorded",
+          "registryLocator": "CRRT-18 manifest-only reserved record",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GUID-KDIGO-AKI-2012",
+          "type": "guideline",
+          "locator": "Registered sections 5.1.1, 5.1.2, 5.6.2, 5.8.1, 5.8.2, 5.8.4 (not re-read); lesson link text cites chapter 5.2 (G01-CRRT-08)",
+          "version": "Kidney International Supplements. 2012;2:1–138",
+          "registrySourceType": "guideline",
+          "registryLocator": "Sections 5.1.1, 5.1.2, 5.6.2, 5.8.1, 5.8.2, and 5.8.4 · https://kdigo.org/wp-content/uploads/2016/10/KDIGO-2012-AKI-Guideline-English.pdf",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-006",
+          "type": "manufacturer-manual",
+          "locator": "Manual pages 65–90 · PDF pages 66–91 (stop/end workflow)",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pages 65–90 · PDF pages 66–91",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": [
+        "draft-guideline",
+        "guideline",
+        "manufacturer-manual",
+        "synthetic-teaching-fixture"
+      ],
+      "externalSources": [
+        {
+          "citation": "KDIGO 2026 Clinical Practice Guideline for AKI and AKD — Public Review Draft, March 2026 (kdigo.org), Practice Points 5.9.1–5.9.4 (5.9.3: urine output >450 mL/24 h without diuretics or >2,300 mL/24 h with diuretics, and 2-h timed CrCl ≥23 mL/min)",
+          "type": "draft-guideline",
+          "locator": "PDF p42 (summary); PDF p316 (chapter)",
+          "publicationStatus": "Draft (public review closed 2026-05-11; no final publication found on 2026-09-23)",
+          "howRead": "Text extraction; ungraded draft practice points"
+        },
+        {
+          "citation": "Meersch-Dini et al. Multidisciplinary guidelines on RRT in intensive care medicine. Crit Care 2026;30:46 (PMID 41535952), Rec 7.3 (Grade 0: no precise minimum urine output; 300–600 mL/day without diuretics may be indicative)",
+          "type": "guideline",
+          "locator": "Section 7",
+          "publicationStatus": "Published 2026-01-14",
+          "howRead": "PMC full text via retrieval tool"
+        }
+      ],
+      "missingEvidence": [
+        "Urine-output and creatinine time series with context (diuretics, fluid balance, sampling relative to CRRT)",
+        "Reviewed choice between differing sources",
+        "Post-stop serial chemistry"
+      ],
+      "proposedMinimalChange": "Option A: rename so CRRT-18 promises workflow separation only. Option B: a reviewed authored series (Storyboard B2).",
+      "affectedActivities": ["CRRT-18", "Learn Lesson 7 liberation items"],
+      "ownerDecisionRequired": "A or B; if B, which predictors, window, diuretic context, and which source the case cites.",
+      "recommendedReviewerRole": "Nephrology",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-O06",
+      "ownerDecisionIds": ["O-06"],
+      "contentTopicIds": ["G-07"],
+      "findingIds": ["F-05", "F-16"],
+      "title": "Recurrent filter loss: plan-only case or simulated event and exchange",
+      "packetSection": "§9 and Storyboard B3",
+      "currentImplementation": "CRRT-16 is byte-identical to CRRT-15; 6 h: filter 70.0→70.37 mmHg, drop 14.0→14.37, TMP 52.5→52.69, dose 20.6 mL/kg/h, downtime 0. CRRT-16 actions have no effect. The engine has no filter/set-change action; anticoagulation is none.",
+      "sourceIds": ["SYNTH-CRRT-15", "SYNTH-CRRT-16", "DEV-PM-006", "DEV-PM-009", "DEV-PM-010"],
+      "sourceLocators": [
+        {
+          "sourceId": "SYNTH-CRRT-15",
+          "type": "synthetic-teaching-fixture",
+          "locator": "CRRT-15 authored reviewer fixture",
+          "version": "v1 authored teaching calibration · no clinical review recorded",
+          "registrySourceType": "synthetic-calibration",
+          "registryLocator": "CRRT-15 authored reviewer fixture",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "SYNTH-CRRT-16",
+          "type": "synthetic-teaching-fixture",
+          "locator": "CRRT-16 adapted runtime case (template CRRT-15)",
+          "registrySourceType": "synthetic-calibration",
+          "version": "v1 authored teaching calibration · no clinical review recorded",
+          "registryLocator": "CRRT-16 manifest-only reserved record",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-006",
+          "type": "manufacturer-manual",
+          "locator": "Manual pages 65–90 · PDF pages 66–91",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pages 65–90 · PDF pages 66–91",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-009",
+          "type": "manufacturer-manual",
+          "locator": "Manual pp197–204 · PDF pp198–205",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pp197–204 · PDF pp198–205",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-010",
+          "type": "manufacturer-manual",
+          "locator": "Manual pp201–202 · PDF pp202–203",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pp201–202 · PDF pp202–203",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": ["manufacturer-manual", "synthetic-teaching-fixture"],
+      "externalSources": [
+        {
+          "citation": "PrisMax AW8035 alarm rows: Change Set – T0948 (High), CRRT Max Set Life Reached – T1262 (Medium); TMP rise feeds the filter-clotting alarm",
+          "type": "manufacturer-manual",
+          "locator": "PDF p103, p112, p219",
+          "publicationStatus": "Local registered document; rows not registered as records",
+          "howRead": "Read locally"
+        }
+      ],
+      "missingEvidence": [
+        "Filter/circuit-life time course source",
+        "Contributor effect sizes",
+        "Anticoagulation effect-size source",
+        "Engine filter-exchange action",
+        "Approved downtime for a set change"
+      ],
+      "proposedMinimalChange": "Option A: keep plan-only with the existing labels. Option B: one trigger, one action and one recovery rule, after sources exist.",
+      "affectedActivities": ["CRRT-16 (legacy Assess/Challenge)", "CRRT-15"],
+      "ownerDecisionRequired": "A or B; if B, the single trigger, single action, and the source for the time course.",
+      "recommendedReviewerRole": "Nephrology + experienced CRRT nurse",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-O07",
+      "ownerDecisionIds": ["O-07"],
+      "contentTopicIds": ["G-01", "G-02", "G-04", "G-09"],
+      "findingIds": [],
+      "title": "Dose, indication/timing, anticoagulation and access orientation by evidence tier",
+      "packetSection": "§10",
+      "currentImplementation": "No dose target, start rule, anticoagulation dose or access site is taught. Prescribed and delivered dose are displayed without a target (DOSE-PM-001).",
+      "sourceIds": [
+        "GUID-KDIGO-AKI-2012",
+        "GUID-NICE-NG148-2024",
+        "STARRT-AKI-2020",
+        "RENAL-2009",
+        "DOSE-PM-001",
+        "GUID-RRT-ICU-2026"
+      ],
+      "sourceLocators": [
+        {
+          "sourceId": "GUID-KDIGO-AKI-2012",
+          "type": "guideline",
+          "locator": "Registered sections 5.1.1, 5.1.2, 5.6.2, 5.8.1, 5.8.2, 5.8.4 (not re-read)",
+          "version": "Kidney International Supplements. 2012;2:1–138",
+          "registrySourceType": "guideline",
+          "registryLocator": "Sections 5.1.1, 5.1.2, 5.6.2, 5.8.1, 5.8.2, and 5.8.4 · https://kdigo.org/wp-content/uploads/2016/10/KDIGO-2012-AKI-Guideline-English.pdf",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GUID-NICE-NG148-2024",
+          "type": "guideline",
+          "locator": "Recommendations 1.5.6–1.5.10",
+          "version": "NICE NG148 · last updated 16 October 2024",
+          "registrySourceType": "guideline",
+          "registryLocator": "Recommendations 1.5.6–1.5.10 · https://www.nice.org.uk/guidance/ng148/chapter/Recommendations",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "STARRT-AKI-2020",
+          "type": "trial",
+          "locator": "DOI 10.1056/NEJMoa2000741",
+          "version": "N Engl J Med. 2020;383:240–251",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "DOI 10.1056/NEJMoa2000741 · https://pubmed.ncbi.nlm.nih.gov/32668114/",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "RENAL-2009",
+          "type": "trial",
+          "locator": "DOI 10.1056/NEJMoa0902413",
+          "version": "N Engl J Med. 2009;361:1627–1638",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "DOI 10.1056/NEJMoa0902413",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DOSE-PM-001",
+          "type": "manufacturer-manual",
+          "locator": "Manual pp219–220 · PDF pp220–221",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pp219–220 · PDF pp220–221",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GUID-RRT-ICU-2026",
+          "type": "guideline",
+          "locator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, 5.1 (registered)",
+          "version": "Critical Care. 2026;30:46",
+          "registrySourceType": "guideline",
+          "registryLocator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, and 5.1 · DOI 10.1186/s13054-025-05817-6 · https://link.springer.com/article/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": ["draft-guideline", "guideline", "manufacturer-manual", "trial"],
+      "externalSources": [
+        {
+          "citation": "KDIGO 2026 Clinical Practice Guideline for AKI and AKD — Public Review Draft, March 2026 (kdigo.org), Recs 5.1.1 (1C), 5.2.1 (2C), 5.3.1 (1B), 5.5.1 (1B); PP 5.1.3, 5.3.1, 5.4.1, 5.5.1",
+          "type": "draft-guideline",
+          "locator": "PDF pp38–40 (summary); pp261, 270, 277, 286, 292 (chapter)",
+          "publicationStatus": "Draft (public review closed 2026-05-11; no final publication found on 2026-09-23)",
+          "howRead": "Text extraction"
+        },
+        {
+          "citation": "Meersch-Dini et al. Multidisciplinary guidelines on RRT in intensive care medicine. Crit Care 2026;30:46 (PMID 41535952), Rec 5.1 (20–25 mL/kg/h, Grade A, ⊕⊕⊕⊝); Rec 3.3 (grade per retrieval summary only)",
+          "type": "guideline",
+          "locator": "Sections 3, 5",
+          "publicationStatus": "Published 2026-01-14",
+          "howRead": "PMC full text via retrieval tool"
+        },
+        {
+          "citation": "Palevsky et al. (ATN). N Engl J Med 2008;359:7–20 (PMID 18492867)",
+          "type": "trial",
+          "locator": "Abstract",
+          "publicationStatus": "Published",
+          "howRead": "PubMed abstract"
+        }
+      ],
+      "missingEvidence": ["KDIGO 2012 full text", "KDIGO 2026 final version"],
+      "proposedMinimalChange": "None until each row is decided; optionally one tier-labeled sentence per row.",
+      "affectedActivities": [
+        "Learn Lessons 1, 2, 4, 6",
+        "CRRT-01",
+        "CRRT-02",
+        "CRRT-04",
+        "CRRT-06",
+        "CRRT-09"
+      ],
+      "ownerDecisionRequired": "For each row of §10: which tier(s) may be stated, with which wording; whether draft statements appear before KDIGO 2026 is final.",
+      "recommendedReviewerRole": "Nephrology/faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-O08",
+      "ownerDecisionIds": ["O-08"],
+      "contentTopicIds": ["G-05", "G-08"],
+      "findingIds": ["F-25"],
+      "title": "Net UF, citrate monitoring and numeric anchors: include with context or omit",
+      "packetSection": "§11",
+      "currentImplementation": "No net-UF threshold, calcium range, ratio, FF ceiling or blood-flow range is shown. Case numbers are synthetic (SYNTH-CRRT-nn).",
+      "sourceIds": ["WHITE-2024", "FLUID-PM-001", "CITRATE-ICU-GUIDE-2026-SAFETY", "MATH-PM-002"],
+      "sourceLocators": [
+        {
+          "sourceId": "WHITE-2024",
+          "type": "observational-study",
+          "locator": "DOI 10.1159/000538421",
+          "version": "Blood Purif. 2024;53:624–633",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "DOI 10.1159/000538421",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "FLUID-PM-001",
+          "type": "manufacturer-manual",
+          "locator": "Manual p219 · PDF p220",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual p219 · PDF p220",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "CITRATE-ICU-GUIDE-2026-SAFETY",
+          "type": "guideline",
+          "locator": "Section 4 recommendations 4.4–4.6",
+          "version": "Critical Care. 2026;30:46",
+          "registrySourceType": "guideline",
+          "registryLocator": "Section 4 recommendations 4.4–4.6; Adverse events in RCA; RCA in liver failure · https://doi.org/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "MATH-PM-002",
+          "type": "manufacturer-manual",
+          "locator": "Manual p217 · PDF p218; TMP > +300 mmHg alarm on PDF p219",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual p217 · PDF p218",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": ["draft-guideline", "guideline", "manufacturer-manual", "observational-study"],
+      "externalSources": [
+        {
+          "citation": "Murugan et al. JAMA Netw Open 2019;2:e195418 (PMID 31173127): NUF >1.75 vs <1.01 mL/kg/h associated with lower risk-adjusted 90-day survival (RENAL secondary analysis, ANZ, CVVHDF)",
+          "type": "observational-study",
+          "locator": "Abstract",
+          "publicationStatus": "Published 2019-06-05",
+          "howRead": "PubMed abstract"
+        },
+        {
+          "citation": "KDIGO 2026 Clinical Practice Guideline for AKI and AKD — Public Review Draft, March 2026 (kdigo.org), UFNET practice table adapted from Murugan et al.; Table 50 (anticoagulant profiles incl. a post-filter iCa range, not reproduced)",
+          "type": "draft-guideline",
+          "locator": "PDF p314; PDF p298",
+          "publicationStatus": "Draft (public review closed 2026-05-11; no final publication found on 2026-09-23)",
+          "howRead": "Text extraction; Table 50 column alignment uncertain"
+        }
+      ],
+      "missingEvidence": [
+        "Source for an FF ceiling",
+        "Full text for the total/ionized ratio claim",
+        "Source for a typical blood-flow range",
+        "Local citrate protocol"
+      ],
+      "proposedMinimalChange": "None; per-number disposition only.",
+      "affectedActivities": ["Learn Lessons 3–4, 6, 7", "CRRT-10", "CRRT-11", "CRRT-17"],
+      "ownerDecisionRequired": "For each number in §11: include with its category and population stated, or omit.",
+      "recommendedReviewerRole": "Nephrology/ICU faculty + CRRT pharmacist",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-O09",
+      "ownerDecisionIds": ["O-09"],
+      "contentTopicIds": ["G-06", "G-07"],
+      "findingIds": ["F-19"],
+      "title": "Device alarm mapping, workflow, fluids and access",
+      "packetSection": "§12 and Artifact D part 2",
+      "currentImplementation": "13 generic simulated alerts (content/alertLabels.ts) with urgency null and deviceMappingStatus pending-device-adapter; boundary sentence says they are not PrisMax alarms. CRRT-13's acknowledge action has no effect on the engine alert. Five drills, safe response first.",
+      "sourceIds": ["DEV-PM-007", "DEV-PM-008", "DEV-PM-011", "DEV-PM-013", "DEV-PM-014"],
+      "sourceLocators": [
+        {
+          "sourceId": "DEV-PM-007",
+          "type": "manufacturer-manual",
+          "locator": "Manual pages 93–100 · PDF pages 94–101 (priorities: PDF pp96–98)",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pages 93–100 · PDF pages 94–101",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-008",
+          "type": "manufacturer-manual",
+          "locator": "Manual pages 101–169 · PDF pages 102–170 (alarm tables)",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pages 101–169 · PDF pages 102–170",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-011",
+          "type": "manufacturer-manual",
+          "locator": "Manual pages 206–212 · PDF pages 207–213",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pages 206–212 · PDF pages 207–213",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-013",
+          "type": "manufacturer-manual",
+          "locator": "Manual pp241–244 · PDF pp242–245",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pp241–244 · PDF pp242–245",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-014",
+          "type": "manufacturer-manual",
+          "locator": "Manual pages 252–262 · PDF pages 253–263",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pages 252–262 · PDF pages 253–263",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": ["manufacturer-manual"],
+      "externalSources": [],
+      "missingEvidence": [
+        "Operator confirmation of each candidate row for program 2.XX",
+        "Facsimile acknowledgment behavior",
+        "Local protocols for blood return, set discard, anticoagulation"
+      ],
+      "proposedMinimalChange": "Option A: a source-labeled reference list of manufacturer alarm names beside the unmapped generic alerts.",
+      "affectedActivities": [
+        "Learn Lesson 5",
+        "five safety drills",
+        "CRRT-13",
+        "CRRT-14",
+        "PrisMax facsimile"
+      ],
+      "ownerDecisionRequired": "A (keep unmapped; add reference list) or B (confirm/reject each candidate row and its priority); whether acknowledgment marks the alert acknowledged.",
+      "recommendedReviewerRole": "PrisMax SME/CRRT nurse + pharmacy/nephrology",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-O10",
+      "ownerDecisionIds": ["O-10"],
+      "contentTopicIds": [],
+      "findingIds": ["F-06", "F-15", "F-16", "F-25", "X-01", "X-03"],
+      "title": "Smallest next set of content, model, media and usability changes",
+      "packetSection": "§13",
+      "currentImplementation": "Fourteen consolidated candidates, none built; Learn minutes are authoring estimates; no real learner/operator sessions recorded.",
+      "sourceIds": [],
+      "sourceLocators": [],
+      "sourceType": [],
+      "externalSources": [],
+      "missingEvidence": [
+        "Real intended-learner and operator session observations",
+        "Media permissions for any manufacturer imagery"
+      ],
+      "proposedMinimalChange": "Owner selects at most three rows in order.",
+      "affectedActivities": ["Module-wide"],
+      "ownerDecisionRequired": "Choose and order the smallest set from §13.",
+      "recommendedReviewerRole": "Owner + faculty/learners/media reviewer",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-G01",
+      "ownerDecisionIds": ["O-07"],
+      "contentTopicIds": ["G-01"],
+      "findingIds": [],
+      "title": "Indications and timing",
+      "packetSection": "§16 G-01",
+      "currentImplementation": "Learner surface: Learn Lesson 1; CRRT-01, CRRT-02. Implementation: Qualitative goal-first framing; no start rule.",
+      "sourceIds": ["GUID-KDIGO-AKI-2012", "GUID-NICE-NG148-2024", "STARRT-AKI-2020"],
+      "sourceLocators": [
+        {
+          "sourceId": "GUID-KDIGO-AKI-2012",
+          "type": "guideline",
+          "locator": "Registered sections 5.1.1, 5.1.2, 5.6.2, 5.8.1, 5.8.2, 5.8.4 (not re-read)",
+          "version": "Kidney International Supplements. 2012;2:1–138",
+          "registrySourceType": "guideline",
+          "registryLocator": "Sections 5.1.1, 5.1.2, 5.6.2, 5.8.1, 5.8.2, and 5.8.4 · https://kdigo.org/wp-content/uploads/2016/10/KDIGO-2012-AKI-Guideline-English.pdf",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GUID-NICE-NG148-2024",
+          "type": "guideline",
+          "locator": "Recommendations 1.5.6–1.5.10",
+          "version": "NICE NG148 · last updated 16 October 2024",
+          "registrySourceType": "guideline",
+          "registryLocator": "Recommendations 1.5.6–1.5.10 · https://www.nice.org.uk/guidance/ng148/chapter/Recommendations",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "STARRT-AKI-2020",
+          "type": "trial",
+          "locator": "DOI 10.1056/NEJMoa2000741",
+          "version": "N Engl J Med. 2020;383:240–251",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "DOI 10.1056/NEJMoa2000741 · https://pubmed.ncbi.nlm.nih.gov/32668114/",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": ["draft-guideline", "guideline", "trial"],
+      "externalSources": [
+        {
+          "citation": "KDIGO 2026 Clinical Practice Guideline for AKI and AKD — Public Review Draft, March 2026 (kdigo.org), Rec 5.1.1 (1C), PP 5.1.3",
+          "type": "draft-guideline",
+          "locator": "PDF p38; p261, p266",
+          "publicationStatus": "Draft (public review closed 2026-05-11; no final publication found on 2026-09-23)",
+          "howRead": "Text extraction"
+        }
+      ],
+      "missingEvidence": ["KDIGO 2012 full text", "KDIGO 2026 final"],
+      "proposedMinimalChange": "None now; optionally one tier-labeled sentence after O-07.",
+      "affectedActivities": ["Learn Lesson 1; CRRT-01, CRRT-02"],
+      "ownerDecisionRequired": "Decided through O-07 row Timing.",
+      "recommendedReviewerRole": "Nephrology/faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-G02",
+      "ownerDecisionIds": ["O-07"],
+      "contentTopicIds": ["G-02"],
+      "findingIds": [],
+      "title": "Dose target",
+      "packetSection": "§16 G-02",
+      "currentImplementation": "Learner surface: Learn Lesson 4; CRRT-04, CRRT-06. Implementation: Prescribed and delivered dose display; no target.",
+      "sourceIds": ["DOSE-PM-001", "RENAL-2009", "TEXT-CRRT-NEYRA-2026"],
+      "sourceLocators": [
+        {
+          "sourceId": "DOSE-PM-001",
+          "type": "manufacturer-manual",
+          "locator": "Manual pp219–220 · PDF pp220–221",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pp219–220 · PDF pp220–221",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "RENAL-2009",
+          "type": "trial",
+          "locator": "DOI 10.1056/NEJMoa0902413",
+          "version": "N Engl J Med. 2009;361:1627–1638",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "DOI 10.1056/NEJMoa0902413",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "TEXT-CRRT-NEYRA-2026",
+          "type": "expert-opinion (textbook)",
+          "locator": "Chapter 64 · pp1881–1898",
+          "version": "Brenner & Rector's The Kidney. 12th ed. 2026",
+          "registrySourceType": "textbook",
+          "registryLocator": "Chapter 64 · pp1881–1898 · Kidney replacement therapy section",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": [
+        "draft-guideline",
+        "expert-opinion (textbook)",
+        "guideline",
+        "manufacturer-manual",
+        "trial"
+      ],
+      "externalSources": [
+        {
+          "citation": "KDIGO 2026 Clinical Practice Guideline for AKI and AKD — Public Review Draft, March 2026 (kdigo.org), Rec 5.3.1 (1B)",
+          "type": "draft-guideline",
+          "locator": "PDF p39; p277",
+          "publicationStatus": "Draft (public review closed 2026-05-11; no final publication found on 2026-09-23)",
+          "howRead": "Text extraction"
+        },
+        {
+          "citation": "Meersch-Dini et al. Multidisciplinary guidelines on RRT in intensive care medicine. Crit Care 2026;30:46 (PMID 41535952), Rec 5.1 (Grade A)",
+          "type": "guideline",
+          "locator": "Section 5",
+          "publicationStatus": "Published 2026-01-14",
+          "howRead": "PMC full text via retrieval tool"
+        },
+        {
+          "citation": "Palevsky et al. (ATN). N Engl J Med 2008;359:7–20 (PMID 18492867)",
+          "type": "trial",
+          "locator": "Abstract",
+          "publicationStatus": "Published",
+          "howRead": "PubMed abstract"
+        }
+      ],
+      "missingEvidence": ["KDIGO 2012 full text", "Source for 'prescribe more to cover downtime'"],
+      "proposedMinimalChange": "One tier-labeled sentence on the recommended delivered-dose range, separate from the display.",
+      "affectedActivities": ["Learn Lesson 4; CRRT-04, CRRT-06"],
+      "ownerDecisionRequired": "Decided through O-07 row CRRT dose.",
+      "recommendedReviewerRole": "Nephrology/faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-G03",
+      "ownerDecisionIds": ["O-03"],
+      "contentTopicIds": ["G-03"],
+      "findingIds": ["F-03"],
+      "title": "Filtration fraction",
+      "packetSection": "§16 G-03",
+      "currentImplementation": "Learner surface: Learn Lessons 3–4; CRRT-05; CRRT-15/16. Implementation: FF fixed coefficient; PrisMax FF functions unwired.",
+      "sourceIds": ["MATH-PM-003", "MATH-PM-004", "MATH-PM-005", "MATH-PM-006"],
+      "sourceLocators": [
+        {
+          "sourceId": "MATH-PM-003",
+          "type": "manufacturer-manual",
+          "locator": "Manual p218 · PDF p219",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual p218 · PDF p219",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "MATH-PM-004",
+          "type": "manufacturer-manual",
+          "locator": "Manual p218 · PDF p219",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual p218 · PDF p219",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "MATH-PM-005",
+          "type": "manufacturer-manual",
+          "locator": "Manual pp218–219 · PDF pp219–220",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pp218–219 · PDF pp219–220",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "MATH-PM-006",
+          "type": "manufacturer-manual",
+          "locator": "Manual p220 · PDF p221",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual p220 · PDF p221",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": ["draft-guideline", "manufacturer-manual"],
+      "externalSources": [
+        {
+          "citation": "KDIGO 2026 Clinical Practice Guideline for AKI and AKD — Public Review Draft, March 2026 (kdigo.org), PP 5.6.2 (predilution among circuit-life strategies)",
+          "type": "draft-guideline",
+          "locator": "PDF p305",
+          "publicationStatus": "Draft (public review closed 2026-05-11; no final publication found on 2026-09-23)",
+          "howRead": "Text extraction"
+        }
+      ],
+      "missingEvidence": [
+        "Resolution of CONFLICT-001/002",
+        "Registered FF definition/ceiling source"
+      ],
+      "proposedMinimalChange": "Per O-03.",
+      "affectedActivities": ["Learn Lessons 3–4; CRRT-05; CRRT-15/16"],
+      "ownerDecisionRequired": "Decided through O-03.",
+      "recommendedReviewerRole": "Nephrology/device SME",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-G04",
+      "ownerDecisionIds": ["O-07", "O-06"],
+      "contentTopicIds": ["G-04"],
+      "findingIds": ["F-05"],
+      "title": "Heparin and no anticoagulation",
+      "packetSection": "§16 G-04",
+      "currentImplementation": "Learner surface: Learn Lesson 6; CRRT-09; CRRT-16. Implementation: Methods none/systemic-concept; all cases none; no citrate method.",
+      "sourceIds": ["GUID-RRT-ICU-2026", "CITRATE-ICU-GUIDE-2026-SAFETY"],
+      "sourceLocators": [
+        {
+          "sourceId": "GUID-RRT-ICU-2026",
+          "type": "guideline",
+          "locator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, 5.1 (registered)",
+          "version": "Critical Care. 2026;30:46",
+          "registrySourceType": "guideline",
+          "registryLocator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, and 5.1 · DOI 10.1186/s13054-025-05817-6 · https://link.springer.com/article/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "CITRATE-ICU-GUIDE-2026-SAFETY",
+          "type": "guideline",
+          "locator": "Section 4 recommendations 4.4–4.6",
+          "version": "Critical Care. 2026;30:46",
+          "registrySourceType": "guideline",
+          "registryLocator": "Section 4 recommendations 4.4–4.6; Adverse events in RCA; RCA in liver failure · https://doi.org/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": ["draft-guideline", "guideline"],
+      "externalSources": [
+        {
+          "citation": "KDIGO 2026 Clinical Practice Guideline for AKI and AKD — Public Review Draft, March 2026 (kdigo.org), Rec 5.5.1 (1B), PP 5.5.1–5.5.5",
+          "type": "draft-guideline",
+          "locator": "PDF p40; p292",
+          "publicationStatus": "Draft (public review closed 2026-05-11; no final publication found on 2026-09-23)",
+          "howRead": "Text extraction"
+        }
+      ],
+      "missingEvidence": ["Filter-life source by anticoagulation strategy", "Local protocol"],
+      "proposedMinimalChange": "One tier-labeled sentence on agent choice; no dose or filter-life number.",
+      "affectedActivities": ["Learn Lesson 6; CRRT-09; CRRT-16"],
+      "ownerDecisionRequired": "Decided through O-07 row Anticoagulation; O-06.",
+      "recommendedReviewerRole": "Nephrology/faculty + pharmacist",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-G05",
+      "ownerDecisionIds": ["O-05", "O-08"],
+      "contentTopicIds": ["G-05"],
+      "findingIds": ["F-04"],
+      "title": "Citrate monitoring",
+      "packetSection": "§16 G-05",
+      "currentImplementation": "Learner surface: Learn Lesson 6; CRRT-17. Implementation: Direction-only conceptual state; one supplied systemic iCa.",
+      "sourceIds": [
+        "CITRATE-SIAARTI-2023-MECHANISM",
+        "CITRATE-SIAARTI-2023-SAMPLING",
+        "CITRATE-SCHNEIDER-2017-METABOLISM",
+        "CITRATE-SCHNEIDER-2017-PATTERNS",
+        "CITRATE-ICU-GUIDE-2026-SAFETY"
+      ],
+      "sourceLocators": [
+        {
+          "sourceId": "CITRATE-SIAARTI-2023-MECHANISM",
+          "type": "expert-opinion (position statement)",
+          "locator": "Section 1 Rationale; Section 2",
+          "version": "J Anesth Analg Crit Care. 2023;3:7",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "Section 1, Rationale, paragraph beginning “During RCA”; Section 2 modality context · https://doi.org/10.1186/s44158-023-00091-w",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "CITRATE-SIAARTI-2023-SAMPLING",
+          "type": "expert-opinion (position statement)",
+          "locator": "Section 4 Rationale; Section 5 Rationale",
+          "version": "J Anesth Analg Crit Care. 2023;3:7",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "Section 4, Rationale, monitoring discussion after the accumulation triad; Section 5, Rationale, calcium mass balance · https://doi.org/10.1186/s44158-023-00091-w",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "CITRATE-SCHNEIDER-2017-METABOLISM",
+          "type": "expert-opinion (viewpoint)",
+          "locator": "General principles; clearance and metabolism; acid-base",
+          "version": "Crit Care. 2017;21:281",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "General principles: Principles of citrate anticoagulation (calcium infusion sites); Citrate clearance and metabolism; Citrate and acid-base balance · https://doi.org/10.1186/s13054-017-1880-1",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "CITRATE-SCHNEIDER-2017-PATTERNS",
+          "type": "expert-opinion (viewpoint)",
+          "locator": "Citrate accumulation and alternative diagnoses; Table 1",
+          "version": "Crit Care. 2017;21:281",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "Citrate accumulation and alternative diagnoses: Citrate accumulation, Net citrate overload, Insufficient trisodium-citrate delivery; Table 1 · https://doi.org/10.1186/s13054-017-1880-1",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "CITRATE-ICU-GUIDE-2026-SAFETY",
+          "type": "guideline",
+          "locator": "Section 4 recommendations 4.4–4.6",
+          "version": "Critical Care. 2026;30:46",
+          "registrySourceType": "guideline",
+          "registryLocator": "Section 4 recommendations 4.4–4.6; Adverse events in RCA; RCA in liver failure · https://doi.org/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": [
+        "expert-opinion (position statement)",
+        "expert-opinion (viewpoint)",
+        "guideline"
+      ],
+      "externalSources": [
+        {
+          "citation": "Meersch-Dini et al. Multidisciplinary guidelines on RRT in intensive care medicine. Crit Care 2026;30:46 (PMID 41535952), Recs 4.4 (Grade 0), 4.5 (Grade A), 4.6 (Grade B)",
+          "type": "guideline",
+          "locator": "Section 4",
+          "publicationStatus": "Published 2026-01-14",
+          "howRead": "PMC full text via retrieval tool; relevant to G01-CRRT-07, which is not edited"
+        }
+      ],
+      "missingEvidence": [
+        "Full text of Schneider 2017 and SIAARTI 2023",
+        "Local citrate protocol",
+        "Serial values for CRRT-17"
+      ],
+      "proposedMinimalChange": "Per O-05C and O-08.",
+      "affectedActivities": ["Learn Lesson 6; CRRT-17"],
+      "ownerDecisionRequired": "Decided through O-05C; O-08.",
+      "recommendedReviewerRole": "Nephrology + CRRT pharmacist",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-G06",
+      "ownerDecisionIds": ["O-09"],
+      "contentTopicIds": ["G-06"],
+      "findingIds": ["F-19"],
+      "title": "PrisMax alarms",
+      "packetSection": "§16 G-06",
+      "currentImplementation": "Learner surface: Learn Lesson 5; drills; CRRT-13/14. Implementation: 13 generic simulated alerts, unmapped.",
+      "sourceIds": ["DEV-PM-007", "DEV-PM-008"],
+      "sourceLocators": [
+        {
+          "sourceId": "DEV-PM-007",
+          "type": "manufacturer-manual",
+          "locator": "Manual pages 93–100 · PDF pages 94–101",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pages 93–100 · PDF pages 94–101",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-008",
+          "type": "manufacturer-manual",
+          "locator": "Manual pages 101–169 · PDF pages 102–170",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pages 101–169 · PDF pages 102–170",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": ["manufacturer-manual"],
+      "externalSources": [
+        {
+          "citation": "PrisMax AW8035 alarm tables (candidate titles, codes, priority sections)",
+          "type": "manufacturer-manual",
+          "locator": "PDF pp96–98 (priorities), pp102–161 (tables)",
+          "publicationStatus": "Local registered document",
+          "howRead": "Read locally"
+        }
+      ],
+      "missingEvidence": ["Operator confirmation for program 2.XX"],
+      "proposedMinimalChange": "Per O-09 (source-labeled reference list is the smallest step).",
+      "affectedActivities": ["Learn Lesson 5; drills; CRRT-13/14"],
+      "ownerDecisionRequired": "Decided through O-09.",
+      "recommendedReviewerRole": "PrisMax SME/CRRT nurse",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-G07",
+      "ownerDecisionIds": ["O-06", "O-09"],
+      "contentTopicIds": ["G-07"],
+      "findingIds": ["F-05"],
+      "title": "Filter clotting",
+      "packetSection": "§16 G-07",
+      "currentImplementation": "Learner surface: Learn Lessons 2 and 5; CRRT-15/16. Implementation: Filter burden too slow for a readable trend; no exchange.",
+      "sourceIds": ["DEV-PM-009", "DEV-PM-010", "MATH-PM-002"],
+      "sourceLocators": [
+        {
+          "sourceId": "DEV-PM-009",
+          "type": "manufacturer-manual",
+          "locator": "Manual pp197–204 · PDF pp198–205",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pp197–204 · PDF pp198–205",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-010",
+          "type": "manufacturer-manual",
+          "locator": "Manual pp201–202 · PDF pp202–203",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual pp201–202 · PDF pp202–203",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "MATH-PM-002",
+          "type": "manufacturer-manual",
+          "locator": "Manual p217 · PDF p218",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual p217 · PDF p218",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": ["manufacturer-manual"],
+      "externalSources": [
+        {
+          "citation": "PrisMax AW8035: TMP rise feeds the filter-clotting alarm; alarm if TMP > +300 mmHg",
+          "type": "manufacturer-manual",
+          "locator": "PDF p219",
+          "publicationStatus": "Local registered document; not a registered record",
+          "howRead": "Read locally"
+        }
+      ],
+      "missingEvidence": ["Filter-life source", "Device record for PDF p219 statements"],
+      "proposedMinimalChange": "Register PDF p219 statements as a device record if the device reviewer agrees; otherwise per O-06.",
+      "affectedActivities": ["Learn Lessons 2 and 5; CRRT-15/16"],
+      "ownerDecisionRequired": "Decided through O-06; O-09.",
+      "recommendedReviewerRole": "Nephrology + CRRT nurse",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-G08",
+      "ownerDecisionIds": ["O-02", "O-08"],
+      "contentTopicIds": ["G-08"],
+      "findingIds": ["F-02"],
+      "title": "Net UF rate",
+      "packetSection": "§16 G-08",
+      "currentImplementation": "Learner surface: Learn Lesson 7; CRRT-10, CRRT-11. Implementation: Two ledgers; abstract tolerance indices; MAP held.",
+      "sourceIds": ["FLUID-PM-001", "FLUID-PM-002", "WHITE-2024", "GONEUTRAL-2024"],
+      "sourceLocators": [
+        {
+          "sourceId": "FLUID-PM-001",
+          "type": "manufacturer-manual",
+          "locator": "Manual p219 · PDF p220",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual p219 · PDF p220",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "FLUID-PM-002",
+          "type": "manufacturer-manual",
+          "locator": "Manual p219 · PDF p220",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registrySourceType": "device-manual",
+          "registryLocator": "Manual p219 · PDF p220",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "WHITE-2024",
+          "type": "observational-study",
+          "locator": "DOI 10.1159/000538421",
+          "version": "Blood Purif. 2024;53:624–633",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "DOI 10.1159/000538421",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GONEUTRAL-2024",
+          "type": "trial",
+          "locator": "DOI 10.1007/s00134-024-07676-1",
+          "version": "Intensive Care Med. 2024;50:2061–2072",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "DOI 10.1007/s00134-024-07676-1",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": ["draft-guideline", "manufacturer-manual", "observational-study", "trial"],
+      "externalSources": [
+        {
+          "citation": "Murugan et al. JAMA Netw Open 2019;2:e195418 (PMID 31173127)",
+          "type": "observational-study",
+          "locator": "Abstract",
+          "publicationStatus": "Published 2019-06-05",
+          "howRead": "PubMed abstract"
+        },
+        {
+          "citation": "KDIGO 2026 Clinical Practice Guideline for AKI and AKD — Public Review Draft, March 2026 (kdigo.org), PP 5.8.1–5.8.2; UFNET table",
+          "type": "draft-guideline",
+          "locator": "PDF p42; pp313–314",
+          "publicationStatus": "Draft (public review closed 2026-05-11; no final publication found on 2026-09-23)",
+          "howRead": "Text extraction"
+        }
+      ],
+      "missingEvidence": ["Registered record for Murugan 2019 if cited"],
+      "proposedMinimalChange": "Per O-08 (context sentence or omit).",
+      "affectedActivities": ["Learn Lesson 7; CRRT-10, CRRT-11"],
+      "ownerDecisionRequired": "Decided through O-02; O-08.",
+      "recommendedReviewerRole": "Nephrology/ICU faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-G09",
+      "ownerDecisionIds": ["O-07"],
+      "contentTopicIds": ["G-09"],
+      "findingIds": [],
+      "title": "Vascular access",
+      "packetSection": "§16 G-09",
+      "currentImplementation": "Learner surface: Learn Lesson 2. Implementation: Synthetic dual-lumen descriptor; no site or length teaching.",
+      "sourceIds": [],
+      "sourceLocators": [],
+      "sourceType": ["draft-guideline"],
+      "externalSources": [
+        {
+          "citation": "KDIGO 2026 Clinical Practice Guideline for AKI and AKD — Public Review Draft, March 2026 (kdigo.org), PP 5.4.1; chapter text on site preference",
+          "type": "draft-guideline",
+          "locator": "PDF p40; p287",
+          "publicationStatus": "Draft (public review closed 2026-05-11; no final publication found on 2026-09-23)",
+          "howRead": "Text extraction"
+        }
+      ],
+      "missingEvidence": ["Any registered site/length source"],
+      "proposedMinimalChange": "None, or one tier-labeled sentence after O-07.",
+      "affectedActivities": ["Learn Lesson 2"],
+      "ownerDecisionRequired": "Decided through O-07 row Vascular access.",
+      "recommendedReviewerRole": "Nephrology/faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-G10",
+      "ownerDecisionIds": ["O-10"],
+      "contentTopicIds": ["G-10"],
+      "findingIds": [],
+      "title": "Drug dosing, nutrition, temperature",
+      "packetSection": "§16 G-10",
+      "currentImplementation": "Learner surface: CRRT-12 (additional case); Lesson 7 mentions medication and nutrition needs. Implementation: Supplied scalars only; nothing modeled; CRRT-12 has no evidence-scope entry.",
+      "sourceIds": ["REVIEW-CKRT-CORE-2025", "GUID-RRT-ICU-2026"],
+      "sourceLocators": [
+        {
+          "sourceId": "REVIEW-CKRT-CORE-2025",
+          "type": "expert-opinion (narrative review)",
+          "locator": "DOI 10.1053/j.ajkd.2024.09.015",
+          "version": "Am J Kidney Dis. 2025;85:767–786",
+          "registrySourceType": "peer-reviewed",
+          "registryLocator": "DOI 10.1053/j.ajkd.2024.09.015 · https://www.sciencedirect.com/science/article/pii/S027263862401120X · erratum DOI 10.1053/j.ajkd.2025.06.004",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GUID-RRT-ICU-2026",
+          "type": "guideline",
+          "locator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, 5.1 (registered)",
+          "version": "Critical Care. 2026;30:46",
+          "registrySourceType": "guideline",
+          "registryLocator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, and 5.1 · DOI 10.1186/s13054-025-05817-6 · https://link.springer.com/article/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": ["expert-opinion (narrative review)", "guideline"],
+      "externalSources": [],
+      "missingEvidence": [
+        "Pharmacist/dietitian-named references for drug dosing, nutrition losses, temperature"
+      ],
+      "proposedMinimalChange": "CRRT-12 evidence scope first; new teaching only with a pharmacist-named source.",
+      "affectedActivities": [
+        "CRRT-12 (additional case); Lesson 7 mentions medication and nutrition needs"
+      ],
+      "ownerDecisionRequired": "Decided through O-10 rows 9–10.",
+      "recommendedReviewerRole": "CRRT pharmacist + dietitian + nephrology",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-E01",
+      "ownerDecisionIds": ["O-10"],
+      "contentTopicIds": [],
+      "findingIds": ["F-06"],
+      "title": "Lesson 7 task 9 · crrt-fluid-liberation / liberation-transfer — weak-item revision (Batch 04 P-01)",
+      "packetSection": "§14 E-01",
+      "currentImplementation": "Authored item at src/features/baxter-crrt/content/operationalLessons.ts:370; accepted key 'reassess'. Presentation (optional try, worked explanation, verdict words) implemented in Batch 04; option text, IDs and keys unchanged at 85acc113.",
+      "sourceIds": [
+        "FLUID-PM-001",
+        "FLUID-PM-002",
+        "TEXT-CRRT-NEYRA-2026",
+        "WHITE-2024",
+        "GONEUTRAL-2024",
+        "SYNTH-LAB-FLUID-001",
+        "GUID-RRT-ICU-2026"
+      ],
+      "sourceLocators": [
+        {
+          "sourceId": "FLUID-PM-001",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual p219 · PDF p220",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "FLUID-PM-002",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual p219 · PDF p220",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "TEXT-CRRT-NEYRA-2026",
+          "type": "expert-opinion (textbook)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "textbook",
+          "version": "Neyra JA, Teixeira JP, Tolwani AJ. Brenner & Rector's The Kidney. 12th ed. 2026",
+          "registryLocator": "Chapter 64 · pp1881–1898 · Kidney replacement therapy section",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "WHITE-2024",
+          "type": "observational-study",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Blood Purif. 2024;53:624–633 · PMID 38626729",
+          "registryLocator": "DOI 10.1159/000538421",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GONEUTRAL-2024",
+          "type": "trial",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Intensive Care Med. 2024;50:2061–2072 · PMID 39417870",
+          "registryLocator": "DOI 10.1007/s00134-024-07676-1",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "SYNTH-LAB-FLUID-001",
+          "type": "synthetic-teaching-fixture",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "synthetic-calibration",
+          "version": "v1 authored teaching calibration · no clinical review recorded",
+          "registryLocator": "Fluid management and liberation lesson",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GUID-RRT-ICU-2026",
+          "type": "guideline",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "guideline",
+          "version": "Critical Care. 2026;30:46 · PMID 41535952 · PMCID PMC12849416",
+          "registryLocator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, and 5.1 · DOI 10.1186/s13054-025-05817-6 · https://link.springer.com/article/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": [
+        "expert-opinion (textbook)",
+        "guideline",
+        "manufacturer-manual",
+        "observational-study",
+        "synthetic-teaching-fixture",
+        "trial"
+      ],
+      "externalSources": [],
+      "missingEvidence": ["Faculty review of the proposed wording"],
+      "proposedMinimalChange": "Replace option text as proposed in §14 E-01; no ID, key or order change. Adds one new option.",
+      "affectedActivities": ["Learn Lesson 7 task 9 (crrt-fluid-liberation)"],
+      "ownerDecisionRequired": "Approve, edit or reject each line; should the new third option exist given sources disagree on urine-output thresholds? Clinical meaning change: Key reworded (same meaning); distractor reworded (same misconception); optional new third option.",
+      "recommendedReviewerRole": "Nephrology/ICU faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-E02",
+      "ownerDecisionIds": ["O-10"],
+      "contentTopicIds": [],
+      "findingIds": ["F-06"],
+      "title": "Lesson 8 task 9 · crrt-pressure-profile-integration / case-reassess — weak-item revision (Batch 04 P-02)",
+      "packetSection": "§14 E-02",
+      "currentImplementation": "Authored item at src/features/baxter-crrt/content/advancedLessons.ts:366; accepted key 'reconcile'. Presentation (optional try, worked explanation, verdict words) implemented in Batch 04; option text, IDs and keys unchanged at 85acc113.",
+      "sourceIds": [
+        "DEV-PM-009",
+        "DEV-PM-010",
+        "MATH-PM-002",
+        "FLUID-PM-002",
+        "TEXT-RRT-HOSTE-2024",
+        "REVIEW-CRRT-PRINCIPLES-2021",
+        "REVIEW-CKRT-CORE-2025",
+        "SYNTH-LAB-PRESSURE-001",
+        "GUID-RRT-ICU-2026"
+      ],
+      "sourceLocators": [
+        {
+          "sourceId": "DEV-PM-009",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pp197–204 · PDF pp198–205",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-010",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pp201–202 · PDF pp202–203",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "MATH-PM-002",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual p217 · PDF p218",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "FLUID-PM-002",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual p219 · PDF p220",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "TEXT-RRT-HOSTE-2024",
+          "type": "expert-opinion (textbook)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "textbook",
+          "version": "Hoste EAJ. Textbook of Critical Care. 8th ed. 2024",
+          "registryLocator": "Chapter 38 · pp233–239",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "REVIEW-CRRT-PRINCIPLES-2021",
+          "type": "expert-opinion (narrative review)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Claure-Del Granado R, Clark WR. Seminars in Dialysis. 2021;34:398–405",
+          "registryLocator": "DOI 10.1111/sdi.12967 · pp398–405",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "REVIEW-CKRT-CORE-2025",
+          "type": "expert-opinion (narrative review)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Am J Kidney Dis. 2025;85:767–786 · PMID 40072400",
+          "registryLocator": "DOI 10.1053/j.ajkd.2024.09.015 · https://www.sciencedirect.com/science/article/pii/S027263862401120X · erratum DOI 10.1053/j.ajkd.2025.06.004",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "SYNTH-LAB-PRESSURE-001",
+          "type": "synthetic-teaching-fixture",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "synthetic-calibration",
+          "version": "v1 authored teaching calibration · no clinical review recorded",
+          "registryLocator": "LAB-PRESSURE-LOCALIZATION reviewer prototype",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GUID-RRT-ICU-2026",
+          "type": "guideline",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "guideline",
+          "version": "Critical Care. 2026;30:46 · PMID 41535952 · PMCID PMC12849416",
+          "registryLocator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, and 5.1 · DOI 10.1186/s13054-025-05817-6 · https://link.springer.com/article/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": [
+        "expert-opinion (narrative review)",
+        "expert-opinion (textbook)",
+        "guideline",
+        "manufacturer-manual",
+        "synthetic-teaching-fixture"
+      ],
+      "externalSources": [],
+      "missingEvidence": ["Faculty review of the proposed wording"],
+      "proposedMinimalChange": "Replace option text as proposed in §14 E-02; no ID, key or order change.",
+      "affectedActivities": ["Learn Lesson 8 task 9 (crrt-pressure-profile-integration)"],
+      "ownerDecisionRequired": "Which misconception should complete-runtime test; approve the wording? Clinical meaning change: Key: no change in meaning; complete-runtime misconception changes (both in authored feedback).",
+      "recommendedReviewerRole": "Nephrology/ICU faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-E03",
+      "ownerDecisionIds": ["O-10"],
+      "contentTopicIds": [],
+      "findingIds": ["F-06"],
+      "title": "Lesson 7 task 7 · crrt-fluid-liberation / flow-transfer — weak-item revision (Batch 04 P-03)",
+      "packetSection": "§14 E-03",
+      "currentImplementation": "Authored item at src/features/baxter-crrt/content/operationalLessons.ts:326; accepted key 'separate'. Presentation (optional try, worked explanation, verdict words) implemented in Batch 04; option text, IDs and keys unchanged at 85acc113.",
+      "sourceIds": [
+        "FLUID-PM-001",
+        "FLUID-PM-002",
+        "TEXT-CRRT-NEYRA-2026",
+        "WHITE-2024",
+        "GONEUTRAL-2024",
+        "SYNTH-LAB-FLUID-001",
+        "GUID-RRT-ICU-2026"
+      ],
+      "sourceLocators": [
+        {
+          "sourceId": "FLUID-PM-001",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual p219 · PDF p220",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "FLUID-PM-002",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual p219 · PDF p220",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "TEXT-CRRT-NEYRA-2026",
+          "type": "expert-opinion (textbook)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "textbook",
+          "version": "Neyra JA, Teixeira JP, Tolwani AJ. Brenner & Rector's The Kidney. 12th ed. 2026",
+          "registryLocator": "Chapter 64 · pp1881–1898 · Kidney replacement therapy section",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "WHITE-2024",
+          "type": "observational-study",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Blood Purif. 2024;53:624–633 · PMID 38626729",
+          "registryLocator": "DOI 10.1159/000538421",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GONEUTRAL-2024",
+          "type": "trial",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Intensive Care Med. 2024;50:2061–2072 · PMID 39417870",
+          "registryLocator": "DOI 10.1007/s00134-024-07676-1",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "SYNTH-LAB-FLUID-001",
+          "type": "synthetic-teaching-fixture",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "synthetic-calibration",
+          "version": "v1 authored teaching calibration · no clinical review recorded",
+          "registryLocator": "Fluid management and liberation lesson",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GUID-RRT-ICU-2026",
+          "type": "guideline",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "guideline",
+          "version": "Critical Care. 2026;30:46 · PMID 41535952 · PMCID PMC12849416",
+          "registryLocator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, and 5.1 · DOI 10.1186/s13054-025-05817-6 · https://link.springer.com/article/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": [
+        "expert-opinion (textbook)",
+        "guideline",
+        "manufacturer-manual",
+        "observational-study",
+        "synthetic-teaching-fixture",
+        "trial"
+      ],
+      "externalSources": [],
+      "missingEvidence": ["Faculty review of the proposed wording"],
+      "proposedMinimalChange": "Replace option text as proposed in §14 E-03; no ID, key or order change.",
+      "affectedActivities": ["Learn Lesson 7 task 7 (crrt-fluid-liberation)"],
+      "ownerDecisionRequired": "Approve, edit or reject? Clinical meaning change: No.",
+      "recommendedReviewerRole": "Nephrology/ICU faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-E04",
+      "ownerDecisionIds": ["O-10"],
+      "contentTopicIds": [],
+      "findingIds": ["F-06"],
+      "title": "Lesson 2 task 6 · crrt-circuit-pressures / pressure-transfer — weak-item revision (Batch 04 P-04)",
+      "packetSection": "§14 E-04",
+      "currentImplementation": "Authored item at src/features/baxter-crrt/content/foundationLessons.ts:256; accepted key 'return'. Presentation (optional try, worked explanation, verdict words) implemented in Batch 04; option text, IDs and keys unchanged at 85acc113.",
+      "sourceIds": [
+        "DEV-PM-009",
+        "DEV-PM-010",
+        "MATH-PM-002",
+        "TEXT-RRT-HOSTE-2024",
+        "REVIEW-CRRT-PRINCIPLES-2021",
+        "SYNTH-LAB-PRESSURE-001"
+      ],
+      "sourceLocators": [
+        {
+          "sourceId": "DEV-PM-009",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pp197–204 · PDF pp198–205",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-010",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pp201–202 · PDF pp202–203",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "MATH-PM-002",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual p217 · PDF p218",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "TEXT-RRT-HOSTE-2024",
+          "type": "expert-opinion (textbook)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "textbook",
+          "version": "Hoste EAJ. Textbook of Critical Care. 8th ed. 2024",
+          "registryLocator": "Chapter 38 · pp233–239",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "REVIEW-CRRT-PRINCIPLES-2021",
+          "type": "expert-opinion (narrative review)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Claure-Del Granado R, Clark WR. Seminars in Dialysis. 2021;34:398–405",
+          "registryLocator": "DOI 10.1111/sdi.12967 · pp398–405",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "SYNTH-LAB-PRESSURE-001",
+          "type": "synthetic-teaching-fixture",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "synthetic-calibration",
+          "version": "v1 authored teaching calibration · no clinical review recorded",
+          "registryLocator": "LAB-PRESSURE-LOCALIZATION reviewer prototype",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": [
+        "expert-opinion (narrative review)",
+        "expert-opinion (textbook)",
+        "manufacturer-manual",
+        "synthetic-teaching-fixture"
+      ],
+      "externalSources": [],
+      "missingEvidence": ["Faculty review of the proposed wording"],
+      "proposedMinimalChange": "Replace option text as proposed in §14 E-04; no ID, key or order change.",
+      "affectedActivities": ["Learn Lesson 2 task 6 (crrt-circuit-pressures)"],
+      "ownerDecisionRequired": "Approve, edit or reject? Clinical meaning change: No.",
+      "recommendedReviewerRole": "Nephrology/ICU faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-E05",
+      "ownerDecisionIds": ["O-10"],
+      "contentTopicIds": [],
+      "findingIds": ["F-06"],
+      "title": "Lesson 8 task 10 · crrt-pressure-profile-integration / integration-transfer — weak-item revision (Batch 04 P-05)",
+      "packetSection": "§14 E-05",
+      "currentImplementation": "Authored item at src/features/baxter-crrt/content/advancedLessons.ts:398; accepted key 'request-history'. Presentation (optional try, worked explanation, verdict words) implemented in Batch 04; option text, IDs and keys unchanged at 85acc113.",
+      "sourceIds": [
+        "DEV-PM-009",
+        "DEV-PM-010",
+        "MATH-PM-002",
+        "FLUID-PM-002",
+        "TEXT-RRT-HOSTE-2024",
+        "REVIEW-CRRT-PRINCIPLES-2021",
+        "REVIEW-CKRT-CORE-2025",
+        "SYNTH-LAB-PRESSURE-001",
+        "GUID-RRT-ICU-2026"
+      ],
+      "sourceLocators": [
+        {
+          "sourceId": "DEV-PM-009",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pp197–204 · PDF pp198–205",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-010",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pp201–202 · PDF pp202–203",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "MATH-PM-002",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual p217 · PDF p218",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "FLUID-PM-002",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual p219 · PDF p220",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "TEXT-RRT-HOSTE-2024",
+          "type": "expert-opinion (textbook)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "textbook",
+          "version": "Hoste EAJ. Textbook of Critical Care. 8th ed. 2024",
+          "registryLocator": "Chapter 38 · pp233–239",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "REVIEW-CRRT-PRINCIPLES-2021",
+          "type": "expert-opinion (narrative review)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Claure-Del Granado R, Clark WR. Seminars in Dialysis. 2021;34:398–405",
+          "registryLocator": "DOI 10.1111/sdi.12967 · pp398–405",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "REVIEW-CKRT-CORE-2025",
+          "type": "expert-opinion (narrative review)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Am J Kidney Dis. 2025;85:767–786 · PMID 40072400",
+          "registryLocator": "DOI 10.1053/j.ajkd.2024.09.015 · https://www.sciencedirect.com/science/article/pii/S027263862401120X · erratum DOI 10.1053/j.ajkd.2025.06.004",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "SYNTH-LAB-PRESSURE-001",
+          "type": "synthetic-teaching-fixture",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "synthetic-calibration",
+          "version": "v1 authored teaching calibration · no clinical review recorded",
+          "registryLocator": "LAB-PRESSURE-LOCALIZATION reviewer prototype",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GUID-RRT-ICU-2026",
+          "type": "guideline",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "guideline",
+          "version": "Critical Care. 2026;30:46 · PMID 41535952 · PMCID PMC12849416",
+          "registryLocator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, and 5.1 · DOI 10.1186/s13054-025-05817-6 · https://link.springer.com/article/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": [
+        "expert-opinion (narrative review)",
+        "expert-opinion (textbook)",
+        "guideline",
+        "manufacturer-manual",
+        "synthetic-teaching-fixture"
+      ],
+      "externalSources": [],
+      "missingEvidence": ["Faculty review of the proposed wording"],
+      "proposedMinimalChange": "Replace option text as proposed in §14 E-05; no ID, key or order change.",
+      "affectedActivities": ["Learn Lesson 8 task 10 (crrt-pressure-profile-integration)"],
+      "ownerDecisionRequired": "Approve, edit or reject? Clinical meaning change: No.",
+      "recommendedReviewerRole": "Nephrology/ICU faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-E06",
+      "ownerDecisionIds": ["O-10"],
+      "contentTopicIds": [],
+      "findingIds": ["F-06"],
+      "title": "Lesson 5 task 10 · crrt-alarms-troubleshooting / alarm-transfer — weak-item revision (Batch 04 P-06)",
+      "packetSection": "§14 E-06",
+      "currentImplementation": "Authored item at src/features/baxter-crrt/content/operationalLessons.ts:206; accepted key 'not-restored'. Presentation (optional try, worked explanation, verdict words) implemented in Batch 04; option text, IDs and keys unchanged at 85acc113.",
+      "sourceIds": [
+        "DEV-PM-005",
+        "DEV-PM-008",
+        "DEV-PM-012",
+        "DEV-PM-013",
+        "DEV-PM-014",
+        "TEXT-RRT-HOSTE-2024",
+        "GUID-RRT-ICU-2026"
+      ],
+      "sourceLocators": [
+        {
+          "sourceId": "DEV-PM-005",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pp39–64 · PDF pp40–65",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-008",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pages 101–169 · PDF pages 102–170",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-012",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pages 215–217 · PDF pages 216–218",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-013",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pp241–244 · PDF pp242–245",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-014",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pages 252–262 · PDF pages 253–263",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "TEXT-RRT-HOSTE-2024",
+          "type": "expert-opinion (textbook)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "textbook",
+          "version": "Hoste EAJ. Textbook of Critical Care. 8th ed. 2024",
+          "registryLocator": "Chapter 38 · pp233–239",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GUID-RRT-ICU-2026",
+          "type": "guideline",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "guideline",
+          "version": "Critical Care. 2026;30:46 · PMID 41535952 · PMCID PMC12849416",
+          "registryLocator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, and 5.1 · DOI 10.1186/s13054-025-05817-6 · https://link.springer.com/article/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": ["expert-opinion (textbook)", "guideline", "manufacturer-manual"],
+      "externalSources": [],
+      "missingEvidence": ["Faculty review of the proposed wording"],
+      "proposedMinimalChange": "Replace option text as proposed in §14 E-06; no ID, key or order change. Adds one new option.",
+      "affectedActivities": ["Learn Lesson 5 task 10 (crrt-alarms-troubleshooting)"],
+      "ownerDecisionRequired": "Approve, edit or reject the new option; confirm the key stays the only accepted answer. Clinical meaning change: Key: no; new third option.",
+      "recommendedReviewerRole": "Nephrology/ICU faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-E07",
+      "ownerDecisionIds": ["O-10"],
+      "contentTopicIds": [],
+      "findingIds": ["F-06"],
+      "title": "Lesson 3 task 5 · crrt-solute-transport / transport-transfer — weak-item revision (Batch 04 P-07)",
+      "packetSection": "§14 E-07",
+      "currentImplementation": "Authored item at src/features/baxter-crrt/content/foundationLessons.ts:359; accepted key 'convection'. Presentation (optional try, worked explanation, verdict words) implemented in Batch 04; option text, IDs and keys unchanged at 85acc113.",
+      "sourceIds": [
+        "REVIEW-CRRT-PRINCIPLES-2021",
+        "TEXT-RRT-HOSTE-2024",
+        "REVIEW-CKRT-CORE-2025",
+        "GUID-RRT-ICU-2026",
+        "SYNTH-LAB-TRANSPORT-001"
+      ],
+      "sourceLocators": [
+        {
+          "sourceId": "REVIEW-CRRT-PRINCIPLES-2021",
+          "type": "expert-opinion (narrative review)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Claure-Del Granado R, Clark WR. Seminars in Dialysis. 2021;34:398–405",
+          "registryLocator": "DOI 10.1111/sdi.12967 · pp398–405",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "TEXT-RRT-HOSTE-2024",
+          "type": "expert-opinion (textbook)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "textbook",
+          "version": "Hoste EAJ. Textbook of Critical Care. 8th ed. 2024",
+          "registryLocator": "Chapter 38 · pp233–239",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "REVIEW-CKRT-CORE-2025",
+          "type": "expert-opinion (narrative review)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Am J Kidney Dis. 2025;85:767–786 · PMID 40072400",
+          "registryLocator": "DOI 10.1053/j.ajkd.2024.09.015 · https://www.sciencedirect.com/science/article/pii/S027263862401120X · erratum DOI 10.1053/j.ajkd.2025.06.004",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GUID-RRT-ICU-2026",
+          "type": "guideline",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "guideline",
+          "version": "Critical Care. 2026;30:46 · PMID 41535952 · PMCID PMC12849416",
+          "registryLocator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, and 5.1 · DOI 10.1186/s13054-025-05817-6 · https://link.springer.com/article/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "SYNTH-LAB-TRANSPORT-001",
+          "type": "synthetic-teaching-fixture",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "synthetic-calibration",
+          "version": "v1 authored teaching calibration · no clinical review recorded",
+          "registryLocator": "Solute and water transport lesson",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": [
+        "expert-opinion (narrative review)",
+        "expert-opinion (textbook)",
+        "guideline",
+        "synthetic-teaching-fixture"
+      ],
+      "externalSources": [],
+      "missingEvidence": ["Faculty review of the proposed wording"],
+      "proposedMinimalChange": "Replace option text as proposed in §14 E-07; no ID, key or order change.",
+      "affectedActivities": ["Learn Lesson 3 task 5 (crrt-solute-transport)"],
+      "ownerDecisionRequired": "Approve, edit or reject; should 'offsets part of that water' stay? Clinical meaning change: No; separate wording question on 'offsets part of'.",
+      "recommendedReviewerRole": "Nephrology/ICU faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-E08",
+      "ownerDecisionIds": ["O-10"],
+      "contentTopicIds": [],
+      "findingIds": ["F-06"],
+      "title": "Lesson 5 task 8 · crrt-alarms-troubleshooting / alarm-continuation — weak-item revision (Batch 04 P-08)",
+      "packetSection": "§14 E-08",
+      "currentImplementation": "Authored item at src/features/baxter-crrt/content/operationalLessons.ts:162; accepted key 'resume-verify'. Presentation (optional try, worked explanation, verdict words) implemented in Batch 04; option text, IDs and keys unchanged at 85acc113.",
+      "sourceIds": [
+        "DEV-PM-005",
+        "DEV-PM-008",
+        "DEV-PM-012",
+        "DEV-PM-013",
+        "DEV-PM-014",
+        "TEXT-RRT-HOSTE-2024",
+        "GUID-RRT-ICU-2026"
+      ],
+      "sourceLocators": [
+        {
+          "sourceId": "DEV-PM-005",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pp39–64 · PDF pp40–65",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-008",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pages 101–169 · PDF pages 102–170",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-012",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pages 215–217 · PDF pages 216–218",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-013",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pp241–244 · PDF pp242–245",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "DEV-PM-014",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual pages 252–262 · PDF pages 253–263",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "TEXT-RRT-HOSTE-2024",
+          "type": "expert-opinion (textbook)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "textbook",
+          "version": "Hoste EAJ. Textbook of Critical Care. 8th ed. 2024",
+          "registryLocator": "Chapter 38 · pp233–239",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GUID-RRT-ICU-2026",
+          "type": "guideline",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "guideline",
+          "version": "Critical Care. 2026;30:46 · PMID 41535952 · PMCID PMC12849416",
+          "registryLocator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, and 5.1 · DOI 10.1186/s13054-025-05817-6 · https://link.springer.com/article/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": ["expert-opinion (textbook)", "guideline", "manufacturer-manual"],
+      "externalSources": [],
+      "missingEvidence": ["Faculty review of the proposed wording"],
+      "proposedMinimalChange": "Replace option text as proposed in §14 E-08; no ID, key or order change.",
+      "affectedActivities": ["Learn Lesson 5 task 8 (crrt-alarms-troubleshooting)"],
+      "ownerDecisionRequired": "Approve, edit or reject? Clinical meaning change: No.",
+      "recommendedReviewerRole": "Nephrology/ICU faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-E09",
+      "ownerDecisionIds": ["O-10"],
+      "contentTopicIds": [],
+      "findingIds": ["F-06"],
+      "title": "Lesson 6 task 8 · crrt-anticoagulation / citrate-transfer — weak-item revision (Batch 04 P-09)",
+      "packetSection": "§14 E-09",
+      "currentImplementation": "Authored item at src/features/baxter-crrt/content/advancedLessons.ts:152; accepted key 'parallel-assessment'. Presentation (optional try, worked explanation, verdict words) implemented in Batch 04; option text, IDs and keys unchanged at 85acc113.",
+      "sourceIds": [
+        "TEXT-CRRT-NEYRA-2026",
+        "REVIEW-CKRT-CORE-2025",
+        "GUID-RRT-ICU-2026",
+        "SYNTH-LAB-CITRATE-001",
+        "CITRATE-SIAARTI-2023-MECHANISM",
+        "CITRATE-SIAARTI-2023-SAMPLING",
+        "CITRATE-SCHNEIDER-2017-METABOLISM",
+        "CITRATE-SCHNEIDER-2017-PATTERNS",
+        "CITRATE-ICU-GUIDE-2026-SAFETY"
+      ],
+      "sourceLocators": [
+        {
+          "sourceId": "TEXT-CRRT-NEYRA-2026",
+          "type": "expert-opinion (textbook)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "textbook",
+          "version": "Neyra JA, Teixeira JP, Tolwani AJ. Brenner & Rector's The Kidney. 12th ed. 2026",
+          "registryLocator": "Chapter 64 · pp1881–1898 · Kidney replacement therapy section",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "REVIEW-CKRT-CORE-2025",
+          "type": "expert-opinion (narrative review)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Am J Kidney Dis. 2025;85:767–786 · PMID 40072400",
+          "registryLocator": "DOI 10.1053/j.ajkd.2024.09.015 · https://www.sciencedirect.com/science/article/pii/S027263862401120X · erratum DOI 10.1053/j.ajkd.2025.06.004",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GUID-RRT-ICU-2026",
+          "type": "guideline",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "guideline",
+          "version": "Critical Care. 2026;30:46 · PMID 41535952 · PMCID PMC12849416",
+          "registryLocator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, and 5.1 · DOI 10.1186/s13054-025-05817-6 · https://link.springer.com/article/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "SYNTH-LAB-CITRATE-001",
+          "type": "synthetic-teaching-fixture",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "synthetic-calibration",
+          "version": "v1 authored teaching calibration · no clinical review recorded",
+          "registryLocator": "Citrate first-use terms, mechanism walk, and four-way comparison · authored schematic boundary",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "CITRATE-SIAARTI-2023-MECHANISM",
+          "type": "expert-opinion (position statement)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Pistolesi et al. J Anesth Analg Crit Care. 2023;3:7 · PMID 37386664",
+          "registryLocator": "Section 1, Rationale, paragraph beginning “During RCA”; Section 2 modality context · https://doi.org/10.1186/s44158-023-00091-w",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "CITRATE-SIAARTI-2023-SAMPLING",
+          "type": "expert-opinion (position statement)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Pistolesi et al. J Anesth Analg Crit Care. 2023;3:7 · PMID 37386664",
+          "registryLocator": "Section 4, Rationale, monitoring discussion after the accumulation triad; Section 5, Rationale, calcium mass balance · https://doi.org/10.1186/s44158-023-00091-w",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "CITRATE-SCHNEIDER-2017-METABOLISM",
+          "type": "expert-opinion (viewpoint)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Schneider, Journois and Rimmelé. Critical Care. 2017;21:281",
+          "registryLocator": "General principles: Principles of citrate anticoagulation (calcium infusion sites); Citrate clearance and metabolism; Citrate and acid-base balance · https://doi.org/10.1186/s13054-017-1880-1",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "CITRATE-SCHNEIDER-2017-PATTERNS",
+          "type": "expert-opinion (viewpoint)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Schneider, Journois and Rimmelé. Critical Care. 2017;21:281",
+          "registryLocator": "Citrate accumulation and alternative diagnoses: Citrate accumulation, Net citrate overload, Insufficient trisodium-citrate delivery; Table 1 · https://doi.org/10.1186/s13054-017-1880-1",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "CITRATE-ICU-GUIDE-2026-SAFETY",
+          "type": "guideline",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "guideline",
+          "version": "Critical Care. 2026;30:46 · PMID 41535952",
+          "registryLocator": "Section 4 recommendations 4.4–4.6; Adverse events in RCA; RCA in liver failure · https://doi.org/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": [
+        "expert-opinion (narrative review)",
+        "expert-opinion (position statement)",
+        "expert-opinion (textbook)",
+        "expert-opinion (viewpoint)",
+        "guideline",
+        "synthetic-teaching-fixture"
+      ],
+      "externalSources": [],
+      "missingEvidence": ["Faculty review of the proposed wording"],
+      "proposedMinimalChange": "Replace option text as proposed in §14 E-09; no ID, key or order change.",
+      "affectedActivities": ["Learn Lesson 6 task 8 (crrt-anticoagulation)"],
+      "ownerDecisionRequired": "Should this item test substitution or sequencing? Approve, edit or reject. Clinical meaning change: Yes, in what the item tests (substitution → sequencing).",
+      "recommendedReviewerRole": "Nephrology/ICU faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-E10",
+      "ownerDecisionIds": ["O-10"],
+      "contentTopicIds": [],
+      "findingIds": ["F-06"],
+      "title": "Lesson 7 task 4 · crrt-fluid-liberation / missing-chart-data — weak-item revision (new in this packet)",
+      "packetSection": "§14 E-10",
+      "currentImplementation": "Authored item at src/features/baxter-crrt/content/operationalLessons.ts:272; accepted key 'reconcile'. Presentation (optional try, worked explanation, verdict words) implemented in Batch 04; option text, IDs and keys unchanged at 85acc113.",
+      "sourceIds": [
+        "FLUID-PM-001",
+        "FLUID-PM-002",
+        "TEXT-CRRT-NEYRA-2026",
+        "WHITE-2024",
+        "GONEUTRAL-2024",
+        "SYNTH-LAB-FLUID-001",
+        "GUID-RRT-ICU-2026"
+      ],
+      "sourceLocators": [
+        {
+          "sourceId": "FLUID-PM-001",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual p219 · PDF p220",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "FLUID-PM-002",
+          "type": "manufacturer-manual",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "device-manual",
+          "version": "AW8035 Rev B JUN2019 · program 2.XX",
+          "registryLocator": "Manual p219 · PDF p220",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "TEXT-CRRT-NEYRA-2026",
+          "type": "expert-opinion (textbook)",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "textbook",
+          "version": "Neyra JA, Teixeira JP, Tolwani AJ. Brenner & Rector's The Kidney. 12th ed. 2026",
+          "registryLocator": "Chapter 64 · pp1881–1898 · Kidney replacement therapy section",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "WHITE-2024",
+          "type": "observational-study",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Blood Purif. 2024;53:624–633 · PMID 38626729",
+          "registryLocator": "DOI 10.1159/000538421",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GONEUTRAL-2024",
+          "type": "trial",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "peer-reviewed",
+          "version": "Intensive Care Med. 2024;50:2061–2072 · PMID 39417870",
+          "registryLocator": "DOI 10.1007/s00134-024-07676-1",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "SYNTH-LAB-FLUID-001",
+          "type": "synthetic-teaching-fixture",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "synthetic-calibration",
+          "version": "v1 authored teaching calibration · no clinical review recorded",
+          "registryLocator": "Fluid management and liberation lesson",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        },
+        {
+          "sourceId": "GUID-RRT-ICU-2026",
+          "type": "guideline",
+          "locator": "Lesson-level sourceRecordIds (no item-level claim map)",
+          "registrySourceType": "guideline",
+          "version": "Critical Care. 2026;30:46 · PMID 41535952 · PMCID PMC12849416",
+          "registryLocator": "Recommendations 2.1, 2.4, 3.2, 3.3, 3.6, and 5.1 · DOI 10.1186/s13054-025-05817-6 · https://link.springer.com/article/10.1186/s13054-025-05817-6",
+          "registryReviewStatus": "pending",
+          "resolvedBy": "learnerFacing"
+        }
+      ],
+      "sourceType": [
+        "expert-opinion (textbook)",
+        "guideline",
+        "manufacturer-manual",
+        "observational-study",
+        "synthetic-teaching-fixture",
+        "trial"
+      ],
+      "externalSources": [],
+      "missingEvidence": ["Faculty review of the proposed wording"],
+      "proposedMinimalChange": "Replace option text as proposed in §14 E-10; no ID, key or order change. Adds one new option.",
+      "affectedActivities": ["Learn Lesson 7 task 4 (crrt-fluid-liberation)"],
+      "ownerDecisionRequired": "Approve, edit or reject the new option; confirm the key stays the only accepted answer. Clinical meaning change: No change to key or existing distractor; new third option.",
+      "recommendedReviewerRole": "Nephrology/ICU faculty",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    },
+    {
+      "id": "CRRT-F05-F01",
+      "ownerDecisionIds": ["O-10"],
+      "contentTopicIds": [],
+      "findingIds": ["F-25", "X-03"],
+      "title": "Lesson 5 presentation: status quo, split, or resume point (Batch 04 P-10)",
+      "packetSection": "§15 Artifact F",
+      "currentImplementation": "One lesson crrt-alarms-troubleshooting, ten tasks, two-part in-lesson outline (learnSequence.ts). URL carries only ?lesson=; task position lives in local selfPaced.lastLocation.taskId in baxter-crrt-progress-v3.",
+      "sourceIds": [],
+      "sourceLocators": [],
+      "sourceType": [],
+      "externalSources": [],
+      "missingEvidence": ["Pilot observations of where learners stop"],
+      "proposedMinimalChange": "None (A) until observations exist; B is a separately scoped migration.",
+      "affectedActivities": [
+        "Learn Lesson 5",
+        "Lesson 8 prerequisites",
+        "hub sequence",
+        "analytics allowlist",
+        "curriculum station",
+        "pathway/activity catalog"
+      ],
+      "ownerDecisionRequired": "A (status quo), B (split with a new ID and migration), or C (resume point, no new ID).",
+      "recommendedReviewerRole": "Owner",
+      "status": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "requiredChange": null,
+      "unresolvedDisagreement": null
+    }
+  ]
+}
