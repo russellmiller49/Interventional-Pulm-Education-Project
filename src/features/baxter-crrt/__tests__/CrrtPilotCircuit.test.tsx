@@ -294,7 +294,7 @@ describe('CRRT universal educational circuit', () => {
       'calculated-relationship',
       'calculated-relationship',
     ])
-    expect(within(pressureList).getAllByText('Directly modelled site')).toHaveLength(4)
+    expect(within(pressureList).getAllByText('Directly modeled site')).toHaveLength(4)
     expect(within(pressureList).getAllByText('Calculated relationship')).toHaveLength(2)
   })
 
@@ -319,7 +319,7 @@ describe('CRRT universal educational circuit', () => {
   it('shows the worked conservation ledger when no live flows are supplied', () => {
     renderCircuit()
 
-    const ledger = screen.getByRole('region', { name: 'Where every millilitre goes' })
+    const ledger = screen.getByRole('region', { name: 'Where every milliliter goes' })
     expect(ledger).toHaveTextContent(/Authored worked example/i)
     expect(within(ledger).getByText('2,100 mL/h')).toBeInTheDocument()
     expect(within(ledger).getByText('100 mL/h')).toBeInTheDocument()
@@ -356,7 +356,7 @@ describe('CRRT universal educational circuit', () => {
       },
     })
 
-    const ledger = screen.getByRole('region', { name: 'Where every millilitre goes' })
+    const ledger = screen.getByRole('region', { name: 'Where every milliliter goes' })
     expect(ledger).toHaveTextContent(/Computed from the flows currently set on this circuit/i)
     expect(ledger).toHaveTextContent(/This ledger cannot be closed/i)
     expect(ledger).toHaveTextContent(/none of this volume is attributed to patient fluid loss/i)

@@ -238,3 +238,119 @@ export function createSyntheticPressureLocalizationResult(
       'Only the selected circuit location changes. Compare the direction of all six pressure signals; alarm behavior and automatic device actions are not part of this lab.',
   })
 }
+
+/* ------------------------------------------------------------------ *
+ * Per-signal comparison (CRRT-FELLOW-04, F-23)
+ * ------------------------------------------------------------------ */
+
+export type PressureSignalComparisonOutcome = 'matches' | 'does-not-match' | 'no-prediction'
+
+export interface PressureSignalComparison {
+  readonly id: PressureLocalizationSignal
+  readonly label: string
+  readonly predicted: QualitativePressureDirection | null
+  readonly observed: QualitativePressureDirection
+  readonly outcome: PressureSignalComparisonOutcome
+  readonly baselineMmHg: number
+  readonly revealedMmHg: number
+  /** Why this signal moved or held, computed from this pattern's own readings. */
+  readonly explanation: string
+}
+
+/** A change in mmHg as a learner reads it: “+20 mmHg”, “0 mmHg”, “−30 mmHg”. */
+function signedChange(value: number): string {
+  const rounded = Math.round(value * 10) / 10
+  if (rounded === 0) return '0 mmHg'
+  const magnitude = Math.abs(rounded).toLocaleString('en-US', { maximumFractionDigits: 1 })
+  return `${rounded > 0 ? '+' : '−'}${magnitude} mmHg`
+}
+
+function reading(value: number): string {
+  const rounded = Math.round(value * 10) / 10
+  const magnitude = Math.abs(rounded).toLocaleString('en-US', { maximumFractionDigits: 1 })
+  return `${rounded < 0 ? '−' : ''}${magnitude}`
+}
+
+function movement(baseline: number, revealed: number, direction: QualitativePressureDirection) {
+  if (direction === 'unchanged') return `stayed at ${reading(baseline)} mmHg`
+  const verb = direction === 'higher' ? 'rose' : 'fell'
+  const note = direction === 'lower' && revealed < 0 ? ' (more negative)' : ''
+  return `${verb} from ${reading(baseline)} to ${reading(revealed)} mmHg${note}`
+}
+
+/**
+ * The explanation for one signal, derived from the readings of the pattern being shown, so it
+ * stays true for every supported site. TMP and filter pressure drop are explained from their
+ * own arithmetic: TMP = (filter + return) ÷ 2 − effluent − 18, and drop = filter − return − 25.
+ * Both constants cancel out of a before/after change, so they never decide a direction here.
+ */
+export function explainPressureSignal(
+  result: SyntheticPressureLocalizationResult,
+  signalId: PressureLocalizationSignal,
+): string {
+  const b = result.baseline
+  const r = result.revealed
+  const delta = {
+    access: r.accessPressureMmHg - b.accessPressureMmHg,
+    filter: r.filterPressureMmHg - b.filterPressureMmHg,
+    return: r.returnPressureMmHg - b.returnPressureMmHg,
+    effluent: r.effluentPressureMmHg - b.effluentPressureMmHg,
+    lossAcrossFilter:
+      r.filterPressureMmHg - r.returnPressureMmHg - (b.filterPressureMmHg - b.returnPressureMmHg),
+  }
+  const signal = result.signals.find((candidate) => candidate.id === signalId)
+  if (!signal) throw new Error(`Unknown pressure signal: ${signalId}`)
+  const moved = movement(signal.baselineMmHg, signal.revealedMmHg, signal.direction)
+
+  switch (signalId) {
+    case 'access':
+      return delta.access === 0
+        ? `Access pressure is measured between the patient and the blood pump, and in this model it moves only when resistance before the pump changes. Nothing before the pump changed in this pattern, so it ${moved}.`
+        : `Access pressure is measured between the patient and the blood pump. Resistance before the pump changed in this pattern, so the pump draws against it and access pressure ${moved}.`
+    case 'return':
+      return delta.return === 0
+        ? `Return pressure is measured on the return line after the filter and moves with resistance between that site and the patient. Nothing on that side changed here, so it ${moved}.`
+        : `Return pressure is measured on the return line after the filter. Resistance between that site and the patient changed here, so return pressure ${moved}.`
+    case 'filter':
+      return `Filter pressure is measured at the filter inlet, so it carries the return-side pressure plus the pressure lost across the filter. Return changed by ${signedChange(delta.return)} and the loss across the filter by ${signedChange(delta.lossAcrossFilter)}, so filter pressure ${moved}.`
+    case 'effluent':
+      return delta.effluent === 0
+        ? `Effluent pressure is measured on the fluid side. Nothing on the effluent path changed here, so it ${moved}.`
+        : `Effluent pressure is measured on the fluid side. This pattern imposes a changed effluent reading, so it ${moved}; where an obstruction sits relative to the sensor and pump is not modeled.`
+    case 'tmp': {
+      const averageChange = (delta.filter + delta.return) / 2
+      return `TMP is calculated, not measured: (filter + return) ÷ 2 − effluent − 18. Filter changed by ${signedChange(delta.filter)} and return by ${signedChange(delta.return)}, so their average changed by ${signedChange(averageChange)}; effluent, which is subtracted, changed by ${signedChange(delta.effluent)}. TMP therefore ${moved}. The −18 mmHg term is the same before and after.`
+    }
+    case 'filter-drop':
+      return `Filter pressure drop is calculated: filter − return, with this simulation’s −25 mmHg correction. Filter changed by ${signedChange(delta.filter)} and return by ${signedChange(delta.return)}, so their difference changed by ${signedChange(delta.filter - delta.return)} and the drop ${moved}. The −25 mmHg correction is the same before and after.`
+  }
+}
+
+/**
+ * Each of the six predictions beside the observed direction and its explanation. With no
+ * committed prediction (reveal-first), every signal still gets its explanation. There is no
+ * total, count or score: each signal is compared on its own.
+ */
+export function comparePressureLocalizationPrediction(
+  result: SyntheticPressureLocalizationResult,
+  prediction: PressureLocalizationPrediction | null,
+): readonly PressureSignalComparison[] {
+  return result.signals.map((signal) => {
+    const predicted = prediction ? prediction[signal.id] : null
+    return Object.freeze({
+      id: signal.id,
+      label: signal.label,
+      predicted,
+      observed: signal.direction,
+      outcome:
+        predicted === null
+          ? ('no-prediction' as const)
+          : predicted === signal.direction
+            ? ('matches' as const)
+            : ('does-not-match' as const),
+      baselineMmHg: signal.baselineMmHg,
+      revealedMmHg: signal.revealedMmHg,
+      explanation: explainPressureSignal(result, signal.id),
+    })
+  })
+}

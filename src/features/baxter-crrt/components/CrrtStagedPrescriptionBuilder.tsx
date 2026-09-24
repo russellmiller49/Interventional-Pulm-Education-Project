@@ -72,12 +72,12 @@ const NUMERIC_FIELDS: Readonly<Record<NumericFieldId, NumericFieldSpec>> = Objec
   simulatedWeightKg: Object.freeze({
     label: 'Practice weight',
     unit: 'kg',
-    description: 'A denominator only. It normalises the effluent display and changes nothing else.',
+    description: 'A denominator only. It normalizes the effluent display and changes nothing else.',
     min: 0.1,
     step: 0.1,
   }),
   hematocritPercent: Object.freeze({
-    label: 'Practice haematocrit',
+    label: 'Practice hematocrit',
     unit: '%',
     description: 'Used only to turn blood flow into plasma flow.',
     min: 0,
@@ -182,8 +182,8 @@ const SOURCE_NOTES = Object.freeze([
   }),
   Object.freeze({
     key: 'dose',
-    label: 'Weight-normalised display',
-    text: "PrisMax operator's manual weight-normalised effluent display",
+    label: 'Weight-normalized display',
+    text: "PrisMax operator's manual weight-normalized effluent display",
   }),
   Object.freeze({
     key: 'predilution',
@@ -567,7 +567,7 @@ export function CrrtStagedPrescriptionBuilder({
   const nextStageId = nextCrrtPrescriptionStageId(stageId)
 
   const updateStatus = consequences
-    ? `Predictions updated for step ${stage.ordinal} of ${CRRT_PRESCRIPTION_STAGE_IDS.length}, ${stage.shortTitle}. Total effluent ${formatNumber(consequences.ledger.totalEffluentMlHour)} millilitres per hour; prescribed intensity ${formatNumber(consequences.intensity.prescribedDoseMlPerKgHour, 2)} and projected time-averaged intensity ${formatNumber(consequences.intensity.deliveredDoseMlPerKgHour, 2)} millilitres per kilogram per hour; fluid results ${consequences.resolution === 'resolved' ? 'available' : 'withheld while the makeup attribution is unresolved'}.`
+    ? `Predictions updated for step ${stage.ordinal} of ${CRRT_PRESCRIPTION_STAGE_IDS.length}, ${stage.shortTitle}. Total effluent ${formatNumber(consequences.ledger.totalEffluentMlHour)} milliliters per hour; prescribed intensity ${formatNumber(consequences.intensity.prescribedDoseMlPerKgHour, 2)} and projected time-averaged intensity ${formatNumber(consequences.intensity.deliveredDoseMlPerKgHour, 2)} milliliters per kilogram per hour; fluid results ${consequences.resolution === 'resolved' ? 'available' : 'withheld while the makeup attribution is unresolved'}.`
     : (attempt?.errorMessage ??
       `Every predicted consequence is unavailable. Revise: ${validation.invalidLabels.join(', ')}.`)
 
@@ -972,7 +972,7 @@ export function CrrtStagedPrescriptionBuilder({
                         {formatNumber(consequences.intensity.prescribedDoseMlPerKgHour, 2)} mL/kg/h
                       </strong>
                       <small>
-                        The weight-normalised display for the prescription as written. No target
+                        The weight-normalized display for the prescription as written. No target
                         range is supplied.
                       </small>
                     </dd>

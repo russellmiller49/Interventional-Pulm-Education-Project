@@ -7,9 +7,16 @@ import {
   prismaxSimulatorHotspots,
   type PrismaxSimulatorHotspotId,
 } from '../content/prismaxSimulator'
+import { CRRT_SIMULATED_ALERT_BOUNDARY, crrtSimulatedAlertLabel } from '../content/alertLabels'
 import { crrtHardwareFunctionTeaching } from '../content/operationalLessons'
+import { crrtDeliveryStateWords } from '../content/stateLabels'
 import { totalExternalInputRateMlHour, totalExternalOutputRateMlHour } from '../engine/fluidModel'
 import type { CrrtLearnEvidence } from '../learnEvidence'
+import {
+  formatCrrtBalanceMl,
+  selectCrrtBalanceFeedback,
+  type CrrtBalanceFeedback,
+} from '../balanceFeedback'
 import {
   crrtLearnRunLabels,
   crrtRecordedDeliveryIntervals,
@@ -210,7 +217,7 @@ function PatientAndDelivery({ run }: { run: CrrtOperationalRun }) {
           : 'Weight unavailable'}
         .{' '}
         {run.id === 'access'
-          ? 'This case asks you to assess the patient and access path as a pressure pattern changes. Patient assessment actions record a reviewed case step; they do not simulate a physical examination.'
+          ? 'This case asks you to assess the patient and access path as a pressure pattern changes. Patient review actions record a case step; they do not simulate a physical examination.'
           : run.id === 'fluid'
             ? 'High external intake can leave whole-patient balance positive despite net CRRT removal. Review tolerance and fluid goals together.'
             : 'Reference for setup and fluid accounting; no kidney-recovery trajectory is modeled.'}
@@ -219,7 +226,8 @@ function PatientAndDelivery({ run }: { run: CrrtOperationalRun }) {
         <div>
           <dt>Applied modality / delivery state</dt>
           <dd>
-            {display.modality?.toUpperCase() ?? 'Not applied'} · {s.device.deliveryState}
+            {display.modality?.toUpperCase() ?? 'Not applied'} ·{' '}
+            {crrtDeliveryStateWords[s.device.deliveryState]}
           </dd>
         </div>
         <div>
@@ -266,7 +274,7 @@ function PatientAndDelivery({ run }: { run: CrrtOperationalRun }) {
       </dl>
       <p className={styles.caption}>
         Applied flows remain settings while paused; they are not proof that fluid is moving.
-        Recorded quantities derive from the engine’s integrated delivery and common charting
+        Recorded quantities come from the simulation’s integrated delivery over a common charting
         interval.
       </p>
       {display.cumulativeFluid.withheldReason ? (
@@ -283,14 +291,15 @@ function AlarmRecord({ run }: { run: CrrtOperationalRun }) {
     <section aria-label="Alert and cause record">
       <h3>Alert and cause record</h3>
       <p>
-        Generic engine alerts · manufacturer mapping and priorities pending. These alerts do not
-        automatically stop the modeled pumps.
+        {CRRT_SIMULATED_ALERT_BOUNDARY} In this simulation an alert does not stop the modeled pumps
+        by itself.
       </p>
       {alarms.length ? (
         <ul>
           {alarms.map((a) => (
             <li key={a.id}>
-              {a.code} · {a.active ? 'active cause' : 'cause resolved'} ·{' '}
+              {crrtSimulatedAlertLabel(a.code)} ·{' '}
+              {a.active ? 'cause still active' : 'cause resolved'} ·{' '}
               {a.acknowledgedAtSeconds === undefined
                 ? 'not acknowledged'
                 : `acknowledged at ${crrtLearnClock(a.acknowledgedAtSeconds)}`}
@@ -357,7 +366,7 @@ export function DeliveryTimeline({ run }: { run: CrrtOperationalRun }) {
                   <td>{number(r.externalInputMl)}</td>
                   <td>{number(r.externalOutputMl)}</td>
                   <td>{number(r.downtimeSeconds / 60)}</td>
-                  <td>{r.endState}</td>
+                  <td>{crrtDeliveryStateWords[r.endState]}</td>
                 </tr>
               ))}
             </tbody>
@@ -441,7 +450,7 @@ function NetRemovalComparison({ run }: { run: CrrtOperationalRun }) {
       >
         <table className={styles.table}>
           <caption>
-            Same CRRT-10 run · engine values at recorded events. Reserve and stress are teaching
+            Same CRRT-10 run · simulated values at recorded events. Reserve and stress are teaching
             proxies, not clinical tolerance measurements.
           </caption>
           <thead>
@@ -509,38 +518,64 @@ export function CrrtRecordedBalanceQuestion({
   const value = crrtValidBalanceResponse(raw)
   const chart = crrtRecordedFluidChart(run.session)
   const expected = chart.balanceMl
+  const therapy = run.session.simulation.deliveredTherapy
+  const context = {
+    windowHours: therapy.chartingWindowSeconds / 3600,
+    effluentMl: therapy.cumulativeActualEffluentMl,
+  }
+  // The entry the feedback describes is the one this check recorded, never a later edit.
+  const entered = evidence?.inputs?.answerMl ?? null
+  const feedback = selectCrrtBalanceFeedback(evidence ? entered : null, chart, context)
   useEffect(() => {
     if (evidence && !evidence.feedbackDisplayed) onFeedbackDisplayed()
   }, [evidence, onFeedbackDisplayed])
   return (
     <section aria-label="Recorded balance calculation" className={styles.numericQuestion}>
       <h3>Recorded balance calculation</h3>
-      <button type="button" onClick={() => setExplanationVisible((visible) => !visible)}>
-        {explanationVisible ? 'Hide explanation' : 'Show explanation'}
-      </button>
-      {explanationVisible ? (
-        <p>
-          Worked calculation · no answer recorded.{' '}
-          {expected === null
-            ? 'Exact balance is unavailable because fluid attribution is unresolved.'
-            : `${number(chart.externalInputMl)} − ${number(chart.urineMl)} − ${number(chart.otherOutputMl)} − ${number(chart.removalMl)} + ${number(chart.additionalDeviceGainMl)} = ${number(expected)} mL in this run. Positive means gain.`}
-        </p>
+      <p>
+        Optional try: enter your balance and check it, or open the worked calculation first. Nothing
+        you enter here is saved or counted, and you can try again or move on at any time.
+      </p>
+      {!evidence ? (
+        <button type="button" onClick={() => setExplanationVisible((visible) => !visible)}>
+          {explanationVisible ? 'Hide worked calculation' : 'Show worked calculation'}
+        </button>
+      ) : null}
+      {explanationVisible && !evidence ? (
+        <div className={styles.feedback} data-crrt-balance-worked>
+          <p>Worked calculation · no entry recorded.</p>
+          <CrrtBalanceWorkedCalculation feedback={feedback} />
+        </div>
       ) : null}
       {evidence ? (
-        <div role="status" className={styles.feedback}>
-          <h3>{evidence.correct ? 'Balance accounted for' : 'Review the fluid accounting'}</h3>
+        <div role="status" className={styles.feedback} data-crrt-balance-feedback={feedback.status}>
+          <h3>
+            {feedback.status === 'matches'
+              ? 'Your entry matches the recorded balance'
+              : feedback.status === 'unavailable'
+                ? 'An exact balance is unavailable for this chart'
+                : 'Your entry does not match the recorded balance'}
+          </h3>
           <p>
-            First answer: {number(evidence.inputs?.answerMl ?? null)} mL. Recorded balance:{' '}
-            {number(expected)} mL.
+            Your entry: {formatCrrtBalanceMl(feedback.enteredMl, true)}. Recorded balance:{' '}
+            {formatCrrtBalanceMl(feedback.recordedMl, true)}.
+            {feedback.differenceMl !== null && feedback.status === 'does-not-match'
+              ? ` Difference: ${formatCrrtBalanceMl(feedback.differenceMl, true)}.`
+              : ''}
           </p>
+          {feedback.diagnosis ? (
+            <p data-crrt-balance-diagnosis={feedback.diagnosis.errorId ?? 'general'}>
+              <strong>
+                {feedback.diagnosis.kind === 'specific' ? 'What your number shows:' : 'Hint:'}
+              </strong>{' '}
+              {feedback.diagnosis.text}
+            </p>
+          ) : null}
+          <CrrtBalanceWorkedCalculation feedback={feedback} />
           <p>
-            {number(chart.externalInputMl)} − {number(chart.urineMl)} −{' '}
-            {number(chart.otherOutputMl)} − {number(chart.removalMl)} +{' '}
-            {number(chart.additionalDeviceGainMl)} = {number(expected)} mL. Positive means gain.
             These are recorded interval totals. Recorded interruptions remain part of the patient
-            ledger.
+            ledger. Try again, or continue to another topic.
           </p>
-          <p>Review the calculation or continue to another topic.</p>
           {onRetry ? (
             <button
               type="button"
@@ -577,7 +612,8 @@ export function CrrtRecordedBalanceQuestion({
             aria-describedby="crrt-balance-help"
           />
           <p id="crrt-balance-help">
-            Enter a finite number in mL. Blank or invalid entries cannot be submitted.{' '}
+            Enter a finite number in mL, with a minus sign for a net loss. A blank or invalid entry
+            cannot be checked; the worked calculation stays available either way.{' '}
             {expected === null
               ? 'Required fluid attribution is unavailable, so an exact balance cannot be submitted.'
               : ''}
@@ -588,5 +624,27 @@ export function CrrtRecordedBalanceQuestion({
         </form>
       )}
     </section>
+  )
+}
+
+/** The ledger term by term, the sign convention, units and what stays out (F-21). */
+function CrrtBalanceWorkedCalculation({ feedback }: { feedback: CrrtBalanceFeedback }) {
+  return (
+    <div data-crrt-balance-ledger>
+      <p>
+        <strong>Worked calculation:</strong> {feedback.workedCalculation}
+      </p>
+      <ul aria-label="Patient fluid ledger for this window">
+        {feedback.ledger.map((line) => (
+          <li key={line.id}>
+            {line.operation === 'add' ? 'Add' : 'Subtract'} {line.label.charAt(0).toLowerCase()}
+            {line.label.slice(1)}: {formatCrrtBalanceMl(line.valueMl)} ({line.note})
+          </li>
+        ))}
+      </ul>
+      <p>{feedback.signConvention}</p>
+      <p>{feedback.unitsAndWindow}</p>
+      <p>{feedback.notInLedger}</p>
+    </div>
   )
 }

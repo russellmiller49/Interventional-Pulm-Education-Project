@@ -1,0 +1,121 @@
+/* The glossary renders inside the CRRT dialog portal, so it restates the dialog palette. */
+.trigger {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid rgba(175, 222, 215, 0.45);
+  border-radius: 0.6rem;
+  color: #ecf7f5;
+  background: rgba(2, 18, 21, 0.55);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.trigger:focus-visible {
+  outline: 3px solid #f5bb65;
+  outline-offset: 2px;
+}
+
+.trigger svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.glossary {
+  display: grid;
+  gap: 1rem;
+  line-height: 1.55;
+}
+
+.status {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border: 1px dashed rgba(245, 187, 101, 0.6);
+  border-radius: 0.6rem;
+  color: #fff1d7;
+}
+
+.groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.groups button {
+  min-height: 44px;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid rgba(175, 222, 215, 0.35);
+  border-radius: 999px;
+  color: #d7e6e4;
+  background: rgba(2, 18, 21, 0.55);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.groups button:focus-visible,
+.glossary h3:focus-visible,
+.basis summary:focus-visible {
+  outline: 3px solid #f5bb65;
+  outline-offset: 2px;
+}
+
+.glossary h3 {
+  margin: 0.4rem 0 0.4rem;
+  font-size: 1.05rem;
+  color: #f4fbfa;
+}
+
+.glossary dl {
+  display: grid;
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.entry {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(175, 222, 215, 0.22);
+  border-radius: 0.7rem;
+  background: rgba(2, 18, 21, 0.35);
+  overflow-wrap: anywhere;
+}
+
+.entry dt {
+  font-weight: 800;
+  color: #bdf5e7;
+}
+
+.entry dd {
+  margin: 0.25rem 0 0;
+}
+
+.entry p {
+  margin: 0.3rem 0;
+}
+
+.aliases,
+.distinct {
+  color: #d6e8e6;
+}
+
+.distinct ul,
+.basis ul {
+  margin: 0.2rem 0 0.3rem;
+  padding-left: 1.1rem;
+}
+
+.open {
+  color: #fff1d7;
+}
+
+.basis summary {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+}

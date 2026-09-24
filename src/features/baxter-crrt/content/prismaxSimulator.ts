@@ -48,7 +48,7 @@ export const prismaxStaticReferenceNotice = Object.freeze({
   unsynchronisedNotice:
     'This drawing is not connected to the simulation. Nothing on it updates, no region shows a value, and its appearance does not change when the model does. For current pressures, read the live pressure profile above.',
   fidelityBoundary:
-    'It shows roughly where hardware sits, nothing more. Screen layout, menus, button behaviour, alarm appearance, and every operating sequence belong to the manufacturer’s instructions and your local training.',
+    'It shows roughly where hardware sits, nothing more. Screen layout, menus, button behavior, alarm appearance, and every operating sequence belong to the manufacturer’s instructions and your local training.',
   sourceRecordIds: Object.freeze(['DEV-PM-014'] as const),
 })
 

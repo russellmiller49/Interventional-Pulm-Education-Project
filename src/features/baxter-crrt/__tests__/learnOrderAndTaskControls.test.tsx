@@ -149,7 +149,7 @@ describe('one canonical Learn order (F-10)', () => {
     for (const caseId of unit.coreCaseIds) recordCrrtVisit({ section: 'practice', id: caseId })
     render(<BaxterCrrtHub />)
     await settle()
-    const note = screen.getByText('Topics visited')
+    const note = screen.getByText('Every lesson and core case here opened', { exact: false })
     const heading = note.closest('div')!
     expect(within(heading).getByText('1', { exact: false })).not.toBe(note)
     expect(note.className).not.toBe(heading.querySelector('span')!.className)

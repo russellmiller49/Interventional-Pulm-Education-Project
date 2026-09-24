@@ -169,7 +169,7 @@ export const crrtAdvancedTasks: Partial<
           'parallel-assessment',
           'Assess patient and circuit, verify delivery, and obtain correctly identified systemic and circuit information.',
           true,
-          'Mechanical localization and the anticoagulation review answer different questions. Neither pressure nor one unlabelled laboratory result can replace the other.',
+          'Mechanical localization and the anticoagulation review answer different questions. Neither pressure nor one unlabeled laboratory result can replace the other.',
         ),
         choice(
           'ignore-systemic',
@@ -191,7 +191,7 @@ export const crrtAdvancedTasks: Partial<
       instruction:
         'Review the patient, applied prescription and initial profile. Record the first interval, then connect the new findings to the earlier lessons.',
       teaching: [
-        'This bounded case combines the circuit, flow and pressure relationships, interruptions, anticoagulation context and both fluid ledgers. It uses an existing engine case that was not demonstrated in the earlier lessons.',
+        'This bounded case combines the circuit, flow and pressure relationships, interruptions, anticoagulation context and both fluid ledgers. It is a guided version of Practice case CRRT-14, which the earlier lessons did not use.',
         'Read the starting findings before advancing time. The cause is initially undisclosed. The model does not simulate bedside inspection, citrate metabolism or a complete clinical response.',
       ],
     },
@@ -315,7 +315,7 @@ export const crrtAdvancedTasks: Partial<
       run: 'integration',
       operation: 'integration-decision',
       instruction:
-        'Use the inspection and paused state. A continued pause for escalation is also supported when cause correction cannot be verified.',
+        'Use the inspection and the paused state to choose a plan. More than one plan can be supported.',
       teaching: [],
       question:
         'The authored inspection confirms a return-region restriction but does not specify its physical cause. Which plan will you follow in this bounded simulation?',
@@ -324,7 +324,7 @@ export const crrtAdvancedTasks: Partial<
           'unsafe-flow',
           'Increase blood flow through the unresolved restriction and infer safety from delivery.',
           false,
-          'Increasing flow does not correct the restriction. This action is not applied. Your first choice is retained; the next task provides guided correction and verification.',
+          'Increasing flow does not correct the restriction, and this simulation does not apply it. The next task carries out a supported plan and verifies it.',
         ),
         choice(
           'defer',
@@ -400,7 +400,7 @@ export const crrtAdvancedTasks: Partial<
       exampleId: 'integrated-missing-record-v1',
       kind: 'question',
       instruction:
-        'Use the same reasoning with a different record. There is no current engine run on this screen.',
+        'Use the same reasoning with a different record. There is no simulated run on this screen.',
       teaching: [],
       question:
         'A separate handoff gives only the final pump settings and total effluent volume. It omits urine, external intake, interruption times and anticoagulation delivery. What can you conclude?',

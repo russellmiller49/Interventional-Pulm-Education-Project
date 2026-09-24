@@ -356,7 +356,8 @@
           "excerpt": "https://kdigo.org/wp-content/uploads/2019/01/KDIGO-2012-AKI-Guideline-English.pdf"
         }
       ],
-      "learnerWording": "“Clinical reassessment reference: KDIGO 2012 AKI guideline, chapter 5.2. This supplies conceptual stopping/reassessment guidance, not a device procedure or a universal threshold. Clinical review of this teaching remains pending.”",
+      "learnerWording": "“Clinical reassessment reference: KDIGO 2012 AKI guideline, chapter 5.2. This supplies conceptual stopping/reassessment guidance, not a device procedure or a universal threshold. No clinician has reviewed this teaching yet.”",
+      "laterWordingChange": "CRRT-FELLOW-04 (2026-09-23), presentation only: “Clinical review of this teaching remains pending.” now reads “No clinician has reviewed this teaching yet.” The link, the chapter locator, the hard-coded URL and the hold are unchanged. Decision still NOT REVIEWED.",
       "visual": "Linked paragraph in the collapsed lesson source list.",
       "intendedTeachingPoint": "Stopping or reassessing CRRT is a clinical decision framed by guidance, not a device procedure or a universal threshold.",
       "sourceRecordIds": ["GUID-KDIGO-AKI-2012"],
@@ -442,7 +443,8 @@
           "excerpt": "baxterCrrtReleaseStage === 'published' ? 'Public release' : 'Unlisted preview'"
         }
       ],
-      "learnerWording": "Now: “English fallback” on non-English routes, and “v1 authored teaching calibration · no clinical review recorded” as the version text of simulated-value sources. SHARED-02 renamed the conditional release label to “Public release”; it is not shown while the release stage is 'unlisted-preview'.",
+      "learnerWording": "Now: “English fallback” on non-English routes. Simulated-value sources read “Simulated teaching values · Written for this module” with “No clinical review recorded” on the main path of the evidence drawer and lesson source lists; the registered version text “v1 authored teaching calibration · no clinical review recorded” is shown verbatim in each source’s “Source record” disclosure. SHARED-02 renamed the conditional release label to “Public release”; it is not shown while the release stage is 'unlisted-preview'.",
+      "laterWordingChange": "CRRT-FELLOW-04 (2026-09-23), presentation only: learner surfaces print a plain citation for simulated-value records (src/features/baxter-crrt/sourcePresentation.ts). The registered version and section strings in phase7ReviewSources.ts are unchanged and remain one disclosure away; a version string containing “sme-review” is explained there as a release-stage name, not a review. No review status was upgraded. Decision still NOT REVIEWED.",
       "previousWording": "“Reviewed-English fallback”; “v1 SME-review build”. Before SHARED-02: “Reviewed release” on the conditional published branch.",
       "visual": "Small note and source-list text.",
       "intendedTeachingPoint": "A status label must not imply a review that no record documents.",

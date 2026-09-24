@@ -23,7 +23,7 @@ describe('CRRT runnable rapid-drill interface', () => {
 
     const drill = getCrrtReviewerRapidDrill('DRILL-AIR')
     expect(screen.queryByText(drill.openingSignal)).not.toBeInTheDocument()
-    const commit = within(drillUi).getByRole('button', { name: 'Submit prediction' })
+    const commit = within(drillUi).getByRole('button', { name: 'Check this response' })
     expect(commit).toBeDisabled()
     fireEvent.click(
       within(drillUi).getByRole('radio', {
@@ -43,7 +43,7 @@ describe('CRRT runnable rapid-drill interface', () => {
         name: new RegExp(drill.predictionOptions[0].label, 'i'),
       }),
     )
-    fireEvent.click(within(drillUi).getByRole('button', { name: 'Submit prediction' }))
+    fireEvent.click(within(drillUi).getByRole('button', { name: 'Check this response' }))
     fireEvent.click(within(drillUi).getByRole('button', { name: 'Acknowledge signal' }))
     expect(within(drillUi).getByRole('status')).toHaveTextContent(
       /Acknowledgement does not resolve the cause/i,
@@ -71,10 +71,10 @@ describe('CRRT runnable rapid-drill interface', () => {
         name: new RegExp(selected.predictionOptions[0].label, 'i'),
       }),
     )
-    fireEvent.click(within(drillUi).getByRole('button', { name: 'Submit prediction' }))
+    fireEvent.click(within(drillUi).getByRole('button', { name: 'Check this response' }))
     expect(screen.getByText(selected.openingSignal)).toBeInTheDocument()
-    fireEvent.click(within(drillUi).getByRole('button', { name: 'Reset drill' }))
+    fireEvent.click(within(drillUi).getByRole('button', { name: 'Reset this drill' }))
     expect(screen.queryByText(selected.openingSignal)).not.toBeInTheDocument()
-    expect(within(drillUi).getByRole('button', { name: 'Submit prediction' })).toBeDisabled()
+    expect(within(drillUi).getByRole('button', { name: 'Check this response' })).toBeDisabled()
   })
 })

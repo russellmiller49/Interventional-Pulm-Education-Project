@@ -550,6 +550,60 @@
   }
 }
 
+/* F-23: each signal's comparison is said in words, with a glyph and a border style as
+   secondary cues. Color never carries the outcome by itself. */
+.comparisonCell {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.comparisonTag {
+  display: inline-block;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid rgba(140, 226, 215, 0.55);
+  border-radius: 0.4rem;
+  font-weight: 700;
+  color: #e7f2f0;
+}
+
+.comparisonTag[data-comparison='does-not-match'] {
+  border-style: dashed;
+  border-color: #f5bb65;
+  color: #fff1d7;
+}
+
+.comparisonTag[data-comparison='no-prediction'] {
+  border-style: dotted;
+  color: #c8d9d7;
+}
+
+.signalExplanations {
+  margin-top: 1rem;
+}
+
+.signalExplanations h5 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  color: #f4fbfa;
+}
+
+.signalExplanations ol {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0.6rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.signalExplanations li p {
+  margin: 0.15rem 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.signalExplanationHead {
+  color: #e7f2f0;
+}
+
 @media (forced-colors: active) {
   .lab,
   .reviewBoundary,
@@ -562,6 +616,10 @@
   .tableRegion,
   .resultBoundary {
     border: 1px solid CanvasText;
+  }
+
+  .comparisonTag {
+    border-color: CanvasText;
   }
 
   .segmentedChoices input:checked + span,

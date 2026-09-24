@@ -18,7 +18,7 @@ export function BaxterCrrtLearnLanding() {
       sectionHref={(sectionId) => `${baxterCrrtNavBase}/learn?lesson=${sectionId}`}
       intro="Begin at section 1, the treatment trajectory: what problem is this therapy meant to work on, and what is it meant to move toward? Section 2 then traces one circuit, and every section after it reuses that same picture — what moves solute across it, what the prescription asks it to deliver, where a pressure change points, what citrate does inside it, and what leaves the patient. The final section puts those readings together on a run that is going wrong. Move in order or open any section directly; every section stays open."
       startLabel="Start with the treatment trajectory"
-      sectionsNote="The final section is an integration capstone that reuses every earlier reading, not a new topic."
+      sectionsNote="The final section is an integration capstone that reuses every earlier reading, not a new topic. The minutes shown beside each section are estimates written when this pathway was authored, not measured learner times."
       notice={
         <aside
           role="note"
@@ -34,7 +34,7 @@ export function BaxterCrrtLearnLanding() {
             </p>
           </div>
           <div>
-            <p className="font-semibold">What you will practise</p>
+            <p className="font-semibold">What you will practice</p>
             <p className="text-muted-foreground">
               Tracing one circuit and naming where each pressure sits; building a prescription in
               stages and reading what those flows predict; separating prescribed intensity from
@@ -45,7 +45,7 @@ export function BaxterCrrtLearnLanding() {
           <div>
             <p className="font-semibold">Educational model · pending clinical review</p>
             <p className="text-muted-foreground">
-              Values, device responses, and alarm behaviour are synthetic teaching examples.
+              Values, device responses, and alarm behavior are synthetic teaching examples.
               Finishing this pathway does not by itself qualify anyone to prescribe, set up, run, or
               troubleshoot CRRT independently, and it replaces no local protocol. Confirm every
               workflow against current PrisMax instructions, your local policy, and the responsible

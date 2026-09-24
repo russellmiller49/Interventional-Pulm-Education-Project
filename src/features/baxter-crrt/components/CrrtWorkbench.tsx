@@ -20,7 +20,10 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 
+import type { CrrtLearnerCitation } from '../sourcePresentation'
 import { CrrtDialog } from './CrrtDialog'
+import { CrrtGlossaryButton } from './CrrtGlossary'
+import { CrrtSourceRecord } from './CrrtSourceRecord'
 import styles from './crrt-workbench.module.css'
 
 /**
@@ -181,6 +184,10 @@ export interface CrrtReferenceMaterial {
     readonly title: string
     readonly sourceLabel: string
     readonly limitation: string
+    readonly limitationLabel?: string
+    /** Plain review state; the exact record is one disclosure away (F-19). */
+    readonly review?: string
+    readonly citation?: CrrtLearnerCitation
   }[]
 }
 
@@ -297,6 +304,7 @@ export function CrrtCurrentTask({
             </button>
           }
         />
+        <CrrtGlossaryButton className={styles.materialButton} />
       </div>
     </section>
   )
@@ -337,9 +345,11 @@ function CrrtMaterialDrawer({
               <article key={entry.id} className={styles.materialEntry}>
                 <h3>{entry.title}</h3>
                 <p>{entry.sourceLabel}</p>
+                {entry.review ? <p>{entry.review}</p> : null}
                 <p>
-                  <strong>Limit:</strong> {entry.limitation}
+                  <strong>{entry.limitationLabel ?? 'Limit'}:</strong> {entry.limitation}
                 </p>
+                {entry.citation ? <CrrtSourceRecord citation={entry.citation} /> : null}
               </article>
             ))
           )}
@@ -376,7 +386,7 @@ export function CrrtHelpDialog({
       onOpenChange={onOpenChange}
       returnFocusRef={returnFocusRef}
       title="Help for this case"
-      description={`${caseTitle}. Opening help changes nothing in your run: no simulated time passes, no setting changes, and nothing is recorded or scored.`}
+      description={`${caseTitle}. Opening help changes nothing in your run: no simulated time passes, no setting changes, and nothing is recorded or judged.`}
     >
       <div className={styles.help} data-crrt-help-surface>
         <section aria-labelledby="crrt-help-hint">
@@ -405,7 +415,11 @@ export function CrrtHelpDialog({
             <li>
               <strong>Reference</strong> opens the case description and its sources.{' '}
               <strong>Evidence</strong>
-              {' opens each source’s scope and limits.'}
+              {' opens each source’s scope and limits. '}
+              <strong>Glossary</strong>
+              {
+                ' defines the terms used here — PBP, effluent, net machine removal (PFR), whole-patient balance and more.'
+              }
             </li>
             {includesCaseNavigation ? (
               <li>

@@ -203,7 +203,7 @@ export const criticalCareLearningPathways: readonly LearningPathway[] = Object.f
       {
         id: 'crrt-pressure-profile-integration',
         shortTitle: 'Integrate',
-        title: 'Read the pressure profile: where in the circuit is the problem?',
+        title: 'Pressure-profile integration',
         minutes: 18,
         description:
           'Put every earlier reading on one deteriorating run: circuit anatomy, the prescription, citrate, and the fluid ledger, read together to localize the problem.',

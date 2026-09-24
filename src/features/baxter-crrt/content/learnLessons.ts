@@ -212,7 +212,7 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
   }),
   lesson({
     id: 'crrt-pressure-profile-integration',
-    title: 'Read the pressure profile: where in the circuit is the problem?',
+    title: 'Pressure-profile integration',
     summary:
       'Localize a deteriorating run from the whole pressure profile, then reconcile prescription, anticoagulation, and fluid before deciding what to change.',
     paragraphs: [

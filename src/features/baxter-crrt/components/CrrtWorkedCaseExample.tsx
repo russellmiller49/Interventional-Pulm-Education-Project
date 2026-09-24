@@ -7,6 +7,7 @@ import {
   isResolvableCrrtSourceId,
   resolveCrrtLearnerFacingSource,
 } from '../content/learnerSourceMap'
+import { crrtLearnerCitation } from '../sourcePresentation'
 import type {
   CrrtWorkedCaseExample,
   CrrtWorkedCheck,
@@ -47,11 +48,7 @@ const locationSignalLabels: Readonly<Record<CrrtWorkedPressureLocationSignal, st
 function citationText(sourceIds: readonly string[]): string {
   return sourceIds
     .filter(isResolvableCrrtSourceId)
-    .map((id) => {
-      const source = resolveCrrtLearnerFacingSource(id)
-      const location = source.pageOrSection?.includes('http') ? null : source.pageOrSection
-      return [source.sourceTitle, source.documentVersion, location].filter(Boolean).join(' · ')
-    })
+    .map((id) => crrtLearnerCitation(resolveCrrtLearnerFacingSource(id)).line)
     .join('; ')
 }
 

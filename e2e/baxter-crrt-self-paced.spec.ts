@@ -91,7 +91,7 @@ test('Learn supports no answer, explanation, wrong answer, retry, skip, map jump
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
   await page.getByRole('button', { name: 'Continue without this exercise' }).click()
-  const explain = page.getByRole('button', { name: 'Show explanation', exact: true })
+  const explain = page.getByRole('button', { name: 'Show worked explanation', exact: true })
   await explain.focus()
   await page.keyboard.press('Enter')
   await expect(
@@ -100,7 +100,7 @@ test('Learn supports no answer, explanation, wrong answer, retry, skip, map jump
   await expect(page.getByRole('radio', { checked: true })).toHaveCount(0)
   await page.getByRole('radio', { name: /Fluid removal alone/ }).check()
   await page.getByRole('button', { name: 'Check reasoning' }).click()
-  await expect(page.getByRole('status')).toContainText('Reasoning feedback')
+  await expect(page.getByRole('status')).toContainText('Your choice is not the accepted answer')
   await page.getByRole('button', { name: 'Try again', exact: true }).click()
   await expect(page.getByRole('radio', { checked: true })).toHaveCount(0)
   await page.getByRole('button', { name: 'Continue without this exercise' }).click()
@@ -114,7 +114,7 @@ test('Learn supports no answer, explanation, wrong answer, retry, skip, map jump
   await page.getByText(/Lesson tasks ·/, { exact: false }).click()
   const map = page.locator('details').filter({ has: page.getByText(/Lesson tasks ·/) })
   await map.getByRole('button').last().click()
-  await page.getByRole('button', { name: 'Show explanation', exact: true }).click()
+  await page.getByRole('button', { name: 'Show worked explanation', exact: true }).click()
   await expect(
     page.getByText('Worked explanation · no answer recorded.', { exact: true }),
   ).toBeVisible()

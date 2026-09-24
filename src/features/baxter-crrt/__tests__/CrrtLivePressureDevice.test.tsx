@@ -47,7 +47,7 @@ function renderProfile(state: CrrtSimulationState, selected: CrrtPressureSignalI
 describe('live pressure profile — direct sites versus calculated relationships', () => {
   it('names four sites and two relationships in words, not only by styling', () => {
     renderProfile(runningState())
-    expect(screen.getAllByText('Directly modelled site')).toHaveLength(5) // 4 cards + the open detail
+    expect(screen.getAllByText('Directly modeled site')).toHaveLength(5) // 4 cards + the open detail
     expect(screen.getAllByText('Calculated relationship')).toHaveLength(2)
   })
 
@@ -202,9 +202,9 @@ describe('live pressure profile — keyboard and text equivalent', () => {
 
     for (const signal of operationsFor(state).pressureSignals) {
       expect(summary).toContain(signal.label)
-      expect(summary).toContain(`${Math.round(signal.valueMmHg!)} millimetres of mercury`)
+      expect(summary).toContain(`${Math.round(signal.valueMmHg!)} millimeters of mercury`)
     }
-    expect(summary).toContain('Directly modelled site')
+    expect(summary).toContain('Directly modeled site')
     expect(summary).toContain('Calculated relationship')
     expect(summary).toMatch(/Selected: TMP, a calculated relationship/)
     expect(summary).toMatch(/current value only, no recorded series/)
@@ -301,7 +301,7 @@ describe('live pressure profile — circuit linkage', () => {
 
     const site = renderLinked('return')
     expect(site.container.textContent).toMatch(
-      /Selected pressure: Return pressure, a directly modelled site, marked on this circuit/,
+      /Selected pressure: Return pressure, a directly modeled site, marked on this circuit/,
     )
     site.unmount()
   })

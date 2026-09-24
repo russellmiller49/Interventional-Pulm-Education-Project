@@ -15,6 +15,7 @@ import {
 } from '../content/curriculum'
 import type { CrrtCaseId } from '../content/schema'
 import { createCrrtLearningSession, crrtLearningSessionReducer } from '../engine'
+import { crrtCaseReuseNote } from '../caseReuse'
 import { readCrrtSelfPacedProgress, recordCrrtVisit } from '../selfPacedProgress'
 import type { CrrtRoleLens } from '../engine/types'
 import { BaxterCrrtModuleFrame } from './BaxterCrrtModuleFrame'
@@ -79,6 +80,7 @@ export function BaxterCrrtPractice({
   const selectedDefinition = getBaxterCrrtCase(selectedCaseId)
   const selectedCatalogEntry = getBaxterCrrtCaseCatalogEntry(selectedCaseId)
   const selectedIsAdditional = baxterCrrtAdditionalCaseIds.includes(selectedCaseId)
+  const caseReuseNote = crrtCaseReuseNote(selectedCaseId)
   const nextRecommendedCase =
     baxterCrrtCoreCaseIds.find(
       (caseId) => caseId !== selectedCaseId && !progress.visitedCaseIds.includes(caseId),
@@ -187,6 +189,11 @@ export function BaxterCrrtPractice({
                   : `Core station ${selectedCatalogEntry.station}`}
               </span>
               <h2 id="practice-case-heading">{selectedCatalogEntry.title}</h2>
+              {caseReuseNote ? (
+                <p className={styles.caseReuseNote} data-crrt-case-reuse>
+                  {caseReuseNote}
+                </p>
+              ) : null}
             </div>
           </div>
           <CrrtCasePlayer
@@ -202,7 +209,9 @@ export function BaxterCrrtPractice({
         <section className={styles.drillStrip} aria-labelledby="safety-drills-heading">
           <div className={styles.sectionHeading}>
             <div>
-              <span className={styles.kicker}>Five focused rehearsals</span>
+              <span className={styles.kicker}>
+                Five worked safety examples · optional try first
+              </span>
               <h2 id="safety-drills-heading">Safety drills</h2>
             </div>
             <ShieldAlert aria-hidden="true" />

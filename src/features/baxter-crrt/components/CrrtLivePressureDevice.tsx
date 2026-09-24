@@ -41,7 +41,7 @@ export interface CrrtLivePressureDeviceProps {
 }
 
 const KIND_LABEL = {
-  'directly-modelled-site': 'Directly modelled site',
+  'directly-modelled-site': 'Directly modeled site',
   'calculated-relationship': 'Calculated relationship',
 } as const
 
@@ -58,7 +58,7 @@ function formatMmHg(value: number | null): string {
 
 function spokenValue(signal: CrrtDevicePressureSignalView): string {
   if (signal.valueMmHg === null) return 'unavailable'
-  return `${Math.round(signal.valueMmHg)} millimetres of mercury`
+  return `${Math.round(signal.valueMmHg)} millimeters of mercury`
 }
 
 function formatClock(totalSeconds: number): string {
@@ -176,7 +176,7 @@ export function CrrtLivePressureDevice({
       context.bloodFlowContributesToPressures
         ? 'The blood pump is running and both lumens are connected, so blood flow is acting on these pressures.'
         : 'The blood pump is not moving blood through the circuit, so these values are the model at zero flow rather than readings taken during treatment.',
-      `Modality ${context.modality ? context.modality.toUpperCase() : 'not set'}; blood flow set to ${flowText(context.bloodFlow.setMlMin, 'millilitres per minute')}, and the circuit is carrying ${flowText(context.bloodFlow.actualMlMin, 'millilitres per minute')}; dialysate ${flowText(context.dialysateFlowMlHour, 'millilitres per hour')}; patient fluid removal set to ${flowText(context.patientFluidRemovalMlHour, 'millilitres per hour')}. These are the settings in force, not a statement of how much fluid has actually been removed.`,
+      `Modality ${context.modality ? context.modality.toUpperCase() : 'not set'}; blood flow set to ${flowText(context.bloodFlow.setMlMin, 'milliliters per minute')}, and the circuit is carrying ${flowText(context.bloodFlow.actualMlMin, 'milliliters per minute')}; dialysate ${flowText(context.dialysateFlowMlHour, 'milliliters per hour')}; patient fluid removal set to ${flowText(context.patientFluidRemovalMlHour, 'milliliters per hour')}. These are the settings in force, not a statement of how much fluid has actually been removed.`,
       'Pressure profile:',
       ...signals.map((signal) => {
         const kind = KIND_LABEL[signal.kind]
@@ -215,8 +215,8 @@ export function CrrtLivePressureDevice({
       </header>
 
       <p className={styles.lede}>
-        These are modelled device values, not readings from a machine at a bedside. Four of them are
-        modelled at a place on the circuit you could go and look at. Two of them are arithmetic over
+        These are modeled device values, not readings from a machine at a bedside. Four of them are
+        modeled at a place on the circuit you could go and look at. Two of them are arithmetic over
         those places and have nowhere to inspect.
       </p>
 

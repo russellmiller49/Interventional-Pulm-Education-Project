@@ -9,11 +9,12 @@ import {
 } from '@/features/learning-module/activity'
 import { ActivityChrome } from '@/features/learning-module/components/ActivityChrome'
 import { AssumedConceptStrip } from '@/features/critical-care/components/AssumedConceptStrip'
-import { DebriefPanel } from '@/features/learning-module/components/DebriefPanel'
 import { ResumeBanner } from '@/features/learning-module/components/ResumeBanner'
 import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
 import { Link } from '@/i18n/navigation'
 
+import { crrtSimulatedAlertLabel } from '../content/alertLabels'
+import { crrtLearnerCitation } from '../sourcePresentation'
 import { baxterCrrtMasteryManifest } from '../content/mastery'
 import { getBaxterCrrtDeviceProfile } from '../content/deviceProfiles'
 import { CRRT_ACTUAL_BLOOD_FLOW_LABEL, selectCrrtBloodFlowState } from '../engine/circuitDelivery'
@@ -109,14 +110,6 @@ function formatPressureSites(
     .join(' · ')} mmHg`
 }
 
-function humanizeAlarmCode(code: string): string {
-  return code
-    .toLowerCase()
-    .split('_')
-    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
-    .join(' ')
-}
-
 export function crrtSemanticActivityPhase(
   session: CrrtLearningSessionState,
 ): CriticalCareActivityPhase {
@@ -169,7 +162,9 @@ export function CrrtActivityWorkspace({
   const catalogActivity = criticalCareActivityById.get(activityId)
   const [helpOpen, setHelpOpen] = useState(false)
   const helpReturnFocus = useRef<HTMLElement | null>(null)
-  const sourceTitles = [...new Set(definition.sourceBasis.map((source) => source.sourceTitle))]
+  const sourceTitles = [
+    ...new Set(definition.sourceBasis.map((source) => crrtLearnerCitation(source).title)),
+  ]
 
   // Every item the old sideways strip carried, except the case title (already the page heading
   // and the Cases control). Values keep their units and are grouped by whether they were supplied
@@ -317,14 +312,22 @@ export function CrrtActivityWorkspace({
                   summary: definition.patientDescription,
                   meta: sourceTitles.join(' · '),
                 },
-                evidence: definition.sourceBasis.map((source) => ({
-                  id: source.id,
-                  title: source.sourceTitle,
-                  sourceLabel: `${source.documentVersion} · ${source.pageOrSection}`,
-                  limitation: String(
-                    source.value ?? 'Use only within the authored educational source scope.',
-                  ),
-                })),
+                evidence: definition.sourceBasis.map((source) => {
+                  const citation = crrtLearnerCitation(source)
+                  return {
+                    id: source.id,
+                    title: citation.title,
+                    sourceLabel: [citation.kind, citation.edition, citation.locator]
+                      .filter(Boolean)
+                      .join(' · '),
+                    review: citation.review,
+                    limitation: String(
+                      source.value ?? 'Use only within the educational scope this source supports.',
+                    ),
+                    limitationLabel: source.unit ? 'Registered value' : 'Limit',
+                    citation,
+                  }
+                }),
               }}
             >
               {currentTaskExtras}
@@ -334,7 +337,7 @@ export function CrrtActivityWorkspace({
             <CrrtEvidenceSummary
               alert={{
                 active: Boolean(activeAlarm),
-                label: activeAlarm ? humanizeAlarmCode(activeAlarm.code) : 'None',
+                label: activeAlarm ? crrtSimulatedAlertLabel(activeAlarm.code) : 'None',
               }}
               items={evidenceItems}
               deviceLabel={deviceProfile.displayName}
@@ -356,36 +359,9 @@ export function CrrtActivityWorkspace({
               />
             ) : null}
             {children}
-            {session.debriefRevealed ? (
-              <DebriefPanel
-                clinicalModel={definition.debrief.summary}
-                actions={session.timeline.map((entry) => entry.type.replaceAll('-', ' '))}
-                consequences={definition.debrief.causalChain}
-                performanceDomains={[
-                  {
-                    label: 'Clinical frame',
-                    result: 'Compare the prediction with the observed patient and circuit response',
-                  },
-                  {
-                    label: 'Safety review',
-                    result:
-                      session.criticalErrorIds.length === 0
-                        ? 'Review device warnings and prerequisites for each action'
-                        : 'Revisit the safety event and the cue that preceded it',
-                  },
-                  {
-                    label: 'Reassessment',
-                    result: 'Reconnect prescription, delivered therapy, circuit, and patient',
-                  },
-                ]}
-                transfer={<p>{definition.debrief.transferQuestion}</p>}
-                replay={
-                  <button type="button" onClick={onReset}>
-                    Replay this case
-                  </button>
-                }
-              />
-            ) : null}
+            {/* The case's own debrief (CrrtCasePlayer) is the only one: it keeps what this run did
+                apart from the worked example. The shared generic panel that used to follow it
+                listed raw event types and narrated the worked example as "What happened" (F-18). */}
           </div>
         </CrrtWorkbenchLayout>
         <CrrtHelpDialog

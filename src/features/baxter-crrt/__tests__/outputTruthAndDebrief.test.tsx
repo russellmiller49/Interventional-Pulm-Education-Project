@@ -123,7 +123,7 @@ describe('CRRT debrief separates the worked example from this run', () => {
     expect(screen.queryByText('Run reviewed')).toBeNull()
     expect(screen.getByText(/^Debrief opened · \d+ recorded events? in this run$/)).toBeVisible()
     expect(
-      screen.getByText(/not a judgement that the care was safe, complete, or successful/),
+      screen.getByText(/not a judgment that the care was safe, complete, or successful/),
     ).toBeVisible()
   })
 
@@ -212,6 +212,6 @@ describe('CRRT debrief separates the worked example from this run', () => {
     const safety = debriefSection(/Safety review of this run/)
     expect(safety).toHaveTextContent('No simulated fault was still active when the run ended.')
     expect(safety).toHaveTextContent(/none of the actions this case flags as unsafe/)
-    expect(safety).toHaveTextContent(/not a judgement that the run was clinically adequate/)
+    expect(safety).toHaveTextContent(/not a judgment that the run was clinically adequate/)
   })
 })

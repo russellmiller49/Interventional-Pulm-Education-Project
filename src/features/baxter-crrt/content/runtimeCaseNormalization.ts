@@ -10,6 +10,7 @@ import {
   runtimeCrrtCaseSchema,
   type RuntimeCrrtCase,
 } from './schema'
+import { milligramsPerDeciliterToMilligramsPerLiter } from './concentrationUnits'
 
 type RuntimeSoluteConfiguration =
   RuntimeCrrtCase['engineFixtureConfiguration']['patient']['solutes']
@@ -67,7 +68,7 @@ function buildMgSolute(
     amountUnit: 'mg',
     concentrationUnit: 'mg/L',
     // Exact unit conversion only; the normalizer supplies no clinical value.
-    concentrationPerLiter: concentrationMgPerDeciliter * 10,
+    concentrationPerLiter: milligramsPerDeciliterToMilligramsPerLiter(concentrationMgPerDeciliter),
     distributionVolumeLiters: configuration.distributionVolumeLiters,
     productionAmountPerHour: configuration.productionAmountPerHour,
     inputAmountPerHour: configuration.inputAmountPerHour,

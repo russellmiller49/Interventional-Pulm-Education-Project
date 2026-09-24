@@ -160,7 +160,7 @@ for (const compact of [false, true]) {
     await review(page)
     await click(page, 'Acknowledge the access alert')
     await expect(page.getByRole('region', { name: 'Alert and cause record' })).toContainText(
-      'active cause · acknowledged',
+      'cause still active · acknowledged',
     )
     await expect(page.getByText('Modeled pumps', { exact: true }).locator('..')).toContainText(
       'Blood: on · Fluid: on',
@@ -211,7 +211,12 @@ for (const compact of [false, true]) {
     await capture(page, info, '08-blank-balance-no-answer')
     await fill(page, input, compact ? '300' : '400')
     await click(page, 'Check recorded balance')
-    await expect(page.getByRole('status')).toContainText('Recorded balance: 300 mL')
+    await expect(page.getByRole('status')).toContainText('Recorded balance: +300 mL')
+    await expect(page.getByRole('status')).toContainText(
+      compact
+        ? 'Your entry matches the recorded balance'
+        : 'Your entry does not match the recorded balance',
+    )
     expect((await saved(page)).completedLessonIds).not.toContain('crrt-fluid-liberation')
     await capture(page, info, '09-balance-feedback')
     await review(page)

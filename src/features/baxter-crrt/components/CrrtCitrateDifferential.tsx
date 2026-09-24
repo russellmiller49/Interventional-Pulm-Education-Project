@@ -15,8 +15,10 @@ import {
 import { crrtCircuitNode } from '../content/circuitModel'
 import { baxterCrrtLearnerFacingSourceById } from '../content/learnerSourceMap'
 import { crrtSourceDating } from '../content/sourceReviewMetadata'
+import { crrtLearnerCitation } from '../sourcePresentation'
 import { CrrtPilotCircuit } from './CrrtPilotCircuit'
 import { CrrtSourceDating } from './CrrtSourceDating'
+import { CrrtSourceRecord } from './CrrtSourceRecord'
 import styles from './crrt-citrate-differential.module.css'
 
 const DOMAIN_LABELS: Record<CrrtSamplingDomain, string> = {
@@ -225,13 +227,15 @@ export function CrrtCitrateDifferential({
         {sourceIds.map((id) => {
           const source = baxterCrrtLearnerFacingSourceById.get(id)!
           const dated = crrtSourceDating(id) !== undefined
+          const citation = crrtLearnerCitation(source)
           return (
             <Fragment key={id}>
               <p>
                 <strong>{source.sourceTitle}</strong> · {source.documentVersion}.{' '}
-                {source.pageOrSection}.{dated ? null : ` Review: ${source.reviewStatus}.`}
+                {source.pageOrSection}.{dated ? null : ` ${citation.review}.`}
               </p>
               <CrrtSourceDating sourceId={id} />
+              <CrrtSourceRecord citation={citation} />
             </Fragment>
           )
         })}

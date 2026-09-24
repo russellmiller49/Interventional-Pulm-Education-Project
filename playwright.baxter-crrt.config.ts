@@ -10,6 +10,7 @@ export default defineConfig({
     'baxter-crrt-sanity-review.spec.ts',
     'baxter-crrt-workbench-wayfinding.spec.ts',
     'baxter-crrt-batch03-sanity.spec.ts',
+    'baxter-crrt-fellow04.spec.ts',
   ],
   workers: 1,
   retries: 0,
