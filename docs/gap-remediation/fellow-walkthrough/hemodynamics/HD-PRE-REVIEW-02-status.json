@@ -370,7 +370,16 @@
       "lint": "eslint --max-warnings 0 clean on every changed file; prettier --check clean",
       "build": "npm run build succeeded; third-party warnings only",
       "browserHeadless": "Chromium against port 3125 at 1204x987 (wedge and debrief also 390x844, no horizontal overflow): wedge provenance HD-01, clamped repeat HD-02, historical-series debrief HD-03; journeys-head.json, journeys-head-390.json, screenshots 01-07",
-      "playwright": "playwright.icu-hemodynamics.config.ts (port 3125): 10 passed / 16 failed; the 16 failing test names are identical to the recorded baseline set (flow 78, 212, 256, 295, 319, 361, 391, 458, 550, 574 x2; targeted 87 x3, 132, 191); not repaired, by instruction"
+      "playwright": "playwright.icu-hemodynamics.config.ts (port 3125): 10 passed / 16 failed; the 16 failing test names are identical to the recorded baseline set (flow 78, 212, 256, 295, 319, 361, 391, 458, 550, 574 x2; targeted 87 x3, 132, 191); not repaired, by instruction",
+      "integrationRecheck": {
+        "date": "2026-09-24",
+        "originMain": "afe74131b83718be1bb07b8739f8ba2bd37a0c07",
+        "commitsPastRepairMain": 7,
+        "scope": "CRRT-FELLOW-04/05; critical-care content touched; no ICU Hemodynamics, dependency or config file",
+        "mainAlone": "route + consumers 47/50 suites, 433/436 tests; the same three baseline failures by name",
+        "withHeadMerged": "head 082962882b2708866bbc254aaa2059e8e96995f0 merged, not committed: 93/96 suites, 1059/1062 tests, the same three failures; tsc clean",
+        "pullRequest": "CLEAN and mergeable; branch not rebased or merged"
+      }
     },
     "holdsChanged": [],
     "holdsNote": "HD02-H1..H14 and Task-01 R1/R5/R8 unchanged; none of the three repairs depended on a held clinical or source decision",
