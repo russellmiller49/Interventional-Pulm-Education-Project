@@ -16,14 +16,17 @@ async function openSection(page: Page, moduleId: string, path: string) {
     .first()
     .click()
   await expect
-    .poll(() =>
-      page
-        .locator('iframe')
-        .evaluate(
-          (element) =>
-            (element as HTMLIFrameElement).contentWindow?.location.pathname +
-            ((element as HTMLIFrameElement).contentWindow?.location.search ?? ''),
-        ),
+    .poll(
+      () =>
+        page
+          .locator('iframe')
+          .evaluate(
+            (element) =>
+              (element as HTMLIFrameElement).contentWindow?.location.pathname +
+              ((element as HTMLIFrameElement).contentWindow?.location.search ?? ''),
+          ),
+      // The first real lesson visit compiles its route in the development server.
+      { timeout: 30000 },
     )
     .toBe(path)
   const frame = (await (await page.locator('iframe').elementHandle())!.contentFrame())!

@@ -310,13 +310,14 @@ describe('main site auth access helpers', () => {
       '/learn/anatomy/airway',
       '/zh-CN/learn/anatomy/airway',
       '/airway-anatomy/case-001/case_manifest.json',
-      '/admin/therapeutic-bronchoscopy',
       '/intro-bronchoscopy/airway-anatomy',
     ]) {
       expect(getRequiredEntitlement(path, params())).toBeNull()
       expect(isPublicPath(path)).toBe(true)
       expect(isPublicUnlistedPath(path)).toBe(true)
     }
+    expect(isPublicPath('/admin/therapeutic-bronchoscopy')).toBe(false)
+    expect(getRequiredEntitlement('/admin/therapeutic-bronchoscopy', params())).toBe('site_admin')
     expect(isPublicPath('/admin/therapeutic-bronchoscopy/settings')).toBe(false)
     expect(getRequiredEntitlement('/admin/therapeutic-bronchoscopy/settings', params())).toBe(
       'site_admin',

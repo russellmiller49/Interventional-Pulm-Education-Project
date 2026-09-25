@@ -1,5 +1,11 @@
 import { z } from 'zod'
-import { feedbackSchema, isPngScreenshot, maxScreenshotBytes, reviewSchema } from './schema'
+import {
+  feedbackSchema,
+  storedFeedbackSchema,
+  isPngScreenshot,
+  maxScreenshotBytes,
+  reviewSchema,
+} from './schema'
 
 export const ownerFeedbackDatabase = 'module-owner-feedback'
 export const ownerFeedbackVersion = 1
@@ -35,7 +41,7 @@ function readRecord(value: unknown): OwnerFeedbackEntry {
   if (!parsed.success)
     throw new Error('Unsupported or damaged local feedback record. No data was removed.')
   const record = parsed.data
-  feedbackSchema.parse({
+  storedFeedbackSchema.parse({
     id: record.id,
     moduleId: record.module_id,
     pagePath: record.page_path,

@@ -3,8 +3,10 @@ import { betaModuleById } from './catalog'
 
 export type FeedbackMode = 'owner-local' | 'server'
 
+// Deployed feedback must reach the reviewer. Browser-only storage is a local development aid.
 // NEXT_PUBLIC values are fixed at build time. Missing/unknown settings keep server behavior.
 export function feedbackMode(): FeedbackMode {
+  if (process.env.NODE_ENV === 'production') return 'server'
   return process.env.NEXT_PUBLIC_MODULE_FEEDBACK_MODE === 'owner-local' ? 'owner-local' : 'server'
 }
 
