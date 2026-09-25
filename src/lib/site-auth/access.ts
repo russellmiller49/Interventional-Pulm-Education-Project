@@ -23,7 +23,6 @@ const PUBLIC_EXACT_PATHS = new Set([
 ])
 
 const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
-  '/admin/therapeutic-bronchoscopy',
   '/learn/anatomy/airway',
   '/intro-bronchoscopy/airway-anatomy',
   '/learn/anatomy/branch-tracing',
@@ -294,8 +293,6 @@ export function getRequiredEntitlement(
   }
 
   if (normalizedPathname.startsWith('/socrates/')) return 'socrates_participant'
-
-  if (normalizedPathname === '/admin/therapeutic-bronchoscopy') return null
 
   if (normalizedPathname === '/admin' || normalizedPathname.startsWith('/admin/')) {
     return 'site_admin'

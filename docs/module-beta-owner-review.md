@@ -1,21 +1,23 @@
 # Owner review feedback
 
-## Current phase: owner review
+## Optional local development workflow
 
-The site owner is currently the sole reviewer. Use `/en/development-beta` to test modules,
+Live beta testing now uses Supabase; see [Live user feedback](module-beta-testing.md).
+This browser-local workflow remains available for local owner testing. Use `/en/development-beta` to test modules,
 then `/en/admin/module-feedback` to review and export findings. Other locale prefixes work
 as well. These findings are owner notes, not reports from authenticated external testers.
 Owner review and either feedback mode do not authorize public release.
 
 ## Choose a storage mode explicitly
 
-| Configuration                                  | Storage and access                                                                                                                                |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_MODULE_FEEDBACK_MODE=owner-local` | IndexedDB in this browser. Beta hub, known beta module wrappers, and the exact feedback workspace page require no Supabase account/configuration. |
-| `NEXT_PUBLIC_MODULE_FEEDBACK_MODE=server`      | Existing verified main-site account submissions, Supabase persistence, and `site_admin` review authorization.                                     |
-| Unset or any other value                       | Server mode; fails explicitly if storage is unavailable.                                                                                          |
+| Configuration                                  | Storage and access                                                                                                                                                      |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_MODULE_FEEDBACK_MODE=owner-local` | IndexedDB in this browser. In local development, beta hub, known beta module wrappers, and the exact feedback workspace page require no Supabase account/configuration. |
+| `NEXT_PUBLIC_MODULE_FEEDBACK_MODE=server`      | Existing verified main-site account submissions, Supabase persistence, and `site_admin` review authorization.                                                           |
+| Unset or any other value                       | Server mode; fails explicitly if storage is unavailable.                                                                                                                |
 
-Set the value in the environment used to start/build the app. For a local session, for example:
+Production builds always use server storage. This setting only enables owner-local in non-production runs.
+Set the value in the environment used to start the local app. For a local session, for example:
 
 ```sh
 NEXT_PUBLIC_MODULE_FEEDBACK_MODE=owner-local npm run dev:codex

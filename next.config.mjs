@@ -84,7 +84,6 @@ const embeddedAppSecurityHeaders = securityHeaders.map((header) => {
 // Keep the default DENY policy on unrelated pages and all feedback/admin endpoints.
 const betaFramePaths = [
   '/ebus-guided/:path*',
-  '/admin/therapeutic-bronchoscopy',
   '/learn/anatomy/airway/:path*',
   '/learn/anatomy/branch-tracing/:path*',
   '/branch-tracing/:path*',

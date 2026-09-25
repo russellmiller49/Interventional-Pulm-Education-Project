@@ -1,24 +1,24 @@
 # Development beta testing
 
-## Owner review — current
+## Live user feedback — current
 
-The site owner is the sole reviewer during the current phase. Set
-`NEXT_PUBLIC_MODULE_FEEDBACK_MODE=owner-local` explicitly to save feedback and screenshots in
-IndexedDB without Supabase. The beta interface labels this **Owner review · saved locally on this
-browser**. The local workspace at `/en/admin/module-feedback` supports filters, review status,
-notes, screenshots, ZIP export for consolidated ChatGPT analysis, and confirmed clearing.
-These records make no external-user identity claims and are not publication approval.
-See [Owner review feedback](module-beta-owner-review.md) for setup, privacy, storage limits,
-page-context inventory, exports, and the transition checklist.
+The deployed beta hub uses server storage. Verified main-site users can submit feedback and
+optional screenshots from any of the 12 beta modules. Reports are available to the site owner
+at `/en/admin/module-feedback` using the existing `site_admin` account. Open **Admin → Modules
+in development → Review module feedback**, or visit that address directly. The workspace
+supports module/status filters, screenshots, review status, and private notes. Choose **Refresh**
+to fetch new reports. Feedback is collected in the workspace; no email notifications are sent.
 
-## External development beta — future
+Production always uses Supabase, even if an old `NEXT_PUBLIC_MODULE_FEEDBACK_MODE=owner-local`
+setting remains in the hosting environment. Missing/unrecognized mode configuration also uses
+server storage. Server errors preserve the current draft and never fall back to local storage.
 
-Before external distribution, disable owner-local, set `NEXT_PUBLIC_MODULE_FEEDBACK_MODE=server`,
-and rebuild/restart. Configure main-site Supabase, apply the feedback migration (and later catalog
-constraint migrations), verify a real submission with an image and admin review, and verify
-main-site tester authentication. Missing/unrecognized mode configuration defaults to server.
-Server errors never fall back to local storage. The server-backed design below remains the
-external development-beta workflow.
+## Optional local owner review
+
+For local development only, set `NEXT_PUBLIC_MODULE_FEEDBACK_MODE=owner-local` to save findings
+and screenshots in IndexedDB. These notes remain in that browser and are not sent to the owner
+workspace on the live site. Export existing local notes before clearing browser data. See
+[Owner review feedback](module-beta-owner-review.md) for local storage and export details.
 
 ## Public release — later
 
@@ -32,7 +32,7 @@ It uses the existing main-site sign-in, email verification, and profile completi
 verified site account can test; no shared password or separate tester account is introduced.
 The hub is absent from public navigation and the sitemap, with `noindex, nofollow, noarchive`.
 
-The hub offers 13 modules: EBUS Guided, the three requested simulators, the existing live anatomy lesson,
+The hub offers 12 modules: EBUS Guided, the two airway simulators, the existing live anatomy lesson,
 Device Atlas, Peripheral Bronchoscopy Imaging, Bronchoscopy Foundations, and the five critical
 care modules. The live lesson at `/en/intro-bronchoscopy/airway-anatomy` is now titled **Live
 Bronchoscopy Anatomy**; the synchronized simulator is a separate entry at
@@ -41,8 +41,8 @@ Bronchoscopy Anatomy**; the synchronized simulator is a separate entry at
 Each **Test with feedback** link opens `/en/development-beta/<module-id>`. The actual module
 runs in a same-origin frame with a compact feedback toolbar outside it, so lesson navigation
 and simulator state stay intact. The usual module URLs have no feedback UI and open without
-an account. The public exception under `/admin` is limited to the exact therapeutic
-bronchoscopy simulator page; the other admin surfaces retain their access requirements.
+an account. Therapeutic Bronchoscopy is not in the beta hub. It remains in **Modules in development**,
+and its `/admin/therapeutic-bronchoscopy` page requires `site_admin` access.
 
 ## Tester feedback
 
@@ -75,14 +75,18 @@ Stored URLs exclude arbitrary query parameters such as auth tokens.
 
 ## Deployment
 
-Apply `supabase/migrations/20260912234953_module_beta_feedback.sql` to the **main-site Supabase
-project** as part of deployment. It creates `public.module_beta_feedback`, indexes, and the
-private `module-beta-feedback` image bucket. Do not apply it to the dedicated literature
-project. Follow the primary-checkout requirements in `AGENTS.md` for database operations.
-This PR does not apply the migration to a shared or production database.
+The **main-site Supabase project**, `tqnhxlwvkkswuckszlee` (Endoreels), needs these migrations:
+
+1. `supabase/migrations/20260912234953_module_beta_feedback.sql`: feedback table, indexes,
+   and private `module-beta-feedback` screenshot bucket.
+2. `supabase/migrations/20260925055243_expand_module_beta_feedback_catalog.sql`: permits EBUS
+   Guided submissions. Historical Therapeutic Bronchoscopy records remain valid and reviewable, including local notes and exports.
+
+Both were applied to the main-site project on 2026-09-25 UTC. Do not apply them to the dedicated
+literature project. Follow the primary-checkout requirements in `AGENTS.md` for database operations.
 
 In server mode, the API uses the site's existing server-only `SUPABASE_SERVICE_ROLE_KEY` and Supabase URL
-configuration. `NEXT_PUBLIC_MODULE_FEEDBACK_MODE` selects the UI storage mode; it never changes
+configuration. `NEXT_PUBLIC_MODULE_FEEDBACK_MODE` selects local development storage only; it never changes
 API authorization. Table access is revoked from public,
 `anon`, and `authenticated`; only authenticated server endpoints use the service role. A
 restrictive storage policy also excludes browser roles from this bucket even if an unrelated
@@ -95,6 +99,13 @@ submission with an image and a real admin review before distributing the beta li
 
 ## Validation
 
+Live verification on 2026-09-25 UTC used a temporary verified tester against
+`https://interventionalpulm.com`: all 12 modules saved reports; an EBUS screenshot upload and
+idempotent retry passed; a temporary reviewer retrieved the private image, saved status/notes,
+and opened the real review workspace. Browser-role table reads, tester review access, and public
+screenshot access were denied. The test reports, screenshot, session, temporary entitlement, and
+account were removed afterward. The existing owner account retains active, unexpired `site_admin`.
+
 Owner-local validation and commands are documented in [Owner review feedback](module-beta-owner-review.md).
 
 - Targeted Jest coverage: catalog/access boundaries, signed-in and admin authorization,
@@ -105,10 +116,10 @@ Owner-local validation and commands are documented in [Owner review feedback](mo
   highlighting, selected-text/page context, draft preservation, failed-save retry, review edits,
   and mobile layout. Persistence responses use fixtures; real API calls confirm that preview
   cookies cannot access feedback data.
-- The migration was executed against an isolated in-memory PostgreSQL (PGlite) database with
+- During initial implementation, the base migration was executed against an isolated in-memory PostgreSQL (PGlite) database with
   representative auth/storage schemas. Service-role insert/read/review, check constraints,
   denied browser-role table access, and restrictive screenshot access were verified, including
-  a deliberately broad pre-existing storage policy. No shared Supabase state was mutated.
+  a deliberately broad pre-existing storage policy. That initial rehearsal did not mutate shared Supabase state; the live rollout and verification are recorded above.
 
 The shared future-session asset guidance is in `AGENTS.md` and `docs/local-authoring-assets.md`.
 The local `interventional-pulm-education` Codex skill also points to that map; no authoring

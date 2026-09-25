@@ -195,3 +195,41 @@ it('exports faithful Markdown and JSON plus exact screenshot bytes; leaves recor
   expect(await archive.file(`screenshots/${input.id}.png`)!.async('nodebuffer')).toEqual(png)
   expect(await listOwnerFeedback()).toHaveLength(1)
 })
+
+it('keeps retired-module notes readable and exportable while rejecting new reports', async () => {
+  const existing = await saveOwnerFeedback(input, image())
+  const retired = {
+    ...existing,
+    module_id: 'therapeutic-bronchoscopy',
+    page_path: '/en/admin/therapeutic-bronchoscopy',
+  }
+  await new Promise<void>((resolve, reject) => {
+    const open = indexedDB.open(ownerFeedbackDatabase, ownerFeedbackVersion)
+    open.onsuccess = () => {
+      const db = open.result
+      const tx = db.transaction('reports', 'readwrite')
+      tx.objectStore('reports').put(retired)
+      tx.oncomplete = () => {
+        db.close()
+        resolve()
+      }
+      tx.onerror = () => {
+        db.close()
+        reject(tx.error)
+      }
+    }
+    open.onerror = () => reject(open.error)
+  })
+  const reports = await listOwnerFeedback()
+  expect(reports[0].module_id).toBe('therapeutic-bronchoscopy')
+  await updateOwnerFeedback(input.id, { status: 'resolved', reviewerNotes: 'Preserved review' })
+  const exported = await exportOwnerFeedback(await listOwnerFeedback(), {})
+  const zip = await JSZip.loadAsync(await exported.blob.arrayBuffer())
+  expect(await zip.file('feedback.md')!.async('string')).toContain(
+    'Therapeutic Bronchoscopy Simulator',
+  )
+  expect(zip.file(`screenshots/${input.id}.png`)).not.toBeNull()
+  await expect(
+    saveOwnerFeedback({ ...input, moduleId: retired.module_id, pagePath: retired.page_path }),
+  ).rejects.toThrow()
+})

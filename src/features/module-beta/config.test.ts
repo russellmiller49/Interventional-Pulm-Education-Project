@@ -2,8 +2,19 @@
 import { feedbackMode, isOwnerLocalFeedbackPage } from './config'
 const original = process.env.NEXT_PUBLIC_MODULE_FEEDBACK_MODE
 afterEach(() => {
+  jest.restoreAllMocks()
   if (original === undefined) delete process.env.NEXT_PUBLIC_MODULE_FEEDBACK_MODE
   else process.env.NEXT_PUBLIC_MODULE_FEEDBACK_MODE = original
+})
+it('always saves deployed feedback to the server, even with a stale owner-local setting', () => {
+  jest.replaceProperty(process, 'env', {
+    ...process.env,
+    NODE_ENV: 'production',
+    NEXT_PUBLIC_MODULE_FEEDBACK_MODE: 'owner-local',
+  })
+  expect(feedbackMode()).toBe('server')
+  expect(isOwnerLocalFeedbackPage('/en/development-beta')).toBe(false)
+  expect(isOwnerLocalFeedbackPage('/en/admin/module-feedback')).toBe(false)
 })
 it.each([undefined, '', 'server', 'typo'])('defaults conservatively for %s', (value) => {
   if (value === undefined) delete process.env.NEXT_PUBLIC_MODULE_FEEDBACK_MODE
