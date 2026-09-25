@@ -492,3 +492,353 @@ Edited: `src/app/[locale]/peripheral-imaging/assess/page.tsx`,
 Nothing outside PI was touched: no EBUS, BBT, CRRT, MCS, hemodynamics or MV file; no global auth,
 header or footer; no shared learning-module or stage file; no Prompt 05 storage; no deployment
 configuration. No release flag, access tier or storage key changed.
+
+## Post-sanity-review repair (September 24, 2026)
+
+Prepared by Claude (AI implementation). The independent sanity review of head
+`a18c349f5f04103cab3526b366fbe3a5057a40e4` returned **SANITY REVIEW: NOT READY TO MERGE** with five
+bounded findings (F1–F5). This section records the repair of those five and two small optional
+items the owner allowed. Everything above this section is the historical implementation record and
+is left as written; where the repair supersedes a statement above, this section says so.
+
+### Scope and baseline
+
+- Pre-flight: worktree clean, branch `claude/pi-prompt04-approved-runtime`, HEAD `a18c349f`
+  (unchanged since review), `origin` fetched, and no process was running from this worktree.
+- Commits: the repair is `d6bcc7be` (source and tests); this section is the commit after it.
+- Specification: the owner's repair brief, which summarises the reviewer's findings. The reviewer's
+  full report was not in the repository or on the PR, so the brief is what was worked to.
+- Dev server: port **3126** (the tracked `claude-imaging` launch entry,
+  `next dev --port 3126 --webpack`), and the listening process's working directory was checked to
+  be this worktree. As before, this worktree has no `.env.local`, so the site root `/en` fails in
+  the Supabase proxy. The PI routes are unaffected.
+- Bounded: no connected case, no Prompt 05 or 06, no media-rights or clinical-hold resolution, no
+  shared CSS and no shared learning-module or stage file. Nothing outside
+  `src/features/peripheral-imaging/`, `e2e/peripheral-imaging.spec.ts` and this handoff was edited.
+
+### F1 · Section 9's beam lines are now the rays the table measures
+
+**Problem.** The path lengths in the strip were measured along the divergent ray from the X-ray
+source through the lesion to the detector (`suiteFrame` / `rayThrough`). The axial figure instead
+drew the parallel beam direction translated through the lesion. Frontally the two differ by 6.9°
+on the axial image.
+
+**Repair** (`components/figures/teachingFigureModel.ts`, `TwoAxisWorkedExample.tsx`,
+`content/teachingFigures.ts`):
+
+- `targetRayGeometry(obliquity, tilt)` returns the ray's source, target (the lesion's centre) and
+  detector hit from `rayThrough(suiteFrame(obliquity, tilt), LESION_CENTER)`. `targetRay` measures
+  along exactly that object and now carries it as `geometry`.
+- `axialRayLine(obliquity, geometry)` projects the source, the lesion and the hit onto the axial
+  image (z dropped) and clips the projected segment to the image (Liang–Barsky, 3-unit margin, so
+  the detector-end arrowhead stays visible).
+- `twoAxisModel` builds each candidate line from **the strip row's own `geometry`**, and throws if a
+  candidate has no strip row. The old `axialBeamLine` is removed. The numbers in the strip are
+  unchanged: they were always measured along this ray; only the drawing was wrong.
+- Model values: frontally the source is at [0, −720, 0], the lesion at [85, −20, −30] and the hit at
+  [145.7, 480, −51.4] (the suite's model frame, isocentre at the origin, mm). The ray descends 30 mm from the source to the
+  lesion, so it lies in no single axial slice. On the image each line differs from its parallel beam
+  by 6.92° (0°), 6.77° (−20°) and 6.20° (+20°).
+- Axial caption, replacing "Each line is the central ray … the X-ray tube is at the other end":
+  "Each line is the target ray whose path lengths the table gives: from the X-ray tube's focal spot,
+  through the centre of the modeled lesion, to the detector, with its arrowhead at the detector
+  end. It is drawn as its projection onto this axial image. The tube lies off the image beyond the
+  line's other end, and the ray crosses this slice only at the lesion. The rays spread out from the
+  tube and the lesion lies off the isocentre, so each line's angle on the image differs by a few
+  degrees from its C-arm obliquity." The canvas's accessible label now says "the axial projection
+  of the target ray from the X-ray tube through the lesion to the detector".
+- Label placement: the −20° ray now leaves the image near its right edge, where its label was
+  clipped (seen in the first repair screenshots). Each label now slides back along its own line
+  until it fits inside the image.
+
+### F2 · Practice case 9 (QS-5): the inference is bound to this teaching case
+
+**Kept:** id `dts-interpretation-practice-1`, stem, all three choices, key `a`, and the decision.
+Only choice a's rationale and the takeaway changed. That is within the OD4-05 exception already
+recorded for this item.
+
+**Final choice-a rationale:** "In this teaching figure, the projection stands for the current
+acquisition and deliberately contains the modeled catheter, while the three planes match the
+planning CT and contain no catheter. In this model, planes reconstructed from the current
+acquisition would carry that catheter, at least blurred on the planes near its depth. So, in this
+authored example, the planes were drawn from the planning CT, and their margin describes the lesion
+as it was when that CT was acquired. The inference rests on what this figure shows: catheter
+absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or
+display system."
+
+**Final takeaway:** "Before reading a margin from a displayed plane, identify whether it was
+reconstructed from the current acquisition or drawn from an earlier study. In this teaching case,
+the current acquisition contains the catheter and the prior-derived planes match the planning CT
+without it, so here the missing catheter identifies those planes. Outside this case, catheter
+absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or
+display system. Finding the catheter elsewhere in the volume would show only that some of the
+display was acquired now, because a reconstruction can carry a live catheter over a contour from
+an older scan."
+
+Removed wording: "could not be missed", "cannot be absent from planes built from that
+acquisition", and "Its absence marks prior-derived content". No product is named. The learner-copy
+gate refuses the word "test", so the sentence says "not a universal sign" instead of "not a
+universal provenance test". This supersedes the earlier note under
+[Deviations](#deviations-from-approved-text) that the [O] softening was not applied: the rationale
+is now narrower than either the sample or the [O] option. The figure's revealed readouts ("Where
+these planes come from, in this model") were already model-bound and are unchanged.
+
+### F3 · CHK-S10: Section 10's check is written, with no image beside it
+
+**Problem.** The check (`dts-1`: "…structures are elongated in the depth direction…") sat beside
+one reconstructed plane with a depth slider. That plane cannot show elongation through depth, and
+the check said "Inspect the image". This is the open verification task 1 noted under Limitations
+above, now closed.
+
+**Repair:**
+
+- In `content/learningActivities.ts`, Section 10 (`dts-acquisition`) now ends with
+  `...finish('record', 'case')`, the existing path the five other conceptual checks use. The
+  check therefore renders no suite pane, no fixed example and no image banner, and its instruction
+  is the existing scenario wording ("Read the scenario. Choose what the evidence supports and what
+  remains uncertain.").
+- In `content/teachingExamples.ts`, the check's authored image state (`independentValues`,
+  sweep 20 / plane 10) is removed, because nothing draws it any more.
+- The teaching column beside every check printed "Choose the interpretation this image and its
+  acquisition context support". The browser screenshot review found it on the now-written
+  Section 10 check. `components/stage/ImagingTeachingColumn.tsx`, a PI-local component, now says
+  "Choose the interpretation the written scenario supports" on a check with no visual
+  (`visual === 'case'`), and keeps the image wording everywhere else. This also corrects the same
+  line on the five checks that were already text-only (Sections 1, 11, 13, 14 and 19) and on the
+  closing rounds, none of which shows an image. Checks with an image, including the three
+  illustrative identities, keep their wording.
+- Not relabelled `illustrative-model`: the three Prompt 01 identities (`current-anatomy:example:0`,
+  `changing-anatomy:example:0`, `staff-protection:example:0`) are exactly as before, and tested.
+- Unchanged: the `dts-1` item, its id `dts-acquisition:dts-1`, stem, choices and key. The reading,
+  guided and comparison steps of Section 10 keep their DTS images (tested step by step). The
+  transfer round was already a text case. The explanation-before-answer, retry, skip and self-paced
+  behaviour of the check is unchanged (tested).
+
+### F4 · Section 9's tool views are drawn whole, at one scale
+
+**Problem.** Each view was drawn at a fixed 1.1 units/mm with the tip at the frame centre. The
+side-on tool (99.1 detector mm) therefore started at x = −29.0 in a 160-unit frame, so 26.6% of it
+was clipped.
+
+**Repair:** `toolViews(obliquities)` fits every compared view together: one scale (now 1.23
+units/mm) and one tip position (131.8, 60) chosen from the union of all the views' extents (tool
+ends and lesion circles), inside a 10-unit margin of `TOOL_VIEW_FRAME` (160 × 120). Nothing is
+fitted per view, so a shorter line still means a more foreshortened tool; profile fractions (0.14
+and 0.91) and the model geometry are unchanged. The side-on tool now runs from x = 10 to 131.8. The
+caption adds "Both views are drawn at the same scale, with the tool's tip at the same place." The
+SVG carries `data-tool-scale`, so the browser test can hold both views to one scale.
+
+### F5 · QS-4: the key is no longer the long option
+
+The key option (b) now reads: **"Agree a stable, tolerable breath hold or ventilation pause with
+anesthesia."** That is 11 words; the distractors are 11 and 7 (before: 19, 11, 7). The readiness
+and stopping detail it used to carry was already in its rationale, which is unchanged: "…Plan the
+breath hold with anesthesia: agree the intended state, who announces readiness and the stopping
+criteria before it begins. Anesthesia safety governs the breath hold."
+
+Unchanged: key `b`, clinical meaning, id `changing-anatomy-interpretation-v2`, and the historical
+`change-1`, which stays in the bank. The id is kept by the owner's instruction. The item has never
+been released (PR #279 is unmerged), so no stored record can have been written under the old
+wording. This closes the length-cue note under Limitations above for QS-4. QS-6's 1.3× length was
+not in the finding and is untouched.
+
+### Section 6 · −20° and −35° told apart (optional, added)
+
+Under the conspicuity set's "another projection" readout, and only while the model's numbers show
+the shortening, the figure now says: "This −20° comparison shortens the model's soft-tissue path on
+the target ray; the later −35° example shows a different pattern, with the overlap redistributed
+along the ray." The −35° is read from the section's own "CT superimposition · changed view" example
+(`SIGNAL_LATER_DEMONSTRATION_OBLIQUITY`), so it cannot name a different angle. Neither angle is
+recommended, and the numbers are not forced to match. `model-truth` holds the second half to the
+CT: at −35° the detector-side soft-tissue path falls and the tube-side path grows, each by more than
+30 mm, while the whole-ray total stays within 10 mm of frontal.
+
+### Readiness aid at 320 px with 200 % text (optional, PI-local, changed)
+
+The aid's words broke every few letters at this condition. The figure itself is 190 px wide there,
+which is set by the shared stage and is not changed here. In `figures.module.css`, under a
+`@container (max-width: 16rem)` rule scoped to the aid (`.readiness`):
+
+- the rows drop the 1.1rem list indent;
+- the status line's box keeps its amber edge with a slimmer inset (`padding-inline: 0.3rem 0`).
+
+"Section" and its number are joined by a no-break space. Measured at 320 × 740 with 200% text: row
+text 127 → 162 px wide, mid-word breaks 27 → 6, status line 31 → 25 lines, aid height 8,193 →
+7,198 px, no overflow. At 1440 × 900 and at 390 × 844 with normal text nothing changes. At 320 px
+with normal text the figure is 15.9rem, so the rule applies there too.
+
+`hyphens: auto` was tried first and made the result worse (40 breaks), because this Chromium has no
+hyphenation dictionary. It was not kept. No content, font size or shared component changed, and no
+width is fixed. The known shared case-answer/header overflow at this condition is not touched.
+
+### Preserved (re-verified by the suites below)
+
+- **Question identity:** old definitions, new versioned ids, legacy redirects with locale, no
+  storage or progress reinterpretation (`prompt04-questions`, the redirect Playwright test).
+- **Integrated case 5:** tip [19, 2, −1], radius 9 mm, partial window intersection, tip 10.1 mm
+  beyond the surface, readouts hidden until check or explanation, and hidden again on retry.
+- **Section 6:** labels, seeded noise, schematic veil, model-derived alternate projection.
+- **Section 16:** truncation model and the "No image here" placeholders.
+- **Fixed/mobile:** equalised field; the 300 mm mobile value is not back.
+- **Readiness aid:** the same 11 source-backed rows; the two organisational rows stay out.
+- **Practice 15:** geometry-only floor plan, no dose-map semantics.
+- **Prompt 01–03:** the contracts and holds.
+
+### Tests added or changed
+
+New:
+
+- `model-truth.test.ts`:
+  - "draws each beam as the axial projection of the exact ray its path lengths were measured on
+    (F1)". It checks, for each line:
+    - identity with the strip row's `geometry`;
+    - that the geometry equals `suiteFrame`'s source and `rayThrough`'s hit;
+    - re-measured tube-side and detector-side soft tissue equal the printed values;
+    - the ray is not in one slice;
+    - projected source, lesion and hit pixels;
+    - collinearity of source, lesion, hit and both drawn ends (< 1e-6);
+    - their order along the ray;
+    - off-image source and hit;
+    - drawn ends inside the margin;
+    - a 3–10° difference from the parallel beam.
+
+    It also checks the frontal lean equals atan(85/700).
+
+  - "fits both tool views in their frame at one shared scale and anchor (F4)": equal scale and tip,
+    every endpoint and lesion circle inside the margin, drawn-length ratio equal to the model's.
+  - "the later demonstration's angle redistributes the overlap rather than shortening it".
+
+- `teaching-figures.rendered.test.tsx`:
+  - F1: the rendered SVG line coordinates equal `axialRayLine(targetRayGeometry(…))`, and the
+    caption wording.
+  - F4: one `data-tool-scale`, one tip, viewBox, every line end inside the margin.
+  - The Section 6 note: exact text, conditional on the shortening, no recommendation words.
+- `prompt04-questions.test.tsx`:
+  - F2: key and choices unchanged; the rationale and takeaway carry the case-bound sentences; no
+    categorical wording anywhere the learner reads.
+  - F5: exact labels, key word count no more than the longest distractor, the safety detail in the
+    rationale, id and `change-1` unchanged.
+- `example-evidence-framing.rendered.test.tsx`, a new describe "a conceptual check carries no image
+  it cannot support (CHK-S10)" with three tests:
+  - no image, identity, banner or "inspect" instruction; the teaching column's prompt names the
+    written scenario and no image; the `dts-1` stem and key; the three illustrative identities
+    unchanged;
+  - open gate, explanation before an answer, a distractor, retry, the key;
+  - every Section 10 step before the check still shows its demonstration or DTS suite view.
+- `fixed-example-state.test.ts`: "Section 10's check is written and has no authored image state".
+
+The existing "the component walk still tells the learner to inspect the image it superimposes"
+test now also holds the image wording of the column's prompt on a check that has an image.
+
+Changed, each asserting a value this repair intentionally changes:
+
+- `model-truth` "draws each candidate beam …": frontally the detector end is now to the image's
+  right of the lesion (the true ray), not vertically above it.
+- `truthful-surfaces` "the six text-only checks" (was five) adds `dts-acquisition`.
+- `fixed-example-state` "the separately authored rounds are unchanged" drops `dts-acquisition`.
+
+Playwright (`e2e/peripheral-imaging.spec.ts`):
+
+- Section 10's image-task walk now asserts that the check has no DTS view, plane control or
+  readout.
+- "report 4.2" asserts that the check carries no DTS view, overlay or mark.
+- Four new tests:
+  - "PR #279 repair F1 and F4" at 1440, 390 and 320 px: the drawn lines equal the model ray,
+    labels inside the image, one tool scale, each tool line inside its frame;
+  - "F2", practice 9's revealed rationale;
+  - "F3 and F5": Section 10's check has no image and explains first; QS-4's labels and rationale;
+  - "the readiness aid" at 1440 and 390 px with normal text and 320 px with 200% text.
+
+**Negative control.** The new and changed Jest tests were run against an untouched checkout of
+`a18c349f`, a temporary detached worktree that has since been removed. All five suites failed, 8
+tests in all: F1, F2, F3 (twice), F4, F5, the six-text-only list, and the Section 6 note. The CHK-S10
+self-paced and earlier-steps tests pass on both heads, because they guard behaviour that must not
+change. The two figure tests fail there partly because the new exports do not exist yet.
+
+### Validation after the repair
+
+Failures and reruns are listed as they happened. Evidence (logs, probe output, screenshots) is in
+the session scratchpad, not in Git.
+
+**Jest** (`--runInBand`):
+
+- **Focused runs while repairing:**
+  - The five touched suites passed after each fix, with one exception. The first rendered F4 run
+    failed on floating-point rounding: the longest tool is fitted exactly to the margin
+    (9.999999999999986 against 10). The rendered assertion now allows 1e-6, as the model assertion
+    already did.
+  - `model-truth` passed (21 tests; 136 s, because it decodes the real atlas).
+- **PI + PI routes, final source: 50 suites / 481 tests pass**, against 470 before the repair (the
+  11 new tests).
+- **Learning-module: 15 suites / 139 tests pass.**
+- **Full repository** (`npx jest`, final source): 963 suites passed, 2 skipped, **9 failed** (8
+  failing tests and one collection error). These are exactly the nine baseline suites recorded
+  above on untouched `85acc113`, none of them PI:
+  - `scripts/ip-preference-cards/check-brochure-intake-static-exposure`;
+  - `scripts/ip-preference-cards/us-status/…/safety-boundaries`;
+  - `scripts/training-apps.test.mjs` (a `node --test` file with no Jest test);
+  - `bronchial-branch-tracing/contracts`;
+  - `critical-care/accessibility`, `curriculum-sequencing` and `learner-copy`;
+  - `literature/dedicated-supabase/foundation-manifest`;
+  - `src/lib/board-review-html`.
+
+  The independent review counted eight, which is the same list without the collection error. They
+  are baseline failures, not branch passes, and were not touched.
+
+**Playwright, PI suite** (`playwright.peripheral-imaging.config.ts`, dev server on port 3126):
+
+| Run                    | Result                            | Note                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| targeted 1             | 6 passed                          | The Section 10 walk, "report 4.2", and the four repair tests. Screenshot review then found the −20° label clipped at the image's right edge. The label now slides along its line, and the F1 test asserts every label lies inside the image.                                                                                                                        |
+| full 1                 | 76 passed, **1 failed**, 10.2 min | "report 2.3 … at 1024×768" (the Section 2 component walk; it passed at 1280 and 1440): `seen.lit` was null, meaning the lit 3D pin was not in the measured band at that instant. Section 2 is untouched by this repair. Rerun alone three times: 3 of 3 passed.                                                                                                     |
+| full 2 (first attempt) | stopped by me after a few minutes | The screenshot review had found the check column's "this image" line on Section 10's written check (see F3). The run was stopped so the fix would not reach the dev server mid-run. Not a failure.                                                                                                                                                                  |
+| **full 2**             | **77 passed**, 0 failed, 10.1 min | Final source (73 earlier tests + 4 new). Nothing was edited during the run.                                                                                                                                                                                                                                                                                         |
+| production smoke       | **5 passed**                      | Against this worktree's standalone build (`.next/standalone/server.js`, port 3130; the tracked `claude-ebus-02-prod` launch entry, cwd checked): the four repair tests and the integrated-case redirect test. `curl`: the hub, Section 9, Section 10 and practice 9 return 200; `assess?case=case-5` returns 307 to `case-5-v2`. The server was stopped afterwards. |
+
+Browser conditions for the repaired surfaces:
+
+- Section 9 (F1 and F4): 1440 × 900, 390 × 844 and 320 × 740 in the repair test, and all seven
+  Prompt 04 conditions in the surfaces test, 320 × 740 at 200% text included.
+- Practice 9 (F2), Section 10 (F3) and QS-4 (F5): 1440 × 1050.
+- The readiness aid: 1440 × 900 and 390 × 844 at normal text, and 320 × 740 at 200% text in the
+  repair test; all seven conditions in the surfaces test.
+
+**Engineering, final source:**
+
+- `tsc --noEmit` (8 GB heap): exit 0.
+- ESLint `--max-warnings=0` on every changed `.ts/.tsx`: clean.
+- Prettier `--check` on every changed file: clean. Prettier reformatted five files once while
+  repairing, and added two blank lines to this handoff.
+- `git diff --check`: clean.
+
+**Production build:** `npm run build` on the final source, with the dev server stopped first:
+**exit 0**. `next build --webpack` compiled in 81 s, TypeScript passed, 776 of 776 static pages
+were generated, and `prepare:standalone` ran. The only warnings are the pre-existing ones listed
+above: the mermaid/langium dynamic `require` through board-review, the `metadataBase` notices and
+the training-app chunk-size notices.
+
+### Remaining blockers and open items
+
+- None of F1–F5 remains open on this branch. Merge still needs the owner's own review of this
+  repair; the independent reviewer may want to re-check.
+- Unchanged and still open: the teaching-CT rights basis (release hold), the nine owner deferrals,
+  the P03 packets, practice cases 1–3, the IC2 extension, connected cases, and the shared
+  case-decision overflow at 320 px with 200% text.
+- The owner decision noted above on aligning Section 6's −35° with −20° is answered by the note
+  (not aligned, told apart). The QS-5 [O] softening question is superseded by F2.
+
+### Files changed by the repair
+
+Under `src/features/peripheral-imaging/`:
+
+- `components/figures/{teachingFigureModel.ts,TwoAxisWorkedExample.tsx,ConspicuityComparison.tsx,CbctReferenceAids.tsx,figures.module.css}`
+- `components/stage/ImagingTeachingColumn.tsx`
+- `content/{teachingFigures,learningActivities,teachingExamples,interpretationChecks}.ts`
+- `data/questions.ts`
+- `__tests__/{model-truth,fixed-example-state,truthful-surfaces}.test.ts`
+- `__tests__/{prompt04-questions,teaching-figures.rendered,example-evidence-framing.rendered}.test.tsx`
+
+Outside it: `e2e/peripheral-imaging.spec.ts` and this handoff.
+
+No shared learning-module or stage file, global style, other module, storage key, access tier,
+release flag or deployment configuration changed. No binary asset was added.
