@@ -113,7 +113,7 @@ export function FoundationComparison({
       aria-label="Before and after comparison"
     >
       <h3>Before / After / Change</h3>
-      <p className={styles.comparisonTiming}>
+      <p className={styles.comparisonTiming} role="status">
         Before: modeled time {before.simulationTime} s.
         {comparison
           ? ` After: modeled time ${comparison.after.simulationTime} s. Values retained from this comparison.`

@@ -27,6 +27,7 @@ import {
 } from '../../session/useEcmoSessionCore'
 import { EcmoOptionalExplanation } from '../shell/EcmoOptionalExplanation'
 import { advanceSimulation } from '../PracticeCasePlayer'
+import { CircuitLiveReadings } from '../CircuitAndMonitors'
 import { CardiohelpConsole } from '../CardiohelpConsole'
 import { CardiohelpModuleFrame } from '../CardiohelpModuleFrame'
 import { FitWidthSurface } from '../FitWidthSurface'
@@ -616,6 +617,9 @@ export function DrillStageHost({
       return (
         <fieldset className={styles.choiceList} disabled={stepPerformed} data-prediction-choices>
           <legend>{item.stem}</legend>
+          {presentation && lesson.scenarioId.endsWith('preload-drainage-collapse') ? (
+            <CircuitLiveReadings state={state} />
+          ) : null}
           {orderChoices(item.id, item.choices).map((choice) => (
             <label
               key={choice.id}

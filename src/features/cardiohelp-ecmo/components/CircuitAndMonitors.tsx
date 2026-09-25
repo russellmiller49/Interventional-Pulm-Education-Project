@@ -170,6 +170,47 @@ function nearestScrollingAncestor(element: HTMLElement): HTMLElement | null {
   return null
 }
 
+/** A read-only projection of the host's existing simulation; no clock or state owner. */
+export function CircuitLiveReadings({
+  state,
+  open = true,
+}: {
+  readonly state: EcmoSimulationState
+  readonly open?: boolean
+}) {
+  return (
+    <details className={styles.circuitReadouts} open={open} data-circuit-readouts>
+      <summary>Live readings</summary>
+      <div className={styles.circuitReadoutGrid}>
+        <div>
+          <span>Flow</span>
+          <strong>{state.circuit.bloodFlow.toFixed(2)} L/min</strong>
+        </div>
+        <CircuitChannelReadout label="pVen" readout={state.circuit.readouts.pVen} />
+        <CircuitChannelReadout label="pInt" readout={state.circuit.readouts.pInt} />
+        <CircuitChannelReadout label="pArt" readout={state.circuit.readouts.pArt} />
+        <CircuitChannelReadout
+          label="Δp trend"
+          readout={state.circuit.readouts.deltaP}
+          spokenLabel="Δp trend"
+        />
+        <div>
+          <span>Pre-oxygenator saturation</span>
+          <strong>{state.circuit.preOxygenatorSaturation.toFixed(1)}%</strong>
+        </div>
+        <div data-alert={state.circuit.drainageClampClosed}>
+          <span>Drainage clamp</span>
+          <strong>{state.circuit.drainageClampClosed ? 'CLOSED' : 'OPEN'}</strong>
+        </div>
+        <div data-alert={state.circuit.returnClampClosed}>
+          <span>Return clamp</span>
+          <strong>{state.circuit.returnClampClosed ? 'CLOSED' : 'OPEN'}</strong>
+        </div>
+      </div>
+    </details>
+  )
+}
+
 export function CircuitSchematic({
   state,
   dispatch,
@@ -385,37 +426,7 @@ export function CircuitSchematic({
           ? 'Preload-limited drainage pattern'
           : 'No resistance pattern present'
 
-  const readingsBlock = (
-    <details className={styles.circuitReadouts} open={!answerable} data-circuit-readouts>
-      <summary>Live readings</summary>
-      <div className={styles.circuitReadoutGrid}>
-        <div>
-          <span>Flow</span>
-          <strong>{state.circuit.bloodFlow.toFixed(2)} L/min</strong>
-        </div>
-        <CircuitChannelReadout label="pVen" readout={state.circuit.readouts.pVen} />
-        <CircuitChannelReadout label="pInt" readout={state.circuit.readouts.pInt} />
-        <CircuitChannelReadout label="pArt" readout={state.circuit.readouts.pArt} />
-        <CircuitChannelReadout
-          label="Δp trend"
-          readout={state.circuit.readouts.deltaP}
-          spokenLabel="Δp trend"
-        />
-        <div>
-          <span>Pre-oxygenator saturation</span>
-          <strong>{state.circuit.preOxygenatorSaturation.toFixed(1)}%</strong>
-        </div>
-        <div data-alert={state.circuit.drainageClampClosed}>
-          <span>Drainage clamp</span>
-          <strong>{state.circuit.drainageClampClosed ? 'CLOSED' : 'OPEN'}</strong>
-        </div>
-        <div data-alert={state.circuit.returnClampClosed}>
-          <span>Return clamp</span>
-          <strong>{state.circuit.returnClampClosed ? 'CLOSED' : 'OPEN'}</strong>
-        </div>
-      </div>
-    </details>
-  )
+  const readingsBlock = <CircuitLiveReadings state={state} open={!answerable} />
 
   return (
     <section

@@ -1,6 +1,8 @@
 'use client'
 
-import { useSyncExternalStore, type ReactNode, type RefObject } from 'react'
+import { useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from 'react'
+
+import { useIsomorphicLayoutEffect } from '../useIsomorphicLayoutEffect'
 
 import { Link } from '@/i18n/navigation'
 
@@ -68,16 +70,36 @@ export function EcmoSectionHeader({
       {restartLabel}
     </button>
   ) : null
-  /*
-   * On a phone the header used to take about 270 px of an 844 px screen, and more than a full
-   * screen at 200% text, before the task began (fellow walkthrough, Figure 23). Where you are — the
-   * kicker names the track and the section — the sections list, help and Save & exit stay in view;
-   * switching track and restarting fold into one disclosure. Nothing is removed.
-   */
-  const phoneOptions =
-    phone && (trackToggle || restartButton) ? (
-      <details className={styles.headerMore} data-ecmo-header-more>
-        <summary>{trackToggle ? 'Switch track or restart' : 'Restart'}</summary>
+  // Keep the same controls mounted across the breakpoint. If a control has focus, keep its
+  // disclosure open when shrinking; when widening, a focused summary hands focus to its contents.
+  const detailsRef = useRef<HTMLDetailsElement>(null)
+  const [optionsOpen, setOptionsOpen] = useState(false)
+  useIsomorphicLayoutEffect(() => {
+    const details = detailsRef.current
+    if (!details) return
+    const active = document.activeElement
+    const summary = details.querySelector('summary')
+    if (!phone && active === summary) {
+      details.querySelector<HTMLElement>('button, a, input')?.focus({ preventScroll: true })
+    }
+    if (phone && active !== summary && active && details.contains(active)) setOptionsOpen(true)
+  }, [phone])
+  const responsiveOptions =
+    trackToggle || restartButton ? (
+      <details
+        ref={detailsRef}
+        className={styles.headerMore}
+        data-ecmo-header-more
+        open={!phone || optionsOpen}
+      >
+        <summary
+          onClick={(event) => {
+            event.preventDefault()
+            setOptionsOpen((current) => !current)
+          }}
+        >
+          {trackToggle ? 'Switch track or restart' : 'Restart'}
+        </summary>
         <div className={styles.headerMoreBody}>
           {trackToggle}
           {restartButton}
@@ -99,7 +121,6 @@ export function EcmoSectionHeader({
         <h1 className={styles.title}>{title}</h1>
         {meta && meta.length > 0 ? <p className={styles.meta}>{meta.join(' · ')}</p> : null}
       </div>
-      {phone ? null : trackToggle}
       <div className={styles.headerActions}>
         {sectionsControl}
         {options}
@@ -114,7 +135,6 @@ export function EcmoSectionHeader({
             What do I do now?
           </button>
         ) : null}
-        {phone ? null : restartButton}
         {onSaveAndExit ? (
           <button
             type="button"
@@ -126,7 +146,7 @@ export function EcmoSectionHeader({
             Save &amp; exit
           </button>
         ) : null}
-        {phoneOptions}
+        {responsiveOptions}
       </div>
       {resumedNote ? (
         <p className={styles.resumedNote} role="note" data-ecmo-resumed-note>

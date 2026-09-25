@@ -117,12 +117,12 @@ export function EcmoCircuit3D({
   const [contextLost, setContextLost] = useState(false)
   const [canvasEpoch, setCanvasEpoch] = useState(0)
   const [labelsOn, setLabelsOn] = useState(true)
-  /*
-   * A label the learner asked to find, from the keyboard list under the scene (S2-3). It takes
-   * over the step's own emphasis while set and is released by pressing it again; nothing moves the
-   * camera, so a learner who has orbited keeps the view they chose.
-   */
-  const [foundLabelId, setFoundLabelId] = useState<string | null>(null)
+  // Scope a manual selection to its track and teaching emphasis. A new step restores its own cue.
+  const finderScope = `${state.supportMode}:${(emphasisSceneLabelIds ?? []).join(',')}`
+  const [found, setFound] = useState<{ scope: string; id: string } | null>(null)
+  const foundLabelId = found?.scope === finderScope ? found.id : null
+  if (found && found.scope !== finderScope) setFound(null)
+  const [overviewRequest, setOverviewRequest] = useState(0)
   const sceneLabels = buildCircuitLayout(state.supportMode).labels
   const shownEmphasis = foundLabelId ? [foundLabelId] : emphasisSceneLabelIds
   const { active: assetsLoading, progress: assetProgress } = useProgress()
@@ -197,6 +197,8 @@ export function EcmoCircuit3D({
                   reduceMotion={reduceMotion}
                   labelsVisible={!compactViewport && labelsOn}
                   emphasisSceneLabelIds={shownEmphasis}
+                  onlyLabelId={foundLabelId}
+                  overviewRequest={overviewRequest}
                 />
               </Suspense>
             </Canvas>
@@ -212,16 +214,6 @@ export function EcmoCircuit3D({
             Loading bedside models… {Math.round(assetProgress)}%
           </div>
         ) : null}
-        <div className={styles.circuit3dHud} data-scene-label-obstacle>
-          <span data-state={flowState}>{flowState}</span>
-          <span data-mode={state.supportMode}>{state.supportMode.toUpperCase()}</span>
-          {drainageChattering ? <span data-state="CHATTER">DRAINAGE CHATTER</span> : null}
-          <strong>{state.circuit.bloodFlow.toFixed(2)} L/min</strong>
-          <small>
-            Drag to orbit · scroll to zoom · zoom in to pan (right-drag or two-finger drag) · select
-            a clamp or use the controls below
-          </small>
-        </div>
         {compactViewport ? (
           <div className={styles.circuit3dLabels} aria-hidden="true">
             <span>
@@ -233,11 +225,20 @@ export function EcmoCircuit3D({
           </div>
         ) : null}
       </div>
+      <div className={styles.circuit3dHud} data-scene-status>
+        <span data-state={flowState}>{flowState}</span>
+        <span data-mode={state.supportMode}>{state.supportMode.toUpperCase()}</span>
+        {drainageChattering ? <span data-state="CHATTER">DRAINAGE CHATTER</span> : null}
+        <strong>{state.circuit.bloodFlow.toFixed(2)} L/min</strong>
+        <small>
+          Drag to orbit · scroll to zoom · zoom in to pan (right-drag or two-finger drag) · select a
+          clamp or use the controls below
+        </small>
+      </div>
       {webglReady && !contextLost && !compactViewport ? (
         <button
           type="button"
           className={styles.circuit3dLabelsToggle}
-          data-scene-label-obstacle
           aria-pressed={labelsOn}
           onClick={() => setLabelsOn((current) => !current)}
         >
@@ -252,6 +253,10 @@ export function EcmoCircuit3D({
           data-scene-label-finder
         >
           <p className={styles.circuit3dFindLabel}>Find on the model</p>
+          <p>
+            Labels that do not fit are hidden. Choose a structure to restore the overview and show
+            only its label; choose it again to restore the teaching labels.
+          </p>
           <div className={styles.circuit3dFindButtons}>
             {sceneLabels.map((label) => (
               <button
@@ -259,14 +264,20 @@ export function EcmoCircuit3D({
                 type="button"
                 aria-pressed={foundLabelId === label.id}
                 data-find-scene-label={label.id}
-                onClick={() =>
-                  setFoundLabelId((current) => (current === label.id ? null : label.id))
-                }
+                onClick={() => {
+                  setFound(foundLabelId === label.id ? null : { scope: finderScope, id: label.id })
+                  setOverviewRequest((current) => current + 1)
+                }}
               >
                 {label.text}
               </button>
             ))}
           </div>
+          <p role="status" data-scene-find-status>
+            {foundLabelId
+              ? `Showing ${sceneLabels.find((label) => label.id === foundLabelId)?.text}. Overview restored.`
+              : 'Teaching labels shown where space permits.'}
+          </p>
         </div>
       ) : null}
 

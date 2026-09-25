@@ -1,17 +1,5 @@
-/**
- * Screen-space placement for the bedside scene's label pills.
- *
- * Every pill rests just above its anchor on a short vertical leader. At a readable type size the
- * default camera puts some anchors closer together than the pills are wide (the femoral return, both
- * clamps and the module crowd the centre of the frame), and the HUD and the labels toggle sit over
- * the canvas corners. So a pill that would land on another pill or on one of those overlays moves
- * straight up — or, when that is shorter or the only way to stay inside the canvas, straight down
- * below its anchor — on a longer leader, until it clears. Nothing moves sideways and no anchor
- * moves: the leader still ends on the object the pill names.
- *
- * Pills are placed in priority order — an emphasised pill first, then from the lowest anchor up — so
- * the pill a teaching step points at, and the pills nearest the floor, keep their resting place.
- */
+/** Optional screen-space labels: keep their projected anchors, fit whole pills within the canvas,
+ * and reject collisions (including leaders). The keyboard finder can isolate any rejected label. */
 
 export interface SceneLabelBox {
   readonly id: string
@@ -36,6 +24,9 @@ export interface SceneLabelPlacement {
   readonly leader: number
   /** Vertical offset of the pill's centre from its anchor, in pixels (negative is up). */
   readonly offsetY: number
+  readonly offsetX: number
+  /** False when no truthful, non-overlapping placement fits; the finder still exposes its name. */
+  readonly visible: boolean
 }
 
 export interface SceneLabelLayoutOptions {
@@ -61,10 +52,33 @@ const intersects = (a: SceneRect, b: SceneRect, gap: number) =>
   a.top < b.bottom + gap &&
   a.bottom > b.top - gap
 
+type Segment = { x1: number; y1: number; x2: number; y2: number }
+function crossing(a: Segment, b: Segment): boolean {
+  const side = (x: number, y: number, line: Segment) =>
+    (line.x2 - line.x1) * (y - line.y1) - (line.y2 - line.y1) * (x - line.x1)
+  return (
+    side(b.x1, b.y1, a) * side(b.x2, b.y2, a) < 0 && side(a.x1, a.y1, b) * side(a.x2, a.y2, b) < 0
+  )
+}
+function throughRect(line: Segment, rect: SceneRect): boolean {
+  const { left, right, top, bottom } = rect
+  const inside = (x: number, y: number) => x > left && x < right && y > top && y < bottom
+  return (
+    inside(line.x1, line.y1) ||
+    inside(line.x2, line.y2) ||
+    crossing(line, { x1: left, y1: top, x2: right, y2: top }) ||
+    crossing(line, { x1: right, y1: top, x2: right, y2: bottom }) ||
+    crossing(line, { x1: right, y1: bottom, x2: left, y2: bottom }) ||
+    crossing(line, { x1: left, y1: bottom, x2: left, y2: top })
+  )
+}
+
 /**
  * Where each pill goes. A pill with nothing in the way rests above its anchor on the resting
  * leader; otherwise it takes the shorter clear shift, up or down, that keeps it inside the canvas.
- * When neither direction clears within the cap, it keeps the shorter of the two capped shifts.
+ * When no position fits, hide the optional overlay rather than draw a clipped or overlapping label.
+ * All names remain in the keyboard finder; an explicit selection restores the overview and shows
+ * just that label. Horizontal shifts retain a leader to the original projected anchor.
  */
 export function placeSceneLabels(
   boxes: readonly SceneLabelBox[],
@@ -85,11 +99,15 @@ export function placeSceneLabels(
     return a.id.localeCompare(b.id)
   })
   const placed: SceneRect[] = [...obstacles]
+  const leaders: Segment[] = []
   const placements = new Map<string, SceneLabelPlacement>()
 
   for (const box of order) {
-    const left = box.x - box.width / 2
-    const right = box.x + box.width / 2
+    const left = bounds
+      ? Math.max(gap, Math.min(box.x - box.width / 2, bounds.width - gap - box.width))
+      : box.x - box.width / 2
+    const right = left + box.width
+    const offsetX = left + box.width / 2 - box.x
     const rect = (side: 'above' | 'below', shift: number): SceneRect => {
       const top =
         side === 'above'
@@ -97,23 +115,37 @@ export function placeSceneLabels(
           : box.y + restingLeader + shift
       return { left, right, top, bottom: top + box.height }
     }
+    const line = (candidate: SceneRect, side: 'above' | 'below'): Segment => ({
+      x1: (candidate.left + candidate.right) / 2,
+      y1: side === 'above' ? candidate.bottom : candidate.top,
+      x2: box.x,
+      y2: box.y,
+    })
     const clearShift = (side: 'above' | 'below') => {
-      let shift = 0
-      // Each pass either clears everything placed or moves past one of them.
-      for (let pass = 0; pass <= placed.length; pass += 1) {
+      for (let shift = 0; shift <= maxShift; shift += gap || 1) {
         const candidate = rect(side, shift)
-        const hit = placed.find((other) => intersects(candidate, other, gap))
-        if (!hit) break
-        // Bring the near edge to just past the thing in the way.
-        shift =
-          side === 'above'
-            ? box.y - restingLeader - (hit.top - gap)
-            : hit.bottom + gap - (box.y + restingLeader)
+        const leaderLine = line(candidate, side)
+        const inside =
+          !bounds ||
+          (candidate.top >= gap &&
+            candidate.bottom <= bounds.height - gap &&
+            left >= gap &&
+            right <= bounds.width - gap &&
+            box.x >= gap &&
+            box.x <= bounds.width - gap &&
+            box.y >= gap &&
+            box.y <= bounds.height - gap)
+        if (
+          inside &&
+          !placed.some(
+            (other) => intersects(candidate, other, gap) || throughRect(leaderLine, other),
+          ) &&
+          !leaders.some((other) => throughRect(other, candidate) || crossing(leaderLine, other))
+        ) {
+          return { side, shift, inside: true }
+        }
       }
-      const final = rect(side, shift)
-      const inside =
-        shift <= maxShift && (!bounds || (final.top >= 0 && final.bottom <= bounds.height))
-      return { side, shift: Math.max(0, Math.round(shift)), inside }
+      return { side, shift: maxShift, inside: false }
     }
 
     const above = clearShift('above')
@@ -127,8 +159,13 @@ export function placeSceneLabels(
     const shift = Math.min(choice.shift, maxShift)
     const leader = restingLeader + shift
     const offsetY = choice.side === 'above' ? -(leader + box.height / 2) : leader + box.height / 2
-    placed.push(rect(choice.side, shift))
-    placements.set(box.id, { side: choice.side, leader, offsetY })
+    const visible = choice.inside
+    if (visible) {
+      const candidate = rect(choice.side, shift)
+      placed.push(candidate)
+      leaders.push(line(candidate, choice.side))
+    }
+    placements.set(box.id, { side: choice.side, leader, offsetY, offsetX, visible })
   }
   return placements
 }

@@ -1101,9 +1101,9 @@ export function CardiohelpConsole({
         <p data-console-paux>
           <strong>pAux</strong> on the Parameter list is an additional pressure channel, read from a
           separate external pressure sensor (IFU revision 2.3, pages 45 and 110); the device raises
-          pAux alarms only in its &ldquo;MECC&rdquo; application (page 91). This simulation does not
-          model a pAux sensor, so the channel shows no value and is not one of the pressures these
-          lessons teach.
+          alarms for pAux values outside warning/alarm limits only in its &ldquo;MECC&rdquo;
+          application (page 91). This simulation does not model a pAux sensor, so the channel shows
+          no value and is not one of the pressures these lessons teach.
         </p>
       </div>
     </section>

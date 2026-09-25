@@ -226,6 +226,22 @@ describe('A. console reflows by its own width', () => {
       expect(surface()).not.toHaveAttribute('tabindex')
       expect(surface()).not.toHaveAttribute('role')
 
+      // Overflow can change while the wrapper and remeasure key remain the same.
+      for (const [content, overflow] of [
+        [701, true],
+        [702, true],
+        [700, false],
+      ] as const) {
+        widths.content = content
+        rerender(
+          <FitWidthSurface mode="actual" label="console" remeasureKey="fits">
+            <div>console {content}</div>
+          </FitWidthSurface>,
+        )
+        expect(surface()).toHaveAttribute('data-fit-scrollable', String(overflow))
+        if (!overflow) expect(surface()).not.toHaveAttribute('tabindex')
+      }
+
       widths.content = 900
       rerender(
         <FitWidthSurface mode="actual" label="console" remeasureKey="overflows">
@@ -336,9 +352,18 @@ describe('B. the work and what it is read against, together', () => {
     expect(follows(run, table)).toBe(true)
     expect(follows(table, teaching)).toBe(true)
 
+    run.focus()
     fireEvent.click(run)
     const repeat = await screen.findByRole('button', { name: 'Repeat this comparison' })
     expect(lead.contains(repeat)).toBe(true)
+    expect(repeat).toBe(run)
+    expect(repeat).toHaveFocus()
+    const saved = table.textContent
+    fireEvent.click(screen.getByRole('button', { name: 'Reset this comparison' }))
+    const resetRun = screen.getByRole('button', { name: 'Increase pump speed by 300 rpm' })
+    expect(resetRun).toBe(run)
+    fireEvent.click(resetRun)
+    expect(table.textContent).toBe(saved)
     expect(follows(repeat, lead.querySelector('[data-foundation-comparison]') as Element)).toBe(
       true,
     )
@@ -356,6 +381,7 @@ describe('B. the work and what it is read against, together', () => {
     })
     const lead = document.querySelector('[data-drill-lead]') as HTMLElement
     expect(lead.contains(choices)).toBe(true)
+    expect(choices.querySelector('[data-circuit-readouts]')).not.toBeNull()
     expect(lead.textContent).toMatch(/Show explanation without answering/)
     const content = document.querySelector('[data-activity-content]') as HTMLElement
     expect(follows(lead, content)).toBe(true)
@@ -453,7 +479,11 @@ describe('C. comparisons that fit the room they have', () => {
     expect(
       view.container.querySelector('[data-hypothesis-column="recirculation"]'),
     ).toHaveAttribute('hidden')
-    fireEvent.click(screen.getByRole('button', { name: /Show all 4/ }))
+    const showAll = screen.getByRole('button', { name: /Show all 4/ })
+    showAll.focus()
+    fireEvent.click(showAll)
+    expect(showAll).toHaveFocus()
+    expect(showAll).toHaveAttribute('aria-disabled', 'true')
     expect(
       view.container.querySelector('[data-hypothesis-column="recirculation"]'),
     ).not.toHaveAttribute('hidden')
@@ -579,12 +609,12 @@ describe('D. drawings that stay true', () => {
     const pill = ruleBody(ecmoCss, '.circuit3dSceneLabel')
     expect(pill).toContain('overflow-wrap: normal')
     expect(pill).toContain('width: max-content')
-    expect(pill).toContain('translateY(var(--scene-label-offset, calc(-50% - 0.9rem)))')
+    expect(pill).toContain('var(--scene-label-offset, calc(-50% - 0.9rem))')
     expect(ruleBody(ecmoCss, '.circuit3dSceneLabel::after')).toContain(
-      'height: var(--scene-label-leader, 0.9rem)',
+      'transform: rotate(var(--scene-leader-angle, 1.5708rad))',
     )
     expect(ruleBody(ecmoCss, ".circuit3dSceneLabel[data-leader='below']::after")).toContain(
-      'bottom: 100%',
+      'top: 0',
     )
   })
 
@@ -601,7 +631,13 @@ describe('D. drawings that stay true', () => {
       { restingLeader: leader },
     )
     for (const placement of apart.values()) {
-      expect(placement).toEqual({ side: 'above', leader, offsetY: -(leader + pill.height / 2) })
+      expect(placement).toEqual({
+        side: 'above',
+        leader,
+        offsetY: -(leader + pill.height / 2),
+        offsetX: 0,
+        visible: true,
+      })
     }
     // Crowded: the lower anchor keeps its rest; the other takes the shorter clear move.
     const crowded = placeSceneLabels(
@@ -650,10 +686,47 @@ describe('D. drawings that stay true', () => {
     )
   })
 
-  it('S2-3: the HUD and the labels toggle are the overlays a pill steers around', () => {
-    const source = read('src/features/cardiohelp-ecmo/components/EcmoCircuit3D.tsx')
-    expect(source).toContain('data-scene-label-host')
-    expect(source.match(/data-scene-label-obstacle/g)).toHaveLength(2)
+  it('S2-3: never exposes a clipped or colliding label when space is exhausted', () => {
+    const boxes = Array.from({ length: 16 }, (_, i) => ({
+      id: String(i),
+      x: 25 + i * 20,
+      y: 160,
+      width: 150,
+      height: 45,
+    }))
+    const placements = placeSceneLabels(boxes, {
+      bounds: { width: 360, height: 240 },
+      priorityIds: ['0'],
+    })
+    const visible = boxes
+      .filter((box) => placements.get(box.id)?.visible)
+      .map((box) => {
+        const placement = placements.get(box.id)!
+        const left = box.x + placement.offsetX - box.width / 2
+        const top = box.y + placement.offsetY - box.height / 2
+        return { left, right: left + box.width, top, bottom: top + box.height }
+      })
+    expect(placements.get('0')?.visible).toBe(true)
+    expect(visible.length).toBeLessThan(boxes.length)
+    for (const [index, rect] of visible.entries()) {
+      expect(rect.left).toBeGreaterThanOrEqual(0)
+      expect(rect.right).toBeLessThanOrEqual(360)
+      expect(rect.top).toBeGreaterThanOrEqual(0)
+      expect(rect.bottom).toBeLessThanOrEqual(240)
+      for (const other of visible.slice(index + 1)) {
+        expect(
+          rect.left < other.right &&
+            rect.right > other.left &&
+            rect.top < other.bottom &&
+            rect.bottom > other.top,
+        ).toBe(false)
+      }
+    }
+    expect(
+      placeSceneLabels([{ id: 'outside', x: -5, y: 100, width: 100, height: 25 }], {
+        bounds: { width: 360, height: 240 },
+      }).get('outside')?.visible,
+    ).toBe(false)
   })
 
   it('S6-1: draws the VV series loop with its recirculation short-circuit, labelled schematic', () => {
@@ -764,7 +837,7 @@ describe('phone chrome', () => {
     })
   })
 
-  it('keeps the wide header unchanged elsewhere', () => {
+  it('exposes the same header controls at wide widths', () => {
     withPhone(false, () => {
       render(
         <EcmoSectionHeader
@@ -774,7 +847,7 @@ describe('phone chrome', () => {
           onRestart={() => {}}
         />,
       )
-      expect(document.querySelector('details[data-ecmo-header-more]')).toBeNull()
+      expect(document.querySelector('details[data-ecmo-header-more]')).toHaveAttribute('open')
       expect(screen.getByRole('radiogroup', { name: 'ECMO support mode' })).toBeInTheDocument()
     })
   })

@@ -99,6 +99,8 @@ export function CapstoneHypothesisMatrix<H extends string>({
     if (!scroller) return undefined
     const observer = new ResizeObserver(() => measure())
     observer.observe(scroller)
+    // A font change can change the required width without changing the container width.
+    observer.observe(document.documentElement)
     return () => observer.disconnect()
   }, [measure])
 
@@ -141,16 +143,19 @@ export function CapstoneHypothesisMatrix<H extends string>({
                 </button>
               )
             })}
-            {hidden.size > 0 ? (
+            {
               <button
                 type="button"
                 className={styles.filterReset}
                 data-hypothesis-show-all
-                onClick={() => setHidden(new Set())}
+                aria-disabled={hidden.size === 0 || undefined}
+                onClick={() => {
+                  if (hidden.size > 0) setHidden(new Set())
+                }}
               >
                 Show all {hypotheses.length}
               </button>
-            ) : null}
+            }
           </div>
         </div>
         <button

@@ -81,14 +81,25 @@ export function scrollEcmoTargetIntoView(
  *
  * For a result that appears right under the control that produced it: a node already on screen is
  * left where it is, and one that runs past the bottom edge is scrolled up just far enough to show its
- * end (or its top, when it is taller than the view) — never a jump that takes the control off screen.
+ * end (or its top, when it is taller than the view). Callers that need to retain the activating
+ * control pass that control, not an entire result table.
  */
 export function revealEcmoTargetIfNeeded(node: HTMLElement): void {
   if (typeof window === 'undefined') return
   const owner = ecmoScrollOwner(node)
   const rect = node.getBoundingClientRect()
-  const top = owner ? owner.getBoundingClientRect().top : siteHeaderHeight()
-  const bottom = owner ? owner.getBoundingClientRect().bottom : window.innerHeight
+  const strip = node
+    .closest('[data-ecmo-shell]')
+    ?.querySelector<HTMLElement>('[data-ecmo-context-strip]')
+  const stickyHeight =
+    strip && getComputedStyle(strip).position === 'sticky'
+      ? strip.getBoundingClientRect().height
+      : 0
+  const top = Math.max(siteHeaderHeight(), owner?.getBoundingClientRect().top ?? 0) + stickyHeight
+  const bottom = Math.min(
+    window.innerHeight,
+    owner?.getBoundingClientRect().bottom ?? window.innerHeight,
+  )
   const margin = 16
   let delta = 0
   if (rect.top < top + margin) delta = rect.top - top - margin

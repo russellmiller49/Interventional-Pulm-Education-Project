@@ -164,8 +164,19 @@
 }
 
 /* The phone header's one disclosure: track switch and restart (see EcmoSectionHeader). */
-.headerMore[open] {
-  flex-basis: 100%;
+@media (max-width: 600px) {
+  .headerMore[open] {
+    flex-basis: 100%;
+  }
+}
+
+@media (min-width: 601px) {
+  .headerMore > summary {
+    display: none;
+  }
+  .headerMoreBody {
+    margin-top: 0;
+  }
 }
 
 .headerMore > summary {
@@ -250,6 +261,10 @@
   display: none;
 }
 
+.strip > * {
+  min-width: 0;
+}
+
 .stripLine {
   display: flex;
   flex-wrap: wrap;
@@ -274,7 +289,10 @@
 
 .alarmChip {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
+  min-width: 0;
+  max-width: 100%;
   gap: 0.4rem;
   padding: 0.15rem 0.6rem;
   border: 1px solid var(--ecmo-shell-line);
@@ -687,6 +705,8 @@
 /* A label, not reading: the one sanctioned size under the floor. */
 .badge {
   display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
   align-items: center;
   gap: 0.3rem;
   padding: 0.1rem 0.5rem;
@@ -700,6 +720,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  :global(html):has(.shell),
+  .shell {
+    scroll-behavior: auto;
+  }
+
   .now,
   .surfaceToggle,
   .headerButton {
@@ -781,4 +806,9 @@
     :is(a, button, input, select, textarea, summary, [tabindex]) {
     scroll-margin-block: 0.5rem;
   }
+}
+
+/* A tall urgent strip must not cover the learner's task or intercept its controls. */
+.shell[data-flowing='true'] > .strip[data-sticky-unfits='true'] {
+  position: static;
 }

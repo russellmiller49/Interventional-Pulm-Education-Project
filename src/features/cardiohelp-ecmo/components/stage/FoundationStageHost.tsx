@@ -348,16 +348,12 @@ function FoundationStageSession({
   function runFocusedComparison(plan: EcmoFoundationComparisonPlan) {
     dispatch({ type: 'RUN_COMPARISON', plan })
     requestAnimationFrame(() => {
-      const result = nowFocusRef.current?.querySelector<HTMLElement>('[data-foundation-comparison]')
-      if (!result) return
-      // The result sits under the action now, so reveal it only as far as it is out of view — no
-      // page-length jump that takes the replay controls off screen (S3-1).
-      revealEcmoTargetIfNeeded(result)
-      const heading = result.querySelector<HTMLElement>('h3')
-      if (heading) {
-        heading.tabIndex = -1
-        heading.focus({ preventScroll: true })
-      }
+      const control = nowFocusRef.current?.querySelector<HTMLElement>('[data-comparison-run]')
+      if (!control) return
+      // Keep the action in place. The saved result follows it; do not scroll an entire table into
+      // view at the expense of its activating control. The live status announces completion.
+      control.focus({ preventScroll: true })
+      revealEcmoTargetIfNeeded(control)
     })
   }
 
@@ -367,7 +363,12 @@ function FoundationStageSession({
       ...current,
       performedIds: current.performedIds.filter((id) => id !== plan.taskId),
     }))
-    requestAnimationFrame(() => scrollTaskPaneToTop(nowFocusRef.current))
+    requestAnimationFrame(() => {
+      const control = nowFocusRef.current?.querySelector<HTMLElement>('[data-comparison-run]')
+      if (!control) return
+      control.focus({ preventScroll: true })
+      revealEcmoTargetIfNeeded(control)
+    })
   }
 
   function runGuidedAction(guided: EcmoFoundationGuidedAction) {
@@ -658,9 +659,7 @@ function FoundationStageSession({
       body: activeStep.instruction,
       where: presentation ? undefined : lookInLine,
       why: activeStep.rationale,
-      primaryBeforeContent: Boolean(
-        comparisonPlan && !savedComparison && (!focusedStory || storyCommittedId),
-      ),
+
       ...(canGoBack && previousStep
         ? {
             back: {
@@ -797,12 +796,7 @@ function FoundationStageSession({
             status: savedComparison
               ? 'Comparison saved. Review Before / After / Change, then continue.'
               : 'Run the guided comparison before continuing.',
-            primary: savedComparison
-              ? { label: 'Continue', onActivate: advance }
-              : {
-                  label: comparisonPlan.guided.label,
-                  onActivate: () => runFocusedComparison(comparisonPlan),
-                },
+            primary: savedComparison ? { label: 'Continue', onActivate: advance } : undefined,
           }
         return { ...base, primary: { label: activeStep.actionLabel, onActivate: advance } }
       default:
@@ -1507,29 +1501,34 @@ function FoundationStageSession({
    */
   const comparisonBlock = comparisonPlan ? (
     <div className={styles.comparisonBlock} data-comparison-block>
-      {savedComparison && foundationTask?.actionId ? (
+      {foundationTask?.actionId ? (
         <div className={styles.comparisonControls} data-comparison-controls>
           <button
             type="button"
-            className={shellStyles.nowSecondary}
+            className={savedComparison ? shellStyles.nowSecondary : shellStyles.nowPrimary}
+            data-now-primary={
+              !savedComparison && (!focusedStory || storyCommittedId) ? true : undefined
+            }
+            data-comparison-run
             onClick={() => runFocusedComparison(comparisonPlan)}
           >
-            Repeat this comparison
+            {savedComparison
+              ? 'Repeat this comparison'
+              : focusedStory && !storyCommittedId
+                ? 'Run comparison without answering'
+                : comparisonPlan.guided.label}
           </button>
-          <button
-            type="button"
-            className={shellStyles.nowSecondary}
-            onClick={() => resetFocusedComparison(comparisonPlan)}
-          >
-            Reset this comparison
-          </button>
+          {savedComparison ? (
+            <button
+              type="button"
+              className={shellStyles.nowSecondary}
+              onClick={() => resetFocusedComparison(comparisonPlan)}
+            >
+              Reset this comparison
+            </button>
+          ) : null}
         </div>
       ) : null}
-      <p data-active-state-variant={activeVariant.id}>{activeVariant.label}</p>
-      <p data-teaching-run-note>
-        Teaching comparison: the Run button restores and advances the model. It is not a CARDIOHELP
-        hardware control.
-      </p>
       <FoundationComparison
         baseline={ecmoFoundationSnapshot(
           createFoundationVariantState(comparisonPlan.baselineVariant),
@@ -1538,18 +1537,13 @@ function FoundationStageSession({
         actionId={comparisonPlan.guided.id}
         supportMode={supportMode}
       />
+      <p data-active-state-variant={activeVariant.id}>{activeVariant.label}</p>
+      <p data-teaching-run-note>
+        Teaching comparison: the Run button restores and advances the model. It is not a CARDIOHELP
+        hardware control.
+      </p>
     </div>
   ) : null
-  const storyRunWithoutAnswer =
-    focusedStory && comparisonPlan && !savedComparison ? (
-      <button
-        type="button"
-        className={shellStyles.nowSecondary}
-        onClick={() => runFocusedComparison(comparisonPlan)}
-      >
-        Run comparison without answering
-      </button>
-    ) : null
   // In a flowing task the question (for a story step), the action's replay row and the result lead
   // the card; the teaching and the simulator surfaces follow. The fixed fallback keeps its order.
   const comparisonLeads = Boolean(presentation && comparisonBlock)
@@ -1560,7 +1554,6 @@ function FoundationStageSession({
           {comparisonLeads ? (
             <div className={styles.comparisonLead} data-comparison-lead>
               {focusedStory ? nowBody : null}
-              {storyRunWithoutAnswer}
               {comparisonBlock}
             </div>
           ) : null}
@@ -1575,7 +1568,6 @@ function FoundationStageSession({
           >
             {comparisonLeads && focusedStory ? null : nowBody}
             {comparisonLeads ? null : comparisonBlock}
-            {comparisonLeads ? null : storyRunWithoutAnswer}
             <EcmoOptionalExplanation
               key={activeStep.id}
               onContinue={skipStep}
