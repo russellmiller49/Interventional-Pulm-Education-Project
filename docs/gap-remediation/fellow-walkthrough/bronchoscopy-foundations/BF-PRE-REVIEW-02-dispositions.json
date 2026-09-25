@@ -1,0 +1,328 @@
+{
+  "batch": "BF-PRE-REVIEW-02",
+  "title": "Truthful sources, readable tables and usable actions",
+  "lane": "02",
+  "module": "bronchoscopy-foundations",
+  "source": "Bronchoscopy_Foundations_Fellow_Walkthrough.docx (Claude in a first-year-fellow persona, 19 September 2026)",
+  "sourceSha256": "3bac73ed7dc966f3cf9482b356f75261c2803ea94892201739a96c690d6d30aa",
+  "package": "Interventional-Pulm-Local-Data/module_update_9_19/BF_Claude_Implementation_Pack",
+  "planningBaseline": "77a141ccfd574a984f91e74abc9018b5d67e8202",
+  "promptPreparationMain": "b9fa0483f0551ed055a4e370afaafdec4eb49c14",
+  "batch01VerifiedMain": "d98bab79af9231eb1857e2da96cb75ca2068d85c",
+  "baseSha": "a306d8250ec10207c750f46407f151c06d487707",
+  "branch": "claude/bf-pre-review-02-9-22",
+  "checkout": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-bf-02",
+  "state": "implemented; production-built and browser-verified; PR opened for independent pre-merge review; not merged, not deployed",
+  "claims": {
+    "clinicalApproval": false,
+    "sourceReview": false,
+    "anatomicalValidation": false,
+    "mediaRightsReview": false,
+    "realLearnerValidation": false,
+    "usabilitySession": false,
+    "facultyReview": false,
+    "release": false
+  },
+  "fileOwnership": {
+    "sharedRuntimeFilesChanged": [],
+    "note": "Every change is under src/features/bronchoscopy-foundations/** or e2e/bronchoscopy-foundations.spec.ts (BF 01-04 per PI_EBUS_BBT_BF_COORDINATION.md). AnswerVerdict.tsx (EBUS 01), the shared stage and StageSourcesFooter, global CSS, other modules and Device Intelligence are untouched. No engine, generated-data or section-content file changed."
+  },
+  "sharedAnswerVerdict": {
+    "status": "merged and consumed",
+    "commit": "853c60e7",
+    "owner": "EBUS-PRE-REVIEW-01",
+    "forked": false,
+    "note": "After a wrong or unsafe BF selection the comparison is headed 'How the other answers compare' and the keyed option is labelled 'Best-supported answer.'; asserted by BF Jest and browser cases."
+  },
+  "findings": [
+    {
+      "id": "A8",
+      "reportSeverity": "P2",
+      "reportSource": "All section Sources; p. 4; figure 1.1",
+      "reproduced": true,
+      "reproducedAt": "a306d825 production build, S1/S4/S8/S19 section source lists, 1204x987",
+      "observedBefore": "Every list row data-source-class=transcript; S1, S2, S3, U1, U2, U4 carried the lecture-transcript sentence once, genuine transcripts twice. The Reference was correct.",
+      "rootCause": "BronchSourceList tested manifest.transcript !== undefined; the generated manifest writes transcript: null on every non-transcript.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/data/sources.ts",
+        "src/features/bronchoscopy-foundations/components/stage/BronchSourceList.tsx"
+      ],
+      "observedAfter": "S1 Textbook, S2 Training manual, S3 Faculty manual, U1/U2 Guideline or official guidance, U4 Emergency checklist: class reference, no transcript sentence. T01-T16: class transcript, the sentence once as the limit. Every section list agrees with the Reference. Copy and Open name their source.",
+      "preserved": [
+        "generated source records unchanged (transcript: null kept)",
+        "source ids, citations and review status unchanged",
+        "transcript review sentence kept on genuine transcripts"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/sources-and-reading-view.test.tsx (valid/null/absent/malformed record, id disagreement, registry classes, every-section agreement with the Reference, copy/open identity)",
+        "e2e: each source is labelled as what it is, and copy and open keep its identity"
+      ],
+      "residualHumanDecision": null
+    },
+    {
+      "id": "SUP-02",
+      "reportSeverity": null,
+      "reportSource": "S1 sources; p. 4",
+      "reproduced": true,
+      "observedBefore": "Locators printed 'S1, PDF 71–83' with no statement of what a PDF page is.",
+      "rootCause": "formatSourceRef abbreviated the PDF locator; the registry holds no printed page numbers.",
+      "disposition": "repaired (display); printed pages owner-held",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/data/sources.ts",
+        "src/features/bronchoscopy-foundations/content/stageSources.ts",
+        "src/features/bronchoscopy-foundations/components/stage/BronchSourceList.tsx"
+      ],
+      "observedAfter": "'S1, PDF pages 71–83'; a book cited by PDF page carries: 'Pages are PDF page numbers in the uploaded file. They may not match the page numbers printed in the book, which are not listed here.' No printed page is inferred.",
+      "preserved": ["no offset applied", "no page invented"],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/sources-and-reading-view.test.tsx"
+      ],
+      "residualHumanDecision": "Printed page locators need each book's pages checked; an unchecked authoring note puts S1's printed page at the PDF page less sixteen."
+    },
+    {
+      "id": "A9",
+      "reportSeverity": "P3",
+      "reportSource": "All section Sources; p. 4; figure 1.1",
+      "reproduced": true,
+      "reproducedAt": "a306d825 production build, S1 and S19 lists at 1204x987, 1440x900, 1024x768, 390x844, 320x740, 100% and 200% root text",
+      "observedBefore": "Open list absolute z-index 5 under the sticky continuation z-index 10: overlap at every 100% size, last source's focused Copy covered at 1204/1440/1024/390; at 200% text and phone widths the list and its first source rose above the viewport under the site header. Not reproduced at 390x844 200% (bar far off screen).",
+      "rootCause": "The shared StageSourcesFooter floats its list up from the summary; this course scrolls the document and pins its continuation. Separately a fixed scroll-padding-bottom: 19rem (608 px at 200% text) left no focus band on short viewports.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/stage/course-flow.module.css",
+        "src/features/bronchoscopy-foundations/components/stage/BronchCourseLayout.tsx"
+      ],
+      "observedAfter": "List in page flow after the lesson section: never intersects the bar at any matrix size; first and last source start below the header and hit-test as themselves; every focused control in the list is in view and uncovered; Escape closes and returns focus to the summary. Bottom scroll reserve = measured bar height + 12 px.",
+      "preserved": [
+        "shared StageSourcesFooter unchanged",
+        "no global z-index, body overflow or shell default change",
+        "header clearance still measured"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/sources-and-reading-view.test.tsx (measured bottom clearance)",
+        "e2e: the open source list clears the continuation bar at 5 viewports x 2 text sizes"
+      ],
+      "residualHumanDecision": null
+    },
+    {
+      "id": "A10",
+      "reportSeverity": "P2",
+      "reportSource": "S6, S8-12, S15-16, S18-20; p. 18; figure 8.1",
+      "reproduced": true,
+      "observedBefore": "All 13 lesson occurrences rendered div/h4/p lines without headers; the Reference rendered a four-column table.",
+      "rootCause": "cc8a6a00 replaced the stage grammar table with loose lines in BronchCourseTeaching; the Reference kept a separate table without the control column.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/content/grammar.ts",
+        "src/features/bronchoscopy-foundations/components/ReadingTheViewTable.tsx",
+        "src/features/bronchoscopy-foundations/components/reading-the-view.module.css",
+        "src/features/bronchoscopy-foundations/components/stage/BronchCourseTeaching.tsx",
+        "src/features/bronchoscopy-foundations/components/reference/BronchoscopyFoundationsReference.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/bronch-stage.module.css"
+      ],
+      "observedAfter": "One component on both surfaces: table named by its heading, observation as row header, Where it lives, Shortlist, Which control, if any (+ Taught in on the Reference); labelled card stack in a narrow container; cell text equal to the canonical rows everywhere.",
+      "preserved": [
+        "every row and exception",
+        "control wording unchanged (grammarRowControl)",
+        "trend rule printed under each excerpt"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/sources-and-reading-view.test.tsx (11 sections, every grammar step, Reference)",
+        "e2e: Reading the view is a table at every lesson occurrence and matches the Reference; stacks into labelled rows at 390, 320 and 1204 at 200% text (with CDP accessibility tree)"
+      ],
+      "residualHumanDecision": null
+    },
+    {
+      "id": "A12",
+      "reportSeverity": "P2",
+      "reportSource": "S4 Part 3; p. 10; figure 4.1",
+      "reproduced": true,
+      "observedBefore": "'Answer' transparent, no border or padding, 26x1040 px, class orderActions; only the skip looked like a button.",
+      "rootCause": "BronchLedgerControl used the sequence arrows' layout class as a button class.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/stage/BronchLedgerControl.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/bronch-stage.module.css"
+      ],
+      "observedAfter": "'Check this answer', course primary class, 44 px; disabled and described by a visible reason when incomplete or no statement chosen; false entries flagged and still checkable; unsafe refused with the table open; keyed answer focuses the outcome; Now-card status names the next step.",
+      "preserved": [
+        "arithmetic, rows, statements, keys and meanings unchanged",
+        "no dose limit, mixed-agent rule or remaining-dose statement",
+        "skip separate and secondary"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/actions-and-feedback.test.tsx",
+        "e2e: the S4 ledger is checked with a visible primary Check, by keyboard, without new dose rules"
+      ],
+      "residualHumanDecision": "SUP-07 local-anaesthetic dose discussion remains an owner/pharmacist decision (unchanged)."
+    },
+    {
+      "id": "A13",
+      "reportSeverity": "P2",
+      "reportSource": "S15, S18, S19; pp. 29, 31; figure 15.1",
+      "reproduced": true,
+      "observedBefore": "'Continue to the next observation' unstyled (orderActions); Now-card status still 'Decide on this card…' after the decision; no primary.",
+      "rootCause": "Same layout class misuse; the feedback phase was local to the control so the host could not describe it.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/stage/BronchScenarioControl.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/course-flow.module.css"
+      ],
+      "observedAfter": "Decide and Continue are primary buttons; after the keyed decision the case waits on its feedback, focus moves to it, the status says to read it and continue; Continue shows the next frame; last decision ends the case with Continue in the Now card.",
+      "preserved": ["no automatic advance", "skip separate", "reveal available"],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/actions-and-feedback.test.tsx (3 cases)",
+        "e2e: the poor-return / deterioration / bleeding-priorities case …"
+      ],
+      "residualHumanDecision": null
+    },
+    {
+      "id": "SUP-17",
+      "reportSeverity": null,
+      "reportSource": "S15/S18/S19; pp. 2, 28, 31",
+      "reproduced": true,
+      "observedBefore": "Unsafe moves refused, frame stays; read, reveal and skip available.",
+      "rootCause": null,
+      "disposition": "preserved and audited; no contract mismatch found",
+      "changedFiles": [],
+      "observedAfter": "Unchanged refusal; wording 'Not correct, and unsafe. That move is refused here, and the case does not move on with it.'; no acknowledgment or new gate.",
+      "preserved": [
+        "engine refuses without advancing",
+        "no safe response required to reveal or skip"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/actions-and-feedback.test.tsx",
+        "e2e scenario cases"
+      ],
+      "residualHumanDecision": null
+    },
+    {
+      "id": "A15",
+      "reportSeverity": "P2",
+      "reportSource": "S1 Part 3; p. 5; figure 1.2",
+      "reproduced": true,
+      "observedBefore": "After a wrong answer the situation, stem and options were gone; the merged shared card already used the neutral heading and keyed label.",
+      "rootCause": "BronchStageHost replaced the question with the verdict once committed.",
+      "disposition": "repaired (BF part); shared part closed by merged 853c60e7",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/bronch-stage.module.css"
+      ],
+      "observedAfter": "Situation, still, stem and options stay above the verdict with the learner's answer marked, for wrong, correct and unsafe answers; retry restores the question.",
+      "preserved": ["AnswerVerdict not forked or edited", "explanation before answering"],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/actions-and-feedback.test.tsx",
+        "e2e: the S1 question stays in view after a wrong answer at 1204px and 390px"
+      ],
+      "residualHumanDecision": null
+    },
+    {
+      "id": "A16",
+      "reportSeverity": "P2",
+      "reportSource": "S1 Part 4; pp. 5-6; figure 1.3",
+      "reproduced": true,
+      "observedBefore": "'Did not hold.' with the rationale, never naming the keyed category.",
+      "rootCause": "BronchSortControl named the origin only on the explanation-first path.",
+      "disposition": "repaired (feedback); wording owner-held",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/stage/BronchSortControl.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/verdictWords.ts"
+      ],
+      "observedAfter": "'Not correct. You chose: What am I looking at? Belongs with: What result would change management?' + rationale; explanation-first names every category; no count.",
+      "preserved": ["key unchanged (result)", "statement and rationale unchanged"],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/actions-and-feedback.test.tsx",
+        "e2e: the S1 matching set names the authored category …"
+      ],
+      "residualHumanDecision": "Owner/faculty: the lavage statement (shared-airway.ts:327, row lavage-returned) joins a procedural observation and a result clause; current wording, key, rationale and a proposal are in the handoff for batch 05."
+    },
+    {
+      "id": "A43",
+      "reportSeverity": "P3",
+      "reportSource": "Site / Reference / sets; pp. 35-36",
+      "reproduced": true,
+      "observedBefore": "Sets said 'Held / Did not hold' while questions said 'Correct / Not correct'.",
+      "rootCause": "Each BF activity control carried its own verdict words.",
+      "disposition": "repaired (BF verdict vocabulary); lecture display names batch 04; global intro route and language menu PI platform lane",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/stage/verdictWords.ts",
+        "src/features/bronchoscopy-foundations/components/stage/BronchSortControl.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchIdentifyControl.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchSequenceControl.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchReportControl.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchLedgerControl.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchScenarioControl.tsx"
+      ],
+      "observedAfter": "One vocabulary mapped from plausibility, equal to the shared card's labels, no grading terms.",
+      "preserved": ["data-outcome hook values", "report refusal wording"],
+      "tests": ["src/features/bronchoscopy-foundations/__tests__/actions-and-feedback.test.tsx"],
+      "residualHumanDecision": null
+    }
+  ],
+  "sharedFollowUps": [
+    "200% root text: the site header and footer links overflow the page width (reproduced on the base build; not BF). For the single PI platform queue.",
+    "StageSourcesFooter's float-over list suits the fixed-height stage; document-scrolling modules may need the BF in-flow override."
+  ],
+  "preservedContracts": [
+    "protected-accessory demonstration truth",
+    "intentional first accessory misreport",
+    "exposed-accessory movement refusal",
+    "laryngeal environmental clock",
+    "closed-fold guard",
+    "carina hold",
+    "environmental time not learner work",
+    "historical versus current goal semantics",
+    "ledger history semantics",
+    "truthful optical accessibility wording",
+    "no invented visible-lumen judgement",
+    "no A26 geometry or default-branch change",
+    "self-paced explanation-first, retry, skip, no score",
+    "stable ids and legacy data",
+    "source/media/review/release holds",
+    "pre-existing 3D restore defect not touched"
+  ],
+  "validation": {
+    "finalHead": "21f753ce",
+    "jest": {
+      "base": "30 suites, 410 passed, 1 todo",
+      "final": "32 suites, 446 passed, 1 todo",
+      "newCases": 36,
+      "newCasesFailingOnBaseRuntime": 29,
+      "newCasesPassingOnBaseRuntime": {
+        "count": 7,
+        "why": "helper unit cases and preserved-contract guards"
+      }
+    },
+    "tsc": "exit 0 (8 GB heap)",
+    "eslint": "clean on changed paths",
+    "prettier": "clean on changed paths",
+    "diffCheck": "clean",
+    "build": {
+      "base": "cH8SKNAsjrlBfqQC1zRQm",
+      "intermediate_1614e5ea": "ZtMAPeXAQ7V5N-ZTSfsV_",
+      "final_21f753ce": "R6q1Frts9WYPZ7RuLwEJm",
+      "exit": 0
+    },
+    "playwrightBf": {
+      "uniqueTests": 50,
+      "passedOnFinalBuild": 50,
+      "existing": 28,
+      "new": 22,
+      "newFailingOnBaseBuild": 21,
+      "newPassingOnBaseBuild": "the source list at 390x844 200% (not reproduced)",
+      "reruns": "49/50 then 50/50 on 1614e5ea (test-helper fix a1b18f84), 50/50 on 21f753ce"
+    },
+    "playwrightSystemicUxBf": "13 passed on the final build",
+    "notRun": [
+      "human review of any kind",
+      "screen-reader listening",
+      "WebKit and Firefox",
+      "native browser zoom",
+      "hidden-tab re-test beyond the existing suite",
+      "printed-page verification against the books"
+    ]
+  }
+}

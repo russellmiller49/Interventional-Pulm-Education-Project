@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, type ReactNode, type RefObject } from 'react'
+import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react'
 import type { NowCardAction, NowCardModel } from '@/features/learning-module/stage/NowCard'
 import { Link } from '@/i18n/navigation'
 import type { CoursePresentation } from '../../content/courseFlow'
@@ -45,6 +45,7 @@ export function BronchCourseLayout({
 }) {
   const id = useId()
   const interactive = presentation === 'skill' || presentation === 'inspection'
+  const continuationRef = useRef<HTMLDivElement>(null)
   // The site navigation wraps under text enlargement. Reserve its actual height
   // for native keyboard scrolling without changing focus or the shared shell.
   useEffect(() => {
@@ -66,8 +67,35 @@ export function BronchCourseLayout({
       root.style.removeProperty('--bronch-focus-clear-top')
     }
   }, [])
+  // The continuation is pinned to the bottom of the lesson while a reading step scrolls. Reserve
+  // its actual height, not a fixed guess, for native focus scrolling: a fixed 19rem became 608 px
+  // at 200% text, which with the header's own clearance left no band on a short viewport where a
+  // focused control could land, so the browser parked focus under the site header (fellow
+  // walkthrough A9, measured at 1440×900, 1024×768 and 320×740).
+  useEffect(() => {
+    const root = document.documentElement
+    const bar = continuationRef.current
+    if (!bar || interactive) {
+      root.style.removeProperty('--bronch-focus-clear-bottom')
+      return
+    }
+    const measure = () => {
+      const zoom = Number.parseFloat(getComputedStyle(root).zoom) || 1
+      root.style.setProperty(
+        '--bronch-focus-clear-bottom',
+        `${(bar.getBoundingClientRect().height + 12) / zoom}px`,
+      )
+    }
+    measure()
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    observer?.observe(bar)
+    return () => {
+      observer?.disconnect()
+      root.style.removeProperty('--bronch-focus-clear-bottom')
+    }
+  }, [interactive, stepId])
   const continuation = (
-    <div className={styles.continuation}>
+    <div className={styles.continuation} ref={continuationRef} data-course-continuation>
       {model.status ? (
         <p className={styles.status} data-now-status role="status">
           {model.status}

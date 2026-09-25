@@ -6,7 +6,9 @@ import type { ManifestSource } from './manifestTypes'
  * learner reads about what it does not cover, and the location grammar every citation uses.
  *
  * Three classes of source, three kinds of location. The three uploaded works (S1–S3) are cited by
- * PDF page — in S1 the printed clinical page is the PDF page less sixteen. The targeted external
+ * PDF page. An authoring note puts S1's printed clinical page at the PDF page less sixteen; that
+ * offset is not checked against the book here, so no printed page is ever derived from it (see
+ * `PDF_PAGE_LOCATOR_NOTE`). The targeted external
  * clarifications (U1–U13) are cited by the recommendation or section they were checked for. The
  * sixteen lecture transcripts (T01–T16) are cited by an approximate time span and are always shown
  * with the transcript sentence: narrated lecture content, not a reviewed demonstration.
@@ -54,8 +56,91 @@ export interface SourceRef {
 export const TRANSCRIPT_SENTENCE =
   'Lecture transcript — narrated lecture content, not a reviewed demonstration. The recording and slides were not reviewed; times are approximate.'
 
+/** The manifest's transcript record, present on lecture transcripts only. */
+export type ManifestTranscript = NonNullable<ManifestSource['transcript']>
+
+/**
+ * Which of the two ways a source may be presented. A `transcript` is a narrated lecture and always
+ * carries the transcript sentence; a `reference` is a published or uploaded work (textbook,
+ * manual, guideline, manufacturer document, trial) and never does.
+ *
+ * This is the source's publication class only. Whether the course has checked the source, and
+ * whether a claim drawn from it is approved for teaching, are separate records (the claim-review
+ * queue and the transcript review register), and nothing here reads or implies either.
+ */
+export type BronchSourceClass = 'transcript' | 'reference'
+
+const TRANSCRIPT_TEXT_FIELDS = [
+  'collection',
+  'duration',
+  'adoptedContribution',
+  'publicationPermission',
+] as const
+const TRANSCRIPT_FLAG_FIELDS = [
+  'audioVideoReviewed',
+  'slidesAvailable',
+  'speakerIdentityVerified',
+] as const
+
+function isManifestTranscript(value: unknown): value is ManifestTranscript {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false
+  const record = value as Record<string, unknown>
+  return (
+    TRANSCRIPT_TEXT_FIELDS.every(
+      (field) => typeof record[field] === 'string' && (record[field] as string).trim() !== '',
+    ) &&
+    TRANSCRIPT_FLAG_FIELDS.every((field) => typeof record[field] === 'boolean') &&
+    typeof record.durationSeconds === 'number' &&
+    Number.isFinite(record.durationSeconds) &&
+    record.durationSeconds > 0 &&
+    Array.isArray(record.moduleIds) &&
+    record.moduleIds.every((moduleId) => typeof moduleId === 'string')
+  )
+}
+
+/**
+ * A source's transcript record, read against the manifest schema: the record when it is one,
+ * `null` when the source has none. The generated manifest writes `transcript: null` on every
+ * non-transcript, and a field that is absent means the same thing. Anything else is a malformed
+ * record and throws at import rather than guessing which way to label the source.
+ *
+ * The section source list used to test `transcript !== undefined`, which is true of `null`, and so
+ * labelled every textbook, manual and guideline as an unreviewed lecture (fellow walkthrough A8).
+ * Every renderer now reads the class this derives, never the raw field.
+ */
+export function manifestTranscript(source: {
+  readonly id: string
+  readonly transcript?: unknown
+}): ManifestTranscript | null {
+  const value = source.transcript
+  if (value === null || value === undefined) return null
+  if (!isManifestTranscript(value))
+    throw new Error(`Source ${source.id} carries a malformed transcript record.`)
+  return value
+}
+
+/**
+ * The publication class, checked against the id grammar every citation already relies on: the
+ * lecture transcripts are T01–T16 and are cited by time span (`sourceRefErrors`). A transcript
+ * record on any other id, or a T id without one, means the manifest and the registry disagree about
+ * what the source is, and the import stops rather than choosing.
+ */
+export function bronchSourceClass(source: {
+  readonly id: string
+  readonly transcript?: unknown
+}): BronchSourceClass {
+  const sourceClass: BronchSourceClass = manifestTranscript(source) ? 'transcript' : 'reference'
+  if (/^T\d{2}$/.test(source.id) !== (sourceClass === 'transcript'))
+    throw new Error(
+      `Source ${source.id} is registered as a ${/^T\d{2}$/.test(source.id) ? 'lecture transcript' : 'published source'} but its manifest record ${sourceClass === 'transcript' ? 'carries' : 'has no'} transcript.`,
+    )
+  return sourceClass
+}
+
 export interface BronchSource {
   readonly id: BronchSourceId
+  /** Publication class — see `BronchSourceClass`. Renderers read this, not the manifest field. */
+  readonly sourceClass: BronchSourceClass
   readonly kindLabel: string
   readonly title: string
   readonly byline: string
@@ -94,8 +179,8 @@ const SOURCE_USE_WORDING: Readonly<Record<string, string>> = {
   T08: 'Capability-based history; sequential preparation, simulation, learner evaluation, and apprenticeship.',
 }
 
-function kindLabel(source: ManifestSource): string {
-  if (source.transcript) return 'Lecture transcript'
+function kindLabel(source: ManifestSource, sourceClass: BronchSourceClass): string {
+  if (sourceClass === 'transcript') return 'Lecture transcript'
   if (source.id === 'S1') return 'Textbook'
   if (source.id === 'S2') return 'Training manual'
   if (source.id === 'S3') return 'Faculty manual'
@@ -111,10 +196,12 @@ function kindLabel(source: ManifestSource): string {
 
 export const SOURCES: readonly BronchSource[] = MANIFEST_SOURCES.map((source) => {
   const id = source.id as BronchSourceId
-  const transcript = source.transcript
+  const sourceClass = bronchSourceClass(source)
+  const transcript = manifestTranscript(source)
   return {
     id,
-    kindLabel: kindLabel(source),
+    sourceClass,
+    kindLabel: kindLabel(source, sourceClass),
     title: source.title,
     byline:
       source.authors ??
@@ -187,12 +274,23 @@ export function sourceRefErrors(where: string, ref: SourceRef): readonly string[
   return errors
 }
 
-/** "S1, PDF 61–70" · "T11, 00:23:09–00:25:15" · "U1, monitoring recommendations". */
+/**
+ * What a PDF-page location is, said once wherever one is listed. The uploaded works are cited by
+ * their PDF page, which is the only locator the registry holds. A printed book's page numbers can
+ * differ from the file's (fellow walkthrough SUP-02), and nothing in the registry records them, so
+ * they are not stated or inferred — no offset is applied.
+ */
+export const PDF_PAGE_LOCATOR_NOTE =
+  'Pages are PDF page numbers in the uploaded file. They may not match the page numbers printed in the book, which are not listed here.'
+
+/** "S1, PDF pages 61–70" · "T11, 00:23:09–00:25:15" · "U1, monitoring recommendations". */
 export function formatSourceRef(ref: SourceRef): string {
   const { location } = ref
   switch (location.kind) {
     case 'pdf-pages':
-      return `${ref.sourceId}, PDF ${location.from}${location.to && location.to !== location.from ? `–${location.to}` : ''}`
+      return location.to && location.to !== location.from
+        ? `${ref.sourceId}, PDF pages ${location.from}–${location.to}`
+        : `${ref.sourceId}, PDF page ${location.from}`
     case 'time-span':
       return `${ref.sourceId}, ${location.start}${location.end ? `–${location.end}` : ''}`
     case 'section':
