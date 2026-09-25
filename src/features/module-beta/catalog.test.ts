@@ -1,5 +1,6 @@
 /** @jest-environment node */
-import { betaModules, betaModuleForPath, feedbackPagePath } from './catalog'
+import { betaModules, betaModuleById, betaModuleForPath, feedbackPagePath } from './catalog'
+import { nonPublicModules } from '@/lib/non-public-modules'
 import { feedbackSchema, isPngScreenshot } from './schema'
 import { isPublicPath, isPublicUnlistedPath, getRequiredEntitlement } from '@/lib/site-auth/access'
 import { isVisibleModulePath } from '@/lib/draft-modules'
@@ -12,6 +13,18 @@ const report = {
 }
 
 describe('beta module boundaries', () => {
+  it('keeps Therapeutic Bronchoscopy in development, outside the beta catalog', () => {
+    const path = '/admin/therapeutic-bronchoscopy'
+    expect(nonPublicModules.some((entry) => entry.path === path)).toBe(true)
+    expect(betaModuleById('therapeutic-bronchoscopy')).toBeUndefined()
+    expect(betaModuleForPath(path)).toBeUndefined()
+    expect(isPublicPath(path)).toBe(false)
+    expect(getRequiredEntitlement(path, new URLSearchParams())).toBe('site_admin')
+    expect(
+      feedbackSchema.safeParse({ ...report, moduleId: 'therapeutic-bronchoscopy', pagePath: path })
+        .success,
+    ).toBe(false)
+  })
   it.each(betaModules)('$id has a normal unlisted link and a protected beta version', (entry) => {
     expect(isPublicPath(`/en${entry.path}`)).toBe(true)
     expect(isPublicUnlistedPath(`/en${entry.path}`)).toBe(true)

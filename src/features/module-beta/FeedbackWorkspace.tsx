@@ -4,7 +4,7 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { betaModuleById, betaModules } from './catalog'
+import { feedbackReviewModuleById, feedbackReviewModules } from './catalog'
 import { feedbackStatuses, type FeedbackEntry } from './schema'
 import { feedbackMode } from './config'
 import {
@@ -65,7 +65,7 @@ function FeedbackCard({ entry, onSaved }: { entry: ReviewEntry; onSaved: () => v
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">
-            {betaModuleById(entry.module_id)?.title ?? entry.module_id}
+            {feedbackReviewModuleById(entry.module_id)?.title ?? entry.module_id}
           </h2>
           <p className="mt-1 break-all text-xs text-muted-foreground">
             {localEntry ? 'Owner review' : (entry as FeedbackEntry).tester_email} ·{' '}
@@ -317,7 +317,7 @@ export function FeedbackWorkspace({ locale }: { locale: string }) {
             className="mt-1 block w-full max-w-full rounded-lg border bg-background p-2"
           >
             <option value="">All modules</option>
-            {betaModules.map((entry) => (
+            {feedbackReviewModules.map((entry) => (
               <option value={entry.id} key={entry.id}>
                 {entry.title}
               </option>

@@ -1,36 +1,44 @@
 import { z } from 'zod'
-import { betaModuleById, betaModuleForPath, feedbackPagePath } from './catalog'
+import { betaModuleForPath, feedbackReviewModuleForPath, feedbackPagePath } from './catalog'
 
 export const feedbackStatuses = ['new', 'in-review', 'resolved'] as const
 export const maxScreenshotBytes = 3 * 1024 * 1024
-export const feedbackSchema = z
-  .object({
-    id: z.string().uuid(),
-    moduleId: z.string().refine((id) => Boolean(betaModuleById(id))),
-    pagePath: z
-      .string()
-      .max(2000)
-      .startsWith('/')
-      .refine((path) => !path.startsWith('//') && !path.includes('\\')),
-    comment: z.string().trim().min(1, 'Add a comment before sending.').max(10000),
-    selectedText: z.string().max(3000).default(''),
-  })
-  .superRefine((value, context) => {
-    const url = URL.canParse(value.pagePath, 'https://module.invalid')
-      ? new URL(value.pagePath, 'https://module.invalid')
-      : null
-    if (
-      !url ||
-      betaModuleForPath(url.pathname)?.id !== value.moduleId ||
-      feedbackPagePath(url) !== value.pagePath
-    ) {
-      context.addIssue({
-        code: 'custom',
-        path: ['pagePath'],
-        message: 'Open a module from the beta hub before sending feedback.',
-      })
-    }
-  })
+function reportSchema(includeRetired: boolean) {
+  return z
+    .object({
+      id: z.string().uuid(),
+      moduleId: z.string(),
+      pagePath: z
+        .string()
+        .max(2000)
+        .startsWith('/')
+        .refine((path) => !path.startsWith('//') && !path.includes('\\')),
+      comment: z.string().trim().min(1, 'Add a comment before sending.').max(10000),
+      selectedText: z.string().max(3000).default(''),
+    })
+    .superRefine((value, context) => {
+      const url = URL.canParse(value.pagePath, 'https://module.invalid')
+        ? new URL(value.pagePath, 'https://module.invalid')
+        : null
+      if (
+        !url ||
+        (includeRetired
+          ? feedbackReviewModuleForPath(url.pathname)
+          : betaModuleForPath(url.pathname)
+        )?.id !== value.moduleId ||
+        feedbackPagePath(url) !== value.pagePath
+      ) {
+        context.addIssue({
+          code: 'custom',
+          path: ['pagePath'],
+          message: 'Open a module from the beta hub before sending feedback.',
+        })
+      }
+    })
+}
+export const feedbackSchema = reportSchema(false)
+// Reading an old report must never depend on whether its module is still offered in beta.
+export const storedFeedbackSchema = reportSchema(true)
 export const reviewSchema = z.object({
   status: z.enum(feedbackStatuses),
   reviewerNotes: z.string().trim().max(10000),

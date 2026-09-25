@@ -1,4 +1,4 @@
-import { betaModuleById } from './catalog'
+import { feedbackReviewModuleById } from './catalog'
 import type { OwnerFeedbackEntry, OwnerFeedbackFilter } from './ownerFeedbackStore'
 
 // A code fence longer than any run in the text keeps Markdown-like comments verbatim.
@@ -36,7 +36,7 @@ export async function exportOwnerFeedback(
   for (const entry of sorted) {
     // IDs are validated on read as UUIDs; also guard paths at the export boundary.
     if (!/^[0-9a-f-]{36}$/i.test(entry.id)) throw new Error('Invalid report ID in export.')
-    const moduleTitle = betaModuleById(entry.module_id)?.title ?? entry.module_id
+    const moduleTitle = feedbackReviewModuleById(entry.module_id)?.title ?? entry.module_id
     const filename = entry.screenshot ? `screenshots/${entry.id}.png` : null
     const { screenshot, ...fields } = entry
     records.push({

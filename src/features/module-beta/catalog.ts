@@ -3,12 +3,6 @@ import { unlocalizedPathname } from '@/i18n/path'
 export const betaModules = [
   { id: 'ebus-guided', title: 'EBUS: Guided Course', path: '/ebus-guided', group: 'Bronchoscopy' },
   {
-    id: 'therapeutic-bronchoscopy',
-    title: 'Therapeutic Bronchoscopy Simulator',
-    path: '/admin/therapeutic-bronchoscopy',
-    group: 'Bronchoscopy',
-  },
-  {
     id: 'synchronized-anatomy',
     title: 'Airway Anatomy — Synchronized Bronchoscopy',
     path: '/learn/anatomy/airway',
@@ -70,6 +64,29 @@ export const betaModules = [
     group: 'Critical care',
   },
 ] as const
+
+// Retired beta modules remain available only when reviewing historical feedback.
+export const retiredBetaModules = [
+  {
+    id: 'therapeutic-bronchoscopy',
+    title: 'Therapeutic Bronchoscopy Simulator (in development)',
+    path: '/admin/therapeutic-bronchoscopy',
+    group: 'Bronchoscopy',
+  },
+] as const
+export const feedbackReviewModules = [...betaModules, ...retiredBetaModules]
+export function feedbackReviewModuleById(id: string) {
+  return feedbackReviewModules.find((entry) => entry.id === id)
+}
+export function feedbackReviewModuleForPath(path: string) {
+  const pathname = unlocalizedPathname(path)
+  return (
+    betaModuleForPath(path) ??
+    retiredBetaModules.find(
+      (entry) => pathname === entry.path || pathname.startsWith(`${entry.path}/`),
+    )
+  )
+}
 
 export type BetaModule = (typeof betaModules)[number]
 export function betaModuleById(id: string) {

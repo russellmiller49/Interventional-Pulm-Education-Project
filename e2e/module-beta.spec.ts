@@ -24,6 +24,7 @@ test('beta hub requires sign-in, is noindex, and feedback APIs reject preview co
   await expect(page.getByRole('link', { name: 'Test with feedback' })).toHaveCount(
     betaModules.length,
   )
+  await expect(page.getByRole('heading', { name: /Therapeutic Bronchoscopy/ })).toHaveCount(0)
   await page.screenshot({
     path: 'artifacts/module-beta-hub.png',
     fullPage: true,
@@ -213,7 +214,6 @@ test('real standard module pages permit same-origin beta framing and have no fee
     '/en/icu-hemodynamics',
     '/en/mechanical-ventilation',
     '/en/mechanical-circulatory-support',
-    '/en/admin/therapeutic-bronchoscopy',
     '/en/learn/anatomy/airway',
     '/en/learn/anatomy/branch-tracing',
     '/en/intro-bronchoscopy/airway-anatomy',
