@@ -78,7 +78,7 @@ export function FixedMobileComparison() {
 export function TeamReadinessAid() {
   const roles = [...new Set(TEAM_READINESS_ROWS.map((row) => row.role))]
   return (
-    <section className={styles.figure} data-team-readiness>
+    <section className={`${styles.figure} ${styles.readiness}`} data-team-readiness>
       <p className={styles.kicker}>Before a CBCT spin, confirm · teaching aid</p>
       <p className={styles.modelLabel} data-readiness-status>
         {TEAM_READINESS_STATUS}
@@ -92,7 +92,9 @@ export function TeamReadinessAid() {
                 <li key={row.id} data-readiness-row={row.id}>
                   {row.confirm}{' '}
                   <span className={styles.basis}>
-                    Section {peripheralImagingSectionIds.indexOf(row.basis.sectionId) + 1}
+                    {/* A no-break space keeps "Section" with its number on a narrow line. */}
+                    Section{'\u00a0'}
+                    {peripheralImagingSectionIds.indexOf(row.basis.sectionId) + 1}
                   </span>
                 </li>
               ))}

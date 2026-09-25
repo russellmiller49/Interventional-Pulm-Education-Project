@@ -169,6 +169,27 @@ describe('question identity and versioning', () => {
     expect(s16.stem).not.toMatch(/motion|breath/i)
     expect(s16.correctChoiceIds).toEqual(['b'])
     expect(s16.itemType).toBe('management-decision')
+    // PR #279 sanity review (F5): the key no longer stands out by length or bundled detail; the
+    // readiness and stopping detail it used to carry is in its rationale.
+    expect(s16.choices.map((choice) => choice.label)).toEqual([
+      'Select a higher-dose protocol so the edges come out better defined.',
+      'Agree a stable, tolerable breath hold or ventilation pause with anesthesia.',
+      'Turn on metal-artifact reduction for the catheter.',
+    ])
+    const words = (text: string) => text.trim().split(/\s+/).length
+    const keyWords = words(s16.choices[1].label)
+    const longestDistractor = Math.max(words(s16.choices[0].label), words(s16.choices[2].label))
+    expect(keyWords).toBeLessThanOrEqual(longestDistractor)
+    expect(s16.choices[1].label).not.toMatch(/readiness|stop|announce|monitor/i)
+    const keyRationale = s16.choices[1].rationale
+    expect(keyRationale).toMatch(/Plan the breath hold with anesthesia/)
+    expect(keyRationale).toMatch(/agree the intended state/)
+    expect(keyRationale).toMatch(/who announces readiness/)
+    expect(keyRationale).toMatch(/stopping criteria before it begins/)
+    expect(keyRationale).toMatch(/Anesthesia safety governs the breath hold/)
+    // The identity, and the question it displaced, are unchanged.
+    expect(s16.id).toBe('changing-anatomy:changing-anatomy-interpretation-v2')
+    expect(QUESTION_BY_ID['change-1'].correct).toBe('b')
 
     const case4 = imagingCaseById.get('case-4-v2')!.item
     expect(case4.correctChoiceIds).toEqual(['c'])
@@ -249,6 +270,49 @@ describe('practice case 9 keeps its id and loses what the model cannot support (
     // The learner finds the absence on the figure: neither title nor situation narrates it.
     expect(text).not.toMatch(/absent|appears on none|none of them/i)
     expect(practice.situation).toMatch(/The figure shows/)
+  })
+
+  it('binds the key’s rationale and the takeaway to this authored figure, and states no universal rule (F2)', () => {
+    // PR #279 sanity review (F2): the model supports the answer inside this exercise, not the
+    // general inference "a missing catheter marks prior-derived content" on every real system.
+    const practice = imagingMicroCaseById.get('dts-interpretation-practice-1')!
+    const question = QUESTION_BY_ID['dts-interpretation-practice-1']
+    expect(question.correct).toBe('a')
+    expect(practice.item.correctChoiceIds).toEqual(['a'])
+    const key = practice.item.choices.find((choice) => choice.id === 'a')!.rationale
+    expect(key).toBe(question.choices[0].rationale)
+    // What this figure establishes, stated as this figure's.
+    expect(key).toMatch(/^In this teaching figure, /)
+    expect(key).toMatch(/the projection stands for the current acquisition/)
+    expect(key).toMatch(/deliberately contains the modeled catheter/)
+    expect(key).toMatch(/the three planes match the planning CT and contain no catheter/)
+    expect(key).toMatch(/In this model, planes reconstructed from the current acquisition/)
+    expect(key).toMatch(/in this authored example, the planes were drawn from the planning CT/)
+    // What it does not claim.
+    expect(key).toMatch(
+      /catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system/,
+    )
+    expect(question.takeaway).toMatch(/In this teaching case, /)
+    expect(question.takeaway).toMatch(/so here the missing catheter identifies those planes/)
+    expect(question.takeaway).toMatch(
+      /Outside this case, catheter absence alone is not a universal sign of prior-derived content/,
+    )
+    // The lesson itself stays: identify current versus prior-derived content before reading it.
+    expect(question.takeaway).toMatch(
+      /identify whether it was reconstructed from the current acquisition or drawn from an earlier study/,
+    )
+    expect(practice.item.explanation).toContain(question.takeaway)
+    // The categorical wording is gone from everything the learner reads.
+    const everything = [
+      practice.presentationTitle,
+      practice.situation,
+      question.stem,
+      ...question.choices.flatMap((choice) => [choice.text, choice.rationale]),
+      question.takeaway,
+    ].join(' ')
+    expect(everything).not.toMatch(
+      /could not be missed|cannot be absent|absence marks|its absence means|always|by definition/i,
+    )
   })
 
   it('claims no airway anywhere the learner reads it: the modeled catheter runs through lung-density CT', () => {

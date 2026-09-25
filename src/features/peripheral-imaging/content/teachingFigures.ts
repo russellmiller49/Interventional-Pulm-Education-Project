@@ -1,6 +1,7 @@
 import { fovCylinder } from '../components/suite/suiteModel'
 import { LESION_CENTER, type Point3 } from '../lib/physics'
 import { imagingLearnerCopyErrors } from './learnerCopy'
+import { teachingDemonstration } from './teachingExamples'
 
 /**
  * Teaching figures on reading steps (Prompt 04, owner decisions OD4-06 and OD4-08, 2026-09-22).
@@ -72,6 +73,19 @@ export const CONSPICUITY_SET = {
   noise: { photonsPerPixel: 700, seed: 6 },
   veil: { fractionOfMean: 1 },
 } as const
+
+/**
+ * The obliquity of Section 6's later suite demonstration ("CT superimposition · changed view"),
+ * which follows the conspicuity set. Read from its authored example, so the note that tells the
+ * two angles apart (PR #279 sanity review) cannot name a different angle from the one shown there.
+ */
+export const SIGNAL_LATER_DEMONSTRATION_OBLIQUITY: number = (() => {
+  const orbit = teachingDemonstration('signal')?.examples.find(
+    (example) => example.title === 'CT superimposition · changed view',
+  )?.values.orbit
+  if (typeof orbit !== 'number') throw new Error('Section 6 has no changed-view demonstration')
+  return orbit
+})()
 
 /**
  * Section 16's truncation panel (OD4-06; brief D5). The modeled reconstruction volume is the CBCT
@@ -176,7 +190,7 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
         title: 'Planning CT through the lesion, with candidate beams',
         medium: 'model-output',
         caption:
-          'Each line is the central ray through the modeled lesion at one C-arm obliquity, with its arrowhead at the detector end; the X-ray tube is at the other end.',
+          'Each line is the target ray whose path lengths the table gives: from the X-ray tube’s focal spot, through the centre of the modeled lesion, to the detector, with its arrowhead at the detector end. It is drawn as its projection onto this axial image. The tube lies off the image beyond the line’s other end, and the ray crosses this slice only at the lesion. The rays spread out from the tube and the lesion lies off the isocentre, so each line’s angle on the image differs by a few degrees from its C-arm obliquity.',
       },
       {
         id: 'strip',
@@ -203,7 +217,7 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
         title: 'Alignment view and advancement view',
         medium: 'model-output',
         caption:
-          'The modeled tool seen from near its own axis, where it is foreshortened, and side-on, where it is in profile.',
+          'The modeled tool seen from near its own axis, where it is foreshortened, and side-on, where it is in profile. Both views are drawn at the same scale, with the tool’s tip at the same place.',
       },
     ],
   },

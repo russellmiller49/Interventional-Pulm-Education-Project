@@ -3,6 +3,7 @@
 import {
   CONSPICUITY_SET,
   obliquityDirection,
+  SIGNAL_LATER_DEMONSTRATION_OBLIQUITY,
   signedDegrees,
   teachingFigure,
 } from '../../content/teachingFigures'
@@ -103,6 +104,17 @@ export function ConspicuityComparison() {
                 ). Soft-tissue-like CT on the ray through the lesion:{' '}
                 {model.rays.reference.softTotal} mm frontal, {model.rays.changed.softTotal} mm at{' '}
                 {signedDegrees(changed)}.
+              </p>
+            ) : null}
+            {panel.id === 'superimposition' &&
+            model &&
+            model.rays.changed.softTotal < model.rays.reference.softTotal ? (
+              // PR #279 sanity review: the section's later demonstration uses another angle. The
+              // two are not in conflict, and this says what each one shows.
+              <p className={styles.panelCaption} data-later-example-note>
+                This {signedDegrees(changed)} comparison shortens the model’s soft-tissue path on
+                the target ray; the later {signedDegrees(SIGNAL_LATER_DEMONSTRATION_OBLIQUITY)}{' '}
+                example shows a different pattern, with the overlap redistributed along the ray.
               </p>
             ) : null}
           </figure>

@@ -12,6 +12,7 @@ import {
 import { FigureCanvas } from './FigureCanvas'
 import {
   AXIAL_VIEW,
+  TOOL_VIEW_FRAME,
   twoAxisModel,
   type LesionMark,
   type TargetRay,
@@ -20,6 +21,9 @@ import {
 import { useFigureComputation } from './useFigureComputation'
 import { useTeachingVolume } from './useTeachingData'
 import styles from './figures.module.css'
+
+/** Width of a signed-angle label such as "−20°" at the overlay's 10-unit type, in image units. */
+const LABEL_WIDTH = 26
 
 const LINE_STYLE: Readonly<Record<number, { stroke: string; dash?: string }>> = {
   0: { stroke: '#e2eef0', dash: '5 4' },
@@ -74,12 +78,13 @@ function ToolViewPanel({ view, title }: { readonly view: ToolView; readonly titl
   return (
     <figure className={styles.panel} data-tool-view={view.obliquity}>
       <svg
-        viewBox="0 0 160 120"
+        viewBox={`0 0 ${TOOL_VIEW_FRAME.width} ${TOOL_VIEW_FRAME.height}`}
         className={`${styles.svgFigure} ${styles.svgCapped}`}
         role="img"
         aria-label={`${title}: the modeled tool appears ${toolDescription(view)} beside the modeled lesion`}
+        data-tool-scale={view.scale}
       >
-        <rect width="160" height="120" rx="6" fill="#0b1418" />
+        <rect width={TOOL_VIEW_FRAME.width} height={TOOL_VIEW_FRAME.height} rx="6" fill="#0b1418" />
         <circle
           cx={view.lesion.x}
           cy={view.lesion.y}
@@ -96,6 +101,7 @@ function ToolViewPanel({ view, title }: { readonly view: ToolView; readonly titl
           stroke="#e2eef0"
           strokeWidth="2.5"
           strokeLinecap="round"
+          data-tool-line
         />
       </svg>
       <figcaption>
@@ -155,7 +161,7 @@ export function TwoAxisWorkedExample() {
           <FigureCanvas
             pixels={model?.axial ?? null}
             size={AXIAL_VIEW.sizePx}
-            label={`Axial planning CT through the modeled lesion in the posterior left lung, with the central ray drawn at C-arm obliquity ${TWO_AXIS_EXAMPLE.candidates.map(signedDegrees).join(', ')}`}
+            label={`Axial planning CT through the modeled lesion in the posterior left lung, with the axial projection of the target ray from the X-ray tube through the lesion to the detector at C-arm obliquity ${TWO_AXIS_EXAMPLE.candidates.map(signedDegrees).join(', ')}`}
             overlay={
               model ? (
                 <>
@@ -180,10 +186,19 @@ export function TwoAxisWorkedExample() {
                   </defs>
                   {model.lines.map((line) => {
                     const style = LINE_STYLE[line.obliquity] ?? { stroke: '#e2eef0' }
-                    const labelAt: [number, number] = [
-                      line.from[0] + (line.to[0] - line.from[0]) * 0.86,
-                      line.from[1] + (line.to[1] - line.from[1]) * 0.86,
+                    const along = (fraction: number): [number, number] => [
+                      line.from[0] + (line.to[0] - line.from[0]) * fraction,
+                      line.from[1] + (line.to[1] - line.from[1]) * fraction,
                     ]
+                    // The label sits beside the line's detector end, pulled back along the line
+                    // until it fits inside the image (the −20° ray leaves near the right edge).
+                    let fraction = 0.86
+                    while (
+                      fraction > 0.5 &&
+                      along(fraction)[0] + 4 + LABEL_WIDTH > AXIAL_VIEW.sizePx - 2
+                    )
+                      fraction -= 0.02
+                    const labelAt = along(fraction)
                     return (
                       <g key={line.obliquity} data-beam-line={line.obliquity}>
                         <line
@@ -198,7 +213,7 @@ export function TwoAxisWorkedExample() {
                         />
                         <text
                           x={labelAt[0] + 4}
-                          y={labelAt[1]}
+                          y={Math.max(labelAt[1], 12)}
                           fill={style.stroke}
                           fontSize="10"
                           fontWeight="700"

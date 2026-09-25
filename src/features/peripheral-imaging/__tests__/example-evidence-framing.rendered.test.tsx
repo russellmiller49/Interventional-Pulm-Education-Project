@@ -1,12 +1,15 @@
-import { cleanup, fireEvent } from '@testing-library/react'
+import { cleanup, fireEvent, screen } from '@testing-library/react'
 
 import { imagingStageLesson } from '../content/stageLessons'
 import type { ImagingSectionId } from '../content/pathway'
+import { illustrativeOnlyExampleIdentities } from '../content/teachingExamples'
+import { QUESTION_BY_ID } from '../data/questions'
 import {
   currentStepId,
   installDom,
   mountSection,
   nowPrimary,
+  nowSecondary,
   nowSkip,
 } from '../test-support/stageHarness'
 
@@ -205,6 +208,9 @@ describe('a check whose image is the evidence keeps saying so', () => {
   it('the component walk still tells the learner to inspect the image it superimposes', () => {
     reachCheck('chain-walk')
     const seen = checkSurfaces()
+    expect(
+      document.querySelector('[data-check-teaching] [data-check-prompt]')?.textContent,
+    ).toMatch(/^Choose the interpretation this image and its acquisition context support\./)
     expect(seen.identity).toBe('chain-walk:example:0')
     expect(seen.evidence).toBe('depicts-the-question')
     expect(seen.banner).toMatch(MATCHING_CLAIM)
@@ -224,5 +230,111 @@ describe('a check whose image is the evidence keeps saying so', () => {
     expect(seen.nowCard).toMatch(/Inspect the image and acquisition context/)
     expect(seen.nowCard).not.toMatch(/Answer from the written scenario/)
     expect(seen.stem).toMatch(/lateral view/i)
+  })
+})
+
+/*
+ * Independent sanity review of PR #279, finding F3 (CHK-S10). Section 10's check asks about
+ * structures elongated through depth. The image beside it was a single reconstructed plane with a
+ * depth slider, which cannot show elongation through depth, and the check told the learner to
+ * inspect it. The check is now the written scenario its stem already was: no image, and no
+ * instruction to read one. It is not relabelled `illustrative-model`; the three declared
+ * identities stay exactly three.
+ */
+describe('a conceptual check carries no image it cannot support (CHK-S10)', () => {
+  it('Section 10’s check is written: no adjacent image, no instruction to inspect one', () => {
+    const lesson = reachCheck('dts-acquisition')
+    const seen = checkSurfaces()
+    const step = lesson.steps[lesson.predictionStepIndex]
+    if (step.interaction.kind !== 'prediction') throw new Error('unreachable')
+
+    // The dts-1 question, exactly as it was.
+    expect(step.interaction.item.id).toBe('dts-acquisition:dts-1')
+    expect(seen.stem).toBe(QUESTION_BY_ID['dts-1'].stem)
+    expect(seen.stem).toMatch(/elongated in the depth direction/)
+    expect(seen.choices).toHaveLength(QUESTION_BY_ID['dts-1'].choices.length)
+    expect(step.interaction.item.correctChoiceIds).toEqual([QUESTION_BY_ID['dts-1'].correct])
+
+    // Nothing beside it, and nothing that claims or disclaims an image.
+    expect(seen.identity).toBeNull()
+    expect(seen.imagePresent).toBe(false)
+    expect(document.querySelector('[data-dts-state]')).toBeNull()
+    expect(seen.banner).toBeNull()
+    expect(seen.nowCard).not.toMatch(/inspect the image|teaching model of the equipment/i)
+    expect(seen.nowCard).toMatch(/Read the scenario\./)
+    // The teaching column beside it says the same: a written scenario, not "this image".
+    const prompt = document.querySelector('[data-check-teaching] [data-check-prompt]')
+    expect(prompt?.textContent).toMatch(
+      /^Choose the interpretation the written scenario supports\./,
+    )
+    expect(prompt?.textContent).not.toMatch(/image/i)
+    expect(illustrativeOnlyExampleIdentities()).toEqual([
+      'current-anatomy:example:0',
+      'changing-anatomy:example:0',
+      'staff-protection:example:0',
+    ])
+  })
+
+  it('stays self-paced: explanation first, answer, retry, and leaving without an answer', () => {
+    const lesson = reachCheck('dts-acquisition')
+    const step = lesson.steps[lesson.predictionStepIndex]
+    if (step.interaction.kind !== 'prediction') throw new Error('unreachable')
+    const item = step.interaction.item
+    expect(step.gate).toBe('open')
+    expect(nowSkip()?.textContent).toMatch(/Continue without answering/)
+    // Nothing is chosen yet, and nothing waits on an image.
+    expect(nowPrimary()?.disabled).toBe(true)
+
+    // The explanation opens before any answer.
+    expect(nowSecondary()?.textContent).toBe('Show the explanation')
+    fireEvent.click(nowSecondary()!)
+    expect(document.querySelector('[data-explanation-reveal]')).not.toBeNull()
+
+    // A distractor, then retry, then the key.
+    const distractor = item.choices.find((choice) => !item.correctChoiceIds.includes(choice.id))!
+    fireEvent.click(
+      document.querySelector(`[data-prediction-choices] input[value="${distractor.id}"]`)!,
+    )
+    expect(nowPrimary()?.disabled).toBe(false)
+    fireEvent.click(nowPrimary()!)
+    expect(
+      document.querySelector('[data-answer-verdict]')?.getAttribute('data-verdict-outcome'),
+    ).toBe('not-correct')
+    fireEvent.click(screen.getByRole('button', { name: 'Try this question again' }))
+    const keyed = item.choices.find((choice) => item.correctChoiceIds.includes(choice.id))!
+    fireEvent.click(document.querySelector(`[data-prediction-choices] input[value="${keyed.id}"]`)!)
+    fireEvent.click(nowPrimary()!)
+    expect(
+      document.querySelector('[data-answer-verdict]')?.getAttribute('data-verdict-outcome'),
+    ).toBe('correct')
+  })
+
+  it('keeps the DTS image on every Section 10 step before the check', () => {
+    const lesson = imagingStageLesson('dts-acquisition')
+    const checkId = lesson.steps[lesson.predictionStepIndex].id
+    mountSection('dts-acquisition')
+    const seen: { step: string; demonstration: boolean; suiteMode: string | null }[] = []
+    for (let guard = 0; currentStepId() !== checkId; guard++) {
+      if (guard > 40) throw new Error(`Never reached ${checkId}`)
+      seen.push({
+        step: currentStepId()!,
+        demonstration: document.querySelector('[data-lesson-demonstration]') !== null,
+        suiteMode:
+          document.querySelector('[data-suite-scene]')?.getAttribute('data-suite-mode') ?? null,
+      })
+      const primary = nowPrimary()
+      if (primary && !primary.disabled) fireEvent.click(primary)
+      else fireEvent.click(nowSkip()!)
+    }
+    // Every reading step shows its demonstration; the guided and comparison steps show the DTS
+    // suite view, as before.
+    expect(seen.map((entry) => entry.step)).toEqual(
+      lesson.steps.slice(0, lesson.predictionStepIndex).map((entry) => entry.id),
+    )
+    for (const entry of seen) {
+      const step = lesson.steps.find((candidate) => candidate.id === entry.step)!
+      if (step.interaction.kind === 'read') expect(entry.demonstration).toBe(true)
+      else expect(entry.suiteMode).toBe('dts')
+    }
   })
 })

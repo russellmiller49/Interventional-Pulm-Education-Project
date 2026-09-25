@@ -279,7 +279,11 @@ export const INTERPRETATION_CHECKS: Partial<Record<ImagingSectionId, Question>> 
       },
       {
         id: 'b',
-        text: 'Agree a stable, tolerable breath hold or ventilation pause with anesthesia, including who announces readiness and when to stop.',
+        // Independent sanity review of PR #279 (finding F5, 2026-09-24): the key was the only long
+        // option (19 words against 11 and 7), so its length and extra detail cued it. The option
+        // is now as short as the distractors; the readiness and stopping detail it carried is in
+        // the rationale below, which already stated it. Id, key and meaning are unchanged.
+        text: 'Agree a stable, tolerable breath hold or ventilation pause with anesthesia.',
         rationale:
           'Duplicated edges suggest motion. With the table, the C-arm and the tool still, the likely source is breathing or other patient motion during the spin. Plan the breath hold with anesthesia: agree the intended state, who announces readiness and the stopping criteria before it begins. Anesthesia safety governs the breath hold.',
       },

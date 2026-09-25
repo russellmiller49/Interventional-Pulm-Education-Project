@@ -51,9 +51,14 @@ export function ImagingTeachingColumn({
       .flatMap((step) => step.activity.content)
     return (
       <div className={styles.teaching} data-teaching-panel data-check-teaching>
-        <p>
-          Choose the interpretation this image and its acquisition context support. You can show the
-          explanation first, reread the section’s teaching, or continue without answering.
+        {/* A check with no visual is a written scenario (PR #279 sanity review, F3): it must not
+            send the learner to an image that is not there. */}
+        <p data-check-prompt>
+          {activity.visual === 'case'
+            ? 'Choose the interpretation the written scenario supports.'
+            : 'Choose the interpretation this image and its acquisition context support.'}{' '}
+          You can show the explanation first, reread the section’s teaching, or continue without
+          answering.
         </p>
         {earlier.length > 0 ? (
           <details data-teaching-review>

@@ -5,6 +5,11 @@ import { ArtifactCauseStrip } from '../components/figures/ArtifactCauseStrip'
 import { FixedMobileComparison, TeamReadinessAid } from '../components/figures/CbctReferenceAids'
 import { ConspicuityComparison } from '../components/figures/ConspicuityComparison'
 import { TwoAxisWorkedExample } from '../components/figures/TwoAxisWorkedExample'
+import {
+  axialRayLine,
+  targetRayGeometry,
+  TOOL_VIEW_FRAME,
+} from '../components/figures/teachingFigureModel'
 import { SignalComparison, TeachingPanels } from '../components/stage/TeachingPanels'
 import {
   FIXED_MOBILE_COMPARISON,
@@ -21,7 +26,9 @@ import {
 } from '../content/learningActivities'
 import {
   CLINICAL_ANGLE_LABEL,
+  SIGNAL_LATER_DEMONSTRATION_OBLIQUITY,
   teachingFigureDeclarations,
+  TWO_AXIS_EXAMPLE,
   validateTeachingFigures,
 } from '../content/teachingFigures'
 import { fovCylinder, GANTRY_VARIANTS } from '../components/suite/suiteModel'
@@ -174,6 +181,24 @@ describe('OD4-06 · Section 6 compares three causes on the course’s CT', () =>
     expect(figure.textContent).not.toMatch(/\b(LAO|RAO)\b/)
     expect(figure.querySelectorAll('[data-figure-canvas="drawn"]')).toHaveLength(4)
   }, 30_000)
+
+  it('tells its −20° comparison apart from the later −35° demonstration, recommending neither', async () => {
+    // PR #279 sanity review: not a contradiction, but two different changed views in one section.
+    render(<ConspicuityComparison />)
+    await ready('[data-teaching-figure="signal:conspicuity-set"]')
+    const figure = document.querySelector('[data-teaching-figure="signal:conspicuity-set"]')!
+    const [frontal, changed] = (
+      figure.querySelector('[data-ray-readout]')!.textContent!.match(/\d+ mm/g) ?? []
+    ).map((value) => Number.parseInt(value, 10))
+    // The note is conditional on the shortening it describes; the synthetic chest here has it.
+    expect(changed).toBeLessThan(frontal)
+    const note = figure.querySelector('[data-later-example-note]')
+    expect(note).toHaveTextContent(
+      'This −20° comparison shortens the model’s soft-tissue path on the target ray; the later −35° example shows a different pattern, with the overlap redistributed along the ray.',
+    )
+    expect(SIGNAL_LATER_DEMONSTRATION_OBLIQUITY).toBe(-35)
+    expect(note!.textContent).not.toMatch(/best|optimal|ideal|recommend|always|should|choose/i)
+  }, 30_000)
 })
 
 describe('OD4-06 · Section 16 shows truncation as coverage and draws no motion or opacity', () => {
@@ -251,6 +276,63 @@ describe('OD4-08 · the two-axis example uses the model’s signed angles only',
     const printed =
       figure.querySelector('[data-two-axis-reading]')!.textContent!.match(/\d+ mm/g) ?? []
     for (const value of printed) expect(strip.join(' ')).toContain(value)
+  }, 30_000)
+
+  it('draws each beam as the axial projection of the target ray from the tube, and says so (F1)', async () => {
+    render(<TwoAxisWorkedExample />)
+    await ready('[data-teaching-figure="two-dimensional:two-axis-example"]')
+    const figure = document.querySelector(
+      '[data-teaching-figure="two-dimensional:two-axis-example"]',
+    )!
+    for (const obliquity of TWO_AXIS_EXAMPLE.candidates) {
+      // The expected line is computed from the suite's own source → lesion → detector ray.
+      const expected = axialRayLine(obliquity, targetRayGeometry(obliquity, 0))
+      const line = figure.querySelector(`[data-beam-line="${obliquity}"] line`)!
+      const drawn = ['x1', 'y1', 'x2', 'y2'].map((name) => Number(line.getAttribute(name)))
+      drawn.forEach((value, i) =>
+        expect(value).toBeCloseTo([...expected.from, ...expected.to][i], 9),
+      )
+    }
+    const caption = figure.querySelector('[data-figure-panel="axial"] figcaption')!
+    expect(caption).toHaveTextContent(/the target ray whose path lengths the table gives/)
+    expect(caption).toHaveTextContent(/from the X-ray tube’s focal spot/)
+    expect(caption).toHaveTextContent(/drawn as its projection onto this axial image/)
+    expect(caption).toHaveTextContent(/crosses this slice only at the lesion/)
+    expect(caption).not.toHaveTextContent(/central ray/)
+  }, 30_000)
+
+  it('draws both tool views whole, at one scale and one tip position (F4)', async () => {
+    render(<TwoAxisWorkedExample />)
+    await ready('[data-teaching-figure="two-dimensional:two-axis-example"]')
+    const views = [
+      ...document.querySelectorAll('[data-figure-panel="tool-views"] [data-tool-view] svg'),
+    ]
+    expect(views).toHaveLength(2)
+    expect(new Set(views.map((svg) => svg.getAttribute('data-tool-scale'))).size).toBe(1)
+    expect(new Set(views.map((svg) => svg.querySelector('circle')!.getAttribute('cx'))).size).toBe(
+      1,
+    )
+    for (const svg of views) {
+      expect(svg.getAttribute('viewBox')).toBe(
+        `0 0 ${TOOL_VIEW_FRAME.width} ${TOOL_VIEW_FRAME.height}`,
+      )
+      // The longest tool is fitted to the margin exactly, so allow floating-point rounding.
+      const line = svg.querySelector('[data-tool-line]')!
+      const { width, height, marginPx } = TOOL_VIEW_FRAME
+      for (const [name, extent] of [
+        ['x1', width],
+        ['x2', width],
+        ['y1', height],
+        ['y2', height],
+      ] as const) {
+        const value = Number(line.getAttribute(name))
+        expect(value).toBeGreaterThanOrEqual(marginPx - 1e-6)
+        expect(value).toBeLessThanOrEqual(extent - marginPx + 1e-6)
+      }
+    }
+    expect(document.querySelector('[data-figure-panel="tool-views"]')).toHaveTextContent(
+      /Both views are drawn at the same scale, with the tool’s tip at the same place\./,
+    )
   }, 30_000)
 })
 

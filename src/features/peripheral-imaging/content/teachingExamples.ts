@@ -309,7 +309,8 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
  * `fixedExampleValues`, never directly: a fixed example must never fall back to learner state.
  */
 export function independentValues(id: ImagingSectionId, round: 0 | 1): LabValues | null {
-  if (id === 'dts-acquisition') return { sweep: 20, plane: 10 }
+  // Section 10's check was drawn at sweep 20 / plane 10 until PR #279's sanity review (F3): it is
+  // now a written check with no image, so it has no authored image state.
   if (id === 'projection')
     return {
       orbit: round ? 0 : -28,

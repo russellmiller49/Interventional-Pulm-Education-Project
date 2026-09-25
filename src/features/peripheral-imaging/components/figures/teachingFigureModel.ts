@@ -47,9 +47,27 @@ export interface RaySide {
   readonly lung: number
 }
 
+/**
+ * The target ray in the suite's own cone geometry: from the X-ray source (focal spot), through the
+ * lesion's centre, to where it meets the detector. It diverges from the source, so it is not the
+ * parallel beam direction translated through the lesion, and it is not confined to one axial slice.
+ */
+export interface TargetRayGeometry {
+  readonly source: Point3
+  readonly target: Point3
+  readonly hit: Point3
+}
+
+export function targetRayGeometry(obliquity: number, tilt: number): TargetRayGeometry {
+  const ray = rayThrough(suiteFrame(obliquity, tilt), LESION_CENTER)
+  return { source: ray.source, target: LESION_CENTER, hit: ray.hit }
+}
+
 export interface TargetRay {
   readonly obliquity: number
   readonly tilt: number
+  /** The ray these path lengths were measured along; a figure that draws the ray draws this one. */
+  readonly geometry: TargetRayGeometry
   /** From the X-ray tube to the lesion's centre. */
   readonly tubeSide: RaySide
   /** From the lesion's centre to the detector. */
@@ -76,13 +94,16 @@ export function targetRay(
   tilt: number,
   sample: CtSampler = ctSampler(volume),
 ): TargetRay {
-  const ray = rayThrough(suiteFrame(obliquity, tilt), LESION_CENTER)
+  const geometry = targetRayGeometry(obliquity, tilt)
   const sampleHu = (point: Point3) => sample(point[0], point[1], point[2])
-  const tubeSide = side(rayProfile(volume, ray.source, LESION_CENTER, { stepMm: 1, sampleHu }))
-  const detectorSide = side(rayProfile(volume, LESION_CENTER, ray.hit, { stepMm: 1, sampleHu }))
+  const measure = (from: Point3, to: Point3) =>
+    side(rayProfile(volume, from, to, { stepMm: 1, sampleHu }))
+  const tubeSide = measure(geometry.source, geometry.target)
+  const detectorSide = measure(geometry.target, geometry.hit)
   return {
     obliquity,
     tilt,
+    geometry,
     tubeSide,
     detectorSide,
     softTotal: tubeSide.soft + detectorSide.soft,
@@ -126,26 +147,51 @@ export function axialSlicePixels(
   return pixels
 }
 
-/**
- * The central ray's line across the axial plane, from the tube side to the detector side, clipped
- * to the image so the arrow at its detector end stays in view.
- */
-export function axialBeamLine(obliquity: number): {
+export interface AxialRayLine {
+  readonly obliquity: number
+  /** The 3D ray the line is drawn from: the same geometry its path lengths were measured on. */
+  readonly ray: TargetRayGeometry
+  /** Where the source, the lesion's centre and the detector hit fall on the axial image (z dropped). */
+  readonly sourcePx: [number, number]
+  readonly targetPx: [number, number]
+  readonly hitPx: [number, number]
+  /** The stretch drawn: the projected ray clipped to the image, tube end first. */
   readonly from: [number, number]
   readonly to: [number, number]
-} {
-  const direction = beamDirection(obliquity, 0)
-  const at = (t: number) =>
-    axialPixelOf(LESION_CENTER[0] + direction[0] * t, LESION_CENTER[1] + direction[1] * t)
+}
+
+/**
+ * The axial projection of a 3D target ray: its source, the lesion's centre and its detector hit
+ * with z dropped, clipped to the image (a margin keeps the detector-end arrowhead in view). The
+ * source and the hit lie far outside the image, so the drawn stretch is the part that crosses it.
+ * Dropping z is a projection, not a slice: the ray crosses this axial plane only at the lesion.
+ */
+export function axialRayLine(obliquity: number, ray: TargetRayGeometry): AxialRayLine {
+  const sourcePx = axialPixelOf(ray.source[0], ray.source[1])
+  const targetPx = axialPixelOf(ray.target[0], ray.target[1])
+  const hitPx = axialPixelOf(ray.hit[0], ray.hit[1])
+  // Liang–Barsky clip of the projected segment source → hit to the image, less the margin.
   const margin = 3
-  const inside = ([x, y]: [number, number]) =>
-    x >= margin && y >= margin && x <= AXIAL_VIEW.sizePx - margin && y <= AXIAL_VIEW.sizePx - margin
-  const reach = (sign: 1 | -1) => {
-    let t = 0
-    while (t < AXIAL_VIEW.spanMm * 2 && inside(at(sign * (t + 1)))) t += 1
-    return sign * t
+  const [low, high] = [margin, AXIAL_VIEW.sizePx - margin]
+  const d = [hitPx[0] - sourcePx[0], hitPx[1] - sourcePx[1]]
+  let [enter, leave] = [0, 1]
+  for (const axis of [0, 1]) {
+    for (const [p, q] of [
+      [-d[axis], sourcePx[axis] - low],
+      [d[axis], high - sourcePx[axis]],
+    ]) {
+      if (p === 0) {
+        if (q < 0) throw new Error(`The ray at ${obliquity}° does not cross the axial image`)
+        continue
+      }
+      const t = q / p
+      if (p < 0) enter = Math.max(enter, t)
+      else leave = Math.min(leave, t)
+    }
   }
-  return { from: at(reach(-1)), to: at(reach(1)) }
+  if (enter > leave) throw new Error(`The ray at ${obliquity}° does not cross the axial image`)
+  const at = (t: number): [number, number] => [sourcePx[0] + d[0] * t, sourcePx[1] + d[1] * t]
+  return { obliquity, ray, sourcePx, targetPx, hitPx, from: at(enter), to: at(leave) }
 }
 
 /* ------------------------------------------------------------------ *
@@ -218,11 +264,16 @@ export function conspicuityImages(volume: Uint8Array): ConspicuityImages {
  * Section 9 · CT → two-axis worked example (OD4-08)
  * ------------------------------------------------------------------ */
 
+/** The frame both tool views are drawn in, in SVG units. */
+export const TOOL_VIEW_FRAME = { width: 160, height: 120, marginPx: 10 } as const
+
 export interface ToolView {
   readonly obliquity: number
   /** Projected tool length on the detector, as a fraction of its length seen side-on (0–1). */
   readonly profileFraction: number
-  /** Endpoints of the projected tool and the lesion's projected circle, in a 160 × 120 frame. */
+  /** Frame units per detector millimetre: one value shared by every view compared. */
+  readonly scale: number
+  /** Endpoints of the projected tool and the lesion's projected circle, in `TOOL_VIEW_FRAME`. */
   readonly from: [number, number]
   readonly to: [number, number]
   readonly lesion: LesionMark
@@ -231,11 +282,8 @@ export interface ToolView {
 export interface TwoAxisModel {
   readonly axial: Uint8ClampedArray
   readonly lesionAxial: LesionMark
-  readonly lines: readonly {
-    readonly obliquity: number
-    readonly from: [number, number]
-    readonly to: [number, number]
-  }[]
+  /** One per candidate beam, each drawn from the strip row that prints its path lengths. */
+  readonly lines: readonly AxialRayLine[]
   readonly strip: readonly TargetRay[]
   readonly tilts: readonly TargetRay[]
   /** Largest change in the detector-side soft-tissue path across the tilts checked, in mm. */
@@ -260,7 +308,8 @@ function toolEnds(): [Point3, Point3] {
   ]
 }
 
-function toolView(obliquity: number): ToolView {
+/** The modeled tool projected at one obliquity, in detector millimetres, before any drawing. */
+function projectedTool(obliquity: number) {
   const [start, end] = toolEnds()
   const a = projectToDetector(start, obliquity, 0)
   const b = projectToDetector(end, obliquity, 0)
@@ -270,20 +319,54 @@ function toolView(obliquity: number): ToolView {
   // Side-on, the whole tool is perpendicular to the beam: its length times the magnification there.
   const sideOnLength =
     TWO_AXIS_EXAMPLE.toolLengthMm * magnificationAt((depthOf(start) + depthOf(end)) / 2)
-  const scale = 1.1
-  const frame = (point: [number, number]): [number, number] => [
-    80 + (point[0] - b[0]) * scale,
-    60 - (point[1] - b[1]) * scale,
+  const lesionR = LESION_RADIUS * magnificationAt(depthOf(LESION_CENTER))
+  return { obliquity, a, b, profileFraction: Math.min(1, length / sideOnLength), lesionR }
+}
+
+/**
+ * The tool views drawn for comparison, all at one scale and with the tool's tip (the lesion's
+ * projected centre) at one place in the frame, so a shorter line means a more foreshortened tool.
+ * The scale and that shared anchor are chosen once, from every view together, so the longest
+ * projected tool and each lesion circle fit inside the margin. Nothing is fitted per view.
+ */
+export function toolViews(obliquities: readonly number[]): readonly ToolView[] {
+  const tools = obliquities.map(projectedTool)
+  // Extents about the tip, detector millimetres, v up.
+  const extents = tools.flatMap((tool) => [
+    [tool.a[0] - tool.b[0], tool.a[1] - tool.b[1]],
+    [-tool.lesionR, -tool.lesionR],
+    [tool.lesionR, tool.lesionR],
+  ])
+  const [minU, maxU] = [
+    Math.min(...extents.map((e) => e[0])),
+    Math.max(...extents.map((e) => e[0])),
   ]
-  const r = LESION_RADIUS * magnificationAt(depthOf(LESION_CENTER)) * scale
-  const [lx, ly] = frame(b)
-  return {
-    obliquity,
-    profileFraction: Math.min(1, length / sideOnLength),
-    from: frame(a),
-    to: frame(b),
-    lesion: { x: lx, y: ly, r },
-  }
+  const [minV, maxV] = [
+    Math.min(...extents.map((e) => e[1])),
+    Math.max(...extents.map((e) => e[1])),
+  ]
+  const { width, height, marginPx } = TOOL_VIEW_FRAME
+  const scale = Math.min(
+    (width - 2 * marginPx) / (maxU - minU),
+    (height - 2 * marginPx) / (maxV - minV),
+  )
+  // The shared tip position centres the union of every view's extents in the frame.
+  const tipX = width / 2 - ((minU + maxU) / 2) * scale
+  const tipY = height / 2 + ((minV + maxV) / 2) * scale
+  return tools.map((tool) => {
+    const frame = (point: readonly [number, number]): [number, number] => [
+      tipX + (point[0] - tool.b[0]) * scale,
+      tipY - (point[1] - tool.b[1]) * scale,
+    ]
+    return {
+      obliquity: tool.obliquity,
+      profileFraction: tool.profileFraction,
+      scale,
+      from: frame(tool.a),
+      to: frame(tool.b),
+      lesion: { x: tipX, y: tipY, r: tool.lesionR * scale },
+    }
+  })
 }
 
 function approach(
@@ -307,10 +390,17 @@ export function twoAxisModel(volume: Uint8Array): TwoAxisModel {
   const { sizePx, fieldMm } = example.projection
   const before = projectCt(sample, { orbit: 0, tilt: 0, sizePx, fieldMm })
   const after = projectCt(sample, { orbit: example.chosenObliquity, tilt: 0, sizePx, fieldMm })
+  // Each beam line is drawn from the very ray its strip row was measured along.
+  const lines = example.candidates.map((obliquity) => {
+    const printed = strip.find((ray) => ray.obliquity === obliquity)
+    if (!printed) throw new Error(`Candidate beam ${obliquity}° has no row in the strip`)
+    return axialRayLine(obliquity, printed.geometry)
+  })
+  const [alignment, advancement] = toolViews([example.alignmentObliquity, example.chosenObliquity])
   return {
     axial: axialSlicePixels(sample, example.sliceZ),
     lesionAxial: { x: lx, y: ly, r: LESION_RADIUS * axialScale },
-    lines: example.candidates.map((obliquity) => ({ obliquity, ...axialBeamLine(obliquity) })),
+    lines,
     strip,
     tilts,
     tiltRangeMm: Math.max(...detectorSoft) - Math.min(...detectorSoft),
@@ -323,10 +413,7 @@ export function twoAxisModel(volume: Uint8Array): TwoAxisModel {
       approachBefore: approach(before, 0),
       approachAfter: approach(after, example.chosenObliquity),
     },
-    toolViews: {
-      alignment: toolView(example.alignmentObliquity),
-      advancement: toolView(example.chosenObliquity),
-    },
+    toolViews: { alignment, advancement },
   }
 }
 

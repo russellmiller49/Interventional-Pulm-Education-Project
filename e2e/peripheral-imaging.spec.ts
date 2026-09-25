@@ -4,6 +4,12 @@ import { imagingCases } from '../src/features/peripheral-imaging/content/cases'
 import { imagingMicroCasesInPathwayOrder } from '../src/features/peripheral-imaging/content/microCases'
 import { peripheralImagingSectionIds } from '../src/features/peripheral-imaging/content/pathway'
 import { imagingStageLesson } from '../src/features/peripheral-imaging/content/stageLessons'
+import { TWO_AXIS_EXAMPLE } from '../src/features/peripheral-imaging/content/teachingFigures'
+import {
+  axialRayLine,
+  targetRayGeometry,
+  TOOL_VIEW_FRAME,
+} from '../src/features/peripheral-imaging/components/figures/teachingFigureModel'
 import {
   LEGACY_IMAGING_RECORD_KEY_V1,
   LEGACY_IMAGING_RECORD_KEY_V2,
@@ -720,9 +726,11 @@ for (const id of [
       await primary(page).click()
       await controlRange(page, 'sweep', 50)
       await primary(page).click()
-      await expect(page.locator('#peripheral-imaging-control-plane')).toBeEnabled()
-      await expect(page.locator('#peripheral-imaging-control-planeLesion')).toHaveCount(0)
-      await controlRange(page, 'plane', 10)
+      // PR #279 sanity review (F3, CHK-S10): the check is the written scenario its stem is, with no
+      // reconstructed plane beside it, so it offers no plane to browse and no plane readout.
+      await expect(page.locator('[data-prediction-choices]')).toBeVisible()
+      await expect(page.locator('[data-dts-state]')).toHaveCount(0)
+      await expect(page.locator('#peripheral-imaging-control-plane')).toHaveCount(0)
       await expect(page.locator('[data-readout="planeMm"]')).toHaveCount(0)
     }
     if (id === 'cbct-acquisition') {
@@ -2199,10 +2207,11 @@ test('report 4.2 and 4.3: an optional, truthful DTS overlay and projections that
 })
 
 test('report 4.2: a check never offers the overlay that would answer it', async ({ page }) => {
+  // Section 10's check was the one check drawn on a DTS plane. Since PR #279's sanity review (F3)
+  // it is written and draws none, so no DTS view, overlay or mark can reach it.
   await advanceToKind(page, 'dts-acquisition', 'prediction')
-  await expect(page.locator('[data-dts-state]')).toHaveAttribute('data-dts-state', 'ready', {
-    timeout: 90000,
-  })
+  await expect(page.locator('[data-prediction-choices]')).toBeVisible()
+  await expect(page.locator('[data-dts-state]')).toHaveCount(0)
   await expect(page.locator('[data-dts-overlay-toggle]')).toHaveCount(0)
   await expect(page.locator('[data-dts-mark]')).toHaveCount(0)
   await expect(secondary(page)).toHaveText('Show the explanation')
@@ -3008,6 +3017,190 @@ test('prompt 04: the three changed checks ask their new questions, and each stil
     await expect(page.locator('[data-explanation-reveal]')).toBeVisible()
     await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
     await expect(skip(page)).toBeVisible()
+  }
+})
+
+/*
+ * Independent sanity review of PR #279 (2026-09-24): the five merge blockers, each in a real
+ * browser. F1, the Section 9 beams are the rays the table measured; F2, practice 9's key rationale
+ * is bound to its figure; F3, Section 10's check carries no image; F4, both tool views are whole;
+ * F5, QS-4's key is no longer the long option. Plus the readiness aid at 320 px with 200 % text.
+ */
+test('PR #279 repair F1 and F4: Section 9 draws the measured rays and both whole tool views', async ({
+  page,
+}, info) => {
+  const selector = '[data-teaching-figure="two-dimensional:two-axis-example"]'
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+    [320, 740],
+  ] as const) {
+    await page.setViewportSize({ width, height })
+    await openSection(page, 'two-dimensional')
+    await figureReady(page, selector)
+    // F1: each drawn line is the axial projection of the source → lesion → detector ray whose
+    // path lengths the strip prints, computed here from the same model.
+    for (const obliquity of TWO_AXIS_EXAMPLE.candidates) {
+      const expected = axialRayLine(obliquity, targetRayGeometry(obliquity, 0))
+      const drawn = await page
+        .locator(`${selector} [data-beam-line="${obliquity}"] line`)
+        .evaluate((line) => ['x1', 'y1', 'x2', 'y2'].map((name) => Number(line.getAttribute(name))))
+      drawn.forEach((value, i) =>
+        expect(value).toBeCloseTo([...expected.from, ...expected.to][i], 6),
+      )
+    }
+    await expect(page.locator(`${selector} [data-figure-panel="axial"] figcaption`)).toContainText(
+      'drawn as its projection onto this axial image',
+    )
+    // Every angle label stays inside the image (the −20° ray leaves near its right edge).
+    const labelsInside = await page
+      .locator(`${selector} [data-figure-panel="axial"]`)
+      .evaluate((panel) => {
+        const frame = panel.querySelector('[data-figure-canvas]')!.getBoundingClientRect()
+        return [...panel.querySelectorAll('[data-beam-line] text')].map((label) => {
+          const box = label.getBoundingClientRect()
+          return (
+            box.left >= frame.left - 0.5 &&
+            box.right <= frame.right + 0.5 &&
+            box.top >= frame.top - 0.5 &&
+            box.bottom <= frame.bottom + 0.5
+          )
+        })
+      })
+    expect(labelsInside).toEqual([true, true, true])
+    // F4: both tool views share one scale, and each whole tool line lies inside its own frame.
+    const views = page.locator(`${selector} [data-tool-view] svg`)
+    await expect(views).toHaveCount(2)
+    const scales = await views.evaluateAll((svgs) =>
+      svgs.map((svg) => svg.getAttribute('data-tool-scale')),
+    )
+    expect(new Set(scales).size).toBe(1)
+    for (const svg of await views.all()) {
+      await svg.scrollIntoViewIfNeeded()
+      const fit = await svg.evaluate((node) => {
+        const frame = node.getBoundingClientRect()
+        const line = node.querySelector('[data-tool-line]')!.getBoundingClientRect()
+        return {
+          inside:
+            line.left >= frame.left - 0.5 &&
+            line.right <= frame.right + 0.5 &&
+            line.top >= frame.top - 0.5 &&
+            line.bottom <= frame.bottom + 0.5,
+          lineWidth: line.width,
+          frameWidth: frame.width,
+        }
+      })
+      expect(fit.inside).toBe(true)
+      expect(fit.lineWidth).toBeGreaterThan(0)
+    }
+    await expect(views.first()).toHaveAttribute(
+      'viewBox',
+      `0 0 ${TOOL_VIEW_FRAME.width} ${TOOL_VIEW_FRAME.height}`,
+    )
+    await page.locator(`${selector} [data-figure-panel="axial"]`).scrollIntoViewIfNeeded()
+    await page.locator(`${selector} [data-figure-panel="axial"]`).screenshot({
+      path: info.outputPath(`repair-f1-axial-${width}.png`),
+    })
+    await page.locator(`${selector} [data-figure-panel="tool-views"]`).scrollIntoViewIfNeeded()
+    await page.locator(`${selector} [data-figure-panel="tool-views"]`).screenshot({
+      path: info.outputPath(`repair-f4-tool-views-${width}.png`),
+    })
+  }
+})
+
+test('PR #279 repair F2: practice case 9’s key rationale is bound to this teaching case', async ({
+  page,
+}, info) => {
+  await page.goto(`${base()}/en/peripheral-imaging/practice?case=dts-interpretation-practice-1`)
+  const figure = '[data-case-figure="practice:dts-interpretation-practice-1:figure"]'
+  await figureReady(page, figure)
+  await page.locator('[data-prediction-choices] input[value="a"]').check()
+  await page.locator('[data-now-primary]').click()
+  const verdict = page.locator('[data-answer-verdict]')
+  await expect(verdict).toHaveAttribute('data-verdict-outcome', 'correct')
+  const text = await page.locator('[data-practice-case]').innerText()
+  expect(text).toContain(
+    'In this teaching figure, the projection stands for the current acquisition',
+  )
+  expect(text).toContain('in this authored example, the planes were drawn from the planning CT')
+  expect(text).toContain('catheter absence alone is not a universal sign of prior-derived content')
+  expect(text).not.toMatch(/could not be missed|cannot be absent|absence marks/i)
+  await verdict.scrollIntoViewIfNeeded()
+  await capture(page, info, 'repair-f2-practice9-verdict.png')
+})
+
+test('PR #279 repair F3 and F5: Section 10’s check is written, and QS-4’s key is not the long option', async ({
+  page,
+}, info) => {
+  // F3 (CHK-S10).
+  await advanceToKind(page, 'dts-acquisition', 'prediction')
+  await expect(page.locator('[data-prediction-choices] legend')).toHaveText(
+    /structures are elongated in the depth direction/,
+  )
+  await expect(page.locator('[data-authored-example]')).toHaveCount(0)
+  await expect(page.locator('[data-suite-scene]')).toHaveCount(0)
+  await expect(page.locator('[data-dts-state]')).toHaveCount(0)
+  await expect(page.locator('[data-now-card]')).toContainText('Read the scenario.')
+  await expect(page.locator('[data-now-card]')).not.toContainText(/inspect the image/i)
+  await expect(page.locator('[data-check-teaching] [data-check-prompt]')).toHaveText(
+    /^Choose the interpretation the written scenario supports\./,
+  )
+  await secondary(page).click()
+  await expect(page.locator('[data-explanation-reveal]')).toBeVisible()
+  await expect(skip(page)).toBeVisible()
+  await page.locator('[data-current-task]').scrollIntoViewIfNeeded()
+  await capture(page, info, 'repair-f3-section10-check.png')
+
+  // F5 (QS-4).
+  await advanceToKind(page, 'changing-anatomy', 'prediction')
+  const labels = await page.locator('[data-prediction-choices] label').allInnerTexts()
+  expect(labels.map((label) => label.trim())).toEqual([
+    'Select a higher-dose protocol so the edges come out better defined.',
+    'Agree a stable, tolerable breath hold or ventilation pause with anesthesia.',
+    'Turn on metal-artifact reduction for the catheter.',
+  ])
+  await secondary(page).click()
+  const explanation = page.locator('[data-explanation-reveal]')
+  await expect(explanation).toContainText('who announces readiness')
+  await expect(explanation).toContainText('stopping criteria before it begins')
+  await expect(explanation).toContainText('Anesthesia safety governs the breath hold')
+  await page.locator('[data-current-task]').scrollIntoViewIfNeeded()
+  await capture(page, info, 'repair-f5-qs4.png')
+})
+
+test('PR #279 repair: the readiness aid reads at 320 px with 200 % text, and is unchanged when wide', async ({
+  page,
+}, info) => {
+  for (const [width, height, root, narrow] of [
+    [1440, 900, 100, false],
+    [390, 844, 100, false],
+    [320, 740, 200, true],
+  ] as const) {
+    await page.setViewportSize({ width, height })
+    await openSection(page, 'cbct-acquisition')
+    await enlargeRootText(page, root)
+    await expect(primary(page)).toBeEnabled({ timeout: 60000 })
+    await primary(page).click()
+    const aid = page.locator('[data-team-readiness]')
+    await aid.scrollIntoViewIfNeeded()
+    const seen = await aid.evaluate((node) => ({
+      rowIndent: getComputedStyle(node.querySelector('ul ul')!).paddingLeft,
+      statusEnd: getComputedStyle(node.querySelector('[data-readiness-status]')!).paddingRight,
+      overflow: node.scrollWidth > node.clientWidth + 1,
+      rows: node.querySelectorAll('[data-readiness-row]').length,
+    }))
+    expect(seen.overflow).toBe(false)
+    expect(seen.rows).toBe(11)
+    if (narrow) {
+      // The rows start at the figure's edge, and the status line gives up its trailing inset.
+      expect(seen.rowIndent).toBe('0px')
+      expect(seen.statusEnd).toBe('0px')
+    } else {
+      expect(seen.rowIndent).not.toBe('0px')
+      expect(seen.statusEnd).not.toBe('0px')
+    }
+    expect(await fitsViewport(page, '[data-team-readiness]')).toBe(true)
+    await aid.screenshot({ path: info.outputPath(`repair-readiness-${width}-${root}.png`) })
   }
 })
 

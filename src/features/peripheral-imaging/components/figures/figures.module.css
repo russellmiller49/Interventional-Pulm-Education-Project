@@ -285,6 +285,24 @@
   color: var(--stage-muted, var(--muted, #a9bec3));
 }
 
+/* The team-readiness aid in a very narrow figure: under 16rem, which (the query being in rem) is
+   enlarged text on a narrow screen, or a 320 px phone; a 390 px phone at normal text keeps the
+   indent. PR #279's sanity review found its words broken every few letters at 320 px with 200 %
+   text: the rows lost a further 1.1rem (35 px there) to the list indent, and the status line the
+   same again to its box's inline padding. The rows now start at the figure's edge, and the status
+   line keeps its amber edge with a slimmer inset. Measured there: row text 127 → 162 px wide,
+   words broken mid-word 27 → 6 times, the status line 31 → 25 lines. (`hyphens: auto` was tried
+   and made it worse, without a hyphenation dictionary.) No width is fixed and no content changes. */
+@container (max-width: 16rem) {
+  .readiness .roleList ul {
+    padding-left: 0;
+    list-style-position: inside;
+  }
+  .readiness .modelLabel {
+    padding-inline: 0.3rem 0;
+  }
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;

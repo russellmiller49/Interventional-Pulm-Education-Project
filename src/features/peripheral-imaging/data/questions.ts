@@ -934,6 +934,12 @@ export const QUESTIONS: Question[] = [
   // c's rationale said "the airway around it"; the modeled catheter runs through lung-density CT
   // with no airway on the planes (OD4-04 rule 3: case text matches the model), so it now says
   // "the anatomy around it". The argument is unchanged.
+  //
+  // Independent sanity review of PR #279 (finding F2, 2026-09-24): the key's rationale and the
+  // takeaway turned this authored model into a rule for every real pipeline ("could not be missed",
+  // "cannot be absent", "its absence marks prior-derived content"). They now say what this figure
+  // establishes and bind the inference to it, and say that catheter absence alone is not a
+  // universal sign. Choices, key and decision are unchanged.
   item(
     'dts-interpretation-practice-1',
     'dts',
@@ -942,7 +948,7 @@ export const QUESTIONS: Question[] = [
     [
       [
         'The lesion margin on these planes comes from another acquisition, since the catheter is absent from them.',
-        'Each DTS plane is built from X-ray paths that crossed whatever lay in the field during the acquisition, and a catheter that live fluoroscopy shows this clearly could not be missed. Its absence means these pixels were not acquired while the catheter was there: the margin was supplied by another acquisition, such as the planning CT, and describes the lesion as it was then.',
+        'In this teaching figure, the projection stands for the current acquisition and deliberately contains the modeled catheter, while the three planes match the planning CT and contain no catheter. In this model, planes reconstructed from the current acquisition would carry that catheter, at least blurred on the planes near its depth. So, in this authored example, the planes were drawn from the planning CT, and their margin describes the lesion as it was when that CT was acquired. The inference rests on what this figure shows: catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system.',
       ],
       [
         'The catheter is too thin to appear on these planes, so the lesion margin comes from this DTS acquisition.',
@@ -953,7 +959,7 @@ export const QUESTIONS: Question[] = [
         'Registration drift does occur, but a shift moves the catheter and the anatomy around it together, because one set of projections drew both. The planes that show that anatomy would show the catheter, and waiting for a refreshed registration cannot add a catheter those planes never contained.',
       ],
     ],
-    'A catheter present throughout a DTS acquisition cannot be absent from planes built from that acquisition. Its absence marks prior-derived content: the margin describes the lesion when the prior was acquired. Finding the catheter elsewhere in the volume would show only that some of the display was acquired now, because a reconstruction can carry a live catheter over a contour from an older scan.',
+    'Before reading a margin from a displayed plane, identify whether it was reconstructed from the current acquisition or drawn from an earlier study. In this teaching case, the current acquisition contains the catheter and the prior-derived planes match the planning CT without it, so here the missing catheter identifies those planes. Outside this case, catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system. Finding the catheter elsewhere in the volume would show only that some of the display was acquired now, because a reconstruction can carry a live catheter over a contour from an older scan.',
     ['saad', 'pritchett'],
   ),
   item(

@@ -4,16 +4,24 @@ import sharp from 'sharp'
 
 import metadata from '../../../../public/peripheral-imaging/anatomy/manifest.json'
 import { SAMPLING_CASE_FIGURE, samplingCaseReadouts } from '../content/caseFigures'
-import { CONSPICUITY_SET, TRUNCATION_EXAMPLE, TWO_AXIS_EXAMPLE } from '../content/teachingFigures'
+import {
+  CONSPICUITY_SET,
+  SIGNAL_LATER_DEMONSTRATION_OBLIQUITY,
+  TRUNCATION_EXAMPLE,
+  TWO_AXIS_EXAMPLE,
+} from '../content/teachingFigures'
 import {
   dtsAbsenceImages,
   dtsModelProjection,
   modeledCatheterFraction,
 } from '../components/figures/DtsAbsenceFigure'
 import {
+  AXIAL_VIEW,
   axialPixelOf,
   conspicuityImages,
   targetRay,
+  TOOL_VIEW_FRAME,
+  toolViews,
   truncationModel,
   twoAxisModel,
 } from '../components/figures/teachingFigureModel'
@@ -21,7 +29,7 @@ import { DTS_PLANE, priorPlanePoint } from '../components/suite/dtsModel'
 import { rayThrough, suiteFrame } from '../components/suite/suiteModel'
 import { sampleAnatomy } from '../lib/anatomy'
 import { ctSampler, projectCt, projectionPixelOf, projectionPixels } from '../lib/ctProjection'
-import { LESION_CENTER, LESION_RADIUS, windowRelationship } from '../lib/physics'
+import { beamDirection, LESION_CENTER, LESION_RADIUS, windowRelationship } from '../lib/physics'
 import { rayProfile } from '../lib/rayProfile'
 
 /*
@@ -121,8 +129,143 @@ describe('OD4-08 · the two-axis worked example reads the model, not a rule', ()
       // Positive obliquity: detector toward the patient's right, which is the image's left.
       if (line.obliquity > 0) expect(tx).toBeLessThan(lx)
       if (line.obliquity < 0) expect(tx).toBeGreaterThan(lx)
-      if (line.obliquity === 0) expect(Math.abs(tx - lx)).toBeLessThan(1)
+      // Frontally the ray still leans toward the patient's left (image right): it diverges from a
+      // source under the isocentre to a lesion left of it. PR #279's sanity review (F1) found the
+      // figure drawing this line vertical, which is the beam direction, not the ray it measured.
+      if (line.obliquity === 0) expect(tx).toBeGreaterThan(lx + 1)
     }
+  })
+
+  it('draws each beam as the axial projection of the exact ray its path lengths were measured on (F1)', () => {
+    const model = twoAxisModel(volume)
+    const sample = ctSampler(volume)
+    const sampleHu = (point: readonly number[]) => sample(point[0], point[1], point[2])
+    const measure = (from: readonly number[], to: readonly number[]) =>
+      Math.round(
+        rayProfile(volume, from as [number, number, number], to as [number, number, number], {
+          stepMm: 1,
+          sampleHu,
+        }).tissueMm.soft,
+      )
+    const cross = (
+      [ax, ay]: readonly number[],
+      [bx, by]: readonly number[],
+      [cx, cy]: readonly number[],
+    ) => Math.abs((bx - ax) * (cy - ay) - (by - ay) * (cx - ax)) / Math.hypot(bx - ax, by - ay)
+    expect(model.lines.map((line) => line.obliquity)).toEqual([...TWO_AXIS_EXAMPLE.candidates])
+    for (const line of model.lines) {
+      const printed = model.strip.find((ray) => ray.obliquity === line.obliquity)!
+      // One geometry: the line is drawn from the very object the strip row was measured along.
+      expect(line.ray).toBe(printed.geometry)
+
+      // That object is the suite's actual source → lesion → detector ray, not a parallel beam.
+      const frame = suiteFrame(line.obliquity, 0)
+      const actual = rayThrough(frame, LESION_CENTER)
+      expect(line.ray.source).toEqual(frame.source)
+      expect(line.ray.target).toEqual(LESION_CENTER)
+      expect(line.ray.hit).toEqual(actual.hit)
+
+      // Measuring along it again gives exactly the numbers the strip prints.
+      expect(measure(line.ray.source, line.ray.target)).toBe(printed.tubeSide.soft)
+      expect(measure(line.ray.target, line.ray.hit)).toBe(printed.detectorSide.soft)
+
+      // The ray is three-dimensional: it leaves the source at the isocentre's height and reaches
+      // the lesion 30 mm lower, so it lies in no single axial slice. The figure draws its
+      // projection (z dropped), which is what these pixel positions are.
+      expect(line.ray.source[2]).not.toBeCloseTo(line.ray.target[2], 0)
+      expect(line.sourcePx).toEqual(axialPixelOf(line.ray.source[0], line.ray.source[1]))
+      expect(line.targetPx).toEqual(axialPixelOf(LESION_CENTER[0], LESION_CENTER[1]))
+      expect(line.hitPx).toEqual(axialPixelOf(line.ray.hit[0], line.ray.hit[1]))
+
+      // Source, lesion, hit and both drawn endpoints are collinear on the image.
+      for (const point of [line.targetPx, line.from, line.to])
+        expect(cross(line.sourcePx, line.hitPx, point)).toBeLessThan(1e-6)
+      // In order along the ray: source, tube end, lesion, detector end, hit.
+      const along = (point: readonly number[]) =>
+        ((point[0] - line.sourcePx[0]) * (line.hitPx[0] - line.sourcePx[0]) +
+          (point[1] - line.sourcePx[1]) * (line.hitPx[1] - line.sourcePx[1])) /
+        Math.hypot(line.hitPx[0] - line.sourcePx[0], line.hitPx[1] - line.sourcePx[1]) ** 2
+      const order = [line.sourcePx, line.from, line.targetPx, line.to, line.hitPx].map(along)
+      expect([...order].sort((a, b) => a - b)).toEqual(order)
+      // The source and the hit lie off the image; the drawn ends are its edges, less the margin.
+      for (const off of [line.sourcePx, line.hitPx])
+        expect(off.some((value) => value < 0 || value > AXIAL_VIEW.sizePx)).toBe(true)
+      for (const end of [line.from, line.to])
+        for (const value of end) {
+          expect(value).toBeGreaterThanOrEqual(3 - 1e-9)
+          expect(value).toBeLessThanOrEqual(AXIAL_VIEW.sizePx - 3 + 1e-9)
+        }
+
+      // Its angle on the image differs from the parallel beam's by a few degrees (the caption's
+      // claim), because the rays diverge from the source and the lesion is off the isocentre.
+      const beam = beamDirection(line.obliquity, 0)
+      const drawn = [line.to[0] - line.from[0], -(line.to[1] - line.from[1])]
+      const degrees =
+        (Math.acos(
+          (drawn[0] * beam[0] + drawn[1] * beam[1]) /
+            (Math.hypot(drawn[0], drawn[1]) * Math.hypot(beam[0], beam[1])),
+        ) *
+          180) /
+        Math.PI
+      expect(degrees).toBeGreaterThan(3)
+      expect(degrees).toBeLessThan(10)
+    }
+    // Frontally the reviewer measured about 6.9° between the parallel beam and the true ray.
+    const frontal = model.lines.find((line) => line.obliquity === 0)!
+    const lean =
+      (Math.atan2(frontal.to[0] - frontal.from[0], frontal.from[1] - frontal.to[1]) * 180) / Math.PI
+    expect(lean).toBeCloseTo((Math.atan2(85, 700) * 180) / Math.PI, 1)
+  })
+
+  it('fits both tool views in their frame at one shared scale and anchor (F4)', () => {
+    const { alignment, advancement } = twoAxisModel(volume).toolViews
+    // One scale and one tip position for both views, so their lengths compare directly.
+    expect(alignment.scale).toBe(advancement.scale)
+    expect([alignment.lesion.x, alignment.lesion.y]).toEqual([
+      advancement.lesion.x,
+      advancement.lesion.y,
+    ])
+    // The same views computed on their own agree: nothing depends on the CT or on the caller.
+    expect(
+      toolViews([TWO_AXIS_EXAMPLE.alignmentObliquity, TWO_AXIS_EXAMPLE.chosenObliquity]),
+    ).toEqual([alignment, advancement])
+    const { width, height, marginPx } = TOOL_VIEW_FRAME
+    for (const view of [alignment, advancement]) {
+      // Every projected tool endpoint and each lesion circle lie inside the frame's margin: no
+      // part of either tool is clipped (the side-on tool used to start about 30 units off-frame).
+      for (const [x, y] of [view.from, view.to]) {
+        expect(x).toBeGreaterThanOrEqual(marginPx - 1e-9)
+        expect(x).toBeLessThanOrEqual(width - marginPx + 1e-9)
+        expect(y).toBeGreaterThanOrEqual(marginPx - 1e-9)
+        expect(y).toBeLessThanOrEqual(height - marginPx + 1e-9)
+      }
+      expect(view.lesion.x - view.lesion.r).toBeGreaterThanOrEqual(marginPx - 1e-9)
+      expect(view.lesion.x + view.lesion.r).toBeLessThanOrEqual(width - marginPx + 1e-9)
+      expect(view.lesion.y - view.lesion.r).toBeGreaterThanOrEqual(marginPx - 1e-9)
+      expect(view.lesion.y + view.lesion.r).toBeLessThanOrEqual(height - marginPx + 1e-9)
+    }
+    // The drawn lengths keep the model's ratio: presentation only, no geometry change.
+    const drawnLength = (view: typeof alignment) =>
+      Math.hypot(view.to[0] - view.from[0], view.to[1] - view.from[1])
+    const alignmentFrame = suiteFrame(TWO_AXIS_EXAMPLE.alignmentObliquity, 0)
+    const advancementFrame = suiteFrame(TWO_AXIS_EXAMPLE.chosenObliquity, 0)
+    const start: [number, number, number] = [
+      LESION_CENTER[0] - TWO_AXIS_EXAMPLE.toolLengthMm,
+      LESION_CENTER[1],
+      LESION_CENTER[2],
+    ]
+    const detectorLength = (frame: typeof alignmentFrame) => {
+      const [a, b] = [rayThrough(frame, start).uv, rayThrough(frame, LESION_CENTER).uv]
+      return Math.hypot(a[0] - b[0], a[1] - b[1])
+    }
+    expect(drawnLength(alignment) / drawnLength(advancement)).toBeCloseTo(
+      detectorLength(alignmentFrame) / detectorLength(advancementFrame),
+      9,
+    )
+    expect(drawnLength(advancement)).toBeCloseTo(
+      detectorLength(advancementFrame) * advancement.scale,
+      9,
+    )
   })
 
   it('shows the modeled tool nearly in profile at the chosen view and foreshortened near its axis', () => {
@@ -138,6 +281,20 @@ describe('OD4-06 · Section 6 compares on the real CT, and says what is simulate
     const images = conspicuityImages(volume)
     expect(images.rays.changed.obliquity).toBe(CONSPICUITY_SET.changedView.orbit)
     expect(images.rays.changed.softTotal).toBeLessThan(images.rays.reference.softTotal)
+  })
+
+  it('the later demonstration’s angle redistributes the overlap rather than shortening it, as the note says', () => {
+    // PR #279 sanity review: the conspicuity set's −20° and the section's later −35°
+    // demonstration are different examples, not a contradiction. The note under the set says so;
+    // this holds its second half to the CT.
+    expect(SIGNAL_LATER_DEMONSTRATION_OBLIQUITY).toBe(-35)
+    const frontal = targetRay(volume, 0, 0)
+    const later = targetRay(volume, SIGNAL_LATER_DEMONSTRATION_OBLIQUITY, 0)
+    // The detector-side stretch falls and the tube-side stretch grows, by tens of millimetres...
+    expect(later.detectorSide.soft).toBeLessThan(frontal.detectorSide.soft - 30)
+    expect(later.tubeSide.soft).toBeGreaterThan(frontal.tubeSide.soft + 30)
+    // ...while the whole ray crosses about as much as it did frontally.
+    expect(Math.abs(later.softTotal - frontal.softTotal)).toBeLessThanOrEqual(10)
   })
 
   it('draws the reference, noise and superimposition frames collimated, and the scatter frame open', () => {
