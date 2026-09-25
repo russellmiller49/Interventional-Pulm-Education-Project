@@ -4,6 +4,7 @@ import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
 
 import type { BronchSequence } from '../../content/types'
 import styles from './bronch-stage.module.css'
+import { MATCHED_WORDS, UNMATCHED_WORDS } from './verdictWords'
 
 /** The order a sequence is first shown in: rotated by its id, never the authored order. */
 export function initialSequenceOrder(sequence: BronchSequence): readonly string[] {
@@ -12,7 +13,8 @@ export function initialSequenceOrder(sequence: BronchSequence): readonly string[
 
 /**
  * Putting steps in order: moved up and down one at a time, checked as one order and read step by
- * step. A misplaced step the section marks critical is named as a safety error. The learner may
+ * step. A misplaced step says where the worked order puts it, and one the section marks critical is
+ * named as a safety error. The learner may
  * open the worked order without arranging anything (`revealed`); that records nothing.
  */
 export function BronchSequenceControl({
@@ -65,7 +67,10 @@ export function BronchSequenceControl({
                 {committed ? (
                   <span className={styles.verdict} data-sequence-verdict={outcome}>
                     {' '}
-                    — {held ? 'Held.' : 'Did not hold.'}
+                    — {held ? MATCHED_WORDS : UNMATCHED_WORDS}
+                    {held
+                      ? ''
+                      : ` In the worked order this is step ${(authoredIndex.get(stepId) ?? 0) + 1}.`}
                     {!held && critical.has(stepId)
                       ? ' Misplacing this step is a safety error.'
                       : ''}{' '}

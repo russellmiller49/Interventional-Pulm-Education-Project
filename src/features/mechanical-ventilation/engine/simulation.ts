@@ -13,6 +13,7 @@ import {
   measurementConditionsFingerprint,
 } from './measurementConditions'
 import {
+  ardsLungStateForPeep,
   cardiogenicFlowOscillationLps,
   clamp,
   effectiveBaselinePressureCmH2O,
@@ -31,21 +32,27 @@ import {
   moveTowardExp,
   observedEndExpiratoryVolumeMl,
   passiveExpiratoryFlowLps,
+  phFromBicarbonateAndPaCO2,
+  positiveModulo,
   round,
   secretionFlowDisturbanceLps,
+  spo2FromPaO2,
   targetTidalVolumeMl,
   unmodeledIntrinsicPeepCmH2O,
   usesPressureTargetedDelivery,
+  WAVEFORM_SAMPLE_HZ,
   WAVEFORM_STEP_SECONDS,
 } from './physics'
 import type {
   AlarmEvent,
+  BreathClock,
   CaseOutcome,
   MechanicalVentilationSettings,
   InterventionDefinition,
   LearningExperience,
   PatientModelState,
   PerformedHoldRecord,
+  PhysiologyReference,
   RiskState,
   VentilationCaseDefinition,
   VentilationSimulationState,
@@ -73,6 +80,7 @@ const emptyMeasurements: VentilatorMeasurements = {
   plateauIsInterpretable: true,
   meanAirwayPressureCmH2O: 0,
   exhaledVtMl: 0,
+  exhaledVtSource: 'predicted',
   minuteVentilationLMin: 0,
   totalRatePerMin: 0,
   observedPatientRatePerMin: 0,
@@ -179,6 +187,7 @@ function baseState(
       holdType: null,
       holdUntil: null,
       manualBreathUntil: null,
+      breathClock: { periodSeconds: null, anchorSeconds: 0, nextOnsetSeconds: null },
     },
     patient,
     measurements: emptyMeasurements,
@@ -200,12 +209,73 @@ function baseState(
     lastResponse: null,
     lastAbgAt: null,
     holdRecords: [],
-    arterialGasSamples: [baselineArterialGasSample(definition.id, patient.gasExchange)],
+    arterialGasSamples: [
+      baselineArterialGasSample(
+        definition.id,
+        patient.gasExchange,
+        definition.initialGasProvenance,
+      ),
+    ],
+    // Provisional: replaced with the case-open values once the mechanical history is prepared.
+    physiologyReference: undefined as unknown as PhysiologyReference,
     teachingMechanics: { complianceScale: 1, resistanceScale: 1 },
   }
-  return { ...state, measurements: deriveMeasurements(state, definition, patient) }
+  const measurements = deriveMeasurements(state, definition, patient)
+  const provisional = { ...state, measurements }
+  return {
+    ...provisional,
+    physiologyReference: capturePhysiologyReference(provisional, definition),
+  }
 }
 
+/**
+ * How much mechanical history a case opens with.
+ *
+ * The buffer keeps the last `WAVEFORM_WINDOW_SECONDS` of it — one display window — which is long
+ * enough that every live case has a completed inflation, with its onset, on screen before the
+ * learner sees anything (the slowest, MV-05 and MV-12, cycle every 7.5 s). Four seconds was not:
+ * those two opened on the analytic prediction — "VTE 1400" and "VTE 1021" — rather than on a
+ * breath. The second half of the minute is used to average the delivered minute ventilation the
+ * CO₂ anchor divides by, because some cases' breaths vary on a longer cycle than one window
+ * (MV-07's efforts and machine breaths beat on a cycle of about half a minute).
+ */
+export const PREPARED_HISTORY_SECONDS = 60
+
+/**
+ * A sample from the mechanical history prepared before the case opened.
+ *
+ * These are the patient's own breaths on the case's own settings — the ventilator was running
+ * before the learner arrived — but nobody in this run observed them, and no action of the learner's
+ * is in them. They sit at negative time so every consumer can tell.
+ */
+export function isPreparedHistorySample(sample: WaveformSample): boolean {
+  return sample.time <= 0
+}
+
+/**
+ * A case, opened.
+ *
+ * Three distinct things happen here, and only the first one is allowed to run the model:
+ *
+ * 1. **Prepared mechanical history.** The ventilator runs the case's own settings on the case's own
+ *    lung for `PREPARED_HISTORY_SECONDS`, *ending* at time zero, so the waveform buffer, the trapped
+ *    volume and every trace-derived measurement describe a patient who was already being ventilated.
+ *    It runs at negative time and is never rewound: the breath clock, the neural effort and the
+ *    circuit ripples are one continuous schedule through the moment the case opens. It used to
+ *    run four seconds from zero and then shift the samples back, and because every periodic signal
+ *    is a function of absolute time, the breath schedule restarted at zero — cutting the prepared
+ *    expiration short in thirteen of fourteen live cases (MV-10's to 0.02 s, MV-13's to 0.54 of
+ *    2.55 s) and starting the first breath of the case on a lung that had not finished emptying.
+ * 2. **The presentation.** Everything slow — gas, saturation, circulation, comfort — is the case's
+ *    authored presentation, restored after the history is prepared. Nothing the model computed
+ *    during those seconds is kept: no drift, no risk, no trend, no alarm history, no action.
+ * 3. **The case-open epoch.** Alarms are evaluated on the patient the learner is shown, at time
+ *    zero. They used to be the ones the priming run had raised at its own end, stamped four seconds
+ *    into a case that had not started.
+ *
+ * Changing the display device re-opens the case the same way (`CHANGE_DEVICE`), and restarting
+ * opens a new epoch; neither carries a measurement, hold, specimen or trend across.
+ */
 export function createInitialSimulationState(
   caseId = DEFAULT_CASE_ID,
   experience: LearningExperience = 'learn',
@@ -214,17 +284,86 @@ export function createInitialSimulationState(
 ): VentilationSimulationState {
   const definition = resolveVentilationSimulationCase(caseId)
   const initial = baseState(definition, experience, attempt, deviceId)
-  const primed = advanceSimulation({ ...initial, paused: false }, 4, definition)
-  return {
-    ...primed,
+  /*
+   * Stepped the way 1× playback steps (0.1 s per call), so the delivered minute ventilation can be
+   * read after every call. The reported value is the last completed breath times the rate, and it
+   * varies breath to breath wherever breaths differ — MV-07 between 1.7 and 2.4 L/min, MV-09
+   * between 3.2 and 3.7 — so a single instant is the wrong anchor: whichever breath happened to be
+   * last would set the CO₂ equilibrium. The anchor is the harmonic mean across the prepared history,
+   * which is the minute ventilation at which `PaCO₂ ∝ 1/VE` averages back to the authored PaCO₂.
+   * The last 12 s of it survive in the waveform buffer; the rest is only used for this mean.
+   */
+  const chunk = 0.1
+  const chunks = Math.round(PREPARED_HISTORY_SECONDS / chunk)
+  let prepared: VentilationSimulationState = {
+    ...initial,
+    simulationTime: -PREPARED_HISTORY_SECONDS,
+    paused: false,
+  }
+  let inverseMinuteVentilationSum = 0
+  let tracedChunks = 0
+  for (let index = 0; index < chunks; index += 1) {
+    prepared = advanceSimulation(prepared, chunk, definition)
+    // Only once a breath has actually been completed — before that the reported value is the
+    // analytic prediction (11.8 L/min on MV-05, against 2 L/min delivered) — and only over the
+    // second half, after trapped volume has built to where the case will hold it.
+    if (index >= chunks / 2 && prepared.measurements.exhaledVtSource === 'trace') {
+      inverseMinuteVentilationSum += 1 / Math.max(0.8, prepared.measurements.minuteVentilationLMin)
+      tracedChunks += 1
+    }
+  }
+  const preparedMinuteVentilationLMin =
+    tracedChunks > 0
+      ? tracedChunks / inverseMinuteVentilationSum
+      : Math.max(0.8, prepared.measurements.minuteVentilationLMin)
+  const presented: VentilationSimulationState = {
+    ...prepared,
     simulationTime: 0,
+    // On the 50 Hz grid: sixty seconds of accumulated steps can land the last sample a rounding
+    // error either side of zero, and every prepared sample must read as negative-time history.
+    waveforms: prepared.waveforms.map((sample) => ({
+      ...sample,
+      time: Math.round(sample.time * WAVEFORM_SAMPLE_HZ) / WAVEFORM_SAMPLE_HZ,
+    })),
     paused: true,
-    patient: { ...initial.patient, mechanics: { ...primed.patient.mechanics } },
+    patient: { ...initial.patient, mechanics: { ...prepared.patient.mechanics } },
     trends: [],
     risk: { ...emptyRisk },
     criticalErrors: [],
-    waveforms: primed.waveforms.map((sample) => ({ ...sample, time: sample.time - 4 })),
+    alarms: [],
+    alarmHistory: [],
+    holdRecords: [],
+    interventions: [],
+    lastResponse: null,
+    // The breath timer runs straight through the moment the case opens; nothing else does.
+    ventilator: { ...initial.ventilator, breathClock: prepared.ventilator.breathClock },
   }
+  const opened = {
+    ...presented,
+    measurements: deriveMeasurements(presented, definition),
+  }
+  const withReference = {
+    ...opened,
+    physiologyReference: {
+      ...capturePhysiologyReference(opened, definition),
+      minuteVentilationLMin: preparedMinuteVentilationLMin,
+    },
+  }
+  return { ...withReference, ...reconcileAlarms(withReference, definition) }
+}
+
+/**
+ * Re-open the alarm epoch on a state whose clock has just been set back to zero by a caller that
+ * prepares its own history (the Learn lab's warm-up). The alarms themselves are re-evaluated on the
+ * patient being shown; nothing about the patient changes.
+ */
+export function reopenAlarmEpoch(
+  state: VentilationSimulationState,
+  suppliedDefinition?: VentilationCaseDefinition,
+): VentilationSimulationState {
+  const definition = suppliedDefinition ?? resolveVentilationSimulationCase(state.caseId)
+  const cleared = { ...state, alarms: [], alarmHistory: [] }
+  return { ...cleared, ...reconcileAlarms(cleared, definition) }
 }
 
 function flowProfile(
@@ -246,9 +385,10 @@ function effortAt(
   patient: PatientModelState,
   measurements: VentilatorMeasurements,
   time: number,
+  machine: { readonly phase: number; readonly period: number },
 ): number {
   const neuralPeriod = 60 / Math.max(1, patient.drive.neuralRatePerMin)
-  let phase = time % neuralPeriod
+  let phase = positiveModulo(time, neuralPeriod)
   /*
    * Entrainment is the whole phenotype, and breaking it is the whole treatment — so it has to be
    * conditional on the case still being unresolved. It used to break by accident: `effortAt` and
@@ -266,12 +406,12 @@ function effortAt(
      * patient's own rate then keeps the machine running faster than the setting. Third instance of
      * the same two-clocks defect (§1.3 item 9, §1.6).
      */
-    const machinePeriod = 60 / Math.max(1, measurements.totalRatePerMin)
-    phase =
-      ((time % machinePeriod) -
-        (patient.drive.reverseTriggerDelaySeconds ?? 0.35) +
-        machinePeriod) %
-      machinePeriod
+    // The machine's own timer (`BreathClock`), so a rate change moves the effort with the breath
+    // rather than letting the two jump to different phases.
+    phase = positiveModulo(
+      machine.phase - (patient.drive.reverseTriggerDelaySeconds ?? 0.35),
+      machine.period,
+    )
   }
   if (definition.phenotype === 'autotriggering' && state.measurements.autotriggerFraction > 0.2) {
     return 0
@@ -281,28 +421,198 @@ function effortAt(
   return patient.drive.effortAmplitudeCmH2O * Math.sin(Math.PI * normalized)
 }
 
+/** How long the machine inspires within a cycle — the part a period change must not cut into. */
+function machineInspiratorySeconds(
+  state: VentilationSimulationState,
+  definition: VentilationCaseDefinition,
+  measurements: VentilatorMeasurements,
+): number {
+  if (isTwoLevelMode(state.ventilator.settings.deviceMode)) {
+    return state.ventilator.settings.advanced.tHighSeconds
+  }
+  const ti = measurements.mechanicalInspiratoryTimeSeconds
+  // The double-trigger phenotype delivers a second inflation after a 0.12 s gap in the same cycle.
+  return definition.phenotype === 'double-triggering' ? 2 * ti + 0.12 : ti
+}
+
+/** The length of one machine cycle at this instant — what the breath timer counts. */
+function machineCyclePeriodSeconds(
+  state: VentilationSimulationState,
+  definition: VentilationCaseDefinition,
+  patient: PatientModelState,
+  measurements: VentilatorMeasurements,
+): number {
+  const settings = state.ventilator.settings
+  if (isTwoLevelMode(settings.deviceMode)) {
+    return Math.max(0.3, settings.advanced.tHighSeconds + settings.advanced.tLowSeconds)
+  }
+  const rate =
+    definition.phenotype === 'double-triggering'
+      ? patient.drive.neuralRatePerMin
+      : Math.max(1, measurements.totalRatePerMin)
+  return 60 / rate
+}
+
+/**
+ * Float slack on "has the clock reached the onset it is holding". Sixty seconds of 0.02 s steps
+ * accumulate rounding of order 1e-12 s; this is that, not a physiological interval.
+ */
+const BREATH_ONSET_TOLERANCE_SECONDS = 1e-9
+
+/** Whether two cycle lengths are the same schedule (both are `60 / rate` or `tHigh + tLow`). */
+function sameCycleLength(a: number, b: number): boolean {
+  return Math.abs(a - b) < 1e-9
+}
+
+/**
+ * The neural effort's own cycle, when there is an effort for a breath to stay with.
+ *
+ * `effortAt` draws the effort on the absolute grid `time mod (60 / neural rate)`. When the machine
+ * is asked to cycle at exactly that period — pressure support with every effort captured, or an
+ * assist-control patient breathing above the set rate — the breaths are the patient's own, and the
+ * schedule has to sit on that grid or every later breath would begin away from the effort that is
+ * supposed to be starting it (MV-07 after its trigger is corrected).
+ */
+function effortCycleSeconds(patient: PatientModelState): number | null {
+  if (patient.drive.effortAmplitudeCmH2O <= 0 || patient.drive.neuralRatePerMin <= 0) return null
+  return 60 / Math.max(1, patient.drive.neuralRatePerMin)
+}
+
+/**
+ * The cycle that begins at the onset the clock was holding, and the onset that will end it.
+ *
+ * - **Same length as the cycle just finished:** continue that schedule. Its next onset is read off
+ *   the schedule's own grid (`anchor + (k + 1)·period`), not accumulated, so a constant rate is the
+ *   absolute grid the case opened on, sample for sample.
+ * - **The patient's own rhythm:** rejoin the effort grid (see `effortCycleSeconds`). If this onset
+ *   is already on it, continue on it. Otherwise the next breath is the first effort that begins
+ *   after the breath starting here has finished inspiring (and one sample of expiration), and the
+ *   schedule is on the effort grid from then on. That one transition cycle is therefore longer than
+ *   this breath's inspiration and no longer than that inspiration plus one effort cycle. No effort
+ *   is moved and none that could be captured is skipped: a first version waited for the effort
+ *   nearest one full cycle away, which on MV-08 passed over the patient's effort 2.1 s after the
+ *   boundary and left a 9.7 s gap after the trigger was corrected.
+ * - **Any other new length:** a new schedule anchored at this onset. Its first cycle is exactly the
+ *   requested length, so the interval between the last breath at the old rate and the first at the
+ *   new one is one of the two periods, never more.
+ */
+function breathClockAtOnset(
+  clock: BreathClock,
+  requested: number,
+  effortCycle: number | null,
+  inspiratorySeconds: number,
+): BreathClock {
+  const onset = clock.nextOnsetSeconds as number
+  const period = clock.periodSeconds as number
+  if (sameCycleLength(requested, period)) {
+    const index = Math.round((onset - clock.anchorSeconds) / period)
+    return { ...clock, nextOnsetSeconds: clock.anchorSeconds + (index + 1) * period }
+  }
+  if (effortCycle !== null && sameCycleLength(requested, effortCycle)) {
+    const effortPhase = positiveModulo(onset, effortCycle)
+    if (effortPhase < 1e-6 || effortCycle - effortPhase < 1e-6) {
+      const index = Math.round(onset / effortCycle)
+      return {
+        periodSeconds: effortCycle,
+        anchorSeconds: 0,
+        nextOnsetSeconds: (index + 1) * effortCycle,
+      }
+    }
+    const readyAt = onset + inspiratorySeconds + WAVEFORM_STEP_SECONDS
+    const next = Math.ceil((readyAt - 1e-9) / effortCycle) * effortCycle
+    return { periodSeconds: next - onset, anchorSeconds: onset, nextOnsetSeconds: next }
+  }
+  return { periodSeconds: requested, anchorSeconds: onset, nextOnsetSeconds: onset + requested }
+}
+
+/**
+ * Advance the breath timer to `time`. See `BreathClock`.
+ *
+ * The contract, whatever the settings do in between:
+ *
+ * - **The cycle in progress is never shortened or lengthened.** Its next onset is fixed at the
+ *   moment it began. A rate change during its inspiration, its expiration or in its last sample
+ *   neither cuts it short nor pushes that onset later, and a change made several times before the
+ *   onset is read once, at the onset.
+ * - **A new rate is authoritative from the next onset** (`breathClockAtOnset`). That onset is the
+ *   one breath boundary it can take effect at without truncating a breath or deferring one.
+ * - **Exactly one onset per cycle.** The boundary is processed on the first step past the onset
+ *   the clock was holding, and the cycle that follows is at least the length of the inspiration it
+ *   contains, so there is no one-sample breath, no duplicated onset and no skipped one.
+ *
+ * Nothing here decides whether a breath is triggered by the patient; that is still the grid
+ * coincidence described in the MV-PRE-REVIEW-02 handoff (§8, owner decision D5).
+ */
+function advanceBreathClock(
+  ventilator: VentilationSimulationState['ventilator'],
+  requested: number,
+  effortCycle: number | null,
+  inspiratorySeconds: number,
+  time: number,
+): VentilationSimulationState['ventilator'] {
+  const clock = ventilator.breathClock
+  if (clock.periodSeconds === null || clock.nextOnsetSeconds === null) {
+    // The first step of a case: the absolute grid of the case's own cycle.
+    const index = Math.floor(time / requested)
+    return {
+      ...ventilator,
+      breathClock: {
+        periodSeconds: requested,
+        anchorSeconds: 0,
+        nextOnsetSeconds: (index + 1) * requested,
+      },
+    }
+  }
+  let next = clock
+  // One step is far shorter than any cycle, so this runs at most once; the bound guards a time jump.
+  for (let guard = 0; guard < 8; guard += 1) {
+    if (time <= (next.nextOnsetSeconds as number) + BREATH_ONSET_TOLERANCE_SECONDS) break
+    next = breathClockAtOnset(next, requested, effortCycle, inspiratorySeconds)
+  }
+  return next === clock ? ventilator : { ...ventilator, breathClock: next }
+}
+
+/**
+ * The same clock with its time origin moved by `offsetSeconds`, for a caller that re-bases
+ * simulated time (the Learn lab's warm-up). The schedule is unchanged; only the numbers move.
+ */
+export function shiftBreathClock(clock: BreathClock, offsetSeconds: number): BreathClock {
+  return {
+    periodSeconds: clock.periodSeconds,
+    anchorSeconds: clock.anchorSeconds + offsetSeconds,
+    nextOnsetSeconds:
+      clock.nextOnsetSeconds === null ? null : clock.nextOnsetSeconds + offsetSeconds,
+  }
+}
+
 function machineTiming(
   state: VentilationSimulationState,
   definition: VentilationCaseDefinition,
   patient: PatientModelState,
   measurements: VentilatorMeasurements,
   time: number,
-): { inspiration: boolean; phase: number; triggered: boolean; spontaneous: boolean } {
+): {
+  inspiration: boolean
+  phase: number
+  period: number
+  triggered: boolean
+  spontaneous: boolean
+} {
+  const clock = state.ventilator.breathClock
+  const period =
+    clock.periodSeconds ?? machineCyclePeriodSeconds(state, definition, patient, measurements)
+  const phase = positiveModulo(time - clock.anchorSeconds, period)
   if (isTwoLevelMode(state.ventilator.settings.deviceMode)) {
     const settings = state.ventilator.settings
-    const period = Math.max(0.3, settings.advanced.tHighSeconds + settings.advanced.tLowSeconds)
-    const phase = time % period
     return {
       inspiration: phase < settings.advanced.tHighSeconds,
       phase,
+      period,
       triggered: phase < WAVEFORM_STEP_SECONDS * 1.5,
       spontaneous: false,
     }
   }
-  let rate = Math.max(1, measurements.totalRatePerMin)
-  if (definition.phenotype === 'double-triggering') rate = patient.drive.neuralRatePerMin
-  const period = 60 / rate
-  const phase = time % period
+  const rate = 60 / period
   const settings = state.ventilator.settings
   let spontaneous = false
   if (
@@ -310,7 +620,7 @@ function machineTiming(
     settings.mode !== 'pressure-support' &&
     rate > settings.ratePerMin + 0.5
   ) {
-    const breathIndex = Math.floor(time / period)
+    const breathIndex = Math.floor((time - clock.anchorSeconds) / period)
     const mandatoryFraction = clamp(settings.ratePerMin / rate, 0, 1)
     const mandatoryBefore = Math.floor((breathIndex + 1) * mandatoryFraction)
     const mandatoryAfter = Math.floor((breathIndex + 2) * mandatoryFraction)
@@ -348,6 +658,7 @@ function machineTiming(
   return {
     inspiration,
     phase,
+    period,
     triggered: phase < WAVEFORM_STEP_SECONDS * 1.5,
     spontaneous,
   }
@@ -393,7 +704,7 @@ function nextWaveformSample(
 ): { sample: WaveformSample; volumeL: number } {
   const settings = state.ventilator.settings
   const timing = machineTiming(state, definition, patient, measurements, time)
-  const effort = effortAt(state, definition, patient, measurements, time)
+  const effort = effortAt(state, definition, patient, measurements, time, timing)
   const holdActive = state.ventilator.holdUntil !== null && state.ventilator.holdUntil > time
   const pressureTargeted = usesPressureTargetedDelivery(settings)
   const baselinePressure = effectiveBaselinePressureCmH2O(settings)
@@ -580,63 +891,19 @@ function nextWaveformSample(
   }
 }
 
-function baselineMinuteVentilation(definition: VentilationCaseDefinition): number {
-  const settings = definition.initialSettings
-  if (settings.mode === 'volume-ac') {
-    return (
-      (settings.vtMl / 1000) *
-      Math.max(settings.ratePerMin, definition.initialPatient.drive.neuralRatePerMin)
-    )
-  }
-  const drivingPressure =
-    settings.mode === 'pressure-ac'
-      ? settings.deltaPControlCmH2O
-      : settings.pressureSupportCmH2O + definition.initialPatient.drive.effortAmplitudeCmH2O * 0.35
-  const vt = drivingPressure * definition.initialPatient.mechanics.complianceLPerCmH2O
-  const rate =
-    settings.mode === 'pressure-ac'
-      ? Math.max(settings.ratePerMin, definition.initialPatient.drive.neuralRatePerMin)
-      : definition.initialPatient.drive.neuralRatePerMin
-  return Math.max(1, vt * rate)
-}
+/*
+ * The slow relationships, each written once and used twice: at case open, to record what the
+ * relationship said about the authored presentation (`capturePhysiologyReference`), and on every
+ * step, where only the change since then moves the patient (`updateSlowPhysiology`). None of the
+ * coefficients below is new; they are the ones this function has always used.
+ */
 
-function spo2FromPaO2(paO2: number): number {
-  const exponent = 2.7
-  const numerator = paO2 ** exponent
-  return clamp((100 * numerator) / (numerator + 26.8 ** exponent), 50, 100)
-}
-
-function updateSlowPhysiology(
+/** FiO₂ and PEEP as the oxygenation relationship sees them, including IntelliVent's controller. */
+function oxygenationInputs(
   state: VentilationSimulationState,
-  definition: VentilationCaseDefinition,
-  patient: PatientModelState,
-  measurements: VentilatorMeasurements,
-  deltaSeconds: number,
-): PatientModelState {
-  const next = clonePatient(patient)
+  spo2Percent: number,
+): { oxygenPercent: number; effectivePeepCmH2O: number } {
   const settings = state.ventilator.settings
-  const baselineMv = baselineMinuteVentilation(definition)
-  const targetPaCO2 = clamp(
-    definition.initialPatient.gasExchange.paCO2MmHg *
-      (baselineMv / Math.max(0.8, measurements.minuteVentilationLMin)),
-    20,
-    110,
-  )
-  next.gasExchange.paCO2MmHg = moveTowardExp(
-    state.patient.gasExchange.paCO2MmHg,
-    targetPaCO2,
-    deltaSeconds,
-    180,
-  )
-  next.gasExchange.pH = clamp(
-    6.1 +
-      Math.log10(
-        next.gasExchange.bicarbonateMmolL / (0.03 * Math.max(10, next.gasExchange.paCO2MmHg)),
-      ),
-    6.7,
-    7.75,
-  )
-
   let oxygenPercent =
     state.ventilator.oxygenEnrichmentUntil &&
     state.ventilator.oxygenEnrichmentUntil > state.simulationTime
@@ -650,15 +917,179 @@ function updateSlowPhysiology(
   ) {
     const lowTarget = settings.advanced.targetSpO2LowPercent
     const oxygenationGap =
-      next.gasExchange.spo2Percent < lowTarget
-        ? lowTarget - next.gasExchange.spo2Percent
-        : Math.min(0, lowTarget + 3 - next.gasExchange.spo2Percent)
+      spo2Percent < lowTarget ? lowTarget - spo2Percent : Math.min(0, lowTarget + 3 - spo2Percent)
     oxygenPercent = clamp(oxygenPercent + oxygenationGap * 3, 21, 100)
     effectivePeepCmH2O = clamp(settings.peepCmH2O + oxygenationGap * 0.5, 0, 18)
   }
+  return { oxygenPercent, effectivePeepCmH2O }
+}
+
+/** The generic FiO₂/PEEP/shunt oxygenation relationship, in mmHg. */
+function oxygenationTermMmHg(
+  oxygenPercent: number,
+  effectivePeepCmH2O: number,
+  shuntFraction: number,
+): number {
   const recruitmentBonus = effectivePeepCmH2O <= 12 ? effectivePeepCmH2O * 2 : 20
+  return 35 + (oxygenPercent - 21) * 2.2 + recruitmentBonus - shuntFraction * 180
+}
+
+/** What trapped gas, mean airway pressure and ARDS overdistension take off the MAP. */
+function circulatoryLoadMmHg(
+  state: VentilationSimulationState,
+  definition: VentilationCaseDefinition,
+  measurements: VentilatorMeasurements,
+): number {
+  let load =
+    Math.max(0, measurements.intrinsicPeepCmH2O - 5) *
+    (definition.phenotype === 'asthma-obstructive-shock' ? 2.4 : 1.1)
+  load += Math.max(0, measurements.meanAirwayPressureCmH2O - 18) * 0.8
+  if (
+    definition.phenotype === 'ards-recruitment' &&
+    ardsLungStateForPeep(state.ventilator.settings.peepCmH2O) === 'overdistended'
+  ) {
+    load += 15
+  }
+  return load
+}
+
+/** The comfort burdens, and the relief that resolving the case's mechanism brings. */
+function dyspneaLoad(
+  state: VentilationSimulationState,
+  patient: PatientModelState,
+  measurements: VentilatorMeasurements,
+  resolved: boolean,
+): number {
+  const settings = state.ventilator.settings
+  const triggerBurden =
+    measurements.ineffectiveEffortFraction * 4 + measurements.autotriggerFraction * 2
+  const cyclingBurden = Math.min(
+    4,
+    Math.abs(
+      measurements.mechanicalInspiratoryTimeSeconds - patient.drive.neuralInspiratoryTimeSeconds,
+    ) * 4,
+  )
+  const assistBurden =
+    settings.mode === 'pressure-support' ? Math.abs(settings.pressureSupportCmH2O - 11) * 0.22 : 0
+  return (
+    clamp(
+      patient.human.painScore * 0.35 +
+        patient.human.anxietyScore * 0.25 +
+        triggerBurden +
+        cyclingBurden +
+        assistBurden,
+      0,
+      10,
+    ) - (resolved ? 2 : 0)
+  )
+}
+
+/** What hypotension and dyspnea add to the heart rate. */
+function heartRateLoadPerMin(mapMmHg: number, dyspneaScore: number): number {
+  return Math.max(0, 65 - mapMmHg) * 0.8 + dyspneaScore
+}
+
+/**
+ * RASS at or below which the model bounds the dyspnea index. An existing engine rule (it also
+ * drives the excessive-sedation risk), named here, not a new threshold.
+ */
+const DEEP_SEDATION_RASS = -4
+
+/**
+ * The case-open values of every slow relationship — see `PhysiologyReference`.
+ *
+ * Read from the patient the learner is shown (the authored presentation, with the case's branch
+ * applied) and from the measurements of the prepared mechanical history, so the delivered minute
+ * ventilation the CO₂ anchor divides by is the one the model will later compare it with.
+ */
+export function capturePhysiologyReference(
+  state: VentilationSimulationState,
+  definition: VentilationCaseDefinition,
+): PhysiologyReference {
+  const presented = state.patient
+  const effective = deriveEffectivePatient(state, definition)
+  const measurements = state.measurements
+  const resolved = isCaseResolved(state, definition)
+  const oxygenation = oxygenationInputs(state, presented.gasExchange.spo2Percent)
+  return {
+    minuteVentilationLMin: Math.max(0.8, measurements.minuteVentilationLMin),
+    paCO2MmHg: presented.gasExchange.paCO2MmHg,
+    paO2MmHg: presented.gasExchange.paO2MmHg,
+    spo2Percent: presented.gasExchange.spo2Percent,
+    oxygenationTermMmHg: oxygenationTermMmHg(
+      oxygenation.oxygenPercent,
+      oxygenation.effectivePeepCmH2O,
+      effective.gasExchange.shuntFraction,
+    ),
+    saturationCurvePercent: spo2FromPaO2(presented.gasExchange.paO2MmHg),
+    mapMmHg: presented.hemodynamics.mapMmHg,
+    systolicMmHg: presented.hemodynamics.systolicMmHg,
+    diastolicMmHg: presented.hemodynamics.diastolicMmHg,
+    mapLoadMmHg: circulatoryLoadMmHg(state, definition, measurements),
+    heartRatePerMin: presented.hemodynamics.heartRatePerMin,
+    heartRateLoadPerMin: heartRateLoadPerMin(
+      presented.hemodynamics.mapMmHg,
+      presented.human.dyspneaScore,
+    ),
+    dyspneaScore: presented.human.dyspneaScore,
+    dyspneaLoad: dyspneaLoad(state, effective, measurements, resolved),
+  }
+}
+
+/**
+ * The slow patient: gas exchange, circulation, heart rate and comfort.
+ *
+ * Every target is the case's authored value plus what its relationship has changed by since the
+ * case opened (`PhysiologyReference`). At the case's own inputs nothing moves; a change of
+ * setting, a treatment taking effect, or a trace-derived quantity moving (delivered minute
+ * ventilation, trapped gas, missed efforts) moves the patient by exactly as much as the
+ * relationship has always said. The time constants and coefficients are unchanged.
+ */
+function updateSlowPhysiology(
+  state: VentilationSimulationState,
+  definition: VentilationCaseDefinition,
+  patient: PatientModelState,
+  measurements: VentilatorMeasurements,
+  deltaSeconds: number,
+): PatientModelState {
+  const next = clonePatient(patient)
+  const reference = state.physiologyReference
+  /*
+   * CO₂: the authored PaCO₂ scaled by how delivered minute ventilation has changed. The anchor
+   * used to be computed from the *initial settings* — tidal volume at pressure equilibrium times
+   * the patient's neural rate — and compared with the minute ventilation the trace actually
+   * delivers, which is a different quantity. On MV-05 those were 46.6 and 1.9 L/min, so the target
+   * sat at the 110 mmHg ceiling from the first step and an untouched COPD patient climbed from 62
+   * to 92 mmHg in three minutes; MV-12's pointed the other way and "normalised" an alkalemia the
+   * case exists to show. Both terms are now the same measurement.
+   */
+  const targetPaCO2 = clamp(
+    (reference.paCO2MmHg * reference.minuteVentilationLMin) /
+      Math.max(0.8, measurements.minuteVentilationLMin),
+    20,
+    110,
+  )
+  next.gasExchange.paCO2MmHg = moveTowardExp(
+    state.patient.gasExchange.paCO2MmHg,
+    targetPaCO2,
+    deltaSeconds,
+    180,
+  )
+  next.gasExchange.pH = clamp(
+    phFromBicarbonateAndPaCO2(next.gasExchange.bicarbonateMmolL, next.gasExchange.paCO2MmHg),
+    6.7,
+    7.75,
+  )
+
+  const oxygenation = oxygenationInputs(state, next.gasExchange.spo2Percent)
   const targetPaO2 = clamp(
-    35 + (oxygenPercent - 21) * 2.2 + recruitmentBonus - next.gasExchange.shuntFraction * 180,
+    reference.paO2MmHg +
+      oxygenationTermMmHg(
+        oxygenation.oxygenPercent,
+        oxygenation.effectivePeepCmH2O,
+        next.gasExchange.shuntFraction,
+      ) -
+      reference.oxygenationTermMmHg,
     35,
     500,
   )
@@ -668,19 +1099,29 @@ function updateSlowPhysiology(
     deltaSeconds,
     45,
   )
+  /*
+   * Saturation moves along the engine's curve from the authored pairing. Where a case prints both a
+   * PaO₂ and an SpO₂ they sit up to three points off this curve (MV-01: 54 mmHg and 84 %, where the
+   * curve says 87 %) — the curve has no pH or temperature shift, and none is inferred here — so the
+   * authored pair is kept as the starting point and the curve supplies only the change.
+   */
   next.gasExchange.spo2Percent = moveTowardExp(
     state.patient.gasExchange.spo2Percent,
-    spo2FromPaO2(next.gasExchange.paO2MmHg),
+    clamp(
+      reference.spo2Percent +
+        spo2FromPaO2(next.gasExchange.paO2MmHg) -
+        reference.saturationCurvePercent,
+      50,
+      100,
+    ),
     deltaSeconds,
     15,
   )
 
-  let targetMap = definition.initialPatient.hemodynamics.mapMmHg
-  targetMap -=
-    Math.max(0, measurements.intrinsicPeepCmH2O - 5) *
-    (definition.phenotype === 'asthma-obstructive-shock' ? 2.4 : 1.1)
-  targetMap -= Math.max(0, measurements.meanAirwayPressureCmH2O - 18) * 0.8
-  if (definition.phenotype === 'ards-recruitment' && settings.peepCmH2O >= 14) targetMap -= 15
+  const resolved = isCaseResolved({ ...state, patient: next, measurements }, definition)
+  let targetMap =
+    reference.mapMmHg -
+    (circulatoryLoadMmHg(state, definition, measurements) - reference.mapLoadMmHg)
   if (
     definition.phenotype === 'asthma-obstructive-shock' &&
     hasPerformedEffect(state, definition, 'disconnect-bag')
@@ -688,39 +1129,27 @@ function updateSlowPhysiology(
     targetMap = Math.max(targetMap, 72)
   }
   if (next.hemodynamics.obstructiveShock) targetMap = Math.min(targetMap, 42)
-  if (isCaseResolved({ ...state, patient: next, measurements }, definition)) {
-    targetMap = Math.max(targetMap, 68)
-  }
+  if (resolved) targetMap = Math.max(targetMap, 68)
   next.hemodynamics.mapMmHg = moveTowardExp(
     state.patient.hemodynamics.mapMmHg,
     clamp(targetMap, 25, 110),
     deltaSeconds,
     18,
   )
-  next.hemodynamics.systolicMmHg = round(next.hemodynamics.mapMmHg * 1.5, 0)
-  next.hemodynamics.diastolicMmHg = round(next.hemodynamics.mapMmHg * 0.75, 0)
+  /*
+   * Systolic and diastolic keep the case's own pulse-pressure shape and scale with MAP. They were
+   * rebuilt as MAP × 1.5 and MAP × 0.75 on the first step, so MV-01's authored 108/62 became 116/58
+   * a fiftieth of a second into the case with nothing having changed.
+   */
+  const mapRatio = next.hemodynamics.mapMmHg / Math.max(1, reference.mapMmHg)
+  next.hemodynamics.systolicMmHg = round(reference.systolicMmHg * mapRatio, 0)
+  next.hemodynamics.diastolicMmHg = round(reference.diastolicMmHg * mapRatio, 0)
 
-  const triggerBurden =
-    measurements.ineffectiveEffortFraction * 4 + measurements.autotriggerFraction * 2
-  const cyclingBurden = Math.min(
-    4,
-    Math.abs(
-      measurements.mechanicalInspiratoryTimeSeconds - next.drive.neuralInspiratoryTimeSeconds,
-    ) * 4,
-  )
-  const assistBurden =
-    settings.mode === 'pressure-support' ? Math.abs(settings.pressureSupportCmH2O - 11) * 0.22 : 0
-  let targetDyspnea = clamp(
-    next.human.painScore * 0.35 +
-      next.human.anxietyScore * 0.25 +
-      triggerBurden +
-      cyclingBurden +
-      assistBurden,
-    0,
-    10,
-  )
-  if (isCaseResolved({ ...state, patient: next, measurements }, definition)) targetDyspnea -= 2
-  if (next.human.sedationScore <= -4) targetDyspnea = Math.min(targetDyspnea, 2)
+  let targetDyspnea =
+    reference.dyspneaScore +
+    dyspneaLoad(state, next, measurements, resolved) -
+    reference.dyspneaLoad
+  if (next.human.sedationScore <= DEEP_SEDATION_RASS) targetDyspnea = Math.min(targetDyspnea, 2)
   next.human.dyspneaScore = moveTowardExp(
     state.patient.human.dyspneaScore,
     clamp(targetDyspnea, 0, 10),
@@ -729,9 +1158,9 @@ function updateSlowPhysiology(
   )
   next.hemodynamics.heartRatePerMin = moveTowardExp(
     state.patient.hemodynamics.heartRatePerMin,
-    definition.initialPatient.hemodynamics.heartRatePerMin +
-      Math.max(0, 65 - next.hemodynamics.mapMmHg) * 0.8 +
-      next.human.dyspneaScore,
+    reference.heartRatePerMin +
+      heartRateLoadPerMin(next.hemodynamics.mapMmHg, next.human.dyspneaScore) -
+      reference.heartRateLoadPerMin,
     deltaSeconds,
     45,
   )
@@ -773,7 +1202,9 @@ function updateRisk(
         : -deltaSeconds * 0.25),
     excessiveSedation:
       risk.excessiveSedation +
-      (state.patient.human.sedationScore <= -4 ? deltaSeconds : -deltaSeconds * 0.25),
+      (state.patient.human.sedationScore <= DEEP_SEDATION_RASS
+        ? deltaSeconds
+        : -deltaSeconds * 0.25),
   }
 }
 
@@ -816,7 +1247,8 @@ function alarmDescriptors(
   ) {
     descriptors.push({ code: 'MAP_LOW', message: 'Patient blood pressure low', priority: 'high' })
   }
-  if (m.exhaledVtMl < 250 && m.totalRatePerMin > 0) {
+  // Evaluated on an exhaled breath, never on the analytic prediction a cold buffer falls back to.
+  if (m.exhaledVtSource === 'trace' && m.exhaledVtMl < 250 && m.totalRatePerMin > 0) {
     descriptors.push({ code: 'VT_LOW', message: 'Vt low', priority: 'medium' })
   }
   if (m.totalRatePerMin < 2) {
@@ -839,6 +1271,23 @@ function alarmDescriptors(
   return descriptors
 }
 
+/**
+ * The alarm record after one evaluation of the alarm conditions on `state`, at its
+ * `simulationTime`.
+ *
+ * `advanceSimulation` calls this once per fixed model step, so a transition is dated at the step
+ * it happened on and an alarm that rises and clears within one outer call is still recorded; the
+ * case-open epoch and `reopenAlarmEpoch` call it once at time zero. The record keeps **one entry
+ * per alarm code**, not one per episode:
+ *
+ * - a code not in the history gets an entry stamped with this step's time, its id from that second;
+ * - a code that stays active keeps its entry — id, `startedAt` and `acknowledgedAt` — every step;
+ * - a code that stops is kept in the history marked inactive, and leaves `alarms`;
+ * - a code that returns reuses its entry, first start and acknowledgement included.
+ *
+ * The history lists the active codes in evaluation order, then the inactive ones in the order the
+ * previous record held them; `alarms` is the active set ordered by priority.
+ */
 function reconcileAlarms(
   state: VentilationSimulationState,
   definition: VentilationCaseDefinition,
@@ -895,8 +1344,23 @@ export function advanceSimulation(
   let volumeL = state.patient.mechanics.endExpiratoryVolumeL
   let waveforms = [...state.waveforms]
   let trends = [...state.trends]
-  let patient = deriveEffectivePatient(state, definition)
-  let measurements = deriveMeasurements(state, definition, patient)
+  /*
+   * The step starts from the state the last step published, not from a fresh derivation of it.
+   *
+   * Each fixed step runs in one order: the state entering the step → the effective patient → the
+   * breath clock, which reads the measurements the previous step published → the waveform sample →
+   * the updated lung volume → the measurements this step publishes → slow physiology. This used to
+   * re-derive the patient and the measurements once more at the top of every *call*, which is an
+   * extra iteration of anything the measurements feed back into — and the number of calls is the
+   * caller's batching, not the model's. On MV-05's combined PS 12 + ETS 40 correction that extra
+   * iteration flipped the reported rate between 16 and 19 per call, the clock read whichever it
+   * got at an onset, and 1×, 5× and 30× produced different patients (VTE 438 / 397 / 318 mL at
+   * 30 s with the hold). Every action that changes an input already re-derives through the reducer
+   * (`refreshMeasurements`, `applyIntervention`), at the model time it happens, so nothing is lost
+   * by trusting the published state here (MV-PRE-REVIEW-02 sanity repair R1).
+   */
+  let patient = state.patient
+  let measurements = state.measurements
   let risk = { ...state.risk }
   let working = state
   let lastTrendSecond = Math.floor(state.simulationTime)
@@ -913,6 +1377,18 @@ export function advanceSimulation(
    */
   let holdRecords: PerformedHoldRecord[] = [...state.holdRecords]
   const openHoldIndex = () => holdRecords.findIndex((record) => record.completedAtSeconds === null)
+  /*
+   * The alarm record is carried step to step like the rest of the model, not observed once when the
+   * call returns. It used to be reconciled only on the state this function published, so an alarm
+   * that rose and cleared inside one call was never recorded, and whether it was depended on how
+   * the caller batched time: MV-01 with PEEP 5 → 16 at 12 s raises pressure limitation for three
+   * steps (12.86–12.90 s) before high pressure replaces it — kept in the history at 1× (0.1 s calls),
+   * missing at 5× and 30× (MV-PRE-REVIEW-02 alarm-history repair).
+   */
+  let alarmRecord: Pick<VentilationSimulationState, 'alarms' | 'alarmHistory'> = {
+    alarms: state.alarms,
+    alarmHistory: state.alarmHistory,
+  }
 
   for (let index = 0; index < steps; index += 1) {
     time += actualStep
@@ -920,6 +1396,14 @@ export function advanceSimulation(
     // trace, so a long advance must not derive them from the buffer as it was before the call.
     working = { ...working, ventilator, simulationTime: time, patient, measurements, waveforms }
     patient = deriveEffectivePatient(working, definition)
+    ventilator = advanceBreathClock(
+      ventilator,
+      machineCyclePeriodSeconds(working, definition, patient, measurements),
+      effortCycleSeconds(patient),
+      machineInspiratorySeconds(working, definition, measurements),
+      time,
+    )
+    working = { ...working, ventilator }
     let frame = nextWaveformSample(working, definition, patient, measurements, time, volumeL)
 
     /*
@@ -1015,6 +1499,9 @@ export function advanceSimulation(
       actualStep,
     )
     risk = boundedRisk(updateRisk(risk, { ...working, patient }, measurements, actualStep))
+    // On the state this step would publish, so the last step's evaluation is the one the call's
+    // published alarms have always come from.
+    alarmRecord = reconcileAlarms({ ...working, patient, measurements, ...alarmRecord }, definition)
     const currentSecond = Math.floor(time)
     if (currentSecond > lastTrendSecond) {
       trends.push({
@@ -1032,7 +1519,7 @@ export function advanceSimulation(
     }
   }
 
-  let next: VentilationSimulationState = {
+  const next: VentilationSimulationState = {
     ...state,
     simulationTime: time,
     patient,
@@ -1041,6 +1528,8 @@ export function advanceSimulation(
     trends,
     risk,
     holdRecords,
+    alarms: alarmRecord.alarms,
+    alarmHistory: alarmRecord.alarmHistory,
     // `ventilator`, not `state.ventilator`: a hold armed inside the loop lives on the local copy.
     ventilator: {
       ...ventilator,
@@ -1054,7 +1543,6 @@ export function advanceSimulation(
           : ventilator.manualBreathUntil,
     },
   }
-  next = { ...next, ...reconcileAlarms(next, definition) }
   return withCriticalErrors(next)
 }
 

@@ -2,7 +2,9 @@ import { mcsDerivedValueGuides } from '../../content/derivedValueGuides'
 import type { McsTeachingPanelProps } from './panelProps'
 import { mcsComparesAgainstActionBaseline, mcsMechanismDisclosed } from './revealStage'
 import {
+  MCS_DURABLE_FLOW_IDENTITY,
   MCS_ESTIMATED_FLOW_BOUNDARY,
+  afterloadCostView,
   activeAlarms,
   beforeAfterReadings,
   directionOf,
@@ -56,12 +58,13 @@ export function LvadParametersAssessmentPanel({
   const controller = lvadView(state)
   const account = flowAccountView(state)
   const alarms = activeAlarms(state)
+  const afterloadCost = afterloadCostView(state)
   const gradient = displaySignalNumber(state, 'pressureGradientMmHg')
   const rows = beforeAfterReadings(
     [
       { metric: 'pumpPowerW', label: 'Pump power', unit: 'W', kind: 'displayed' },
       { metric: 'pulsatilityIndex', label: 'Pulsatility index', unit: '', kind: 'displayed' },
-      { metric: 'deviceFlowLMin', label: 'Displayed pump flow', unit: 'L/min', kind: 'estimated' },
+      { metric: 'deviceFlowLMin', label: 'Displayed pump flow', unit: 'L/min', kind: 'modeled' },
       {
         metric: 'effectiveSystemicFlowLMin',
         label: 'Effective systemic delivery',
@@ -132,7 +135,7 @@ export function LvadParametersAssessmentPanel({
             label="Displayed pump flow"
             value={metrics.deviceFlowLMin}
             unit="L/min"
-            kind="estimated"
+            kind="modeled"
             note={
               disclosed
                 ? 'Generated from speed and loading in this model; power and PI are derived afterward. Clinical estimation methods depend on the device.'
@@ -212,6 +215,7 @@ export function LvadParametersAssessmentPanel({
           electrical power and PI are derived. None is a clinical measurement here.
         </TextEquivalent>
 
+        <ModelBoundary>{MCS_DURABLE_FLOW_IDENTITY}</ModelBoundary>
         <ModelBoundary>{MCS_ESTIMATED_FLOW_BOUNDARY}</ModelBoundary>
         <p className="mt-2 text-xs leading-5" data-no-published-targets>
           This module publishes no universal speed, power, pulsatility-index, or alarm target.
@@ -242,6 +246,14 @@ export function LvadParametersAssessmentPanel({
             digits={0}
             kind="modeled"
           />
+          {afterloadCost ? (
+            <LiveSetting
+              label="Modeled afterload multiplier"
+              value={`${afterloadCost.costPercent}% reduction from otherwise identical modeled loading`}
+              kind="modeled"
+              note={`This model's own afterload factor, ${afterloadCost.factor.toFixed(2)} of one, the smaller of the factor from unsupported baseline MAP and the factor from the conserved arterial-to-pulmonary-venous pressure gradient. It multiplies the flow after modeled filling and tamponade factors; this is not a measured device cost. The module's high-afterload alarm does not read it and does not read the mean pressure above either: its input is this patient's modeled mean pressure with no support running, ${afterloadCost.alarmInputMmHg.toFixed(0)} mm Hg against a threshold of ${afterloadCost.alarmThresholdMmHg}, so it is ${afterloadCost.alarmRaised ? 'raised' : 'not raised'} here. That mismatch is authored, unchanged, and open for review as OD-02.`}
+            />
+          ) : null}
           <LiveValue
             label="Right atrial pressure"
             value={metrics.rapMmHg}
@@ -364,7 +376,7 @@ export function LvadParametersAssessmentPanel({
                 label="Displayed pump flow"
                 value={metrics.deviceFlowLMin}
                 unit="L/min"
-                kind="estimated"
+                kind="modeled"
               />
               <LiveValue
                 label="Mean arterial pressure"

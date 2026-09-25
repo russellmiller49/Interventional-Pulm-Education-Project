@@ -4,12 +4,15 @@ import { useId } from 'react'
 
 import type { BronchSort } from '../../content/types'
 import styles from './bronch-stage.module.css'
+import { asSentence, MATCHED_WORDS, UNMATCHED_WORDS } from './verdictWords'
 
 /**
  * An attribution sort: statements placed into a small set of origins, checked as a set and read
- * row by row in words. After a check each row says whether the placement held and why. The learner
- * may also open the worked matches without placing anything (`revealed`); that shows each row's
- * origin and reasoning and records nothing.
+ * row by row in words. After a check each row says whether the placement matches the course's, what
+ * the learner chose, where the course places the statement when that differs, and why (fellow
+ * walkthrough A16) — no count or total, only the row. The learner may also open the worked matches
+ * without placing anything (`revealed`); that shows each row's origin and reasoning and records
+ * nothing.
  */
 export function BronchSortControl({
   sort,
@@ -25,6 +28,8 @@ export function BronchSortControl({
   readonly onChange: (rowId: string, originId: string) => void
 }) {
   const base = useId()
+  const labelOf = (originId: string | undefined) =>
+    sort.origins.find((origin) => origin.id === originId)?.label ?? 'nothing yet'
   return (
     <div className={styles.act} data-bronch-sort={sort.id} data-committed={committed !== null}>
       <p className={styles.verdict}>{sort.prompt}</p>
@@ -65,13 +70,20 @@ export function BronchSortControl({
             </select>
             {committed ? (
               <p className={styles.verdict} data-sort-verdict={outcome}>
-                <strong>{outcome === 'held' ? 'Held.' : 'Did not hold.'}</strong> {row.rationale}
+                <strong>{outcome === 'held' ? MATCHED_WORDS : UNMATCHED_WORDS}</strong>{' '}
+                <span data-sort-chosen>You chose: {asSentence(labelOf(committed[row.id]))}</span>{' '}
+                {outcome === 'held' ? null : (
+                  <>
+                    <strong data-sort-authored>
+                      Belongs with: {asSentence(labelOf(row.origin))}
+                    </strong>{' '}
+                  </>
+                )}
+                {row.rationale}
               </p>
             ) : revealed ? (
               <p className={styles.verdict} data-sort-explanation>
-                <strong>
-                  Belongs with: {sort.origins.find((origin) => origin.id === row.origin)?.label}.
-                </strong>{' '}
+                <strong data-sort-authored>Belongs with: {asSentence(labelOf(row.origin))}</strong>{' '}
                 {row.rationale}
               </p>
             ) : null}

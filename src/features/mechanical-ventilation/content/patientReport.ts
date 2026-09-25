@@ -17,9 +17,13 @@
  *
  * `canCommunicate` is the case's own field and `sedationScore` is RASS as the module already uses
  * it. No threshold is introduced: deep sedation is read from the case's own flag rather than from
- * a cutoff invented here. Whether a patient at a given RASS should be reportable at all is a
- * clinical question for batch 02 and the owner list; this file only stops the two being printed
- * under one heading.
+ * a cutoff invented here. MV-PRE-REVIEW-02 closes the two routes by which a patient who cannot
+ * answer was still shown answering — deepening sedation to RASS −5 and neuromuscular blockade now
+ * set `canCommunicate` false (`deriveEffectivePatient`) — and puts the same identity on the
+ * Practice bedside panel and the Section 13 panel, which printed a bare "Dyspnea 2.5 / 10" and
+ * "Reported dyspnea" whatever the patient could do. What it does not do is decide when shock,
+ * hypoxemia or delirium should take the ability to answer away: the model has no representation of
+ * consciousness, so that is said, not simulated (owner decision D2).
  */
 import type { VentilationSimulationState } from '../engine/types'
 
@@ -28,6 +32,16 @@ export const PATIENT_REPORT_METRICS = ['dyspnea', 'pain', 'anxiety'] as const
 export type PatientReportMetric = (typeof PATIENT_REPORT_METRICS)[number]
 
 export type PatientReportAvailability = 'reported' | 'index-only'
+
+/**
+ * The model boundary for every surface that prints RASS or a symptom score. RASS here is the
+ * case's sedation input, changed only by sedation actions; nothing in the model lowers it, or
+ * removes the ability to answer, when blood pressure or oxygenation fall — MV-06 at a MAP of 25
+ * still reads RASS 0. Said wherever the numbers are, rather than simulated with a cutoff nobody
+ * has reviewed.
+ */
+export const CONSCIOUSNESS_MODEL_BOUNDARY =
+  'RASS and the symptom scores are the case’s inputs as the model carries them. The model does not lower consciousness, or take away the ability to answer, as blood pressure or oxygenation fall.'
 
 export interface PatientReportView {
   readonly availability: PatientReportAvailability

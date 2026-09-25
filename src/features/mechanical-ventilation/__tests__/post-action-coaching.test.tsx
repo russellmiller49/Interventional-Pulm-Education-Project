@@ -515,8 +515,12 @@ describe('unchanged physiology', () => {
     const scenario = coachedScenario('MV-01', 'standard', ['inspiratory-hold'], 25)
     const text = scenario.coachingText()
     expect(text).toContain('not interpretable: patient effort')
-    // The maneuver is a measurement: it must not be reported as having moved the patient.
-    expect(text).toContain('an occlusion measures, it does not treat')
+    // The maneuver is a measurement: it must not be reported as having moved the patient. The
+    // "anything that moved did so on the patient's own trajectory" branch used to be selected here
+    // because MV-01's untreated saturation was drifting (MV-PRE-REVIEW-02, C1); nothing moves now.
+    expect(text).toContain(
+      'nothing about the patient changed, which is what a measurement should do',
+    )
     expect(text).not.toContain('separated')
   })
 

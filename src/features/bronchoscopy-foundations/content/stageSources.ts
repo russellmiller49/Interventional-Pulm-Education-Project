@@ -19,6 +19,8 @@ export interface BronchStageSourceRecord {
   readonly source: BronchSource
   /** Every location the section cites in this source, formatted, in first-cited order. */
   readonly locations: readonly string[]
+  /** Whether any of those locations is a PDF page, which the list then explains once. */
+  readonly pdfPages: boolean
 }
 
 export interface BronchStageSources {
@@ -53,12 +55,14 @@ export function bronchStageSources(sectionId: BronchSectionId): BronchStageSourc
   const section = bronchSection(sectionId)
   const ids: string[] = []
   const locations = new Map<string, string[]>()
+  const pdfPages = new Set<string>()
   const add = (refs: readonly SourceRef[]) => {
     for (const ref of refs) {
       if (!ids.includes(ref.sourceId)) {
         ids.push(ref.sourceId)
         locations.set(ref.sourceId, [])
       }
+      if (ref.location.kind === 'pdf-pages') pdfPages.add(ref.sourceId)
       const formatted = formatSourceRef(ref)
       const list = locations.get(ref.sourceId)!
       if (!list.includes(formatted)) list.push(formatted)
@@ -74,7 +78,7 @@ export function bronchStageSources(sectionId: BronchSectionId): BronchStageSourc
   const records = ids.map((id) => {
     const source = SOURCE_BY_ID.get(id)
     if (!source) throw new Error(`Section ${sectionId} cites an unregistered source ${id}.`)
-    return { source, locations: locations.get(id) ?? [] }
+    return { source, locations: locations.get(id) ?? [], pdfPages: pdfPages.has(id) }
   })
   const built = { evidenceIds: ids, records }
   cache.set(sectionId, built)

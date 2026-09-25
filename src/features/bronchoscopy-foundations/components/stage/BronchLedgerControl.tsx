@@ -1,12 +1,14 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
 import { orderChoices } from '@/features/learning-module/stage/choiceOrder'
 
 import type { BronchLedger, Plausibility } from '../../content/types'
 import type { LedgerCommitment } from '../../engine/stageSession'
 import styles from './bronch-stage.module.css'
+import courseStyles from './course-flow.module.css'
+import { OUTCOME_WORDS } from './verdictWords'
 
 /** Milligrams from a concentration in mg/mL and a volume in mL: arithmetic, never a dose check. */
 export function ledgerRowMg(concentrationMgPerMl: number, volumeMl: number): number {
@@ -22,6 +24,11 @@ const TOLERANCE_MG = 0.5
  * unsafe answer is refused with its reasoning and the table stays open; any other answer shows its
  * reasoning and the question stays open (A10, A27). The learner may open the worked arithmetic and
  * the reasoning for every answer without entering anything (`revealed`); that records nothing.
+ *
+ * The statement is submitted with the course's primary action, "Check this answer" — the words
+ * every other check uses — not a control that looked like a caption (fellow walkthrough A12). While
+ * it cannot be used, it stays visible, disabled, and says what is missing. Nothing about the
+ * arithmetic, the rows or what any answer means changes here.
  */
 export function BronchLedgerControl({
   ledger,
@@ -38,6 +45,8 @@ export function BronchLedgerControl({
 }) {
   const base = useId()
   const [selected, setSelected] = useState<string | null>(null)
+  const outcomeRef = useRef<HTMLParagraphElement>(null)
+  const [checks, setChecks] = useState(0)
   const measured = ledger.rows.filter((row) => row.kind === 'measured')
   const entered = measured.every((row) => commitment.entries[row.id] !== undefined)
   const held = commitment.heldTotalChoiceId !== null
@@ -51,6 +60,13 @@ export function BronchLedgerControl({
       : last.plausibility === 'unsafe'
         ? 'refused'
         : 'other'
+  // The keyed answer removes the Check control; keep the learner's place on what it produced.
+  useEffect(() => {
+    if (checks > 0 && held) outcomeRef.current?.focus()
+  }, [checks, held])
+  // Why Check is unavailable, said where the learner is looking: the entry prompt above while a
+  // line is still empty, a line under the button once only the statement is missing.
+  const awaitingChoice = entered && !selected
   return (
     <div className={styles.act} data-bronch-ledger={ledger.id} data-held={held}>
       <p className={styles.verdict}>{ledger.prompt}</p>
@@ -131,7 +147,7 @@ export function BronchLedgerControl({
       <fieldset className={styles.choices} disabled={held || !entered} data-ledger-total>
         <legend>{ledger.totalPrompt}</legend>
         {!entered ? (
-          <p className={styles.verdict} role="status">
+          <p className={styles.verdict} role="status" id={`${base}-check-reason`}>
             Enter the milligrams for every measured line to answer, or open the worked arithmetic.
           </p>
         ) : null}
@@ -152,34 +168,49 @@ export function BronchLedgerControl({
           </label>
         ))}
         {!held ? (
-          <button
-            type="button"
-            className={styles.orderActions}
-            data-ledger-answer
-            disabled={!selected || !entered}
-            onClick={() => {
-              const choice = ledger.totalChoices.find((candidate) => candidate.id === selected)
-              if (choice) onTotal(choice.id, choice.plausibility)
-            }}
-          >
-            Answer
-          </button>
+          <div className={styles.actRow}>
+            <button
+              type="button"
+              className={courseStyles.primary}
+              data-ledger-answer
+              disabled={!entered || awaitingChoice}
+              aria-describedby={!entered || awaitingChoice ? `${base}-check-reason` : undefined}
+              onClick={() => {
+                const choice = ledger.totalChoices.find((candidate) => candidate.id === selected)
+                if (!choice) return
+                onTotal(choice.id, choice.plausibility)
+                setChecks((count) => count + 1)
+              }}
+            >
+              Check this answer
+            </button>
+            {awaitingChoice ? (
+              <p
+                id={`${base}-check-reason`}
+                className={styles.boundaryLine}
+                data-ledger-check-reason
+              >
+                Choose a statement, then check it.
+              </p>
+            ) : null}
+          </div>
         ) : null}
       </fieldset>
-      {last ? (
-        <p className={styles.verdict} data-ledger-outcome={lastOutcome} data-tone={lastOutcome}>
-          <strong>
-            {lastOutcome === 'held'
-              ? 'Held.'
-              : lastOutcome === 'refused'
-                ? 'Refused: that answer is unsafe.'
-                : 'Not the answer the record allows.'}
-          </strong>{' '}
-          {last.rationale}
-          {lastOutcome === 'other' ? ' Answer again if you like.' : ''}
-          {lastOutcome === 'refused' ? ' The table stays open.' : ''}
-        </p>
-      ) : null}
+      <div aria-live="polite">
+        {last ? (
+          <p
+            ref={outcomeRef}
+            tabIndex={-1}
+            className={styles.verdict}
+            data-ledger-outcome={lastOutcome}
+            data-tone={lastOutcome}
+          >
+            <strong>{OUTCOME_WORDS[last.plausibility]}</strong> {last.rationale}
+            {lastOutcome === 'other' ? ' Choose another statement and check it if you like.' : ''}
+            {lastOutcome === 'refused' ? ' The table stays open.' : ''}
+          </p>
+        ) : null}
+      </div>
       {revealed && !held ? (
         <section className={styles.row} data-ledger-explanation aria-label="The worked arithmetic">
           <p className={styles.kicker}>The worked arithmetic</p>

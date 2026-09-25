@@ -271,6 +271,11 @@ function BronchStageSessionView({
   const [identifyDraft, setIdentifyDraft] = useState<Record<string, string>>({})
   const [sequenceDraft, setSequenceDraft] = useState<Record<string, readonly string[]>>({})
   const [explanationShown, setExplanationShown] = useState<Record<string, boolean>>({})
+  // Which scenario frame's feedback is open, held here so the Now card can say what comes next.
+  const [scenarioFeedback, setScenarioFeedback] = useState<{
+    readonly stepId: string
+    readonly frameId: string
+  } | null>(null)
   const [viewIndex, setViewIndex] = useState<number | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [spotlight, setSpotlight] = useState<{ stepId: string; key: string; count: number } | null>(
@@ -310,6 +315,18 @@ function BronchStageSessionView({
   const interaction = activeStep.interaction
   const workDone = stepWorkDone(lesson, activeStep, activeIndex, session)
   const explanationOpen = explanationShown[activeStep.id] === true
+  /*
+   * The frame whose feedback the learner is reading after a keyed decision, before choosing
+   * "Continue to the next observation" (fellow walkthrough A13). Only while this session actually
+   * holds that decision and the case is not finished — a stale id after a restart opens nothing.
+   */
+  const scenarioFeedbackFrameId = (() => {
+    if (interaction.kind !== 'scenario' || scenarioFeedback?.stepId !== activeStep.id) return null
+    const commitment = scenarioCommitment(session, activeStep.id)
+    return !commitment.done && commitment.lastChoices[scenarioFeedback.frameId] !== undefined
+      ? scenarioFeedback.frameId
+      : null
+  })()
   const demonstration = useScopeDemonstration(activeStep, scopeCase)
   const hasDemonstration = !!(activeStep.learn?.demonstration ?? activeStep.course?.demonstration)
     ?.length
@@ -716,7 +733,9 @@ function BronchStageSessionView({
         return {
           ...base,
           status:
-            'Work through the accounting on this card, open the worked arithmetic, or continue without completing it.',
+            ledgerCommitment(session, activeStep.id).lastTotalChoiceId !== null
+              ? 'Choose another statement and check it, open the worked arithmetic, or continue without completing it.'
+              : 'Work through the accounting on this card, open the worked arithmetic, or continue without completing it.',
         }
       case 'report':
         if (workDone)
@@ -730,18 +749,30 @@ function BronchStageSessionView({
           status:
             'Give each field a statement the evidence supports, open what it supports, or continue without completing the report.',
         }
-      case 'scenario':
+      case 'scenario': {
         if (workDone)
           return {
             ...base,
             status: 'Done. You worked the case to its end.',
             primary: continueAction,
           }
+        // After a decision the instruction names the next real step, not the decision just made.
+        if (scenarioFeedbackFrameId)
+          return {
+            ...base,
+            status:
+              'Read the feedback on your decision, then continue to the next observation. You can also continue without completing the case.',
+          }
+        const scenario = scenarioCommitment(session, activeStep.id)
+        const frame = interaction.scenario.frames[scenario.frameIndex]
         return {
           ...base,
           status:
-            'Decide on this card, open the reasoning for this observation, or continue without completing the case.',
+            frame && scenario.lastChoices[frame.id] !== undefined
+              ? 'Decide again on this observation, open its reasoning, or continue without completing the case.'
+              : 'Decide on this card, open the reasoning for this observation, or continue without completing the case.',
         }
+      }
       case 'scope-task':
         if (activeStep.learn || hasDemonstration) {
           if (demonstration.state || !practicing)
@@ -879,6 +910,7 @@ function BronchStageSessionView({
   function verdictFor(stage: BronchStageItem, choiceId: string) {
     return (
       <>
+        <QuestionContext stage={stage} choiceId={choiceId} />
         <AnswerVerdict
           item={stage.item}
           choiceId={choiceId}
@@ -1076,10 +1108,16 @@ function BronchStageSessionView({
       case 'scenario':
         return (
           <>
-            {!workDone ? explanationToggle(activeStep, 'Show the reasoning') : null}
+            {!workDone && !scenarioFeedbackFrameId
+              ? explanationToggle(activeStep, 'Show the reasoning')
+              : null}
             <BronchScenarioControl
               scenario={interaction.scenario}
               integrated
+              feedbackFrameId={scenarioFeedbackFrameId}
+              onFeedbackFrameChange={(frameId) =>
+                setScenarioFeedback(frameId ? { stepId: activeStep.id, frameId } : null)
+              }
               baseline={
                 lesson.section.blocks.find((block) => block.role === 'normal-reference')?.body
               }
@@ -1434,6 +1472,52 @@ function BronchStageSessionView({
 function MediaWorkspaceInline({ stage }: { readonly stage: BronchStageItem }) {
   if (!stage.media) return null
   return <MediaWorkspace media={[stage.media]} caption="The image this decision is about." />
+}
+
+/**
+ * The question a verdict answers, kept in view while the verdict is read (fellow walkthrough A15).
+ *
+ * Checking an answer used to replace the situation, the stem and the options with the verdict
+ * alone, so "You chose", the explanation and the comparison of the other answers had nothing on the
+ * page to refer back to. The question stays, as it was asked and in the order it was shown, with the
+ * learner's own answer marked. Saying which answer is best supported, and how the others compare,
+ * remains the shared verdict card's job; this adds no second verdict.
+ */
+function QuestionContext({
+  stage,
+  choiceId,
+}: {
+  readonly stage: BronchStageItem
+  readonly choiceId: string
+}) {
+  return (
+    <section
+      className={styles.questionContext}
+      data-question-context
+      aria-label="The question you answered"
+    >
+      <p className={styles.kicker}>The question</p>
+      {stage.situation ? <p data-question-situation>{stage.situation}</p> : null}
+      <MediaWorkspaceInline stage={stage} />
+      <p className={styles.questionStem} data-question-stem>
+        {stage.item.stem}
+      </p>
+      {stage.choiceAirways ? null : (
+        <ul className={styles.questionOptions} data-question-options>
+          {orderChoices(stage.item.id, stage.item.choices).map((choice) => (
+            <li
+              key={choice.id}
+              data-question-option={choice.id}
+              data-chosen={choice.id === choiceId || undefined}
+            >
+              {choice.label}
+              {choice.id === choiceId ? <strong> — your answer</strong> : null}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
 }
 
 /** The learner's own review-later mark for this section. */

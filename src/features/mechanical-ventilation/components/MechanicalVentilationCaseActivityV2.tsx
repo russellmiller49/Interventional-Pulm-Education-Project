@@ -6,6 +6,7 @@ import type { CriticalCareActivityMode } from '@/features/learning-module/activi
 import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
 import { mechanicalVentilationCaseById } from '../content/runtimeCases'
 import { branchResolution } from '../content/caseFindings'
+import { casePresentationModelNote, caseResponseModelNote } from '../content/caseModelNotes'
 import { plateauReadingValidity } from '../content/plateauValidity'
 import {
   capturePostActionBaseline,
@@ -188,6 +189,11 @@ function LiveCase({
           <header className={task.block}>
             <h1>{definition.title}</h1>
             <p>{definition.patientDescription}</p>
+            {casePresentationModelNote(state, definition) ? (
+              <p className={task.note} data-case-model-note>
+                {casePresentationModelNote(state, definition)}
+              </p>
+            ) : null}
             <p>
               Inspect, experiment, and reassess. Optional questions and explanations are available
               throughout.
@@ -237,6 +243,9 @@ function LiveCase({
                   )?.label
                 }
               </p>
+              {caseResponseModelNote(caseId) ? (
+                <p data-case-model-boundary>{caseResponseModelNote(caseId)}</p>
+              ) : null}
               <h3>Actions to consider in this authored example</h3>
               <ul>
                 {definition.expectedActions.map((action) => (

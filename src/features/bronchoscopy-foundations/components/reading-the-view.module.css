@@ -1,0 +1,95 @@
+/*
+ * Reading the view — one table on the lesson (dark course palette) and on the Reference (site
+ * theme, light or dark). Colours come from the surrounding text so either theme reads correctly:
+ * rules are the text colour at low strength, headings the text colour at lower emphasis.
+ */
+.wrap {
+  --reading-view-line: color-mix(in srgb, currentColor 24%, transparent);
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.table th,
+.table td {
+  padding: 0.6rem 0.9rem 0.6rem 0;
+  border-top: 1px solid var(--reading-view-line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.table thead th {
+  border-top: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.78;
+}
+
+.table tbody th {
+  font-weight: 650;
+}
+
+.shortlist {
+  margin: 0;
+  padding-left: 1.05rem;
+  list-style: disc;
+}
+
+.shortlist li + li {
+  margin-top: 0.15rem;
+}
+
+.cellLabel {
+  display: none;
+}
+
+/* A narrow container: one card per row, every cell under its visible label. */
+@container (max-width: 42rem) {
+  .table,
+  .table tbody,
+  .table tr,
+  .table th,
+  .table td {
+    display: block;
+    width: auto;
+  }
+
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .table tbody tr {
+    margin: 0 0 0.75rem;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid var(--reading-view-line);
+    border-radius: 0.6rem;
+  }
+
+  .table tbody th,
+  .table tbody td {
+    padding: 0.3rem 0;
+    border: 0;
+  }
+
+  .cellLabel {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.78;
+  }
+}

@@ -121,13 +121,11 @@ export function VentilationTriggerAndCycle({
    */
   const trigger = triggerDelayEvidence(state)
   const triggerSentence =
-    trigger.status === 'measured'
-      ? `Measured trigger delay is ${round(trigger.delayMs ?? 0)} ms`
-      : trigger.status === 'model-estimate'
-        ? `Modeled trigger delay for this phenotype is ${round(trigger.delayMs ?? 0)} ms, not measured on this breath`
-        : trigger.status === 'not-applicable'
-          ? 'Trigger delay is not applicable: no effort belongs to this breath'
-          : 'Trigger delay is not available yet: no complete breath on the trace'
+    trigger.status === 'model-estimate'
+      ? `Modeled trigger delay for this phenotype is ${round(trigger.delayMs ?? 0)} ms, not measured on this breath`
+      : trigger.status === 'not-applicable'
+        ? 'Trigger delay is not applicable: no effort belongs to this breath'
+        : 'Trigger delay is not available yet: no complete breath on the trace'
   const ineffectivePercent = measurements.ineffectiveEffortFraction * 100
   const autotriggerPercent = measurements.autotriggerFraction * 100
   const machineSeconds = measurements.mechanicalInspiratoryTimeSeconds

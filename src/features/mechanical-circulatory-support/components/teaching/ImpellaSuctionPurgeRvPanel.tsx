@@ -7,6 +7,7 @@ import { mcsComparesAgainstActionBaseline, mcsMechanismDisclosed } from './revea
 import {
   MCS_ESTIMATED_FLOW_BOUNDARY,
   activeAlarms,
+  inflowLimitView,
   beforeAfterReadings,
   flowAccountView,
   impellaView,
@@ -58,6 +59,7 @@ export function ImpellaSuctionPurgeRvPanel({
   const pump = impellaView(state)
   const account = flowAccountView(state)
   const alarms = activeAlarms(state)
+  const inflowLimit = inflowLimitView(state)
   const rows = beforeAfterReadings(
     [
       {
@@ -281,13 +283,26 @@ export function ImpellaSuctionPurgeRvPanel({
                   : 'no suction state in this model'
             }
             kind="modeled"
-            note="A suction state means the chamber a pump is drawing from is underfilled or restricted relative to what has been asked of it."
+            note="A suction state means what is arriving at the inlet is below what the selected level has asked for. It is a statement about inflow, not a measurement of the chamber's size."
           />
+          {inflowLimit ? (
+            <LiveSetting
+              label="Smallest term feeding the left inlet"
+              value={inflowLimit.label}
+              kind="modeled"
+              note={`${inflowLimit.value.toFixed(2)} on this model's dimensionless scale (terms can exceed one). With the left pump running at P5 or above, a value below ${inflowLimit.threshold.toFixed(2)} raises modeled suction. ${inflowLimit.note}`}
+            />
+          ) : null}
         </div>
         <ModelBoundary>
-          Hemolysis is not modeled anywhere in this simulation, and neither is the detailed behavior
-          of a purge system. The blood-trauma alarm is a modeled risk flag, not a hemolysis outcome,
-          and no purge-fluid or anticoagulation management is authored here.
+          The limiting term above is this model&rsquo;s internal arithmetic made visible, not a
+          number any console reports and not a clinical measurement. It is shown because the
+          alternative is a suction alarm standing beside a full-looking ventricle with nothing on
+          screen to reconcile them. Which of the four domains is responsible in a patient is still a
+          bedside reconciliation. Hemolysis is not modeled anywhere in this simulation, and neither
+          is the detailed behavior of a purge system. The blood-trauma alarm is a modeled risk flag,
+          not a hemolysis outcome, and no purge-fluid or anticoagulation management is authored
+          here.
         </ModelBoundary>
         <FigureScope
           establishes="Which readings belong to which of the four domains, and what each domain can and cannot answer on its own."

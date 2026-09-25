@@ -18,3 +18,7 @@ export const mcsUnloadingSignals = [
   ['lvedvMl', 'LV end-diastolic volume', 'mL', 0],
   ['pcwpMmHg', 'Wedge pressure', 'mm Hg', 0],
 ] as const
+
+/** Matched-time arithmetic on display metrics, without asserting hidden precision. */
+export const MCS_UNLOADING_DELTA_CAPTION =
+  'The last column subtracts the rounded P5 control from the rounded changed setting at the same simulated instant. “No resolvable displayed change” means those displayed values are equal. This table does not quantify a smaller underlying change. Idle drift across different times is not a resolution threshold for this matched-time comparison.'

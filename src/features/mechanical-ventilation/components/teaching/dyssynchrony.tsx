@@ -10,6 +10,8 @@
  */
 import { useMemo, useState } from 'react'
 
+import { exhaledVolumeReading } from '../../content/measurementReadiness'
+import { patientReportAvailability } from '../../content/patientReport'
 import { plateauAcquisition } from '../../content/plateauAcquisition'
 import { triggerDelayEvidence } from '../../engine/triggerEvidence'
 import type { VentilationSimulationState } from '../../engine'
@@ -129,7 +131,10 @@ export function VentilationDyssynchronyDomains({
           bearing: effortPresent ? 'supports' : 'neutral',
         },
         {
-          signal: 'Reported dyspnea',
+          signal:
+            patientReportAvailability(state).availability === 'reported'
+              ? 'Reported dyspnea'
+              : 'Dyspnea index (not a patient report)',
           observed: `${round(human.dyspneaScore, 1)} on the modeled scale`,
           bearing: human.dyspneaScore > 0 ? 'supports' : 'neutral',
         },
@@ -183,10 +188,11 @@ export function VentilationDyssynchronyDomains({
                 ? '— no effort belongs to this breath'
                 : '— no complete breath on the trace yet',
           /*
-           * Only a delay actually measured between two events on this trace can bear on the
-           * mechanism; the phenotype's modeled value describes the class, not this breath.
+           * Only a delay actually measured between two events on this trace could bear on the
+           * mechanism, and the simulator measures none: every live value is the phenotype's
+           * modeled delay, which describes the class, not this breath (`triggerDelayEvidence`).
            */
-          bearing: trigger.status === 'measured' ? 'supports' : 'neutral',
+          bearing: 'neutral',
         },
         {
           signal: 'Efforts producing no breath',
@@ -211,7 +217,10 @@ export function VentilationDyssynchronyDomains({
         },
         {
           signal: 'Delivered tidal volume',
-          observed: `${round(measurements.exhaledVtMl)} mL exhaled`,
+          observed:
+            exhaledVolumeReading(state).exhaledVtMl === null
+              ? 'Awaiting a completed breath on the trace'
+              : `${round(measurements.exhaledVtMl)} mL exhaled`,
           bearing: 'neutral',
         },
         {

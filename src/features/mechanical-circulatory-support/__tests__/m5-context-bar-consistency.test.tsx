@@ -263,13 +263,13 @@ describe('MCS M5 — the patient-context bar reports device flow as the model do
     expect(account).toMatch(/EFFECTIVE FLOW\s*\d+\.\d\s*L\/min/)
   })
 
-  it('keeps a numeric displayed flow, marked estimated, on durable support', async () => {
+  it('keeps a numeric displayed flow, marked modeled, on durable support', async () => {
     const { container } = await renderWorkbench({ section: 'practice' })
     selectDeviceTrack('lvad')
 
     const account = monitorFlowAccountText(container)
     expect(account).toMatch(/DEVICE FLOW\s*\d+\.\d/)
-    expect(account).toMatch(/L\/min · estimated/)
+    expect(account).toMatch(/L\/min · modeled/)
     expect(account).not.toContain('NONE REPORTED')
     expect(account).toMatch(/EFFECTIVE FLOW\s*\d+\.\d\s*L\/min/)
   })

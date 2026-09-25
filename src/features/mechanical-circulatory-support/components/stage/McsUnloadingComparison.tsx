@@ -2,12 +2,20 @@ import { useState } from 'react'
 import {
   MCS_UNLOADING_BASE_LEVEL,
   MCS_UNLOADING_COMPARISON_LEVELS,
+  MCS_UNLOADING_DELTA_CAPTION,
   mcsUnloadingSignals,
   type McsUnloadingLevel,
 } from '../../content/unloadingExamples'
 import { mcsObservedDirection } from '../../engine/learningSession'
 import { replayMcsUnloadingComparison } from '../../engine/unloadingComparison'
 import styles from './mcs-unloading.module.css'
+
+/** Differences of the rounded values this table actually receives, at matched times. */
+function deltaText(before: number, after: number, unit: string, digits: number): string {
+  const difference = Number((after - before).toFixed(digits))
+  if (difference === 0) return 'No resolvable displayed change'
+  return `${difference > 0 ? '+' : '−'}${Math.abs(difference).toFixed(digits)} ${unit}`
+}
 
 /** A replay of provided examples; it never dispatches into a learner's live session. */
 export function McsUnloadingComparison() {
@@ -78,36 +86,62 @@ export function McsUnloadingComparison() {
                 Filling input: {preloadPercent}% of the model reference. This input is not a
                 measured blood volume or a clinical target.
               </p>
-              <table>
-                <caption>
-                  Provided outputs at {changed.timeSeconds.toFixed(2)} simulated seconds
-                </caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Modeled quantity</th>
-                    <th scope="col">P5 control</th>
-                    <th scope="col">P{level}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mcsUnloadingSignals.map(([key, name, unit, digits]) => (
-                    <tr key={key} data-unloading-signal={key}>
-                      <th scope="row">
-                        {name}
-                        <small>{unit}</small>
-                      </th>
-                      <td>{control.metrics[key].toFixed(digits)}</td>
-                      <td>{changed.metrics[key].toFixed(digits)}</td>
+              <p className={styles.tableHint}>
+                Scroll the table horizontally if all columns are not visible.
+              </p>
+              <div
+                className={styles.tableScroll}
+                role="region"
+                aria-label={`${label} pressure and flow comparison`}
+                tabIndex={0}
+              >
+                <table>
+                  <caption>
+                    Provided outputs at {changed.timeSeconds.toFixed(2)} simulated seconds
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Modeled quantity</th>
+                      <th scope="col">P5 control</th>
+                      <th scope="col">P{level}</th>
+                      <th scope="col">Difference at the same instant</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {mcsUnloadingSignals.map(([key, name, unit, digits]) => (
+                      <tr key={key} data-unloading-signal={key}>
+                        <th scope="row">
+                          {name}
+                          <small>{unit}</small>
+                        </th>
+                        <td>{control.metrics[key].toFixed(digits)}</td>
+                        <td>{changed.metrics[key].toFixed(digits)}</td>
+                        <td data-unloading-delta={key}>
+                          {deltaText(control.metrics[key], changed.metrics[key], unit, digits)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p data-unloading-delta-caption>{MCS_UNLOADING_DELTA_CAPTION}</p>
               <p data-unloading-interpretation>
                 Compared with continued P5, LV volume{' '}
                 {mcsObservedDirection(control.metrics.lvedvMl, changed.metrics.lvedvMl, 0)} by{' '}
                 {Math.abs(changed.metrics.lvedvMl - control.metrics.lvedvMl)} mL. Wedge pressure{' '}
                 {mcsObservedDirection(control.metrics.pcwpMmHg, changed.metrics.pcwpMmHg, 0)} (
-                {control.metrics.pcwpMmHg} → {changed.metrics.pcwpMmHg} mm Hg).
+                {control.metrics.pcwpMmHg} → {changed.metrics.pcwpMmHg} mm Hg). Left pump flow{' '}
+                {mcsObservedDirection(
+                  control.metrics.leftDeviceFlowLMin,
+                  changed.metrics.leftDeviceFlowLMin,
+                  2,
+                )}{' '}
+                by{' '}
+                {Math.abs(
+                  changed.metrics.leftDeviceFlowLMin - control.metrics.leftDeviceFlowLMin,
+                ).toFixed(2)}{' '}
+                L/min. These are matched-time endpoints; they do not establish the sequence of the
+                responses.
               </p>
               <details>
                 <summary>Starting state and model assumptions</summary>

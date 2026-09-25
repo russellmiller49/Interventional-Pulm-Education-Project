@@ -2,7 +2,6 @@
 
 import { useId, useState } from 'react'
 import { TEACHING_TREE, airwayDisplayName } from '../../content/airwayTree'
-import { scopeControl } from '../../content/controlPanel'
 import { useBronchoscopyFoundationsRecord } from '../useBronchoscopyFoundationsRecord'
 import { BRONCH_SECTION_IDS } from '../../content/sectionIds'
 import { MonitorPanel } from './MonitorPanel'
@@ -10,6 +9,7 @@ import { GRAMMAR_TREND_RULE, BRONCH_GRAMMAR } from '../../content/grammar'
 import { fiveControlsLearnInputs } from '../../content/fiveControlsLearn'
 import { isStillStructureId } from '../../content/media'
 import type { BronchStageLesson, BronchStageStep } from '../../content/stageLessons'
+import { ReadingTheViewTable } from '../ReadingTheViewTable'
 import { BlockCard } from './BronchTeachingBlock'
 import { BronchPilotTeaching } from './BronchPilotTeaching'
 import { InstrumentOrientation } from './InstrumentOrientation'
@@ -137,25 +137,12 @@ export function BronchCourseTeaching({
       ) : null}
       {chunk.grammar && section.grammarRowIds.length > 0 ? (
         <section className={styles.worked} data-teaching-block="grammar">
-          <h3>Connect the observation to the problem</h3>
-          {BRONCH_GRAMMAR.filter((row) => section.grammarRowIds.includes(row.id)).map((row) => (
-            <div key={row.id} data-grammar-row={row.id}>
-              <h4>{row.see}</h4>
-              <p>
-                {row.lives}: {row.shortlist.join('; ')}.
-              </p>
-              <p>
-                {row.verdict === 'this-control'
-                  ? row.thisControl.map((control) => scopeControl(control).plainName).join(', ')
-                  : row.verdict === 'no-control-retrace'
-                    ? 'Stop, name the last certain landmark, retrace'
-                    : row.verdict === 'no-control-stop-and-communicate'
-                      ? 'Stop the provoking action, communicate, get help'
-                      : 'The plan, the question or the record changes'}
-              </p>
-            </div>
-          ))}
-          <p>{GRAMMAR_TREND_RULE}</p>
+          <h3 id={`${id}-grammar`}>Connect the observation to the problem</h3>
+          <ReadingTheViewTable
+            rows={BRONCH_GRAMMAR.filter((row) => section.grammarRowIds.includes(row.id))}
+            labelledBy={`${id}-grammar`}
+          />
+          <p data-grammar-trend-rule>{GRAMMAR_TREND_RULE}</p>
         </section>
       ) : null}
       {chunk.kind === 'debrief' ? (

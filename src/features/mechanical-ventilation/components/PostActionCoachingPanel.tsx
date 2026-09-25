@@ -118,6 +118,12 @@ export function PostActionCoachingPanel({ coaching }: { coaching: PostActionCoac
           <strong>Reassess next</strong>
           {coaching.reassess}
         </p>
+        {coaching.modelBoundary ? (
+          <p data-coaching-claim="model-boundary">
+            <strong>What this simulation does not model</strong>
+            {coaching.modelBoundary}
+          </p>
+        ) : null}
         <p
           data-coaching-claim="stabilization"
           data-stabilization-required={coaching.stabilizationRequired}

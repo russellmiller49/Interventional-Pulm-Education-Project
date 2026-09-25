@@ -2,7 +2,9 @@ import type { McsTeachingPanelProps } from './panelProps'
 import { mcsComparesAgainstActionBaseline, mcsMechanismDisclosed } from './revealStage'
 import {
   MCS_ESTIMATED_FLOW_BOUNDARY,
+  MCS_DURABLE_FLOW_IDENTITY,
   activeAlarms,
+  afterloadCostView,
   beforeAfterReadings,
   flowAccountView,
   hasAlarm,
@@ -72,12 +74,13 @@ export function LvadAlarmsEmergenciesPanel({
   const disclosed = mcsMechanismDisclosed(reveal)
   const metrics = state.metrics
   const controller = lvadView(state)
+  const afterloadCost = afterloadCostView(state)
   const account = flowAccountView(state)
   const alarms = activeAlarms(state)
   const rows = beforeAfterReadings(
     [
       { metric: 'pumpPowerW', label: 'Pump power', unit: 'W', kind: 'displayed' },
-      { metric: 'deviceFlowLMin', label: 'Displayed pump flow', unit: 'L/min', kind: 'estimated' },
+      { metric: 'deviceFlowLMin', label: 'Displayed pump flow', unit: 'L/min', kind: 'modeled' },
       { metric: 'pulsatilityIndex', label: 'Pulsatility index', unit: '', kind: 'displayed' },
       {
         metric: 'effectiveSystemicFlowLMin',
@@ -146,10 +149,21 @@ export function LvadAlarmsEmergenciesPanel({
     {
       id: 'afterload',
       title: 'Afterload',
+      /*
+       * The row used to offer the displayed mean pressure as the evidence for this alarm. It is
+       * not: the predicate reads this patient's modeled unsupported mean pressure, which sits
+       * well below the monitor's figure, so the alarm can stay quiet in a state the model is
+       * plainly limiting (F27). The evidence now names the factor that does carry the limitation
+       * and says what the alarm's own input is.
+       */
       modeledState: hasAlarm(state, 'lvad-high-afterload') ? 'present' : 'absent',
-      evidence: `mean arterial pressure ${reading(metrics.mapMmHg, 0)} mm Hg · systemic vascular resistance ${reading(state.patient.systemicVascularResistanceDynSecCm5, 0)} dyn·s·cm⁻⁵ · high-afterload alarm ${hasAlarm(state, 'lvad-high-afterload') ? 'active' : 'not active'}`,
+      evidence: `mean arterial pressure ${reading(metrics.mapMmHg, 0)} mm Hg · systemic vascular resistance ${reading(state.patient.systemicVascularResistanceDynSecCm5, 0)} dyn·s·cm⁻⁵${
+        afterloadCost
+          ? ` · the modeled afterload multiplier reduces flow by ${afterloadCost.costPercent}% from otherwise identical modeled loading (the minimum of unsupported-baseline and compartment-gradient factors, not a measured device quantity) · the alarm's own input is this patient's modeled unsupported mean pressure, ${afterloadCost.alarmInputMmHg.toFixed(0)} mm Hg against a threshold of ${afterloadCost.alarmThresholdMmHg}, not the mean pressure above`
+          : ''
+      } · high-afterload alarm ${hasAlarm(state, 'lvad-high-afterload') ? 'active' : 'not active'}`,
       raises:
-        'Whether the pressure the pump ejects against is limiting what crosses it at this speed.',
+        'Whether the pressure the pump ejects against is limiting what crosses it at this speed. Read the cost figure rather than the alarm: the two are computed from different quantities, and a quiet alarm here does not mean the outlet is costing the pump nothing.',
       differential:
         'Hypertension reduces flow at a fixed speed. On this pathway a blood-pressure problem is a flow problem.',
     },
@@ -232,7 +246,7 @@ export function LvadAlarmsEmergenciesPanel({
             label="Displayed pump flow"
             value={metrics.deviceFlowLMin}
             unit="L/min"
-            kind="estimated"
+            kind="modeled"
           />
           <LiveValue
             label="Pulsatility index"
@@ -251,6 +265,7 @@ export function LvadAlarmsEmergenciesPanel({
       <PanelSection title="The flow account, and what has not moved" id="alarms-flow">
         <FlowAccount account={account} disclosed={disclosed} />
         <TextEquivalent>{flowAccountSentence(account, disclosed)}</TextEquivalent>
+        <ModelBoundary>{MCS_DURABLE_FLOW_IDENTITY}</ModelBoundary>
         <ModelBoundary>{MCS_ESTIMATED_FLOW_BOUNDARY}</ModelBoundary>
       </PanelSection>
 
@@ -419,7 +434,7 @@ export function LvadAlarmsEmergenciesPanel({
                 label="Displayed pump flow"
                 value={metrics.deviceFlowLMin}
                 unit="L/min"
-                kind="estimated"
+                kind="modeled"
               />
               <LiveValue
                 label="Effective systemic delivery"

@@ -712,8 +712,8 @@
       "learnerSurfaces": [
         {
           "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
-          "locator": "Integration transfer stem",
-          "excerpt": "Output is low, RAP is rising and PAPi falling, and PCWP is only modestly elevated. Which reasoning best selects the next mechanism?"
+          "locator": "Integration transfer stem (reworded by MCS-PRE-REVIEW-02; see learnerWording)",
+          "excerpt": "Output is low, RAP is rising to meet an already elevated PCWP, and PAPi is falling. Which reasoning best selects the next mechanism?"
         },
         {
           "file": "src/features/mechanical-circulatory-support/content/lessonTransfers.ts",
@@ -726,7 +726,7 @@
           "excerpt": "raises the displayed number more than it raises effective systemic delivery"
         }
       ],
-      "learnerWording": "Before: “Adding left-sided support to an RV-limited circulation raises the displayed number without raising effective systemic flow.” After: “…raises effective systemic flow only a little and leaves the suction pattern in place.”",
+      "learnerWording": "Before: “Adding left-sided support to an RV-limited circulation raises the displayed number without raising effective systemic flow.” After: “…raises effective systemic flow only a little and leaves the suction pattern in place.” MCS-PRE-REVIEW-02 (2026-09-22) then reworded the stem quoted above. The measured state this transfer sets up does not have a modest wedge pressure: it settles with the right atrial pressure risen to about the wedge pressure and both above the 15 mm Hg the module\u2019s own congestion framework cites, so \u201conly modestly elevated\u201d contradicted the congestion panel on the same screen (F29). Previous stem: \u201cOutput is low, RAP is rising and PAPi falling, and PCWP is only modestly elevated. Which reasoning best selects the next mechanism?\u201d The keyed option, its id and the teaching point are unchanged, and this item\u2019s decision remains NOT REVIEWED.",
       "intendedTeachingPoint": "Device selection follows the limiting problem: left-sided escalation cannot fix delivery that fails upstream of the left heart.",
       "sourceRecordIds": [
         "mcs-bedside-reference-supplied",
