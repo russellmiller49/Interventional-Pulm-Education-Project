@@ -33,6 +33,7 @@ import type {
 } from '../engine'
 import { resolvePumpStopExplanation } from '../engine'
 import { formatChannelReadout } from './channelReadout'
+import { revealEcmoTargetIfNeeded } from './stage/scrollTaskPaneToTop'
 import styles from './cardiohelp-ecmo.module.css'
 
 interface CardiohelpConsoleProps {
@@ -837,7 +838,13 @@ export function CardiohelpConsole({
                   aria-current={state.device.screen === tab.id ? 'page' : undefined}
                   data-active={state.device.screen === tab.id}
                   data-guided-help={guidedControlId === `cardiohelp-screen-${tab.id}`}
-                  onClick={() => dispatch({ type: 'SET_SCREEN', screen: tab.id })}
+                  onClick={(event) => {
+                    const button = event.currentTarget
+                    dispatch({ type: 'SET_SCREEN', screen: tab.id })
+                    // A reflowed screen can change height above its tabs. Retain the learner's
+                    // active tab without scrolling the whole console or changing focus.
+                    requestAnimationFrame(() => revealEcmoTargetIfNeeded(button))
+                  }}
                 >
                   {tab.short}
                 </button>

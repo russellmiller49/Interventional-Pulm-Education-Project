@@ -4090,6 +4090,33 @@
   overflow-wrap: normal;
 }
 
+/* Keep the shared gate's copy and actions inside this module's narrow bedside panel. */
+@media (max-width: 600px) {
+  .bedsideView :global([data-gate-reason]) {
+    min-width: 0;
+    padding: 0.25rem;
+  }
+
+  .bedsideView :global([data-gate-reason]) > div {
+    min-width: 0;
+    padding: 0.375rem;
+  }
+
+  .bedsideView :global([data-gate-reason]) h2 {
+    font-size: var(--ecmo-type-floor, 0.875rem);
+  }
+
+  .bedsideView :global([data-gate-reason]) dl > div {
+    display: block;
+  }
+
+  .bedsideView :global([data-gate-reason]) :is(button, a) {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+  }
+}
+
 /*
  * The full-width toggle only changes anything where the task is two columns (≥1100 px viewport, the
  * flowing layout's own breakpoint), so it is offered only there.

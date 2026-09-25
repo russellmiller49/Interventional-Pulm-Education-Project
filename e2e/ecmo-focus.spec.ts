@@ -296,6 +296,24 @@ test('clearance follows resized chrome and is removed when leaving Learn', async
 })
 
 // Independent Prompt-03 regressions: these exercise the failures missed by a width-only sweep.
+test('Prompt03: the enlarged phone launch gate keeps its action inside the panel', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 740 })
+  await open(page, 'circuit-flow-path', true)
+  await page.getByRole('tab', { name: 'Bedside 3D circuit' }).click()
+  const action = page.getByRole('button', { name: 'Continue on this device', exact: true })
+  await action.focus()
+  await settle(page)
+  await visibleFocus(page)
+  const panel = await page.locator('#cardiohelp-bedside-view').boundingBox()
+  const button = await action.boundingBox()
+  expect(button!.x).toBeGreaterThanOrEqual(panel!.x)
+  expect(button!.x + button!.width).toBeLessThanOrEqual(panel!.x + panel!.width)
+  await page.keyboard.press('Enter')
+  await expect(page.locator('[data-gate-reason]')).toHaveCount(0)
+})
+
 test('Prompt03: header controls retain focus across the phone breakpoint', async ({ page }) => {
   await page.setViewportSize({ width: 610, height: 844 })
   await open(page, 'circuit-flow-path')
@@ -309,7 +327,7 @@ test('Prompt03: header controls retain focus across the phone breakpoint', async
   const summary = page.locator('[data-ecmo-header-more] > summary')
   await summary.focus()
   await page.setViewportSize({ width: 610, height: 844 })
-  await expect(page.getByRole('button', { name: 'VV track', exact: true })).toBeFocused()
+  await expect(page.getByRole('radio', { name: 'VV track', exact: true })).toBeFocused()
 })
 
 test('Prompt03: enlarged emergency strip does not intercept the event or crush console tabs', async ({
@@ -328,6 +346,7 @@ test('Prompt03: enlarged emergency strip does not intercept the event or crush c
   for (const tab of await tabs.all()) {
     await tab.focus()
     await page.keyboard.press('Enter')
+    await settle(page)
     await expect(tab).toBeFocused()
     const bounds = await tab.evaluate((e) => {
       const text = document.createRange()
