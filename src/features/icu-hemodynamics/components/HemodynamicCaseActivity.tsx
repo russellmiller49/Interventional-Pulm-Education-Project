@@ -20,6 +20,7 @@ import type {
 import { Link, useRouter } from '@/i18n/navigation'
 
 import {
+  authoredConcernForUnfavourableAction,
   feedbackForHemodynamicAction,
   feedbackTimingForHemodynamicAction,
   hemodynamicPreparationGuidance,
@@ -37,11 +38,28 @@ import {
 import {
   createInitialHemodynamicState,
   icuHemodynamicsReducer,
-  thermodilutionAcceptedAverage,
   type HemodynamicAction,
+  type HemodynamicInterventionDefinition,
   type HemodynamicSimulationState,
 } from '../engine'
-import { describeObservedSystemState, observedSystemState } from '../engine/decisionRecord'
+import {
+  acceptedFlowSeries,
+  describeObservedSystemState,
+  flowAroundAction,
+  observedSystemState,
+  type AcquiredFlow,
+  type ObservedSystemState,
+} from '../engine/decisionRecord'
+import { modelOnlyHorizonSeconds, modelOnlyMatchedComparison } from '../engine/matchedComparison'
+import {
+  physiologicalEpisodeWords,
+  thermodilutionSeriesView,
+} from '../engine/measurementProvenance'
+import {
+  absorbedInterventionNarration,
+  interventionHasModeledEffect,
+  latentPhysiologicalEstimates,
+} from '../engine/simulation'
 import { updateSelfPacedRecord, withCaseOpened } from '../engine/selfPacedProgress'
 import { IcuHemodynamicsModuleFrameV2 } from './IcuHemodynamicsModuleFrameV2'
 import flowStyles from './stage/hemodynamics-flow.module.css'
@@ -61,6 +79,25 @@ function seededCaseNumber(caseId: string, mode: CaseMode): number {
 
 function metricValue(value: number | null, digits = 0): string {
   return value === null || !Number.isFinite(value) ? '—' : value.toFixed(digits)
+}
+
+/**
+ * An action the case accepted, with the state immediately before it (HD-PRE-REVIEW-02).
+ *
+ * Kept so the response to it can be read at a matched time: what the monitor showed and what had
+ * been acquired just before, against what it shows now — and, labelled as the model's own values,
+ * what this model does at the same moment with and without the action.
+ */
+interface CaseActionRecord {
+  readonly id: string
+  readonly intervention: HemodynamicInterventionDefinition
+  readonly atSeconds: number
+  readonly before: HemodynamicSimulationState
+}
+
+/** One acquired series, said with the conditions it was acquired under. */
+function flowWords(flow: AcquiredFlow): string {
+  return `${flow.cardiacOutputLMin.toFixed(1)} L/min (CI ${flow.cardiacIndexLMinM2.toFixed(1)}), acquired ${physiologicalEpisodeWords(flow.episode)}`
 }
 
 function requireValue<T>(value: T | undefined, message: string): T {
@@ -145,6 +182,7 @@ export function HemodynamicCaseActivity({
   const [revealedFeedbackIds, setRevealedFeedbackIds] = useState<readonly string[]>([])
   const [decisionTrace, setDecisionTrace] = useState<readonly ScenarioDecisionTraceEntry[]>([])
   const [activeHardInterruptId, setActiveHardInterruptId] = useState<string | null>(null)
+  const [actionRecords, setActionRecords] = useState<readonly CaseActionRecord[]>([])
   const traceSequence = useRef(0)
   const feedbackSequence = useRef(0)
   // Automatic open/visible/phase lifecycle events only; no answer, hint, safety or outcome events.
@@ -298,6 +336,25 @@ export function HemodynamicCaseActivity({
     // A refused request is answered at once whatever the setting: it is the answer to a press, not
     // a teaching verdict on a modeled response.
     const timing = hardInterrupt || preparationOnly || !holdFeedback ? authoredTiming : 'debrief'
+    // Reduce it, then read the result. A dispatch is a request; only the engine says what happened.
+    // A safety interrupt is never reduced: the pre-action state is preserved.
+    const next = hardInterrupt
+      ? state
+      : icuHemodynamicsReducer(state, {
+          type: 'APPLY_INTERVENTION',
+          intervention: selected,
+        })
+    const accepted = next.activeEffects.length > state.activeEffects.length
+    // HD-PRE-REVIEW-02 sanity repair (blocker 2): accepted, but the model's bounds absorb its whole
+    // effect — no new physiological episode. The authored "what happened" describes a change the
+    // model did not make, so it is replaced by what did happen; the teaching around it is kept.
+    const absorbed =
+      accepted &&
+      interventionHasModeledEffect(selected) &&
+      next.physiologicalEpisode.index === state.physiologicalEpisode.index
+    const authoredFeedback = preparationOnly
+      ? preparationFeedbackForHemodynamicAction(selected)
+      : feedbackForHemodynamicAction(definition, selected, hardInterrupt)
     feedbackSequence.current += 1
     const event: ScenarioFeedbackEvent = {
       id: `${caseId}-feedback-${feedbackSequence.current}`,
@@ -306,9 +363,9 @@ export function HemodynamicCaseActivity({
       timeSeconds: state.timeSeconds,
       timing,
       hardInterrupt,
-      feedback: preparationOnly
-        ? preparationFeedbackForHemodynamicAction(selected)
-        : feedbackForHemodynamicAction(definition, selected, hardInterrupt),
+      feedback: absorbed
+        ? { ...authoredFeedback, whatHappened: absorbedInterventionNarration(selected) }
+        : authoredFeedback,
     }
     setFeedbackEvents((current) => [...current, event])
 
@@ -324,18 +381,25 @@ export function HemodynamicCaseActivity({
       return
     }
 
-    // Reduce it, then read the result. A dispatch is a request; only the engine says what happened.
-    const next = icuHemodynamicsReducer(state, {
-      type: 'APPLY_INTERVENTION',
-      intervention: selected,
-    })
-    const accepted = next.activeEffects.length > state.activeEffects.length
     recordDecision(
-      accepted
-        ? `Applied ${selected.label}.`
-        : `Requested ${selected.label}; this case did not perform it from the action list.`,
+      absorbed
+        ? `Applied ${selected.label}; it had no further modeled effect — every quantity it acts on was already at the limit this simulation allows.`
+        : accepted
+          ? `Applied ${selected.label}.`
+          : `Requested ${selected.label}; this case did not perform it from the action list.`,
     )
     if (!baseline) setBaseline(state)
+    if (accepted) {
+      setActionRecords((current) => [
+        ...current,
+        {
+          id: `${caseId}-action-${feedbackSequence.current}`,
+          intervention: selected,
+          atSeconds: state.timeSeconds,
+          before: state,
+        },
+      ])
+    }
     setState(next)
     if (!accepted && next.responseMessage && next.responseMessage !== state.responseMessage) {
       setMessage(next.responseMessage)
@@ -424,7 +488,17 @@ export function HemodynamicCaseActivity({
   }
 
   function reset() {
-    setState(createInitialHemodynamicState(definition, 'practice', seededCaseNumber(caseId, mode)))
+    // A reset is a new run of the case: the reducer gives it a new session identity, so nothing
+    // acquired before the reset can be read as this run's measurement.
+    setState((current) =>
+      icuHemodynamicsReducer(current, {
+        type: 'RESET_CASE',
+        definition,
+        mode: 'practice',
+        seed: seededCaseNumber(caseId, mode),
+      }),
+    )
+    setActionRecords([])
     setPhase('recognize')
     setHintVisible(false)
     setBaseline(null)
@@ -448,7 +522,14 @@ export function HemodynamicCaseActivity({
   const requiredCompleted = definition.requiredInterventionIds.filter((id) =>
     state.completedInterventionIds.includes(id),
   ).length
-  const average = thermodilutionAcceptedAverage(state.thermodilutionTrials)
+  // The accepted series for the conditions now; a series from before a modeled intervention is not
+  // carried forward as the current value (report P-05).
+  const seriesView = thermodilutionSeriesView(state)
+  const average = seriesView.current.averageLMin
+  const observedNow = observedSystemState(state)
+  const legRaise = [...actionRecords]
+    .reverse()
+    .find((record) => record.intervention.id === 'passive-leg-raise')
   const visibleInterventions = definition.interventions
 
   let taskControls = null
@@ -624,16 +705,18 @@ export function HemodynamicCaseActivity({
     taskControls = (
       <div className="grid gap-3">
         <dl className="grid gap-2 text-sm">
-          <div className="flex justify-between">
-            <dt>MAP</dt>
-            <dd>{metricValue(state.measurements.mapMmHg)} mmHg</dd>
+          <div className="flex justify-between gap-3">
+            <dt>MAP (monitor, last beat)</dt>
+            <dd>{metricValue(observedNow.arterialMean.displayedMmHg)} mmHg</dd>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between gap-3">
             <dt>Cardiac index</dt>
-            <dd>
-              {average === null
-                ? 'Not acquired'
-                : `${metricValue(average / state.parameters.bodySurfaceAreaM2, 1)} L/min/m²`}
+            <dd data-observe-cardiac-index>
+              {average !== null
+                ? `${metricValue(average / state.parameters.bodySurfaceAreaM2, 1)} L/min/m²`
+                : observedNow.earlierFlow
+                  ? `Not acquired under the current conditions (the last series was acquired ${physiologicalEpisodeWords(observedNow.earlierFlow.episode)})`
+                  : 'Not acquired'}
             </dd>
           </div>
           <div className="flex justify-between">
@@ -651,6 +734,7 @@ export function HemodynamicCaseActivity({
             <dd>{average === null ? 'Pending' : `${average.toFixed(1)} L/min`}</dd>
           </div>
         </dl>
+        {legRaise ? <LegRaiseModelOnly record={legRaise} state={state} /> : null}
         <button
           type="button"
           className="min-h-11 rounded-xl border px-4 py-2.5 text-sm font-semibold"
@@ -865,6 +949,10 @@ export function HemodynamicCaseActivity({
               Adult ICU · simulated · HR {metricValue(state.measurements.heartRateBpm)} /min · PEEP{' '}
               {state.parameters.peepCmH2O} cm H₂O
             </p>
+            <p data-model-time>
+              Model time: the clock on the monitor counts simulation seconds. Responses here are
+              compressed, and their timing is not a clinical time course.
+            </p>
           </section>
           {state.catheter.balloonInflated ? (
             <aside className={flowStyles.safety} role="status">
@@ -904,6 +992,7 @@ export function HemodynamicCaseActivity({
                 state={state}
                 baseline={baseline}
                 decisionTrace={decisionTrace}
+                actionRecords={actionRecords}
               />
               <ScenarioTeachingDebrief
                 allowRevealWithoutFrame
@@ -947,39 +1036,11 @@ export function HemodynamicCaseActivity({
           ) : (
             <>
               {phase === 'observe' && baseline ? (
-                <section className={flowStyles.comparison} aria-label="Retained case observations">
-                  <h2>Before action and current response</h2>
-                  <p>
-                    Recorded before your first recorded frame or action; current values reflect the
-                    running model.
-                  </p>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Observation</th>
-                        <th>Before action</th>
-                        <th>Current</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <th>MAP (mmHg)</th>
-                        <td>{metricValue(baseline.measurements.mapMmHg)}</td>
-                        <td>{metricValue(state.measurements.mapMmHg)}</td>
-                      </tr>
-                      <tr>
-                        <th>Accepted thermodilution CO (L/min)</th>
-                        <td>
-                          {metricValue(
-                            thermodilutionAcceptedAverage(baseline.thermodilutionTrials),
-                            1,
-                          )}
-                        </td>
-                        <td>{metricValue(average, 1)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </section>
+                <BeforeAndCurrent
+                  before={observedSystemState(baseline)}
+                  now={observedNow}
+                  elapsedSeconds={state.timeSeconds - baseline.timeSeconds}
+                />
               ) : null}
               <HemodynamicNativeWorkspace
                 state={state}
@@ -1029,26 +1090,117 @@ export function HemodynamicCaseActivity({
  * kind of evidence, not as a reason treatment should have waited. It is HD-local data rendered
  * beside the shared debrief rather than a change to it.
  */
+/**
+ * The before-and-now table in the response step (HD-PRE-REVIEW-02).
+ *
+ * Both columns are what a learner could have had: the monitor's printed MAP at each moment, and the
+ * accepted thermodilution series for the conditions at each moment. It used to print the model's
+ * own MAP estimate and a pooled average; a series from before a modeled intervention is now shown
+ * with its conditions and is never the "current" value.
+ */
+function BeforeAndCurrent({
+  before,
+  now,
+  elapsedSeconds,
+}: {
+  readonly before: ObservedSystemState
+  readonly now: ObservedSystemState
+  readonly elapsedSeconds: number
+}) {
+  return (
+    <section className={flowStyles.comparison} aria-label="Retained case observations">
+      <h2>Before action and current response</h2>
+      <p>
+        Recorded just before your first recorded frame or action, and now,{' '}
+        {elapsedSeconds.toFixed(0)} model seconds later. MAP is the monitor’s last beat at each
+        moment. Each thermodilution value is the series acquired under the conditions named; two
+        series are compared as two, never averaged.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Observation</th>
+            <th>Before action</th>
+            <th>Current</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>MAP (mmHg, monitor)</th>
+            <td>{metricValue(before.arterialMean.displayedMmHg)}</td>
+            <td>{metricValue(now.arterialMean.displayedMmHg)}</td>
+          </tr>
+          <tr>
+            <th>Accepted thermodilution CO</th>
+            <td data-before-flow>{before.flow ? flowWords(before.flow) : 'Not acquired'}</td>
+            <td data-current-flow>
+              {now.flow
+                ? flowWords(now.flow)
+                : now.earlierFlow
+                  ? 'Not acquired under the current conditions'
+                  : 'Not acquired'}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  )
+}
+
+/**
+ * The leg raise's flow response, as the model has it (report P-04).
+ *
+ * The monitor has no continuous flow channel, so a learner who performed a leg raise saw no flow
+ * response unless they acquired a thermodilution series while it lasted. The model's own flow does
+ * respond, and this shows it — as a model-only teaching value, labelled so, never recorded in the
+ * decision trace, and never called a cardiac output, stroke volume or VTI measurement.
+ */
+function LegRaiseModelOnly({
+  record,
+  state,
+}: {
+  readonly record: CaseActionRecord
+  readonly state: HemodynamicSimulationState
+}) {
+  const atStart = latentPhysiologicalEstimates(record.before).cardiacOutputLMin
+  const now = latentPhysiologicalEstimates(state).cardiacOutputLMin
+  const elapsed = state.timeSeconds - record.atSeconds
+  return (
+    <details className="rounded-xl border p-3 text-sm leading-6" data-model-only-flow>
+      <summary>Model-only flow during the leg raise — not a measurement</summary>
+      <p>
+        The simulation’s internal cardiac output, which no channel on this monitor displays:{' '}
+        {atStart.toFixed(2)} L/min when the leg raise began, {now.toFixed(2)} L/min now,{' '}
+        {elapsed.toFixed(0)} model seconds later.
+      </p>
+      <p>
+        This is the model’s own value, shown for teaching. It is not a cardiac-output, stroke-volume
+        or VTI measurement, and it is not recorded in your decision trace. A measured response needs
+        a thermodilution series acquired while the leg raise lasts; a series from before it cannot
+        show one.
+      </p>
+    </details>
+  )
+}
+
 function CaseRunSummary({
   definition,
   state,
   baseline,
   decisionTrace,
+  actionRecords,
 }: {
   readonly definition: ReturnType<typeof hemodynamicCaseById.get> & object
   readonly state: HemodynamicSimulationState
   readonly baseline: HemodynamicSimulationState | null
   readonly decisionTrace: readonly ScenarioDecisionTraceEntry[]
+  readonly actionRecords: readonly CaseActionRecord[]
 }) {
   const definitive = definition.interventions.filter((item) => item.category === 'definitive')
   const observed = observedSystemState(state)
   const before = baseline ? observedSystemState(baseline) : null
   const mapChange =
     before === null ? null : observed.arterialMean.displayedMmHg - before.arterialMean.displayedMmHg
-  const flowChange =
-    before === null || before.flow === null || observed.flow === null
-      ? null
-      : observed.flow.cardiacIndexLMinM2 - before.flow.cardiacIndexLMinM2
 
   return (
     <section
@@ -1082,13 +1234,15 @@ function CaseRunSummary({
           {Math.abs(mapChange) < 0.5
             ? 'Displayed MAP has not moved over this run.'
             : `Displayed MAP moved ${mapChange > 0 ? 'up' : 'down'} by ${Math.abs(mapChange).toFixed(0)} mmHg over this run.`}{' '}
-          {observed.flow === null
-            ? 'No accepted thermodilution series was acquired, so this run holds no flow measurement to say whether perfusion moved with it. A higher displayed pressure on its own is not documented improvement, and not documented resolution of a mechanism.'
-            : flowChange === null
-              ? `The accepted thermodilution series here (${observed.flow.trialCount} curves) has no earlier counterpart in this run to compare it with.`
-              : `The accepted thermodilution series moved by ${flowChange >= 0 ? '+' : ''}${flowChange.toFixed(1)} L/min/m² over the same run. Read the two together; the pressure alone does not establish flow.`}
+          {flowSentence(state)}
         </p>
       ) : null}
+      <LegRaiseSummary definition={definition} state={state} actionRecords={actionRecords} />
+      <UnfavourableActions definition={definition} state={state} actionRecords={actionRecords} />
+      <p className="text-xs opacity-80" data-model-time>
+        Model time is compressed: the seconds on the monitor are simulation seconds, and no response
+        here is a clinical time course.
+      </p>
       <p className="text-xs opacity-80">
         This is a record of what happened in this run on this device. It is not a judgement of
         competence, and the only thing kept is that you opened the case. {decisionTrace.length}{' '}
@@ -1096,5 +1250,275 @@ function CaseRunSummary({
         {decisionTrace.length === 1 ? '' : 's'} recorded.
       </p>
     </section>
+  )
+}
+
+/*
+ * HD-PRE-REVIEW-02 sanity repair (blocker 3). This used to compare only the record before the first
+ * action with the record at the end. When neither held a *current* series it said no series had
+ * been acquired at all — even with an accepted post-fluid series on file, withheld from "now" only
+ * because a later action had changed the conditions. It now reads every accepted series the run
+ * holds, each with the conditions it was acquired under, and keeps "none under the final
+ * conditions" apart from "none ever".
+ */
+function flowSentence(state: HemodynamicSimulationState): string {
+  const series = acceptedFlowSeries(state)
+  if (series.length === 0) {
+    return 'No accepted thermodilution series was acquired, so this run holds no flow measurement to say whether perfusion moved with it. A higher displayed pressure on its own is not documented improvement, and not documented resolution of a mechanism.'
+  }
+  const current = series.find((item) => item.current)?.flow ?? null
+  const earlier = series.filter((item) => !item.current).map((item) => item.flow)
+  if (current === null) {
+    const listed =
+      earlier.length === 1
+        ? `An accepted thermodilution series was acquired ${physiologicalEpisodeWords(earlier[0].episode)}: ${earlier[0].cardiacOutputLMin.toFixed(1)} L/min (CI ${earlier[0].cardiacIndexLMinM2.toFixed(1)}), from ${earlier[0].trialCount} curves.`
+        : `Accepted thermodilution series were acquired under ${earlier.length} earlier sets of conditions, each kept separate and never averaged: ${earlier.map(flowWords).join('; ')}.`
+    return `${listed} The modeled physiology has changed since — the conditions at the end of the run are those ${physiologicalEpisodeWords(state.physiologicalEpisode)} — and no series was acquired under them, so this run holds no measurement of flow under the final conditions, and none of whether flow changed after ${earlier.length === 1 ? 'that series' : 'the last of those series'} was acquired. ${earlier.length === 1 ? 'It stays a measurement' : 'They stay measurements'} of the earlier conditions. The pressure alone does not establish flow.`
+  }
+  if (earlier.length === 0) {
+    return `The accepted thermodilution series here (${current.trialCount} curves, ${physiologicalEpisodeWords(current.episode)}) has no earlier counterpart in this run to compare it with.`
+  }
+  const previous = earlier[earlier.length - 1]
+  const change =
+    (current.cardiacOutputUnroundedLMin - previous.cardiacOutputUnroundedLMin) /
+    state.parameters.bodySurfaceAreaM2
+  return `Accepted series under ${series.length} different sets of conditions: ${series.map((item) => flowWords(item.flow)).join(', then ')}. From the one acquired ${physiologicalEpisodeWords(previous.episode)} to the one under the final conditions, cardiac index changed by ${change >= 0 ? '+' : '−'}${Math.abs(change).toFixed(2)} L/min/m². They are compared as separate series, never averaged. Read them with the pressure; the pressure alone does not establish flow.`
+}
+
+/**
+ * What this run measured around a leg raise (report P-04). The authored expert path reads "flow
+ * rises during passive leg raise"; this says whether this run acquired anything that could show it.
+ */
+function LegRaiseSummary({
+  definition,
+  state,
+  actionRecords,
+}: {
+  readonly definition: ReturnType<typeof hemodynamicCaseById.get> & object
+  readonly state: HemodynamicSimulationState
+  readonly actionRecords: readonly CaseActionRecord[]
+}) {
+  const record = actionRecords.find(
+    (candidate) => candidate.intervention.id === 'passive-leg-raise',
+  )
+  const comparison = useMemo(
+    () =>
+      record
+        ? modelOnlyMatchedComparison(
+            record.before,
+            record.intervention,
+            modelOnlyHorizonSeconds(record.intervention),
+          )
+        : null,
+    [record],
+  )
+  if (!definition.interventions.some((item) => item.id === 'passive-leg-raise')) return null
+  if (!record || !comparison) {
+    return (
+      <p data-leg-raise-summary="not-performed">
+        Leg raise: not performed in this run, so there is no leg-raise response to read.
+      </p>
+    )
+  }
+  // Which series belongs to the leg raise's own conditions comes from the series' acquisition
+  // identity (HD-PRE-REVIEW-02 sanity repair, blocker 3), the same rule the other debrief rows use.
+  const around = flowAroundAction(state, {
+    interventionId: record.intervention.id,
+    atSeconds: record.atSeconds,
+    episodeBefore: record.before.physiologicalEpisode.index,
+  })
+  const noMeasuredResponse =
+    'The monitor has no continuous flow channel, so this run holds no measured flow response to the leg raise. The expert path below describes one; this run did not measure it.'
+  return (
+    <div className="grid gap-2" data-leg-raise-summary="performed">
+      <p>
+        <strong>Leg raise at {record.atSeconds.toFixed(0)} model seconds.</strong>{' '}
+        {around.kind === 'under-its-conditions'
+          ? `A thermodilution series was acquired while its modeled effect was building: ${around.after.cardiacOutputLMin.toFixed(1)} L/min from ${around.after.trialCount} curves. That is the measured response in this run.`
+          : around.kind === 'no-modeled-change'
+            ? 'It changed nothing in the model: every quantity it acts on was already at the limit this simulation allows, so there was no response to measure.'
+            : around.kind === 'only-after-a-later-change'
+              ? `No series was acquired while its modeled effect was building. The first series after it (${flowWords(around.firstAfter)}) came only after a later change in the modeled physiology, so it is not the leg-raise response. ${noMeasuredResponse}`
+              : `No thermodilution series was acquired while it lasted. ${noMeasuredResponse}`}
+      </p>
+      <ModelOnlyTable comparison={comparison} label="the leg raise" />
+    </div>
+  )
+}
+
+/**
+ * Choices the case lists as unfavourable, named against the learner's own run (report P-08).
+ *
+ * It quotes the case's own authored reason, says what this run displayed and acquired afterwards,
+ * and states what the model cannot show. It adds no verdict, no deterioration, and no score; a MAP
+ * that rose afterwards is described as exactly that.
+ */
+function UnfavourableActions({
+  definition,
+  state,
+  actionRecords,
+}: {
+  readonly definition: ReturnType<typeof hemodynamicCaseById.get> & object
+  readonly state: HemodynamicSimulationState
+  readonly actionRecords: readonly CaseActionRecord[]
+}) {
+  // The records are immutable snapshots held in state, so this runs once per recorded action rather
+  // than on every tick of the running case.
+  const comparisons = useMemo(
+    () =>
+      actionRecords
+        .filter((record) => definition.unsafeInterventionIds.includes(record.intervention.id))
+        .map((record) => ({
+          record,
+          comparison: modelOnlyMatchedComparison(
+            record.before,
+            record.intervention,
+            modelOnlyHorizonSeconds(record.intervention),
+          ),
+        })),
+    [actionRecords, definition],
+  )
+  if (comparisons.length === 0) return null
+  const now = observedSystemState(state)
+  return (
+    <div className="grid gap-3" data-unfavourable-actions>
+      <h4 className="font-bold text-white">Choices this case lists as unfavourable</h4>
+      {comparisons.map(({ record, comparison }) => {
+        const concern = authoredConcernForUnfavourableAction(definition, record.intervention.id)
+        const atAction = observedSystemState(record.before)
+        const flowAround = flowAroundAction(state, {
+          interventionId: record.intervention.id,
+          atSeconds: record.atSeconds,
+          episodeBefore: record.before.physiologicalEpisode.index,
+        })
+        return (
+          <div
+            key={record.id}
+            className="grid gap-2"
+            data-unfavourable-action={record.intervention.id}
+          >
+            <p>
+              <strong>
+                {record.intervention.label}, at {record.atSeconds.toFixed(0)} model seconds.
+              </strong>{' '}
+              This case lists it among its unfavourable choices.{' '}
+              {concern
+                ? `The case’s own reasoning: “${concern}”`
+                : 'Its authored reasoning adds nothing further about this choice.'}
+            </p>
+            <p>
+              Afterwards in this run: the monitor’s MAP read {atAction.arterialMean.displayedMmHg}{' '}
+              mmHg just before it and {now.arterialMean.displayedMmHg} mmHg now.{' '}
+              {flowAfterActionSentence(state, record.intervention, flowAround)} A higher displayed
+              MAP afterwards is not by itself benefit, and not by itself a sign the choice was
+              sound.
+            </p>
+            {record.intervention.id === 'fluid-250' ? (
+              <p>
+                What this model can and cannot show: it moves flow and filling pressures with a
+                volume step, but it does not model oxygenation or lung water, so SpO₂ does not
+                change with fluid here. An unchanged SpO₂ is not evidence that the fluid was
+                harmless.
+              </p>
+            ) : null}
+            <ModelOnlyTable comparison={comparison} label={record.intervention.shortLabel} />
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * What this run measured of flow after one action, from the series' own acquisition identity
+ * (HD-PRE-REVIEW-02 sanity repair, blocker 3). A series from before the action is never offered as
+ * its effect, and a series acquired only after a later change is not read as this action's alone.
+ */
+function flowAfterActionSentence(
+  state: HemodynamicSimulationState,
+  intervention: HemodynamicInterventionDefinition,
+  around: ReturnType<typeof flowAroundAction>,
+): string {
+  const beforeWords = around.before
+    ? ` The series acquired before it (${flowWords(around.before)}) describes the conditions before this choice, not its effect.`
+    : ''
+  switch (around.kind) {
+    case 'no-modeled-change':
+      return interventionHasModeledEffect(intervention)
+        ? 'It changed nothing in the model: every quantity it acts on was already at the limit this simulation allows, so there was no change in flow for a series to measure.'
+        : 'It has no modeled effect on the patient’s physiology, so there was no change in flow for a series to measure.'
+    case 'none-after':
+      return around.before
+        ? `No thermodilution series was acquired after it.${beforeWords} So this run holds no measurement of whether flow changed.`
+        : 'No thermodilution series was acquired after it, so this run holds no measurement of whether flow changed.'
+    case 'only-after-a-later-change':
+      return `No series was acquired under the conditions it created. The first accepted series after it (${flowWords(around.firstAfter)}) came only after a later change in the modeled physiology, so it cannot be read as this choice’s effect alone.${beforeWords}`
+    case 'under-its-conditions':
+      return `Flow was acquired after it, under the conditions it created: ${flowWords(around.after)}.${
+        around.afterIsCurrent
+          ? ''
+          : ` That series is now historical: the modeled physiology has changed since — the conditions now are those ${physiologicalEpisodeWords(state.physiologicalEpisode)} — and ${
+              around.current
+                ? `the series under them is ${flowWords(around.current)}`
+                : 'no series has been acquired under them, so current flow is not measured'
+            }.`
+      }`
+    default:
+      return ''
+  }
+}
+
+function ModelOnlyTable({
+  comparison,
+  label,
+}: {
+  readonly comparison: ReturnType<typeof modelOnlyMatchedComparison>
+  readonly label: string
+}) {
+  const rows: readonly (readonly [
+    string,
+    (value: typeof comparison.withAction) => number,
+    number,
+  ])[] = [
+    ['Mean arterial pressure (mmHg)', (value) => value.meanArterialMmHg, 0],
+    ['Cardiac output (L/min)', (value) => value.cardiacOutputLMin, 2],
+    ['Right atrial pressure (mmHg)', (value) => value.rightAtrialMmHg, 1],
+    ['Occlusion-pressure estimate (mmHg)', (value) => value.pawpMmHg, 1],
+    ['PA diastolic pressure (mmHg)', (value) => value.paDiastolicMmHg, 1],
+    ['SpO₂', (value) => value.spo2Percent, 0],
+  ]
+  return (
+    <details className="rounded-xl border border-white/15 p-3" data-model-only-comparison>
+      <summary>
+        Model-only comparison: {comparison.horizonSeconds} model seconds after {label}, with and
+        without it
+      </summary>
+      <p className="text-xs opacity-80">
+        The simulation’s internal physiological values, free of this run’s measurement-system error
+        and run from the same starting state to the same model time — not anything the monitor
+        displayed or you acquired. They show what this model does, not what a patient would do; its
+        response coefficients are not clinically validated, and model seconds are compressed.
+      </p>
+      <table className="w-full text-left text-xs">
+        <thead>
+          <tr>
+            <th scope="col">Model value</th>
+            <th scope="col">At the action</th>
+            <th scope="col">Without it</th>
+            <th scope="col">With it</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(([name, read, digits]) => (
+            <tr key={name}>
+              <th scope="row">{name}</th>
+              <td>{read(comparison.atAction).toFixed(digits)}</td>
+              <td>{read(comparison.withoutAction).toFixed(digits)}</td>
+              <td>{read(comparison.withAction).toFixed(digits)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </details>
   )
 }

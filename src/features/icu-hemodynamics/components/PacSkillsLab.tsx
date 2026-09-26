@@ -11,11 +11,14 @@ import {
 
 import { requireCardiacOutputParameter } from '../content/cardiacOutputSourceBoundaries'
 import {
-  thermodilutionAcceptedAverage,
+  thermodilutionSeriesConditionWords,
+  thermodilutionSeriesGroups,
+  thermodilutionSeriesIdentityOf,
   type HemodynamicAction,
   type HemodynamicSimulationState,
   type ThermodilutionTechnique,
 } from '../engine'
+import { thermodilutionSeriesView } from '../engine/measurementProvenance'
 import { PressureSystemTeachingVisual } from './PressureSystemTeachingVisual'
 import { ThermodilutionSeriesReadout, ThermodilutionTrialCard } from './ThermodilutionTrialReview'
 import { TroubleshootingPanel } from './TroubleshootingPanel'
@@ -57,7 +60,14 @@ export function PacSkillsLab({
     useState<ThermodilutionTechnique['respiratoryPhase']>('end-expiration')
   const injectionStart = useRef<number | null>(null)
   const ignoreClick = useRef(false)
-  const average = thermodilutionAcceptedAverage(state.thermodilutionTrials)
+  // One series per set of conditions (report P-05): the average is the current series', and the
+  // configured maximum counts only the curves acquired under the current conditions.
+  const view = thermodilutionSeriesView(state)
+  const average = view.current.averageLMin
+  const groups = thermodilutionSeriesGroups(state.thermodilutionTrials)
+  const inCurrentSeries = state.thermodilutionTrials.filter(
+    (trial) => thermodilutionSeriesIdentityOf(trial).key === view.current.identity.key,
+  ).length
 
   function generate(injectionDurationSeconds = durationSeconds) {
     dispatch({
@@ -310,7 +320,7 @@ export function PacSkillsLab({
             <button
               type="button"
               className={styles.injectButton}
-              disabled={state.thermodilutionTrials.length >= configuration.maximumTrials}
+              disabled={inCurrentSeries >= configuration.maximumTrials}
               onPointerDown={onPointerDown}
               onPointerUp={onPointerUp}
               onKeyDown={onInjectionKeyDown}
@@ -338,34 +348,50 @@ export function PacSkillsLab({
                   before you generate one.
                 </p>
               ) : (
-                state.thermodilutionTrials.map((trial) => (
-                  <ThermodilutionTrialCard
-                    key={trial.id}
-                    trial={trial}
-                    onReview={() =>
-                      dispatch({ type: 'REVIEW_THERMODILUTION_CURVE', trialId: trial.id })
-                    }
-                    onAccept={() =>
-                      dispatch({
-                        type: 'SET_THERMODILUTION_ACCEPTED',
-                        trialId: trial.id,
-                        accepted: true,
-                      })
-                    }
-                    onExclude={(exclusionReasonId) =>
-                      dispatch({
-                        type: 'SET_THERMODILUTION_ACCEPTED',
-                        trialId: trial.id,
-                        accepted: false,
-                        exclusionReasonId,
-                      })
-                    }
-                  />
-                ))
+                groups.flatMap((group) => [
+                  ...(groups.length > 1
+                    ? [
+                        <p
+                          key={`${group.identity.key}-heading`}
+                          className={styles.configurationNote}
+                          data-series-group-heading={group.identity.key}
+                        >
+                          Series: {thermodilutionSeriesConditionWords(group.identity)}
+                          {group.identity.key === view.current.identity.key
+                            ? ' — the current series'
+                            : ' — an earlier series, kept separately'}
+                        </p>,
+                      ]
+                    : []),
+                  ...group.trials.map((trial) => (
+                    <ThermodilutionTrialCard
+                      key={trial.id}
+                      trial={trial}
+                      onReview={() =>
+                        dispatch({ type: 'REVIEW_THERMODILUTION_CURVE', trialId: trial.id })
+                      }
+                      onAccept={() =>
+                        dispatch({
+                          type: 'SET_THERMODILUTION_ACCEPTED',
+                          trialId: trial.id,
+                          accepted: true,
+                        })
+                      }
+                      onExclude={(exclusionReasonId) =>
+                        dispatch({
+                          type: 'SET_THERMODILUTION_ACCEPTED',
+                          trialId: trial.id,
+                          accepted: false,
+                          exclusionReasonId,
+                        })
+                      }
+                    />
+                  )),
+                ])
               )}
             </div>
 
-            <ThermodilutionSeriesReadout trials={state.thermodilutionTrials} />
+            <ThermodilutionSeriesReadout trials={state.thermodilutionTrials} view={view} />
           </article>
         ) : null}
       </div>

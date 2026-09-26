@@ -65,6 +65,57 @@ export const fickVenousSampleSiteLabels: Readonly<
   unrecorded: { label: 'Not recorded', isTrueMixedVenous: false },
 })
 
+/**
+ * What a venous specimen is called, by where it was drawn (HD-PRE-REVIEW-02, report L7-06).
+ *
+ * The rows used to read "Mixed-venous oxygen saturation" whatever the site, so a superior vena cava
+ * specimen was labelled as the very thing the result was being withheld for not being.
+ */
+export function fickVenousSpecimenWords(site: FickVenousSampleSite): {
+  readonly saturation: string
+  readonly content: string
+  readonly short: string
+} {
+  switch (site) {
+    case 'pulmonary-artery':
+      return {
+        saturation: 'Mixed-venous oxygen saturation',
+        content: 'Mixed-venous oxygen content',
+        short: 'mixed-venous',
+      }
+    case 'superior-vena-cava':
+      return {
+        saturation: 'Central venous oxygen saturation (superior vena cava specimen)',
+        content: 'Central venous oxygen content (superior vena cava specimen)',
+        short: 'central venous (superior vena cava)',
+      }
+    case 'right-atrium':
+      return {
+        saturation: 'Venous oxygen saturation (right-atrial specimen)',
+        content: 'Venous oxygen content (right-atrial specimen)',
+        short: 'right-atrial venous',
+      }
+    default:
+      return {
+        saturation: 'Venous oxygen saturation (sampling site not recorded)',
+        content: 'Venous oxygen content (sampling site not recorded)',
+        short: 'venous',
+      }
+  }
+}
+
+/**
+ * Why a Fick result was withheld, as data, so a surface or a suite can tell a missing input from
+ * inputs that contradict each other without parsing prose.
+ */
+export type FickWithheldReasonKind =
+  | 'missing-input'
+  | 'contradictory-inputs'
+  | 'not-mixed-venous'
+  | 'not-steady'
+  | 'not-paired-in-time'
+  | 'intracardiac-shunt'
+
 export interface FickInputSet {
   readonly methodId: Extract<CardiacOutputMethodId, 'fick-direct' | 'fick-assumed-vo2'>
   readonly vo2MlMin: number | null
@@ -115,6 +166,11 @@ export interface FickResult {
   /** The units, carried step by step through the division. */
   readonly unitAccount: readonly string[]
   readonly withheldReasons: readonly string[]
+  /** One kind per entry of `withheldReasons`, in the same order. */
+  readonly withheldReasonKinds: readonly FickWithheldReasonKind[]
+  /** The unrounded difference and flow, so a displayed rounding step can be explained. */
+  readonly contentDifferenceUnroundedMlDl: number | null
+  readonly cardiacOutputUnroundedLMin: number | null
   readonly caveats: readonly string[]
 }
 
@@ -187,8 +243,14 @@ export function fickCardiacOutput(inputs: FickInputSet): FickResult {
   }
 
   const withheldReasons: string[] = []
+  const withheldReasonKinds: FickWithheldReasonKind[] = []
+  const withhold = (kind: FickWithheldReasonKind, reason: string) => {
+    withheldReasonKinds.push(kind)
+    withheldReasons.push(reason)
+  }
   const caveats: string[] = []
   const site = fickVenousSampleSiteLabels[inputs.venousSampleSite]
+  const specimen = fickVenousSpecimenWords(inputs.venousSampleSite)
 
   const missing: string[] = []
   if (!finite(inputs.vo2MlMin) || inputs.vo2MlMin <= 0) missing.push('oxygen uptake')
@@ -196,9 +258,12 @@ export function fickCardiacOutput(inputs: FickInputSet): FickResult {
   if (!saturationIsPlausible(inputs.arterialSaturationFraction))
     missing.push('arterial oxygen saturation')
   if (!saturationIsPlausible(inputs.mixedVenousSaturationFraction))
-    missing.push('mixed-venous oxygen saturation')
+    missing.push(`${specimen.short} oxygen saturation`)
   if (missing.length > 0) {
-    withheldReasons.push(
+    // A missing specimen is missing — not zero, and not something the other inputs can be checked
+    // against. It is never reported as a contradiction.
+    withhold(
+      'missing-input',
       `A required input is missing or outside a usable range: ${missing.join(', ')}.`,
     )
   }
@@ -233,27 +298,32 @@ export function fickCardiacOutput(inputs: FickInputSet): FickResult {
     arterialContent !== null && venousContent !== null ? arterialContent - venousContent : null
 
   if (contentDifference !== null && contentDifference <= 0) {
-    withheldReasons.push(
-      'The mixed-venous oxygen content is at or above the arterial content, so the difference is not a quantity this form can be divided by. The inputs contradict each other.',
+    withhold(
+      'contradictory-inputs',
+      `The ${specimen.short} oxygen content is at or above the arterial content, so the difference is not a quantity this form can be divided by. The inputs contradict each other.`,
     )
   }
   if (!site.isTrueMixedVenous) {
-    withheldReasons.push(
-      `The venous specimen came from the ${site.label.toLowerCase()} rather than the pulmonary artery, so it is not a true mixed-venous specimen. This module does not treat the two as interchangeable.`,
+    withhold(
+      'not-mixed-venous',
+      `The venous specimen came from the ${site.label.toLowerCase()} rather than the pulmonary artery, so it is not a true mixed-venous specimen: it is drawn upstream of where venous return from the whole body has mixed. This module does not treat the two as interchangeable and does not substitute one for the other.`,
     )
   }
   if (!inputs.steadyState) {
-    withheldReasons.push(
+    withhold(
+      'not-steady',
       'The patient was not in a steady state across the interval these inputs describe, so the oxygen balance the equation depends on did not hold while they were collected.',
     )
   }
   if (!inputs.samplesPairedInTime) {
-    withheldReasons.push(
+    withhold(
+      'not-paired-in-time',
       'The specimens and the oxygen-uptake figure do not belong to one measurement episode, so their difference describes no single circulatory state.',
     )
   }
   if (inputs.intracardiacShuntPresent) {
-    withheldReasons.push(
+    withhold(
+      'intracardiac-shunt',
       'An intracardiac shunt is present. This simple one-difference Fick calculation cannot represent separate pulmonary and systemic flow. A dedicated compartmental oximetry and Qp/Qs calculation is outside this model.',
     )
   }
@@ -316,7 +386,7 @@ export function fickCardiacOutput(inputs: FickInputSet): FickResult {
     ),
     traceRow(
       'mixed-venous-saturation',
-      'Mixed-venous oxygen saturation',
+      specimen.saturation,
       'sampled',
       inputs.mixedVenousSaturationFraction,
       'fraction',
@@ -372,7 +442,7 @@ export function fickCardiacOutput(inputs: FickInputSet): FickResult {
     ),
     traceRow(
       'mixed-venous-content',
-      'Mixed-venous oxygen content',
+      specimen.content,
       'calculated',
       venousContent,
       'mL/dL',
@@ -407,11 +477,11 @@ export function fickCardiacOutput(inputs: FickInputSet): FickResult {
         ]
       : [
           `Arterial content: ${CARDIAC_OUTPUT_MODEL_CONSTANTS.hemoglobinOxygenBindingCapacityMlPerG} mL of oxygen per g of hemoglobin × ${roundTo(inputs.hemoglobinGDl as number, 1)} g/dL × ${roundTo((inputs.arterialSaturationFraction as number) * 100, 0)} in every 100 binding sites${useDissolved ? ' plus the dissolved term' : ''} = ${roundTo(arterialContent, 2)} mL/dL.`,
-          `Mixed-venous content, computed the same way = ${roundTo(venousContent, 2)} mL/dL.`,
-          `Difference: ${roundTo(arterialContent, 2)} mL/dL − ${roundTo(venousContent, 2)} mL/dL = ${roundTo(arterialContent - venousContent, 2)} mL/dL.`,
+          `${specimen.content.charAt(0).toUpperCase()}${specimen.content.slice(1)}, computed the same way = ${roundTo(venousContent, 2)} mL/dL.`,
+          differenceLine(arterialContent, venousContent),
           cardiacOutput === null
             ? 'The division is not carried out, because the inputs above do not support it.'
-            : `Division: ${roundTo(inputs.vo2MlMin as number, 0)} mL/min ÷ (${roundTo(contentDifference as number, 2)} mL/dL × ${CARDIAC_OUTPUT_MODEL_CONSTANTS.decilitersPerLiter} dL per L) = ${roundTo(cardiacOutput, 2)} L/min. The millilitres of oxygen cancel and the deciliters convert to liters, leaving liters per minute.`,
+            : divisionLine(inputs.vo2MlMin as number, contentDifference as number, cardiacOutput),
         ]
 
   return {
@@ -423,11 +493,49 @@ export function fickCardiacOutput(inputs: FickInputSet): FickResult {
     arterialOxygenContentMlDl: arterialContent === null ? null : roundTo(arterialContent, 2),
     mixedVenousOxygenContentMlDl: venousContent === null ? null : roundTo(venousContent, 2),
     contentDifferenceMlDl: contentDifference === null ? null : roundTo(contentDifference, 2),
+    contentDifferenceUnroundedMlDl: contentDifference,
+    cardiacOutputUnroundedLMin: cardiacOutput,
     trace,
     unitAccount,
     withheldReasons,
+    withheldReasonKinds,
     caveats,
   }
+}
+
+/** The division step, with the same rule: say when the printed denominator does not reproduce it. */
+function divisionLine(vo2MlMin: number, difference: number, cardiacOutput: number): string {
+  const shownDifference = roundTo(difference, 2)
+  const shownOutput = roundTo(cardiacOutput, 2)
+  const fromLabels = roundTo(
+    roundTo(vo2MlMin, 0) / (shownDifference * CARDIAC_OUTPUT_MODEL_CONSTANTS.decilitersPerLiter),
+    2,
+  )
+  const base = `Division: ${roundTo(vo2MlMin, 0)} mL/min ÷ (${shownDifference} mL/dL × ${CARDIAC_OUTPUT_MODEL_CONSTANTS.decilitersPerLiter} dL per L)`
+  const units =
+    'The millilitres of oxygen cancel and the deciliters convert to liters, leaving liters per minute.'
+  if (Math.abs(fromLabels - shownOutput) < 0.005) return `${base} = ${shownOutput} L/min. ${units}`
+  return `${base} ≈ ${shownOutput} L/min, divided by the unrounded difference of ${difference.toFixed(4)} mL/dL (the rounded ${shownDifference} alone would give ${fromLabels.toFixed(2)}). ${units}`
+}
+
+/**
+ * The subtraction step, at a precision that explains itself (report L7-06).
+ *
+ * Each content is shown to two decimals and the difference is computed from the unrounded contents,
+ * so the two-decimal figures can subtract to something other than the printed difference
+ * (16.12 − 14.12 printed as 1.99). When they do, the line says so and shows the contents to four
+ * decimals, where the difference is visible. The backend never computes from the rounded labels.
+ */
+function differenceLine(arterialContent: number, venousContent: number): string {
+  const shownArterial = roundTo(arterialContent, 2)
+  const shownVenous = roundTo(venousContent, 2)
+  const difference = arterialContent - venousContent
+  const shownDifference = roundTo(difference, 2)
+  const subtractedLabels = roundTo(shownArterial - shownVenous, 2)
+  if (Math.abs(subtractedLabels - shownDifference) < 0.005) {
+    return `Difference: ${shownArterial} mL/dL − ${shownVenous} mL/dL = ${shownDifference} mL/dL.`
+  }
+  return `Difference: ${shownArterial} mL/dL − ${shownVenous} mL/dL ≈ ${shownDifference} mL/dL. The contents are rounded to two decimals for display and the difference is taken before rounding: ${arterialContent.toFixed(4)} − ${venousContent.toFixed(4)} = ${difference.toFixed(4)} mL/dL, which rounds to ${shownDifference.toFixed(2)} (the rounded figures alone would give ${subtractedLabels.toFixed(2)}).`
 }
 
 /* ------------------------------------------------------------------ *

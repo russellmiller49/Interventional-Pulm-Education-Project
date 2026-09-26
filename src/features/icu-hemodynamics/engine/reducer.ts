@@ -1,18 +1,33 @@
 import { clamp, measurementMeetsCriterion, roundTo } from './calculations'
+import {
+  assistedWedgeCursorTime,
+  currentThermodilutionSeriesIdentity,
+  thermodilutionAcquisitionFor,
+  thermodilutionSeriesView,
+  WEDGE_WINDOW_STRADDLES_CHANGE,
+  wedgeCursorReadingAt,
+} from './measurementProvenance'
+import { lineMeasurementSystem } from './measurementLines'
 import { catheterFlushBlocked } from './pressureObservation'
 import {
+  absorbedInterventionNarration,
   advanceHemodynamicSimulation,
   catheterTransitionDurationSeconds,
   catheterPositionDepth,
   createInitialHemodynamicState,
   deriveHemodynamicMeasurements,
+  interventionChangesPhysiology,
+  interventionHasModeledEffect,
+  sessionOrdinalOf,
+  withNewPhysiologicalEpisode,
 } from './simulation'
 import {
   canExcludeThermodilutionTrial,
   generateThermodilutionCurve,
-  thermodilutionAcceptedAverage,
   thermodilutionExclusionReasonById,
   thermodilutionExclusionReasonsFor,
+  thermodilutionSeriesIdentityOf,
+  thermodilutionTrialInclusion,
   THERMODILUTION_SERIES_TRIAL_COUNT,
 } from './thermodilution'
 import { DYNAMIC_RESPONSE_REFERENCE, FAST_FLUSH_LIVE_DURATION_SECONDS } from './waveformArtifacts'
@@ -73,7 +88,9 @@ function withValidatedProcedureMilestones(
   ) {
     completed.add('reposition-catheter')
   }
-  if (thermodilutionAcceptedAverage(state.thermodilutionTrials) !== null) {
+  // A series for the conditions the patient is in now. One acquired before a modeled intervention
+  // describes a different patient and does not repeat the measurement for this one.
+  if (thermodilutionSeriesView(state).currentEstablished) {
     completed.add('repeat-valid-thermodilution')
   }
 
@@ -154,15 +171,23 @@ export function icuHemodynamicsReducer(
     case 'TICK':
       return withValidatedProcedureMilestones(advanceHemodynamicSimulation(state, action.seconds))
     case 'RESET_CASE': {
+      // A new run: its session identity differs, so nothing acquired before the reset can be read
+      // as this run's measurement.
       const next = createInitialHemodynamicState(
         action.definition,
         action.mode ?? state.mode,
         action.seed ?? state.seed,
+        sessionOrdinalOf(state) + 1,
       )
       return { ...next, workspace: state.workspace }
     }
     case 'SET_MODE': {
-      const next = createInitialHemodynamicState(state.caseDefinition, action.mode, state.seed)
+      const next = createInitialHemodynamicState(
+        state.caseDefinition,
+        action.mode,
+        state.seed,
+        sessionOrdinalOf(state) + 1,
+      )
       return { ...next, workspace: state.workspace }
     }
     case 'SET_WORKSPACE':
@@ -196,7 +221,9 @@ export function icuHemodynamicsReducer(
           wedgeStartedAt: null,
           wedgeCaptureReady: false,
           wedgeCursorTime: null,
+          wedgeCursor: null,
           storedWedgeMmHg: null,
+          storedWedge: null,
           storedAtEndExpiration: false,
           forcedSafetyRecovery: false,
         },
@@ -274,6 +301,8 @@ export function icuHemodynamicsReducer(
             balloonInflated: false,
             wedgeStartedAt: null,
             wedgeCaptureReady: false,
+            wedgeCursorTime: null,
+            wedgeCursor: null,
           },
           signalValidationChecks: retractingFromWedge
             ? [...new Set([...state.signalValidationChecks, 'catheter-position-confirmed'])]
@@ -296,7 +325,9 @@ export function icuHemodynamicsReducer(
           wedgeStartedAt: null,
           wedgeCaptureReady: false,
           wedgeCursorTime: null,
-          storedAtEndExpiration: state.catheter.storedWedgeMmHg !== null,
+          wedgeCursor: null,
+          storedAtEndExpiration:
+            state.catheter.storedWedgeMmHg !== null && state.catheter.storedAtEndExpiration,
         },
         signalValidationChecks: retractingFromWedge
           ? [...new Set([...state.signalValidationChecks, 'catheter-position-confirmed'])]
@@ -337,29 +368,67 @@ export function icuHemodynamicsReducer(
               : 'Atmospheric zero accepted, but the transducer remains off level and must be positioned separately.',
         }),
       )
-    case 'SET_DAMPING':
-      return withValidatedProcedureMilestones(
-        refreshMeasurements({
+    case 'SET_DAMPING': {
+      const dampingRatio = clamp(action.dampingRatio, 0.15, 1.5)
+      const artifact =
+        action.dampingRatio > DYNAMIC_RESPONSE_REFERENCE.overdampedAbove
+          ? 'overdamped'
+          : action.dampingRatio < DYNAMIC_RESPONSE_REFERENCE.underdampedBelow
+            ? 'underdamped'
+            : 'none'
+      if (action.line === 'systemic-arterial') {
+        // This line's own tubing only (report L9-05). The other channels keep the shared response.
+        const current = lineMeasurementSystem(state.measurementSystem, 'systemic-arterial')
+        return refreshMeasurements({
           ...state,
           measurementSystem: {
             ...state.measurementSystem,
-            dampingRatio: clamp(action.dampingRatio, 0.15, 1.5),
-            artifact:
-              action.dampingRatio > DYNAMIC_RESPONSE_REFERENCE.overdampedAbove
-                ? 'overdamped'
-                : action.dampingRatio < DYNAMIC_RESPONSE_REFERENCE.underdampedBelow
-                  ? 'underdamped'
-                  : 'none',
+            arterialLine: {
+              dampingRatio,
+              naturalFrequencyHz: current.naturalFrequencyHz,
+              artifact,
+            },
           },
+        })
+      }
+      return withValidatedProcedureMilestones(
+        refreshMeasurements({
+          ...state,
+          measurementSystem: { ...state.measurementSystem, dampingRatio, artifact },
         }),
       )
-    case 'SET_ARTIFACT':
+    }
+    case 'SET_ARTIFACT': {
+      if (action.line === 'systemic-arterial') {
+        // Only a dynamic-response artifact belongs to a line's tubing; catheter artifacts do not
+        // exist on an arterial line and are refused rather than smuggled into the shared state.
+        if (
+          action.artifact !== 'none' &&
+          action.artifact !== 'overdamped' &&
+          action.artifact !== 'underdamped'
+        ) {
+          return state
+        }
+        const current = lineMeasurementSystem(state.measurementSystem, 'systemic-arterial')
+        return refreshMeasurements({
+          ...state,
+          measurementSystem: {
+            ...state.measurementSystem,
+            arterialLine: {
+              dampingRatio: current.dampingRatio,
+              naturalFrequencyHz: current.naturalFrequencyHz,
+              artifact: action.artifact,
+            },
+          },
+        })
+      }
       return withValidatedProcedureMilestones(
         refreshMeasurements({
           ...state,
           measurementSystem: { ...state.measurementSystem, artifact: action.artifact },
         }),
       )
+    }
     case 'FAST_FLUSH': {
       if (catheterFlushBlocked(state, action.lineType)) {
         return {
@@ -368,8 +437,10 @@ export function icuHemodynamicsReducer(
             'Catheter flush blocked: stop movement and confirm a safe waveform with the balloon deflated. Never flush a wedged catheter.',
         }
       }
-      const artifact = state.measurementSystem.artifact
-      const dampingRatio = state.measurementSystem.dampingRatio
+      // The flushed line's own response: flushing the arterial line reads the arterial tubing.
+      const lineSystem = lineMeasurementSystem(state.measurementSystem, action.lineType)
+      const artifact = lineSystem.artifact
+      const dampingRatio = lineSystem.dampingRatio
       const finding =
         artifact === 'overdamped' || dampingRatio > DYNAMIC_RESPONSE_REFERENCE.overdampedAbove
           ? 'Sluggish return without oscillation: overdamping suspected.'
@@ -391,6 +462,8 @@ export function icuHemodynamicsReducer(
               (check) => !check.startsWith('learn-current-response-rechecked:'),
             ),
             'fast-flush',
+            // Which line was flushed, so a goal about one line is not met by flushing another.
+            `fast-flush:${action.lineType}`,
           ]),
         ],
         responseMessage: finding,
@@ -430,7 +503,9 @@ export function icuHemodynamicsReducer(
           wedgeStartedAt: state.timeSeconds,
           wedgeCaptureReady: false,
           wedgeCursorTime: null,
+          wedgeCursor: null,
           storedWedgeMmHg: null,
+          storedWedge: null,
           storedAtEndExpiration: false,
           forcedSafetyRecovery: false,
           wedgeEpisodeCount: state.catheter.wedgeEpisodeCount + 1,
@@ -439,29 +514,97 @@ export function icuHemodynamicsReducer(
           'Balloon inflated at the existing PA depth. Sample about one respiratory cycle, capture at end expiration, then deflate promptly.',
       }
     }
-    case 'PLACE_WEDGE_CURSOR':
+    /*
+     * HD-PRE-REVIEW-02 (report L6-02). The cursor used to be dropped at "now" — wherever in the breath
+     * that was — while the state recorded it as end-expiratory and the stored value was the model's
+     * own estimate. It is now placed on a captured sample of this occlusion: at a time the learner
+     * chose (`manual`), or at the simulation's modeled end expiration (`assisted`, the default and
+     * the only behaviour of the one-button docks). Which of the two it was is recorded, and whether
+     * the point sits in the modeled end-expiratory window is a property of the sample, not a claim.
+     */
+    case 'PLACE_WEDGE_CURSOR': {
       if (!state.catheter.wedgeCaptureReady) return state
-      return {
-        ...state,
-        catheter: {
-          ...state.catheter,
-          wedgeCursorTime: state.timeSeconds,
-          storedAtEndExpiration: true,
-        },
-        responseMessage: 'Cursor placed at the modeled end-expiratory point.',
+      const placement = action.placement ?? 'assisted'
+      const time =
+        placement === 'manual' && typeof action.time === 'number'
+          ? action.time
+          : assistedWedgeCursorTime(state)
+      const reading = time === null ? null : wedgeCursorReadingAt(state, time, placement)
+      if (!reading) {
+        return {
+          ...state,
+          responseMessage:
+            'There is not yet a full cardiac cycle of captured occlusion trace to place a cursor on.',
+        }
       }
-    case 'STORE_WEDGE':
-      if (!state.catheter.wedgeCaptureReady || state.catheter.wedgeCursorTime === null) return state
       return {
         ...state,
         catheter: {
           ...state.catheter,
-          storedWedgeMmHg: state.measurements.pawpMmHg,
+          wedgeCursorTime: reading.time,
+          wedgeCursor: reading,
+        },
+        responseMessage:
+          reading.acquisition.physiologicalEpisode === null
+            ? WEDGE_WINDOW_STRADDLES_CHANGE
+            : placement === 'assisted'
+              ? 'Assisted placement: the simulation put the cursor at its own modeled end expiration. It is recorded as assisted, not as a point you identified.'
+              : 'Cursor placed on the sample you chose. Store it, or move it first.',
+      }
+    }
+    /*
+     * HD-PRE-REVIEW-02 sanity repair (blocker 1). The record used to take the physiological episode
+     * current when Store was pressed, so a pressure captured before a modeled change and stored
+     * after it was relabelled as belonging to the new conditions — and then divided by a flow
+     * acquired under them. The record now takes the acquisition identity the cursor worked out from
+     * its own sample times. Pressing Store changes nothing about which conditions a pressure
+     * describes.
+     */
+    case 'STORE_WEDGE': {
+      const cursor = state.catheter.wedgeCursor
+      if (
+        !state.catheter.wedgeCaptureReady ||
+        state.catheter.wedgeCursorTime === null ||
+        !cursor ||
+        cursor.occlusionEpisode !== state.catheter.wedgeEpisodeCount
+      ) {
+        return state
+      }
+      const acquiredIn = cursor.acquisition.physiologicalEpisode
+      if (acquiredIn === null) {
+        return { ...state, responseMessage: `Not stored. ${WEDGE_WINDOW_STRADDLES_CHANGE}` }
+      }
+      const acquiredUnderCurrentConditions =
+        cursor.acquisition.sessionId === state.sessionId &&
+        acquiredIn === state.physiologicalEpisode.index
+      // The stored value is the one the cursor reads: the mean of the cardiac cycle centred on the
+      // chosen sample, unrounded. Whether it is end-expiratory is whatever the sample is.
+      return {
+        ...state,
+        catheter: {
+          ...state.catheter,
+          storedWedgeMmHg: cursor.cycleMeanMmHg,
+          storedAtEndExpiration: cursor.withinModeledEndExpiratoryWindow,
+          storedWedge: {
+            valueMmHg: cursor.cycleMeanMmHg,
+            storedAtSeconds: state.timeSeconds,
+            cursor,
+            physiologicalEpisode: acquiredIn,
+            sessionId: cursor.acquisition.sessionId,
+          },
         },
         signalValidationChecks: [...new Set([...state.signalValidationChecks, 'wedge-stored'])],
-        responseMessage:
-          'PAWP stored. Deflate the balloon now and confirm return of the PA waveform.',
+        responseMessage: `${
+          cursor.withinModeledEndExpiratoryWindow
+            ? 'PAWP stored.'
+            : 'Value stored — from a point outside the simulation’s modeled end-expiratory window, so it is not recorded as an end-expiratory wedge.'
+        }${
+          acquiredUnderCurrentConditions
+            ? ''
+            : ' The cycle it averages was acquired before the modeled physiology last changed, so it is kept as a value from those earlier conditions and is not combined with measurements from now.'
+        } Deflate the balloon now and confirm return of the PA waveform.`,
       }
+    }
     case 'DEFLATE_WEDGE':
       return {
         ...state,
@@ -477,7 +620,9 @@ export function icuHemodynamicsReducer(
           wedgeStartedAt: null,
           wedgeCaptureReady: false,
           wedgeCursorTime: null,
-          storedAtEndExpiration: state.catheter.storedWedgeMmHg !== null,
+          wedgeCursor: null,
+          storedAtEndExpiration:
+            state.catheter.storedWedgeMmHg !== null && state.catheter.storedAtEndExpiration,
         },
         // H3 §7: the simulation no longer tells the learner that the pulmonary-artery waveform came
         // back. Whether the occlusion ended at the vessel is the question the sequence ends on, and
@@ -486,8 +631,17 @@ export function icuHemodynamicsReducer(
           'Balloon deflated. Confirm on the monitor whether the pulmonary-artery waveform has returned before recording anything or moving on.',
       }
     case 'GENERATE_THERMODILUTION_TRIAL': {
-      if (state.thermodilutionTrials.length >= state.caseDefinition.thermodilution.maximumTrials) {
-        return { ...state, responseMessage: 'Six trials is the maximum for this modeled series.' }
+      // The configured maximum applies to one series — the curves acquired under the current
+      // conditions — not to the whole run, so a series after an intervention can be acquired too.
+      const currentKey = currentThermodilutionSeriesIdentity(state).key
+      const inCurrentSeries = state.thermodilutionTrials.filter(
+        (trial) => thermodilutionSeriesIdentityOf(trial).key === currentKey,
+      ).length
+      if (inCurrentSeries >= state.caseDefinition.thermodilution.maximumTrials) {
+        return {
+          ...state,
+          responseMessage: `${state.caseDefinition.thermodilution.maximumTrials} curves is this simulation’s maximum for one series.`,
+        }
       }
       const sequence = state.thermodilutionTrials.length + 1
       const trial = generateThermodilutionCurve({
@@ -504,6 +658,7 @@ export function icuHemodynamicsReducer(
         seed: state.seed,
         sequence,
         generatedAt: state.timeSeconds,
+        acquisition: thermodilutionAcquisitionFor(state),
       })
       return {
         ...state,
@@ -561,19 +716,31 @@ export function icuHemodynamicsReducer(
             }
           : trial,
       )
-      const average = thermodilutionAcceptedAverage(thermodilutionTrials)
+      const updated = thermodilutionTrials.find((trial) => trial.id === action.trialId)!
+      const seriesKey = thermodilutionSeriesIdentityOf(updated).key
+      const view = thermodilutionSeriesView({ ...state, thermodilutionTrials })
+      const series =
+        view.current.identity.key === seriesKey
+          ? view.current
+          : (view.earlier.find((summary) => summary.identity.key === seriesKey) ?? view.current)
+      const average = series.averageLMin
       const excludedFor =
         !action.accepted && action.exclusionReasonId
           ? thermodilutionExclusionReasonById.get(action.exclusionReasonId)
           : undefined
+      const inclusion = thermodilutionTrialInclusion(updated)
+      // Report L7-03: accepting a flagged curve used to pass without a word while the series left
+      // it out. The learner's choice stands; the reason it is not averaged is said at once.
       return withValidatedProcedureMilestones({
         ...state,
         thermodilutionTrials,
         responseMessage: excludedFor
           ? `Trial ${target.sequence} excluded: ${excludedFor.label.toLowerCase()}.`
-          : average === null
-            ? `Continue until ${THERMODILUTION_SERIES_TRIAL_COUNT} reviewed, technically usable trials are available.`
-            : `Accepted thermodilution series: ${average.toFixed(1)} L/min by bolus thermodilution.`,
+          : !inclusion.included
+            ? `Trial ${target.sequence}: ${inclusion.explanation}`
+            : average === null
+              ? `Continue until ${THERMODILUTION_SERIES_TRIAL_COUNT} reviewed, technically usable trials are available in this series.`
+              : `Accepted thermodilution series: ${average.toFixed(1)} L/min by bolus thermodilution.`,
       })
     }
     case 'APPLY_INTERVENTION': {
@@ -607,6 +774,7 @@ export function icuHemodynamicsReducer(
               dampingRatio: 0.65,
               artifact: 'none' as const,
               noiseAmplitudeMmHg: 0.12,
+              arterialLine: null,
             }
           : state.measurementSystem
       const correctedCatheter =
@@ -623,11 +791,20 @@ export function icuHemodynamicsReducer(
               wedgeStartedAt: null,
               wedgeCaptureReady: false,
               wedgeCursorTime: null,
+              wedgeCursor: null,
               storedWedgeMmHg: null,
+              storedWedge: null,
               storedAtEndExpiration: false,
               forcedSafetyRecovery: false,
             }
           : state.catheter
+      // An accepted action that changes the model changes the conditions every later measurement is
+      // acquired under. One with no modeled effect does not — and neither does one whose effect the
+      // model's bounds already absorb for its whole course (HD-PRE-REVIEW-02 sanity repair,
+      // blocker 2). Its effect is still recorded; it simply cannot move anything, and the learner
+      // is told so instead of being told what the authored response says usually happens.
+      const changesPhysiology = interventionChangesPhysiology(state, action.intervention)
+      const absorbed = !changesPhysiology && interventionHasModeledEffect(action.intervention)
       const nextState: HemodynamicSimulationState = {
         ...state,
         activeEffects: [
@@ -648,9 +825,19 @@ export function icuHemodynamicsReducer(
         measurementSystem: correctedMeasurementSystem,
         catheter: correctedCatheter,
         phase: 'response',
-        responseMessage: action.intervention.response,
+        responseMessage: absorbed
+          ? absorbedInterventionNarration(action.intervention)
+          : action.intervention.response,
       }
-      return refreshMeasurements(nextState)
+      return refreshMeasurements(
+        changesPhysiology
+          ? withNewPhysiologicalEpisode(nextState, state.timeSeconds, {
+              kind: 'intervention',
+              interventionId: action.intervention.id,
+              label: action.intervention.shortLabel,
+            })
+          : nextState,
+      )
     }
     case 'REASSESS':
       return {

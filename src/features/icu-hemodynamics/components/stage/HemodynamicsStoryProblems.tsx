@@ -143,6 +143,7 @@ function StoryProblem({ story }: { readonly story: HemodynamicsStoryProblem }) {
                 <th scope="col">Reading</th>
                 <th scope="col">Before</th>
                 <th scope="col">After</th>
+                <th scope="col">Change</th>
               </tr>
             </thead>
             <tbody>
@@ -150,8 +151,12 @@ function StoryProblem({ story }: { readonly story: HemodynamicsStoryProblem }) {
                 const before = run.before[reading]
                 const after = run.after[reading]
                 const numeric = typeof before === 'number' && typeof after === 'number'
+                // Unrounded model estimates of the same quantity either side of the move, shown to
+                // a tenth of a mmHg: a pure offset reads as the same change on every row and none
+                // on the pulse pressure (HD-PRE-REVIEW-02, report L2-14).
+                const change = numeric ? after - before : null
                 const direction = numeric
-                  ? Math.abs(after - before) < 0.5
+                  ? Math.abs(after - before) < 0.05
                     ? 'same'
                     : after > before
                       ? 'up'
@@ -160,17 +165,29 @@ function StoryProblem({ story }: { readonly story: HemodynamicsStoryProblem }) {
                     ? 'same'
                     : 'changed'
                 const format = (value: number | string | null) =>
-                  value === null ? '—' : typeof value === 'number' ? value.toFixed(0) : value
+                  value === null ? '—' : typeof value === 'number' ? value.toFixed(1) : value
                 return (
                   <tr key={reading}>
                     <th scope="row">{storyReadingLabels[reading]}</th>
                     <td>{format(before)}</td>
                     <td data-direction={direction}>{format(after)}</td>
+                    <td data-change>
+                      {change === null
+                        ? '—'
+                        : direction === 'same'
+                          ? 'none'
+                          : `${change > 0 ? '+' : '−'}${Math.abs(change).toFixed(1)}`}
+                    </td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
+          <p className={styles.dockNote} data-story-provenance>
+            The model’s own estimates of the pressures, read from the same model state just before
+            and just after the move — not two different beats of the moving trace — and shown to a
+            tenth of a mmHg.
+          </p>
           <p className={styles.axisVerdict} data-story-axis>
             {story.axisVerdict}
           </p>

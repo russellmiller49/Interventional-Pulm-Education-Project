@@ -7,12 +7,13 @@ import type {
   HemodynamicSimulationState,
   PressureWaveformField,
 } from '../engine'
-import {
-  monitorPressureReadouts,
-  recentTracePressureMetrics,
-  thermodilutionAcceptedAverage,
-} from '../engine'
+import { monitorPressureReadouts, recentTracePressureMetrics } from '../engine'
 import { catheterSimulationNotice } from '../engine/catheterSafety'
+import {
+  physiologicalEpisodeWords,
+  storedWedgeProvenance,
+  thermodilutionSeriesView,
+} from '../engine/measurementProvenance'
 import { CARDIAC_PHASE } from '../engine/waveformMorphology'
 import { WaveformStrip, type WaveformLandmark, type WaveformPhaseCursor } from './WaveformStrip'
 import styles from './icu-hemodynamics.module.css'
@@ -99,6 +100,16 @@ function value(value: number | null, digits = 0): string {
   return value === null || !Number.isFinite(value) ? '—' : value.toFixed(digits)
 }
 
+/** How the stored wedge was read, and whether it still describes this patient. */
+function storedWedgeWords(stored: NonNullable<ReturnType<typeof storedWedgeProvenance>>): string {
+  if (!stored.record) return 'stored · how it was read was not recorded'
+  const cursor = stored.record.cursor
+  const phase = cursor.withinModeledEndExpiratoryWindow ? 'stored end-exp' : 'stored, not end-exp'
+  const who = cursor.placement === 'manual' ? 'your cursor' : 'assisted cursor'
+  const conditions = stored.current === false ? ' · earlier conditions' : ''
+  return `${phase} · ${who}${conditions}`
+}
+
 function lowPressureScaleMaximum(targetMmHg: number): 20 | 40 | 80 | 160 {
   if (targetMmHg <= 18) return 20
   if (targetMmHg <= 36) return 40
@@ -116,7 +127,15 @@ export function BedsideMonitor({
 }: BedsideMonitorProps) {
   const measurements = state.measurements
   const withheld = chamberLabel === 'withheld'
-  const thermodilutionAverage = thermodilutionAcceptedAverage(state.thermodilutionTrials)
+  /*
+   * The cardiac output shown is the series for the conditions the patient is in now (report P-05).
+   * A series acquired before a modeled intervention is not carried forward as the current value:
+   * the rail says it exists and when it was acquired, and leaves the current value empty.
+   */
+  const seriesView = thermodilutionSeriesView(state)
+  const thermodilutionAverage = seriesView.current.averageLMin
+  const earlierSeries = seriesView.latestEarlierEstablished
+  const storedWedge = storedWedgeProvenance(state)
   /*
    * The rail's pressures come from one selector, which the decision record reads too.
    *
@@ -171,7 +190,7 @@ export function BedsideMonitor({
           color: '#ffd166',
           landmarks: RV_LANDMARKS,
           referenceValue: measurements.rvDiastolicMmHg,
-          referenceLabel: 'RVEDP',
+          referenceLabel: 'model RVEDP',
         }
       : state.catheter.position === 'pa'
         ? {
@@ -181,8 +200,10 @@ export function BedsideMonitor({
             maximum: lowPressureScaleMaximum(measurements.papSystolicMmHg + 5),
             color: '#ffd166',
             landmarks: PA_LANDMARKS,
+            // The dashed line is the model's own mean, which carries no respiratory swing; the rail's
+            // numbers are the last displayed beat. They are different quantities (report L2-02).
             referenceValue: measurements.meanPapMmHg,
-            referenceLabel: 'mPAP',
+            referenceLabel: 'model mPAP',
           }
         : state.catheter.position === 'wedge'
           ? {
@@ -199,7 +220,8 @@ export function BedsideMonitor({
               referenceValue: falseWedge
                 ? measurements.meanPapMmHg
                 : (measurements.pawpMmHg ?? measurements.papDiastolicMmHg),
-              referenceLabel: falseWedge ? 'trace mean' : 'end-exp mean',
+              // Both lines are the model's values, not a stored reading (report L6-03).
+              referenceLabel: falseWedge ? 'model mean' : 'model end-exp mean',
               transitionFrom:
                 state.catheter.wedgeStartedAt === null
                   ? undefined
@@ -238,6 +260,22 @@ export function BedsideMonitor({
     : namedPacTrace
   // Labels would smear across a sweeping trace, so they appear only on a frozen strip.
   const annotate = state.frozen
+  /*
+   * During an occlusion the PAC strip shows the cursor the learner (or the assisted placement) set,
+   * not the automatic end-expiratory marker: the marker would find end expiration for them, which is
+   * the decision the wedge step asks them to make (report L6-02).
+   */
+  const occluding = state.catheter.position === 'wedge' && state.catheter.balloonInflated
+  const wedgeCursor = occluding && state.catheter.wedgeCursor ? state.catheter.wedgeCursor : null
+  const pacPhaseCursor: WaveformPhaseCursor | undefined = wedgeCursor
+    ? {
+        time: wedgeCursor.time,
+        value: wedgeCursor.sampleMmHg,
+        label: `${wedgeCursor.placement === 'manual' ? 'your cursor' : 'assisted cursor'} · cycle mean ${value(wedgeCursor.cycleMeanMmHg)}`,
+      }
+    : occluding
+      ? undefined
+      : endExpirationMarker
   const pacTraceMetrics = useMemo(
     () =>
       state.catheter.position === 'introducer' || state.catheter.position === 'ra'
@@ -295,7 +333,9 @@ export function BedsideMonitor({
                 value: `${value(
                   pacTraceMetrics?.systolic ?? measurements.papSystolicMmHg,
                 )}/${value(pacTraceMetrics?.diastolic ?? measurements.papDiastolicMmHg)}`,
-                detail: `mPAP ${value(pacTraceMetrics?.mean ?? measurements.meanPapMmHg)}`,
+                detail: pacTraceMetrics
+                  ? `last beat · mPAP ${value(pacTraceMetrics.mean)}, that beat’s mean`
+                  : `model mPAP ${value(measurements.meanPapMmHg)}`,
               }
             : falseWedge
               ? {
@@ -312,11 +352,13 @@ export function BedsideMonitor({
               : {
                   label: 'PAC · PAWP',
                   value: value(pacTraceMetrics?.mean ?? measurements.pawpMmHg),
+                  // The last displayed beat, wherever in the breath it fell — not the stored,
+                  // end-expiratory value (report L6-03).
                   detail: `${
                     state.catheter.balloonInflated
                       ? 'balloon occlusion'
                       : 'occluded branch, balloon down'
-                  } · live mean · mmHg`,
+                  } · live mean, last beat, any breath phase · mmHg`,
                 }
 
   if (focus !== 'all') {
@@ -333,7 +375,10 @@ export function BedsideMonitor({
             {arterial
               ? `${value(artSystolic)}/${value(artDiastolic)} · MAP ${value(artMean)}`
               : pacPressureDisplay.value}{' '}
-            mmHg
+            mmHg{' '}
+            <small data-focused-sampling>
+              {arterial ? 'last beat' : pacPressureDisplay.detail}
+            </small>
           </span>
           <small>
             Simulated · {state.sweepSeconds} s sweep · {state.parameters.respiratoryRateBpm}{' '}
@@ -368,12 +413,13 @@ export function BedsideMonitor({
           referenceLabel={arterial ? 'MAP' : pacTrace.referenceLabel}
           transitionFrom={arterial ? undefined : pacTrace.transitionFrom}
           unavailableMessage={arterial ? undefined : pacTrace.unavailableMessage}
-          phaseCursor={withheld ? undefined : endExpirationMarker}
+          phaseCursor={withheld ? undefined : arterial ? endExpirationMarker : pacPhaseCursor}
         />
         {state.catheter.balloonInflated || state.catheter.storedWedgeMmHg !== null ? (
-          <p>
-            Balloon {state.catheter.balloonInflated ? 'inflated' : 'down'} · stored end-expiratory
-            PAWP {value(state.catheter.storedWedgeMmHg)} mmHg
+          <p data-stored-wedge-line>
+            Balloon {state.catheter.balloonInflated ? 'inflated' : 'down'} · stored PAWP{' '}
+            {value(state.catheter.storedWedgeMmHg)} mmHg
+            {storedWedge ? ` · ${storedWedgeWords(storedWedge)}` : ' · nothing stored yet'}
           </p>
         ) : null}
         {activeAlarms.length > 0 ? (
@@ -485,7 +531,13 @@ export function BedsideMonitor({
             referenceLabel={pacTrace.referenceLabel}
             transitionFrom={pacTrace.transitionFrom}
             unavailableMessage={pacTrace.unavailableMessage}
-            phaseCursor={state.catheter.position === 'ra' ? cvpMeasurementCursor : undefined}
+            phaseCursor={
+              state.catheter.position === 'ra'
+                ? cvpMeasurementCursor
+                : wedgeCursor
+                  ? pacPhaseCursor
+                  : undefined
+            }
           />
           <WaveformStrip
             samples={state.waveforms}
@@ -532,8 +584,8 @@ export function BedsideMonitor({
             <span>Stored PAWP</span>
             <strong>{value(state.catheter.storedWedgeMmHg)}</strong>
             <small>
-              {state.catheter.storedWedgeMmHg !== null
-                ? 'stored end-exp · mmHg'
+              {storedWedge
+                ? `${storedWedgeWords(storedWedge)} · mmHg`
                 : state.catheter.position === 'wedge'
                   ? // "A live trace is visible" said nothing about whether that trace is an
                     // occlusion pressure. Under the false-wedge artifact it is not (report L9-01).
@@ -546,10 +598,12 @@ export function BedsideMonitor({
           <div data-color="white" role="group" aria-label="Thermodilution cardiac output">
             <span>CO / CI</span>
             <strong>{value(thermodilutionAverage, 1)}</strong>
-            <small>
-              {acceptedCardiacIndex === null
-                ? 'thermodilution not established'
-                : `CI ${value(acceptedCardiacIndex, 1)}`}
+            <small data-co-rail-provenance>
+              {acceptedCardiacIndex !== null
+                ? `CI ${value(acceptedCardiacIndex, 1)}`
+                : earlierSeries
+                  ? `thermodilution not established for current conditions · last series ${value(earlierSeries.averageLMin, 1)} L/min was acquired ${physiologicalEpisodeWords(earlierSeries.identity.episode)}`
+                  : 'thermodilution not established'}
             </small>
           </div>
           <div data-color="purple" role="group" aria-label="Mixed venous oxygen saturation">

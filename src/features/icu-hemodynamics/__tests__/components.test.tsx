@@ -4,7 +4,12 @@ import { hemodynamicCases } from '../content'
 import { FormulaDrawer } from '../components/FormulaDrawer'
 import { PacActionDock } from '../components/PacActionDock'
 import { ResizablePacWorkspace } from '../components/ResizablePacWorkspace'
-import { createInitialHemodynamicState, icuHemodynamicsReducer } from '../engine'
+import {
+  advanceHemodynamicSimulation,
+  createInitialHemodynamicState,
+  icuHemodynamicsReducer,
+  wedgeCaptureDelaySeconds,
+} from '../engine'
 
 /**
  * The Practice workspace parts: the resizable three-panel workspace, the PAC action dock, and the
@@ -99,17 +104,23 @@ describe('ICU Hemodynamics Practice workspace components', () => {
 
     expect(wedgeStatus()).toHaveTextContent(/Sampling the respiratory cycle/i)
 
-    const ready = {
-      ...sampling,
-      catheter: { ...sampling.catheter, wedgeCaptureReady: true },
-    }
+    // HD-PRE-REVIEW-02 (L6-02): the cursor is placed on captured occlusion samples, so readiness is
+    // reached by letting a breath of trace accumulate rather than by setting the flag on a state
+    // with nothing captured. The one-button dock's placement is the assisted one, and says so.
+    const ready = advanceHemodynamicSimulation(
+      sampling,
+      wedgeCaptureDelaySeconds(sampling.parameters.respiratoryRateBpm) + 0.1,
+    )
+    expect(ready.catheter.wedgeCaptureReady).toBe(true)
     rerender(<PacActionDock state={ready} dispatch={dispatch} />)
     expect(wedgeStatus()).toHaveTextContent(/Place the end-expiratory cursor/i)
 
     const cursor = icuHemodynamicsReducer(ready, { type: 'PLACE_WEDGE_CURSOR' })
+    expect(cursor.catheter.wedgeCursor?.placement).toBe('assisted')
     rerender(<PacActionDock state={cursor} dispatch={dispatch} />)
     expect(wedgeStatus()).toHaveTextContent(/Store PAWP, then deflate/i)
-    expect(screen.getByRole('button', { name: 'End-exp cursor' })).toBeDisabled()
+    expect(wedgeStatus()).toHaveTextContent(/assisted/i)
+    expect(screen.getByRole('button', { name: 'End-exp cursor (assisted)' })).toBeDisabled()
 
     const stored = icuHemodynamicsReducer(cursor, { type: 'STORE_WEDGE' })
     rerender(<PacActionDock state={stored} dispatch={dispatch} />)

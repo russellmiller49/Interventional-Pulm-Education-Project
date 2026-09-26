@@ -516,12 +516,17 @@ describe('the wedge section', () => {
         (button) => button.disabled,
       ),
     ).toBe(true)
-    expect((control('cursor') as HTMLButtonElement).disabled).toBe(true)
+    expect((control('cursor') as HTMLInputElement).disabled).toBe(true)
     tick(6)
-    expect((control('cursor') as HTMLButtonElement).disabled).toBe(false)
-    fireEvent.click(control('cursor'))
+    expect((control('cursor') as HTMLInputElement).disabled).toBe(false)
+    // HD-PRE-REVIEW-02 (L6-02): the cursor is a control on the captured trace; the one-press
+    // placement is the labelled assisted one, and the stored value says it was assisted.
+    fireEvent.click(document.querySelector<HTMLButtonElement>('[data-cursor-action="assisted"]')!)
     fireEvent.click(control('store'))
     expect(goalStates()).toEqual(['true', 'false'])
+    expect(document.querySelector('[data-stored-wedge-provenance]')?.textContent).toMatch(
+      /assisted cursor/,
+    )
     fireEvent.click(control('deflate'))
     expect(goalStates()).toEqual(['true', 'true'])
     expect(nowPrimary()).not.toBeDisabled()
@@ -614,6 +619,24 @@ describe('the capstone', () => {
     readAndRepairFlush('overdamped')
     expect(goalStates()).toEqual(['true', 'true', 'true'])
     clickPrimary()
+    // HD-PRE-REVIEW-02 (L9-05): the transfer's table reports the arterial line that was repaired,
+    // and its pulmonary-artery and right-atrial rows show the repair left those lines alone.
+    const transferRows = [...document.querySelectorAll('[data-before-after] tbody tr')].map(
+      (row) => [
+        row.querySelector('th')?.textContent,
+        row.querySelector('[data-change]')?.textContent,
+      ],
+    )
+    expect(transferRows.map(([label]) => label)).toEqual([
+      'Arterial systolic (mmHg)',
+      'Arterial diastolic (mmHg)',
+      'Arterial pulse pressure (mmHg)',
+      'PA pulse pressure (mmHg)',
+      'Right atrial mean (mmHg)',
+    ])
+    expect(transferRows[2][1]).toMatch(/^\+/)
+    expect(transferRows[3][1]).toBe('none')
+    expect(transferRows[4][1]).toBe('none')
     clickPrimary()
     expect(storedRecord()?.reviewedSectionIds).toEqual(['pac-signal-validation'])
   })
