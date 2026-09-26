@@ -1,0 +1,744 @@
+{
+  "task": "EBUS-PRE-REVIEW-05",
+  "kind": "documentation-only owner decision preparation",
+  "date": "2026-09-23",
+  "repository": "russellmiller49/Interventional-Pulm-Education-Project",
+  "baseline": {
+    "expected": "85acc113be11f9acbd395f49e00fee4b69ceff71",
+    "originMainAtStart": "85acc113be11f9acbd395f49e00fee4b69ceff71",
+    "reconciliation": "origin/main equal to the verified post-Prompt-04 main; no intervening changes",
+    "prompt04MergedAs": "90cf4cec1aad3e5aeb016ff8c2d45ceb27f99897",
+    "prompt04ReviewedHead": "b7e397082e416192abcf535584cfda6ce94e1c98",
+    "prompt04SanityRepair": "0ec6753bd05e4e26e383282432e624052f39b48a",
+    "prompt04PostMergeSmoke": "PASS (as supplied by the owner; not re-run here)"
+  },
+  "branch": "claude/ebus-clinical-media-drafts-9-23",
+  "worktree": "Interventional-Pulm-Education-Worktrees/claude-ebus-05 (created for this batch; branch renamed from claude/ebus-05 before any commit)",
+  "head": "the commit that adds this file (recorded in the PR)",
+  "scope": {
+    "runtimeChanged": false,
+    "mediaChanged": false,
+    "schemaChanged": false,
+    "questionIdsOrKeysChanged": false,
+    "sourceReviewStatusChanged": false,
+    "prompt06Started": false
+  },
+  "lane05Accounting": {
+    "expected": 52,
+    "accounted": 52,
+    "ids": {
+      "L1-5": {
+        "decisionGroup": "G6",
+        "workflowStatus": "RETAIN CURRENT BEHAVIOR",
+        "draftRef": "R1 class (not redrafted)",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L1-8": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "R1",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L2-1": {
+        "decisionGroup": "G4",
+        "workflowStatus": "LOCAL PROTOCOL REQUIRED",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L2-2": {
+        "decisionGroup": "G4",
+        "workflowStatus": "SOURCE VERIFICATION INCOMPLETE",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L2-5": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "R2",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L2-7": {
+        "decisionGroup": "G4",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L3-7": {
+        "decisionGroup": "G3",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L3-14": {
+        "decisionGroup": "G3",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L3-15": {
+        "decisionGroup": "G3",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L5-6": {
+        "decisionGroup": "G2",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "Storyboard B panels B1/B2; question draft R4",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L6-2": {
+        "decisionGroup": "G1",
+        "workflowStatus": "EXPERT IMAGE ANNOTATION REQUIRED",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L6-4": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "R5",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L6-5": {
+        "decisionGroup": "G7",
+        "workflowStatus": "RETAIN CURRENT BEHAVIOR",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L6-7": {
+        "decisionGroup": "G1",
+        "workflowStatus": "MEDIA / RIGHTS INPUT REQUIRED",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L7-2": {
+        "decisionGroup": "G6",
+        "workflowStatus": "RETAIN CURRENT BEHAVIOR",
+        "draftRef": "none — Prompt 04 P3 framing retained",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L8-1": {
+        "decisionGroup": "G1",
+        "workflowStatus": "EXPERT IMAGE ANNOTATION REQUIRED",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L8-2": {
+        "decisionGroup": "G1",
+        "workflowStatus": "EXPERT IMAGE ANNOTATION REQUIRED",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L8-3": {
+        "decisionGroup": "G6",
+        "workflowStatus": "RETAIN CURRENT BEHAVIOR",
+        "draftRef": "R5 class; key-point exposure retained",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L9-5": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "R5 class",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L11-2": {
+        "decisionGroup": "G1",
+        "workflowStatus": "EXPERT IMAGE ANNOTATION REQUIRED",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L11-6": {
+        "decisionGroup": "G3",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L13-2": {
+        "decisionGroup": "G1",
+        "workflowStatus": "EXPERT IMAGE ANNOTATION REQUIRED",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L13-4": {
+        "decisionGroup": "G2",
+        "workflowStatus": "EXPERT IMAGE ANNOTATION REQUIRED",
+        "draftRef": "Storyboard A",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L13-6": {
+        "decisionGroup": "G1",
+        "workflowStatus": "EXPERT IMAGE ANNOTATION REQUIRED",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L14-3": {
+        "decisionGroup": "G1",
+        "workflowStatus": "EXPERT IMAGE ANNOTATION REQUIRED",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L14-5": {
+        "decisionGroup": "G2",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "Asset matrix row; storyboard A pattern",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L15-2": {
+        "decisionGroup": "G2",
+        "workflowStatus": "EXPERT IMAGE ANNOTATION REQUIRED",
+        "draftRef": "Asset matrix row",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L16-1": {
+        "decisionGroup": "G2",
+        "workflowStatus": "MEDIA / RIGHTS INPUT REQUIRED",
+        "draftRef": "ASSET REQUIRED; Fujiwara/CLNS abstracts only (G4)",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L16-2": {
+        "decisionGroup": "G2",
+        "workflowStatus": "MEDIA / RIGHTS INPUT REQUIRED",
+        "draftRef": "ASSET REQUIRED",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L16-4": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "R8",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L17-6": {
+        "decisionGroup": "G4",
+        "workflowStatus": "SOURCE VERIFICATION INCOMPLETE",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L18-2": {
+        "decisionGroup": "G2",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "Course-drawn schematic or model view — owner choice",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L18-3": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "R1 class; EBUS-01 ledger \"rewrite\" for eus-observe",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L19-4": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "R1 class; EBUS-01 ledger \"combine\" for route-model-observe",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L20-2": {
+        "decisionGroup": "G4",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L20-3": {
+        "decisionGroup": "G4",
+        "workflowStatus": "LOCAL PROTOCOL REQUIRED",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L20-6": {
+        "decisionGroup": "G2",
+        "workflowStatus": "MEDIA / RIGHTS INPUT REQUIRED",
+        "draftRef": "ASSET REQUIRED for a real still; model alternative available",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L21-3": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "recognition-first scenario draft (teaching drafts §A.12)",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L21-5": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "R8 class",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L22-2": {
+        "decisionGroup": "G5",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L22-3": {
+        "decisionGroup": "G4",
+        "workflowStatus": "RETAIN CURRENT BEHAVIOR",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L22-4": {
+        "decisionGroup": "G6",
+        "workflowStatus": "RETAIN CURRENT BEHAVIOR",
+        "draftRef": "R8 class — labelled intentional retrieval",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L23-3": {
+        "decisionGroup": "G4",
+        "workflowStatus": "LOCAL PROTOCOL REQUIRED",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L24-3": {
+        "decisionGroup": "G2",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "Storyboard B",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L25-2": {
+        "decisionGroup": "G4",
+        "workflowStatus": "SOURCE VERIFICATION INCOMPLETE",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L25-3": {
+        "decisionGroup": "G4",
+        "workflowStatus": "LOCAL PROTOCOL REQUIRED",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L25-4": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "R9",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L26-2": {
+        "decisionGroup": "G5",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "L26-4": {
+        "decisionGroup": "G4",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "PR-1": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "storyboard A + R8 class",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "CS-1": {
+        "decisionGroup": "G2",
+        "workflowStatus": "RETAIN CURRENT BEHAVIOR",
+        "draftRef": "Storyboard B note (text-only cases may stay text-only)",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      },
+      "CS-2": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "R10",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null
+      }
+    }
+  },
+  "prompt04CarryForward": {
+    "count": 12,
+    "items": {
+      "L20-4": {
+        "decisionGroup": "G4",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null,
+        "prompt04Queue": "Q1",
+        "topic": "specific harm wording"
+      },
+      "L17-5": {
+        "decisionGroup": "G3",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null,
+        "prompt04Queue": "Q2",
+        "topic": "station labels and primary-side N colouring"
+      },
+      "L5-1": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "R4",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null,
+        "prompt04Queue": "Q3",
+        "topic": "question vs held-image/contact alignment"
+      },
+      "NAV-3-Q4": {
+        "decisionGroup": "G4",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null,
+        "prompt04Queue": "Q4",
+        "topic": "undefined glossary terms: CHS/central hilar structure, TNM, IASLC, NSCLC, PET, IFU, FNA, ERS/ESGE/ESTS, CHEST"
+      },
+      "L19-2": {
+        "decisionGroup": "G3",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null,
+        "prompt04Queue": "Q5",
+        "topic": "per-view anatomy"
+      },
+      "L2-6": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "R3",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null,
+        "prompt04Queue": "Q6",
+        "topic": "stem revision"
+      },
+      "L12-2": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "R6",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null,
+        "prompt04Queue": "Q6",
+        "topic": "stem revision"
+      },
+      "L15-3": {
+        "decisionGroup": "G6",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "R7",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null,
+        "prompt04Queue": "Q7",
+        "topic": "follow-up question"
+      },
+      "L22-6": {
+        "decisionGroup": "G5",
+        "workflowStatus": "INSUFFICIENT EVIDENCE — HOLD",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null,
+        "prompt04Queue": "Q11",
+        "topic": "specimen destinations"
+      },
+      "Q13-workbench": {
+        "decisionGroup": "G7",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": "teaching drafts §C",
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null,
+        "prompt04Queue": "Q13",
+        "topic": "integrated depth/gain/contrast/Doppler workbench"
+      },
+      "Q14-ct-primer": {
+        "decisionGroup": "G2",
+        "workflowStatus": "READY FOR OWNER DECISION",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null,
+        "prompt04Queue": "Q14",
+        "topic": "EBUS-local CT-orientation primer"
+      },
+      "Q15-image-needs": {
+        "decisionGroup": "G2",
+        "workflowStatus": "MEDIA / RIGHTS INPUT REQUIRED",
+        "draftRef": null,
+        "reviewStatus": "NOT REVIEWED",
+        "reviewer": null,
+        "reviewDate": null,
+        "prompt04Queue": "Q15",
+        "topic": "L18/L16 image-based teaching needs"
+      }
+    }
+  },
+  "relatedRowsAlsoAccounted": {
+    "L12-4": {
+      "decisionGroup": "G3",
+      "workflowStatus": "READY FOR OWNER DECISION",
+      "draftRef": null,
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewDate": null
+    },
+    "L9-2": {
+      "decisionGroup": "G3",
+      "workflowStatus": "READY FOR OWNER DECISION",
+      "draftRef": null,
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewDate": null
+    },
+    "L9-3": {
+      "decisionGroup": "G3",
+      "workflowStatus": "READY FOR OWNER DECISION",
+      "draftRef": null,
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewDate": null
+    },
+    "L9-4": {
+      "decisionGroup": "G3",
+      "workflowStatus": "READY FOR OWNER DECISION",
+      "draftRef": null,
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewDate": null
+    },
+    "L10-1": {
+      "decisionGroup": "G3",
+      "workflowStatus": "READY FOR OWNER DECISION",
+      "draftRef": null,
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewDate": null
+    },
+    "L12-6": {
+      "decisionGroup": "G5",
+      "workflowStatus": "RETAIN CURRENT BEHAVIOR",
+      "draftRef": null,
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewDate": null
+    },
+    "L26-3": {
+      "decisionGroup": "G5",
+      "workflowStatus": "RETAIN CURRENT BEHAVIOR",
+      "draftRef": null,
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewDate": null
+    }
+  },
+  "L5-1": "UNRESOLVED — alignment remains an owner decision (options A/B/C in teaching drafts R4; D not recommended). Data contract from Prompt 02 and presentation note from Prompt 04 unchanged.",
+  "guideline2026": {
+    "claim": "L26-4 and the other ers2026 sentences (plan.ts:111, plan.ts:199, complete.ts:192/258, cases.ts:379)",
+    "disposition": "A — located and read in full text (publisher HTML, 2026-09-23)",
+    "result": "PICO 4: strong recommendation against add-on confirmatory mediastinoscopy after a negative systematic endosonography (low certainty); PICO 2: conditional suggestion for systematic over targeted staging (very low); PICO 3: conditional suggestion for combined EBUS-TBNA+EUS(-B)-FNA over EBUS-TBNA alone (moderate)",
+    "notUsedAsProof": "MEDIASTrial and other trials were not used to verify guideline wording",
+    "reviewStatus": "NOT REVIEWED"
+  },
+  "sourceVerification": {
+    "verifiedInPrimaryFullText": [
+      "ers2026 PICO 2/3/4 (checked directly)",
+      "chest2024 recs 3–5 (checked directly)",
+      "combined2015 (ERJ co-publication)",
+      "accp2022 Table 2 and recs",
+      "ics2023",
+      "chest2016",
+      "iaslc-n9 Table 3 (N descriptors)",
+      "accp2013-staging rec 4.4.4.3"
+    ],
+    "manufacturerBrochureOnly": ["Olympus BF-UC190F dimensions (no IFU revision)"],
+    "partialOrAbstractOnly": [
+      "ests2014 (automated extraction)",
+      "bts2013 (non-publisher copy; flowchart not read)",
+      "aquire2013 (ABSTRACT ONLY — FULL TEXT NOT VERIFIED)",
+      "fujiwara2010 (ABSTRACT ONLY)",
+      "clns2020 (ABSTRACT ONLY)",
+      "IFU expansion (search result only)"
+    ],
+    "localProtocolRequired": [
+      "L2-1 antithrombotic handling",
+      "L20-3 pass sequence (device IFU/local)",
+      "L23-3 specimen media",
+      "L25-3 bleeding response"
+    ],
+    "retrievalDate": "2026-09-23"
+  },
+  "mediaProvenance": {
+    "recordedClips": "provenance, consent, de-identification and rights: UNKNOWN (no record found in searched locations)",
+    "stationImages": "UNKNOWN",
+    "deviceBanner": "Depth3.mp4 ~10–12 s: full date/time visible (NAME/AGE/SEX labels unpopulated) — OWNER REVIEWED 2026-09-24; redacted replacement candidate technically verified, not published; historical-blob decision pending",
+    "aiGeneratedStills": "eu-me2_main.jpg and eu-me2_image_enhance.jpg carry Gemini-generated source filenames in XMP (standalone lab only)",
+    "trackedDerivativeScreenshots": "docs/ebus-guided/flow-redesign-evidence/*.png include downscaled recorded frames (pre-existing, not changed)",
+    "privateEvidence": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pre-review-05-2026-09-23/ (outside Git)"
+  },
+  "unresolvedBlockers": [
+    "Depth3 historical Git blob (owner A/B/C)",
+    "Depth3 replacement adoption (separate media-remediation task)",
+    "G1 Doppler clip purpose (A/B/C/D) and any expert frame annotation",
+    "4R/4L disc meaning and view orientation",
+    "recording/station-image provenance, de-identification and rights",
+    "L5-1 alignment",
+    "local antithrombotic, specimen-media and bleeding protocols",
+    "scope IFU revision",
+    "AQuIRE full text",
+    "faculty review of 2R/10R model targets before storyboard A",
+    "owner decision on provisional-N field"
+  ],
+  "deliverables": [
+    "docs/gap-remediation/fellow-walkthrough/ebus/drafts/EBUS-PRE-REVIEW-05-decision-packet.md",
+    "docs/gap-remediation/fellow-walkthrough/ebus/drafts/EBUS-PRE-REVIEW-05-asset-source-manifest.json",
+    "docs/gap-remediation/fellow-walkthrough/ebus/drafts/EBUS-PRE-REVIEW-05-teaching-drafts.md",
+    "docs/gap-remediation/fellow-walkthrough/ebus/drafts/EBUS-PRE-REVIEW-05-status.json"
+  ],
+  "reviewPolicy": "Most Prompt-05 clinical/media decisions remain NOT REVIEWED with reviewer, role and review date empty. The owner explicitly reviewed two bounded matters on 2026-09-24 (fasting required before EBUS; the Depth3 metadata finding and remediation candidate). Technical verification of the replacement candidate is not rights/provenance clearance.",
+  "amendment20260924": {
+    "prHeadBefore": "7d6545187fedacd83d496a711cc7a0d6124db470",
+    "originMainAtAmendment": "41a34608ec556a59270b4c3b2b5bbb1c924653be",
+    "mainRelationship": "origin/main advanced 10 commits beyond the Prompt-05 baseline 85acc113; none touches docs/gap-remediation/fellow-walkthrough/ebus/** or any EBUS path; branch not rebased (no overlap)",
+    "ownerReviewedSubdecisions": {
+      "OWNER-FASTING-REQUIRED": {
+        "reviewStatus": "OWNER DECIDED",
+        "reviewer": "Russell Miller",
+        "reviewerRole": "repository owner",
+        "reviewDate": "2026-09-24"
+      },
+      "DEPTH3-METADATA": {
+        "reviewStatus": "OWNER REVIEWED",
+        "reviewer": "Russell Miller",
+        "reviewerRole": "repository owner",
+        "reviewDate": "2026-09-24"
+      }
+    },
+    "fasting": {
+      "decision": "OWNER DECISION — fasting required before EBUS (patients should not eat or drink)",
+      "exactInterval": "LOCAL / ANESTHESIA POLICY REQUIRED (object LOCAL-FASTING-INTERVAL, NOT REVIEWED)",
+      "runtime": "not changed; future wording concept recorded in teaching drafts D10"
+    },
+    "depth3": {
+      "originalAsset": "VISIBLE DATE/TIME CONFIRMED — OWNER REVIEWED (original still public; SHA-256 4d64ef49dbc69b0e170a3fa8ba6d8e99d0f6b78b1d101800a6972b710d8681e8)",
+      "replacementCandidate": "REDACTED REPLACEMENT CANDIDATE — TECHNICALLY VERIFIED, NOT YET PUBLISHED (SHA-256 9780f54ad86c925d4cd7998f4209c74ea0a91b62ce38bcb6b6df93c09e601e21; not committed)",
+      "provenanceRights": "UNKNOWN",
+      "historicalBlob": "OWNER DECISION REQUIRED — options A replace only / B purge history / C other remediation; blob 9bc24d58 reachable at two historical paths in a PUBLIC repository",
+      "publicScreenshots": "REVIEWED — flagged Depth3 metadata window not present (10 files in docs/ebus-guided/flow-redesign-evidence/; technical review, not owner review)"
+    },
+    "unchangedHolds": [
+      "Doppler A/B/C/D",
+      "4R/4L disc meaning",
+      "clinical-image orientation",
+      "2R/10R target review",
+      "Fujiwara full text",
+      "AQuIRE full text",
+      "device IFU",
+      "antithrombotic timing",
+      "specimen-media protocol",
+      "bleeding-response protocol",
+      "needle-pass sequence",
+      "L5-1",
+      "undefined glossary terms",
+      "per-view anatomy",
+      "measurement/calibration",
+      "clinical annotation rights"
+    ]
+  }
+}
