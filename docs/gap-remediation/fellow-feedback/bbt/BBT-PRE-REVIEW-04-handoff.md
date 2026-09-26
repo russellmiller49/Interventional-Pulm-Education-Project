@@ -521,3 +521,289 @@ identities, protected hashes, signatures, generated level wording).
 
 **Status: SANITY REPAIR: READY FOR INDEPENDENT RE-REVIEW.** Not merged, not deployed; Prompt 05 not
 started.
+
+## Final sanity repair — 2026-09-25
+
+The correct-worktree verification and the independent re-review of PR
+[#273](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/273) at head
+**`00c11cde7dcfb43fd49dd982a731923bd8e28d67`** cleared three of the four earlier blockers (finding
+1 Lesson 5 wording, finding 2 RS8 reopening during LS9, finding 4 skip → record → Continue). One
+blocker remained, the rest of finding 3: **local worked or reference viewing still wrote
+persisted learner display state.** This section records that single-defect repair. The sections
+above are the earlier record and were not rewritten. Nothing else in Prompt 04 was reopened, and
+Prompt 05 was not started.
+
+### Repository
+
+| Field               | Value                                                                                                                                                                                                                            |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prior reviewed head | `00c11cde7dcfb43fd49dd982a731923bd8e28d67` (confirmed as the PR head after `git fetch` before any edit)                                                                                                                          |
+| Repair commit       | `73bc495fbc9877e5b179466ecb5feef6f5fb2aae` (runtime and tests; the production build's source)                                                                                                                                    |
+| Harness commit      | `97bb1bd5` (one Playwright wait; no runtime change; see "Pre-existing harness race")                                                                                                                                             |
+| New PR head         | The documents commit on top of `97bb1bd5`; the PR page and the final report give its SHA                                                                                                                                         |
+| Main                | `origin/main` at `2bc539f4`. Nothing since the merge base touches a BBT, lesson-stage, Playwright-config or BBT-docs path, `git merge-tree` reports no conflict and the PR is MERGEABLE/CLEAN, so main was not merged or rebased |
+| Worktree / branch   | `…/Worktrees/claude-bbt-04`, `claude/bbt-04`, clean before the repair                                                                                                                                                            |
+
+### Reproduction
+
+The reviewer's steps in Lesson 4: Start marking branches → Go to response slice → Lumen
+unresolved here → capture the draft → Show reference → Next demonstration slice → More
+orientation controls → Flip left–right → close the reference → reload. Scripted against the
+`00c11cde` production build (`final-repair/repro-probe-00c11cde.json`):
+
+| Lesson | Reference control | Draft field                | Before | During | After close | After reload |
+| ------ | ----------------- | -------------------------- | ------ | ------ | ----------- | ------------ |
+| 4      | Flip left–right   | `orientation.reflected`    | false  | true   | true        | true         |
+| 4      | Full CT field     | `views[junction-14…].full` | false  | true   | true        | true         |
+| 7      | Flip left–right   | `orientation.reflected`    | false  | true   | true        | true         |
+| 7      | Full CT field     | `views[junction-16…].full` | false  | true   | true        | true         |
+
+The Jest reproduction also showed magnification and `showScope` written the same way, from Show
+reference, from the worked example before Start, and from the comparison before a redo.
+
+### Root cause
+
+`LocalCtLesson` had three write paths from a reference display into the draft:
+
+1. **`onViewChange`.** During reference viewing it kept only the stored slice and focus and
+   passed the rest of the viewer's `CtViewerState` (full field, magnification, paired view) into
+   `session.views[exercise]`. Its own comment stated that policy, which is now known to be wrong.
+2. **`onOrientation`.** The viewer received `orientation={s.orientation}` and
+   `onOrientation={(value) => act({ type: 'orientation', value })}` in every mode, so a flip or
+   rotation on a reference went straight into `session.orientation`.
+3. **No restore on close.** The viewer's own state kept the reference display after the
+   reference closed. Its next report, in learner mode, saved that display as the learner's. This
+   happened on Hide reference, Start marking branches and Redo.
+
+### Repair: two display domains
+
+- **The learner's persisted display** is unchanged: `s.orientation` and `s.views[exercise]`,
+  written by the learner's own actions outside reference viewing, exactly as before.
+- **The reference's transient display** is a component-local `ReferenceDisplay` envelope
+  (`viewer`, `orientation`, `view: CtViewerState`). It exists while `showingWalkthrough` is true:
+  the worked example, Show reference, the comparison and the hint-3 walkthrough.
+  - It opens from the display on screen, which is the learner's own, so nothing jumps.
+  - It takes every viewer report: slice, focus, full field, magnification, paired view.
+  - It takes every flip and rotation: the viewer's `orientation` prop and `onOrientation` read
+    and write the envelope.
+  - It is never written to the draft, and it is discarded when the walkthrough closes.
+  - The open/close adjustment runs during render. No committed frame pairs one mode with the
+    other mode's display.
+- **Handing the learner's view back.** Closing bumps `learnerViewSerial`. A new
+  `NativeCtViewer` prop, `viewRequest: { view, serial }`, puts the learner's saved view back
+  whole: slice, focus, full field, magnification, nodule and paired view. With no saved view it
+  uses the same defaults as a fresh mount. Orientation needs no hand-back because it is a
+  controlled prop.
+- No draft schema, parser, reducer, route-navigation, `reachableThrough`, geometry, source,
+  nomenclature, camera or manifest change. No new store and no attempt state.
+
+### Callback ordering and stale reports
+
+Every `onViewChange` report now carries the serial of the view the viewer was showing when it
+made the report. `LocalCtLesson` accepts a report only when that serial equals the current
+`learnerViewSerial`, which is mirrored into a ref in the layout phase. The report is then routed by
+the mode: reference reports go to the envelope, learner reports go to the draft.
+
+On close:
+
+1. The render that leaves reference viewing drops the envelope. The viewer's `orientation`
+   switches to `s.orientation`, and the viewer receives `viewRequest` with the next serial.
+2. In the layout phase, the host's refs switch to learner mode and the new serial. The viewer's
+   hand-back runs in a **layout effect**. Its state updates are synchronous, so the first painted
+   frame after the close already shows the learner's view.
+3. A report the viewer makes on the reference display after the close still carries the old
+   serial and is dropped. Example: a Full CT field toggle and the close in one React batch, where
+   the report runs in the close's passive phase with `referenceViewing` already false.
+4. The first report after the hand-back carries the new serial and equals the stored learner
+   view, so saving it changes nothing.
+5. A teaching request that arrives with the close is applied on top of the restored view, because
+   the hand-back is declared before the scope, focus and slice-request effects. Examples: Start's
+   move to the anchor, Redo's move to the start, or the parent-view step opening the paired view.
+
+No timer or delay is involved. The stale-report guard and the layout-phase hand-back are each
+covered by a regression that fails without them (see "Mutation checks").
+
+### Fail-before / pass-after
+
+| Regression                                                          | On `00c11cde`                                                                                                                                                                                                                                                                           | Repaired (`73bc495f`) |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| Jest `local-reference-display.test.tsx` (20 tests; Lessons 4 and 7) | 18 failed, 2 passed. The 2 are the genuine-persistence guards, which must pass on both heads. Run with the two runtime files restored from `00c11cde` and the final test text; tree restored clean afterwards (`final-repair/logs/jest-fail-before-00c11cde-final-tests.log`)           | 20 passed             |
+| Jest BBTF-04 (`paired-view-teaching.test.tsx`, updated; see below)  | Failed                                                                                                                                                                                                                                                                                  | Passed                |
+| Browser `final repair · Lesson 4 reproduction …`                    | Failed on the `00c11cde` build `7p2VNaEtLQNWtSVwr_z9o`: `orientation` `{turns:1, reflected:true}` and `magnification: 2.2` written during the reference                                                                                                                                 | Passed                |
+| Browser `final repair · Lesson 7 …`                                 | Failed on the same build: after close the viewer still showed `full: true`, magnification 2, reflection                                                                                                                                                                                 | Passed                |
+| Browser `final repair · genuine learner display choices …`          | Passed (it must: the learner contract is unchanged)                                                                                                                                                                                                                                     | Passed                |
+| Browser first-frame-after-close check (inside the Lesson 7 journey) | Failed on the intermediate build `2WMnZhP5uhysnMvjlp_Ct` (hand-back in a passive effect): the first frame after close still showed `full: true`, magnification 2. This is why the hand-back is a layout effect (`final-repair/logs/e2e-first-frame-on-passive-restore-build-2WMnZ.log`) | Passed                |
+
+The `00c11cde` build `7p2VNaEtLQNWtSVwr_z9o` was already in this worktree's `.next` from an
+earlier session. HEAD had not moved from `00c11cde` and the tree was clean. Its served chunk has
+the earlier repair's strings and no `viewRequest`. It was served by pid 30482 from this
+worktree's `.next/standalone` on port 3001 and stopped afterwards.
+
+What each Jest test covers:
+
+- **A · orientation.** Flip and rotate on the reference. The whole draft is byte-identical during
+  and after close. After reload the draft is equal by value, and the viewer shows the learner's
+  orientation.
+- **B · Full CT field.** `views[exercise].full` stays as saved, through close and reload.
+- **C · magnification** and **D · paired parent view.** The whole draft is byte-identical, and
+  the display returns on close.
+- **E · complete envelope.** Two walkthrough steps, flip, rotate, full on and off, magnify, paired
+  view, a cranial slice step, Go to response slice, previous and Replay. The whole draft is
+  byte-identical, and every intermediate write is logged and equals the snapshot. The whole
+  viewer display (orientation, full field, magnification, paired view, slice) equals the learner's
+  after close and after reload.
+- **F · close/reopen twice** with different controls. A reopened reference starts from the
+  learner's display, not the last reference.
+- **G · stale callback.** A reference display change and the close in one batch, twice, including
+  magnify + flip + close. The write log never contains another draft. The learner's next genuine
+  step saves the learner's full field, magnification, paired view and orientation.
+- **Lesson transitions.** Display choices on the worked example do not follow Start marking
+  branches, and display choices on the comparison do not follow a Redo.
+- **Genuine learner persistence** (both lessons, outside reference viewing). Reflection, rotation,
+  Full CT field, paired view, slice and magnification all save and survive a reload, and the
+  viewer shows them again. After a reload, a reference starts from and returns to that restored
+  display.
+
+The same tests run in Lesson 4 (`vertical`, junction-14) and Lesson 7 (`horizontal-oblique`,
+junction-16).
+
+The exact reproduction on the repaired build (`final-repair/repro-probe-final-cV7fb.json`): all
+four rows stay `false` during the reference, after close and after reload. The whole draft is
+equal to the pre-reference draft after close and after reload.
+
+### Mutation checks (Jest, final code)
+
+| Mutation                                                              | Result                                                                                                                                                  |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M1: remove the stale-report guard (`serial !== reportSerial.current`) | Exactly the two G tests fail: the write log shows an intermediate draft with `full: true` (`jest-mutation-M1-…log`)                                     |
+| M2: take the serial but skip restoring the view                       | 16 of 20 fail: B–G, both transitions and both after-reload reference tests. A passes because orientation is a controlled prop (`jest-mutation-M2-…log`) |
+
+### Test updated because the contract changed
+
+`paired-view-teaching.test.tsx`, BBTF-04 (from Prompt 03, `aefc136d`). The test opened the paired
+view on the Lesson 3 worked example and asserted it was still open after Start marking branches.
+That carry-over is exactly the reference-to-learner display leak this repair removes. The test
+still checks every BBTF-04 claim:
+
+- the paired view is offered before any answer and opens with one click;
+- the camera pose is the same;
+- CT transforms move only the CT, and the display caption follows them.
+
+After Start it now asserts that the view is the learner's own (closed) and reopens it with one
+click at the same pose. No other existing test changed.
+
+### Pre-existing harness race (test-only fix, `97bb1bd5`)
+
+`short route: declared approach reversal …` (Lesson 8) failed in 3 of the 6 uninstrumented runs that ran it in file order (two complete runs and one partial run)
+while the machine's load average was about 9 to 10. In those runs "Start marking branches" was
+clicked and the lesson stayed on the worked example. What happens:
+
+- Replay from parent moves the CT from the anchor (slice 325) to the first demonstration plane
+  (332).
+- The test's two waits, the ready flag and the "Approach context" caption, were already true
+  before Replay.
+- A frame-by-frame probe after Replay shows the Start button disabled from 8 to 17 ms while slice
+  332 loads, because `canAdvance` requires `imageReady`. Under load that window is longer.
+- A click dispatched inside it lands on a disabled button and is dropped.
+
+None of that path (Replay → frame 0, `imageReady`, `canAdvance`) is touched by this repair. The
+journey now waits for slice 332 before continuing. Instrumented runs, CPU-throttled runs (1×, 4×,
+8×, three each) and isolated runs never reproduced the failure. It happened only in whole-suite
+order under load, which is consistent with a timing race.
+
+### Validation after the final source and test edit (unique runs)
+
+| Check                                                                                                                                                 | Result                                                                                                                                                                                                                                                                             |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Focused Jest: new tests, `reference-and-route-state`, `division-levels`, `paired-view-teaching`, `demonstration-step-identity`, `teaching-route-flow` | 6 suites, 73 passed (`final-repair/logs/jest-focused-final.log`)                                                                                                                                                                                                                   |
+| BBT Jest (`src/features/bronchial-branch-tracing`)                                                                                                    | 27 suites, 206 tests: 205 passed, 1 failed, the known baseline below. 20 tests are new (`final-repair/logs/jest-bbt-full.log`)                                                                                                                                                     |
+| Playwright `e2e/branch-tracing.spec.ts` (repaired build)                                                                                              | 72 passed, 0 failed, 0 skipped (69 existing + 3 new), in two consecutive complete runs after the harness fix (`final-repair/logs/playwright-branch-tracing-final-run4.log`, `…-run5.log`). Before that fix, runs 1 and 2 had the single Lesson 8 race above and run 3 passed 72/72 |
+| Playwright `systemic-ux-stabilization -g bbt`                                                                                                         | 3 passed (`final-repair/logs/playwright-systemic-bbt-final.log`)                                                                                                                                                                                                                   |
+| `npx tsc --noEmit --incremental false` (repository)                                                                                                   | `NODE_OPTIONS=--max-old-space-size=8192`: exit 0, no diagnostics                                                                                                                                                                                                                   |
+| ESLint `--max-warnings 0` and Prettier (every changed path)                                                                                           | Clean                                                                                                                                                                                                                                                                              |
+| `git diff --check 00c11cde HEAD`                                                                                                                      | Clean                                                                                                                                                                                                                                                                              |
+| `npm run build` (production)                                                                                                                          | Passed, exit 0, 2 min 14 s; build ID `cV7fbSTxL31JUfNK8lczw`, built from `73bc495f`; no `src/` or `e2e/` file changed after the build started                                                                                                                                      |
+
+Representative prior checks, all passing in the complete runs:
+
+- Lesson 5 source wording (`review finding 1`);
+- RS8 reopening while LS9 work is kept (`review findings 2 and 3`);
+- the local walkthrough draft (`review finding 3`);
+- skip → record → Continue (`review finding 4`);
+- Prompt 02 compact Check ×3 and decoded-caption atomicity ×3;
+- Prompt 03 repeated-plane identity, and the occlusion explanation ×3.
+
+**Browser and server identity (repaired run)** (`final-repair/server-identity-final.txt`)
+
+- Worktree `…/Worktrees/claude-bbt-04`, branch `claude/bbt-04`, head and build source `73bc495fbc9877e5b179466ecb5feef6f5fb2aae`.
+- `cd .next/standalone && PORT=3001 HOSTNAME=127.0.0.1 node server.js`.
+- pid 38414. It is the only listener on 3001, and 3001 was free before start.
+- cwd `…/claude-bbt-04/.next/standalone`, `next-server`, build ID `cV7fbSTxL31JUfNK8lczw`, which
+  is also in the served HTML.
+- `http://127.0.0.1:3001`. Stopped afterwards, and 3001 was free.
+- The build received the public `.env.example` placeholders as process environment only, with
+  non-empty dummy values for `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `GITHUB_TOKEN` (the env schema
+  rejects empty strings). No `.env` file was created or read.
+
+**Known baseline failure.** `contracts.test.ts:198`,
+`isPublicPath('/airway-anatomy/case-001/case_manifest.json')` expected `false`, received `true`.
+It is unchanged, and access policy was not touched.
+
+**Protected-source integrity.** `final-repair/protected-hashes-final.txt` is identical, entry for
+entry, to the earlier repair's list (29 entries). It covers:
+
+- every geometry file, including `paired-scope.ts`;
+- the manifests and the airway graph;
+- the BBT-02 packet, `junction-feedback.ts`, `local-exercises.ts`, `ct-types.ts` and
+  `local-teaching.ts`;
+- the fixtures;
+- the public CT, target and preview trees.
+
+All 21 draft signatures equal the fixture and the earlier evidence
+(`final-repair/draft-signatures-final.json`). No path under `content/`, `geometry/`, `engine/`,
+`public/` or the BBT-02 packet changed. Review status, OD-01 (**OPEN**), OD-03/OD-05 (held),
+OD-04/OD-07 (owner-held), BBT-02 (**NOT REVIEWED**) and H1–H7 (held) are unchanged.
+
+**Files changed by the final repair**
+
+- `components/LocalCtLesson.tsx`: the envelope, the orientation routing, the serial guard and the
+  hand-back request.
+- `components/NativeCtViewer.tsx`: the `viewRequest` prop, the layout-phase hand-back and the
+  serial on each report. It is additive; other hosts pass no `viewRequest` and ignore the second
+  argument.
+- `__tests__/local-reference-display.test.tsx` (new) and `__tests__/paired-view-teaching.test.tsx`
+  (BBTF-04, above).
+- `e2e/branch-tracing.spec.ts`: three new journeys and the Lesson 8 wait.
+- These documents.
+
+**Behaviour to note for review.**
+
+- Display choices made while any walkthrough is on screen are the reference's. This includes the
+  paired view opened on a lesson's first worked example and the hint-3 walkthrough.
+- They are dropped when it closes. When the last response is placed during a hint-3
+  walkthrough, the CT returns to the learner's pre-hint view. That follows from the
+  `showingWalkthrough` boundary the prompt names; it was not separately exercised.
+
+**Logged, not fixed (outside this defect; schema changes are out of scope).**
+
+- `NativeCtViewer`'s magnification slider goes to 4×, but `viewerSchema.magnification` allows at
+  most 2.5.
+- A learner who magnifies above 2.5× outside a reference gets that value saved, and on reload the
+  whole local draft fails to parse and is discarded: the lesson reopens at its worked example
+  with no marks.
+- This was observed in Lessons 4 and 7 on `00c11cde` while writing these tests; the tests use
+  values ≤ 2.5.
+- It needs an owner choice: raise the schema bound, or clamp or limit the slider.
+
+**Limitations.** Desktop Chromium only (Playwright), with no screen reader, device, Safari or
+Firefox. The repair was checked through the listed journeys and was not re-walked end to end.
+
+**Evidence.** `…/renders/output/bbt-pre-review-04-2026-09-23/final-repair/` contains:
+
+- logs for fail-before, mutations, focused and full Jest, every Playwright run, the build, the
+  server and `tsc`;
+- the reproduction and timing probes with their results;
+- screens, server identity, protected hashes and signatures.
+
+**Status: FINAL SANITY REPAIR: READY FOR FOCUSED INDEPENDENT CONFIRMATION.** Not merged, not
+deployed; Prompt 05 not started.
