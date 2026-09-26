@@ -6,6 +6,12 @@ import { peripheralImagingSectionIds } from '@/features/peripheral-imaging/conte
 jest.mock('@/i18n/handoff-server', () => ({
   localizeHandoffServerValue: async (_locale: string, value: unknown) => value,
 }))
+// A redirect ends the render in Next; the double throws so the page stops the same way.
+jest.mock('@/i18n/navigation', () => ({
+  redirect: jest.fn(() => {
+    throw new Error('NEXT_REDIRECT')
+  }),
+}))
 jest.mock('@/features/peripheral-imaging/components/PeripheralImagingModuleFrame', () => ({
   PeripheralImagingModuleFrame: ({
     activeHref,
@@ -211,6 +217,39 @@ describe('peripheral imaging route family', () => {
       'not-a-case',
     )
     expect(screen.queryByTestId('imaging-integrated-case')).not.toBeInTheDocument()
+  })
+
+  it('redirects an integrated-case address whose slot a revised case now holds, and opens the revised case directly', async () => {
+    // Owner decision OD4-05 (2026-09-22): the revised cases have new ids, and the old addresses
+    // redirect to the case now in their slot rather than falling through to the list.
+    const { redirect } = jest.requireMock('@/i18n/navigation') as { redirect: jest.Mock }
+    for (const [legacy, current] of [
+      ['case-4', 'case-4-v2'],
+      ['case-5', 'case-5-v2'],
+      ['case-8', 'case-8-v2'],
+    ]) {
+      redirect.mockClear()
+      await expect(
+        PeripheralImagingIntegratedCasesPage({
+          params: params('es'),
+          searchParams: Promise.resolve({ case: legacy }),
+        }),
+      ).rejects.toThrow('NEXT_REDIRECT')
+      expect(redirect).toHaveBeenCalledTimes(1)
+      expect(redirect).toHaveBeenCalledWith({
+        href: { pathname: '/peripheral-imaging/assess', query: { case: current } },
+        locale: 'es',
+      })
+    }
+    redirect.mockClear()
+    render(
+      await PeripheralImagingIntegratedCasesPage({
+        params: params('en'),
+        searchParams: Promise.resolve({ case: 'case-5-v2' }),
+      }),
+    )
+    expect(redirect).not.toHaveBeenCalled()
+    expect(screen.getByTestId('imaging-integrated-case')).toHaveAttribute('data-id', 'case-5-v2')
   })
 
   it('renders the Practice landing inside the frame with its nav href', async () => {

@@ -44,6 +44,13 @@ const PLAUSIBILITY_OVERRIDES: Readonly<Record<string, Readonly<Record<string, Pl
   'dose-1': { a: 'reasonable-but-incomplete' },
   'choose-1': { c: 'reasonable-but-incomplete' },
 
+  // Prompt 04 samples, tagged as each sample's distractor table proposes (OD4-05, 2026-09-22).
+  // Every other distractor in them is `incorrect-mechanism`.
+  'imaging-questions-interpretation-v2': { c: 'reasonable-but-incomplete' },
+  'case-4-v2': { a: 'unsafe', b: 'reasonable-but-incomplete' },
+  'case-5-v2': { c: 'reasonable-but-incomplete' },
+  'case-8-v2': { c: 'reasonable-but-incomplete' },
+
   // Practice cases.
   'signal-practice-1': { c: 'reasonable-but-incomplete' },
   'signal-practice-2': { a: 'reasonable-but-incomplete' },
@@ -74,6 +81,8 @@ const MANAGEMENT_DECISION_IDS: ReadonlySet<string> = new Set([
   'case-6',
   'case-7',
   'capstone-transfer-1',
+  'case-4-v2',
+  'changing-anatomy-interpretation-v2',
 
   // Practice cases that ask for the next move.
   'signal-practice-2',

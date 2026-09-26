@@ -207,11 +207,18 @@ export function temporal(
   }
 }
 
-/** Authored gantry illustrations, not manufacturer dimensions or supported trajectories. */
+/**
+ * Authored gantry illustrations, not manufacturer dimensions or supported trajectories.
+ *
+ * Every variant draws the same detector field, so the same field-of-view cylinder. The mobile
+ * variant used to carry a 300 mm panel, which drew a smaller cylinder that nothing sourced; owner
+ * decision OD4-09 (2026-09-22) equalised it, because a learner could read the purely illustrative
+ * difference as a fixed-versus-mobile device fact. The variants now differ only in their mount.
+ */
 export const GANTRY_VARIANTS = {
   generic: { panelMm: DEFAULT_GEOMETRY.field, mount: 'pedestal' },
   fixed: { panelMm: DEFAULT_GEOMETRY.field, mount: 'fixed' },
-  mobile: { panelMm: 300, mount: 'cart' },
+  mobile: { panelMm: DEFAULT_GEOMETRY.field, mount: 'cart' },
 } as const
 export function cbctOrbitSamples(span: number, count: number) {
   const n = Math.max(2, Math.round(count))

@@ -309,7 +309,8 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
  * `fixedExampleValues`, never directly: a fixed example must never fall back to learner state.
  */
 export function independentValues(id: ImagingSectionId, round: 0 | 1): LabValues | null {
-  if (id === 'dts-acquisition') return { sweep: 20, plane: 10 }
+  // Section 10's check was drawn at sweep 20 / plane 10 until PR #279's sanity review (F3): it is
+  // now a written check with no image, so it has no authored image state.
   if (id === 'projection')
     return {
       orbit: round ? 0 : -28,
@@ -423,8 +424,10 @@ const ILLUSTRATIVE_ONLY_EXAMPLES: ReadonlySet<string> = new Set([
   // "a new dependent opacity now obscures a previously distinct peripheral lesion" — the
   // registration model translates the CT rigidly and simulates no ventilation or recruitment.
   'current-anatomy:example:0',
-  // "duplicated tool and lesion edges from motion during the spin" — the same rigid-translation
-  // model simulates no motion artifact.
+  // "the catheter and the nodule margin each appear twice" (QS-4's text form, OD4-02/OD4-05,
+  // 2026-09-22; before it, "duplicated tool and lesion edges from motion during the spin") — the
+  // same rigid-translation model simulates no motion artifact, and authentic motion media are
+  // deferred (OD4-06), so the declaration stands for the new check too.
   'changing-anatomy:example:0',
   // "a clinician proposes holding an accessory in the primary beam while wearing a lead glove" —
   // the scatter scene shows distance, tube side and a barrier, and no such action.

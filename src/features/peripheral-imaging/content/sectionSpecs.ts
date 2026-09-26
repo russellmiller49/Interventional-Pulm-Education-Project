@@ -421,7 +421,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     modelBoundary:
       'Scouts are CT-derived projections in the same geometry as the centering controls. The C-arm is a generic motion reference; choosing a workflow does not make it an equipment-specific clearance model, and the centering tolerance is authored for this exercise. No collision detection, clinical reconstruction or breath-hold tolerance is calculated. ' +
       IMAGING_SHARED_BOUNDARY,
-    capstoneCaseId: 'case-4',
+    capstoneCaseId: 'case-4-v2',
     sourceIds: ['setser', 'mobile', 'wabip'],
   },
   {
@@ -500,7 +500,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     modelBoundary:
       'CT-derived lung context is combined with analytic sections of an authored sphere and a fictional side window behind the tip; the slab is a maximum-intensity projection over an authored depth. This is not a clinical reconstruction or a specification for a real needle, and it omits vessels, pleura, tool deformation, metal artifact and tissue acquisition. Geometric intersection does not establish safe or diagnostic sampling. ' +
       IMAGING_SHARED_BOUNDARY,
-    capstoneCaseId: 'case-5',
+    capstoneCaseId: 'case-5-v2',
     sourceIds: ['setser', 'pritchett', 'mobile', 'tg272'],
   },
   {
@@ -580,7 +580,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     modelBoundary:
       'All exposure values are authored for arithmetic. No controller, patient attenuation, skin backscatter, organ dose or clinical action threshold is modelled. Keep different dose quantities and acquisition totals distinct. ' +
       IMAGING_SHARED_BOUNDARY,
-    capstoneCaseId: 'case-8',
+    capstoneCaseId: 'case-8-v2',
     sourceIds: ['wabip', 'aapm12', 'skin', 'tg125', 'icrp'],
   },
   {

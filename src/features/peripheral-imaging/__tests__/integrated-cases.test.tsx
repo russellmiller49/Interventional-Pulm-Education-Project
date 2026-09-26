@@ -61,15 +61,17 @@ function checkChoice(choiceId: string) {
 describe('the integrated cases', () => {
   it('keep the eight cases, their stable item ids and the item bank’s safety flags', () => {
     expect(validateImagingCases()).toEqual([])
+    // Prompt 04 (OD4-05, 2026-09-22) replaced the fourth, fifth and eighth slots with revised
+    // cases under new ids; the earlier items stay in the bank and their addresses redirect.
     expect(imagingCases.map((imagingCase) => imagingCase.id)).toEqual([
       'case-1',
       'case-2',
       'case-3',
-      'case-4',
-      'case-5',
+      'case-4-v2',
+      'case-5-v2',
       'case-6',
       'case-7',
-      'case-8',
+      'case-8-v2',
     ])
     expect(imagingCases.map((imagingCase) => imagingCase.item.id)).toEqual(
       imagingCases.map((imagingCase) => `capstone:${imagingCase.id}`),
@@ -78,7 +80,7 @@ describe('the integrated cases', () => {
       imagingCases
         .filter((imagingCase) => imagingCase.critical)
         .map((imagingCase) => imagingCase.id),
-    ).toEqual(['case-1', 'case-4', 'case-6', 'case-7'])
+    ).toEqual(['case-1', 'case-4-v2', 'case-6', 'case-7'])
   })
 
   it('are all open, from the old Assess address, to a learner who has opened no section', async () => {

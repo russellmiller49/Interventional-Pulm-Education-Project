@@ -107,9 +107,15 @@ const MICRO_CASE_DEFINITIONS: readonly MicroCaseDefinition[] = [
   {
     id: 'dts-interpretation-practice-1',
     sectionId: 'dts-interpretation',
-    presentationTitle: 'Catheter absent from the DTS planes',
+    // QS-5 (OD4-04, OD4-05, 2026-09-22): the learner now finds the absence on a teaching-model
+    // figure, so neither the title nor the situation narrates it. Three statements the model
+    // cannot support are gone: the course's authored nodule lies in the posterior LEFT lung (no
+    // lobe is named until the teaching CT is reviewed, OD4-11), it is a smooth part-solid sphere
+    // rather than lobulated, and the modeled catheter runs through lung-density CT, not a visible
+    // airway, so the planes are described by their depth instead.
+    presentationTitle: 'A parked catheter and the DTS planes',
     situation:
-      'A robotic catheter was parked in a subsegmental airway of the right lower lobe before the DTS acquisition and has not moved since; live fluoroscopy shows its distal end clearly. The second monitor shows a reconstructed view of that region, where the lesion has fine lobulated margins much as on the planning CT open on the adjacent display. Scrolling the reconstructed planes through the airway and the lesion, the catheter appears on none of them. The C-arm and the table have not moved since the acquisition.',
+      'A robotic catheter was parked near the lesion before the DTS acquisition and has not moved since. The C-arm and the table have not moved either. The figure shows, left to right, a projection with the catheter in place, three reconstructed planes from the catheter’s depth to the lesion, and the planning CT through the lesion.',
   },
   {
     id: 'cbct-acquisition-practice-1',
