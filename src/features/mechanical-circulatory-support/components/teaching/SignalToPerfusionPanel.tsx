@@ -131,7 +131,7 @@ export function SignalToPerfusionPanel({
             data-ladder-rung="oxygen-delivery"
           >
             <p className="text-sm font-semibold">3. Oxygen delivery — not directly calculated</p>
-            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <LiveValue
                 label="Mixed venous saturation"
                 value={metrics.svo2Percent}
@@ -232,7 +232,7 @@ export function SignalToPerfusionPanel({
       {reveal === 'transfer' ? (
         <PanelSection title="The transfer patient, read live" id="signals-transfer">
           <TransferState principle="Three readings, three different questions. A preserved mean pressure answers at the pressure level and nowhere else, and the flow account has three lines rather than one number — in this patient exactly as in the last one.">
-            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <LiveValue
                 label="Mean arterial pressure"
                 value={metrics.mapMmHg}

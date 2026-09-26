@@ -148,11 +148,17 @@
   .timingDiscussion {
     grid-template-columns: minmax(0, 1fr);
   }
+  /*
+   * Padding in rem doubles with the root text size, and on a phone at 200% text the shell, this
+   * flow, the Now card and the monitor together took about 127 px of a 390 px screen, leaving
+   * 170–200 px text columns (F38). On narrow screens the padding is capped by the screen instead;
+   * the text keeps its size.
+   */
   .flow {
-    padding: 0.5rem;
+    padding: min(0.5rem, 2vw);
   }
   .flow [data-now-card] {
-    padding: 0.8rem;
+    padding: min(0.8rem, 3vw);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -173,7 +179,7 @@
   margin: 0 auto;
 }
 .flow [data-annotated-pathway-comparison] .cutaway {
-  max-height: 210px;
+  max-height: 280px;
 }
 .flow [data-annotated-pathway-comparison] .readings dd {
   font-size: 0.95rem;
@@ -191,7 +197,9 @@
   .flow [data-pump-cutaway] {
     overflow-x: auto;
   }
-  .flow [data-pump-cutaway] svg {
+  /* The drawing keeps a readable size and scrolls in its own labelled region; the legend's
+     swatches are not drawings and keep theirs. */
+  .flow [data-pump-cutaway] > svg {
     min-width: 500px;
   }
 }
@@ -206,4 +214,166 @@
 }
 .flow [data-map-anchor] [data-circulation-map] > div:first-of-type {
   min-width: 570px;
+}
+
+/* The pump cutaway's line legend: line style, colour and words, never a label slot (F23). */
+.cutawayLegend {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.4rem 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+.cutawayLegend li {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+  overflow-wrap: normal;
+}
+.cutawayLegend svg {
+  width: 2.5rem;
+  height: 0.75rem;
+}
+
+/*
+ * Save & exit is the way out, not the next step. The shared header paints it as the one primary
+ * control, which on arrival made it the brightest thing on the screen while Continue sat far
+ * below (F03). Inside this module it takes the secondary look; it stays in the header, keeps its
+ * label and its keyboard focus ring, and does the same thing.
+ */
+.flow [data-stage-save-exit][data-primary='true'] {
+  border-color: var(--stage-line);
+  background: transparent;
+  color: var(--stage-ink);
+}
+
+/*
+ * Radio buttons that look like radio buttons.
+ *
+ * The stage runs `color-scheme: dark`, so the browser drew every unchecked radio as a filled grey
+ * disc — on a dark card that reads as selected, and a learner could not tell which answer was
+ * theirs (F32). These are still the native inputs, in the same labels and groups, with the same
+ * arrow-key and Space behaviour and the same checked state for assistive technology; only their
+ * paint is set: an empty ring when unchecked, a ring with a filled centre when checked, a dashed
+ * ring when disabled, and the stage's focus ring. The map's answer rows keep their own numbered
+ * discs and are left alone. Forced-colours mode gets the system radio back.
+ */
+.flow fieldset:not([data-map-answer]) input[type='radio'] {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0.2rem 0 0;
+  border: 2px solid var(--stage-ink);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+.flow fieldset:not([data-map-answer]) input[type='radio']::before {
+  content: '';
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--stage-accent);
+  transform: scale(0);
+}
+.flow fieldset:not([data-map-answer]) input[type='radio']:checked {
+  border-color: var(--stage-accent);
+}
+.flow fieldset:not([data-map-answer]) input[type='radio']:checked::before {
+  transform: scale(1);
+}
+.flow fieldset:not([data-map-answer]) input[type='radio']:disabled {
+  border-style: dashed;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.flow fieldset:not([data-map-answer]) input[type='radio']:focus-visible {
+  outline: 3px solid var(--stage-accent);
+  outline-offset: 2px;
+}
+@media (forced-colors: active) {
+  .flow fieldset:not([data-map-answer]) input[type='radio'] {
+    appearance: auto;
+  }
+  .flow fieldset:not([data-map-answer]) input[type='radio']::before {
+    display: none;
+  }
+}
+
+/*
+ * The Sections drawer, as a list (F37).
+ *
+ * The shared drawer holds the pathway's own rail — a horizontal strip built for a full-width bar —
+ * inside a 26rem panel, so it showed two of the nine section tiles, and this stage's
+ * `overflow-wrap: anywhere` broke their titles mid-word ("Pressur e and flow", "Three device s").
+ * Inside this module the rail is laid out as a vertical list: every section on its own row with its
+ * number, short title and full title, words kept whole, in a panel no taller than the window below
+ * it that scrolls on its own. The shared drawer's own behaviour is untouched: its summary opens and
+ * closes it, Escape closes it and returns focus to that summary, and choosing a section closes it.
+ */
+.flow [data-sections-drawer] {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.flow [data-sections-drawer] > div {
+  width: min(28rem, calc(100vw - 1.5rem));
+  max-height: min(70vh, calc(100dvh - 12rem));
+  min-height: 12rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.flow [data-sections-drawer] nav {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+  gap: 0.5rem;
+  overflow: visible;
+  padding: 0.5rem;
+  box-shadow: none;
+  border-bottom: 0;
+}
+.flow [data-sections-drawer] nav > div {
+  gap: 0.2rem;
+}
+.flow [data-sections-drawer] nav > div > span,
+.flow [data-sections-drawer] nav > div > small {
+  font-size: 0.75rem;
+}
+.flow [data-sections-drawer] nav > div > strong {
+  font-size: 0.875rem;
+}
+.flow [data-sections-drawer] ol {
+  display: grid;
+  gap: 0.35rem;
+  overflow: visible;
+}
+.flow [data-sections-drawer] li {
+  min-width: 0;
+}
+.flow [data-sections-drawer] li button {
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  align-items: start;
+  min-height: 2.75rem;
+}
+.flow [data-sections-drawer] li button > span:first-child {
+  font-size: 0.8125rem;
+  padding-top: 0.1rem;
+}
+.flow [data-sections-drawer] li button strong {
+  font-size: 0.875rem;
+  line-height: 1.3;
+}
+.flow [data-sections-drawer] li button small {
+  display: block;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }

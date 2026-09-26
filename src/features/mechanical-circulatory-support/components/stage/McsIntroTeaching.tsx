@@ -1,6 +1,6 @@
 import { McsPumpCutaway } from './McsPumpCutaway'
 import { useState } from 'react'
-import { McsPathwayTour, McsCirculationSketch } from './McsPathwayTour'
+import { McsPathwayTour } from './McsPathwayTour'
 import type { McsIntroduction } from '../../content/introductorySteps'
 import type { McsSimulationState } from '../../engine/types'
 import { activePathways } from '../teaching/selectors'
@@ -26,7 +26,13 @@ export function McsIntroTeaching({
       {introduction.paragraphs.map((text) => (
         <p key={text}>{text}</p>
       ))}
-      {introduction.id === 'orientation' ? <McsCirculationSketch /> : null}
+      {/*
+       * No second drawing of the circulation here. The orientation step is read beside the
+       * circulation map, and this five-box sketch drew the same loop differently on the same
+       * screen, which left a learner comparing two pictures of one thing (F03). The sketch still
+       * introduces the loop where no map is on screen — the prerequisite reference and the
+       * pathway tour.
+       */}
       {introduction.visual === 'signals' ? (
         <dl className={styles.definitionList} data-measurement-tour>
           <dt>Pressure · mm Hg</dt>
