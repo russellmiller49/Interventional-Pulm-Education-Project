@@ -14,7 +14,12 @@ import { JunctionFeedback } from './JunctionFeedback'
 import { junctionFeedbackPacket } from '../content/junction-feedback'
 import { CourseOutline } from './CourseOutline'
 import { LOCAL_DRAFT_ALIASES } from '../engine/local-draft-migration'
-import { orientationName, sameOrientation, STANDARD_ORIENTATION } from '../geometry/orientation'
+import {
+  orientationName,
+  sameOrientation,
+  STANDARD_ORIENTATION,
+  type CtOrientation,
+} from '../geometry/orientation'
 import { pairedScope } from '../geometry/paired-scope'
 import { divisionIdentities, sourceNamingNote } from '../engine/branch-identity'
 import {
@@ -59,6 +64,20 @@ import { displayName } from '../engine/display-text'
 import { resetPaneScroll } from './resetPaneScroll'
 import { useSelfPacedProgress } from './useSelfPacedProgress'
 import styles from './branch-tracing.module.css'
+
+/**
+ * The reference's own display (PR #273 final repair). While a worked walkthrough, Show reference or
+ * the comparison is on screen, whatever the learner does to that CT (plane, crop focus, Full CT
+ * field, magnification, paired parent view, flip, rotation) changes this envelope and nothing else.
+ * It opens from the display on screen, which is the learner's own, is never written to the draft,
+ * and is discarded when the reference closes, when the viewer is handed the learner's saved view back.
+ */
+interface ReferenceDisplay {
+  /** The viewer instance it belongs to: a new example or a restart opens a new envelope. */
+  viewer: string
+  orientation: CtOrientation
+  view?: CtViewerState
+}
 
 export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   const router = useRouter()
@@ -128,6 +147,13 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
   const [liveSlice, setLiveSlice] = useState<number | null>(null)
   const referenceViewing = useRef(false)
   const currentFrames = useRef<LocalCtExercise['frames']>([])
+  // The display a reference is shown in; null while the learner's own display is on screen.
+  const [referenceDisplay, setReferenceDisplay] = useState<ReferenceDisplay | null>(null)
+  // Bumped each time a reference closes. The viewer is handed the learner's saved view back with
+  // this serial and stamps every later report with it, so a report stamped with an earlier serial
+  // was made on a reference's display and is never saved as the learner's.
+  const [learnerViewSerial, setLearnerViewSerial] = useState(0)
+  const reportSerial = useRef(0)
   const exercise = exercises[s.exercise]
   const point = exercise.trace.checkpoints[0]
   const slot = exercise.answerPoints[s.slot]
@@ -199,10 +225,22 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
       s.phase === 'compare' ||
       (s.phase === 'attempt' && (referenceShown || (s.hints === 3 && !attemptReady))))
   const complete = s.phase === 'complete'
+  // The reference's display opens and closes with the walkthrough itself. Adjusting it during render
+  // means no committed frame pairs reference viewing with the learner's display or the reverse.
+  const referenceViewer = showingWalkthrough ? `${exercise.id}.${viewerEpoch}` : null
+  if ((referenceDisplay?.viewer ?? null) !== referenceViewer) {
+    if (referenceDisplay) setLearnerViewSerial((serial) => serial + 1)
+    setReferenceDisplay(
+      referenceViewer
+        ? { viewer: referenceViewer, orientation: s.orientation, view: s.views[exercise.id] }
+        : null,
+    )
+  }
   // Read by onViewChange, which must keep one identity: the viewer re-reports its state whenever
   // that callback changes, which would save a reference position as the learner's own.
   useLayoutEffect(() => {
     referenceViewing.current = showingWalkthrough
+    reportSerial.current = learnerViewSerial
     currentFrames.current = exercise.frames
   })
   const reviewed = record.reviewedLessonIds.includes(lesson.id)
@@ -317,7 +355,11 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
     return next
   }
   const onViewChange = useCallback(
-    (view: CtViewerState) => {
+    (view: CtViewerState, serial?: number) => {
+      // Made before the viewer took the learner's view back, so it shows a reference's display. It
+      // can arrive after the reference has closed (a display change and the close in one batch), so
+      // it is dropped, never routed by whichever mode is on now.
+      if (serial !== reportSerial.current) return
       // Browsing to another plane moves the demonstration to the occurrence nearest the step
       // the learner is on, so leaving a pass and returning cannot rewind them into an earlier one.
       setLiveSlice(view.slice)
@@ -325,18 +367,17 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
         const matched = demonstrationFrameIndex(currentFrames.current, current, view.slice)
         return matched < 0 ? current : matched
       })
-      const reference = referenceViewing.current
+      // A reference's plane, crop, full field, magnification and paired view are the reference's
+      // own; none of them is the learner's, so none reaches the draft.
+      if (referenceViewing.current) {
+        setReferenceDisplay((current) => current && { ...current, view })
+        return
+      }
       setSession((current) => {
         const key = exercises[current.exercise].id
-        const stored = current.views[key]
-        // A reference moves the CT without moving the learner: the stored slice and focus stay the
-        // learner's own, while display choices (magnify, full field, paired view) are still theirs.
-        const next = reference
-          ? stored && { ...view, slice: stored.slice, focus: stored.focus }
-          : view
-        return !next || JSON.stringify(stored) === JSON.stringify(next)
+        return JSON.stringify(current.views[key]) === JSON.stringify(view)
           ? current
-          : { ...current, views: { ...current.views, [key]: next } }
+          : { ...current, views: { ...current.views, [key]: view } }
       })
     },
     [exercises],
@@ -544,8 +585,16 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                       ? 'Your branch marks are placed. Choose the Airway course below, then select Check my tracing.'
                       : 'Your branch marks are placed. Choose which branch to follow below, then select Check my tracing.'
                     : `Trace ${displayLabel(s.slot)} from ${identities?.parent.display ?? exercise.trace.anchor.airway.code} to slice ${slot.slice}, then click inside its lumen. You can also record Lumen unresolved here, show the reference, or continue without marking.`
+  const learnerView = s.views[exercise.id]
+  // The learner's saved view, handed back to the viewer whenever a reference closes.
+  const viewRequest = useMemo(
+    () => ({ view: learnerView, serial: learnerViewSerial }),
+    [learnerView, learnerViewSerial],
+  )
+  // What the viewer opens with if it mounts: the open reference's display, else the learner's.
+  const displayView = referenceDisplay ? referenceDisplay.view : learnerView
   // Model points appear in the demonstration, the comparison, and whenever the learner shows the reference.
-  const viewSlice = liveSlice ?? s.views[exercise.id]?.slice ?? exercise.trace.anchor.slice
+  const viewSlice = liveSlice ?? learnerView?.slice ?? exercise.trace.anchor.slice
   // A plane is demonstrated once per daughter pass, so the step the learner is on is the frame
   // index and never the slice number: resolving either the overlays or the caption by slice
   // alone hands a later pass the first pass's branch identity.
@@ -1371,15 +1420,21 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               onMark={
                 !guide && s.phase === 'attempt' ? (mark) => act({ type: 'mark', mark }) : undefined
               }
-              orientation={s.orientation}
-              onOrientation={(value) => act({ type: 'orientation', value })}
+              orientation={referenceDisplay ? referenceDisplay.orientation : s.orientation}
+              onOrientation={(value) =>
+                // Flipping or rotating a reference turns the reference's display only.
+                referenceDisplay
+                  ? setReferenceDisplay((current) => current && { ...current, orientation: value })
+                  : act({ type: 'orientation', value })
+              }
               initialView={
                 // A viewer that mounts during a paired teaching moment opens paired; a saved
                 // preference to hide the view is honoured again as soon as the learner toggles it.
-                s.views[exercise.id] && (s.phase === 'parent-view' || viewpoint)
-                  ? { ...s.views[exercise.id], showScope: true }
-                  : s.views[exercise.id]
+                displayView && (s.phase === 'parent-view' || viewpoint)
+                  ? { ...displayView, showScope: true }
+                  : displayView
               }
+              viewRequest={viewRequest}
               onViewChange={onViewChange}
               onReadyChange={setImageReady}
               onDisplayedSliceChange={setDisplayedSlice}

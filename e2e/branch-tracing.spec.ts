@@ -1937,3 +1937,185 @@ test('review finding 4 · Continue works after a skip, and a partial route ends 
   await button(page, 'Continue to the next division').click()
   await expect(nowHeading(page)).toHaveText(`Junction 3 of ${trace.checkpoints.length - 1}`)
 })
+
+// PR #273 final sanity repair. A local worked or reference walkthrough owns its own display: plane,
+// crop, Full CT field, magnification, paired parent view, flip and rotation. Each journey below
+// failed on the reviewed head 00c11cde.
+async function shownDisplay(page: Page) {
+  const viewer = page.getByRole('region', { name: 'CT tracing viewer' })
+  return {
+    orientation: await viewer.locator('h2 + span').textContent(),
+    full: await button(page, /^(Full CT field|Airway detail)$/).getAttribute('aria-pressed'),
+    magnification: await page.getByLabel('CT magnification').inputValue(),
+    paired: await button(page, /^(Show|Hide) parent airway view$/).getAttribute('aria-pressed'),
+    slice: await page.getByLabel('CT slice', { exact: true }).inputValue(),
+  }
+}
+async function orientationControl(page: Page, name: RegExp) {
+  const details = page.locator('details', { hasText: 'More orientation controls' })
+  if (!(await details.evaluate((d) => (d as HTMLDetailsElement).open)))
+    await page.getByText('More orientation controls').click()
+  await button(page, name).click()
+}
+/** Genuine partial learner work, as in the independent reproduction: Lumen unresolved here. */
+async function localPartialWork(page: Page, id: string) {
+  await startLocal(page, id)
+  await button(page, 'Go to response slice').click()
+  await ctReady(page)
+  await button(page, 'Lumen unresolved here').click()
+  const value = JSON.parse((await storedRaw(page, `learn.${id}`))!).value
+  expect(value.phase).toBe('attempt')
+  expect(value.marks[0]).toMatchObject({ pixel: null })
+}
+/** Closes the reference and reads the display in the first animation frame after the close. */
+async function closeReferenceFirstFrame(page: Page) {
+  return page.evaluate(async () => {
+    const byText = (pattern: RegExp) =>
+      [...document.querySelectorAll('button')].find((b) => pattern.test(b.textContent!.trim()))!
+    byText(/^Show reference$/).click()
+    await new Promise((resolve) => requestAnimationFrame(resolve))
+    return {
+      orientation: document.querySelector('[aria-label="CT tracing viewer"] h2 + span')!
+        .textContent,
+      full: byText(/^(Full CT field|Airway detail)$/).getAttribute('aria-pressed'),
+      magnification: (document.querySelector('[aria-label="CT magnification"]') as HTMLInputElement)
+        .value,
+    }
+  })
+}
+/** Every write of this draft from now on, including ones a later write overwrites. */
+async function logDraftWrites(page: Page, id: string) {
+  await page.evaluate((k) => {
+    const log: string[] = []
+    ;(window as unknown as { __draftWrites: string[] }).__draftWrites = log
+    const original = Storage.prototype.setItem
+    Storage.prototype.setItem = function (name: string, value: string) {
+      if (name === `branch-tracing.draft.${k}`) log.push(value)
+      return original.call(this, name, value)
+    }
+  }, `learn.${id}`)
+  return () => page.evaluate(() => (window as unknown as { __draftWrites: string[] }).__draftWrites)
+}
+
+test('final repair · Lesson 4 reproduction: a reference flip, Full CT field, magnification and paired view never reach the draft', async ({
+  page,
+}) => {
+  await localPartialWork(page, 'vertical')
+  const before = await storedRaw(page, 'learn.vertical')
+  const learner = await shownDisplay(page)
+  const writes = await logDraftWrites(page, 'vertical')
+  await button(page, 'Show reference').click()
+  await ctReady(page)
+  await button(page, 'Next demonstration slice').click()
+  await ctReady(page)
+  await orientationControl(page, /Flip left–right/)
+  await expect(
+    page.getByRole('region', { name: 'CT tracing viewer' }).locator('h2 + span'),
+  ).toHaveText('Left–right reflection')
+  await orientationControl(page, /Rotate 90° right/)
+  await button(page, 'Full CT field').click()
+  await button(page, 'Airway detail').click()
+  await page.getByLabel('CT magnification').fill('2.2')
+  await button(page, /^(Show|Hide) parent airway view$/).click()
+  expect(await storedRaw(page, 'learn.vertical')).toBe(before)
+  await button(page, 'Show reference').click()
+  await ctReady(page)
+  expect(await shownDisplay(page)).toEqual(learner)
+  expect(await storedRaw(page, 'learn.vertical')).toBe(before)
+  for (const value of await writes()) expect(value).toBe(before)
+  await capture(page, 'bbt04-final-L4-reference-closed')
+  await page.reload()
+  await ctReady(page)
+  expect(JSON.parse((await storedRaw(page, 'learn.vertical'))!)).toEqual(JSON.parse(before!))
+  expect(JSON.parse((await storedRaw(page, 'learn.vertical'))!).value.orientation).toEqual({
+    turns: 0,
+    reflected: false,
+  })
+  expect(await shownDisplay(page)).toEqual(learner)
+})
+
+test('final repair · Lesson 7: two reference cycles and a same-task rapid close write nothing, and the learner resumes from their own display', async ({
+  page,
+}) => {
+  await localPartialWork(page, 'horizontal-oblique')
+  const key = 'learn.horizontal-oblique'
+  const before = await storedRaw(page, key)
+  const learner = await shownDisplay(page)
+  const writes = await logDraftWrites(page, 'horizontal-oblique')
+  await button(page, 'Show reference').click()
+  await ctReady(page)
+  await orientationControl(page, /Flip left–right/)
+  await button(page, 'Full CT field').click()
+  await page.getByLabel('CT magnification').fill('2')
+  await button(page, 'Next demonstration slice').click()
+  await ctReady(page)
+  // The first frame painted after the close already shows the learner's own display.
+  expect(await closeReferenceFirstFrame(page)).toEqual({
+    orientation: learner.orientation,
+    full: learner.full,
+    magnification: learner.magnification,
+  })
+  await ctReady(page)
+  expect(await shownDisplay(page)).toEqual(learner)
+  await button(page, 'Show reference').click()
+  await ctReady(page)
+  await orientationControl(page, /Rotate 90° left/)
+  await button(page, /^(Show|Hide) parent airway view$/).click()
+  // A display change and the close dispatched in one task: React handles both in one batch.
+  await page.evaluate(() => {
+    const byText = (text: string) =>
+      [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === text)!
+    byText('Full CT field').click()
+    byText('Show reference').click()
+  })
+  await ctReady(page)
+  expect(await shownDisplay(page)).toEqual(learner)
+  expect(await storedRaw(page, key)).toBe(before)
+  for (const value of await writes()) expect(value).toBe(before)
+  // The learner's next genuine navigation is saved, from the learner's display.
+  await button(page, 'More cranial CT slice').click()
+  const was = JSON.parse(before!).value
+  const exercise = Object.keys(was.views)[0]
+  await expect
+    .poll(async () => JSON.parse((await storedRaw(page, key))!).value.views[exercise])
+    .toEqual({ ...was.views[exercise], slice: was.views[exercise].slice + 1 })
+  const after = JSON.parse((await storedRaw(page, key))!).value
+  expect(after.orientation).toEqual(was.orientation)
+  expect(after.marks).toEqual(was.marks)
+  await page.reload()
+  await ctReady(page)
+  expect(JSON.parse((await storedRaw(page, key))!).value).toEqual(after)
+})
+
+test('final repair · genuine learner display choices outside reference viewing still persist after reload', async ({
+  page,
+}) => {
+  await localPartialWork(page, 'vertical')
+  const was = JSON.parse((await storedRaw(page, 'learn.vertical'))!).value
+  const exercise = Object.keys(was.views)[0]
+  await orientationControl(page, /Flip left–right/)
+  await orientationControl(page, /Rotate 90° right/)
+  await button(page, 'Full CT field').click()
+  const saved = async () => JSON.parse((await storedRaw(page, 'learn.vertical'))!).value
+  await expect.poll(async () => (await saved()).orientation).toEqual({ turns: 1, reflected: true })
+  await expect.poll(async () => (await saved()).views[exercise].full).toBe(true)
+  await button(page, 'Airway detail').click()
+  await page.getByLabel('CT magnification').fill('2.3')
+  await button(page, 'Show parent airway view').click()
+  await button(page, 'More cranial CT slice').click()
+  await expect
+    .poll(async () => (await saved()).views[exercise])
+    .toMatchObject({
+      full: false,
+      magnification: 2.3,
+      showScope: true,
+      slice: was.views[exercise].slice + 1,
+    })
+  const final = await saved()
+  const learner = await shownDisplay(page)
+  await page.reload()
+  await ctReady(page)
+  expect(await saved()).toEqual(final)
+  expect(await shownDisplay(page)).toEqual(learner)
+  await capture(page, 'bbt04-final-L4-learner-display-reloaded')
+})
