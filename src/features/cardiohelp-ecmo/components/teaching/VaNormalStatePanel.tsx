@@ -11,6 +11,7 @@ import type { EcmoSimulationState } from '../../engine/types'
 import {
   GuidedValue,
   ModelBoundary,
+  TableSentences,
   TextEquivalent,
   VA_CONFIGURATION_BOUNDARY,
   VaConfigurationLabel,
@@ -142,6 +143,8 @@ interface BaselineRow {
 
 function format(value: number | null, precision: number, unit: string): string {
   if (value === null) return '--'
+  // A saturation reads as the device and the monitor print it, "96.9%", with no space (S5-5).
+  if (unit === '%') return `${value.toFixed(precision)}%`
   return unit ? `${value.toFixed(precision)} ${unit}` : value.toFixed(precision)
 }
 
@@ -328,7 +331,7 @@ function baselineRows(
       id: 'postOxygenatorSaturation',
       group: 'membrane-and-return',
       label: 'Post-membrane saturation',
-      unit: '',
+      unit: '%',
       precision: 1,
       current: circuit.postOxygenatorSaturation,
       reference: reference.circuit.postOxygenatorSaturation,
@@ -389,7 +392,7 @@ function baselineRows(
       id: 'venousLineSaturation',
       group: 'patient',
       label: 'Drainage-limb saturation (console SvO₂ tile)',
-      unit: '',
+      unit: '%',
       precision: 1,
       current: circuit.readouts.venousLineSaturation.displayed,
       reference: reference.circuit.readouts.venousLineSaturation.displayed,
@@ -404,7 +407,7 @@ function baselineRows(
       id: 'systemicVenousSaturationEstimate',
       group: 'patient',
       label: 'Systemic venous saturation (estimated, no sensor)',
-      unit: '',
+      unit: '%',
       precision: 1,
       current: patient.systemicVenousSaturationEstimate,
       reference: reference.patient.systemicVenousSaturationEstimate,
@@ -416,7 +419,7 @@ function baselineRows(
       id: 'spo2',
       group: 'patient',
       label: 'Patient SpO₂',
-      unit: '',
+      unit: '%',
       precision: 1,
       current: patient.spo2,
       reference: reference.patient.spo2,
@@ -480,7 +483,7 @@ function baselineRows(
       id: 'rightRadialSpo2',
       group: 'parallel-circulation',
       label: 'Right radial arterial saturation',
-      unit: '',
+      unit: '%',
       precision: 1,
       current: patient.rightRadialSpo2,
       reference: reference.patient.rightRadialSpo2,
@@ -492,7 +495,7 @@ function baselineRows(
       id: 'femoralArterialSpo2',
       group: 'parallel-circulation',
       label: 'Femoral arterial saturation',
-      unit: '',
+      unit: '%',
       precision: 1,
       current: patient.femoralArterialSpo2,
       reference: reference.patient.femoralArterialSpo2,
@@ -504,7 +507,7 @@ function baselineRows(
       id: 'arterialSamplingGap',
       group: 'parallel-circulation',
       label: 'Femoral minus right radial saturation',
-      unit: '',
+      unit: 'percentage points',
       precision: 1,
       current: patient.femoralArterialSpo2 - patient.rightRadialSpo2,
       reference: reference.patient.femoralArterialSpo2 - reference.patient.rightRadialSpo2,
@@ -532,7 +535,7 @@ function baselineRows(
       id: 'distalLimbNirs',
       group: 'parallel-circulation',
       label: 'Distal limb near-infrared reading',
-      unit: '',
+      unit: '%',
       precision: 0,
       current: patient.distalLimbNirs,
       reference: reference.patient.distalLimbNirs,
@@ -574,8 +577,8 @@ function ChangeCell({ row }: { readonly row: BaselineRow }) {
   const word = changeWord[direction(delta, row.deadband)]
   return (
     <span data-change={word.replace(/ .*/, '')}>
-      <span className="font-semibold">{signed(delta, row.precision)}</span>
-      <span className="ml-1 text-xs text-muted-foreground">{word} the earlier value</span>
+      <span className="font-semibold">{signed(delta, row.precision)}</span>{' '}
+      <span className="text-xs text-muted-foreground">{word} the earlier value</span>
     </span>
   )
 }
@@ -643,12 +646,12 @@ export function VaNormalStatePanel({
         </h3>
         <p className="mt-2 text-sm leading-6">
           Venoarterial support drains blood from the venous side and returns it to the{' '}
-          <strong>arterial</strong> side, downstream of the heart. The circuit therefore runs{' '}
-          <strong>in parallel</strong> with the patient&rsquo;s own circulation rather than in
-          series with it: it both carries blood and exchanges gas, and the two circulations fill the
-          same aorta from opposite ends. Where they meet moves, and what each side supplies depends
-          on where that is — the mechanism the next section works through in detail. Everything that
-          separates one parallel state from another is measured on the patient, not on the console.
+          <strong>arterial</strong>
+          {' side, downstream of the heart. The circuit therefore runs'}{' '}
+          <strong>in parallel</strong>
+          {
+            ' with the patient’s own circulation rather than in series with it: it both carries blood and exchanges gas, and the two circulations fill the same aorta from opposite ends. Where they meet moves, and what each side supplies depends on where that is — the mechanism the next section works through in detail. Everything that separates one parallel state from another is measured on the patient, not on the console.'
+          }
         </p>
         <TextEquivalent>
           In venoarterial support the circuit is in parallel with the patient: venous drainage,
@@ -673,7 +676,7 @@ export function VaNormalStatePanel({
           skipping past.
         </p>
 
-        <div className="mt-3 overflow-x-auto">
+        <div className="mt-3 overflow-x-auto" data-responsive-table>
           <table className="w-full text-left text-sm" data-baseline-table>
             <caption className="sr-only">
               Each observed signal with its current value, the value in this circuit’s own reference
@@ -719,7 +722,7 @@ export function VaNormalStatePanel({
                         <th scope="row" className="py-1 pr-3 font-medium">
                           {row.label}
                         </th>
-                        <td className="py-1 pr-3" data-current-value>
+                        <td className="py-1 pr-3" data-current-value data-column-label="Now">
                           {row.stateWords
                             ? row.stateWords.current
                             : format(row.current, row.precision, row.unit)}
@@ -731,6 +734,7 @@ export function VaNormalStatePanel({
                           className="py-1 pr-3 text-muted-foreground"
                           data-reference-value
                           data-reference-provenance={row.referenceProvenance}
+                          data-column-label="This circuit’s reference state"
                         >
                           {row.stateWords
                             ? row.stateWords.reference
@@ -741,7 +745,7 @@ export function VaNormalStatePanel({
                             ({provenanceLabel[row.referenceProvenance]})
                           </span>
                         </td>
-                        <td className="py-1">
+                        <td className="py-1" data-column-label="Change over the observed window">
                           <ChangeCell row={row} />
                         </td>
                       </tr>
@@ -751,9 +755,11 @@ export function VaNormalStatePanel({
           </table>
         </div>
 
-        <TextEquivalent>
-          {rows.map((row) => rowSentence(row, window.label)).join('. ')}.
-        </TextEquivalent>
+        <TableSentences>
+          <TextEquivalent>
+            {rows.map((row) => rowSentence(row, window.label)).join('. ')}.
+          </TextEquivalent>
+        </TableSentences>
 
         <ModelBoundary>
           The words higher, lower and unchanged come from an authored per-signal display deadband
@@ -853,7 +859,7 @@ export function VaNormalStatePanel({
         <h3 id="va-trend-window-heading" className={styles.heading}>
           The observed window, sample by sample
         </h3>
-        <div className="mt-3 overflow-x-auto">
+        <div className="mt-3 overflow-x-auto" data-responsive-table>
           <table className="w-full text-left text-sm" data-trend-table>
             <caption className="sr-only">
               Retained trend samples for this circuit, showing modeled time, circuit flow, drainage
@@ -893,12 +899,24 @@ export function VaNormalStatePanel({
                   <th scope="row" className="py-1 pr-3 font-medium">
                     {sample.time.toFixed(0)} s
                   </th>
-                  <td className="py-1 pr-3">{sample.flow.toFixed(2)}</td>
-                  <td className="py-1 pr-3">{trendCell(sample.pVen)}</td>
-                  <td className="py-1 pr-3">{trendCell(sample.deltaP)}</td>
-                  <td className="py-1 pr-3">{sample.spo2.toFixed(1)}</td>
-                  <td className="py-1 pr-3">{sample.map.toFixed(0)}</td>
-                  <td className="py-1">{sample.lactate.toFixed(1)}</td>
+                  <td className="py-1 pr-3" data-column-label="Flow">
+                    {sample.flow.toFixed(2)}
+                  </td>
+                  <td className="py-1 pr-3" data-column-label="pVen">
+                    {trendCell(sample.pVen)}
+                  </td>
+                  <td className="py-1 pr-3" data-column-label="ΔP">
+                    {trendCell(sample.deltaP)}
+                  </td>
+                  <td className="py-1 pr-3" data-column-label="SpO₂">
+                    {sample.spo2.toFixed(1)}
+                  </td>
+                  <td className="py-1 pr-3" data-column-label="MAP">
+                    {sample.map.toFixed(0)}
+                  </td>
+                  <td className="py-1" data-column-label="Lactate">
+                    {sample.lactate.toFixed(1)}
+                  </td>
                 </tr>
               ))}
             </tbody>

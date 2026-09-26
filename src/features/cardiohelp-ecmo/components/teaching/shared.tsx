@@ -138,6 +138,32 @@ export const comparisonPhrase: Readonly<Record<'up' | 'down' | 'flat', string>> 
 }
 
 /** The textual equivalent of a figure. Never decorative — it carries the same numbers. */
+/**
+ * A table's sentence equivalent, one disclosure away rather than printed under the table.
+ *
+ * Under a real, labelled table the sentences repeat every cell word for word — thirteen visible
+ * "X is n, unchanged from … by 0" sentences under the baseline table in a fellow walkthrough (S5-5,
+ * VA5-2). The table is the accessible reading; the sentences stay available on request, unchanged
+ * and in the DOM.
+ */
+export function TableSentences({
+  summary = 'Read the same table as sentences',
+  children,
+}: {
+  readonly summary?: string
+  readonly children: ReactNode
+}) {
+  return (
+    <details
+      className="mt-3 rounded-xl border border-dashed px-3 py-2 text-xs"
+      data-table-sentences
+    >
+      <summary className="cursor-pointer font-semibold leading-5">{summary}</summary>
+      {children}
+    </details>
+  )
+}
+
 export function TextEquivalent({ children }: { readonly children: ReactNode }) {
   return (
     <p className="mt-2 text-xs leading-5 text-muted-foreground" data-text-equivalent>

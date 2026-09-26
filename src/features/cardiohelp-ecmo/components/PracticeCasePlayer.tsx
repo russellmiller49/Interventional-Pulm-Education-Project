@@ -215,7 +215,13 @@ export function PredictionPanel({
         }}
       >
         {committed ? <CheckCircle2 aria-hidden="true" /> : <Target aria-hidden="true" />}
-        {committed ? 'Prediction recorded' : 'Compare this prediction'}
+        {/*
+          It records; the debrief compares. "Compare this prediction" promised a comparison the
+          click never showed (C1-5).
+        */}
+        {committed
+          ? 'Prediction recorded · the debrief compares it'
+          : 'Record prediction for the debrief'}
       </button>
     </section>
   )

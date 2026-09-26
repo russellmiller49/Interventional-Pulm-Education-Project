@@ -1,0 +1,177 @@
+/*
+ * The capstone comparison (S17-1, S17-2, VA17-1). Colours come from the ECMO shell tokens, which
+ * this matrix always renders inside; the fallbacks are the module's own dark palette.
+ */
+
+.matrix {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+  margin-top: 0.75rem;
+}
+
+.controls {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.controlsLabel {
+  margin: 0 0 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.controlsHint {
+  color: var(--ecmo-shell-muted, #9fb4b7);
+  font-weight: 400;
+}
+
+.filterButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.filterButton,
+.filterReset,
+.reasoningToggle {
+  min-height: 2.75rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--ecmo-shell-line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.65rem;
+  background: transparent;
+  color: var(--ecmo-shell-ink, #eaf4f4);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Pressed is a filled chip with dark ink; unpressed is an outline. Luminance carries it, not hue. */
+.filterButton[aria-pressed='true'] {
+  border-color: var(--ecmo-shell-accent, #71e1e5);
+  background: var(--ecmo-shell-accent, #71e1e5);
+  color: #04211f;
+}
+
+.filterButton[aria-pressed='false'] {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.filterButton[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
+.filterButton:hover,
+.filterReset:hover,
+.reasoningToggle:hover {
+  border-color: var(--ecmo-shell-accent, #71e1e5);
+}
+
+.reasoningToggle {
+  justify-self: start;
+}
+
+.reasoningToggle[aria-pressed='true'] {
+  border-color: var(--ecmo-shell-accent, #71e1e5);
+  background: color-mix(in srgb, var(--ecmo-shell-accent, #71e1e5) 18%, transparent);
+}
+
+.filterButton:focus-visible,
+.filterReset:focus-visible,
+.reasoningToggle:focus-visible {
+  outline: 3px solid var(--ecmo-shell-accent, #71e1e5);
+  outline-offset: 2px;
+}
+
+.status {
+  margin: 0;
+  color: var(--ecmo-shell-muted, #9fb4b7);
+  font-size: 0.875rem;
+}
+
+.scroller {
+  min-width: 0;
+}
+
+.table :is(th, td) {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
+}
+
+/*
+ * Cards: one signal per card, each value named by its explanation. The header row stays in the
+ * accessibility tree (visually hidden); the row keeps its heading and every shown cell.
+ */
+.scroller[data-matrix-layout='cards'] .table,
+.scroller[data-matrix-layout='cards'] .table :is(tbody, tr, th, td) {
+  display: block;
+  width: auto;
+}
+
+.scroller[data-matrix-layout='cards'] .table :is(th, td)[hidden] {
+  display: none;
+}
+
+.scroller[data-matrix-layout='cards'] .table thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.scroller[data-matrix-layout='cards'] .table tbody tr {
+  margin-block: 0 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--ecmo-shell-line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+}
+
+.scroller[data-matrix-layout='cards'] .table tbody :is(th, td) {
+  padding: 0;
+  overflow-wrap: anywhere;
+}
+
+.scroller[data-matrix-layout='cards'] .table tbody th {
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+
+.scroller[data-matrix-layout='cards'] .table tbody td {
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--ecmo-shell-line, rgba(163, 206, 209, 0.22));
+}
+
+.scroller[data-matrix-layout='cards'] .table tbody td::before {
+  content: attr(data-column-label);
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--ecmo-shell-accent, #71e1e5);
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+
+.sentences {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--ecmo-shell-line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+}
+
+.sentences > summary {
+  min-height: 2.75rem;
+  padding-block: 0.6rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sentences > summary:focus-visible {
+  outline: 3px solid var(--ecmo-shell-accent, #71e1e5);
+  outline-offset: 2px;
+}

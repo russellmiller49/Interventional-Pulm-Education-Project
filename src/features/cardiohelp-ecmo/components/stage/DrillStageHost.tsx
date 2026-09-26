@@ -27,6 +27,7 @@ import {
 } from '../../session/useEcmoSessionCore'
 import { EcmoOptionalExplanation } from '../shell/EcmoOptionalExplanation'
 import { advanceSimulation } from '../PracticeCasePlayer'
+import { CircuitLiveReadings } from '../CircuitAndMonitors'
 import { CardiohelpConsole } from '../CardiohelpConsole'
 import { CardiohelpModuleFrame } from '../CardiohelpModuleFrame'
 import { FitWidthSurface } from '../FitWidthSurface'
@@ -469,7 +470,9 @@ export function DrillStageHost({
    * ---------------------------------------------------------------- */
 
   const selectedChoiceId = progression.choiceByStepId[activeStep.id] ?? null
-  const stepPosition = `Step ${activeStep.ordinal} of ${lesson.steps.length}`
+  // One word for a unit of work across the pathway: the foundation hosts, this host and the
+  // "Tasks in this section" list all say task (S2-8, S7-5).
+  const stepPosition = `Task ${activeStep.ordinal} of ${lesson.steps.length}`
   const showWhereAction =
     helpControlId && !stepPerformed
       ? {
@@ -614,6 +617,9 @@ export function DrillStageHost({
       return (
         <fieldset className={styles.choiceList} disabled={stepPerformed} data-prediction-choices>
           <legend>{item.stem}</legend>
+          {presentation && lesson.scenarioId.endsWith('preload-drainage-collapse') ? (
+            <CircuitLiveReadings state={state} />
+          ) : null}
           {orderChoices(item.id, item.choices).map((choice) => (
             <label
               key={choice.id}
@@ -698,6 +704,8 @@ export function DrillStageHost({
       circuitPresentation={circuitPresentation}
       circuitAutoScroll={false}
       circuitFit="pane"
+      // Reading the pattern and committing to it are both read off the numbers (S8-2).
+      readingsFirst={activeStep.phase === 'recognize' || activeStep.phase === 'predict'}
       openSurfaces={openSurfaces}
       onToggleSurface={toggleSurface}
       onSaveForLater={() => router.push(cardiohelpEcmoNavBase)}
@@ -719,10 +727,58 @@ export function DrillStageHost({
         ? 'You can review this section at any time. The next case in this unit is ready in Practice, starting fresh with less prompting.'
         : 'You can review this section at any time. Continue to the next section to keep building on this.'
 
+  const explanation = (
+    <EcmoOptionalExplanation
+      key={activeStep.id}
+      onContinue={skipStep}
+      onRetry={activeStep.interaction.kind === 'prediction' ? retryPrediction : undefined}
+    >
+      {activeStep.interaction.kind === 'prediction' ? (
+        <>
+          <p>{activeStep.interaction.item.explanation}</p>
+          <ul>
+            {activeStep.interaction.item.choices.map((choice) => (
+              <li key={choice.id}>
+                <strong>{choice.label}</strong> {choice.rationale}
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <>
+          <p>{activeStep.rationale ?? activeStep.instruction}</p>
+          <p>
+            Expected response in this teaching example; viewing it performs no simulator action.
+          </p>
+          <ul>
+            {activeStep.expectedResponse?.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </>
+      )}
+    </EcmoOptionalExplanation>
+  )
+
   const task = (
     <>
       <div ref={nowHeadingRef} tabIndex={-1} data-now-focus>
         <EcmoNowCard model={nowModel}>
+          {/*
+            The question, or the thing to do on the simulator, first.
+
+            A fellow walkthrough (S8-2) found a drill's options about 3,600 px under the task
+            heading, below the whole teaching column and the whole simulator, so steps 1 and 2
+            looked identical above the fold. In a flowing task the current question — or the
+            simulator task and its status — and the explanation row now lead the card; the teaching
+            and the simulator follow, all still on the page and nothing withheld.
+          */}
+          {presentation ? (
+            <div className={styles.drillLead} data-drill-lead>
+              {nowBody}
+              {explanation}
+            </div>
+          ) : null}
           <ActivityContent
             presentation={presentation}
             teaching={teaching}
@@ -733,38 +789,8 @@ export function DrillStageHost({
               activeStep.phase === 'transfer'
             }
           >
-            {nowBody}
-            <EcmoOptionalExplanation
-              key={activeStep.id}
-              onContinue={skipStep}
-              onRetry={activeStep.interaction.kind === 'prediction' ? retryPrediction : undefined}
-            >
-              {activeStep.interaction.kind === 'prediction' ? (
-                <>
-                  <p>{activeStep.interaction.item.explanation}</p>
-                  <ul>
-                    {activeStep.interaction.item.choices.map((choice) => (
-                      <li key={choice.id}>
-                        <strong>{choice.label}</strong> {choice.rationale}
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              ) : (
-                <>
-                  <p>{activeStep.rationale ?? activeStep.instruction}</p>
-                  <p>
-                    Expected response in this teaching example; viewing it performs no simulator
-                    action.
-                  </p>
-                  <ul>
-                    {activeStep.expectedResponse?.map((line) => (
-                      <li key={line}>{line}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
-            </EcmoOptionalExplanation>
+            {presentation ? null : nowBody}
+            {presentation ? null : explanation}
           </ActivityContent>
         </EcmoNowCard>
       </div>

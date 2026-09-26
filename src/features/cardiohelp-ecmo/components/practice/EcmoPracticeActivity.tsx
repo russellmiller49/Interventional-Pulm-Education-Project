@@ -60,7 +60,12 @@ import {
   stageReachable,
   type EcmoPracticeStage,
 } from './stages'
-import { surfaceForControl, surfaceForTarget, surfacesForStage } from './surfaceDisclosure'
+import {
+  practiceCaseLeadsWithPatientOxygenation,
+  surfaceForControl,
+  surfaceForTarget,
+  surfacesForStage,
+} from './surfaceDisclosure'
 import styles from './EcmoPracticeActivity.module.css'
 
 /**
@@ -251,7 +256,9 @@ export function EcmoPracticeCaseView({
       : []),
     ...(latestHint?.target ? [latestHint.target] : []),
   ].filter((target): target is NonNullable<typeof target> => Boolean(target))
-  const defaultSurfaces = surfacesForStage(activeStage, surfaceExtras)
+  const defaultSurfaces = surfacesForStage(activeStage, surfaceExtras, {
+    patientOxygenationFocus: practiceCaseLeadsWithPatientOxygenation(scenario.id),
+  })
   const openSurfaces = new Set<StageSurfaceId>(
     attemptView?.surfaces && attemptView.surfaces.stage === activeStage
       ? attemptView.surfaces.open
@@ -435,7 +442,11 @@ export function EcmoPracticeCaseView({
     rpm: pumpStop.running
       ? `${state.device.rpmSetpoint} rpm`
       : `${state.device.rpmSetpoint} rpm requested · ${pumpStop.label.toLocaleLowerCase()}`,
-    sweep: `${state.gas.sweepLpm.toFixed(1)} L/min`,
+    // Before support starts the sweep is a setting on the blender, not gas meeting blood (C1-5).
+    sweep:
+      state.scenario.clinical && state.scenario.clinical.supportStatus !== 'on-ecmo'
+        ? `${state.gas.sweepLpm.toFixed(1)} L/min set · support not started`
+        : `${state.gas.sweepLpm.toFixed(1)} L/min`,
     alarm: activeAlarm
       ? { priority: activeAlarm.priority, text: activeAlarm.message }
       : { priority: 'none', text: 'No active device alarm' },
@@ -786,15 +797,29 @@ export function EcmoPracticeCaseView({
                 <div className={styles.stagePanel} data-stage-panel={activeStage}>
                   {stagePanel}
                 </div>
-                <div className="my-4 flex flex-wrap gap-3" aria-label="Self-paced case navigation">
+                {/*
+                  Buttons that look like buttons (C1-5). They were bare text in a row — "Start guided
+                  activity  Show explanation without answering  Hint  Try again" read as a sentence.
+                */}
+                <div
+                  className="my-4 flex flex-wrap gap-3"
+                  role="group"
+                  aria-label="Self-paced case navigation"
+                  data-self-paced-row
+                >
                   {activeStage !== 'manage' ? (
-                    <button type="button" onClick={() => showStage('manage')}>
+                    <button
+                      type="button"
+                      className={shellStyles.nowSecondary}
+                      onClick={() => showStage('manage')}
+                    >
                       Start guided activity
                     </button>
                   ) : null}
                   {!debriefRevealed ? (
                     <button
                       type="button"
+                      className={shellStyles.nowSecondary}
                       onClick={() => {
                         onReveal()
                         updateView({ expanded: null })
@@ -803,14 +828,19 @@ export function EcmoPracticeCaseView({
                       Show explanation without answering
                     </button>
                   ) : null}
-                  <button type="button" onClick={() => setHelpOpen(true)}>
+                  <button
+                    type="button"
+                    className={shellStyles.nowSecondary}
+                    onClick={() => setHelpOpen(true)}
+                  >
                     Hint
                   </button>
-                  <button type="button" onClick={onReset}>
+                  <button type="button" className={shellStyles.nowSecondary} onClick={onReset}>
                     Try again
                   </button>
                   <button
                     type="button"
+                    className={shellStyles.nowSecondary}
                     onClick={() => {
                       if (nextLink?.onSelect) nextLink.onSelect()
                       else
@@ -908,6 +938,10 @@ export function EcmoPracticeCaseView({
             >
               <EcmoSimulatorSurfaces
                 console={consoleNode}
+                // The patient's saturation is what these cases act on: its monitor leads (C5-2).
+                leadingSurfaces={
+                  practiceCaseLeadsWithPatientOxygenation(scenario.id) ? ['monitor'] : undefined
+                }
                 openSurfaces={openSurfaces}
                 onToggleSurface={toggleSurface}
                 state={state}

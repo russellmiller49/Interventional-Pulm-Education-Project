@@ -82,7 +82,11 @@ import {
   baselineGroupLabels,
   foundationPresentationSections,
 } from './foundationPresentationSections'
-import { scrollEcmoTargetIntoView, scrollTaskPaneToTop } from './scrollTaskPaneToTop'
+import {
+  revealEcmoTargetIfNeeded,
+  scrollEcmoTargetIntoView,
+  scrollTaskPaneToTop,
+} from './scrollTaskPaneToTop'
 import { StageSourcesScope } from './StageSourcesScope'
 import { StageTeachingScope } from './StageTeachingScope'
 import { StepList } from './StepList'
@@ -344,14 +348,12 @@ function FoundationStageSession({
   function runFocusedComparison(plan: EcmoFoundationComparisonPlan) {
     dispatch({ type: 'RUN_COMPARISON', plan })
     requestAnimationFrame(() => {
-      const result = nowFocusRef.current?.querySelector<HTMLElement>('[data-foundation-comparison]')
-      if (!result) return
-      scrollEcmoTargetIntoView(result)
-      const heading = result.querySelector<HTMLElement>('h3')
-      if (heading) {
-        heading.tabIndex = -1
-        heading.focus({ preventScroll: true })
-      }
+      const control = nowFocusRef.current?.querySelector<HTMLElement>('[data-comparison-run]')
+      if (!control) return
+      // Keep the action in place. The saved result follows it; do not scroll an entire table into
+      // view at the expense of its activating control. The live status announces completion.
+      control.focus({ preventScroll: true })
+      revealEcmoTargetIfNeeded(control)
     })
   }
 
@@ -361,7 +363,12 @@ function FoundationStageSession({
       ...current,
       performedIds: current.performedIds.filter((id) => id !== plan.taskId),
     }))
-    requestAnimationFrame(() => scrollTaskPaneToTop(nowFocusRef.current))
+    requestAnimationFrame(() => {
+      const control = nowFocusRef.current?.querySelector<HTMLElement>('[data-comparison-run]')
+      if (!control) return
+      control.focus({ preventScroll: true })
+      revealEcmoTargetIfNeeded(control)
+    })
   }
 
   function runGuidedAction(guided: EcmoFoundationGuidedAction) {
@@ -652,9 +659,7 @@ function FoundationStageSession({
       body: activeStep.instruction,
       where: presentation ? undefined : lookInLine,
       why: activeStep.rationale,
-      primaryBeforeContent: Boolean(
-        comparisonPlan && !savedComparison && (!focusedStory || storyCommittedId),
-      ),
+
       ...(canGoBack && previousStep
         ? {
             back: {
@@ -791,12 +796,7 @@ function FoundationStageSession({
             status: savedComparison
               ? 'Comparison saved. Review Before / After / Change, then continue.'
               : 'Run the guided comparison before continuing.',
-            primary: savedComparison
-              ? { label: 'Continue', onActivate: advance }
-              : {
-                  label: comparisonPlan.guided.label,
-                  onActivate: () => runFocusedComparison(comparisonPlan),
-                },
+            primary: savedComparison ? { label: 'Continue', onActivate: advance } : undefined,
           }
         return { ...base, primary: { label: activeStep.actionLabel, onActivate: advance } }
       default:
@@ -1214,45 +1214,75 @@ function FoundationStageSession({
       : { priority: 'none', text: 'No active device alarm' },
   }
 
-  const stateCard = (
+  /*
+   * In a focused (flowing) task the card opens the visual column, directly above the map. A fellow
+   * walkthrough (S2-5) found three sentences of model meta-text there — the held clock, the teaching
+   * anchor, the observation-only display — pushing the map below the fold. The identity stays in view
+   * (which reference, and that the clock is held); the explanation of it is one disclosure away, in
+   * the same words, never removed.
+   */
+  const stateCard = focusedFoundation ? (
+    <div
+      className={styles.stateCard}
+      data-active-state-variant={activeVariant.id}
+      data-model-reference="compact"
+    >
+      <p className={shellStyles.kicker}>Model reference for this task</p>
+      <p className="font-semibold">
+        {activeVariant.label}
+        {running ? null : (
+          <span className="font-normal" data-clock-held>
+            {' '}
+            · clock held
+          </span>
+        )}
+      </p>
+      <details data-model-reference-details>
+        <summary>About this model</summary>
+        {running ? null : (
+          <p>
+            The clock is held. Each guided comparison advances through its stated modeled interval.
+          </p>
+        )}
+        {activeVariant.modelBoundary ? (
+          <p data-variant-boundary>{activeVariant.modelBoundary}</p>
+        ) : null}
+        <p>
+          Observation-only display. Use the enabled guided controls beside this display; each
+          comparison starts from the reference and holds its result.
+        </p>
+      </details>
+    </div>
+  ) : (
     <div className={styles.stateCard} data-active-state-variant={activeVariant.id}>
       <p className={shellStyles.kicker}>Model reference for this task</p>
       <p className="font-semibold">{activeVariant.label}</p>
       {running ? null : (
         <p data-clock-held>
-          {focusedFoundation
-            ? 'The clock is held. Each guided comparison advances through its stated modeled interval.'
-            : 'The clock is held here, so the circuit stays as it is until you start it.'}
+          The clock is held here, so the circuit stays as it is until you start it.
         </p>
       )}
       {activeVariant.modelBoundary ? (
         <p data-variant-boundary>{activeVariant.modelBoundary}</p>
       ) : null}
-      {focusedFoundation ? (
-        <p>
-          Observation-only display. Use the enabled guided controls beside this display; each
-          comparison starts from the reference and holds its result.
-        </p>
-      ) : (
-        <div className={styles.stateControls}>
-          <button
-            type="button"
-            className={shellStyles.nowSecondary}
-            data-clock-running={running}
-            onClick={() => dispatch({ type: 'SET_CLOCK_RUNNING', running: !running })}
-          >
-            {running ? 'Pause the circuit' : 'Let the circuit run on'}
-          </button>
-          <button
-            type="button"
-            className={shellStyles.nowSecondary}
-            data-restore-primary
-            onClick={() => dispatch(ecmoFoundationRestoreAction(primaryVariant))}
-          >
-            Restore {primaryVariant.label}
-          </button>
-        </div>
-      )}
+      <div className={styles.stateControls}>
+        <button
+          type="button"
+          className={shellStyles.nowSecondary}
+          data-clock-running={running}
+          onClick={() => dispatch({ type: 'SET_CLOCK_RUNNING', running: !running })}
+        >
+          {running ? 'Pause the circuit' : 'Let the circuit run on'}
+        </button>
+        <button
+          type="button"
+          className={shellStyles.nowSecondary}
+          data-restore-primary
+          onClick={() => dispatch(ecmoFoundationRestoreAction(primaryVariant))}
+        >
+          Restore {primaryVariant.label}
+        </button>
+      </div>
     </div>
   )
 
@@ -1459,10 +1489,74 @@ function FoundationStageSession({
   )
 
   const storyProblems = ecmoStoryProblemsFor(sectionId)
+  /*
+   * The comparison: its replay controls, then its matched Before / After / Change.
+   *
+   * A fellow walkthrough (S3-1) pressed "Increase pump speed by 300 rpm", watched the button vanish,
+   * and found the result table under two screens of teaching; the host then jumped the page 900 px to
+   * reach it. In a flowing task the block now sits directly under the Now card's action: the Run
+   * button's slot is taken, after a run, by Repeat and Reset in the same place, and the saved result
+   * is the next thing below them. The teaching follows, unchanged. Nothing reruns on layout: the
+   * table reads the saved comparison, and only these buttons write one.
+   */
+  const comparisonBlock = comparisonPlan ? (
+    <div className={styles.comparisonBlock} data-comparison-block>
+      {foundationTask?.actionId ? (
+        <div className={styles.comparisonControls} data-comparison-controls>
+          <button
+            type="button"
+            className={savedComparison ? shellStyles.nowSecondary : shellStyles.nowPrimary}
+            data-now-primary={
+              !savedComparison && (!focusedStory || storyCommittedId) ? true : undefined
+            }
+            data-comparison-run
+            onClick={() => runFocusedComparison(comparisonPlan)}
+          >
+            {savedComparison
+              ? 'Repeat this comparison'
+              : focusedStory && !storyCommittedId
+                ? 'Run comparison without answering'
+                : comparisonPlan.guided.label}
+          </button>
+          {savedComparison ? (
+            <button
+              type="button"
+              className={shellStyles.nowSecondary}
+              onClick={() => resetFocusedComparison(comparisonPlan)}
+            >
+              Reset this comparison
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+      <FoundationComparison
+        baseline={ecmoFoundationSnapshot(
+          createFoundationVariantState(comparisonPlan.baselineVariant),
+        )}
+        comparison={savedComparison}
+        actionId={comparisonPlan.guided.id}
+        supportMode={supportMode}
+      />
+      <p data-active-state-variant={activeVariant.id}>{activeVariant.label}</p>
+      <p data-teaching-run-note>
+        Teaching comparison: the Run button restores and advances the model. It is not a CARDIOHELP
+        hardware control.
+      </p>
+    </div>
+  ) : null
+  // In a flowing task the question (for a story step), the action's replay row and the result lead
+  // the card; the teaching and the simulator surfaces follow. The fixed fallback keeps its order.
+  const comparisonLeads = Boolean(presentation && comparisonBlock)
   const task = (
     <>
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus data-active-phase={activeStep.phase}>
         <EcmoNowCard model={nowModel}>
+          {comparisonLeads ? (
+            <div className={styles.comparisonLead} data-comparison-lead>
+              {focusedStory ? nowBody : null}
+              {comparisonBlock}
+            </div>
+          ) : null}
           <ActivityContent
             presentation={presentation}
             teaching={teaching}
@@ -1472,51 +1566,8 @@ function FoundationStageSession({
                 : null
             }
           >
-            {nowBody}
-            {comparisonPlan ? (
-              <>
-                <p data-active-state-variant={activeVariant.id}>{activeVariant.label}</p>
-                <p data-teaching-run-note>
-                  Teaching comparison: the Run button restores and advances the model. It is not a
-                  CARDIOHELP hardware control.
-                </p>
-                <FoundationComparison
-                  baseline={ecmoFoundationSnapshot(
-                    createFoundationVariantState(comparisonPlan.baselineVariant),
-                  )}
-                  comparison={savedComparison}
-                  actionId={comparisonPlan.guided.id}
-                  supportMode={supportMode}
-                />
-                {savedComparison && foundationTask?.actionId ? (
-                  <div className={styles.comparisonControls}>
-                    <button
-                      type="button"
-                      className={shellStyles.nowSecondary}
-                      onClick={() => runFocusedComparison(comparisonPlan)}
-                    >
-                      Repeat this comparison
-                    </button>
-                    <button
-                      type="button"
-                      className={shellStyles.nowSecondary}
-                      onClick={() => resetFocusedComparison(comparisonPlan)}
-                    >
-                      Reset this comparison
-                    </button>
-                  </div>
-                ) : null}
-              </>
-            ) : null}
-            {focusedStory && comparisonPlan && !savedComparison ? (
-              <button
-                type="button"
-                className={shellStyles.nowSecondary}
-                onClick={() => runFocusedComparison(comparisonPlan)}
-              >
-                Run comparison without answering
-              </button>
-            ) : null}
+            {comparisonLeads && focusedStory ? null : nowBody}
+            {comparisonLeads ? null : comparisonBlock}
             <EcmoOptionalExplanation
               key={activeStep.id}
               onContinue={skipStep}

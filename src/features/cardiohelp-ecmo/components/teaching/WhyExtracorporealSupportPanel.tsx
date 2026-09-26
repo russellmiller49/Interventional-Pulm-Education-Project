@@ -119,8 +119,10 @@ export function WhyExtracorporealSupportPanel({ state }: { readonly state: EcmoS
             </p>
             <p className="text-sm leading-6">
               <strong>Oxygen saturation</strong> is the fraction of hemoglobin carrying oxygen.{' '}
-              <strong>Oxygen content</strong> also depends on how much hemoglobin is present. A high
-              saturation alone does not establish adequate delivery.
+              <strong>Oxygen content</strong>
+              {
+                ' also depends on how much hemoglobin is present. A high saturation alone does not establish adequate delivery.'
+              }
             </p>
             <p className="mt-2 text-sm leading-6">
               <strong>Oxygen consumption</strong> is the amount the tissues use. It must be

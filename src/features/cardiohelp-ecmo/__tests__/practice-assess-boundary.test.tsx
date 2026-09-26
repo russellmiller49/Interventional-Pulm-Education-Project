@@ -122,7 +122,7 @@ describe('Practice is unchanged by the Learn prediction work', () => {
     fireEvent.change(screen.getByLabelText('Expected immediate effect'), {
       target: { value: 'decrease' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Compare this prediction' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Record prediction for the debrief' }))
 
     expect(dispatch).toHaveBeenCalledWith({
       type: 'COMMIT_PREDICTION',
@@ -159,7 +159,7 @@ describe('Practice is unchanged by the Learn prediction work', () => {
       'aria-current',
       'step',
     )
-    expect(screen.queryByRole('button', { name: /Compare this prediction/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /Record prediction for the debrief/i })).toBeNull()
     expect(document.querySelector('[data-answer-verdict]')).toBeNull()
     expect(screen.queryByText(/why the other answers do not fit/i)).toBeNull()
   })

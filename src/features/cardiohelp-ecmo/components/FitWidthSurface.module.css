@@ -11,10 +11,14 @@
   overflow: hidden;
 }
 
+/*
+ * No reserved scrollbar gutter: `scrollbar-gutter: stable` here reserved a vertical-scrollbar strip
+ * (17 px at 1280 wide) inside a surface that never scrolls vertically, taking it from the console.
+ */
 .fitSurface[data-fit-mode='actual'] {
   overflow-x: auto;
+  overflow-y: hidden;
   overscroll-behavior-x: contain;
-  scrollbar-gutter: stable;
 }
 
 .fitContent {

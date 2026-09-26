@@ -37,6 +37,8 @@ import {
 } from './circuit-map/CircuitMapAnswerFieldset'
 import {
   CIRCUIT_MAP_FRAME_VIEWBOX,
+  VA_NATIVE_EJECTION_PATH,
+  VA_RIGHT_ARM_SITE,
   circuitMapGeometry,
   type CircuitMapFrame,
 } from './circuit-map/circuitMapGeometry'
@@ -122,6 +124,14 @@ export interface SimulationPanelProps {
    * does; in the poster's horizontal scroller it would not.
    */
   mapAnswer?: CircuitMapAnswerProps | null
+  /**
+   * Put the live readings above the circuit views instead of under the map.
+   *
+   * For a step whose work is reading the pattern — a drill's opening read and its prediction — the
+   * numbers are the evidence, and under a 500 px drawing they sat far from the question (S8-2).
+   * Presentation only: the same readings, the same state, in a different place in the panel.
+   */
+  readingsFirst?: boolean
 }
 
 /**
@@ -160,6 +170,47 @@ function nearestScrollingAncestor(element: HTMLElement): HTMLElement | null {
   return null
 }
 
+/** A read-only projection of the host's existing simulation; no clock or state owner. */
+export function CircuitLiveReadings({
+  state,
+  open = true,
+}: {
+  readonly state: EcmoSimulationState
+  readonly open?: boolean
+}) {
+  return (
+    <details className={styles.circuitReadouts} open={open} data-circuit-readouts>
+      <summary>Live readings</summary>
+      <div className={styles.circuitReadoutGrid}>
+        <div>
+          <span>Flow</span>
+          <strong>{state.circuit.bloodFlow.toFixed(2)} L/min</strong>
+        </div>
+        <CircuitChannelReadout label="pVen" readout={state.circuit.readouts.pVen} />
+        <CircuitChannelReadout label="pInt" readout={state.circuit.readouts.pInt} />
+        <CircuitChannelReadout label="pArt" readout={state.circuit.readouts.pArt} />
+        <CircuitChannelReadout
+          label="Δp trend"
+          readout={state.circuit.readouts.deltaP}
+          spokenLabel="Δp trend"
+        />
+        <div>
+          <span>Pre-oxygenator saturation</span>
+          <strong>{state.circuit.preOxygenatorSaturation.toFixed(1)}%</strong>
+        </div>
+        <div data-alert={state.circuit.drainageClampClosed}>
+          <span>Drainage clamp</span>
+          <strong>{state.circuit.drainageClampClosed ? 'CLOSED' : 'OPEN'}</strong>
+        </div>
+        <div data-alert={state.circuit.returnClampClosed}>
+          <span>Return clamp</span>
+          <strong>{state.circuit.returnClampClosed ? 'CLOSED' : 'OPEN'}</strong>
+        </div>
+      </div>
+    </details>
+  )
+}
+
 export function CircuitSchematic({
   state,
   dispatch,
@@ -176,12 +227,20 @@ export function CircuitSchematic({
   onSaveForLater,
   locationDisclosure = 'full',
   circuitMeasurementNote,
+  readingsFirst = false,
 }: SimulationPanelProps) {
   const locationsDisclosed = locationDisclosure === 'full'
   const diagramScrollRef = useRef<HTMLDivElement>(null)
   const [circuitView, setCircuitView] = useState<CircuitViewPreference>(
     () => circuitViewPreference?.view ?? 'bedside',
   )
+  /*
+   * The pane is the zoom (see `circuitMapGeometry`): a wider box is a larger drawing. In a two-column
+   * lesson the circuit sits in a ~740 px column at 1280 wide, where the map's labels render at about
+   * 8 px (S2-2). This lets the learner give the circuit the whole width of the task and back, from
+   * the keyboard, without an overlay, a pan window or wheel capture. Presentation only.
+   */
+  const [enlarged, setEnlarged] = useState(false)
 
   // Step entry, not step state: keyed on the step id so arriving at a pressure-localization step
   // opens its view once, and a learner who then picks the other tab keeps it for that step.
@@ -367,6 +426,8 @@ export function CircuitSchematic({
           ? 'Preload-limited drainage pattern'
           : 'No resistance pattern present'
 
+  const readingsBlock = <CircuitLiveReadings state={state} open={!answerable} />
+
   return (
     <section
       id="cardiohelp-circuit-panel"
@@ -376,6 +437,7 @@ export function CircuitSchematic({
       data-guided-focus={guidedTarget === 'circuit'}
       data-guided-help={guidedControlId === 'cardiohelp-circuit-panel'}
       data-location-disclosure={locationDisclosure}
+      data-circuit-enlarged={fitted && enlarged ? 'true' : undefined}
       tabIndex={-1}
     >
       {guidedTarget === 'circuit' ? (
@@ -410,6 +472,11 @@ export function CircuitSchematic({
         </div>
         <span className={styles.modePill}>{supportModeLabel}</span>
       </div>
+      {readingsFirst ? (
+        <div className={styles.circuitReadingsFirst} data-circuit-readings-first>
+          {readingsBlock}
+        </div>
+      ) : null}
 
       {/*
         Roving tabindex needs the arrow keys that go with it. The step selects a tab on entry and
@@ -466,9 +533,21 @@ export function CircuitSchematic({
           Pressure-zone map
         </button>
       </div>
+      {fitted ? (
+        <button
+          type="button"
+          className={styles.circuitEnlargeToggle}
+          aria-pressed={enlarged}
+          data-circuit-enlarge
+          onClick={() => setEnlarged((current) => !current)}
+        >
+          {enlarged ? 'Show the circuit beside the task' : 'Show the circuit at full width'}
+        </button>
+      ) : null}
 
       <div
         id="cardiohelp-bedside-view"
+        className={styles.bedsideView}
         role="tabpanel"
         aria-labelledby="cardiohelp-bedside-view-tab"
         hidden={circuitView !== 'bedside'}
@@ -635,8 +714,16 @@ export function CircuitSchematic({
               <text x="42" y="55" className={styles.svgSectionLabel}>
                 PATIENT / CANNULATION
               </text>
-              <text x="42" y="76" className={styles.svgSectionSubLabel}>
-                Simplified anterior anatomy
+              {/*
+                Two short lines left of the head, which the one long line used to run under (S2-2).
+                An anterior view: the patient's right is the viewer's left. Everything lateral in
+                this panel is drawn that way, and the right-arm site below is placed by it.
+              */}
+              <text x="42" y="78" className={styles.svgSectionSubLabel} data-map-view="anterior">
+                <tspan x="42">Anterior view,</tspan>
+                <tspan x="42" dy="15">
+                  {' simplified'}
+                </tspan>
               </text>
 
               <circle cx="164" cy="103" r="35" className={styles.anatomyOutline} />
@@ -679,51 +766,104 @@ export function CircuitSchematic({
                   }
                   data-va-mixing-cue={mixingCueWithheld ? 'withheld' : 'shown'}
                 >
+                  {/*
+                    Laterality (VA7-2). This panel is an anterior view, so the patient's right arm is
+                    the arm on the viewer's LEFT. The right-arm (right-radial) site and the native
+                    stream's path to the upper body used to be drawn on the viewer's right — the
+                    patient's left — which is exactly the side a right-radial line exists to avoid.
+                    Mirrored across the body's midline (x = 164) onto the patient's right arm; the
+                    anatomy and the sampled value are unchanged. Asserted by `ecmo-fellow-03` tests.
+                  */}
                   {mixingCueWithheld ? null : (
                     <>
                       <path
-                        d="M165 151 C189 140 214 136 238 151 C250 166 253 193 252 220"
+                        d={VA_NATIVE_EJECTION_PATH}
                         className={styles.nativeEjectionPath}
                         markerEnd="url(#cardiohelp-return-arrow)"
                       />
-                      <circle cx="196" cy="218" r="11" className={styles.mixingPoint} />
-                      <path d="M196 207 V188 H278" className={styles.mixingLeader} />
-                      <text x="278" y="184" textAnchor="end" className={styles.vaCueLabel}>
-                        MIXING REGION VARIES
+                      <circle
+                        cx="196"
+                        cy="218"
+                        r="11"
+                        className={styles.mixingPoint}
+                        data-mixing-region-marker
+                      />
+                      <path d="M196 207 V176 L214 142" className={styles.mixingLeader} />
+                      <text x="212" y="120" className={styles.vaCueLabel}>
+                        <tspan x="212">MIXING REGION</tspan>
+                        <tspan x="212" dy="14">
+                          {' VARIES'}
+                        </tspan>
                       </text>
-                      <text x="42" y="109" className={styles.vaCueLabel}>
-                        NATIVE EJECTION → UPPER BODY
+                      <text x="26" y="110" className={styles.vaCueLabel}>
+                        <tspan x="26">NATIVE</tspan>
+                        <tspan x="26" dy="13">
+                          {' EJECTION →'}
+                        </tspan>
+                        <tspan x="26" dy="13">
+                          {' UPPER BODY'}
+                        </tspan>
                       </text>
                     </>
                   )}
-                  <circle cx="258" cy="223" r="23" className={styles.rightArmMonitor} />
-                  <text x="258" y="219" textAnchor="middle" className={styles.rightArmMonitorLabel}>
+                  <circle
+                    cx={VA_RIGHT_ARM_SITE.cx}
+                    cy={VA_RIGHT_ARM_SITE.cy}
+                    r="23"
+                    className={styles.rightArmMonitor}
+                    data-right-arm-site
+                  />
+                  <text
+                    x={VA_RIGHT_ARM_SITE.cx}
+                    y={VA_RIGHT_ARM_SITE.cy - 5}
+                    textAnchor="middle"
+                    className={styles.rightArmMonitorLabel}
+                  >
                     R ARM
                   </text>
-                  <text x="258" y="231" textAnchor="middle" className={styles.rightArmMonitorValue}>
+                  <text
+                    x={VA_RIGHT_ARM_SITE.cx}
+                    y={VA_RIGHT_ARM_SITE.cy + 10}
+                    textAnchor="middle"
+                    className={styles.rightArmMonitorValue}
+                  >
                     {state.patient.rightRadialSpo2.toFixed(0)}%
                   </text>
                   <path
                     d="M244 447 C255 462 263 476 266 493"
                     className={styles.distalPerfusionCue}
                   />
-                  <text x="288" y="493" textAnchor="end" className={styles.distalPerfusionLabel}>
-                    DISTAL LIMB CHECK
+                  {/* Beside the cue, clear of the return limb and its arrow it used to sit under. */}
+                  <text x="270" y="456" className={styles.distalPerfusionLabel}>
+                    <tspan x="270">DISTAL</tspan>
+                    <tspan x="270" dy="13">
+                      {' LIMB'}
+                    </tspan>
+                    <tspan x="270" dy="13">
+                      {' CHECK'}
+                    </tspan>
                   </text>
                 </g>
               ) : null}
               <circle cx="96" cy="447" r="8" className={styles.drainageInsertionSite} />
               <circle cx={returnPortX} cy="447" r="8" className={styles.returnInsertionSite} />
-              <text x="34" y="500" className={styles.cannulaLabel}>
-                Femoral vein drainage
+              <text x="26" y="500" className={styles.cannulaLabel}>
+                <tspan x="26">Femoral vein</tspan>
+                <tspan x="26" dy="13">
+                  {' drainage'}
+                </tspan>
               </text>
-              <text x="158" y="519" className={styles.cannulaLabel}>
-                {isVa ? 'Femoral artery return' : 'Femoral vein return'}
+              {/* Ends left of the return limb's rise, which it used to sit under (S2-2). */}
+              <text x={returnPortX - 20} y="500" textAnchor="end" className={styles.cannulaLabel}>
+                <tspan x={returnPortX - 20}>{isVa ? 'Femoral artery' : 'Femoral vein'}</tspan>
+                <tspan x={returnPortX - 20} dy="13">
+                  {' return'}
+                </tspan>
               </text>
               <text x="38" y="329" className={styles.anatomyVesselLabel}>
                 VENOUS
               </text>
-              <text x="210" y="329" className={styles.anatomyVesselLabel}>
+              <text x="236" y="329" className={styles.anatomyVesselLabel}>
                 ARTERIAL
               </text>
 
@@ -763,7 +903,13 @@ export function CircuitSchematic({
                   markerEnd="url(#cardiohelp-flow-arrow)"
                 />
               </g>
-              <text x="286" y="361" textAnchor="middle" className={styles.limbLabel}>
+              {/* Left of the pump body, which the enlarged label would otherwise run into. */}
+              <text
+                x="268"
+                y="361"
+                textAnchor="middle"
+                className={`${styles.limbLabel} ${styles.limbLabelCompact}`}
+              >
                 DRAINAGE LIMB · NEGATIVE PRESSURE
               </text>
               {/*
@@ -787,7 +933,7 @@ export function CircuitSchematic({
                 className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
                 markerEnd="url(#cardiohelp-flow-arrow)"
               />
-              <text x="601" y="361" textAnchor="middle" className={styles.limbLabel}>
+              <text x="566" y="442" textAnchor="middle" className={styles.limbLabel}>
                 PUMP OUTFLOW
               </text>
 
@@ -857,8 +1003,12 @@ export function CircuitSchematic({
               <text x="762" y="500" textAnchor="middle" className={styles.componentSubLabel}>
                 BLOOD AROUND FIBERS · GAS THROUGH FIBERS
               </text>
-              <text x="832" y="319" className={styles.oxygenatorGasLabel}>
-                GAS EXHAUST
+              {/* Where the gas leaves the fibres, clear of the pArt flag it used to sit under. */}
+              <text x="694" y="296" textAnchor="end" className={styles.oxygenatorGasLabel}>
+                <tspan x="694">GAS</tspan>
+                <tspan x="694" dy="13">
+                  {' EXHAUST'}
+                </tspan>
               </text>
               <text x="832" y="459" className={styles.oxygenatorGasLabel}>
                 SWEEP GAS IN
@@ -933,9 +1083,13 @@ export function CircuitSchematic({
                 </>
               ) : null}
               <circle cx="650" cy="385" r="10" className={styles.accessPoint} />
-              <path d="M650 375 V333" className={styles.accessLeader} />
-              <text x="650" y="320" textAnchor="middle" className={styles.accessLabel}>
-                PRE-OXYGENATOR ACCESS
+              {/* Below the limb, so the label no longer runs into the pInt flag or the membrane. */}
+              <path d="M650 395 V452" className={styles.accessLeader} />
+              <text x="692" y="466" textAnchor="end" className={styles.accessLabel}>
+                <tspan x="692">PRE-OXYGENATOR</tspan>
+                <tspan x="692" dy="13">
+                  {' ACCESS'}
+                </tspan>
               </text>
 
               <path
@@ -987,7 +1141,10 @@ export function CircuitSchematic({
           </p>
         )}
         {isVa && !mixingCueWithheld ? (
-          <p className={styles.circuitPanHint} data-local-model-boundary="va-mixing-fixed">
+          // Its own always-visible class: `.circuitPanHint` is hidden above 1000 px, which hid this
+          // boundary — the one sentence saying the drawn mixing region is not computed — at every
+          // desktop width (VA11-1).
+          <p className={styles.circuitMapNote} data-local-model-boundary="va-mixing-fixed">
             Model boundary: the mixing region is drawn where this diagram places it and does not
             move. In a real VA circuit its position shifts with the balance between native ejection
             and circuit flow, and that shift is what decides which beds each side supplies. This
@@ -1010,9 +1167,27 @@ export function CircuitSchematic({
             <i data-kind="post-pump" aria-hidden="true" />
             <span>Post-pump / membrane path</span>
           </li>
-          <li>
+          <li data-legend-return>
             <i data-kind="return" aria-hidden="true" />
-            <span>{supportModeLabel} return limb</span>
+            {/*
+              Red marks what the blood carries, not which vessel it enters (S2-2): in VV the
+              oxygenated return still goes into a vein. Said in words, so colour is never the carrier.
+            */}
+            <span>
+              <span>{supportModeLabel} return limb</span>
+              <span data-legend-return-note>
+                {isVa
+                  ? ' — red marks oxygenated blood; in VA it returns into an artery'
+                  : ' — red marks oxygenated blood; in VV it returns into a vein, not an artery'}
+              </span>
+            </span>
+          </li>
+          <li data-legend-vessels>
+            <i data-kind="vessels" aria-hidden="true" />
+            <span>
+              Patient panel: blue is the patient&apos;s veins, dark red the arteries; anterior view,
+              so the patient&apos;s right is on the left
+            </span>
           </li>
           <li>
             <i data-kind="gas" aria-hidden="true" />
@@ -1038,35 +1213,7 @@ export function CircuitSchematic({
         point?" Every other step — the Observe step in particular, whose whole instruction is to read
         these values — still opens with them showing.
       */}
-      <details className={styles.circuitReadouts} open={!answerable} data-circuit-readouts>
-        <summary>Live readings</summary>
-        <div className={styles.circuitReadoutGrid}>
-          <div>
-            <span>Flow</span>
-            <strong>{state.circuit.bloodFlow.toFixed(2)} L/min</strong>
-          </div>
-          <CircuitChannelReadout label="pVen" readout={state.circuit.readouts.pVen} />
-          <CircuitChannelReadout label="pInt" readout={state.circuit.readouts.pInt} />
-          <CircuitChannelReadout label="pArt" readout={state.circuit.readouts.pArt} />
-          <CircuitChannelReadout
-            label="Δp trend"
-            readout={state.circuit.readouts.deltaP}
-            spokenLabel="Δp trend"
-          />
-          <div>
-            <span>Pre-oxygenator saturation</span>
-            <strong>{state.circuit.preOxygenatorSaturation.toFixed(1)}%</strong>
-          </div>
-          <div data-alert={state.circuit.drainageClampClosed}>
-            <span>Drainage clamp</span>
-            <strong>{state.circuit.drainageClampClosed ? 'CLOSED' : 'OPEN'}</strong>
-          </div>
-          <div data-alert={state.circuit.returnClampClosed}>
-            <span>Return clamp</span>
-            <strong>{state.circuit.returnClampClosed ? 'CLOSED' : 'OPEN'}</strong>
-          </div>
-        </div>
-      </details>
+      {readingsFirst ? null : readingsBlock}
 
       {controlsEnabled ? (
         <EcmoCircuitControls

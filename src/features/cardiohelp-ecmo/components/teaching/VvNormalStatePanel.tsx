@@ -11,6 +11,7 @@ import type { EcmoSimulationState } from '../../engine/types'
 import {
   GuidedValue,
   ModelBoundary,
+  TableSentences,
   TextEquivalent,
   direction,
   round,
@@ -102,6 +103,8 @@ interface BaselineRow {
 
 function format(value: number | null, precision: number, unit: string): string {
   if (value === null) return '--'
+  // A saturation reads as the device and the monitor print it, "96.9%", with no space (S5-5).
+  if (unit === '%') return `${value.toFixed(precision)}%`
   return unit ? `${value.toFixed(precision)} ${unit}` : value.toFixed(precision)
 }
 
@@ -233,7 +236,7 @@ function baselineRows(
       id: 'venousLineSaturation',
       group: 'drainage-and-load',
       label: 'Venous-line SvO₂',
-      unit: '',
+      unit: '%',
       precision: 1,
       current: circuit.readouts.venousLineSaturation.displayed,
       reference: reference.circuit.readouts.venousLineSaturation.displayed,
@@ -329,7 +332,7 @@ function baselineRows(
       id: 'spo2',
       group: 'patient',
       label: 'Patient SpO₂',
-      unit: '',
+      unit: '%',
       precision: 1,
       current: patient.spo2,
       reference: reference.patient.spo2,
@@ -376,8 +379,8 @@ function ChangeCell({ row }: { readonly row: BaselineRow }) {
   const word = changeWord[direction(delta, row.deadband)]
   return (
     <span data-change={word.replace(/ .*/, '')}>
-      <span className="font-semibold">{signed(delta, row.precision)}</span>
-      <span className="ml-1 text-xs text-muted-foreground">{word} the earlier value</span>
+      <span className="font-semibold">{signed(delta, row.precision)}</span>{' '}
+      <span className="text-xs text-muted-foreground">{word} the earlier value</span>
     </span>
   )
 }
@@ -416,12 +419,10 @@ export function VvNormalStatePanel({
         <p className="mt-2 text-sm leading-6">
           Venovenous support drains blood from the venous side, carries it through the membrane
           lung, and returns it to the venous side. The circuit therefore sits{' '}
-          <strong>in series</strong> with the patient&rsquo;s own circulation: it changes the oxygen
-          content of blood arriving at the right heart, and adds no circulatory support at all. The
-          native heart still does every bit of the pumping, and the native lungs are still in the
-          path. Because both cannulae sit in the venous circulation, some of what the circuit
-          returns can be drained again before it has been anywhere — the mechanism the next section
-          works through in detail.
+          <strong>in series</strong>
+          {
+            ' with the patient’s own circulation: it changes the oxygen content of blood arriving at the right heart, and adds no circulatory support at all. The native heart still does every bit of the pumping, and the native lungs are still in the path. Because both cannulae sit in the venous circulation, some of what the circuit returns can be drained again before it has been anywhere — the mechanism the next section works through in detail.'
+          }
         </p>
         <TextEquivalent>
           In venovenous support the circuit is in series with the patient: venous drainage, membrane
@@ -443,7 +444,7 @@ export function VvNormalStatePanel({
           . Nothing here is compared with a value from any other circuit or any other patient.
         </p>
 
-        <div className="mt-3 overflow-x-auto">
+        <div className="mt-3 overflow-x-auto" data-responsive-table>
           <table className="w-full text-left text-sm" data-baseline-table>
             <caption className="sr-only">
               Each observed signal with its current value, the value in this circuit’s own reference
@@ -489,7 +490,7 @@ export function VvNormalStatePanel({
                         <th scope="row" className="py-1 pr-3 font-medium">
                           {row.label}
                         </th>
-                        <td className="py-1 pr-3" data-current-value>
+                        <td className="py-1 pr-3" data-current-value data-column-label="Now">
                           {format(row.current, row.precision, row.unit)}
                           {row.unavailableReason ? (
                             <span className="sr-only"> Not available. {row.unavailableReason}</span>
@@ -499,6 +500,7 @@ export function VvNormalStatePanel({
                           className="py-1 pr-3 text-muted-foreground"
                           data-reference-value
                           data-reference-provenance={row.referenceProvenance}
+                          data-column-label="This circuit’s reference state"
                         >
                           {row.reference === null
                             ? 'not reported in the reference state'
@@ -507,7 +509,7 @@ export function VvNormalStatePanel({
                             ({provenanceLabel[row.referenceProvenance]})
                           </span>
                         </td>
-                        <td className="py-1">
+                        <td className="py-1" data-column-label="Change over the observed window">
                           <ChangeCell row={row} />
                         </td>
                       </tr>
@@ -517,22 +519,24 @@ export function VvNormalStatePanel({
           </table>
         </div>
 
-        <TextEquivalent>
-          {rows
-            .map((row) =>
-              row.current === null
-                ? `${row.label} is not available, ${
-                    row.unavailableReason ?? 'the channel is not reporting a value'
-                  }`
-                : `${row.label} is ${format(row.current, row.precision, row.unit)}${
-                    row.start === null
-                      ? ''
-                      : `, ${changeWord[direction(row.current - row.start, row.deadband)]} ${window.label} by ${signed(row.current - row.start, row.precision)}`
-                  }`,
-            )
-            .join('. ')}
-          .
-        </TextEquivalent>
+        <TableSentences>
+          <TextEquivalent>
+            {rows
+              .map((row) =>
+                row.current === null
+                  ? `${row.label} is not available, ${
+                      row.unavailableReason ?? 'the channel is not reporting a value'
+                    }`
+                  : `${row.label} is ${format(row.current, row.precision, row.unit)}${
+                      row.start === null
+                        ? ''
+                        : `, ${changeWord[direction(row.current - row.start, row.deadband)]} ${window.label} by ${signed(row.current - row.start, row.precision)}`
+                    }`,
+              )
+              .join('. ')}
+            .
+          </TextEquivalent>
+        </TableSentences>
 
         <ModelBoundary>
           The words higher, lower and unchanged come from an authored per-signal display deadband
@@ -580,7 +584,7 @@ export function VvNormalStatePanel({
         <h3 id="trend-window-heading" className={styles.heading}>
           The observed window, sample by sample
         </h3>
-        <div className="mt-3 overflow-x-auto">
+        <div className="mt-3 overflow-x-auto" data-responsive-table>
           <table className="w-full text-left text-sm" data-trend-table>
             <caption className="sr-only">
               Retained trend samples for this circuit, showing modeled time, circuit flow, drainage
@@ -614,11 +618,21 @@ export function VvNormalStatePanel({
                   <th scope="row" className="py-1 pr-3 font-medium">
                     {sample.time.toFixed(0)} s
                   </th>
-                  <td className="py-1 pr-3">{sample.flow.toFixed(2)}</td>
-                  <td className="py-1 pr-3">{trendCell(sample.pVen)}</td>
-                  <td className="py-1 pr-3">{trendCell(sample.deltaP)}</td>
-                  <td className="py-1 pr-3">{sample.spo2.toFixed(1)}</td>
-                  <td className="py-1">{sample.paCO2.toFixed(1)}</td>
+                  <td className="py-1 pr-3" data-column-label="Flow">
+                    {sample.flow.toFixed(2)}
+                  </td>
+                  <td className="py-1 pr-3" data-column-label="pVen">
+                    {trendCell(sample.pVen)}
+                  </td>
+                  <td className="py-1 pr-3" data-column-label="ΔP">
+                    {trendCell(sample.deltaP)}
+                  </td>
+                  <td className="py-1 pr-3" data-column-label="SpO₂">
+                    {sample.spo2.toFixed(1)}
+                  </td>
+                  <td className="py-1" data-column-label="PaCO₂">
+                    {sample.paCO2.toFixed(1)}
+                  </td>
                 </tr>
               ))}
             </tbody>

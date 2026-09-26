@@ -52,7 +52,7 @@ export function StepList({
               </span>
               <span className={styles.stepText}>
                 <span className={styles.stepPhase}>
-                  {step.foundationTask ? `Step ${step.ordinal}` : STAGE_PHASE_LABELS[step.phase]}
+                  {step.foundationTask ? `Task ${step.ordinal}` : STAGE_PHASE_LABELS[step.phase]}
                 </span>
                 {/*
                   A step the learner has not reached shows its phase and ordinal only. Reached

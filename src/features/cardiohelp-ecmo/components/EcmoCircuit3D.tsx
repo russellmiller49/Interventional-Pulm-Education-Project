@@ -21,6 +21,7 @@ import {
 } from './ecmo-circuit/constants'
 import { drainageChatterActive } from './ecmo-circuit/chatter'
 import { BedsideScene } from './ecmo-circuit/BedsideScene'
+import { buildCircuitLayout } from './ecmo-circuit/layout'
 import { WebGLContextGuard } from './ecmo-circuit/WebGLContextGuard'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoCircuitControls } from './EcmoCircuitControls'
@@ -116,6 +117,14 @@ export function EcmoCircuit3D({
   const [contextLost, setContextLost] = useState(false)
   const [canvasEpoch, setCanvasEpoch] = useState(0)
   const [labelsOn, setLabelsOn] = useState(true)
+  // Scope a manual selection to its track and teaching emphasis. A new step restores its own cue.
+  const finderScope = `${state.supportMode}:${(emphasisSceneLabelIds ?? []).join(',')}`
+  const [found, setFound] = useState<{ scope: string; id: string } | null>(null)
+  const foundLabelId = found?.scope === finderScope ? found.id : null
+  if (found && found.scope !== finderScope) setFound(null)
+  const [overviewRequest, setOverviewRequest] = useState(0)
+  const sceneLabels = buildCircuitLayout(state.supportMode).labels
+  const shownEmphasis = foundLabelId ? [foundLabelId] : emphasisSceneLabelIds
   const { active: assetsLoading, progress: assetProgress } = useProgress()
   const closedClampCount =
     Number(state.circuit.drainageClampClosed) + Number(state.circuit.returnClampClosed)
@@ -136,7 +145,7 @@ export function EcmoCircuit3D({
   }, [webglReady])
 
   return (
-    <div className={styles.circuit3dShell}>
+    <div className={styles.circuit3dShell} data-scene-label-host>
       {/* Decorative only while the canvas is live (text equivalents live in the
           HUD-adjacent DOM); when WebGL is missing or the context is lost the
           viewport holds real text and a focusable reload button, and hiding a
@@ -187,7 +196,9 @@ export function EcmoCircuit3D({
                   controlsEnabled={clampControlsEnabled}
                   reduceMotion={reduceMotion}
                   labelsVisible={!compactViewport && labelsOn}
-                  emphasisSceneLabelIds={emphasisSceneLabelIds}
+                  emphasisSceneLabelIds={shownEmphasis}
+                  onlyLabelId={foundLabelId}
+                  overviewRequest={overviewRequest}
                 />
               </Suspense>
             </Canvas>
@@ -203,16 +214,6 @@ export function EcmoCircuit3D({
             Loading bedside models… {Math.round(assetProgress)}%
           </div>
         ) : null}
-        <div className={styles.circuit3dHud}>
-          <span data-state={flowState}>{flowState}</span>
-          <span data-mode={state.supportMode}>{state.supportMode.toUpperCase()}</span>
-          {drainageChattering ? <span data-state="CHATTER">DRAINAGE CHATTER</span> : null}
-          <strong>{state.circuit.bloodFlow.toFixed(2)} L/min</strong>
-          <small>
-            Drag to orbit · scroll to zoom · zoom in to pan (right-drag or two-finger drag) · select
-            a clamp or use the controls below
-          </small>
-        </div>
         {compactViewport ? (
           <div className={styles.circuit3dLabels} aria-hidden="true">
             <span>
@@ -224,6 +225,16 @@ export function EcmoCircuit3D({
           </div>
         ) : null}
       </div>
+      <div className={styles.circuit3dHud} data-scene-status>
+        <span data-state={flowState}>{flowState}</span>
+        <span data-mode={state.supportMode}>{state.supportMode.toUpperCase()}</span>
+        {drainageChattering ? <span data-state="CHATTER">DRAINAGE CHATTER</span> : null}
+        <strong>{state.circuit.bloodFlow.toFixed(2)} L/min</strong>
+        <small>
+          Drag to orbit · scroll to zoom · zoom in to pan (right-drag or two-finger drag) · select a
+          clamp or use the controls below
+        </small>
+      </div>
       {webglReady && !contextLost && !compactViewport ? (
         <button
           type="button"
@@ -233,6 +244,41 @@ export function EcmoCircuit3D({
         >
           {labelsOn ? 'Hide labels' : 'Show labels'}
         </button>
+      ) : null}
+      {webglReady && !contextLost && !compactViewport && labelsOn ? (
+        <div
+          className={styles.circuit3dFind}
+          role="group"
+          aria-label="Find on the bedside model"
+          data-scene-label-finder
+        >
+          <p className={styles.circuit3dFindLabel}>Find on the model</p>
+          <p>
+            Labels that do not fit are hidden. Choose a structure to restore the overview and show
+            only its label; choose it again to restore the teaching labels.
+          </p>
+          <div className={styles.circuit3dFindButtons}>
+            {sceneLabels.map((label) => (
+              <button
+                key={label.id}
+                type="button"
+                aria-pressed={foundLabelId === label.id}
+                data-find-scene-label={label.id}
+                onClick={() => {
+                  setFound(foundLabelId === label.id ? null : { scope: finderScope, id: label.id })
+                  setOverviewRequest((current) => current + 1)
+                }}
+              >
+                {label.text}
+              </button>
+            ))}
+          </div>
+          <p role="status" data-scene-find-status>
+            {foundLabelId
+              ? `Showing ${sceneLabels.find((label) => label.id === foundLabelId)?.text}. Overview restored.`
+              : 'Teaching labels shown where space permits.'}
+          </p>
+        </div>
       ) : null}
 
       {showControls ? (
