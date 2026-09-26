@@ -1,6 +1,8 @@
 .moduleShell {
   --ink: #17323a;
-  --muted: #63777c;
+  /* One step darker than it was (#63777c): that measured 4.11–4.49:1 on the module's tinted
+     light cards, under 4.5 for the small text that uses it (F41). */
+  --muted: #56696e;
   --line: #d8e4e2;
   --paper: #f5f8f5;
   --navy: #071f29;
@@ -64,6 +66,24 @@
   --lm-v2-border: var(--line);
   --lm-v2-text: var(--ink);
   --lm-v2-muted: #52676c;
+  /*
+   * The same inversion reached the Tailwind-classed blocks inside the light frame: the hub's
+   * source-disagreement cards are `bg-background` with module ink, so in a dark browser they drew
+   * navy text on a near-black card (1.37:1) and their `text-muted-foreground` notes a pale grey on
+   * white (2.55:1) (F41, an F01 residual inside a disclosure the F01 probes did not open). Inside
+   * the light frame the site's colour tokens are pinned to its light values; the muted foreground
+   * is one step darker so it clears 4.5:1 on the module's tinted cards. Nothing outside this module
+   * reads these declarations, and the stage's dark frame does not match this rule.
+   */
+  --background: 210 40% 98%;
+  --foreground: 224 71% 4%;
+  --muted-foreground: 193 12% 36%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 71% 4%;
+  --card: 0 0% 100%;
+  --card-foreground: 224 71% 4%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
   color-scheme: light;
 }
 
@@ -77,6 +97,17 @@
 .moduleShell select {
   font: inherit;
 }
+/*
+ * Keyboard focus is never left under the site's sticky header. Moving focus backwards with
+ * Shift+Tab scrolled each control to the very top of the window, where the header covered it —
+ * "Explore all supported controls" landed at 76 px under an 81 px header, case sliders at 61 px
+ * (F38). Every focusable element in the module keeps the header's height plus a margin clear; the
+ * header height token is the site's own and grows with the root text size.
+ */
+.moduleShell :is(a, button, input, select, textarea, summary, [tabindex]) {
+  scroll-margin-top: calc(var(--site-header-height, 4rem) + 0.75rem);
+  scroll-margin-bottom: 0.75rem;
+}
 .moduleShell button:focus-visible,
 .moduleShell input:focus-visible,
 .moduleShell select:focus-visible,
@@ -84,6 +115,22 @@
 .moduleShell a:focus-visible {
   outline: 3px solid #5bd1c5;
   outline-offset: 3px;
+}
+/*
+ * On the module's light cards the bright teal ring measured about 1.9:1 against white, under the
+ * 3:1 a focus indicator needs (F41). The light frame uses the darker teal; the dark monitor cards
+ * inside it keep the bright ring, which is the one that shows on them.
+ */
+.moduleShell
+  [data-learning-module-v2-theme-root][data-theme='light']
+  :is(button, input, select, summary, a, [tabindex]):focus-visible {
+  outline-color: var(--teal-text);
+}
+.moduleShell
+  [data-learning-module-v2-theme-root][data-theme='light']
+  .monitorCard
+  :is(button, input, select, summary, a, [tabindex]):focus-visible {
+  outline-color: #5bd1c5;
 }
 
 .frameHeader {
@@ -106,7 +153,7 @@
   color: #63cfc2;
 }
 .kicker {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.69rem;
   font-weight: 850;
   letter-spacing: 0.13em;
@@ -397,7 +444,7 @@
 }
 .statsBand svg {
   width: 1.3rem;
-  color: var(--teal);
+  color: var(--teal-text);
 }
 .statsBand strong {
   color: var(--navy);
@@ -469,7 +516,7 @@
 }
 .trackGrid article > span,
 .profileGrid article > span {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.68rem;
   font-weight: 850;
   letter-spacing: 0.08em;
@@ -529,7 +576,7 @@
   background: linear-gradient(145deg, #f8fbf9, #eef6f3);
 }
 .comparisonGrid article > span {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.62rem;
   font-weight: 900;
   letter-spacing: 0.1em;
@@ -599,7 +646,7 @@
   border-top: 1px solid #e1eae8;
 }
 .impellaPreviewGrid dt {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.62rem;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -658,7 +705,7 @@
   background: #fff;
 }
 .workflowSection li span {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.65rem;
   font-weight: 900;
 }
@@ -767,7 +814,7 @@
   align-self: center;
   padding: 0.38rem 0.5rem;
   border-radius: 0.4rem;
-  color: var(--teal);
+  color: var(--teal-text);
   background: var(--teal-soft);
   font-size: 0.69rem;
   font-weight: 900;
@@ -815,7 +862,7 @@
   background: #edf8f4;
 }
 .activityRail button > span {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.62rem;
   font-weight: 900;
 }
@@ -981,7 +1028,7 @@
   background: #eaf8f4;
 }
 .taskActivityRail button > span {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.62rem;
   font-weight: 900;
 }
@@ -1090,7 +1137,7 @@
   height: 1.3rem;
   place-items: center;
   border-radius: 50%;
-  color: var(--teal);
+  color: var(--teal-text);
   background: var(--teal-soft);
   font-size: 0.62rem;
   font-weight: 900;
@@ -1171,7 +1218,7 @@
   background: #fff;
 }
 .transferContext small {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.58rem;
   font-weight: 850;
   letter-spacing: 0.05em;
@@ -1681,7 +1728,7 @@
  */
 .waveStrip span small {
   display: block;
-  color: #6b8285;
+  color: #8aa3a6;
   font-size: 0.92em;
   letter-spacing: 0.01em;
 }
@@ -1690,6 +1737,16 @@
   height: 100%;
   min-height: 74px;
   overflow: visible;
+}
+/*
+ * The strip a step points at is drawn at about twice the height, so the assisted and unassisted
+ * beats a "Look here" names can actually be told apart (F04). The others keep their size.
+ */
+.waveStrip[data-focused='true'] {
+  min-height: 150px;
+}
+.waveStrip[data-focused='true'] svg {
+  min-height: 146px;
 }
 .monitorGridLine {
   fill: none;
@@ -1771,15 +1828,33 @@
   color: #a8c5c3;
 }
 .derivedValueGuide small {
-  color: #789493;
+  color: #8fabaa;
   font-size: 0.59rem;
 }
 .chartGrid {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  /* The PV display keeps a readable column; the trend takes the rest (F04, F34). */
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
   gap: 1px;
   border-top: 1px solid #1b3b43;
   background: #1b3b43;
+}
+/*
+ * The monitor is placed in columns of very different widths — the whole card on a case page, a
+ * half-width column beside a lesson's teaching — so its charts follow the monitor's own width, not
+ * the window's. Below about 52rem of monitor the PV display and the trend stack, each at full
+ * width, instead of squeezing the trend into a sliver beside a fixed PV column.
+ */
+.monitorCard {
+  container: mcs-monitor / inline-size;
+}
+@container mcs-monitor (max-width: 52rem) {
+  .chartGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pvFigure > svg {
+    max-width: 420px;
+  }
 }
 .pvFigure,
 .trendFigure {
@@ -1794,45 +1869,49 @@
   display: grid;
   gap: 0.15rem;
   min-height: 38px;
-  font-size: 0.62rem;
+  font-size: 0.72rem;
+  line-height: 1.4;
 }
 .pvFigure figcaption strong,
 .trendFigure figcaption strong {
   color: #eef7f5;
-  font-size: 0.7rem;
+  font-size: 0.78rem;
 }
-.pvFigure svg,
-.trendFigure svg {
+.pvFigure > svg {
+  display: block;
   width: 100%;
-  height: 175px;
-  overflow: visible;
+  height: auto;
+  max-height: 280px;
 }
 .pvFigure svg text {
-  fill: #71898b;
-  font-size: 9px;
+  fill: #a9c0c1;
+  font-size: 11px;
 }
-.trendFigure figcaption span {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  align-items: center;
+.pvSummary {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
 }
-.trendFigure i {
-  width: 0.55rem;
-  height: 0.12rem;
-  background: #ff7185;
+.trendFigure [data-trend-legend] {
+  color: #cfe0df;
 }
-.trendFigure i[data-color='effective'] {
-  background: #6ee7f2;
+.trendFigure [data-trend-scale-note],
+.trendFigure [data-trend-table] {
+  color: #a9c0c1;
 }
-.trendFigure i[data-color='device'] {
-  background: #f4c66e;
+.trendFigure [data-trend-table] table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
 }
-.trendFigure i[data-color='left-device'] {
-  background: #f4c66e;
+.trendFigure [data-trend-table] th,
+.trendFigure [data-trend-table] td {
+  padding: 0.15rem 0.5rem;
+  border-bottom: 1px solid #1f4049;
+  text-align: left;
+  white-space: nowrap;
 }
-.trendFigure i[data-color='right-device'] {
-  background: #b788ff;
+.trendFigure [data-trend-table] summary {
+  cursor: pointer;
 }
 .causalCallout {
   padding: 0.75rem 1rem;
@@ -1959,7 +2038,7 @@
 }
 .workflowStep > div:first-child > span,
 .predictionFieldset legend > span {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.65rem;
   font-weight: 900;
 }
@@ -2035,6 +2114,56 @@
   box-shadow: inset 0 0 0 1px var(--teal);
   background: #e4f4ef;
 }
+/*
+ * The case prediction's radios, painted explicitly rather than left to the browser's colour
+ * scheme. Before the F01 pin this card inherited a dark scheme and every unchecked radio drew as a
+ * dark filled disc (F32); the pin fixed that by accident. These rules make it deliberate: the
+ * native input, an empty ring when unchecked, a filled centre when checked, a dashed ring when
+ * disabled, and a focus ring that clears 3:1 against the light card.
+ */
+.predictionFieldset input[type='radio'] {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+  border: 2px solid #466065;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+}
+.predictionFieldset input[type='radio']::before {
+  content: '';
+  width: 0.52rem;
+  height: 0.52rem;
+  border-radius: 50%;
+  background: var(--teal-text);
+  transform: scale(0);
+}
+.predictionFieldset input[type='radio']:checked {
+  border-color: var(--teal-text);
+}
+.predictionFieldset input[type='radio']:checked::before {
+  transform: scale(1);
+}
+.predictionFieldset input[type='radio']:disabled {
+  border-style: dashed;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.predictionFieldset input[type='radio']:focus-visible {
+  outline: 3px solid var(--teal-text);
+  outline-offset: 2px;
+}
+@media (forced-colors: active) {
+  .predictionFieldset input[type='radio'] {
+    appearance: auto;
+  }
+  .predictionFieldset input[type='radio']::before {
+    display: none;
+  }
+}
 .predictionFieldset > button {
   display: inline-flex;
   gap: 0.35rem;
@@ -2091,6 +2220,34 @@
   color: #235f5d;
   background: #e7f5f2;
 }
+.caseJumpLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  align-items: baseline;
+  margin: 0.6rem 0;
+  font-size: 0.8125rem;
+}
+.caseJumpLinks > span {
+  color: #52676c;
+  font-weight: 750;
+}
+.caseJumpLinks ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.caseJumpLinks a {
+  display: inline-block;
+  padding: 0.35rem 0;
+  color: var(--teal-text);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
 .caseActions {
   display: grid;
   grid-template-columns: 1.15fr 1fr 1fr;
@@ -2122,8 +2279,8 @@
 }
 .debriefCard {
   display: grid;
-  grid-template-columns: 105px 1fr;
-  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
   padding: 1rem;
   margin-top: 0.8rem;
   border-radius: 0.75rem;
@@ -2158,13 +2315,44 @@
   font-size: 0.9rem;
 }
 .debriefCard h4 {
-  margin: 0.7rem 0 0.1rem;
-  font-size: 0.72rem;
+  margin: 0 0 0.25rem;
+  font-size: 0.875rem;
 }
 .debriefCard p,
 .debriefCard li {
-  font-size: 0.66rem;
-  line-height: 1.45;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.debriefHeader {
+  display: grid;
+  gap: 0.25rem;
+}
+.debriefHeader p {
+  margin: 0;
+}
+/*
+ * The worked explanation's three blocks share the card: side by side where each can have about
+ * 18rem, stacked below that. Container-free on purpose — `min()` keeps a block from ever asking for
+ * more than the card has, so nothing overflows at 320 px or at 200% text.
+ */
+.debriefColumns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: 1rem 1.25rem;
+  align-items: start;
+}
+.debriefColumns > div {
+  min-width: 0;
+}
+.debriefColumns [data-debrief-run] button {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid currentColor;
+  border-radius: 0.45rem;
+  background: #fff;
+  color: #604113;
+  cursor: pointer;
+  font-weight: 750;
 }
 .debriefCard ul {
   padding-left: 1rem;
@@ -2333,7 +2521,7 @@
   font-weight: 800;
 }
 .rangeControl output small {
-  color: #809193;
+  color: #5a6b6d;
   font-size: 0.52rem;
 }
 .rangeControl input {
@@ -2371,7 +2559,7 @@
   font-size: 0.66rem;
 }
 .checkControl small {
-  color: #849596;
+  color: #5a6b6d;
   font-size: 0.58rem;
 }
 .authorityNote {
@@ -2447,7 +2635,7 @@
   gap: 0.12rem;
 }
 .profileGrid dt {
-  color: #71878a;
+  color: #5a6b6d;
   font-size: 0.62rem;
   font-weight: 850;
   text-transform: uppercase;
@@ -2461,7 +2649,7 @@
 .profileGrid ul {
   padding-left: 1rem;
   margin: 0.75rem 0 0;
-  color: #6d7e80;
+  color: #5a6b6d;
   font-size: 0.65rem;
   line-height: 1.5;
 }
@@ -2506,7 +2694,7 @@
   background: #f8faf9;
 }
 .sourceList article > span {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.58rem;
   font-weight: 850;
   letter-spacing: 0.06em;
@@ -2583,7 +2771,11 @@
 
 @media (max-width: 760px) {
   .moduleShell {
-    padding: 0.7rem 0.65rem 3rem;
+    padding: 0.7rem min(0.65rem, 2.5vw) 3rem;
+  }
+  .alarmExplanations,
+  .causalCallout {
+    padding-inline: min(1rem, 3vw);
   }
   .frameHeader {
     align-items: flex-start;
@@ -2758,10 +2950,7 @@
     grid-template-columns: 68px 1fr;
   }
   .chartGrid {
-    grid-template-columns: 1fr;
-  }
-  .pvFigure {
-    display: none;
+    grid-template-columns: minmax(0, 1fr);
   }
   .controlGrid {
     grid-template-columns: 1fr;
@@ -2857,7 +3046,7 @@
 }
 
 .ecmoCannulationExplanation > span {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.62rem;
   font-weight: 900;
   letter-spacing: 0.09em;
@@ -3193,7 +3382,7 @@
   line-height: 1.45;
 }
 .modelQuestions h4 span {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
@@ -3235,7 +3424,7 @@
   align-items: baseline;
 }
 .causalLevelHead span {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.72rem;
   font-weight: 850;
   font-variant-numeric: tabular-nums;
@@ -3261,7 +3450,7 @@
   line-height: 1.5;
 }
 .causalLevelLive small {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.66rem;
   font-weight: 850;
   letter-spacing: 0.09em;
@@ -3501,7 +3690,7 @@
   background: var(--navy-2);
 }
 .pathwayCardRole[data-support-role='temporary'] {
-  color: var(--teal);
+  color: var(--teal-text);
 }
 .pathwayCardComparison {
   margin: 0.5rem 0 0;
@@ -3609,7 +3798,7 @@
   font-variant-numeric: tabular-nums;
 }
 .pathwayCardProduct li span {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.75rem;
   font-weight: 800;
 }
@@ -4631,7 +4820,7 @@
 }
 .pathwayGroup > summary::before {
   content: '▸';
-  color: var(--teal);
+  color: var(--teal-text);
 }
 .pathwayGroup[open] > summary::before {
   content: '▾';
@@ -4694,7 +4883,7 @@
   line-height: 1.45;
 }
 .pathwayChipDone {
-  color: var(--teal);
+  color: var(--teal-text);
   font-size: 0.78rem;
   font-weight: 800;
 }
@@ -4721,7 +4910,7 @@
   font-size: 0.9rem;
 }
 .crossLinkLine a {
-  color: var(--teal);
+  color: var(--teal-text);
   font-weight: 700;
 }
 .learnLanding {
@@ -4807,4 +4996,105 @@
 }
 .moduleShell[data-flowing='true'] [data-case-workflow] [tabindex='-1'] {
   scroll-margin-top: 6rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * Practice and integrated cases: the shared workbench chrome, arranged for this module (F31, F38)
+ *
+ * The case pages sit in the shared native-workbench frame. Three of its arrangements collided with
+ * this module's content at every width and made the phone view hard to use, so they are rearranged
+ * here, inside this module only; the shared components and their other consumers are untouched.
+ *
+ *  - "Current task" floated over the top-right of the patient-context strip and covered whichever
+ *    item sat there — RAP / PCWP / PAPi at 1204 px, Support at 390 px. It is placed in the flow,
+ *    between the context and the case, so it covers nothing; opened, it pushes the case down.
+ *  - The six-phase stepper scrolled sideways under 1024 px and showed three phases at 390 px, two at
+ *    320 px and one at 200% text. It wraps instead, so all six are on screen.
+ *  - The bottom bar was sticky under 1024 px and took 124 px of an 844 px phone screen (403 px at
+ *    200% text) over the case. It returns to the end of the page, where it already sits on a
+ *    desktop; its links keep their labels.
+ *  - On a phone the context strip is stacked rather than scrolled sideways, so the active alarm and
+ *    the pressures at its far end are not off the right edge.
+ * ------------------------------------------------------------------ */
+.moduleShell[data-flowing='true']
+  [data-layout='native-workbench']
+  div:has(> section[aria-label='Simulation viewport']) {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+.moduleShell[data-flowing='true']
+  [data-layout='native-workbench']
+  div
+  > section[aria-label='Clinical context'] {
+  order: 0;
+}
+.moduleShell[data-flowing='true']
+  [data-layout='native-workbench']
+  div
+  > section[aria-label='Simulation viewport'] {
+  order: 2;
+}
+.moduleShell[data-flowing='true']
+  [data-layout='native-workbench']
+  div:has(> section[aria-label='Simulation viewport'])
+  > details {
+  position: static;
+  order: 1;
+  justify-self: end;
+  max-width: calc(100% - 1.5rem);
+  margin: 0.5rem 0.75rem;
+}
+.moduleShell[data-flowing='true'] [data-critical-care-activity-shell] > footer {
+  position: static;
+}
+@media (max-width: 1023px) {
+  .moduleShell[data-flowing='true'] [data-critical-care-activity-shell] > header ol {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.5rem), 1fr));
+    overflow: visible;
+  }
+  .moduleShell[data-flowing='true'] [data-critical-care-activity-shell] > header ol > li {
+    min-width: 0;
+  }
+}
+@media (max-width: 40rem) {
+  .moduleShell[data-flowing='true'] section[aria-label='Clinical context'] {
+    display: block;
+    max-height: none;
+    overflow: visible;
+  }
+  .moduleShell[data-flowing='true'] section[aria-label='Clinical context'] > section {
+    display: grid;
+    min-width: 0;
+  }
+  .moduleShell[data-flowing='true'] section[aria-label='Clinical context'] dl {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+    gap: 0.5rem 0.75rem;
+  }
+  .moduleShell[data-flowing='true'] section[aria-label='Clinical context'] dl > div {
+    width: auto;
+    min-width: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 0 0 0.35rem;
+  }
+  .moduleShell[data-flowing='true'] section[aria-label='Clinical context'] dl dd {
+    max-width: none;
+  }
+  .moduleShell[data-flowing='true'] section[aria-label='Clinical context'] > section > div,
+  .moduleShell[data-flowing='true'] section[aria-label='Clinical context'] ul {
+    width: auto;
+    min-width: 0;
+  }
+}
+
+/*
+ * The pressure–flow trend scales with its container, so on a phone its axis numbers drew at under
+ * 8 px. Below 600 px they are drawn larger in the chart's own units, which keeps them at about
+ * 10–11 px on screen; the legend under the chart carries every value in full-size text anyway.
+ */
+@media (max-width: 600px) {
+  .moduleShell [data-trend-svg] text {
+    font-size: 15px;
+  }
 }

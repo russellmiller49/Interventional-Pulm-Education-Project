@@ -31,6 +31,8 @@
   --red: #ff6b73;
   --green: #76d69b;
   --teal: #36c3ca;
+  /* Teal for text: the bright teal itself on this dark palette (the light shell's is darker). */
+  --teal-text: #36c3ca;
   --teal-soft: rgba(54, 195, 202, 0.14);
   --amber-soft: rgba(255, 191, 98, 0.14);
   --paper: #061519;
@@ -791,4 +793,42 @@
 .optionalActions button:focus-visible {
   outline: 2px solid #77e1e5;
   outline-offset: 3px;
+}
+
+/*
+ * The step bar: the run's identity on the left, the way on at the right, above the step (F03).
+ * It wraps rather than shrinking the button, so Continue keeps a full-size target at every width.
+ */
+.stepBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.stepBarIdentity {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 16rem;
+}
+
+.stepBarIdentity > p {
+  margin: 0;
+}
+
+.runDetails > summary {
+  width: fit-content;
+  padding: 0.15rem 0 !important;
+  color: var(--stage-muted);
+  font-size: 0.8125rem;
+}
+
+.runDetails > p {
+  margin: 0.25rem 0 0;
+  color: var(--stage-muted);
+  font-size: 0.8125rem;
+  max-width: 70ch;
 }

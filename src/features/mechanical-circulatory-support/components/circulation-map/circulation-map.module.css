@@ -156,14 +156,72 @@
   stroke-width: 2;
 }
 
-.pathwayLabel {
+/* The pathway's letter, on its own component; its words are in the key below the drawing. */
+.pathwayLetter {
   fill: var(--map-ink);
-  font-size: 18px;
-  font-weight: 700;
-  paint-order: stroke;
-  stroke: rgba(6, 21, 25, 0.85);
-  stroke-width: 6px;
-  stroke-linejoin: round;
+  font-size: 20px;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+[data-map-pathway='iabp-balloon'] .pathwayLetter {
+  fill: #061519;
+}
+
+/* A numbered place, when a section lights more than one. */
+.stopMarker circle {
+  fill: var(--map-accent);
+  stroke: #061519;
+  stroke-width: 3;
+}
+
+.stopMarker text {
+  fill: #061519;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.key {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.pathwayKey {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pathwayKey li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: baseline;
+  overflow-wrap: normal;
+}
+
+.keyLetter {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--map-ink);
+  border-radius: 0.35rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.keyState {
+  color: var(--map-muted);
+}
+
+.lineKey {
+  margin: 0;
+  color: var(--map-muted);
+  font-size: 0.8125rem;
 }
 
 /* ------------------------------------------------------------------ *

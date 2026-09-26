@@ -30,6 +30,15 @@ export interface CirculationMapEmphasis {
   /** "You are here: The left ventricle." — the same sentence goes into the drawing's description. */
   readonly caption: string
   readonly tone: 'you-are-here' | 'implicated'
+  /**
+   * The places the caption names, in the caption's order. When there is more than one, each is
+   * numbered on the drawing beside its lit segment, so "this section stands at two places" points
+   * at two numbered places rather than at one glow the learner has to divide in their head (F03).
+   */
+  readonly stops?: readonly {
+    readonly name: string
+    readonly segmentIds: readonly McsMapSegmentId[]
+  }[]
 }
 
 export interface CirculationMapAnswerOption {
@@ -118,15 +127,18 @@ function segmentShape(
 }
 
 /**
- * A pathway label as the lines it is drawn on: the mechanism's name on the first, where it draws
- * from and returns to on the second, and whether it is in place on whichever is last. The text's
- * content is the label unchanged, with the space the colon had; only the line break is new.
+ * A pathway label as its two parts: the mechanism's name, and where it draws from and returns to.
+ * The label's words are unchanged; only where they are printed moved (F05).
  */
-function pathwayLabelLines(label: string, inPlace: boolean): readonly string[] {
-  const suffix = inPlace ? '' : ' — not in place'
+function pathwayLabelParts(label: string): readonly [string, string | null] {
   const colon = label.indexOf(': ')
-  if (colon < 0) return [`${label}${suffix}`]
-  return [label.slice(0, colon + 1), ` ${label.slice(colon + 2)}${suffix}`]
+  if (colon < 0) return [label, null]
+  return [label.slice(0, colon + 1), label.slice(colon + 2)]
+}
+
+/** A, B — one letter per drawn pathway, on the part and in the key. */
+function pathwayLetter(index: number): string {
+  return String.fromCharCode(65 + index)
 }
 
 /** Options ordered along the blood path, so pin numbers read around the loop rather than about it. */
@@ -183,12 +195,47 @@ export function CirculationMap({ state, emphasis, answer }: CirculationMapProps)
           <title id={titleId}>Circulation map, a teaching schematic</title>
           <desc id={descriptionId}>{description}</desc>
 
-          {/* Halos first, under everything, so a lit segment is lit and not covered. */}
+          {/*
+           * Halos first, under everything, so a lit segment is lit and not covered.
+           *
+           * A vessel is an open polyline. Filled, SVG closes it with a straight line from its last
+           * point back to its first and paints the triangle between — the "dark teal wedge"
+           * between the pulmonary artery and the lungs, and another inside the aortic corner, that
+           * a learner read as a structure (F05). Only its stroke is the halo; chambers and organs
+           * are closed shapes and keep their fill. The inline style is deliberate: a class rule
+           * would lose to nothing, but it would also be invisible to the regression test.
+           */}
           {CIRCULATION_MAP_SEGMENTS.filter((segment) => lit.has(segment.id)).map((segment) => (
-            <g key={`halo-${segment.id}`} data-map-emphasis-target={segment.id}>
-              {segmentShape(segment, styles.halo)}
+            <g
+              key={`halo-${segment.id}`}
+              data-map-emphasis-target={segment.id}
+              data-map-halo-shape={segment.shape.kind}
+            >
+              {segmentShape(
+                segment,
+                styles.halo,
+                segment.shape.kind === 'vessel' ? { style: { fill: 'none' } } : {},
+              )}
             </g>
           ))}
+          {emphasis?.stops && emphasis.stops.length > 1
+            ? emphasis.stops.map((stop, index) => {
+                const segment = circulationMapSegment(stop.segmentIds[0] ?? 'venous-return')
+                return (
+                  <g
+                    key={`stop-${stop.name}`}
+                    className={styles.stopMarker}
+                    data-map-stop-marker={index + 1}
+                    aria-hidden="true"
+                  >
+                    <circle cx={segment.pinAt.x} cy={segment.pinAt.y} r={20} />
+                    <text x={segment.pinAt.x} y={segment.pinAt.y + 7} textAnchor="middle">
+                      {index + 1}
+                    </text>
+                  </g>
+                )
+              })
+            : null}
 
           {/* The loop. */}
           <g className={styles.loop}>
@@ -218,7 +265,7 @@ export function CirculationMap({ state, emphasis, answer }: CirculationMapProps)
           </g>
 
           {/* The pathway for the mechanism on screen. */}
-          {pathways.map((pathway) => {
+          {pathways.map((pathway, index) => {
             const shape = CIRCULATION_MAP_PATHWAYS.find((candidate) => candidate.id === pathway.id)
             if (!shape) return null
             return (
@@ -227,6 +274,7 @@ export function CirculationMap({ state, emphasis, answer }: CirculationMapProps)
                 data-map-pathway={pathway.id}
                 data-map-pathway-in-place={pathway.inPlace}
                 data-map-pathway-running={pathway.running}
+                data-map-pathway-letter={pathwayLetter(index)}
                 className={styles.pathway}
               >
                 <path d={shape.d} className={styles.deviceLine} />
@@ -265,17 +313,22 @@ export function CirculationMap({ state, emphasis, answer }: CirculationMapProps)
                     className={styles.outlet}
                   />
                 ) : null}
+                {/*
+                 * The pathway's letter sits on its own component, and the words sit in the key
+                 * under the drawing. The words used to be drawn here, two lines of 18-unit type
+                 * beside a loop whose right-hand side already carries five anatomical labels: the
+                 * balloon's ran into "Descending aorta", the transvalvular pump's into "Left
+                 * ventricle" and "Aortic valve", the right-sided pump's into "Pulmonary artery"
+                 * (F05). A letter on the part cannot collide with anything, and the key wraps.
+                 */}
                 <text
-                  x={shape.labelAt.x}
-                  y={shape.labelAt.y}
-                  textAnchor={shape.labelAt.anchor}
-                  className={styles.pathwayLabel}
+                  x={shape.componentAt.x}
+                  y={shape.componentAt.y + 6}
+                  textAnchor="middle"
+                  className={styles.pathwayLetter}
+                  aria-hidden="true"
                 >
-                  {pathwayLabelLines(shape.label, pathway.inPlace).map((line, index) => (
-                    <tspan key={line} x={shape.labelAt.x} dy={index === 0 ? 0 : '1.15em'}>
-                      {line}
-                    </tspan>
-                  ))}
+                  {pathwayLetter(index)}
                 </text>
               </g>
             )
@@ -346,6 +399,45 @@ export function CirculationMap({ state, emphasis, answer }: CirculationMapProps)
           </div>
         ) : null}
       </div>
+
+      {pathways.length > 0 ? (
+        <div className={styles.key} data-map-key>
+          <ul className={styles.pathwayKey} aria-label="Device pathways drawn on the map">
+            {pathways.map((pathway, index) => {
+              const shape = CIRCULATION_MAP_PATHWAYS.find(
+                (candidate) => candidate.id === pathway.id,
+              )
+              if (!shape) return null
+              const [name, route] = pathwayLabelParts(shape.label)
+              return (
+                <li key={pathway.id} data-map-pathway-key={pathway.id}>
+                  <span className={styles.keyLetter} aria-hidden="true">
+                    {pathwayLetter(index)}
+                  </span>
+                  <span>
+                    <span className={styles.visuallyHidden}>{pathwayLetter(index)}: </span>
+                    <strong>{name}</strong>
+                    {route ? ` ${route}` : ''}
+                    <span className={styles.keyState} data-map-pathway-key-state>
+                      {pathway.inPlace
+                        ? pathway.running
+                          ? ' · in place, running'
+                          : ' · in place, paused'
+                        : ' · drawn dashed, not in place'}
+                    </span>
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+          <p className={styles.lineKey} data-map-line-key>
+            Line key: the thick pale line is the device pathway — solid when the device is in place,
+            dashed when it is drawn but not in place; moving dashes along it mean it is running.
+            Each vessel and chamber is named on the drawing; the blue limb is the venous side before
+            the lungs and the red limb the arterial side after them.
+          </p>
+        </div>
+      ) : null}
 
       {answer ? <CirculationMapAnswerRows answer={answer} options={orderedOptions} /> : null}
 

@@ -10,6 +10,8 @@ import {
 import { MCS_AF_TRIGGER_CONTAINMENT, mcsAfTriggerLimitApplies } from '../content/afTriggerLimit'
 import type { McsSimulationState, McsWaveformSample } from '../engine'
 import { mcsDeviceFlowLine, mcsLiveValueKindLabels } from './teaching/selectors'
+import { ecgDisplayPoints } from './monitorDisplay'
+import { McsPressureFlowTrend, mcsMonitorTrendSeries } from './McsPressureFlowTrend'
 import styles from './mechanical-circulatory-support.module.css'
 
 type WaveformField = 'ecgMv' | 'arterialMmHg' | 'papMmHg' | 'cvpMmHg'
@@ -60,6 +62,8 @@ function WaveStrip({
   maximum,
   color,
   targetProps,
+  heartRateBpm,
+  focused = false,
 }: {
   samples: readonly McsWaveformSample[]
   field: WaveformField
@@ -69,17 +73,25 @@ function WaveStrip({
   maximum: number
   color: string
   targetProps?: Record<string, string>
+  /** For the ECG only: the rate the stored samples were generated at, for the display fill. */
+  heartRateBpm?: number
+  /** The strip a step points at is drawn taller, so an assisted beat can be told from an unassisted one. */
+  focused?: boolean
 }) {
   const latest = samples.at(-1)?.[field] ?? 0
-  const path = linePath(
-    samples.slice(-250).map((sample) => ({ x: sample.time, y: sample[field] })),
-    720,
-    92,
-    minimum,
-    maximum,
-  )
+  const window = samples.slice(-250)
+  const points =
+    field === 'ecgMv' && heartRateBpm !== undefined
+      ? ecgDisplayPoints(window, heartRateBpm).map((point) => ({ x: point.time, y: point.value }))
+      : window.map((sample) => ({ x: sample.time, y: sample[field] }))
+  const path = linePath(points, 720, 92, minimum, maximum)
   return (
-    <div className={styles.waveStrip} {...targetProps}>
+    <div
+      className={styles.waveStrip}
+      data-wave-strip={field}
+      data-focused={focused || undefined}
+      {...targetProps}
+    >
       <div>
         <strong style={{ color }}>{label}</strong>
         <span>
@@ -94,12 +106,16 @@ function WaveStrip({
            * whichever came first (F04). Nothing about the values changes here; they are named.
            */}
           <small data-readout-window="instantaneous">instantaneous</small>
+          {/* The strip's own fixed vertical scale, so a trace's height can be read in its units. */}
+          <small data-strip-scale>
+            scale {minimum}–{maximum} {unit}
+          </small>
         </span>
       </div>
       <svg
         viewBox="0 0 720 92"
         role="img"
-        aria-label={`${label} waveform; instantaneous sample ${latest.toFixed(1)} ${unit} at the model's current time`}
+        aria-label={`${label} waveform; instantaneous sample ${latest.toFixed(1)} ${unit} at the model's current time; drawn on a fixed ${minimum} to ${maximum} ${unit} scale`}
         preserveAspectRatio="none"
       >
         <path className={styles.monitorGridLine} d="M0 23 H720 M0 46 H720 M0 69 H720" />
@@ -107,7 +123,7 @@ function WaveStrip({
           d={path}
           fill="none"
           stroke={color}
-          strokeWidth="2.2"
+          strokeWidth={focused ? 2.6 : 2.2}
           vectorEffect="non-scaling-stroke"
         />
       </svg>
@@ -115,137 +131,98 @@ function WaveStrip({
   )
 }
 
+/*
+ * The left-ventricular pressure–volume display, as what it is.
+ *
+ * The samples are this model's plotted surrogate: a modeled LV pressure and a modeled volume
+ * generated per sample from the mean values, not a conductance-catheter loop. It was a thin sliver
+ * with "180", "0", "20 mL" and "240" at its corners and no axis names, hidden entirely below
+ * 760 px (F04, F34). It now names both axes with their units, keeps a fixed scale so a change in
+ * position is a change in the model, says in words what range the plotted samples cover, and stays
+ * on screen at every width. The samples are drawn as they are — no smoothing, no reshaping.
+ */
+const PV_VOLUME_AXIS = { min: 0, max: 250, ticks: [0, 50, 100, 150, 200, 250] } as const
+const PV_PRESSURE_AXIS = { min: 0, max: 200, ticks: [0, 50, 100, 150, 200] } as const
+
 function PressureVolumeLoop({ samples }: { samples: readonly McsWaveformSample[] }) {
   const recent = samples.slice(-100)
   const values = recent.map((sample) => ({ x: sample.lvVolumeMl, y: sample.lvMmHg }))
-  const xMin = 20
-  const xMax = 240
-  const yMin = 0
-  const yMax = 180
-  const width = 320
-  const height = 190
+  const left = 46
+  const right = 330
+  const top = 10
+  const bottom = 190
+  const xFor = (volume: number) =>
+    left +
+    ((Math.min(PV_VOLUME_AXIS.max, Math.max(PV_VOLUME_AXIS.min, volume)) - PV_VOLUME_AXIS.min) /
+      (PV_VOLUME_AXIS.max - PV_VOLUME_AXIS.min)) *
+      (right - left)
+  const yFor = (pressure: number) =>
+    bottom -
+    ((Math.min(PV_PRESSURE_AXIS.max, Math.max(PV_PRESSURE_AXIS.min, pressure)) -
+      PV_PRESSURE_AXIS.min) /
+      (PV_PRESSURE_AXIS.max - PV_PRESSURE_AXIS.min)) *
+      (bottom - top)
   const path = values
-    .map((value, index) => {
-      const x = ((value.x - xMin) / (xMax - xMin)) * width
-      const y = height - ((value.y - yMin) / (yMax - yMin)) * height
-      return `${index === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
-    })
+    .map(
+      (value, index) =>
+        `${index === 0 ? 'M' : 'L'}${xFor(value.x).toFixed(1)},${yFor(value.y).toFixed(1)}`,
+    )
     .join(' ')
+  const volumes = values.map((value) => value.x)
+  const pressures = values.map((value) => value.y)
+  const seconds = recent.length > 1 ? recent[recent.length - 1].time - recent[0].time : 0
+  const summary =
+    values.length > 1
+      ? `Plotted over the last ${seconds.toFixed(1)} simulated seconds: volume ${Math.min(...volumes).toFixed(0)}–${Math.max(...volumes).toFixed(0)} mL, pressure ${Math.min(...pressures).toFixed(0)}–${Math.max(...pressures).toFixed(0)} mm Hg.`
+      : 'No samples yet.'
   return (
-    <figure className={styles.pvFigure}>
+    <figure className={styles.pvFigure} data-pv-display>
       <figcaption>
-        <strong>LV pressure–volume loop</strong>
-        <span>Unloading shifts volume left; afterload changes loop height.</span>
-      </figcaption>
-      <svg viewBox="0 0 360 225" role="img" aria-label="Left ventricular pressure-volume loop">
-        <path d="M28 8 V198 H348" className={styles.axisLine} />
-        <path
-          d="M28 55 H348 M28 103 H348 M28 151 H348 M108 8 V198 M188 8 V198 M268 8 V198"
-          className={styles.monitorGridLine}
-        />
-        <g transform="translate(28 8)">
-          <path d={path} fill="rgba(116, 219, 205, .12)" stroke="#74dbcd" strokeWidth="3" />
-        </g>
-        <text x="10" y="16">
-          180
-        </text>
-        <text x="13" y="199">
-          0
-        </text>
-        <text x="27" y="218">
-          20 mL
-        </text>
-        <text x="302" y="218">
-          240
-        </text>
-      </svg>
-    </figure>
-  )
-}
-
-function TrendPlot({
-  state,
-  targetProps,
-  withholdFlow = false,
-}: {
-  state: McsSimulationState
-  targetProps?: Record<string, string>
-  withholdFlow?: boolean
-}) {
-  const recent = state.trends.slice(-160)
-  const mapPath = linePath(
-    recent.map((sample) => ({ x: sample.time, y: sample.mapMmHg })),
-    640,
-    150,
-    20,
-    150,
-  )
-  const flowPath = linePath(
-    recent.map((sample) => ({ x: sample.time, y: sample.effectiveFlowLMin * 16 })),
-    640,
-    150,
-    20,
-    150,
-  )
-  const leftDevicePath = linePath(
-    recent.map((sample) => ({ x: sample.time, y: sample.leftDeviceFlowLMin * 16 })),
-    640,
-    150,
-    20,
-    150,
-  )
-  const rightDevicePath = linePath(
-    recent.map((sample) => ({ x: sample.time, y: sample.rightDeviceFlowLMin * 16 })),
-    640,
-    150,
-    20,
-    150,
-  )
-  return (
-    <figure className={styles.trendFigure} {...targetProps}>
-      <figcaption>
-        <strong>Response trend</strong>
+        <strong>LV pressure–volume display</strong>
         <span>
-          <i data-color="map" /> MAP <i data-color="effective" /> effective flow ×16{' '}
-          <i data-color="left-device" /> LV pump ×16 <i data-color="right-device" /> RP pump ×16
+          This model’s plotted pressure–volume surrogate, not a calibrated clinical PV loop.
+          Unloading shifts the plotted volume left; afterload changes its height.
         </span>
       </figcaption>
       <svg
-        viewBox="0 0 640 150"
+        viewBox="0 0 340 232"
         role="img"
-        aria-label="Trend of MAP, effective systemic flow, left pump flow, and right pump flow"
+        aria-label={`Left ventricular pressure-volume loop as this model plots it, a surrogate and not a calibrated clinical PV loop: LV volume in mL across, LV pressure in mm Hg up. ${summary}`}
       >
-        <path d="M0 30 H640 M0 75 H640 M0 120 H640" className={styles.monitorGridLine} />
-        <path data-series="map" d={mapPath} fill="none" stroke="#ff7185" strokeWidth="2.5" />
-        {withholdFlow ? null : (
-          <>
-            <path
-              data-series="effective-flow"
-              d={flowPath}
-              fill="none"
-              stroke="#6ee7f2"
-              strokeWidth="2.5"
-              strokeDasharray="12 3"
-            />
-            <path
-              data-series="left-pump"
-              d={leftDevicePath}
-              fill="none"
-              stroke="#f4c66e"
-              strokeWidth="2"
-              strokeDasharray="6 5"
-            />
-            <path
-              data-series="right-pump"
-              d={rightDevicePath}
-              fill="none"
-              stroke="#b788ff"
-              strokeWidth="2"
-              strokeDasharray="3 4"
-            />
-          </>
-        )}
+        {PV_PRESSURE_AXIS.ticks.map((tick) => (
+          <g key={`p${tick}`}>
+            <path d={`M${left} ${yFor(tick)} H${right}`} className={styles.monitorGridLine} />
+            <text x={left - 5} y={yFor(tick) + 3} textAnchor="end">
+              {tick}
+            </text>
+          </g>
+        ))}
+        {PV_VOLUME_AXIS.ticks.map((tick) => (
+          <g key={`v${tick}`}>
+            <path d={`M${xFor(tick)} ${top} V${bottom}`} className={styles.monitorGridLine} />
+            <text x={xFor(tick)} y={bottom + 13} textAnchor="middle">
+              {tick}
+            </text>
+          </g>
+        ))}
+        <path d={`M${left} ${top} V${bottom} H${right}`} className={styles.axisLine} />
+        <path d={path} fill="rgba(116, 219, 205, .12)" stroke="#74dbcd" strokeWidth="3" />
+        <text x={(left + right) / 2} y={bottom + 30} textAnchor="middle" data-pv-axis="volume">
+          LV volume (mL)
+        </text>
+        <text
+          x={12}
+          y={(top + bottom) / 2}
+          textAnchor="middle"
+          transform={`rotate(-90 12 ${(top + bottom) / 2})`}
+          data-pv-axis="pressure"
+        >
+          LV pressure (mm Hg)
+        </text>
       </svg>
+      <p className={styles.pvSummary} data-pv-summary>
+        {summary}
+      </p>
     </figure>
   )
 }
@@ -358,6 +335,7 @@ export function McsMonitor({
             minimum={-0.3}
             maximum={1.3}
             color="#66df9a"
+            heartRateBpm={state.patient.heartRateBpm}
           />
           <WaveStrip
             samples={state.waveforms}
@@ -368,6 +346,7 @@ export function McsMonitor({
             maximum={180}
             color="#ff7185"
             targetProps={target('monitor:arterial-waveform', highlightTarget)}
+            focused={highlightTarget === 'monitor:arterial-waveform'}
           />
           <WaveStrip
             samples={state.waveforms}
@@ -557,11 +536,19 @@ export function McsMonitor({
       </section>
       <div className={styles.chartGrid}>
         <PressureVolumeLoop samples={state.waveforms} />
-        <TrendPlot
-          state={state}
-          targetProps={target('monitor:response-trend', highlightTarget)}
-          withholdFlow={withholdFlowAccount}
-        />
+        <figure className={styles.trendFigure}>
+          <figcaption>
+            <strong>Pressure and flow trend</strong>
+            <span>Separate scales in mm Hg and L/min on one simulated-time axis.</span>
+          </figcaption>
+          <McsPressureFlowTrend
+            samples={state.trends}
+            windowSeconds={40}
+            series={mcsMonitorTrendSeries(state.deviceKind)}
+            withholdFlow={withholdFlowAccount}
+            targetProps={target('monitor:response-trend', highlightTarget)}
+          />
+        </figure>
       </div>
       <p className={styles.causalCallout}>
         <strong>

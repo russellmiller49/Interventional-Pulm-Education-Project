@@ -492,86 +492,73 @@ const relationshipStroke: Readonly<Record<McsPathwayView['relationship'], string
 /**
  * Source → active component → destination, drawn once per pathway in place.
  *
- * The series/parallel distinction is carried by a stroke pattern *and* by a printed sentence, and a
- * pathway that moves no blood is drawn with an open end and an explicit "no source" / "no
- * destination" box rather than by omitting the arrow, so the absence is legible as a fact about the
- * mechanism rather than as a missing part of the drawing.
+ * The three boxes carry their own words. They used to be three empty outlined rectangles scaled to
+ * the full width of the card, with the words printed as a list underneath, so a learner looked at
+ * empty boxes, read a list, and matched the two by eye (F22). The words now sit inside the box they
+ * name, the boxes wrap to a column on a narrow screen, and the list underneath keeps only what the
+ * boxes do not say.
+ *
+ * The series/parallel distinction is carried by the connector's line pattern *and* by a printed
+ * sentence, and a pathway that moves no blood keeps its explicit "no source" / "no destination"
+ * boxes rather than omitting them, so the absence is legible as a fact about the mechanism rather
+ * than as a missing part of the drawing.
  */
 export function PathwayGraphic({ pathway }: { readonly pathway: McsPathwayView }) {
+  const boxes = [
+    { key: 'source', role: 'Source', text: pathway.source, attr: { 'data-pathway-source': '' } },
+    {
+      key: 'component',
+      role: 'Active component',
+      text: pathway.activeComponent,
+      attr: { 'data-pathway-component': '' },
+    },
+    {
+      key: 'destination',
+      role: 'Destination',
+      text: pathway.destination,
+      attr: { 'data-pathway-destination': '' },
+    },
+  ] as const
   return (
-    <div
-      className="min-w-0"
+    <figure
+      className="m-0 mt-2 min-w-0"
       data-pathway={pathway.id}
       data-pathway-relationship={pathway.relationship}
     >
-      <svg
-        viewBox="0 0 320 84"
-        className="mt-2 h-auto w-full"
-        role="img"
-        aria-label={`Pathway diagram: ${pathway.source}, then ${pathway.activeComponent}, then ${pathway.destination}`}
+      <ol
+        className="m-0 flex list-none flex-col p-0 md:flex-row md:items-stretch"
+        // The stage's `.block ol` makes every list a padded grid; this list is a row of boxes.
+        style={{ display: 'flex', paddingLeft: 0 }}
+        aria-label={`Pathway: ${pathway.source}, then ${pathway.activeComponent}, then ${pathway.destination}`}
+        data-pathway-flow
       >
-        <defs>
-          <marker
-            id={`mcs-arrow-${pathway.id}`}
-            viewBox="0 0 10 10"
-            refX="8"
-            refY="5"
-            markerWidth="6"
-            markerHeight="6"
-            orient="auto-start-reverse"
-          >
-            <path d="M0 0 L10 5 L0 10 z" fill="currentColor" />
-          </marker>
-        </defs>
-        <g fill="none" stroke="currentColor" strokeWidth="1.5">
-          <rect x="1" y="18" width="92" height="46" rx="8" />
-          <rect x="114" y="18" width="92" height="46" rx="8" strokeDasharray="4 3" />
-          <rect x="227" y="18" width="92" height="46" rx="8" />
-          <line
-            x1="94"
-            y1="41"
-            x2="112"
-            y2="41"
-            markerEnd={`url(#mcs-arrow-${pathway.id})`}
-            strokeDasharray={relationshipStroke[pathway.relationship]}
-          />
-          <line
-            x1="207"
-            y1="41"
-            x2="225"
-            y2="41"
-            markerEnd={`url(#mcs-arrow-${pathway.id})`}
-            strokeDasharray={relationshipStroke[pathway.relationship]}
-          />
-        </g>
-        <g fontSize="7" fill="currentColor">
-          <text x="6" y="14">
-            SOURCE
-          </text>
-          <text x="119" y="14">
-            ACTIVE COMPONENT
-          </text>
-          <text x="232" y="14">
-            DESTINATION
-          </text>
-        </g>
-      </svg>
+        {boxes.map((box, index) => (
+          <li key={box.key} className="flex min-w-0 flex-1 flex-col md:flex-row">
+            {index > 0 ? <PathwayConnector relationship={pathway.relationship} /> : null}
+            <div
+              className={`min-w-0 flex-1 rounded-lg border-2 p-2 text-sm leading-5 ${
+                box.key === 'component' ? 'border-dashed' : 'border-solid'
+              }`}
+              style={{ borderColor: 'currentColor', overflowWrap: 'normal' }}
+              data-pathway-box={box.key}
+            >
+              <span className="block text-[0.7rem] font-extrabold uppercase tracking-[0.08em] opacity-80">
+                {box.role}
+              </span>
+              <span className="block font-semibold" {...box.attr}>
+                {box.text}
+              </span>
+            </div>
+          </li>
+        ))}
+      </ol>
       <dl className="mt-2 grid gap-1 text-xs leading-5" data-pathway-legend>
         <div>
-          <dt className="font-semibold">Source</dt>
-          <dd data-pathway-source>{pathway.source}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold">Active component</dt>
-          <dd data-pathway-component>{pathway.activeComponent}</dd>
-        </div>
-        <div>
-          <dt className="font-semibold">Destination</dt>
-          <dd data-pathway-destination>{pathway.destination}</dd>
-        </div>
-        <div>
           <dt className="font-semibold">Relationship</dt>
-          <dd data-pathway-relationship-label>{pathway.relationshipLabel}</dd>
+          <dd data-pathway-relationship-label>
+            {pathway.relationshipLabel}{' '}
+            <span className="opacity-80">({relationshipLineWords[pathway.relationship]})</span>
+          </dd>
         </div>
         <div>
           <dt className="font-semibold">Chamber primarily unloaded</dt>
@@ -588,7 +575,47 @@ export function PathwayGraphic({ pathway }: { readonly pathway: McsPathwayView }
           </dd>
         </div>
       </dl>
-    </div>
+    </figure>
+  )
+}
+
+/** What the connector's line pattern means, in words, beside the relationship it draws. */
+const relationshipLineWords: Readonly<Record<McsPathwayView['relationship'], string>> = {
+  series: 'solid connector: in series',
+  parallel: 'dashed connector: in parallel with native ejection',
+  'no-pathway': 'dotted connector: no blood pathway',
+}
+
+/** The arrow between two boxes: across on a wide screen, down on a narrow one. Decorative. */
+function PathwayConnector({
+  relationship,
+}: {
+  readonly relationship: McsPathwayView['relationship']
+}) {
+  return (
+    <span
+      className="flex items-center justify-center py-0.5 md:px-0.5 md:py-0"
+      aria-hidden="true"
+      data-pathway-connector={relationship}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className="h-5 w-5 rotate-90 md:rotate-0"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <line
+          x1="2"
+          y1="12"
+          x2="17"
+          y2="12"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeDasharray={relationshipStroke[relationship]}
+        />
+        <path d="M15 7 L22 12 L15 17 Z" fill="currentColor" />
+      </svg>
+    </span>
   )
 }
 
