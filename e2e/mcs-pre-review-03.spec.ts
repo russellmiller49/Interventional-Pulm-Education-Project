@@ -181,18 +181,25 @@ test('F32 · stage radios read as their state and move with the arrow keys', asy
 test('F32 · case radios read as their state in a dark browser', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' })
   await page.addInitScript(() => window.localStorage.setItem('theme', 'dark'))
-  await page.goto(`${MCS}/practice?case=IABP-01`)
+  await page.goto(`${MCS}/practice?case=IABP-01`, { waitUntil: 'load' })
   const group = page.getByRole('group', { name: /Optional prediction/ })
-  await group.getByRole('radio').nth(1).check()
-  const dots = await group
-    .getByRole('radio')
-    .evaluateAll((inputs) =>
-      inputs.map((input) => [
-        (input as HTMLInputElement).checked,
-        getComputedStyle(input, '::before').transform,
-      ]),
+  const radios = group.getByRole('radio')
+  // A click before hydration is undone by React; select until the controlled state holds.
+  await expect(async () => {
+    await radios.nth(1).check()
+    await expect(radios.nth(1)).toBeChecked()
+  }).toPass()
+  await expect
+    .poll(() =>
+      radios.evaluateAll((inputs) =>
+        inputs.map(
+          (input) =>
+            (input as HTMLInputElement).checked ===
+            (getComputedStyle(input, '::before').transform !== 'matrix(0, 0, 0, 0, 0, 0)'),
+        ),
+      ),
     )
-  for (const [checked, dot] of dots) expect(dot === 'matrix(0, 0, 0, 0, 0, 0)').toBe(!checked)
+    .toEqual([true, true, true])
 })
 
 /* ------------------------------------------------------------------ F33 */
