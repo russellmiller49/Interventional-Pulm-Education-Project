@@ -107,6 +107,10 @@ it('BBTF-04 · every local lesson offers the parent airway view before any answe
   const pose = scopePose()
   expect(pose).toMatch(/^[-\d.,]+\|[-\d.,]+\|[-\d.,]+$/)
   click('Start marking branches')
+  // PR #273 final repair: the paired view opened on the worked example was the reference's display
+  // and does not follow the learner into the try. It is still one click away, at the same pose.
+  expect(scopeColumn()).toBeNull()
+  click('Show parent airway view')
   expect(scopeColumn()).not.toBeNull()
   expect(scopePose()).toBe(pose)
   const preset = () => document.querySelector('[data-preset]')!.getAttribute('data-preset')

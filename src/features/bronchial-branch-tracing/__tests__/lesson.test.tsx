@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { CRITICAL_CARE_PROGRESS_STORAGE_KEY } from '@/features/learning-module/activity/progress'
 import { BranchTracingLesson } from '../components/BranchTracingLesson'
-import { traceById } from '../geometry/native-ct'
+import { targetForTrace, traceById } from '../geometry/native-ct'
 import { LESSONS } from '../content/lessons'
 import { DRAFT_PREFIX } from '../engine/ct-draft'
 import { readSelfPacedRecord } from '../engine/selfPacedProgress'
@@ -32,6 +32,10 @@ beforeEach(() => {
   }
 })
 const lesson = LESSONS.find((l) => l.id === 'variants-limits')!
+// BBT-PRE-REVIEW-04 (BBTF-08/09): the worked example's actions and the reflection step's action
+// name the route they open. Formerly "Trace this airway" and "Trace another airway".
+const OWN_TRACE = `Skip to your own trace: ${targetForTrace(traceById(lesson.prediction)).segment.code}`
+const ANOTHER_TRACE = `Continue to another trace: ${targetForTrace(traceById(lesson.transfer)).segment.code}`
 type StoredAttempt = { branch: unknown; hints?: number; support?: string }
 const session = () =>
   JSON.parse(localStorage.getItem(`${DRAFT_PREFIX}learn.${lesson.id}`)!).value.session
@@ -108,9 +112,9 @@ function markLevels(id: string, wrong = false) {
 // the learner's choice, and finishing writes only the self-paced reviewed note.
 it('records a route when the learner chooses to, keeps a wrong choice as placed, and finishes with a note rather than a result', async () => {
   render(<BranchTracingLesson requestedId={lesson.id} />)
-  await screen.findByRole('button', { name: 'Trace this airway' })
+  await screen.findByRole('button', { name: OWN_TRACE })
   imageReady()
-  fireEvent.click(screen.getByRole('button', { name: 'Trace this airway' }))
+  fireEvent.click(screen.getByRole('button', { name: OWN_TRACE }))
   expect(document.querySelector('[data-ct-reference]')).toBeNull()
   expect(screen.getByRole('button', { name: 'Use this orientation' })).toBeInTheDocument()
   orient(lesson.prediction)
@@ -141,7 +145,7 @@ it('records a route when the learner chooses to, keeps a wrong choice as placed,
   imageReady()
   expect(screen.getByLabelText('Your mark 1')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Review the relationship' }))
-  fireEvent.click(screen.getByRole('button', { name: 'Trace another airway' }))
+  fireEvent.click(screen.getByRole('button', { name: ANOTHER_TRACE }))
   expect(document.querySelector('[data-ct-reference]')).toBeNull()
   expect(screen.getByRole('button', { name: 'Use this orientation' })).toBeInTheDocument()
   orient(lesson.transfer)
@@ -172,9 +176,9 @@ it('records a route when the learner chooses to, keeps a wrong choice as placed,
 // state only and is never written to a response or a progress record.
 it('restores the recorded trace across reload and never records hint use', async () => {
   const view = render(<BranchTracingLesson requestedId={lesson.id} />)
-  await screen.findByRole('button', { name: 'Trace this airway' })
+  await screen.findByRole('button', { name: OWN_TRACE })
   imageReady()
-  fireEvent.click(screen.getByRole('button', { name: 'Trace this airway' }))
+  fireEvent.click(screen.getByRole('button', { name: OWN_TRACE }))
   orient(lesson.prediction)
   fireEvent.click(screen.getByRole('button', { name: 'Tracing reminder' }))
   markLevels(lesson.prediction)
@@ -191,9 +195,9 @@ it('restores the recorded trace across reload and never records hint use', async
 it('shows a junction reference without recording, continues past junctions and both traces, and finishes with nothing recorded', async () => {
   const trace = traceById(lesson.prediction)
   render(<BranchTracingLesson requestedId={lesson.id} />)
-  await screen.findByRole('button', { name: 'Trace this airway' })
+  await screen.findByRole('button', { name: OWN_TRACE })
   imageReady()
-  fireEvent.click(screen.getByRole('button', { name: 'Trace this airway' }))
+  fireEvent.click(screen.getByRole('button', { name: OWN_TRACE }))
   imageReady()
   fireEvent.click(screen.getByRole('button', { name: 'Use this orientation' }))
   imageReady()
@@ -221,7 +225,7 @@ it('shows a junction reference without recording, continues past junctions and b
   imageReady()
   expect(screen.getByText('No interpretation recorded for this trace')).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: 'Review the relationship' }))
-  fireEvent.click(screen.getByRole('button', { name: 'Trace another airway' }))
+  fireEvent.click(screen.getByRole('button', { name: ANOTHER_TRACE }))
   imageReady()
   fireEvent.click(screen.getByRole('button', { name: 'Finish without recording' }))
   expect(screen.getByRole('heading', { name: 'Lesson finished' })).toBeVisible()
@@ -239,8 +243,8 @@ it('shows a junction reference without recording, continues past junctions and b
 })
 it('has no automated accessibility violations in orientation and before comparison', async () => {
   const { container } = render(<BranchTracingLesson requestedId={lesson.id} />)
-  await screen.findByRole('button', { name: 'Trace this airway' })
+  await screen.findByRole('button', { name: OWN_TRACE })
   expect(await axe(container)).toHaveNoViolations()
-  fireEvent.click(screen.getByRole('button', { name: 'Trace this airway' }))
+  fireEvent.click(screen.getByRole('button', { name: OWN_TRACE }))
   expect(await axe(container)).toHaveNoViolations()
 })

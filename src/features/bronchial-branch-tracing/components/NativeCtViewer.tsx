@@ -37,6 +37,7 @@ import type { ScopeAnnotation } from './ClinicalAirwayView'
 import { nativeImageUrl, sliceZ, targetForTrace, TARGET_CT_BASE } from '../geometry/native-ct'
 import { placeOverlayLabels } from './ctOverlayLabels'
 import { useCtFrame } from './useCtFrame'
+import { displayName } from '../engine/display-text'
 import styles from './branch-tracing.module.css'
 import { resetPaneScroll } from './resetPaneScroll'
 
@@ -75,7 +76,13 @@ interface Props {
   teachingFrame?: CtTeachingFrame
   annotationReview?: AnnotationReview
   initialView?: CtViewerState
-  onViewChange?: (view: CtViewerState) => void
+  /**
+   * Bumped by the host to put a whole saved view back on screen: plane, crop focus, full field,
+   * magnification and paired view. Every later `onViewChange` report carries this serial, so a host
+   * can tell a report made on the view it replaced from one made on the view it handed back.
+   */
+  viewRequest?: { view?: CtViewerState; serial: number }
+  onViewChange?: (view: CtViewerState, viewSerial?: number) => void
   onReadyChange?: (ready: boolean) => void
   onDisplayedSliceChange?: (slice: number | null) => void
   onTargetReady?: () => void
@@ -118,6 +125,7 @@ export function NativeCtViewer({
   teachingFrame,
   annotationReview,
   initialView,
+  viewRequest,
   onViewChange,
   onReadyChange,
   onDisplayedSliceChange,
@@ -135,7 +143,7 @@ export function NativeCtViewer({
   const stationLabel = checkpoint.decision
     ? `${checkpoint.decision.parent.airway.code} junction`
     : 'Distal nodule approach'
-  const stationName = checkpoint.decision?.parent.airway.name ?? checkpoint.airway.name
+  const stationName = displayName(checkpoint.decision?.parent.airway.name ?? checkpoint.airway.name)
   const [sliceState, setSliceState] = useState({
     active,
     levelRequest,
@@ -190,12 +198,31 @@ export function NativeCtViewer({
   const focusedOnStart = startFocus?.active === active && startFocus?.levelRequest === levelRequest
   const [showNodule, setShowNodule] = useState(initialView?.showNodule ?? !local)
   const [showScope, setShowScope] = useState(initialView?.showScope ?? scopeDefault ?? !local)
+  const [magnification, setMagnification] = useState(initialView?.magnification ?? 1)
+  // The host's saved view, handed back whole: the same defaults a mount without one would use.
+  // A layout effect, so the first frame painted after the hand-back already shows that view, and
+  // it lands before the scope, focus and slice requests: a teaching moment that arrives with the
+  // hand-back (opening the parent view, moving to a response slice) applies to the restored view.
+  const [viewSerial, setViewSerial] = useState(viewRequest?.serial)
+  useLayoutEffect(() => {
+    if (!viewRequest || viewRequest.serial === viewSerial) return
+    const view = viewRequest.view
+    const restored = view?.slice ?? trace.anchor.slice
+    setSliceState({ active, levelRequest, slice: restored })
+    sliceRef.current = restored
+    setFull(view?.full ?? false)
+    setMagnification(view?.magnification ?? 1)
+    setShowNodule(view?.showNodule ?? !local)
+    setShowScope(view?.showScope ?? scopeDefault ?? !local)
+    setTargetFocus(view?.focus === 'target' ? { active, levelRequest } : null)
+    setStartFocus(!view || view.focus === 'start' ? { active, levelRequest } : null)
+    setViewSerial(viewRequest.serial)
+  }, [viewRequest, viewSerial, trace.anchor.slice, active, levelRequest, local, scopeDefault])
   const firstScopeRequest = useRef(scopeRequest?.serial)
   useEffect(() => {
     if (!scopeRequest || scopeRequest.serial === firstScopeRequest.current) return
     setShowScope(scopeRequest.show)
   }, [scopeRequest])
-  const [magnification, setMagnification] = useState(initialView?.magnification ?? 1)
   const [cursor, setCursor] = useState<[number, number]>([50, 50])
   const [retry, setRetry] = useState(0)
   const [expanded, setExpanded] = useState(false)
@@ -472,14 +499,17 @@ export function NativeCtViewer({
     setStartFocus(null)
   }, [focusRequest])
   useEffect(() => {
-    onViewChange?.({
-      slice,
-      focus: focusedOnTarget ? 'target' : focusedOnStart ? 'start' : 'junction',
-      full,
-      magnification,
-      showNodule,
-      showScope,
-    })
+    onViewChange?.(
+      {
+        slice,
+        focus: focusedOnTarget ? 'target' : focusedOnStart ? 'start' : 'junction',
+        full,
+        magnification,
+        showNodule,
+        showScope,
+      },
+      viewSerial,
+    )
   }, [
     slice,
     focusedOnTarget,
@@ -488,6 +518,7 @@ export function NativeCtViewer({
     magnification,
     showNodule,
     showScope,
+    viewSerial,
     onViewChange,
   ])
   const canMark = Boolean(onMark) && ready && atCheckpoint

@@ -142,3 +142,70 @@ export function approachReference(trace: CtTrace, target: CtNoduleTarget): Appro
     matchesRoute: distal.airway.code === target.approachCode,
   }
 }
+
+export interface DivisionCourse {
+  parentCode: string
+  parentSlice: number
+  /** The native plane nearest the model node: round((node z − origin z) / 0.5). */
+  nodeSlice: number
+  /** Parent point slice minus node slice, exactly; positive is cranial of the node. */
+  parentOffset: number
+  /** How the parent runs from its point to the node (within one slice counts as the same level). */
+  approach: LevelRelation
+  daughters: {
+    label: string
+    code: string
+    slice: number
+    /** Response slice minus node slice, exactly; positive is cranial of the node. */
+    offset: number
+    /** The daughter's direction from the node (within one slice counts as the same level). */
+    fromNode: LevelRelation
+    slices: number
+  }[]
+  /** Parent point, node and every response plane lie within one slice of each other. */
+  inPlane: boolean
+  /** At least one daughter leaves the node in the direction opposite to the approach. */
+  reverses: boolean
+}
+
+/**
+ * The levels a division's source points already have, relative to the model node, so a cranial
+ * course or a change of direction can be stated before the learner marks (BBTF-07). Read from the
+ * unchanged export; no anatomical claim is added and nothing is judged.
+ */
+export function divisionCourse(
+  checkpoint: CtCheckpoint,
+  sliceOf: (z: number) => number,
+  labelFor: (index: number) => string,
+): DivisionCourse | null {
+  const decision = checkpoint.decision
+  if (!decision) return null
+  const nodeSlice = sliceOf(decision.junctionLps[2])
+  const parentSlice = decision.parent.slice
+  const near = (a: number, b: number) => Math.abs(a - b) <= 1
+  const approach = near(parentSlice, nodeSlice)
+    ? 'same level'
+    : levelRelation(parentSlice, nodeSlice)
+  const daughters = decision.options.map((option, i) => ({
+    label: labelFor(i),
+    code: option.airway.code,
+    slice: option.slice,
+    offset: option.slice - nodeSlice,
+    fromNode: near(nodeSlice, option.slice)
+      ? ('same level' as const)
+      : levelRelation(nodeSlice, option.slice),
+    slices: Math.abs(option.slice - nodeSlice),
+  }))
+  return {
+    parentCode: decision.parent.airway.code,
+    parentSlice,
+    nodeSlice,
+    parentOffset: parentSlice - nodeSlice,
+    approach,
+    daughters,
+    inPlane: near(parentSlice, nodeSlice) && daughters.every((d) => d.fromNode === 'same level'),
+    reverses:
+      approach !== 'same level' &&
+      daughters.some((d) => d.fromNode !== 'same level' && d.fromNode !== approach),
+  }
+}

@@ -18,8 +18,16 @@ import { StageBlock } from '@/features/learning-module/stage/StageBlock'
 import { BASE_PATH, LESSONS, SOURCE, lessonAfter, lessonById } from '../content/lessons'
 import { type CtLesson } from '../content/ct-types'
 import { traceById, targetForTrace } from '../geometry/native-ct'
-import { orientationFor, orientationName } from '../geometry/orientation'
-import { approachReference } from '../engine/model-reference'
+import {
+  orientationFor,
+  orientationName,
+  STANDARD_ORIENTATION,
+  type CtOrientation,
+} from '../geometry/orientation'
+import { approachReference, routeLevels } from '../engine/model-reference'
+import { count } from '../engine/display-text'
+import type { CtNoduleTarget, CtTrace } from '../content/ct-types'
+import { CourseReference } from './CourseReference'
 import { CtOrientationTeaching, CtOrientationFeedback } from './CtOrientationTeaching'
 import {
   browserStorage,
@@ -31,6 +39,7 @@ import {
 import {
   ctSessionReducer,
   emptyCtSession,
+  atLastStop,
   routeRestartDiscards,
   traceComplete,
   junctionReady,
@@ -120,42 +129,84 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
   useEffect(() => {
     recordLessonOpened(lesson.id)
   }, [lesson.id])
-  const step = lesson.steps[s.step],
-    transfer = s.step === 5
-  const trace = s.step === 0 ? traceById(lesson.example) : transfer ? transferTrace : prediction
-  const viewKey = `${trace.id}.${s.step === 0 ? 'demo' : 'work'}`
+  // Two state domains (PR #273 review, findings 2 and 3). The learner's route lives in `s` and
+  // `views`, the persisted draft. The worked RS8 route is reference viewing: its junction, the
+  // divisions viewed, its CT display and its viewer position live only in the component state
+  // below, so browsing it writes nothing, and reopening it from a later step leaves the learner's
+  // own route exactly as it was.
+  const [reopened, setReopened] = useState(false)
+  const [workedActive, setWorkedActive] = useState(0)
+  const [workedFurthest, setWorkedFurthest] = useState(0)
+  const [workedOrientation, setWorkedOrientation] = useState<CtOrientation>(STANDARD_ORIENTATION)
+  const [workedView, setWorkedView] = useState<CtViewerState | null>(null)
+  const step = lesson.steps[s.step]
+  // Three distinct routes, each named by its own target so the worked example is never mistaken for
+  // the learner's trace or the transfer (BBTF-08). Viewing the worked route records nothing.
+  const exampleTrace = traceById(lesson.example)
+  const exampleTarget = targetForTrace(exampleTrace)
+  const ownTarget = targetForTrace(prediction)
+  const transferTarget = targetForTrace(transferTrace)
+  const worked = reopened || (s.step === 0 && !s.complete)
+  const complete = s.complete && !reopened
+  // The route the learner's draft belongs to at this step; the worked route never is one.
+  const learnerTrace = s.step === 5 ? transferTrace : prediction
+  const learnerTarget = targetForTrace(learnerTrace)
+  const transfer = !worked && s.step === 5
+  const trace = worked ? exampleTrace : learnerTrace
+  const active = worked ? workedActive : s.active
+  const viewKey = `${learnerTrace.id}.work`
   const onViewChange = useCallback(
-    (view: CtViewerState) =>
+    (view: CtViewerState) => {
+      if (worked) {
+        setWorkedView(view)
+        return
+      }
       setViews((current) =>
         JSON.stringify(current[viewKey]) === JSON.stringify(view)
           ? current
           : { ...current, [viewKey]: view },
-      ),
-    [viewKey],
+      )
+    },
+    [viewKey, worked],
   )
   const target = targetForTrace(trace)
-  const response = transfer ? s.transfer : s.prediction
+  const lastWorked = workedActive >= exampleTrace.checkpoints.length - 1
+  const reflecting = !worked && s.step === 4 && !s.complete
+  const role = worked ? 'Worked example' : transfer ? 'Another trace' : 'Your trace'
+  const returnLabel = `Return to ${
+    s.complete
+      ? 'the finished lesson'
+      : `${s.step === 5 ? 'another trace' : 'your trace'}: ${learnerTarget.segment.code}`
+  }`
+  const response = worked ? null : transfer ? s.transfer : s.prediction
   // The comparison steps show the reference whether or not an interpretation was recorded.
-  const revealed = s.step === 0 || s.step === 3 || s.step === 4 || Boolean(response)
-  const marking = !s.complete && (s.step === 1 || (transfer && !response))
+  const revealed = worked || s.step === 3 || s.step === 4 || Boolean(response)
+  const marking = !worked && !s.complete && (s.step === 1 || (transfer && !response))
   const orienting = marking && !s.alignment
-  const routeDone = traceComplete(trace, s)
-  const stationDone = Boolean(s.recorded[s.active])
-  const shown = new Set(shownRefs[trace.id] ?? [])
-  const referenceShown = shown.has(s.active)
+  const routeDone = traceComplete(learnerTrace, s)
+  const stationDone = !worked && Boolean(s.recorded[s.active])
+  const shown = new Set(shownRefs[learnerTrace.id] ?? [])
+  const referenceShown = !worked && shown.has(s.active)
   const taskTop = useRef<HTMLDivElement>(null)
   const teachingTop = useRef<HTMLDivElement>(null)
   useEffect(() => {
     resetPaneScroll(taskTop.current)
     resetPaneScroll(teachingTop.current)
-  }, [s.active, s.step, s.alignment, stationDone])
+  }, [active, s.step, s.alignment, stationDone, worked])
+  function goWorked(index: number) {
+    if (index < 0 || index >= exampleTrace.checkpoints.length) return
+    setWorkedActive(index)
+    setWorkedFurthest((furthest) => Math.max(furthest, index))
+    setLevelRequest((v) => v + 1)
+  }
   const stationTask = marking && !orienting && !routeDone
   const maxActive = marking
     ? orienting
       ? 0
       : reachableThrough(s.recorded, s.reached)
     : trace.checkpoints.length - 1
-  const describing = !s.complete && (s.step === 2 || (transfer && !response && routeDone))
+  const describing =
+    !worked && !s.complete && (s.step === 2 || (transfer && !response && routeDone))
   // Recording needs its real parts; moving on does not.
   const disabled =
     !imageReady ||
@@ -168,10 +219,18 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
           : describing
             ? !routeDone || !s.course || !s.targetRelation || !s.targetViewed[trace.id]
             : false)
+  // The last stop is recorded while an earlier one was skipped: no stop is left to open, so Continue
+  // moves the partial route on instead of doing nothing (PR #273 review, finding 4). The skipped
+  // stops stay unrecorded.
+  const partialEnd = stationTask && stationDone && atLastStop(learnerTrace, s.active)
   const stationAction = stationDone
-    ? s.active + 1 === trace.checkpoints.length - 1
-      ? 'Inspect the distal airway–nodule relationship'
-      : 'Continue to the next division'
+    ? partialEnd
+      ? transfer
+        ? 'Finish with this partial route'
+        : 'Continue with this partial route'
+      : s.active + 1 === trace.checkpoints.length - 1
+        ? 'Inspect the distal airway–nodule relationship'
+        : 'Continue to the next division'
     : trace.checkpoints[s.active].decision
       ? 'Check this junction'
       : 'Record nodule approach'
@@ -191,6 +250,11 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
     if (action.type === 'restart') {
       setViews({})
       setShownRefs({})
+      setReopened(false)
+      setWorkedActive(0)
+      setWorkedFurthest(0)
+      setWorkedOrientation(STANDARD_ORIENTATION)
+      setWorkedView(null)
       setViewerEpoch((v) => v + 1)
       setRestarted(true)
       setRestartAsk(false)
@@ -202,10 +266,10 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
   }
   function toggleReference() {
     setShownRefs((current) => {
-      const list = current[trace.id] ?? []
+      const list = current[learnerTrace.id] ?? []
       return {
         ...current,
-        [trace.id]: list.includes(s.active)
+        [learnerTrace.id]: list.includes(s.active)
           ? list.filter((i) => i !== s.active)
           : [...list, s.active],
       }
@@ -219,7 +283,10 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
         }
       : undefined
   const skipTrace =
-    !s.complete && (s.step === 1 || s.step === 2 || (transfer && !response))
+    !worked &&
+    !partialEnd &&
+    !s.complete &&
+    (s.step === 1 || s.step === 2 || (transfer && !response))
       ? {
           label:
             s.step === 2
@@ -234,16 +301,16 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
   return (
     <CtRouteWorkspace
       section="learn"
-      stageId={s.complete ? 'complete' : step.id}
+      stageId={complete ? 'complete' : worked ? lesson.steps[0].id : step.id}
       label="Branch tracing lesson"
-      explanationOpen={s.step === 0 || s.step === 3 || s.step === 4}
+      explanationOpen={worked || s.step === 3 || s.step === 4}
       header={
         <SectionHeader
           kicker={`Learn · Lesson ${LESSONS.indexOf(lesson) + 1} of ${LESSONS.length}`}
           title={lesson.title}
           sectionsControl={<CourseOutline currentId={lesson.id} />}
           onRestart={() =>
-            routeRestartDiscards(s, trace).length
+            routeRestartDiscards(s, learnerTrace).length
               ? setRestartAsk(true)
               : perform({ type: 'restart' })
           }
@@ -266,8 +333,8 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
       }
       contextStrip={
         <div className={styles.context}>
-          <span>
-            Target: {target.segment.code} · {target.segment.name}
+          <span data-route-role={worked ? 'worked' : transfer ? 'transfer' : 'own'}>
+            {role} · target {target.segment.code} · {target.segment.name}
           </span>
           <span>Orient the CT · compare the parent view</span>
           <span>One source CT · self-paced, not scored</span>
@@ -277,61 +344,127 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
         <div ref={taskTop}>
           <NowCard
             model={{
-              kicker: s.complete ? 'Lesson finished' : `Step ${s.step + 1} of 6 · ${step.phase}`,
-              heading: s.complete
+              kicker: complete
                 ? 'Lesson finished'
-                : orienting
-                  ? 'Orient before tracing'
-                  : stationTask
-                    ? trace.checkpoints[s.active].decision
-                      ? `Junction ${s.active + 1} of ${trace.checkpoints.length - 1}`
-                      : 'Distal nodule approach'
-                    : step.title,
-              body: s.complete
+                : reopened
+                  ? `Worked example (reference): ${exampleTarget.segment.code} · your ${learnerTarget.segment.code} work is kept`
+                  : `Step ${s.step + 1} of 6 · ${role}: ${target.segment.code}`,
+              heading: complete
+                ? 'Lesson finished'
+                : worked
+                  ? `Worked example: the route to ${exampleTarget.segment.code}`
+                  : reflecting
+                    ? 'Optional reflection: relate the two views'
+                    : orienting
+                      ? 'Orient before tracing'
+                      : stationTask
+                        ? trace.checkpoints[s.active].decision
+                          ? `Junction ${s.active + 1} of ${trace.checkpoints.length - 1}`
+                          : 'Distal nodule approach'
+                        : step.title,
+              body: complete
                 ? `${
                     recordedCount === 2
                       ? 'You recorded both routes toward simulated nodules and compared their CT continuity.'
                       : recordedCount === 1
                         ? 'You recorded one of the two routes and compared it with the CT; the other was passed without recording.'
                         : 'You moved through both routes without recording an interpretation.'
-                  } Finishing is a note for finding your place, not a result or clinical competence.`
-                : orienting
-                  ? 'Standard axial is a valid tracing display. Use the patient labels to maintain direction; regional display conventions are optional aids. Record the display you choose.'
-                  : stationTask
-                    ? 'Select the branch you would follow, then mark its lumen on the answer slice. Check this fork to compare it, show the reference first, or continue without recording.'
-                    : step.instruction,
-              primary: s.complete
-                ? {
-                    label: next ? `Next: ${next.title}` : 'Return to overview',
-                    href: next ? `${BASE_PATH}/learn?lesson=${next.id}` : BASE_PATH,
-                  }
-                : {
-                    label: orienting
-                      ? 'Use this orientation'
-                      : stationTask
-                        ? stationAction
-                        : transfer && response
-                          ? 'Finish lesson'
-                          : step.actionLabel,
-                    onActivate: () =>
-                      orienting
-                        ? perform({ type: 'check-orientation' })
+                  } Finishing is a note for finding your place, not a result or clinical competence.${
+                    next ? '' : ' Practice is the suggested next step; every lesson stays open.'
+                  }`
+                : reopened
+                  ? `Viewing the worked route to ${targetLabel(exampleTarget)} again, with the model reference shown: worked junction ${workedActive + 1} of ${exampleTrace.checkpoints.length}. Your ${targetLabel(learnerTarget)} work is kept exactly as you left it, and nothing here is recorded.`
+                  : worked
+                    ? `Study the worked route to the simulated nodule in ${targetLabel(exampleTarget)}, with the model reference shown: worked junction ${workedActive + 1} of ${exampleTrace.checkpoints.length}. Nothing here is recorded. Your own trace goes to a different target, ${targetLabel(ownTarget)}, and starts with a clean view whenever you choose.`
+                    : reflecting
+                      ? 'Nothing here is recorded or checked. Think it through, or note it outside the module: how does this route’s course change what you would see from the parent airway, what on the CT supports an approach to the nodule, and where does continuity stay uncertain? Then compare your reasoning with the reference below.'
+                      : orienting
+                        ? 'Standard axial is a valid tracing display. Use the patient labels to maintain direction; regional display conventions are optional aids. Record the display you choose.'
                         : stationTask
-                          ? stationDone
-                            ? perform({ type: 'active', index: s.active + 1 })
-                            : perform({ type: 'record-junction' })
-                          : perform({ type: 'advance' }),
-                    disabled,
-                    disabledReason: !imageReady
-                      ? 'Wait for the CT image to load.'
-                      : stationTask
-                        ? 'To check this junction, select a daughter branch (or uncertainty) and mark its lumen (or unresolved lumen). You can also continue without recording.'
-                        : 'To record, mark every junction and the distal approach, use Show target to inspect the nodule, then describe the course and distal relationship. You can also continue without recording.',
-                  },
-              secondary: skipJunction ?? skipTrace,
+                          ? 'Select the branch you would follow, then mark its lumen on the answer slice. Check this fork to compare it, show the reference first, or continue without recording.'
+                          : step.instruction,
+              primary: complete
+                ? {
+                    label: next ? `Next: ${next.title}` : 'Continue to Practice',
+                    href: next ? `${BASE_PATH}/learn?lesson=${next.id}` : `${BASE_PATH}/practice`,
+                  }
+                : worked
+                  ? lastWorked
+                    ? reopened
+                      ? { label: returnLabel, onActivate: () => setReopened(false) }
+                      : {
+                          label: `Start your own trace: ${ownTarget.segment.code}`,
+                          onActivate: () => perform({ type: 'advance' }),
+                          disabled: !imageReady,
+                          disabledReason: 'Wait for the CT image to load.',
+                        }
+                    : {
+                        label: `Next worked junction (${exampleTarget.segment.code} route)`,
+                        onActivate: () => goWorked(workedActive + 1),
+                        disabled: !imageReady,
+                        disabledReason: 'Wait for the CT image to load.',
+                      }
+                  : reflecting
+                    ? {
+                        label: `Continue to another trace: ${transferTarget.segment.code}`,
+                        onActivate: () => perform({ type: 'advance' }),
+                        disabled,
+                        disabledReason: 'Wait for the CT image to load.',
+                      }
+                    : {
+                        label: orienting
+                          ? 'Use this orientation'
+                          : stationTask
+                            ? stationAction
+                            : transfer && response
+                              ? 'Finish lesson'
+                              : step.actionLabel,
+                        onActivate: () =>
+                          orienting
+                            ? perform({ type: 'check-orientation' })
+                            : stationTask
+                              ? stationDone
+                                ? partialEnd
+                                  ? perform({ type: 'continue-without-recording' })
+                                  : perform({ type: 'active', index: s.active + 1 })
+                                : perform({ type: 'record-junction' })
+                              : perform({ type: 'advance' }),
+                        disabled,
+                        disabledReason: !imageReady
+                          ? 'Wait for the CT image to load.'
+                          : stationTask
+                            ? 'To check this junction, select a daughter branch (or uncertainty) and mark its lumen (or unresolved lumen). You can also continue without recording.'
+                            : 'To record, mark every junction and the distal approach, use Show target to inspect the nodule, then describe the course and distal relationship. You can also continue without recording.',
+                      },
+              secondary: complete
+                ? next
+                  ? undefined
+                  : { label: 'Return to overview', href: BASE_PATH }
+                : reopened
+                  ? lastWorked
+                    ? undefined
+                    : { label: returnLabel, onActivate: () => setReopened(false) }
+                  : worked && !lastWorked
+                    ? {
+                        label: `Skip to your own trace: ${ownTarget.segment.code}`,
+                        onActivate: () => perform({ type: 'advance' }),
+                        disabled: !imageReady,
+                      }
+                    : (skipJunction ?? skipTrace),
             }}
           />
           <div className={styles.routeResponses}>
+            {(worked || complete) && (
+              <RouteRoles
+                example={exampleTarget}
+                own={ownTarget}
+                transfer={transferTarget}
+                current={worked ? 'worked' : undefined}
+              />
+            )}
+            {reflecting && (
+              <ReflectionReference trace={trace} target={target} recorded={Boolean(response)} />
+            )}
             {orienting && s.orientationAttempts.length > 0 && (
               <div className={styles.feedback} role="status">
                 <strong>Recheck the direction letters</strong>
@@ -410,8 +543,8 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 <strong>Your interpretation is recorded</strong>
                 <CtOrientationFeedback trace={trace} {...response.orientation} />
                 <p>
-                  {response.marks.filter((m) => m.pixel === null).length} checkpoints marked
-                  unresolved.
+                  {count(response.marks.filter((m) => m.pixel === null).length, 'checkpoint')}{' '}
+                  marked unresolved.
                 </p>
                 <CtCourseFeedback value={response.course} trace={trace} />
                 <CtTargetFeedback
@@ -424,7 +557,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 </p>
               </div>
             )}
-            {!response && (s.step === 3 || s.step === 4) && (
+            {!worked && !response && (s.step === 3 || s.step === 4) && (
               <div className={styles.feedback} role="status">
                 <strong>No interpretation recorded for this trace</strong>
                 <p>
@@ -433,7 +566,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 </p>
               </div>
             )}
-            {s.complete && (
+            {complete && (
               <p role="status">
                 {reviewed
                   ? 'Marked reviewed on this device — a note for finding your place, not a result.'
@@ -457,8 +590,21 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 )}
               </div>
             )}
+            {!worked && (
+              <p className={styles.small} data-reopen-worked>
+                <button
+                  onClick={() => {
+                    setReopened(true)
+                    setLevelRequest((v) => v + 1)
+                  }}
+                >
+                  View the worked {exampleTarget.segment.code} route (reference)
+                </button>{' '}
+                Viewing it changes nothing in your own work.
+              </p>
+            )}
           </div>
-          {s.step > 0 && !s.complete && (
+          {!worked && s.step > 0 && !s.complete && (
             <CtTraceList
               trace={trace}
               marks={s.marks}
@@ -469,7 +615,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
             />
           )}
 
-          <details>
+          <details hidden={reopened}>
             <summary>Review earlier route tasks</summary>
             <StepList
               lesson={{
@@ -497,23 +643,39 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
         </div>
       }
       map={
-        <CtProgressiveMap
-          trace={trace}
-          recorded={s.recorded}
-          branches={s.branches}
-          active={s.active}
-          onReview={(index) => perform({ type: 'active', index })}
-        />
+        worked ? (
+          <CtProgressiveMap
+            trace={trace}
+            worked
+            recorded={trace.checkpoints.map((_, i) => i <= workedFurthest)}
+            branches={trace.checkpoints.map(() => null)}
+            active={workedActive}
+            onReview={goWorked}
+          />
+        ) : (
+          <CtProgressiveMap
+            trace={trace}
+            recorded={s.recorded}
+            branches={s.branches}
+            active={s.active}
+            onReview={(index) => perform({ type: 'active', index })}
+          />
+        )
       }
       teaching={
         <div ref={teachingTop} className={styles.teaching}>
-          {!orienting && s.step !== 0 && <CtJunctionTeaching trace={trace} active={s.active} />}
-          {s.step === 0 ? (
+          {!orienting && !worked && <CtJunctionTeaching trace={trace} active={s.active} />}
+          {worked ? (
             <>
               <details>
                 <summary>Review display conventions</summary>
                 <CtOrientationTeaching trace={trace} />
               </details>
+              <CourseReference
+                parts={['naming', 'patterns', 'terms']}
+                target={exampleTarget}
+                summary="Course reference: naming, the four patterns and key terms (optional)"
+              />
               <StageBlock kind="question" heading="Clinical purpose" visibility="shown">
                 <h2>Clinical purpose</h2>
                 <p>{lesson.objective}</p>
@@ -539,14 +701,16 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                 <h2>Worked CT example</h2>
                 <p>{lesson.worked}</p>
                 <p>
-                  Use <strong>Show target</strong> to inspect the nodule, then Start at the trachea.
-                  Use <strong>Continue to the next division</strong> beneath the paired views to
-                  inspect each worked junction. Every route includes all modeled branch decisions
+                  This worked route goes to {targetLabel(exampleTarget)}. Use{' '}
+                  <strong>Show target</strong> to inspect the nodule, then{' '}
+                  <strong>Next worked junction</strong> in the task card to step through each worked
+                  junction from the trachea. Every route includes all modeled branch decisions
                   before the distal approach.
                 </p>
                 <p className={styles.small}>
                   The gold crosses identify the source-derived trace in this worked example. Your
-                  next trace begins without them; Show reference brings them back at any junction.
+                  own trace, to {targetLabel(ownTarget)}, begins without them; Show reference brings
+                  them back at any junction. Viewing this worked route places no marks of yours.
                 </p>
               </StageBlock>
             </>
@@ -611,44 +775,54 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
               )}
             </>
           )}
-          {s.step === 0 && <CtJunctionTeaching trace={trace} active={s.active} />}
+          {worked && <CtJunctionTeaching trace={trace} active={active} />}
           {revealed && (
             <CtBranchDecision
               trace={trace}
-              active={s.active}
-              choice={s.step === 0 ? null : s.branches[s.active]}
-              recorded={s.step !== 0}
+              active={active}
+              choice={worked ? null : s.branches[s.active]}
+              recorded={!worked}
+              worked={worked}
               reveal
             />
           )}
-          <CtAirwayGuide trace={trace} active={s.active} pending={!revealed} />
+          <CtAirwayGuide trace={trace} active={active} pending={!revealed} />
         </div>
       }
       simulator={
         <div className={styles.viewStack}>
           <NativeCtViewer
-            key={`${trace.id}-${s.step === 0 ? 'example' : transfer ? 'transfer' : 'prediction'}.${viewerEpoch}`}
+            key={`${trace.id}-${worked ? 'example' : transfer ? 'transfer' : 'prediction'}.${viewerEpoch}`}
             trace={trace}
-            initialView={views[viewKey] ?? freshRouteView(trace)}
+            initialView={
+              worked
+                ? // An older draft's worked-route view is read, never written.
+                  (workedView ?? views[`${exampleTrace.id}.demo`] ?? freshRouteView(trace))
+                : (views[viewKey] ?? freshRouteView(trace))
+            }
             onViewChange={onViewChange}
             onReadyChange={setImageReady}
-            onTargetReady={() => perform({ type: 'target-inspected' })}
+            onTargetReady={worked ? undefined : () => perform({ type: 'target-inspected' })}
             scopeAvailable={revealed || stationDone || referenceShown}
-            marks={s.step === 0 ? trace.checkpoints.map(() => null) : s.marks}
-            active={s.active}
+            marks={worked ? trace.checkpoints.map(() => null) : s.marks}
+            active={active}
             levelRequest={levelRequest}
             maxActive={maxActive}
-            referenceThrough={marking || s.step === 2 ? referenceIndex(s.recorded, shown) : -1}
-            onActive={(index) => perform({ type: 'active', index })}
+            referenceThrough={
+              marking || (!worked && s.step === 2) ? referenceIndex(s.recorded, shown) : -1
+            }
+            onActive={worked ? goWorked : (index) => perform({ type: 'active', index })}
             onMark={
               marking && !orienting && !stationDone
                 ? (mark) => perform({ type: 'mark', index: s.active, mark })
                 : undefined
             }
-            orientation={s.orientation}
-            onOrientation={(value) => perform({ type: 'orientation', value })}
+            orientation={worked ? workedOrientation : s.orientation}
+            onOrientation={
+              worked ? setWorkedOrientation : (value) => perform({ type: 'orientation', value })
+            }
             orientationPending={orienting}
-            demonstrate={s.step === 0}
+            demonstrate={worked}
             revealed={revealed}
             showAnchor
           />
@@ -658,11 +832,17 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
         <>
           <HelpDialog open={help} onClose={() => setHelp(false)} returnFocusTo={helpRef}>
             <p>
-              {orienting
-                ? 'Use the rotate or flip controls, then use this orientation.'
-                : stationTask
-                  ? 'Select the branch you would follow. Browse neighboring CT slices, then use Go to response slice to mark its lumen or record uncertainty. Show reference for this junction displays the model continuation without recording anything.'
-                  : step.instruction}
+              {reopened
+                ? `You are viewing the worked route to ${targetLabel(exampleTarget)} again. Next worked junction and the junction buttons step through it; nothing is recorded, and your own ${targetLabel(learnerTarget)} work is unchanged. ${returnLabel} takes you back to it.`
+                : worked
+                  ? `This is the worked route to ${targetLabel(exampleTarget)}. Next worked junction steps through it with the model reference shown; nothing is recorded. Skip to your own trace opens your route to ${targetLabel(ownTarget)} with a clean view.`
+                  : reflecting
+                    ? 'This reflection is optional and nothing is recorded. Compare your reasoning with the reference below, then continue to another trace.'
+                    : orienting
+                      ? 'Use the rotate or flip controls, then use this orientation.'
+                      : stationTask
+                        ? 'Select the branch you would follow. Browse neighboring CT slices, then use Go to response slice to mark its lumen or record uncertainty. Show reference for this junction displays the model continuation without recording anything.'
+                        : step.instruction}
             </p>
             <p>
               Slice controls browse the CT; Continue to the next division changes the active fork.
@@ -677,7 +857,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
           >
             <p>Restarting would discard:</p>
             <ul>
-              {routeRestartDiscards(s, trace).map((item) => (
+              {routeRestartDiscards(s, learnerTrace).map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -707,9 +887,99 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
             {SOURCE.title}
           </a>
           <span>{lesson.sourcePages}</span>
-          <span>Native CT · Slicer 5.12.3 · clinical review pending</span>
+          <span>One teaching CT · model reference not yet faculty reviewed</span>
+          <details className={styles.footerDetails}>
+            <summary>Source details</summary>
+            <span>
+              Native axial CT exported with 3D Slicer 5.12.3 from the same source volume as the
+              airway model; clinical review pending.
+            </span>
+          </details>
         </div>
       }
     />
+  )
+}
+
+const targetLabel = (target: CtNoduleTarget) =>
+  `${target.segment.code} (${target.segment.name.toLowerCase()})`
+
+/** The three routes of a route lesson, each named by its target, so none is taken for another. */
+function RouteRoles({
+  example,
+  own,
+  transfer,
+  current,
+}: {
+  example: CtNoduleTarget
+  own: CtNoduleTarget
+  transfer: CtNoduleTarget
+  current?: 'worked'
+}) {
+  return (
+    <section className={styles.routeRoles} aria-label="Routes in this lesson" data-route-roles>
+      <h3>Routes in this lesson</h3>
+      <ol>
+        <li data-route-role="worked" aria-current={current === 'worked' ? 'step' : undefined}>
+          <strong>Worked example</strong> · {example.segment.code} · {example.segment.name}. The
+          model reference is shown; nothing is recorded.
+        </li>
+        <li data-route-role="own">
+          <strong>Your trace</strong> · {own.segment.code} · {own.segment.name}. A clean view; Show
+          reference is available at every junction.
+        </li>
+        <li data-route-role="transfer">
+          <strong>Another trace</strong> · {transfer.segment.code} · {transfer.segment.name}.
+          Applies the same steps to a new target in this CT.
+        </li>
+      </ol>
+    </section>
+  )
+}
+
+/**
+ * The reference an optional reflection can be held against: what the source records for this
+ * route's levels and target placement. The learner's reflection itself is never asked for, kept or
+ * judged.
+ */
+function ReflectionReference({
+  trace,
+  target,
+  recorded,
+}: {
+  trace: CtTrace
+  target: CtNoduleTarget
+  recorded: boolean
+}) {
+  const route = routeLevels(trace)
+  const reference = approachReference(trace, target)
+  return (
+    <div className={styles.feedback} data-reflection-reference>
+      <strong>Compare with the reference</strong>
+      <p>
+        <strong>Source levels:</strong> this route’s supplied points run{' '}
+        {route.levels.map((l) => `${l.code} ${l.slice}`).join(' → ')}; overall {route.net}, with{' '}
+        {route.reversals === 0
+          ? 'no change of cranial–caudal direction'
+          : `${count(route.reversals, 'change')} of cranial–caudal direction`}
+        .
+      </p>
+      <p>
+        <strong>Target placement:</strong> the source places this simulated nodule in{' '}
+        {reference.segmentCode} ({reference.segmentName.toLowerCase()}) at the end of{' '}
+        {reference.approachCode}
+        {reference.matchesRoute
+          ? `, which is this route's distal checkpoint (${reference.distalCode}).`
+          : `; this route's distal checkpoint is ${reference.distalCode}.`}
+      </p>
+      <p className={styles.small}>
+        These are the source’s point levels and target placement, not a reviewed course description
+        and not a finding that the lumen reaches the nodule.{' '}
+        {recorded
+          ? 'Your recorded interpretation is shown below.'
+          : 'You did not record an interpretation for this route, so only the reference is shown.'}{' '}
+        Use the paired parent airway view beside the CT to see how the course looks from the parent.
+      </p>
+    </div>
   )
 }

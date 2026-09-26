@@ -367,7 +367,8 @@ describe('Overview', () => {
     expect(
       screen.getByRole('link', { name: 'Continue: Relate CT to the parent airway view' }),
     ).toHaveAttribute('href', `${BASE_PATH}/learn?lesson=orientation`)
-    expect(screen.getByRole('heading', { name: 'Saved for review' })).toBeVisible()
+    // BBT-PRE-REVIEW-04 (BBTF-51): the bookmark reads "Saved for later"; storage is unchanged.
+    expect(screen.getByRole('heading', { name: 'Saved for later' })).toBeVisible()
     expect(screen.getByText('Reviewed')).toBeVisible()
     expect(localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)).toBe(bytes)
   })

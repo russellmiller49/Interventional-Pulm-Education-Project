@@ -21,6 +21,7 @@ import {
   routeLevels,
   type ApproachReference,
 } from '../engine/model-reference'
+import { count, displayName, displayOptionLabel } from '../engine/display-text'
 import styles from './branch-tracing.module.css'
 
 export function CtTraceList({
@@ -43,8 +44,8 @@ export function CtTraceList({
       <h3>Route checkpoints</h3>
       <p className={styles.small}>
         {trace.checkpoints.filter((p) => p.decision).length} branch decisions, then the distal
-        nodule approach. {recorded.filter(Boolean).length} of {trace.checkpoints.length} stops
-        recorded.
+        nodule approach. {recorded.filter(Boolean).length} of{' '}
+        {count(trace.checkpoints.length, 'stop')} recorded.
       </p>
       <details>
         <summary>Review the route in order</summary>
@@ -58,7 +59,7 @@ export function CtTraceList({
                 aria-label={
                   i > maxActive
                     ? `Stop ${i + 1}: locked`
-                    : `Stop ${i + 1}: ${point.decision?.parent.airway.name ?? 'Distal nodule approach'}`
+                    : `Stop ${i + 1}: ${point.decision ? displayName(point.decision.parent.airway.name) : 'Distal nodule approach'}`
                 }
               >
                 <span aria-hidden="true">{recorded[i] ? '✓' : i + 1}</span>
@@ -97,6 +98,7 @@ export function CtBranchDecision({
   onChange,
   recorded = false,
   reveal = false,
+  worked = false,
 }: {
   trace: CtTrace
   active: number
@@ -104,6 +106,8 @@ export function CtBranchDecision({
   onChange?: (value: CtBranchChoice) => void
   recorded?: boolean
   reveal?: boolean
+  /** A worked example's junction: no question is posed and nothing is attributed to the learner. */
+  worked?: boolean
 }) {
   const point = trace.checkpoints[active],
     decision = point.decision
@@ -120,13 +124,14 @@ export function CtBranchDecision({
   const recordedChoice =
     choice === null
       ? 'No branch choice was recorded at this junction.'
-      : `Your recorded choice: ${chosen?.label ?? 'Daughter branch unresolved'}.`
+      : `Your recorded choice: ${chosen ? displayOptionLabel(chosen.label) : 'Daughter branch unresolved'}.`
   return (
     <div className={styles.branchDecision}>
       <p>
-        <strong>Parent: {decision.parent.airway.code}</strong> · {decision.parent.airway.name}
+        <strong>Parent: {decision.parent.airway.code}</strong> ·{' '}
+        {displayName(decision.parent.airway.name)}
       </p>
-      {!recorded && (
+      {!recorded && !worked && (
         <fieldset disabled={!onChange}>
           <legend>Which daughter continues toward the target?</legend>
           {decision.options.map((option) => (
@@ -139,7 +144,7 @@ export function CtBranchDecision({
                 onChange={() => onChange?.(option.sourceEdgeId)}
               />
               <span>
-                <strong>{option.label}</strong>
+                <strong>{displayOptionLabel(option.label)}</strong>
                 <small>{option.direction} in patient coordinates</small>
               </span>
             </label>
@@ -163,7 +168,8 @@ export function CtBranchDecision({
           <p>Model reference — not yet faculty reviewed.</p>
           {recorded && <p>{recordedChoice}</p>}
           <p>
-            The model reference route continues through <strong>{reference.label}</strong>.{' '}
+            The model reference route continues through{' '}
+            <strong>{displayOptionLabel(reference.label)}</strong>.{' '}
             {decision.options.filter((o) => o.airway.code === reference.airway.code).length > 1
               ? 'These daughters share a bronchial name. Follow their separate lumens; sharing a segment name does not make them the same branch.'
               : `The other ${decision.options.length === 2 ? 'daughter leaves' : 'daughters leave'} this route at the same junction. Compare the parent and each opening on the CT and the paired airway view.`}
@@ -196,7 +202,7 @@ export function CtJunctionTeaching({ trace, active }: { trace: CtTrace; active: 
       )}
       <div className={styles.junctionParent}>
         {decision.parent.airway.code}
-        <small>{decision.parent.airway.name}</small>
+        <small>{displayName(decision.parent.airway.name)}</small>
       </div>
       <div className={styles.junctionDaughters}>
         {decision.options.map((option) => (
@@ -238,7 +244,7 @@ export function CtAirwayGuide({
         {airways.map((airway, i) => (
           <span key={`${i}-${airway.code}`}>
             {i > 0 && <span aria-hidden="true"> → </span>}
-            <abbr title={airway.name}>{airway.code}</abbr>
+            <abbr title={displayName(airway.name)}>{airway.code}</abbr>
           </span>
         ))}
       </p>
