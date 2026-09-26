@@ -309,6 +309,13 @@ test('short route: declared approach reversal, all connected divisions, map grow
   await page.goto(`${base}/learn?lesson=${lesson.id}`)
   await ctReady(page)
   await button(page, 'Replay from parent').click()
+  // Harness fix (PR #273 final repair): Replay moves the CT from the anchor (slice 325) to the
+  // first demonstration plane (332). The ready flag and the approach caption were already true
+  // before the click, so Start could be pressed during that plane's reload, while it is disabled,
+  // and the click was dropped under load. Wait for the replayed plane before continuing.
+  await expect(page.getByLabel('CT slice', { exact: true })).toHaveValue(
+    String(localExercise(lesson.exercises![0]).frames[0].slice),
+  )
   await ctReady(page)
   // BBT-PRE-REVIEW-02 moved the live caption to the transport beside the CT; the
   // full transcript stays in the instructions pane.
