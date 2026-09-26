@@ -197,7 +197,9 @@
   .flow [data-pump-cutaway] {
     overflow-x: auto;
   }
-  .flow [data-pump-cutaway] svg {
+  /* The drawing keeps a readable size and scrolls in its own labelled region; the legend's
+     swatches are not drawings and keep theirs. */
+  .flow [data-pump-cutaway] > svg {
     min-width: 500px;
   }
 }
