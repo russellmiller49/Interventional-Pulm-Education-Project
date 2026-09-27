@@ -385,3 +385,11 @@
     gap: 0.25rem;
   }
 }
+
+@media (max-width: 600px) {
+  /* Enlarged section names need the whole row, including the ninth entry. */
+  .flow [data-sections-drawer] li button {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.15rem;
+  }
+}

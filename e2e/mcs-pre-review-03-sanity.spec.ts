@@ -121,3 +121,31 @@ for (const theme of ['light', 'dark'] as const) {
     expect(contrast.letter).toBeGreaterThanOrEqual(4.5)
   })
 }
+
+test('ninth drawer entry and monitor readout words fit at 320px / 200% text', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 740 })
+  await page.addStyleTag({ content: 'html { font-size: 200% !important; }' })
+  const drawer = page.locator('[data-sections-drawer]')
+  await drawer.locator(':scope > summary').press('Enter')
+  const ninth = drawer.locator('li button').last()
+  await ninth.focus()
+  const textFits = await ninth.evaluate((node) => {
+    const frame = node.getBoundingClientRect()
+    return [...node.querySelectorAll('strong, small')].every((text) => {
+      const range = document.createRange()
+      range.selectNodeContents(text)
+      return [...range.getClientRects()].every(
+        (rect) => rect.left >= frame.left && rect.right <= frame.right,
+      )
+    })
+  })
+  expect(textFits).toBe(true)
+  await page.keyboard.press('Escape')
+  const qualifier = page.locator('[data-wave-strip="ecgMv"] [data-readout-window]')
+  const lines = await qualifier.evaluate((node) => {
+    const range = document.createRange()
+    range.selectNodeContents(node)
+    return [...range.getClientRects()].length
+  })
+  expect(lines).toBe(1)
+})

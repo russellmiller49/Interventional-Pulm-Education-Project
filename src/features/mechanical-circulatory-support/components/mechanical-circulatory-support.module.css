@@ -5100,3 +5100,18 @@
     font-size: 15px;
   }
 }
+
+@media (max-width: 600px) {
+  /* Fixed pixel readout columns split enlarged units and qualifiers into letter fragments. */
+  .waveStrip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .waveStrip > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.75rem;
+    align-items: baseline;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+}
