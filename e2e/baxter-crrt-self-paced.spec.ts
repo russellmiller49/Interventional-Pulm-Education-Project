@@ -524,3 +524,59 @@ test('the debrief says where the simulated time came from and what stayed static
   await assertUngraded(page)
   expect(errors).toEqual([])
 })
+
+test('CRRT-12 names its missing clinical data and records the review as a request', async ({
+  page,
+}, info) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  const unsupported = /become available|trends change|linked monitoring domains change/i
+
+  await page.goto('/en/baxter-crrt/practice?case=CRRT-12')
+
+  // The information boundary is in the task, before any action.
+  const scope = page.getByRole('region', { name: 'What this case can show you', exact: true })
+  await expect(scope).toContainText('35.8 °C')
+  await expect(scope).toContainText('Supplied case-start observation, one value')
+  await expect(scope).toContainText('Serial temperature')
+  await expect(scope).toContainText('Medication delivery or drug exposure over time')
+  await expect(scope).toContainText('An earlier treatment interruption')
+
+  await page.getByRole('button', { name: 'Explain this case', exact: true }).click()
+  await expect(page.getByRole('region', { name: 'Worked example', exact: true })).not.toContainText(
+    unsupported,
+  )
+
+  const review =
+    'Review the available evidence, name the missing data, and request a multidisciplinary reassessment'
+  for (const label of ['Complete the initial clinical assessment', review]) {
+    await page
+      .getByRole('article')
+      .filter({ has: page.getByText(label, { exact: true }) })
+      .getByRole('button')
+      .first()
+      .click()
+  }
+  const card = page.getByRole('article').filter({ has: page.getByText(review, { exact: true }) })
+  await expect(card).toContainText('requesting the data does not supply it')
+
+  await page.getByRole('button', { name: '+1 hr', exact: true }).click()
+  await page.getByRole('button', { name: '+1 hr', exact: true }).click()
+  const patient = page
+    .getByRole('heading', { name: 'Patient and delivered-therapy state' })
+    .locator('..')
+  await expect(patient).toContainText('Delivered dose')
+  await expect(patient).not.toContainText(/temperature|potassium|medication|nutrition/i)
+
+  await page.getByRole('tab', { name: 'Debrief', exact: true }).click()
+  await page.getByRole('button', { name: 'End run and review debrief', exact: true }).click()
+  const actual = page.getByRole('heading', { name: 'What you did in this run' }).locator('..')
+  await expect(actual).toContainText(review)
+  await expect(page.getByText(/This run cannot attribute an electrolyte/)).toBeVisible()
+  await expect(page.locator('#main-content')).not.toContainText(unsupported)
+
+  await noOverflow(page)
+  await page.screenshot({ path: info.outputPath('crrt12-information-gap.png'), fullPage: true })
+  await assertUngraded(page)
+  expect(errors).toEqual([])
+})
