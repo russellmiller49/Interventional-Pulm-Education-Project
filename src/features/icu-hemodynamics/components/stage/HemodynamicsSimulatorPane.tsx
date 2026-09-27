@@ -17,7 +17,12 @@ import { WaveformRecognitionDrill } from '../WaveformRecognitionDrill'
 import type { RecognitionRecord } from '../WaveformRecognitionDrill'
 import { AtrialComponentDemonstration } from './AtrialComponentActivity'
 import { LevelingVisual, FastFlushTrace } from '../PressureSystemTeachingVisual'
-import { dynamicResponseDefinitions } from '../../content/pressureSystemVisuals'
+import {
+  dynamicResponseDefinitions,
+  formatSignedPressure,
+  hydrostaticPressureOffsetMmHg,
+} from '../../content/pressureSystemVisuals'
+import { unroundedModelEstimates } from '../../engine/simulation'
 import {
   FlushDock,
   FreezeDock,
@@ -121,8 +126,8 @@ export function HemodynamicsSimulatorPane({
           <>
             <LineDock {...props} only="zero" />
             <p className={styles.dockNote}>
-              PAC mean {state.measurements.meanPapMmHg.toFixed(1)} mmHg · transducer{' '}
-              {state.measurementSystem.transducerLevelCm} cm · zero{' '}
+              PAC mean estimate {unroundedModelEstimates(state).meanPapMmHg.toFixed(1)} mmHg ·
+              transducer {state.measurementSystem.transducerLevelCm} cm · zero{' '}
               {state.measurementSystem.zeroed ? 'set' : 'unset'}.
             </p>
           </>
@@ -132,9 +137,9 @@ export function HemodynamicsSimulatorPane({
           <>
             <LineDock {...props} only="scale" />
             <p className={styles.dockNote}>
-              Systemic arterial MAP {state.measurements.mapMmHg.toFixed(1)} mmHg · ART display axis
-              0–{state.pressureScaleMmHg} mmHg. Changing the axis leaves the measured pressure
-              unchanged.
+              Systemic arterial MAP estimate {unroundedModelEstimates(state).mapMmHg.toFixed(1)}{' '}
+              mmHg · ART display axis 0–{state.pressureScaleMmHg} mmHg. Changing the axis leaves the
+              measured pressure unchanged.
             </p>
           </>
         )
@@ -326,7 +331,11 @@ export function HemodynamicsSimulatorPane({
         {lineDemo && baseline ? (
           <section className={flowStyles.comparison} aria-label="Retained demonstration comparison">
             <h3>Reference and current result</h3>
-            <p>Same simulated patient; only this demonstration’s measurement setting changes.</p>
+            <p>
+              Same simulated patient; only this demonstration’s measurement setting changes. Model
+              estimates, each rounded to 0.1 mmHg on its own, so a hand subtraction of the rounded
+              figures can differ from the printed result by 0.1.
+            </p>
             <table>
               <thead>
                 <tr>
@@ -346,23 +355,45 @@ export function HemodynamicsSimulatorPane({
                   <td>{baseline.measurementSystem.zeroed ? 'Set' : 'Unset'}</td>
                   <td>{state.measurementSystem.zeroed ? 'Set' : 'Unset'}</td>
                 </tr>
+                {/*
+                  HD-PRE-REVIEW-02 (report L2-02). These rows printed the model's integer estimate
+                  with a ".0", so a 7.355 mmHg offset read as 16.0 → 9.0. They are now the
+                  unrounded estimates at one decimal, with the offset itself on its own row.
+                */}
                 <tr>
-                  <th>{surface === 'scale-demo' ? 'Arterial MAP' : 'PAC mean estimate'}</th>
-                  <td>
+                  <th>
+                    {surface === 'scale-demo' ? 'Arterial MAP estimate' : 'PAC mean estimate'}
+                  </th>
+                  <td data-demo-before>
                     {(surface === 'scale-demo'
-                      ? baseline.measurements.mapMmHg
-                      : baseline.measurements.meanPapMmHg
+                      ? unroundedModelEstimates(baseline).mapMmHg
+                      : unroundedModelEstimates(baseline).meanPapMmHg
                     ).toFixed(1)}{' '}
                     mmHg
                   </td>
-                  <td>
+                  <td data-demo-current>
                     {(surface === 'scale-demo'
-                      ? state.measurements.mapMmHg
-                      : state.measurements.meanPapMmHg
+                      ? unroundedModelEstimates(state).mapMmHg
+                      : unroundedModelEstimates(state).meanPapMmHg
                     ).toFixed(1)}{' '}
                     mmHg
                   </td>
                 </tr>
+                {surface === 'level-demo' ? (
+                  <tr>
+                    <th>Hydrostatic contribution of the transducer height</th>
+                    <td>
+                      {formatSignedPressure(
+                        hydrostaticPressureOffsetMmHg(baseline.measurementSystem.transducerLevelCm),
+                      )}
+                    </td>
+                    <td data-demo-offset>
+                      {formatSignedPressure(
+                        hydrostaticPressureOffsetMmHg(state.measurementSystem.transducerLevelCm),
+                      )}
+                    </td>
+                  </tr>
+                ) : null}
                 {surface === 'scale-demo' ? (
                   <tr>
                     <th>ART display axis</th>

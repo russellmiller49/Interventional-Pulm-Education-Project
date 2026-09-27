@@ -3,6 +3,7 @@ import {
   type ClinicalLearningItem,
 } from '@/features/learning-module/activity'
 
+import { unroundedModelEstimates } from '../engine/simulation'
 import { freshTeachingState, reduceAll } from '../engine/stageRuntime'
 import type { HemodynamicAction, HemodynamicSimulationState } from '../engine/types'
 import { hemodynamicsLearnerCopyErrors } from './controlPanel'
@@ -240,18 +241,29 @@ export interface StoryRun {
   readonly after: Readonly<Record<StoryReading, StoryReadingValue>>
 }
 
+/**
+ * One reading of the story's state.
+ *
+ * Pressures are the model's own estimates before rounding (HD-PRE-REVIEW-02, report L2-14). The
+ * story is "a pure offset moves every number by the same amount", and it was read off values each
+ * rounded on its own: a 5.9 mmHg move showed as +5 on systolic and +6 on diastolic, and the pulse
+ * pressure "fell" from 9 to 8 under the sentence saying it had not. Before and after are the same
+ * quantity from the same model state on either side of the move, so the offset is exact here and
+ * the table rounds only for display.
+ */
 export function storyReading(
   reading: StoryReading,
   state: HemodynamicSimulationState,
 ): StoryReadingValue {
+  const estimates = unroundedModelEstimates(state)
   switch (reading) {
     case 'papSystolic':
-      return state.measurements.papSystolicMmHg
+      return estimates.papSystolicMmHg
     case 'papDiastolic':
     case 'papDiastolicFloor':
-      return state.measurements.papDiastolicMmHg
+      return estimates.papDiastolicMmHg
     case 'pulsePressure':
-      return state.measurements.papSystolicMmHg - state.measurements.papDiastolicMmHg
+      return estimates.papSystolicMmHg - estimates.papDiastolicMmHg
     case 'flushFinding':
       return state.measurementSystem.lastFastFlushFinding ?? 'No flush run yet'
     case 'storedWedge':

@@ -10,11 +10,15 @@ import {
 } from '../content'
 import {
   calculateDerivedHemodynamics,
-  thermodilutionAcceptedAverage,
   type HemodynamicAction,
   type HemodynamicSimulationState,
   type InterpretationValue,
 } from '../engine'
+import {
+  physiologicalEpisodeWords,
+  storedWedgeProvenance,
+  thermodilutionSeriesView,
+} from '../engine/measurementProvenance'
 import styles from './icu-hemodynamics.module.css'
 
 interface FormulaDrawerProps {
@@ -63,12 +67,29 @@ function DerivedValue({
 
 export function FormulaDrawer({ state, dispatch, observedInputsOnly = false }: FormulaDrawerProps) {
   const derivedReviewComplete = state.signalValidationChecks.includes('derived-reviewed')
+  /*
+   * HD-PRE-REVIEW-02 (report L7-06, section E). A derived value is only as current as the oldest
+   * thing it is made of. Flow comes from the series acquired under the conditions the patient is in
+   * now, and the wedge only when it was stored under those same conditions — a post-intervention
+   * pressure is never divided by a pre-intervention output because both happen to exist.
+   */
+  const seriesView = thermodilutionSeriesView(state)
+  const storedWedge = storedWedgeProvenance(state)
+  const wedgeIsCurrent = storedWedge !== null && storedWedge.current !== false
+  const staleInputs = [
+    seriesView.currentEstablished || !seriesView.latestEarlierEstablished
+      ? null
+      : `the only accepted thermodilution series was acquired ${physiologicalEpisodeWords(seriesView.latestEarlierEstablished.identity.episode)}`,
+    storedWedge !== null && storedWedge.current === false
+      ? `the stored wedge was read ${physiologicalEpisodeWords(storedWedge.episode)}`
+      : null,
+  ].filter((item): item is string => item !== null)
   const derived = calculateDerivedHemodynamics({
     measurements: observedInputsOnly
       ? {
           ...state.measurements,
-          cardiacOutputLMin: thermodilutionAcceptedAverage(state.thermodilutionTrials) ?? undefined,
-          pawpMmHg: state.catheter.storedWedgeMmHg,
+          cardiacOutputLMin: seriesView.current.averageLMin ?? undefined,
+          pawpMmHg: wedgeIsCurrent ? state.catheter.storedWedgeMmHg : null,
         }
       : state.measurements,
     bodySurfaceAreaM2: state.parameters.bodySurfaceAreaM2,
@@ -94,12 +115,18 @@ export function FormulaDrawer({ state, dispatch, observedInputsOnly = false }: F
       <div className={styles.formulaIntro}>
         <p>
           {observedInputsOnly
-            ? 'Flow-dependent results use the accepted thermodilution series; wedge-dependent results require a captured value. '
-            : ''}
-          Every value is calculated from the current simulated measurements. Stale, unzeroed,
-          artifact-contaminated, or physiologically invalid inputs remain explicitly
-          uninterpretable.
+            ? 'Flow-dependent results use the accepted thermodilution series for the current conditions; wedge-dependent results require a value stored under those conditions. The other pressures are the simulation’s current estimates. '
+            : 'Every value is calculated from the simulation’s current estimates. '}
+          Stale, unzeroed, artifact-contaminated, or physiologically invalid inputs remain
+          explicitly uninterpretable.
         </p>
+        {observedInputsOnly && staleInputs.length > 0 ? (
+          <p data-derived-stale-inputs>
+            Not used, because the patient’s modeled physiology has changed since:{' '}
+            {staleInputs.join('; ')}. A value from before the change does not describe the patient
+            now.
+          </p>
+        ) : null}
         <span>Current BSA: {state.parameters.bodySurfaceAreaM2.toFixed(2)} m²</span>
       </div>
       <div className={styles.formulaGrid}>

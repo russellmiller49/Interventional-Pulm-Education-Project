@@ -9,10 +9,13 @@ import {
   thermodilutionCurveTextEquivalent,
   thermodilutionExclusionReasonsFor,
   thermodilutionQualityLabels,
+  thermodilutionSeriesConditionWords,
   thermodilutionSeriesSummary,
-  THERMODILUTION_SERIES_TRIAL_COUNT,
+  thermodilutionTrialInclusion,
+  type ThermodilutionSeriesSummary,
   type ThermodilutionTrial,
 } from '../engine'
+import type { ThermodilutionSeriesView } from '../engine/measurementProvenance'
 import styles from './icu-hemodynamics.module.css'
 
 const SERIES_COUNT_QUALIFIER = requireParameter('minimum-accepted-trials').learnerFacingQualifier
@@ -161,15 +164,36 @@ export function ThermodilutionTrialCard({
         : trial.reviewed
           ? 'Reviewed; no decision yet'
           : cardiacOutputResultLabels.unreviewedTrial
+  // Three facts, shown as three (report L7-03): what you chose, what the automatic check found, and
+  // whether the curve is in the calculation. The badge used to be the first of these alone.
+  const inclusion = thermodilutionTrialInclusion(trial)
+  const acceptedButLeftOut = inclusion.learnerDecision === 'accepted' && !inclusion.included
 
   return (
-    <article className={styles.thermoTrialCard} aria-labelledby={headingId}>
+    <article
+      className={styles.thermoTrialCard}
+      aria-labelledby={headingId}
+      data-trial-inclusion={inclusion.code}
+    >
       <header>
         <h4 id={headingId}>Trial {trial.sequence}</h4>
         <p data-trial-state={trial.accepted === null ? 'undecided' : String(trial.accepted)}>
+          <span className={styles.srOnly}>Your decision: </span>
           {state}
         </p>
+        <p data-trial-in-calculation={inclusion.included ? 'yes' : 'no'}>
+          {inclusion.included ? 'In the calculation' : 'Not in the calculation'}
+        </p>
       </header>
+      {inclusion.learnerDecision !== 'undecided' ? (
+        <p
+          className={acceptedButLeftOut ? styles.thermoTrialLeftOut : styles.thermoTrialInclusion}
+          data-trial-inclusion-note
+          role={acceptedButLeftOut ? 'status' : undefined}
+        >
+          {inclusion.explanation}
+        </p>
+      ) : null}
 
       <ThermodilutionCurveFigure trial={trial} />
       <CurveFeatureList trial={trial} />
@@ -255,27 +279,49 @@ export function ThermodilutionTrialCard({
  * Spread is shown and described; it is never compared against an authored agreement criterion,
  * because this module has none that a registered record supports. The repeatability sentence says
  * so, and it says the thing a tight series most invites a learner to forget.
+ *
+ * HD-PRE-REVIEW-02 (report P-05, Figure 42). The readout describes one series: with a state, the
+ * one for the conditions the patient is in now. Curves acquired under earlier conditions are listed
+ * beneath it, each with its own conditions and numbers, and are never folded into its average.
  */
 export function ThermodilutionSeriesReadout({
   trials,
+  view,
 }: {
   readonly trials: readonly ThermodilutionTrial[]
+  /** The state's series view. Without one, the most recently acquired series is described. */
+  readonly view?: ThermodilutionSeriesView
 }) {
-  const summary = thermodilutionSeriesSummary(trials)
+  const summary = view?.current ?? thermodilutionSeriesSummary(trials)
+  const earlier = view?.earlier ?? []
   const headingId = useId()
 
   return (
-    <section className={styles.thermoSeriesReadout} aria-labelledby={headingId}>
-      <h4 id={headingId}>Accepted series</h4>
+    <section
+      className={styles.thermoSeriesReadout}
+      aria-labelledby={headingId}
+      data-series-key={summary.identity.key}
+    >
+      <h4 id={headingId}>
+        {earlier.length > 0 ? 'Accepted series — current conditions' : 'Accepted series'}
+      </h4>
+      {earlier.length > 0 || summary.identity.origin === 'unrecorded' ? (
+        <p data-series-conditions>
+          This series: {thermodilutionSeriesConditionWords(summary.identity)}.
+        </p>
+      ) : null}
       {summary.averageLMin === null ? (
         <p data-series-state="incomplete">
+          {summary.trialIds.length === 0 && earlier.length > 0
+            ? 'No curve has been acquired under these conditions yet. '
+            : ''}
           {summary.blockedReasons.join(' ')} {SERIES_COUNT_QUALIFIER}
         </p>
       ) : (
         <>
           <p data-series-state="established">
             <strong>{summary.averageLMin.toFixed(1)} L/min</strong> by bolus thermodilution, from{' '}
-            {summary.acceptedTrialIds.length} reviewed trials.
+            {summary.includedTrialIds.length} reviewed trials in this series.
           </p>
           <dl className={styles.curveFeatureList}>
             <div>
@@ -304,11 +350,54 @@ export function ThermodilutionSeriesReadout({
           contribute to this value.
         </p>
       ) : null}
+      {summary.acceptedButNotIncluded.length > 0 ? (
+        <ul className={styles.thermoExcludedNote} data-series-accepted-not-included>
+          {summary.acceptedButNotIncluded.map((item) => (
+            <li key={item.trialId}>
+              Trial {item.sequence}: {item.explanation}
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <p className={styles.measurementTeachingCallout}>
-        Repeatability describes the spread of these {THERMODILUTION_SERIES_TRIAL_COUNT}{' '}
-        acquisitions. It does not describe where they sit: a series acquired the same slightly
-        imperfect way every time agrees with itself and is shifted together. {AGREEMENT_QUALIFIER}
+        Repeatability describes the spread of the{' '}
+        {summary.includedTrialIds.length === 1
+          ? 'one curve'
+          : `${summary.includedTrialIds.length} curves`}{' '}
+        in this series’ calculation. It does not describe where they sit: a series acquired the same
+        slightly imperfect way every time agrees with itself and is shifted together.{' '}
+        {AGREEMENT_QUALIFIER}
       </p>
+      {earlier.length > 0 ? <EarlierSeries earlier={earlier} current={summary} /> : null}
     </section>
+  )
+}
+
+/**
+ * Series from earlier conditions: kept, reviewable, and never averaged with the current one. Opening
+ * this list changes nothing — no series is started, relabelled or merged.
+ */
+function EarlierSeries({
+  earlier,
+  current,
+}: {
+  readonly earlier: readonly ThermodilutionSeriesSummary[]
+  readonly current: ThermodilutionSeriesSummary
+}) {
+  return (
+    <details className={styles.thermoEarlierSeries} data-earlier-series>
+      <summary>Earlier series ({earlier.length}) — kept, and not averaged with this one</summary>
+      {current.unpooledReason ? <p>{current.unpooledReason}</p> : null}
+      <ul>
+        {earlier.map((series) => (
+          <li key={series.identity.key} data-earlier-series-key={series.identity.key}>
+            <strong>{thermodilutionSeriesConditionWords(series.identity)}</strong>:{' '}
+            {series.averageLMin === null
+              ? `${series.trialIds.length} curve${series.trialIds.length === 1 ? '' : 's'}, not an established series (${series.includedTrialIds.length} in its calculation).`
+              : `${series.averageLMin.toFixed(1)} L/min from ${series.includedTrialIds.length} curves (${series.lowestLMin?.toFixed(1)} to ${series.highestLMin?.toFixed(1)} L/min).`}
+          </li>
+        ))}
+      </ul>
+    </details>
   )
 }

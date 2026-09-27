@@ -13,6 +13,7 @@ import {
   normalWaveformValidityChallenges,
   type NormalWaveformValidityChallenge,
 } from '../content'
+import { validityWithheldHeading } from '../content/normalWaveformValidityChallenges'
 import styles from './icu-hemodynamics.module.css'
 import { HemodynamicsExplanation } from './stage/HemodynamicsQuestion'
 import { WaveformAtlasFigure } from './WaveformAtlasFigure'
@@ -22,9 +23,12 @@ import { WaveformAtlasFigure } from './WaveformAtlasFigure'
  *
  * Each card draws one of the four normal tracings through one authored display fault and asks for a
  * reading. The reasoning appears when the learner checks one or asks to see it — it never waits on
- * an answer (HD-01). The chamber readout never names a chamber: before a reading or a reveal it says
- * none has been made, and afterwards it says plainly that this display cannot support one. That is the whole lesson — a recognizable shape on an
- * untrustworthy display is not a recognized chamber.
+ * an answer (HD-01). Before a reading or a reveal the readout names nothing. Afterwards it gives two
+ * separate answers (HD-PRE-REVIEW-02, report L3-09): whether the shape still names the chamber, and
+ * whether the number can be used. An off-level transducer leaves a right-atrial shape that names
+ * the right atrium and a number that cannot be used; damping takes both. A recognizable shape on
+ * an untrustworthy display is a recognized chamber only when the fault left the shape alone — and
+ * never a usable number by itself.
  *
  * Nothing here gates. Skipping every card leaves the rest of the section, and every other station,
  * exactly as reachable as before.
@@ -98,16 +102,32 @@ function ChallengeCard({
       <p
         id={readoutId}
         className={styles.validityChallengeReadout}
-        data-withheld="true"
+        data-withheld={
+          progress.committed || progress.shown
+            ? challenge.readout.chamber.identifiable
+              ? 'value-only'
+              : 'true'
+            : 'true'
+        }
         role="status"
         aria-live="polite"
       >
         <span>Chamber readout</span>
-        <strong>
-          {progress.committed || progress.shown
-            ? NORMAL_WAVEFORM_INTERPRETATION_WITHHELD
-            : 'Not established yet — check a reading or show the reasoning'}
-        </strong>
+        {progress.committed || progress.shown ? (
+          <>
+            <strong
+              data-chamber-reading={challenge.readout.chamber.identifiable ? 'named' : 'withheld'}
+            >
+              Chamber:{' '}
+              {challenge.readout.chamber.identifiable
+                ? challenge.readout.chamber.words
+                : `${NORMAL_WAVEFORM_INTERPRETATION_WITHHELD} — ${challenge.readout.chamber.words}`}
+            </strong>
+            <strong data-value-reading>Value: {challenge.readout.value}</strong>
+          </>
+        ) : (
+          <strong>Not established yet — check a reading or show the reasoning</strong>
+        )}
       </p>
 
       <fieldset className={styles.validityChallengeChoices}>
@@ -149,7 +169,7 @@ function ChallengeCard({
               <dd>{challenge.whatItInvites}</dd>
             </div>
             <div>
-              <dt>Why no chamber can be named</dt>
+              <dt>{validityWithheldHeading(challenge)}</dt>
               <dd>{challenge.whyInterpretationIsWithheld}</dd>
             </div>
             <div>

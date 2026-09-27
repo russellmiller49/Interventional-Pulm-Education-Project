@@ -2,7 +2,10 @@
 
 import { useId, useState } from 'react'
 
-import { NORMAL_WAVEFORM_INTERPRETATION_WITHHELD } from '../content/normalWaveformValidityChallenges'
+import {
+  NORMAL_WAVEFORM_INTERPRETATION_WITHHELD,
+  validityWithheldHeading,
+} from '../content/normalWaveformValidityChallenges'
 import {
   recognitionPracticeExampleById,
   recognitionPracticeExamples,
@@ -292,7 +295,7 @@ export function WaveformRecognitionDrill({
                   <dd>{example.displayFault.whatYouSee}</dd>
                 </div>
                 <div>
-                  <dt>Why no chamber can be named</dt>
+                  <dt>{validityWithheldHeading(example.displayFault)}</dt>
                   <dd>{example.displayFault.whyInterpretationIsWithheld}</dd>
                 </div>
                 <div>

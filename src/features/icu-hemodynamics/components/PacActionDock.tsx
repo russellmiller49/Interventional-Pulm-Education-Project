@@ -12,6 +12,7 @@ import {
   type HemodynamicAction,
   type HemodynamicSimulationState,
 } from '../engine'
+import { storedWedgeProvenance } from '../engine/measurementProvenance'
 import { WaveformAtlasPanel } from './WaveformAtlasPanel'
 import { WedgeValidityPanel } from './WedgeValidityPanel'
 import styles from './icu-hemodynamics.module.css'
@@ -58,21 +59,34 @@ export function PacActionDock({
   )
   const wedgeElapsed =
     catheter.wedgeStartedAt === null ? 0 : Math.max(0, state.timeSeconds - catheter.wedgeStartedAt)
+  // HD-PRE-REVIEW-02 sanity repair (blocker 1): a cursor whose cycle straddles a modeled change
+  // cannot be stored, and a stored value keeps the conditions its cycle was acquired under.
+  const cursorStraddlesChange =
+    catheter.wedgeCursor !== null &&
+    catheter.wedgeCursor !== undefined &&
+    catheter.wedgeCursor.acquisition.physiologicalEpisode === null
+  const storedUnderEarlierConditions = storedWedgeProvenance(state)?.current === false
+  const earlierConditionsNote = storedUnderEarlierConditions
+    ? ' Its cycle was acquired before the modeled physiology last changed, so it is kept as a value from those earlier conditions.'
+    : ''
   const wedgeStatus = catheter.floatBalloonInflated
     ? 'Flow-directed balloon inflated for advancement through the right heart; PAWP capture is unavailable.'
     : catheter.storedWedgeMmHg !== null
       ? catheter.balloonInflated
-        ? 'PAWP stored. Deflate now and confirm return of the PA waveform.'
+        ? `PAWP stored.${earlierConditionsNote} Deflate now and confirm return of the PA waveform.`
         : catheter.position === 'pa'
-          ? 'PAWP stored and balloon deflated. Confirm the return of the PA waveform yourself before the value is used.'
-          : `PAWP stored. Balloon deflated; current confirmed waveform is ${catheter.position.toUpperCase()}.`
-      : catheter.wedgeCursorTime !== null
-        ? 'End-expiratory cursor placed. Store PAWP, then deflate.'
-        : catheter.wedgeCaptureReady
-          ? 'One respiratory cycle sampled. Place the end-expiratory cursor.'
-          : catheter.balloonInflated
-            ? 'Balloon inflated. Sampling the respiratory cycle.'
-            : 'Balloon deflated.'
+          ? `PAWP stored and balloon deflated.${earlierConditionsNote} Confirm the return of the PA waveform yourself before the value is used.`
+          : `PAWP stored.${earlierConditionsNote} Balloon deflated; current confirmed waveform is ${catheter.position.toUpperCase()}.`
+      : cursorStraddlesChange
+        ? 'The assisted cursor’s cardiac cycle straddles a change in the modeled physiology, so it cannot be stored as one wedge. Place the assisted cursor again after the next breath, or deflate and take a new occlusion.'
+        : catheter.wedgeCursorTime !== null
+          ? // Report L6-02: this one-button dock places the cursor for the learner. It says so.
+            'Assisted end-expiratory cursor placed by the simulation, not a point you identified. Store PAWP, then deflate.'
+          : catheter.wedgeCaptureReady
+            ? 'One respiratory cycle sampled. Place the end-expiratory cursor (assisted).'
+            : catheter.balloonInflated
+              ? 'Balloon inflated. Sampling the respiratory cycle.'
+              : 'Balloon deflated.'
   const advancementBalloonStatus =
     catheter.position === 'wedge'
       ? 'PAWP capture uses a separate brief occlusion inflation; deflate promptly after the end-expiratory sample.'
@@ -263,14 +277,21 @@ export function PacActionDock({
               </button>
               <button
                 type="button"
-                disabled={!catheter.wedgeCaptureReady || catheter.wedgeCursorTime !== null}
-                onClick={() => dispatch({ type: 'PLACE_WEDGE_CURSOR' })}
+                disabled={
+                  !catheter.wedgeCaptureReady ||
+                  (catheter.wedgeCursorTime !== null && !cursorStraddlesChange)
+                }
+                onClick={() => dispatch({ type: 'PLACE_WEDGE_CURSOR', placement: 'assisted' })}
               >
-                End-exp cursor
+                End-exp cursor (assisted)
               </button>
               <button
                 type="button"
-                disabled={catheter.wedgeCursorTime === null || catheter.storedWedgeMmHg !== null}
+                disabled={
+                  catheter.wedgeCursorTime === null ||
+                  catheter.storedWedgeMmHg !== null ||
+                  cursorStraddlesChange
+                }
                 onClick={() => dispatch({ type: 'STORE_WEDGE' })}
               >
                 Store PAWP

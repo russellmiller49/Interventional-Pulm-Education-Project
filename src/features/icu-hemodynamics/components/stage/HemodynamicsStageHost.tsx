@@ -1289,7 +1289,23 @@ function HemodynamicsStageSession({
                     vary with respiration.
                   </p>
                 ) : null}
-                <BeforeAfter before={before} after={after} watch={lesson.runtime.watch} />
+                {round === 1 && lesson.runtime.transferWatch ? (
+                  <p className={styles.dockNote} data-transfer-watch-note>
+                    Model estimates of each line’s pressures before and after the arterial repair,
+                    not the monitor’s last beat. The arterial rows are the line you repaired; the
+                    pulmonary-artery and right-atrial rows are there to show what a repair of one
+                    line leaves alone.
+                  </p>
+                ) : null}
+                <BeforeAfter
+                  before={before}
+                  after={after}
+                  watch={
+                    round === 1 && lesson.runtime.transferWatch
+                      ? lesson.runtime.transferWatch
+                      : lesson.runtime.watch
+                  }
+                />
               </>
             ) : lesson.runtime.watch.length > 0 ? (
               <p className={styles.dockNote} data-before-after-absent>
@@ -2052,6 +2068,7 @@ function BeforeAfter({
           <th scope="col">Reading</th>
           <th scope="col">Before</th>
           <th scope="col">After</th>
+          <th scope="col">Change</th>
         </tr>
       </thead>
       <tbody>
@@ -2060,6 +2077,9 @@ function BeforeAfter({
           const b = stageWatchValue(key, before)
           const a = stageWatchValue(key, after)
           const numeric = typeof a === 'number' && typeof b === 'number'
+          // The change is taken between unrounded values and then shown at the table's precision,
+          // so an offset reads as one change on every row (HD-PRE-REVIEW-02, report L2-14).
+          const change = numeric ? a - b : null
           const direction = numeric
             ? Math.abs(a - b) < 0.5 * 10 ** -meta.digits
               ? 'same'
@@ -2079,6 +2099,13 @@ function BeforeAfter({
               </th>
               <td>{format(b)}</td>
               <td data-direction={direction}>{format(a)}</td>
+              <td data-change>
+                {change === null
+                  ? '—'
+                  : direction === 'same'
+                    ? 'none'
+                    : `${change > 0 ? '+' : '−'}${Math.abs(change).toFixed(meta.digits)}`}
+              </td>
             </tr>
           )
         })}
