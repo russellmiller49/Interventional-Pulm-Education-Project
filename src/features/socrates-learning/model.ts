@@ -64,7 +64,9 @@ export function moduleName(document: SocratesCaseDocument) {
 }
 export function teachingTitle(document: SocratesCaseDocument) {
   const source = document.authorContent.curriculumSource?.sourceValues['Full Case Name']
-  return source?.split(' · ').slice(2).join(' · ') || document.title
+  return /^Slide \d+$/.test(document.title)
+    ? source?.split(' · ').slice(2).join(' · ') || document.title
+    : document.title
 }
 
 export interface TeachingSection {
@@ -73,6 +75,13 @@ export interface TeachingSection {
   text: string
 }
 export function teachingSections(document: SocratesCaseDocument): TeachingSection[] {
+  const context = document.caseContent.vignette.trim()
+  return [
+    ...(context ? [{ id: 'context', title: 'Case context', text: context }] : []),
+    ...teachingObservations(document),
+  ]
+}
+function teachingObservations(document: SocratesCaseDocument): TeachingSection[] {
   const content = document.caseContent
   if (content.learnerNarrative) {
     const sections = narrativeSections(content.learnerNarrative)

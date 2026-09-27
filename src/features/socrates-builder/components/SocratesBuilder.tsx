@@ -66,6 +66,7 @@ import {
 import { createInvenioDemoDocument } from '../content/invenio-demo-document'
 import { loadInvenioDziDescriptor, resolveSocratesSlideSource } from '../descriptor'
 import { databaseCompatibilityError } from '../database-compatibility'
+import { emptyCaseContent, emptyAuthorContent } from '../case-content'
 import { getInvenioPair } from '../invenio-source'
 import type { WebOverlayWorkspace } from '../web-overlay-storage'
 import { DraftLearnerPreview } from './DraftLearnerPreview'
@@ -100,11 +101,22 @@ interface SocratesBuilderProps {
   embedded?: boolean
   onDocumentsChange?: (documents: SocratesSlideDocument[]) => void
   onLocalWorkspaceChange?: (workspace: WebOverlayWorkspace) => string | null
+  onPreviewTeaching?: (document: SocratesSlideDocument) => void
 }
 
 interface ActionNotice {
   tone: 'info' | 'success' | 'error'
   message: string
+}
+
+function localCaseDocument(document: SocratesSlideDocument): SocratesSlideDocument {
+  // Keep incomplete in-memory edits editable; validation happens at save/preview boundaries.
+  return {
+    ...cloneDocument(document),
+    schemaVersion: 2,
+    caseContent: document.caseContent ?? emptyCaseContent(),
+    authorContent: document.authorContent ?? emptyAuthorContent(),
+  }
 }
 
 function cloneAnnotations(annotations: readonly DemoAnnotation[]): DemoAnnotation[] {
@@ -193,10 +205,11 @@ export function SocratesBuilder({
   embedded = false,
   onDocumentsChange,
   onLocalWorkspaceChange,
+  onPreviewTeaching,
 }: SocratesBuilderProps) {
   const locale = useLocale()
   const [initialDocument] = useState(() =>
-    cloneDocument(
+    (mode === 'local' ? localCaseDocument : cloneDocument)(
       initialActiveDocument ??
         initialDocuments[0] ??
         (mode === 'local' ? createInvenioDemoDocument() : createStarterSocratesDocument()),
@@ -315,7 +328,7 @@ export function SocratesBuilder({
     (nextDocument: SocratesSlideDocument) => {
       descriptorRequestRef.current += 1
       setLoadingDescriptor(false)
-      const clone = cloneDocument(nextDocument)
+      const clone = isLocal ? localCaseDocument(nextDocument) : cloneDocument(nextDocument)
       if (isLocal) {
         clone.recordId ??= crypto.randomUUID()
         setDocuments((current) => replaceDocumentInCatalog(current, document))
@@ -602,7 +615,13 @@ export function SocratesBuilder({
             },
           },
           ...(descriptorChanged
-            ? { schemaVersion: undefined, caseContent: undefined, authorContent: undefined }
+            ? isLocal
+              ? {
+                  schemaVersion: 2 as const,
+                  caseContent: emptyCaseContent(),
+                  authorContent: emptyAuthorContent(),
+                }
+              : { schemaVersion: undefined, caseContent: undefined, authorContent: undefined }
             : {}),
           annotations: descriptorChanged ? [] : current.annotations,
         }))
@@ -1022,6 +1041,11 @@ export function SocratesBuilder({
                 onClick={() => selectDocument(catalogDocument)}
               >
                 <span>{catalogDocument.title}</span>
+                {catalogDocument.authorContent?.curriculumSource && (
+                  <small>
+                    {catalogDocument.authorContent.curriculumSource.sourceValues['Full Case Name']}
+                  </small>
+                )}
                 <small>
                   <Badge
                     variant={
@@ -1335,6 +1359,7 @@ export function SocratesBuilder({
               document={document}
               onChange={setDirtyDocument}
               privateEnabled={true}
+              localModules={isLocal}
             />
           )}
           <section className={styles.formSection}>
@@ -1608,6 +1633,10 @@ export function SocratesBuilder({
             disabled={loadingDescriptor}
             ref={previewButtonRef}
             onClick={() => {
+              if (onPreviewTeaching) {
+                onPreviewTeaching(document)
+                return
+              }
               returnViewportRef.current = viewport
               setPreviewDocument(JSON.parse(JSON.stringify(document)))
             }}

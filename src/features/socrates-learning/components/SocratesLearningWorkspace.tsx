@@ -1,12 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight, BookOpen, Check, ClipboardCheck, Upload } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookOpen, Check, ClipboardCheck, Pencil } from 'lucide-react'
 import type { SocratesSlideDocument, SocratesCaseDocument } from '@/features/socrates-builder/types'
 import {
   caseKey,
-  COLLECTION_KEY,
-  collectionSchema,
   currentProgress,
   learningDocuments,
   moduleName,
@@ -14,62 +12,73 @@ import {
   progressSchema,
   teachingTitle,
   type CaseProgress,
-  type LearningCollection,
   type LearningMode,
   type LearningProgress,
 } from '../model'
+import type { SlideAssignment } from '@/features/socrates-builder/web-overlay-storage'
 import { SlideLesson } from './SlideLesson'
 import styles from './learning.module.css'
 
-export function SocratesLearningWorkspace({ documents }: { documents: SocratesSlideDocument[] }) {
-  const [collection, setCollection] = useState<LearningCollection | null>(null)
+export function SocratesLearningWorkspace({
+  documents,
+  assignments,
+  preview,
+  onLibrary,
+  onEdit,
+}: {
+  documents: SocratesSlideDocument[]
+  assignments?: Record<string, SlideAssignment>
+  preview?: { id: string; mode: LearningMode }
+  onLibrary?: () => void
+  onEdit?: (document: SocratesCaseDocument) => void
+}) {
   const [progress, setProgress] = useState<LearningProgress>({})
   const [ready, setReady] = useState(false)
-  const [mode, setMode] = useState<LearningMode | null>(null)
-  const [active, setActive] = useState<string | null>(null)
+  const [mode, setMode] = useState<LearningMode | null>(preview?.mode ?? null)
+  const [active, setActive] = useState<string | null>(preview?.id ?? null)
   const [module, setModule] = useState('all')
   const [warning, setWarning] = useState('')
-  const input = useRef<HTMLInputElement>(null)
   const title = useRef<HTMLHeadingElement>(null)
 
   useEffect(() => {
     let message = ''
-    let restoredCollection: LearningCollection | null = null
     let restoredProgress: LearningProgress = {}
     try {
-      const raw = localStorage.getItem(COLLECTION_KEY)
-      if (raw) restoredCollection = collectionSchema.parse(JSON.parse(raw))
-    } catch {
-      message =
-        'The curriculum could not be restored. Its stored copy is preserved; import the curriculum file again.'
-    }
-    try {
       const raw = localStorage.getItem(PROGRESS_KEY)
-      if (raw) restoredProgress = progressSchema.parse(JSON.parse(raw))
+      if (raw && !preview) restoredProgress = progressSchema.parse(JSON.parse(raw))
     } catch {
       message += ' Saved progress could not be restored.'
     }
     // Hydrate browser-only author previews without rendering a different initial slide.
-    setCollection(restoredCollection)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProgress(restoredProgress)
     setWarning(message)
     setReady(true)
-  }, [])
+  }, [preview])
   useEffect(() => {
     if (ready) title.current?.focus()
   }, [mode, active, ready])
 
-  const cases = learningDocuments(collection?.documents ?? documents)
+  const allCases = learningDocuments(documents)
+  const assignedCases = (target: LearningMode) =>
+    assignments ? allCases.filter((doc) => assignments[caseKey(doc)] === target) : allCases
+  const cases = preview
+    ? allCases.filter((doc) => caseKey(doc) === preview.id)
+    : mode
+      ? assignedCases(mode)
+      : allCases
   const modules = [...new Set(cases.map(moduleName))]
   const selected = cases.find((doc) => caseKey(doc) === active)
   const completed = (doc: SocratesCaseDocument, target: LearningMode) => {
     const saved = currentProgress(doc, progress)
     return target === 'teaching' ? saved.teachingComplete : Boolean(saved.submission)
   }
-  const count = (target: LearningMode) => cases.filter((doc) => completed(doc, target)).length
+  const count = (target: LearningMode) =>
+    assignedCases(target).filter((doc) => completed(doc, target)).length
   function updateProgress(doc: SocratesCaseDocument, value: CaseProgress) {
     const next = { ...progress, [caseKey(doc)]: value }
     setProgress(next)
+    if (preview) return
     try {
       localStorage.setItem(PROGRESS_KEY, JSON.stringify(next))
     } catch {
@@ -88,33 +97,6 @@ export function SocratesLearningWorkspace({ documents }: { documents: SocratesSl
     setActive(null)
     setModule('all')
   }
-  async function importCollection(file?: File) {
-    if (!file) return
-    try {
-      if (file.size > 2_000_000) throw new Error('The curriculum file is too large (maximum 2 MB).')
-      const parsed = collectionSchema.safeParse(JSON.parse(await file.text()))
-      if (!parsed.success)
-        throw new Error(
-          'Use a SOCRATES local curriculum package containing validated draft slides.',
-        )
-      setCollection(parsed.data)
-      setActive(null)
-      setMode(null)
-      setModule('all')
-      try {
-        localStorage.setItem(COLLECTION_KEY, JSON.stringify(parsed.data))
-        setWarning('')
-      } catch {
-        setWarning(
-          'The curriculum is open for this visit but could not be saved in this browser. Keep the original JSON file to import it again.',
-        )
-      }
-    } catch (cause) {
-      setWarning(cause instanceof Error ? cause.message : 'Unable to read the curriculum file.')
-    } finally {
-      if (input.current) input.current.value = ''
-    }
-  }
   if (!ready)
     return (
       <div className={styles.shell} role="status">
@@ -132,7 +114,9 @@ export function SocratesLearningWorkspace({ documents }: { documents: SocratesSl
       <div className={styles.reviewBar}>
         <span>
           <span className={styles.dot} />
-          Author preview · teaching/testing allocation pending
+          {preview
+            ? 'Author preview · responses are not recorded'
+            : 'Module preview · assigned slides only'}
         </span>
         <span>Browser only · unpublished</span>
       </div>
@@ -140,6 +124,18 @@ export function SocratesLearningWorkspace({ documents }: { documents: SocratesSl
         <p className={styles.warning} role="alert">
           {warning}
         </p>
+      )}
+      {onLibrary && (
+        <div className={styles.authorActions}>
+          <button className={styles.secondary} onClick={onLibrary}>
+            <ArrowLeft size={16} /> Slide library & builder
+          </button>
+          {preview && selected && onEdit && (
+            <button className={styles.secondary} onClick={() => onEdit(selected)}>
+              <Pencil size={16} /> Return to editing
+            </button>
+          )}
+        </div>
       )}
       {selected && mode ? (
         <>
@@ -149,12 +145,13 @@ export function SocratesLearningWorkspace({ documents }: { documents: SocratesSl
           <SlideLesson
             key={`${caseKey(selected)}-${mode}`}
             document={selected}
+            previewOnly={Boolean(preview)}
             mode={mode}
             position={cases.indexOf(selected) + 1}
             total={cases.length}
             progress={currentProgress(selected, progress)}
             onProgress={(value) => updateProgress(selected, value)}
-            onBack={() => setActive(null)}
+            onBack={() => (preview && onLibrary ? onLibrary() : setActive(null))}
             onNext={
               visible.indexOf(selected) < visible.length - 1
                 ? () => openCase(visible[visible.indexOf(selected) + 1])
@@ -195,24 +192,17 @@ export function SocratesLearningWorkspace({ documents }: { documents: SocratesSl
               </p>
             </div>
             <div className={styles.heroAside}>
-              <span className={styles.largeCount}>{cases.length.toString().padStart(2, '0')}</span>
-              <span>slides available for review</span>
-              {!mode && (
-                <>
-                  <button className={styles.secondary} onClick={() => input.current?.click()}>
-                    <Upload size={16} />
-                    Import curriculum
-                  </button>
-                  <input
-                    ref={input}
-                    type="file"
-                    accept="application/json,.json"
-                    aria-label="Import local curriculum JSON"
-                    hidden
-                    onChange={(event) => void importCollection(event.target.files?.[0])}
-                  />
-                </>
-              )}
+              <span className={styles.largeCount}>
+                {(mode
+                  ? cases.length
+                  : new Set(
+                      [...assignedCases('teaching'), ...assignedCases('testing')].map(caseKey),
+                    ).size
+                )
+                  .toString()
+                  .padStart(2, '0')}
+              </span>
+              <span>{mode ? 'slides in this module' : 'slides assigned to modules'}</span>
             </div>
           </div>
           {!mode ? (
@@ -230,15 +220,18 @@ export function SocratesLearningWorkspace({ documents }: { documents: SocratesSl
                   </p>
                   <div className={styles.moduleMeta}>
                     <span>
-                      {modules.length} curriculum {modules.length === 1 ? 'section' : 'sections'}
+                      {new Set(assignedCases('teaching').map(moduleName)).size} curriculum{' '}
+                      {new Set(assignedCases('teaching').map(moduleName)).size === 1
+                        ? 'section'
+                        : 'sections'}
                     </span>
                     <span>
-                      {count('teaching')} / {cases.length} reviewed
+                      {count('teaching')} / {assignedCases('teaching').length} reviewed
                     </span>
                   </div>
                   <button
                     className={styles.primary}
-                    disabled={!cases.length}
+                    disabled={!assignedCases('teaching').length}
                     onClick={() => chooseModule('teaching')}
                   >
                     Open teaching module
@@ -258,12 +251,12 @@ export function SocratesLearningWorkspace({ documents }: { documents: SocratesSl
                   <div className={styles.moduleMeta}>
                     <span>Tissue only</span>
                     <span>
-                      {count('testing')} / {cases.length} submitted
+                      {count('testing')} / {assignedCases('testing').length} submitted
                     </span>
                   </div>
                   <button
                     className={styles.primary}
-                    disabled={!cases.length}
+                    disabled={!assignedCases('testing').length}
                     onClick={() => chooseModule('testing')}
                   >
                     Open testing module
@@ -277,9 +270,9 @@ export function SocratesLearningWorkspace({ documents }: { documents: SocratesSl
                   <h3>Choose the teaching and testing sets</h3>
                 </div>
                 <p>
-                  Every imported slide is available in both modules for author review. These are
-                  preview pools; final case assignments have not been made. Your existing
-                  slide-builder drafts remain separate.
+                  Assign each slide to Teaching or Testing in the shared slide library. Unassigned
+                  drafts stay in the library, where you can edit their context, add bounding boxes,
+                  and preview either version before deciding.
                 </p>
               </div>
             </>
@@ -361,7 +354,8 @@ export function SocratesLearningWorkspace({ documents }: { documents: SocratesSl
           )}
           {!cases.length && (
             <p className={styles.warning}>
-              Import a local curriculum package or add case content to a browser draft to begin.
+              Assign slides in the slide library to build this module. You can preview unassigned
+              drafts there.
             </p>
           )}
         </>

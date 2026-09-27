@@ -5,17 +5,27 @@ import { socratesSlideDocumentSchema } from './schema'
 import type { SocratesSlideDocument } from './types'
 
 export const WEB_OVERLAY_STORAGE_KEY = 'socrates-invenio-web-overlays:v1'
+export const slideAssignmentSchema = z.enum(['unassigned', 'teaching', 'testing'])
+export type SlideAssignment = z.infer<typeof slideAssignmentSchema>
+export const curriculumStateSchema = z.object({
+  title: z.string().min(1).max(160),
+  importedIds: z.array(z.string()),
+  imports: z.record(z.string()).optional(),
+  assignments: z.record(slideAssignmentSchema),
+})
 
 export interface WebOverlayWorkspace {
   version: 1
   activeDocument: SocratesSlideDocument
   documents: SocratesSlideDocument[]
+  curriculum?: z.infer<typeof curriculumStateSchema>
 }
 
-const workspaceSchema = z.object({
+export const workspaceSchema = z.object({
   version: z.literal(1),
   activeDocument: socratesSlideDocumentSchema,
   documents: z.array(socratesSlideDocumentSchema),
+  curriculum: curriculumStateSchema.optional(),
 })
 
 export function createWebOverlayWorkspace(): WebOverlayWorkspace {

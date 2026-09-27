@@ -22,6 +22,7 @@ export function SlideLesson({
   onProgress,
   onBack,
   onNext,
+  previewOnly = false,
 }: {
   document: SocratesCaseDocument
   mode: LearningMode
@@ -31,6 +32,7 @@ export function SlideLesson({
   onProgress: (next: CaseProgress) => void
   onBack: () => void
   onNext: (() => void) | null
+  previewOnly?: boolean
 }) {
   const testing = mode === 'testing'
   const sections = teachingSections(document)
@@ -113,8 +115,10 @@ export function SlideLesson({
                 <div className={styles.confirmation}>
                   <Check size={20} />
                   <p>
-                    Your response is saved in this browser. Answers and teaching explanations are
-                    not shown in the testing module.
+                    {previewOnly
+                      ? 'This preview response is kept for this visit only.'
+                      : 'Your response is saved in this browser.'}{' '}
+                    Answers and teaching explanations are not shown in the testing module.
                   </p>
                 </div>
                 <dl className={styles.responseSummary}>

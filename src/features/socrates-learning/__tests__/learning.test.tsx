@@ -2,13 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { caseFixture } from '@/features/socrates-study/testing/fixtures'
 import { SocratesLearningWorkspace } from '../components/SocratesLearningWorkspace'
-import {
-  collectionSchema,
-  COLLECTION_KEY,
-  currentProgress,
-  PROGRESS_KEY,
-  teachingSections,
-} from '../model'
+import { collectionSchema, currentProgress, PROGRESS_KEY, teachingSections } from '../model'
 import { narrativeTeaching } from '@/features/socrates-builder/learner-narrative'
 
 const mockViewer = jest.fn()
@@ -76,6 +70,8 @@ test('teaching works without bounding boxes, resumes its step, and never submits
   const view = render(<SocratesLearningWorkspace documents={[doc]} />)
   await user.click(screen.getByRole('button', { name: 'Open teaching module' }))
   await user.click(screen.getByRole('button', { name: 'Start teaching' }))
+  expect(screen.getByText('Synthetic case context')).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Continue' }))
   expect(screen.getByText('LOW_OBSERVATION')).toBeVisible()
   expect(screen.queryByText('HIGH_OBSERVATION')).not.toBeInTheDocument()
   expect(mockViewer.mock.lastCall[0]).toMatchObject({ tissueOnly: false, annotations: [] })
@@ -117,24 +113,10 @@ test('rejects incomplete answers and keeps saved answers tied to the actual case
   expect(currentProgress(doc, progress).draft).toEqual({})
 })
 
-test('curriculum import never overwrites builder drafts and storage failures are visible', async () => {
+test('progress storage failures are visible and author previews do not record module progress', async () => {
   const user = userEvent.setup()
   const doc = previewFixture()
-  localStorage.setItem('socrates-invenio-web-overlays:v1', 'EXISTING_AUTHOR_WORK')
-  render(<SocratesLearningWorkspace documents={[]} />)
-  const file = new File(['unused'], 'curriculum.json', { type: 'application/json' })
-  Object.defineProperty(file, 'text', {
-    value: async () =>
-      JSON.stringify({
-        format: 'socrates-local-curriculum-v1',
-        title: 'Synthetic',
-        documents: [doc],
-      }),
-  })
-  await user.upload(screen.getByLabelText('Import local curriculum JSON'), file)
-  expect(screen.getByRole('button', { name: 'Open teaching module' })).toBeEnabled()
-  expect(localStorage.getItem('socrates-invenio-web-overlays:v1')).toBe('EXISTING_AUTHOR_WORK')
-  expect(JSON.parse(localStorage.getItem(COLLECTION_KEY)!).documents).toHaveLength(1)
+  const view = render(<SocratesLearningWorkspace documents={[doc]} />)
   const storage = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
     throw new Error('quota')
   })
@@ -142,6 +124,40 @@ test('curriculum import never overwrites builder drafts and storage failures are
   await user.click(screen.getByRole('button', { name: 'Start teaching' }))
   expect(screen.getByRole('alert')).toHaveTextContent('storage is unavailable or full')
   storage.mockRestore()
+  view.unmount()
+  render(
+    <SocratesLearningWorkspace
+      documents={[doc]}
+      assignments={{}}
+      preview={{ id: doc.slug, mode: 'testing' }}
+    />,
+  )
+  await user.click(screen.getByRole('radio', { name: 'High' }))
+  expect(localStorage.getItem(PROGRESS_KEY)).toBeNull()
+})
+
+test('only assigned cases enter each module and testing titles remain neutral', async () => {
+  const user = userEvent.setup()
+  const teach = previewFixture()
+  const test = { ...previewFixture(), slug: 'testing-case', title: 'HIDDEN_TEST_DIAGNOSIS' }
+  const unassigned = { ...previewFixture(), slug: 'unassigned', title: 'UNASSIGNED_DIAGNOSIS' }
+  render(
+    <SocratesLearningWorkspace
+      documents={[teach, test, unassigned]}
+      assignments={{ [teach.slug]: 'teaching', [test.slug]: 'testing' }}
+    />,
+  )
+  expect(screen.getByText('0 / 1 reviewed')).toBeVisible()
+  expect(screen.getByText('0 / 1 submitted')).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Open teaching module' }))
+  expect(screen.getByRole('button', { name: /ANSWER_IN_TITLE/ })).toBeVisible()
+  expect(screen.queryByText(test.title)).not.toBeInTheDocument()
+  expect(screen.queryByText(unassigned.title)).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'All modules' }))
+  await user.click(screen.getByRole('button', { name: 'Open testing module' }))
+  expect(screen.getByRole('button', { name: /Slide 01/ })).toBeVisible()
+  expect(screen.queryByText(teach.title)).not.toBeInTheDocument()
+  expect(screen.queryByText(test.title)).not.toBeInTheDocument()
 })
 
 test('local curriculum validation rejects saved case identities, duplicate slides, and release eligibility', () => {
@@ -161,6 +177,7 @@ test('local curriculum validation rejects saved case identities, duplicate slide
 
 test('teaching partitions only explicit source headings, preserving qualification and paragraph text', () => {
   const doc = previewFixture()
+  doc.caseContent.vignette = ''
   const text =
     'What to notice\nAt low magnification: Architecture remains organized.\nAt high magnification: Cells vary. Do not infer a subtype.\n\nKey learning point\nPreserve this qualification.\n\nExpected study classification\nAdequacy: Adequate. Authored reason.\nCancer vs non-cancer: Non-cancer. Authored reason.\n\nCommon pitfall\nDo not omit this paragraph.'
   Object.assign(doc.caseContent, { learnerNarrative: text, ...narrativeTeaching(text) })
