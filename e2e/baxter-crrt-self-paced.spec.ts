@@ -562,6 +562,7 @@ test('CRRT-12 names its missing clinical data and records the review as a reques
 
   await page.getByRole('button', { name: '+1 hr', exact: true }).click()
   await page.getByRole('button', { name: '+1 hr', exact: true }).click()
+  await page.getByRole('tab', { name: 'Patient & trends', exact: true }).click()
   const patient = page
     .getByRole('heading', { name: 'Patient and delivered-therapy state' })
     .locator('..')
