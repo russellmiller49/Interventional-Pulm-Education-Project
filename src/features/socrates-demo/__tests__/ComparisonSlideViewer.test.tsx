@@ -73,6 +73,28 @@ function renderComparison() {
 }
 
 describe('paired teaching viewer', () => {
+  it('enforces tissue-only mode even for an automatically paired Invenio source and fullscreen', async () => {
+    const user = userEvent.setup()
+    render(
+      <ComparisonSlideViewer
+        tissueOnly
+        slide={pairedSlide}
+        annotations={[]}
+        selectedAnnotationId=""
+        previewedAnnotationId={null}
+        onImageHover={jest.fn()}
+        onImageSelect={jest.fn()}
+        onViewportChange={jest.fn()}
+      />,
+    )
+    expect(screen.getByTestId('tissue-viewer')).toBeVisible()
+    expect(screen.queryByTestId('annotated-viewer')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Color annotated' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Expand viewer' }))
+    expect(screen.getByTestId('tissue-viewer')).toBeVisible()
+    expect(screen.queryByTestId('annotated-viewer')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Color annotated' })).not.toBeInTheDocument()
+  })
   beforeEach(() => {
     jest.clearAllMocks()
   })

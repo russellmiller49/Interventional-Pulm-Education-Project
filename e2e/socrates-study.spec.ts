@@ -1,5 +1,9 @@
 import { test, expect, type BrowserContext, type Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
+import { bootstrapFixture } from '../scripts/socrates/bootstrap-fixtures'
+import { createBootstrapPlan, generateDraft } from '../scripts/socrates/bootstrap-plan'
+import { readProvider } from '../scripts/socrates/bootstrap-io'
+import { INVENIO_DEMO_ORIGIN } from '../src/features/socrates-builder/invenio-source'
 const fixture = JSON.parse(readFileSync('/tmp/socrates-rehearsal.json', 'utf8'))
 async function login(context: BrowserContext, name = 'one') {
   const session = fixture.sessions[name]
@@ -513,4 +517,56 @@ test('browser-only v2 draft preview returns and reloads without participant or p
     'Browser unsaved observation',
   )
   expect(writes).toEqual([])
+})
+
+test('bootstrap-generated zero-region draft paints both images and preserves canonical reveal without progress calls', async ({
+  page,
+}) => {
+  const source = bootstrapFixture()
+  // Real provider identity/descriptors; synthetic teaching only. This does not verify clinical content.
+  const catalog = JSON.parse(await readProvider(`${INVENIO_DEMO_ORIGIN}/generated/catalog.json`))
+  const plan = await createBootstrapPlan(source.inspection, catalog, readProvider, source.snapshot)
+  const doc = generateDraft(source.records[9], plan.rows[9])
+  expect(doc.annotations).toEqual([])
+  expect(doc.recordId).toBeUndefined()
+  await page.goto('/en/socrates-demo#builder')
+  await page.evaluate(
+    (document) =>
+      window.localStorage.setItem(
+        'socrates-invenio-web-overlays:v1',
+        JSON.stringify({ version: 1, activeDocument: document, documents: [document] }),
+      ),
+    doc,
+  )
+  await page.reload()
+  await expect(page.getByLabel('Learner narrative (after reveal)')).toHaveValue(
+    doc.caseContent.learnerNarrative!,
+  )
+  const progress: string[] = []
+  page.on('request', (r) => {
+    const route = new URL(r.url()).pathname
+    if (route.startsWith('/api/socrates/') || route.startsWith('/rest/v1/')) progress.push(route)
+  })
+  await page.getByRole('button', { name: 'Preview teaching view' }).click()
+  await ready(page)
+  await expect(page.getByTestId('deep-zoom-viewer')).toHaveCount(2)
+  await expect(page.getByTestId('learner-narrative')).toHaveCount(0)
+  expect(await page.locator('body').innerText()).not.toMatch(
+    /PRIVATE_|Synthetic category|Synthetic observation/,
+  )
+  await page.getByRole('button', { name: 'Reveal teaching interpretation' }).click()
+  expect(await page.getByTestId('learner-narrative').textContent()).toBe(
+    doc.caseContent.learnerNarrative,
+  )
+  expect(await page.locator('body').innerText()).not.toMatch(/PRIVATE_/)
+  await screenshotFromTop(page, 'test-results/socrates/bootstrap-preview.png')
+  await page.getByRole('button', { name: 'Return to editing' }).click()
+  await expect(page.getByLabel('Learner narrative (after reveal)')).toHaveValue(
+    doc.caseContent.learnerNarrative!,
+  )
+  await page.reload()
+  await expect(page.getByLabel('Learner narrative (after reveal)')).toHaveValue(
+    doc.caseContent.learnerNarrative!,
+  )
+  expect(progress).toEqual([])
 })
