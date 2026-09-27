@@ -101,7 +101,7 @@ describe('the trend’s scales and window', () => {
     expect(fixedTrendAxis([4.5, 4.5], 8, 2).ticks).toEqual([0, 2, 4, 6, 8])
   })
 
-  it('spans the retained trend, at least ten and at most the window’s seconds', () => {
+  it('spans only the recorded trend, at most the window’s seconds', () => {
     const samples = Array.from({ length: 9 }, (_, index) => ({
       time: 2 + index * 0.5,
       mapMmHg: 70,
@@ -112,7 +112,7 @@ describe('the trend’s scales and window', () => {
       pcwpMmHg: 10,
       rapMmHg: 5,
     }))
-    expect(trendWindow(samples, 40).span).toBe(10)
+    expect(trendWindow(samples, 40)).toMatchObject({ start: 2, end: 6, span: 4 })
     const long = Array.from({ length: 400 }, (_, index) => ({ ...samples[0], time: index * 0.25 }))
     expect(trendWindow(long, 40).span).toBe(40)
     expect(trendTimeStep(10)).toBe(2)

@@ -800,6 +800,7 @@
  * It wraps rather than shrinking the button, so Continue keeps a full-size target at every width.
  */
 .stepBar {
+  scroll-margin-top: calc(var(--site-header-height, 4rem) + 0.75rem);
   display: flex;
   flex-wrap: wrap;
   align-items: center;

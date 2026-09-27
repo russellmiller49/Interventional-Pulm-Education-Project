@@ -8,56 +8,70 @@ import type { McsTrendSample, McsWaveformSample } from '../engine/types'
 
 const round3 = (value: number) => Math.round(value * 1000) / 1000
 
+type EcgDisplayPoint = { readonly time: number; readonly value: number }
+
+// Presentation provenance only. The reducer retains immutable sample objects when its history
+// window moves. Weak keys let the display remember each sample's observed rate across rerenders
+// and monitor remounts without adding metadata or reconstructed values to simulation state.
+const observedEcgRates = new WeakMap<McsWaveformSample, number | null>()
+
 /**
- * The ECG strip's points: the stored samples, and between them the model's own ECG expression.
- *
- * The monitor keeps 50 samples a second, and the modeled QRS is narrower than two of them, so a
- * line drawn sample-to-sample showed a different spike height on every beat (F04). Every stored
- * sample is kept as a point, and the gaps are filled from `mcsEcgMillivolts` — the expression that
- * generated those samples — at display resolution and at each deflection's exact peak. The filled
- * curve is used only over the tail of the window where it reproduces every stored sample to the
- * sample's own rounding; before any heart-rate change inside the window the stored samples are
- * drawn as they are, rather than redrawn at a rate they were not generated at.
+ * Preserve every stored point, filling only intervals whose two samples were observed at the
+ * same verified rate. Never reinterpret an already observed sample using a later rate: removing
+ * its old fill would itself redraw history and reintroduce apparent amplitude alternation.
+ * Unknown history stays sample-to-sample. Rounded zeroes alone are not rate provenance across a
+ * known rate boundary. The subdivision grid belongs to each sample interval, not the changing
+ * window, so resize, scrolling history and disclosure remounts preserve old geometry.
  */
 export function ecgDisplayPoints(
   samples: readonly McsWaveformSample[],
   heartRateBpm: number,
   resolution = 720,
-): readonly { readonly time: number; readonly value: number }[] {
-  if (samples.length < 2)
-    return samples.map((sample) => ({ time: sample.time, value: sample.ecgMv }))
+): readonly EcgDisplayPoint[] {
   let firstMatching = samples.length
   for (let index = samples.length - 1; index >= 0; index -= 1) {
     const sample = samples[index]
     if (round3(mcsEcgMillivolts(sample.time, heartRateBpm)) !== sample.ecgMv) break
     firstMatching = index
   }
-  const stored = samples.slice(0, firstMatching).map((sample) => ({
-    time: sample.time,
-    value: sample.ecgMv,
-  }))
-  const tail = samples.slice(firstMatching)
-  if (tail.length < 2) return samples.map((sample) => ({ time: sample.time, value: sample.ecgMv }))
-  const start = tail[0].time
-  const end = tail[tail.length - 1].time
-  const times = new Set<number>(tail.map((sample) => sample.time))
-  const step = (end - start) / resolution
-  for (let index = 1; index < resolution; index += 1) times.add(start + index * step)
-  const cycle = 60 / Math.max(25, heartRateBpm)
-  for (let beat = Math.floor(start / cycle); beat <= Math.ceil(end / cycle); beat += 1) {
-    for (const phase of MCS_ECG_DEFLECTION_PHASES) {
-      const time = (beat + phase) * cycle
-      if (time > start && time < end) times.add(time)
+  for (let index = 0; index < samples.length; index += 1) {
+    const sample = samples[index]
+    if (!observedEcgRates.has(sample)) {
+      observedEcgRates.set(sample, index >= firstMatching ? heartRateBpm : null)
     }
   }
-  const storedByTime = new Map(tail.map((sample) => [sample.time, sample.ecgMv]))
-  const filled = [...times]
-    .sort((a, b) => a - b)
-    .map((time) => ({
-      time,
-      value: storedByTime.get(time) ?? mcsEcgMillivolts(time, heartRateBpm),
-    }))
-  return [...stored, ...filled]
+  const points: EcgDisplayPoint[] = []
+  const subdivisions = Math.max(2, Math.ceil(resolution / 250))
+  for (let index = 0; index < samples.length; index += 1) {
+    const sample = samples[index]
+    const previous = samples[index - 1]
+    const rate = observedEcgRates.get(sample)
+    if (previous && rate != null && observedEcgRates.get(previous) === rate) {
+      const start = previous.time
+      const end = sample.time
+      const times = new Set<number>()
+      for (let part = 1; part < subdivisions; part += 1) {
+        times.add(start + ((end - start) * part) / subdivisions)
+      }
+      const cycle = 60 / Math.max(25, rate)
+      for (let beat = Math.floor(start / cycle); beat <= Math.ceil(end / cycle); beat += 1) {
+        for (const phase of MCS_ECG_DEFLECTION_PHASES) {
+          const time = (beat + phase) * cycle
+          if (time > start && time < end) times.add(time)
+        }
+      }
+      points.push(
+        ...[...times]
+          .sort((a, b) => a - b)
+          .map((time) => ({
+            time,
+            value: mcsEcgMillivolts(time, rate),
+          })),
+      )
+    }
+    points.push({ time: sample.time, value: sample.ecgMv })
+  }
+  return points
 }
 
 /* ------------------------------------------------------------------ *
@@ -83,7 +97,7 @@ export interface McsTrendSeries {
   readonly color: string
 }
 
-/** A fixed axis: it starts at zero and only ever grows, in whole steps, to hold the data. */
+/** A zero-based axis that expands in whole steps when the displayed window needs more range. */
 export interface McsTrendAxis {
   readonly min: number
   readonly max: number
@@ -124,12 +138,7 @@ export function trendRange(
   }
 }
 
-/**
- * The samples inside the last `windowSeconds` of simulated time, and the time axis they are drawn
- * on. The axis spans what has been retained — at least ten seconds, at most the window — so a
- * trend that has only just started is not squeezed into the last sliver of an empty plot; its
- * tick labels say what span is shown.
- */
+/** The recorded time range in the retained window; never backdate a short recording. */
 export function trendWindow(
   samples: readonly McsTrendSample[],
   windowSeconds: number,
@@ -140,14 +149,14 @@ export function trendWindow(
   readonly span: number
 } {
   const end = samples.length > 0 ? samples[samples.length - 1].time : 0
-  const retained = samples.length > 0 ? end - samples[0].time : 0
-  const span = Math.min(windowSeconds, Math.max(10, retained))
-  const start = end - span
+  const start = Math.max(samples[0]?.time ?? 0, end - windowSeconds)
+  const span = end - start
   return { samples: samples.filter((sample) => sample.time >= start), start, end, span }
 }
 
 /** A tick step that gives four to seven labelled times across a span. */
 export function trendTimeStep(span: number): number {
+  if (span <= 2) return 0.5
   if (span <= 12) return 2
   if (span <= 30) return 5
   if (span <= 60) return 10

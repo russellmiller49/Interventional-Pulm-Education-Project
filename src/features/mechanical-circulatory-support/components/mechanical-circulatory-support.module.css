@@ -60,6 +60,8 @@
  * every one of these tokens, and is untouched by this rule.
  */
 .moduleShell [data-learning-module-v2-theme-root][data-theme='light'] {
+  /* Dark label ink needs a light halo; pump and answer discs retain light lettering. */
+  --mcs-map-label-halo: #fff;
   --lm-v2-surface: var(--paper);
   --lm-v2-panel: #fff;
   --lm-v2-panel-muted: #eef4f2;

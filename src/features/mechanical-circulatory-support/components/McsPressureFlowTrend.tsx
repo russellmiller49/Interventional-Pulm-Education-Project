@@ -20,7 +20,7 @@ import {
  * was drawn outside the plot, on top of the caption under it (F34).
  *
  * Now pressure has its own panel in mm Hg and flow its own in L/min, both starting at zero, both on
- * fixed scales that only grow — in whole steps, and said so — when a value would not fit, and both
+ * zero-based scales that expand — in whole steps, and said so — when a value would not fit, and both
  * sharing one simulated-time axis over a fixed window. No value is transformed, so the numbers in
  * the legend are the numbers on the lines. Every series is named in words with its line pattern,
  * its latest value and its range; a flat series is drawn inside the plot, above the frame. The
@@ -187,7 +187,7 @@ export function McsPressureFlowTrend({
     MCS_TREND_FLOW_DEFAULT_MAX,
     2,
   )
-  const xFor = (time: number) => LEFT + ((time - start) / span) * (RIGHT - LEFT)
+  const xFor = (time: number) => LEFT + ((time - start) / (span || 1)) * (RIGHT - LEFT)
   const timeStep = trendTimeStep(span)
   const timeTicks: number[] = []
   for (
@@ -264,7 +264,7 @@ export function McsPressureFlowTrend({
       <svg
         viewBox={`0 0 ${VIEW_WIDTH} 284`}
         role="img"
-        aria-label={`Trend of ${seriesLabel} over the last ${span.toFixed(0)} simulated seconds, pressure and flow on separate labelled scales: pressure 0 to ${pressureAxis.max} mm Hg, flow 0 to ${flowAxis.max} L/min`}
+        aria-label={`Trend of ${seriesLabel} from ${start.toFixed(1)} to ${end.toFixed(1)} simulated seconds, pressure and flow on separate labelled scales: pressure 0 to ${pressureAxis.max} mm Hg, flow 0 to ${flowAxis.max} L/min`}
         style={{
           display: 'block',
           width: '100%',
@@ -393,8 +393,9 @@ export function McsPressureFlowTrend({
         {pressureAxis.extended ? ' (raised from 0–160 to hold this run)' : ''}, flow 0–
         {flowAxis.max} L/min
         {flowAxis.extended ? ' (raised from 0–8 to hold this run)' : ''}, one simulated-time axis
-        across the {span.toFixed(0)} s shown (at most the last {windowSeconds} s). No value is
-        rescaled; a flat line is a steady value.
+        from {start.toFixed(1)} to {end.toFixed(1)} s ({span.toFixed(1)} s of recorded samples; at
+        most the last {windowSeconds} s). The scale follows this window and can return to its
+        default when higher values leave it. No value is rescaled; a flat line is a steady value.
       </p>
       <details className="mt-1 text-xs leading-5" data-trend-table>
         <summary>Trend as a table</summary>

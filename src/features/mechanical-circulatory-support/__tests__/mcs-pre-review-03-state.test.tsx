@@ -12,6 +12,20 @@
  * the operation itself.
  */
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import type { McsSimulationState } from '../engine'
+
+let mockMonitorState: McsSimulationState | null = null
+jest.mock('../components/McsMonitor', () => {
+  const actual = jest.requireActual('../components/McsMonitor')
+  const { createElement } = jest.requireActual('react')
+  return {
+    ...actual,
+    McsMonitor: (props: { state: McsSimulationState }) => {
+      mockMonitorState = props.state
+      return createElement(actual.McsMonitor, props)
+    },
+  }
+})
 
 jest.mock('@/i18n/navigation', () =>
   jest.requireActual('../test-support/mcsWorkbenchStubs').navigationModule(),
@@ -31,6 +45,7 @@ import {
 } from '../test-support/mcsStage'
 
 beforeEach(() => {
+  mockMonitorState = null
   setupMcsStage()
   jest.useFakeTimers()
 })
@@ -42,6 +57,7 @@ afterEach(() => {
 })
 
 interface Snapshot {
+  readonly modelState: string
   readonly identity: string
   readonly step: string
   readonly checked: readonly string[]
@@ -52,7 +68,9 @@ interface Snapshot {
 }
 
 function snapshot(): Snapshot {
+  expect(mockMonitorState).not.toBeNull()
   return {
+    modelState: JSON.stringify(mockMonitorState),
     // The identity line carries the run and its simulated time; the seed sits in Run details.
     identity: `${document.querySelector('[data-session-identity]')?.textContent ?? ''} ${
       document.querySelector('[data-run-details] p')?.textContent?.match(/Seed \d+/)?.[0] ?? ''
@@ -202,7 +220,9 @@ describe('a live Learn section: presentation operations change nothing the model
 
 describe('a live case: the case page’s disclosures and jump links change nothing', () => {
   function caseSnapshot() {
+    expect(mockMonitorState).not.toBeNull()
     return {
+      modelState: JSON.stringify(mockMonitorState),
       response: document.querySelector('#mcs-case-response')?.textContent ?? '',
       time:
         document.querySelector(

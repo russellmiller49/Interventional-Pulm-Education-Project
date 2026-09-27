@@ -377,3 +377,11 @@
   overflow: visible;
   text-overflow: clip;
 }
+
+/* Keep enlarged legend words readable independently of the pannable drawing. */
+@media (max-width: 600px) {
+  .cutawayLegend li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+}

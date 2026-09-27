@@ -1,6 +1,14 @@
 'use client'
 
-import { useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from 'react'
 import { ArrowRight, Check } from 'lucide-react'
 
 import { ChoiceReasoningFeedback } from '@/features/learning-module/components/ChoiceReasoningFeedback'
@@ -265,11 +273,13 @@ function McsStageSession({
     expandedTeachingStepId: null,
     transferLoaded: lesson.steps[mount.index].interaction.kind === 'transfer',
   }))
+  const [monitorPreferences, setMonitorPreferences] = useState<Record<string, boolean>>({})
   const [helpOpen, setHelpOpen] = useState(false)
   const [explorationOpen, setExplorationOpen] = useState(false)
   const [revealedStepIds, setRevealedStepIds] = useState<readonly string[]>([])
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
+  const stepBarRef = useRef<HTMLDivElement>(null)
 
   const activeIndex = Math.min(progression.index, lesson.steps.length - 1)
   const activeStep = lesson.steps[activeIndex]
@@ -371,9 +381,10 @@ function McsStageSession({
     const node = nowFocusRef.current
     if (!node) return
     node.focus({ preventScroll: true })
-    // A new step starts at the top of its pane, whatever the previous step left it scrolled to.
-    node.closest<HTMLElement>('[role="region"]')?.scrollTo({ top: 0 })
-  }, [activeStep.id])
+    // The flowing lesson uses document scroll. Resetting an ancestor region alone leaves the
+    // new task thousands of pixels above a learner who used the bottom Continue.
+    stepBarRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+  }, [activeStep.id, referenceViewed])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -683,6 +694,22 @@ function McsStageSession({
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
   const canGoBack = previousStep !== undefined
 
+  function handleContinue(event?: MouseEvent<HTMLButtonElement>) {
+    // A native double-click is one navigation intent, even when the top button stays put.
+    // Both Continue controls use this handler; keyboard activation has detail zero.
+    if (event && event.detail > 1) {
+      event.currentTarget
+        .closest('[data-critical-care-activity-shell]')
+        ?.querySelector<HTMLElement>('[data-now-focus]')
+        ?.focus({ preventScroll: true })
+      return
+    }
+    if (!lookingBack && isLastStep) {
+      if (nextSection) goToSection(nextSection.id)
+      else router.push(`${mechanicalCirculatorySupportNavBase}/learn`)
+    } else advance()
+  }
+
   const continueAction = {
     label: lookingBack
       ? 'Return to current task'
@@ -691,13 +718,7 @@ function McsStageSession({
           ? `Continue to next section: ${nextSection.title}`
           : 'Return to lesson map'
         : 'Continue',
-    onActivate:
-      !lookingBack && isLastStep
-        ? () =>
-            nextSection
-              ? goToSection(nextSection.id)
-              : router.push(`${mechanicalCirculatorySupportNavBase}/learn`)
-        : advance,
+    onActivate: handleContinue,
     icon: <ArrowRight aria-hidden="true" />,
   }
 
@@ -1444,6 +1465,12 @@ function McsStageSession({
       onToggleSurface={toggleSurface}
       mapPreference={activeStep.surfaces.includes('map') ? activeStep.id : null}
       monitorPointedAt={monitorPointedAt}
+      monitorOpen={monitorPreferences[activeStep.id] ?? monitorPointedAt}
+      onMonitorToggle={(open) => {
+        setMonitorPreferences((previous) =>
+          previous[activeStep.id] === open ? previous : { ...previous, [activeStep.id]: open },
+        )
+      }}
       stepKey={activeStep.id}
     />
   )
@@ -1594,7 +1621,7 @@ function McsStageSession({
           ? 'Guided reference'
           : 'Current exercise'
   const stepBar = (
-    <div className={styles.stepBar} data-step-bar>
+    <div ref={stepBarRef} className={styles.stepBar} data-step-bar>
       <div className={styles.stepBarIdentity}>
         <p className={styles.footnote} data-session-identity>
           {runLabel === null

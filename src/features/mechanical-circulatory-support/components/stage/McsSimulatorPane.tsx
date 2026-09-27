@@ -57,6 +57,8 @@ export function McsSimulatorPane({
   allowedActionIds,
   focusedControls = false,
   monitorPointedAt = false,
+  monitorOpen = monitorPointedAt,
+  onMonitorToggle,
   stepKey,
 }: {
   readonly presentation?: McsPresentationKind
@@ -81,6 +83,8 @@ export function McsSimulatorPane({
    * trace"). The full monitor then starts open, so the thing named is on screen (F03).
    */
   readonly monitorPointedAt?: boolean
+  readonly monitorOpen?: boolean
+  readonly onMonitorToggle?: (open: boolean) => void
   /** The step on screen: each step starts its disclosures in that step's own default. */
   readonly stepKey?: string
 }) {
@@ -246,12 +250,13 @@ export function McsSimulatorPane({
          * Collapsed by default everywhere it used to be — including the steps whose own words say
          * "Look here" at one of its traces, so the target of the instruction was behind a closed
          * disclosure (F03). Those steps open it. It is keyed by step, so a learner who closes it
-         * keeps it closed for the rest of that step, and the next step starts at its own default.
+         * keeps that preference on revisit; each unvisited step starts at its own default.
          * Opening or closing it is display only: no model action, no clock tick, no progress.
          */}
         <details
           key={`monitor-${stepKey ?? ''}`}
-          open={monitorPointedAt || undefined}
+          open={monitorOpen}
+          onToggle={(event) => onMonitorToggle?.(event.currentTarget.open)}
           data-monitor-disclosure
           data-monitor-pointed-at={monitorPointedAt || undefined}
         >
