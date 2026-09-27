@@ -227,9 +227,28 @@ describe('performing the CRRT-12 review records a plan and changes nothing else'
     expect(patient).toHaveTextContent('Downtime')
     expect(patient).not.toHaveTextContent(/temperature|potassium|medication|nutrition/i)
   })
+
+  it('describes the accepted alternative without claiming the review request occurred', () => {
+    const alternative = definition.interventions.find(
+      ({ id }) => id === 'crrt12-action-alternative-candidate',
+    )!
+    expect(alternative.response).toMatch(/keep the treatment unchanged/)
+    expect(alternative.response).toMatch(/clarifying the gap does not supply the data/)
+    expect(alternative.response).not.toMatch(/your review and the request/i)
+  })
 })
 
 describe('the CRRT-12 debrief keeps the missing evidence missing', () => {
+  it('states the future reassessment need without narrating one on a no-action run', () => {
+    render(<Player caseDefinition={definition} />)
+    fireEvent.click(screen.getByRole('button', { name: 'End run and review debrief' }))
+    const actual = sectionFor(/What you did in this run/)
+    expect(actual).not.toHaveTextContent(review.label)
+    const debrief = sectionFor(/Causal debrief/)
+    expect(debrief).toHaveTextContent(/A future multidisciplinary reassessment would need/)
+    expect(debrief).not.toHaveTextContent(/Your review and the request/)
+  })
+
   it('records the actual action and never announces the trends', () => {
     render(<Player caseDefinition={definition} />)
     perform('Complete the initial clinical assessment')

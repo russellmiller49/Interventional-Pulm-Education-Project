@@ -26,6 +26,8 @@ interface CaseNarrative {
   readonly mechanism: string
   readonly safeAction: string
   readonly acceptedAlternative: string
+  /** Response when the accepted alternative records a different plan from the safe action. */
+  readonly acceptedAlternativeResponse?: string
   readonly unsafeAction: string
   readonly expectedResponse: string
   /**
@@ -1226,7 +1228,8 @@ function buildAdaptedCase(narrative: CaseNarrative): MutableRuntimeCrrtCase {
     if (alternativeIntervention) {
       alternativeIntervention.label = narrative.acceptedAlternative
       alternativeIntervention.description = ADAPTED_ACTION_DESCRIPTION
-      alternativeIntervention.response = narrative.expectedResponse
+      alternativeIntervention.response =
+        narrative.acceptedAlternativeResponse ?? narrative.expectedResponse
       alternativeIntervention.sourceIds = [...narrativeSourceIds]
     }
   }
@@ -1714,6 +1717,8 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'Review the available evidence, name the missing data, and request a multidisciplinary reassessment',
     acceptedAlternative:
       'Hold the bounded simulation state while escalating incomplete domain information',
+    acceptedAlternativeResponse:
+      'Your choice to keep the treatment unchanged while clarifying the missing information is recorded in the case timeline. No electrolyte, temperature, medication-exposure, or nutrition series appears; clarifying the gap does not supply the data.',
     unsafeAction:
       'Attribute the concerns to the filter and act without the missing data or a cross-domain review',
     expectedResponse:
@@ -1728,7 +1733,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
     causalChain: [
       'This run supplies case-start values and a treatment-delivery record; it supplies no serial electrolyte, temperature, medication-exposure, or nutrition data.',
       'Delivered dose, downtime, and interruptions belong in the review, but they cannot be linked to a clinical change that has not been measured.',
-      'The multidisciplinary reassessment obtains the missing data before any contributor is named.',
+      'A future multidisciplinary reassessment would need to obtain the missing data before any contributor is named.',
     ],
     transferQuestion:
       'Which delivered-therapy findings from this run, and which missing clinical data, would you bring to the multidisciplinary review, and whom would you ask for each?',
