@@ -13,7 +13,7 @@ import styles from './cardiohelp-ecmo.module.css'
 interface CardiohelpModuleFrameProps {
   locale: string
   activeHref: string
-  /** Extra header content (e.g. the player pages' track toggle). */
+  /** Extra header content. */
   headerExtra?: ReactNode
   activityMode?: boolean
   children: ReactNode

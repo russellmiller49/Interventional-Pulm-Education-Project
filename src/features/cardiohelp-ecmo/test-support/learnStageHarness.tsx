@@ -62,7 +62,7 @@ export function nowPrimary(): HTMLButtonElement {
   return button
 }
 
-/** The prediction's own radios — the header's track toggle is a radiogroup too, and is not a choice. */
+/** The prediction's own radios, scoped to its fieldset so no other radio on the page is counted. */
 export function predictionRadios(): HTMLElement[] {
   const fieldset = document.querySelector<HTMLElement>('[data-prediction-choices]')
   return fieldset ? Array.from(fieldset.querySelectorAll<HTMLElement>('input[type="radio"]')) : []

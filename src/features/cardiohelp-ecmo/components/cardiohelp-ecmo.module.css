@@ -5794,48 +5794,6 @@
   border-color: var(--cyan-bright);
 }
 
-.trackToggle {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  /* It used to hold 351 px at 320 wide with 200% text; now it wraps inside its box. */
-  max-width: 100%;
-  padding: 0.3rem;
-  border: 1px solid var(--line);
-  border-radius: 1.4rem;
-  background: rgba(8, 30, 35, 0.82);
-}
-
-.trackToggle button {
-  display: inline-flex;
-  min-width: 0;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.9rem;
-  color: var(--muted);
-  border: 1px solid transparent;
-  border-radius: 999px;
-  background: transparent;
-  font-size: var(--ecmo-type-floor, 0.875rem);
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.trackToggle button svg {
-  width: 16px;
-  height: 16px;
-}
-
-.trackToggle button:hover {
-  color: var(--ink);
-}
-
-.trackToggle button[data-active='true'] {
-  color: var(--navy);
-  background: var(--cyan-bright);
-  border-color: var(--cyan-bright);
-}
-
 /* ---------------------------------------------------------------------------
  * Hub: hero, how-it-works path, track picker, curriculum map.
  * ------------------------------------------------------------------------- */

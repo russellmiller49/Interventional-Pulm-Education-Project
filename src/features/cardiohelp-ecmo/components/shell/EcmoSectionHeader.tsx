@@ -40,7 +40,7 @@ export function EcmoSectionHeader({
   title,
   meta,
   sectionsControl,
-  trackToggle,
+  onMainMenu,
   options,
   helpRef,
   onHelp,
@@ -55,7 +55,12 @@ export function EcmoSectionHeader({
   readonly meta?: readonly string[]
   /** The collapsed Sections / Case options disclosure trigger. */
   readonly sectionsControl?: ReactNode
-  readonly trackToggle?: ReactNode
+  /**
+   * Back to the ECMO menu, which is where the track is chosen. There is no in-activity VV/VA
+   * switch: it lived in a disclosure whose summary did nothing on a desktop (live report,
+   * 2026-09-27), and switching quietly swapped a Practice case for another one.
+   */
+  readonly onMainMenu?: () => void
   readonly options?: ReactNode
   readonly helpRef?: RefObject<HTMLButtonElement | null>
   readonly onHelp?: () => void
@@ -65,6 +70,11 @@ export function EcmoSectionHeader({
   readonly resumedNote?: string
 }) {
   const phone = useSyncExternalStore(subscribePhone, phoneSnapshot, () => false)
+  const mainMenuButton = onMainMenu ? (
+    <button type="button" className={styles.headerButton} data-ecmo-main-menu onClick={onMainMenu}>
+      Main menu
+    </button>
+  ) : null
   const restartButton = onRestart ? (
     <button type="button" className={styles.headerButton} data-ecmo-restart onClick={onRestart}>
       {restartLabel}
@@ -85,7 +95,7 @@ export function EcmoSectionHeader({
     if (phone && active !== summary && active && details.contains(active)) setOptionsOpen(true)
   }, [phone])
   const responsiveOptions =
-    trackToggle || restartButton ? (
+    mainMenuButton || restartButton ? (
       <details
         ref={detailsRef}
         className={styles.headerMore}
@@ -98,10 +108,14 @@ export function EcmoSectionHeader({
             setOptionsOpen((current) => !current)
           }}
         >
-          {trackToggle ? 'Switch track or restart' : 'Restart'}
+          {mainMenuButton && restartButton
+            ? 'Main menu or restart'
+            : mainMenuButton
+              ? 'Main menu'
+              : 'Restart'}
         </summary>
         <div className={styles.headerMoreBody}>
-          {trackToggle}
+          {mainMenuButton}
           {restartButton}
         </div>
       </details>

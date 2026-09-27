@@ -163,19 +163,10 @@
   outline-offset: 2px;
 }
 
-/* The phone header's one disclosure: track switch and restart (see EcmoSectionHeader). */
+/* The phone header's one disclosure: main menu and restart (see EcmoSectionHeader). */
 @media (max-width: 600px) {
   .headerMore[open] {
     flex-basis: 100%;
-  }
-}
-
-@media (min-width: 601px) {
-  .headerMore > summary {
-    display: none;
-  }
-  .headerMoreBody {
-    margin-top: 0;
   }
 }
 
@@ -211,6 +202,21 @@
   gap: 0.4rem;
   align-items: center;
   margin-top: 0.4rem;
+}
+
+/*
+ * Wider than a phone the two controls simply sit in the header and the summary is not shown.
+ * This must come after the base summary rule: at equal specificity the later rule wins, and when
+ * it came first the summary stayed on screen on a desktop, forced open, and did nothing when
+ * pressed (live report, 2026-09-27).
+ */
+@media (min-width: 601px) {
+  .headerMore > summary {
+    display: none;
+  }
+  .headerMoreBody {
+    margin-top: 0;
+  }
 }
 
 /* Phone widths: tighter chrome, same controls. */

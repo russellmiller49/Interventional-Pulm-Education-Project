@@ -54,17 +54,18 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     })
   })
 
-  it('keeps VV and VA Learn tracks isolated with keyboard-accessible switching', async () => {
-    const { container } = render(<CardiohelpWorkbench section="learn" />)
-    await waitFor(() => {
-      expect(container.querySelector('[data-now-card]')).toBeInTheDocument()
-    })
+  // The track is chosen on the ECMO menu (Main menu), not inside an activity: each track opens on
+  // its own URL, which is what these tests do.
+  function openTrack(track: 'vv' | 'va') {
+    window.history.replaceState(null, '', `/?track=${track}`)
+  }
 
-    const vvTrack = screen.getByRole('radio', { name: /VV track/i })
-    const vaTrack = screen.getByRole('radio', { name: /VA track/i })
-    expect(vvTrack).toHaveAttribute('aria-checked', 'true')
-    expect(vvTrack).toHaveAttribute('tabindex', '0')
-    expect(vaTrack).toHaveAttribute('tabindex', '-1')
+  it('keeps VV and VA Learn tracks isolated, and leaves the track choice to the main menu', async () => {
+    const vv = render(<CardiohelpWorkbench section="learn" />)
+    await waitFor(() => {
+      expect(vv.container.querySelector('[data-now-card]')).toBeInTheDocument()
+    })
+    expect(screen.queryByRole('radiogroup', { name: 'ECMO support mode' })).toBeNull()
     // The rail — behind the Sections control — lists the whole authored VV pathway, physiology
     // sections included.
     const vvRail = screen.getByRole('navigation', { name: /VV learning pathway sections/i })
@@ -75,14 +76,24 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     expect(
       screen.getByRole('img', { name: /VV ECMO femoral-femoral circuit schematic/i }),
     ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Main menu' }))
+    expect(mockRouterPush).toHaveBeenCalledWith({
+      pathname: '/cardiohelp-ecmo/learn',
+      query: { track: 'vv' },
+    })
+    vv.unmount()
 
-    fireEvent.keyDown(vvTrack, { key: 'ArrowRight' })
-    expect(vaTrack).toHaveAttribute('aria-checked', 'true')
-    expect(vaTrack).toHaveAttribute('tabindex', '0')
+    openTrack('va')
+    const va = render(<CardiohelpWorkbench section="learn" />)
+    await waitFor(() => {
+      expect(va.container.querySelector('[data-now-card]')).toBeInTheDocument()
+    })
     const vaRail = screen.getByRole('navigation', { name: /VA learning pathway sections/i })
     expect(within(vaRail).getAllByRole('button')).toHaveLength(
       criticalCareLearningPathway('cardiohelp-ecmo', 'va').sections.length,
     )
+    expect(screen.queryByRole('navigation', { name: /VV learning pathway sections/i })).toBeNull()
+    fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
     expect(
       screen.getByRole('img', { name: /VA ECMO femoral-femoral circuit schematic/i }),
     ).toBeInTheDocument()
@@ -92,13 +103,10 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
       'data-support-mode',
       'va',
     )
-
-    fireEvent.keyDown(vaTrack, { key: 'Home' })
-    expect(vvTrack).toHaveAttribute('aria-checked', 'true')
   })
 
-  it('keeps Practice case options track-scoped when switching modes', async () => {
-    render(<CardiohelpWorkbench section="practice" />)
+  it('keeps Practice case options track-scoped on each track', async () => {
+    const vv = render(<CardiohelpWorkbench section="practice" />)
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Begin case/i })).toBeInTheDocument()
     })
@@ -109,8 +117,18 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     expect(
       within(vvControl).queryByRole('option', { name: /right-arm oxygenation/i }),
     ).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Main menu' }))
+    expect(mockRouterPush).toHaveBeenCalledWith({
+      pathname: '/cardiohelp-ecmo/learn',
+      query: { track: 'vv' },
+    })
+    vv.unmount()
 
-    fireEvent.click(screen.getByRole('radio', { name: /VA track/i }))
+    openTrack('va')
+    render(<CardiohelpWorkbench section="practice" />)
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Begin case/i })).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByRole('button', { name: /Begin case/i }))
     const vaControl = screen.getByLabelText('First priority')
     expect(
@@ -126,22 +144,33 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     expect(document.querySelector(`option[value="${vaInitiation.id}"]`)).toBeInTheDocument()
   })
 
-  it('reloads a clean walkthrough when the track changes and never scores Learn', async () => {
-    const { container } = render(<CardiohelpWorkbench section="learn" />)
+  it('opens a clean walkthrough on each track and never scores Learn', async () => {
+    const doneRows = (container: HTMLElement) =>
+      container.querySelectorAll('[data-step-state="done"]')
+    const firstTrack = render(<CardiohelpWorkbench section="learn" />)
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /identify all four sources/i })).toBeInTheDocument()
     })
-    const doneRows = () => container.querySelectorAll('[data-step-state="done"]')
     fireEvent.click(screen.getByRole('button', { name: /identify all four sources/i }))
-    expect(doneRows()).toHaveLength(1)
+    expect(doneRows(firstTrack.container)).toHaveLength(1)
+    firstTrack.unmount()
 
-    fireEvent.click(screen.getByRole('radio', { name: /VA track/i }))
-    expect(doneRows()).toHaveLength(0)
+    openTrack('va')
+    const va = render(<CardiohelpWorkbench section="learn" />)
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /identify all four sources/i })).toBeInTheDocument()
+    })
+    expect(doneRows(va.container)).toHaveLength(0)
     fireEvent.click(screen.getByRole('button', { name: /identify all four sources/i }))
-    expect(doneRows()).toHaveLength(1)
+    expect(doneRows(va.container)).toHaveLength(1)
+    va.unmount()
 
-    fireEvent.click(screen.getByRole('radio', { name: /VV track/i }))
-    expect(doneRows()).toHaveLength(0)
+    openTrack('vv')
+    const back = render(<CardiohelpWorkbench section="learn" />)
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /identify all four sources/i })).toBeInTheDocument()
+    })
+    expect(doneRows(back.container)).toHaveLength(0)
 
     const stored = JSON.parse(
       window.localStorage.getItem('cardiohelp-ecmo-progress-v1') ?? '{}',

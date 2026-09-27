@@ -336,7 +336,7 @@ describe('B · Practice says what its clock and its brief are', () => {
       activityMode: 'practice',
       dispatch: jest.fn(),
       onLoadScenario: jest.fn(),
-      onSelectTrack: jest.fn(),
+      onMainMenu: jest.fn(),
       onReveal: jest.fn(),
       onSaveAndExit: jest.fn(),
       onReset: jest.fn(),

@@ -74,7 +74,7 @@ function renderPractice(
       activityMode={mode === 'challenge' ? 'challenge' : 'practice'}
       dispatch={dispatch}
       onLoadScenario={jest.fn()}
-      onSelectTrack={jest.fn()}
+      onMainMenu={jest.fn()}
       onReveal={jest.fn()}
       onSaveAndExit={jest.fn()}
       onReset={jest.fn()}

@@ -46,7 +46,6 @@ import { EcmoHelpDialog } from '../shell/EcmoHelpDialog'
 import { EcmoNowCard } from '../shell/EcmoNowCard'
 import { EcmoSectionHeader } from '../shell/EcmoSectionHeader'
 import { EcmoSimulatorSurfaces } from '../shell/EcmoSimulatorSurfaces'
-import { EcmoTrackToggle } from '../shell/EcmoTrackToggle'
 import shellStyles from '../shell/EcmoActivityShell.module.css'
 import type { StageSurfaceId } from '../stage/stageModel'
 import { useAlarmAudio } from '../useAlarmAudio'
@@ -91,7 +90,7 @@ export interface EcmoPracticeCaseViewProps {
   readonly resumedFromStorage?: boolean
   readonly assumedConceptIds?: readonly string[]
   readonly onLoadScenario: (scenarioId: string, mode?: SimulationMode) => void
-  readonly onSelectTrack: (mode: SupportMode) => void
+  readonly onMainMenu: () => void
   readonly onReveal: () => void
   readonly onSaveAndExit: () => void
   readonly onReset: () => void
@@ -137,7 +136,7 @@ export function EcmoPracticeActivity({
       resumedFromStorage={core.resumedFromStorage}
       assumedConceptIds={core.catalogActivity?.assumedConceptIds}
       onLoadScenario={core.loadPracticeScenario}
-      onSelectTrack={core.selectTrack}
+      onMainMenu={core.openMainMenu}
       onReveal={core.revealDebrief}
       onSaveAndExit={core.saveAndExit}
       onReset={core.resetActivity}
@@ -162,7 +161,7 @@ export function EcmoPracticeCaseView({
   resumedFromStorage = false,
   assumedConceptIds,
   onLoadScenario,
-  onSelectTrack,
+  onMainMenu,
   onReveal,
   onSaveAndExit,
   onReset,
@@ -527,7 +526,7 @@ export function EcmoPracticeCaseView({
       title={title}
       meta={meta}
       sectionsControl={caseOptions}
-      trackToggle={<EcmoTrackToggle supportMode={supportMode} onSelect={onSelectTrack} />}
+      onMainMenu={onMainMenu}
       helpRef={helpButtonRef}
       onHelp={() => setHelpOpen(true)}
       onRestart={restartCase}

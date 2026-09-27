@@ -60,7 +60,6 @@ import { EcmoLookInLine } from '../shell/EcmoLookInLine'
 import { EcmoOtherAnswers, ECMO_VERDICT_FRAMES } from '../shell/EcmoOtherAnswers'
 import { EcmoSectionHeader } from '../shell/EcmoSectionHeader'
 import { EcmoSimulatorSurfaces } from '../shell/EcmoSimulatorSurfaces'
-import { EcmoTrackToggle } from '../shell/EcmoTrackToggle'
 import shellStyles from '../shell/EcmoActivityShell.module.css'
 import { EcmoFoundationTeachingPanel } from '../teaching/EcmoFoundationTeachingPanel'
 import {
@@ -1697,18 +1696,8 @@ function FoundationStageSession({
           onSelect={goToSection}
         />
       }
-      trackToggle={
-        trackIsFixed ? undefined : (
-          <EcmoTrackToggle
-            supportMode={supportMode}
-            onSelect={(mode) =>
-              router.push({
-                pathname: `${cardiohelpEcmoNavBase}/learn`,
-                query: { lesson: sectionId, track: mode },
-              })
-            }
-          />
-        )
+      onMainMenu={() =>
+        router.push({ pathname: `${cardiohelpEcmoNavBase}/learn`, query: { track: supportMode } })
       }
       helpRef={helpButtonRef}
       onHelp={() => setHelpOpen(true)}
