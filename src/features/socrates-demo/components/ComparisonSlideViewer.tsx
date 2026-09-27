@@ -171,20 +171,22 @@ const PairedViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerProps>(
   },
 )
 
-export const ComparisonSlideViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerProps>(
-  function ComparisonSlideViewer(props, ref) {
-    return (
-      <ExpandableViewer>
-        {getInvenioPair(props.slide.descriptorUrl) || props.slide.comparisonDescriptorUrl ? (
-          <PairedViewer
-            key={`${props.slide.descriptorUrl}:${JSON.stringify(props.slide.initialImageRect)}`}
-            {...props}
-            ref={ref}
-          />
-        ) : (
-          <DeepZoomViewer {...props} ref={ref} />
-        )}
-      </ExpandableViewer>
-    )
-  },
-)
+export const ComparisonSlideViewer = forwardRef<
+  DeepZoomViewerHandle,
+  DeepZoomViewerProps & { tissueOnly?: boolean }
+>(function ComparisonSlideViewer({ tissueOnly = false, ...props }, ref) {
+  return (
+    <ExpandableViewer>
+      {!tissueOnly &&
+      (getInvenioPair(props.slide.descriptorUrl) || props.slide.comparisonDescriptorUrl) ? (
+        <PairedViewer
+          key={`${props.slide.descriptorUrl}:${JSON.stringify(props.slide.initialImageRect)}`}
+          {...props}
+          ref={ref}
+        />
+      ) : (
+        <DeepZoomViewer {...props} ref={ref} />
+      )}
+    </ExpandableViewer>
+  )
+})

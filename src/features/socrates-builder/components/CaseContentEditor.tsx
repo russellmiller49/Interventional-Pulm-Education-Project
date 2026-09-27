@@ -15,10 +15,12 @@ export function CaseContentEditor({
   document,
   onChange,
   privateEnabled,
+  localModules = false,
 }: {
   document: SocratesSlideDocument
   onChange: (document: SocratesSlideDocument) => void
   privateEnabled: boolean
+  localModules?: boolean
 }) {
   const content = document.caseContent ?? emptyCaseContent()
   const author = document.authorContent ?? emptyAuthorContent()
@@ -38,7 +40,9 @@ export function CaseContentEditor({
     })
   const legendIssues = annotationLegendIssues(content.annotationLegend)
   const readiness = author.readiness
-  const issues = testingReadinessIssues(content, author)
+  const issues = testingReadinessIssues(content, author).filter(
+    (issue) => !localModules || issue !== 'Testing eligibility is not enabled.',
+  )
   function field(
     label: string,
     value: string,
@@ -90,25 +94,30 @@ export function CaseContentEditor({
           Categories are alphabetical. This does not set curriculum module order or a case’s
           position within a module. Existing values keep their meaning.
         </p>
-        <label>
-          <input
-            type="checkbox"
-            checked={content.trainingEligible}
-            onChange={(e) => changeCase({ trainingEligible: e.target.checked })}
-          />{' '}
-          Training eligible
-        </label>
+        {!localModules && (
+          <label>
+            <input
+              type="checkbox"
+              checked={content.trainingEligible}
+              onChange={(e) => changeCase({ trainingEligible: e.target.checked })}
+            />{' '}
+            Training eligible
+          </label>
+        )}
         {field('Case vignette', content.vignette, (vignette) => changeCase({ vignette }))}
         {content.learnerNarrative !== undefined ? (
           <>
-            <h3>Verbatim learner narrative</h3>
+            <h3>{localModules ? 'Teaching narrative' : 'Verbatim learner narrative'}</h3>
             <p>
-              This complete narrative appears after reveal. Its headings and paragraphs are
-              preserved. Classification fields follow only the explicitly labeled source text. The
-              original workbook cells remain in protected author metadata.
+              {localModules
+                ? 'This narrative appears in the teaching module. '
+                : 'This complete narrative appears after reveal. '}
+              Its headings and paragraphs are preserved. Classification fields follow only the
+              explicitly labeled source text. The original workbook cells remain in protected author
+              metadata.
             </p>
             {field(
-              'Learner narrative (after reveal)',
+              localModules ? 'Teaching narrative' : 'Learner narrative (after reveal)',
               content.learnerNarrative,
               (learnerNarrative) =>
                 changeCase({ learnerNarrative, ...narrativeTeaching(learnerNarrative) }),
@@ -349,16 +358,24 @@ export function CaseContentEditor({
           {field('Protected hold reason / readiness note', readiness.holdReason, (holdReason) =>
             changeAuthor({ readiness: { ...readiness, holdReason } }),
           )}
-          <label>
-            <input
-              type="checkbox"
-              checked={content.testingEligible}
-              onChange={(e) => changeCase({ testingEligible: e.target.checked })}
-            />{' '}
-            Testing eligible
-          </label>
+          {!localModules && (
+            <label>
+              <input
+                type="checkbox"
+                checked={content.testingEligible}
+                onChange={(e) => changeCase({ testingEligible: e.target.checked })}
+              />{' '}
+              Testing eligible
+            </label>
+          )}
           <div role="status">
-            <strong>{issues.length ? 'Testing blocked' : 'Ready for study activation'}</strong>
+            <strong>
+              {issues.length
+                ? localModules
+                  ? 'Review needed before release'
+                  : 'Testing blocked'
+                : 'Ready for study activation'}
+            </strong>
             {issues.length > 0 && (
               <ul>
                 {issues.map((issue) => (
@@ -368,8 +385,9 @@ export function CaseContentEditor({
             )}
           </div>
           <p className={styles.fieldHint}>
-            Eligibility does not activate a case. A study administrator must select a reviewed,
-            saved revision for a study round.
+            {localModules
+              ? 'Module assignment is a draft planning choice. Complete the release review before using this case in a live study.'
+              : 'Eligibility does not activate a case. A study administrator must select a reviewed, saved revision for a study round.'}
           </p>
         </section>
       )}

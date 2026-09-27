@@ -17,9 +17,11 @@ const empty: DemoAnnotation[] = []
 export function StudyViewer({
   slide,
   annotations = empty,
+  tissueOnly = false,
 }: {
   slide: DeepZoomSlide
   annotations?: DemoAnnotation[]
+  tissueOnly?: boolean
 }) {
   const viewer = useRef<DeepZoomViewerHandle>(null)
   const [viewport, setViewport] = useState<ViewportSnapshot>({
@@ -71,6 +73,7 @@ export function StudyViewer({
           )}
         </div>
         <ComparisonSlideViewer
+          tissueOnly={tissueOnly}
           ref={viewer}
           slide={slide}
           annotations={shown ? annotations.filter((a) => visible.has(a.id)) : empty}

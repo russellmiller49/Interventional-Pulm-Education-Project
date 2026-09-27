@@ -108,6 +108,19 @@
   padding: 0.6rem;
   background: #edf5f3;
 }
+.controls button {
+  min-height: 44px;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #b8ceca;
+  border-radius: 0.45rem;
+  background: #fff;
+  color: #17343d;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.controls button:hover {
+  background: #deeee8;
+}
 .panel {
   min-width: 0;
   border: 1px solid #bfd3d0;
