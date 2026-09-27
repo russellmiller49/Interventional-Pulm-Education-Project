@@ -1,7 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { FlaskConical, ScanSearch } from 'lucide-react'
+import { BookOpen, FlaskConical, ScanSearch } from 'lucide-react'
+import { SocratesLearningWorkspace } from '@/features/socrates-learning/components/SocratesLearningWorkspace'
 
 import { SocratesBuilder } from '@/features/socrates-builder/components/SocratesBuilder'
 import {
@@ -13,7 +14,7 @@ import {
 import { SocratesDemo } from './SocratesDemo'
 import styles from './socrates-demo-workspace.module.css'
 
-type WorkspaceView = 'demo' | 'builder'
+type WorkspaceView = 'demo' | 'builder' | 'learn'
 
 export function SocratesDemoWorkspace() {
   const [view, setView] = useState<WorkspaceView>('demo')
@@ -26,7 +27,14 @@ export function SocratesDemoWorkspace() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setWorkspace(restored.workspace)
     setStorageWarning(restored.warning)
-    const syncFromHash = () => setView(window.location.hash === '#builder' ? 'builder' : 'demo')
+    const syncFromHash = () =>
+      setView(
+        window.location.hash === '#builder'
+          ? 'builder'
+          : window.location.hash === '#learn'
+            ? 'learn'
+            : 'demo',
+      )
     syncFromHash()
     window.addEventListener('hashchange', syncFromHash)
     return () => window.removeEventListener('hashchange', syncFromHash)
@@ -42,7 +50,7 @@ export function SocratesDemoWorkspace() {
 
   const chooseView = useCallback((nextView: WorkspaceView) => {
     setView(nextView)
-    const nextHash = nextView === 'builder' ? '#builder' : ''
+    const nextHash = nextView === 'demo' ? '' : `#${nextView}`
     window.history.replaceState(
       null,
       '',
@@ -64,16 +72,28 @@ export function SocratesDemoWorkspace() {
     <div className={styles.workspaceShell}>
       <section className={styles.launcher} aria-labelledby="socrates-workspace-title">
         <div>
-          <span className={styles.kicker}>Invenio + SOCRATES · company demo</span>
+          <span className={styles.kicker}>Invenio + SOCRATES</span>
           <div className={styles.workspaceTitle} id="socrates-workspace-title">
-            SOCRATES interactive demo
+            SOCRATES slide workspace
           </div>
           <p>
-            Explore Invenio’s web slides with your teaching overlays. Edits stay in this browser;
-            export JSON to share or back them up. No sign-in is required.
+            Review teaching and testing modules, explore slides, or prepare annotations. Drafts and
+            review progress stay in this browser.
           </p>
         </div>
         <div className={styles.viewPicker} role="group" aria-label="Choose workspace">
+          <button
+            type="button"
+            className={view === 'learn' ? styles.activeView : undefined}
+            aria-pressed={view === 'learn'}
+            onClick={() => chooseView('learn')}
+          >
+            <BookOpen aria-hidden="true" />
+            <span>
+              <strong>Teaching & testing</strong>
+              <small>Separate learning modules</small>
+            </span>
+          </button>
           <button
             type="button"
             className={view === 'demo' ? styles.activeView : undefined}
@@ -110,7 +130,9 @@ export function SocratesDemoWorkspace() {
         </p>
       ) : null}
 
-      {view === 'demo' ? (
+      {view === 'learn' ? (
+        <SocratesLearningWorkspace documents={workspace.documents} />
+      ) : view === 'demo' ? (
         <SocratesDemo
           key={workspace.activeDocument.recordId ?? workspace.activeDocument.slug}
           slide={workspace.activeDocument.slide}

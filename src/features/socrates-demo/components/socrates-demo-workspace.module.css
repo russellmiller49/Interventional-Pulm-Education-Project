@@ -18,7 +18,7 @@
   position: relative;
   z-index: 15;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(28rem, 0.85fr);
+  grid-template-columns: minmax(0, 1fr) minmax(36rem, 1.1fr);
   gap: clamp(1rem, 3vw, 3rem);
   align-items: center;
   width: min(calc(100% - 2rem), 96rem);
@@ -54,7 +54,7 @@
 
 .viewPicker {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.55rem;
   padding: 0.45rem;
   border: 1px solid #c6d6d8;
