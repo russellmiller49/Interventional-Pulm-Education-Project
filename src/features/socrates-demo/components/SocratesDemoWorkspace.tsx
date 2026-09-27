@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useLocale } from 'next-intl'
 import { BookOpen, FlaskConical, ScanSearch } from 'lucide-react'
 import { SocratesLearningWorkspace } from '@/features/socrates-learning/components/SocratesLearningWorkspace'
 
@@ -40,6 +41,7 @@ import styles from './socrates-demo-workspace.module.css'
 type WorkspaceView = 'demo' | 'builder' | 'learn' | 'library'
 
 export function SocratesDemoWorkspace() {
+  const locale = useLocale()
   const [view, setView] = useState<WorkspaceView>('demo')
   const [workspace, setWorkspace] = useState<WebOverlayWorkspace | null>(null)
   const workspaceRef = useRef<WebOverlayWorkspace | null>(null)
@@ -194,6 +196,7 @@ export function SocratesDemoWorkspace() {
             Drafts stay in this browser until you export them.
           </p>
         </div>
+        <a href={`/${locale}/socrates-library`}>Open shared team library ↗</a>
         <div className={styles.viewPicker} role="group" aria-label="Choose workspace">
           <button
             type="button"

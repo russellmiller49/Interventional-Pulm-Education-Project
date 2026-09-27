@@ -209,7 +209,7 @@ export function SocratesBuilder({
 }: SocratesBuilderProps) {
   const locale = useLocale()
   const [initialDocument] = useState(() =>
-    (mode === 'local' ? localCaseDocument : cloneDocument)(
+    (mode === 'local' || mode === 'shared' ? localCaseDocument : cloneDocument)(
       initialActiveDocument ??
         initialDocuments[0] ??
         (mode === 'local' ? createInvenioDemoDocument() : createStarterSocratesDocument()),
@@ -247,7 +247,8 @@ export function SocratesBuilder({
   )
 
   const isSandbox = mode === 'sandbox'
-  const isLocal = mode === 'local'
+  const isShared = mode === 'shared'
+  const isLocal = mode === 'local' || isShared
   const isPairedSlide = Boolean(getInvenioPair(document.slide.descriptorUrl))
   const catalog = useMemo(
     () => (isLocal ? replaceDocumentInCatalog(documents, document) : documents),
@@ -950,11 +951,13 @@ export function SocratesBuilder({
       <header className={styles.hero}>
         <div>
           <div className={styles.eyebrow}>
-            {isLocal
-              ? 'Invenio web overlay demo'
-              : isSandbox
-                ? 'Open company sandbox'
-                : 'Protected authoring workspace'}
+            {isShared
+              ? 'Shared author workspace'
+              : isLocal
+                ? 'Invenio web overlay demo'
+                : isSandbox
+                  ? 'Open company sandbox'
+                  : 'Protected authoring workspace'}
           </div>
           <h1>{isLocal || isSandbox ? 'Build and annotate a slide' : 'SOCRATES slide builder'}</h1>
           <p>
@@ -965,15 +968,17 @@ export function SocratesBuilder({
         </div>
         <div className={styles.heroMeta}>
           <Badge variant={access.canPersist ? 'success' : 'outline'}>
-            {isLocal
-              ? 'Browser storage'
-              : isSandbox
-                ? access.canPersist
-                  ? 'Anonymous sandbox saving'
-                  : 'Local preview'
-                : access.canPersist
-                  ? 'Database connected'
-                  : 'Local preview'}
+            {isShared
+              ? 'Team draft'
+              : isLocal
+                ? 'Browser storage'
+                : isSandbox
+                  ? access.canPersist
+                    ? 'Anonymous sandbox saving'
+                    : 'Local preview'
+                  : access.canPersist
+                    ? 'Database connected'
+                    : 'Local preview'}
           </Badge>
           {access.userEmail ? <span>{access.userEmail}</span> : null}
         </div>
@@ -981,18 +986,22 @@ export function SocratesBuilder({
 
       <div className={styles.safetyBanner} role="note">
         <strong>
-          {isLocal
-            ? 'Images from Invenio · teaching overlays saved on this browser.'
-            : isSandbox
-              ? 'Shared sandbox: do not enter patient or confidential information.'
-              : 'Authoring content is illustrative until reviewed.'}
+          {isShared
+            ? 'Shared draft · learner publication is separate.'
+            : isLocal
+              ? 'Images from Invenio · teaching overlays saved on this browser.'
+              : isSandbox
+                ? 'Shared sandbox: do not enter patient or confidential information.'
+                : 'Authoring content is illustrative until reviewed.'}
         </strong>
         <span>
-          {isLocal
-            ? 'Changes save automatically. Export JSON to back up your work or move it to another browser or computer. Teaching regions require author review.'
-            : isSandbox
-              ? 'Anyone with this unlisted URL can view saved drafts. Sandbox drafts never publish to the production demo.'
-              : 'No annotation is clinical guidance. Publishing requires site-administrator review.'}
+          {isShared
+            ? 'Edits queue for automatic team saving. Check the shared save status above before leaving. Complete review before publishing.'
+            : isLocal
+              ? 'Changes save automatically. Export JSON to back up your work or move it to another browser or computer. Teaching regions require author review.'
+              : isSandbox
+                ? 'Anyone with this unlisted URL can view saved drafts. Sandbox drafts never publish to the production demo.'
+                : 'No annotation is clinical guidance. Publishing requires site-administrator review.'}
         </span>
       </div>
 
@@ -1005,131 +1014,140 @@ export function SocratesBuilder({
         </p>
       ) : null}
 
-      <section className={styles.workspace} aria-label="SOCRATES annotation workspace">
-        <aside className={styles.catalog} aria-label="Slide catalog">
-          <div className={styles.panelHeading}>
-            <div>
-              <span>Library</span>
-              <h2>Slides</h2>
-            </div>
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              onClick={addNewSlide}
-              aria-label="Add slide"
-            >
-              <CirclePlus aria-hidden="true" />
-            </Button>
-          </div>
-
-          <InvenioSlidePicker
-            onLoad={(url) => void loadDescriptor(url, true)}
-            disabled={loadingDescriptor || saving}
-          />
-
-          <div className={styles.catalogList}>
-            {catalog.map((catalogDocument) => (
-              <button
+      <section
+        className={`${styles.workspace} ${isShared ? styles.sharedWorkspace : ''}`}
+        aria-label="SOCRATES annotation workspace"
+      >
+        {!isShared && (
+          <aside className={styles.catalog} aria-label="Slide catalog">
+            <div className={styles.panelHeading}>
+              <div>
+                <span>Library</span>
+                <h2>Slides</h2>
+              </div>
+              <Button
                 type="button"
-                key={catalogDocument.recordId ?? catalogDocument.slug}
-                className={
-                  catalogDocument.recordId === document.recordId && document.recordId
-                    ? styles.catalogItemActive
-                    : styles.catalogItem
-                }
-                onClick={() => selectDocument(catalogDocument)}
+                size="icon"
+                variant="outline"
+                onClick={addNewSlide}
+                aria-label="Add slide"
               >
-                <span>{catalogDocument.title}</span>
-                {catalogDocument.authorContent?.curriculumSource && (
+                <CirclePlus aria-hidden="true" />
+              </Button>
+            </div>
+
+            <InvenioSlidePicker
+              onLoad={(url) => void loadDescriptor(url, true)}
+              disabled={loadingDescriptor || saving}
+            />
+
+            <div className={styles.catalogList}>
+              {catalog.map((catalogDocument) => (
+                <button
+                  type="button"
+                  key={catalogDocument.recordId ?? catalogDocument.slug}
+                  className={
+                    catalogDocument.recordId === document.recordId && document.recordId
+                      ? styles.catalogItemActive
+                      : styles.catalogItem
+                  }
+                  onClick={() => selectDocument(catalogDocument)}
+                >
+                  <span>{catalogDocument.title}</span>
+                  {catalogDocument.authorContent?.curriculumSource && (
+                    <small>
+                      {
+                        catalogDocument.authorContent.curriculumSource.sourceValues[
+                          'Full Case Name'
+                        ]
+                      }
+                    </small>
+                  )}
                   <small>
-                    {catalogDocument.authorContent.curriculumSource.sourceValues['Full Case Name']}
+                    <Badge
+                      variant={
+                        isSandbox && ownedSandboxIds.has(catalogDocument.recordId ?? '')
+                          ? 'success'
+                          : statusVariant(catalogDocument.workflowStatus)
+                      }
+                      size="sm"
+                    >
+                      {isLocal
+                        ? 'browser draft'
+                        : isSandbox
+                          ? ownedSandboxIds.has(catalogDocument.recordId ?? '')
+                            ? 'your draft'
+                            : 'shared'
+                          : catalogDocument.workflowStatus}
+                    </Badge>
+                    {!isLocal ? <span>v{catalogDocument.revision}</span> : null}
                   </small>
+                </button>
+              ))}
+              {catalog.length === 0 ? (
+                <div className={styles.emptyCatalog}>
+                  <FileJson aria-hidden="true" />
+                  <strong>Starter draft</strong>
+                  <span>Load and save the sample, or add another Invenio slide.</span>
+                </div>
+              ) : null}
+            </div>
+
+            <div className={styles.catalogActions}>
+              <Button type="button" variant="outline" size="sm" onClick={exportDocument}>
+                <Download aria-hidden="true" /> Export JSON
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => importInputRef.current?.click()}
+              >
+                <Upload aria-hidden="true" /> Import copy
+              </Button>
+              <input
+                ref={importInputRef}
+                className={styles.visuallyHidden}
+                type="file"
+                accept="application/json,.json"
+                onChange={importDocument}
+                aria-label="Import SOCRATES JSON"
+              />
+            </div>
+
+            {!isLocal && !isSandbox && access.canPublish ? (
+              <div className={styles.cleanupPanel}>
+                <div>
+                  <span>Public sandbox</span>
+                  <strong>{cleanupDocuments.length} submissions</strong>
+                </div>
+                {cleanupDocuments.length ? (
+                  <div className={styles.cleanupList}>
+                    {cleanupDocuments.map((sandboxDocument) => (
+                      <div key={sandboxDocument.recordId ?? sandboxDocument.slug}>
+                        <span title={sandboxDocument.title}>{sandboxDocument.title}</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            sandboxDocument.recordId
+                              ? void deleteSandboxDocumentAsAdmin(sandboxDocument.recordId)
+                              : undefined
+                          }
+                          disabled={saving || !sandboxDocument.recordId}
+                          aria-label={`Delete sandbox submission ${sandboxDocument.title}`}
+                        >
+                          <Trash2 aria-hidden="true" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <small>No sandbox submissions to clean up.</small>
                 )}
-                <small>
-                  <Badge
-                    variant={
-                      isSandbox && ownedSandboxIds.has(catalogDocument.recordId ?? '')
-                        ? 'success'
-                        : statusVariant(catalogDocument.workflowStatus)
-                    }
-                    size="sm"
-                  >
-                    {isLocal
-                      ? 'browser draft'
-                      : isSandbox
-                        ? ownedSandboxIds.has(catalogDocument.recordId ?? '')
-                          ? 'your draft'
-                          : 'shared'
-                        : catalogDocument.workflowStatus}
-                  </Badge>
-                  {!isLocal ? <span>v{catalogDocument.revision}</span> : null}
-                </small>
-              </button>
-            ))}
-            {catalog.length === 0 ? (
-              <div className={styles.emptyCatalog}>
-                <FileJson aria-hidden="true" />
-                <strong>Starter draft</strong>
-                <span>Load and save the sample, or add another Invenio slide.</span>
               </div>
             ) : null}
-          </div>
-
-          <div className={styles.catalogActions}>
-            <Button type="button" variant="outline" size="sm" onClick={exportDocument}>
-              <Download aria-hidden="true" /> Export JSON
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => importInputRef.current?.click()}
-            >
-              <Upload aria-hidden="true" /> Import copy
-            </Button>
-            <input
-              ref={importInputRef}
-              className={styles.visuallyHidden}
-              type="file"
-              accept="application/json,.json"
-              onChange={importDocument}
-              aria-label="Import SOCRATES JSON"
-            />
-          </div>
-
-          {!isLocal && !isSandbox && access.canPublish ? (
-            <div className={styles.cleanupPanel}>
-              <div>
-                <span>Public sandbox</span>
-                <strong>{cleanupDocuments.length} submissions</strong>
-              </div>
-              {cleanupDocuments.length ? (
-                <div className={styles.cleanupList}>
-                  {cleanupDocuments.map((sandboxDocument) => (
-                    <div key={sandboxDocument.recordId ?? sandboxDocument.slug}>
-                      <span title={sandboxDocument.title}>{sandboxDocument.title}</span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          sandboxDocument.recordId
-                            ? void deleteSandboxDocumentAsAdmin(sandboxDocument.recordId)
-                            : undefined
-                        }
-                        disabled={saving || !sandboxDocument.recordId}
-                        aria-label={`Delete sandbox submission ${sandboxDocument.title}`}
-                      >
-                        <Trash2 aria-hidden="true" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <small>No sandbox submissions to clean up.</small>
-              )}
-            </div>
-          ) : null}
-        </aside>
+          </aside>
+        )}
 
         <section className={styles.viewerPanel} aria-label="Slide annotation canvas">
           <div className={styles.viewerToolbar}>
@@ -1601,15 +1619,17 @@ export function SocratesBuilder({
       <footer className={styles.publishBar}>
         <div className={styles.publishState}>
           <Badge variant={dirty || localSaveError ? 'info' : 'success'}>
-            {isLocal
-              ? localSaveError
-                ? 'Not saved'
+            {isShared
+              ? 'Team save status shown above'
+              : isLocal
+                ? localSaveError
+                  ? 'Not saved'
+                  : dirty
+                    ? 'Saving in browser'
+                    : 'Browser auto-save'
                 : dirty
-                  ? 'Saving in browser'
-                  : 'Browser auto-save'
-              : dirty
-                ? 'Unsaved changes'
-                : 'Saved'}
+                  ? 'Unsaved changes'
+                  : 'Saved'}
           </Badge>
           {!isLocal ? <span>Revision {document.revision}</span> : null}
           {isLocal && localSaveError ? (

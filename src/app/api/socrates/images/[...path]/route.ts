@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { libraryImageDocument } from '@/features/socrates-learning/server/shared-library'
 import {
   requireSocratesUser,
   trainingDocument,
@@ -21,7 +22,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pat
     const path = (await params).path
     const [kind, id, revision, pane, ...asset] = path
     if (
-      !['training', 'testing'].includes(kind) ||
+      !['training', 'testing', 'library'].includes(kind) ||
       !z.string().uuid().safeParse(id).success ||
       !/^\d+$/.test(revision) ||
       !['tissue', 'color'].includes(pane)
@@ -37,7 +38,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pat
     const testing = kind === 'testing' ? await loadAttempt(id, session) : null
     if (testing && pane === 'color' && !testing.config.showColorImage)
       return new Response('Not found.', { status: 404, headers })
-    const document = testing?.document ?? (await trainingDocument(id, Number(revision)))
+    const released = kind === 'library' ? await libraryImageDocument(id, Number(revision)) : null
+    if (released?.assignment === 'testing' && pane === 'color')
+      return new Response('Not found.', { status: 404, headers })
+    const document =
+      released?.document ?? testing?.document ?? (await trainingDocument(id, Number(revision)))
     const pair = getInvenioPair(document.slide.descriptorUrl)
     if (pane === 'color' && !pair) return new Response('Not found.', { status: 404, headers })
     const descriptor =

@@ -311,6 +311,8 @@ export function getRequiredEntitlement(
   }
 
   if (
+    normalizedPathname === '/socrates-library' ||
+    normalizedPathname.startsWith('/socrates-library/') ||
     normalizedPathname === '/socrates-builder' ||
     normalizedPathname.startsWith('/socrates-builder/')
   ) {

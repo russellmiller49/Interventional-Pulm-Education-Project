@@ -1,5 +1,9 @@
 # SOCRATES teaching and testing module preview
 
+For team-wide saving and reviewed publication, use the new
+[shared authoring library](socrates-shared-library.md). The browser workspace below
+remains available as a private local draft source and offline preview.
+
 The local slide workspace now has independent **Teaching** and **Testing** modules.
 Both modules now use the same editable slide library as the annotation builder.
 Each draft has one assignment: Unassigned, Teaching, or Testing. All migrated slides

@@ -57,7 +57,12 @@ export function caseKey(document: SocratesCaseDocument) {
 }
 export function signature(document: SocratesCaseDocument) {
   // Exact content comparison invalidates local progress when a draft changes.
-  return JSON.stringify([document.caseContent, document.slide, document.annotations])
+  return JSON.stringify([
+    document.revision,
+    document.caseContent,
+    document.slide,
+    document.annotations,
+  ])
 }
 export function moduleName(document: SocratesCaseDocument) {
   return document.authorContent.curriculumSource?.sourceValues.Module ?? 'Slide collection'
