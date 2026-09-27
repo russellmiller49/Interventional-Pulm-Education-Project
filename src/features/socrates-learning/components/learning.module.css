@@ -7,6 +7,8 @@
   margin: 0 auto;
   padding: 0 clamp(1rem, 3vw, 3rem) 2rem;
   color: var(--ink);
+  background: #f4f9f8;
+  color-scheme: light;
 }
 .shell *,
 .lesson * {

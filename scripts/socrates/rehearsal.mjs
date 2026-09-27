@@ -585,6 +585,8 @@ try {
   })
   const { runImportChecks } = await import('./import-rehearsal.mjs')
   await runImportChecks({ sql, rpc, asUser, ids, cid, fixture, assert, rejects, lit, root })
+  const { runSharedLibraryChecks } = await import('./shared-library-rehearsal.mjs')
+  await runSharedLibraryChecks({ sql, rpc, asUser, ids, fixture, assert, rejects, lit, root })
   process.stdout.write(`\n${checks} PostgreSQL checks passed.\n`)
   if (!process.argv.includes('--serve')) {
     cleanup()

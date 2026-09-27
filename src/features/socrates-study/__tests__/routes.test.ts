@@ -3,6 +3,10 @@ import { GET, POST } from '@/app/api/socrates/[...path]/route'
 import { GET as imageGET } from '@/app/api/socrates/images/[...path]/route'
 import * as service from '../server/service'
 import { caseFixture } from '../testing/fixtures'
+import { libraryImageDocument } from '@/features/socrates-learning/server/shared-library'
+jest.mock('@/features/socrates-learning/server/shared-library', () => ({
+  libraryImageDocument: jest.fn(),
+}))
 
 jest.mock('../server/service', () => ({
   SocratesAccessError: class extends Error {
@@ -43,6 +47,28 @@ beforeEach(() => {
 })
 afterAll(() => {
   global.fetch = originalFetch
+})
+
+test('published testing images deny color access at the server boundary', async () => {
+  jest.mocked(libraryImageDocument).mockResolvedValue({
+    id,
+    assignment: 'testing',
+    publishedAt: '2026-09-27',
+    document: caseFixture(),
+  } as Awaited<ReturnType<typeof libraryImageDocument>>)
+  const response = await imageGET(request('image'), params(`library/${id}/1/color/slide.dzi`))
+  expect(response.status).toBe(404)
+  expect(global.fetch).not.toHaveBeenCalled()
+  expect(response.headers.get('Cache-Control')).toBe('private, no-store')
+})
+test('withdrawn or superseded library images are unavailable', async () => {
+  jest
+    .mocked(libraryImageDocument)
+    .mockRejectedValue(new service.SocratesAccessError('Published slide unavailable.', 404))
+  expect(
+    (await imageGET(request('image'), params(`library/${id}/1/tissue/slide.dzi`))).status,
+  ).toBe(404)
+  expect(global.fetch).not.toHaveBeenCalled()
 })
 
 test.each(['admin/dashboard', 'admin/export'])(

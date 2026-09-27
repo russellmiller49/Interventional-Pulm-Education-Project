@@ -1,0 +1,160 @@
+.shell {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 40px 24px 100px;
+  color: #16333b;
+  background: #f4f9f8;
+  color-scheme: light;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.header h1 {
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 8px 0;
+}
+.header p,
+.release p {
+  color: #536973;
+  line-height: 1.6;
+}
+.header a {
+  color: #087d83;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 11px;
+  font-weight: 700;
+  color: #46747a;
+}
+.status {
+  padding: 14px 18px;
+  background: #e4f3ef;
+  border: 1px solid #b6d6cd;
+  border-radius: 12px;
+  margin: 20px 0;
+  font-size: 14px;
+}
+.status span {
+  display: block;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+}
+.toolbar button,
+.release button,
+.card button {
+  border: 1px solid #aec6cb;
+  border-radius: 9px;
+  background: #fff;
+  padding: 10px 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.shell button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.shell button:focus-visible,
+.shell a:focus-visible {
+  outline: 3px solid #128b93;
+  outline-offset: 3px;
+}
+.toolbar input {
+  min-width: 230px;
+  flex: 1;
+  border: 1px solid #aec6cb;
+  border-radius: 9px;
+  padding: 12px;
+  background: #fff;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 16px;
+}
+.card,
+.empty,
+.release {
+  border: 1px solid #cadbdd;
+  border-radius: 15px;
+  background: #fff;
+  padding: 22px;
+}
+.card h2 {
+  font-size: 20px;
+  line-height: 1.4;
+  margin: 8px 0;
+  font-weight: 650;
+}
+.card p {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 8px 0;
+}
+.card button {
+  margin-top: 12px;
+}
+.release {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.release > div {
+  flex: 1;
+}
+.release p {
+  font-size: 13px;
+  margin-top: 6px;
+}
+.conflict {
+  padding: 20px;
+  background: #fff4de;
+  border: 1px solid #d5b267;
+  border-radius: 12px;
+  margin: 20px 0;
+  color: #543e12;
+}
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.compare pre {
+  overflow: auto;
+  max-height: 400px;
+  font-size: 12px;
+}
+@media (max-width: 700px) {
+  .shell {
+    padding: 24px 12px 90px;
+  }
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .grid,
+  .compare {
+    grid-template-columns: 1fr;
+  }
+  .toolbar input {
+    min-width: 0;
+    width: 100%;
+  }
+}

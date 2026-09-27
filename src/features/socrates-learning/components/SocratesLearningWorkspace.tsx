@@ -25,7 +25,11 @@ export function SocratesLearningWorkspace({
   preview,
   onLibrary,
   onEdit,
+  published = false,
+  progressKey = PROGRESS_KEY,
 }: {
+  published?: boolean
+  progressKey?: string
   documents: SocratesSlideDocument[]
   assignments?: Record<string, SlideAssignment>
   preview?: { id: string; mode: LearningMode }
@@ -44,7 +48,7 @@ export function SocratesLearningWorkspace({
     let message = ''
     let restoredProgress: LearningProgress = {}
     try {
-      const raw = localStorage.getItem(PROGRESS_KEY)
+      const raw = localStorage.getItem(progressKey)
       if (raw && !preview) restoredProgress = progressSchema.parse(JSON.parse(raw))
     } catch {
       message += ' Saved progress could not be restored.'
@@ -54,7 +58,7 @@ export function SocratesLearningWorkspace({
     setProgress(restoredProgress)
     setWarning(message)
     setReady(true)
-  }, [preview])
+  }, [preview, progressKey])
   useEffect(() => {
     if (ready) title.current?.focus()
   }, [mode, active, ready])
@@ -80,7 +84,7 @@ export function SocratesLearningWorkspace({
     setProgress(next)
     if (preview) return
     try {
-      localStorage.setItem(PROGRESS_KEY, JSON.stringify(next))
+      localStorage.setItem(progressKey, JSON.stringify(next))
     } catch {
       setWarning(
         'Progress is kept for this visit, but browser storage is unavailable or full. Keep this page open until you can save it.',
@@ -116,9 +120,11 @@ export function SocratesLearningWorkspace({
           <span className={styles.dot} />
           {preview
             ? 'Author preview · responses are not recorded'
-            : 'Module preview · assigned slides only'}
+            : published
+              ? 'Published teaching and testing modules'
+              : 'Module preview · assigned slides only'}
         </span>
-        <span>Browser only · unpublished</span>
+        <span>{published ? 'Progress saved in this browser' : 'Browser only · unpublished'}</span>
       </div>
       {warning && (
         <p className={styles.warning} role="alert">
@@ -264,17 +270,19 @@ export function SocratesLearningWorkspace({
                   </button>
                 </section>
               </div>
-              <div className={styles.allocation}>
-                <div>
-                  <span className={styles.eyebrow}>Before launch</span>
-                  <h3>Choose the teaching and testing sets</h3>
+              {!published && (
+                <div className={styles.allocation}>
+                  <div>
+                    <span className={styles.eyebrow}>Before launch</span>
+                    <h3>Choose the teaching and testing sets</h3>
+                  </div>
+                  <p>
+                    Assign each slide to Teaching or Testing in the shared slide library. Unassigned
+                    drafts stay in the library, where you can edit their context, add bounding
+                    boxes, and preview either version before deciding.
+                  </p>
                 </div>
-                <p>
-                  Assign each slide to Teaching or Testing in the shared slide library. Unassigned
-                  drafts stay in the library, where you can edit their context, add bounding boxes,
-                  and preview either version before deciding.
-                </p>
-              </div>
+              )}
             </>
           ) : (
             <>
@@ -354,14 +362,16 @@ export function SocratesLearningWorkspace({
           )}
           {!cases.length && (
             <p className={styles.warning}>
-              Assign slides in the slide library to build this module. You can preview unassigned
-              drafts there.
+              {published
+                ? 'No slides have been published to this module yet.'
+                : 'Assign slides in the slide library to build this module. You can preview unassigned drafts there.'}
             </p>
           )}
         </>
       )}
       <footer className={styles.footer}>
-        For education only. Draft teaching content requires author review before release. Completing
+        For education only.{' '}
+        {!published && 'Draft teaching content requires author review before release. '}Completing
         these modules does not establish clinical competency.
       </footer>
     </div>
