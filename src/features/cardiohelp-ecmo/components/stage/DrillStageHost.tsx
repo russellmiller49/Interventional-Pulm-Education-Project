@@ -37,7 +37,6 @@ import { EcmoHelpDialog } from '../shell/EcmoHelpDialog'
 import { EcmoNowCard, type NowCardModel } from '../shell/EcmoNowCard'
 import { EcmoSectionHeader } from '../shell/EcmoSectionHeader'
 import { EcmoSimulatorSurfaces } from '../shell/EcmoSimulatorSurfaces'
-import { EcmoTrackToggle } from '../shell/EcmoTrackToggle'
 import shellStyles from '../shell/EcmoActivityShell.module.css'
 import { useAlarmAudio } from '../useAlarmAudio'
 import { buildDrillStageLesson } from './adapters/drillStageAdapter'
@@ -884,7 +883,7 @@ export function DrillStageHost({
           onSelect={goToSection}
         />
       }
-      trackToggle={<EcmoTrackToggle supportMode={supportMode} onSelect={core.selectTrack} />}
+      onMainMenu={core.openMainMenu}
       helpRef={helpButtonRef}
       onHelp={() => setHelpOpen(true)}
       onRestart={core.resetActivity}

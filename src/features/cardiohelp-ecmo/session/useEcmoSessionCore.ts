@@ -94,6 +94,8 @@ export interface EcmoSessionCore {
   readonly completeLearnLesson: (scenarioId: string) => void
   readonly revealDebrief: () => void
   readonly saveAndExit: () => void
+  /** Save, then open the Learn menu on this track, where VV and VA are the first choice. */
+  readonly openMainMenu: () => void
   readonly resetActivity: () => void
   readonly semanticPhase: CriticalCareActivityPhase
   readonly setSemanticPhase: (phase: CriticalCareActivityPhase) => void
@@ -329,6 +331,11 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
     router.push(cardiohelpEcmoNavBase)
   }, [progress, router])
 
+  const openMainMenu = useCallback(() => {
+    writeLearningProgress(progress)
+    router.push({ pathname: `${cardiohelpEcmoNavBase}/learn`, query: { track: supportMode } })
+  }, [progress, router, supportMode])
+
   const resetActivity = useCallback(() => {
     if (section === 'learn') loadLearnScenario(learnLesson.scenarioId)
     else loadPracticeScenario(scenario.id, state.simulationMode)
@@ -363,6 +370,7 @@ export function useEcmoSessionCore(options: EcmoSessionCoreOptions): EcmoSession
     completeLearnLesson,
     revealDebrief,
     saveAndExit,
+    openMainMenu,
     resetActivity,
     semanticPhase,
     setSemanticPhase,

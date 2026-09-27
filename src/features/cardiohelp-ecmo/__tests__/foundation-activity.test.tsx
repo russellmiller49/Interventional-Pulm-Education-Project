@@ -533,34 +533,35 @@ describe('the VA lessons load the states they are authored over', () => {
 })
 
 describe('a shared section keeps both tracks', () => {
-  it.each(ecmoSharedFoundationSectionIds)('offers both tracks on %s', (sectionId) => {
-    mount(sectionId)
+  it.each(ecmoSharedFoundationSectionIds)(
+    'runs on either track and leaves the choice to the main menu on %s',
+    (sectionId) => {
+      mount(sectionId)
 
-    const group = screen.getByRole('radiogroup', { name: 'ECMO support mode' })
-    const vv = screen.getByRole('radio', { name: 'VV track' })
-    const va = screen.getByRole('radio', { name: 'VA track' })
-    expect(group).toContainElement(vv)
-    expect(group).toContainElement(va)
-    expect(vv).toHaveAttribute('aria-checked', 'true')
-    expect(va).toHaveAttribute('aria-checked', 'false')
-    expect(stageFrame().hasAttribute('data-fixed-pathway')).toBe(false)
+      // No in-section VV/VA switch: the track is chosen on the ECMO menu.
+      expect(screen.queryByRole('radiogroup', { name: 'ECMO support mode' })).toBeNull()
+      expect(stageFrame().hasAttribute('data-fixed-pathway')).toBe(false)
 
-    // Choosing the other track is a navigation to the same section on that track, nothing else.
-    fireEvent.click(va)
-    expect(mockPush).toHaveBeenCalledTimes(1)
-    expect(mockPush).toHaveBeenCalledWith({
-      pathname: '/cardiohelp-ecmo/learn',
-      query: { lesson: sectionId, track: 'va' },
-    })
-  })
+      fireEvent.click(screen.getByRole('button', { name: 'Main menu' }))
+      expect(mockPush).toHaveBeenCalledTimes(1)
+      expect(mockPush).toHaveBeenCalledWith({
+        pathname: '/cardiohelp-ecmo/learn',
+        query: { track: 'vv' },
+      })
+    },
+  )
 
   it('honours the requested track, so the VV-only rule is not a blanket one', () => {
     mount('why-extracorporeal-support', 'va')
 
     expect(stageFrame().getAttribute('data-support-mode')).toBe('va')
-    expect(screen.getByRole('radio', { name: 'VA track' })).toHaveAttribute('aria-checked', 'true')
-    expect(stageFrame()).toHaveAttribute('data-support-mode', 'va')
     expect(document.querySelector('[data-simulator-surfaces]')).toBeNull()
+    // The main menu opens on the track the learner is on.
+    fireEvent.click(screen.getByRole('button', { name: 'Main menu' }))
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/cardiohelp-ecmo/learn',
+      query: { track: 'va' },
+    })
   })
 })
 

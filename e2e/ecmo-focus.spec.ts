@@ -327,7 +327,23 @@ test('Prompt03: header controls retain focus across the phone breakpoint', async
   const summary = page.locator('[data-ecmo-header-more] > summary')
   await summary.focus()
   await page.setViewportSize({ width: 610, height: 844 })
-  await expect(page.getByRole('radio', { name: 'VV track', exact: true })).toBeFocused()
+  await expect(page.locator('[data-ecmo-main-menu]')).toBeFocused()
+})
+
+test('Main menu replaces the in-activity track switch and opens Learn on the current track', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 961 })
+  await open(page, 'circuit-flow-path')
+  // No inert summary on a desktop, and no VV/VA switch inside the activity.
+  await expect(page.locator('[data-ecmo-header-more] > summary')).toBeHidden()
+  await expect(page.getByRole('radiogroup', { name: 'ECMO support mode' })).toHaveCount(0)
+  await expect(page.locator('[data-ecmo-restart]')).toBeVisible()
+  await page.getByRole('button', { name: 'Main menu', exact: true }).click()
+  await expect(page).toHaveURL(/\/en\/cardiohelp-ecmo\/learn\?track=vv$/)
+  // The menu leads with the track choice.
+  await page.getByRole('link', { name: /^VA · for a failing heart/ }).click()
+  await expect(page).toHaveURL(/\/en\/cardiohelp-ecmo\/learn\?track=va$/)
 })
 
 test('Prompt03: enlarged emergency strip does not intercept the event or crush console tabs', async ({

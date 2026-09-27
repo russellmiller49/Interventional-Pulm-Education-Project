@@ -323,6 +323,39 @@
   box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.45);
 }
 
+/*
+ * Inside the drawer the shared rail becomes a list.
+ *
+ * `PathwayNav` is a horizontal rail made for the full width above a lesson. In this 26 rem panel it
+ * showed two of the seventeen sections (one on a phone, none at 200% text) and hid the rest behind
+ * a sideways scroller with no visible cue, so the drawer looked as if it stopped at section 02.
+ * Stacked, every section is in the panel, which already scrolls vertically. The component is shared
+ * and unchanged; these rules apply only inside this drawer.
+ */
+.sectionsPanel nav {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+  overflow: visible;
+  padding: 0.25rem;
+  border-bottom: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.sectionsPanel nav ol {
+  flex-direction: column;
+  overflow: visible;
+}
+
+.sectionsPanel nav li {
+  min-width: 0;
+}
+
+/* A long title word ("hypercapnia" at 200% text on a phone) wraps inside its button. */
+.sectionsPanel nav button {
+  overflow-wrap: anywhere;
+}
+
 /* ------------------------------------------------------------------ *
  * Task column cards
  * ------------------------------------------------------------------ */

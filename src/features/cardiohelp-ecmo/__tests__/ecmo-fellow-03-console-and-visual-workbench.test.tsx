@@ -811,13 +811,14 @@ describe('phone chrome', () => {
     }
   }
 
-  it('folds track switch and restart into one disclosure on a phone, keeping section, help and exit', () => {
+  it('folds main menu and restart into one disclosure on a phone, keeping section, help and exit', () => {
     withPhone(true, () => {
+      const onMainMenu = jest.fn()
       render(
         <EcmoSectionHeader
           kicker="VV track · Section 4 of 17"
           title="The control panel"
-          trackToggle={<div role="radiogroup" aria-label="ECMO support mode" />}
+          onMainMenu={onMainMenu}
           sectionsControl={<button type="button">Sections</button>}
           onHelp={() => {}}
           onRestart={() => {}}
@@ -827,35 +828,48 @@ describe('phone chrome', () => {
       )
       const more = document.querySelector('details[data-ecmo-header-more]')
       expect(more).not.toBeNull()
-      expect(more?.querySelector('[role="radiogroup"]')).not.toBeNull()
+      expect(more?.querySelector('summary')).toHaveTextContent('Main menu or restart')
+      expect(more?.querySelector('[role="radiogroup"]')).toBeNull()
+      const menu = within(more as HTMLElement).getByRole('button', { name: 'Main menu' })
       expect(
         within(more as HTMLElement).getByRole('button', { name: 'Restart section' }),
       ).toBeTruthy()
       expect(screen.getByRole('button', { name: 'Sections' })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'What do I do now?' })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /Save & exit/ })).toBeInTheDocument()
+      fireEvent.click(menu)
+      expect(onMainMenu).toHaveBeenCalledTimes(1)
     })
   })
 
-  it('exposes the same header controls at wide widths', () => {
+  it('shows main menu and restart as plain buttons at wide widths, with no inert summary', () => {
     withPhone(false, () => {
       render(
         <EcmoSectionHeader
           kicker="VV track"
           title="The control panel"
-          trackToggle={<div role="radiogroup" aria-label="ECMO support mode" />}
+          onMainMenu={() => {}}
           onRestart={() => {}}
         />,
       )
       expect(document.querySelector('details[data-ecmo-header-more]')).toHaveAttribute('open')
-      expect(screen.getByRole('radiogroup', { name: 'ECMO support mode' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Main menu' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Restart' })).toBeInTheDocument()
     })
+    // The summary is hidden above 600 px only if that rule comes after the base summary rule: at
+    // equal specificity the later one wins. In the wrong order the desktop showed a summary that
+    // was forced open and did nothing (live report, 2026-09-27).
+    const base = shellCss.indexOf('.headerMore > summary {')
+    const wide = shellCss.indexOf('@media (min-width: 601px)')
+    expect(base).toBeGreaterThan(-1)
+    expect(wide).toBeGreaterThan(base)
+    expect(mediaBlock(shellCss, '@media (min-width: 601px)')).toMatch(
+      /\.headerMore > summary \{\s*display: none;/,
+    )
   })
 
   it('lets no single word widen the page, while table cells keep whole words', () => {
     expect(ruleBody(flowCss, '.flow')).toContain('overflow-wrap: anywhere')
-    expect(ruleBody(ecmoCss, '.trackToggle')).toContain('max-width: 100%')
-    expect(ruleBody(ecmoCss, '.trackToggle')).toContain('flex-wrap: wrap')
     // The surfaces column never grows past its box, and the attribution selects take their row's
     // width rather than their longest option's.
     expect(ruleBody(shellCss, '.surfaces')).toContain('grid-template-columns: minmax(0, 1fr)')
