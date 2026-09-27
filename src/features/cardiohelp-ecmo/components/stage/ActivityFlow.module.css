@@ -3,6 +3,17 @@
   padding: clamp(0.75rem, 2vw, 1.5rem);
   max-width: 1440px;
   margin: 0 auto;
+  /*
+   * No single word may widen the page: at 320 px with 200% text "Observation-only" and
+   * "CARDIOHELP-i" were wider than the card and pushed the document sideways. Tables are the
+   * exception (below): in table layout `anywhere` lets a column's minimum width collapse to one
+   * letter, which is exactly the "Signa l / L/mi n" breaking a fellow walkthrough found (S7-1).
+   */
+  overflow-wrap: anywhere;
+}
+
+.flow table :is(th, td) {
+  overflow-wrap: normal;
 }
 
 .flow[data-presentation='concept'],
@@ -50,6 +61,14 @@
   .content[data-visual-first='true'] {
     grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
   }
+  /* The capstones: surfaces, then the comparison at the card's full width (S17-1, VA17-1). */
+  .content[data-stacked='true'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* The learner asked for the circuit at full width: one column, the circuit as wide as the task. */
+  .content:has([data-circuit-enlarged='true']) {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .flow [data-pane='teaching'] {
@@ -84,38 +103,63 @@
   .flow [data-now-card] {
     padding: 0.75rem;
   }
-  .flow [data-signal-register-scroller] {
-    overflow: visible;
+}
+
+/*
+ * Tables reflow by the width of the box they sit in, not by the viewport's (S5-2, S7-1, VA5-2).
+ *
+ * At 1280 × 961 a fellow walkthrough found four-column tables squeezed into the ~370 px teaching
+ * column of a two-column task, breaking words letter by letter ("Signa l", "L/mi n"), while the
+ * viewport rule that stacked them only fired below 600 px. Each responsive table's own wrapper is a
+ * size container; below 36rem of it every row becomes a block that names each value's column. The
+ * column header row is kept for assistive technology (visually hidden), every cell keeps its value,
+ * and nothing scrolls sideways. `data-column-label` carries the header text beside each value.
+ */
+.flow [data-signal-register-scroller],
+.flow [data-responsive-table] {
+  container: ecmo-table / inline-size;
+}
+
+@container ecmo-table (max-width: 36rem) {
+  .flow :is([data-signal-register], [data-responsive-table] > table) {
+    display: block;
+    width: auto;
   }
-  .flow [data-signal-register] thead {
+  .flow :is([data-signal-register], [data-responsive-table] > table) thead {
     position: absolute;
     width: 1px;
     height: 1px;
     overflow: hidden;
     clip-path: inset(50%);
+    white-space: nowrap;
   }
-  .flow [data-signal-register] tbody,
-  .flow [data-signal-register] tr,
-  .flow [data-signal-register] th,
-  .flow [data-signal-register] td {
+  .flow :is([data-signal-register], [data-responsive-table] > table) :is(tbody, tr, th, td) {
     display: block;
     width: auto;
     text-align: left;
     padding: 0;
   }
-  .flow [data-signal-register] tbody tr {
-    padding-block: 1rem;
+  .flow :is([data-signal-register], [data-responsive-table] > table) tbody tr {
+    padding-block: 0.75rem;
     border-bottom: 1px solid var(--ecmo-shell-line);
   }
-  .flow [data-signal-register] td {
-    margin-top: 0.6rem;
+  .flow :is([data-signal-register], [data-responsive-table] > table) tbody tr:has(> th[colspan]) {
+    padding-block: 0.75rem 0;
+    border-bottom: 0;
   }
-  .flow [data-signal-register] td::before {
+  .flow :is([data-signal-register], [data-responsive-table] > table) td {
+    margin-top: 0.4rem;
+  }
+  /* Stacked, a cell is a block of prose again, and a long word may break to fit. */
+  .flow :is([data-signal-register], [data-responsive-table] > table) :is(th, td) {
+    overflow-wrap: anywhere;
+  }
+  .flow :is([data-signal-register], [data-responsive-table] > table) td::before {
     content: attr(data-column-label);
     display: block;
     color: var(--ecmo-shell-muted);
     font-weight: 600;
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
   }
 }
 

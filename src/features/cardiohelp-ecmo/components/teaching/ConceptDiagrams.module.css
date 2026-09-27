@@ -1,0 +1,262 @@
+/*
+ * The conceptual flow diagrams (S6-1, VA6-1, VA7-3, VA11-1). Schematic teaching drawings, labelled as
+ * such on the page; their colours name a stream or a role, never an oxygen content, and every colour
+ * is paired with a line pattern or a word.
+ */
+
+.figure {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+  margin: 0.75rem 0 0;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+
+.schematicBadge {
+  padding: 0.15rem 0.5rem;
+  border: 1px dashed rgba(255, 191, 98, 0.7);
+  border-radius: 999px;
+  color: #ffd489;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.drawing {
+  width: 100%;
+  max-width: 40rem;
+  border: 1px solid var(--ecmo-shell-line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.75rem;
+  background: #071c20;
+}
+
+.drawing svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.drawing text {
+  fill: #dcebec;
+  font-size: 13px;
+  font-weight: 700;
+  paint-order: stroke fill;
+  stroke: rgba(5, 22, 26, 0.92);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.drawing .quiet {
+  fill: #b5cbcd;
+  font-weight: 600;
+}
+
+.node rect {
+  fill: #0f2a2f;
+  stroke-width: 2;
+}
+
+.node[data-role='circuit'] rect {
+  stroke: #71e1e5;
+}
+
+.node[data-role='patient'] rect {
+  stroke: #8fa6a9;
+  stroke-dasharray: none;
+}
+
+.arrow {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.arrow[data-role='circuit'] {
+  stroke: #71e1e5;
+}
+
+.arrow[data-role='patient'] {
+  stroke: #8fa6a9;
+}
+
+.arrow[data-role='recirculation'] {
+  stroke: #ffbf62;
+  stroke-dasharray: 7 5;
+}
+
+.markerCircuit {
+  fill: #71e1e5;
+}
+
+.markerPatient {
+  fill: #8fa6a9;
+}
+
+.markerRecirculation {
+  fill: #ffbf62;
+}
+
+.markerNative {
+  fill: #f08a73;
+}
+
+.vessel {
+  fill: none;
+  stroke: #36555a;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.heart {
+  fill: #4c2530;
+  stroke: #d9707c;
+  stroke-width: 2;
+}
+
+.stream {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Native stream: solid salmon. Circuit return: dashed cyan. A pattern as well as a hue. */
+.stream[data-stream='native'] {
+  stroke: #f08a73;
+}
+
+.stream[data-stream='circuit'] {
+  stroke: #71e1e5;
+  stroke-dasharray: 8 5;
+}
+
+.band {
+  fill: rgba(255, 191, 98, 0.32);
+  stroke: #ffbf62;
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+
+.site {
+  fill: #102a30;
+  stroke: #ffbf62;
+  stroke-width: 2;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin: 0;
+  padding: 0;
+  color: var(--ecmo-shell-muted, #9fb4b7);
+  font-size: 0.8125rem;
+  list-style: none;
+}
+
+.legend li {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.legend i {
+  display: block;
+  width: 1.75rem;
+  height: 0;
+  border-top-width: 3px;
+  border-top-style: solid;
+}
+
+.legend i[data-key='circuit'] {
+  border-top-color: #71e1e5;
+}
+
+.legend i[data-key='circuit-stream'] {
+  border-top-color: #71e1e5;
+  border-top-style: dashed;
+}
+
+.legend i[data-key='patient'] {
+  border-top-color: #8fa6a9;
+}
+
+.legend i[data-key='native'] {
+  border-top-color: #f08a73;
+}
+
+.legend i[data-key='recirculation'],
+.legend i[data-key='band'] {
+  border-top-color: #ffbf62;
+  border-top-style: dashed;
+}
+
+.caption {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.caveat {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid #ffbf62;
+  border-radius: 0 0.6rem 0.6rem 0;
+  background: rgba(255, 191, 98, 0.08);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.choices {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choices legend {
+  margin-bottom: 0.3rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.choice {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--ecmo-shell-line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.65rem;
+  cursor: pointer;
+}
+
+.choice:has(input:checked) {
+  border-color: #71e1e5;
+  background: rgba(113, 225, 229, 0.12);
+}
+
+.choice:has(input:focus-visible) {
+  outline: 3px solid #71e1e5;
+  outline-offset: 2px;
+}
+
+.choice input {
+  margin-top: 0.2rem;
+  accent-color: #71e1e5;
+}

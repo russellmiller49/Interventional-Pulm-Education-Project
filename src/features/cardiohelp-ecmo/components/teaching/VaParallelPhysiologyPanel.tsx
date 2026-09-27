@@ -1,4 +1,5 @@
 import { FocusedFoundationSections } from './FocusedFoundationSections'
+import { VaAorticStreamsDiagram } from './VaAorticStreamsDiagram'
 import {
   ECMO_BASELINE_DISPLAY_DEADBANDS,
   ecmoDerivedValueGuides,
@@ -501,6 +502,13 @@ export function VaParallelPhysiologyPanel({
         </h3>
 
         {/*
+          The diagram the next sentence names (VA6-1). It used to be absent: "This diagram shows…"
+          stood over a text list, and the only drawing of the meeting place was the pressure-zone
+          map in Section 7, whose marker cannot move (VA7-3).
+        */}
+        <VaAorticStreamsDiagram />
+
+        {/*
           Stated at the diagram rather than only in the panel's boundary note. The sequence below is
           one topology, and a learner who reads it without that sentence has been shown a flow path
           and told it is "VA".
@@ -595,7 +603,7 @@ export function VaParallelPhysiologyPanel({
           This circuit against the settled VA reference circuit
         </h3>
 
-        <div className="mt-3 overflow-x-auto">
+        <div className="mt-3 overflow-x-auto" data-responsive-table>
           <table className="w-full text-left text-sm" data-reference-comparison>
             <caption className="sr-only">
               Each quantity in the settled VA reference circuit this lesson opens on, in the state
@@ -635,13 +643,25 @@ export function VaParallelPhysiologyPanel({
                     <th scope="row" className="py-1 pr-3 font-medium">
                       {row.label}
                     </th>
-                    <td className="py-1 pr-3 text-muted-foreground" data-reference-value>
+                    <td
+                      className="py-1 pr-3 text-muted-foreground"
+                      data-reference-value
+                      data-column-label="VA reference circuit"
+                    >
                       {format(row.read(reference), row.precision, row.unit)}
                     </td>
-                    <td className="py-1 pr-3 font-semibold" data-live-comparison-value>
+                    <td
+                      className="py-1 pr-3 font-semibold"
+                      data-live-comparison-value
+                      data-column-label="On screen now"
+                    >
                       {format(row.read(state), row.precision, row.unit)}
                     </td>
-                    <td className="py-1" data-comparison-direction={comparisonWord(row, state)}>
+                    <td
+                      className="py-1"
+                      data-comparison-direction={comparisonWord(row, state)}
+                      data-column-label="Direction"
+                    >
                       {comparisonWord(row, state)}
                     </td>
                   </tr>

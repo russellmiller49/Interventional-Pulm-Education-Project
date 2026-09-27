@@ -1,4 +1,5 @@
 import { FocusedFoundationSections } from './FocusedFoundationSections'
+import { VvSeriesLoopDiagram } from './VvSeriesLoopDiagram'
 import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import { ecmoReferenceProfiles, isEcmoReferenceProfileId } from '../../content/referenceProfiles'
 import { cardiohelpScenarioById } from '../../content/scenarios'
@@ -199,6 +200,8 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
           The circuit in series with the patient
         </h3>
 
+        <VvSeriesLoopDiagram />
+
         <ol className="mt-3 grid gap-2" data-series-path>
           {stages.map((stage, index) => (
             <li
@@ -365,7 +368,7 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
           “On screen now” reads the state loaded in the simulator: {loadedStateName(state)}. A
           question below describes a different patient unless it says it is about this state.
         </p>
-        <div className="mt-3 overflow-x-auto">
+        <div className="mt-3 overflow-x-auto" data-responsive-table>
           <table className="w-full text-left text-sm" data-reference-comparison>
             <caption className="sr-only">
               Each quantity in the VV reference circuit this lesson opens on, in the state currently
@@ -397,15 +400,27 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
                     <th scope="row" className="py-1 pr-3 font-medium">
                       {row.label}
                     </th>
-                    <td className="py-1 pr-3 text-muted-foreground" data-reference-value>
+                    <td
+                      className="py-1 pr-3 text-muted-foreground"
+                      data-reference-value
+                      data-column-label="VV reference circuit"
+                    >
                       {referenceValue.toFixed(row.precision)}
                       {row.unit ? ` ${row.unit}` : ''}
                     </td>
-                    <td className="py-1 pr-3 font-semibold" data-live-comparison-value>
+                    <td
+                      className="py-1 pr-3 font-semibold"
+                      data-live-comparison-value
+                      data-column-label="On screen now"
+                    >
                       {liveValue.toFixed(row.precision)}
                       {row.unit ? ` ${row.unit}` : ''}
                     </td>
-                    <td className="py-1" data-comparison-direction={word}>
+                    <td
+                      className="py-1"
+                      data-comparison-direction={word}
+                      data-column-label="Direction"
+                    >
                       {word}
                     </td>
                   </tr>

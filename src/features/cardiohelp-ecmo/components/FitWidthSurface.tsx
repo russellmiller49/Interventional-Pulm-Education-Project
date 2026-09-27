@@ -5,27 +5,8 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Reac
 import styles from './FitWidthSurface.module.css'
 import { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect'
 
-/**
- * A surface that shows its child at whatever scale makes the child's full width visible.
- *
- * The CARDIOHELP console cannot lay out narrower than about 820px: its device grid is
- * `58px minmax(500px, 1fr) 190px` plus gaps, shell padding and section padding. The primary pane of
- * a three-pane workspace is around 620px at 1600px of viewport and less below that, so the console
- * was clipped at every laptop width and no amount of dragging the separators could reveal it.
- *
- * Scaling the rendered console is the only fix that keeps the device intact. The alternatives were
- * to delete controls until the remainder fits, which stops being a facsimile of the device, or to
- * let the pane scroll horizontally, which hides half of a console whose whole teaching point is that
- * the numbers are read together.
- *
- * The scale is measured, never assumed:
- *
- *   intrinsic width = the child's `min-content` width, its narrowest real layout
- *   scale           = min(1, available width / intrinsic width)
- *
- * The child is laid out at `max(available, intrinsic)` so a pane wider than the console still gets a
- * console that fills it at scale 1, and is never upscaled past its own design size.
- */
+/** Measures the child's real minimum and overflow widths. Reflowing consoles normally remain at
+ * scale 1; fixed-size surfaces may opt into fit or an explicitly labelled scrollable region. */
 
 export type FitWidthMode = 'fit' | 'actual'
 
@@ -99,7 +80,16 @@ export function FitWidthSurface({
     const inlineTransform = content.style.transform
     content.style.transform = 'none'
     content.style.width = 'min-content'
-    const intrinsicWidth = content.getBoundingClientRect().width
+    const minContentWidth = content.getBoundingClientRect().width
+    /*
+     * The console is a size container (it reflows by its own width), and size containment makes an
+     * element's min-content width ignore its content — so min-content alone would always say "fits".
+     * Laid out at the available width, the content's scroll width is what actually overflows, if
+     * anything still does after the reflow.
+     */
+    content.style.width = `${availableWidth}px`
+    const overflowWidth = content.scrollWidth
+    const intrinsicWidth = Math.max(minContentWidth, overflowWidth)
     const layoutWidth = Math.max(availableWidth, intrinsicWidth)
     content.style.width = `${layoutWidth}px`
     const intrinsicHeight = content.getBoundingClientRect().height
@@ -143,12 +133,19 @@ export function FitWidthSurface({
     }
   }, [measure, remeasureKey])
 
+  // A child can change its minimum width without resizing the fixed-width wrapper (even by 1px).
+  useIsomorphicLayoutEffect(() => measure(), [children, measure])
+
   useEffect(() => {
     if (typeof ResizeObserver === 'undefined') return undefined
     const outer = outerRef.current
     if (!outer) return undefined
     const observer = new ResizeObserver(() => measure())
     observer.observe(outer)
+    if (contentRef.current) {
+      observer.observe(contentRef.current)
+      for (const child of contentRef.current.children) observer.observe(child)
+    }
     return () => observer.disconnect()
   }, [measure])
 
@@ -163,6 +160,15 @@ export function FitWidthSurface({
 
   const scale = metrics?.scale ?? 1
   const scaled = scale < 1
+  /*
+   * An actual-size surface is a keyboard-scrollable region only while something in it is wider than
+   * the box. A focus stop that scrolls nothing, labelled "scroll horizontally", is a broken promise
+   * to a keyboard user — and since the console reflows to its box, that is now the ordinary case.
+   */
+  const scrollable =
+    mode === 'actual' &&
+    metrics !== null &&
+    metrics.intrinsicWidth > metrics.availableWidth + MEASUREMENT_EPSILON
   const outerStyle: CSSProperties | undefined =
     metrics && scaled ? { height: `${metrics.intrinsicHeight * scale}px` } : undefined
   /*
@@ -180,17 +186,16 @@ export function FitWidthSurface({
   return (
     <div
       ref={outerRef}
-      tabIndex={mode === 'actual' ? 0 : undefined}
-      role={mode === 'actual' ? 'region' : undefined}
+      tabIndex={scrollable ? 0 : undefined}
+      role={scrollable ? 'region' : undefined}
       aria-label={
-        mode === 'actual'
-          ? 'Console viewport. Scroll horizontally to inspect all controls.'
-          : undefined
+        scrollable ? 'Console viewport. Scroll horizontally to inspect all controls.' : undefined
       }
       className={[styles.fitSurface, className].filter(Boolean).join(' ')}
       style={outerStyle}
       data-fit-width-surface=""
       data-fit-mode={mode}
+      data-fit-scrollable={scrollable ? 'true' : 'false'}
       data-fit-measured={metrics ? 'true' : 'false'}
       data-fit-scale={scale.toFixed(4)}
       data-intrinsic-width={Math.round(metrics?.intrinsicWidth ?? 0)}

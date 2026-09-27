@@ -33,6 +33,15 @@ jest.mock('@/i18n/navigation', () => ({
   usePathname: () => '/cardiohelp-ecmo/learn',
 }))
 
+/** An SVG <text> whose whole text (across any <tspan> lines) reads `label`, whitespace-normalized. */
+function svgLabel(label: string): Element | null {
+  return (
+    [...document.querySelectorAll('svg text')].find(
+      (node) => (node.textContent ?? '').replace(/\s+/g, ' ').trim() === label,
+    ) ?? null
+  )
+}
+
 describe('CARDIOHELP VV and VA pathway isolation', () => {
   beforeEach(() => {
     window.localStorage.clear()
@@ -77,7 +86,8 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     expect(
       screen.getByRole('img', { name: /VA ECMO femoral-femoral circuit schematic/i }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Femoral artery return')).toBeInTheDocument()
+    // Map labels may wrap onto <tspan> lines (ECMO-FELLOW-03, S2-2), so match the whole <text>.
+    expect(svgLabel('Femoral artery return')).toBeInTheDocument()
     expect(document.querySelector('[data-ecmo-stage-frame]')).toHaveAttribute(
       'data-support-mode',
       'va',
@@ -93,7 +103,7 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
       expect(screen.getByRole('button', { name: /Begin case/i })).toBeInTheDocument()
     })
     fireEvent.click(screen.getByRole('button', { name: /Begin case/i }))
-    expect(screen.getByRole('button', { name: 'Compare this prediction' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Record prediction for the debrief' })).toBeDisabled()
 
     const vvControl = screen.getByLabelText('First priority')
     expect(
@@ -179,8 +189,8 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
 
     expect(screen.getByText(/femoral artery → arterial circulation/i)).toBeInTheDocument()
-    expect(screen.getByText(/MIXING REGION VARIES/i)).toBeInTheDocument()
-    expect(screen.getByText(/DISTAL LIMB CHECK/i)).toBeInTheDocument()
+    expect(svgLabel('MIXING REGION VARIES')).toBeInTheDocument()
+    expect(svgLabel('DISTAL LIMB CHECK')).toBeInTheDocument()
     expect(
       screen.getByText(/Circuit pArt is post-oxygenator circuit pressure/i),
     ).toBeInTheDocument()

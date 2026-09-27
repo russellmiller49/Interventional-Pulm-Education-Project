@@ -17,6 +17,7 @@ export function ActivityContent({
   readonly children?: ReactNode
 }) {
   if (!presentation) return <>{children}</>
+  const stacked = Boolean(presentation.stacked)
   const explanation = (
     <div key="teaching" className={styles.explanation}>
       {teaching}
@@ -31,9 +32,10 @@ export function ActivityContent({
     <div
       className={styles.content}
       data-activity-content={presentation.kind}
-      data-visual-first={visualFirst || undefined}
+      data-visual-first={visualFirst || stacked || undefined}
+      data-stacked={stacked || undefined}
     >
-      {visualFirst ? [visualContent, explanation] : [explanation, visualContent]}
+      {visualFirst || stacked ? [visualContent, explanation] : [explanation, visualContent]}
       <div className={styles.response}>{children}</div>
     </div>
   )

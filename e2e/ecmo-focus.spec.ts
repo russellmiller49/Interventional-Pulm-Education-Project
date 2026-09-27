@@ -294,3 +294,135 @@ test('clearance follows resized chrome and is removed when leaving Learn', async
     await page.locator('html').evaluate((node) => getComputedStyle(node).scrollPaddingTop),
   ).toBe('auto')
 })
+
+// Independent Prompt-03 regressions: these exercise the failures missed by a width-only sweep.
+test('Prompt03: the enlarged phone launch gate keeps its action inside the panel', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 740 })
+  await open(page, 'circuit-flow-path', true)
+  await page.getByRole('tab', { name: 'Bedside 3D circuit' }).click()
+  const action = page.getByRole('button', { name: 'Continue on this device', exact: true })
+  await action.focus()
+  await settle(page)
+  await visibleFocus(page)
+  const panel = await page.locator('#cardiohelp-bedside-view').boundingBox()
+  const button = await action.boundingBox()
+  expect(button!.x).toBeGreaterThanOrEqual(panel!.x)
+  expect(button!.x + button!.width).toBeLessThanOrEqual(panel!.x + panel!.width)
+  await page.keyboard.press('Enter')
+  await expect(page.locator('[data-gate-reason]')).toHaveCount(0)
+})
+
+test('Prompt03: header controls retain focus across the phone breakpoint', async ({ page }) => {
+  await page.setViewportSize({ width: 610, height: 844 })
+  await open(page, 'circuit-flow-path')
+  const restart = page.locator('[data-ecmo-restart]')
+  await restart.focus()
+  for (const width of [590, 610, 590]) {
+    await page.setViewportSize({ width, height: 844 })
+    await expect(restart).toBeFocused()
+    await expect(restart).toBeVisible()
+  }
+  const summary = page.locator('[data-ecmo-header-more] > summary')
+  await summary.focus()
+  await page.setViewportSize({ width: 610, height: 844 })
+  await expect(page.getByRole('radio', { name: 'VV track', exact: true })).toBeFocused()
+})
+
+test('Prompt03: enlarged emergency strip does not intercept the event or crush console tabs', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 740 })
+  await open(page, 'arterial-bubble-stop', true)
+  await page
+    .getByRole('button', { name: 'Advance 4 simulated seconds to the event', exact: true })
+    .click()
+  await expect(page.getByRole('button', { name: 'Next step', exact: true })).toBeEnabled()
+  expect(
+    await page.locator('[data-ecmo-context-strip]').evaluate((e) => getComputedStyle(e).position),
+  ).toBe('static')
+  const tabs = page.locator('[aria-label="CARDIOHELP screens"] button')
+  for (const tab of await tabs.all()) {
+    await tab.focus()
+    await page.keyboard.press('Enter')
+    await settle(page)
+    await expect(tab).toBeFocused()
+    const bounds = await tab.evaluate((e) => {
+      const text = document.createRange()
+      text.selectNodeContents(e)
+      return {
+        text: text.getBoundingClientRect().width,
+        button: e.clientWidth,
+        height: e.getBoundingClientRect().height,
+      }
+    })
+    expect(bounds.text).toBeLessThanOrEqual(bounds.button)
+    expect(bounds.height).toBeLessThan(100)
+    await visibleFocus(page)
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320)
+  // The alarm changes to a long, medium-priority two-clamp message after de-airing.
+  await page.getByRole('button', { name: 'Next step', exact: true }).click()
+  await page.getByRole('button', { name: 'Continue without doing this step', exact: true }).click()
+  await page.locator('#cardiohelp-clamp-return').click()
+  await page.getByRole('button', { name: 'Next step', exact: true }).click()
+  await page.locator('#cardiohelp-clamp-drainage').click()
+  await page.getByRole('button', { name: 'Next step', exact: true }).click()
+  await page
+    .getByRole('button', { name: 'Correct the source and clear the circuit', exact: true })
+    .click()
+  await page.getByRole('button', { name: 'Next step', exact: true }).click()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320)
+  await page.locator('[data-stage-sources] > summary').focus()
+  await settle(page)
+  await visibleFocus(page)
+})
+
+test('Prompt03: Run Repeat and Reset keep the action visible at enlarged phone text', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 740 })
+  await open(page, 'pump-and-pressure-zones', true)
+  await page.locator('[data-task-history] > summary').click()
+  await page.locator('[data-step-id="pump-and-pressure-zones-act"] button').click()
+  const run = page.locator('[data-comparison-run]')
+  await run.focus()
+  await settle(page)
+  const before = await run.boundingBox()
+  await page.keyboard.press('Enter')
+  await expect(run).toHaveText('Repeat this comparison')
+  await expect(run).toBeFocused()
+  await visibleFocus(page)
+  expect(Math.abs((await run.boundingBox())!.y - before!.y)).toBeLessThan(120)
+  const result = await page.locator('[data-foundation-comparison]').innerText()
+  await page.keyboard.press('Enter')
+  expect(await page.locator('[data-foundation-comparison]').innerText()).toBe(result)
+  await page.getByRole('button', { name: 'Reset this comparison', exact: true }).click()
+  await expect(run).toBeFocused()
+  await expect(run).toHaveText('Increase pump speed by 300 rpm')
+  await visibleFocus(page)
+})
+
+test('Prompt03: hidden matrix explanations can be restored without losing keyboard focus', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await open(page, 'vv-integration-capstone')
+  const toggles = page.locator('[data-hypothesis-toggle]')
+  for (const index of [2, 0, 1]) {
+    await toggles.nth(index).focus()
+    await page.keyboard.press('Enter')
+    await expect(toggles.nth(index)).toBeFocused()
+  }
+  await toggles.nth(3).focus()
+  await page.keyboard.press('Enter')
+  await expect(toggles.nth(3)).toHaveAttribute('aria-pressed', 'true')
+  await expect(toggles.nth(3)).toHaveAttribute('aria-disabled', 'true')
+  const all = page.locator('[data-hypothesis-show-all]')
+  await all.focus()
+  await page.keyboard.press('Enter')
+  await expect(all).toBeFocused()
+  await expect(page.locator('[data-hypothesis-toggle][aria-pressed="true"]')).toHaveCount(4)
+  await visibleFocus(page)
+})

@@ -422,6 +422,18 @@
   margin: 0 auto;
   padding: 1rem;
   grid-template-columns: minmax(0, 1fr);
+  /* At 320 px with 200% text no single word may widen the page ("DETERIORATION"). */
+  overflow-wrap: anywhere;
+}
+
+.flowBody table :is(th, td) {
+  overflow-wrap: normal;
+}
+
+@media (max-width: 600px) {
+  .flowBody.body {
+    padding: 0.5rem;
+  }
 }
 .flowBody .caseColumn,
 .flowBody .simulatorColumn {

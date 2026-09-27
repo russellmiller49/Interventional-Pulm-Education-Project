@@ -197,7 +197,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
       expect(within(workflow).getByRole('button', { name: new RegExp(later) })).toBeEnabled()
     }
     expect(
-      screen.queryByRole('button', { name: 'Compare this prediction' }),
+      screen.queryByRole('button', { name: 'Record prediction for the debrief' }),
     ).not.toBeInTheDocument()
     expect(screen.queryByText(/Console locked/i)).not.toBeInTheDocument()
 
@@ -212,7 +212,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(
       within(nowCard).getByText(/Try a prediction to compare with the case explanation/i),
     ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Compare this prediction' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Record prediction for the debrief' })).toBeDisabled()
     expect(screen.queryByRole('button', { name: 'Standard practice' })).toBeNull()
     expect(screen.queryByRole('button', { name: /Less coaching/ })).toBeNull()
     expect(screen.queryByText(/Step complete—now verify what changed/i)).not.toBeInTheDocument()
@@ -234,7 +234,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
       target: { value: 'gas-exchange' },
     })
     expect(screen.queryByText(/Console locked/i)).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Compare this prediction' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Record prediction for the debrief' }))
     expect(
       (global.fetch as jest.Mock).mock.calls
         .map(([, request]) => JSON.parse(request.body as string))
@@ -330,7 +330,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     const { dispatch } = renderCaseView(state)
 
     fireEvent.click(screen.getByRole('button', { name: /Begin case/i }))
-    const commit = screen.getByRole('button', { name: 'Compare this prediction' })
+    const commit = screen.getByRole('button', { name: 'Record prediction for the debrief' })
     expect(commit).toBeDisabled()
     fireEvent.change(screen.getByLabelText('Goal'), {
       target: { value: 'initiate-vv-support' },
@@ -491,7 +491,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     fireEvent.change(screen.getByLabelText('Expected immediate effect'), {
       target: { value: 'gas-exchange' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Compare this prediction' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Record prediction for the debrief' }))
 
     fireEvent.change(screen.getByLabelText('Case'), {
       target: { value: 'clinical-vv-occult-hemorrhage' },

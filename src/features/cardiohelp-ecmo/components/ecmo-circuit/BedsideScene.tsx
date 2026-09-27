@@ -13,6 +13,7 @@ import {
   BLENDER_PLACEMENT,
   bloodColor,
   CAMERA_TARGET,
+  CAMERA_POSITION,
   CONSOLE_ASSET,
   CONSOLE_MODEL_BOUNDS,
   CONSOLE_PLACEMENT,
@@ -110,6 +111,8 @@ export interface BedsideSceneProps {
   labelsVisible: boolean
   /** Scene label ids the current teaching step is standing at. */
   emphasisSceneLabelIds?: readonly string[] | null
+  onlyLabelId?: string | null
+  overviewRequest?: number
 }
 
 export function BedsideScene({
@@ -119,11 +122,20 @@ export function BedsideScene({
   reduceMotion,
   labelsVisible,
   emphasisSceneLabelIds = null,
+  onlyLabelId = null,
+  overviewRequest = 0,
 }: BedsideSceneProps) {
   const layout = useMemo(() => buildCircuitLayout(state.supportMode), [state.supportMode])
   const [orbiting, setOrbiting] = useState(false)
   const controls = useRef<OrbitControlsImpl>(null)
   const interacting = useRef(false)
+  useEffect(() => {
+    const instance = controls.current
+    if (!instance || overviewRequest === 0) return
+    instance.object.position.set(...CAMERA_POSITION)
+    instance.target.set(...CAMERA_TARGET)
+    instance.update()
+  }, [overviewRequest])
 
   /*
    * Pan unlocks with zoom, and the target stays fenced to the scene.
@@ -329,7 +341,11 @@ export function BedsideScene({
 
       <SceneLabels
         emphasisIds={emphasisSceneLabelIds}
-        layout={layout}
+        layout={
+          onlyLabelId
+            ? { ...layout, labels: layout.labels.filter((label) => label.id === onlyLabelId) }
+            : layout
+        }
         visible={labelsVisible}
         dimmed={orbiting}
       />

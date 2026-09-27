@@ -18,6 +18,10 @@ export function useEcmoFocusClearance(
     const documentToken = '--ecmo-document-focus-clearance'
     const previous = root.style.getPropertyValue(documentToken)
     const measure = () => {
+      const availableHeight = window.innerHeight - siteHeader.getBoundingClientRect().height
+      strip.dataset.stickyUnfits = String(
+        strip.getBoundingClientRect().height > availableHeight / 3,
+      )
       // Only the operational strip is sticky. The activity title and ordinary context flow away.
       const stripHeight =
         getComputedStyle(strip).position === 'sticky' ? strip.getBoundingClientRect().height : 0
@@ -36,6 +40,7 @@ export function useEcmoFocusClearance(
     return () => {
       observer.disconnect()
       window.removeEventListener('resize', measure)
+      delete strip.dataset.stickyUnfits
       shell.style.removeProperty('--ecmo-sticky-strip-height')
       if (previous) root.style.setProperty(documentToken, previous)
       else root.style.removeProperty(documentToken)

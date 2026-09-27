@@ -21,6 +21,12 @@ export interface EcmoSimulatorSurfacesProps extends SimulationPanelProps {
   readonly safety?: ReactNode
   /** Focused lessons mount only the selected views, with no hidden answer-bearing panels. */
   readonly surfaceIds?: readonly StageSurfaceId[]
+  /**
+   * Disclosure surfaces rendered before the console rather than after it, when the reading the step
+   * acts on lives there (the patient monitor, in an oxygenation case). Order only; each stays a
+   * disclosure the learner can open or close.
+   */
+  readonly leadingSurfaces?: readonly StageSurfaceId[]
 }
 
 /**
@@ -38,6 +44,7 @@ export function EcmoSimulatorSurfaces({
   onToggleSurface,
   safety,
   surfaceIds,
+  leadingSurfaces,
   ...panelProps
 }: EcmoSimulatorSurfacesProps) {
   const baseId = useId()
@@ -60,8 +67,36 @@ export function EcmoSimulatorSurfaces({
     ),
   }
 
+  function disclosure(surface: StageSurfaceId) {
+    const open = openSurfaces.has(surface)
+    const panelId = `${baseId}-${surface}`
+    return (
+      <section key={surface} className={styles.surface} data-surface={surface} data-open={open}>
+        <h2 className={styles.surfaceHeading}>
+          <button
+            type="button"
+            className={styles.surfaceToggle}
+            aria-expanded={open}
+            aria-controls={panelId}
+            onClick={() => onToggleSurface(surface, !open)}
+          >
+            <span>{STAGE_SURFACE_LABELS[surface]}</span>
+            <span className={styles.surfaceToggleHint} aria-hidden="true">
+              {open ? 'Hide' : 'Show'}
+            </span>
+          </button>
+        </h2>
+        <div id={panelId} className={styles.surfaceBody} hidden={!open}>
+          {panels[surface]}
+        </div>
+      </section>
+    )
+  }
+
+  const leading = surfaceIds ? [] : (leadingSurfaces ?? [])
   return (
     <div className={styles.surfaces} data-simulator-surfaces>
+      {leading.map((surface) => disclosure(surface))}
       {consoleNode}
       {safety}
       {(surfaceIds ?? STAGE_SURFACES).map((surface) => {
@@ -71,29 +106,8 @@ export function EcmoSimulatorSurfaces({
               {panels[surface]}
             </div>
           )
-        const open = openSurfaces.has(surface)
-        const panelId = `${baseId}-${surface}`
-        return (
-          <section key={surface} className={styles.surface} data-surface={surface} data-open={open}>
-            <h2 className={styles.surfaceHeading}>
-              <button
-                type="button"
-                className={styles.surfaceToggle}
-                aria-expanded={open}
-                aria-controls={panelId}
-                onClick={() => onToggleSurface(surface, !open)}
-              >
-                <span>{STAGE_SURFACE_LABELS[surface]}</span>
-                <span className={styles.surfaceToggleHint} aria-hidden="true">
-                  {open ? 'Hide' : 'Show'}
-                </span>
-              </button>
-            </h2>
-            <div id={panelId} className={styles.surfaceBody} hidden={!open}>
-              {panels[surface]}
-            </div>
-          </section>
-        )
+        if (leading.includes(surface)) return null
+        return disclosure(surface)
       })}
     </div>
   )

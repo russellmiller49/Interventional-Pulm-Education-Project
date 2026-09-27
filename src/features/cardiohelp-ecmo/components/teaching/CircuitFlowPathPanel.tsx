@@ -85,8 +85,11 @@ export function CircuitFlowPathPanel({
               <button
                 type="button"
                 key={id}
-                className="min-h-11 rounded-xl border px-3 font-semibold"
+                // The pressed state is real (aria-pressed) and now visible too: filled, with dark
+                // ink, where the others stay outlined (S2-8). Luminance, not hue, carries it.
+                className="min-h-11 rounded-xl border px-3 font-semibold hover:border-[#71e1e5] aria-pressed:border-[#71e1e5] aria-pressed:bg-[#71e1e5] aria-pressed:text-[#04211f]"
                 aria-pressed={selected === id}
+                data-pressure-site-toggle={id}
                 onClick={() => {
                   setLocalSite(id)
                   onPressureSiteChange?.(id)
@@ -135,9 +138,46 @@ export function CircuitFlowPathPanel({
           <h3 id="circuit-patient-heading" className={styles.heading}>
             Circuit pressure and patient pressure
           </h3>
-          <div className="mt-3">
-            <ChannelValue label="pArt" readout={circuit.readouts.pArt} unit="mmHg" />
-          </div>
+          {/*
+            The two readings this task compares, side by side and each named by where it is taken.
+
+            A fellow walkthrough (S2-4) found the task asking for pArt "alongside the independent
+            patient monitor" while the monitor sat about 1,300 px further down the page. Both cells
+            read the one live simulation state the console and the bedside monitor read; nothing is
+            copied or held here. The full monitor is also the first surface beside this task.
+          */}
+          <dl className="mt-3 grid gap-2 sm:grid-cols-2" data-part-map-pair>
+            <div className="rounded-xl border p-3" data-measurement-site="circuit">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Circuit · console channel
+              </dt>
+              <dd className="mt-1">
+                <ChannelValue label="pArt" readout={circuit.readouts.pArt} unit="mmHg" />
+              </dd>
+              <dd className="mt-1 text-xs leading-5">{ecmoSensorSite('pArt').measuredAt}.</dd>
+            </div>
+            <div className="rounded-xl border p-3" data-measurement-site="patient">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Patient · bedside monitor
+              </dt>
+              <dd className="mt-1">
+                <span className="inline-flex flex-col" data-patient-map>
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">MAP</span>
+                  <span className="text-lg font-semibold">
+                    {state.patient.meanArterialPressure} mmHg
+                  </span>
+                </span>
+              </dd>
+              <dd className="mt-1 text-xs leading-5">
+                The patient&apos;s mean arterial pressure, from the independent bedside monitor
+                rather than any circuit sensor.
+              </dd>
+            </div>
+          </dl>
+          <p className="mt-2 text-sm leading-6" data-part-map-sites>
+            Two different places, so the two numbers are not expected to agree, and neither stands
+            in for the other.
+          </p>
           <CircuitPressureIdentity />
           <p className="mt-3 text-sm leading-6">
             Read the patient&apos;s arterial pressure on the separate bedside monitor. A change in

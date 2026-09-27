@@ -113,7 +113,7 @@ export function FoundationComparison({
       aria-label="Before and after comparison"
     >
       <h3>Before / After / Change</h3>
-      <p className={styles.comparisonTiming}>
+      <p className={styles.comparisonTiming} role="status">
         Before: modeled time {before.simulationTime} s.
         {comparison
           ? ` After: modeled time ${comparison.after.simulationTime} s. Values retained from this comparison.`
@@ -157,9 +157,13 @@ export function FoundationComparison({
                   {label}
                   {unit ? <span className={styles.comparisonUnit}>{unit}</span> : null}
                 </th>
-                <td>{left === null ? UNAVAILABLE_INDICATION : left.toFixed(precision)}</td>
-                <td>{right === null ? UNAVAILABLE_INDICATION : right.toFixed(precision)}</td>
-                <td>
+                <td data-column-label="Before">
+                  {left === null ? UNAVAILABLE_INDICATION : left.toFixed(precision)}
+                </td>
+                <td data-column-label="After">
+                  {right === null ? UNAVAILABLE_INDICATION : right.toFixed(precision)}
+                </td>
+                <td data-column-label="Change">
                   {delta === null
                     ? UNAVAILABLE_INDICATION
                     : `${delta > 0 ? '+' : ''}${delta.toFixed(precision)}`}

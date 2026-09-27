@@ -11,6 +11,12 @@ export interface EcmoTaskPresentation {
   readonly console: boolean
   readonly surfaces: readonly StageSurfaceId[]
   readonly operational?: boolean
+  /**
+   * One column at every width, the simulator surfaces first and the teaching under them at the
+   * full width of the card. For the capstones, whose teaching is a wide comparison of competing
+   * explanations that a side column cannot hold (S17-1, VA17-1). Display only.
+   */
+  readonly stacked?: boolean
 }
 
 const concept: EcmoTaskPresentation = { kind: 'concept', console: false, surfaces: [] }
@@ -45,7 +51,9 @@ const foundationTasks: Readonly<Record<string, Readonly<Record<string, EcmoTaskP
     recognize: circuit,
     'gas-path': circuit,
     'pressure-sites': circuit,
-    observe: { ...circuit, surfaces: ['circuit', 'monitor'] },
+    // The comparison task reads the monitor against pArt, so the monitor leads the visual column
+    // and sits beside the task rather than under the map (S2-4). Display order only.
+    observe: { ...circuit, surfaces: ['monitor', 'circuit'] },
     predict: circuit,
     transfer: concept,
   },
@@ -86,6 +94,7 @@ const patient: EcmoTaskPresentation = {
   console: false,
   surfaces: ['monitor'],
 }
+const capstonePatient: EcmoTaskPresentation = { ...patient, stacked: true }
 const pressure: EcmoTaskPresentation = {
   kind: 'circuit-walk',
   console: false,
@@ -139,20 +148,20 @@ const trackFoundationViews: Readonly<
     transfer: comparison,
   },
   'vv-integration-capstone': {
-    recognize: patient,
-    predict: patient,
-    act: { ...patient, surfaces: ['circuit', 'gas', 'monitor'] },
-    observe: { ...patient, surfaces: ['circuit', 'gas', 'monitor'] },
+    recognize: capstonePatient,
+    predict: capstonePatient,
+    act: { ...capstonePatient, surfaces: ['circuit', 'gas', 'monitor'] },
+    observe: { ...capstonePatient, surfaces: ['circuit', 'gas', 'monitor'] },
     explain: concept,
-    transfer: patient,
+    transfer: capstonePatient,
   },
   'va-integration-capstone': {
-    recognize: patient,
-    predict: patient,
-    act: { ...patient, surfaces: ['circuit', 'gas', 'monitor'] },
-    observe: { ...patient, surfaces: ['circuit', 'gas', 'monitor'] },
+    recognize: capstonePatient,
+    predict: capstonePatient,
+    act: { ...capstonePatient, surfaces: ['circuit', 'gas', 'monitor'] },
+    observe: { ...capstonePatient, surfaces: ['circuit', 'gas', 'monitor'] },
     explain: concept,
-    transfer: patient,
+    transfer: capstonePatient,
   },
 }
 

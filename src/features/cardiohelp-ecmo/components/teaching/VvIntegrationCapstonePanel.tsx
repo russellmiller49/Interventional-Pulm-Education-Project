@@ -1,11 +1,7 @@
 import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import type { EcmoChannelReadout, EcmoSimulationState } from '../../engine/types'
-import {
-  CapstoneMatrixCellBody,
-  matrixCellEquivalent,
-  rowQuotesGrammar,
-  type CapstoneMatrixCell,
-} from './capstoneGrammarCell'
+import { matrixCellEquivalent, type CapstoneMatrixCell } from './capstoneGrammarCell'
+import { CapstoneHypothesisMatrix, CapstoneMatrixSentences } from './CapstoneHypothesisMatrix'
 import { GuidedValue, ModelBoundary, TextEquivalent, round, styles } from './shared'
 
 /**
@@ -453,84 +449,36 @@ export function VvIntegrationCapstonePanel({ state }: { readonly state: EcmoSimu
           the four do not cover.
         </p>
 
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full min-w-[64rem] text-left text-sm" data-hypothesis-matrix>
-            <caption className="sr-only">
-              Each observed signal with its live value in the case currently loaded, and the
-              direction each of the four explanations predicts for it, together with what makes that
-              row useful and any limitation that applies.
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col" className="pb-1 pr-3 align-bottom font-semibold">
-                  Signal
-                </th>
-                <th scope="col" className="pb-1 pr-3 align-bottom font-semibold">
-                  In this case now
-                </th>
-                {hypotheses.map((hypothesis) => (
-                  <th
-                    key={hypothesis.id}
-                    scope="col"
-                    className="pb-1 pr-3 align-bottom font-semibold"
-                    data-hypothesis-column={hypothesis.id}
-                  >
-                    {hypothesis.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => {
-                const live = row.read(state)
-                return (
-                  <tr key={row.id} data-matrix-row={row.id} className="align-top">
-                    <th scope="row" className="py-2 pr-3 font-medium">
-                      {row.label}
-                    </th>
-                    <td className="py-2 pr-3" data-live-finding={row.id}>
-                      {live.text}
-                      {live.reason ? (
-                        <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                          {live.reason}
-                        </span>
-                      ) : null}
-                    </td>
-                    {hypotheses.map((hypothesis) => (
-                      <td
-                        key={hypothesis.id}
-                        className="py-2 pr-3"
-                        data-matrix-cell={`${row.id}:${hypothesis.id}`}
-                      >
-                        <CapstoneMatrixCellBody
-                          cell={row.cells[hypothesis.id]}
-                          supportMode={SUPPORT_MODE}
-                          outsideGrammar={rowQuotesGrammar(row.cells)}
-                        />
-                      </td>
-                    ))}
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+        <CapstoneHypothesisMatrix
+          idPrefix="vv-capstone"
+          caption="Each observed signal with its live value in the case currently loaded, and the direction each of the four explanations predicts for it, together with what makes that row useful and any limitation that applies."
+          hypotheses={hypotheses}
+          rows={rows.map((row) => ({
+            id: row.id,
+            label: row.label,
+            live: row.read(state),
+            cells: row.cells,
+          }))}
+          supportMode={SUPPORT_MODE}
+        />
 
-        {hypotheses.map((hypothesis) => (
-          <TextEquivalent key={hypothesis.id}>
-            <span className="font-semibold">{hypothesis.label}. </span>
-            {rows
-              .map(
-                (row) =>
-                  `${row.label}: ${matrixCellEquivalent(row.cells, hypothesis.id, SUPPORT_MODE)}`,
-              )
-              .join(' ')}{' '}
-            {rows
-              .filter((row) => row.cells[hypothesis.id].limitation)
-              .map((row) => `Limitation for ${row.label}: ${row.cells[hypothesis.id].limitation}`)
-              .join(' ')}
-          </TextEquivalent>
-        ))}
+        <CapstoneMatrixSentences>
+          {hypotheses.map((hypothesis) => (
+            <TextEquivalent key={hypothesis.id}>
+              <span className="font-semibold">{hypothesis.label}. </span>
+              {rows
+                .map(
+                  (row) =>
+                    `${row.label}: ${matrixCellEquivalent(row.cells, hypothesis.id, SUPPORT_MODE)}`,
+                )
+                .join(' ')}{' '}
+              {rows
+                .filter((row) => row.cells[hypothesis.id].limitation)
+                .map((row) => `Limitation for ${row.label}: ${row.cells[hypothesis.id].limitation}`)
+                .join(' ')}
+            </TextEquivalent>
+          ))}
+        </CapstoneMatrixSentences>
 
         <ModelBoundary>
           The directions in the matrix are what these mechanisms do. The magnitudes and the speed at

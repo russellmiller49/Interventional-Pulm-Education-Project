@@ -86,11 +86,17 @@ export function CapstoneMatrixCellBody({
   cell,
   supportMode,
   outsideGrammar,
+  reasoningShown = true,
 }: {
   readonly cell: CapstoneMatrixCell
   readonly supportMode: SupportMode
   /** Whether this row quotes the grammar, so an authored cell in it is marked as outside it. */
   readonly outsideGrammar: boolean
+  /**
+   * Whether the discriminator — why this row separates the explanation — is on show. Collapsed, it
+   * stays in the DOM (`hidden`); the direction and any limitation are always shown.
+   */
+  readonly reasoningShown?: boolean
 }) {
   return (
     <>
@@ -121,7 +127,11 @@ export function CapstoneMatrixCellBody({
           ) : null}
         </>
       )}
-      <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+      <span
+        className="mt-1 block text-xs leading-5 text-muted-foreground"
+        data-cell-discriminator
+        hidden={!reasoningShown || undefined}
+      >
         {cell.discriminator}
       </span>
       {cell.limitation ? (
