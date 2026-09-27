@@ -28,6 +28,7 @@ import {
 import { SHARED_CRITICAL_CARE_THRESHOLDS } from '@/features/critical-care/content/sharedClinicalThresholds'
 import { PAC_ROUTE_PROGRESS } from '@/features/cardiac-anatomy/content/paths'
 import { HEMODYNAMIC_CLINICAL_THRESHOLDS } from '../content/clinicalThresholds'
+import { arterialMeasurementSystem } from './measurementLines'
 export {
   advanceWindkesselCompartments,
   createInitialCirculationCompartments,
@@ -41,6 +42,7 @@ import type {
   CirculationParameters,
   HemodynamicAlarm,
   HemodynamicCaseDefinition,
+  HemodynamicInterventionDefinition,
   HemodynamicLearningMode,
   HemodynamicMeasurements,
   HemodynamicSimulationState,
@@ -48,6 +50,7 @@ import type {
   FastFlushLineType,
   MeasurementSystemState,
   ParameterEffect,
+  PhysiologicalEpisode,
 } from './types'
 
 const MAX_WAVEFORM_SECONDS = 12
@@ -100,7 +103,7 @@ export function wedgeCaptureDelaySeconds(respiratoryRateBpm: number): number {
 }
 
 /** Fraction of the respiratory cycle spent in inspiration, an I:E ratio of roughly 1:1.5. */
-const INSPIRATORY_FRACTION = 0.4
+export const INSPIRATORY_FRACTION = 0.4
 
 /**
  * Respiratory phase at which intrathoracic pressure most closely approximates atmospheric
@@ -152,12 +155,47 @@ function deterministicNoise(seed: number, index: number, salt: number): number {
   return (value - Math.floor(value)) * 2 - 1
 }
 
+/**
+ * When a transient effect stops building and starts to wane, in model seconds, or `null` for an
+ * effect that does not recover. The same boundary `effectScale` uses, so an episode boundary and
+ * the model's own behaviour cannot drift apart.
+ */
+export function effectWaningStartsAt(effect: ParameterEffect): number | null {
+  if (effect.recoverySeconds === null) return null
+  return effect.startedAt + Math.max(20, effect.onsetSeconds * 3)
+}
+
 function effectScale(effect: ParameterEffect, timeSeconds: number): number {
   const elapsed = Math.max(0, timeSeconds - effect.startedAt)
   const onset = 1 - Math.exp(-elapsed / Math.max(0.1, effect.onsetSeconds))
   if (effect.recoverySeconds === null) return onset
   const recoveryElapsed = Math.max(0, elapsed - Math.max(20, effect.onsetSeconds * 3))
   return onset * Math.exp(-recoveryElapsed / Math.max(0.1, effect.recoverySeconds))
+}
+
+/**
+ * The range the model holds each effective parameter to, after every active effect is summed.
+ * Parameters not listed are not bounded. One table, read by the derivation below and by
+ * `effectCanChangeEffectiveParameters`, so the two cannot disagree about where a parameter stops.
+ */
+const EFFECTIVE_PARAMETER_BOUNDS: Readonly<
+  Partial<Record<keyof CirculationParameters, readonly [number, number]>>
+> = {
+  heartRateBpm: [25, 190],
+  respiratoryRateBpm: [4, 45],
+  circulatingVolumeFraction: [0.45, 1.4],
+  systemicVascularResistanceDynSecCm5: [250, 3200],
+  pulmonaryVascularResistanceWU: [0.4, 18],
+  leftVentricularContractility: [0.25, 2],
+  rightVentricularContractility: [0.2, 2],
+  leftVentricularCompliance: [0.25, 2],
+  rightVentricularCompliance: [0.25, 2],
+  pericardialPressureMmHg: [0, 28],
+  peepCmH2O: [0, 22],
+}
+
+function effectDeltas(effect: ParameterEffect): [keyof CirculationParameters, number][] {
+  return Object.entries(effect.deltas) as [keyof CirculationParameters, number][]
 }
 
 export function deriveEffectiveCirculationParameters(
@@ -168,32 +206,128 @@ export function deriveEffectiveCirculationParameters(
   const next = { ...baseline }
   for (const effect of effects) {
     const scale = effectScale(effect, timeSeconds)
-    for (const [key, delta] of Object.entries(effect.deltas) as [
-      keyof CirculationParameters,
-      number,
-    ][]) {
+    for (const [key, delta] of effectDeltas(effect)) {
       next[key] += delta * scale
     }
   }
-  next.heartRateBpm = clamp(next.heartRateBpm, 25, 190)
-  next.respiratoryRateBpm = clamp(next.respiratoryRateBpm, 4, 45)
-  next.circulatingVolumeFraction = clamp(next.circulatingVolumeFraction, 0.45, 1.4)
-  next.systemicVascularResistanceDynSecCm5 = clamp(
-    next.systemicVascularResistanceDynSecCm5,
-    250,
-    3200,
-  )
-  next.pulmonaryVascularResistanceWU = clamp(next.pulmonaryVascularResistanceWU, 0.4, 18)
-  next.leftVentricularContractility = clamp(next.leftVentricularContractility, 0.25, 2)
-  next.rightVentricularContractility = clamp(next.rightVentricularContractility, 0.2, 2)
-  next.leftVentricularCompliance = clamp(next.leftVentricularCompliance, 0.25, 2)
-  next.rightVentricularCompliance = clamp(next.rightVentricularCompliance, 0.25, 2)
-  next.pericardialPressureMmHg = clamp(next.pericardialPressureMmHg, 0, 28)
-  next.peepCmH2O = clamp(next.peepCmH2O, 0, 22)
+  for (const [key, bounds] of Object.entries(EFFECTIVE_PARAMETER_BOUNDS) as [
+    keyof CirculationParameters,
+    readonly [number, number],
+  ][]) {
+    next[key] = clamp(next[key], bounds[0], bounds[1])
+  }
   return next
 }
 
-export function deriveHemodynamicMeasurements(
+/**
+ * The lowest and highest scale an effect can have at any model time from `fromSeconds` on.
+ *
+ * Read from the shape of `effectScale`: the onset term only rises, towards 1; a transient's recovery
+ * term then only falls, towards 0. So a sustained effect never drops below its scale now and never
+ * exceeds 1, and a transient can reach anything between 0 and 1. The bounds are sound rather than
+ * tight: where they are loose, the check below errs towards "can change".
+ */
+function effectScaleBounds(
+  effect: ParameterEffect,
+  fromSeconds: number,
+): { readonly lowest: number; readonly highest: number } {
+  if (effect.recoverySeconds !== null) return { lowest: 0, highest: 1 }
+  return { lowest: effectScale(effect, fromSeconds), highest: 1 }
+}
+
+/**
+ * Whether `effect` can change the model's effective parameters at any model time from `fromSeconds`
+ * on, given the other effects and the model's bounds (HD-PRE-REVIEW-02 sanity repair, blocker 2).
+ *
+ * This compares the same model with and without the effect, over the whole of its course rather
+ * than at the instant it starts (when its scale is zero). Parameters are summed independently and
+ * then bounded, so for each parameter the effect moves, adding it changes nothing at a given time
+ * exactly when the sum without it is already at or beyond the bound the effect pushes towards —
+ * both then read the bound itself. The effect is inert only if that holds for every parameter it
+ * moves at every time from `fromSeconds` on; the range of the sum without it comes from
+ * `effectScaleBounds`. An unbounded parameter it moves, or a range that reaches inside the bound,
+ * means it can change the conditions.
+ *
+ * No tolerance is involved: an inert effect leaves the effective parameters bit-for-bit equal.
+ */
+export function effectCanChangeEffectiveParameters(
+  baseline: CirculationParameters,
+  otherEffects: readonly ParameterEffect[],
+  effect: ParameterEffect,
+  fromSeconds: number,
+): boolean {
+  for (const [key, delta] of effectDeltas(effect)) {
+    if (delta === 0) continue
+    const bounds = EFFECTIVE_PARAMETER_BOUNDS[key]
+    if (!bounds) return true
+    let lowestWithout = baseline[key]
+    let highestWithout = baseline[key]
+    for (const other of otherEffects) {
+      const otherDelta = other.deltas[key]
+      if (!otherDelta) continue
+      const scale = effectScaleBounds(other, fromSeconds)
+      lowestWithout += otherDelta * (otherDelta > 0 ? scale.lowest : scale.highest)
+      highestWithout += otherDelta * (otherDelta > 0 ? scale.highest : scale.lowest)
+    }
+    const masked = delta > 0 ? lowestWithout >= bounds[1] : highestWithout <= bounds[0]
+    if (!masked) return true
+  }
+  return false
+}
+
+/** Whether an intervention is written to change the model at all (any non-zero parameter delta). */
+export function interventionHasModeledEffect(
+  intervention: HemodynamicInterventionDefinition,
+): boolean {
+  return Object.values(intervention.parameterDeltas).some((delta) => delta !== 0)
+}
+
+/**
+ * What an accepted intervention did when the model's bounds absorb its whole effect. Its authored
+ * response ("tone rises over several seconds") describes a change that, in this state, the model
+ * cannot make, so it is not what the learner is told happened.
+ */
+export function absorbedInterventionNarration(
+  intervention: HemodynamicInterventionDefinition,
+): string {
+  return `${intervention.shortLabel}: accepted, with no further modeled effect. Every quantity this step acts on is already at the limit this simulation allows, so the modeled physiology — and the conditions measurements are acquired under — did not change.`
+}
+
+/**
+ * Whether accepting `intervention` now would change the physiology later measurements are acquired
+ * under. An intervention with no modeled effect, or one whose every effect the model's bounds
+ * already absorb (the thirtieth dose of a vasopressor at its ceiling), does not — and so it starts
+ * no new physiological episode and leaves compatible measurements current.
+ */
+export function interventionChangesPhysiology(
+  state: HemodynamicSimulationState,
+  intervention: HemodynamicInterventionDefinition,
+): boolean {
+  return effectCanChangeEffectiveParameters(
+    state.baselineParameters,
+    state.activeEffects,
+    {
+      id: `${intervention.id}-candidate`,
+      interventionId: intervention.id,
+      startedAt: state.timeSeconds,
+      onsetSeconds: intervention.onsetSeconds,
+      recoverySeconds: intervention.recoverySeconds ?? null,
+      deltas: intervention.parameterDeltas,
+    },
+    state.timeSeconds,
+  )
+}
+
+/**
+ * The model's own estimates, before any rounding (HD-PRE-REVIEW-02, reports L2-02 and L2-14).
+ *
+ * `deriveHemodynamicMeasurements` rounds each estimate to the precision the model reports. A
+ * comparison built from those rounded integers can make a pure hydrostatic offset look like
+ * different shifts (22 → 27 and 13 → 19 for one 5.9 mmHg move) and a pulse pressure that changed.
+ * Anything that compares or subtracts model estimates reads these instead and rounds only for
+ * display. The values are the same quantities; only the rounding is deferred.
+ */
+export function deriveUnroundedHemodynamicMeasurements(
   parameters: CirculationParameters,
   measurementSystem: MeasurementSystemState,
 ): HemodynamicMeasurements {
@@ -265,10 +399,12 @@ export function deriveHemodynamicMeasurements(
   let papDiastolic = meanPapTrue - paPulsePressure * PULMONARY_ARTERY_MEAN_FRACTION
 
   // Dynamic-response artifacts widen or narrow pulse pressure around the preserved mean.
-  // The live trace receives the same gain exactly once; see pressureTransfer below.
+  // The live trace receives the same gain exactly once; see pressureTransfer below. The arterial
+  // line reads its own response when it has one (L9-05); otherwise both share it, as before.
   const pulsatileGain = pulsatileGainFor(measurementSystem)
-  artSystolic = mapTrue + (artSystolic - mapTrue) * pulsatileGain
-  artDiastolic = mapTrue + (artDiastolic - mapTrue) * pulsatileGain
+  const arterialGain = pulsatileGainFor(arterialMeasurementSystem(measurementSystem))
+  artSystolic = mapTrue + (artSystolic - mapTrue) * arterialGain
+  artDiastolic = mapTrue + (artDiastolic - mapTrue) * arterialGain
   papSystolic = meanPapTrue + (papSystolic - meanPapTrue) * pulsatileGain
   papDiastolic = meanPapTrue + (papDiastolic - meanPapTrue) * pulsatileGain
 
@@ -290,30 +426,83 @@ export function deriveHemodynamicMeasurements(
   )
 
   return {
-    heartRateBpm: roundTo(parameters.heartRateBpm, 0),
-    spo2Percent: roundTo(parameters.arterialOxygenSaturationPercent, 0),
-    artSystolicMmHg: roundTo(artSystolic + offset, 0),
-    artDiastolicMmHg: roundTo(artDiastolic + offset, 0),
-    mapMmHg: roundTo(mapTrue + offset, 0),
-    rapMmHg: roundTo(rapTrue + offset, 0),
+    heartRateBpm: parameters.heartRateBpm,
+    spo2Percent: parameters.arterialOxygenSaturationPercent,
+    artSystolicMmHg: artSystolic + offset,
+    artDiastolicMmHg: artDiastolic + offset,
+    mapMmHg: mapTrue + offset,
+    rapMmHg: rapTrue + offset,
     // No systolic pressure difference exists between the right ventricle and the pulmonary
     // artery unless there is pulmonic valvular or pulmonary artery stenosis.
-    rvSystolicMmHg: roundTo(papSystolic + offset, 0),
+    rvSystolicMmHg: papSystolic + offset,
     // Right ventricular end-diastolic pressure sits within a few mmHg of right atrial pressure.
-    rvDiastolicMmHg: roundTo(Math.max(0, rapTrue - 1) + offset, 0),
-    papSystolicMmHg: roundTo(papSystolic + offset, 0),
-    papDiastolicMmHg: roundTo(papDiastolic + offset, 0),
-    meanPapMmHg: roundTo(meanPapTrue + offset, 0),
-    pawpMmHg: roundTo(displayedPawp, 0),
-    cardiacOutputLMin: roundTo(flow, 1),
-    cardiacIndexLMinM2: roundTo(flow / parameters.bodySurfaceAreaM2, 1),
-    svo2Percent: roundTo(
-      clamp(parameters.mixedVenousOxygenSaturationPercent + (flow - 5) * 2.4, 35, 85),
-      0,
-    ),
-    pulsePressureMaxMmHg: roundTo(artPulsePressure * (1 + pulseVariation / 200), 1),
-    pulsePressureMinMmHg: roundTo(artPulsePressure * (1 - pulseVariation / 200), 1),
+    rvDiastolicMmHg: Math.max(0, rapTrue - 1) + offset,
+    papSystolicMmHg: papSystolic + offset,
+    papDiastolicMmHg: papDiastolic + offset,
+    meanPapMmHg: meanPapTrue + offset,
+    pawpMmHg: displayedPawp,
+    cardiacOutputLMin: flow,
+    cardiacIndexLMinM2: flow / parameters.bodySurfaceAreaM2,
+    svo2Percent: clamp(parameters.mixedVenousOxygenSaturationPercent + (flow - 5) * 2.4, 35, 85),
+    pulsePressureMaxMmHg: artPulsePressure * (1 + pulseVariation / 200),
+    pulsePressureMinMmHg: artPulsePressure * (1 - pulseVariation / 200),
   }
+}
+
+/** The model's estimates at the precision it reports them. Same quantities as the unrounded set. */
+export function deriveHemodynamicMeasurements(
+  parameters: CirculationParameters,
+  measurementSystem: MeasurementSystemState,
+): HemodynamicMeasurements {
+  const raw = deriveUnroundedHemodynamicMeasurements(parameters, measurementSystem)
+  return {
+    heartRateBpm: roundTo(raw.heartRateBpm, 0),
+    spo2Percent: roundTo(raw.spo2Percent, 0),
+    artSystolicMmHg: roundTo(raw.artSystolicMmHg, 0),
+    artDiastolicMmHg: roundTo(raw.artDiastolicMmHg, 0),
+    mapMmHg: roundTo(raw.mapMmHg, 0),
+    rapMmHg: roundTo(raw.rapMmHg, 0),
+    rvSystolicMmHg: roundTo(raw.rvSystolicMmHg, 0),
+    rvDiastolicMmHg: roundTo(raw.rvDiastolicMmHg, 0),
+    papSystolicMmHg: roundTo(raw.papSystolicMmHg, 0),
+    papDiastolicMmHg: roundTo(raw.papDiastolicMmHg, 0),
+    meanPapMmHg: roundTo(raw.meanPapMmHg, 0),
+    pawpMmHg: roundTo(raw.pawpMmHg as number, 0),
+    cardiacOutputLMin: roundTo(raw.cardiacOutputLMin, 1),
+    cardiacIndexLMinM2: roundTo(raw.cardiacIndexLMinM2, 1),
+    svo2Percent: roundTo(raw.svo2Percent, 0),
+    pulsePressureMaxMmHg: roundTo(raw.pulsePressureMaxMmHg, 1),
+    pulsePressureMinMmHg: roundTo(raw.pulsePressureMinMmHg, 1),
+  }
+}
+
+/** The current state's model estimates, unrounded. */
+export function unroundedModelEstimates(
+  state: HemodynamicSimulationState,
+): HemodynamicMeasurements {
+  return deriveUnroundedHemodynamicMeasurements(state.parameters, state.measurementSystem)
+}
+
+/** A levelled, zeroed, well-damped measurement system, for reading the physiology itself. */
+const IDEAL_MEASUREMENT_SYSTEM: MeasurementSystemState = {
+  ...defaultMeasurementSystem,
+  zeroed: true,
+  transducerLevelCm: 0,
+  dampingRatio: 0.65,
+  artifact: 'none',
+  arterialLine: null,
+}
+
+/**
+ * The model's physiological values with no measurement-system error applied: what the circulation
+ * in the model is doing, before any transducer height, missing zero or damping distorts it. Latent
+ * model state — never something the monitor displayed or the learner acquired — and used only by
+ * surfaces that label it that way.
+ */
+export function latentPhysiologicalEstimates(
+  state: HemodynamicSimulationState,
+): HemodynamicMeasurements {
+  return deriveUnroundedHemodynamicMeasurements(state.parameters, IDEAL_MEASUREMENT_SYSTEM)
 }
 
 function arterialShape(phase: number): number {
@@ -473,12 +662,20 @@ function generateWaveformSample(
   return {
     time,
     ecgMv: ecg,
-    artMmHg: pressureTransfer(artTrue, artMean, measurementSystem, time, 3, seed, {
-      cardiacPhase,
-      pulsePressureMmHg: artPulsePressure,
-      gainAlreadyApplied: true,
-      fastFlushLineType: 'systemic-arterial',
-    }),
+    artMmHg: pressureTransfer(
+      artTrue,
+      artMean,
+      arterialMeasurementSystem(measurementSystem),
+      time,
+      3,
+      seed,
+      {
+        cardiacPhase,
+        pulsePressureMmHg: artPulsePressure,
+        gainAlreadyApplied: true,
+        fastFlushLineType: 'systemic-arterial',
+      },
+    ),
     cvpMmHg: pressureTransfer(cvpTrue, rapTrue, measurementSystem, time, 7, seed, {
       cardiacPhase,
       pulsePressureMmHg: cvpPulsePressure,
@@ -572,10 +769,29 @@ function alarmsFor(
   ]
 }
 
+/**
+ * Which run of a case a state belongs to. Deterministic, so identical inputs give identical states;
+ * a reset through the reducer increments the ordinal so a new run is never the old one.
+ */
+export function hemodynamicSessionId(
+  caseId: string,
+  mode: HemodynamicLearningMode,
+  seed: number,
+  ordinal: number,
+): string {
+  return `${caseId}/${mode}/${seed}/run-${ordinal}`
+}
+
+export function sessionOrdinalOf(state: Pick<HemodynamicSimulationState, 'sessionId'>): number {
+  const match = /\/run-(\d+)$/.exec(state.sessionId ?? '')
+  return match ? Number(match[1]) : 1
+}
+
 export function createInitialHemodynamicState(
   definition: HemodynamicCaseDefinition,
   mode: HemodynamicLearningMode = 'learn',
   seed = 417,
+  sessionOrdinal = 1,
 ): HemodynamicSimulationState {
   const measurementSystem: MeasurementSystemState = {
     ...defaultMeasurementSystem,
@@ -591,10 +807,18 @@ export function createInitialHemodynamicState(
     waveforms.push(generateWaveformSample(time, measurements, parameters, measurementSystem, seed))
   }
   const position = definition.initialCatheterPosition ?? 'pa'
+  const openingEpisode: PhysiologicalEpisode = {
+    index: 0,
+    startedAtSeconds: initialTime,
+    cause: { kind: 'case-opened' },
+  }
   return {
     schemaVersion: 1,
     caseDefinition: definition,
     caseId: definition.id,
+    sessionId: hemodynamicSessionId(definition.id, mode, seed, sessionOrdinal),
+    physiologicalEpisode: openingEpisode,
+    physiologicalEpisodes: [openingEpisode],
     mode,
     workspace: 'pac-skills',
     phase: 'observe',
@@ -623,6 +847,8 @@ export function createInitialHemodynamicState(
       storedWedgeMmHg: null,
       storedAtEndExpiration: false,
       forcedSafetyRecovery: false,
+      wedgeCursor: null,
+      storedWedge: null,
       wedgeEpisodeCount: 0,
     },
     measurements,
@@ -641,6 +867,46 @@ export function createInitialHemodynamicState(
     score: null,
     completed: false,
   }
+}
+
+/**
+ * Start a new physiological episode. Measurements acquired from here on belong to it; nothing
+ * acquired before it is relabelled.
+ */
+export function withNewPhysiologicalEpisode(
+  state: HemodynamicSimulationState,
+  startedAtSeconds: number,
+  cause: PhysiologicalEpisode['cause'],
+): HemodynamicSimulationState {
+  const episode: PhysiologicalEpisode = {
+    index: state.physiologicalEpisode.index + 1,
+    startedAtSeconds,
+    cause,
+  }
+  return {
+    ...state,
+    physiologicalEpisode: episode,
+    physiologicalEpisodes: [...state.physiologicalEpisodes, episode],
+  }
+}
+
+/** A transient effect the model itself begins to withdraw inside this step. */
+function waningEffectsBetween(
+  state: HemodynamicSimulationState,
+  from: number,
+  to: number,
+): readonly ParameterEffect[] {
+  return state.activeEffects.filter((effect) => {
+    const waning = effectWaningStartsAt(effect)
+    return waning !== null && waning > from && waning <= to
+  })
+}
+
+function interventionLabel(state: HemodynamicSimulationState, interventionId: string): string {
+  return (
+    state.caseDefinition.interventions.find((item) => item.id === interventionId)?.shortLabel ??
+    interventionId
+  )
 }
 
 function advanceOneStep(state: HemodynamicSimulationState): HemodynamicSimulationState {
@@ -694,7 +960,8 @@ function advanceOneStep(state: HemodynamicSimulationState): HemodynamicSimulatio
         wedgeStartedAt: null,
         wedgeCaptureReady: false,
         wedgeCursorTime: null,
-        storedAtEndExpiration: catheter.storedWedgeMmHg !== null,
+        wedgeCursor: null,
+        storedAtEndExpiration: catheter.storedWedgeMmHg !== null && catheter.storedAtEndExpiration,
         forcedSafetyRecovery: true,
       }
       criticalErrors = [...new Set([...criticalErrors, 'wedge-prolonged-inflation'])]
@@ -723,8 +990,25 @@ function advanceOneStep(state: HemodynamicSimulationState): HemodynamicSimulatio
   const waveforms = state.frozen
     ? state.waveforms
     : [...state.waveforms, nextSample].filter((sample) => sample.time >= minimumTime)
+  // A scheduled change of the model's own: a transient effect starts to wane. Measurements taken
+  // after it describe different physiology from those taken while the effect was building — unless
+  // the model's bounds already absorb the effect from here on, in which case its waning changes
+  // nothing and is not a boundary (HD-PRE-REVIEW-02 sanity repair, blocker 2).
+  let episodeState: HemodynamicSimulationState = state
+  for (const effect of waningEffectsBetween(state, state.timeSeconds, nextTime)) {
+    const waning = effectWaningStartsAt(effect) ?? nextTime
+    const others = state.activeEffects.filter((candidate) => candidate !== effect)
+    if (!effectCanChangeEffectiveParameters(state.baselineParameters, others, effect, waning)) {
+      continue
+    }
+    episodeState = withNewPhysiologicalEpisode(episodeState, roundTo(waning, 4), {
+      kind: 'effect-waning',
+      interventionId: effect.interventionId,
+      label: interventionLabel(state, effect.interventionId),
+    })
+  }
   return {
-    ...state,
+    ...episodeState,
     timeSeconds: nextTime,
     parameters,
     compartments,

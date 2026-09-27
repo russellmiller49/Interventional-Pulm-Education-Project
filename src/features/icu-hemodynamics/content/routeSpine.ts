@@ -75,18 +75,20 @@ export const routeStops: readonly RouteStop[] = Object.freeze([
     analogy:
       'A filling room with a door that shuts. The room fills quietly, the door slams once a beat, and the level rises and falls by only a few millimetres of mercury.',
     precise:
-      'A low-amplitude venous tracing with three positive waves (a, c, v) and two descents (x, y). The a wave follows the P wave, the c wave the QRS, the v wave peaks at the end of the T wave. Read the mean at end expiration, at the base of the c wave.',
+      'A low-amplitude venous tracing with three positive waves (a, c, v) and two descents (x, y). The a wave follows the P wave, the c wave the QRS, the v wave peaks at the end of the T wave. Read it at end expiration, at the base of the c wave — one point in one beat, not a digital mean averaged across the breath.',
     checklistLabel: 'What to look for in this tracing',
     checklist: [
       'a, c and v waves present',
       'x and y descents present',
-      'read the mean, not a peak',
+      // HD-PRE-REVIEW-02 (report L3-04): this said "read the mean", a third rule beside the
+      // reference's and the monitor's end-expiratory c-wave base. It now names that one point.
+      'read at the base of the c wave, not a peak',
       'at end expiration',
     ],
     wiggle: {
       change: 'Freeze the trace and find end expiration.',
       watch:
-        'The slow envelope under the waves: the reading is taken at its trough, not at a peak.',
+        'The slow respiratory envelope under the cardiac waves. On this patient’s controlled positive-pressure ventilation its trough is end expiration; the reading is taken there, at the base of the c wave.',
     },
     sourceIds: ['clinical-hemodynamics-waveforms', 'cvp-measurement-2017', 'pac-review-2014'],
   },

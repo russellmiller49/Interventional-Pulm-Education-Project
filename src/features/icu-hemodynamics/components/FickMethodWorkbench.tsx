@@ -80,10 +80,17 @@ export const FICK_EPISODES: readonly FickEpisode[] = [
     inputs: { ...baseInputs, venousSampleSite: 'superior-vena-cava' },
   },
   {
+    /*
+     * Report L7-06. This was titled "Inputs that contradict each other" and said the venous
+     * saturation was higher than the arterial one — but there is no arterial specimen, so there is
+     * nothing to contradict, and the calculation withholds for a missing input. The inputs are
+     * unchanged (no arterial value is inferred); the title and account now say what they are. The
+     * id is kept so saved task state still resolves.
+     */
     id: 'contradictory-inputs',
-    label: 'Inputs that contradict each other',
+    label: 'A missing arterial specimen',
     whatHappened:
-      'The recorded mixed-venous saturation is higher than the arterial one, and the arterial specimen is missing.',
+      'No arterial specimen was drawn, so the arterial saturation is not available. A mixed-venous saturation of 99% was recorded, and with nothing to compare it against, the calculation cannot say whether the two would contradict each other — it can only say an input is missing.',
     inputs: {
       ...baseInputs,
       arterialSaturationFraction: null,

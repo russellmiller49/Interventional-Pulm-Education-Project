@@ -22,13 +22,18 @@ import {
   LEVEL_TOLERANCE_CM,
   standardTechnique,
 } from '../../engine/stageRuntime'
+import { lineMeasurementSystem } from '../../engine/measurementLines'
+import { storedWedgeProvenance, thermodilutionSeriesView } from '../../engine/measurementProvenance'
 import { WEDGE_AUTO_DEFLATION_SECONDS } from '../../engine/simulation'
 import {
   catheterFlushBlocked,
   pressureObservationKey,
   flushReleaseReady,
 } from '../../engine/pressureObservation'
-import { thermodilutionAcceptedAverage } from '../../engine/thermodilution'
+import {
+  thermodilutionSeriesConditionWords,
+  thermodilutionSeriesGroups,
+} from '../../engine/thermodilution'
 import type {
   DynamicResponseKind,
   FastFlushLineType,
@@ -40,6 +45,7 @@ import { FastFlushTrace } from '../PressureSystemTeachingVisual'
 import { ThermodilutionSeriesReadout, ThermodilutionTrialCard } from '../ThermodilutionTrialReview'
 import styles from './hemodynamics-stage.module.css'
 import { useHemodynamicsTaskDraft } from './HemodynamicsTaskDrafts'
+import { WedgeCursorPicker } from './WedgeCursorPicker'
 
 /**
  * The controls a lesson step opens beneath the monitor.
@@ -195,15 +201,18 @@ export function FlushDock({
     null,
   )
   const groupId = useId()
-  const current = classifyDynamicResponse(state.measurementSystem)
+  // The flushed line's own response (report L9-05): the arterial line reads its own tubing.
+  const lineSystem = lineMeasurementSystem(state.measurementSystem, lineType)
+  const arterial = lineType === 'systemic-arterial'
+  const current = classifyDynamicResponse(lineSystem)
   const response = observed ?? current
   const definition = getDynamicResponseDefinition(response)
   const classified = state.signalValidationChecks.includes(DYNAMIC_RESPONSE_CLASSIFIED_CHECK)
   const corrected =
     state.signalValidationChecks.includes(DYNAMIC_RESPONSE_CORRECTED_CHECK) ||
-    (state.measurementSystem.artifact === 'none' &&
-      state.measurementSystem.dampingRatio >= DYNAMIC_RESPONSE_REFERENCE.underdampedBelow &&
-      state.measurementSystem.dampingRatio <= DYNAMIC_RESPONSE_REFERENCE.overdampedAbove)
+    (lineSystem.artifact === 'none' &&
+      lineSystem.dampingRatio >= DYNAMIC_RESPONSE_REFERENCE.underdampedBelow &&
+      lineSystem.dampingRatio <= DYNAMIC_RESPONSE_REFERENCE.overdampedAbove)
   const paUnsafe = catheterFlushBlocked(state, lineType)
   const stale = hasRun && observedKey !== pressureObservationKey(state, lineType)
   const acquiring = requireFreshObservation && hasRun && !stale && !flushReleaseReady(state)
@@ -212,7 +221,7 @@ export function FlushDock({
   function run() {
     if (paUnsafe || !enabled) return
     dispatch({ type: 'FAST_FLUSH', lineType })
-    setObserved(classifyDynamicResponse(state.measurementSystem))
+    setObserved(classifyDynamicResponse(lineSystem))
     setHasRun(true)
     setClassification(null)
     setRevealed(false)
@@ -233,11 +242,16 @@ export function FlushDock({
     }
   }
 
-  /** The reading stays on screen after the repair; flushing again shows the settled line. */
+  /**
+   * The reading stays on screen after the repair; flushing again shows the settled line. The
+   * arterial repair acts on the arterial line only; the shared response the other lines use is
+   * untouched (report L9-05).
+   */
   function repair() {
     if (!enabled) return
-    dispatch({ type: 'SET_DAMPING', dampingRatio: 0.65 })
-    dispatch({ type: 'SET_ARTIFACT', artifact: 'none' })
+    const line = arterial ? ('systemic-arterial' as const) : undefined
+    dispatch({ type: 'SET_DAMPING', dampingRatio: 0.65, line })
+    dispatch({ type: 'SET_ARTIFACT', artifact: 'none', line })
     dispatch({ type: 'VALIDATE_SIGNAL', check: DYNAMIC_RESPONSE_CORRECTED_CHECK })
   }
 
@@ -262,7 +276,14 @@ export function FlushDock({
           balloon is up, and while the tip is moving.
           {paUnsafe ? ' That is why the control is unavailable now.' : ''}
         </p>
-      ) : null}
+      ) : (
+        <p className={styles.dockNote} data-arterial-line-scope>
+          This is the systemic arterial line: its own tubing and flush device. Flushing it reads
+          only its response, and repairing it changes only the arterial tracing — the
+          pulmonary-artery and central-venous lines keep their own. In this model the lines still
+          share one transducer height and zero.
+        </p>
+      )}
       <div className={styles.dockRow}>
         <div>
           <span>Run a fast flush</span>
@@ -353,8 +374,9 @@ export function FlushDock({
               <div>
                 <span>Simulated line correction</span>
                 <small>
-                  This sets the modeled dynamic response to an acceptable preset. Finding and
-                  correcting a real air bubble, kink, clot, or connection problem is not modeled.
+                  This sets the modeled dynamic response {arterial ? 'of the arterial line ' : ''}to
+                  an acceptable preset. Finding and correcting a real air bubble, kink, clot, or
+                  connection problem is not modeled.
                 </small>
               </div>
               <button
@@ -441,8 +463,26 @@ export function TipDock({ state, dispatch, enabled }: DockProps) {
  * The wedge: occlude, cursor, store, deflate
  * ------------------------------------------------------------------ */
 
+/** What was stored, from which cursor, and whether it still describes this patient. */
+function storedWords(stored: NonNullable<ReturnType<typeof storedWedgeProvenance>>): string {
+  const value = `${stored.valueMmHg.toFixed(1)} mmHg`
+  if (!stored.record) return `Stored: ${value}. How it was read was not recorded.`
+  const cursor = stored.record.cursor
+  const from =
+    cursor.placement === 'manual' ? 'from the cursor you set' : 'from the assisted cursor'
+  const phase = cursor.withinModeledEndExpiratoryWindow
+    ? 'at the modeled end expiration'
+    : 'away from the modeled end expiration, so not recorded as end-expiratory'
+  const conditions =
+    stored.current === false
+      ? ' It was stored under earlier conditions; the patient’s modeled physiology has changed since.'
+      : ''
+  return `Stored: ${value}, the mean of one cardiac cycle ${from}, ${phase}.${conditions}`
+}
+
 export function WedgeDock({ state, dispatch, enabled }: DockProps) {
   const catheter = state.catheter
+  const stored = storedWedgeProvenance(state)
   const occluding = catheter.position === 'wedge' && catheter.balloonInflated
   const elapsed =
     occluding && catheter.wedgeStartedAt !== null
@@ -488,13 +528,13 @@ export function WedgeDock({ state, dispatch, enabled }: DockProps) {
       <div className={styles.dockRow}>
         <div>
           <span>Read at end expiration</span>
-          <small>
-            {catheter.storedWedgeMmHg !== null
-              ? `Stored: ${catheter.storedWedgeMmHg} mmHg${catheter.storedAtEndExpiration ? ', at end expiration' : ''}.`
+          <small data-stored-wedge-provenance>
+            {stored
+              ? storedWords(stored)
               : catheter.wedgeCursorTime !== null
-                ? 'Cursor placed. Store the value.'
+                ? 'Cursor set. Store the value, or move the cursor first.'
                 : catheter.wedgeCaptureReady
-                  ? 'The tracing has settled: place the cursor at the trough of the swing.'
+                  ? 'The tracing has settled. Find end expiration on the captured trace below and set the cursor there — or show the assisted placement.'
                   : occluding
                     ? 'Let the tracing settle for about a breath.'
                     : 'Nothing to read until the balloon is up.'}
@@ -502,20 +542,15 @@ export function WedgeDock({ state, dispatch, enabled }: DockProps) {
         </div>
         <div className={styles.buttonPair}>
           <button
-            id={quickControlId('cursor')}
-            type="button"
-            className={styles.dockButton}
-            disabled={!occluding || !catheter.wedgeCaptureReady}
-            onClick={() => dispatch({ type: 'PLACE_WEDGE_CURSOR' })}
-          >
-            Place cursor
-          </button>
-          <button
             id={quickControlId('store')}
             type="button"
             className={styles.dockButton}
             disabled={
-              !occluding || catheter.wedgeCursorTime === null || catheter.storedWedgeMmHg !== null
+              !occluding ||
+              catheter.wedgeCursorTime === null ||
+              catheter.storedWedgeMmHg !== null ||
+              // A cycle that straddles a modeled change describes neither set of conditions.
+              catheter.wedgeCursor?.acquisition.physiologicalEpisode === null
             }
             onClick={() => dispatch({ type: 'STORE_WEDGE' })}
           >
@@ -523,6 +558,14 @@ export function WedgeDock({ state, dispatch, enabled }: DockProps) {
           </button>
         </div>
       </div>
+      {occluding ? (
+        <WedgeCursorPicker
+          state={state}
+          dispatch={dispatch}
+          enabled={enabled}
+          controlId={quickControlId('cursor')}
+        />
+      ) : null}
       {catheter.forcedSafetyRecovery ? (
         <p className={styles.dockNote} role="alert">
           The simulation released the balloon itself. That release does not count as your deflation,
@@ -540,7 +583,9 @@ export function WedgeDock({ state, dispatch, enabled }: DockProps) {
 export function ThermodilutionDock({ state, dispatch, enabled }: DockProps) {
   const start = useRef<number | null>(null)
   const [holding, setHolding] = useState(false)
-  const average = thermodilutionAcceptedAverage(state.thermodilutionTrials)
+  const view = thermodilutionSeriesView(state)
+  const average = view.current.averageLMin
+  const groups = thermodilutionSeriesGroups(state.thermodilutionTrials)
   const canInject =
     state.catheter.position === 'pa' &&
     state.catheter.targetPosition === null &&
@@ -616,27 +661,44 @@ export function ThermodilutionDock({ state, dispatch, enabled }: DockProps) {
           {holding ? 'Injecting…' : 'Hold to inject'}
         </button>
       </div>
-      <div className={styles.trialGrid} data-trial-count={state.thermodilutionTrials.length}>
-        {state.thermodilutionTrials.map((trial) => (
-          <ThermodilutionTrialCard
-            key={trial.id}
-            trial={trial}
-            onReview={() => dispatch({ type: 'REVIEW_THERMODILUTION_CURVE', trialId: trial.id })}
-            onAccept={() =>
-              dispatch({ type: 'SET_THERMODILUTION_ACCEPTED', trialId: trial.id, accepted: true })
-            }
-            onExclude={(reasonId) =>
-              dispatch({
-                type: 'SET_THERMODILUTION_ACCEPTED',
-                trialId: trial.id,
-                accepted: false,
-                exclusionReasonId: reasonId,
-              })
-            }
-          />
-        ))}
-      </div>
-      <ThermodilutionSeriesReadout trials={state.thermodilutionTrials} />
+      {groups.map((group) => (
+        <div key={group.identity.key} data-series-group={group.identity.key}>
+          {groups.length > 1 ? (
+            <p className={styles.dockNote}>
+              Series: {thermodilutionSeriesConditionWords(group.identity)}
+              {group.identity.key === view.current.identity.key ? ' — the current series' : ''}
+            </p>
+          ) : null}
+          <div className={styles.trialGrid} data-trial-count={group.trials.length}>
+            {group.trials.map((trial) => (
+              <ThermodilutionTrialCard
+                key={trial.id}
+                trial={trial}
+                onReview={() =>
+                  dispatch({ type: 'REVIEW_THERMODILUTION_CURVE', trialId: trial.id })
+                }
+                onAccept={() =>
+                  dispatch({
+                    type: 'SET_THERMODILUTION_ACCEPTED',
+                    trialId: trial.id,
+                    accepted: true,
+                  })
+                }
+                onExclude={(reasonId) =>
+                  dispatch({
+                    type: 'SET_THERMODILUTION_ACCEPTED',
+                    trialId: trial.id,
+                    accepted: false,
+                    exclusionReasonId: reasonId,
+                  })
+                }
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+      {groups.length === 0 ? <div className={styles.trialGrid} data-trial-count={0} /> : null}
+      <ThermodilutionSeriesReadout trials={state.thermodilutionTrials} view={view} />
       {average !== null ? (
         <p className={styles.dockNote} data-series-average>
           The monitor now shows the series average as the cardiac output.

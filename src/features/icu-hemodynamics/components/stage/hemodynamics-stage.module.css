@@ -715,3 +715,80 @@
   overflow: visible;
   display: block;
 }
+
+/*
+ * HD-PRE-REVIEW-02 (report L6-02): the captured occlusion trace the wedge cursor is moved across,
+ * with the simulation's modeled respiratory phase drawn beneath it. The shaded band is the one
+ * cardiac cycle the cursor's value averages.
+ */
+.cursorPicker {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/*
+ * The picker's slider takes the row's full width under its label rather than sitting beside it:
+ * the shared `.slider` minimum (9rem) is 288px at 200% root text, which pushed a 390px page
+ * sideways. Stacked, it shrinks with the dock.
+ */
+.cursorPicker .dockRow {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.cursorPicker .slider {
+  min-width: 0;
+}
+
+.captureFigure {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.6rem;
+  background: #07171d;
+}
+
+.captureTrace {
+  fill: none;
+  stroke: #ffd166;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.captureRespiration {
+  fill: none;
+  stroke: #8fb6c4;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.captureWindow {
+  fill: rgba(113, 225, 229, 0.14);
+}
+
+.captureDraftCursor {
+  stroke: var(--cyan-bright, #71e1e5);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.capturePlacedCursor {
+  stroke: var(--green, #76d69b);
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.capturePlacedCursor[data-placement='assisted'] {
+  stroke: var(--amber, #ffbf62);
+}
+
+.dockVerdict p {
+  margin: 0 0 0.35rem;
+}
+
+.dockVerdict p:last-child {
+  margin-bottom: 0;
+}
