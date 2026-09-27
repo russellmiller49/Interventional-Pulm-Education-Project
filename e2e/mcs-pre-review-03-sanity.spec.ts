@@ -149,3 +149,33 @@ test('ninth drawer entry and monitor readout words fit at 320px / 200% text', as
   })
   expect(lines).toBe(1)
 })
+
+for (const textSize of [100, 200]) {
+  test(`case slider stays visible after rapid Tab and Shift+Tab at 320px / ${textSize}% text`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 320, height: 844 })
+    await page.goto(`${root}/practice?case=IABP-01`)
+    const slider = page.getByRole('slider').first()
+    await slider.waitFor()
+    if (textSize === 200)
+      await page.addStyleTag({ content: 'html { font-size: 200% !important; }' })
+    await slider.focus()
+    await page.keyboard.press('Tab')
+    await page.keyboard.press('Shift+Tab')
+    await expect(slider).toBeFocused()
+    await expect
+      .poll(
+        () =>
+          slider.evaluate((node) => {
+            const box = node.getBoundingClientRect()
+            return (
+              box.top >= parseFloat(getComputedStyle(node).scrollMarginTop) - 12 &&
+              box.bottom < innerHeight
+            )
+          }),
+        { timeout: 1000 },
+      )
+      .toBe(true)
+  })
+}

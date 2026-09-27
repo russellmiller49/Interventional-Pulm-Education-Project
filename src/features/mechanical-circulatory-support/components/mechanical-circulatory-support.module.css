@@ -5115,3 +5115,8 @@
     word-break: normal;
   }
 }
+
+:global(html:focus-within):has(.moduleShell) {
+  /* Rapid Tab/Shift+Tab must not leave a stale native smooth-scroll destination in flight. */
+  scroll-behavior: auto;
+}
