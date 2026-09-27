@@ -14,7 +14,7 @@ import styles from './EcmoLessonStage.module.css'
  * thing a learner met in the task pane and the last thing they needed while working a step. It
  * lives here now, closed by default, opened by one button that says where the learner is. The
  * rail itself is the shared `PathwayNav`, unchanged: every section stays one click away and
- * nothing is withheld.
+ * nothing is withheld. Inside this drawer it is laid out as a list (see `.sectionsPanel nav`).
  */
 export function SectionsDrawer({
   pathway,
@@ -30,6 +30,20 @@ export function SectionsDrawer({
 }) {
   const ref = useRef<HTMLDetailsElement>(null)
 
+  /*
+   * On opening, the current section is brought to the middle of the list. From section 12 onward
+   * it would otherwise sit below the panel's fold. Only the panel scrolls; the page stays put.
+   */
+  function onToggle() {
+    const drawer = ref.current
+    if (!drawer?.open) return
+    const panel = drawer.querySelector<HTMLElement>('[data-sections-panel]')
+    const current = panel?.querySelector<HTMLElement>('[aria-current="step"]')
+    if (!panel || !current) return
+    const offset = current.getBoundingClientRect().top - panel.getBoundingClientRect().top
+    panel.scrollTop += offset - (panel.clientHeight - current.offsetHeight) / 2
+  }
+
   function onKeyDown(event: ReactKeyboardEvent<HTMLDetailsElement>) {
     if (event.key !== 'Escape' || !ref.current?.open) return
     event.preventDefault()
@@ -38,12 +52,18 @@ export function SectionsDrawer({
   }
 
   return (
-    <details ref={ref} className={styles.sectionsDrawer} data-sections-drawer onKeyDown={onKeyDown}>
+    <details
+      ref={ref}
+      className={styles.sectionsDrawer}
+      data-sections-drawer
+      onKeyDown={onKeyDown}
+      onToggle={onToggle}
+    >
       <summary className={styles.sectionsSummary}>
         <span>Sections</span>
         <span className={styles.sectionsPosition}>{position}</span>
       </summary>
-      <div className={styles.sectionsPanel}>
+      <div className={styles.sectionsPanel} data-sections-panel>
         <PathwayNav
           pathway={pathway}
           label={`${pathway.trackId?.toUpperCase() ?? ''} learning pathway`.trim()}
