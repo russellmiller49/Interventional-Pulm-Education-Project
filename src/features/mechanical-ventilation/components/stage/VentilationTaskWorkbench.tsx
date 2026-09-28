@@ -9,6 +9,7 @@ import { labMetricLabels, labSnapshot, type LabSession } from '../../engine/lear
 import { holdStatus } from '../../engine/learningMeasurements'
 import { plateauAcquisition } from '../../content/plateauAcquisition'
 import { PATIENT_REPORT_METRICS, patientReportAvailability } from '../../content/patientReport'
+import { deliveredVolumeStepNote } from '../../content/deliveredVolume'
 import type { VentilationAction, VentilatorDeviceId, WaveformSample } from '../../engine/types'
 import { BedsidePanel } from '../BedsidePanel'
 import { MechanicalVentilatorConsole } from '../MechanicalVentilatorConsole'
@@ -32,6 +33,7 @@ export function VentilationTaskWorkbench({
   lockedReason,
   readOnly = false,
   transportOnly = false,
+  transport = true,
 }: {
   session: LabSession
   presentation: VentilationTaskPresentation
@@ -45,6 +47,11 @@ export function VentilationTaskWorkbench({
   lockedReason?: string
   readOnly?: boolean
   transportOnly?: boolean
+  /**
+   * False when the step's own experiment panel carries Run, Pause, one breath and speed. Two Run
+   * buttons for one patient read as two clocks.
+   */
+  transport?: boolean
 }) {
   const state = session.simulation
   const profile = getVentilatorDeviceProfile(session.device)
@@ -68,6 +75,7 @@ export function VentilationTaskWorkbench({
   const acquisition = plateauAcquisition(state, { requireAcquisition: integration })
   const withholdUnacquiredPlateau = integration && !acquisition.supportsMechanicsClaim
   const report = patientReportAvailability(state)
+  const volumeStepNote = deliveredVolumeStepNote(state)
   const showPatient = presentation.patient === 'bedside'
   const bedsideActionIds = [
     ...new Set([
@@ -117,40 +125,43 @@ export function VentilationTaskWorkbench({
 
   return (
     <div className={styles.workbench} data-task-workbench data-session-time={state.simulationTime}>
-      <div className={styles.tools} data-ventilation-transport>
-        <strong>Playback / inspection</strong>
-        <button
-          className={controls.toolButton}
-          type="button"
-          disabled={readOnly}
-          aria-pressed={!state.paused}
-          data-paused={state.paused}
-          onClick={() => engine({ type: 'SET_PAUSED', paused: !state.paused })}
-        >
-          {state.paused ? 'Run' : 'Pause'}
-        </button>
-        <button
-          className={controls.toolButton}
-          type="button"
-          disabled={readOnly}
-          onClick={() => engine({ type: 'STEP_BREATH' })}
-        >
-          Advance one breath
-        </button>
-        <select
-          className={controls.select}
-          aria-label="Simulation speed"
-          value={state.speed}
-          disabled={readOnly}
-          onChange={(e) => engine({ type: 'SET_SPEED', speed: Number(e.target.value) as 1 | 5 })}
-        >
-          <option value={1}>1× time</option>
-          <option value={5}>5× time</option>
-        </select>
-        <span className={styles.note} aria-live="off">
-          {state.simulationTime.toFixed(1)} s simulated · {state.paused ? 'Paused' : 'Live patient'}
-        </span>
-      </div>
+      {transport ? (
+        <div className={styles.tools} data-ventilation-transport>
+          <strong>Playback / inspection</strong>
+          <button
+            className={controls.toolButton}
+            type="button"
+            disabled={readOnly}
+            aria-pressed={!state.paused}
+            data-paused={state.paused}
+            onClick={() => engine({ type: 'SET_PAUSED', paused: !state.paused })}
+          >
+            {state.paused ? 'Run' : 'Pause'}
+          </button>
+          <button
+            className={controls.toolButton}
+            type="button"
+            disabled={readOnly}
+            onClick={() => engine({ type: 'STEP_BREATH' })}
+          >
+            Advance one breath
+          </button>
+          <select
+            className={controls.select}
+            aria-label="Simulation speed"
+            value={state.speed}
+            disabled={readOnly}
+            onChange={(e) => engine({ type: 'SET_SPEED', speed: Number(e.target.value) as 1 | 5 })}
+          >
+            <option value={1}>1× time</option>
+            <option value={5}>5× time</option>
+          </select>
+          <span className={styles.note} aria-live="off">
+            {state.simulationTime.toFixed(1)} s simulated ·{' '}
+            {state.paused ? 'Paused' : 'Live patient'}
+          </span>
+        </div>
+      ) : null}
       {transportOnly ? (
         <p className={styles.note}>
           Run and Step advance the live patient. Reading a captured reference does not change its
@@ -163,65 +174,8 @@ export function VentilationTaskWorkbench({
               {lockedReason}
             </p>
           ) : null}
-          {presentation.patient === 'protection' ? (
-            <section className={styles.block} data-pbw-context>
-              <h3>Patient context · authored PBW {definition.predictedBodyWeightKg} kg</h3>
-              {state.measurements.exhaledVtSource === 'trace' ? (
-                <p>
-                  Delivered VT {state.measurements.exhaledVtMl.toFixed(0)} mL /{' '}
-                  {definition.predictedBodyWeightKg} kg ={' '}
-                  {(state.measurements.exhaledVtMl / definition.predictedBodyWeightKg).toFixed(1)}{' '}
-                  mL/kg PBW.
-                </p>
-              ) : (
-                <p>Delivered VT: awaiting a completed breath on the trace.</p>
-              )}
-              <p className={styles.note}>
-                The case supplies PBW; a height input is not supplied. Verify height and the
-                applicable PBW reference at the bedside. Assess effort, gas exchange, and an
-                acquired interpretable pressure together.
-              </p>
-            </section>
-          ) : null}
-          {showPatient ? (
-            <BedsidePanel state={state} definition={definition} compact requireAssessment />
-          ) : null}
           <div className={styles.experiment} data-native-view={nativeView || undefined}>
             <div className={styles.signals}>
-              {!nativeView &&
-              !reference &&
-              !comparison &&
-              presentation.kind !== 'concept-control' ? (
-                <>
-                  <div className={styles.tools}>
-                    <button
-                      type="button"
-                      className={controls.toolButton}
-                      onClick={() => setCapture(state.waveforms)}
-                    >
-                      Capture current breath
-                    </button>
-                    {capture ? (
-                      <button
-                        type="button"
-                        className={controls.toolButton}
-                        onClick={() => setCapture(null)}
-                      >
-                        Follow live breaths
-                      </button>
-                    ) : null}
-                  </div>
-                  <CapturedBreath
-                    label={
-                      capture
-                        ? 'Your captured breath · inspection only'
-                        : 'Live patient · most recent complete breath'
-                    }
-                    samples={capture ?? state.waveforms}
-                    effort={presentation.effort}
-                  />
-                </>
-              ) : null}
               <section className={styles.block} data-live-readings>
                 <h3>Readings to watch</h3>
                 <p className={styles.note} data-controlled-inputs>
@@ -270,6 +224,9 @@ export function VentilationTaskWorkbench({
                             {labMetricLabels[metric].unit}
                           </small>
                         ) : null}
+                        {metric === 'volume' && volumeStepNote ? (
+                          <small data-volume-step-note>{volumeStepNote}</small>
+                        ) : null}
                       </dd>
                     </div>
                   ))}
@@ -298,6 +255,65 @@ export function VentilationTaskWorkbench({
                   </p>
                 ) : null}
               </section>
+              {presentation.patient === 'protection' ? (
+                <section className={styles.block} data-pbw-context>
+                  <h3>Patient context · authored PBW {definition.predictedBodyWeightKg} kg</h3>
+                  {state.measurements.exhaledVtSource === 'trace' ? (
+                    <p>
+                      Delivered VT {state.measurements.exhaledVtMl.toFixed(0)} mL /{' '}
+                      {definition.predictedBodyWeightKg} kg ={' '}
+                      {(state.measurements.exhaledVtMl / definition.predictedBodyWeightKg).toFixed(
+                        1,
+                      )}{' '}
+                      mL/kg PBW.
+                    </p>
+                  ) : (
+                    <p>Delivered VT: awaiting a completed breath on the trace.</p>
+                  )}
+                  <p className={styles.note}>
+                    The case supplies PBW; a height input is not supplied. Verify height and the
+                    applicable PBW reference at the bedside. Assess effort, gas exchange, and an
+                    acquired interpretable pressure together.
+                  </p>
+                </section>
+              ) : null}
+              {showPatient ? (
+                <BedsidePanel state={state} definition={definition} compact requireAssessment />
+              ) : null}
+              {!nativeView &&
+              !reference &&
+              !comparison &&
+              presentation.kind !== 'concept-control' ? (
+                <>
+                  <div className={styles.tools}>
+                    <button
+                      type="button"
+                      className={controls.toolButton}
+                      onClick={() => setCapture(state.waveforms)}
+                    >
+                      Capture current breath
+                    </button>
+                    {capture ? (
+                      <button
+                        type="button"
+                        className={controls.toolButton}
+                        onClick={() => setCapture(null)}
+                      >
+                        Follow live breaths
+                      </button>
+                    ) : null}
+                  </div>
+                  <CapturedBreath
+                    label={
+                      capture
+                        ? 'Your captured breath · inspection only'
+                        : 'Live patient · most recent complete breath'
+                    }
+                    samples={capture ?? state.waveforms}
+                    effort={presentation.effort}
+                  />
+                </>
+              ) : null}
               {presentation.kind === 'response-lab' ? (
                 <VentilationResponseTimeline session={session} />
               ) : null}

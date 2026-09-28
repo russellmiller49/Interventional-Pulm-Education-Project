@@ -24,14 +24,36 @@
   margin: 1rem auto 0;
   padding: clamp(0.85rem, 2vw, 1.5rem);
 }
+/*
+ * The optional question card in the module's own dark palette (walkthrough V2: a white card on a
+ * dark page, tiring over a long sitting). The card's stylesheet reads these variables and keeps its
+ * light values everywhere it is mounted outside this flow. The chosen row is still marked three
+ * ways — tint, accented border and an inset ring — so selection never rests on colour alone, and
+ * the native radios are painted for a dark surface.
+ */
 .flow [data-reinforcement] {
-  color-scheme: light;
-  --ink: #17343c;
-  --muted: #536b71;
-  --accent: #086f70;
-  --pale: #eaf5f1;
+  color-scheme: dark;
+  --ink: #eaf4f4;
+  --muted: #aec5c8;
+  --accent: #71e1e5;
+  --pale: #1f4249;
+  --button-surface: #193239;
+  --button-line: #648a91;
+  --choice-line: #4b7a82;
+  --choice-checked-surface: #1d4a52;
+  --focus-ring: #71e1e5;
+  --feedback-surface: #10262b;
+  --feedback-line: #345158;
+  --feedback-warm-surface: #2b2412;
+  --feedback-warm-line: #8a6a2a;
+  --notice-surface: #10262b;
+  --notice-line: #4b7a82;
+  --warning-surface: #33260f;
+  --warning-line: #ffbf62;
+  --warning-ink: #ffdca6;
   color: var(--ink);
-  background: #f7f9f7;
+  background: #0f2429;
+  border: 1px solid #345158;
   padding: clamp(0.85rem, 2vw, 1.5rem);
   border-radius: 0.75rem;
 }
@@ -110,17 +132,42 @@
 .flow [data-foundation-teaching] > p {
   max-width: 85ch;
 }
+/*
+ * Module-dark reference and patient-status cards (walkthrough V2). Both stylesheets already paint
+ * from these variables; only the values change inside the Learn flow. The vital-sign strip keeps its
+ * own navy monitor surface.
+ */
 .flow [aria-label='Adult ARDS guideline reference'] {
-  --ink: #16383b;
-  --muted: #436068;
-  --accent: #17685f;
+  --ink: #eaf4f4;
+  --muted: #aec5c8;
+  --accent: #71e1e5;
   color: var(--ink);
+  background: #10262b;
+  border-color: #345158;
+}
+.flow [aria-label='Adult ARDS guideline reference'] > span:first-child {
+  border-color: #4b7a82;
+  background: #17343a;
+  color: #b7f0c9;
 }
 .flow [data-bedside-panel] {
-  --ink: #16383b;
-  --muted: #436068;
-  --line: #c4d7da;
-  --accent: #17685f;
+  --ink: #eaf4f4;
+  --muted: #aec5c8;
+  --surface: #10262b;
+  --surface-soft: #17343a;
+  --surface-raised: #17343a;
+  --line: #345158;
+  --teal: #71e1e5;
+  --teal-dark: #9ff0f2;
+  --teal-soft: #1f4249;
+  --amber-soft: #33260f;
+  --red-soft: #3a1c24;
+  --green-soft: #143a2c;
+  --accent: #71e1e5;
+  color: var(--ink);
+  box-shadow: none;
+}
+.flow [data-bedside-panel] :is(summary, dd, h2, h3) {
   color: var(--ink);
 }
 .flow [data-task-workbench] [data-bedside-panel][data-compact='true'] details > div {
@@ -270,6 +317,213 @@
   border: 1px solid #345158;
   border-radius: 0.75rem;
   min-width: 0;
+}
+
+/*
+ * The experiment, beside the task (MV-PRE-REVIEW-03, N7). Module-dark like every other card in the
+ * flow; the stage is carried by the words in the chip and the checklist, and colour only repeats it.
+ */
+.experimentPanel {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  padding: 0.8rem;
+  border: 1px solid #4b7a82;
+  border-radius: 0.7rem;
+  background: #0f2429;
+  min-width: 0;
+}
+.experimentPanel > * {
+  margin: 0;
+}
+.experimentHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+}
+.experimentHeader h3 {
+  font-size: 1rem;
+  font-weight: 750;
+}
+.stageChip {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border: 1px solid #648a91;
+  border-radius: 999px;
+  color: #eaf4f4;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.stageChip[data-stage='ready'],
+.stageChip[data-stage='captured'] {
+  border-color: #76d69b;
+  color: #b7f0c9;
+}
+.stageChip[data-stage='awaiting-action'],
+.stageChip[data-stage='not-started'] {
+  border-color: #ffbf62;
+  color: #ffdca6;
+}
+.goalList {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0;
+  list-style: none;
+}
+.goalList li {
+  display: grid;
+  grid-template-columns: 1.4rem minmax(0, 1fr);
+  gap: 0.35rem;
+  align-items: baseline;
+}
+.goalList small {
+  color: #aec5c8;
+  font-size: 0.85rem;
+}
+.goalMark {
+  font-weight: 800;
+  text-align: center;
+}
+.goalList li[data-goal-state='done'] .goalMark {
+  color: #76d69b;
+}
+.goalList li[data-goal-state='repeat'] .goalMark,
+.goalList li[data-goal-state='to-do'] .goalMark {
+  color: #ffbf62;
+}
+.interval {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+.interval progress {
+  width: 100%;
+  height: 0.6rem;
+  accent-color: #71e1e5;
+}
+.experimentPanel .tools > .checkbox {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+}
+.experimentPanel .checkbox input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: #71e1e5;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.experimentPanel .tools > :is(button, a) {
+  min-height: 44px;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid #648a91;
+  border-radius: 0.5rem;
+  background: #193239;
+  color: #eaf4f4;
+  font-size: 0.9rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.experimentPanel .tools > button[data-run-experiment][data-paused='true'] {
+  border-color: #71e1e5;
+  background: #1d4a52;
+}
+.experimentPanel .tools > button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.experimentPanel .tools > select {
+  min-height: 44px;
+  border: 1px solid #648a91;
+  border-radius: 0.5rem;
+  background: #193239;
+  color: #eaf4f4;
+  padding: 0.4rem;
+}
+/* The lesson: one shape in every section, three named disclosures (T1/S6-2). */
+.flow [data-lesson] > * + * {
+  margin-top: 0.75rem;
+}
+.flow [data-lesson] h3 {
+  font-size: 1.15rem;
+}
+.flow [data-lesson] h4 {
+  font-size: 1rem;
+  font-weight: 700;
+}
+.flow [data-lesson] [data-lesson-part] > * + * {
+  margin-top: 0.6rem;
+}
+.flow [data-lesson] ol {
+  padding-left: 1.3rem;
+  list-style: decimal;
+}
+.flow [data-lesson] ul {
+  padding-left: 1.3rem;
+  list-style: disc;
+}
+.lessonDisclosure {
+  border-top: 1px solid #345158;
+  padding-top: 0.35rem;
+}
+.lessonDisclosure > summary {
+  font-weight: 700;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.lessonDisclosure > div > * + * {
+  margin-top: 0.75rem;
+}
+.viewSwitch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.viewSwitch > span {
+  font-weight: 700;
+}
+.viewSwitch > button {
+  min-height: 44px;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid #648a91;
+  border-radius: 0.5rem;
+  background: #193239;
+  color: #eaf4f4;
+  font-size: 0.9rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+/* Pressed is shown by the border, a check mark and the weight, not by colour alone. */
+.viewSwitch > button[aria-pressed='true'] {
+  border: 2px solid #71e1e5;
+  background: #1d4a52;
+}
+.viewSwitch > button[aria-pressed='true']::before {
+  content: '✓ ';
+}
+.stepHeading:focus {
+  outline: none;
+}
+.stepHeading:focus-visible {
+  outline: 3px solid #71e1e5;
+  outline-offset: 4px;
 }
 .block > * + * {
   margin-top: 0.6rem;

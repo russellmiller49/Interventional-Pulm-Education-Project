@@ -7,6 +7,7 @@ import {
   anchorBreathVolume,
   breathStopIndex,
   completedBreath,
+  sampleSpacingSeconds,
   waveformAxes,
   waveformFields,
   type WaveformAxes,
@@ -63,6 +64,7 @@ export function CapturedBreath({
   onInspect,
   effort = false,
   durationSeconds,
+  timeWindow,
 }: {
   samples: readonly WaveformSample[]
   label: string
@@ -80,6 +82,12 @@ export function CapturedBreath({
   effort?: boolean
   /** Shared physical time range for retained before/after comparisons. */
   durationSeconds?: number
+  /**
+   * A display crop of the time axis, in seconds from this breath's first sample. The samples are
+   * not retimed or resampled: the same physical seconds map onto a wider plot, and samples outside
+   * the window are simply not drawn. The figure says what it is showing and of how long a breath.
+   */
+  timeWindow?: { readonly from: number; readonly to: number }
 }) {
   const id = useId()
   const figureRef = useRef<HTMLElement>(null)
@@ -120,11 +128,32 @@ export function CapturedBreath({
   const first = breath[0].time
   const duration = breath.at(-1)!.time - first
   const timeRange = Math.max(duration, durationSeconds ?? 0)
+  const spacing = sampleSpacingSeconds(breath)
+  const windowFrom = timeWindow ? Math.max(0, timeWindow.from) : 0
+  const windowTo = timeWindow ? Math.min(timeRange, timeWindow.to) : timeRange
+  const zoomed = windowFrom > 0 || windowTo < timeRange
+  /* One sample beyond each edge, so a line leaves the plot where it really goes rather than stopping short. */
+  const drawn = zoomed
+    ? plotted.filter((s, i) => {
+        const t = s.time - first
+        const next = plotted[i + 1]
+        const prev = plotted[i - 1]
+        return (
+          (t >= windowFrom && t <= windowTo) ||
+          (next !== undefined && next.time - first > windowFrom && t < windowFrom) ||
+          (prev !== undefined && prev.time - first < windowTo && t > windowTo)
+        )
+      })
+    : plotted
   const sample = plotted[index]
   const previous = plotted[Math.max(0, index - 1)]
   const rawSample = breath[index]
   const rawPrevious = breath[Math.max(0, index - 1)]
-  const x = (time: number) => 50 + ((time - first) / timeRange) * (width - 70)
+  const x = (time: number) =>
+    50 + ((time - first - windowFrom) / Math.max(1e-6, windowTo - windowFrom)) * (width - 70)
+  const inWindow = (time: number) =>
+    time - first >= windowFrom - 1e-9 && time - first <= windowTo + 1e-9
+  const clipId = `${id.replace(/:/g, '')}-clip`
   const y = (value: number, field: (typeof fields)[number]) =>
     64 - ((value - bounds[field][0]) / (bounds[field][1] - bounds[field][0])) * 54
   const cycling = breath.findIndex((s) => s.phase === 'expiration')
@@ -155,6 +184,13 @@ export function CapturedBreath({
         {guided ? ' · Worked demonstration; no independent credit' : ''}
       </figcaption>
       <svg viewBox={`0 0 ${width} ${fields.length * 85 + 23}`} role="img" aria-label={text}>
+        {zoomed ? (
+          <defs>
+            <clipPath id={clipId}>
+              <rect x="50" y="0" width={Math.max(0, width - 70)} height={fields.length * 85} />
+            </clipPath>
+          </defs>
+        ) : null}
         {fields.map((field, row) => (
           <g key={field} transform={`translate(0 ${row * 85})`}>
             <text x="0" y="12">
@@ -171,6 +207,7 @@ export function CapturedBreath({
                   height="58"
                   className={styles.phaseBand}
                   data-phase-band={highlighted}
+                  clipPath={zoomed ? `url(#${clipId})` : undefined}
                 />
               ) : null}
               {[bounds[field][0], bounds[field][1]].map((v) => (
@@ -202,15 +239,16 @@ export function CapturedBreath({
                 </g>
               ) : null}
               <path
-                d={plotted
+                d={drawn
                   .map(
                     (s, i) =>
                       `${i ? 'L' : 'M'}${x(s.time).toFixed(2)} ${y(s[field], field).toFixed(2)}`,
                   )
                   .join(' ')}
                 className={styles.breathTrace}
+                clipPath={zoomed ? `url(#${clipId})` : undefined}
               />
-              {guided && cycling > 0 ? (
+              {guided && cycling > 0 && inWindow(breath[cycling].time) ? (
                 <line
                   x1={x(breath[cycling].time)}
                   x2={x(breath[cycling].time)}
@@ -223,7 +261,7 @@ export function CapturedBreath({
                * The authored marker, drawn on every row, with its letter beside it. It is a
                * different element from the cursor below and never follows it.
                */}
-              {evidence ? (
+              {evidence && inWindow(evidence.sample.time) ? (
                 <g data-breath-marker={evidence.marker.markerId}>
                   <line
                     x1={x(evidence.sample.time)}
@@ -242,33 +280,50 @@ export function CapturedBreath({
                   </text>
                 </g>
               ) : null}
-              <line
-                x1={x(rawSample.time)}
-                x2={x(rawSample.time)}
-                y1="7"
-                y2="66"
-                className={styles.cursor}
-                data-time-cursor={rawSample.time}
-              />
+              {inWindow(rawSample.time) ? (
+                <line
+                  x1={x(rawSample.time)}
+                  x2={x(rawSample.time)}
+                  y1="7"
+                  y2="66"
+                  className={styles.cursor}
+                  data-time-cursor={rawSample.time}
+                />
+              ) : null}
             </g>
           </g>
         ))}
         <text x="50" y={fields.length * 85 + 20}>
-          0
+          {windowFrom.toFixed(zoomed ? 2 : 0)}
         </text>
         <text x={width / 2} y={fields.length * 85 + 20} textAnchor="middle">
-          Time (s)
+          {zoomed ? 'Time from breath start (s) · zoomed' : 'Time (s)'}
         </text>
         <text x={width - 20} y={fields.length * 85 + 20} textAnchor="end">
-          {timeRange.toFixed(2)}
+          {windowTo.toFixed(2)}
         </text>
       </svg>
-      <p className={styles.quickNote}>
-        Breath duration {duration.toFixed(2)} s ·{' '}
+      <p
+        className={styles.quickNote}
+        data-breath-duration={duration.toFixed(2)}
+        data-sample-spacing={spacing.toFixed(3)}
+      >
+        {whole ? 'Breath duration' : 'Trace length'} {duration.toFixed(2)} s
+        {whole ? ', onset to next onset' : ''}
+        {spacing > 0
+          ? ` · samples every ${Math.round(spacing * 1000)} ms, so a time is resolved to one sample`
+          : ''}{' '}
+        ·{' '}
         {durationSeconds
           ? 'Shared comparison time and signal scales'
           : 'One time axis for all signals'}
       </p>
+      {zoomed ? (
+        <p className={styles.quickNote} data-zoom-window>
+          Showing {windowFrom.toFixed(2)}–{windowTo.toFixed(2)} s of this {duration.toFixed(2)}-s
+          breath. The same seconds are spread wider; nothing is retimed or resampled.
+        </p>
+      ) : null}
       {anchored ? (
         <p className={styles.quickNote} data-volume-anchor={anchorMl.toFixed(0)}>
           Volume is drawn from this breath’s start. The lung held {anchorMl.toFixed(0)} mL above the

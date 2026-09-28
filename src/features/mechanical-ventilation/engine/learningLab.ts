@@ -96,10 +96,18 @@ export function labSnapshot(
     plateauSource: currentHold ? 'captured' : lastHold ? 'historical' : 'modeled',
     hold: lastHold,
     inputs: measurementInputs(state),
-    // Saved reference only. The actual console continues to use all 50 Hz samples.
-    waveforms: state.waveforms.filter(
-      (_, index) => index % 4 === 0 || index === state.waveforms.length - 1,
-    ),
+    /*
+     * Every sample the engine produced, at its own 20 ms spacing.
+     *
+     * This used to keep one sample in four so the record would fit a saved checkpoint. Nothing
+     * saves a lab checkpoint any more — the self-paced Learn host keeps runs in memory only — and
+     * the thinning is what turned the captured baseline into an 80 ms trace beside the 20 ms
+     * reference: the end-inspiratory drop became a ramp, and a breath's onset-to-onset duration
+     * could read 3.68 s at a set rate of 16/min because both onsets had to land on every fourth
+     * sample. The record is the acquisition; a figure that needs fewer points thins at drawing
+     * time, not here.
+     */
+    waveforms: state.waveforms,
     at: state.simulationTime,
   }
 }
@@ -720,6 +728,12 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
 }
 
 const finite = z.number().finite()
+/*
+ * A captured record now keeps the whole 12-second buffer at 50 Hz (601 samples) rather than every
+ * fourth sample. Older records, written with at most 160, parse exactly as they did; the bound only
+ * grew, so nothing that was accepted is refused.
+ */
+const LAB_RECORD_MAX_SAMPLES = 800
 const sampleSchema = z.object({
   time: finite,
   pawCmH2O: finite,
@@ -739,7 +753,7 @@ const holdSchema = z.object({
   value: finite,
   interpretable: z.boolean(),
   reason: z.string().nullable(),
-  waveforms: z.array(sampleSchema).max(160),
+  waveforms: z.array(sampleSchema).max(LAB_RECORD_MAX_SAMPLES),
 })
 const capturedHoldSchema = holdSchema.extend({ capturedAt: finite })
 const snapshotSchema = z.object({
@@ -754,7 +768,7 @@ const snapshotSchema = z.object({
   inputs: z.record(z.union([finite, z.string()])).optional(),
   hold: capturedHoldSchema.optional(),
   issues: z.array(z.string()).max(100).optional(),
-  waveforms: z.array(sampleSchema).max(160),
+  waveforms: z.array(sampleSchema).max(LAB_RECORD_MAX_SAMPLES),
   at: finite.min(0).max(1000),
 })
 const evidenceSchema = z.object({
@@ -769,7 +783,7 @@ const evidenceSchema = z.object({
     .object({
       sample: sampleSchema,
       previous: sampleSchema,
-      waveforms: z.array(sampleSchema).max(160).optional(),
+      waveforms: z.array(sampleSchema).max(LAB_RECORD_MAX_SAMPLES).optional(),
     })
     .optional(),
   reflection: z.string().max(1200).optional(),

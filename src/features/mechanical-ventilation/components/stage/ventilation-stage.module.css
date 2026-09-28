@@ -87,6 +87,15 @@
   background: rgba(113, 225, 229, 0.26);
 }
 
+/* A pressed toggle (a scale or view choice) is marked by border weight and a check, not colour alone. */
+[data-ideal-scale-choice] .toolButton[aria-pressed='true'] {
+  border: 2px solid var(--cyan-bright, #71e1e5);
+  background: rgba(113, 225, 229, 0.18);
+}
+[data-ideal-scale-choice] .toolButton[aria-pressed='true']::before {
+  content: '✓';
+}
+
 .toolButton:focus-visible,
 .select:focus-visible,
 .rangeInput:focus-visible,

@@ -104,7 +104,11 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
           <div className={styles.browsePanel} id={accordionId} hidden={!browsing}>
             {browsing ? (
               <>
-                <VentilationPathwayAccordion progress={progress} visitedCaseIds={visitedCases} />
+                <VentilationPathwayAccordion
+                  progress={progress}
+                  visitedCaseIds={visitedCases}
+                  ready={ready}
+                />
                 <Link className={styles.pathwayLink} href={`${mechanicalVentilationNavBase}/learn`}>
                   Open the pathway page
                 </Link>
