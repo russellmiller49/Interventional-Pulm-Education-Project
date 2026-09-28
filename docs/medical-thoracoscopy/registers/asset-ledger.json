@@ -1,0 +1,27 @@
+{
+  "ledger": "medical-thoracoscopy-assets",
+  "version": 1,
+  "preparedOn": "2026-09-28",
+  "preparedBy": "AI authoring assistant (Claude) at the owner's request",
+  "statement": "Every file the module serves, with its size, its cost once decoded, the rights item that covers it and the claims it depends on. The ledger is empty until the first asset is built. A small download is not evidence of acceptable memory or frame rate, so the two are reported separately.",
+  "budgets": {
+    "source": "docs/medical-thoracoscopy/implementation-manifest.json, budgets",
+    "pleuralScenePayloadMb": 8,
+    "anatomyGlbMb": 3,
+    "deviceGlbMb": 2.5,
+    "deviceGlbTriangles": 50000,
+    "textureEdgePx": 1024,
+    "renderedTrianglesHigh": 250000,
+    "renderedTrianglesLow": 120000,
+    "drawCalls": 150,
+    "collisionProxyTriangles": 12000,
+    "coverageUpdateMs": 4
+  },
+  "accounting": {
+    "pleuralScenePayload": "Everything the pleural-space scene loads cold, including collision and visibility data.",
+    "excluded": "The Draco decoder and the site's own scripts, which are reported under shared runtime cost.",
+    "cacheAssumption": "Cold: nothing cached."
+  },
+  "assets": [],
+  "scenes": []
+}

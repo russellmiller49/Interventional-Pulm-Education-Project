@@ -1,0 +1,106 @@
+{
+  "register": "medical-thoracoscopy-claims",
+  "version": 1,
+  "preparedOn": "2026-09-28",
+  "preparedBy": "AI authoring assistant (Claude) at the owner's request",
+  "statement": "Every statement the course teaches, and every rule the simulation follows, is a claim with an entry here. Nothing in this register is clinical approval. Every decision reads NOT REVIEWED: no reviewer, role, date or reviewed revision is recorded, and an empty decision is not approval. Device facts are held in the device definitions, with their own fact-check records.",
+  "idPattern": "MT-C-0000",
+  "claims": [
+    {
+      "id": "MT-C-0001",
+      "revision": 1,
+      "category": "authored simulation assumption",
+      "lane": "clinical",
+      "assertion": "With the port open and the fluid drained, air enters the pleural space and the lung falls away from the chest wall.",
+      "context": "An adult breathing spontaneously, lying on the side with the examined side up, with a free pleural space and no adhesions.",
+      "sources": [],
+      "sourceNote": "No source has been read for this relationship yet. It is the one relationship the survey lesson cannot exist without.",
+      "surfaces": [
+        { "kind": "section", "id": "four-controls", "state": "planned" },
+        { "kind": "section", "id": "systematic-survey", "state": "planned" },
+        { "kind": "prototype", "id": "tool-contact", "state": "planned" }
+      ],
+      "dependentRules": ["The lung state follows the learner's air-entry control."],
+      "limitations": "The model shows a change of shape. It shows no pressure, no physiology and no rate, and it does not show a lung that fails to fall away.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": true,
+        "learnerLabel": "Awaiting clinical review",
+        "basis": "Owner decisions, open item T2. A default, not a decision."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0002",
+      "revision": 1,
+      "category": "authored simulation assumption",
+      "lane": "clinical",
+      "assertion": "In the collapsed state the lung surface sits at an authored distance from the port, chosen so that the survey has room to work.",
+      "context": "The same patient and position as MT-C-0001.",
+      "sources": [],
+      "sourceNote": "The distance is chosen by the author. It is not measured and not taken from a source.",
+      "surfaces": [
+        { "kind": "section", "id": "systematic-survey", "state": "planned" },
+        { "kind": "asset", "id": "lung-states", "state": "planned" }
+      ],
+      "dependentRules": [
+        "What the survey can reach and see depends on where the collapsed lung sits."
+      ],
+      "limitations": "Illustrative. A real lung collapses by an amount that varies with the patient and the disease.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": true,
+        "learnerLabel": "Authored, illustrative",
+        "basis": "Owner decisions, open item I5."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0003",
+      "revision": 1,
+      "category": "authored simulation assumption",
+      "lane": "clinical",
+      "assertion": "The prototype places its one port in the right seventh intercostal space on the mid-axillary line.",
+      "context": "This scan only. It is the highest space on the scan at which the skin, the chest wall and the gap between the ribs can all be measured.",
+      "sources": [],
+      "sourceNote": "Chosen by the author from measurements of the scan. It is a teaching example and is not taken from a source.",
+      "surfaces": [
+        { "kind": "section", "id": "four-controls", "state": "planned" },
+        { "kind": "section", "id": "systematic-survey", "state": "planned" },
+        { "kind": "asset", "id": "port-record", "state": "planned" }
+      ],
+      "dependentRules": [
+        "The pivot, the corridor through the wall and the tilt limits all follow from the port."
+      ],
+      "limitations": "A port site is chosen for each patient, with ultrasound. This one is never described as a safe site, a recommended site or a usual site.",
+      "status": "proposed change",
+      "shownBeforeReview": {
+        "allowed": true,
+        "learnerLabel": "Authored construct",
+        "basis": "Owner decisions, open item T6. A default, not a decision."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    }
+  ]
+}
