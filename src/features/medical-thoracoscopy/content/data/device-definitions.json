@@ -1,6 +1,6 @@
 {
   "definitions": "medical-thoracoscopy-device-definitions",
-  "version": 1,
+  "version": 2,
   "preparedOn": "2026-09-28",
   "preparedBy": "AI authoring assistant (Claude) at the owner's request",
   "statement": "Device facts copied from manufacturer documents and from records the manufacturer submitted to the FDA device database, each with the document and place it was read. Nothing here has been fact-checked by the manufacturer: every fact check reads NOT REVIEWED. A dimensional comparison is not a statement of compatibility. Values that were measured from images or chosen by the author are marked as such and are not device facts.",
@@ -95,6 +95,21 @@
       "url": "https://accessgudid.nlm.nih.gov/",
       "retrievedOn": "2026-07-23",
       "note": "Records are submitted by the manufacturer. A record is not a fact-check."
+    },
+    {
+      "id": "S-FRAMES",
+      "kind": "manufacturer product animation",
+      "title": "Mini-Thoracoscopy Set product animation, seventeen stills gathered by the owner",
+      "documentNumber": "mini-thoracoscopy.pptx",
+      "publisher": "Richard Wolf",
+      "market": "Not stated",
+      "documentDate": "2026-09-23",
+      "dateBasis": "The date the owner gathered the stills into the presentation. The animation's own date is not known.",
+      "pages": null,
+      "sha256": "ddcb08d88ad97c31a6ad974e2dc87a2f29b7d75c4a62c737da9ccef086cdd259",
+      "url": null,
+      "retrievedOn": null,
+      "note": "Held in the owner's local data and read in place. Reference only: never committed, never uploaded, never shown to a learner. Every value read from it is a derived measurement, recorded with its tolerance in reference-measurements.json."
     }
   ],
   "devices": [
@@ -104,6 +119,7 @@
       "role": "telescope",
       "inPrototype": true,
       "modelled": true,
+      "standard": "full",
       "productNumbers": [
         {
           "number": "8920.401",
@@ -410,13 +426,13 @@
         {
           "key": "fieldOfView",
           "label": "Field of view",
-          "value": null,
+          "value": 75,
           "unit": "deg",
           "category": "authored simulation assumption",
           "status": "unresolved input",
           "sources": [],
           "neededBy": ["normal-pleural-space", "four-controls", "systematic-survey"],
-          "note": "Not published in any document read. Until the manufacturer supplies it, the view uses an authored value, labelled as one.",
+          "note": "Not published in any document read. The scope view uses this authored value, labelled as one, until the manufacturer supplies it.",
           "factCheck": {
             "decision": "NOT REVIEWED",
             "reviewer": null,
@@ -427,14 +443,20 @@
         },
         {
           "key": "opticOffsetOnTip",
-          "label": "Position of the optic on the distal face",
-          "value": null,
+          "label": "Centre of the optic, above the centre of the distal face",
+          "value": 1.92,
           "unit": "mm",
           "category": "derived measurement",
-          "status": "unresolved input",
-          "sources": [],
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 3"
+            }
+          ],
+          "measurement": ["telescope.lensCentreAbove"],
+          "tolerance": 0.2,
           "neededBy": ["four-controls", "systematic-survey"],
-          "note": "To be measured from a reference frame of the tip.",
           "factCheck": {
             "decision": "NOT REVIEWED",
             "reviewer": null,
@@ -445,14 +467,21 @@
         },
         {
           "key": "channelExitOnTip",
-          "label": "Position of the channel exit on the distal face",
-          "value": null,
+          "label": "Centre of the working channel's exit, below the centre of the distal face",
+          "value": 0.86,
           "unit": "mm",
           "category": "derived measurement",
-          "status": "unresolved input",
-          "sources": [],
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 3"
+            }
+          ],
+          "measurement": ["telescope.channelCentreBelow"],
+          "tolerance": 0.15,
           "neededBy": ["taking-biopsies"],
-          "note": "To be measured from a reference frame of the tip.",
+          "note": "The centre of the largest circle that fits the channel at the distal face.",
           "factCheck": {
             "decision": "NOT REVIEWED",
             "reviewer": null,
@@ -464,13 +493,20 @@
         {
           "key": "channelLength",
           "label": "Length of the working channel, entry to exit",
-          "value": null,
+          "value": 291.5,
           "unit": "mm",
           "category": "derived measurement",
-          "status": "unresolved input",
-          "sources": [],
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.channelEntryAt"],
+          "tolerance": 2.0,
           "neededBy": ["taking-biopsies"],
-          "note": "To be measured from the side view. It sets how far a tool can reach beyond the tip.",
+          "note": "The channel is taken to run straight, from the rear face of the sealing cap to the distal face.",
           "factCheck": {
             "decision": "NOT REVIEWED",
             "reviewer": null,
@@ -482,13 +518,900 @@
         {
           "key": "eyepieceAngle",
           "label": "Angle of the eyepiece to the shaft",
-          "value": null,
+          "value": 29.6,
           "unit": "deg",
           "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.eyepieceAngle"],
+          "tolerance": 1.0,
+          "neededBy": ["the-instrument"],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyepieceAxisMeetsShaft",
+          "label": "Where the eyepiece axis meets the shaft axis, from the distal face",
+          "value": 239.0,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.eyepieceMeetsShaftAt"],
+          "tolerance": 1.0,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyepieceNarrowDiameter",
+          "label": "Eyepiece tube, narrow section, diameter",
+          "value": 14.2,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.eyepieceNarrowDiameter"],
+          "tolerance": 0.4,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyepieceWideStartsAt",
+          "label": "Eyepiece tube, start of the wide section, along the eyepiece axis from where it meets the shaft axis",
+          "value": 70.9,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.eyepieceWideStartsAt"],
+          "tolerance": 1.0,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyepieceWideDiameter",
+          "label": "Eyepiece tube, wide section, diameter",
+          "value": 15.4,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.eyepieceWideDiameter"],
+          "tolerance": 0.4,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyepieceRingFrom",
+          "label": "Coloured ring on the eyepiece tube, start, along the eyepiece axis from where it meets the shaft axis",
+          "value": 81.6,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.eyepieceRingFrom"],
+          "tolerance": 1.0,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyepieceRingTo",
+          "label": "Coloured ring on the eyepiece tube, end, along the eyepiece axis from where it meets the shaft axis",
+          "value": 83.7,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.eyepieceRingTo"],
+          "tolerance": 1.0,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyepieceNeckStartsAt",
+          "label": "Eyepiece neck, start, along the eyepiece axis from where it meets the shaft axis",
+          "value": 114.9,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.eyepieceNeckStartsAt"],
+          "tolerance": 1.0,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyepieceNeckDiameter",
+          "label": "Eyepiece neck, diameter",
+          "value": 18.3,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.eyepieceNeckDiameter"],
+          "tolerance": 0.5,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyecupFlareStartsAt",
+          "label": "Eyecup, start of the flare, along the eyepiece axis from where it meets the shaft axis",
+          "value": 130.6,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.eyecupFlareStartsAt"],
+          "tolerance": 1.0,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyecupDiameter",
+          "label": "Eyecup, largest diameter",
+          "value": 32.9,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.eyecupDiameter"],
+          "tolerance": 0.7,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyecupWidestFrom",
+          "label": "Eyecup, largest diameter from, along the eyepiece axis from where it meets the shaft axis",
+          "value": 137.2,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.eyecupWidestFrom"],
+          "tolerance": 1.5,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyecupWidestTo",
+          "label": "Eyecup, largest diameter to, along the eyepiece axis from where it meets the shaft axis",
+          "value": 142.9,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.eyecupWidestTo"],
+          "tolerance": 1.5,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyepieceEndsAt",
+          "label": "Eyepiece end, along the eyepiece axis from where it meets the shaft axis",
+          "value": 150.7,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.eyepieceEndsAt"],
+          "tolerance": 1.5,
+          "note": "The measuring plane was turned so that this end lies at the published total length.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "bodyAxisBelowShaftAxis",
+          "label": "Body, its axis below the shaft axis",
+          "value": 0.8,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.bodyAxisBelowShaftAxis"],
+          "tolerance": 0.3,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "bodyEndsAt",
+          "label": "Body, rear end, from the distal face",
+          "value": 280.5,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.bodyEndsAt"],
+          "tolerance": 1.5,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "valveRingHalfWidth",
+          "label": "Valve ring behind the body, half-width below the shaft axis",
+          "value": 9.2,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.valveRingHalfWidth"],
+          "tolerance": 0.4,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "sealingCapStartsAt",
+          "label": "Sealing cap on the channel entry, start, from the distal face",
+          "value": 285.3,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.sealingCapStartsAt"],
+          "tolerance": 2.0,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "sealingCapHalfWidth",
+          "label": "Sealing cap on the channel entry, half-width below the shaft axis",
+          "value": 8.5,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.sealingCapHalfWidth"],
+          "tolerance": 0.3,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "wallThickness",
+          "label": "Wall of the shaft at the distal face",
+          "value": 0.14,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 3"
+            }
+          ],
+          "measurement": ["telescope.wallThickness"],
+          "tolerance": 0.06,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "lensDiameter",
+          "label": "Lens, bright clear aperture, diameter",
+          "value": 0.97,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 3"
+            }
+          ],
+          "measurement": ["telescope.lensDiameter"],
+          "tolerance": 0.15,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "opticHousingDiameter",
+          "label": "Optic housing, outer diameter",
+          "value": 1.52,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 3"
+            }
+          ],
+          "measurement": ["telescope.opticHousingDiameter"],
+          "tolerance": 0.25,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "opticHousingCentreAbove",
+          "label": "Optic housing, centre above the centre of the distal face",
+          "value": 1.82,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 3"
+            }
+          ],
+          "measurement": ["telescope.opticHousingCentreAbove"],
+          "tolerance": 0.2,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "channelWidth",
+          "label": "Working channel at the distal face, widest",
+          "value": 4.51,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 3"
+            }
+          ],
+          "measurement": ["telescope.channelWidth"],
+          "tolerance": 0.25,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "channelTop",
+          "label": "Working channel at the distal face, its flat upper edge above the centre",
+          "value": 0.9,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 3"
+            }
+          ],
+          "measurement": ["telescope.channelTop"],
+          "tolerance": 0.15,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "channelBottom",
+          "label": "Working channel at the distal face, its lowest point below the centre",
+          "value": 2.61,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 3"
+            }
+          ],
+          "measurement": ["telescope.channelBottomBelow"],
+          "tolerance": 0.2,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "channelInscribedDiameter",
+          "label": "Largest circle that fits the working channel at the distal face",
+          "value": 3.51,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 3"
+            }
+          ],
+          "measurement": ["telescope.channelInscribedDiameter"],
+          "tolerance": 0.2,
+          "note": "Agrees with the published channel diameter. It is a check on the method, not a second source for that diameter.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyepieceSide",
+          "label": "Which side of the shaft the eyepiece is on",
+          "value": "above the shaft, in the plane through the optic and the channel",
+          "unit": null,
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 3"
+            }
+          ],
+          "note": "Frame 2 shows the eyepiece and frame 3 the distal face, from different sides. That the eyepiece lies in the plane through the optic and the channel is assumed.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "gripAt",
+          "label": "Where the hand holds the telescope, from the distal face, on the body's axis",
+          "value": 250,
+          "unit": "mm",
+          "category": "authored simulation assumption",
           "status": "unresolved input",
           "sources": [],
-          "neededBy": ["the-instrument"],
-          "note": "To be measured from the side view.",
+          "neededBy": ["four-controls"],
+          "note": "Chosen at the widest part of the body, for posing the telescope in the hand. It is kept apart from the published shaft length. Not measured.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ],
+      "forms": [
+        {
+          "key": "bodyOutline",
+          "label": "Body, half-width below the shaft axis against distance from the distal face",
+          "kind": "outline",
+          "axes": ["distance from the distal face", "half-width below the shaft axis"],
+          "points": [
+            [215.2, 3.53],
+            [215.8, 4.98],
+            [216.5, 5.65],
+            [217.2, 6.47],
+            [217.8, 6.94],
+            [218.5, 7.45],
+            [219.2, 7.81],
+            [219.8, 8.16],
+            [220.5, 8.52],
+            [221.2, 8.83],
+            [221.8, 9.03],
+            [222.5, 9.39],
+            [223.2, 9.75],
+            [223.9, 9.91],
+            [224.5, 10.26],
+            [225.2, 10.62],
+            [225.9, 10.98],
+            [226.5, 11.18],
+            [227.2, 11.49],
+            [227.9, 11.7],
+            [228.6, 12.05],
+            [229.2, 12.25],
+            [229.9, 12.45],
+            [230.6, 12.62],
+            [231.3, 12.82],
+            [231.9, 13.02],
+            [232.6, 13.22],
+            [233.3, 13.38],
+            [234.0, 13.58],
+            [234.7, 13.79],
+            [235.3, 13.99],
+            [236.0, 14.19],
+            [236.7, 14.35],
+            [237.4, 14.56],
+            [238.1, 14.6],
+            [238.7, 14.65],
+            [239.4, 14.81],
+            [240.1, 15.01],
+            [240.8, 15.06],
+            [241.5, 15.26],
+            [242.2, 15.3],
+            [242.8, 15.31],
+            [243.5, 15.51],
+            [244.2, 15.56],
+            [244.9, 15.76],
+            [245.6, 15.77],
+            [246.3, 15.81],
+            [247.0, 15.86],
+            [247.6, 16.06],
+            [248.3, 16.11],
+            [249.0, 16.11],
+            [249.7, 16.16],
+            [250.4, 16.2],
+            [251.1, 16.25],
+            [251.8, 16.25],
+            [252.5, 16.3],
+            [253.2, 16.34],
+            [253.9, 16.39],
+            [254.5, 16.28],
+            [255.2, 16.28],
+            [255.9, 16.33],
+            [256.6, 16.37],
+            [257.3, 16.26],
+            [258.0, 16.26],
+            [258.7, 16.15],
+            [259.4, 16.2],
+            [260.1, 16.24],
+            [260.8, 16.29],
+            [261.5, 16.13],
+            [262.2, 16.02],
+            [262.9, 16.06],
+            [263.6, 15.95],
+            [264.3, 15.79],
+            [265.0, 15.68],
+            [265.7, 15.57],
+            [266.4, 15.45],
+            [267.1, 15.3],
+            [267.8, 15.34],
+            [268.5, 15.19],
+            [269.2, 14.95],
+            [269.9, 14.84],
+            [270.6, 14.68],
+            [271.3, 14.56],
+            [272.0, 14.45],
+            [272.7, 14.33],
+            [273.4, 14.02],
+            [274.1, 13.9],
+            [274.8, 13.62],
+            [275.5, 13.51],
+            [276.3, 13.67],
+            [277.0, 13.4],
+            [277.7, 13.12],
+            [278.4, 13.0],
+            [279.1, 12.73],
+            [279.8, 12.41]
+          ],
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            }
+          ],
+          "measurement": ["telescope.bodyOutline"],
+          "tolerance": 0.5,
+          "note": "The body is modelled as a surface of revolution about its own axis, which lies below the shaft axis.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "channelOutline",
+          "label": "Working channel at the distal face, half-width against height above the centre",
+          "kind": "outline",
+          "axes": ["height above the centre of the distal face", "half-width"],
+          "points": [
+            [0.783, 1.148],
+            [0.522, 1.827],
+            [0.261, 2.062],
+            [0.0, 2.166],
+            [-0.522, 2.245],
+            [-1.044, 2.179],
+            [-1.566, 1.944],
+            [-2.088, 1.501],
+            [-2.479, 0.783]
+          ],
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 3"
+            }
+          ],
+          "measurement": ["telescope.channelOutline", "telescope.wallThickness"],
+          "tolerance": 0.21,
+          "note": "Measured in units of the inner wall radius and converted with the published shaft diameter less the measured wall.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "lightPost",
+          "label": "Light post",
+          "kind": "parameters",
+          "parameters": {
+            "side": "left",
+            "frontAtMm": 255,
+            "aroundDeg": 32,
+            "elevationDeg": 7,
+            "splayDeg": -8,
+            "lengthMm": 46,
+            "diameterMm": 10,
+            "endStepDiameterMm": 8,
+            "endStepLengthMm": 9
+          },
+          "unit": "mm",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 2"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 4"
+            }
+          ],
+          "note": "Drawn to lie on its outline in frame 2, seen through that frame's fitted camera, with its front end taken to sit on the body; frame 4 agrees. One view does not fix its depth, so this is drawn, not measured. aroundDeg is the angle round the body's axis from the left side toward the top; a negative splay turns it toward the midline.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "stopcock",
+          "label": "Stopcock on the body",
+          "kind": "parameters",
+          "parameters": {
+            "side": "right",
+            "atMm": 266,
+            "bodyDiameterMm": 7,
+            "bodyLengthMm": 10,
+            "elevationDeg": 28,
+            "leverLengthMm": 12,
+            "portDiameterMm": 5.5,
+            "portLengthMm": 6
+          },
+          "unit": "mm",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 4"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 5"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 13"
+            }
+          ],
+          "note": "Drawn from inspection of frames 4, 5 and 13, not measured: it stands off the plane the measurements were read on. Placed where frame 2 hides it behind the eyepiece.",
           "factCheck": {
             "decision": "NOT REVIEWED",
             "reviewer": null,
@@ -505,6 +1428,7 @@
       "role": "sleeve",
       "inPrototype": true,
       "modelled": true,
+      "standard": "full",
       "productNumbers": [
         {
           "number": "8906.051",
@@ -608,13 +1532,151 @@
         {
           "key": "outerDiameter",
           "label": "Outer diameter over the thread",
-          "value": null,
+          "value": 7.6,
           "unit": "mm",
           "category": "derived measurement",
-          "status": "unresolved input",
-          "sources": [],
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 13"
+            }
+          ],
+          "measurement": ["sleeve.tubeOuterDiameter"],
+          "tolerance": 0.6,
           "neededBy": ["four-controls", "choosing-the-port", "systematic-survey"],
-          "note": "Not published. To be measured from a reference frame. It decides how far the scope can tilt between two ribs.",
+          "note": "The thread is not resolved in the frame; this is the diameter over it. It decides how far the scope can tilt between two ribs.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "headDiameter",
+          "label": "Head and cap, outer diameter",
+          "value": 16.6,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 13"
+            }
+          ],
+          "measurement": ["sleeve.headOuterDiameter"],
+          "tolerance": 0.7,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "headLength",
+          "label": "Head, length distal to the cap",
+          "value": 11.3,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 13"
+            }
+          ],
+          "measurement": ["sleeve.whiteHeadLength"],
+          "tolerance": 1.0,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "capLength",
+          "label": "Cap, length",
+          "value": 8.2,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 13"
+            }
+          ],
+          "measurement": ["sleeve.capLength"],
+          "tolerance": 1.0,
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ],
+      "forms": [
+        {
+          "key": "thread",
+          "label": "Thread on the sleeve",
+          "kind": "parameters",
+          "parameters": {
+            "pitchMm": 2.4,
+            "depthMm": 0.35,
+            "plainTipMm": 4
+          },
+          "unit": "mm",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 11"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 12"
+            }
+          ],
+          "note": "The frames show a fine thread along the tube but do not resolve it. Pitch and depth are drawn from inspection of frames 11 and 12, not measured.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "head",
+          "label": "Head and cap, rounding",
+          "kind": "parameters",
+          "parameters": {
+            "shoulderRadiusMm": 2.5
+          },
+          "unit": "mm",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 12"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 13"
+            }
+          ],
+          "note": "The head's ends are rounded over about this distance in frame 13; drawn, not measured.",
           "factCheck": {
             "decision": "NOT REVIEWED",
             "reviewer": null,
@@ -631,6 +1693,7 @@
       "role": "trocar",
       "inPrototype": false,
       "modelled": true,
+      "standard": "draft",
       "productNumbers": [
         {
           "number": "8906.151",
@@ -722,6 +1785,43 @@
             "reviewedRevision": null
           }
         }
+      ],
+      "forms": [
+        {
+          "key": "draftForm",
+          "label": "Handle and tip",
+          "kind": "parameters",
+          "parameters": {
+            "handleColour": "light",
+            "handleDiameterMm": 12,
+            "handleLengthMm": 14,
+            "flangeDiameterMm": 17,
+            "flangeLengthMm": 4,
+            "tipTaperMm": 7,
+            "tipEndDiameterMm": 1.2
+          },
+          "unit": "mm",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 11"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 12"
+            }
+          ],
+          "note": "Drawn from inspection of the frames, not measured. A draft for the owner's review and the manufacturer's fact-check.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
       ]
     },
     {
@@ -730,6 +1830,7 @@
       "role": "sleeve",
       "inPrototype": false,
       "modelled": true,
+      "standard": "draft",
       "productNumbers": [
         {
           "number": "8919.333",
@@ -835,6 +1936,46 @@
             "reviewedRevision": null
           }
         }
+      ],
+      "forms": [
+        {
+          "key": "draftForm",
+          "label": "Sleeve, ribs, head, valve and stopcock",
+          "kind": "parameters",
+          "parameters": {
+            "tubeOuterDiameterMm": 8,
+            "ribOuterDiameterMm": 10,
+            "ribPitchMm": 7,
+            "ribbedLengthMm": 40,
+            "headDiameterMm": 17,
+            "headLengthMm": 22,
+            "valveDiameterMm": 13,
+            "valveLengthMm": 7,
+            "stopcockPortDiameterMm": 5.5,
+            "stopcockPortLengthMm": 12
+          },
+          "unit": "mm",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 11"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 12"
+            }
+          ],
+          "note": "Drawn from inspection of the frames, not measured. A draft for the owner's review and the manufacturer's fact-check. The outer diameter is still to be measured; this one is drawn.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
       ]
     },
     {
@@ -843,6 +1984,7 @@
       "role": "trocar",
       "inPrototype": false,
       "modelled": true,
+      "standard": "draft",
       "productNumbers": [
         {
           "number": "8919.3311",
@@ -930,6 +2072,43 @@
             "reviewedRevision": null
           }
         }
+      ],
+      "forms": [
+        {
+          "key": "draftForm",
+          "label": "Handle and tip",
+          "kind": "parameters",
+          "parameters": {
+            "handleColour": "dark",
+            "handleDiameterMm": 12,
+            "handleLengthMm": 16,
+            "flangeDiameterMm": 17,
+            "flangeLengthMm": 4,
+            "tipTaperMm": 7,
+            "tipEndDiameterMm": 1.2
+          },
+          "unit": "mm",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 11"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 12"
+            }
+          ],
+          "note": "Drawn from inspection of the frames, not measured. A draft for the owner's review and the manufacturer's fact-check.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
       ]
     },
     {
@@ -938,6 +2117,7 @@
       "role": "tool",
       "inPrototype": true,
       "modelled": true,
+      "standard": "full",
       "productNumbers": [
         {
           "number": "83912167",
@@ -1089,14 +2269,92 @@
         },
         {
           "key": "jawOpeningAngle",
-          "label": "Jaw opening angle, fully open",
-          "value": null,
+          "label": "Jaw opening, both jaws together, fully open",
+          "value": 44.0,
           "unit": "deg",
           "category": "derived measurement",
-          "status": "unresolved input",
-          "sources": [],
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 7"
+            }
+          ],
+          "measurement": ["forceps.jawOpeningInImage"],
+          "tolerance": 5.0,
           "neededBy": ["taking-biopsies"],
-          "note": "To be measured from a reference frame.",
+          "note": "Read as the angle in frame 7's image. Seen at a slant, a true angle can only look smaller, so the true opening is this or more.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ],
+      "forms": [
+        {
+          "key": "jaws",
+          "label": "Spoon jaws",
+          "kind": "parameters",
+          "parameters": {
+            "hingeInsideSheathMm": 1.0,
+            "cupWidthMm": 3.0,
+            "cupDepthMm": 1.1,
+            "jawThicknessMm": 0.35
+          },
+          "unit": "mm",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 7"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 16"
+            }
+          ],
+          "note": "The jaw length is published; the rest of the jaw's form is drawn from inspection of frames 7 and 16, not measured.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "handle",
+          "label": "Handle, simplified",
+          "kind": "parameters",
+          "parameters": {
+            "noseLengthMm": 18,
+            "noseBaseDiameterMm": 15,
+            "bodyLengthMm": 58,
+            "bodyHeightMm": 20,
+            "bodyWidthMm": 13,
+            "ringOuterDiameterMm": 34,
+            "ringBarMm": 6,
+            "gripDropDeg": 65,
+            "leverTravelDeg": 18
+          },
+          "unit": "mm",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 9"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 10"
+            }
+          ],
+          "note": "A simplified stand-in for the pistol-grip ring handle, drawn from inspection of frames 9 and 10. It is refined with the device explorer.",
           "factCheck": {
             "decision": "NOT REVIEWED",
             "reviewer": null,
@@ -1113,6 +2371,7 @@
       "role": "tool",
       "inPrototype": false,
       "modelled": true,
+      "standard": "draft",
       "productNumbers": [
         {
           "number": "83912227",
@@ -1232,6 +2491,69 @@
             "reviewedRevision": null
           }
         }
+      ],
+      "forms": [
+        {
+          "key": "jaws",
+          "label": "Dissecting jaws",
+          "kind": "parameters",
+          "parameters": {
+            "hingeInsideSheathMm": 1.0,
+            "jawBaseWidthMm": 2.6,
+            "jawTipWidthMm": 0.8,
+            "jawThicknessMm": 0.9
+          },
+          "unit": "mm",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 1"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 15"
+            }
+          ],
+          "note": "Drawn from inspection of the frames, not measured. A draft for the owner's review and the manufacturer's fact-check.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "handle",
+          "label": "Handle, simplified",
+          "kind": "parameters",
+          "parameters": {
+            "sameAsDevice": "double-spoon-forceps"
+          },
+          "unit": "mm",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 9"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 10"
+            }
+          ],
+          "note": "The same handle as the double-spoon forceps (part 83930074), drawn the same way.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
       ]
     },
     {
@@ -1240,6 +2562,7 @@
       "role": "tool",
       "inPrototype": false,
       "modelled": true,
+      "standard": "draft",
       "productNumbers": [
         {
           "number": "8379.452",
@@ -1322,6 +2645,43 @@
             "reviewedRevision": null
           }
         }
+      ],
+      "forms": [
+        {
+          "key": "draftForm",
+          "label": "Insulated tip, hook and handle",
+          "kind": "parameters",
+          "parameters": {
+            "insulationTaperLengthMm": 15,
+            "insulationTipDiameterMm": 1.8,
+            "wireDiameterMm": 0.8,
+            "hookStemMm": 4,
+            "hookLegMm": 2.6,
+            "handleLengthMm": 70,
+            "handleDiameterMm": 9
+          },
+          "unit": "mm",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 1"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 17"
+            }
+          ],
+          "note": "Drawn from inspection of the frames, not measured. A draft for the owner's review and the manufacturer's fact-check. The hook is drawn within the shaft's diameter so that it passes the channel.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
       ]
     },
     {
@@ -1330,6 +2690,7 @@
       "role": "tool",
       "inPrototype": false,
       "modelled": true,
+      "standard": "draft",
       "productNumbers": [
         {
           "number": "8379.462",
@@ -1412,6 +2773,43 @@
             "reviewedRevision": null
           }
         }
+      ],
+      "forms": [
+        {
+          "key": "draftForm",
+          "label": "Insulated tip, button and handle",
+          "kind": "parameters",
+          "parameters": {
+            "insulationTaperLengthMm": 15,
+            "insulationTipDiameterMm": 2.2,
+            "neckDiameterMm": 1.4,
+            "neckLengthMm": 2,
+            "buttonDiameterMm": 3,
+            "handleLengthMm": 70,
+            "handleDiameterMm": 9
+          },
+          "unit": "mm",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 1"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 17"
+            }
+          ],
+          "note": "Drawn from inspection of the frames, not measured. A draft for the owner's review and the manufacturer's fact-check.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
       ]
     },
     {
@@ -1420,6 +2818,7 @@
       "role": "tool",
       "inPrototype": false,
       "modelled": true,
+      "standard": "draft",
       "productNumbers": [
         {
           "number": "8379.672",
@@ -1505,6 +2904,41 @@
             "reviewedRevision": null
           }
         }
+      ],
+      "forms": [
+        {
+          "key": "draftForm",
+          "label": "Graduations, tip and handle",
+          "kind": "parameters",
+          "parameters": {
+            "graduationBandMm": 1,
+            "graduationIntervalMm": 10,
+            "tipRadiusMm": 1.75,
+            "handleLengthMm": 60,
+            "handleDiameterMm": 8
+          },
+          "unit": "mm",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 1"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 17"
+            }
+          ],
+          "note": "Drawn from inspection of the frames, not measured. A draft for the owner's review and the manufacturer's fact-check. The interval between graduations is still to be measured; the one drawn here is not a device value.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
       ]
     },
     {
@@ -1513,6 +2947,7 @@
       "role": "tool",
       "inPrototype": false,
       "modelled": true,
+      "standard": "draft",
       "productNumbers": [
         {
           "number": "8380.68",
@@ -1584,6 +3019,43 @@
             "reviewedRevision": null
           }
         }
+      ],
+      "forms": [
+        {
+          "key": "draftForm",
+          "label": "Side holes, tip and stopcock",
+          "kind": "parameters",
+          "parameters": {
+            "sideHoleDiameterMm": 1.2,
+            "sideHoleCount": 6,
+            "sideHoleSpacingMm": 5,
+            "tipRadiusMm": 1.4,
+            "stopcockBodyDiameterMm": 9,
+            "stopcockBodyLengthMm": 24,
+            "leverLengthMm": 25
+          },
+          "unit": "mm",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 1"
+            },
+            {
+              "document": "S-FRAMES",
+              "locator": "frame 17"
+            }
+          ],
+          "note": "Drawn from inspection of the frames, not measured. A draft for the owner's review and the manufacturer's fact-check.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
       ]
     },
     {
@@ -1592,6 +3064,7 @@
       "role": "cable",
       "inPrototype": false,
       "modelled": false,
+      "standard": "not modelled",
       "productNumbers": [
         {
           "number": "806625301",
@@ -1667,7 +3140,8 @@
           },
           "note": "Manufacturer documents differ on this value. The value given is the one in the US documents."
         }
-      ]
+      ],
+      "forms": []
     },
     {
       "id": "camera-control-unit",
@@ -1675,6 +3149,7 @@
       "role": "tower",
       "inPrototype": false,
       "modelled": false,
+      "standard": "not modelled",
       "productNumbers": [
         {
           "number": "5525301",
@@ -1715,7 +3190,8 @@
             "reviewedRevision": null
           }
         }
-      ]
+      ],
+      "forms": []
     },
     {
       "id": "talc-delivery",
@@ -1723,6 +3199,7 @@
       "role": "accessory",
       "inPrototype": false,
       "modelled": false,
+      "standard": "not modelled",
       "productNumbers": [],
       "facts": [
         {
@@ -1747,7 +3224,8 @@
             "reviewedRevision": null
           }
         }
-      ]
+      ],
+      "forms": []
     }
   ],
   "fit": [

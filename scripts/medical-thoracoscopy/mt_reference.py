@@ -160,6 +160,36 @@ def outer_edges(frame: Frame, line: Line, t: float, half: float, drop: float = 2
     return crossing(below[0] - 1, below[0]), crossing(below[-1] + 1, below[-1])
 
 
+def silhouette_edges(frame: Frame, line: Line, t: float, half: float, rim_px: float = 3.0,
+                     step: float = 0.25, background: float | None = None):
+    """Where a profile across the line leaves the background, on each side, at half contrast.
+
+    A fixed threshold below the background places the edge deeper into the object wherever the
+    object's own rim is light, and the rim of polished metal changes along a shaft. Here each edge
+    is placed half way between the background and the object's luminance `rim_px` inside it.
+    """
+    across = np.arange(-half, half + step, step)
+    values = frame.sample(line.at(t)[None, :] + across[:, None] * line.normal[None, :])
+    level_bg = np.percentile(values, 97) if background is None else background
+    below = np.nonzero(values < level_bg - 8.0)[0]
+    if len(below) == 0 or below[0] == 0 or below[-1] == len(across) - 1:
+        return None
+    inset = int(round(rim_px / step))
+
+    def edge(first_inside: int, inward: int) -> float:
+        rim_index = int(np.clip(first_inside + inward * inset, 0, len(across) - 1))
+        level = (level_bg + values[rim_index]) / 2
+        index = first_inside
+        while 0 < index < len(across) - 1 and values[index] > level:
+            index += inward
+        outside = index - inward
+        v0, v1 = values[outside], values[index]
+        fraction = (level - v0) / (v1 - v0) if v1 != v0 else 0.0
+        return float(across[outside] + fraction * (across[index] - across[outside]))
+
+    return edge(int(below[0]), 1), edge(int(below[-1]), -1)
+
+
 def mask_run(mask: np.ndarray, line: Line, t: float, half: float, step: float = 0.5):
     """The stretch of the mask that the line passes through at t, as offsets across the line."""
     across = np.arange(-half, half + step, step)

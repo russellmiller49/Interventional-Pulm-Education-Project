@@ -32,6 +32,17 @@ gives the date.
 | [Repository baseline](repository-baseline.md)           | Where the build started: commit, packages, policies, file boundaries                                                                        |
 | [Handoffs](handoffs/)                                   | One per slice: what changed, what was checked, what was not                                                                                 |
 
+## Device kit
+
+The instrument models are built from the device definitions by
+`scripts/medical-thoracoscopy/build_device_kit.py` and served from
+`public/models/medical-thoracoscopy/v1/devices/`, listed in its `manifest.json`. Values the
+manufacturer has not published were measured from its product-animation stills: the record is
+`src/features/medical-thoracoscopy/content/data/reference-measurements.json`, written by
+`measure_reference_frames.py`, and every value there is a derived measurement with a tolerance.
+The order the scripts run in, and what each checks, is in the
+[device-kit handoff](handoffs/mt-02a-device-kit.md).
+
 ## Status words
 
 Every open item in these documents carries one of five statuses, taken from the revised plan:
