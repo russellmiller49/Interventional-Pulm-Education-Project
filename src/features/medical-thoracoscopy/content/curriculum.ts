@@ -188,8 +188,15 @@ const SECTION_ROWS: readonly SectionRow[] = [
   ],
 ]
 
-/** Sections a learner can open. None yet: the first three open with the lesson host. */
-const SECTION_STATES: Readonly<Partial<Record<ThoracoscopySectionId, SectionState>>> = {}
+/**
+ * Sections past "in preparation". The first three are written (`content/sections/`) and open to
+ * learners only once the lesson that shows them exists; none is available yet.
+ */
+const SECTION_STATES: Readonly<Partial<Record<ThoracoscopySectionId, SectionState>>> = {
+  'normal-pleural-space': 'written',
+  'four-controls': 'written',
+  'systematic-survey': 'written',
+}
 
 export const curriculumSections: readonly CurriculumSection[] = SECTION_ROWS.map(
   ([id, importedTitle, plannedActivity, minutes, chapter], index) => ({

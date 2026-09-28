@@ -43,6 +43,15 @@ manufacturer has not published were measured from its product-animation stills: 
 The order the scripts run in, and what each checks, is in the
 [device-kit handoff](handoffs/mt-02a-device-kit.md).
 
+## Written sections
+
+A section is data: one file in `src/features/medical-thoracoscopy/content/sections/`, in the shape
+`content/types.ts` gives, checked by `content/sectionValidation.ts` as the section index loads. The
+regions a survey visits are one list, `content/data/pleural-zones.json`, which the lessons and the
+anatomy asset both read. A section can be written before the lesson that shows it exists; a learner
+can open it only once the curriculum marks it available. Sections 6, 7 and 11 are written; see the
+[survey-specs handoff](handoffs/mt-03a-survey-specs.md).
+
 ## Status words
 
 Every open item in these documents carries one of five statuses, taken from the revised plan:

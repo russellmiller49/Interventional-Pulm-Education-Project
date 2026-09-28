@@ -10,8 +10,8 @@ import { statusWordSchema } from './reviewRecords'
  *
  * A source being listed says only that its citation was checked. Whether a statement in the
  * course is supported by it is recorded claim by claim, with a locator, in the claim register.
- * `read` says how much of the source has actually been read, and nothing may be attributed to a
- * part of a source that was not.
+ * `read` says how much of the source has actually been read, `readParts` which parts when a full
+ * text was read only in part, and nothing may be attributed to a part of a source that was not.
  */
 export const SOURCE_CLASSES = [
   'guideline',
@@ -36,6 +36,8 @@ const checkedSchema = z
     on: z.string().regex(isoDate),
     against: z.string().min(1),
     read: z.enum(READ_DEPTHS),
+    /** The parts read, when a full text was read only in part. */
+    readParts: z.string().min(1).optional(),
   })
   .strict()
 

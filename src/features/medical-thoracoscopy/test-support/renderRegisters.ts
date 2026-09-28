@@ -252,6 +252,9 @@ function claimSection(claim: Claim): string {
         ['Review lane', claim.lane],
         ['Context', claim.context],
         ['Sources', sources],
+        ...(claim.sources.length > 0 && claim.sourceNote
+          ? [['Note on the sources', claim.sourceNote]]
+          : []),
         [
           'Where it is shown',
           claim.surfaces
@@ -313,7 +316,9 @@ export function renderSourceRegister(): string {
         `${source.authors} ${source.title}. ${source.journal}. ${source.year};${citationLocator(source)}.`,
         `${doiLink(source.doi)}; PMID ${source.pmid}`,
         `${source.checked.on}, ${source.checked.against}`,
-        source.checked.read,
+        source.checked.readParts
+          ? `${source.checked.read}, in part: ${source.checked.readParts}`
+          : source.checked.read,
         source.limits,
       ]),
     ),
