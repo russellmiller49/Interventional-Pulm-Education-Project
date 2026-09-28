@@ -1,0 +1,543 @@
+{
+  "batch": "BF-PRE-REVIEW-03",
+  "title": "Readable images and coherent scope workspaces",
+  "lane": "03",
+  "module": "bronchoscopy-foundations",
+  "source": "Bronchoscopy_Foundations_Fellow_Walkthrough.docx (Claude in a first-year-fellow persona, 19 September 2026)",
+  "sourceSha256": "3bac73ed7dc966f3cf9482b356f75261c2803ea94892201739a96c690d6d30aa",
+  "package": "Interventional-Pulm-Local-Data/module_update_9_19/BF_Claude_Implementation_Pack",
+  "planningBaseline": "77a141ccfd574a984f91e74abc9018b5d67e8202",
+  "batch02PostMergeVerifiedMain": "2bc539f4e96fe66d196aae9ae08fad4c8131e79a",
+  "baseSha": "756c9aee7d7119f3817b5d85aaf73f9efa573418",
+  "branch": "claude/bf-pre-review-03-9-25",
+  "checkout": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-bf-pre-review-03",
+  "ports": {
+    "baseline": 3143,
+    "branch": 3144,
+    "baselineBuild": "UNI1BRS7GvfPS-DHqZx9n",
+    "finalBuild": "IbUgl6424100pTpX6vN9N"
+  },
+  "verifiedCodeHead": "6d434a135b74126bc346d86763565d0a6905f13e",
+  "state": "implemented; production-built and browser-verified; PR opened for independent pre-merge review; not merged, not deployed",
+  "claims": {
+    "clinicalApproval": false,
+    "sourceReview": false,
+    "anatomicalValidation": false,
+    "mediaRightsReview": false,
+    "realLearnerValidation": false,
+    "usabilitySession": false,
+    "facultyReview": false,
+    "screenReaderReview": false,
+    "release": false
+  },
+  "fileOwnership": {
+    "sharedRuntimeFilesChanged": [],
+    "publicAssetsChanged": [],
+    "note": "Every change is under src/features/bronchoscopy-foundations/** or e2e/bronchoscopy-foundations.spec.ts (BF 01-04 per PI_EBUS_BBT_BF_COORDINATION.md). No shared stage, AnswerVerdict, HelpDialog, global CSS, other module, Device Intelligence or public/ asset changed."
+  },
+  "findings": [
+    {
+      "id": "A18",
+      "reportSeverity": "P2",
+      "reportSource": "S3 Part 3; p. 8; figure 3.1",
+      "reproduced": true,
+      "reproducedAt": "756c9aee production build (UNI1BRS7GvfPS-DHqZx9n), pre-use-check Part 3, 1204x987/1024x768/390x844/320x740",
+      "observedBefore": "Views 2/3/6/8 outlines on screen 21x35, 12.8x13.5, 17x17, 42x48 px at 1204x987 (view 3: 11.8 px at 1024, 9 px at 390, 7 px at 320); no enlargement control.",
+      "rootCause": "MediaFigure drew the whole file at column width with its polygon only; no enlargement.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/stage/MediaFigure.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/MediaEnlargeDialog.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/mediaDetail.ts",
+        "src/features/bronchoscopy-foundations/components/stage/bronch-stage.module.css",
+        "src/features/bronchoscopy-foundations/components/stage/BronchIdentifyControl.tsx"
+      ],
+      "observedAfter": "Detail windows cut from the same file for outlines under 15% of the photograph (views 2,3,6,7,8): 48x79, 58x61, 79x79, 71x79 px at 1204; 65-106 px at 390/320. Real Enlarge dialog (Escape/Close, focus return, selection kept); registration error < 1.5 px on the card, after resize and enlarged. At 1204/1024 the whole photograph on the card is ~60% of its former width beside the detail; full width one press away.",
+      "preserved": [
+        "source files and polygons unchanged; no derived asset",
+        "part identity unchanged",
+        "no generative upscaling or painted detail"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/workbench-and-visuals.test.tsx (detail region, Enlarge + registered detail, dialog focus, selection kept)",
+        "e2e: S3 instrument views readable, open full size by keyboard and keep the chosen name"
+      ],
+      "residualHumanDecision": "New crop annotations or disputed part identity remain owner/media decisions."
+    },
+    {
+      "id": "A20",
+      "reportSeverity": "P2",
+      "reportSource": "S3 Part 3; p. 8",
+      "reproduced": true,
+      "reproducedAt": "756c9aee production build (UNI1BRS7GvfPS-DHqZx9n), pre-use-check Part 3",
+      "observedBefore": "All eight images: alt \"A photograph of the bronchoscope with one part outlined\".",
+      "rootCause": "mediaDescription() returned one sentence per media kind.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/content/types.ts",
+        "src/features/bronchoscopy-foundations/content/sectionValidation.ts",
+        "src/features/bronchoscopy-foundations/content/sections/pre-use-check.ts",
+        "src/features/bronchoscopy-foundations/components/stage/BronchIdentifyControl.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/MediaFigure.tsx"
+      ],
+      "observedAfter": "Eight distinct alternatives describing where each outline sits without the keyed name (validator refuses one containing it); an alphabetical text reference of the eight parts and what each does, open before any answer.",
+      "preserved": [
+        "part notes condensed from the rows existing sourced rationales (S1 PDF 89-100, T02)",
+        "self-paced explanation-first"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/workbench-and-visuals.test.tsx (unique alternatives, never the keyed name, part reference order)",
+        "e2e: S3 case (8 distinct alternatives at four sizes)"
+      ],
+      "residualHumanDecision": "No screen-reader or accessibility-specialist review (NOT RUN)."
+    },
+    {
+      "id": "A21",
+      "reportSeverity": "P2",
+      "reportSource": "S5 Part 3; p. 12; figure 5.1",
+      "reproduced": true,
+      "reproducedAt": "756c9aee production build (UNI1BRS7GvfPS-DHqZx9n), five-controls bend step, 1204x987",
+      "observedBefore": "Scope-view lit share 0.118 at 0 deg, 0.133 at 15, 0.124 at 30, 0.003 at +-60 and +-120: black, direction unreadable.",
+      "rootCause": "The bench view renders only what the 88 deg optical field sees; nothing reported the frame itself.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/engine/scope/benchOrientation.ts",
+        "src/features/bronchoscopy-foundations/components/scope/TipCompass.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/ScopeScene.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/BenchSchematic.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/ScopeOpticalView.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/ScopeFallback.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/scope-fallback.module.css",
+        "src/features/bronchoscopy-foundations/components/scope/scope-scene.module.css"
+      ],
+      "observedAfter": "An end-on drawing read from the engine optical frame: 0 centre; +-15 top/bottom; +-60 opposite sides with \"card outside the field ... the bench, not a lost view of an airway\"; +-120 beyond the 90 ring. Lever, drawing and engine agree at every sampled state.",
+      "preserved": [
+        "deflection range 0-120 unchanged",
+        "transforms and geometry unchanged",
+        "clinical lost-view signal unchanged"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/workbench-and-visuals.test.tsx (eight deflections off the engine frame; +-60 distinguished)",
+        "e2e: S5 bench says where the tip points at every angle"
+      ],
+      "residualHumanDecision": null
+    },
+    {
+      "id": "A22",
+      "reportSeverity": "P2",
+      "reportSource": "S5 Part 4; p. 13; figure 5.2",
+      "reproduced": true,
+      "reproducedAt": "756c9aee production build (UNI1BRS7GvfPS-DHqZx9n), five-controls rotation step, 30 deg bend",
+      "observedBefore": "At 90 deg roll the side-view bending section looks straight; image-rotation direction never stated.",
+      "rootCause": "The close-up is a single projection; no end-on view; no statement of the model sign rule.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/engine/scope/benchOrientation.ts",
+        "src/features/bronchoscopy-foundations/components/scope/TipCompass.tsx"
+      ],
+      "observedAfter": "At 30 deg: U toward the card top/right/bottom/left at 0/90/180/270, angle 30 throughout; the sentence states the model rule (clockwise turn -> picture turns counterclockwise), checked against the projection.",
+      "preserved": [
+        "scopeFrame sign convention unchanged",
+        "side-view close-up unchanged",
+        "no universal clinical clock orientation stated"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/workbench-and-visuals.test.tsx (four rolls; picture turn vs projection)",
+        "e2e: S5 case"
+      ],
+      "residualHumanDecision": null
+    },
+    {
+      "id": "A24",
+      "reportSeverity": "P2",
+      "reportSource": "S6 Part 3; p. 14; figure 6.2",
+      "reproduced": true,
+      "reproducedAt": "756c9aee production build (UNI1BRS7GvfPS-DHqZx9n), branch-entry Part 3 at the main carina",
+      "observedBefore": "LMSB/RMSB captions 17 px apart at 1204 (19 at 1024, 15 at 390) on the ridge; neither view stated its frame.",
+      "rootCause": "layoutOpticalLabels offset the second caption 32 px vertically only; no frame statements.",
+      "disposition": "repaired (display); anatomy pending",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/scope/scopeSceneModel.ts",
+        "src/features/bronchoscopy-foundations/components/scope/ScopeScene.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/ScopeFallback.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/TreeMap.tsx"
+      ],
+      "observedAfter": "Caption gap 51/61/46 px; each displaced caption has a dot and leader at its own projected ostium point and never covers another opening point; A/L rim ticks from the model LPS frame turn with rotation; map states it is a coronal front view.",
+      "preserved": [
+        "ostium points and inView unchanged",
+        "occluded pins still not drawn",
+        "no anatomical label added"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/workbench-and-visuals.test.tsx (declutter vs anchors at four widths; ticks turn with the image)",
+        "e2e: S6 carina labels and frames"
+      ],
+      "residualHumanDecision": "Why the main-bronchial openings do not read dark at the carina is anatomy/rendering (owner); left-main tour still is A23 (batch 05)."
+    },
+    {
+      "id": "A25",
+      "reportSeverity": "P2",
+      "reportSource": "S7 Part 2; p. 17; figure 7.1",
+      "reproduced": true,
+      "reproducedAt": "756c9aee production build (UNI1BRS7GvfPS-DHqZx9n), reference-frames Part 2",
+      "observedBefore": "CT 1038x1038 and still 1038x819 stacked: union height 1868 px at 1204x987, 1730 at 1024x768.",
+      "rootCause": "MediaWorkspace stacked every figure at full column width; no per-image frame statements.",
+      "disposition": "partially repaired: co-visibility repaired; five-level trace source-held",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/stage/MediaWorkspace.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/bronch-stage.module.css",
+        "src/features/bronchoscopy-foundations/content/types.ts",
+        "src/features/bronchoscopy-foundations/content/sectionValidation.ts",
+        "src/features/bronchoscopy-foundations/content/sections/reference-frames.ts",
+        "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx"
+      ],
+      "observedAfter": "Side by side, tops level: union 478 px (1204x987), 397 (1024x768), 466 (1440x900); stacked at 390. Notes: CT as if viewed from the feet with its letters, crosshair = lesson marked point, from the teaching case preview CT; still with orientation/roll not recorded; not a registered pair; the panel shows one axial slice of the five-level trace.",
+      "preserved": [
+        "only the two existing files; no BBT/EBUS images; no synthesized slices",
+        "not presented as a registered pair"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/workbench-and-visuals.test.tsx (comparison layout and notes)",
+        "e2e: S7 side by side at laptop sizes"
+      ],
+      "residualHumanDecision": "SOURCE-HELD/OWNER-HELD: no registered slice at the main carina; basal only as segmental points; the RUL/BI/RML slices are the Part 3 identify images (exposing them would make those items recall). Requirement: five axial slices from one volume (carina, RUL takeoff, BI, RML/RB6, basal trunk) with volume id, slice index/position, window, display convention and the traced airway marked, distinct from the Part 3 images or with those items replaced."
+    },
+    {
+      "id": "A28",
+      "reportSeverity": "P2",
+      "reportSource": "S9 Part 1; p. 21; figure 9.1",
+      "reproduced": true,
+      "reproducedAt": "756c9aee production build (UNI1BRS7GvfPS-DHqZx9n), larynx-and-entry Part 1",
+      "observedBefore": "Caption \"one still from the course annotated normal survey\" with nothing drawn; no real zoom; corner rectangle reads as an expand control.",
+      "rootCause": "Caption authored as annotated while the media ref sets outline:false; no enlargement existed.",
+      "disposition": "partially repaired: caption and zoom repaired; labels owner-held",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/content/sections/larynx-and-entry.ts",
+        "src/features/bronchoscopy-foundations/content/sections/describe-findings.ts",
+        "src/features/bronchoscopy-foundations/components/stage/MediaFigure.tsx"
+      ],
+      "observedAfter": "Caption says no structures are marked; Enlarge opens the still full size with a note that the corner rectangle is part of the recorded frame. The same annotated-claim correction applied to the S13 comparison still.",
+      "preserved": ["no label, outline or orientation added"],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/workbench-and-visuals.test.tsx (no annotated caption on unmarked stills; processor note)",
+        "e2e: S9/S10 stills case"
+      ],
+      "residualHumanDecision": "OWNER-HELD (batch 05): a registered \"Vocal cords\" polygon exists in the quiz-frame manifest but was not shown; epiglottis, false-fold, arytenoid and orientation labels need review."
+    },
+    {
+      "id": "A29",
+      "reportSeverity": "P2",
+      "reportSource": "S10 Part 1; p. 23; figure 10.1",
+      "reproduced": true,
+      "reproducedAt": "756c9aee production build (UNI1BRS7GvfPS-DHqZx9n), right-side Part 1 tour",
+      "observedBefore": "One still behind a 15-option dropdown; RB1 outline at the top edge, RB6 bottom right, RB10 a crescent; no frame statement.",
+      "rootCause": "NormalAirwayTour was a single still with a select.",
+      "disposition": "partially repaired: navigation, comparison, enlargement and honest framing repaired; new stills source-held",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/stage/BronchCourseTeaching.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/course-flow.module.css",
+        "src/features/bronchoscopy-foundations/components/stage/MediaFigure.tsx"
+      ],
+      "observedAfter": "Four groups by the tree (airways before the segments, then each lobe segments), one press per still, side-by-side comparison of a group, Enlarge on every still, \"Frame not recorded\" statement; each still keeps its registered outline (registration < 1.5 px). The trachea no longer lists itself as its parent.",
+      "preserved": ["stills and polygons unchanged", "no camera roll inferred", "no warping"],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/workbench-and-visuals.test.tsx (grouping; RB1/RB6/RB10 registered; comparison)",
+        "e2e: S9/S10 stills case"
+      ],
+      "residualHumanDecision": "SOURCE-HELD (batch 05): clearer head-on representative stills and any frame metadata."
+    },
+    {
+      "id": "A30",
+      "reportSeverity": "P2",
+      "reportSource": "S10 Part 3 and S6; pp. 13, 24; figure 10.2",
+      "reproduced": true,
+      "reproducedAt": "756c9aee production build (UNI1BRS7GvfPS-DHqZx9n), branch-entry Part 3 at the carina; right-side Part 3 start",
+      "observedBefore": "Show me where spotlights Advance for \"enter the right main bronchus\" after the carina and for the RUL goal from the bronchus intermedius; labels unavailable in the less-assisted lesson.",
+      "rootCause": "goalControlKey read only a goal first clause; location/sequence goals mapped to Advance.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/engine/scope/goalHelp.ts",
+        "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/types.ts",
+        "src/features/bronchoscopy-foundations/components/scope/ScopeScene.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/ScopeFallback.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/scope-scene.module.css",
+        "src/features/bronchoscopy-foundations/components/scope/scope-fallback.module.css"
+      ],
+      "observedAfter": "Help from the first unmet requirement: withdraw when the opening is behind; Advance only when the reducer (on a copy) enters it (144/144 sampled states agree); otherwise rotate/deflect by the align-to-branch math, with the opening ringed. Carina: Rotate counterclockwise; right side: Withdraw. Opening names on request in S10/S11 (dashed); help and names send no command, record no assist, meet no goal, and are withheld during the unfamiliar-clear phase.",
+      "preserved": [
+        "no dispatch from help",
+        "assistsUsed and inputModes unchanged",
+        "goal predicates unchanged",
+        "self-paced record unchanged"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/workbench-and-visuals.test.tsx (pending requirement; Advance iff entry; advice followed into both main bronchi; state not mutated; names withheld)",
+        "src/features/bronchoscopy-foundations/__tests__/workbench-host.test.tsx (help and names change no state, goal or record)",
+        "e2e: S6 help followed into the right main bronchus",
+        "e2e: S10 help and names record nothing"
+      ],
+      "residualHumanDecision": "Owner to confirm reference names are wanted without being recorded as the in-view-labels assist."
+    },
+    {
+      "id": "A33",
+      "reportSeverity": "P2",
+      "reportSource": "S20 Part 2; p. 32; figure 20.1",
+      "reproduced": true,
+      "reproducedAt": "756c9aee production build (UNI1BRS7GvfPS-DHqZx9n), scope-in-a-tube Part 2",
+      "observedBefore": "No cross-sectional view; longitudinal cutaway 157x195 px; the gap invisible.",
+      "rootCause": "No cross-section existed; annularArea fed only the readouts.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/engine/scope/scopeMetrics.ts",
+        "src/features/bronchoscopy-foundations/components/scope/TubeCrossSection.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/ScopeFallback.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/scope-fallback.module.css"
+      ],
+      "observedAfter": "To-scale cross-section in mm from tubeGeometry (the same calculation the readouts print): 8/6 mm -> 22 mm2, 0.44; 7.5/6.2 mm -> 14 mm2, 0.32; circle ratio 0.75 and 0.827; limit stated; impossible pairing draws no open area.",
+      "preserved": [
+        "authored diameters unchanged",
+        "no fit rule, threshold or ventilation claim",
+        "no interactive sizing"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/workbench-and-visuals.test.tsx (one calculation; impossible pairing)",
+        "e2e: S20 cross-section to scale"
+      ],
+      "residualHumanDecision": null
+    },
+    {
+      "id": "A37",
+      "reportSeverity": "P2",
+      "reportSource": "Mobile; p. 35; figure X.1",
+      "reproduced": true,
+      "reproducedAt": "756c9aee production build (UNI1BRS7GvfPS-DHqZx9n), branch-entry Part 3 at 390x844",
+      "observedBefore": "View top 916, dock 1203, duplicate pane list (5 rows) 1573, the Now card ticking checklist 2089 — 1,173 px below the view.",
+      "rootCause": "ScopePaneFrame printed the whole list after the controls; the ticking list followed the teaching column.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/scope/ScopeFallback.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/scope-fallback.module.css",
+        "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/types.ts"
+      ],
+      "observedAfter": "One current-goal card directly above the view on airway steps (only the view tabs and review line between), goal/view/Advance on one screen at 390 and 320, link to the full list which takes focus, focused controls visible at 200% text, no course overflow. On the five-controls pilot bench the card follows the controls to keep SYSTEMIC-UX-01 geometry.",
+      "preserved": [
+        "Batch-01 record framing (heading, claim class, limit) on the card",
+        "full list kept on the Now card",
+        "no sticky region added"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/workbench-host.test.tsx (one current goal; link to the full list; order)",
+        "src/features/bronchoscopy-foundations/__tests__/goal-truth.test.tsx (pane framing on the card)",
+        "e2e: phone and enlarged-text layouts at 390/320 100% and 390/1204 200%"
+      ],
+      "residualHumanDecision": null
+    },
+    {
+      "id": "A2",
+      "reportSeverity": "P1",
+      "reportSource": "S9 Part 3; pp. 21-22; figure 9.2 (visual part)",
+      "reproduced": true,
+      "reproducedAt": "756c9aee production build (UNI1BRS7GvfPS-DHqZx9n), larynx-and-entry Part 3",
+      "observedBefore": "The phase was only in the readouts under the controls; the close-up turns into a pink ring (report item 3).",
+      "rootCause": "The timing cue was not on the picture; the close-up geometry is anatomy.",
+      "disposition": "partially repaired: phase cue repaired; close-up geometry owner-held",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/scope/ScopeScene.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/scope-scene.module.css"
+      ],
+      "observedAfter": "The folds phase (CORDS_STATE_WORDS, the state the crossing guard reads) shown on the larynx image.",
+      "preserved": [
+        "environmental clock unchanged",
+        "closed-fold guard unchanged",
+        "no fold held open"
+      ],
+      "tests": ["e2e: existing breath and closed-fold cases pass on the final build"],
+      "residualHumanDecision": "OWNER-HELD (batch 05): close-up pink-ring geometry and inlet continuity (existing scope-assets larynx/trachea todo)."
+    },
+    {
+      "id": "SUP-08",
+      "reportSeverity": "—",
+      "reportSource": "S5; pp. 12-13",
+      "reproduced": true,
+      "reproducedAt": "756c9aee production build (UNI1BRS7GvfPS-DHqZx9n), five-controls close-up",
+      "observedBefore": "Control-head U/D marks a few pixels tall.",
+      "rootCause": "DirectionMarkings drawn at 43 px on a 400x560 texture.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/scope/BronchoscopeCloseup.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/TipCompass.tsx"
+      ],
+      "observedAfter": "The model own U/D marks drawn larger in the same places; U/D carried into the end-on drawing with \"U and D are the marks on this model control head\".",
+      "preserved": ["model convention unchanged; no device convention asserted"],
+      "tests": ["e2e: S5 case (compass U direction per roll)"],
+      "residualHumanDecision": null
+    },
+    {
+      "id": "SUP-09",
+      "reportSeverity": "—",
+      "reportSource": "S6; p. 13",
+      "reproduced": true,
+      "reproducedAt": "756c9aee production build (UNI1BRS7GvfPS-DHqZx9n), branch-entry Part 3",
+      "observedBefore": "About 30 Advance presses; keys in a closed disclosure naming five keys.",
+      "rootCause": "Text in a collapsed details; incomplete.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/scope/scopeKeyMap.ts",
+        "src/features/bronchoscopy-foundations/components/scope/ScopeScenePane.tsx"
+      ],
+      "observedAfter": "A visible line beside the dock built from SCOPE_KEY_MAP and the step controls; says to select the view first, that held keys repeat, and that Advance/Withdraw can be pressed and held.",
+      "preserved": ["no key behaviour, speed or step size changed", "no teleport"],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/workbench-and-visuals.test.tsx (keys for this step only)",
+        "e2e: S6 carina reached with W on the selected view; S5 ArrowUp"
+      ],
+      "residualHumanDecision": null
+    },
+    {
+      "id": "SUP-13",
+      "reportSeverity": "—",
+      "reportSource": "S9; pp. 21-22",
+      "reproduced": true,
+      "reproducedAt": "756c9aee production build (UNI1BRS7GvfPS-DHqZx9n), larynx-and-entry Parts 1, 3, 4",
+      "observedBefore": "Part 4 titled \"Identify the structures in view\" but asks when to cross; baked processor icon looks like Expand; \"Scope view\" label clipped to \"ew\".",
+      "rootCause": "Generic check title; no real zoom; label below the lens vignette.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/content/courseFlow.ts",
+        "src/features/bronchoscopy-foundations/components/stage/MediaFigure.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/scope-scene.module.css"
+      ],
+      "observedAfter": "Title \"Decide when to cross the glottis\" (id unchanged); real Enlarge with the processor-rectangle note; label fully visible.",
+      "preserved": ["no new anatomical quiz", "step id unchanged"],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/workbench-and-visuals.test.tsx (title; processor note)",
+        "after/s9-scope-label.png vs baseline/s9-scope-label.png"
+      ],
+      "residualHumanDecision": null
+    }
+  ],
+  "derivedAssets": [],
+  "mediaDisplayedSha256": {
+    "public/intro-bronchoscopy/scope-anatomy/scope-photo-atlas.json": "f1d0608f77d025e5839418bb35e748cd67192e898e42a4b5c5dd026f03c6e29b",
+    "public/intro-bronchoscopy/scope-anatomy/full-scope.png": "894d1c582cf802d708c80e7c1b99aae20a34c74738771ee85cfc327bea67ee36",
+    "public/intro-bronchoscopy/scope-anatomy/suction-valve-setup.png": "5c97a8d39655e8fb6226b2787d2fc3cc219166be6ab79cb5bbeebb1f3bcad600",
+    "public/intro-bronchoscopy/scope-anatomy/biopsy-adapter-setup.png": "c237f8699ebe6b71ab2337a89e46a5d81b71c4cdd34be494869cc56251b01c95",
+    "public/airway-lesson/airway-quiz-frames.json": "4970b9f814c87d4f0f9d5a422435cc7883a404f6f5c49cfccff8d5ffff81ef08",
+    "public/airway-lesson/airway-survey-ct.json": "ed63f8607abd93224d94f2fafbbc40d8bc1a7e8cb3d3b51f686759d70f40a516",
+    "public/airway-lesson/ct/rmb-axial.jpg": "fdf7750350e6445bdfff3f9ac2110118cf008e8a2a2385a4a284a9f62d77c7c7",
+    "public/airway-lesson/quiz/larynx.jpg": "81233827f38a230c89f23b5b77297c65d452d86393746cdc75c4451018067521",
+    "public/airway-lesson/quiz/rmb.jpg": "7d04e067ab945816a2a6af62af549e429e9967af23784140e7fed199e406fff6",
+    "public/airway-lesson/quiz/rb1.jpg": "0abba8e1bda7c962184089444dd71d8af1923048229901d5be973ff4026a58f9",
+    "public/airway-lesson/quiz/rb10.jpg": "bfada05443e613b9880f02cb03c3dbe36e5f24c240546afd278144330bfcb792",
+    "public/airway-lesson/quiz/rb2.jpg": "1d8a1e25e1b457f095469fa72779b10039c9f466308ba6c04276b1441f7c6d44",
+    "public/airway-lesson/quiz/rb3.jpg": "248133d96a287890b119ff1981bc314665f00fc1c8e700cd5ce71e0f88389a02",
+    "public/airway-lesson/quiz/rb4.jpg": "12a00fde015bb091aec22e23eecee9ab53bdcfdd1ab0e4a6fe4f19351d9f367b",
+    "public/airway-lesson/quiz/rb5.jpg": "386a9971e8af0c4d427ef4cc85e1cf57db808b1add5c38289d015f2954026174",
+    "public/airway-lesson/quiz/rb6.jpg": "f04884a9a0e6ec24a1ef93afff47d3b4ad13350ae5a2d9144662b26f349db38e",
+    "public/airway-lesson/quiz/rb7.jpg": "3efd9f49636dc9f49f9737ba04e07c242f16743b4288d4bb4eb72dea3b96870f",
+    "public/airway-lesson/quiz/rb8.jpg": "4daa5cadff7127978a014cc29b1875f7103f3602b8da13c9be05e94655ccabca",
+    "public/airway-lesson/quiz/rb9.jpg": "1fb494e386f7f5ea9529db2869115d7398c2669ebe47cf3b8c256f118fe3426e",
+    "public/airway-lesson/quiz/rul.jpg": "3a37cb8602a2ccad5d9635ffda04d7d7ee37c83651f6c72a3a9f047cbacbb9f0",
+    "public/airway-lesson/quiz/rml.jpg": "9b445083d6ac7f3ab3ef776301d5772a7bf4780b1cb109bff0044464d33c1b6c",
+    "public/airway-lesson/quiz/rll.jpg": "498e636b08278b896fc5a85aa65224d1f727f72f55206f5471c807e2e0b25099",
+    "public/airway-lesson/quiz/bronchus-intermedius.jpg": "079829e30843816c5ee8b96232d46966a6930e24d461a67e506b6a144fb28fdb",
+    "public/airway-lesson/quiz/trachea.jpg": "8b769d09e235acd61bc4ef5016610b728cb2cdfd8bdb50299372f0e607b932e0",
+    "public/airway-lesson/quiz/lmb.jpg": "acf199d2942c8c7d34468bbad1007cdc3e8c20701cd8a8b525c2bdde5f4e9f53",
+    "public/bronchoscopy-foundations/anatomy/devices/control-head.glb": "a37bd40aa21301455f2571c9ecb7dbc2fcba9491dac791de5180597005b561fa",
+    "public/bronchoscopy-foundations/anatomy/devices/control-head.json": "a3418177405e0f4b2cccf4577f09eb81aca4c315c1ab178fcfdf96353ed47d7a",
+    "public/bronchoscopy-foundations/anatomy/devices/bench.glb": "ed5af750097eb78c60724f43a6598ca003780f4db20146abfe778242cb84a71f"
+  },
+  "sideFixes": [
+    "S13 describe-findings comparison still: \"annotated\" caption corrected (the same rule as A28).",
+    "Airway tour: the trachea no longer lists itself as its own parent."
+  ],
+  "preservedContracts": [
+    "intentional accessory misreport sequence",
+    "exposed-accessory withdrawal refusal",
+    "truthful protected/in-channel demonstration completion",
+    "environmental clock semantics",
+    "environmental time not learner work",
+    "closed-fold guard",
+    "carina hold timing/drift",
+    "historical versus current goal semantics",
+    "historical inspection-ledger semantics",
+    "truthful optical accessibility naming",
+    "no invented visible-lumen judgement",
+    "source classification and PDF-page wording",
+    "source-list/focus geometry",
+    "Reading-the-view canonical table",
+    "S4 primary Check",
+    "S15/S18/S19 Decide -> feedback -> Continue",
+    "SUP-17 unsafe-action refusal without forced safe response",
+    "question context with shared AnswerVerdict",
+    "qualitative matching feedback",
+    "explanation-first / retry / skip / self-paced policy",
+    "stable ids and legacy storage meanings",
+    "owner-held lavage answer key",
+    "pre-existing 3D restore defect not touched",
+    "SYSTEMIC-UX-01 bench geometry"
+  ],
+  "validation": {
+    "jest": {
+      "base": "32 suites, 446 passed, 1 todo",
+      "final": "34 suites, 488 passed, 1 todo",
+      "newCases": 42,
+      "changedCases": 1,
+      "casesFailingOnBaseRuntime": 17,
+      "casesPassingOnBaseRuntime": {
+        "count": 26,
+        "why": "25 unit tests of helpers added as additive shims (bench orientation, goal help, detail region, tour grouping, rim ticks, keyboard hint, tube geometry) and 1 guard (no reference names where a step has its own labels); runtime fail-before for those mechanisms is in the browser run"
+      }
+    },
+    "tsc": "exit 0 (8 GB heap)",
+    "eslint": "33 changed .ts/.tsx files, 0 errors, 0 warnings",
+    "prettier": "clean on 37 changed paths",
+    "diffCheck": "clean",
+    "build": {
+      "base": "UNI1BRS7GvfPS-DHqZx9n",
+      "drafts": [
+        "Q99nAqXjLNdQJhe5_pcLs",
+        "oe8a9DDehSHgZJZuKRgbO",
+        "KKIyzbZR4iK279bT4JUkD",
+        "6l1oxjYoSkvDdsHIbRyIr"
+      ],
+      "final": "IbUgl6424100pTpX6vN9N",
+      "exit": 0,
+      "warnings": "identical to base (third-party vscode-languageserver-types notice; embedded apps Vite chunk-size notes)"
+    },
+    "playwrightBf": {
+      "uniqueTests": 61,
+      "existing": 50,
+      "new": 11,
+      "passedOnFinalBuild": 61,
+      "newFailingOnBaseBuild": 11
+    },
+    "systemicUxBf": {
+      "tests": 7,
+      "base": "7 passed",
+      "final": "7 passed"
+    },
+    "reruns": [
+      "oe8a9DD: new cases 8/11 (two harness faults; one real: detail under 40 px at narrow widths -> 2.4x context and stacked detail)",
+      "KKIyzbZ: full suite 60/61 (S3 measured the dialog whole photograph; test-only fix); systemic 1/7 (bench-to-Advance span 747 px) -> source fix",
+      "6l1oxjY: systemic 4/7 (bench off screen at 390/320/200%) -> source fix 290255ad",
+      "IbUgl64: full suite 57/61 (fixed 60 px gap assumption in the new phone cases; bound changed to the measured view header) -> 4/4 -> clean 61/61"
+    ],
+    "evidence": "Interventional-Pulm-Local-Data/renders/output/bf-pre-review-03-2026-09-28/{baseline,after,logs}/"
+  },
+  "ownerDecisions": [
+    "Show the existing \"Vocal cords\" polygon on the S9 still?",
+    "Author the five-level S7 trace, or reuse per-airway slices and replace the Part 3 items?",
+    "Confirm the A/L rim ticks (teaching-model LPS frame) are the frame to teach.",
+    "Confirm reference names on request in S10/S11 without recording them as the in-view-labels assist."
+  ],
+  "notRun": [
+    "human review of any kind; screen-reader listening",
+    "Safari/WebKit and Firefox",
+    "native browser zoom (200% means root font size)",
+    "exhaustive loading-gate race (A39 is batch 04)",
+    "hidden-tab and reduced-motion beyond the existing suite"
+  ]
+}
