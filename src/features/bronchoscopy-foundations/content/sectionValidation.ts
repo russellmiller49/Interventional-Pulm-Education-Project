@@ -339,6 +339,14 @@ function workspaceErrors(
     case 'media':
       c.copy(`${where} caption`, workspace.caption)
       if (workspace.media.length === 0) c.add(`${where} shows no media.`)
+      if (workspace.mediaNotes && workspace.mediaNotes.length !== workspace.media.length)
+        c.add(
+          `${where} has ${workspace.mediaNotes?.length} image notes for ${workspace.media.length} images.`,
+        )
+      workspace.mediaNotes?.forEach((note, index) =>
+        c.copy(`${where} image ${index + 1} note`, note),
+      )
+      c.copy(`${where} comparison note`, workspace.comparisonNote)
       workspace.media.forEach((media, index) =>
         c.add(mediaRefErrors(`${where} media ${index + 1}`, media)),
       )
@@ -401,6 +409,15 @@ function actErrors(c: Collector, act: BronchAct, section: BronchSectionDefinitio
         c.add(mediaRefErrors(at, row.media))
         c.copy(`${at} prompt`, row.prompt)
         c.copy(`${at} rationale`, row.rationale, { surface: 'rationale' })
+        c.copy(`${at} media description`, row.mediaDescription)
+        c.copy(`${at} part note`, row.partNote, { surface: 'rationale' })
+        const keyed = row.choices.find((choice) => choice.id === row.answerId)?.label
+        if (
+          keyed &&
+          row.mediaDescription &&
+          row.mediaDescription.toLowerCase().includes(keyed.toLowerCase())
+        )
+          c.add(`${at} media description names the part the row asks for.`)
         if (row.choices.length < 3 || row.choices.length > 5)
           c.add(`${at} has ${row.choices.length} choices; three to five.`)
         if (!row.choices.some((choice) => choice.id === row.answerId))

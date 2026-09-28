@@ -348,6 +348,32 @@
   display: grid;
   gap: 0.6rem;
 }
+/*
+ * Two images to compare sit side by side at a height a laptop screen holds together (A25); on a
+ * narrow screen they stack. The frame keeps the image's own aspect, so outlines stay registered.
+ */
+.mediaGrid[data-media-compare='true'] {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  align-items: start;
+  gap: 1rem;
+  --compare-height: min(52vh, 30rem);
+}
+.mediaGrid[data-media-compare='true'] .figureFrame {
+  width: min(100%, calc(var(--compare-height) * var(--media-aspect, 1)));
+  margin-inline: auto;
+}
+.mediaCell {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.mediaNote {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--stage-muted, var(--muted));
+  overflow-wrap: anywhere;
+}
 
 .figure {
   margin: 0;
@@ -382,6 +408,136 @@
 .figureCaption {
   font-size: 0.85rem;
   color: var(--stage-muted, var(--muted));
+}
+
+/*
+ * A small registered outline gets a detail cut from the same file beside the whole photograph
+ * (A18). Side by side where the figure has room, the detail under the photograph where it has not.
+ */
+.figure {
+  container-type: inline-size;
+}
+.figureBody {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.figureBody[data-has-detail='true'] {
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items: start;
+}
+@container (max-width: 22rem) {
+  .figureBody[data-has-detail='true'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .figureBody[data-has-detail='true'] .detailFrame {
+    width: min(100%, 16rem);
+    justify-self: center;
+  }
+}
+.detailFrame {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.detail {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid #ffce57;
+  border-radius: 0.5rem;
+  background: #000;
+}
+.detailLabel {
+  font-size: 0.75rem;
+  color: var(--stage-muted, var(--muted));
+}
+.figureTools {
+  display: flex;
+  justify-content: flex-end;
+}
+.enlarge {
+  min-height: 36px;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--cyan-bright, #71e1e5);
+  border-radius: 0.4rem;
+  color: var(--ink, #eaf4f4);
+  background: var(--panel-2, #17343a);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.enlarge:hover {
+  background: var(--panel-3, #1f4249);
+}
+.enlarge:focus-visible,
+.mediaDialogHeader button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+/* The enlarged view: sized to the viewport, not to the reading column. */
+.mediaDialog {
+  width: min(96vw, 80rem);
+  max-width: none;
+  max-height: 96dvh;
+  padding: 0;
+  border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  border-radius: 0.8rem;
+  color: var(--ink, #eaf4f4);
+  background: var(--surface-base, #061519);
+}
+.mediaDialog::backdrop {
+  background: rgba(2, 8, 10, 0.82);
+}
+.mediaDialogInner {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  overflow-wrap: anywhere;
+}
+.mediaDialogHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+.mediaDialogHeader h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.mediaDialogHeader button {
+  min-height: 40px;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--cyan-bright, #71e1e5);
+  border-radius: 0.4rem;
+  color: var(--ink, #eaf4f4);
+  background: var(--panel-2, #17343a);
+  font: inherit;
+  cursor: pointer;
+}
+.mediaDialogInner > p {
+  margin: 0;
+}
+.enlargedPair {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+}
+.enlargedPair[data-has-detail='true'] {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  align-items: start;
+}
+@media (max-width: 700px) {
+  .enlargedPair[data-has-detail='true'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.figureFrameLarge {
+  width: min(100%, calc((96dvh - 12rem) * var(--media-aspect, 1)));
+}
+.detailFrameLarge {
+  width: min(100%, calc(96dvh - 12rem));
 }
 
 /**
@@ -537,4 +693,32 @@
 
 .questionOptions li[data-chosen='true'] {
   color: var(--cyan-bright);
+}
+
+/* The instrument set's text reference (A20): a disclosure, open before any answer. */
+.partReference {
+  grid-column: 1 / -1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+}
+.partReference summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+.partReference dl {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.5rem 0 0;
+}
+.partReference dt {
+  font-weight: 600;
+}
+.partReference dd {
+  margin: 0;
+  color: var(--stage-muted, var(--muted));
+  font-size: 0.9rem;
 }

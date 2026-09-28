@@ -1,7 +1,7 @@
 'use client'
 
 import { useId, useState } from 'react'
-import { TEACHING_TREE, airwayDisplayName } from '../../content/airwayTree'
+import { TEACHING_TREE, airwayDisplayName, type TeachingTreeNode } from '../../content/airwayTree'
 import { useBronchoscopyFoundationsRecord } from '../useBronchoscopyFoundationsRecord'
 import { BRONCH_SECTION_IDS } from '../../content/sectionIds'
 import { MonitorPanel } from './MonitorPanel'
@@ -199,9 +199,51 @@ function SharedAirwayFigure() {
   )
 }
 
-/** Normal stills introduce names independently of the difficulty of driving the scope. */
+/** The tour's groups: the airways before the segments, then each lobe's segments. */
+export function tourGroups(
+  nodes: readonly TeachingTreeNode[],
+): readonly { readonly title: string; readonly nodes: readonly TeachingTreeNode[] }[] {
+  const SEGMENT_GROUP: Readonly<Record<TeachingTreeNode['lobe'], string>> = {
+    central: 'Segments',
+    RUL: 'Right upper lobe segments',
+    RML: 'Right middle lobe segments',
+    RLL: 'Right lower lobe segments',
+    LUL: 'Left upper lobe segments',
+    lingula: 'Lingular segments',
+    LLL: 'Left lower lobe segments',
+  }
+  const groups = new Map<string, TeachingTreeNode[]>()
+  for (const node of nodes) {
+    const title =
+      node.type === 'segmental_bronchus' ? SEGMENT_GROUP[node.lobe] : 'Airways before the segments'
+    groups.set(title, [...(groups.get(title) ?? []), node])
+  }
+  return [...groups].map(([title, members]) => ({ title, nodes: members }))
+}
+
+function tourName(node: TeachingTreeNode): string {
+  return node.label ? airwayDisplayName(node.label) : node.requiredName
+}
+
+/** What a tour button says: the segment's label with its name, or the airway's name. */
+function tourButtonText(node: TeachingTreeNode): string {
+  return node.type === 'segmental_bronchus' && node.label
+    ? `${node.label} · ${node.requiredName}`
+    : node.requiredName
+}
+
+/**
+ * Normal stills introduce names independently of the difficulty of driving the scope.
+ *
+ * The stills are grouped the way the tree is (fellow walkthrough A29): the airways before the
+ * segments, then each lobe's segments, so RB1 to RB3 or RB7 to RB10 can be compared side by side
+ * and any still opened at full size. Each still keeps its own registered outline. The stills carry
+ * no orientation or camera-roll record, and the tour says so rather than labelling a wall.
+ */
 export function NormalAirwayTour({ sectionId }: { readonly sectionId: string }) {
-  const [selected, setSelected] = useState(0)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [compare, setCompare] = useState(false)
+  const headingId = useId()
   const side = sectionId === 'left-side' ? 'left' : 'right'
   const nodes = TEACHING_TREE.filter(
     (node) =>
@@ -213,41 +255,81 @@ export function NormalAirwayTour({ sectionId }: { readonly sectionId: string }) 
           ? ['TR', 'RMSB', 'BI'].includes(node.label ?? '')
           : node.side === side),
   )
-  const node = nodes[Math.min(selected, nodes.length - 1)]
+  const node = nodes.find((entry) => entry.id === selectedId) ?? nodes[0]
   if (!node || !isStillStructureId(node.lessonId)) return null
+  const groups = tourGroups(nodes)
+  const group = groups.find((entry) => entry.nodes.includes(node))!
   const parent = TEACHING_TREE.find((entry) => entry.id === node.parentId)
+  const comparing = compare && group.nodes.length > 1
+  const figure = (entry: TeachingTreeNode) =>
+    isStillStructureId(entry.lessonId) ? (
+      <MediaFigure
+        key={entry.id}
+        media={{ kind: 'endoscopic-still', structureId: entry.lessonId, outline: true }}
+        caption={tourName(entry)}
+        alt={`Endoscopic still from the course’s normal survey at the ${tourName(entry)} stop, with that opening outlined`}
+        enlargeLabel={`Enlarge the ${tourName(entry)} still`}
+        dialogTitle={`${tourName(entry)}, enlarged`}
+      />
+    ) : null
   return (
-    <section className={styles.tour} data-normal-airway-tour>
+    <section
+      className={styles.tour}
+      data-normal-airway-tour
+      data-tour-compare={comparing ? 'true' : undefined}
+    >
       <div>
-        <MediaFigure
-          media={{ kind: 'endoscopic-still', structureId: node.lessonId, outline: true }}
-          caption={node.label ? airwayDisplayName(node.label) : node.requiredName}
-        />
+        {comparing ? (
+          <div className={styles.tourCompare} data-tour-compare-grid>
+            {group.nodes.map(figure)}
+          </div>
+        ) : (
+          figure(node)
+        )}
         <p>
           Normal teaching still; clinical/media review pending. These images are not a registered
           match to the scope model or CT study.
         </p>
+        <p data-tour-frame>
+          Frame not recorded: these stills carry no orientation or camera-roll information, so this
+          page does not say which wall of an image is anterior.
+        </p>
       </div>
       <div>
-        <label>
-          Follow the normal airway tour
-          <select
-            aria-label="Airway in the normal tour"
-            value={selected}
-            onChange={(event) => setSelected(Number(event.target.value))}
+        <h3 id={headingId}>Follow the normal airway tour</h3>
+        <nav className={styles.tourNav} aria-labelledby={headingId} data-tour-nav>
+          {groups.map((entry) => (
+            <div key={entry.title} role="group" aria-label={entry.title} data-tour-group>
+              <p>{entry.title}</p>
+              <div className={styles.tourButtons}>
+                {entry.nodes.map((member) => (
+                  <button
+                    key={member.id}
+                    type="button"
+                    aria-pressed={member === node}
+                    data-tour-airway={member.label ?? member.id}
+                    onClick={() => setSelectedId(member.id)}
+                  >
+                    {tourButtonText(member)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
+        {group.nodes.length > 1 ? (
+          <button
+            type="button"
+            className={styles.tourCompareToggle}
+            aria-pressed={comparing}
+            data-tour-compare-toggle
+            onClick={() => setCompare((value) => !value)}
           >
-            {nodes.map((entry, index) => (
-              <option key={entry.id} value={index}>
-                {entry.label ? airwayDisplayName(entry.label) : entry.requiredName}
-              </option>
-            ))}
-          </select>
-        </label>
-        <h3>{node.label ? airwayDisplayName(node.label) : node.requiredName}</h3>
-        <p>
-          Parent:{' '}
-          {parent?.label ? airwayDisplayName(parent.label) : (parent?.requiredName ?? 'Trachea')}.
-        </p>
+            {comparing ? 'Show one still' : `Compare the ${group.title.toLowerCase()} side by side`}
+          </button>
+        ) : null}
+        <h3 data-tour-current>{tourName(node)}</h3>
+        <p>Parent: {parent ? tourName(parent) : 'none; the tree starts at the trachea'}.</p>
         <p>
           Name the parent first, then follow its daughter airway. The outline identifies the opening
           in this teaching example; later interpretation checks remove the worked tour.
