@@ -90,15 +90,6 @@ export function reviewedSectionIds(
   return openableIds(progress.reviewedSectionIds, sections)
 }
 
-/** Sections saved to review later, in the canonical order. */
-export function reviewLaterSections(
-  progress: ThoracoscopyProgress,
-  sections: readonly CurriculumSection[] = curriculumSections,
-): readonly CurriculumSection[] {
-  const saved = openableIds(progress.reviewLaterSectionIds, sections)
-  return sections.filter((section) => saved.has(section.id))
-}
-
 export interface ChapterGroup {
   readonly chapter: CurriculumChapter
   readonly index: number

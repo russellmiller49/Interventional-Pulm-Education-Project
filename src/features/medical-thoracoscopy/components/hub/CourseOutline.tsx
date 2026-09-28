@@ -8,7 +8,6 @@ import {
   isOpenable,
   nextStep,
   reviewedSectionIds,
-  reviewLaterSections,
   sectionLinkTarget,
   visitedSectionIds,
 } from '../../content/pathwayResolver'
@@ -32,7 +31,6 @@ export function CourseOutline({
   const groups = chapterGroups()
   const visited = visitedSectionIds(progress)
   const reviewed = reviewedSectionIds(progress)
-  const saved = new Set(reviewLaterSections(progress).map((section) => section.id))
   const step = nextStep(progress)
   const nextId = step.kind === 'section' ? step.section.id : null
   const openIndex = Math.max(
@@ -94,7 +92,6 @@ export function CourseOutline({
                     <span className={styles.sectionMeta}>
                       {meta}
                       {status}
-                      {saved.has(section.id) ? ' · saved for review' : ''}
                     </span>
                   </li>
                 )

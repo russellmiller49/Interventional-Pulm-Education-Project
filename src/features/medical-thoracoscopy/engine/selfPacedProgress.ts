@@ -3,12 +3,14 @@ import { z } from 'zod'
 import { curriculumSections, integratedCases, practiceScenarios } from '../content/curriculum'
 
 /**
- * Self-paced progress for Medical Thoracoscopy: where the learner was, what they have opened,
- * which sections they marked reviewed, and which they saved to review later.
+ * Self-paced progress for Medical Thoracoscopy: where the learner is, which sections they have
+ * visited, and which sections they have chosen to mark reviewed. Nothing else (learning contract,
+ * "What is stored").
  *
  * The course is self-paced, not an examination, and this record is all it keeps. It holds no
  * answer, no correctness, no use of help and no simulation step. Opening a section is a location
- * fact; a section is reviewed only because the learner said so, and they can take it back.
+ * fact; a section is reviewed only because the learner said so, and they can take it back. Being in
+ * a practice scenario or a case moves the place and adds nothing else.
  *
  * This module is the only writer. It writes one key and never any other: the earlier pleuroscopy
  * module's record (`ip-pleural-module-progress-v1`) is never read, written or removed. A stored
@@ -38,9 +40,6 @@ const progressSchema = z
     lastLocation: locationSchema.nullable(),
     visitedSectionIds: entryIds,
     reviewedSectionIds: entryIds,
-    reviewLaterSectionIds: entryIds,
-    openedScenarioIds: entryIds,
-    openedCaseIds: entryIds,
     updatedAt: z.string().min(1).max(64),
   })
   .strict()
@@ -62,9 +61,6 @@ export function createEmptyProgress(): ThoracoscopyProgress {
     lastLocation: null,
     visitedSectionIds: [],
     reviewedSectionIds: [],
-    reviewLaterSectionIds: [],
-    openedScenarioIds: [],
-    openedCaseIds: [],
     updatedAt: '1970-01-01T00:00:00.000Z',
   }
 }
@@ -85,9 +81,6 @@ export function parseProgress(serialized: string | null | undefined): Thoracosco
       ...data,
       visitedSectionIds: unique(data.visitedSectionIds),
       reviewedSectionIds: unique(data.reviewedSectionIds),
-      reviewLaterSectionIds: unique(data.reviewLaterSectionIds),
-      openedScenarioIds: unique(data.openedScenarioIds),
-      openedCaseIds: unique(data.openedCaseIds),
     }
   } catch {
     return null
@@ -121,31 +114,26 @@ export function isRecordable(location: ThoracoscopyLocation): boolean {
   }
 }
 
-const OPENED_LIST = {
-  section: 'visitedSectionIds',
-  'practice-scenario': 'openedScenarioIds',
-  case: 'openedCaseIds',
-} as const satisfies Record<ThoracoscopyLocation['kind'], keyof ThoracoscopyProgress>
-
-/** The learner is here now: the last location, and the place added to what has been opened. */
+/** The learner is here now. A section is also added to the sections visited. */
 export function withLocation(
   progress: ThoracoscopyProgress,
   location: ThoracoscopyLocation,
   now = new Date().toISOString(),
 ): ThoracoscopyProgress {
   if (!isRecordable(location)) return progress
-  const listKey = OPENED_LIST[location.kind]
-  const list = progress[listKey]
   const alreadyHere =
     progress.lastLocation?.kind === location.kind && progress.lastLocation.id === location.id
-  if (alreadyHere && list.includes(location.id)) return progress
-  const next: ThoracoscopyProgress = {
+  const firstVisit =
+    location.kind === 'section' && !progress.visitedSectionIds.includes(location.id)
+  if (alreadyHere && !firstVisit) return progress
+  return {
     ...progress,
     lastLocation: { kind: location.kind, id: location.id },
+    visitedSectionIds: firstVisit
+      ? [...progress.visitedSectionIds, location.id]
+      : progress.visitedSectionIds,
     updatedAt: now,
   }
-  next[listKey] = list.includes(location.id) ? list : [...list, location.id]
-  return next
 }
 
 /** The learner finished the section and says so, or takes it back. */
@@ -163,24 +151,6 @@ export function withSectionReviewed(
     reviewedSectionIds: reviewed
       ? [...progress.reviewedSectionIds, sectionId]
       : progress.reviewedSectionIds.filter((id) => id !== sectionId),
-    updatedAt: now,
-  }
-}
-
-export function withReviewLater(
-  progress: ThoracoscopyProgress,
-  sectionId: string,
-  saved: boolean,
-  now = new Date().toISOString(),
-): ThoracoscopyProgress {
-  if (!isRecordable({ kind: 'section', id: sectionId })) return progress
-  const listed = progress.reviewLaterSectionIds.includes(sectionId)
-  if (listed === saved) return progress
-  return {
-    ...progress,
-    reviewLaterSectionIds: saved
-      ? [...progress.reviewLaterSectionIds, sectionId]
-      : progress.reviewLaterSectionIds.filter((id) => id !== sectionId),
     updatedAt: now,
   }
 }
@@ -232,8 +202,4 @@ export function recordLocation(location: ThoracoscopyLocation): boolean {
 
 export function setSectionReviewed(sectionId: string, reviewed: boolean): boolean {
   return updateProgress((progress) => withSectionReviewed(progress, sectionId, reviewed))
-}
-
-export function setSectionReviewLater(sectionId: string, saved: boolean): boolean {
-  return updateProgress((progress) => withReviewLater(progress, sectionId, saved))
 }

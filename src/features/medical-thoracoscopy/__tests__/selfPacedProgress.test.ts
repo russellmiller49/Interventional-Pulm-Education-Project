@@ -5,7 +5,6 @@ import {
   readProgress,
   recordLocation,
   setSectionReviewed,
-  setSectionReviewLater,
   THORACOSCOPY_PROGRESS_CHANGED_EVENT,
   THORACOSCOPY_PROGRESS_STORAGE_KEY,
   updateProgress,
@@ -21,14 +20,31 @@ const LEGACY_KEY = 'ip-pleural-module-progress-v1'
 beforeEach(() => window.localStorage.clear())
 
 describe('progress record, with nothing open', () => {
-  it('records no visit, review or saved place for a section in preparation', () => {
+  it('keeps where the learner is, the sections visited and those marked reviewed, and nothing else', () => {
+    expect(Object.keys(createEmptyProgress()).sort()).toEqual([
+      'lastLocation',
+      'reviewedSectionIds',
+      'updatedAt',
+      'version',
+      'visitedSectionIds',
+    ])
+    for (const extra of [
+      { reviewLaterSectionIds: [] },
+      { openedScenarioIds: [] },
+      { answers: {} },
+      { score: 1 },
+    ]) {
+      expect(parseProgress(JSON.stringify({ ...createEmptyProgress(), ...extra }))).toBeNull()
+    }
+  })
+
+  it('records no visit, review or place for a section in preparation', () => {
     const events = jest.fn()
     window.addEventListener(THORACOSCOPY_PROGRESS_CHANGED_EVENT, events)
 
     expect(isRecordable({ kind: 'section', id: 'four-controls' })).toBe(false)
     expect(recordLocation({ kind: 'section', id: 'four-controls' })).toBe(false)
     expect(setSectionReviewed('four-controls', true)).toBe(false)
-    expect(setSectionReviewLater('four-controls', true)).toBe(false)
     expect(recordLocation({ kind: 'practice-scenario', id: 'P1' })).toBe(false)
     expect(recordLocation({ kind: 'case', id: 'C1' })).toBe(false)
     expect(window.localStorage.getItem(THORACOSCOPY_PROGRESS_STORAGE_KEY)).toBeNull()
