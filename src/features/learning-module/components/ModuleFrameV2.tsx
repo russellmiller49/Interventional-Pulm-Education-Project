@@ -14,6 +14,15 @@ export interface ModuleFrameV2Props {
   readonly navItems: readonly ModuleNavItem[]
   readonly navAriaLabel?: string
   readonly safetyNotice: ReactNode
+  /**
+   * A sponsorship disclosure, printed under the safety notice. Leave it out and the frame
+   * renders exactly as it did before the slot existed.
+   *
+   * It is an `<aside>`, never a `div`: module stylesheets reach the activity body as
+   * `[data-activity-frame] > div`. In activity mode the frame's chrome is hidden, so the
+   * disclosure is not rendered here either, and the lesson prints its own.
+   */
+  readonly sponsorNotice?: ReactNode
   readonly headerExtra?: ReactNode
   readonly children: ReactNode
   readonly theme?: 'light' | 'dark'
@@ -29,11 +38,19 @@ export function ModuleFrameV2({
   navItems,
   navAriaLabel,
   safetyNotice,
+  sponsorNotice,
   headerExtra,
   children,
   theme = 'light',
   activityMode = false,
 }: ModuleFrameV2Props) {
+  const showSponsorNotice =
+    !activityMode &&
+    sponsorNotice !== undefined &&
+    sponsorNotice !== null &&
+    sponsorNotice !== false &&
+    sponsorNotice !== ''
+
   return (
     <div
       className={styles.moduleFrame}
@@ -55,6 +72,16 @@ export function ModuleFrameV2({
         <ShieldAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
         <div>{safetyNotice}</div>
       </section>
+      {showSponsorNotice ? (
+        <aside
+          className={styles.sponsorNotice}
+          role="note"
+          aria-label="Sponsorship disclosure"
+          data-sponsor-notice
+        >
+          {sponsorNotice}
+        </aside>
+      ) : null}
       {activityMode ? <div className={styles.activityFrameBody}>{children}</div> : children}
     </div>
   )
