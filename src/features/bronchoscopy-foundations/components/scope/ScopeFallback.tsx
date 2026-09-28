@@ -378,6 +378,53 @@ export function ScopePaneFrame(
     }
   }
 
+  // Above the view on airway steps (A37). On the five-controls pilot bench the card follows the
+  // controls instead, so the bench keeps its SYSTEMIC-UX-01 geometry: on screen at entry on a phone
+  // (the scene draws only while visible) and next to Advance.
+  const goalCardFirst = !view.physicalControlLabels
+  const goalCard =
+    goals.length > 0 ? (
+      <section
+        className={styles.goalNow}
+        aria-labelledby={goalNowId}
+        data-scope-goal-now={currentGoal ? currentGoal.goal.id : 'all-recorded'}
+      >
+        <p id={goalNowId} className={styles.goalsHeading} data-scope-goals-group={paneGoalsClaim}>
+          {paneGoalsHeading}
+        </p>
+        <ul className={styles.goals} aria-labelledby={goalNowId} data-scope-goals>
+          {currentGoal ? (
+            <li
+              data-met="false"
+              data-goal-claim={currentGoal.claim ?? ''}
+              data-goal-current={currentGoal.goal.id}
+            >
+              {paneGoalsClaim === 'mixed' && currentGoal.claim ? (
+                <span className={styles.goalTag}>{GOAL_CLAIM_TAG[currentGoal.claim]}</span>
+              ) : null}
+              {currentGoal.goal.label}
+            </li>
+          ) : (
+            <li data-met="true" data-goal-claim={paneGoalsClaim} data-goal-summary>
+              {scopeDoneLead(paneGoalsClaim)}
+            </li>
+          )}
+        </ul>
+        {props.helpSentence ? (
+          <p className={styles.goalHelp} role="status" data-goal-help>
+            {props.helpSentence}
+          </p>
+        ) : null}
+        <p className={styles.goalsLimit} data-scope-goals-limit>
+          {scopeNowLine(state)} {GOAL_MODEL_LIMIT}
+        </p>
+        {props.allGoalsHref ? (
+          <a className={styles.allGoals} href={props.allGoalsHref} data-all-goals-link>
+            All the goals for this step
+          </a>
+        ) : null}
+      </section>
+    ) : null
   return (
     <div
       className={styles.pane}
@@ -417,48 +464,7 @@ export function ScopePaneFrame(
           <span>For reference only: it sends nothing to the scope and records nothing.</span>
         </div>
       ) : null}
-      {goals.length > 0 ? (
-        <section
-          className={styles.goalNow}
-          aria-labelledby={goalNowId}
-          data-scope-goal-now={currentGoal ? currentGoal.goal.id : 'all-recorded'}
-        >
-          <p id={goalNowId} className={styles.goalsHeading} data-scope-goals-group={paneGoalsClaim}>
-            {paneGoalsHeading}
-          </p>
-          <ul className={styles.goals} aria-labelledby={goalNowId} data-scope-goals>
-            {currentGoal ? (
-              <li
-                data-met="false"
-                data-goal-claim={currentGoal.claim ?? ''}
-                data-goal-current={currentGoal.goal.id}
-              >
-                {paneGoalsClaim === 'mixed' && currentGoal.claim ? (
-                  <span className={styles.goalTag}>{GOAL_CLAIM_TAG[currentGoal.claim]}</span>
-                ) : null}
-                {currentGoal.goal.label}
-              </li>
-            ) : (
-              <li data-met="true" data-goal-claim={paneGoalsClaim} data-goal-summary>
-                {scopeDoneLead(paneGoalsClaim)}
-              </li>
-            )}
-          </ul>
-          {props.helpSentence ? (
-            <p className={styles.goalHelp} role="status" data-goal-help>
-              {props.helpSentence}
-            </p>
-          ) : null}
-          <p className={styles.goalsLimit} data-scope-goals-limit>
-            {scopeNowLine(state)} {GOAL_MODEL_LIMIT}
-          </p>
-          {props.allGoalsHref ? (
-            <a className={styles.allGoals} href={props.allGoalsHref} data-all-goals-link>
-              All the goals for this step
-            </a>
-          ) : null}
-        </section>
-      ) : null}
+      {goalCardFirst ? goalCard : null}
       {props.opticalView ??
         (state.place === 'bench' && view.physicalControlLabels ? (
           <BenchSchematic state={state} view={view} />
@@ -574,6 +580,7 @@ export function ScopePaneFrame(
 
       {/* After the controls, so the bench and its controls stay together (SYSTEMIC-UX-01). */}
       {state.place === 'bench' && view.physicalControlLabels ? <TipCompass state={state} /> : null}
+      {goalCardFirst ? null : goalCard}
       {readouts.length > 0 ? (
         <dl
           className={styles.readouts}
