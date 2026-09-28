@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, type ReactNode } from 'react'
+import { useId, useRef, type ReactNode } from 'react'
 
 import { projectOptical } from '@/lib/bronchoscopy-core/frame'
 import { scopeOpticalFrame } from '@/lib/airway-anatomy/transport-frames'
@@ -13,8 +13,10 @@ import {
   ledgerStatus,
 } from '../../engine/scope/inspectionLedger'
 import {
+  GOAL_CLAIM_TAG,
   GOAL_GROUP_HEADING,
   GOAL_MODEL_LIMIT,
+  scopeDoneLead,
   scopeNowLine,
 } from '../../engine/scope/goalPresentation'
 import { MODEL_DEFLECTION_LIMIT_DEG } from '../../engine/scope/scopeInputs'
@@ -26,10 +28,12 @@ import {
 } from '../../engine/scope/scopeMetrics'
 import { OPTICAL_ASPECT, OPTICAL_FOV_DEG } from '../../engine/scope/scopeOstia'
 import { LocationCaptionStrip } from './LocationCaptionStrip'
-import { opticalViewName } from './scopeSceneModel'
+import { opticalViewName, PATIENT_TICK_LEGEND, patientDirectionTicks } from './scopeSceneModel'
 import styles from './scope-fallback.module.css'
 import { TreeAnswerFieldset } from './TreeAnswerFieldset'
 import { TreeMap } from './TreeMap'
+import { TipCompass } from './TipCompass'
+import { TubeCrossSection } from './TubeCrossSection'
 import { BenchSchematic } from './BenchSchematic'
 import {
   DECLARABLE_STATUSES,
@@ -161,15 +165,25 @@ export function ScopePaneFrame(
   const inputMode = useRef<ScopeInputMode>('pointer')
   const send = (command: ScopeCommand) => onCommand(command, inputMode.current)
   /**
-   * The pane repeats the step's goals under the controls, and they turn green together. The host
-   * classifies each one; where every row is met, the list says what those ticks are a record of
-   * rather than leaving a green block to be read as approval of the image (A4).
+   * The pane keeps the current goal beside the scope and its controls (fellow walkthrough A37). It
+   * used to repeat the whole list under the controls, which put a second copy of the list between
+   * the phone's view and the card's own ticking list two screens further down; now it shows the one
+   * goal the learner is on, directly above the view, and links to the full list. Above rather than
+   * between keeps the view and its controls adjacent (SYSTEMIC-UX-01). The host classifies each goal; where every
+   * one is met, the card says what those ticks are a record of rather than leaving a green row to
+   * be read as approval of the image (A4).
    */
+  const goalNowId = useId()
   const paneClaims = new Set(goals.map(({ claim }) => claim ?? 'history'))
   const paneGoalsClaim = paneClaims.size === 1 ? [...paneClaims][0] : 'mixed'
-  const paneGoalsHeading = goals.every(({ met }) => met)
-    ? GOAL_GROUP_HEADING[paneGoalsClaim]
-    : 'What this step is waiting for'
+  const currentGoal = goals.find(({ met }) => !met)
+  const paneGoalsHeading = currentGoal
+    ? 'The goal this step is waiting for'
+    : GOAL_GROUP_HEADING[paneGoalsClaim]
+  // The engine withholds names until the view is identified again (unfamiliar-clear); so does help.
+  const withheld = state.script?.phase === 'unidentified'
+  const referenceNames =
+    props.referenceLabels?.on === true && !state.inputs.branchLabels && !withheld
 
   const pins = fieldPins(state)
   const alignOffered = view.assists['align-to-branch'] === true && controlsEnabled
@@ -390,6 +404,61 @@ export function ScopePaneFrame(
         </p>
       ) : null}
 
+      {props.referenceLabels ? (
+        <div className={styles.referenceLabels} data-reference-labels-control>
+          <button
+            type="button"
+            aria-pressed={props.referenceLabels.on}
+            onClick={props.referenceLabels.onToggle}
+            data-reference-labels
+          >
+            {props.referenceLabels.on ? 'Hide the opening names' : 'Show the opening names'}
+          </button>
+          <span>For reference only: it sends nothing to the scope and records nothing.</span>
+        </div>
+      ) : null}
+      {goals.length > 0 ? (
+        <section
+          className={styles.goalNow}
+          aria-labelledby={goalNowId}
+          data-scope-goal-now={currentGoal ? currentGoal.goal.id : 'all-recorded'}
+        >
+          <p id={goalNowId} className={styles.goalsHeading} data-scope-goals-group={paneGoalsClaim}>
+            {paneGoalsHeading}
+          </p>
+          <ul className={styles.goals} aria-labelledby={goalNowId} data-scope-goals>
+            {currentGoal ? (
+              <li
+                data-met="false"
+                data-goal-claim={currentGoal.claim ?? ''}
+                data-goal-current={currentGoal.goal.id}
+              >
+                {paneGoalsClaim === 'mixed' && currentGoal.claim ? (
+                  <span className={styles.goalTag}>{GOAL_CLAIM_TAG[currentGoal.claim]}</span>
+                ) : null}
+                {currentGoal.goal.label}
+              </li>
+            ) : (
+              <li data-met="true" data-goal-claim={paneGoalsClaim} data-goal-summary>
+                {scopeDoneLead(paneGoalsClaim)}
+              </li>
+            )}
+          </ul>
+          {props.helpSentence ? (
+            <p className={styles.goalHelp} role="status" data-goal-help>
+              {props.helpSentence}
+            </p>
+          ) : null}
+          <p className={styles.goalsLimit} data-scope-goals-limit>
+            {scopeNowLine(state)} {GOAL_MODEL_LIMIT}
+          </p>
+          {props.allGoalsHref ? (
+            <a className={styles.allGoals} href={props.allGoalsHref} data-all-goals-link>
+              All the goals for this step
+            </a>
+          ) : null}
+        </section>
+      ) : null}
       {props.opticalView ??
         (state.place === 'bench' && view.physicalControlLabels ? (
           <BenchSchematic state={state} view={view} />
@@ -413,14 +482,34 @@ export function ScopePaneFrame(
                   <span /> <i /> <b />
                 </div>
               ) : null}
+              {(props.treeAnswer ? [] : patientDirectionTicks(state)).map((tick) => (
+                <span
+                  key={tick.id}
+                  className={styles.patientTick}
+                  // The field is 4:3 and its lumen round: 0.9 of the half-height on both axes.
+                  style={{ left: `${50 + 33.75 * tick.x}%`, top: `${50 - 45 * tick.y}%` }}
+                  aria-hidden="true"
+                  data-patient-tick={tick.id}
+                >
+                  {tick.id}
+                </span>
+              ))}
               {pins.map(({ pin, left, top }) => {
+                const helped = props.helpTarget === pin.label && !withheld
+                const shown = state.inputs.branchLabels || referenceNames || helped
                 const shared = {
-                  className: styles.ostium,
+                  className: [
+                    styles.ostium,
+                    referenceNames ? styles.ostiumReference : '',
+                    helped ? styles.ostiumTarget : '',
+                  ].join(' '),
                   style: { left, top },
                   'data-ostium-pin': pin.label,
-                  'aria-label': state.inputs.branchLabels ? pin.fullLabel : UNLABELED_OPENING,
+                  'data-reference-label': referenceNames ? 'true' : undefined,
+                  'data-help-target': helped ? 'true' : undefined,
+                  'aria-label': shown ? pin.fullLabel : UNLABELED_OPENING,
                 }
-                const text = state.inputs.branchLabels ? pin.label : null
+                const text = shown ? pin.label : null
                 return alignOffered ? (
                   <button
                     key={pin.label}
@@ -483,6 +572,8 @@ export function ScopePaneFrame(
           </fieldset>
         ) : null)}
 
+      {/* After the controls, so the bench and its controls stay together (SYSTEMIC-UX-01). */}
+      {state.place === 'bench' && view.physicalControlLabels ? <TipCompass state={state} /> : null}
       {readouts.length > 0 ? (
         <dl
           className={styles.readouts}
@@ -498,6 +589,15 @@ export function ScopePaneFrame(
         </dl>
       ) : null}
 
+      {view.mode === 'tube' && state.inputs.tube ? (
+        <TubeCrossSection inputs={state.inputs} />
+      ) : null}
+      {!props.treeAnswer && patientDirectionTicks(state).length > 0 ? (
+        // Below the controls, so it does not push them away from the view while steering (A37).
+        <p className={styles.frameLegend} data-frame-badge="scope">
+          {PATIENT_TICK_LEGEND}
+        </p>
+      ) : null}
       {records.length > 0 ? (
         <div
           className={styles.ledger}
@@ -573,26 +673,8 @@ export function ScopePaneFrame(
           ? lastMode === 'scripted'
             ? 'Demonstration · not your own attempt'
             : `Screen-based learning · ${lastMode ?? 'no input yet'} · not a physical-skills assessment`
-          : describeScopePerformance(state)}
+          : `${describeScopePerformance(state)}${props.referenceLabels?.used ? ' · opening names shown for reference' : ''}`}
       </p>
-
-      {goals.length > 0 ? (
-        <>
-          <p className={styles.goalsHeading} data-scope-goals-group={paneGoalsClaim}>
-            {paneGoalsHeading}
-          </p>
-          <ul className={styles.goals} aria-label={paneGoalsHeading} data-scope-goals>
-            {goals.map(({ goal, met, claim }) => (
-              <li key={goal.id} data-met={met ? 'true' : 'false'} data-goal-claim={claim ?? ''}>
-                {goal.label}
-              </li>
-            ))}
-          </ul>
-          <p className={styles.goalsLimit} data-scope-goals-limit>
-            {scopeNowLine(state)} {GOAL_MODEL_LIMIT}
-          </p>
-        </>
-      ) : null}
 
       <p className={styles.boundary} {...{ [SCOPE_DOM.boundary]: '' }}>
         <strong>Model boundary.</strong> {view.boundary}

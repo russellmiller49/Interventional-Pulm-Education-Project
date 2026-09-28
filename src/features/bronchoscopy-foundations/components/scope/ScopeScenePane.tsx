@@ -5,7 +5,7 @@ import { useCallback, useRef, useState, type KeyboardEvent } from 'react'
 import { ScopePaneFrame } from './ScopeFallback'
 import { ScopeDock } from './ScopeDock'
 import { useScopePlayback } from './useScopePlayback'
-import { SCOPE_KEY_MAP, scopeKeyCommand } from './scopeKeyMap'
+import { SCOPE_KEY_MAP, scopeKeyCommand, scopeKeyboardHint } from './scopeKeyMap'
 import { SCOPE_MODES, type ScopeMode, type ScopePaneProps } from './types'
 import styles from './scope-scene.module.css'
 import { TreeMap } from './TreeMap'
@@ -33,6 +33,7 @@ const PAUSED_SCENE_NOTE =
   'The scripted scene is held while motion is reduced. Step one second moves it on, one second at a time.'
 
 function ScopeDockWithClock(props: ScopePaneProps & { needsStep: boolean }) {
+  const keys = scopeKeyboardHint(props.view.controls)
   return (
     <>
       {props.needsStep ? (
@@ -41,6 +42,11 @@ function ScopeDockWithClock(props: ScopePaneProps & { needsStep: boolean }) {
         </p>
       ) : null}
       <ScopeDock {...props} />
+      {keys ? (
+        <p className={styles.help} data-keyboard-help>
+          {keys}
+        </p>
+      ) : null}
     </>
   )
 }
@@ -179,15 +185,6 @@ function ScenePane(props: ScopePaneProps) {
           }
         />
       )}
-      {props.view.controls.length > 0 ? (
-        <details className={styles.help}>
-          <summary>Keyboard controls</summary>
-          <p>
-            Focus the scope view. W / S: advance / withdraw; A / D: rotate; up / down arrows:
-            deflect; Space: suction. Only the controls shown for this step are active.
-          </p>
-        </details>
-      ) : null}
     </div>
   )
 }

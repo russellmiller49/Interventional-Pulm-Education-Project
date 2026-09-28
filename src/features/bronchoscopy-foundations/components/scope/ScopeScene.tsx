@@ -11,8 +11,15 @@ import { ScopeOpticalView } from './ScopeOpticalView'
 import { ObserverView } from './ObserverView'
 import { ControlHeadCloseup, DistalTipCloseup } from './BronchoscopeCloseup'
 import { useBenchPresentation } from './useBenchPresentation'
+import { benchTipOrientation } from '../../engine/scope/benchOrientation'
+import { CORDS_STATE_WORDS } from '../../engine/scope/scopeMetrics'
 import { loadSceneAssets, type ScopeSceneAssets } from './scopeSceneAssets'
-import { layoutOpticalLabels, opticalViewName, projectScenePins } from './scopeSceneModel'
+import {
+  layoutOpticalLabels,
+  opticalViewName,
+  patientDirectionTicks,
+  projectScenePins,
+} from './scopeSceneModel'
 import { treeChoiceInputId, type ScopePaneProps, type AirwayLabel } from './types'
 import styles from './scope-scene.module.css'
 
@@ -86,6 +93,11 @@ export default function ScopeScene(props: SceneProps) {
   const detailedBench =
     view.sectionId === 'five-controls' && !!view.physicalControlLabels && state.place === 'bench'
   const presentation = useBenchPresentation(state, detailedBench, props.visible)
+  // Read from the frame this pane draws, so the note and the picture cannot disagree.
+  const benchOrientation =
+    view.physicalControlLabels && state.place === 'bench'
+      ? benchTipOrientation(presentation.state)
+      : null
   const visualProps = { ...props, state: presentation.state }
   const root = useRef<HTMLDivElement>(null)
   const opticalRoot = useRef<HTMLDivElement>(null)
@@ -148,11 +160,17 @@ export default function ScopeScene(props: SceneProps) {
     update()
     return () => resize.disconnect()
   }, [assets, observer, generation])
+  // In-view labels are the learner's recorded assist; reference names are the pane's own drawing
+  // and record nothing (A30). Either way a caption points at the model's ostium point.
+  const withheld = state.script?.phase === 'unidentified'
+  const referenceNames =
+    props.referenceLabels?.on === true && !state.inputs.branchLabels && !withheld
+  const labelled = state.inputs.branchLabels || referenceNames
   const placedPins = layoutOpticalLabels(
     projectScenePins(state),
     opticalSize.width,
     opticalSize.height,
-    state.inputs.branchLabels,
+    labelled,
   )
   const pins: OstiumLabel[] = placedPins.map((pin) => ({
     edgeId: pin.edgeId,
@@ -161,6 +179,8 @@ export default function ScopeScene(props: SceneProps) {
     pointLps: pin.pointLps,
   }))
   const pointerMode = useRef<'pointer' | 'touch'>('pointer')
+  // Frame ticks stay off while a question is open on the tree, so they cannot answer it.
+  const ticks = props.treeAnswer ? [] : patientDirectionTicks(state)
   return (
     <div>
       <p className={styles.reviewStatus}>Teaching model · clinical review pending</p>
@@ -222,6 +242,14 @@ export default function ScopeScene(props: SceneProps) {
                   +
                 </span>
               ) : null}
+              {benchOrientation && !benchOrientation.cardInView ? (
+                // The end-on drawing under the views carries this in words for assistive technology.
+                <span className={styles.benchOffCard} aria-hidden="true" data-bench-off-card>
+                  The card is outside the field of view: the tip points{' '}
+                  {Math.round(benchOrientation.angleDeg)}° from straight ahead. This is the bench,
+                  not a lost view of an airway.
+                </span>
+              ) : null}
               {optical ? (
                 <div
                   className={styles.lens}
@@ -229,7 +257,7 @@ export default function ScopeScene(props: SceneProps) {
                   data-lens-state={state.signals.view}
                 />
               ) : null}
-              {state.inputs.branchLabels && optical ? (
+              {labelled && optical ? (
                 <svg
                   className={styles.pinLeaders}
                   viewBox="0 0 100 100"
@@ -245,10 +273,25 @@ export default function ScopeScene(props: SceneProps) {
                         y1={pin.topPct}
                         x2={pin.labelLeftPct}
                         y2={pin.labelTopPct}
+                        data-ostium-leader={pin.label}
                       />
                     ))}
                 </svg>
               ) : null}
+              {labelled && optical
+                ? placedPins
+                    .filter((pin) => pin.displaced)
+                    .map((pin) => (
+                      // The dot is where the model puts this opening; the caption only moved.
+                      <span
+                        key={pin.label}
+                        className={styles.ostiumAnchor}
+                        style={{ left: pin.leftPct + '%', top: pin.topPct + '%' }}
+                        aria-hidden="true"
+                        data-ostium-anchor={pin.label}
+                      />
+                    ))
+                : null}
               {state.pose && optical ? (
                 <BronchLabelOverlay
                   ostia={pins}
@@ -262,16 +305,24 @@ export default function ScopeScene(props: SceneProps) {
                     const choice = props.treeAnswer?.choices.find(
                       (choice) => choice.airway === label,
                     )
+                    const helped = props.helpTarget === label && !withheld
+                    const shown = labelled || helped
                     const shared = {
-                      className: styles.ostium,
+                      className: [
+                        styles.ostium,
+                        referenceNames ? styles.ostiumReference : '',
+                        helped ? styles.ostiumTarget : '',
+                      ].join(' '),
                       style: {
                         left: projected.labelLeftPct + '%',
                         top: projected.labelTopPct + '%',
                       },
                       'data-ostium-pin': label,
-                      'aria-label': state.inputs.branchLabels ? label : 'An opening ahead',
+                      'data-reference-label': referenceNames ? 'true' : undefined,
+                      'data-help-target': helped ? 'true' : undefined,
+                      'aria-label': shown ? label : 'An opening ahead',
                     }
-                    const text = state.inputs.branchLabels ? label : '·'
+                    const text = shown ? label : '·'
                     if (choice)
                       return (
                         <label
@@ -303,7 +354,7 @@ export default function ScopeScene(props: SceneProps) {
                           {text}
                         </button>
                       )
-                    return state.inputs.branchLabels ? (
+                    return shown ? (
                       <span key={label} {...shared}>
                         {text}
                       </span>
@@ -312,6 +363,36 @@ export default function ScopeScene(props: SceneProps) {
                 />
               ) : null}
               {state.inputs.suction ? <span className={styles.suction}>Suction on</span> : null}
+              {view.mode === 'larynx-entry' && state.place === 'larynx' ? (
+                // The phase the crossing guard reads, on the picture it is timed from (A2). The
+                // readout under the controls says the same words for assistive technology.
+                <span
+                  className={styles.phaseCue}
+                  aria-hidden="true"
+                  data-cords-cue={state.inputs.cords}
+                >
+                  True vocal folds: {CORDS_STATE_WORDS[state.inputs.cords]}
+                </span>
+              ) : null}
+              {optical
+                ? ticks.map((tick) => {
+                    const radius = (Math.min(opticalSize.width, opticalSize.height) / 2) * 0.9
+                    return (
+                      <span
+                        key={tick.id}
+                        className={styles.patientTick}
+                        style={{
+                          left: `${((opticalSize.width / 2 + radius * tick.x) / opticalSize.width) * 100}%`,
+                          top: `${((opticalSize.height / 2 - radius * tick.y) / opticalSize.height) * 100}%`,
+                        }}
+                        aria-hidden="true"
+                        data-patient-tick={tick.id}
+                      >
+                        {tick.id}
+                      </span>
+                    )
+                  })
+                : null}
             </div>
             {observer ? (
               <div

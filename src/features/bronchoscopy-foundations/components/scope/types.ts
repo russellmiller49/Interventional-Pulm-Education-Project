@@ -591,6 +591,26 @@ export interface ScopePaneProps {
   readonly treeAnswer?: TreeAnswer
   /** A control key to spotlight ("Show me where"). */
   readonly spotlightKey?: ScopeControlKey
+  /**
+   * "Show me where" for the current goal (fellow walkthrough A30): the opening it is about, ringed
+   * and named in the view while it is in the field, and one sentence on what to do. Advice only —
+   * nothing the pane does with either is an input, an assist or a record.
+   */
+  readonly helpTarget?: AirwayLabel | null
+  readonly helpSentence?: string
+  /**
+   * Opening names on request where a step does not offer the in-view labels control (A30). A
+   * reference drawn by the pane: it sends no command, records no assist, and marks nothing seen or
+   * inspected. `used` says whether it has been on during this attempt, so the pane's line about
+   * the attempt can say so.
+   */
+  /** Where the step's full goal list is, for the pane's current-goal card to link to (A37). */
+  readonly allGoalsHref?: string
+  readonly referenceLabels?: {
+    readonly on: boolean
+    readonly used: boolean
+    readonly onToggle: () => void
+  }
   readonly children?: ReactNode
 }
 

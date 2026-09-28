@@ -7,6 +7,7 @@ import { AirwaySurface, ScopeCamera } from '@/components/airway-anatomy/scope-pr
 import { updateScopeCamera } from '@/components/airway-anatomy/scope-primitives/ScopeCamera'
 import { TEACHING_LUMEN_URL } from '../../engine/scope/scopeCase'
 import { OPTICAL_FOV_DEG } from '../../engine/scope/scopeOstia'
+import { BENCH_CARD_CENTER } from '../../engine/scope/benchOrientation'
 import { DRACO_DECODER_PATH } from '../stage/scopeCaseLoader'
 import type { ScopePaneProps } from './types'
 import type { ScopeSceneAssets } from './scopeSceneAssets'
@@ -74,7 +75,7 @@ export function ScopeOpticalView({
       <Headlight />
       {state.place === 'bench' ? <BenchTarget view={view} /> : null}
       {state.place === 'bench' ? (
-        <group position={[0, 0, 65]}>
+        <group position={BENCH_CARD_CENTER}>
           <NamedModel assets={assets} file="devices/bench.glb" />
         </group>
       ) : (

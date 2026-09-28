@@ -3,6 +3,7 @@ import { projectOptical } from '@/lib/bronchoscopy-core/frame'
 import type { Vec3 } from '@/lib/airway-anatomy/types'
 import { OPTICAL_ASPECT, OPTICAL_FOV_DEG } from '../../engine/scope/scopeOstia'
 import { benchTargetObservation } from '../../engine/scope/scopeBenchTarget'
+import { benchTipOrientation } from '../../engine/scope/benchOrientation'
 import type { ScopePaneProps } from './types'
 
 /** Accessible fallback: project a fixed reference card with the actual camera frame. */
@@ -22,6 +23,7 @@ export function BenchSchematic({ state, view }: Pick<ScopePaneProps, 'state' | '
     ] as Vec3[]
   ).map(project)
   const target = view.benchTarget ? project(view.benchTarget.point) : null
+  const orientation = benchTipOrientation(state)
   const observation = view.benchTarget
     ? benchTargetObservation(state, view.benchTarget.point)
     : null
@@ -62,6 +64,11 @@ export function BenchSchematic({ state, view }: Pick<ScopePaneProps, 'state' | '
         />
       ) : null}
       <path d="M190 150 H210 M200 140 V160" stroke="#f4faff" strokeWidth="2" />
+      {orientation && !orientation.cardInView ? (
+        <text x="200" y="40" fill="#d6e4ee" fontSize="14" textAnchor="middle" data-bench-off-card>
+          The card is outside the field of view (the bench, not an airway).
+        </text>
+      ) : null}
     </svg>
   )
 }
