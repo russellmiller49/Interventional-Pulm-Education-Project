@@ -7,6 +7,10 @@ import type { DecisionScenario } from '@/features/skill-lab/engine/types'
  *
  * Reference ids on terminals point at the same paraphrased sources cited in the
  * module lessons (bts-pleural-2023, bts-procedures-2023, bts-lat-2010).
+ *
+ * A re-expansion pulmonary oedema scenario was removed on 2026-09-28. It applied
+ * thoracentesis drainage-volume limits to open-port thoracoscopy. Do not restore
+ * it, or add drainage-volume teaching here, without clinical review.
  */
 export const pleuroscopyScenarios: DecisionScenario[] = [
   {
@@ -104,104 +108,6 @@ export const pleuroscopyScenarios: DecisionScenario[] = [
           debrief:
             'The bleed was controlled, but continuing to biopsy near the intercostal vessels made it worse first. Tamponade early and biopsy over ribs.',
           referenceIds: ['bts-procedures-2023', 'bts-lat-2010'],
-        },
-      },
-    ],
-  },
-  {
-    id: 're-expansion-oedema',
-    title: 'Re-expansion pulmonary oedema during drainage',
-    briefing:
-      'You are draining a large, long-standing effusion at pleuroscopy. Recognize re-expansion pulmonary oedema and drain in a controlled way.',
-    initialVitals: { spo2: 95, hr: 96, sbp: 126 },
-    startNodeId: 'draining',
-    nodes: [
-      {
-        id: 'draining',
-        situation:
-          'After draining roughly a litre, the patient develops a cough and chest tightness. What now?',
-        decisionSeconds: 20,
-        choices: [
-          {
-            id: 'stop-slow',
-            label: 'Stop or slow drainage and reassess symptoms',
-            feedback:
-              'New cough or chest tightness during large-volume drainage suggests re-expansion; stopping is the right first move.',
-            isSafe: true,
-            nextNodeId: 'supportive',
-          },
-          {
-            id: 'keep-draining',
-            label: 'Continue draining to fully empty the pleural space',
-            feedback:
-              'Continuing high-volume drainage against symptoms increases the risk and severity of re-expansion oedema.',
-            isSafe: false,
-            vitalsDelta: { spo2: -9, hr: 18 },
-            nextNodeId: 'rpe',
-          },
-        ],
-      },
-      {
-        id: 'supportive',
-        situation: 'You paused drainage. The patient is mildly breathless with a persistent cough.',
-        decisionSeconds: 20,
-        choices: [
-          {
-            id: 'oxygen-support',
-            label: 'Give oxygen and supportive care, keep drainage controlled, and monitor',
-            feedback:
-              'Supportive care with controlled, volume-limited drainage manages mild re-expansion oedema.',
-            isSafe: true,
-            nextNodeId: 'settled',
-          },
-          {
-            id: 'resume-fast',
-            label: 'Resume rapid drainage now that fluid is flowing again',
-            feedback:
-              'Resuming rapid drainage re-triggers the same mechanism; keep it controlled and volume-limited.',
-            isSafe: false,
-            vitalsDelta: { spo2: -7 },
-            nextNodeId: 'rpe',
-          },
-        ],
-      },
-      {
-        id: 'rpe',
-        situation:
-          'The patient is now hypoxaemic with a cough productive of frothy sputum — re-expansion pulmonary oedema.',
-        decisionSeconds: 15,
-        choices: [
-          {
-            id: 'stop-support',
-            label: 'Stop drainage, give oxygen and supportive care, and escalate as needed',
-            feedback:
-              'Management is supportive: stop draining, oxygenate, and support — most cases are self-limited but can be severe.',
-            isSafe: true,
-            vitalsDelta: { spo2: 5 },
-            nextNodeId: 'rescued-late',
-          },
-        ],
-      },
-      {
-        id: 'settled',
-        situation: 'Symptoms settle with controlled drainage and supportive care.',
-        choices: [],
-        terminal: {
-          outcome: 'rescued',
-          debrief:
-            'Limiting drainage volume and responding to early symptoms prevents severe re-expansion pulmonary oedema.',
-          referenceIds: ['bts-procedures-2023'],
-        },
-      },
-      {
-        id: 'rescued-late',
-        situation: 'The patient recovers with supportive care after developing oedema.',
-        choices: [],
-        terminal: {
-          outcome: 'mixed',
-          debrief:
-            'Re-expansion oedema developed because drainage continued against symptoms. Drain large effusions in a controlled, volume-limited way and stop when symptoms appear.',
-          referenceIds: ['bts-procedures-2023'],
         },
       },
     ],
