@@ -510,6 +510,9 @@ describe('claim register', () => {
           expect(sectionIds.has(surface.id)).toBe(true)
           const written = curriculumSections.find((section) => section.id === surface.id)?.state
           expect(surface.state).toBe(written === 'in-preparation' ? 'planned' : 'written')
+        } else if (surface.kind === 'asset') {
+          const built = ['thorax-surfaces', 'survey-zones', 'port-record'].includes(surface.id)
+          expect(surface.state).toBe(built ? 'written' : 'planned')
         } else {
           expect(surface.state).toBe('planned')
         }

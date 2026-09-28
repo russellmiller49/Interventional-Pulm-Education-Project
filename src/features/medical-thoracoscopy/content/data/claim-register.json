@@ -151,7 +151,7 @@
         {
           "kind": "asset",
           "id": "port-record",
-          "state": "planned"
+          "state": "written"
         }
       ],
       "dependentRules": [
@@ -431,7 +431,7 @@
         {
           "kind": "asset",
           "id": "survey-zones",
-          "state": "planned"
+          "state": "written"
         }
       ],
       "dependentRules": ["The survey ledger has one entry for each region, in this order."],
@@ -782,7 +782,7 @@
         {
           "kind": "asset",
           "id": "thorax-surfaces",
-          "state": "planned"
+          "state": "written"
         }
       ],
       "dependentRules": [
@@ -1060,7 +1060,7 @@
         {
           "kind": "asset",
           "id": "survey-zones",
-          "state": "planned"
+          "state": "written"
         }
       ],
       "dependentRules": [

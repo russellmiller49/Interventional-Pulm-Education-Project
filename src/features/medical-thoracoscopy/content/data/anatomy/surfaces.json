@@ -1,0 +1,133 @@
+{
+  "record": "medical-thoracoscopy-anatomy-surfaces",
+  "version": 1,
+  "script": "scripts/medical-thoracoscopy/build_thorax_surfaces.py",
+  "statement": "Numbers only. The surfaces are built in the owner's local data and are not in the repository: the segmentation's terms are not settled (rights register, R-ANATOMY-SEGMENTATION).",
+  "label": "Derived from CT segmentation",
+  "frame": "LPS millimetres",
+  "presentationFromLps": [
+    [0.0, 0.0, 1.0],
+    [-1.0, 0.0, 0.0],
+    [0.0, -1.0, 0.0]
+  ],
+  "gravityLps": [1.0, 0.0, 0.0],
+  "attribution": {
+    "dataset": "Hofstad E, Bouget D, Pedersen A, Støverud K-H, Langø T, Leira HO. AeroPath: An airway segmentation benchmark dataset with challenging pathology. Zenodo; 2023, version 1. https://doi.org/10.5281/zenodo.10069289",
+    "describedIn": "Støverud KH, Bouget D, Pedersen A, et al. AeroPath: An airway segmentation benchmark dataset with challenging pathology and baseline method. PLoS One. 2024;19(10):e0311416. https://doi.org/10.1371/journal.pone.0311416",
+    "licence": "Creative Commons Attribution 4.0 International, https://creativecommons.org/licenses/by/4.0/",
+    "changes": "The material was modified. Surfaces were built from a segmentation of the scan, then simplified and divided into named regions. Nothing shown is the scan itself.",
+    "identity": "Asserted to be case 19 of the dataset; not verified against the archive."
+  },
+  "files": {
+    "pleural-space": {
+      "file": "pleural-space.glb",
+      "sha256": "1b11de26df7099f5cd7305b35191633e0120950664cb7a53e5c76b7d02459199",
+      "bytes": 660608
+    },
+    "ribs": {
+      "file": "ribs.glb",
+      "sha256": "ae6e61836e5829a0b3292204ef38ff96ecb7b05cbfd76c4e8ed041226ba2e452",
+      "bytes": 2540960
+    },
+    "context": {
+      "file": "context.glb",
+      "sha256": "2b0b85083f5744dee07be2e8a150d13520fcb780435d91645cb9cdbb783ff48b",
+      "bytes": 1305952
+    }
+  },
+  "pleuralSpace": {
+    "voxelVolumeMl": 3386.283,
+    "meshVolumeMl": 3375.456,
+    "faces": 27350,
+    "vertices": 13677,
+    "areaCm2": 1668.612,
+    "watertight": true,
+    "outward": true,
+    "closingMm": 3.0,
+    "simplifyMm": 0.5,
+    "boundsLps": [
+      [-150.37, -291.285, -470.708],
+      [22.373, -70.539, -198.117]
+    ],
+    "apexPlaneZ": -237.808,
+    "zones": [
+      {
+        "id": "diaphragm",
+        "faces": 2059,
+        "areaCm2": 206.112,
+        "shareOfSurface": 0.124,
+        "pieces": 1
+      },
+      {
+        "id": "costophrenic-recess",
+        "faces": 4269,
+        "areaCm2": 154.89,
+        "shareOfSurface": 0.093,
+        "pieces": 1
+      },
+      {
+        "id": "posterior-chest-wall",
+        "faces": 5531,
+        "areaCm2": 403.193,
+        "shareOfSurface": 0.242,
+        "pieces": 1
+      },
+      {
+        "id": "apex",
+        "faces": 1820,
+        "areaCm2": 143.946,
+        "shareOfSurface": 0.086,
+        "pieces": 1
+      },
+      {
+        "id": "anterior-chest-wall",
+        "faces": 3147,
+        "areaCm2": 269.591,
+        "shareOfSurface": 0.162,
+        "pieces": 1
+      },
+      {
+        "id": "mediastinum",
+        "faces": 8455,
+        "areaCm2": 344.89,
+        "shareOfSurface": 0.207,
+        "pieces": 1
+      },
+      {
+        "id": "lateral-chest-wall",
+        "faces": 2069,
+        "areaCm2": 145.99,
+        "shareOfSurface": 0.087,
+        "pieces": 1
+      }
+    ],
+    "facesInExactlyOneZone": 27350
+  },
+  "context": {
+    "diaphragm": {
+      "faces": 7787
+    },
+    "heart": {
+      "faces": 7380
+    },
+    "aorta": {
+      "faces": 5077
+    },
+    "superior-vena-cava": {
+      "faces": 1374
+    },
+    "inferior-vena-cava": {
+      "faces": 1550
+    },
+    "pulmonary-artery": {
+      "faces": 5416
+    },
+    "skin": {
+      "faces": 25466
+    }
+  },
+  "sternum": {
+    "faces": 5770,
+    "volumeMl": 84.401
+  }
+}

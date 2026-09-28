@@ -1,0 +1,370 @@
+{
+  "record": "medical-thoracoscopy-anatomy-source-audit",
+  "version": 1,
+  "script": "scripts/medical-thoracoscopy/audit_thorax_sources.py",
+  "statement": "Numbers only. The CT and its segmentation stay in the owner's local data. Segments are identified by what they were measured to contain, never by the names in the file.",
+  "frame": "LPS millimetres",
+  "ct": {
+    "file": "19_CT_HR.nii",
+    "sha256": "15fd4ac2ecd3183b403803793bedd289b1befd0fdae331e1967cbcc5b103467a",
+    "bytes": 349176160,
+    "size": [512, 512, 666],
+    "spacing": [0.738, 0.738, 0.499],
+    "origin": [-173.631, -387.631, -508.9]
+  },
+  "segmentation": {
+    "file": "19_CT_HR segmentation_final.seg.nrrd",
+    "sha256": "d08b62497cd06131d4b9404fa7f411f223571134473c504c443d39f9d603d99b",
+    "bytes": 6462465,
+    "layers": 5,
+    "size": [512, 512, 669],
+    "spacing": [0.738, 0.738, 0.499],
+    "origin": [-173.631, -387.631, -509.399],
+    "space": "left-posterior-superior"
+  },
+  "segmentationSliceOffset": 1,
+  "segments": [
+    {
+      "key": "right-lung-upper",
+      "layer": 0,
+      "value": 78,
+      "nameInFile": "upper lobe of right lung",
+      "contains": "Right upper lobe",
+      "volumeMl": 1233.977,
+      "huMean": -635.354,
+      "huSd": 267.242,
+      "lpsMin": [-118.26, -290.178, -345.146],
+      "lpsMax": [22.013, -115.205, -198.367],
+      "pieces": 1,
+      "expected": {
+        "volumeMl": [1100, 1350],
+        "huMean": [-760, -520]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "right-lung-middle",
+      "layer": 0,
+      "value": 79,
+      "nameInFile": "middle lobe of right lung",
+      "contains": "Right middle lobe",
+      "volumeMl": 489.335,
+      "huMean": -696.988,
+      "huSd": 179.447,
+      "lpsMin": [-133.026, -290.916, -415.54],
+      "lpsMax": [7.986, -180.174, -323.679],
+      "pieces": 1,
+      "expected": {
+        "volumeMl": [420, 560],
+        "huMean": [-800, -600]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "right-lung-lower",
+      "layer": 2,
+      "value": 2,
+      "nameInFile": "lower lobe of right lung",
+      "contains": "Right lower lobe",
+      "volumeMl": 708.095,
+      "huMean": -643.779,
+      "huSd": 235.829,
+      "lpsMin": [-137.455, -241.451, -427.023],
+      "lpsMax": [-0.873, -118.897, -301.712],
+      "pieces": 1,
+      "expected": {
+        "volumeMl": [620, 800],
+        "huMean": [-760, -520]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "right-effusion",
+      "layer": 3,
+      "value": 3,
+      "nameInFile": "right pleural effusion",
+      "contains": "Right pleural effusion",
+      "volumeMl": 931.964,
+      "huMean": 5.724,
+      "huSd": 40.542,
+      "lpsMin": [-150.006, -189.033, -470.458],
+      "lpsMax": [13.154, -70.908, -200.863],
+      "pieces": 1,
+      "expected": {
+        "volumeMl": [850, 1010],
+        "huMean": [-30, 40]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "rib-cage",
+      "layer": 1,
+      "value": 3,
+      "nameInFile": "thoracic cavity",
+      "contains": "The rib cage, both sides (the file names it thoracic cavity)",
+      "volumeMl": 909.863,
+      "huMean": 247.397,
+      "huSd": 228.269,
+      "lpsMin": [-158.865, -315.279, -508.9],
+      "lpsMax": [171.146, -59.096, -175.901],
+      "pieces": 7,
+      "expected": {
+        "volumeMl": [820, 1000],
+        "huMean": [180, 320]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "spine",
+      "layer": 0,
+      "value": 82,
+      "nameInFile": "spine",
+      "contains": "The vertebral column",
+      "volumeMl": 539.077,
+      "huMean": 233.829,
+      "huSd": 201.11,
+      "lpsMin": [-40.002, -204.537, -509.399],
+      "lpsMax": [44.9, -43.592, -176.4],
+      "pieces": 1,
+      "expected": {
+        "volumeMl": [480, 600],
+        "huMean": [170, 300]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "diaphragm",
+      "layer": 4,
+      "value": 2,
+      "nameInFile": "diaphragm",
+      "contains": "The diaphragm",
+      "volumeMl": 596.239,
+      "huMean": -42.692,
+      "huSd": 131.445,
+      "lpsMin": [-144.838, -313.065, -509.399],
+      "lpsMax": [157.119, -71.647, -389.579],
+      "pieces": 1,
+      "expected": {
+        "volumeMl": [530, 660],
+        "huMean": [-110, 30]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "liver",
+      "layer": 1,
+      "value": 1,
+      "nameInFile": "liver",
+      "contains": "The liver",
+      "volumeMl": 1841.05,
+      "huMean": 51.158,
+      "huSd": 44.972,
+      "lpsMin": [-151.483, -309.373, -508.9],
+      "lpsMax": [48.592, -76.076, -401.561],
+      "pieces": 1,
+      "expected": {
+        "volumeMl": [1650, 2050],
+        "huMean": [20, 80]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "heart",
+      "layer": 1,
+      "value": 4,
+      "nameInFile": "heart",
+      "contains": "The heart",
+      "volumeMl": 927.559,
+      "huMean": 35.506,
+      "huSd": 40.856,
+      "lpsMin": [-35.572, -292.393, -420.533],
+      "lpsMax": [111.345, -158.764, -307.703],
+      "pieces": 2,
+      "expected": {
+        "volumeMl": [830, 1030],
+        "huMean": [0, 70]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "aorta",
+      "layer": 0,
+      "value": 83,
+      "nameInFile": "aorta",
+      "contains": "The aorta",
+      "volumeMl": 306.942,
+      "huMean": 60.261,
+      "huSd": 118.054,
+      "lpsMin": [-14.901, -253.264, -509.399],
+      "lpsMax": [49.33, -118.158, -245.297],
+      "pieces": 1,
+      "expected": {
+        "volumeMl": [270, 340],
+        "huMean": [0, 120]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "superior-vena-cava",
+      "layer": 0,
+      "value": 84,
+      "nameInFile": "superior vena cava",
+      "contains": "The superior vena cava",
+      "volumeMl": 30.772,
+      "huMean": 32.827,
+      "huSd": 37.039,
+      "lpsMin": [-29.666, -237.76, -341.152],
+      "lpsMax": [-3.088, -199.369, -255.281],
+      "pieces": 1,
+      "expected": {
+        "volumeMl": [25, 37],
+        "huMean": [0, 70]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "inferior-vena-cava",
+      "layer": 0,
+      "value": 87,
+      "nameInFile": "inferior vena cava",
+      "contains": "The inferior vena cava",
+      "volumeMl": 65.314,
+      "huMean": 40.268,
+      "huSd": 46.725,
+      "lpsMin": [-36.311, -216.35, -509.399],
+      "lpsMax": [4.295, -148.428, -376.1],
+      "pieces": 1,
+      "expected": {
+        "volumeMl": [55, 76],
+        "huMean": [0, 80]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "pulmonary-artery",
+      "layer": 3,
+      "value": 1,
+      "nameInFile": "pulmonary artery",
+      "contains": "The pulmonary arteries",
+      "volumeMl": 309.676,
+      "huMean": -41.581,
+      "huSd": 171.828,
+      "lpsMin": [-128.596, -282.795, -430.019],
+      "lpsMax": [148.998, -102.655, -206.355],
+      "pieces": 66,
+      "expected": {
+        "volumeMl": [270, 350],
+        "huMean": [-120, 40]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "pulmonary-vein",
+      "layer": 4,
+      "value": 1,
+      "nameInFile": "pulmonary vein",
+      "contains": "The pulmonary veins",
+      "volumeMl": 155.84,
+      "huMean": -136.776,
+      "huSd": 235.97,
+      "lpsMin": [-129.334, -284.272, -423.528],
+      "lpsMax": [150.474, -102.655, -203.859],
+      "pieces": 32,
+      "expected": {
+        "volumeMl": [130, 180],
+        "huMean": [-250, 0]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "esophagus",
+      "layer": 0,
+      "value": 73,
+      "nameInFile": "esophagus",
+      "contains": "The oesophagus",
+      "volumeMl": 47.678,
+      "huMean": -12.065,
+      "huSd": 148.185,
+      "lpsMin": [1.342, -212.658, -429.519],
+      "lpsMax": [33.088, -142.522, -188.881],
+      "pieces": 1,
+      "expected": {
+        "volumeMl": [40, 56],
+        "huMean": [-60, 40]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "airway",
+      "layer": 1,
+      "value": 2,
+      "nameInFile": "trachea and bronchus",
+      "contains": "The trachea and bronchi",
+      "volumeMl": 82.173,
+      "huMean": -949.855,
+      "huSd": 112.632,
+      "lpsMin": [-110.877, -270.983, -408.551],
+      "lpsMax": [127.588, -114.467, -176.899],
+      "pieces": 71,
+      "expected": {
+        "volumeMl": [70, 95],
+        "huMean": [-1000, -880]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "left-lung-upper",
+      "layer": 0,
+      "value": 76,
+      "nameInFile": "upper lobe of left lung",
+      "contains": "Left upper lobe",
+      "volumeMl": 1385.857,
+      "huMean": -680.047,
+      "huSd": 210.316,
+      "lpsMin": [18.322, -293.131, -437.008],
+      "lpsMax": [150.474, -112.252, -190.878],
+      "pieces": 1,
+      "expected": {
+        "volumeMl": [1250, 1520],
+        "huMean": [-780, -580]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "left-lung-lower",
+      "layer": 2,
+      "value": 1,
+      "nameInFile": "lower lobe of left lung",
+      "contains": "Left lower lobe",
+      "volumeMl": 970.148,
+      "huMean": -642.333,
+      "huSd": 192.455,
+      "lpsMin": [34.564, -240.713, -442.999],
+      "lpsMax": [157.119, -92.319, -262.77],
+      "pieces": 1,
+      "expected": {
+        "volumeMl": [870, 1070],
+        "huMean": [-740, -540]
+      },
+      "matchesExpected": true
+    },
+    {
+      "key": "skin",
+      "layer": 2,
+      "value": 3,
+      "nameInFile": "skin",
+      "contains": "Skin and subcutaneous tissue, where the scan holds them",
+      "volumeMl": 3549.907,
+      "huMean": -68.49,
+      "huSd": 92.77,
+      "lpsMin": [-173.631, -327.83, -508.9],
+      "lpsMax": [203.631, -28.088, -176.899],
+      "pieces": 1,
+      "expected": {
+        "volumeMl": [3200, 3900],
+        "huMean": [-110, -30]
+      },
+      "matchesExpected": true
+    }
+  ]
+}
