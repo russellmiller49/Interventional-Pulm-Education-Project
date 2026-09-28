@@ -43,6 +43,7 @@ row to change and what to change it to.
 | T7  | Where the chest view is seen from                             | The patient's front, head to the right of the screen                                                                                                                                                                                | Proposed change |
 | T8  | Wording of the second control                                 | "Where the scope looks (pivot, depth, roll)". The original wording trips the learner-copy check on the word "points"                                                                                                                | Proposed change |
 | T9  | Finishing a section                                           | Marks it reviewed, with undo. A second action leaves without marking                                                                                                                                                                | Proposed change |
+| T10 | Title of section 18 (`complications`)                         | "When a complication happens". The imported title, "When something goes wrong", trips the learner-copy check on "wrong"; it stays in the manifest unchanged                                                                         | Proposed change |
 
 ### Sponsorship and rights
 

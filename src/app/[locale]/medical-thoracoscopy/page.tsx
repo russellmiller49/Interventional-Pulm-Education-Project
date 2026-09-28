@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import { InPreparation } from '@/features/medical-thoracoscopy/components/InPreparation'
+import { MedicalThoracoscopyHub } from '@/features/medical-thoracoscopy/components/hub/MedicalThoracoscopyHub'
 import { MedicalThoracoscopyModuleFrame } from '@/features/medical-thoracoscopy/components/MedicalThoracoscopyModuleFrame'
 import { MEDICAL_THORACOSCOPY_NAV_BASE } from '@/features/medical-thoracoscopy/content/routes'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
@@ -27,14 +27,7 @@ export default async function MedicalThoracoscopyPage({
   setRequestLocale(locale)
   return (
     <MedicalThoracoscopyModuleFrame locale={locale} activeHref={MEDICAL_THORACOSCOPY_NAV_BASE}>
-      <InPreparation heading="This course is being built">
-        <p>
-          It takes you from deciding whether looking inside the chest will help, through the
-          instrument, the port and a systematic survey of the pleural space, to biopsy, pleurodesis
-          and finishing safely. Sections open here as they are written.
-        </p>
-        <p>Nothing in the course has been clinically reviewed yet.</p>
-      </InPreparation>
+      <MedicalThoracoscopyHub />
     </MedicalThoracoscopyModuleFrame>
   )
 }
