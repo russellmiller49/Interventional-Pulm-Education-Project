@@ -1,0 +1,1842 @@
+{
+  "definitions": "medical-thoracoscopy-device-definitions",
+  "version": 1,
+  "preparedOn": "2026-09-28",
+  "preparedBy": "AI authoring assistant (Claude) at the owner's request",
+  "statement": "Device facts copied from manufacturer documents and from records the manufacturer submitted to the FDA device database, each with the document and place it was read. Nothing here has been fact-checked by the manufacturer: every fact check reads NOT REVIEWED. A dimensional comparison is not a statement of compatibility. Values that were measured from images or chosen by the author are marked as such and are not device facts.",
+  "units": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "intendedMarket": {
+    "value": "US",
+    "status": "unresolved input",
+    "note": "Assumed from the US sell sheet. The owner has not confirmed the market or the exact kit."
+  },
+  "frame": {
+    "origin": "the centre of the distal face",
+    "axes": {
+      "minusZ": "distally, along the shaft",
+      "plusY": "from the channel toward the optic",
+      "plusX": "image right"
+    },
+    "status": "proposed change"
+  },
+  "labelUntilCad": "Educational rendering from published dimensions",
+  "documents": [
+    {
+      "id": "S-US",
+      "kind": "manufacturer sell sheet",
+      "title": "Mini-Thoracoscopy Set for single-port medical thoracoscopy",
+      "documentNumber": "2323-07.01-0624USA",
+      "publisher": "Richard Wolf Medical Instruments Corporation",
+      "market": "US",
+      "documentDate": "2024-06",
+      "dateBasis": "The 0624 in the document number. The file was created on 2024-08-13.",
+      "pages": 2,
+      "sha256": "7de8bf21a24ddd98d332e731c82747c36a8a97f98ab9d25a07847fffd898c866",
+      "url": "https://www.richard-wolf.com/fileadmin/USA/Brochures/2323-07.01-0624USA_Mini_Thoracoscopy_Set_SS.pdf",
+      "retrievedOn": "2026-09-27"
+    },
+    {
+      "id": "S-INT",
+      "kind": "manufacturer brochure",
+      "title": "Mini Thoracoscopy Set for Single Port Technique",
+      "documentNumber": "B779en021221",
+      "publisher": "Richard Wolf GmbH",
+      "market": "International",
+      "documentDate": "2021-12",
+      "dateBasis": "The file was created on 2021-12-02.",
+      "pages": 2,
+      "sha256": "5c742a18ed7adde389c316a90714e555174a62683216a06a44c8e227fd113c78",
+      "url": "https://www.richard-wolf.com/fileadmin/user_upload/UEbergang_2021/B779en021221_Mini_Thoracoscopy_Set.pdf",
+      "retrievedOn": "2026-09-27"
+    },
+    {
+      "id": "S-CAT",
+      "kind": "manufacturer catalogue",
+      "title": "Bronchoscopy / Thoracoscopy / Mediastinoscopy catalogue, chapter 3: Thoracoscopy",
+      "documentNumber": "VI25, as printed in the page margin",
+      "publisher": "Richard Wolf GmbH",
+      "market": "International",
+      "documentDate": "2025-10",
+      "dateBasis": "The file was created on 2025-10-22.",
+      "pages": 122,
+      "sha256": "fb8e5bc743c8b1f7efaddaa3da5eb8a2530ccd9a070282f353301d7aa84c0c74",
+      "url": null,
+      "retrievedOn": null,
+      "note": "Supplied by the owner. Its web address was not recorded."
+    },
+    {
+      "id": "S-ERA",
+      "kind": "manufacturer brochure",
+      "title": "ERAGONmodular mini 3.5 mm: comprehensive instrument solutions for minilaparoscopy",
+      "documentNumber": "1094-07.03-0622USA, from the file name",
+      "publisher": "Richard Wolf Medical Instruments Corporation",
+      "market": "US",
+      "documentDate": "2022-06",
+      "dateBasis": "The 0622 in the file name. The file was created on 2023-04-04.",
+      "pages": 8,
+      "sha256": "0d927d27aab17d7a0dbdc59a41bf74709b67846559a6584bb6771b0127e88cca",
+      "url": "https://www.richard-wolf.com/fileadmin/USA/Brochures/General_Surgery/1094-07.03-0622USA_ERAGON_Brochure_3.5mm.pdf",
+      "retrievedOn": "2026-09-27"
+    },
+    {
+      "id": "S-GUDID",
+      "kind": "regulatory database",
+      "title": "AccessGUDID, full delimited release",
+      "documentNumber": "Release of 2026-07-23",
+      "publisher": "US Food and Drug Administration and National Library of Medicine",
+      "market": "US",
+      "documentDate": "2026-07-23",
+      "dateBasis": "The release date. Each record is cited by its primary device identifier and public version date.",
+      "pages": null,
+      "sha256": null,
+      "url": "https://accessgudid.nlm.nih.gov/",
+      "retrievedOn": "2026-07-23",
+      "note": "Records are submitted by the manufacturer. A record is not a fact-check."
+    }
+  ],
+  "devices": [
+    {
+      "id": "operative-telescope",
+      "name": "Operative telescope, 5.5 mm, with a 3.5 mm working channel",
+      "role": "telescope",
+      "inPrototype": true,
+      "modelled": true,
+      "productNumbers": [
+        {
+          "number": "8920.401",
+          "what": "telescope",
+          "market": "US and International"
+        },
+        {
+          "number": "89204015",
+          "what": "bundle",
+          "market": "US"
+        },
+        {
+          "number": "8920.4011",
+          "what": "bundle",
+          "market": "International"
+        }
+      ],
+      "facts": [
+        {
+          "key": "directionOfView",
+          "label": "Direction of view",
+          "value": 0,
+          "unit": "deg",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 43"
+            },
+            {
+              "document": "S-INT",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207022092, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "shaftOuterDiameter",
+          "label": "Shaft outer diameter",
+          "value": 5.5,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 43"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207022092, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "shaftLength",
+          "label": "Shaft length",
+          "value": 215,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 43"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207022092, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          },
+          "note": "The shaft only. The body and the side eyepiece have their own anchors."
+        },
+        {
+          "key": "totalLength",
+          "label": "Total length",
+          "value": 370,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-CAT",
+              "locator": "page 43"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207022092, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "workingChannelDiameter",
+          "label": "Working channel diameter",
+          "value": 3.5,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 43"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207022092, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyepiece",
+          "label": "Eyepiece",
+          "value": "lateral",
+          "unit": null,
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207022092, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "automaticValveInnerDiameter",
+          "label": "Automatic valve, inner diameter",
+          "value": 5.7,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 42"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207022085, public version of 2024-11-26"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          },
+          "note": "Part 8920.311."
+        },
+        {
+          "key": "sealingMembraneDiameter",
+          "label": "Sealing membrane diameter",
+          "value": 17,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 42"
+            },
+            {
+              "document": "S-INT",
+              "locator": "page 2"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          },
+          "note": "Part 89.103."
+        },
+        {
+          "key": "imageTransmission",
+          "label": "How the image is carried",
+          "value": null,
+          "unit": null,
+          "category": "device fact",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-INT",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207022092, public version of 2024-11-21"
+            }
+          ],
+          "neededBy": ["the-instrument"],
+          "note": "Manufacturer documents differ on this. Nothing about the optics is taught until the manufacturer confirms it.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "sealingCap",
+          "label": "Sealing cap supplied with the bundle",
+          "value": null,
+          "unit": null,
+          "category": "device fact",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 42"
+            },
+            {
+              "document": "S-INT",
+              "locator": "page 2"
+            }
+          ],
+          "neededBy": ["the-instrument"],
+          "note": "The US and international bundles list different sealing caps.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "fieldOfView",
+          "label": "Field of view",
+          "value": null,
+          "unit": "deg",
+          "category": "authored simulation assumption",
+          "status": "unresolved input",
+          "sources": [],
+          "neededBy": ["normal-pleural-space", "four-controls", "systematic-survey"],
+          "note": "Not published in any document read. Until the manufacturer supplies it, the view uses an authored value, labelled as one.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "opticOffsetOnTip",
+          "label": "Position of the optic on the distal face",
+          "value": null,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "unresolved input",
+          "sources": [],
+          "neededBy": ["four-controls", "systematic-survey"],
+          "note": "To be measured from a reference frame of the tip.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "channelExitOnTip",
+          "label": "Position of the channel exit on the distal face",
+          "value": null,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "unresolved input",
+          "sources": [],
+          "neededBy": ["taking-biopsies"],
+          "note": "To be measured from a reference frame of the tip.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "channelLength",
+          "label": "Length of the working channel, entry to exit",
+          "value": null,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "unresolved input",
+          "sources": [],
+          "neededBy": ["taking-biopsies"],
+          "note": "To be measured from the side view. It sets how far a tool can reach beyond the tip.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "eyepieceAngle",
+          "label": "Angle of the eyepiece to the shaft",
+          "value": null,
+          "unit": "deg",
+          "category": "derived measurement",
+          "status": "unresolved input",
+          "sources": [],
+          "neededBy": ["the-instrument"],
+          "note": "To be measured from the side view.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "trocar-sleeve-flexible",
+      "name": "Trocar sleeve, flexible, straight, with rubber cap",
+      "role": "sleeve",
+      "inPrototype": true,
+      "modelled": true,
+      "productNumbers": [
+        {
+          "number": "8906.051",
+          "what": "sleeve",
+          "market": "US and International"
+        }
+      ],
+      "facts": [
+        {
+          "key": "capacity",
+          "label": "Capacity",
+          "value": 5.7,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 42"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 50"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207021835, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "workingLength",
+          "label": "Working length",
+          "value": 60,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 42"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 50"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207021835, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          },
+          "note": "Manufacturer documents differ on this value. The value given is the one in the US documents."
+        },
+        {
+          "key": "construction",
+          "label": "Construction",
+          "value": "flexible plastic sheath with thread, distal tip straight, rubber cap",
+          "unit": null,
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207021835, public version of 2024-11-21"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 50"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "outerDiameter",
+          "label": "Outer diameter over the thread",
+          "value": null,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "unresolved input",
+          "sources": [],
+          "neededBy": ["four-controls", "choosing-the-port", "systematic-survey"],
+          "note": "Not published. To be measured from a reference frame. It decides how far the scope can tilt between two ribs.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "trocar-for-flexible-sleeve",
+      "name": "Trocar for the flexible sleeve",
+      "role": "trocar",
+      "inPrototype": false,
+      "modelled": true,
+      "productNumbers": [
+        {
+          "number": "8906.151",
+          "what": "trocar",
+          "market": "US and International"
+        }
+      ],
+      "facts": [
+        {
+          "key": "size",
+          "label": "Size",
+          "value": 5.5,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 42"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207021880, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "workingLength",
+          "label": "Working length",
+          "value": 83,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 42"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207021880, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "tip",
+          "label": "Tip",
+          "value": "rounded, dull",
+          "unit": null,
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207021880, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "trocar-sleeve-with-valves",
+      "name": "Trocar sleeve, straight, with membrane valve and insufflation valve",
+      "role": "sleeve",
+      "inPrototype": false,
+      "modelled": true,
+      "productNumbers": [
+        {
+          "number": "8919.333",
+          "what": "sleeve",
+          "market": "US"
+        }
+      ],
+      "facts": [
+        {
+          "key": "capacity",
+          "label": "Capacity",
+          "value": 5.5,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 49"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207021996, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "workingLength",
+          "label": "Working length",
+          "value": 62,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 49"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207021996, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "construction",
+          "label": "Construction",
+          "value": "flexible plastic sheath with thread, distal tip straight, membrane valve, insufflation valve",
+          "unit": null,
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207021996, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "outerDiameter",
+          "label": "Outer diameter over the thread",
+          "value": null,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "unresolved input",
+          "sources": [],
+          "neededBy": ["the-instrument"],
+          "note": "Not published. To be measured from a reference frame.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "trocar-for-sleeve-with-valves",
+      "name": "Trocar for the sleeve with valves",
+      "role": "trocar",
+      "inPrototype": false,
+      "modelled": true,
+      "productNumbers": [
+        {
+          "number": "8919.3311",
+          "what": "trocar",
+          "market": "US"
+        }
+      ],
+      "facts": [
+        {
+          "key": "size",
+          "label": "Size",
+          "value": 5.5,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207028735, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "workingLength",
+          "label": "Working length",
+          "value": 104,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 49"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207028735, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "tip",
+          "label": "Tip",
+          "value": "rounded, dull",
+          "unit": null,
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207028735, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "double-spoon-forceps",
+      "name": "Double-spoon forceps, monopolar, 3.5 mm",
+      "role": "tool",
+      "inPrototype": true,
+      "modelled": true,
+      "productNumbers": [
+        {
+          "number": "83912167",
+          "what": "bundle",
+          "market": "US and International"
+        },
+        {
+          "number": "8391216",
+          "what": "jaw insert",
+          "market": "US and International"
+        },
+        {
+          "number": "8391933",
+          "what": "insulated sheath tube",
+          "market": "US and International"
+        },
+        {
+          "number": "83930074",
+          "what": "handle, pistol shaped, with lock",
+          "market": "US and International"
+        }
+      ],
+      "facts": [
+        {
+          "key": "shaftOuterDiameter",
+          "label": "Shaft outer diameter",
+          "value": 3.5,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-ERA",
+              "locator": "page 5"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207062562, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "sheathLength",
+          "label": "Sheath length",
+          "value": 330,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-INT",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207015636, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "jawLength",
+          "label": "Jaw length",
+          "value": 12,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207042168, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "jawAction",
+          "label": "Jaw action",
+          "value": "double action",
+          "unit": null,
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207042168, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "energy",
+          "label": "Energy",
+          "value": "monopolar",
+          "unit": null,
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207026625, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          },
+          "note": "Energy settings are never authored. They follow the instructions for use and local protocol."
+        },
+        {
+          "key": "jawOpeningAngle",
+          "label": "Jaw opening angle, fully open",
+          "value": null,
+          "unit": "deg",
+          "category": "derived measurement",
+          "status": "unresolved input",
+          "sources": [],
+          "neededBy": ["taking-biopsies"],
+          "note": "To be measured from a reference frame.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "dissection-forceps",
+      "name": "Dissection forceps, monopolar, 3.5 mm",
+      "role": "tool",
+      "inPrototype": false,
+      "modelled": true,
+      "productNumbers": [
+        {
+          "number": "83912227",
+          "what": "bundle",
+          "market": "US"
+        },
+        {
+          "number": "8391222",
+          "what": "jaw insert",
+          "market": "US"
+        },
+        {
+          "number": "8391933",
+          "what": "insulated sheath tube",
+          "market": "US and International"
+        },
+        {
+          "number": "83930074",
+          "what": "handle, pistol shaped, with lock",
+          "market": "US and International"
+        }
+      ],
+      "facts": [
+        {
+          "key": "shaftOuterDiameter",
+          "label": "Shaft outer diameter",
+          "value": 3.5,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-ERA",
+              "locator": "page 5"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207062500, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "sheathLength",
+          "label": "Sheath length",
+          "value": 330,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207015636, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "jawLength",
+          "label": "Jaw length",
+          "value": 14,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207042229, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "jawAction",
+          "label": "Jaw action",
+          "value": "double action",
+          "unit": null,
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207042229, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "hook-electrode",
+      "name": "Hook electrode, monopolar, 3.5 mm",
+      "role": "tool",
+      "inPrototype": false,
+      "modelled": true,
+      "productNumbers": [
+        {
+          "number": "8379.452",
+          "what": "electrode",
+          "market": "US and International"
+        }
+      ],
+      "facts": [
+        {
+          "key": "shaftOuterDiameter",
+          "label": "Shaft outer diameter",
+          "value": 3.5,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 42"
+            },
+            {
+              "document": "S-INT",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-ERA",
+              "locator": "page 8"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207014936, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "workingLength",
+          "label": "Working length",
+          "value": 310,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 42"
+            },
+            {
+              "document": "S-INT",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-ERA",
+              "locator": "page 8"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207014936, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "button-electrode",
+      "name": "Coagulation electrode, button, monopolar, 3.5 mm",
+      "role": "tool",
+      "inPrototype": false,
+      "modelled": true,
+      "productNumbers": [
+        {
+          "number": "8379.462",
+          "what": "electrode",
+          "market": "US and International"
+        }
+      ],
+      "facts": [
+        {
+          "key": "shaftOuterDiameter",
+          "label": "Shaft outer diameter",
+          "value": 3.5,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 42"
+            },
+            {
+              "document": "S-INT",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-ERA",
+              "locator": "page 8"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207014943, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "workingLength",
+          "label": "Working length",
+          "value": 310,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 42"
+            },
+            {
+              "document": "S-INT",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-ERA",
+              "locator": "page 8"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207014943, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "probe",
+      "name": "Probe, graduated, 3.5 mm",
+      "role": "tool",
+      "inPrototype": false,
+      "modelled": true,
+      "productNumbers": [
+        {
+          "number": "8379.672",
+          "what": "probe",
+          "market": "US and International"
+        }
+      ],
+      "facts": [
+        {
+          "key": "shaftOuterDiameter",
+          "label": "Shaft outer diameter",
+          "value": 3.5,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-ERA",
+              "locator": "page 8"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207014967, public version of 2025-01-08"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        },
+        {
+          "key": "workingLength",
+          "label": "Working length",
+          "value": 250,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-ERA",
+              "locator": "page 8"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207014967, public version of 2025-01-08"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          },
+          "note": "Manufacturer documents differ on this value. The value given is the one in the US documents."
+        },
+        {
+          "key": "graduationInterval",
+          "label": "Interval between graduations",
+          "value": null,
+          "unit": "mm",
+          "category": "derived measurement",
+          "status": "unresolved input",
+          "sources": [],
+          "neededBy": ["the-instrument"],
+          "note": "Not published. To be measured from a reference frame.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "suction-tube",
+      "name": "Suction tube",
+      "role": "tool",
+      "inPrototype": false,
+      "modelled": true,
+      "productNumbers": [
+        {
+          "number": "8380.68",
+          "what": "suction tube",
+          "market": "US and International"
+        }
+      ],
+      "facts": [
+        {
+          "key": "outerDiameter",
+          "label": "Outer diameter",
+          "value": 2.8,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 42"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207040041, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          },
+          "note": "Manufacturer documents differ on this value. The value given is the one in the US documents."
+        },
+        {
+          "key": "workingLength",
+          "label": "Working length",
+          "value": 450,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-CAT",
+              "locator": "page 42"
+            },
+            {
+              "document": "S-INT",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207040041, public version of 2024-11-21"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "light-cable",
+      "name": "Fibre light cable",
+      "role": "cable",
+      "inPrototype": false,
+      "modelled": false,
+      "productNumbers": [
+        {
+          "number": "806625301",
+          "what": "bundle",
+          "market": "US"
+        },
+        {
+          "number": "80662530",
+          "what": "cable",
+          "market": "US"
+        },
+        {
+          "number": "8095.07",
+          "what": "adapter, projector side",
+          "market": "US and International"
+        },
+        {
+          "number": "809509",
+          "what": "adapter, endoscope side",
+          "market": "US and International"
+        }
+      ],
+      "facts": [
+        {
+          "key": "diameter",
+          "label": "Diameter",
+          "value": 2.5,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207026328, public version of 2026-05-18"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          },
+          "note": "Manufacturer documents differ on this value. The value given is the one in the US documents."
+        },
+        {
+          "key": "totalLength",
+          "label": "Total length",
+          "value": 3000,
+          "unit": "mm",
+          "category": "device fact",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-US",
+              "locator": "page 2"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207026328, public version of 2026-05-18"
+            }
+          ],
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          },
+          "note": "Manufacturer documents differ on this value. The value given is the one in the US documents."
+        }
+      ]
+    },
+    {
+      "id": "camera-control-unit",
+      "name": "ENDOCAM Logic 4K camera control unit",
+      "role": "tower",
+      "inPrototype": false,
+      "modelled": false,
+      "productNumbers": [
+        {
+          "number": "5525301",
+          "what": "camera control unit",
+          "market": "US and International"
+        },
+        {
+          "number": "55253011",
+          "what": "bundle",
+          "market": "International"
+        }
+      ],
+      "facts": [
+        {
+          "key": "configuration",
+          "label": "Tower configuration used with this set",
+          "value": null,
+          "unit": null,
+          "category": "device fact",
+          "status": "unresolved input",
+          "sources": [
+            {
+              "document": "S-CAT",
+              "locator": "page 4"
+            },
+            {
+              "document": "S-GUDID",
+              "locator": "device 04055207063286, public version of 2025-12-12"
+            }
+          ],
+          "neededBy": ["room-and-tower"],
+          "note": "Which camera head, light source, monitor and cables are used with this telescope, and how each connects, has not been established from a document. No reference images of the tower were supplied.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "talc-delivery",
+      "name": "Talc delivery",
+      "role": "accessory",
+      "inPrototype": false,
+      "modelled": false,
+      "productNumbers": [],
+      "facts": [
+        {
+          "key": "supplier",
+          "label": "Who supplies it",
+          "value": "not part of the set",
+          "unit": null,
+          "category": "device fact",
+          "status": "review pending",
+          "sources": [
+            {
+              "document": "S-CAT",
+              "locator": "page 42"
+            }
+          ],
+          "note": "The catalogue says suitable pleurodesis sets are available on the market. Any talc delivery shown in the course is a generic model and names no product.",
+          "factCheck": {
+            "decision": "NOT REVIEWED",
+            "reviewer": null,
+            "role": null,
+            "date": null,
+            "reviewedRevision": null
+          }
+        }
+      ]
+    }
+  ],
+  "fit": [
+    {
+      "id": "telescope-in-flexible-sleeve",
+      "parts": ["operative-telescope", "trocar-sleeve-flexible"],
+      "market": "US",
+      "status": "documented compatible",
+      "basis": "Listed together as one set, whose instruments the sell sheet describes as compatible.",
+      "sources": [
+        {
+          "document": "S-US",
+          "locator": "page 2"
+        }
+      ],
+      "dimensionalComparison": "Shaft 5.5 mm, sleeve capacity 5.7 mm.",
+      "factCheck": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "telescope-in-sleeve-with-valves",
+      "parts": ["operative-telescope", "trocar-sleeve-with-valves"],
+      "market": "US",
+      "status": "documented compatible",
+      "basis": "Listed together as one set, whose instruments the sell sheet describes as compatible.",
+      "sources": [
+        {
+          "document": "S-US",
+          "locator": "page 2"
+        }
+      ],
+      "dimensionalComparison": "Shaft 5.5 mm, sleeve capacity 5.5 mm. The two published values are equal.",
+      "factCheck": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "tools-in-working-channel",
+      "parts": [
+        "operative-telescope",
+        "double-spoon-forceps",
+        "dissection-forceps",
+        "hook-electrode",
+        "button-electrode",
+        "probe",
+        "suction-tube"
+      ],
+      "market": "US",
+      "status": "documented compatible",
+      "basis": "Listed together as one set, whose instruments the sell sheet describes as compatible.",
+      "sources": [
+        {
+          "document": "S-US",
+          "locator": "page 2"
+        }
+      ],
+      "dimensionalComparison": "Tools 3.5 mm or 2.8 mm, channel 3.5 mm. For the 3.5 mm tools the two published values are equal.",
+      "factCheck": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "telescope-to-tower",
+      "parts": ["operative-telescope", "camera-control-unit", "light-cable"],
+      "market": "US",
+      "status": "not established",
+      "basis": "No document read describes the camera head, light source or connections used with this telescope.",
+      "sources": [],
+      "dimensionalComparison": null,
+      "factCheck": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    }
+  ]
+}

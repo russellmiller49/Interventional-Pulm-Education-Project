@@ -20,6 +20,15 @@ gives the date.
 | [Module plan](module-plan.md)                           | Learner, spine, controls, the one diagnostic table, and the order concepts are taught in                                                    |
 | [Section authoring guide](section-authoring-guide.md)   | How to write one section                                                                                                                    |
 | [Review lanes](review-lanes.md)                         | Who reviews what, kept separate: clinical, manufacturer, rights                                                                             |
+| [Device register](registers/device-register.md)         | Every device fact, where it was read, and what is still not known. Printed from the device definitions                                      |
+| [Claim review queue](registers/claim-review-queue.md)   | Every claim awaiting a reviewer. Printed from the claim register                                                                            |
+| [Source register](registers/source-register.md)         | The literature and the anatomy dataset, with how much of each was read                                                                      |
+| [Rights register](registers/rights-register.json)       | What the module may do with each thing it uses, and what may not be uploaded                                                                |
+| [Asset ledger](registers/asset-ledger.json)             | Every file the module serves, against its budget                                                                                            |
+| [Performance table](registers/performance-table.json)   | The targets, and what has been measured against them                                                                                        |
+| [Traceability](registers/traceability.json)             | For each experience: outcome, content, claims, assets, tests, decisions, evidence                                                           |
+| [Attribution](ATTRIBUTION.md)                           | Credit and licence for the anatomy, and how the instruments are labelled                                                                    |
+| [Sponsorship policy](../sponsorship/POLICY.md)          | Draft. Who decides what when a module is sponsored                                                                                          |
 | [Repository baseline](repository-baseline.md)           | Where the build started: commit, packages, policies, file boundaries                                                                        |
 | [Handoffs](handoffs/)                                   | One per slice: what changed, what was checked, what was not                                                                                 |
 
