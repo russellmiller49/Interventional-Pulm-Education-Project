@@ -1616,7 +1616,7 @@
         },
         "assessment": {
           "title": "Evaluación",
-          "description": "Diez preguntas sobre selección, técnica, pleurodesis y gestión de complicaciones."
+          "description": "Preguntas sobre selección, técnica, pleurodesis y gestión de complicaciones."
         }
       }
     },
@@ -1668,7 +1668,7 @@
       "metaTitle": "Evaluación de pleuroscopia",
       "metaDescription": "Compruebe su razonamiento sobre indicaciones, contraindicaciones, técnica de acceso y biopsia, pleurodesis y gestión de complicaciones.",
       "headerTitle": "Evaluación",
-      "headerDescription": "Diez preguntas que comprueban si sabe seleccionar pacientes, acceder y tomar muestras de forma segura y gestionar complicaciones.",
+      "headerDescription": "Preguntas que comprueban si sabe seleccionar pacientes, acceder y tomar muestras de forma segura y gestionar complicaciones.",
       "checkTitle": "Comprobación de pleuroscopia",
       "checkIntro": "Responda cada pregunta y luego revele la explicación. Reflejan los objetivos de Aprender.",
       "progressLabel": "Marcar Evaluación como completada"
