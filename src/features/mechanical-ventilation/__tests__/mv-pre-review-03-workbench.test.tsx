@@ -430,7 +430,9 @@ describe('sampling: a captured record keeps what the engine sampled', () => {
     expect(peak(snapshot.waveforms)).toBe(peak(simulation.waveforms))
     // Onset-to-onset on a 20 ms grid is within one sample of the 3.75-s cycle, not 3.68 s.
     const breath = completedBreath(snapshot.waveforms)
-    const period = 60 / simulation.ventilator.settings.ratePerMin
+    const settings = simulation.ventilator.settings
+    if (settings.mode !== 'volume-ac') throw new Error('Section 2 opens in volume control')
+    const period = 60 / settings.ratePerMin
     expect(Math.abs(breath.at(-1)!.time - breath[0].time - period)).toBeLessThanOrEqual(0.0201)
   })
 
@@ -455,7 +457,9 @@ describe('sampling: a captured record keeps what the engine sampled', () => {
 
   it('S2-1: explains 413 or 427 mL beside 420 mL from the delivery steps, without forcing equality', () => {
     const baseline = createLabSimulation('waveform-anatomy', 0, DEVICE)
-    expect(baseline.ventilator.settings.vtMl).toBe(420)
+    const settings = baseline.ventilator.settings
+    if (settings.mode !== 'volume-ac') throw new Error('Section 2 opens in volume control')
+    expect(settings.vtMl).toBe(420)
     expect([413, 427]).toContain(baseline.measurements.exhaledVtMl)
     expect(deliveredVolumeStepNote(baseline)).toMatch(/31 or 32 steps — about 413 or 427 mL/)
     // Breath to breath the engine alternates; the display does not round either one to 420.
