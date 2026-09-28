@@ -26,26 +26,50 @@ const ROW_LABELS = {
   pmusCmH2O: 'Effort · model (cmH₂O)',
 } as const
 
-/** What the captured samples themselves show, for the text equivalent of either view. */
+/**
+ * What the drawn breath's own samples show, for the text equivalent of either view.
+ *
+ * Samples are recorded after each 20 ms step, so a breath's inspiratory flow lasts one step per
+ * inspiratory sample, and the volume it received is its peak less the sample just before its onset
+ * — the same definition the ventilator's exhaled-volume reading uses. The drawn breath is the last
+ * complete one in the record; the readings table is what the ventilator published at capture, from
+ * its most recent inflation, so at 40 L/min the two can differ by one delivery step (413 against
+ * 427 mL). Both are stated as what they are rather than made to agree.
+ */
 function breathFacts(record: LabSnapshot) {
   const breath = completedBreath(record.waveforms)
   if (breath.length < 4) return null
-  const anchored = anchorBreathVolume(breath)
+  const onset = record.waveforms.indexOf(breath[0])
+  const before = onset > 0 ? record.waveforms[onset - 1] : null
   const cycling = breath.findIndex((sample) => sample.phase === 'expiration')
+  const inspiratory = cycling > 0 ? breath.slice(0, cycling) : []
+  const spacing = sampleSpacingSeconds(breath)
   return {
     duration: breath.at(-1)!.time - breath[0].time,
+    inspiratorySamples: inspiratory.length,
     inspiration: sampledInspirationSeconds(breath),
-    spacing: sampleSpacingSeconds(breath),
+    spacing,
     peakFlow: Math.max(...breath.map((sample) => sample.flowLMin)),
     peakPressure: Math.max(...breath.map((sample) => sample.pawCmH2O)),
-    endInspiratoryVolume: cycling > 0 ? anchored[cycling - 1].volumeMl : null,
+    received:
+      before && inspiratory.length
+        ? Math.max(...inspiratory.map((sample) => sample.volumeMl)) - before.volumeMl
+        : null,
   }
 }
 
 function describe(name: string, record: LabSnapshot): string {
   const facts = breathFacts(record)
   if (!facts) return `${name}: no complete breath in the record.`
-  return `${name}: inspiration ${facts.inspiration === null ? 'not identified' : `${facts.inspiration.toFixed(2)} s`} of a ${facts.duration.toFixed(2)}-s breath; peak flow ${facts.peakFlow.toFixed(1)} L/min; peak airway pressure ${facts.peakPressure.toFixed(1)} cmH₂O; volume at the end of inspiration ${facts.endInspiratoryVolume === null ? 'not identified' : `${facts.endInspiratoryVolume.toFixed(0)} mL above the breath’s start`}. Samples every ${Math.round(facts.spacing * 1000)} ms.`
+  const flow =
+    facts.inspiration === null
+      ? 'inspiration not identified'
+      : `inspiratory flow over ${facts.inspiratorySamples} samples (${facts.inspiration.toFixed(2)} s)`
+  const received =
+    facts.received === null
+      ? ''
+      : `; it received ${facts.received.toFixed(0)} mL (peak volume less the volume just before its onset)`
+  return `${name} breath drawn above: ${flow} of a ${facts.duration.toFixed(2)}-s breath${received}; peak flow ${facts.peakFlow.toFixed(1)} L/min; peak airway pressure ${facts.peakPressure.toFixed(1)} cmH₂O.`
 }
 
 /**
@@ -289,7 +313,9 @@ export function RecordedBreathComparison({
         </div>
       )}
       <p className={styles.note} data-comparison-description>
-        From the captured samples. {describe('Baseline', before)} {describe('Result', after)}
+        From the captured samples, every {Math.round(sampleSpacingSeconds(breaths[1]) * 1000)} ms.{' '}
+        {describe('Baseline', before)} {describe('Result', after)} The readings below are what the
+        ventilator published at the moment of capture; they are not all taken from the drawn breath.
       </p>
     </section>
   )

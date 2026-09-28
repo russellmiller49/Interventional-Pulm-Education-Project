@@ -453,11 +453,19 @@ describe('sampling: a captured record keeps what the engine sampled', () => {
     }
   })
 
-  it('S2-1: explains 427 mL beside 420 mL from the delivery rule without forcing them equal', () => {
+  it('S2-1: explains 413 or 427 mL beside 420 mL from the delivery steps, without forcing equality', () => {
     const baseline = createLabSimulation('waveform-anatomy', 0, DEVICE)
-    expect(baseline.measurements.exhaledVtMl).toBe(427)
     expect(baseline.ventilator.settings.vtMl).toBe(420)
-    expect(deliveredVolumeStepNote(baseline)).toMatch(/20-ms steps .* up to 13 mL/)
+    expect([413, 427]).toContain(baseline.measurements.exhaledVtMl)
+    expect(deliveredVolumeStepNote(baseline)).toMatch(/31 or 32 steps — about 413 or 427 mL/)
+    // Breath to breath the engine alternates; the display does not round either one to 420.
+    const volumes = new Set<number>()
+    let running = { ...baseline, paused: false }
+    for (let t = 0; t < 30; t += 0.5) {
+      running = advanceSimulation(running, 0.5)
+      volumes.add(running.measurements.exhaledVtMl)
+    }
+    expect([...volumes].sort()).toEqual([413, 427])
     let faster = ventilationSimulationReducer(baseline, {
       type: 'SET_CONTROL',
       control: 'peakFlowLMin',
@@ -538,8 +546,13 @@ describe('V3: baseline and result, overlaid or zoomed without retiming', () => {
     expect(overlay.querySelectorAll('[data-overlay-trace="result"]')).toHaveLength(3)
     expect(overlay.textContent).toMatch(/Baseline \(dashed\) and result \(solid\)/)
     const description = document.querySelector('[data-comparison-description]')!.textContent
-    expect(description).toMatch(/Baseline: inspiration 0\.6\d s/)
-    expect(description).toMatch(/Result: inspiration 0\.4\d s/)
+    expect(description).toMatch(
+      /Baseline breath drawn above: inspiratory flow over 3[12] samples \(0\.6[24] s\)/,
+    )
+    expect(description).toMatch(
+      /Result breath drawn above: inspiratory flow over 21 samples \(0\.42 s\)/,
+    )
+    expect(description).toMatch(/not all taken from the drawn\s+breath/)
   })
 
   it('changes no evidence when the view changes', () => {
