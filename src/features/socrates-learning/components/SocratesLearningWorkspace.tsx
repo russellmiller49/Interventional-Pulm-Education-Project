@@ -38,8 +38,11 @@ export function SocratesLearningWorkspace({
 }) {
   const [progress, setProgress] = useState<LearningProgress>({})
   const [ready, setReady] = useState(false)
-  const [mode, setMode] = useState<LearningMode | null>(preview?.mode ?? null)
-  const [active, setActive] = useState<string | null>(preview?.id ?? null)
+  const [selectedMode, setMode] = useState<LearningMode | null>(null)
+  const [selectedCase, setActive] = useState<string | null>(null)
+  // Author previews follow the current selection; learner navigation stays local.
+  const mode = preview?.mode ?? selectedMode
+  const active = preview?.id ?? selectedCase
   const [module, setModule] = useState('all')
   const [warning, setWarning] = useState('')
   const title = useRef<HTMLHeadingElement>(null)
