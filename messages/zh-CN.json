@@ -1616,7 +1616,7 @@
         },
         "assessment": {
           "title": "评估",
-          "description": "关于选择、技术、胸膜固定术和并发症处理的十道题。"
+          "description": "关于选择、技术、胸膜固定术和并发症处理的题目。"
         }
       }
     },
@@ -1668,7 +1668,7 @@
       "metaTitle": "胸膜腔镜评估",
       "metaDescription": "检验你对适应证、禁忌证、入路与活检技术、胸膜固定术和并发症处理的推理。",
       "headerTitle": "评估",
-      "headerDescription": "十道题，检验你能否选择患者、安全入路取样并处理并发症。",
+      "headerDescription": "这些题目检验你能否选择患者、安全入路取样并处理并发症。",
       "checkTitle": "胸膜腔镜检查",
       "checkIntro": "回答每道题，然后显示解释。它们对应“学习”目标。",
       "progressLabel": "标记“评估”为完成"
