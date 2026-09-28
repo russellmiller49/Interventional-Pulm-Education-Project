@@ -1,0 +1,103 @@
+{
+  "table": "medical-thoracoscopy-performance",
+  "version": 1,
+  "preparedOn": "2026-09-28",
+  "preparedBy": "AI authoring assistant (Claude) at the owner's request",
+  "statement": "The performance targets, and what has been measured against them. A target is met only by a measurement on the hardware it names, with the browser, viewport, quality, network and cache recorded. Desktop emulation of a phone or tablet is not a measurement on that device. A cell that the plans leave open reads UNRESOLVED and is not filled with a default.",
+  "targets": [
+    {
+      "id": "PT-1",
+      "target": "Median frame rate at least 45 fps during active interaction",
+      "hardware": "M1 or Iris Xe laptop",
+      "quality": "UNRESOLVED",
+      "browser": "UNRESOLVED",
+      "viewport": "UNRESOLVED",
+      "network": "not applicable",
+      "cache": "not applicable",
+      "scene": "Linked Chest and Scope views together",
+      "source": "Original plan, line 289"
+    },
+    {
+      "id": "PT-2",
+      "target": "Frame rate at least 30 fps during active interaction",
+      "hardware": "A14 iPad",
+      "quality": "low",
+      "browser": "UNRESOLVED",
+      "viewport": "UNRESOLVED",
+      "network": "not applicable",
+      "cache": "not applicable",
+      "scene": "Linked Chest and Scope views together",
+      "source": "Original plan, line 289"
+    },
+    {
+      "id": "PT-3",
+      "target": "Interactive within 4 s",
+      "hardware": "UNRESOLVED",
+      "quality": "UNRESOLVED",
+      "browser": "UNRESOLVED",
+      "viewport": "UNRESOLVED",
+      "network": "fast; profile UNRESOLVED",
+      "cache": "UNRESOLVED",
+      "scene": "Pleural-space scene",
+      "source": "Original plan, line 290"
+    },
+    {
+      "id": "PT-4",
+      "target": "Interactive within 8 s",
+      "hardware": "UNRESOLVED",
+      "quality": "UNRESOLVED",
+      "browser": "UNRESOLVED",
+      "viewport": "UNRESOLVED",
+      "network": "throttled 4G; profile UNRESOLVED",
+      "cache": "UNRESOLVED",
+      "scene": "Pleural-space scene",
+      "source": "Original plan, line 290"
+    },
+    {
+      "id": "PT-5",
+      "target": "Visibility update within 4 ms",
+      "hardware": "UNRESOLVED",
+      "quality": "not applicable",
+      "browser": "UNRESOLVED",
+      "viewport": "not applicable",
+      "network": "not applicable",
+      "cache": "not applicable",
+      "scene": "Pleural-space scene",
+      "source": "Original plan, line 215"
+    }
+  ],
+  "whatEachMeasurementRecords": [
+    "Target id",
+    "Date, and who ran it",
+    "Device model, operating system and version",
+    "Browser and version",
+    "Viewport and device pixel ratio",
+    "Quality setting",
+    "Network profile and cache state, for loading targets",
+    "The repeatable scene and input sequence used",
+    "Commit and asset manifest hash",
+    "Frame-time distribution: median, 95th and 99th percentile, over a stated duration",
+    "Startup and decode time, and memory after load",
+    "Result against the target"
+  ],
+  "results": [
+    {
+      "target": "PT-1",
+      "result": "NOT TESTED",
+      "reason": "No M1 or Iris Xe laptop has been used."
+    },
+    { "target": "PT-2", "result": "NOT TESTED", "reason": "No A14 iPad has been used." },
+    {
+      "target": "PT-3",
+      "result": "NOT TESTED",
+      "reason": "Hardware and network profile are unresolved."
+    },
+    {
+      "target": "PT-4",
+      "result": "NOT TESTED",
+      "reason": "Hardware and network profile are unresolved."
+    },
+    { "target": "PT-5", "result": "NOT TESTED", "reason": "Hardware is unresolved." }
+  ],
+  "otherMeasurements": []
+}

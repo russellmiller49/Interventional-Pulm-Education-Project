@@ -1,0 +1,136 @@
+{
+  "register": "medical-thoracoscopy-traceability",
+  "version": 2,
+  "preparedOn": "2026-09-28",
+  "preparedBy": "AI authoring assistant (Claude) at the owner's request",
+  "statement": "For each experience: the outcome it serves, where its content lives, the claims and assets it rests on, the tests that cover it, the review decisions recorded for it and the evidence gathered for its release. A link that does not exist yet is left empty and the row says so. A row is complete only when every link is filled and every claim it names is accepted. A green build is not a review decision.",
+  "rows": [
+    {
+      "experience": "normal-pleural-space",
+      "kind": "section",
+      "number": 6,
+      "outcome": "Explain scope control and conduct a systematic modeled survey",
+      "state": "written",
+      "content": [
+        "src/features/medical-thoracoscopy/content/sections/normal-pleural-space.ts",
+        "src/features/medical-thoracoscopy/content/data/pleural-zones.json",
+        "src/features/medical-thoracoscopy/content/landmarks.ts",
+        "src/features/medical-thoracoscopy/content/types.ts",
+        "src/features/medical-thoracoscopy/content/sectionValidation.ts",
+        "src/features/medical-thoracoscopy/content/teachingExamples.ts",
+        "src/features/medical-thoracoscopy/content/modelBoundaries.ts"
+      ],
+      "claims": [
+        "MT-C-0001",
+        "MT-C-0002",
+        "MT-C-0003",
+        "MT-C-0007",
+        "MT-C-0008",
+        "MT-C-0009",
+        "MT-C-0010",
+        "MT-C-0011",
+        "MT-C-0012",
+        "MT-C-0013",
+        "MT-C-0014",
+        "MT-C-0015",
+        "MT-C-0016",
+        "MT-C-0017",
+        "MT-C-0019",
+        "MT-C-0023"
+      ],
+      "assets": [],
+      "tests": [
+        "src/features/medical-thoracoscopy/__tests__/sectionSpecs.test.ts",
+        "src/features/medical-thoracoscopy/__tests__/surveyContent.test.ts"
+      ],
+      "reviewDecisions": [],
+      "releaseEvidence": [],
+      "missing": ["assets", "review decisions", "release evidence"]
+    },
+    {
+      "experience": "four-controls",
+      "kind": "section",
+      "number": 7,
+      "outcome": "Explain scope control and conduct a systematic modeled survey",
+      "state": "written",
+      "content": [
+        "src/features/medical-thoracoscopy/content/sections/four-controls.ts",
+        "src/features/medical-thoracoscopy/content/controlPanel.ts",
+        "src/features/medical-thoracoscopy/content/types.ts",
+        "src/features/medical-thoracoscopy/content/sectionValidation.ts",
+        "src/features/medical-thoracoscopy/content/teachingExamples.ts",
+        "src/features/medical-thoracoscopy/content/modelBoundaries.ts"
+      ],
+      "claims": [
+        "MT-C-0001",
+        "MT-C-0002",
+        "MT-C-0003",
+        "MT-C-0004",
+        "MT-C-0005",
+        "MT-C-0006",
+        "MT-C-0007",
+        "MT-C-0008",
+        "MT-C-0009"
+      ],
+      "assets": [],
+      "tests": [
+        "src/features/medical-thoracoscopy/__tests__/sectionSpecs.test.ts",
+        "src/features/medical-thoracoscopy/__tests__/surveyContent.test.ts"
+      ],
+      "reviewDecisions": [],
+      "releaseEvidence": [],
+      "missing": ["assets", "review decisions", "release evidence"]
+    },
+    {
+      "experience": "systematic-survey",
+      "kind": "section",
+      "number": 11,
+      "outcome": "Explain scope control and conduct a systematic modeled survey",
+      "state": "written",
+      "content": [
+        "src/features/medical-thoracoscopy/content/sections/systematic-survey.ts",
+        "src/features/medical-thoracoscopy/content/data/pleural-zones.json",
+        "src/features/medical-thoracoscopy/content/types.ts",
+        "src/features/medical-thoracoscopy/content/sectionValidation.ts",
+        "src/features/medical-thoracoscopy/content/teachingExamples.ts",
+        "src/features/medical-thoracoscopy/content/modelBoundaries.ts"
+      ],
+      "claims": [
+        "MT-C-0001",
+        "MT-C-0002",
+        "MT-C-0003",
+        "MT-C-0005",
+        "MT-C-0009",
+        "MT-C-0012",
+        "MT-C-0017",
+        "MT-C-0018",
+        "MT-C-0020",
+        "MT-C-0021",
+        "MT-C-0022",
+        "MT-C-0023"
+      ],
+      "assets": [],
+      "tests": [
+        "src/features/medical-thoracoscopy/__tests__/sectionSpecs.test.ts",
+        "src/features/medical-thoracoscopy/__tests__/surveyContent.test.ts"
+      ],
+      "reviewDecisions": [],
+      "releaseEvidence": [],
+      "missing": ["assets", "review decisions", "release evidence"]
+    },
+    {
+      "experience": "tool-contact",
+      "kind": "prototype",
+      "number": null,
+      "outcome": "None. An engineering prototype, outside the curriculum",
+      "state": "planned",
+      "content": [],
+      "claims": ["MT-C-0001", "MT-C-0003"],
+      "assets": [],
+      "tests": [],
+      "reviewDecisions": [],
+      "releaseEvidence": [],
+      "missing": ["content", "assets", "tests", "review decisions", "release evidence"]
+    }
+  ]
+}

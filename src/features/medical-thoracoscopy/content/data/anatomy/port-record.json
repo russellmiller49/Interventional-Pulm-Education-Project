@@ -1,0 +1,23 @@
+{
+  "record": "medical-thoracoscopy-port-record",
+  "version": 1,
+  "script": "scripts/medical-thoracoscopy/build_thorax_surfaces.py",
+  "decision": "Owner decisions, T6: a default, not a decision. Chosen for this model, not a recommended site.",
+  "space": 7,
+  "line": "mid-axillary",
+  "side": "right",
+  "pivotLps": [-134.5, -183.87, -350.14],
+  "pivotIs": "The midpoint of the closest approach between the two ribs, at the level of the ribs.",
+  "corridorAxis": [0.98, -0.14, -0.15],
+  "corridorAxisIs": "Into the chest, along the inward normal of the pleural surface nearest the pivot.",
+  "pleuraPointLps": [-132.09, -184.21, -350.5],
+  "ribGapMm": 15.01,
+  "wallThicknessMm": 40.0,
+  "sleeveOuterDiameterMm": 7.6,
+  "clearanceEachSideMm": 3.7,
+  "wallPatch": {
+    "centreLps": [-134.5, -183.87, -350.14],
+    "radiusMm": 7.5,
+    "is": "The disc of chest wall, across the corridor axis at the pivot, that the shaft may cross."
+  }
+}
