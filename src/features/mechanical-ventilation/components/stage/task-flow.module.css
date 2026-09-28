@@ -119,6 +119,9 @@
 }
 .flow [data-teaching-column] {
   display: grid;
+  /* An auto track sizes to the widest min-content inside it, which at 200 % text on a 320 px phone
+     pushed the lesson 26 px past its own box. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.75rem;
 }
 .flow [data-foundation-teaching] {
@@ -655,6 +658,18 @@
   }
   .comparison {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/*
+ * Stacked (below the two-column width): act, then observe. The control column — the requested
+ * setting, hold or bedside action — comes before the readings and the live trace, so on a phone the
+ * order under the experiment panel is change → readings → trace rather than a scroll past the trace
+ * to find the control.
+ */
+@media (max-width: 999px) {
+  .experiment:not([data-native-view='true']) > .controls {
+    order: -1;
   }
 }
 
