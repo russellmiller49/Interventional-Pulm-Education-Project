@@ -191,8 +191,20 @@ export function formatKnobologyVideoSegmentLabel(segment: KnobologyVideoSegment)
   return `Depth ${segment.depth} cm · ${controlLabel} ${segment.value}`;
 }
 
+/**
+ * Cache version for the de-identified Depth3 recording (first 8 hex of its SHA-256, 9780f54a…).
+ *
+ * Module MP4s are served `immutable` with a one-year max-age, so a browser that cached the
+ * original Depth3.mp4 (replaced in the September 2026 de-identification remediation, PR #281)
+ * would keep showing it on the queryless URL. The query gives Depth3 a new cache key; the file
+ * path and every other depth are unchanged. Change it only if Depth3.mp4 is replaced again.
+ */
+export const DEPTH3_MEDIA_VERSION = '9780f54a';
+
 export function getKnobologyVideoSegmentSrc(depthCm: KnobologyVideoDepthCm | number): string {
-  return resolveCourseAssetPath(`/media/knobology/Depth_segments/Depth${depthCm}.mp4`);
+  const src = resolveCourseAssetPath(`/media/knobology/Depth_segments/Depth${depthCm}.mp4`);
+
+  return depthCm === 3 ? `${src}?v=${DEPTH3_MEDIA_VERSION}` : src;
 }
 
 function getNumericSegmentValue(value: number | string): number | null {
