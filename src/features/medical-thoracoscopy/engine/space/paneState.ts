@@ -4,6 +4,7 @@ import { crossSectionOf } from './crossSection'
 import type { LoadedSpace } from './loadSpace'
 import type { EngineState } from './spaceReducer'
 import { refusalOf } from './spaceWords'
+import { reachFits } from './zoneReach'
 
 /** The engine's state as the pane contract has it (slice 9): what every pane draws. */
 export function paneStateOf(
@@ -21,7 +22,12 @@ export function paneStateOf(
     readiness,
     pose: state.pose,
     inView: state.inView,
-    ledger: ledgerFrom(state.coverage, space.samples, reach),
+    // reach only from a record made for this engine's own snapshot
+    ledger: ledgerFrom(
+      state.coverage,
+      space.samples,
+      reach && reachFits(state.snapshot) ? reach : null,
+    ),
     refusal: refusalOf(state.limit, state.lungHeld, wallZone),
     crossSection:
       readiness.kind === 'ready' ? crossSectionOf(space, state.pose, state.lungStep) : null,

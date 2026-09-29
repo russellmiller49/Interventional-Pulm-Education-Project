@@ -228,4 +228,71 @@ real browser.
 - Do not move the instrument for the learner, or model a consequence without an accepted claim.
 - Do not give a stamp other than the time an event fell due.
 
+## Repair after the independent review (2026-09-29): R2, R4, R5, R7
+
+The independent review (at `ba6f870d`) found four things in this slice. Repaired here; the anatomy,
+the lung's collapse, the port, the optics and the authored limits are unchanged (OD-11, OD-14).
+
+**R4, snapshot identity.** The snapshot hashed the port record, the device definitions and the
+authored optics only. It now also names:
+
+| Part          | What it adds                                                                                                                                                   | Why                                                                                                         |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `port`        | a digest of the port's frame as the engine uses it, after the record's hash                                                                                    | the port candidates' rib points set the direction across the ribs (`portFrame()`), and no hash covered them |
+| `rules` (new) | the step sizes, the clearance skin, the skin piece share, the numeric tolerance, the port's excluded patch, the lung's room and the view's occlusion tolerance | each decides where a move stops or what counts as seen                                                      |
+
+The reach record also names its grid, and `currentReach` refuses a record made on another grid.
+The pane takes reach only from a record made for the engine's own snapshot (`reachFits`: every part
+but the scenario and the lung step, and the same proxies whatever target a scenario adds). Reviewed
+and not added: the fluid (drained in every scenario; no spatial answer reads the fluid table), the
+scenario's start (a new start restarts the engine, which drops everything computed before), and
+anything the renderer alone holds. The forceps' authored values join in slice 13's repair.
+`zone-reach.json` was rebuilt with `npx tsx scripts/medical-thoracoscopy/build-zone-reach.ts`
+(39 s, 43,032 positions): the same reach as before, sample for sample, and the counts per region
+are unchanged. New stale tests: a record for other rules, another port frame, other proxies or
+another grid is refused; a command issued against other rules or another port changes nothing; a
+turn of 1° in the rib direction or 0.01 mm in the rib gap changes the port's identity.
+
+**R5, the ledger's reach.** A sample was reachable only if the offline grid said so, so a sample the
+learner had had in the field (hidden behind the lung) could be called out of reach. It is now
+reachable if the grid says so or the learner has had it in the field. The record's digit per sample
+now says 0 out of the field, 1 in the field only behind something, 2 seeable, so the ledger can say
+what the owner's decision OD-16 asks: a region is **seen as far as this model reaches**
+(`seen-to-reach`) when some of it has been seen and none of the rest can be, from any position the
+model tried; the reason then says whether the rest is hidden or out of reach. No percentage, score
+or completion target was added; the lesson's own note gains the state as a choice.
+
+**R7, the lung's steps.** A lung step was accepted on the instrument's unsigned clearance alone,
+which cannot see a step that closes the lung all around the instrument (the review's finding 10). A
+step is now also refused while the telescope's tip would lie inside the new lung (winding number).
+A test builds that case on an analytic scene and sees it refused; clearance alone would have let it
+through. `spaceJourneys.test.ts` checks, by the judge's own routes (ray parity, its own counting),
+that the space and every lung step are closed, manifold, consistently wound and outward, and that
+no lung proxy point lies further outside the space proxy than the records allow (the lung proxy's
+recorded distance from the drawn lung, plus the drawn pleura's from the space proxy, less the drawn
+lung's recorded clearance: 9.7 to 10.9 mm). Measured: at most 6.12 mm at step 0 and 2.47 to 3.67 mm
+at steps 1 to 8. The drawn lung and the proxy come from one build and have the same steps.
+
+**Finding for the owner (R7): steps 2 and 4 of the lung proxy each have one tunnel** (Euler
+characteristic 0; every other step, and the space, 2). They are closed and outward, so the winding
+number and the clearance hold, and the journeys at step 4 find nothing wrong; whether a tunnel could
+admit an instrument has not been established. The measured shape is pinned by the test. Rebuilding
+the proxies belongs with the lung decision (R9), not this repair.
+
+**R2, a stronger fuzz.** `fuzzJourneys` (test-support) judges every move along its path, not only
+where it ends: a move along the axis sweeps exactly the instrument at its deeper end; a pivot is
+judged at poses at most 0.1 mm of end-point motion apart and certified between them by the Lipschitz
+bound, halving an interval where that bound is not enough. Along a move it requires no penetration
+(the plan's tolerance, −0.001 mm); where a move stops, the clearance skin. It classifies axis points
+inside the space and outside the lung by ray parity (the engine uses winding numbers), and asks the
+lung to move a step either way through the reducer, as the learner's space does, judging the result.
+Preserved failing seeds live in `test-support/fuzz-seeds.json` and are replayed every run (none so
+far). The first run found a pivot that passed 0.24957 mm from a surface mid-move: inside the skin,
+nowhere near contact, and what the engine's pieces at the skin allow; the path criterion was
+corrected to the engine's contract, not the engine to the judge. Fuzzing is evidence, not proof.
+
+Not repaired, recorded: the review's finding 15 (the sleeve's start slides along the axis as the tilt
+changes, which the motion bound omits; at most about 0.09 mm a step on this port, inside the
+port's excluded patch).
+
 This does not change publication status or constitute clinical approval.

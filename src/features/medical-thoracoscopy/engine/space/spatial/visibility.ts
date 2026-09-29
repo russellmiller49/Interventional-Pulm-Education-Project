@@ -22,6 +22,9 @@ export interface ZoneSamples {
 }
 
 export const VIEW = { out: 0, inView: 1, hidden: 2 } as const
+
+/** How far short of a sample a surface must be to hide it, so the sample's own wall never does. */
+export const OCCLUSION_TOLERANCE_MM = 1e-3
 export type SampleView = (typeof VIEW)[keyof typeof VIEW]
 
 export function zoneSamplesFrom(file: ProxyFile, world: SpatialWorld): ZoneSamples {
@@ -87,7 +90,7 @@ export function viewSamples(
     if (dot(toSample, normal) <= 0) continue // seen from behind the wall's surface
     ray.origin.copy(origin)
     ray.direction.set(toSample[0] / range, toSample[1] / range, toSample[2] / range)
-    const far = range - 1e-3
+    const far = range - OCCLUSION_TOLERANCE_MM
     const blocked =
       world.spaceIndex.bvh.raycastFirst(ray, DoubleSide, 0, far) ||
       lung.raycastFirst(ray, DoubleSide, 0, far)

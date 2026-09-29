@@ -18,7 +18,7 @@ import {
   CONTACT_TABLE,
   TOOL_PHASES,
 } from '../engine/space/contactPolicy'
-import { addView, emptyCoverage, ledgerFrom, type Coverage } from '../engine/space/coverage'
+import { addView, emptyCoverage, ledgerFrom, REACH, type Coverage } from '../engine/space/coverage'
 import { crossSectionOf } from '../engine/space/crossSection'
 import {
   acrossRibsLimitDeg,
@@ -32,7 +32,7 @@ import { createResolver, loadSpace, type LoadedSpace } from '../engine/space/loa
 import { OUTCOME_EVENTS, outcomeStanding } from '../engine/space/outcomes'
 import { paneStateOf } from '../engine/space/paneState'
 import { portFrame } from '../engine/space/portDefinition'
-import { spaceSnapshot } from '../engine/space/spaceSnapshot'
+import { portIdentity, spaceSnapshot } from '../engine/space/spaceSnapshot'
 import {
   isSimulatedAction,
   LUNG_STEP_MS,
@@ -48,7 +48,7 @@ import { advance, stepTarget, takeStep } from '../engine/space/spatial/sweep'
 import type { ZoneSamples } from '../engine/space/spatial/visibility'
 import { VIEW } from '../engine/space/spatial/visibility'
 import { cross, dot, length, radians, rotate, sub, type Vec3 } from '../engine/space/vec'
-import { computeReach, currentReach, reachIdentity } from '../engine/space/zoneReach'
+import { computeReach, currentReach, reachFits, reachIdentity } from '../engine/space/zoneReach'
 import {
   fastJudgeSegmentTriangle,
   judgeSegmentTriangle,
@@ -582,7 +582,7 @@ describe('the ledger', () => {
 
   it('gives the reason the learner can still act on: not looked at, then hidden, then out of reach', () => {
     const a = (k: 0 | 1) => index('apex', k)
-    const all = samples.zones.map(() => 1)
+    const all = samples.zones.map(() => REACH.sight)
     const entry = (coverage: Coverage, reach: readonly number[] | null) =>
       ledgerFrom(coverage, samples, reach).find((e) => e.zone === 'apex')
     // one sample never in the field, one hidden: not looked at wins
@@ -597,22 +597,70 @@ describe('the ledger', () => {
       seen: 'not-seen',
       reason: 'hidden',
     })
-    // one seen, the other out of every field
-    const reach = all.map((v, s) => (s === a(1) ? 0 : v))
+    // one seen, the other out of every field: seen as far as the model reaches
+    const reach = all.map((v, s) => (s === a(1) ? REACH.none : v))
     expect(entry(coverageWith([a(0)], []), reach)).toEqual({
       zone: 'apex',
-      seen: 'partly-seen',
+      seen: 'seen-to-reach',
       reason: 'out-of-reach',
     })
     // without a reach record the ledger never says out of reach
     expect(entry(coverageWith([a(0)], []), null)?.reason).toBe('not-looked-at')
   })
 
+  it('counts a sample the learner has had in the field as reachable, whatever the grid found (R5)', () => {
+    const a = (k: 0 | 1) => index('apex', k)
+    const entry = (coverage: Coverage, reach: readonly number[] | null) =>
+      ledgerFrom(coverage, samples, reach).find((e) => e.zone === 'apex')
+    // the grid saw neither sample in any field; the learner had the second in the field, behind the
+    // lung: that is hidden, not out of reach
+    const noneOnGrid = samples.zones.map(() => REACH.none)
+    expect(entry(coverageWith([], [a(1)]), noneOnGrid)).toEqual({
+      zone: 'apex',
+      seen: 'not-seen',
+      reason: 'hidden',
+    })
+    expect(entry(coverageWith([], [a(0), a(1)]), noneOnGrid)?.reason).toBe('hidden')
+    expect(entry(coverageWith([], []), noneOnGrid)?.reason).toBe('out-of-reach')
+  })
+
+  it('says a region is seen as far as the model reaches only when none of the rest can be seen (OD-16)', () => {
+    const a = (k: 0 | 1) => index('apex', k)
+    const entry = (coverage: Coverage, reach: readonly number[] | null) =>
+      ledgerFrom(coverage, samples, reach).find((e) => e.zone === 'apex')
+    const withSecond = (value: number) =>
+      samples.zones.map((_, s) => (s === a(1) ? value : REACH.sight))
+    // the rest is out of every field
+    expect(entry(coverageWith([a(0)], []), withSecond(REACH.none))).toEqual({
+      zone: 'apex',
+      seen: 'seen-to-reach',
+      reason: 'out-of-reach',
+    })
+    // the rest comes into the field, but always behind something
+    expect(entry(coverageWith([a(0)], []), withSecond(REACH.field))).toEqual({
+      zone: 'apex',
+      seen: 'seen-to-reach',
+      reason: 'hidden',
+    })
+    // the rest can be seen from somewhere: only partly seen
+    expect(entry(coverageWith([a(0)], []), withSecond(REACH.sight))?.seen).toBe('partly-seen')
+    // nothing seen yet: not seen, however little the model can show
+    expect(
+      entry(
+        coverageWith([], []),
+        samples.zones.map(() => REACH.field),
+      )?.seen,
+    ).toBe('not-seen')
+    // without a current record the ledger never claims the model's limit
+    expect(entry(coverageWith([a(0)], []), null)?.seen).toBe('partly-seen')
+  })
+
   it('always keeps the pane contract', () => {
     const random = seededRandom(17)
     for (let n = 0; n < 500; n += 1) {
       const pick = () => samples.zones.flatMap((_, s) => (random() < 0.4 ? [s] : []))
-      const reach = random() < 0.3 ? null : samples.zones.map(() => (random() < 0.8 ? 1 : 0))
+      const reach =
+        random() < 0.3 ? null : samples.zones.map(() => Math.floor(random() * 3) as 0 | 1 | 2)
       expect(ledgerProblems(ledgerFrom(coverageWith(pick(), pick()), samples, reach))).toEqual([])
     }
   })
@@ -669,8 +717,10 @@ describe('reach', () => {
     expect(zoneReach.zones.map((z) => [z.id, z.samples])).toEqual(
       zoneSamplesRecord.zones.map((z) => [z.id, z.points]),
     )
-    const ones = [...zoneReach.reachable].filter((d) => d === '1').length
-    expect(zoneReach.zones.reduce((sum, z) => sum + z.reachable, 0)).toBe(ones)
+    const reachable = [...zoneReach.reachable].filter((d) => d !== '0').length
+    const seeable = [...zoneReach.reachable].filter((d) => d === '2').length
+    expect(zoneReach.zones.reduce((sum, z) => sum + z.reachable, 0)).toBe(reachable)
+    expect(zoneReach.zones.reduce((sum, z) => sum + z.seeable, 0)).toBe(seeable)
     for (const zone of zoneReach.zones) expect(zone.seeable).toBeLessThanOrEqual(zone.reachable)
     expect(zoneReach.files['proxy-pleural-space']).toBe(
       anatomyManifest.files.find((f) => f.id === 'proxy-pleural-space')?.sha256,
@@ -684,6 +734,41 @@ describe('reach', () => {
     }
     expect(currentReach(zoneSamplesRecord.total, stale)).toBeNull()
     expect(currentReach(zoneSamplesRecord.total - 1)).toBeNull()
+  })
+
+  it.each([
+    ['the engine’s rules', { rules: 'step tilt 1 depth 2 roll 5' }],
+    ['the port’s frame', { port: `${zoneReach.computedFor.port.split('+')[0]}+000000000000` }],
+    ['the geometry', { geometry: '000000000000+000000000000' }],
+  ])('is not used once %s differ from what it was computed for (R4)', (_what, change) => {
+    const stale = { ...zoneReach, computedFor: { ...zoneReach.computedFor, ...change } }
+    expect(currentReach(zoneSamplesRecord.total, stale)).toBeNull()
+    expect(reachFits(spaceSnapshot('survey', 8), stale)).toBe(false)
+  })
+
+  it('is not used for a grid other than the one it was computed on (R4)', () => {
+    const stale = { ...zoneReach, grid: { ...zoneReach.grid, depthStepMm: 2 } }
+    expect(currentReach(zoneSamplesRecord.total, stale)).toBeNull()
+  })
+
+  it('fits the engine’s own snapshot, whatever the scenario, step or teaching target', () => {
+    const snapshot = spaceSnapshot('another scenario', 4)
+    expect(reachFits(snapshot)).toBe(true)
+    expect(reachFits({ ...snapshot, geometry: `${snapshot.geometry}+nodule 1 2 3 r 5` })).toBe(true)
+    expect(reachFits({ ...snapshot, optics: 'viewRangeMm=1' })).toBe(false)
+  })
+
+  it('gives the pane no reach when the engine’s snapshot is not the record’s (R4, R5)', () => {
+    const { state, space } = sceneEngine()
+    const reach = space.samples.zones.map(() => REACH.none)
+    const fits = paneStateOf(state, space, reach).ledger
+    expect(fits.some((entry) => entry.reason === 'out-of-reach')).toBe(true)
+    const other = paneStateOf(
+      { ...state, snapshot: { ...state.snapshot, rules: 'another rule' } },
+      space,
+      reach,
+    ).ledger
+    expect(other.some((entry) => entry.reason === 'out-of-reach')).toBe(false)
   })
 })
 
@@ -733,10 +818,48 @@ describe('outcomes', () => {
 describe('the snapshot', () => {
   it('names the anatomy, the device, the authored optics, the port and the proxies by their files', () => {
     const snapshot = spaceSnapshot('survey', 8)
-    expect(snapshot.port).toBe(anatomyManifest.records['port-record.json'].slice(0, 12))
+    expect(snapshot.port).toBe(
+      `${anatomyManifest.records['port-record.json'].slice(0, 12)}+${portIdentity()}`,
+    )
     expect(snapshot.optics).toBe('sleeveBeyondPleuraMm=5;viewRangeMm=200;alongRibsLimitDeg=40')
     expect(snapshot.lungAndFluid).toBe('lung step 8')
     expect(snapshot.geometry).toMatch(/^[0-9a-f]{12}\+[0-9a-f]{12}$/)
+    expect(snapshot.rules).toBe(
+      'step tilt 2 depth 2 roll 5;skin 0.25 piece 0.9 numeric 0.001;port patch 10;lung room 0.5;occlusion 0.001',
+    )
+  })
+
+  it('names the port’s frame by value, so rib points that turn it make earlier results stale (R4)', () => {
+    const frame = portFrame()
+    expect(portIdentity(frame)).toBe(portIdentity(portFrame()))
+    // the rib points set the direction across the ribs; a turn of it is a different port
+    const turned = {
+      ...frame,
+      acrossRibs: rotate(frame.acrossRibs, frame.inward, radians(1)),
+      alongRibs: rotate(frame.alongRibs, frame.inward, radians(1)),
+    }
+    expect(portIdentity(turned)).not.toBe(portIdentity(frame))
+    expect(portIdentity({ ...frame, ribGapMm: frame.ribGapMm + 0.01 })).not.toBe(
+      portIdentity(frame),
+    )
+  })
+
+  it('changes nothing for a command issued against other rules or another port (R4)', () => {
+    const { state, resolver } = sceneEngine()
+    for (const change of [{ rules: 'another rule' }, { port: 'another port' }]) {
+      const stale = reduce(
+        state,
+        {
+          type: 'command',
+          command: IN,
+          input: 'scripted',
+          snapshot: { ...state.snapshot, ...change },
+        },
+        resolver,
+      )
+      expect(stale).toBe(state)
+    }
+    expect(reduce(state, command(state, IN), resolver)).not.toBe(state)
   })
 })
 

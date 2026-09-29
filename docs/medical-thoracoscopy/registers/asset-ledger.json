@@ -409,6 +409,13 @@
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-02c-lung-states",
       "compiledIntoPageCode": false
+    },
+    {
+      "path": "src/features/medical-thoracoscopy/content/data/anatomy/zone-reach.json",
+      "what": "Zone reach: per sample, whether the port brings it into the field, and whether any position shows it (computed from the proxies)",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "addedIn": "claude/mt-02e-space-engine",
+      "compiledIntoPageCode": false
     }
   ]
 }

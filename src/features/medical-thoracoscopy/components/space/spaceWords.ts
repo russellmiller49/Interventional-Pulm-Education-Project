@@ -9,13 +9,14 @@ import type {
 
 /**
  * Everything the space pane says, in one place, checked by the learner-copy gate as it loads. The
- * ledger's words are the survey section's own (section 11): a region is seen, partly seen or not
- * seen, and one not seen whole is not looked at yet, hidden by something in the way, or out of
- * reach from this port. No word here carries a number.
+ * ledger's words are the survey section's own (section 11): a region is seen, seen as far as the
+ * model reaches, partly seen or not seen, and one not seen whole is not looked at yet, hidden by
+ * something in the way, or out of reach from this port. No word here carries a number.
  */
 
 export const SEEN_WORDS: Readonly<Record<SeenState, string>> = {
   seen: 'Seen',
+  'seen-to-reach': 'Seen as far as this model reaches',
   'partly-seen': 'Partly seen',
   'not-seen': 'Not seen',
 }
@@ -36,7 +37,7 @@ export function ledgerWords(entry: ZoneLedgerEntry): string {
 export const LEDGER_WORDS = {
   heading: 'The model’s estimate',
   caption:
-    'What the telescope has shown of each region, as the model estimates it, in the order of the survey. It has no number and no total. The model cannot tell a glimpse from a careful look, so a region shown as seen was in view, not necessarily examined.',
+    'What the telescope has shown of each region, as the model estimates it, in the order of the survey. It has no number and no total. The model cannot tell a glimpse from a careful look, so a region shown as seen was in view, not necessarily examined. Seeing every region whole is not the aim: in this model, from its one port, part of the pleura is out of reach or behind the lung, and the estimate says which.',
   regionColumn: 'Region',
   estimateColumn: 'Estimate',
 } as const

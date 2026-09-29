@@ -21,12 +21,17 @@ import {
   createSpatialWorld,
   PORT_EXCLUSION_MM,
 } from '../engine/space/spatial/spatialWorld'
+import { LUNG_STEP_MS, reduce, startEngine } from '../engine/space/spaceReducer'
+import { spaceSnapshot } from '../engine/space/spaceSnapshot'
 import { advance, stepTarget, takeStep } from '../engine/space/spatial/sweep'
 import type { ZoneSamples } from '../engine/space/spatial/visibility'
+import type { Vec3 } from '../engine/space/vec'
 import {
   boxMesh,
   gridBoxMesh,
   judgedMesh,
+  judgedNear,
+  judgeInside,
   judgePointTriangle,
   judgeSegmentMesh,
   seededRandom,
@@ -286,4 +291,287 @@ export function fuzzSweep(
     }
   }
   return { moves, stopped, problems }
+}
+
+// ── Journeys: every move judged along its path, inside and out (independent review, R2) ─────────
+
+/**
+ * The judge's spacing along a move: no capsule end point moves further than this between two judged
+ * poses. Clearance is 1-Lipschitz in the capsules' end points, so between two poses judged `a` and
+ * `b` clear, with the end points moving `m` between them, the clearance is at least (a + b − m) / 2.
+ * Where that is not above the penetration tolerance, the judge halves the interval and looks again.
+ * Along a move the engine promises no penetration; where a move stops, the clearance skin. At the
+ * skin it moves in pieces shorter than the clearance, so a piece may pass inside the skin without
+ * crossing anything (`SKIN_PIECE_SHARE`). A sampled judgment is evidence, not a proof.
+ */
+export const PATH_SPACING_MM = 0.1
+
+/** Clearance below this is a penetration (plan, section 7). */
+export const PENETRATION_MM = -1e-3
+
+/** The instrument's axis points the judge classifies inside or out, away from the port's patch. */
+function axisPoints(geometry: Pick<ScopeGeometry, 'sleeve' | 'tip'>, port: PortFrame): Vec3[] {
+  const start = geometry.sleeve.start
+  const tip = geometry.tip
+  const length = Math.hypot(tip[0] - start[0], tip[1] - start[1], tip[2] - start[2])
+  const points: Vec3[] = [tip]
+  for (let d = 0; d < length; d += 5) {
+    const t = d / Math.max(length, 1e-9)
+    points.push([
+      start[0] + (tip[0] - start[0]) * t,
+      start[1] + (tip[1] - start[1]) * t,
+      start[2] + (tip[2] - start[2]) * t,
+    ])
+  }
+  const far = (p: Vec3) =>
+    Math.hypot(p[0] - port.pleura[0], p[1] - port.pleura[1], p[2] - port.pleura[2]) >=
+    PORT_EXCLUSION_MM
+  return points.filter(far)
+}
+
+/** A straight path between two poses, as the engine's move takes it; rolls the shorter way. */
+function poseAt(from: ScopePose, to: ScopePose, t: number): ScopePose {
+  const roll = ((((to.rollDeg - from.rollDeg) % 360) + 540) % 360) - 180
+  return {
+    tiltAcrossRibsDeg: from.tiltAcrossRibsDeg + (to.tiltAcrossRibsDeg - from.tiltAcrossRibsDeg) * t,
+    tiltAlongRibsDeg: from.tiltAlongRibsDeg + (to.tiltAlongRibsDeg - from.tiltAlongRibsDeg) * t,
+    depthMm: from.depthMm + (to.depthMm - from.depthMm) * t,
+    rollDeg: (((from.rollDeg + roll * t) % 360) + 360) % 360,
+  }
+}
+
+type Capsules = readonly { readonly start: Vec3; readonly end: Vec3; readonly radius: number }[]
+
+function capsulesOf(geometry: Pick<ScopeGeometry, 'sleeve' | 'shaft'>): Capsules {
+  return geometry.shaft ? [geometry.sleeve, geometry.shaft] : [geometry.sleeve]
+}
+
+/** The furthest any capsule end point moves between two sets of capsules. */
+function endPointMotion(a: Capsules, b: Capsules): number {
+  if (a.length !== b.length) return Infinity
+  let most = 0
+  a.forEach((capsule, i) => {
+    for (const [p, q] of [
+      [capsule.start, b[i].start],
+      [capsule.end, b[i].end],
+    ] as const)
+      most = Math.max(most, Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]))
+  })
+  return most
+}
+
+export interface JourneyTarget {
+  readonly space: LoadedSpace
+  /** The judge's wall: the space less the port's patch, for clearance. */
+  readonly wall: JudgedMesh
+  /** The judge's whole space, for inside and outside. */
+  readonly whole: JudgedMesh
+  readonly lungs: readonly JudgedMesh[]
+}
+
+export interface JourneyRun {
+  readonly moves: number
+  readonly stopped: number
+  readonly pathPoses: number
+  readonly insideChecks: number
+  readonly lungMoves: number
+  readonly lungHeld: number
+  readonly problems: readonly string[]
+  readonly failingSeeds: readonly number[]
+}
+
+/**
+ * Seeded journeys on a scene, each judged by the brute force and the ray-parity inside test, which
+ * share no code with the collider or its winding number. Each journey starts somewhere clear, rushes
+ * in, takes commands, asks the lung to move a step either way (the reducer decides, as it does for
+ * the learner), and takes more commands at whatever step the lung is then at. Every move is judged
+ * along its path, not only where it ends: a depth move sweeps exactly the instrument at its deeper
+ * end, a roll moves no capsule, and a pivot is judged at poses no more than `PATH_SPACING_MM` apart.
+ * At the end of every move, the axis must lie inside the space and outside the lung.
+ */
+export function fuzzJourneys(
+  target: JourneyTarget,
+  {
+    seeds,
+    firstSeed,
+    commands,
+    lungSteps,
+    only,
+  }: {
+    readonly seeds: number
+    readonly firstSeed: number
+    readonly commands: number
+    readonly lungSteps: readonly number[]
+    /** Replay just these seeds (the preserved ones), whatever `seeds` and `firstSeed` say. */
+    readonly only?: readonly number[]
+  },
+): JourneyRun {
+  const { space, wall, whole, lungs } = target
+  const { world, port, device, depthLimits } = space
+  const resolver = createResolver(space)
+  const problems: string[] = []
+  const failing = new Set<number>()
+  let moves = 0
+  let stopped = 0
+  let pathPoses = 0
+  let insideChecks = 0
+  let lungMoves = 0
+  let lungHeld = 0
+  const geometryOf = (pose: ScopePose) => scopeGeometry(pose, port, device)
+  const fail = (seed: number, text: string) => {
+    problems.push(`seed ${seed}, ${text}`)
+    failing.add(seed)
+  }
+  const judgeAt = (seed: number, what: string, pose: ScopePose, lungStep: number) => {
+    const judged = judgeInstrument(wall, lungs[lungStep], geometryOf(pose))
+    if (judged < CLEARANCE_SKIN_MM - JUDGE_TOLERANCE_MM)
+      fail(seed, `${what}: the judge finds ${judged} mm`)
+  }
+  const judgeSides = (seed: number, what: string, pose: ScopePose, lungStep: number) => {
+    for (const p of axisPoints(geometryOf(pose), port)) {
+      insideChecks += 1
+      if (!judgeInside(whole, p)) fail(seed, `${what}: a point of the axis is outside the space`)
+      if (judgeInside(lungs[lungStep], p)) fail(seed, `${what}: a point of the axis is in the lung`)
+    }
+  }
+  const judgePath = (
+    seed: number,
+    what: string,
+    from: ScopePose,
+    to: ScopePose,
+    lungStep: number,
+  ) => {
+    const alongAxis =
+      from.tiltAcrossRibsDeg === to.tiltAcrossRibsDeg &&
+      from.tiltAlongRibsDeg === to.tiltAlongRibsDeg
+    if (alongAxis) {
+      // along the axis (or a roll), the instrument sweeps exactly itself at the deeper end
+      pathPoses += 1
+      judgeAt(seed, `${what}, swept`, from.depthMm > to.depthMm ? from : to, lungStep)
+      return
+    }
+    const a = capsulesOf(geometryOf(from))
+    const b = capsulesOf(geometryOf(to))
+    const motion = endPointMotion(a, b)
+    const count = Math.max(1, Math.ceil(motion / PATH_SPACING_MM))
+    // only the triangles that could come near the move
+    const ends = [...a, ...b].flatMap((c) => [c.start, c.end])
+    const corner = (pick: (...values: number[]) => number): Vec3 => [
+      pick(...ends.map((p) => p[0])),
+      pick(...ends.map((p) => p[1])),
+      pick(...ends.map((p) => p[2])),
+    ]
+    const box = { min: corner(Math.min), max: corner(Math.max) }
+    const margin =
+      Math.max(device.sleeveRadiusMm, device.shaftRadiusMm) + CLEARANCE_SKIN_MM + motion + 1
+    const nearWall = judgedNear(wall, box, margin)
+    const nearLung = judgedNear(lungs[lungStep], box, margin)
+    const at = (t: number) => {
+      pathPoses += 1
+      const g = geometryOf(poseAt(from, to, t))
+      return { t, capsules: capsulesOf(g), clearance: judgeInstrument(nearWall, nearLung, g) }
+    }
+    type Sample = ReturnType<typeof at>
+    // certify each interval by the Lipschitz bound, halving it where the bound is not enough
+    const certify = (a: Sample, b: Sample, depth: number): void => {
+      if (b.clearance < PENETRATION_MM) {
+        fail(
+          seed,
+          `${what}, along its path at ${b.t.toFixed(6)}: the judge finds ${b.clearance} mm`,
+        )
+        return
+      }
+      // chords, and a little for the arc a turn of a few degrees makes
+      const m = endPointMotion(a.capsules, b.capsules) * 1.01
+      if ((a.clearance + b.clearance - m) / 2 > PENETRATION_MM) return
+      if (depth > 20) {
+        fail(seed, `${what}, along its path near ${a.t.toFixed(6)}: not certified clear`)
+        return
+      }
+      const middle = at((a.t + b.t) / 2)
+      certify(a, middle, depth + 1)
+      certify(middle, b, depth + 1)
+    }
+    let previous = at(0)
+    for (let k = 1; k <= count; k += 1) {
+      const next = at(k / count)
+      certify(previous, next, 0)
+      previous = next
+    }
+  }
+  const step = (
+    seed: number,
+    what: string,
+    pose: ScopePose,
+    lungStep: number,
+    command: SpaceCommand,
+  ) => {
+    const result = takeStep(world, port, device, pose, command, lungStep, depthLimits)
+    moves += 1
+    if (result.limit) stopped += 1
+    const named = `${what} ${JSON.stringify(command)}`
+    judgeAt(seed, named, result.pose, lungStep)
+    judgePath(seed, named, pose, result.pose, lungStep)
+    judgeSides(seed, named, result.pose, lungStep)
+    if (!tiltAllowed(result.pose, port, device)) fail(seed, `${named}: outside the ellipse`)
+    return result.pose
+  }
+  const least = Math.min(...lungSteps)
+  const most = Math.max(...lungSteps)
+  const list = only ?? Array.from({ length: seeds }, (_, k) => firstSeed + k)
+  for (const seed of list) {
+    const random = seededRandom(seed)
+    let lungStep = lungSteps[Math.floor(random() * lungSteps.length)]
+    let pose = randomStart(random, space, resolver, lungStep)
+    judgeAt(seed, 'the start', pose, lungStep)
+    judgeSides(seed, 'the start', pose, lungStep)
+    // the rush: along the axis, until something stops it
+    const rushed = advance(
+      world,
+      port,
+      device,
+      pose,
+      { ...pose, depthMm: depthLimits[1] },
+      lungStep,
+    )
+    moves += 1
+    if (rushed.limit) stopped += 1
+    judgePath(seed, 'the rush', pose, rushed.pose, lungStep)
+    judgeSides(seed, 'the rush', rushed.pose, lungStep)
+    pose = rushed.pose
+    const held = MOTIONS[Math.floor(random() * MOTIONS.length)]
+    const pick = () => (random() < 0.7 ? held : MOTIONS[Math.floor(random() * MOTIONS.length)])
+    for (let k = 0; k < commands; k += 1) pose = step(seed, `command ${k}`, pose, lungStep, pick())
+    // the lung, one step either way, as the reducer decides
+    const toward = Math.min(most, Math.max(least, lungStep + (random() < 0.5 ? -1 : 1)))
+    if (toward !== lungStep) {
+      let state = startEngine(resolver, {
+        scenario: 'journey',
+        lungStep,
+        pose,
+        reducedMotion: false,
+        snapshot: spaceSnapshot('journey', lungStep),
+      })
+      state = reduce(state, { type: 'lung-target', step: toward }, resolver)
+      state = reduce(state, { type: 'tick', ms: LUNG_STEP_MS }, resolver)
+      if (state.lungStep === toward) {
+        lungMoves += 1
+        lungStep = toward
+        judgeAt(seed, `the lung to step ${toward}`, pose, lungStep)
+        judgeSides(seed, `the lung to step ${toward}`, pose, lungStep)
+      } else lungHeld += 1
+    }
+    for (let k = 0; k < commands; k += 1)
+      pose = step(seed, `after the lung, command ${k}`, pose, lungStep, pick())
+  }
+  return {
+    moves,
+    stopped,
+    pathPoses,
+    insideChecks,
+    lungMoves,
+    lungHeld,
+    problems,
+    failingSeeds: [...failing],
+  }
 }
