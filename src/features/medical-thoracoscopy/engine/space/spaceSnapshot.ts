@@ -5,8 +5,16 @@ import { digest, numbersText } from './digest'
 import { AUTHORED_INSTRUMENT_VALUES } from './instrument'
 import { portFrame, type PortFrame } from './portDefinition'
 import { LUNG_ROOM_MM } from './spaceReducer'
-import { CLEARANCE_SKIN_MM, NUMERIC_MM, PORT_EXCLUSION_MM } from './spatial/spatialWorld'
+import {
+  CLEARANCE_SKIN_MM,
+  NUMERIC_MM,
+  PORT_EXCLUSION_MM,
+  TOUCH_MM,
+  TOUCH_SKIN_MM,
+} from './spatial/spatialWorld'
 import { SKIN_PIECE_SHARE, STEP } from './spatial/sweep'
+import { CONTACT_TABLE } from './contactPolicy'
+import { AUTHORED_TOOL_VALUES, forceps } from './toolChannel'
 import { OCCLUSION_TOLERANCE_MM } from './spatial/visibility'
 
 /**
@@ -25,6 +33,9 @@ import { OCCLUSION_TOLERANCE_MM } from './spatial/visibility'
  *   reads the fluid table, so the fluid is not a spatial input yet;
  * - rules: the step sizes, the skins, the port's excluded patch, the lung's room and the view's
  *   occlusion tolerance, which decide where a move stops and what counts as seen.
+ * - tool: for a scenario with the forceps, the touching distance and its skin, the forceps' authored
+ *   step and reach, the open jaws' envelope and a digest of every row of the contact table, so a
+ *   changed permission makes a contact result stale; `none` otherwise.
  * The scenario is named; a scenario's start is applied by starting the engine afresh, which drops
  * everything computed before, so nothing spatial outlives a change of start. Nothing the renderer
  * alone holds (the presentation turn, the canvas) is part of it.
@@ -65,11 +76,26 @@ export function rulesIdentity(): string {
   ].join(';')
 }
 
+/** The forceps and the contact table, as a text. */
+export function toolIdentity(): string {
+  const table = CONTACT_TABLE.map((row) =>
+    [row.part, row.region, row.phase, row.jaws, row.authorisation, row.rule].join(' '),
+  ).join('|')
+  return [
+    `touch ${TOUCH_MM} skin ${TOUCH_SKIN_MM}`,
+    `step ${AUTHORED_TOOL_VALUES.stepMm} reach ${AUTHORED_TOOL_VALUES.reachMm}`,
+    `open jaws ${Math.round(forceps().openJawsRadiusMm * 1000) / 1000}`,
+    `table ${digest(table)}`,
+  ].join(';')
+}
+
 export function spaceSnapshot(
   scenario: string,
   lungStep: number,
   /** A teaching target in the space, by name (the contact spike, slice 13). */
   target?: string,
+  /** Whether the scenario has the forceps. */
+  withTool = false,
 ): SpaceSnapshotId {
   const optics = Object.entries(AUTHORED_INSTRUMENT_VALUES)
     .map(([key, value]) => `${key}=${value}`)
@@ -83,5 +109,6 @@ export function spaceSnapshot(
     lungAndFluid: `lung step ${lungStep}`,
     geometry: `${fileHash('proxy-pleural-space')}+${fileHash('proxy-lung')}${target ? `+${target}` : ''}`,
     rules: rulesIdentity(),
+    tool: withTool ? toolIdentity() : 'none',
   }
 }

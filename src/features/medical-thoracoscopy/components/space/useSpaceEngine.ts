@@ -98,7 +98,7 @@ function engineStart(start: SpaceEngineStart, reducedMotion: boolean) {
     lungStep: start.lungStep,
     pose: start.pose,
     reducedMotion,
-    snapshot: spaceSnapshot(start.scenario, start.lungStep, start.target),
+    snapshot: spaceSnapshot(start.scenario, start.lungStep, start.target, Boolean(start.tool)),
     ...(start.tool ? { tool: start.tool } : {}),
   }
 }
@@ -225,7 +225,7 @@ export function useSpaceEngine(
       return paneStateOf(engine, loaded.space, reach)
     }
     return {
-      snapshot: spaceSnapshot(start.scenario, start.lungStep, start.target),
+      snapshot: spaceSnapshot(start.scenario, start.lungStep, start.target, Boolean(start.tool)),
       readiness:
         loaded.kind === 'failed'
           ? { kind: 'unavailable', why: READINESS_WORDS.unavailable, canRetry: loaded.canRetry }
@@ -244,7 +244,7 @@ export function useSpaceEngine(
       crossSection: null,
       clock: { held: false },
     }
-  }, [loaded, engine, reach, start.scenario, start.lungStep, start.pose, start.target])
+  }, [loaded, engine, reach, start.scenario, start.lungStep, start.pose, start.target, start.tool])
 
   return {
     paneState,

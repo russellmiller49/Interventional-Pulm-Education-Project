@@ -143,6 +143,8 @@ export function commandWords(command: SpaceCommand): string {
       return DOCK_WORDS.retry
     case 'tool':
       return `${TOOL_WORDS.partName}: ${command.direction === 'extend' ? 'out' : 'back in'}`
+    case 'jaws':
+      return `${TOOL_WORDS.partName}: jaws ${command.action === 'open' ? 'open' : 'closed'}`
   }
 }
 

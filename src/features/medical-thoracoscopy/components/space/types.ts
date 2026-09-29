@@ -35,6 +35,12 @@ export interface SpaceSnapshotId {
    * (added after the independent review, R4).
    */
   readonly rules: string
+  /**
+   * The forceps and the contact table, for a scenario that has the forceps: the touching distance
+   * and skin, the forceps' step and reach, the open jaws' envelope and a digest of the table's rows;
+   * `none` without them (added after the independent review, R4 and R8).
+   */
+  readonly tool: string
 }
 
 export const SNAPSHOT_PARTS = [
@@ -46,6 +52,7 @@ export const SNAPSHOT_PARTS = [
   'lungAndFluid',
   'geometry',
   'rules',
+  'tool',
 ] as const satisfies readonly (keyof SpaceSnapshotId)[]
 
 export function sameSnapshot(a: SpaceSnapshotId, b: SpaceSnapshotId): boolean {
@@ -217,6 +224,11 @@ export type SpaceCommand =
   | { readonly kind: 'retry-geometry' }
   /** The forceps along the working channel, the telescope held still (added in slice 13). */
   | { readonly kind: 'tool'; readonly direction: 'extend' | 'retract' }
+  /**
+   * The forceps' jaws opened or closed, the telescope and the forceps held still (added after the
+   * independent review, R8). No dock control sends it yet; it is part of the contact contract.
+   */
+  | { readonly kind: 'jaws'; readonly action: 'open' | 'close' }
 
 export type SpaceInputMode = 'keyboard' | 'pointer' | 'touch' | 'scripted'
 
@@ -229,7 +241,7 @@ export function commandPart(command: SpaceCommand): 'pivot' | 'depth' | 'roll' |
 
 /** The control of the model a command belongs to, or none for the clock and retry (slice 13). */
 export function commandControl(command: SpaceCommand): 'scope' | 'tool' | null {
-  if (command.kind === 'tool') return 'tool'
+  if (command.kind === 'tool' || command.kind === 'jaws') return 'tool'
   return commandPart(command) === null ? null : 'scope'
 }
 

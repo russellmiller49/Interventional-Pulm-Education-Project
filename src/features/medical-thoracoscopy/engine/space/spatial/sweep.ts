@@ -1,4 +1,5 @@
 import type { ScopePose, SpaceCommand } from '../../../components/space/types'
+import type { PleuralZoneId } from '../../../content/pleuralZones'
 import { acrossRibsLimitDeg, scopeGeometry, sleeveTipDepth, type ScopeGeometry } from '../fulcrum'
 import type { Instrument } from '../instrument'
 import type { PortFrame } from '../portDefinition'
@@ -6,6 +7,7 @@ import { radians } from '../vec'
 import {
   AUTHORED_TOOL_VALUES,
   toolCapsules,
+  jawsOut,
   toolWith,
   type Forceps,
   type ToolState,
@@ -42,6 +44,8 @@ export type SurfaceLimit = {
   readonly kind: Obstacle
   readonly part: InstrumentPart
   readonly triangle: number
+  /** The region of the wall, where the wall stopped it and its regions are known (R8). */
+  readonly zone?: PleuralZoneId
 }
 
 export type Limit =
@@ -49,6 +53,8 @@ export type Limit =
   | { readonly kind: 'ribs'; readonly part: 'sleeve' }
   | { readonly kind: 'fully-in' | 'back-in-sleeve'; readonly part: 'telescope' }
   | { readonly kind: 'tool-out' | 'tool-in'; readonly part: 'working-element' }
+  /** The jaws open cannot come back into the channel, nor open inside it (R8). */
+  | { readonly kind: 'jaws-open' | 'jaws-in-channel'; readonly part: 'working-element' }
 
 export interface StepResult {
   readonly pose: ScopePose
@@ -192,7 +198,12 @@ export function takeStep(
   // Drawing the telescope out passes only through space it already fills, and a tool out with it only
   // through space the telescope or the tool already fills, each part where a part as strict or
   // stricter was: it is never refused by a surface, only by its fence.
-  if (command.kind === 'depth' && target.depthMm <= pose.depthMm) {
+  // (With the jaws open, the wider jaws come back where only the shaft was: that is a move like any.)
+  if (
+    command.kind === 'depth' &&
+    target.depthMm <= pose.depthMm &&
+    !(context && context.state.jaws === 'open')
+  ) {
     return {
       pose: target,
       limit: fenced,
@@ -316,18 +327,22 @@ export function advanceWithTool(
     Math.max(from.depthMm, to.depthMm) +
     Math.max(toolFrom.extensionMm, toolTo.extensionMm) +
     tools.channelOffsetMm +
-    Math.max(device.sleeveRadiusMm, device.shaftRadiusMm, tools.shaftRadiusMm)
+    Math.max(device.sleeveRadiusMm, device.shaftRadiusMm, toolRadius(tools, toolFrom, toolTo))
   // a roll swings the tool about the axis: no point of it lies further from the axis than the
   // channel's offset and the tool's radius
   const motion =
     Math.abs(to.depthMm - from.depthMm) +
     Math.abs(toolTo.extensionMm - toolFrom.extensionMm) +
     reach * radians(turnOf(from, to)) +
-    (tools.channelOffsetMm + tools.shaftRadiusMm) * radians(Math.abs(rollChange(from, to)))
+    (tools.channelOffsetMm + toolRadius(tools, toolFrom, toolTo)) *
+      radians(Math.abs(rollChange(from, to)))
   let touching = false
   const at = (t: number) => ({
     pose: mix(from, to, t),
-    tool: toolWith(toolFrom.extensionMm + (toolTo.extensionMm - toolFrom.extensionMm) * t),
+    tool: toolWith(
+      toolFrom.extensionMm + (toolTo.extensionMm - toolFrom.extensionMm) * t,
+      toolFrom.jaws ?? 'closed',
+    ),
   })
   const measure = (t: number): Measured => {
     const { pose, tool } = at(t)
@@ -340,7 +355,12 @@ export function advanceWithTool(
     return {
       room: found.room,
       pieceLimit: found.leastClearance,
-      limit: { kind: found.obstacle, part: found.part, triangle: found.triangle },
+      limit: {
+        kind: found.obstacle,
+        part: found.part,
+        triangle: found.triangle,
+        ...(found.zone ? { zone: found.zone } : {}),
+      },
     }
   }
   const { t, limit } = advanceBy(motion, measure)
@@ -401,7 +421,17 @@ export function takeToolStep(
       : wanted < 0
         ? { kind: 'tool-in', part: 'working-element' }
         : null
-  const target = toolWith(wanted)
+  const jaws = context.state.jaws ?? 'closed'
+  const target = toolWith(wanted, jaws)
+  // The jaws must be closed to come back: open, they are wider than the shaft behind them.
+  if (direction === 'retract' && jaws === 'open') {
+    return {
+      pose,
+      tool: context.state,
+      limit: { kind: 'jaws-open', part: 'working-element' },
+      touching: touchingAt(world, port, device, pose, context.state, context, lungStep),
+    }
+  }
   // Back into the channel, the tool passes only through space it already fills.
   if (direction === 'retract') {
     return {
@@ -423,4 +453,63 @@ export function takeToolStep(
     lungStep,
   )
   return moved.limit ? moved : { ...moved, limit: fenced }
+}
+
+/** The widest the tool is about its line over a move. */
+function toolRadius(tools: Forceps, from: ToolState, to: ToolState): number {
+  return from.jaws === 'open' || to.jaws === 'open' ? tools.openJawsRadiusMm : tools.shaftRadiusMm
+}
+
+/**
+ * The jaws opened or closed, the telescope and the forceps held still (independent review, R8).
+ * Closing only narrows the working element, so it is never refused. Opening widens it about its
+ * line, so every clearance falls as it opens and is least when it is open: checking the open jaws
+ * where they are checks the whole opening. It is refused, with the part and what it meets named,
+ * where the open jaws would come within a pair's skin, or while the jaws are not wholly out.
+ */
+export function takeJawStep(
+  world: SpatialWorld,
+  port: PortFrame,
+  device: Instrument,
+  pose: ScopePose,
+  action: 'open' | 'close',
+  context: ToolContext,
+  lungStep: number,
+): StepResult {
+  const { state, tools, rule } = context
+  if (action === 'close') {
+    const closed: ToolState = { ...state, jaws: 'closed' }
+    return {
+      pose,
+      tool: closed,
+      limit: null,
+      touching: touchingAt(world, port, device, pose, closed, context, lungStep),
+    }
+  }
+  if (!jawsOut(state, tools))
+    return {
+      pose,
+      tool: state,
+      limit: { kind: 'jaws-in-channel', part: 'working-element' },
+      touching: false,
+    }
+  const open: ToolState = { ...state, jaws: 'open' }
+  const found = world.contact(
+    partsOf(scopeGeometry(pose, port, device), open, tools),
+    lungStep,
+    rule,
+  )
+  if (found.room < -NUMERIC_MM)
+    return {
+      pose,
+      tool: state,
+      limit: {
+        kind: found.obstacle,
+        part: found.part,
+        triangle: found.triangle,
+        ...(found.zone ? { zone: found.zone } : {}),
+      },
+      touching: touchingAt(world, port, device, pose, state, context, lungStep),
+    }
+  return { pose, tool: open, limit: null, touching: found.touching }
 }

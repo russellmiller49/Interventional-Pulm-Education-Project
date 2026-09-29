@@ -26,6 +26,8 @@ export const LIMIT_WORDS = {
   touching: 'They touch the nodule and go no further this way.',
   toolOut: 'They are out as far as this model lets them go.',
   toolIn: 'They are back in the channel and go no further in.',
+  jawsOpen: 'Their jaws are open. Close them before bringing them back.',
+  jawsInChannel: 'Their jaws open only once they are all the way out of the channel.',
 } as const
 
 export const CROSS_SECTION_SEEN_FROM = 'Seen from the patient’s front, with the head to the right.'
@@ -72,6 +74,10 @@ export function refusalOf(
       return { part: PART.forceps, words: LIMIT_WORDS.toolOut }
     case 'tool-in':
       return { part: PART.forceps, words: LIMIT_WORDS.toolIn }
+    case 'jaws-open':
+      return { part: PART['working-element'], words: LIMIT_WORDS.jawsOpen }
+    case 'jaws-in-channel':
+      return { part: PART['working-element'], words: LIMIT_WORDS.jawsInChannel }
   }
 }
 

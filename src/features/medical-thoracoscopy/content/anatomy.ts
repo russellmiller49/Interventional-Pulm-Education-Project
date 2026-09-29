@@ -641,7 +641,7 @@ export const toolContactSchema = z
     script: z.string().min(1),
     statement: z.string().min(1),
     label: z.literal('Authored construct'),
-    computedFor: snapshotPartsSchema,
+    computedFor: snapshotPartsSchema.extend({ tool: z.string().min(1) }),
     lungStep: z.number().int().nonnegative(),
     nodule: z
       .object({
