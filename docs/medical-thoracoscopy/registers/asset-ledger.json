@@ -221,5 +221,41 @@
     }
   ],
   "scenes": [],
-  "bundledRecords": []
+  "bundledRecords": [
+    {
+      "path": "src/features/medical-thoracoscopy/content/data/anatomy/source-audit.json",
+      "what": "Source audit: file hashes and each segment's measured volume, density and extent",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "addedIn": "claude/mt-02b-thorax-surfaces",
+      "compiledIntoPageCode": false
+    },
+    {
+      "path": "src/features/medical-thoracoscopy/content/data/anatomy/ribs.json",
+      "what": "The twelve right ribs, numbered, as measured points",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "addedIn": "claude/mt-02b-thorax-surfaces",
+      "compiledIntoPageCode": false
+    },
+    {
+      "path": "src/features/medical-thoracoscopy/content/data/anatomy/port-candidates.json",
+      "what": "Measured port candidates: rib gaps, wall thickness and depths for the 5th to 8th spaces",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "addedIn": "claude/mt-02b-thorax-surfaces",
+      "compiledIntoPageCode": false
+    },
+    {
+      "path": "src/features/medical-thoracoscopy/content/data/anatomy/port-record.json",
+      "what": "The prototype port: pivot, corridor, pleura point, rib gap and depth",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "addedIn": "claude/mt-02b-thorax-surfaces",
+      "compiledIntoPageCode": false
+    },
+    {
+      "path": "src/features/medical-thoracoscopy/content/data/anatomy/surfaces.json",
+      "what": "Surface records: vertex and triangle counts, hashes and zone areas",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "addedIn": "claude/mt-02b-thorax-surfaces",
+      "compiledIntoPageCode": false
+    }
+  ]
 }

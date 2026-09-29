@@ -142,4 +142,12 @@ Not opened: no page shows the anatomy yet. The scene arrives in slice 11.
 - Do not change a zone id, or the zone list's `split`, without rebuilding and checking the zones.
 - Do not describe the prototype port as a safe, recommended or usual site.
 
+## Repair after the independent review (2026-09-29, R0)
+
+The five records this slice adds under `content/data/anatomy/` are derived from the CT and its
+segmentation and are committed, so they are in the public repository on every pushed branch that
+carries them (a raw address answered HTTP 200 on 2026-09-29). They are now listed in the asset
+ledger's `bundledRecords`, under R-ANATOMY-CT and R-ANATOMY-SEGMENTATION, whose `exposure` says so.
+No page compiles them in yet at this slice. Recorded, not approved.
+
 This does not change publication status or constitute clinical approval.
