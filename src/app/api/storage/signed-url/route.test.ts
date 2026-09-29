@@ -1,5 +1,7 @@
 /** @jest-environment node */
-import { GET, SIGNABLE_BUCKETS } from './route'
+import { SIGNABLE_BUCKETS } from '@/lib/storage/signable-buckets'
+
+import { GET } from './route'
 
 /**
  * The generic signer signs with the service key and needs no sign-in, so it may sign only for the
