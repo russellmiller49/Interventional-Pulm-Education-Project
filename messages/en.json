@@ -1616,7 +1616,7 @@
         },
         "assessment": {
           "title": "Assessment",
-          "description": "Ten questions on selection, technique, poudrage, and complication management."
+          "description": "Questions on selection, technique, poudrage, and complication management."
         }
       }
     },
@@ -1668,7 +1668,7 @@
       "metaTitle": "Pleuroscopy Assessment",
       "metaDescription": "Check your reasoning on indications, contraindications, access and biopsy technique, poudrage, and complication management.",
       "headerTitle": "Assessment",
-      "headerDescription": "Ten questions that check whether you can select patients, access and sample safely, and manage complications.",
+      "headerDescription": "Questions that check whether you can select patients, access and sample safely, and manage complications.",
       "checkTitle": "Pleuroscopy check",
       "checkIntro": "Answer each question, then reveal the explanation. These mirror the Learn objectives.",
       "progressLabel": "Mark Assessment complete"
