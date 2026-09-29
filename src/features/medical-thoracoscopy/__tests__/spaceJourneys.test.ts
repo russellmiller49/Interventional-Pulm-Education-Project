@@ -62,7 +62,13 @@ function journeyTarget(space: LoadedSpace): JourneyTarget {
  */
 const MEASURED_LUNG_EULER = [2, 2, 0, 2, 0, 2, 2, 2, 2] as const
 
-type PreservedSeed = { readonly scene: string; readonly seed: number; readonly note: string }
+type PreservedSeed = {
+  readonly scene: string
+  /** A journey unless said otherwise; the forceps' seeds are replayed with the forceps. */
+  readonly kind?: 'journey' | 'forceps'
+  readonly seed: number
+  readonly note: string
+}
 const preservedSeeds = preserved as readonly PreservedSeed[]
 
 describe('journeys, judged along every move (R2)', () => {
@@ -168,7 +174,9 @@ describe('the real proxies, where the owner’s local data holds them', () => {
   )
 
   maybe('replays every preserved failing seed on the real proxies', () => {
-    const seeds = preservedSeeds.filter((e) => e.scene === 'real').map((e) => e.seed)
+    const seeds = preservedSeeds
+      .filter((e) => e.scene === 'real' && e.kind !== 'forceps')
+      .map((e) => e.seed)
     const run = fuzzJourneys(journeyTarget(real()), {
       seeds: 0,
       firstSeed: 0,

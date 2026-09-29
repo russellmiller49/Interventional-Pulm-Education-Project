@@ -3,6 +3,20 @@
  * `--cyan`, `--amber`, `--green`). The wall's three ledger states differ in line style as well as
  * colour, so colour is never the only cue. One column on a narrow screen; nothing scrolls sideways.
  */
+/* One column that may be narrower than its widest content, so nothing inside widens the page. */
+.pane,
+.dock,
+.paused,
+.scopeControl,
+.shownControl,
+.stepControl,
+.part,
+.ledger,
+.keyHelp,
+.prototype {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .pane {
   display: grid;
   gap: 1rem;

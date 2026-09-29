@@ -31,6 +31,9 @@ gives the date.
 | [Sponsorship policy](../sponsorship/POLICY.md)          | Draft. Who decides what when a module is sponsored                                                                                          |
 | [Repository baseline](repository-baseline.md)           | Where the build started: commit, packages, policies, file boundaries                                                                        |
 | [Handoffs](handoffs/)                                   | One per slice: what changed, what was checked, what was not                                                                                 |
+| [Prototype gate packet](gate/prototype-gate-packet.md)  | The first round's gate, criterion by criterion: what was shown, how, and what is NOT TESTED or NOT RUN                                      |
+| [Revised forecast](gate/forecast.md)                    | What the first round took, and the forecast from it                                                                                         |
+| [Gate forms](gate/forms/)                               | Blank forms for what the gate leaves to people and devices: device measurements, the fellows' pilot, the Scope view, a screen reader        |
 
 ## Device kit
 
@@ -86,7 +89,10 @@ works nothing out: what is in view, what has been seen and what stops the telesc
 the engine, so the same commands give the same ledger whichever pane draws them.
 
 - `SpaceFallbackPane` draws it without WebGL: the Chest view as a cut through the space along the
-  telescope, the Scope view in words, the control dock, the model's estimate and the keys.
+  telescope, the Scope view in words, the control dock, the model's estimate and the keys. The cut
+  is computed from the collision proxies, so it needs them too: where they cannot be delivered (in
+  production, until the owner uploads the anatomy), neither the 3D views nor the cut are available,
+  and the spatial controls say why.
 - `ControlDock` holds the second control's three parts; a held button repeats and lets go when the
   window loses focus or the tab is hidden; under reduced motion a press is one step, and a waiting
   model moves on with Step. While the anatomy loads or cannot be had, the controls say why they wait.
@@ -162,6 +168,28 @@ available section as its lesson (`components/lesson/SectionLesson.tsx`), the par
 the order the section's question sets, with the course, the teaching example and the scope controls
 kept apart. The lesson session (`engine/stageSession.ts`) holds nothing that is stored. See the
 [survey-lesson handoff](handoffs/mt-03c-survey-lesson.md).
+
+## Checks in a real browser
+
+`e2e/medical-thoracoscopy.spec.ts`, against a local server only. The module opens only for a site
+admin (OD-15), so start the server with the site's local-development sign-in, which a production
+build and any host but localhost refuse, and give the run the same token:
+
+    LOCAL_DEV_AUTH_ENABLED=1 LOCAL_DEV_AUTH_TOKEN=<a token of your own> node scripts/dev-with-training-apps.mjs --port 3134
+    MT_BASE_URL=http://localhost:3134 MT_LOCAL_DEV_AUTH_TOKEN=<the same token> npx playwright test -c playwright.medical-thoracoscopy.config.ts
+
+The anatomy must be in the server's ignored `public/models/medical-thoracoscopy/v1/anatomy/` folder
+(`npx tsx scripts/medical-thoracoscopy/package-anatomy.ts --install-dev`, or a link to the packaged
+folder in the owner's local data, removed afterwards). The check of storage refused altogether needs
+the site's storage guard (R6) merged.
+
+It walks a fresh learner's path, refuses and corrupts storage, reads the canvas's pixels, does the
+survey by keyboard alone, taps, scrolls, reduces motion, takes WebGL away, breaks a file, the decoder
+and the context, checks five layouts, the words a learner reads or hears and axe, drives the contact
+spike, checks the independent landmark table in real pixels, and writes the first measurements to
+`test-results/medical-thoracoscopy/`. The prototype gate's fuzz on the real proxies, path-judged
+journeys and the forceps, is `npx tsx scripts/medical-thoracoscopy/fuzz-real-proxies.ts` (about
+nine minutes); the landmark table is written by `python3 scripts/medical-thoracoscopy/landmark_table.py`.
 
 ## Status words
 

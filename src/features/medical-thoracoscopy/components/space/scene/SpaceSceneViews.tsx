@@ -30,6 +30,7 @@ import {
   type WebGLRendererParameters,
 } from 'three'
 
+import { aimScopeCamera, LANDMARK_COLOUR, setDevLandmarks, useDevLandmarks } from './scopeCamera'
 import { anatomyManifest } from '../../../content/data/generated/anatomy'
 import { pleuralZone, type PleuralZoneId } from '../../../content/pleuralZones'
 import { scopeGeometry, type ScopeGeometry } from '../../../engine/space/fulcrum'
@@ -451,19 +452,7 @@ function ScopeView({
   useLayoutEffect(() => {
     const c = camera.current
     if (!c) return
-    c.position.set(...frame.origin)
-    c.up.set(...frame.up)
-    c.lookAt(
-      frame.origin[0] + frame.forward[0],
-      frame.origin[1] + frame.forward[1],
-      frame.origin[2] + frame.forward[2],
-    )
-    c.fov = space.device.fieldOfViewDeg
-    c.aspect = 1
-    c.near = 0.5
-    c.far = 600
-    c.updateProjectionMatrix()
-    c.updateMatrixWorld()
+    aimScopeCamera(c, frame, space.device.fieldOfViewDeg)
     light.current?.position.set(...frame.origin)
     probedScopeCamera.current = c
   }, [frame, space.device.fieldOfViewDeg])
@@ -490,6 +479,33 @@ function ScopeView({
         />
       ))}
       <ContactParts state={state} space={space} geometry={geometry} materials={materials} />
+      <DevLandmarks origin={frame.origin} />
+    </>
+  )
+}
+
+/**
+ * Development only: landmarks the browser check sets, drawn over everything in the Scope view in a
+ * colour nothing else has, each about the same size in the picture wherever it is (R3).
+ */
+function DevLandmarks({ origin }: { origin: Vec3 }) {
+  const points = useDevLandmarks()
+  if (process.env.NODE_ENV === 'production' || points.length === 0) return null
+  return (
+    <>
+      {points.map((point, i) => (
+        <mesh
+          key={i}
+          position={point as [number, number, number]}
+          renderOrder={999}
+          scale={
+            0.03 * Math.hypot(point[0] - origin[0], point[1] - origin[1], point[2] - origin[2])
+          }
+        >
+          <sphereGeometry args={[1, 16, 12]} />
+          <meshBasicMaterial color={LANDMARK_COLOUR} depthTest={false} depthWrite={false} />
+        </mesh>
+      ))}
     </>
   )
 }
@@ -558,6 +574,8 @@ function DevelopmentProbe({
     }
     const hook = {
       frame: () => advance(performance.now(), true),
+      /** Landmarks to draw over the Scope view, in anatomy millimetres; none to clear them (R3). */
+      markers: (points: readonly Vec3[] | null) => setDevLandmarks(points ?? []),
       sample,
       probe: () => ({
         chest: read(chest.current, false, CHEST_BACKGROUND),

@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import type { ScopePose, SpaceCommand } from '../components/space/types'
 import type { PleuralZoneId } from '../content/pleuralZones'
 import { anatomyManifest } from '../content/data/generated/anatomy'
+import preserved from '../test-support/fuzz-seeds.json'
 import { colliderRule, type ContactRegion } from '../engine/space/contactPolicy'
 import { scopeGeometry, sleeveTipDepth } from '../engine/space/fulcrum'
 import { instrument } from '../engine/space/instrument'
@@ -394,6 +395,18 @@ describe('the forceps on the real proxies (R2, R8)', () => {
       expect(run.problems).toEqual([])
       expect(run.stopped).toBeGreaterThan(0)
       expect(run.insideChecks).toBeGreaterThan(0)
+      // and every preserved failing seed of the forceps, replayed
+      const kept = (preserved as { scene: string; kind?: string; seed: number }[]).filter(
+        (entry) => entry.scene === 'real' && entry.kind === 'forceps',
+      )
+      const replay = fuzzForceps(target, {
+        seeds: 0,
+        firstSeed: 0,
+        commands: 12,
+        lungStep: 8,
+        only: kept.map((entry) => entry.seed),
+      })
+      expect(replay.problems).toEqual([])
     },
     600000,
   )
