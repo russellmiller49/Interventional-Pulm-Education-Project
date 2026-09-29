@@ -345,7 +345,24 @@
       "uploaded": false
     }
   ],
-  "scenes": [],
+  "scenes": [
+    {
+      "id": "pleural-space",
+      "assets": [
+        "pleural-space",
+        "ribs",
+        "context",
+        "lung-states",
+        "proxy-pleural-space",
+        "proxy-lung"
+      ],
+      "coldTransferBytes": 2564388,
+      "sharedRuntimeBytes": 368841,
+      "decodedBytes": 6120630,
+      "drawCalls": null,
+      "renderedTriangles": null
+    }
+  ],
   "bundledRecords": [
     {
       "path": "src/features/medical-thoracoscopy/content/data/anatomy/source-audit.json",
@@ -415,6 +432,13 @@
       "what": "Zone reach: per sample, whether the port brings it into the field, and whether any position shows it (computed from the proxies)",
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-02e-space-engine",
+      "compiledIntoPageCode": true
+    },
+    {
+      "path": "src/features/medical-thoracoscopy/content/data/anatomy/tour-stops.json",
+      "what": "Tour stops: for each survey region, the position that shows the most of it (computed from the proxies)",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "addedIn": "claude/mt-03c-survey-lesson",
       "compiledIntoPageCode": true
     }
   ]

@@ -53,6 +53,11 @@ export interface SpaceEngineSession {
   readonly space: LoadedSpace | null
   onCommand(command: SpaceCommand, input: SpaceInputMode): void
   setLungTarget(step: number): void
+  /**
+   * Start the engine afresh at another start, without loading anything again: a teaching example
+   * or a stop on a tour. It is never a simulated action, and nothing seen before carries over.
+   */
+  restart(start: SpaceEngineStart): void
 }
 
 /** The packaged proxies, over the network, from the generated anatomy manifest. */
@@ -188,6 +193,22 @@ export function useSpaceEngine(
     [dispatch],
   )
 
+  const restart = useCallback(
+    (next: SpaceEngineStart) => {
+      if (!resolver) return
+      setEngine(
+        startEngine(resolver, {
+          scenario: next.scenario,
+          lungStep: next.lungStep,
+          pose: next.pose,
+          reducedMotion,
+          snapshot: spaceSnapshot(next.scenario, next.lungStep),
+        }),
+      )
+    },
+    [resolver, reducedMotion],
+  )
+
   const reach = useMemo(() => (resolver ? currentReach(resolver.sampleCount) : null), [resolver])
   const paneState = useMemo((): SpacePaneState => {
     if (loaded.kind === 'ready' && engine) {
@@ -220,5 +241,6 @@ export function useSpaceEngine(
     space: loaded.kind === 'ready' ? loaded.space : null,
     onCommand,
     setLungTarget,
+    restart,
   }
 }

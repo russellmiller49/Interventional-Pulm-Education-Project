@@ -1,0 +1,96 @@
+{
+  "record": "medical-thoracoscopy-tour-stops",
+  "version": 1,
+  "script": "scripts/medical-thoracoscopy/build-tour-stops.ts",
+  "statement": "Numbers only: for each survey region, the position of the telescope that shows the most of it with nothing in the way, with the lung fallen away, and how many of its samples that is. Computed by the space engine from the collision proxies, which are not in the repository.",
+  "label": "Authored construct",
+  "computedFor": {
+    "anatomy": "1fa8ff210d66",
+    "device": "9894b86b08af",
+    "optics": "sleeveBeyondPleuraMm=5;viewRangeMm=200;alongRibsLimitDeg=40",
+    "port": "b93d6e7d31ff+1945bf88138f",
+    "lungAndFluid": "lung step 8",
+    "geometry": "6c4048f8e9ee+9d7a1a5818da",
+    "rules": "step tilt 2 depth 2 roll 5;skin 0.25 piece 0.9 numeric 0.001;port patch 10;lung room 0.5;occlusion 0.001"
+  },
+  "lungStep": 8,
+  "stops": [
+    {
+      "zone": "diaphragm",
+      "pose": {
+        "tiltAcrossRibsDeg": -27.6,
+        "tiltAlongRibsDeg": 22.69,
+        "depthMm": 7.54,
+        "rollDeg": 0
+      },
+      "seenFromThere": 22,
+      "samples": 234
+    },
+    {
+      "zone": "costophrenic-recess",
+      "pose": {
+        "tiltAcrossRibsDeg": -17.74,
+        "tiltAlongRibsDeg": 33.93,
+        "depthMm": 7.54,
+        "rollDeg": 0
+      },
+      "seenFromThere": 18,
+      "samples": 113
+    },
+    {
+      "zone": "posterior-chest-wall",
+      "pose": {
+        "tiltAcrossRibsDeg": -13.8,
+        "tiltAlongRibsDeg": -36.45,
+        "depthMm": 7.54,
+        "rollDeg": 0
+      },
+      "seenFromThere": 136,
+      "samples": 390
+    },
+    {
+      "zone": "apex",
+      "pose": {
+        "tiltAcrossRibsDeg": 21.69,
+        "tiltAlongRibsDeg": -30.5,
+        "depthMm": 7.54,
+        "rollDeg": 0
+      },
+      "seenFromThere": 18,
+      "samples": 146
+    },
+    {
+      "zone": "anterior-chest-wall",
+      "pose": {
+        "tiltAcrossRibsDeg": 25.63,
+        "tiltAlongRibsDeg": 25.78,
+        "depthMm": 7.54,
+        "rollDeg": 0
+      },
+      "seenFromThere": 77,
+      "samples": 266
+    },
+    {
+      "zone": "mediastinum",
+      "pose": {
+        "tiltAcrossRibsDeg": -25.63,
+        "tiltAlongRibsDeg": 23.79,
+        "depthMm": 7.54,
+        "rollDeg": 0
+      },
+      "seenFromThere": 1,
+      "samples": 342
+    },
+    {
+      "zone": "lateral-chest-wall",
+      "pose": {
+        "tiltAcrossRibsDeg": 17.74,
+        "tiltAlongRibsDeg": -33.93,
+        "depthMm": 7.54,
+        "rollDeg": 0
+      },
+      "seenFromThere": 2,
+      "samples": 145
+    }
+  ]
+}

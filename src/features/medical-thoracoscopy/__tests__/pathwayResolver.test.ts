@@ -10,10 +10,12 @@ import {
 } from '../content/pathwayResolver'
 import { createEmptyProgress, type ThoracoscopyProgress } from '../engine/selfPacedProgress'
 
+/** The curriculum with exactly these sections open and every other in preparation. */
 function withOpen(...ids: string[]): readonly CurriculumSection[] {
-  return curriculumSections.map((section) =>
-    ids.includes(section.id) ? { ...section, state: 'available' as const } : section,
-  )
+  return curriculumSections.map((section) => ({
+    ...section,
+    state: ids.includes(section.id) ? ('available' as const) : ('in-preparation' as const),
+  }))
 }
 
 function progress(change: Partial<ThoracoscopyProgress> = {}): ThoracoscopyProgress {
@@ -22,7 +24,8 @@ function progress(change: Partial<ThoracoscopyProgress> = {}): ThoracoscopyProgr
 
 describe('the one door', () => {
   it('points nowhere while no section can be opened', () => {
-    expect(nextStep(progress())).toEqual({ kind: 'none-open' })
+    const none = withOpen()
+    expect(nextStep(progress(), none)).toEqual({ kind: 'none-open' })
     // A record naming sections still in preparation changes nothing.
     expect(
       nextStep(
@@ -30,8 +33,15 @@ describe('the one door', () => {
           lastLocation: { kind: 'section', id: 'four-controls' },
           visitedSectionIds: ['four-controls'],
         }),
+        none,
       ),
     ).toEqual({ kind: 'none-open' })
+  })
+
+  it('opens the course at section six, the first written, for a fresh learner', () => {
+    const step = nextStep(progress())
+    expect(step).toMatchObject({ kind: 'section', fresh: true, resumed: false })
+    expect(step.kind === 'section' && step.section.id).toBe('normal-pleural-space')
   })
 
   it('starts a fresh learner at the first open section', () => {
@@ -81,7 +91,8 @@ describe('the one door', () => {
 
     expect([...visitedSectionIds(stored, sections)]).toEqual(['four-controls'])
     expect([...reviewedSectionIds(stored, sections)]).toEqual(['four-controls'])
-    expect([...visitedSectionIds(stored)]).toEqual([])
+    // in the course as it stands, the open section counts and the one in preparation does not
+    expect([...visitedSectionIds(stored)]).toEqual(['four-controls'])
   })
 
   it('links a section by its id on the Learn page', () => {
@@ -106,6 +117,6 @@ describe('chapter groups', () => {
       'Sections 11–16 · 6 sections · about 53 min',
       'Sections 17–19 · 3 sections · about 22 min',
     ])
-    expect(groups.every((group) => group.openCount === 0)).toBe(true)
+    expect(groups.map((group) => group.openCount)).toEqual([0, 1, 1, 1, 0])
   })
 })

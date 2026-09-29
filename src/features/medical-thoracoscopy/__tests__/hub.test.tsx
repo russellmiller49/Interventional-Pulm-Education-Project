@@ -51,26 +51,41 @@ describe('course hub', () => {
     expect(screen.getByText('19 sections in 5 chapters · about 154 min')).toBeInTheDocument()
   })
 
-  it('offers no door while no section is open, and says so', () => {
-    render(<MedicalThoracoscopyHub />)
+  it('offers one door, to section six, the first open section, for a fresh learner', () => {
+    const { container } = render(<MedicalThoracoscopyHub />)
 
-    expect(screen.getByRole('status')).toHaveTextContent('No section is open yet.')
-    expect(screen.queryAllByRole('link')).toEqual([])
-    expect(screen.queryAllByRole('button')).toEqual([])
+    const door = container.querySelector('[data-continue]') as HTMLElement
+    expect(door).toHaveAttribute('data-next-section', 'normal-pleural-space')
+    expect(door).toHaveTextContent(/^Start: /)
+    expect(door).toHaveAttribute('href', expect.stringContaining('section=normal-pleural-space'))
+    expect(screen.queryByText(/No section is open yet/)).not.toBeInTheDocument()
+    expect(container.querySelectorAll('[data-continue]')).toHaveLength(1)
   })
 
-  it('lists all nineteen sections by chapter, each in preparation and none a link', () => {
+  it('lists all nineteen sections by chapter: the three written as links, the rest in preparation', () => {
     const { container } = render(<MedicalThoracoscopyHub />)
     const outline = container.querySelector('[data-course-outline]') as HTMLElement
 
     expect(outline.querySelectorAll('[data-chapter]')).toHaveLength(5)
-    const items = outline.querySelectorAll('[data-section]')
+    const items = Array.from(outline.querySelectorAll('[data-section]')) as HTMLElement[]
     expect(items).toHaveLength(19)
-    for (const item of Array.from(items)) {
+    const open = items.filter((item) => item.getAttribute('data-state') === 'available')
+    expect(open.map((item) => item.getAttribute('data-section'))).toEqual([
+      'normal-pleural-space',
+      'four-controls',
+      'systematic-survey',
+    ])
+    for (const item of open) expect(within(item).getByRole('link')).toBeInTheDocument()
+    for (const item of items.filter((entry) => !open.includes(entry))) {
       expect(item).toHaveAttribute('data-state', 'in-preparation')
-      expect(within(item as HTMLElement).getByText('In preparation')).toBeInTheDocument()
+      expect(within(item).getByText('In preparation')).toBeInTheDocument()
+      expect(within(item).queryByRole('link')).toBeNull()
     }
-    expect(outline.querySelector('details[open]')).toHaveAttribute('data-chapter', 'decide')
+    // the chapter holding the next step opens on load
+    expect(outline.querySelector('details[open]')).toHaveAttribute(
+      'data-chapter',
+      'equipment-and-anatomy',
+    )
     expect(within(outline).getByText('When a complication happens')).toBeInTheDocument()
   })
 
@@ -140,7 +155,10 @@ describe('Learn landing', () => {
   it('shows the outline and the door with nothing requested', async () => {
     const { container } = render(<LearnLanding />)
 
-    expect(screen.getByRole('status')).toHaveTextContent('No section is open yet.')
+    expect(container.querySelector('[data-continue]')).toHaveAttribute(
+      'data-next-section',
+      'normal-pleural-space',
+    )
     expect(container.querySelectorAll('[data-section]')).toHaveLength(19)
     expect(visibleCopyProblems(container)).toEqual([])
     expect(await axe(container)).toHaveNoViolations()

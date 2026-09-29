@@ -674,7 +674,23 @@ describe('asset ledger', () => {
         expect(asset.rights).toEqual(['R-ANATOMY-CT', 'R-ANATOMY-SEGMENTATION'])
       }
     }
-    expect(ledger.scenes).toEqual([])
+    // One scene so far, the pleural space: its cold download is the sum of its files, and what the
+    // browser draws with it is not measured until the gate (slice 14).
+    expect(ledger.scenes.map((scene) => scene.id)).toEqual(['pleural-space'])
+    for (const scene of ledger.scenes) {
+      const members = scene.assets.map((id) => ledger.assets.find((asset) => asset.id === id))
+      expect(members.every(Boolean)).toBe(true)
+      expect(scene.coldTransferBytes).toBe(
+        members.reduce((sum, asset) => sum + (asset?.bytes ?? 0), 0),
+      )
+      expect(scene.decodedBytes).toBe(
+        members.reduce((sum, asset) => sum + (asset?.decodedBytes ?? 0), 0),
+      )
+      expect(scene.coldTransferBytes).toBeLessThanOrEqual(
+        ledger.budgets.pleuralScenePayloadMb * 1024 * 1024,
+      )
+      expect([scene.drawCalls, scene.renderedTriangles]).toEqual([null, null])
+    }
   })
 
   it('carries the imported budgets unchanged', () => {

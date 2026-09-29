@@ -19,7 +19,7 @@ const LEGACY_KEY = 'ip-pleural-module-progress-v1'
 
 beforeEach(() => window.localStorage.clear())
 
-describe('progress record, with nothing open', () => {
+describe('progress record', () => {
   it('keeps where the learner is, the sections visited and those marked reviewed, and nothing else', () => {
     expect(Object.keys(createEmptyProgress()).sort()).toEqual([
       'lastLocation',
@@ -42,9 +42,9 @@ describe('progress record, with nothing open', () => {
     const events = jest.fn()
     window.addEventListener(THORACOSCOPY_PROGRESS_CHANGED_EVENT, events)
 
-    expect(isRecordable({ kind: 'section', id: 'four-controls' })).toBe(false)
-    expect(recordLocation({ kind: 'section', id: 'four-controls' })).toBe(false)
-    expect(setSectionReviewed('four-controls', true)).toBe(false)
+    expect(isRecordable({ kind: 'section', id: 'entry' })).toBe(false)
+    expect(recordLocation({ kind: 'section', id: 'entry' })).toBe(false)
+    expect(setSectionReviewed('entry', true)).toBe(false)
     expect(recordLocation({ kind: 'practice-scenario', id: 'P1' })).toBe(false)
     expect(recordLocation({ kind: 'case', id: 'C1' })).toBe(false)
     expect(window.localStorage.getItem(THORACOSCOPY_PROGRESS_STORAGE_KEY)).toBeNull()

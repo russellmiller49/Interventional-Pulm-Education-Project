@@ -18,7 +18,15 @@
         "src/features/medical-thoracoscopy/content/types.ts",
         "src/features/medical-thoracoscopy/content/sectionValidation.ts",
         "src/features/medical-thoracoscopy/content/teachingExamples.ts",
-        "src/features/medical-thoracoscopy/content/modelBoundaries.ts"
+        "src/features/medical-thoracoscopy/content/modelBoundaries.ts",
+        "src/features/medical-thoracoscopy/components/lesson/SectionLesson.tsx",
+        "src/features/medical-thoracoscopy/components/lesson/LessonActivities.tsx",
+        "src/features/medical-thoracoscopy/components/lesson/QuestionView.tsx",
+        "src/features/medical-thoracoscopy/components/lesson/lessonWords.ts",
+        "src/features/medical-thoracoscopy/content/lessonParts.ts",
+        "src/features/medical-thoracoscopy/engine/stageSession.ts",
+        "src/features/medical-thoracoscopy/components/space/SpacePane.tsx",
+        "src/features/medical-thoracoscopy/content/data/anatomy/tour-stops.json"
       ],
       "claims": [
         "MT-C-0001",
@@ -38,14 +46,24 @@
         "MT-C-0019",
         "MT-C-0023"
       ],
-      "assets": [],
+      "assets": [
+        "pleural-space",
+        "ribs",
+        "context",
+        "lung-states",
+        "proxy-pleural-space",
+        "proxy-lung"
+      ],
       "tests": [
         "src/features/medical-thoracoscopy/__tests__/sectionSpecs.test.ts",
-        "src/features/medical-thoracoscopy/__tests__/surveyContent.test.ts"
+        "src/features/medical-thoracoscopy/__tests__/surveyContent.test.ts",
+        "src/features/medical-thoracoscopy/__tests__/sectionLesson.test.tsx",
+        "src/features/medical-thoracoscopy/__tests__/stageSession.test.ts",
+        "src/features/medical-thoracoscopy/__tests__/spaceScenePane.test.tsx"
       ],
       "reviewDecisions": [],
       "releaseEvidence": [],
-      "missing": ["assets", "review decisions", "release evidence"]
+      "missing": ["review decisions", "release evidence"]
     },
     {
       "experience": "four-controls",
@@ -59,7 +77,14 @@
         "src/features/medical-thoracoscopy/content/types.ts",
         "src/features/medical-thoracoscopy/content/sectionValidation.ts",
         "src/features/medical-thoracoscopy/content/teachingExamples.ts",
-        "src/features/medical-thoracoscopy/content/modelBoundaries.ts"
+        "src/features/medical-thoracoscopy/content/modelBoundaries.ts",
+        "src/features/medical-thoracoscopy/components/lesson/SectionLesson.tsx",
+        "src/features/medical-thoracoscopy/components/lesson/LessonActivities.tsx",
+        "src/features/medical-thoracoscopy/components/lesson/QuestionView.tsx",
+        "src/features/medical-thoracoscopy/components/lesson/lessonWords.ts",
+        "src/features/medical-thoracoscopy/content/lessonParts.ts",
+        "src/features/medical-thoracoscopy/engine/stageSession.ts",
+        "src/features/medical-thoracoscopy/components/space/SpacePane.tsx"
       ],
       "claims": [
         "MT-C-0001",
@@ -72,14 +97,24 @@
         "MT-C-0008",
         "MT-C-0009"
       ],
-      "assets": [],
+      "assets": [
+        "pleural-space",
+        "ribs",
+        "context",
+        "lung-states",
+        "proxy-pleural-space",
+        "proxy-lung"
+      ],
       "tests": [
         "src/features/medical-thoracoscopy/__tests__/sectionSpecs.test.ts",
-        "src/features/medical-thoracoscopy/__tests__/surveyContent.test.ts"
+        "src/features/medical-thoracoscopy/__tests__/surveyContent.test.ts",
+        "src/features/medical-thoracoscopy/__tests__/sectionLesson.test.tsx",
+        "src/features/medical-thoracoscopy/__tests__/stageSession.test.ts",
+        "src/features/medical-thoracoscopy/__tests__/spaceScenePane.test.tsx"
       ],
       "reviewDecisions": [],
       "releaseEvidence": [],
-      "missing": ["assets", "review decisions", "release evidence"]
+      "missing": ["review decisions", "release evidence"]
     },
     {
       "experience": "systematic-survey",
@@ -93,7 +128,14 @@
         "src/features/medical-thoracoscopy/content/types.ts",
         "src/features/medical-thoracoscopy/content/sectionValidation.ts",
         "src/features/medical-thoracoscopy/content/teachingExamples.ts",
-        "src/features/medical-thoracoscopy/content/modelBoundaries.ts"
+        "src/features/medical-thoracoscopy/content/modelBoundaries.ts",
+        "src/features/medical-thoracoscopy/components/lesson/SectionLesson.tsx",
+        "src/features/medical-thoracoscopy/components/lesson/LessonActivities.tsx",
+        "src/features/medical-thoracoscopy/components/lesson/QuestionView.tsx",
+        "src/features/medical-thoracoscopy/components/lesson/lessonWords.ts",
+        "src/features/medical-thoracoscopy/content/lessonParts.ts",
+        "src/features/medical-thoracoscopy/engine/stageSession.ts",
+        "src/features/medical-thoracoscopy/components/space/SpacePane.tsx"
       ],
       "claims": [
         "MT-C-0001",
@@ -109,14 +151,24 @@
         "MT-C-0022",
         "MT-C-0023"
       ],
-      "assets": [],
+      "assets": [
+        "pleural-space",
+        "ribs",
+        "context",
+        "lung-states",
+        "proxy-pleural-space",
+        "proxy-lung"
+      ],
       "tests": [
         "src/features/medical-thoracoscopy/__tests__/sectionSpecs.test.ts",
-        "src/features/medical-thoracoscopy/__tests__/surveyContent.test.ts"
+        "src/features/medical-thoracoscopy/__tests__/surveyContent.test.ts",
+        "src/features/medical-thoracoscopy/__tests__/sectionLesson.test.tsx",
+        "src/features/medical-thoracoscopy/__tests__/stageSession.test.ts",
+        "src/features/medical-thoracoscopy/__tests__/spaceScenePane.test.tsx"
       ],
       "reviewDecisions": [],
       "releaseEvidence": [],
-      "missing": ["assets", "review decisions", "release evidence"]
+      "missing": ["review decisions", "release evidence"]
     },
     {
       "experience": "tool-contact",

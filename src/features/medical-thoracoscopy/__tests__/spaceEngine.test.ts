@@ -8,7 +8,12 @@ import {
   type ScopePose,
   type SpaceCommand,
 } from '../components/space/types'
-import { portRecord, zoneReach, zoneSamples as zoneSamplesRecord } from '../content/anatomy'
+import {
+  portRecord,
+  tourStops,
+  zoneReach,
+  zoneSamples as zoneSamplesRecord,
+} from '../content/anatomy'
 import { anatomyManifest } from '../content/data/generated/anatomy'
 import { PLEURAL_ZONE_IDS } from '../content/pleuralZones'
 import {
@@ -48,6 +53,7 @@ import { advance, stepTarget, takeStep } from '../engine/space/spatial/sweep'
 import type { ZoneSamples } from '../engine/space/spatial/visibility'
 import { VIEW } from '../engine/space/spatial/visibility'
 import { cross, dot, length, radians, rotate, sub, type Vec3 } from '../engine/space/vec'
+import { currentTourStops } from '../engine/space/tourStops'
 import { computeReach, currentReach, reachFits, reachIdentity } from '../engine/space/zoneReach'
 import {
   fastJudgeSegmentTriangle,
@@ -794,6 +800,19 @@ describe('reach', () => {
   })
 })
 
+describe('the tour’s stops', () => {
+  it('are recorded for the snapshot the engine would compute them for now, one for every region', () => {
+    const stops = currentTourStops()
+    expect(stops?.map((stop) => stop.zone)).toEqual([...PLEURAL_ZONE_IDS])
+    expect(
+      currentTourStops({
+        ...tourStops,
+        computedFor: { ...tourStops.computedFor, port: 'another port' },
+      }),
+    ).toBeNull()
+  })
+})
+
 // ── Contact, outcomes, snapshot ────────────────────────────────────────────────────────────────
 
 describe('contact', () => {
@@ -936,6 +955,18 @@ describe('the real proxies, where the owner’s local data holds them', () => {
   const maybe = available ? it : it.skip
   let loaded: LoadedSpace | null = null
   const space = () => (loaded ??= loadSpace(bytes('proxy-pleural-space'), bytes('proxy-lung')))
+
+  maybe('stops the tour where the telescope is clear and its region is in view', () => {
+    const s = space()
+    const resolver = createResolver(s)
+    for (const stop of currentTourStops() ?? []) {
+      expect(resolver.startProblem(stop.pose, stop.lungStep)).toBeNull()
+      const view = resolver.view(stop.pose, stop.lungStep)
+      expect(
+        s.samples.zones.some((zone, sample) => zone === stop.zone && view[sample] === VIEW.inView),
+      ).toBe(true)
+    }
+  })
 
   maybe('gives the pane a state that keeps the contract, with the record’s reach', () => {
     const s = space()

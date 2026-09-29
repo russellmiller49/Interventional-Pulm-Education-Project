@@ -8,6 +8,7 @@ import rawProxies from './data/anatomy/proxies.json'
 import rawRibs from './data/anatomy/ribs.json'
 import rawAudit from './data/anatomy/source-audit.json'
 import rawSurfaces from './data/anatomy/surfaces.json'
+import rawTourStops from './data/anatomy/tour-stops.json'
 import rawZoneReach from './data/anatomy/zone-reach.json'
 import rawZoneSamples from './data/anatomy/zone-samples.json'
 import { PLEURAL_ZONE_IDS } from './pleuralZones'
@@ -573,6 +574,51 @@ export const zoneReachSchema = z
   })
   .strict()
 
+const snapshotPartsSchema = z
+  .object({
+    anatomy: z.string().min(1),
+    device: z.string().min(1),
+    optics: z.string().min(1),
+    port: z.string().min(1),
+    lungAndFluid: z.string().min(1),
+    geometry: z.string().min(1),
+    rules: z.string().min(1),
+  })
+  .strict()
+
+/** Where the tour of section 6 stops: a position per region, computed by the space engine. */
+export const tourStopsSchema = z
+  .object({
+    record: z.literal('medical-thoracoscopy-tour-stops'),
+    version: z.number().int().positive(),
+    script: z.string().min(1),
+    statement: z.string().min(1),
+    label: z.literal('Authored construct'),
+    computedFor: snapshotPartsSchema,
+    lungStep: z.number().int().nonnegative(),
+    stops: z
+      .array(
+        z
+          .object({
+            zone: z.enum(PLEURAL_ZONE_IDS),
+            pose: z
+              .object({
+                tiltAcrossRibsDeg: z.number(),
+                tiltAlongRibsDeg: z.number(),
+                depthMm: z.number().positive(),
+                rollDeg: z.number(),
+              })
+              .strict()
+              .nullable(),
+            seenFromThere: z.number().int().nonnegative(),
+            samples: z.number().int().positive(),
+          })
+          .strict(),
+      )
+      .length(PLEURAL_ZONE_IDS.length),
+  })
+  .strict()
+
 export type SourceAudit = z.infer<typeof sourceAuditSchema>
 export type AnatomySurfaces = z.infer<typeof surfacesSchema>
 export type RightRibs = z.infer<typeof ribsSchema>
@@ -590,9 +636,11 @@ export type CollisionProxies = z.infer<typeof proxiesSchema>
 export type ZoneSamples = z.infer<typeof zoneSamplesSchema>
 export type FluidTable = z.infer<typeof fluidTableSchema>
 export type ZoneReach = z.infer<typeof zoneReachSchema>
+export type TourStops = z.infer<typeof tourStopsSchema>
 
 export const lungStates: LungStates = lungStatesSchema.parse(rawLungStates)
 export const collisionProxies: CollisionProxies = proxiesSchema.parse(rawProxies)
 export const zoneSamples: ZoneSamples = zoneSamplesSchema.parse(rawZoneSamples)
 export const fluidTable: FluidTable = fluidTableSchema.parse(rawFluidTable)
 export const zoneReach: ZoneReach = zoneReachSchema.parse(rawZoneReach)
+export const tourStops: TourStops = tourStopsSchema.parse(rawTourStops)
