@@ -151,7 +151,51 @@ answered 401; signing in again and reloading kept the explorer; 1440 × 900, 102
 390 × 844 and 200% zoom all rendered without horizontal scrolling. Screenshots (they show the
 models) are in local data: `medical_thoracoscopy/presentation/2026-09-29-device-showcase/wolf-preview-verification/`.
 
-DEPLOYED_RESULTS
+## Deployed results (production, 2026-09-29)
+
+Merged as PR #309 (`68298a84`) and deployed by Railway (service "marvelous-heart", production).
+Checked on `https://interventionalpulm.org`.
+
+**Before the owner set the variables:** the page (`/en` and `/es`), sign-in and model endpoints
+answered 404; `/en/medical-thoracoscopy` still redirected to sign-in; the public storage URL of a
+private object answered 400; the page carried `X-Robots-Tag: noindex, nofollow, noarchive`; the
+sitemap named neither the preview nor the course.
+
+**After the owner set the variables** (with a temporary `claude-verification` reviewer, whose code
+stayed in a private local file and was never printed or committed):
+`verify-wolf-preview.ts --base https://interventionalpulm.org` passed **30 of 30**, twice: on the
+deploy of `68298a84` and again on the deploy of `fef3bfbc` (below). Same checks as the local run:
+code screen only for a fresh context; noindex; wrong code refused with the generic message and no
+cookie; correct code opened the explorer with `__Host-mt-wolf-preview` (HttpOnly, Secure, Lax);
+every major control used; all 13 models served; no preview console errors; a copied model URL
+answered 401 in a fresh context (request and navigation); a reference-image name and a traversal
+answered 404 with a session; no copy at the public storage URL (400), the public module-assets path
+(400), the site module-assets path (400) or the site models path (400); End preview removed the
+cookie and models then answered 401; signing in again and reloading kept the explorer; 1440 × 900,
+1024 × 768, 390 × 844 and 200% zoom rendered without horizontal scrolling. Screenshots are in local
+data under `…/wolf-preview-verification/production/`.
+
+**Direct unauthorised access, without a session (curl):** all 13 model URLs 401; HEAD, a query
+string and forged or wrongly named cookies 401; upper-case, hashed-object and encoded-traversal
+names 401; POST 405; `/en/medical-thoracoscopy/wolf-preview/probe.glb` 404; the kit path under
+`/models/` 400. Against Supabase with the site's public anon key: the public, authenticated and
+plain object endpoints 400, the bucket listing returned `[]`, and signing 400.
+
+**Bypass found and fixed.** The site's existing, unauthenticated `/api/storage/signed-url` signed
+any bucket and path with the service key: an anonymous request returned a working signed URL for a
+private preview model (not downloaded), and every other private bucket was exposed the same way.
+With the owner's approval it was restricted (PR #310, then PR #311 because #310's build failed on a
+route-export rule): it signs only `Audio_companion`, `3d-models` and `module-assets` (its callers'
+buckets), refuses dot, dot-dot, encoded and backslash path segments (`fetch` resolved
+`3d-models/../other` into another bucket), and ignores a `projectRef` that is not the configured
+project. Railway did not pick up the push of `fef3bfbc`; it was deployed with
+`railway redeploy --from-source` (latest commit from the configured GitHub source, no configuration
+change). On production afterwards: the preview bucket (two objects), `library-pdfs`,
+`pocus-media`, `module-beta-feedback` and two traversal forms all answered 404 with no URL; a real
+`3d-models` object still signed (200).
+
+No production variable or reviewer credential was changed by this work. The
+`claude-verification` entry is for the owner to remove.
 
 ## Rollback
 
@@ -173,6 +217,9 @@ DEPLOYED_RESULTS
 - The sleeve's seat on the telescope (58.76 mm) is a derived measurement held only in local data
   and in the generated catalogue.
 - The attempt limit is per server instance, in memory.
+- Remove the temporary `claude-verification` entry from `MT_WOLF_PREVIEW_REVIEWERS` once no further
+  verification is wanted.
+- Railway missed one push to main (`fef3bfbc`); worth checking the service's GitHub trigger.
 - When the review chain and `claude/mt-05b-device-explorer` merge, they should adopt this branch's
   catalogue-driven explorer (the components here read the catalogue instead of the definitions).
 
