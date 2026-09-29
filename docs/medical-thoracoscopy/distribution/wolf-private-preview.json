@@ -1,0 +1,107 @@
+{
+  "record": "medical-thoracoscopy-controlled-distribution",
+  "version": 1,
+  "recordedOn": "2026-09-29",
+  "recordedBy": "AI authoring assistant (Claude) at the owner's request",
+  "what": "The thirteen device showcase models (Draco-compressed copies of the showcase tier), for the device explorer",
+  "channel": "A restricted manufacturer-review channel: a private Supabase Storage bucket, read only by the application server with its service key, and served one model at a time by an endpoint that requires a signed reviewer session on every request",
+  "audience": "Named manufacturer reviewers holding an individually issued review code",
+  "authority": "Owner authorization of 2026-09-29 to deploy the device explorer and its showcase assets for controlled manufacturer review only",
+  "notAuthorized": [
+    "Public or anonymous distribution of any model",
+    "Publication of the Medical Thoracoscopy course or any other part of it",
+    "Any change to manufacturer fact-check status, clinical review status or publication status"
+  ],
+  "rights": {
+    "item": "R-DEVICE-MODELS",
+    "status": "unresolved input",
+    "note": "Unchanged. This controlled review channel does not resolve ownership of the models or whether depicting the product design needs the manufacturer's permission; broader distribution rights remain unresolved."
+  },
+  "factCheck": "NOT REVIEWED (unchanged)",
+  "storage": {
+    "bucket": "mt-wolf-preview",
+    "prefix": "device-explorer/v1",
+    "public": false
+  },
+  "models": [
+    {
+      "id": "operative-telescope",
+      "object": "operative-telescope.2f764e19c427.glb",
+      "bytes": 220552,
+      "sha256": "2f764e19c427b2ae4e89f2c1ab2e60334936a7ebafd2bbd44f14f504a926f923"
+    },
+    {
+      "id": "operative-telescope-illustrative-cutaway",
+      "object": "operative-telescope-illustrative-cutaway.17ca118f257b.glb",
+      "bytes": 224448,
+      "sha256": "17ca118f257ba371db9c2f9303a82cb7049d2c5735d3a47bf6a5a4c34bcc0358"
+    },
+    {
+      "id": "trocar-sleeve-flexible",
+      "object": "trocar-sleeve-flexible.03ae9a58c38a.glb",
+      "bytes": 50736,
+      "sha256": "03ae9a58c38a5db76bebedf83c6961148c01c4725917d51803a05c782f58a43a"
+    },
+    {
+      "id": "trocar-for-flexible-sleeve",
+      "object": "trocar-for-flexible-sleeve.1e001707ccd9.glb",
+      "bytes": 26632,
+      "sha256": "1e001707ccd95f986bf46ada49a851607b220878d65f2c12a370519afcaa5b5f"
+    },
+    {
+      "id": "trocar-sleeve-with-valves",
+      "object": "trocar-sleeve-with-valves.c1dabf68c789.glb",
+      "bytes": 72888,
+      "sha256": "c1dabf68c7895ec6001f06b95885a244f908c12830a5506ebd71da791ef6d3b4"
+    },
+    {
+      "id": "trocar-for-sleeve-with-valves",
+      "object": "trocar-for-sleeve-with-valves.3feae9fba3f9.glb",
+      "bytes": 25368,
+      "sha256": "3feae9fba3f94c0f7a211e796918b8cf47b518c8ede13c282a96e30c0ae84c94"
+    },
+    {
+      "id": "double-spoon-forceps",
+      "object": "double-spoon-forceps.e97b40bf3908.glb",
+      "bytes": 65888,
+      "sha256": "e97b40bf3908c36116675d644e1f3af683e617a9567b77bb23396c36cdc45324"
+    },
+    {
+      "id": "dissection-forceps",
+      "object": "dissection-forceps.f104e2a99fc3.glb",
+      "bytes": 50840,
+      "sha256": "f104e2a99fc33e7a4dc099e1426616af2c49b706a18be51ecf8c3e2282f8360e"
+    },
+    {
+      "id": "hook-electrode",
+      "object": "hook-electrode.5dfc958af27f.glb",
+      "bytes": 35208,
+      "sha256": "5dfc958af27f124149cc100a92efad2b4e0c201351e7a5876b0aba153fadb438"
+    },
+    {
+      "id": "button-electrode",
+      "object": "button-electrode.3e3fe98f4e39.glb",
+      "bytes": 35960,
+      "sha256": "3e3fe98f4e39fffac1c4636ed91a4878cf2ebaec7b4986a8adf4d83ae5581862"
+    },
+    {
+      "id": "probe",
+      "object": "probe.fb3eddb27c35.glb",
+      "bytes": 34288,
+      "sha256": "fb3eddb27c350523b972fc33561f7af70d6b8b780a25f698a3b3f1a2f36fc0a3"
+    },
+    {
+      "id": "suction-tube",
+      "object": "suction-tube.563d7bae279e.glb",
+      "bytes": 31800,
+      "sha256": "563d7bae279e0afafb5f6ae72cba82806dd667ad691b70818ae63958dbb67bd0"
+    },
+    {
+      "id": "tower-blockout",
+      "object": "tower-blockout.cf2a04bba4eb.glb",
+      "bytes": 80304,
+      "sha256": "cf2a04bba4ebbf92e27d66b6f593fb1d82c0c1a542e7849f7ab35c0fde643368"
+    }
+  ],
+  "withdraw": "Set MT_WOLF_PREVIEW_ENABLED to anything but true (the preview answers not found), then remove the objects or the bucket; see docs/medical-thoracoscopy/handoffs/mt-wolf-private-preview.md"
+}
