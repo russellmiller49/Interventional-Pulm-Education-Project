@@ -10,6 +10,7 @@ import { EbusModuleFrame } from '@/features/ebus-guided/components/ModuleFrame'
 import { IcuHemodynamicsModuleFrameV2 } from '@/features/icu-hemodynamics/components/IcuHemodynamicsModuleFrameV2'
 import { McsModuleFrame } from '@/features/mechanical-circulatory-support/components/McsModuleFrame'
 import { MechanicalVentilationModuleFrame } from '@/features/mechanical-ventilation/components/MechanicalVentilationModuleFrame'
+import { MedicalThoracoscopyModuleFrame } from '@/features/medical-thoracoscopy/components/MedicalThoracoscopyModuleFrame'
 import { PeripheralImagingModuleFrame } from '@/features/peripheral-imaging/components/PeripheralImagingModuleFrame'
 
 import { ModuleFrameV2 } from '../ModuleFrameV2'
@@ -219,6 +220,29 @@ const consumers: readonly FrameCase[] = [
     ),
     localeNotice: 'div[role=note]',
   },
+  {
+    name: 'Medical Thoracoscopy',
+    english: (
+      <MedicalThoracoscopyModuleFrame locale="en" activeHref="/medical-thoracoscopy">
+        {body}
+      </MedicalThoracoscopyModuleFrame>
+    ),
+    otherLocale: (
+      <MedicalThoracoscopyModuleFrame locale="es" activeHref="/medical-thoracoscopy">
+        {body}
+      </MedicalThoracoscopyModuleFrame>
+    ),
+    activity: (
+      <MedicalThoracoscopyModuleFrame
+        locale="en"
+        activeHref="/medical-thoracoscopy/learn"
+        activityMode
+      >
+        {body}
+      </MedicalThoracoscopyModuleFrame>
+    ),
+    localeNotice: 'div[role=note]',
+  },
 ]
 
 /**
@@ -233,6 +257,7 @@ const consumerSources = [
   'src/features/icu-hemodynamics/components/IcuHemodynamicsModuleFrameV2.tsx',
   'src/features/mechanical-circulatory-support/components/McsModuleFrame.tsx',
   'src/features/mechanical-ventilation/components/MechanicalVentilationModuleFrame.tsx',
+  'src/features/medical-thoracoscopy/components/MedicalThoracoscopyModuleFrame.tsx',
   'src/features/peripheral-imaging/components/PeripheralImagingModuleFrame.tsx',
   'src/features/therapeutic-bronchoscopy/TherapeuticBronchoscopyModule.tsx',
 ]
@@ -302,7 +327,7 @@ describe('shared module frame: what its consumers receive', () => {
   })
 
   it('lists every file that renders the shared frame', () => {
-    // A tenth consumer must be added above, so it is characterised before the frame changes.
+    // A new consumer must be added above, so it is characterised before the frame changes.
     const found = readdirSync(join(process.cwd(), 'src'), { recursive: true, encoding: 'utf8' })
       .filter((path) => path.endsWith('.tsx') && !path.endsWith('.test.tsx'))
       .map((path) => join('src', path))

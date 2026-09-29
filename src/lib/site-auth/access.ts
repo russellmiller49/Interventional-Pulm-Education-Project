@@ -91,6 +91,27 @@ function isPublicUnlistedMatch(normalizedPathname: string) {
   )
 }
 
+/**
+ * Modules in development that only a site admin may open: sign-in and the `site_admin`
+ * entitlement, enforced by the proxy like `/admin`. Used while a module carries clinical
+ * statements and rights questions nobody has reviewed yet, so an unlisted link is not enough.
+ * Local development and review reach them through the local-dev auth cookie, which only a
+ * non-production server on localhost honours.
+ */
+const ADMIN_PREVIEW_PATH_PREFIXES = [
+  // The medical thoracoscopy course (owner decision OD-15, 2026-09-29): hub, lessons and the
+  // engineering prototypes. `/pleural-procedures/pleuroscopy` is a separate module.
+  '/medical-thoracoscopy',
+]
+
+export function isAdminPreviewModulePath(pathname: string) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
+  return ADMIN_PREVIEW_PATH_PREFIXES.some(
+    (prefix) => normalizedPathname === prefix || normalizedPathname.startsWith(`${prefix}/`),
+  )
+}
+
 const PUBLIC_PREFIXES = [
   '/_next/',
   '/api/auth/callback',
@@ -204,7 +225,8 @@ export function isPublicPath(pathname: string) {
   if (
     isAdminOnlyAirwayStentMechanicsAssetPath(normalizedPathname) ||
     isAuthenticatedAirwayStentMechanicsAssetPath(normalizedPathname) ||
-    isAdminOnlyEbusTrainingAssetPath(normalizedPathname)
+    isAdminOnlyEbusTrainingAssetPath(normalizedPathname) ||
+    isAdminPreviewModulePath(normalizedPathname)
   ) {
     return false
   }
@@ -295,6 +317,10 @@ export function getRequiredEntitlement(
   if (normalizedPathname.startsWith('/socrates/')) return 'socrates_participant'
 
   if (normalizedPathname === '/admin' || normalizedPathname.startsWith('/admin/')) {
+    return 'site_admin'
+  }
+
+  if (isAdminPreviewModulePath(normalizedPathname)) {
     return 'site_admin'
   }
 
@@ -453,6 +479,10 @@ export function resolveSiteModuleId(pathname: string) {
 
   if (first === 'bronchoscopy-foundations') {
     return 'bronchoscopy-foundations'
+  }
+
+  if (first === 'medical-thoracoscopy') {
+    return 'medical-thoracoscopy'
   }
 
   if (

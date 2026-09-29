@@ -1,4 +1,4 @@
-import { isPublicPath, isPublicUnlistedPath } from '@/lib/site-auth/access'
+import { getRequiredEntitlement, isPublicPath, isPublicUnlistedPath } from '@/lib/site-auth/access'
 import { isDraftModulePath, isUnlistedModulePath } from '@/lib/draft-modules'
 
 /**
@@ -17,6 +17,8 @@ export type ModuleAccessMode =
   | 'public'
   /** Requires a site account. */
   | 'sign-in'
+  /** Requires a site account with the site-admin entitlement. */
+  | 'admin-only'
 
 export interface NonPublicModule {
   path: string
@@ -94,6 +96,13 @@ export const nonPublicModules: NonPublicModule[] = [
     group: 'Pleural',
     summary:
       'Interactive thoracic ultrasound simulator with scan-plane rendering and structure identification.',
+  },
+  {
+    path: '/medical-thoracoscopy',
+    title: 'Medical Thoracoscopy',
+    group: 'Pleural',
+    summary:
+      'The new course in single-port medical thoracoscopy on one chest model: deciding when to look, the instrument and the port, a systematic survey of the pleural space, biopsy, pleurodesis and finishing. Separate from the earlier Pleuroscopy module, which keeps its own route until it is retired.',
   },
   {
     path: '/pleural-procedures/pleuroscopy',
@@ -188,6 +197,7 @@ export const nonPublicModules: NonPublicModule[] = [
 export function moduleAccessMode(path: string): ModuleAccessMode {
   if (isPublicUnlistedPath(path)) return 'direct-link'
   if (isPublicPath(path)) return 'public'
+  if (getRequiredEntitlement(path, new URLSearchParams()) === 'site_admin') return 'admin-only'
   return 'sign-in'
 }
 

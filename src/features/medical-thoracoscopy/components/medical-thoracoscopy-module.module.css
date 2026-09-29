@@ -1,0 +1,80 @@
+/*
+ * The module shell around every Medical Thoracoscopy page.
+ *
+ * Dark palette tokens the shared lesson stage reads (`--ink`, `--muted`, `--panel`, `--line`,
+ * `--cyan-bright`, …), and the activity-mode rule that hands a lesson the viewport: at a desktop
+ * size the shell is exactly the viewport less the site header and does not scroll, the rule the
+ * sibling courses carry.
+ */
+.moduleShell {
+  --ink: #eef3f2;
+  --muted: #a8b9b6;
+  --stage-muted: #a8b9b6;
+  --panel: #13262a;
+  --panel-2: #1a3338;
+  --panel-3: #224047;
+  --line: rgba(172, 208, 204, 0.22);
+  --cyan: #3fbfc2;
+  --cyan-bright: #7ce0df;
+  --navy: #081a1d;
+  --surface-base: #07171a;
+  --amber: #ffc46b;
+  --red: #ff717a;
+  --green: #7bd69f;
+  min-height: 100vh;
+  padding: clamp(1rem, 2.5vw, 2.5rem);
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 70% 4%, rgba(63, 191, 194, 0.16), transparent 30rem),
+    radial-gradient(circle at 6% 38%, rgba(196, 118, 92, 0.12), transparent 28rem),
+    var(--surface-base);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+}
+
+@media (min-width: 1024px) and (min-height: 700px) {
+  .moduleShell[data-activity-mode='true'] {
+    height: calc(100dvh - var(--site-header-height, 4rem));
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+  }
+}
+
+.englishOnly {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.englishOnly svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+
+.inPreparation {
+  max-width: 46rem;
+  margin: 1.5rem 0 0;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--panel);
+}
+
+.inPreparation h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+  line-height: 1.3;
+}
+
+.inPreparation p {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
