@@ -57,7 +57,7 @@ Edit the claim in `src/features/medical-thoracoscopy/content/data/claim-register
 | Review lane             | clinical                                                                                                                                  |
 | Context                 | This scan only. It is the highest space on the scan at which the skin, the chest wall and the gap between the ribs can all be measured.   |
 | Sources                 | Chosen by the author from measurements of the scan. It is a teaching example and is not taken from a source.                              |
-| Where it is shown       | section normal-pleural-space (written); section four-controls (written); section systematic-survey (written); asset port-record (planned) |
+| Where it is shown       | section normal-pleural-space (written); section four-controls (written); section systematic-survey (written); asset port-record (written) |
 | Rules that depend on it | The pivot, the corridor through the wall and the tilt limits all follow from the port.                                                    |
 | Limitations             | A port site is chosen for each patient, with ultrasound. This one is never described as a safe site, a recommended site or a usual site.  |
 | Status                  | proposed change                                                                                                                           |
@@ -167,7 +167,7 @@ Edit the claim in `src/features/medical-thoracoscopy/content/data/claim-register
 | Context                 | The survey zones in content/data/pleural-zones.json, used by the lessons and by the anatomy asset.                                                                                                                                 |
 | Sources                 | nccp-ics-thoracoscopy-2024, Visual examination, paragraph 1; consensus statement 14 (i) (full text read): The entire parietal pleura must be examined, there is no standard sequence for the examination, and none is recommended. |
 | Note on the sources     | The division and the order are the author’s. The source says only that no standard order exists.                                                                                                                                   |
-| Where it is shown       | section normal-pleural-space (written); section four-controls (written); section systematic-survey (written); asset survey-zones (planned)                                                                                         |
+| Where it is shown       | section normal-pleural-space (written); section four-controls (written); section systematic-survey (written); asset survey-zones (written)                                                                                         |
 | Rules that depend on it | The survey ledger has one entry for each region, in this order.                                                                                                                                                                    |
 | Limitations             | One order among several possible. The regions are drawn by the author on the scan; their edges are not boundaries a patient has.                                                                                                   |
 | Status                  | review pending                                                                                                                                                                                                                     |
@@ -311,7 +311,7 @@ Edit the claim in `src/features/medical-thoracoscopy/content/data/claim-register
 | Review lane             | clinical                                                                                                                                                                       |
 | Context                 | The anatomy of the model.                                                                                                                                                      |
 | Sources                 | aeropath-2023, The Zenodo record; case 19, asserted (abstract read): The dataset and its licence. That the scan is its case 19 is asserted and not verified (source register). |
-| Where it is shown       | section normal-pleural-space (written); section systematic-survey (written); asset thorax-surfaces (planned)                                                                   |
+| Where it is shown       | section normal-pleural-space (written); section systematic-survey (written); asset thorax-surfaces (written)                                                                   |
 | Rules that depend on it | Every surface drawn from the scan is labelled "Derived from CT segmentation"; the pleura is labelled as authored.                                                              |
 | Limitations             | One scan, taken lying on the back. The segment names in the file are not trusted; the anatomy slice identifies each segment by its content.                                    |
 | Status                  | review pending                                                                                                                                                                 |
@@ -420,7 +420,7 @@ Edit the claim in `src/features/medical-thoracoscopy/content/data/claim-register
 | Context                 | The rigid, straight-viewing telescope at the prototype port.                                                                                                                      |
 | Sources                 | nccp-ics-thoracoscopy-2024, Q 19, Should a second port be used, Table 6 (full text read): Lists sampling lesions around the first entry site among the reasons for a second port. |
 | Note on the sources     | The geometry of a straight-viewing telescope turning about a fixed port. How large the unseen area is in the model follows from its authored field of view.                       |
-| Where it is shown       | section normal-pleural-space (written); section systematic-survey (written); asset survey-zones (planned)                                                                         |
+| Where it is shown       | section normal-pleural-space (written); section systematic-survey (written); asset survey-zones (written)                                                                         |
 | Rules that depend on it | The side of the chest wall around the port is surveyed last, and part of it is recorded as out of reach.                                                                          |
 | Limitations             | The size of the area follows from an authored field of view the manufacturer has not published.                                                                                   |
 | Status                  | review pending                                                                                                                                                                    |

@@ -50,6 +50,37 @@ const zoneListSchema = z
     label: z.literal('Authored construct'),
     claimIds: z.array(z.string().regex(/^MT-C-\d{4}$/)).min(1),
     notTracked: z.string().min(1),
+    /** How the anatomy build divides the surface: one source for the lessons and the asset. */
+    split: z
+      .object({
+        method: z.string().min(1),
+        nearestTissueMm: z
+          .object({
+            diaphragm: z.number().positive(),
+            mediastinum: z.number().positive(),
+            chestWall: z.number().positive(),
+          })
+          .strict(),
+        smoothingPasses: z.number().int().nonnegative(),
+        apex: z
+          .object({
+            rib: z.number().int().min(1).max(12),
+            border: z.enum(['upper', 'lower']),
+            measuredOverLateralMm: z.number().positive(),
+          })
+          .strict(),
+        costophrenicBandMm: z.number().positive(),
+        axillaryLines: z
+          .object({
+            method: z.string().min(1),
+            slabMm: z.number().positive(),
+            anteriorDeg: z.number().negative(),
+            midDeg: z.literal(0),
+            posteriorDeg: z.number().positive(),
+          })
+          .strict(),
+      })
+      .strict(),
     zones: z.array(zoneSchema),
   })
   .strict()

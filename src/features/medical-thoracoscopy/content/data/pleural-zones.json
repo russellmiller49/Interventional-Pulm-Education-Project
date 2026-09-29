@@ -1,6 +1,6 @@
 {
   "list": "medical-thoracoscopy-pleural-zones",
-  "version": 1,
+  "version": 2,
   "preparedOn": "2026-09-28",
   "preparedBy": "AI authoring assistant (Claude) at the owner's request",
   "statement": "The course divides the parietal pleura of the right side into seven regions and surveys them in one order. The division and the order are chosen for teaching. No source prescribes them: one recent guideline lays down no standard order. What the survey needs is one order, kept to.",
@@ -9,6 +9,28 @@
   "label": "Authored construct",
   "claimIds": ["MT-C-0009", "MT-C-0012", "MT-C-0023"],
   "notTracked": "The lung surface is looked at in a real survey too. This model does not keep track of it.",
+  "split": {
+    "method": "The build divides the surface of the pleural space, face by face. Each face is classed as diaphragm, mediastinum or chest wall by the nearest tissue outside it in the segmentation, the classes are smoothed across neighbouring faces, and landmarks measured on the scan then mark the apex, the costophrenic recess and the axillary lines. An authored construct: the thresholds are the author's.",
+    "nearestTissueMm": {
+      "diaphragm": 8,
+      "mediastinum": 10,
+      "chestWall": 20
+    },
+    "smoothingPasses": 6,
+    "apex": {
+      "rib": 2,
+      "border": "lower",
+      "measuredOverLateralMm": 10
+    },
+    "costophrenicBandMm": 10,
+    "axillaryLines": {
+      "method": "Angle about the centroid of the pleural space in each axial slab, in the plane of the slab: 0 degrees points straight to the patient's right, negative toward the front, positive toward the back.",
+      "slabMm": 10,
+      "anteriorDeg": -30,
+      "midDeg": 0,
+      "posteriorDeg": 30
+    }
+  },
   "zones": [
     {
       "id": "diaphragm",

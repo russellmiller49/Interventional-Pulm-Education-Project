@@ -43,6 +43,24 @@ manufacturer has not published were measured from its product-animation stills: 
 The order the scripts run in, and what each checks, is in the
 [device-kit handoff](handoffs/mt-02a-device-kit.md).
 
+## Anatomy
+
+The anatomy is built from one CT scan and its segmentation, in the owner's local data. The scripts
+run in this order:
+
+1. `scripts/medical-thoracoscopy/audit_thorax_sources.py`: pins both files by hash and every
+   segment the build uses by its measured content. `--check` fails if either has changed.
+2. `build_thorax_surfaces.py`: the pleural space divided into the survey zones, the numbered ribs,
+   the Chest view's context, the port-candidate table and the port record. `--install-dev` copies
+   the surfaces to a folder Git ignores, for the dev server.
+3. `validate_thorax_surfaces.py`: reads the surfaces back with its own code and checks them against
+   the committed record.
+
+The surfaces are not in the repository: the segmentation's terms are not settled (rights register,
+R-ANATOMY-SEGMENTATION), and the repository is public. What is committed is the numbers measured
+from them, in `src/features/medical-thoracoscopy/content/data/anatomy/`. See the
+[thorax-surfaces handoff](handoffs/mt-02b-thorax-surfaces.md).
+
 ## Written sections
 
 A section is data: one file in `src/features/medical-thoracoscopy/content/sections/`, in the shape

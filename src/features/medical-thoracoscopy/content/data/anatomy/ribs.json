@@ -1,0 +1,105 @@
+{
+  "record": "medical-thoracoscopy-right-ribs",
+  "version": 1,
+  "script": "scripts/medical-thoracoscopy/build_thorax_surfaces.py",
+  "method": "The right half of the rib cage, with its front 30 per cent cut away, separates into twelve pieces. Each is numbered by the height of its spinal end, highest first, and the rest of the rib is assigned to the nearest numbered piece.",
+  "status": "Numbering awaits the owner's check (owner decisions, T6).",
+  "ribs": [
+    {
+      "number": 1,
+      "spinalEndLps": [-37.787, -177.221, -182.391],
+      "voxelsBehindCut": 49413,
+      "volumeMl": 33.702,
+      "faces": 3080,
+      "watertight": true
+    },
+    {
+      "number": 2,
+      "spinalEndLps": [-54.768, -152.858, -197.369],
+      "voxelsBehindCut": 47526,
+      "volumeMl": 19.416,
+      "faces": 2474,
+      "watertight": true
+    },
+    {
+      "number": 3,
+      "spinalEndLps": [-56.983, -131.448, -210.349],
+      "voxelsBehindCut": 51272,
+      "volumeMl": 24.062,
+      "faces": 3310,
+      "watertight": true
+    },
+    {
+      "number": 4,
+      "spinalEndLps": [-56.983, -116.682, -224.328],
+      "voxelsBehindCut": 60003,
+      "volumeMl": 32.332,
+      "faces": 4024,
+      "watertight": true
+    },
+    {
+      "number": 5,
+      "spinalEndLps": [-58.459, -105.608, -240.803],
+      "voxelsBehindCut": 71390,
+      "volumeMl": 44.296,
+      "faces": 5250,
+      "watertight": true
+    },
+    {
+      "number": 6,
+      "spinalEndLps": [-49.6, -93.795, -258.277],
+      "voxelsBehindCut": 82301,
+      "volumeMl": 64.981,
+      "faces": 6722,
+      "watertight": true
+    },
+    {
+      "number": 7,
+      "spinalEndLps": [-40.74, -83.459, -278.746],
+      "voxelsBehindCut": 105941,
+      "volumeMl": 50.639,
+      "faces": 5688,
+      "watertight": true
+    },
+    {
+      "number": 8,
+      "spinalEndLps": [-51.076, -76.076, -304.208],
+      "voxelsBehindCut": 112807,
+      "volumeMl": 58.153,
+      "faces": 6484,
+      "watertight": true
+    },
+    {
+      "number": 9,
+      "spinalEndLps": [-68.795, -71.647, -338.656],
+      "voxelsBehindCut": 110110,
+      "volumeMl": 33.679,
+      "faces": 5350,
+      "watertight": true
+    },
+    {
+      "number": 10,
+      "spinalEndLps": [-70.272, -65.74, -369.11],
+      "voxelsBehindCut": 82970,
+      "volumeMl": 22.578,
+      "faces": 4142,
+      "watertight": true
+    },
+    {
+      "number": 11,
+      "spinalEndLps": [-76.916, -62.787, -419.534],
+      "voxelsBehindCut": 50847,
+      "volumeMl": 13.836,
+      "faces": 2132,
+      "watertight": true
+    },
+    {
+      "number": 12,
+      "spinalEndLps": [-65.842, -63.526, -458.975],
+      "voxelsBehindCut": 21816,
+      "volumeMl": 5.937,
+      "faces": 1708,
+      "watertight": true
+    }
+  ]
+}
