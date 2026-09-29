@@ -332,7 +332,7 @@
       "id": "anatomy-manifest",
       "kind": "manifest",
       "path": "public/models/medical-thoracoscopy/v1/anatomy/manifest.json",
-      "sha256": "e646c3f1008377fa8d5423e57a4ee2cc8f9aa28397144a0398eb2ec6dce27630",
+      "sha256": "dccb18fb7861486b3d4214a474f33012143ac85c062c50b274387fdae4323695",
       "bytes": 8329,
       "triangles": null,
       "decodedBytes": null,
@@ -408,6 +408,13 @@
       "what": "Zone sample records: counts per survey zone and lift off the proxy",
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-02c-lung-states",
+      "compiledIntoPageCode": false
+    },
+    {
+      "path": "src/features/medical-thoracoscopy/content/data/anatomy/zone-reach.json",
+      "what": "Zone reach: per sample, whether the port brings it into the field, and whether any position shows it (computed from the proxies)",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "addedIn": "claude/mt-02e-space-engine",
       "compiledIntoPageCode": false
     }
   ]

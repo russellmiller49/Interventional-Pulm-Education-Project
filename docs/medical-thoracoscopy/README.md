@@ -98,6 +98,30 @@ the engine, so the same commands give the same ledger whichever pane draws them.
 The 3D scene (slice 11) arrives behind the same contract. The contract changes only by adding. See
 the [space-contract handoff](handoffs/mt-02d-space-contract.md).
 
+## Space engine
+
+`src/features/medical-thoracoscopy/engine/space/` moves the telescope about the port, stops it where
+the anatomy and the device stop it, and keeps the model's estimate of what it has shown. It is pure
+code; everything that owns a BVH is in `engine/space/spatial/`, and the state is plain JSON.
+
+- `loadSpace.ts` builds the space from the two packaged proxy files (bytes, the same in Node and the
+  browser), and the resolver the reducer asks its spatial questions.
+- `fulcrum.ts` makes a pose (two tilts in the port's frame, a depth, a roll) into the telescope's
+  axis, its parts and its optical frame; `spatial/sweep.ts` takes one step of one control only as far
+  as the measured clearance allows, and names what stopped it.
+- `spaceReducer.ts` takes simulated actions only, on a whole-millisecond clock; `spaceReplay.ts`
+  replays a script under any schedule of ticks to the same events.
+- `coverage.ts` is the ledger; `zoneReach.ts` reads reach, which
+  `npx tsx scripts/medical-thoracoscopy/build-zone-reach.ts` computes from the proxies in the owner's
+  local data. Recompute it after any change to the proxies, the port, the device or the engine's
+  authored values: the engine ignores a reach record made for another snapshot, and a test fails.
+- `paneState.ts` gives a pane the engine's state as the slice-9 contract has it.
+- The tests judge the sweep with a brute force that shares no code with the collider, on analytic
+  scenes (`test-support/spaceScenes.ts`) and, where the local data holds them, on the real proxies.
+
+See the [space-engine handoff](handoffs/mt-02e-space-engine.md): what the model lets a survey see,
+and the values the engine authors.
+
 ## Written sections
 
 A section is data: one file in `src/features/medical-thoracoscopy/content/sections/`, in the shape

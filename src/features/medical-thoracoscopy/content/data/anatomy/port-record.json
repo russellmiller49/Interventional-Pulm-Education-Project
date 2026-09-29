@@ -12,6 +12,8 @@
   "corridorAxisIs": "Into the chest, along the inward normal of the pleural surface nearest the pivot.",
   "pleuraPointLps": [-132.01, -184.09, -350.58],
   "ribGapMm": 15.01,
+  "ribDepthMm": 8.9,
+  "ribDepthIs": "The deeper of the two ribs along the corridor axis, measured a few millimetres from the edge that faces the gap.",
   "wallThicknessMm": 40.0,
   "sleeveOuterDiameterMm": 7.6,
   "clearanceEachSideMm": 3.7,

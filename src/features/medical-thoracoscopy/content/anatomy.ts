@@ -8,6 +8,7 @@ import rawProxies from './data/anatomy/proxies.json'
 import rawRibs from './data/anatomy/ribs.json'
 import rawAudit from './data/anatomy/source-audit.json'
 import rawSurfaces from './data/anatomy/surfaces.json'
+import rawZoneReach from './data/anatomy/zone-reach.json'
 import rawZoneSamples from './data/anatomy/zone-samples.json'
 import { PLEURAL_ZONE_IDS } from './pleuralZones'
 
@@ -210,6 +211,8 @@ const portRowSchema = z.union([
       angleDeg: z.number(),
       status: z.literal('measured'),
       ribGapMm: z.number().positive(),
+      upperRibDepthMm: z.number().positive(),
+      lowerRibDepthMm: z.number().positive(),
       upperRibPointLps: vec3,
       lowerRibPointLps: vec3,
       spaceMidpointLps: vec3,
@@ -261,6 +264,8 @@ export const portRecordSchema = z
     corridorAxisIs: z.string().min(1),
     pleuraPointLps: vec3,
     ribGapMm: z.number().positive(),
+    ribDepthMm: z.number().positive(),
+    ribDepthIs: z.string().min(1),
     wallThicknessMm: z.number().positive(),
     sleeveOuterDiameterMm: z.number().positive(),
     clearanceEachSideMm: z.number(),
@@ -516,6 +521,58 @@ export const fluidTableSchema = z
   })
   .strict()
 
+/**
+ * Which zone samples the port lets the telescope bring into its field, computed by the space engine
+ * (`build-zone-reach.ts`) with the snapshot it was computed for; the engine uses it only while that
+ * snapshot is current.
+ */
+export const zoneReachSchema = z
+  .object({
+    record: z.literal('medical-thoracoscopy-zone-reach'),
+    version: z.number().int().positive(),
+    script: z.string().min(1),
+    statement: z.string().min(1),
+    label: z.literal('Authored construct'),
+    computedFor: z
+      .object({
+        anatomy: z.string().min(1),
+        device: z.string().min(1),
+        optics: z.string().min(1),
+        port: z.string().min(1),
+        lungAndFluid: z.string().min(1),
+        geometry: z.string().min(1),
+        rules: z.string().min(1),
+      })
+      .strict(),
+    lungStep: z.number().int().nonnegative(),
+    grid: z
+      .object({
+        tiltStepDeg: z.number().positive(),
+        depthStepMm: z.number().positive(),
+        rollsDeg: z.array(z.number()).min(1),
+        acrossRibsLimitDeg: z.number().positive(),
+        alongRibsLimitDeg: z.number().positive(),
+      })
+      .strict(),
+    files: z.object({ 'proxy-pleural-space': sha256, 'proxy-lung': sha256 }).strict(),
+    poses: z.number().int().positive(),
+    /** One digit a sample: 0 out of the field, 1 in the field only behind something, 2 seeable. */
+    reachable: z.string().regex(/^[012]+$/),
+    zones: z
+      .array(
+        z
+          .object({
+            id: z.enum(PLEURAL_ZONE_IDS),
+            samples: z.number().int().positive(),
+            reachable: z.number().int().nonnegative(),
+            seeable: z.number().int().nonnegative(),
+          })
+          .strict(),
+      )
+      .length(PLEURAL_ZONE_IDS.length),
+  })
+  .strict()
+
 export type SourceAudit = z.infer<typeof sourceAuditSchema>
 export type AnatomySurfaces = z.infer<typeof surfacesSchema>
 export type RightRibs = z.infer<typeof ribsSchema>
@@ -532,8 +589,10 @@ export type LungStates = z.infer<typeof lungStatesSchema>
 export type CollisionProxies = z.infer<typeof proxiesSchema>
 export type ZoneSamples = z.infer<typeof zoneSamplesSchema>
 export type FluidTable = z.infer<typeof fluidTableSchema>
+export type ZoneReach = z.infer<typeof zoneReachSchema>
 
 export const lungStates: LungStates = lungStatesSchema.parse(rawLungStates)
 export const collisionProxies: CollisionProxies = proxiesSchema.parse(rawProxies)
 export const zoneSamples: ZoneSamples = zoneSamplesSchema.parse(rawZoneSamples)
 export const fluidTable: FluidTable = fluidTableSchema.parse(rawFluidTable)
+export const zoneReach: ZoneReach = zoneReachSchema.parse(rawZoneReach)

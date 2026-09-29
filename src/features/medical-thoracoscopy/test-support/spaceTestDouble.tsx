@@ -29,6 +29,7 @@ export const DOUBLE_SNAPSHOT = {
   scenario: 'double-scenario',
   lungAndFluid: 'double-lung',
   geometry: 'double-geometry',
+  rules: 'double-rules',
 } as const
 
 const TILT_STEP_DEG = 5

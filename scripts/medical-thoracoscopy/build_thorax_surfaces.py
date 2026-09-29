@@ -22,11 +22,13 @@ Measured, and written to the repository as numbers only (`content/data/anatomy/`
   ones volume, watertightness and outward orientation; each zone's share of the pleural surface.
 - `ribs.json`: how each right rib was numbered.
 - `port-candidates.json`: the 5th to 8th intercostal spaces on the anterior, mid- and posterior
-  axillary lines: the gap between the ribs, measured bone to bone; the chest wall's thickness from
+  axillary lines: the gap between the ribs, measured bone to bone, and how deep each rib is along the
+  corridor axis beside the gap; the chest wall's thickness from
   the parietal pleura to the air outside the body, where the scan holds it; the depth to the lung
   along the same line; and the distance from the pleura to the nearest diaphragm.
 - `port-record.json`: the prototype port (owner decisions, T6, a default): the pivot, the corridor
-  axis, and the patch of chest wall the shaft may cross.
+  axis, the rib gap and the deeper rib's depth (which together with the sleeve's width limit the tilt
+  across the ribs), and the patch of chest wall the shaft may cross.
 
 `package-anatomy.ts` compresses them and, with `--install-dev`, copies them into
 `public/models/medical-thoracoscopy/v1/anatomy/`, which Git ignores, so the dev server can show
@@ -452,6 +454,33 @@ def leave_layer(volume: Volume, start: np.ndarray, direction: np.ndarray, layer:
     return None
 
 
+RIB_DEPTH_OFFSETS_MM = (1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0)
+
+
+def rib_depth(volume: Volume, rib_labels: np.ndarray, number: int, edge: np.ndarray, into: np.ndarray,
+              axis: np.ndarray, step: float = 0.1) -> float:
+    """How deep the rib is along the corridor axis: its extent along the axis, through the scan's voxels,
+    at points 1 to 8 mm into it from the edge that faces the gap, the largest of them. A rib's edge is
+    rounded; the slab model of the tilt across the ribs takes its full depth."""
+    def inside(p: np.ndarray) -> bool:
+        ijk = np.round((p - volume.origin) / volume.spacing).astype(int)
+        return bool(np.all(ijk >= 0) and np.all(ijk < volume.shape) and rib_labels[tuple(ijk)] == number)
+
+    best = 0.0
+    for offset in RIB_DEPTH_OFFSETS_MM:
+        centre = edge + offset * into
+        if not inside(centre):
+            continue
+        extent = 0.0
+        for sign in (1.0, -1.0):
+            t = 0.0
+            while inside(centre + sign * (t + step) * axis):
+                t += step
+            extent += t
+        best = max(best, extent)
+    return best
+
+
 def measure_ports(volume: Volume, mesh: trimesh.Trimesh, space: np.ndarray, rib_labels: np.ndarray) -> list[dict]:
     ct, ct_origin, _ = load_ct()
     k_shift = int(round((ct_origin[2] - volume.origin[2]) / volume.spacing[2]))
@@ -498,9 +527,13 @@ def measure_ports(volume: Volume, mesh: trimesh.Trimesh, space: np.ndarray, rib_
                                f"{to_air:.1f} mm: something lies against the chest wall here")
             to_lung, lung_status = first_hit(volume, pleura_point, inward, lambda ijk: lung[tuple(ijk)], 150.0)
             to_dia = float(diaphragm_tree.query(pleura_point)[0])
+            upper_depth = rib_depth(volume, rib_labels, space_number, a, (a - mid) / np.linalg.norm(a - mid), inward)
+            lower_depth = rib_depth(volume, rib_labels, space_number + 1, b, (b - mid) / np.linalg.norm(b - mid), inward)
             row.update({
                 "status": "measured",
                 "ribGapMm": gap,
+                "upperRibDepthMm": upper_depth,
+                "lowerRibDepthMm": lower_depth,
                 "upperRibPointLps": a.tolist(),
                 "lowerRibPointLps": b.tolist(),
                 "spaceMidpointLps": mid.tolist(),
@@ -516,7 +549,7 @@ def measure_ports(volume: Volume, mesh: trimesh.Trimesh, space: np.ndarray, rib_
                 "distanceToDiaphragmMm": to_dia,
             })
             rows.append(row)
-            log(f"space {space_number} {line:18s} gap {gap:5.1f} mm  wall {to_skin}  air {to_air}  skin-exit {to_skin_exit}  lung {to_lung}  diaphragm {to_dia:.1f}")
+            log(f"space {space_number} {line:18s} gap {gap:5.1f} mm  ribs {upper_depth:4.1f}/{lower_depth:4.1f} mm deep  wall {to_skin}  air {to_air}  skin-exit {to_skin_exit}  lung {to_lung}  diaphragm {to_dia:.1f}")
     return rows
 
 
@@ -541,6 +574,8 @@ def port_record(rows: list[dict], sleeve_mm: float) -> dict:
         "corridorAxisIs": "Into the chest, along the inward normal of the pleural surface nearest the pivot.",
         "pleuraPointLps": pleura.tolist(),
         "ribGapMm": row["ribGapMm"],
+        "ribDepthMm": max(row["upperRibDepthMm"], row["lowerRibDepthMm"]),
+        "ribDepthIs": "The deeper of the two ribs along the corridor axis, measured a few millimetres from the edge that faces the gap.",
         "wallThicknessMm": row["wallThicknessMm"],
         "sleeveOuterDiameterMm": sleeve_mm,
         "clearanceEachSideMm": (row["ribGapMm"] - sleeve_mm) / 2,
