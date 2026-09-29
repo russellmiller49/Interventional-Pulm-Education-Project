@@ -352,70 +352,70 @@
       "what": "Source audit: file hashes and each segment's measured volume, density and extent",
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-02b-thorax-surfaces",
-      "compiledIntoPageCode": false
+      "compiledIntoPageCode": true
     },
     {
       "path": "src/features/medical-thoracoscopy/content/data/anatomy/ribs.json",
       "what": "The twelve right ribs, numbered, as measured points",
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-02b-thorax-surfaces",
-      "compiledIntoPageCode": false
+      "compiledIntoPageCode": true
     },
     {
       "path": "src/features/medical-thoracoscopy/content/data/anatomy/port-candidates.json",
       "what": "Measured port candidates: rib gaps, wall thickness and depths for the 5th to 8th spaces",
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-02b-thorax-surfaces",
-      "compiledIntoPageCode": false
+      "compiledIntoPageCode": true
     },
     {
       "path": "src/features/medical-thoracoscopy/content/data/anatomy/port-record.json",
       "what": "The prototype port: pivot, corridor, pleura point, rib gap and depth",
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-02b-thorax-surfaces",
-      "compiledIntoPageCode": false
+      "compiledIntoPageCode": true
     },
     {
       "path": "src/features/medical-thoracoscopy/content/data/anatomy/surfaces.json",
       "what": "Surface records: vertex and triangle counts, hashes and zone areas",
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-02b-thorax-surfaces",
-      "compiledIntoPageCode": false
+      "compiledIntoPageCode": true
     },
     {
       "path": "src/features/medical-thoracoscopy/content/data/anatomy/fluid-table.json",
       "what": "Fluid level: volume against height in the presented position",
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-02c-lung-states",
-      "compiledIntoPageCode": false
+      "compiledIntoPageCode": true
     },
     {
       "path": "src/features/medical-thoracoscopy/content/data/anatomy/lung-states.json",
       "what": "Lung states: per-step gap at the port, deviation and fold checks",
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-02c-lung-states",
-      "compiledIntoPageCode": false
+      "compiledIntoPageCode": true
     },
     {
       "path": "src/features/medical-thoracoscopy/content/data/anatomy/proxies.json",
       "what": "Collision proxy records: triangle counts, hashes and recorded deviation from the drawn surfaces",
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-02c-lung-states",
-      "compiledIntoPageCode": false
+      "compiledIntoPageCode": true
     },
     {
       "path": "src/features/medical-thoracoscopy/content/data/anatomy/zone-samples.json",
       "what": "Zone sample records: counts per survey zone and lift off the proxy",
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-02c-lung-states",
-      "compiledIntoPageCode": false
+      "compiledIntoPageCode": true
     },
     {
       "path": "src/features/medical-thoracoscopy/content/data/anatomy/zone-reach.json",
       "what": "Zone reach: per sample, whether the port brings it into the field, and whether any position shows it (computed from the proxies)",
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-02e-space-engine",
-      "compiledIntoPageCode": false
+      "compiledIntoPageCode": true
     }
   ]
 }

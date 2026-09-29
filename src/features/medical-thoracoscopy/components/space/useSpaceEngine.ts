@@ -18,6 +18,7 @@ import {
   type SimulatedAction,
 } from '../../engine/space/spaceReducer'
 import { currentReach } from '../../engine/space/zoneReach'
+import { frameClock } from './lungClock'
 import { READINESS_WORDS } from './spaceWords'
 import {
   emptyLedger,
@@ -34,8 +35,9 @@ import {
  *
  * Loading is guarded: a result that arrives after a newer attempt has started is dropped, and trying
  * again never marks a region seen, since the engine starts afresh from the scenario's start. The clock
- * runs on animation frames only while a move of the lung is due, in whole milliseconds; a hidden tab
- * has no frames, so the lung waits. Under reduced motion the engine holds the clock itself.
+ * runs on animation frames only while a move of the lung is due, in whole milliseconds, each frame
+ * handing the engine at most `MAX_FRAME_MS`; a hidden tab has no frames, so the lung waits, and the
+ * time away is not handed on when the tab returns. Under reduced motion the engine holds the clock.
  */
 export interface SpaceEngineStart {
   readonly scenario: string
@@ -137,26 +139,29 @@ export function useSpaceEngine(
     setEngine(reduce(engine, { type: 'motion', reduced: reducedMotion }, resolver))
   }
 
-  // The clock: animation frames while a move of the lung is due, whole milliseconds at a time.
+  // The clock: animation frames while a move of the lung is due, whole milliseconds at a time, no
+  // frame handing the engine more than a frame's worth, and the time a hidden page had no frames
+  // counting for nothing (`lungClock.ts`).
   const due =
     engine !== null && !engine.reducedMotion && engine.nextLungMoveAtMs !== null && !engine.lungHeld
   useEffect(() => {
     if (!due) return
+    const clock = frameClock(performance.now())
     let frame = 0
-    let last = performance.now()
-    let carried = 0
     const onFrame = (now: number) => {
-      carried += now - last
-      last = now
-      const ms = Math.floor(carried)
-      if (ms > 0) {
-        carried -= ms
-        dispatch({ type: 'tick', ms })
-      }
+      const ms = clock.advance(now)
+      if (ms > 0) dispatch({ type: 'tick', ms })
       frame = requestAnimationFrame(onFrame)
     }
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') clock.resume(performance.now())
+    }
+    document.addEventListener('visibilitychange', onVisibility)
     frame = requestAnimationFrame(onFrame)
-    return () => cancelAnimationFrame(frame)
+    return () => {
+      cancelAnimationFrame(frame)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [due, dispatch])
 
   const onCommand = useCallback(

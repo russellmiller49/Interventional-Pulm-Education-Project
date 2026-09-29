@@ -67,6 +67,7 @@ const CHEST_BACKGROUND = '#0b1622'
 const SCOPE_BACKGROUND = '#050303'
 const SEEN_COLOURS: Readonly<Record<SeenState, string>> = {
   seen: '#4f9d8a',
+  'seen-to-reach': '#7fb3a4',
   'partly-seen': '#d9a441',
   'not-seen': '#8b95a1',
 }
@@ -199,6 +200,7 @@ function useMaterials() {
     return {
       zones: {
         seen: tint(SEEN_COLOURS.seen),
+        'seen-to-reach': tint(SEEN_COLOURS['seen-to-reach']),
         'partly-seen': tint(SEEN_COLOURS['partly-seen']),
         'not-seen': tint(SEEN_COLOURS['not-seen']),
       } as Record<SeenState, MeshStandardMaterial>,
