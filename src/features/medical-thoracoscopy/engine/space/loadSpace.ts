@@ -2,7 +2,7 @@ import type { ScopePose, SpaceCommand } from '../../components/space/types'
 import { portRecord } from '../../content/anatomy'
 import { PLEURAL_ZONE_IDS, type PleuralZoneId } from '../../content/pleuralZones'
 import { modelledNumber } from '../../content/deviceDefinitions'
-import { colliderRule } from './contactPolicy'
+import { colliderRule, type ContactRegion } from './contactPolicy'
 import { scopeGeometry, type ScopeGeometry } from './fulcrum'
 import { capsuleClearance, type Capsule, type MeshIndex } from './spatial/capsuleQuery'
 import { instrument, type Instrument } from './instrument'
@@ -11,6 +11,7 @@ import { readProxyGlb, type TriangleMesh } from './spatial/proxyGlb'
 import { CLEARANCE_SKIN_MM, createSpatialWorld, type SpatialWorld } from './spatial/spatialWorld'
 import {
   depthRange,
+  takeJawStep,
   takeStep,
   takeToolStep,
   type StepResult,
@@ -74,13 +75,21 @@ export function assembleSpace(parts: Omit<LoadedSpace, 'triangleZones'>): Loaded
   const empty = PLEURAL_ZONE_IDS.filter((zone) => !parts.samples.zones.includes(zone))
   if (empty.length > 0)
     throw new Error(`No samples for ${empty.join(', ')}: a region could never be seen`)
-  return { ...parts, triangleZones: nearestZones(parts.world.space, parts.samples) }
+  const triangleZones = nearestZones(parts.world.space, parts.samples)
+  // contact is authorised region by region, so the collider needs each wall triangle's region
+  parts.world.useWallZones(triangleZones)
+  return { ...parts, triangleZones }
 }
 
-/** A tool in the channel, as the resolver needs it: where it is, and whether the target is authorised. */
+/**
+ * A tool in the channel, as the resolver needs it: where it is, whether the scenario authorises any
+ * contact, and which regions it authorises (by default the teaching target alone). An engineering
+ * permission for the contact contract, never a statement that a region is safe to touch.
+ */
 export interface ToolInHand {
   readonly state: ToolState
   readonly authorised: boolean
+  readonly regions?: readonly ContactRegion[]
 }
 
 /** The questions the reducer asks, answered synchronously from the loaded space. */
@@ -91,6 +100,8 @@ export interface SpaceResolver {
   geometry(pose: ScopePose): ScopeGeometry
   /** One step of the telescope; with a tool in the channel, the tool moves with it. */
   step(pose: ScopePose, command: SpaceCommand, lungStep: number, tool?: ToolInHand): StepResult
+  /** The jaws opened or closed, the telescope and the forceps held still (R8). */
+  jawStep(pose: ScopePose, action: 'open' | 'close', lungStep: number, tool: ToolInHand): StepResult
   /** One step of the tool along the channel, the telescope held still. */
   toolStep(
     pose: ScopePose,
@@ -101,6 +112,12 @@ export interface SpaceResolver {
   view(pose: ScopePose, lungStep: number): Uint8Array
   /** The instrument's clearance from the lung at a step, for accepting a move of the lung. */
   lungClearance(pose: ScopePose, lungStep: number, tool?: ToolInHand): number
+  /**
+   * Whether the telescope's tip lies inside the space and outside the lung at a step, by winding
+   * number. With the clearance, it decides a move of the lung: a lung clear of the instrument but
+   * all around it has swallowed it, which clearance alone cannot see (independent review, R7).
+   */
+  tipFree(pose: ScopePose, lungStep: number): boolean
   /** The instrument's least clearance from anything. */
   clearance(pose: ScopePose, lungStep: number): number
   /**
@@ -122,6 +139,7 @@ export function createResolver(space: LoadedSpace): SpaceResolver {
     rule: colliderRule(
       moving ? 'extended' : tool.state.phase,
       tool.authorised ? 'authorised' : 'not-authorised',
+      tool.regions,
     ),
   })
   return {
@@ -140,6 +158,8 @@ export function createResolver(space: LoadedSpace): SpaceResolver {
         depthLimits,
         tool ? contextOf(tool, false) : undefined,
       ),
+    jawStep: (pose, action, lungStep, tool) =>
+      takeJawStep(world, port, device, pose, action, contextOf(tool, false), lungStep),
     toolStep: (pose, direction, lungStep, tool) =>
       takeToolStep(world, port, device, pose, direction, contextOf(tool, true), lungStep),
     view: (pose, lungStep) => viewSamples(world, samples, geometry(pose).camera, device, lungStep),
@@ -154,6 +174,7 @@ export function createResolver(space: LoadedSpace): SpaceResolver {
       const index = world.lungIndex(lungStep)
       return Math.min(...parts.map((capsule) => capsuleClearanceOf(index, capsule)))
     },
+    tipFree: (pose, lungStep) => world.isFree(geometry(pose).tip, lungStep),
     clearance: (pose, lungStep) => world.clearance(geometry(pose), lungStep).clearance,
     startProblem(pose, lungStep) {
       const clearance = world.clearance(geometry(pose), lungStep).clearance

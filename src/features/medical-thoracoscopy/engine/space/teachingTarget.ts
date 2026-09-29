@@ -3,6 +3,7 @@ import { toolContact, type ToolContact } from '../../content/anatomy'
 import type { PleuralZoneId } from '../../content/pleuralZones'
 import type { TriangleMesh } from './spatial/proxyGlb'
 import { add, normalize, scale, type Vec3 } from './vec'
+import { toolIdentity } from './spaceSnapshot'
 import { reachIdentity } from './zoneReach'
 
 /**
@@ -136,6 +137,8 @@ export function currentToolContact(record: ToolContact = toolContact): CurrentTo
   const now = reachIdentity(record.lungStep)
   const parts = Object.keys(now) as (keyof typeof now)[]
   if (!parts.every((part) => now[part] === record.computedFor[part])) return null
+  // made with other forceps or another contact table, its demonstrations may not hold (R4, R8)
+  if (record.computedFor.tool !== toolIdentity()) return null
   const { centre, radiusMm, zone, on } = record.nodule
   return {
     nodule: { on, zone, centre: [centre[0], centre[1], centre[2]], radiusMm },

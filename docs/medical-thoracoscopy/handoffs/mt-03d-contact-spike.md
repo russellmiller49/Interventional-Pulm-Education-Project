@@ -66,7 +66,11 @@ and one illustrative nodule.
 ## What the anatomy allows: the nodule is on the lung's surface
 
 The plan puts the nodule on the costal pleura. The model cannot reach it there. From every one of
-the 6,623 positions the port allows, the line of the working channel meets the lung before the wall.
+the 6,623 positions in the script's census, the line of the working channel meets the lung before
+the wall. (Corrected after the independent review: the census covers tilts within 85 per cent of the
+ellipse the port allows, at roll 0, on a 2° by 3 mm grid (`TILT_SHARE = 0.85`), not every position
+the port allows. The review extended it to the whole ellipse and found the same: all 9,645 lines, and
+38,580 over four rolls, meet the lung first.)
 At the port's least depth the lung comes no nearer than 22.4 mm ahead of the tip along any line; in
 nine directions probed across the port's range it lay 23 to 37 mm ahead, and the wall 70 to 147 mm.
 So the forceps, which leave the channel along the telescope's line, cannot reach any part of the
@@ -161,5 +165,58 @@ frame at a time through the development probe:
 - Do not change the lung's collapse to make the spike reach the chest wall without the owner's
   decision on MT-C-0002.
 - Do not use the nodule's record once its snapshot is stale; compute it again.
+
+## Repair after the independent review (2026-09-29): R0, R2, R4, R8, OD-12
+
+**What the spike is (OD-12).** The nodule on the lung's surface is accepted by the owner only as an
+interim engineering demonstration: one contact framework tells the forceps' jaws, which may touch,
+from the telescope, which may not. It does not meet the plan's costal-pleura criterion, and gate
+criterion 10 stays NOT MET as specified until the lung, the port and the envelope are decided (R9).
+The nodule and the anatomy were not moved. The census wording above is corrected; that no line
+reaches the chest wall is not the collapse's doing alone: the review found the port's tilt envelope
+and the rib gap limit it too (the forecast and the gate packet now say so).
+
+**R8, contact region by region.** The collider no longer treats the chest wall as one obstacle that
+may be touched only if every region allows it:
+
+- `contactPolicy.ts`: the table gains the jaws' state (closed, open) and authorises region by
+  region. The working element may touch only with the forceps out and only a region the scenario
+  authorises (`colliderRule(phase, authorisation, regions)`, by default the teaching target alone);
+  the lung never; every other part never. The jaws' state changes the working element's shape, not
+  its permission. These are engineering permissions: nothing here says a region is safe to touch.
+- `spatialWorld.ts`: the wall is split by region once the regions are known (`useWallZones`, from
+  `assembleSpace`), and a part is measured region by region, each at its own skin, whenever the rule
+  differs between regions; a limit names the region it met.
+- `toolChannel.ts`, `sweep.ts`, the reducer: the jaws open and close (a new simulated command,
+  `{ kind: 'jaws' }`, not yet on the dock). Opening is refused while they are not wholly out, or
+  where the open jaws (an authored, conservative envelope: the half-spread at the published 44°
+  opening plus half a jaw's width, 5.37 mm) would come within a pair's skin; closing is never
+  refused. The forceps come back only with the jaws closed ("Their jaws are open. Close them before
+  bringing them back."), and then withdrawal is never refused by a surface, as before.
+- No biopsy lesson, no target site, no tissue acquisition, bleeding or tissue effect was added.
+
+`spaceContactRegions.test.ts` holds it on a room whose far wall is the mediastinum region: the jaws
+touch that region when it is authorised and stop clear of it when another region, or none, is; the
+telescope is refused at an authorised region; the forceps' shaft keeps the clearance skin where the
+jaws may touch; the lung cannot be authorised; the jaws open only when wholly out and only with room;
+open jaws must close before withdrawal; and 60 seeded sequences of 50 commands, jaws included, keep
+every part at its own skin, region by region.
+
+**R4.** The snapshot gains `tool`: the touching distance and its skin, the forceps' step and reach,
+the open jaws' envelope, and a digest of every row of the contact table; `none` for a scenario
+without the forceps. `currentToolContact` refuses a record made for other forceps or another table.
+`tool-contact.json` was rebuilt (`npx tsx scripts/medical-thoracoscopy/build-tool-contact.ts`, 9 s):
+the same nodule, places and demonstrations (the telescope stops after 7 presses; the jaws touch at
+7.05 mm); only the identity changed.
+
+**R2, the forceps on the real proxies.** `fuzzForceps` (test-support): 150 seeded sequences at the
+lung's last step, the forceps out until stopped, then pivots, depth, rolls, the jaws, the forceps
+out and back, every move judged along its path (Lipschitz-certified), the forceps' tip inside the
+space and outside the lung by ray parity, and the forceps brought all the way back. 6,314 moves,
+58,616 poses on the paths, 6,160 inside checks: nothing wrong. The open jaws fitted only once in
+those sequences: the lung is close to every line of the channel.
+
+The hub's prototype links show for any stage but published (slice 4's repair made the stage
+`admin-preview`).
 
 This does not change publication status or constitute clinical approval.

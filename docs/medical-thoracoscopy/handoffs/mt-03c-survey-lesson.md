@@ -131,4 +131,19 @@ often hidden, so no screenshot was relied on for a result):
 - Do not store an answer, the survey's note or the simulator's state.
 - Do not open a section in preparation, or mark it reviewed.
 
+## Repair after the independent review (2026-09-29): OD-11, R4, OD-16
+
+- **OD-11.** Every lesson already starts from the loaded "space-made" teaching example, with the lung
+  at its last step; no lesson lets the learner drive the lung. That is now the owner's decision, and
+  the lesson says it: with the teaching example and above the space in each activity, "The lung here
+  is an authored teaching state, loaded with the space: not the lung's response to anything you did,
+  and not yet clinically reviewed." Gate criterion 9 stays partial: the lung's change is shown only
+  on the space prototype, as an authored sequence.
+- **R4.** `tour-stops.json` was rebuilt for the fuller snapshot
+  (`npx tsx scripts/medical-thoracoscopy/build-tour-stops.ts`, 9 s): the same stops, only the
+  identity changed. It is listed in the ledger's `bundledRecords`.
+- **OD-16.** The model's ledger may now say a region is seen as far as this model reaches; the
+  learner's own note keeps the three states section 11 teaches (seen, partly seen, not seen), and the
+  comparison shows the two side by side. The section's text is unchanged.
+
 This does not change publication status or constitute clinical approval.

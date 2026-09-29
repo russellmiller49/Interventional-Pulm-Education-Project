@@ -45,7 +45,10 @@ import {
   type LoadedSpace,
   type SpaceResolver,
 } from '../../src/features/medical-thoracoscopy/engine/space/loadSpace'
-import { spaceSnapshot } from '../../src/features/medical-thoracoscopy/engine/space/spaceSnapshot'
+import {
+  spaceSnapshot,
+  toolIdentity,
+} from '../../src/features/medical-thoracoscopy/engine/space/spaceSnapshot'
 import {
   reduce,
   startEngine,
@@ -251,7 +254,7 @@ function start(resolver: SpaceResolver, pose: ScopePose, scenario: string): Engi
     lungStep: LUNG_STEP,
     pose,
     reducedMotion: true,
-    snapshot: spaceSnapshot(scenario, LUNG_STEP),
+    snapshot: spaceSnapshot(scenario, LUNG_STEP, undefined, true),
     tool: { authorised: true },
   })
 }
@@ -395,7 +398,7 @@ async function main(): Promise<void> {
     statement:
       'Numbers only: an illustrative nodule for the contact spike, on the costal pleura where the plan puts it or, when the lung lies in front of every line the port allows, on the lung’s surface; and the two positions of the telescope the spike starts from, with the lung fallen away, each checked by running its demonstration through the space engine. Computed from the collision proxies, which are not in the repository.',
     label: 'Authored construct',
-    computedFor: reachIdentity(LUNG_STEP),
+    computedFor: { ...reachIdentity(LUNG_STEP), tool: toolIdentity() },
     lungStep: LUNG_STEP,
     nodule: {
       on: chosen.site.on,

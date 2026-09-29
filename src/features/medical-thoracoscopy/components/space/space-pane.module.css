@@ -109,6 +109,11 @@
   stroke: var(--green);
 }
 
+.wall[data-seen='seen-to-reach'] {
+  stroke: var(--green);
+  stroke-dasharray: 6 3;
+}
+
 .wall[data-seen='partly-seen'] {
   stroke: var(--amber);
   stroke-dasharray: 6 3;

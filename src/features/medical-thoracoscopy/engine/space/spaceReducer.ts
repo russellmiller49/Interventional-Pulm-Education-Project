@@ -7,6 +7,7 @@ import {
 } from '../../components/space/types'
 import type { PleuralZoneId } from '../../content/pleuralZones'
 import { addView, emptyCoverage, zonesInView, type Coverage } from './coverage'
+import type { ContactRegion } from './contactPolicy'
 import type { SpaceResolver, ToolInHand } from './loadSpace'
 import { CLEARANCE_SKIN_MM } from './spatial/spatialWorld'
 import type { Limit } from './spatial/sweep'
@@ -39,7 +40,14 @@ export const LUNG_ROOM_MM = 0.5
 
 export interface EngineEvent {
   readonly atMs: number
-  readonly kind: 'moved' | 'stopped' | 'lung-moved' | 'lung-held' | 'lung-waits' | 'tool-moved'
+  readonly kind:
+    | 'moved'
+    | 'stopped'
+    | 'lung-moved'
+    | 'lung-held'
+    | 'lung-waits'
+    | 'tool-moved'
+    | 'jaws-moved'
   readonly detail: string
 }
 
@@ -47,9 +55,13 @@ export interface EngineEvent {
 export interface EngineTool {
   readonly phase: 'in-channel' | 'extended'
   readonly extensionMm: number
-  /** Whether the scenario's teaching target is one the jaws may touch. */
+  /** Whether the scenario authorises the jaws to touch anything. */
   readonly authorised: boolean
-  /** The jaws are within touching distance of the target. */
+  /** The regions it authorises; by default the teaching target alone (R8). */
+  readonly regions?: readonly ContactRegion[]
+  /** Open or closed; closed unless the learner opened them (R8). */
+  readonly jaws?: 'closed' | 'open'
+  /** The jaws are within touching distance of what they may touch. */
   readonly touching: boolean
 }
 
@@ -120,7 +132,7 @@ export function startEngine(
     readonly pose: ScopePose
     readonly reducedMotion: boolean
     readonly snapshot: SpaceSnapshotId
-    readonly tool?: { readonly authorised: boolean }
+    readonly tool?: { readonly authorised: boolean; readonly regions?: readonly ContactRegion[] }
   },
 ): EngineState {
   const problem = resolver.startProblem(pose, lungStep)
@@ -147,6 +159,8 @@ export function startEngine(
             phase: TOOL_IN_CHANNEL.phase,
             extensionMm: TOOL_IN_CHANNEL.extensionMm,
             authorised: tool.authorised,
+            ...(tool.regions ? { regions: tool.regions } : {}),
+            jaws: 'closed',
             touching: false,
           } as EngineTool,
         }
@@ -157,8 +171,9 @@ export function startEngine(
 /** The forceps as the resolver takes them. */
 export function toolInHand(tool: EngineTool): ToolInHand {
   return {
-    state: { phase: tool.phase, extensionMm: tool.extensionMm },
+    state: { phase: tool.phase, extensionMm: tool.extensionMm, jaws: tool.jaws ?? 'closed' },
     authorised: tool.authorised,
+    ...(tool.regions ? { regions: tool.regions } : {}),
   }
 }
 
@@ -186,7 +201,12 @@ function moveLung(state: EngineState, resolver: SpaceResolver, atMs: number): En
     return { ...state, nextLungMoveAtMs: null, clockHeld: false }
   const next = state.lungStep + Math.sign(state.lungTarget - state.lungStep)
   const tool = state.tool ? toolInHand(state.tool) : undefined
-  if (resolver.lungClearance(state.pose, next, tool) < CLEARANCE_SKIN_MM + LUNG_ROOM_MM) {
+  // Room to spare around the instrument, and the instrument still outside the lung: a step that
+  // closed the lung all around it would leave room and swallow it (independent review, R7).
+  if (
+    resolver.lungClearance(state.pose, next, tool) < CLEARANCE_SKIN_MM + LUNG_ROOM_MM ||
+    !resolver.tipFree(state.pose, next)
+  ) {
     return state.lungHeld
       ? state
       : event({ ...state, lungHeld: true }, atMs, 'lung-held', `step ${state.lungStep}`)
@@ -283,6 +303,26 @@ export function reduce(
         return state.reducedMotion && state.clockHeld
           ? moveLung(state, resolver, state.clockMs)
           : state
+      }
+      if (command.kind === 'jaws') {
+        if (!state.tool) return state
+        const moved = resolver.jawStep(
+          state.pose,
+          command.action,
+          state.lungStep,
+          toolInHand(state.tool),
+        )
+        const jaws = moved.tool?.jaws ?? state.tool.jaws ?? 'closed'
+        let next: EngineState = {
+          ...state,
+          limit: moved.limit,
+          tool: { ...state.tool, jaws, touching: moved.touching ?? false },
+        }
+        if (jaws !== (state.tool.jaws ?? 'closed'))
+          next = event(next, state.clockMs, 'jaws-moved', command.action)
+        if (moved.limit)
+          next = event(next, state.clockMs, 'stopped', `${moved.limit.part} ${moved.limit.kind}`)
+        return next
       }
       if (command.kind === 'tool') {
         if (!state.tool) return state

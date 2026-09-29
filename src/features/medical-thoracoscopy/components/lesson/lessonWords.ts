@@ -23,6 +23,8 @@ export const LESSON_WORDS = {
   moveOn: 'Move on without doing this',
   exampleLoadAgain: 'Put the space back as the example has it',
   exampleTaughtIn: 'Where these steps are taught',
+  lungAuthored:
+    'The lung here is an authored teaching state, loaded with the space: not the lung’s response to anything you did, and not yet clinically reviewed.',
   inPreparation: 'in preparation',
   open: 'open',
   questionNote: 'Optional. Try it, or read the explanation first. Nothing you choose is kept.',

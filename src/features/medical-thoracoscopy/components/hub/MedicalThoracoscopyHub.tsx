@@ -57,7 +57,7 @@ export function MedicalThoracoscopyHub() {
         </h2>
         <InPreparationList items={integratedCases} />
       </section>
-      {MEDICAL_THORACOSCOPY_RELEASE_STAGE === 'unlisted-preview' ? (
+      {MEDICAL_THORACOSCOPY_RELEASE_STAGE !== 'published' ? (
         <section aria-labelledby="prototypes-heading" data-prototypes>
           <h2 id="prototypes-heading" className={styles.sectionHeading}>
             Engineering prototypes

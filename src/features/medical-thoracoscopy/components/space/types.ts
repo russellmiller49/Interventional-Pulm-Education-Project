@@ -29,6 +29,18 @@ export interface SpaceSnapshotId {
   readonly scenario: string
   readonly lungAndFluid: string
   readonly geometry: string
+  /**
+   * The engine's own authored rules that decide a spatial answer: step sizes, the clearance and
+   * touch skins, the port's excluded patch, the lung's room and the view's occlusion tolerance
+   * (added after the independent review, R4).
+   */
+  readonly rules: string
+  /**
+   * The forceps and the contact table, for a scenario that has the forceps: the touching distance
+   * and skin, the forceps' step and reach, the open jaws' envelope and a digest of the table's rows;
+   * `none` without them (added after the independent review, R4 and R8).
+   */
+  readonly tool: string
 }
 
 export const SNAPSHOT_PARTS = [
@@ -39,6 +51,8 @@ export const SNAPSHOT_PARTS = [
   'scenario',
   'lungAndFluid',
   'geometry',
+  'rules',
+  'tool',
 ] as const satisfies readonly (keyof SpaceSnapshotId)[]
 
 export function sameSnapshot(a: SpaceSnapshotId, b: SpaceSnapshotId): boolean {
@@ -61,8 +75,13 @@ export interface ScopePose {
 
 // ── The ledger ───────────────────────────────────────────────────────────────────────────────
 
-/** How much of a region the telescope has shown, as the model estimates it. */
-export const SEEN_STATES = ['seen', 'partly-seen', 'not-seen'] as const
+/**
+ * How much of a region the telescope has shown, as the model estimates it. `seen-to-reach`: part of
+ * it has been seen and none of the rest can be, from any position the model tried: observed to the
+ * model's available extent, which is as far as a survey can go (owner decision OD-16; added after
+ * the independent review, R5).
+ */
+export const SEEN_STATES = ['seen', 'seen-to-reach', 'partly-seen', 'not-seen'] as const
 export type SeenState = (typeof SEEN_STATES)[number]
 
 /** Why the rest of a region has not been seen. */
@@ -101,6 +120,11 @@ export function ledgerProblems(ledger: ZoneLedger): readonly string[] {
       (entry.reason === null || !UNSEEN_REASONS.includes(entry.reason))
     ) {
       problems.push(`${entry.zone}: a region not seen whole needs one of the three reasons`)
+    }
+    if (entry.seen === 'seen-to-reach' && entry.reason === 'not-looked-at') {
+      problems.push(
+        `${entry.zone}: a region seen as far as the model reaches has nothing left to look at`,
+      )
     }
   }
   return problems
@@ -200,6 +224,11 @@ export type SpaceCommand =
   | { readonly kind: 'retry-geometry' }
   /** The forceps along the working channel, the telescope held still (added in slice 13). */
   | { readonly kind: 'tool'; readonly direction: 'extend' | 'retract' }
+  /**
+   * The forceps' jaws opened or closed, the telescope and the forceps held still (added after the
+   * independent review, R8). No dock control sends it yet; it is part of the contact contract.
+   */
+  | { readonly kind: 'jaws'; readonly action: 'open' | 'close' }
 
 export type SpaceInputMode = 'keyboard' | 'pointer' | 'touch' | 'scripted'
 
@@ -212,7 +241,7 @@ export function commandPart(command: SpaceCommand): 'pivot' | 'depth' | 'roll' |
 
 /** The control of the model a command belongs to, or none for the clock and retry (slice 13). */
 export function commandControl(command: SpaceCommand): 'scope' | 'tool' | null {
-  if (command.kind === 'tool') return 'tool'
+  if (command.kind === 'tool' || command.kind === 'jaws') return 'tool'
   return commandPart(command) === null ? null : 'scope'
 }
 

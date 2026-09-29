@@ -171,7 +171,7 @@ function skinOf(part: InstrumentPart, obstacle: Obstacle, extended: boolean, aut
 }
 
 describe('the table of contact, as the collider reads it', () => {
-  it('lets only the jaws touch, only the target, only out of the channel and authorised; the wall is every region at once', () => {
+  it('by default lets only the jaws touch, only the target, only out of the channel and authorised; the wall is every region at once', () => {
     for (const phase of TOOL_PHASES) {
       for (const authorisation of AUTHORISATIONS) {
         const rule = colliderRule(phase, authorisation)
@@ -179,10 +179,10 @@ describe('the table of contact, as the collider reads it', () => {
           expect(rule(part, 'target')).toBe(
             contactRule(part, 'teaching-target', phase, authorisation),
           )
-          expect(rule(part, 'lung')).toBe(contactRule(part, 'lung', phase, authorisation))
+          expect(rule(part, 'lung')).toBe('refuse')
           expect(rule(part, 'wall')).toBe('refuse')
-          for (const zone of PLEURAL_ZONE_IDS)
-            expect(contactRule(part, zone, phase, authorisation)).toBe('refuse')
+          // no region of the wall is authorised unless the scenario names it
+          for (const zone of PLEURAL_ZONE_IDS) expect(rule(part, 'wall', zone)).toBe('refuse')
           expect(rule(part, 'target') === 'may-touch').toBe(
             part === 'working-element' && phase === 'extended' && authorisation === 'authorised',
           )
