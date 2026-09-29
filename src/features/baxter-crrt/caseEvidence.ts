@@ -114,6 +114,15 @@ const fieldDescriptors: Readonly<Record<CrrtSuppliedEvidenceFieldId, FieldDescri
       decimals: 2,
       read: (patient) => patient.solutes.pH,
     },
+    // CRRT-12: the case-start scalar only. The patient model never writes temperature, so this
+    // is not a trend and not a model output.
+    temperature: {
+      label: 'Temperature',
+      sampleIdentity: 'Supplied case-start observation, one value, not a temperature trend',
+      unit: '°C',
+      decimals: 1,
+      read: (patient) => patient.temperatureCelsius,
+    },
   })
 
 function suppliedEntry(

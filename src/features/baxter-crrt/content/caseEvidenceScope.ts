@@ -15,7 +15,10 @@ import type { CrrtCaseId } from './schema'
  * clearance, at one time point. CRRT-05 asks about the dilution tradeoff while
  * the model holds the concentration reaching the filter and the filtration
  * fraction constant. CRRT-16 describes several failed circuits that are history,
- * not simulation.
+ * not simulation. CRRT-12 (CRRT-FELLOW-06 F06-01) promised changing electrolyte,
+ * temperature, medication and nutrition trends during an interruption; the fixture
+ * carries one case-start record, the patient model never writes temperature, no
+ * medication or nutrition quantity exists, and the run starts with delivery running.
  *
  * Every line here is a statement about this repository — a fixture field, an
  * engine constant, or an already-registered source. Nothing here supplies a
@@ -33,6 +36,7 @@ export const crrtSuppliedEvidenceFieldIds = [
   'potassium',
   'bicarbonate',
   'ph',
+  'temperature',
 ] as const
 
 export type CrrtSuppliedEvidenceFieldId = (typeof crrtSuppliedEvidenceFieldIds)[number]
@@ -132,6 +136,62 @@ const scopes: readonly CrrtCaseEvidenceScope[] = Object.freeze([
       {
         text: 'Reassessment after a fluid-removal change belongs with the patient, the monitoring available and the local protocol, not with a single displayed number.',
         sourceIds: [RRT_ICU],
+      },
+    ],
+  },
+  {
+    caseId: 'CRRT-12',
+    headline:
+      'This case is a multidisciplinary review with incomplete information. It supplies case-start values and the live treatment-delivery record; the serial electrolyte, temperature, medication and nutrition data a review would rest on are not in this case.',
+    suppliedEvidenceFieldIds: ['potassium', 'bicarbonate', 'ph', 'temperature'],
+    absentEvidence: [
+      {
+        label: 'Serial electrolyte and acid-base values',
+        reason:
+          'Potassium, bicarbonate and pH are supplied once, at case start. There is no second time point, and the simulation produces no laboratory values over time, so none are displayed.',
+      },
+      {
+        label: 'Serial temperature',
+        reason:
+          'One temperature is supplied at case start. The patient model has no temperature term, so the value is never recalculated during the run.',
+      },
+      {
+        label: 'Medication delivery or drug exposure over time',
+        reason:
+          'The case carries no medication order, dose, level or administration record. The whole-patient fluid balance includes a medication-carrier volume, which is fluid, not drug delivered or drug exposure.',
+      },
+      {
+        label: 'Nutrition intake or its effect over time',
+        reason:
+          'The case carries no nutrition prescription or intake record, and nothing in the simulation responds to nutrition. The fluid balance counts nutrition, where any is supplied, as volume only.',
+      },
+      {
+        label: 'An earlier treatment interruption',
+        reason:
+          'No interruption history is supplied, and no action in this case pauses delivery; the run starts with treatment running. Interruptions belong in the review as history to obtain, not as something this run shows.',
+      },
+      {
+        label: 'Results of a multidisciplinary reassessment',
+        reason:
+          'Requesting a pharmacist, dietitian, nursing or prescriber review records your plan. No result comes back, because the case contains none.',
+      },
+    ],
+    modelCalculates: [
+      'Delivered dose, elapsed time and downtime, as they actually occur in this run.',
+      'The whole-patient fluid ledger: machine removal plus the supplied external inputs and outputs.',
+      'The current settings, the circuit pressures, and the timeline of the actions you perform.',
+    ],
+    modelDoesNotModel: [
+      'How electrolytes, acid-base status or temperature change during treatment, medication exposure or clearance, or any effect of nutrition. Because it produces none of those, it cannot attribute a change in any of them to CRRT or to anything else.',
+    ],
+    furtherTeaching: [
+      {
+        text: 'Interruptions open a gap between the therapy prescribed and the therapy delivered. Compare the two over the same interval before linking a clinical change to the treatment.',
+        sourceIds: [RRT_ICU],
+      },
+      {
+        text: 'A CRRT review extends beyond the machine: electrolytes and acid-base status, temperature, medication dosing and nutrition each need review alongside the treatment actually delivered, with pharmacy, nutrition, nursing and the prescriber.',
+        sourceIds: [],
       },
     ],
   },

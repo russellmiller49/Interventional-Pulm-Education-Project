@@ -26,8 +26,20 @@ interface CaseNarrative {
   readonly mechanism: string
   readonly safeAction: string
   readonly acceptedAlternative: string
+  /** Response when the accepted alternative records a different plan from the safe action. */
+  readonly acceptedAlternativeResponse?: string
   readonly unsafeAction: string
   readonly expectedResponse: string
+  /**
+   * The correct prediction's label. Defaults to "Expect a linked response, then verify it", which
+   * is wrong for a case whose correct expectation is that no new clinical data appears.
+   */
+  readonly responseOptionLabel?: string
+  /**
+   * The debrief's trend paragraph. Defaults to `expectedResponse`, which is an action response and
+   * so reads as something the learner did even when the run never performed that action.
+   */
+  readonly trendReview?: string
   readonly reassessment: string
   readonly openingFinding: string
   readonly causalChain: readonly string[]
@@ -1176,7 +1188,7 @@ function buildAdaptedCase(narrative: CaseNarrative): MutableRuntimeCrrtCase {
   updateOption(
     cloned.responseOptions,
     cloned.hiddenMechanism.correctResponseOptionId,
-    'Expect a linked response, then verify it',
+    narrative.responseOptionLabel ?? 'Expect a linked response, then verify it',
     narrative.expectedResponse,
     narrativeSourceIds,
   )
@@ -1216,7 +1228,8 @@ function buildAdaptedCase(narrative: CaseNarrative): MutableRuntimeCrrtCase {
     if (alternativeIntervention) {
       alternativeIntervention.label = narrative.acceptedAlternative
       alternativeIntervention.description = ADAPTED_ACTION_DESCRIPTION
-      alternativeIntervention.response = narrative.expectedResponse
+      alternativeIntervention.response =
+        narrative.acceptedAlternativeResponse ?? narrative.expectedResponse
       alternativeIntervention.sourceIds = [...narrativeSourceIds]
     }
   }
@@ -1260,7 +1273,7 @@ function buildAdaptedCase(narrative: CaseNarrative): MutableRuntimeCrrtCase {
   cloned.debrief.actionTimelineReview =
     'Compare prediction, assessment, selected action, timed response, communication, and reassessment in order.'
   cloned.debrief.causalChain = [...narrative.causalChain]
-  cloned.debrief.trendReview = narrative.expectedResponse
+  cloned.debrief.trendReview = narrative.trendReview ?? narrative.expectedResponse
   cloned.debrief.requiredActionsReview = narrative.safeAction
   cloned.debrief.criticalErrorsReview = narrative.unsafeAction
   cloned.debrief.acceptedAlternativesReview = narrative.acceptedAlternative
@@ -1681,39 +1694,49 @@ const authoredNarratives: readonly CaseNarrative[] = [
     clinicalSourceIds: ['GUID-RRT-ICU-2026'],
   },
   {
+    // CRRT-FELLOW-06 F06-01: this case carries one case-start record and a live delivery record,
+    // no serial electrolyte, temperature, medication or nutrition data, and no interruption
+    // history. It is an information-gap exercise; its review action records a request, and the
+    // evidence scope in `caseEvidenceScope.ts` says what is supplied and what is missing.
     id: 'CRRT-12',
     templateId: 'CRRT-11',
     title: 'Electrolyte, temperature, medication, and nutrition consequences',
     stationId: 'monitor-dose-fluid',
     difficulty: 'advanced',
     patientDescription:
-      'During ongoing CRRT, electrolyte, temperature, medication-delivery, and nutrition trends change alongside a period of interrupted treatment.',
+      'A patient is receiving ongoing CRRT, and the team needs a multidisciplinary review of electrolytes, temperature, medication delivery, and nutrition. This case supplies one set of case-start values and the live treatment-delivery record. It carries no serial electrolyte, temperature, medication-exposure, or nutrition data, and no record of an earlier treatment interruption. Sort what is available from what is missing, and plan how the missing data would be obtained before attributing any change to CRRT.',
     learningObjectives: [
-      'Integrate patient trends with actual therapy delivery and interruptions.',
+      'Separate the treatment-delivery record a run provides from the serial clinical data it does not.',
       'Identify when pharmacist, dietitian, nursing, or prescriber coordination is needed.',
       'Avoid treating the device display as the whole patient assessment.',
     ],
-    goal: 'Integrate multidisciplinary consequences with actual treatment delivery',
+    goal: 'Identify what a multidisciplinary review still needs and reconcile it with the treatment actually delivered',
     mechanism:
-      'Continuous extracorporeal therapy, critical illness, inputs, and interruptions can influence linked monitoring domains over time.',
+      'Critical illness, patient inputs, the treatment actually delivered, and any interruption can each influence electrolytes, temperature, medication exposure, and nutrition, so naming one contributor needs serial clinical data and the delivery history, not a single case-start value.',
     safeAction:
-      'Review linked trends and coordinate the appropriate multidisciplinary reassessment',
+      'Review the available evidence, name the missing data, and request a multidisciplinary reassessment',
     acceptedAlternative:
       'Hold the bounded simulation state while escalating incomplete domain information',
-    unsafeAction: 'Attribute every change to the filter and act without cross-domain review',
+    acceptedAlternativeResponse:
+      'Your choice to keep the treatment unchanged while clarifying the missing information is recorded in the case timeline. No electrolyte, temperature, medication-exposure, or nutrition series appears; clarifying the gap does not supply the data.',
+    unsafeAction:
+      'Attribute the concerns to the filter and act without the missing data or a cross-domain review',
     expectedResponse:
-      'The linked trends and delivery timeline become available for coordinated interpretation.',
+      'Your review and the request for the missing data are recorded in the case timeline. No electrolyte, temperature, medication-exposure, or nutrition series appears, because this case carries none; requesting the data does not supply it.',
+    responseOptionLabel: 'Expect the plan to be recorded, not new clinical data',
+    trendReview:
+      'This run cannot attribute an electrolyte, temperature, medication, or nutrition change to CRRT: the case supplies those domains once, at case start, or not at all. What it does record is the treatment actually delivered (dose, elapsed time, any downtime, and the fluid ledger), which is the delivery side a multidisciplinary review would reconcile with the missing data once it is obtained.',
     reassessment:
-      'Reassess electrolytes, temperature, medication exposure, nutrition, and delivered therapy',
+      'Obtain and review serial electrolytes, temperature, medication exposure, and nutrition alongside the treatment actually delivered',
     openingFinding:
-      'Several linked monitoring domains change during a period of interrupted delivery.',
+      'Case-start values and the live treatment-delivery record are available. Serial electrolyte, temperature, medication-exposure, and nutrition data are not, and no earlier treatment interruption is recorded.',
     causalChain: [
-      'Patient inputs and critical illness create a changing baseline.',
-      'Therapy delivery and downtime alter exposure over time.',
-      'Multidisciplinary reassessment distinguishes plausible contributors.',
+      'This run supplies case-start values and a treatment-delivery record; it supplies no serial electrolyte, temperature, medication-exposure, or nutrition data.',
+      'Delivered dose, downtime, and interruptions belong in the review, but they cannot be linked to a clinical change that has not been measured.',
+      'A future multidisciplinary reassessment would need to obtain the missing data before any contributor is named.',
     ],
     transferQuestion:
-      'Which treatment-history and delivered-therapy findings belong in the multidisciplinary review?',
+      'Which delivered-therapy findings from this run, and which missing clinical data, would you bring to the multidisciplinary review, and whom would you ask for each?',
     clinicalSourceIds: ['REVIEW-CKRT-CORE-2025', 'GUID-RRT-ICU-2026'],
   },
   {
