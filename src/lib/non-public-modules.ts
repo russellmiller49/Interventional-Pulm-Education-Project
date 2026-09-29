@@ -96,6 +96,13 @@ export const nonPublicModules: NonPublicModule[] = [
       'Interactive thoracic ultrasound simulator with scan-plane rendering and structure identification.',
   },
   {
+    path: '/medical-thoracoscopy',
+    title: 'Medical Thoracoscopy',
+    group: 'Pleural',
+    summary:
+      'The new course in single-port medical thoracoscopy on one chest model: deciding when to look, the instrument and the port, a systematic survey of the pleural space, biopsy, pleurodesis and finishing. Separate from the earlier Pleuroscopy module, which keeps its own route until it is retired.',
+  },
+  {
     path: '/pleural-procedures/pleuroscopy',
     title: 'Pleuroscopy (Medical Thoracoscopy)',
     group: 'Pleural',

@@ -7,6 +7,9 @@ import type { QuizQuestion } from '@/components/training/Quiz'
  * technique, poudrage, and complication management). Commit-first: explanations
  * appear only after answering. Reference ids are noted per item in comments.
  * English is authored here; other locales fall back to English until translated.
+ *
+ * The item on drainage volume and re-expansion pulmonary oedema was removed on
+ * 2026-09-28 together with its Practice scenario; see content/scenarios.ts.
  */
 export const pleuroscopyQuizQuestions: QuizQuestion[] = [
   {
@@ -99,20 +102,6 @@ export const pleuroscopyQuizQuestions: QuizQuestion[] = [
     answerIndex: 1,
     explanation:
       'Pleurodesis works by fusing apposed pleural surfaces. If the lung will not re-expand, the surfaces cannot appose and poudrage is likely to fail — an indwelling pleural catheter is the usual alternative.',
-  },
-  {
-    // bts-procedures-2023
-    prompt:
-      'While draining a large, long-standing effusion the patient develops cough and chest tightness. The best next step is to:',
-    options: [
-      'Continue draining rapidly to empty the space',
-      'Stop or slow drainage and reassess for re-expansion pulmonary oedema',
-      'Immediately remove the cannula',
-      'Clamp the drain and send the patient home',
-    ],
-    answerIndex: 1,
-    explanation:
-      'New cough or chest tightness during large-volume drainage suggests re-expansion. Draining large effusions in a controlled, volume-limited way and stopping when symptoms appear reduces the risk of re-expansion pulmonary oedema.',
   },
   {
     // bts-procedures-2023

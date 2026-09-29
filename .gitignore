@@ -307,3 +307,8 @@ Preference_card_module/Catalogs and IFU for confirmation/*.pdf
 # Embedded apps are built automatically from the in-repository sources.
 /public/bronch-navigation-trainer/app/
 /public/socal-ebus-course/app/
+
+# Medical Thoracoscopy anatomy, copied in for the dev server by
+# scripts/medical-thoracoscopy/package-anatomy.ts --install-dev. Built from a CT
+# segmentation whose terms are not settled: kept out of this public repository.
+public/models/medical-thoracoscopy/v1/anatomy/

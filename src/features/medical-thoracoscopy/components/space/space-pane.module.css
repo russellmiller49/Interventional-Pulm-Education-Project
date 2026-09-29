@@ -1,0 +1,323 @@
+/*
+ * The space pane without WebGL, on the module shell's tokens (`--ink`, `--muted`, `--panel`, `--line`,
+ * `--cyan`, `--amber`, `--green`). The wall's three ledger states differ in line style as well as
+ * colour, so colour is never the only cue. One column on a narrow screen; nothing scrolls sideways.
+ */
+.pane {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--panel);
+  color: var(--ink);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pane:focus-visible {
+  outline: 3px solid var(--cyan-bright);
+  outline-offset: 2px;
+}
+
+.views {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 900px) {
+  .views {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+.chestView,
+.scopeView {
+  margin: 0;
+  min-width: 0;
+}
+
+.viewHeading,
+.dockHeading,
+.ledgerHeading,
+.keyHelpHeading {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.viewNote,
+.partNote,
+.shownNote,
+.ledgerCaption {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.viewWaiting,
+.inView {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.crossSection {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 28rem;
+  background: var(--navy);
+  border-radius: 0.5rem;
+}
+
+.field {
+  fill: rgba(124, 224, 223, 0.16);
+  stroke: rgba(124, 224, 223, 0.5);
+  stroke-width: 0.6;
+}
+
+.lung {
+  fill: rgba(236, 150, 160, 0.35);
+  stroke: rgba(236, 150, 160, 0.85);
+  stroke-width: 0.8;
+}
+
+.wall {
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.wall[data-seen='seen'] {
+  stroke: var(--green);
+}
+
+.wall[data-seen='partly-seen'] {
+  stroke: var(--amber);
+  stroke-dasharray: 6 3;
+}
+
+.wall[data-seen='not-seen'] {
+  stroke: var(--muted);
+  stroke-dasharray: 1.5 3;
+}
+
+.telescope {
+  stroke: var(--ink);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.port {
+  fill: var(--cyan-bright);
+}
+
+.refusal {
+  margin: 0;
+  min-height: 1.5em;
+  color: var(--amber);
+}
+
+.dock {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.paused {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--panel-2);
+}
+
+.paused p {
+  margin: 0;
+}
+
+.scopeControl,
+.shownControl,
+.stepControl {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+}
+
+.controlName {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.part {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.partName {
+  margin: 0;
+  font-weight: 600;
+}
+
+.pivotPad,
+.buttonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.holdButton,
+.actionButton {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--panel-3);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.holdButton {
+  touch-action: none;
+  user-select: none;
+}
+
+.holdButton[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.holdButton:focus-visible,
+.actionButton:focus-visible {
+  outline: 3px solid var(--cyan-bright);
+  outline-offset: 2px;
+}
+
+.ledger,
+.keyHelp {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.ledgerTable,
+.keyTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.ledgerTable th,
+.ledgerTable td,
+.keyTable th,
+.keyTable td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.ledgerTable tr[data-in-view='true'] th {
+  color: var(--cyan-bright);
+}
+
+.keyTable kbd {
+  font: inherit;
+  font-weight: 600;
+}
+
+/*
+ * The 3D views (slice 11). The canvas is fixed to the viewport, as drei's View needs, and this box
+ * clips it to the pane: `isolation` and `clip-path` keep it from painting over anything else.
+ */
+.sceneViews {
+  position: relative;
+  isolation: isolate;
+  clip-path: inset(0 round 0.6rem);
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .sceneViews {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+.sceneCanvas {
+  z-index: 0;
+}
+
+.sceneViews .chestView,
+.sceneViews .scopeView {
+  position: relative;
+  z-index: 1;
+}
+
+.sceneViewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+/* Square, as the scope camera is: the lens paints everything outside the round field. */
+.scopeViewport {
+  aspect-ratio: 1 / 1;
+  max-width: 26rem;
+  margin-inline: auto;
+  border: 0;
+  border-radius: 0;
+}
+
+.sceneViewportInner {
+  position: absolute;
+  inset: 0;
+}
+
+/* The telescope's round field: a dark rim, and outside it the panel, as a cut-out. */
+.lens {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle closest-side, transparent 94%, #050303 98%, var(--panel) 99%);
+}
+
+.paneNote {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--amber);
+  background: var(--panel-3);
+  line-height: 1.45;
+}
+
+.prototype {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.prototypeControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.actionButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
