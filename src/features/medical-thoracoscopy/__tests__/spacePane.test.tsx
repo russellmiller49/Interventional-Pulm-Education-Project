@@ -89,10 +89,11 @@ describe('the pane contract', () => {
       index === 0 ? { ...entry, seen: 'seen' as const } : entry,
     )
     expect(ledgerProblems(seenWithReason).join()).toMatch(/seen whole has no reason/)
+    // Part of a region seen, and the rest not looked at yet, is a region partly seen (section 11).
     const partlyUnlooked = emptyLedger().map((entry, index) =>
       index === 0 ? { ...entry, seen: 'partly-seen' as const } : entry,
     )
-    expect(ledgerProblems(partlyUnlooked).join()).toMatch(/has been looked at/)
+    expect(ledgerProblems(partlyUnlooked)).toEqual([])
     const noReason = emptyLedger().map((entry, index) =>
       index === 0 ? { ...entry, reason: null } : entry,
     )

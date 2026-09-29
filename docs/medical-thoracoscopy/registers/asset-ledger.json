@@ -331,7 +331,7 @@
       "id": "anatomy-manifest",
       "kind": "manifest",
       "path": "public/models/medical-thoracoscopy/v1/anatomy/manifest.json",
-      "sha256": "e646c3f1008377fa8d5423e57a4ee2cc8f9aa28397144a0398eb2ec6dce27630",
+      "sha256": "dccb18fb7861486b3d4214a474f33012143ac85c062c50b274387fdae4323695",
       "bytes": 8329,
       "triangles": null,
       "decodedBytes": null,

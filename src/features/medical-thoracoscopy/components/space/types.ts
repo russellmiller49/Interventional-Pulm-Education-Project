@@ -102,9 +102,6 @@ export function ledgerProblems(ledger: ZoneLedger): readonly string[] {
     ) {
       problems.push(`${entry.zone}: a region not seen whole needs one of the three reasons`)
     }
-    if (entry.seen === 'partly-seen' && entry.reason === 'not-looked-at') {
-      problems.push(`${entry.zone}: a region partly seen has been looked at`)
-    }
   }
   return problems
 }

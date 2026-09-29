@@ -30,7 +30,7 @@ export const anatomyManifest = {
     'source-audit.json': '3b68b4f5168286b008c225e32f37be1f2d982e3b71e3438061b93d4149220e38',
     'surfaces.json': '1fa8ff210d6640244beb58191beb2e79621ba9c3560f83e25306720985da1cda',
     'ribs.json': '0934abda2737c2d0767de546bfeaa31a0421640b21aeca0a8c6ff8cbf24141eb',
-    'port-record.json': '60a22d455d660e7f33ac0f7736de63b3aa2517b96d79e071970df9bd1fb07acb',
+    'port-record.json': 'b93d6e7d31ff7c9d5c00df80871f4b0af291e4a6ceec391bf82ef7bcaecb9029',
     'lung-states.json': 'a6bc59d3f95dedc0ecb4db3763db03e9c8d3c174b1df54212a3646b0f20295c3',
     'proxies.json': '1e564f4bd8ef5faadfa6ceb02c5d3e1d8d2fee8924852dc291f588e48bdc8aaf',
     'zone-samples.json': '1d796e85f2129357543f2e3c63905ca096b8383f9ec1f40c8f8329327025a2ce',
