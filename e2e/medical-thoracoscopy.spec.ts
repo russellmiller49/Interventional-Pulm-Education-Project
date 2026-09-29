@@ -390,20 +390,23 @@ test('the independent landmark table in real pixels: each landmark where the tab
     // the scope camera reached the table's pose
     const expected = [...entry.camera.origin, ...entry.camera.forward]
     await expect
-      .poll(async () => {
-        const camera = await page.evaluate(() => {
-          const hook = (
-            window as unknown as {
-              __thoracoscopySpace?: {
-                scopeCamera: () => { position: number[]; direction: number[] } | null
+      .poll(
+        async () => {
+          const camera = await page.evaluate(() => {
+            const hook = (
+              window as unknown as {
+                __thoracoscopySpace?: {
+                  scopeCamera: () => { position: number[]; direction: number[] } | null
+                }
               }
-            }
-          ).__thoracoscopySpace
-          const c = hook?.scopeCamera()
-          return c ? [...c.position, ...c.direction] : null
-        })
-        return camera ? Math.max(...camera.map((v, i) => Math.abs(v - expected[i]))) : Infinity
-      })
+            ).__thoracoscopySpace
+            const c = hook?.scopeCamera()
+            return c ? [...c.position, ...c.direction] : null
+          })
+          return camera ? Math.max(...camera.map((v, i) => Math.abs(v - expected[i]))) : Infinity
+        },
+        { message: `the scope camera at the table's pose "${entry.pose}"`, timeout: 15_000 },
+      )
       .toBeLessThan(1e-3)
     // markers at the landmarks in the round field, drawn over everything, then each pixel read
     const inField = Object.entries(entry.landmarks).filter(
@@ -411,34 +414,34 @@ test('the independent landmark table in real pixels: each landmark where the tab
     )
     expect(inField.length).toBeGreaterThanOrEqual(3)
     await page.locator('[data-view="scope"]').scrollIntoViewIfNeeded()
+    type Hook = {
+      markers: (p: number[][] | null) => void
+      frame: () => void
+      sample: (view: 'scope', u: number, v: number) => number[] | null
+    }
+    await page.evaluate(
+      (points) => {
+        ;(window as unknown as { __thoracoscopySpace?: Hook }).__thoracoscopySpace?.markers(points)
+      },
+      inField.map(([key]) => LANDMARK_TABLE.landmarks[key]),
+    )
+    // the markers are React state: let them render, then draw a frame and read it
+    await page.waitForTimeout(250)
     const found = await page.evaluate(
-      ({ points, spots }) => {
-        const hook = (
-          window as unknown as {
-            __thoracoscopySpace?: {
-              markers: (p: number[][] | null) => void
-              frame: () => void
-              sample: (view: 'scope', u: number, v: number) => number[] | null
-            }
-          }
-        ).__thoracoscopySpace
+      (spots) => {
+        const hook = (window as unknown as { __thoracoscopySpace?: Hook }).__thoracoscopySpace
         if (!hook) return null
-        hook.markers(points)
         hook.frame()
-        hook.frame()
-        const read = spots.map(([x, y]) => ({
+        return spots.map(([x, y]) => ({
           at: hook.sample('scope', (x + 1) / 2, (1 - y) / 2),
           mirrored: hook.sample('scope', (1 - x) / 2, (1 - y) / 2),
         }))
-        hook.markers(null)
-        hook.frame()
-        return read
       },
-      {
-        points: inField.map(([key]) => LANDMARK_TABLE.landmarks[key]),
-        spots: inField.map(([, l]) => l.ndc),
-      },
+      inField.map(([, l]) => l.ndc),
     )
+    await page.evaluate(() => {
+      ;(window as unknown as { __thoracoscopySpace?: Hook }).__thoracoscopySpace?.markers(null)
+    })
     expect(found).not.toBeNull()
     inField.forEach(([key, l], i) => {
       expect({ pose: entry.pose, key, drawn: MAGENTA(found![i].at) }).toEqual({

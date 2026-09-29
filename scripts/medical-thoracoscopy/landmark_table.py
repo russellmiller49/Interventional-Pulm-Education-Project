@@ -113,7 +113,7 @@ def main():
         'toward-head-10': {'tiltAcrossRibsDeg': 10, 'tiltAlongRibsDeg': 0, 'depthMm': 20, 'rollDeg': 0},
         'along-8': {'tiltAcrossRibsDeg': 0, 'tiltAlongRibsDeg': 8, 'depthMm': 20, 'rollDeg': 0},
         'rolled-90': {'tiltAcrossRibsDeg': 0, 'tiltAlongRibsDeg': 0, 'depthMm': 20, 'rollDeg': 90},
-        'combined': {'tiltAcrossRibsDeg': -6, 'tiltAlongRibsDeg': 4, 'depthMm': 28, 'rollDeg': 35},
+        'combined': {'tiltAcrossRibsDeg': -6, 'tiltAlongRibsDeg': 4, 'depthMm': 20, 'rollDeg': 35},
     }
     table = []
     for name, pose in poses.items():
