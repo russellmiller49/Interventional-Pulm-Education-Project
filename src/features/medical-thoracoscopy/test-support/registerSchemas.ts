@@ -37,6 +37,8 @@ export const rightsRegisterSchema = z
             status: statusWordSchema,
             openQuestion: z.string().min(1),
             blocksUpload: z.boolean(),
+            /** Where the thing can already be obtained, as it stands: recorded, never approved. */
+            exposure: z.string().min(1),
             decision: reviewDecisionSchema,
           })
           .strict(),
@@ -49,6 +51,7 @@ export const assetLedgerSchema = z
   .object({
     ledger: z.literal('medical-thoracoscopy-assets'),
     ...header,
+    exposure: z.string().min(1),
     budgets: z
       .object({
         source: z.string().min(1),
@@ -103,6 +106,23 @@ export const assetLedgerSchema = z
           decodedBytes: z.number().int().positive().nullable(),
           drawCalls: z.number().int().positive().nullable(),
           renderedTriangles: z.number().int().positive().nullable(),
+        })
+        .strict(),
+    ),
+    /**
+     * Anatomy-derived records the repository carries and the page code compiles in: not served as
+     * files, but in the public repository all the same.
+     */
+    bundledRecords: z.array(
+      z
+        .object({
+          path: z
+            .string()
+            .regex(/^src\/features\/medical-thoracoscopy\/content\/data\/anatomy\/[a-z-]+\.json$/),
+          what: z.string().min(1),
+          rights: z.array(z.string().regex(/^R-[A-Z]+(-[A-Z]+)*$/)).min(1),
+          addedIn: z.string().regex(/^claude\/mt-\d\d[a-z]-[a-z-]+$/),
+          compiledIntoPageCode: z.boolean(),
         })
         .strict(),
     ),
