@@ -3,7 +3,7 @@
   "version": 1,
   "preparedOn": "2026-09-28",
   "preparedBy": "AI authoring assistant (Claude) at the owner's request",
-  "statement": "What the module is permitted to do with each thing it uses. Nothing here is a rights decision: every decision reads NOT REVIEWED. An item marked as blocking upload may be built and used on the build machine. It may not be uploaded to storage or published, because any model or data file on the site can be fetched without signing in.",
+  "statement": "What the module is permitted to do with each thing it uses, and, under exposure, where each thing can already be obtained. Nothing here is a rights decision: every decision reads NOT REVIEWED. The repository is public: anything committed and pushed can be downloaded from GitHub by anyone, on every pushed branch that carries it, and stays in the history, whatever the site's page gate or the upload state says. An item marked as blocking upload may be built and used on the build machine. It may not be uploaded to the module asset storage or published on the site. The block does not undo what is already in the public repository; exposure records that as it stands, and recording it does not approve it.",
   "items": [
     {
       "id": "R-ANATOMY-CT",
@@ -23,6 +23,7 @@
       "status": "unresolved input",
       "openQuestion": "The scan is asserted to be case 19 of the dataset. That has not been verified against the archive.",
       "blocksUpload": true,
+      "exposure": "The scan itself is not in the repository and has not been uploaded. Numbers derived from it are: see R-ANATOMY-SEGMENTATION, which covers the same records.",
       "decision": {
         "decision": "NOT REVIEWED",
         "reviewer": null,
@@ -45,6 +46,7 @@
       "status": "unresolved input",
       "openQuestion": "Which models produced which segments, who ran them, what was edited by hand, and whether the models' terms allow a sponsored course to publish what they produced.",
       "blocksUpload": true,
+      "exposure": "The segmentation and the anatomy models are not in the repository and have not been uploaded. Numeric records derived from them are. From the thorax-surfaces slice (pull request 300) on, the records under src/features/medical-thoracoscopy/content/data/anatomy/ (source audit, ribs, port candidates and port record, surfaces, and later lung states, fluid table, proxies, zone samples, zone reach, tour stops and tool contact) are committed to the public repository on every pushed branch that carries them, and the module's page code compiles them in. A raw file address for one of them answered HTTP 200 on 2026-09-29. None is on main. So the upload block has not kept the anatomy-derived records private. Whether that exposure is acceptable is the owner's decision; it is recorded here, not approved.",
       "decision": {
         "decision": "NOT REVIEWED",
         "reviewer": null,
@@ -67,6 +69,7 @@
       "status": "unresolved input",
       "openQuestion": "Whether the manufacturer will license stills or footage for teaching.",
       "blocksUpload": false,
+      "exposure": "None. Never committed, never uploaded.",
       "decision": {
         "decision": "NOT REVIEWED",
         "reviewer": null,
@@ -89,6 +92,7 @@
       "status": "review pending",
       "openQuestion": "Permission to keep copies together in local data.",
       "blocksUpload": false,
+      "exposure": "None. Cited by document and page; no copy is committed.",
       "decision": {
         "decision": "NOT REVIEWED",
         "reviewer": null,
@@ -111,6 +115,7 @@
       "status": "review pending",
       "openQuestion": "None.",
       "blocksUpload": false,
+      "exposure": "None beyond the cited facts. The records themselves are not committed.",
       "decision": {
         "decision": "NOT REVIEWED",
         "reviewer": null,
@@ -131,11 +136,12 @@
         "The label 'Educational rendering from published dimensions' wherever a model is shown"
       ],
       "use": "Shown in the course.",
-      "heldAt": "The repository, public/models/medical-thoracoscopy/v1/devices/. Not uploaded",
+      "heldAt": "The repository, public/models/medical-thoracoscopy/v1/devices/: committed and pushed, so public (see exposure). Not uploaded to the module asset storage",
       "inRepository": true,
       "status": "unresolved input",
       "openQuestion": "Who owns the models under the sponsorship agreement, and whether depicting the manufacturer's product design needs the manufacturer's permission.",
       "blocksUpload": true,
+      "exposure": "From the device-kit slice (pull request 296) on: twelve instrument models and their manifest under public/models/medical-thoracoscopy/v1/devices/ are committed to the public repository on every pushed branch that carries them. Anyone can download them from GitHub without signing in: a raw file address for one of them answered HTTP 200 on 2026-09-29. They are not on main, not uploaded to the module asset storage and not served by the production site. The history cannot be withdrawn without rewriting it, which the project does not do. The upload block therefore stops upload and publication only; it has not kept the models private. Whether that exposure is acceptable is the owner's decision; it is recorded here, not approved. The later device showcase renders are kept in the owner's local data and are not committed.",
       "decision": {
         "decision": "NOT REVIEWED",
         "reviewer": null,
@@ -162,6 +168,7 @@
       "status": "unresolved input",
       "openQuestion": "The manufacturer's trademark attribution format and the US product names.",
       "blocksUpload": false,
+      "exposure": "The product names appear in plain text in the committed registers and course text in the public repository.",
       "decision": {
         "decision": "NOT REVIEWED",
         "reviewer": null,

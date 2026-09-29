@@ -476,3 +476,151 @@ export function translateMesh(source: TriangleMesh, offset: Point): TriangleMesh
   const positions = Float32Array.from(source.positions, (value, i) => value + offset[i % 3])
   return { positions, indices: source.indices }
 }
+
+// ── Inside or outside, and the shape of a surface, by the judge's own routes ─────────────────
+
+/**
+ * Three fixed ray directions, none along an axis or a diagonal. The engine classifies a point by
+ * winding number; the judge casts rays and counts crossings, a different method that shares no
+ * code with it (independent review, R2 and R7).
+ */
+const RAYS: readonly ReadPoint[] = (
+  [
+    [0.5364, 0.3172, 0.7821],
+    [-0.6121, 0.7043, 0.3597],
+    [0.2791, -0.8612, 0.4247],
+  ] as const
+).map((d) => {
+  const l = Math.hypot(d[0], d[1], d[2])
+  return [d[0] / l, d[1] / l, d[2] / l] as const
+})
+
+/** Crossings of a ray with the triangles, or null if a hit is too near an edge to count. */
+function crossings(mesh: JudgedMesh, p: ReadPoint, d: ReadPoint): number | null {
+  let count = 0
+  for (const [a, b, c] of mesh.triangles) {
+    // Möller and Trumbore
+    const e1: ReadPoint = [b[0] - a[0], b[1] - a[1], b[2] - a[2]]
+    const e2: ReadPoint = [c[0] - a[0], c[1] - a[1], c[2] - a[2]]
+    const h: ReadPoint = [
+      d[1] * e2[2] - d[2] * e2[1],
+      d[2] * e2[0] - d[0] * e2[2],
+      d[0] * e2[1] - d[1] * e2[0],
+    ]
+    const det = e1[0] * h[0] + e1[1] * h[1] + e1[2] * h[2]
+    if (Math.abs(det) < 1e-12) continue
+    const s: ReadPoint = [p[0] - a[0], p[1] - a[1], p[2] - a[2]]
+    const u = (s[0] * h[0] + s[1] * h[1] + s[2] * h[2]) / det
+    if (u < -1e-9 || u > 1 + 1e-9) continue
+    const q: ReadPoint = [
+      s[1] * e1[2] - s[2] * e1[1],
+      s[2] * e1[0] - s[0] * e1[2],
+      s[0] * e1[1] - s[1] * e1[0],
+    ]
+    const v = (d[0] * q[0] + d[1] * q[1] + d[2] * q[2]) / det
+    if (v < -1e-9 || u + v > 1 + 1e-9) continue
+    const t = (e2[0] * q[0] + e2[1] * q[1] + e2[2] * q[2]) / det
+    if (t <= 0) continue
+    const edge = 1e-7
+    if (u < edge || v < edge || 1 - u - v < edge) return null
+    count += 1
+  }
+  return count
+}
+
+/** Whether a point lies inside a closed surface: the parity of each ray, the majority of three. */
+export function judgeInside(mesh: JudgedMesh, p: ReadPoint): boolean {
+  let inside = 0
+  let counted = 0
+  for (const ray of RAYS) {
+    const n = crossings(mesh, p, ray)
+    if (n === null) continue
+    counted += 1
+    if (n % 2 === 1) inside += 1
+  }
+  if (counted === 0) throw new Error(`Every ray from ${p.join(', ')} grazes an edge`)
+  return inside * 2 > counted
+}
+
+export interface JudgedTopology {
+  /** Every edge is shared by exactly two triangles. */
+  readonly closedManifold: boolean
+  /** Every shared edge is walked in opposite directions by its two triangles. */
+  readonly consistent: boolean
+  /** Positive for an outward surface. */
+  readonly signedVolumeMm3: number
+  /** Vertices − edges + faces, after welding coincident vertices: 2 for a sphere-like surface. */
+  readonly euler: number
+}
+
+/** The shape of a triangle mesh, welded by position, by the judge's own counting. */
+export function judgeTopology(source: TriangleMesh): JudgedTopology {
+  const key = (i: number) =>
+    [0, 1, 2].map((k) => Math.round(source.positions[i * 3 + k] * 1e5)).join(',')
+  const weld = new Map<string, number>()
+  const id = (i: number) => {
+    const k = key(i)
+    const found = weld.get(k)
+    if (found !== undefined) return found
+    weld.set(k, weld.size)
+    return weld.size - 1
+  }
+  const directed = new Map<string, number>()
+  const undirected = new Map<string, number>()
+  let volume = 0
+  const faces = source.indices.length / 3
+  for (let f = 0; f < source.indices.length; f += 3) {
+    const v = [source.indices[f], source.indices[f + 1], source.indices[f + 2]]
+    const w = v.map(id)
+    for (let k = 0; k < 3; k += 1) {
+      const a = w[k]
+      const b = w[(k + 1) % 3]
+      directed.set(`${a}>${b}`, (directed.get(`${a}>${b}`) ?? 0) + 1)
+      const u = a < b ? `${a}-${b}` : `${b}-${a}`
+      undirected.set(u, (undirected.get(u) ?? 0) + 1)
+    }
+    const p = v.map((i) => [0, 1, 2].map((k) => source.positions[i * 3 + k]))
+    volume +=
+      (p[0][0] * (p[1][1] * p[2][2] - p[1][2] * p[2][1]) -
+        p[0][1] * (p[1][0] * p[2][2] - p[1][2] * p[2][0]) +
+        p[0][2] * (p[1][0] * p[2][1] - p[1][1] * p[2][0])) /
+      6
+  }
+  const closedManifold = [...undirected.values()].every((n) => n === 2)
+  const consistent = [...directed.entries()].every(([edge, n]) => {
+    const [a, b] = edge.split('>')
+    return n === 1 && directed.get(`${b}>${a}`) === 1
+  })
+  return {
+    closedManifold,
+    consistent,
+    signedVolumeMm3: volume,
+    euler: weld.size - undirected.size + faces,
+  }
+}
+
+/** Only the triangles whose bounding spheres reach within `margin` of a box: a quicker judge. */
+export function judgedNear(
+  mesh: JudgedMesh,
+  box: { readonly min: ReadPoint; readonly max: ReadPoint },
+  margin: number,
+): JudgedMesh {
+  const keep: number[] = []
+  mesh.centres.forEach((c, i) => {
+    const r = mesh.radii[i] + margin
+    if (
+      c[0] + r >= box.min[0] &&
+      c[0] - r <= box.max[0] &&
+      c[1] + r >= box.min[1] &&
+      c[1] - r <= box.max[1] &&
+      c[2] + r >= box.min[2] &&
+      c[2] - r <= box.max[2]
+    )
+      keep.push(i)
+  })
+  return {
+    triangles: keep.map((i) => mesh.triangles[i]),
+    centres: keep.map((i) => mesh.centres[i]),
+    radii: keep.map((i) => mesh.radii[i]),
+  }
+}

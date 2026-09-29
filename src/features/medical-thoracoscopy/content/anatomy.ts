@@ -541,6 +541,7 @@ export const zoneReachSchema = z
         port: z.string().min(1),
         lungAndFluid: z.string().min(1),
         geometry: z.string().min(1),
+        rules: z.string().min(1),
       })
       .strict(),
     lungStep: z.number().int().nonnegative(),
@@ -555,7 +556,8 @@ export const zoneReachSchema = z
       .strict(),
     files: z.object({ 'proxy-pleural-space': sha256, 'proxy-lung': sha256 }).strict(),
     poses: z.number().int().positive(),
-    reachable: z.string().regex(/^[01]+$/),
+    /** One digit a sample: 0 out of the field, 1 in the field only behind something, 2 seeable. */
+    reachable: z.string().regex(/^[012]+$/),
     zones: z
       .array(
         z

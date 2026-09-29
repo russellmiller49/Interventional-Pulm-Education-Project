@@ -10,6 +10,7 @@ import { crossSectionOf } from './crossSection'
 import type { LoadedSpace } from './loadSpace'
 import type { EngineState } from './spaceReducer'
 import { refusalOf } from './spaceWords'
+import { reachFits } from './zoneReach'
 
 /**
  * The last cut and the last ledger, kept by the identity of what they were made from: a tick of the
@@ -76,7 +77,8 @@ export function paneStateOf(
     readiness,
     pose: state.pose,
     inView: state.inView,
-    ledger: ledgerOf(state.coverage, space, reach),
+    // reach only from a record made for this engine's own snapshot
+    ledger: ledgerOf(state.coverage, space, reach && reachFits(state.snapshot) ? reach : null),
     refusal: refusalOf(state.limit, state.lungHeld, wallZone),
     crossSection: readiness.kind === 'ready' ? cutOf(space, state.pose, state.lungStep) : null,
     clock: { held: state.clockHeld },

@@ -71,6 +71,12 @@ export interface SpaceResolver {
   view(pose: ScopePose, lungStep: number): Uint8Array
   /** The instrument's clearance from the lung at a step, for accepting a move of the lung. */
   lungClearance(pose: ScopePose, lungStep: number): number
+  /**
+   * Whether the telescope's tip lies inside the space and outside the lung at a step, by winding
+   * number. With the clearance, it decides a move of the lung: a lung clear of the instrument but
+   * all around it has swallowed it, which clearance alone cannot see (independent review, R7).
+   */
+  tipFree(pose: ScopePose, lungStep: number): boolean
   /** The instrument's least clearance from anything. */
   clearance(pose: ScopePose, lungStep: number): number
   /**
@@ -98,6 +104,7 @@ export function createResolver(space: LoadedSpace): SpaceResolver {
       const index = world.lungIndex(lungStep)
       return Math.min(...parts.map((capsule) => capsuleClearanceOf(index, capsule)))
     },
+    tipFree: (pose, lungStep) => world.isFree(geometry(pose).tip, lungStep),
     clearance: (pose, lungStep) => world.clearance(geometry(pose), lungStep).clearance,
     startProblem(pose, lungStep) {
       const clearance = world.clearance(geometry(pose), lungStep).clearance
