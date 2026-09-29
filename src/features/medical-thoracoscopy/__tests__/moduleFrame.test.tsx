@@ -75,7 +75,7 @@ describe('medical thoracoscopy module frame', () => {
 
     expect(notice).toHaveTextContent('For education only')
     expect(notice).toHaveTextContent('Completing the course is not competence')
-    expect(screen.getByText('In development · direct link')).toBeInTheDocument()
+    expect(screen.getByText('In development · admin preview')).toBeInTheDocument()
   })
 
   it('shows no sponsorship disclosure until the owner approves its wording', () => {

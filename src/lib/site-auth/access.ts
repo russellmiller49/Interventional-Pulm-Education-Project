@@ -45,9 +45,6 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   // The bronchoscopy foundations course is in development alongside the earlier intro course,
   // which keeps `/intro-bronchoscopy` and its enrollment gate until the owner decides on a cutover.
   '/bronchoscopy-foundations',
-  // The medical thoracoscopy course is in development beside the earlier pleuroscopy module,
-  // which keeps `/pleural-procedures/pleuroscopy` until its redirects have a reviewed destination.
-  '/medical-thoracoscopy',
   '/ebus-guided',
   '/pleural-procedures/pleural-ultrasound-simulator',
   '/preference-cards',
@@ -80,9 +77,6 @@ const PUBLIC_UNLISTED_PATH_PREFIXES = [
   // The bronchoscopy foundations course (hub, Learn, Practice, Assess, Reference) is in development
   // and reachable by direct link, noindex. `/intro-bronchoscopy` is a separate module.
   '/bronchoscopy-foundations',
-  // The medical thoracoscopy course (hub, Learn, Practice, Cases, Reference) is in development and
-  // reachable by direct link, noindex. `/pleural-procedures/pleuroscopy` is a separate module.
-  '/medical-thoracoscopy',
   '/ebus-guided',
   // Beta testers reach the card builder and catalog by direct link without an account.
   // Saving a card still needs one — cards are per-user rows under row-level security.
@@ -94,6 +88,27 @@ function isPublicUnlistedMatch(normalizedPathname: string) {
   return (
     PUBLIC_UNLISTED_EXACT_PATHS.has(normalizedPathname) ||
     PUBLIC_UNLISTED_PATH_PREFIXES.some((prefix) => normalizedPathname.startsWith(`${prefix}/`))
+  )
+}
+
+/**
+ * Modules in development that only a site admin may open: sign-in and the `site_admin`
+ * entitlement, enforced by the proxy like `/admin`. Used while a module carries clinical
+ * statements and rights questions nobody has reviewed yet, so an unlisted link is not enough.
+ * Local development and review reach them through the local-dev auth cookie, which only a
+ * non-production server on localhost honours.
+ */
+const ADMIN_PREVIEW_PATH_PREFIXES = [
+  // The medical thoracoscopy course (owner decision OD-15, 2026-09-29): hub, lessons and the
+  // engineering prototypes. `/pleural-procedures/pleuroscopy` is a separate module.
+  '/medical-thoracoscopy',
+]
+
+export function isAdminPreviewModulePath(pathname: string) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
+  return ADMIN_PREVIEW_PATH_PREFIXES.some(
+    (prefix) => normalizedPathname === prefix || normalizedPathname.startsWith(`${prefix}/`),
   )
 }
 
@@ -210,7 +225,8 @@ export function isPublicPath(pathname: string) {
   if (
     isAdminOnlyAirwayStentMechanicsAssetPath(normalizedPathname) ||
     isAuthenticatedAirwayStentMechanicsAssetPath(normalizedPathname) ||
-    isAdminOnlyEbusTrainingAssetPath(normalizedPathname)
+    isAdminOnlyEbusTrainingAssetPath(normalizedPathname) ||
+    isAdminPreviewModulePath(normalizedPathname)
   ) {
     return false
   }
@@ -301,6 +317,10 @@ export function getRequiredEntitlement(
   if (normalizedPathname.startsWith('/socrates/')) return 'socrates_participant'
 
   if (normalizedPathname === '/admin' || normalizedPathname.startsWith('/admin/')) {
+    return 'site_admin'
+  }
+
+  if (isAdminPreviewModulePath(normalizedPathname)) {
     return 'site_admin'
   }
 
