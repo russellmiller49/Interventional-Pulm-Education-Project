@@ -3,7 +3,8 @@
   "version": 1,
   "preparedOn": "2026-09-28",
   "preparedBy": "AI authoring assistant (Claude) at the owner's request",
-  "statement": "Every file the module serves, with its size, its cost once decoded, the rights item that covers it and the claims it depends on. The ledger is empty until the first asset is built. A small download is not evidence of acceptable memory or frame rate, so the two are reported separately.",
+  "statement": "Every model and data file the module serves from public/models/medical-thoracoscopy/, with its size, its cost once decoded, the rights item that covers it and the claims it depends on; and, under bundledRecords, every anatomy-derived record the repository carries, which the module's page code compiles in and which are therefore not served as files. Each list is filled by the slice that adds its first entry. A small download is not evidence of acceptable memory or frame rate, so the two are reported separately.",
+  "exposure": "The repository is public. Every file listed here, served or bundled, can be downloaded from GitHub on each pushed branch that carries it, whatever the site's page gate says and whether or not it has been uploaded. uploaded says only whether a file is in the module asset storage. See the exposure of each item in the rights register.",
   "budgets": {
     "source": "docs/medical-thoracoscopy/implementation-manifest.json, budgets",
     "pleuralScenePayloadMb": 8,
@@ -219,5 +220,6 @@
       "uploaded": false
     }
   ],
-  "scenes": []
+  "scenes": [],
+  "bundledRecords": []
 }

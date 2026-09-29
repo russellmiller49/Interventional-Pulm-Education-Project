@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import {
@@ -631,6 +631,20 @@ describe('rights register', () => {
     )
   })
 
+  it('records where each item can already be obtained, and approves none of it', () => {
+    for (const item of rights.items) {
+      expect(item.exposure.length).toBeGreaterThan(0)
+      expect(item.decision.decision).toBe('NOT REVIEWED')
+    }
+    expect(rights.statement).toMatch(/repository is public/)
+    // the models and the anatomy-derived records are in the public repository, upload block or not
+    for (const id of ['R-DEVICE-MODELS', 'R-ANATOMY-SEGMENTATION']) {
+      expect(rights.items.find((entry) => entry.id === id)?.exposure).toMatch(
+        /public repository[\s\S]*not approved/,
+      )
+    }
+  })
+
   it('claims no terms it has not read', () => {
     const segmentation = rights.items.find((entry) => entry.id === 'R-ANATOMY-SEGMENTATION')
 
@@ -672,6 +686,22 @@ describe('asset ledger', () => {
 
   it('reports download size apart from decoded cost', () => {
     expect(ledger.statement).toMatch(/small download is not evidence/)
+  })
+
+  it('says that the public repository exposes what it lists, uploaded or not', () => {
+    expect(ledger.exposure).toMatch(/repository is public/)
+  })
+
+  it('lists every anatomy-derived record the repository carries, once', () => {
+    const folder = 'src/features/medical-thoracoscopy/content/data/anatomy'
+    const carried = existsSync(join(process.cwd(), folder))
+      ? readdirSync(join(process.cwd(), folder))
+          .filter((name) => name.endsWith('.json'))
+          .map((name) => `${folder}/${name}`)
+          .sort()
+      : []
+
+    expect(ledger.bundledRecords.map((record) => record.path).sort()).toEqual(carried)
   })
 })
 
