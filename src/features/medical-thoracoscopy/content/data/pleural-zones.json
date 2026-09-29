@@ -1,0 +1,92 @@
+{
+  "list": "medical-thoracoscopy-pleural-zones",
+  "version": 2,
+  "preparedOn": "2026-09-28",
+  "preparedBy": "AI authoring assistant (Claude) at the owner's request",
+  "statement": "The course divides the parietal pleura of the right side into seven regions and surveys them in one order. The division and the order are chosen for teaching. No source prescribes them: one recent guideline lays down no standard order. What the survey needs is one order, kept to.",
+  "side": "right",
+  "surface": "parietal pleura",
+  "label": "Authored construct",
+  "claimIds": ["MT-C-0009", "MT-C-0012", "MT-C-0023"],
+  "notTracked": "The lung surface is looked at in a real survey too. This model does not keep track of it.",
+  "split": {
+    "method": "The build divides the surface of the pleural space, face by face. Each face is classed as diaphragm, mediastinum or chest wall by the nearest tissue outside it in the segmentation, the classes are smoothed across neighbouring faces, and landmarks measured on the scan then mark the apex, the costophrenic recess and the axillary lines. An authored construct: the thresholds are the author's.",
+    "nearestTissueMm": {
+      "diaphragm": 8,
+      "mediastinum": 10,
+      "chestWall": 20
+    },
+    "smoothingPasses": 6,
+    "apex": {
+      "rib": 2,
+      "border": "lower",
+      "measuredOverLateralMm": 10
+    },
+    "costophrenicBandMm": 10,
+    "axillaryLines": {
+      "method": "Angle about the centroid of the pleural space in each axial slab, in the plane of the slab: 0 degrees points straight to the patient's right, negative toward the front, positive toward the back.",
+      "slabMm": 10,
+      "anteriorDeg": -30,
+      "midDeg": 0,
+      "posteriorDeg": 30
+    }
+  },
+  "zones": [
+    {
+      "id": "diaphragm",
+      "name": "Diaphragm",
+      "surveyOrder": 1,
+      "where": "The pleura covering the diaphragm, at the base of the space, toward the feet.",
+      "boundary": "The diaphragmatic pleura, from the edge of the costophrenic recess to the mediastinum.",
+      "orderReason": "Taken first: the telescope is first turned toward it to drain the fluid, and it shows which way is toward the feet."
+    },
+    {
+      "id": "costophrenic-recess",
+      "name": "Costophrenic recess",
+      "surveyOrder": 2,
+      "where": "The narrow angle where the chest wall meets the diaphragm, all the way round.",
+      "boundary": "A band either side of the line where the costal pleura meets the diaphragmatic pleura, from the front of the chest to the spine.",
+      "orderReason": "Followed from the diaphragm, along its edge."
+    },
+    {
+      "id": "posterior-chest-wall",
+      "name": "Back of the chest wall",
+      "surveyOrder": 3,
+      "where": "The pleura over the ribs behind the posterior axillary line, as far as the gutter beside the spine.",
+      "boundary": "The costal pleura behind the posterior axillary line, from the apex to the costophrenic recess, including the paravertebral gutter.",
+      "orderReason": "Followed from the costophrenic recess, from the spine outward."
+    },
+    {
+      "id": "apex",
+      "name": "Apex",
+      "surveyOrder": 4,
+      "where": "The end of the space toward the head, where it narrows like a cone.",
+      "boundary": "All the parietal pleura cranial to the lower border of the second rib.",
+      "orderReason": "Reached at the head end of the back of the chest wall."
+    },
+    {
+      "id": "anterior-chest-wall",
+      "name": "Front of the chest wall",
+      "surveyOrder": 5,
+      "where": "The pleura over the ribs in front of the anterior axillary line, as far as the edge of the mediastinum behind the sternum.",
+      "boundary": "The costal pleura in front of the anterior axillary line, from the apex to the costophrenic recess.",
+      "orderReason": "Followed from the apex, back toward the feet."
+    },
+    {
+      "id": "mediastinum",
+      "name": "Mediastinum",
+      "surveyOrder": 6,
+      "where": "The inner wall of the space, with the heart behind it.",
+      "boundary": "The mediastinal pleura, from the apex to the diaphragm.",
+      "orderReason": "Taken after the chest wall, from the front round to the back."
+    },
+    {
+      "id": "lateral-chest-wall",
+      "name": "Side of the chest wall",
+      "surveyOrder": 7,
+      "where": "The pleura over the ribs between the anterior and posterior axillary lines. The port is in this region.",
+      "boundary": "The costal pleura between the anterior and posterior axillary lines, from the apex to the costophrenic recess.",
+      "orderReason": "Taken last: a straight-viewing telescope cannot look back at the wall around its own port."
+    }
+  ]
+}

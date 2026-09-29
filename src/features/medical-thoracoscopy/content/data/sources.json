@@ -1,0 +1,376 @@
+{
+  "register": "medical-thoracoscopy-sources",
+  "version": 2,
+  "preparedOn": "2026-09-28",
+  "preparedBy": "AI authoring assistant (Claude) at the owner's request",
+  "statement": "Each citation was checked against PubMed on the date shown. Read says how much of each source was read: the citation only, the abstract or the full text, with the parts named when a full text was read only in part. Listing a source here does not mean any statement in the course is supported by it: support is recorded claim by claim, with a locator, in the claim register. Textbook chapters named in the original plan are not listed because they were not available to the build.",
+  "sources": [
+    {
+      "id": "bts-pleural-guideline-2023",
+      "class": "guideline",
+      "title": "British Thoracic Society Guideline for pleural disease",
+      "authors": "Roberts ME, Rahman NM, Maskell NA, et al.",
+      "journal": "Thorax",
+      "year": 2023,
+      "volume": "78",
+      "issue": "Suppl 3",
+      "pages": "s1-s42",
+      "doi": "10.1136/thorax-2022-219784",
+      "pmid": "37433578",
+      "pmc": null,
+      "publishedOnline": null,
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed",
+        "read": "citation only"
+      },
+      "limits": "PubMed holds no abstract and the full text has not been read. No claim cites it yet.",
+      "heldLocally": false
+    },
+    {
+      "id": "bts-pleural-guideline-2023-summary",
+      "class": "guideline",
+      "title": "British Thoracic Society Guideline for pleural disease",
+      "authors": "Roberts ME, Rahman NM, Maskell NA, et al.",
+      "journal": "Thorax",
+      "year": 2023,
+      "volume": "78",
+      "issue": "11",
+      "pages": "1143-1156",
+      "doi": "10.1136/thorax-2023-220304",
+      "pmid": "37553157",
+      "pmc": null,
+      "publishedOnline": "2023-08-08",
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed",
+        "read": "citation only"
+      },
+      "limits": "A second record of the same guideline, in a regular issue. PubMed holds no abstract and the full text has not been read.",
+      "heldLocally": false
+    },
+    {
+      "id": "bts-pleural-procedures-2023",
+      "class": "clinical statement",
+      "title": "British Thoracic Society Clinical Statement on pleural procedures",
+      "authors": "Asciak R, Bedawi EO, Bhatnagar R, et al.",
+      "journal": "Thorax",
+      "year": 2023,
+      "volume": "78",
+      "issue": "Suppl 3",
+      "pages": "s43-s68",
+      "doi": "10.1136/thorax-2022-219371",
+      "pmid": "37433579",
+      "pmc": null,
+      "publishedOnline": null,
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed, and the society's PDF of the version published online first (Thorax 2023;0:1-25)",
+        "read": "full text",
+        "readParts": "In the online-first PDF: the medical thoracoscopy section (pages 15 to 18), the clinical practice points on image-guided pleural biopsy (page 14) and appendix 4, troubleshooting in local anaesthetic thoracoscopy (page 25). The rest was searched for terms, not read."
+      },
+      "limits": "A clinical statement, not a guideline. PubMed holds no abstract. Read only in the parts named, and cited by the page numbers of the online-first PDF. Its online supplemental appendix on medical thoracoscopy is listed by the society and has not been read.",
+      "heldLocally": false
+    },
+    {
+      "id": "ers-eacts-mpe-2018",
+      "class": "consensus statement",
+      "title": "ERS/EACTS statement on the management of malignant pleural effusions",
+      "authors": "Bibby AC, Dorn P, Psallidas I, et al.",
+      "journal": "Eur Respir J",
+      "year": 2018,
+      "volume": "52",
+      "issue": "1",
+      "pages": null,
+      "doi": "10.1183/13993003.00349-2018",
+      "pmid": "30054348",
+      "pmc": null,
+      "publishedOnline": "2018-07-27",
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed",
+        "read": "abstract"
+      },
+      "limits": "Concerns malignant pleural effusion. Abstract read; full text not read.",
+      "heldLocally": false
+    },
+    {
+      "id": "ats-sts-str-mpe-2018",
+      "class": "guideline",
+      "title": "Management of Malignant Pleural Effusions. An Official ATS/STS/STR Clinical Practice Guideline",
+      "authors": "Feller-Kopman DJ, Reddy CB, DeCamp MM, et al.",
+      "journal": "Am J Respir Crit Care Med",
+      "year": 2018,
+      "volume": "198",
+      "issue": "7",
+      "pages": "839-849",
+      "doi": "10.1164/rccm.201807-1415ST",
+      "pmid": "30272503",
+      "pmc": null,
+      "publishedOnline": "2018-10-01",
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed",
+        "read": "abstract"
+      },
+      "limits": "Concerns malignant pleural effusion. Its recommendations are described in the abstract as weak recommendations. Abstract read; full text not read.",
+      "heldLocally": false
+    },
+    {
+      "id": "wabip-aabip-benign-2026",
+      "class": "consensus statement",
+      "title": "WABIP/AABIP statement on therapeutic indications of medical thoracoscopy for benign pleural disease",
+      "authors": "Chaddha U, Agrawal A, Ghori U, et al.",
+      "journal": "Eur Respir Rev",
+      "year": 2026,
+      "volume": "35",
+      "issue": "180",
+      "pages": "250327",
+      "doi": "10.1183/16000617.0327-2025",
+      "pmid": "42342262",
+      "pmc": "PMC13291834",
+      "publishedOnline": "2026-06-24",
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed",
+        "read": "abstract"
+      },
+      "limits": "Concerns benign pleural disease only. Its abstract presents it as a consensus statement rather than a formal clinical practice guideline. Abstract read; full text not read.",
+      "heldLocally": false
+    },
+    {
+      "id": "tapps-2020",
+      "class": "randomised trial",
+      "title": "Effect of Thoracoscopic Talc Poudrage vs Talc Slurry via Chest Tube on Pleurodesis Failure Rate Among Patients With Malignant Pleural Effusions: A Randomized Clinical Trial",
+      "authors": "Bhatnagar R, Piotrowska HEG, Laskawiec-Szkonter M, et al.",
+      "journal": "JAMA",
+      "year": 2020,
+      "volume": "323",
+      "issue": "1",
+      "pages": "60-69",
+      "doi": "10.1001/jama.2019.19997",
+      "pmid": "31804680",
+      "pmc": "PMC6990658",
+      "publishedOnline": "2020-01-07",
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed",
+        "read": "abstract"
+      },
+      "limits": "Patients with confirmed malignant effusion who could undergo thoracoscopy under local anaesthesia. It excluded patients who needed thoracoscopy for diagnosis or had evidence of nonexpandable lung. No significant difference in pleurodesis failure at 90 days, and the abstract notes the study may have been underpowered. Abstract read; full text not read.",
+      "heldLocally": false
+    },
+    {
+      "id": "tactic-2026",
+      "class": "randomised trial",
+      "title": "Medical thoracoscopy with talc poudrage and indwelling pleural catheter insertion versus medical thoracoscopy with talc poudrage alone for patients with symptomatic malignant pleural effusion (TACTIC): a randomised, controlled phase 3 trial",
+      "authors": "Dipper A, Sundaralingam A, Hedley E, et al.",
+      "journal": "Lancet Respir Med",
+      "year": 2026,
+      "volume": "14",
+      "issue": "4",
+      "pages": "341-349",
+      "doi": "10.1016/S2213-2600(25)00409-6",
+      "pmid": "41763237",
+      "pmc": null,
+      "publishedOnline": "2026-02-25",
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed",
+        "read": "abstract"
+      },
+      "limits": "Patients with symptomatic malignant effusion in 11 UK hospitals. The co-primary outcomes, time in hospital and breathlessness, did not differ significantly; a result that is not significant is not evidence of equivalence. Fewer further invasive pleural procedures was a separate result. Abstract read; full text not read.",
+      "heldLocally": false
+    },
+    {
+      "id": "wang-artificial-pneumothorax-2026",
+      "class": "randomised trial",
+      "title": "Medical Thoracoscopy With vs Without Prior Artificial Pneumothorax for Patients With Minimal or Absent Pleural Effusion",
+      "authors": "Wang K, Zhou L, Zhu M, et al.",
+      "journal": "Chest",
+      "year": 2026,
+      "volume": "169",
+      "issue": "1",
+      "pages": "269-279",
+      "doi": "10.1016/j.chest.2025.06.051",
+      "pmid": "40712947",
+      "pmc": null,
+      "publishedOnline": "2025-07-23",
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed",
+        "read": "abstract"
+      },
+      "limits": "Patients with minimal or absent pleural effusion. The primary outcome was pleural access success, tested for noninferiority. It is not a general rule about entry. Abstract read; full text not read.",
+      "heldLocally": false
+    },
+    {
+      "id": "jin-consensus-2020",
+      "class": "consensus statement",
+      "title": "Expert consensus for diagnosis and treatment using medical thoracoscopy in China",
+      "authors": "Jin F, Wang H, Li Q, et al.",
+      "journal": "J Thorac Dis",
+      "year": 2020,
+      "volume": "12",
+      "issue": "5",
+      "pages": "1799-1810",
+      "doi": "10.21037/jtd-19-2276",
+      "pmid": "32642085",
+      "pmc": "PMC7330357",
+      "publishedOnline": null,
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed and PubMed Central",
+        "read": "full text"
+      },
+      "limits": "A national expert consensus written for practice in China, not a guideline. Its English is uneven in places, and a statement is used only where its meaning is clear. Read in full.",
+      "heldLocally": false
+    },
+    {
+      "id": "gallagher-fulcrum-1998",
+      "class": "randomised trial",
+      "title": "An ergonomic analysis of the fulcrum effect in the acquisition of endoscopic skills",
+      "authors": "Gallagher AG, McClure N, McGuigan J, Ritchie K, Sheehy NP.",
+      "journal": "Endoscopy",
+      "year": 1998,
+      "volume": "30",
+      "issue": "7",
+      "pages": "617-620",
+      "doi": "10.1055/s-2007-1001366",
+      "pmid": "9826140",
+      "pmc": null,
+      "publishedOnline": null,
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed",
+        "read": "abstract"
+      },
+      "limits": "A laboratory study of 22 people with no endoscopic experience making incisions in a laparoscopic trainer, half of them with the image inverted. Not thoracoscopy and not patients. Abstract read; full text not read.",
+      "heldLocally": false
+    },
+    {
+      "id": "nccp-ics-thoracoscopy-2024",
+      "class": "guideline",
+      "title": "NCCP-ICS joint consensus-based clinical practice guidelines on medical thoracoscopy",
+      "authors": "Chawla RK, Kumar M, Madan A, et al.",
+      "journal": "Lung India",
+      "year": 2024,
+      "volume": "41",
+      "issue": "2",
+      "pages": "151-167",
+      "doi": "10.4103/lungindia.lungindia_5_24",
+      "pmid": "38700413",
+      "pmc": "PMC10959315",
+      "publishedOnline": null,
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed and PubMed Central",
+        "read": "full text"
+      },
+      "limits": "A consensus-based guideline from India. Many of its technique statements are usual practice points drawn from the experience of its authors, and it says that no studies address the technique or order of the visual examination. Read in full.",
+      "heldLocally": false
+    },
+    {
+      "id": "bhatnagar-advanced-interventions-2016",
+      "class": "review",
+      "title": "Advanced medical interventions in pleural disease",
+      "authors": "Bhatnagar R, Corcoran JP, Maldonado F, et al.",
+      "journal": "Eur Respir Rev",
+      "year": 2016,
+      "volume": "25",
+      "issue": "140",
+      "pages": "199-213",
+      "doi": "10.1183/16000617.0020-2016",
+      "pmid": "27246597",
+      "pmc": "PMC9487240",
+      "publishedOnline": null,
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed and PubMed Central",
+        "read": "full text"
+      },
+      "limits": "A narrative review. Its technique section gives the practice of its authors. Read in full.",
+      "heldLocally": false
+    },
+    {
+      "id": "li-lat-review-2022",
+      "class": "review",
+      "title": "Local Anaesthetic Thoracoscopy for Pleural Effusion—A Narrative Review",
+      "authors": "Li D, Jackson K, Panchal R, Aujayeb A.",
+      "journal": "Healthcare (Basel)",
+      "year": 2022,
+      "volume": "10",
+      "issue": "10",
+      "pages": "1978",
+      "doi": "10.3390/healthcare10101978",
+      "pmid": "36292425",
+      "pmc": "PMC9601808",
+      "publishedOnline": "2022-10-09",
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed and PubMed Central",
+        "read": "full text"
+      },
+      "limits": "A narrative review of UK practice. Its step-by-step supplement was not available and has not been read.",
+      "heldLocally": false
+    },
+    {
+      "id": "charalampidis-pleura-anatomy-2015",
+      "class": "review",
+      "title": "Pleura space anatomy",
+      "authors": "Charalampidis C, Youroukou A, Lazaridis G, et al.",
+      "journal": "J Thorac Dis",
+      "year": 2015,
+      "volume": "7",
+      "issue": "Suppl 1",
+      "pages": "S27-S32",
+      "doi": "10.3978/j.issn.2072-1439.2015.01.48",
+      "pmid": "25774304",
+      "pmc": "PMC4332049",
+      "publishedOnline": null,
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed and PubMed Central",
+        "read": "full text"
+      },
+      "limits": "A general anatomy review, not about thoracoscopy, and its text has many errors of wording. Used only for the relations of the pleura, the mediastinum and the heart. Read in full.",
+      "heldLocally": false
+    }
+  ],
+  "datasets": [
+    {
+      "id": "aeropath-2023",
+      "title": "AeroPath: An airway segmentation benchmark dataset with challenging pathology",
+      "creators": "Hofstad E, Bouget D, Pedersen A, Støverud K-H, Langø T, Leira HO",
+      "publisher": "Zenodo",
+      "published": "2023-11-03",
+      "version": "v1",
+      "doi": "10.5281/zenodo.10069289",
+      "describedIn": {
+        "title": "AeroPath: An airway segmentation benchmark dataset with challenging pathology and baseline method",
+        "authors": "Støverud KH, Bouget D, Pedersen A, et al.",
+        "journal": "PLoS One",
+        "year": 2024,
+        "volume": "19",
+        "issue": "10",
+        "pages": "e0311416",
+        "doi": "10.1371/journal.pone.0311416",
+        "pmid": "39356679",
+        "pmc": "PMC11446458"
+      },
+      "licence": "Creative Commons Attribution 4.0 International",
+      "licenceShort": "CC BY 4.0",
+      "checked": {
+        "on": "2026-09-28",
+        "against": "the Zenodo record and PubMed",
+        "read": "abstract"
+      },
+      "use": "The CT of one case is the anatomy the module's surfaces are derived from.",
+      "identity": {
+        "status": "unresolved input",
+        "note": "The scan is asserted to be case 19 of this dataset. Its file has not been compared with the archive, which is a single 5.0 GB download."
+      },
+      "heldLocally": true
+    }
+  ]
+}

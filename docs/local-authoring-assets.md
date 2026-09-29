@@ -80,6 +80,7 @@ Former repository paths are listed so old prompts, handoffs, and memory notes ca
 | `raw-assets/ebus-guided-models/phase-1/`         | Editable Blender anatomy/scope sources, derived Slicer review scene and acoustic label segmentation, source audit and markups               | —                                                      | `scripts/ebus-guided/models/{audit_sources,build_models,validate_and_package}.py` and `optimize.mjs`; browser exports in `EBUS-course/apps/web/public/simulator/case-001/models/guided-v1/` |
 | `raw-assets/ebus-guided-models/additional/`      | Editable Blender A3–A6 sources and optimization intermediates for the generic needle, contact cutaway, analytic phantoms and EUS-B locators | —                                                      | `scripts/ebus-guided/models/{build_additional,validate_additional}.py` and `optimize-additional.mjs`; runtime exports in `EBUS-course/apps/web/public/simulator/case-001/models/guided-v2/` |
 | `raw-assets/hardware/bronch_sim/`                | Scope-tracker hardware plans, Gen 1/Gen 2 CAD and STL                                                                                       | `bronch_sim/`                                          | reference only (`src/lib/scope-input/core/index.ts` header)                                                                                                                                 |
+| `raw-assets/medical-thoracoscopy/`               | Medical Thoracoscopy build intermediates: Blender sources, measurement records, model-beside-reference comparison sheets                    | —                                                      | `scripts/medical-thoracoscopy/*` (instrument and anatomy builds)                                                                                                                            |
 
 The four runtime files the SoCal EBUS app imports at build time stay tracked in
 `EBUS-course/model/` (`case_001_ct.nrrd`, `case_001_segmentation.nrrd`, `CT_segmentation_1.glb`,
@@ -117,6 +118,27 @@ The four runtime files the SoCal EBUS app imports at build time stay tracked in
 | `marketing/`            | LinkedIn promo build scripts, manifests, screenshots, rendered videos and posters (run from here)                                                                           | `marketing/`           |
 | `prompts-and-plans/`    | Module build prompts and plans (APC/electrocautery, scope size, stent physics, Baxter CRRT refactor, AI bronchoscopy video), FluoroView test guide, `GITINGEST.md` snapshot | root `*.md` / `*.docx` |
 | `archive/root-scratch/` | One-off fix scripts (`fix-mdx-chars.py`, `fix-mermaid-*.py`, `tmp-mermaid.mjs`, `test-imports.mjs`)                                                                         | root                   |
+
+### Medical Thoracoscopy — `medical_thoracoscopy/`
+
+| Local-Data path                     | Contents                                                                                                                                              | Read by                                                                                                         |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `medical_thoracoscopy/`             | The revised build plan (v2)                                                                                                                           | `scripts/medical-thoracoscopy/{import_inventory,verify_inventory_import}.py`, by path given on the command line |
+| `medical_thoracoscopy/plans/`       | The original plan, the first revision and the approved first-round build plan, with an index                                                          | The same two scripts                                                                                            |
+| `medical_thoracoscopy/wolf images/` | Frames of the manufacturer's product animation. Unlicensed: reference only, never committed, never uploaded, never sent to a third-party service      | Instrument measurement and comparison scripts, in place                                                         |
+| `medical_thoracoscopy/sponsor/`     | The sponsor request packet and the manufacturer fact-check packet, for the owner to send. Kept out of the repository because the repository is public | Not read by any script                                                                                          |
+
+The module's anatomy comes from `raw-assets/pleural-effusion-simulation/`, above. Segments in
+that segmentation are identified by measured content, because its segment names do not match what
+the segments contain: the one named "thoracic cavity" holds the rib cage.
+
+`scripts/medical-thoracoscopy/build_thorax_surfaces.py` and `build_lung_states.py` write the
+surfaces, the lung's states and the collision proxies they build from them to
+`raw-assets/medical-thoracoscopy/anatomy/raw/`, and keep a cache of the decoded segmentation in
+`anatomy/cache/`. `package-anatomy.ts` writes the compressed, content-named files and their
+manifest to `anatomy/packaged/`. The validators write their reports to `anatomy/`. The files stay
+out of the repository until the segmentation's terms are settled; the repository holds only the
+numbers measured from them.
 
 ### Folders that predate this map
 
@@ -158,3 +180,4 @@ mount names.
 - 2026-09-10: training-project repositories archived under `recovery/2026-09-10/`.
 - 2026-09-12: raw assets, authoring imports, private pleural references, renders, marketing,
   prompts and root scratch moved out (this map); helper resolvers added; scripts repointed.
+- 2026-09-28: `medical_thoracoscopy/` and `raw-assets/medical-thoracoscopy/` added to the map.
