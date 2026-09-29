@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import { InPreparation } from '@/features/medical-thoracoscopy/components/InPreparation'
+import { PracticeLanding } from '@/features/medical-thoracoscopy/components/hub/PracticeLanding'
 import { MedicalThoracoscopyModuleFrame } from '@/features/medical-thoracoscopy/components/MedicalThoracoscopyModuleFrame'
 import { MEDICAL_THORACOSCOPY_PRACTICE_HREF } from '@/features/medical-thoracoscopy/content/routes'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
@@ -26,12 +26,7 @@ export default async function MedicalThoracoscopyPracticePage({
   setRequestLocale(locale)
   return (
     <MedicalThoracoscopyModuleFrame locale={locale} activeHref={MEDICAL_THORACOSCOPY_PRACTICE_HREF}>
-      <InPreparation heading="Practice">
-        <p>
-          Seven short scenarios, each paired with the Learn section it rehearses. None is written
-          yet.
-        </p>
-      </InPreparation>
+      <PracticeLanding />
     </MedicalThoracoscopyModuleFrame>
   )
 }

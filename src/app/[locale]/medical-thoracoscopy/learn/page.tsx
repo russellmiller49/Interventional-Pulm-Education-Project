@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import { InPreparation } from '@/features/medical-thoracoscopy/components/InPreparation'
+import { LearnLanding } from '@/features/medical-thoracoscopy/components/hub/LearnLanding'
 import { MedicalThoracoscopyModuleFrame } from '@/features/medical-thoracoscopy/components/MedicalThoracoscopyModuleFrame'
 import { MEDICAL_THORACOSCOPY_LEARN_HREF } from '@/features/medical-thoracoscopy/content/routes'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
@@ -18,22 +18,22 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return localizeHandoffServerValue(locale, handoffMetadata)
 }
 
+type SearchParams = Record<string, string | string[] | undefined>
+
 export default async function MedicalThoracoscopyLearnPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams?: Promise<SearchParams>
 }) {
   const { locale } = await params
   setRequestLocale(locale)
+  const query = (await searchParams) ?? {}
+  const requested = Array.isArray(query.section) ? query.section[0] : query.section
   return (
     <MedicalThoracoscopyModuleFrame locale={locale} activeHref={MEDICAL_THORACOSCOPY_LEARN_HREF}>
-      <InPreparation heading="Learn">
-        <p>
-          Nineteen sections in five chapters: deciding to look, the equipment and the anatomy,
-          access and orientation, the survey and what you do with it, and finishing safely. None is
-          open yet.
-        </p>
-      </InPreparation>
+      <LearnLanding requestedSection={requested} />
     </MedicalThoracoscopyModuleFrame>
   )
 }

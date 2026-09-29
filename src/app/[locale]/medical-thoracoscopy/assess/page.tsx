@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import { InPreparation } from '@/features/medical-thoracoscopy/components/InPreparation'
+import { CasesLanding } from '@/features/medical-thoracoscopy/components/hub/CasesLanding'
 import { MedicalThoracoscopyModuleFrame } from '@/features/medical-thoracoscopy/components/MedicalThoracoscopyModuleFrame'
 import { MEDICAL_THORACOSCOPY_CASES_HREF } from '@/features/medical-thoracoscopy/content/routes'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
@@ -26,12 +26,7 @@ export default async function MedicalThoracoscopyCasesPage({
   setRequestLocale(locale)
   return (
     <MedicalThoracoscopyModuleFrame locale={locale} activeHref={MEDICAL_THORACOSCOPY_CASES_HREF}>
-      <InPreparation heading="Cases">
-        <p>
-          Four cases that run across the whole procedure, from the decision to the report. None is
-          written yet.
-        </p>
-      </InPreparation>
+      <CasesLanding />
     </MedicalThoracoscopyModuleFrame>
   )
 }

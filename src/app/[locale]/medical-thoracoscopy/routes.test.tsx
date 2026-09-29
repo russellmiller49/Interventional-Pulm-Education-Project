@@ -4,6 +4,22 @@ import { setRequestLocale } from 'next-intl/server'
 jest.mock('@/i18n/handoff-server', () => ({
   localizeHandoffServerValue: async (_locale: string, value: unknown) => value,
 }))
+jest.mock('@/features/medical-thoracoscopy/components/hub/MedicalThoracoscopyHub', () => ({
+  MedicalThoracoscopyHub: () => <h1 data-testid="thoracoscopy-hub">Hub</h1>,
+}))
+jest.mock('@/features/medical-thoracoscopy/components/hub/LearnLanding', () => ({
+  LearnLanding: ({ requestedSection }: { requestedSection?: string }) => (
+    <h1 data-testid="thoracoscopy-learn" data-requested={requestedSection ?? ''}>
+      Learn
+    </h1>
+  ),
+}))
+jest.mock('@/features/medical-thoracoscopy/components/hub/PracticeLanding', () => ({
+  PracticeLanding: () => <h1 data-testid="thoracoscopy-practice">Practice</h1>,
+}))
+jest.mock('@/features/medical-thoracoscopy/components/hub/CasesLanding', () => ({
+  CasesLanding: () => <h1 data-testid="thoracoscopy-cases">Cases</h1>,
+}))
 jest.mock('@/features/medical-thoracoscopy/components/MedicalThoracoscopyModuleFrame', () => ({
   MedicalThoracoscopyModuleFrame: ({
     activeHref,
@@ -73,17 +89,43 @@ describe('medical thoracoscopy route family', () => {
     expect(screen.getByTestId('thoracoscopy-frame')).toHaveAttribute('data-locale', locale)
   })
 
-  it('says what is not written yet, and offers no control that does nothing', async () => {
-    for (const [, Page] of pages) {
-      const { unmount } = render(await Page({ params: params('en') }))
+  it('hands the Learn landing the requested section, taking the first of a repeated key', async () => {
+    const plain = render(await MedicalThoracoscopyLearnPage({ params: params('en') }))
+    expect(screen.getByTestId('thoracoscopy-learn')).toHaveAttribute('data-requested', '')
+    plain.unmount()
 
-      expect(screen.queryAllByRole('button')).toEqual([])
-      expect(screen.queryAllByRole('link')).toEqual([])
+    const one = render(
+      await MedicalThoracoscopyLearnPage({
+        params: params('en'),
+        searchParams: Promise.resolve({ section: 'four-controls' }),
+      }),
+    )
+    expect(screen.getByTestId('thoracoscopy-learn')).toHaveAttribute(
+      'data-requested',
+      'four-controls',
+    )
+    one.unmount()
+
+    render(
+      await MedicalThoracoscopyLearnPage({
+        params: params('en'),
+        searchParams: Promise.resolve({ section: ['entry', 'other'] }),
+      }),
+    )
+    expect(screen.getByTestId('thoracoscopy-learn')).toHaveAttribute('data-requested', 'entry')
+  })
+
+  it('renders each page body once, inside the frame', async () => {
+    for (const [testId, Page] of [
+      ['thoracoscopy-hub', MedicalThoracoscopyPage],
+      ['thoracoscopy-practice', MedicalThoracoscopyPracticePage],
+      ['thoracoscopy-cases', MedicalThoracoscopyCasesPage],
+    ] as const) {
+      const { unmount } = render(await Page({ params: params('en') }))
+      expect(screen.getByTestId('thoracoscopy-frame')).toContainElement(screen.getByTestId(testId))
       unmount()
     }
-    render(await MedicalThoracoscopyPage({ params: params('en') }))
-    expect(
-      screen.getByText(/Nothing in the course has been clinically reviewed yet/),
-    ).toBeInTheDocument()
+    render(await MedicalThoracoscopyReferencePage({ params: params('en') }))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Reference')
   })
 })
