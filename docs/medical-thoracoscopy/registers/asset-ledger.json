@@ -344,5 +344,22 @@
       "uploaded": false
     }
   ],
-  "scenes": []
+  "scenes": [
+    {
+      "id": "pleural-space",
+      "assets": [
+        "pleural-space",
+        "ribs",
+        "context",
+        "lung-states",
+        "proxy-pleural-space",
+        "proxy-lung"
+      ],
+      "coldTransferBytes": 2564388,
+      "sharedRuntimeBytes": 368841,
+      "decodedBytes": 6120630,
+      "drawCalls": null,
+      "renderedTriangles": null
+    }
+  ]
 }

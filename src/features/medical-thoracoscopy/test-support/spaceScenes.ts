@@ -57,7 +57,8 @@ export const SCENE_PORT: PortFrame = {
 }
 
 export const SCENE_KINDS = ['spheres', 'plate', 'torus'] as const
-export type SceneKind = (typeof SCENE_KINDS)[number]
+/** `lesson`: the spheres with nine steps, as the real lung has, for the lesson host's tests. */
+export type SceneKind = (typeof SCENE_KINDS)[number] | 'lesson'
 
 export interface Scene {
   readonly kind: SceneKind
@@ -75,6 +76,11 @@ function lungSteps(kind: SceneKind): TriangleMesh[] {
         sphereMesh(34, [86, 7, -12], 16, 32),
         sphereMesh(28, [92, 9, -14], 16, 32),
       ]
+    case 'lesson':
+      // shrinking and drawing back from the port, step by step, as the lung falls away
+      return Array.from({ length: 9 }, (_, k) =>
+        sphereMesh(40 - 2 * k, [80 + k, 5 + k * 0.5, -10 - k * 0.5], 12, 24),
+      )
     case 'plate': {
       const plate = boxMesh([44.75, -40, -40], [45.25, 40, 40])
       return [plate, plate]

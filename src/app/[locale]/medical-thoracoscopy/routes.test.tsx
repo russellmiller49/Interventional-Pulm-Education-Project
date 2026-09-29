@@ -14,6 +14,13 @@ jest.mock('@/features/medical-thoracoscopy/components/hub/LearnLanding', () => (
     </h1>
   ),
 }))
+jest.mock('@/features/medical-thoracoscopy/components/lesson/SectionLesson', () => ({
+  SectionLesson: ({ sectionId }: { sectionId: string }) => (
+    <h1 data-testid="thoracoscopy-lesson" data-section={sectionId}>
+      Lesson
+    </h1>
+  ),
+}))
 jest.mock('@/features/medical-thoracoscopy/components/hub/PracticeLanding', () => ({
   PracticeLanding: () => <h1 data-testid="thoracoscopy-practice">Practice</h1>,
 }))
@@ -94,17 +101,17 @@ describe('medical thoracoscopy route family', () => {
     expect(screen.getByTestId('thoracoscopy-learn')).toHaveAttribute('data-requested', '')
     plain.unmount()
 
-    const one = render(
+    const unknown = render(
       await MedicalThoracoscopyLearnPage({
         params: params('en'),
-        searchParams: Promise.resolve({ section: 'four-controls' }),
+        searchParams: Promise.resolve({ section: 'not-a-section' }),
       }),
     )
     expect(screen.getByTestId('thoracoscopy-learn')).toHaveAttribute(
       'data-requested',
-      'four-controls',
+      'not-a-section',
     )
-    one.unmount()
+    unknown.unmount()
 
     render(
       await MedicalThoracoscopyLearnPage({
@@ -113,6 +120,30 @@ describe('medical thoracoscopy route family', () => {
       }),
     )
     expect(screen.getByTestId('thoracoscopy-learn')).toHaveAttribute('data-requested', 'entry')
+  })
+
+  it('opens a written section as its lesson, and a section in preparation as the landing', async () => {
+    const open = render(
+      await MedicalThoracoscopyLearnPage({
+        params: params('en'),
+        searchParams: Promise.resolve({ section: 'four-controls' }),
+      }),
+    )
+    expect(screen.getByTestId('thoracoscopy-lesson')).toHaveAttribute(
+      'data-section',
+      'four-controls',
+    )
+    expect(screen.queryByTestId('thoracoscopy-learn')).toBeNull()
+    open.unmount()
+
+    render(
+      await MedicalThoracoscopyLearnPage({
+        params: params('en'),
+        searchParams: Promise.resolve({ section: 'entry' }),
+      }),
+    )
+    expect(screen.getByTestId('thoracoscopy-learn')).toHaveAttribute('data-requested', 'entry')
+    expect(screen.queryByTestId('thoracoscopy-lesson')).toBeNull()
   })
 
   it('renders each page body once, inside the frame', async () => {

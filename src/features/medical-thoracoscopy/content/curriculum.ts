@@ -189,13 +189,13 @@ const SECTION_ROWS: readonly SectionRow[] = [
 ]
 
 /**
- * Sections past "in preparation". The first three are written (`content/sections/`) and open to
- * learners only once the lesson that shows them exists; none is available yet.
+ * Sections past "in preparation". The first three are written (`content/sections/`) and, since the
+ * lesson that shows them exists (slice 12), available to open.
  */
 const SECTION_STATES: Readonly<Partial<Record<ThoracoscopySectionId, SectionState>>> = {
-  'normal-pleural-space': 'written',
-  'four-controls': 'written',
-  'systematic-survey': 'written',
+  'normal-pleural-space': 'available',
+  'four-controls': 'available',
+  'systematic-survey': 'available',
 }
 
 export const curriculumSections: readonly CurriculumSection[] = SECTION_ROWS.map(

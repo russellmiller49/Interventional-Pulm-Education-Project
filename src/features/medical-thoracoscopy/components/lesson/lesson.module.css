@@ -1,0 +1,408 @@
+/*
+ * The lesson in document flow, on the module shell's tokens (`--ink`, `--muted`, `--panel`,
+ * `--panel-2`, `--panel-3`, `--line`, `--cyan`, `--cyan-bright`, `--amber`, `--green`). One column;
+ * nothing scrolls sideways. The three kinds of action look different: the course bar, the teaching
+ * example's panel, and the space pane's own dock.
+ */
+.lesson {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 64rem;
+  margin: 1.5rem 0 3rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+}
+
+.header h1 {
+  margin: 0.25rem 0 0;
+  font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
+  line-height: 1.2;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.notReviewed,
+.cannotSave {
+  margin: 1rem 0 0;
+  padding: 0.6rem 0.85rem;
+  border-left: 3px solid var(--amber);
+  background: var(--panel-3);
+  line-height: 1.5;
+}
+
+.cannotSave {
+  border-left-color: var(--cyan);
+}
+
+.outline {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--panel);
+}
+
+.outlineHeading {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.note {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.outlineList {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.6rem 0 0;
+  padding-left: 1.4rem;
+}
+
+.outlineButton {
+  padding: 0.35rem 0.25rem;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.outlineButton[aria-current='step'] {
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.partState {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.parts {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.part {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--panel);
+  scroll-margin-top: 5rem;
+}
+
+.part[data-current] {
+  border-color: var(--cyan);
+}
+
+.partHeading {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.3;
+}
+
+.partHeading:focus-visible,
+.outlineButton:focus-visible,
+.courseButton:focus-visible,
+.courseButtonPrimary:focus-visible,
+.exampleButton:focus-visible,
+.linkButton:focus-visible {
+  outline: 3px solid var(--cyan-bright);
+  outline-offset: 2px;
+}
+
+.prose {
+  display: grid;
+  gap: 0.6rem;
+  line-height: 1.6;
+}
+
+.prose p,
+.prose ul,
+.prose ol {
+  margin: 0;
+}
+
+.subHeading {
+  margin: 0.4rem 0 0;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.listLabel {
+  margin: 0.25rem 0 0;
+  font-weight: 600;
+}
+
+.zoneList {
+  columns: 2 14rem;
+}
+
+.orientation {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.orientation dt {
+  font-weight: 650;
+}
+
+.orientation dd {
+  margin: 0 0 0.5rem;
+  line-height: 1.55;
+}
+
+.signals {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding-left: 1.2rem;
+  line-height: 1.5;
+}
+
+.label {
+  display: inline-block;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.example {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px dashed var(--amber);
+  border-radius: 0.6rem;
+  background: var(--panel-2);
+  line-height: 1.55;
+}
+
+.example p,
+.example ul {
+  margin: 0;
+}
+
+.exampleLabel {
+  color: var(--amber);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.exampleButton,
+.courseButton,
+.courseButtonPrimary {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--panel-3);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.exampleButton {
+  justify-self: start;
+  border-color: var(--amber);
+}
+
+.courseButtonPrimary {
+  border-color: var(--cyan);
+  background: var(--panel-2);
+  font-weight: 600;
+}
+
+.courseButton:disabled,
+.courseButtonPrimary:disabled,
+.exampleButton:disabled,
+.courseButton[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.newConcept {
+  font-size: 1.1rem;
+  font-weight: 650;
+}
+
+.activity {
+  display: grid;
+  gap: 1rem;
+}
+
+.prompt {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.activityWork,
+.stop,
+.questionBlock {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.question {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.stem {
+  margin-bottom: 0.4rem;
+  padding: 0;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.choice {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.choice input {
+  margin-top: 0.2rem;
+}
+
+.zoneChoices,
+.questionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.feedback {
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  border-left: 3px solid var(--cyan);
+  background: var(--panel-2);
+  line-height: 1.55;
+}
+
+.feedback p {
+  margin: 0;
+}
+
+.feedback[data-plausibility='unsafe'] {
+  border-left-color: var(--amber);
+}
+
+.explanation {
+  display: grid;
+  gap: 0.4rem;
+  line-height: 1.55;
+}
+
+.explanation p {
+  margin: 0;
+}
+
+.others {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.surveyTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.surveyTable caption {
+  text-align: left;
+}
+
+.surveyTable th,
+.surveyTable td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.surveyTable select {
+  max-width: 100%;
+  min-height: 2.25rem;
+  font: inherit;
+}
+
+.courseBar {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--panel);
+}
+
+.finish {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--panel);
+}
+
+.finish button {
+  justify-self: start;
+}
+
+.marked {
+  margin: 0;
+}
+
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cyan-bright);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.finishLinks {
+  margin: 0;
+}
+
+@media (max-width: 40rem) {
+  .courseBar {
+    justify-content: stretch;
+  }
+
+  .courseBar button {
+    flex: 1 1 100%;
+  }
+}

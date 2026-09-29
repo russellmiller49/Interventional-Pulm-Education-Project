@@ -135,8 +135,12 @@ A section is data: one file in `src/features/medical-thoracoscopy/content/sectio
 `content/types.ts` gives, checked by `content/sectionValidation.ts` as the section index loads. The
 regions a survey visits are one list, `content/data/pleural-zones.json`, which the lessons and the
 anatomy asset both read. A section can be written before the lesson that shows it exists; a learner
-can open it only once the curriculum marks it available. Sections 6, 7 and 11 are written; see the
-[survey-specs handoff](handoffs/mt-03a-survey-specs.md).
+can open it only once the curriculum marks it available. Sections 6, 7 and 11 are written (see the
+[survey-specs handoff](handoffs/mt-03a-survey-specs.md)) and available: the Learn page opens an
+available section as its lesson (`components/lesson/SectionLesson.tsx`), the parts in document flow in
+the order the section's question sets, with the course, the teaching example and the scope controls
+kept apart. The lesson session (`engine/stageSession.ts`) holds nothing that is stored. See the
+[survey-lesson handoff](handoffs/mt-03c-survey-lesson.md).
 
 ## Status words
 

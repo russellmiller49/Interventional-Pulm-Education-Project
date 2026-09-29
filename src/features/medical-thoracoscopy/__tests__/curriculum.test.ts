@@ -115,15 +115,13 @@ describe('curriculum registry', () => {
     expect(MODEL_BOUNDARIES[5]).toMatch(/not competence/)
   })
 
-  it('opens nothing yet: three sections are written and wait for their lesson', () => {
+  it('opens the three written sections, whose lesson exists, and nothing else', () => {
     expect(
       curriculumSections
-        .filter((section) => section.state === 'written')
+        .filter((section) => section.state === 'available')
         .map((section) => section.id),
     ).toEqual(['normal-pleural-space', 'four-controls', 'systematic-survey'])
-    for (const entry of [...curriculumSections, ...practiceScenarios, ...integratedCases]) {
-      expect(entry.state).not.toBe('available')
-    }
+    expect(curriculumSections.filter((section) => section.state === 'written')).toEqual([])
     for (const entry of [...practiceScenarios, ...integratedCases]) {
       expect(entry.state).toBe('in-preparation')
     }
