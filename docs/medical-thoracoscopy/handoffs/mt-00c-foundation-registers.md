@@ -121,3 +121,22 @@ Not applicable. Nothing in this slice is rendered.
 - Do not upload any model or anatomy file. Three rights items block it.
 
 This does not change publication status or constitute clinical approval.
+
+## Repair after the independent review (2026-09-29, R0)
+
+The independent review of the stack (at `ba6f870d`) found the rights register and the asset ledger
+contradicting what the public repository already exposes. Corrected here, as records only; no
+status, decision or rights item was approved:
+
+- `rights-register.json`: the statement now says the repository is public and that an upload block
+  does not undo what is committed; every item gains `exposure`, where it can already be obtained.
+  The instrument models (from pull request 296) and the anatomy-derived records (from pull request 300) are in the public repository on the pushed branches (a raw address for each answered HTTP 200
+  on 2026-09-29) and not on main; recorded, not approved.
+- `asset-ledger.json`: the statement no longer claims to list every file the module has; it gains
+  `exposure` and `bundledRecords`, the anatomy-derived records the page code compiles in, filled by
+  the slice that adds each. A test holds the list equal to the records the repository carries.
+- `owner-decisions.md`: the owner's decisions of 2026-09-29 are recorded (OD-11 to OD-14); T2 is
+  superseded by OD-11; S7's premise is corrected: without the upload, production has no
+  cross-section either, because the cut is computed from the proxies.
+
+This does not change publication status or constitute clinical approval.

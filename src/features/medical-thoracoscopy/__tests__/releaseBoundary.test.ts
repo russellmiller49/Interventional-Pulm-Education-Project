@@ -1,7 +1,13 @@
 /** @jest-environment node */
 import { isDraftModulePath, isUnlistedModulePath } from '@/lib/draft-modules'
 import { nonPublicModules } from '@/lib/non-public-modules'
-import { isPublicPath, isPublicUnlistedPath, resolveSiteModuleId } from '@/lib/site-auth/access'
+import { moduleAccessMode } from '@/lib/non-public-modules'
+import {
+  getRequiredEntitlement,
+  isPublicPath,
+  isPublicUnlistedPath,
+  resolveSiteModuleId,
+} from '@/lib/site-auth/access'
 
 import {
   MEDICAL_THORACOSCOPY_MODULE_ID,
@@ -16,9 +22,9 @@ import {
 } from '../content/routes'
 
 /**
- * Where the module stands with the rest of the site while it is built: reachable by direct link,
- * never indexed, absent from navigation, listed for admins. The earlier pleuroscopy module is
- * untouched.
+ * Where the module stands with the rest of the site while it is built: open only to a site admin
+ * (owner decision OD-15), never indexed, absent from navigation, listed for admins. The earlier
+ * pleuroscopy module is untouched.
  */
 const routes = [
   MEDICAL_THORACOSCOPY_NAV_BASE,
@@ -29,25 +35,39 @@ const routes = [
 ]
 
 describe('medical thoracoscopy release boundary', () => {
-  it('is an unlisted preview', () => {
-    expect(MEDICAL_THORACOSCOPY_RELEASE_STAGE).toBe('unlisted-preview')
+  it('is an admin preview', () => {
+    expect(MEDICAL_THORACOSCOPY_RELEASE_STAGE).toBe('admin-preview')
   })
 
-  it.each(routes.flatMap((route) => [route, `/es${route}`, `/zh-CN${route}`]))(
-    '%s opens by direct link and is kept out of navigation',
-    (route) => {
-      expect(isPublicUnlistedPath(route)).toBe(true)
-      expect(isUnlistedModulePath(route)).toBe(true)
-      expect(isDraftModulePath(route)).toBe(false)
-      expect(resolveSiteModuleId(route)).toBe(MEDICAL_THORACOSCOPY_MODULE_ID)
-    },
-  )
+  it.each(
+    [...routes, `${MEDICAL_THORACOSCOPY_NAV_BASE}/prototype/space`].flatMap((route) => [
+      route,
+      `/es${route}`,
+      `/zh-CN${route}`,
+    ]),
+  )('%s needs a site admin and is kept out of navigation', (route) => {
+    expect(isPublicPath(route)).toBe(false)
+    expect(isPublicUnlistedPath(route)).toBe(false)
+    expect(getRequiredEntitlement(route, new URLSearchParams())).toBe('site_admin')
+    expect(isUnlistedModulePath(route)).toBe(true)
+    expect(isDraftModulePath(route)).toBe(false)
+    expect(resolveSiteModuleId(route)).toBe(MEDICAL_THORACOSCOPY_MODULE_ID)
+  })
+
+  it('does not open a file under its path without the gate either', () => {
+    expect(isPublicPath(`${MEDICAL_THORACOSCOPY_NAV_BASE}/anything.json`)).toBe(false)
+  })
+
+  it('does not gate a module whose name merely begins the same way', () => {
+    expect(getRequiredEntitlement('/medical-thoracoscopy-other', new URLSearchParams())).toBeNull()
+  })
 
   it('is listed for admins once, under its own path', () => {
     const listed = nonPublicModules.filter((entry) => entry.path === MEDICAL_THORACOSCOPY_NAV_BASE)
 
     expect(listed).toHaveLength(1)
     expect(listed[0].title).toBe('Medical Thoracoscopy')
+    expect(moduleAccessMode(MEDICAL_THORACOSCOPY_NAV_BASE)).toBe('admin-only')
   })
 
   it('leaves the earlier pleuroscopy module where it was', () => {

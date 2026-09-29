@@ -97,8 +97,11 @@ never presented as clinical margins.
 ## Snapshot identity
 
 Every collision, contact and visibility result names the snapshot it was computed for: anatomy,
-device, optics, port, scenario, lung and fluid configuration, and geometry generation. A result
-for another snapshot changes nothing. While geometry is being computed, the affected interaction
+device, optics, port, scenario, lung and fluid configuration, geometry generation, and the engine's
+own authored rules (step sizes, skins, the port's excluded patch, the lung's room, the view's
+occlusion tolerance). The port is named by its record and by its frame as the engine uses it, so
+new rib points make earlier results stale. An offline record also names the grid it was computed on.
+A result for another snapshot changes nothing. Ephemeral renderer state is not part of it. While geometry is being computed, the affected interaction
 pauses and says why. Reading and navigation stay available.
 
 ## What a passing test does not show

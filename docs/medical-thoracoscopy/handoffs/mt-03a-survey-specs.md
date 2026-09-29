@@ -151,4 +151,11 @@ so there is nothing else of them to see.
   it available.
 - Do not change a zone id or a claim id; the anatomy slice and the survey ledger will read them.
 
+## Repair after the independent review (2026-09-29): decisions recorded
+
+The owner's decisions on access (OD-15) and on the survey's use of T12 (OD-16) are recorded in
+`owner-decisions.md` beside the T11 and T12 rows they settle in part. The sections' clinical
+statements are shown only in the admin-gated preview (slice 4's repair), still under their
+not-yet-reviewed notices. No claim, section text or status changed here.
+
 This does not change publication status or constitute clinical approval.

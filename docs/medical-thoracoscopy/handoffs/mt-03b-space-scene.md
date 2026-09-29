@@ -131,4 +131,27 @@ the dev copy that Git ignores.
 - Do not draw a lung step the engine has not reached, or animate re-expansion, which is not modelled.
 - Do not show the prototype page as a lesson, link it from the curriculum, or record progress on it.
 
+## Repair after the independent review (2026-09-29): R1 and OD-11
+
+**R1, the lung's clock.** The host added the whole gap since the last frame to the model's clock,
+with no cap and no reset when a hidden tab came back, so the review saw the lung jump from step 6
+to 8 on the first frame after three seconds without frames (and 4 to 6 after a slow first frame).
+`components/space/lungClock.ts` now decides what a frame hands the engine: never more than
+`MAX_FRAME_MS` (100 ms), and nothing for the time a hidden page was away (`visibilitychange`
+resumes the clock). While frames are no longer than the cap, the model's time equals the wall
+clock's however many frames there are, and the engine stamps each lung event at its due time, so no
+rule depends on how often the renderer calls back; a longer frame slows the model rather than
+letting it leap. Reduced motion is unchanged (no frames run; the lung waits for Step), and leaving
+the space cancels the frames and the listener. `lungClock.test.tsx` holds this with fake frames and
+fake time: the review's reproduction, a long frame, four frame schedules giving identical events,
+reduced motion and teardown. Three of its ten tests fail on the code before the repair.
+
+**OD-11, the lung change on the prototype.** "Let air in" is now "Play the authored lung change",
+in a group headed "Authored teaching state", with the words that it is an authored teaching
+sequence the page plays, not a response to anything the learner does, not a simulation of how a
+lung behaves, and not clinically reviewed. The collapse itself is unchanged.
+
+The anatomy-derived records are compiled into page code from this slice on (the prototype page runs
+the engine); the ledger's `bundledRecords` say so.
+
 This does not change publication status or constitute clinical approval.

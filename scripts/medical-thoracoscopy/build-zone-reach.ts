@@ -17,8 +17,9 @@
  * much of each region the model lets the learner see at all.
  *
  * Writes `src/features/medical-thoracoscopy/content/data/anatomy/zone-reach.json`: numbers only, one
- * digit per sample in the order of the proxy file, with the snapshot it was computed for. The engine
- * uses it only while that snapshot is the current one.
+ * digit per sample in the order of the proxy file (0 out of the field, 1 in the field only behind
+ * something, 2 seeable), with the snapshot it was computed for. The engine uses it only while that
+ * snapshot is the current one.
  */
 import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
@@ -35,6 +36,7 @@ import {
 import {
   computeReach,
   REACH_GRID,
+  reachDigits,
   reachIdentity,
 } from '../../src/features/medical-thoracoscopy/engine/space/zoneReach'
 
@@ -75,7 +77,7 @@ async function main(): Promise<void> {
     version: 1,
     script: 'scripts/medical-thoracoscopy/build-zone-reach.ts',
     statement:
-      'Numbers only: for each zone sample, whether any position the port allows brings it into the telescope’s field, within range and facing it, with the lung collapsed, whatever lies in the way; and, per region, how many samples some position shows with nothing in the way. Computed by the space engine from the collision proxies, which are not in the repository.',
+      'Numbers only: for each zone sample, one digit: 0 if no position the port allows brings it into the telescope’s field, within range and facing it, with the lung collapsed; 1 if some does, but always with something in the way; 2 if some position shows it with nothing in the way. Per region, the counts. Computed by the space engine from the collision proxies, which are not in the repository.',
     label: 'Authored construct',
     computedFor: reachIdentity(LUNG_STEP),
     lungStep: LUNG_STEP,
@@ -86,7 +88,7 @@ async function main(): Promise<void> {
     },
     files: { 'proxy-pleural-space': spaceFile.sha256, 'proxy-lung': lungFile.sha256 },
     poses,
-    reachable: Array.from(reach).join(''),
+    reachable: reachDigits(reach, seeable),
     zones,
   }
   const options = await prettier.resolveConfig(path.join(ROOT, 'package.json'))
