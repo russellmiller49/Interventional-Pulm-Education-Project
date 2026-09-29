@@ -186,7 +186,12 @@ function moveLung(state: EngineState, resolver: SpaceResolver, atMs: number): En
     return { ...state, nextLungMoveAtMs: null, clockHeld: false }
   const next = state.lungStep + Math.sign(state.lungTarget - state.lungStep)
   const tool = state.tool ? toolInHand(state.tool) : undefined
-  if (resolver.lungClearance(state.pose, next, tool) < CLEARANCE_SKIN_MM + LUNG_ROOM_MM) {
+  // Room to spare around the instrument, and the instrument still outside the lung: a step that
+  // closed the lung all around it would leave room and swallow it (independent review, R7).
+  if (
+    resolver.lungClearance(state.pose, next, tool) < CLEARANCE_SKIN_MM + LUNG_ROOM_MM ||
+    !resolver.tipFree(state.pose, next)
+  ) {
     return state.lungHeld
       ? state
       : event({ ...state, lungHeld: true }, atMs, 'lung-held', `step ${state.lungStep}`)

@@ -13,8 +13,10 @@ import { useReducedMotion } from '../space/useSpaceSupport'
  * An engineering prototype of the pleural space (slice 11): the engine, the 3D scene and the cut,
  * with no lesson around them. It is outside the curriculum and the progress record, and records
  * nothing. The lung starts part-way fallen, since the telescope has no room at the port before air is
- * in; letting air in takes it the rest of the way, an authored relationship awaiting clinical review
- * (owner decisions, T2). It never comes back: re-expansion is not modelled.
+ * in. Until the lung-change claim (MT-C-0002) is clinically reviewed, the lung's fallen-away state is
+ * an explicitly labelled, authored teaching state the page plays, never a physiological consequence
+ * of anything the learner does (owner decision OD-11, which supersedes T2's default). The amount of
+ * collapse is the model's, unchanged. It never comes back: re-expansion is not modelled.
  */
 const START: SpaceEngineStart = {
   scenario: 'space-prototype',
@@ -27,13 +29,15 @@ export const PROTOTYPE_WORDS = {
   heading: 'The pleural space: engineering prototype',
   purpose:
     'This page shows the model of the pleural space and the scene the survey lesson will use, with no lesson around them. It is not a lesson, it records nothing, and nothing on it has been clinically reviewed.',
-  letAirIn: 'Let air in',
-  airIn: 'Air is in: the lung has fallen away as far as this model takes it.',
+  authoredHeading: 'Authored teaching state',
+  letAirIn: 'Play the authored lung change',
+  airIn:
+    'The authored teaching state is shown: the lung has fallen away as far as this model takes it.',
   startAgain: 'Start again',
   drawAsCut: 'Show the Chest view as a cut',
   drawIn3d: 'Draw the Chest view in three dimensions',
   lungLabel:
-    'The lung falling away as air comes in is an authored relationship. It has not been clinically reviewed.',
+    'The page plays this as an authored teaching sequence. It is not a response to anything you do and not a simulation of how a lung behaves, and it has not been clinically reviewed.',
 } as const
 
 assertThoracoscopyCopy(
@@ -84,7 +88,15 @@ function SpaceRun({
   const standing = outcomeStanding('lung-falls-away')
   return (
     <>
-      <div className={styles.prototypeControls}>
+      <div
+        className={styles.prototypeControls}
+        role="group"
+        aria-label={PROTOTYPE_WORDS.authoredHeading}
+        data-authored-teaching-state
+      >
+        <p className={styles.viewNote}>
+          <strong>{PROTOTYPE_WORDS.authoredHeading}</strong>
+        </p>
         <button
           type="button"
           className={styles.actionButton}
@@ -95,6 +107,7 @@ function SpaceRun({
         </button>
         <p className={styles.viewNote} data-lung-step={paneState.lungStep}>
           {fallen ? `${PROTOTYPE_WORDS.airIn} ` : ''}
+          {/* said whenever the change is on offer or shown, until its claim is reviewed */}
           {standing.kind === 'authored-awaiting-review' ? PROTOTYPE_WORDS.lungLabel : ''}
         </p>
       </div>
