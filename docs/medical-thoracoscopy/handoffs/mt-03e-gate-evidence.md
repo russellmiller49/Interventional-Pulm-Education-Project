@@ -85,4 +85,53 @@ turns Playwright's HTTP cache off, so a "warm" reload is cold.
 - Do not fill a form in the repository with a fellow's details: the filled forms stay in the
   owner's local data.
 
+## Repair after the independent review (2026-09-29)
+
+The independent review (stack at `ba6f870d`, tree `26d911e1`) corrected this slice's evidence and
+asked for repairs R0 to R8; R9 is the owner's (OD-14) and was **not performed**. The repairs were made
+in the pull requests the defects belong to and merged down the stack (no rebase, no force-push); a
+separate site pull request carries R6. What changed in this slice:
+
+| Path                                                                                                                                                                                         | Change                                                                                                                                                                                                             |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `gate/prototype-gate-packet.md`                                                                                                                                                              | Rewritten with the corrected states beside the state after the repair; the repairs; the public exposure as it stands; R9 not performed                                                                             |
+| `gate/forecast.md`                                                                                                                                                                           | Collapse no longer framed as the only lever (the review's measurements of the port, the along-rib limit and "seen whole" repeated); production has neither the 3D views nor the cut until the upload; R6 and OD-15 |
+| `README.md`, `repository-baseline.md`                                                                                                                                                        | The cut needs the proxies; how to run the admin-gated browser checks                                                                                                                                               |
+| `scripts/medical-thoracoscopy/landmark_table.py`, `test-support/landmark-table.json`, `__tests__/landmarkProjection.test.ts`, `components/space/scene/scopeCamera.ts`, `SpaceSceneViews.tsx` | R3: the independent landmark table; the scene aims its camera through `aimScopeCamera`, which the check also uses; development-only markers for the pixel check                                                    |
+| `e2e/medical-thoracoscopy.spec.ts`                                                                                                                                                           | Signs in with the local-development cookie (OD-15); checks the module refuses an anonymous visitor; storage refused altogether (needs R6); the landmark table in real pixels; the authored lung change's new name  |
+| `scripts/medical-thoracoscopy/fuzz-real-proxies.ts`                                                                                                                                          | R2: path-judged journeys and the forceps; failing seeds preserved in `test-support/fuzz-seeds.json`                                                                                                                |
+
+### Checks run for the repair
+
+| Command or check                                                                                                            | Result                                                                                                                                                                                                                                                                                           |
+| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npx tsx scripts/medical-thoracoscopy/fuzz-real-proxies.ts`                                                                 | 10,000 journeys (70,000 moves; 218,727 poses judged along paths; 280,060 inside or outside checks; 4,244 lung moves, 3,733 held) in 312 s, and 2,000 forceps sequences (84,415 moves; 783,240 path poses; 82,139 inside checks; jaws opened 23 times) in 206 s: nothing found, no seed preserved |
+| `MT_BASE_URL=… MT_LOCAL_DEV_AUTH_TOKEN=… npx playwright test -c playwright.medical-thoracoscopy.config.ts`                  | 23 of 23 pass (3.4 min) on a local branch that also carries R6 (never pushed); anonymous requests to the module are redirected to sign in (HTTP 307) and the local-development session gets 200                                                                                                  |
+| Focused Jest (the module, its routes, sponsorship, site access, the admin index, the shared frame's consumers, pleuroscopy) | 47 suites, 612 tests, all passing                                                                                                                                                                                                                                                                |
+| `landmarkProjection.test.ts` with the along-ribs hand flipped in the engine                                                 | 4 of 12 fail, as they should; restored                                                                                                                                                                                                                                                           |
+
+### The full gates
+
+Run on 2026-09-29 on the repaired head of this branch, and on an untouched throwaway checkout of
+`origin/main` `501f383c` sharing its packages (removed afterwards), with Node 20.20.2 and npm 10.8.2:
+
+| Gate                                                   | This branch                                                                                                                                                                                                                                                                      | Untouched `main`                                                                                 |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `npx jest --ci --maxWorkers=4`                         | 1,028 suites, 15,287 tests: 15,275 pass, 4 skipped, 1 todo; **8 suites and 7 tests fail**                                                                                                                                                                                        | 995 suites, 14,810 tests: 14,798 pass, 4 skipped, 1 todo; **the same 8 suites and 7 tests fail** |
+| The failing suites, on both                            | critical-care accessibility, learner copy and curriculum sequencing; the literature foundation manifest; the preference-cards research safety boundary; the branch-tracing contracts; board-review HTML; `scripts/training-apps.test.mjs` (no test in it). None is this module's |                                                                                                  |
+| `npm run storybook:build`                              | **Fails**: Rollup cannot resolve `@/components/ui/button` from a story                                                                                                                                                                                                           | **Fails the same way**                                                                           |
+| `NODE_OPTIONS=--max-old-space-size=4096 npm run build` | Passes (117 s, the site's usual warnings); every module route and both prototypes built                                                                                                                                                                                          | Not re-run                                                                                       |
+| `npx tsc --noEmit`                                     | No errors                                                                                                                                                                                                                                                                        |                                                                                                  |
+
+So the full gates are **partial**, for reasons already on `main` and outside this module. Neither
+Jest nor Storybook is green.
+
+### What must not happen next
+
+- Do not perform R9 without the owner's decision packet; do not move the nodule or the anatomy to
+  make criterion 10 pass (OD-12).
+- Do not approve rights or upload anything; the exposure recorded is not an approval (OD-13).
+- Do not open the module to anonymous visitors, or weaken authentication for testing (OD-15).
+- Merge R6 before relying on the course's check of storage refused altogether.
+
 This does not change publication status or constitute clinical approval.

@@ -107,7 +107,9 @@ in the first round.
   for five minutes. Model filenames therefore carry a content hash, and only the manifest is
   ever replaced.
 - A merged slice that refers to a model shows its fallback in production until the owner uploads
-  the files from the primary checkout.
+  the files from the primary checkout. (Corrected on 2026-09-29: for the pleural space that fallback
+  is not the cut, which needs the collision proxies, themselves anatomy files awaiting the upload;
+  without them the spatial controls wait and say why.)
 
 ## Source material, as found
 
