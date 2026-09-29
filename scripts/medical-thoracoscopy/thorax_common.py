@@ -33,7 +33,6 @@ SEGMENTATION_FILE = "19_CT_HR segmentation_final.seg.nrrd"
 WORK = ("raw-assets", "medical-thoracoscopy", "anatomy")
 RECORDS = REPO / "src/features/medical-thoracoscopy/content/data/anatomy"
 ZONES = REPO / "src/features/medical-thoracoscopy/content/data/pleural-zones.json"
-DEV_INSTALL = REPO / "public/models/medical-thoracoscopy/v1/anatomy"
 
 LABEL = "Derived from CT segmentation"
 ATTRIBUTION = {
@@ -49,8 +48,10 @@ ATTRIBUTION = {
     ),
     "licence": "Creative Commons Attribution 4.0 International, https://creativecommons.org/licenses/by/4.0/",
     "changes": (
-        "The material was modified. Surfaces were built from a segmentation of the scan, then simplified "
-        "and divided into named regions. Nothing shown is the scan itself."
+        "The material was modified. Surfaces were built from a segmentation of the scan, remeshed or "
+        "simplified, divided into named regions and, for the lung, reshaped into authored states. The scan "
+        "was taken with the patient lying on their back and is shown with the patient lying on their side. "
+        "Nothing shown is the scan itself."
     ),
     "identity": "Asserted to be case 19 of the dataset; not verified against the archive.",
 }
@@ -242,6 +243,133 @@ def write_glb(path: Path, meshes: list[dict], root_extras: dict) -> None:
         handle.write(body)
         handle.write(struct.pack("<II", len(buffers), 0x004E4942))
         handle.write(bytes(buffers))
+
+
+class GlbBuilder:
+    """A glTF 2 binary built accessor by accessor, for files `write_glb` cannot express: morph
+    targets, quantised attributes (KHR_mesh_quantization), node transforms and point primitives.
+    Vertex attributes are padded to four-byte strides, as glTF requires. Deterministic: the same
+    calls give the same bytes."""
+
+    FLOAT, BYTE, SHORT, UNSIGNED_SHORT, UNSIGNED_INT = 5126, 5120, 5122, 5123, 5125
+    _DTYPES = {5126: np.float32, 5120: np.int8, 5122: np.int16, 5123: np.uint16, 5125: np.uint32}
+
+    def __init__(self, generator: str) -> None:
+        self.generator = generator
+        self.buffer = bytearray()
+        self.views: list[dict] = []
+        self.accessors: list[dict] = []
+        self.meshes: list[dict] = []
+        self.nodes: list[dict] = []
+        self.extensions: set[str] = set()
+
+    def _view(self, data: bytes, target: int | None, stride: int | None) -> int:
+        while len(self.buffer) % 4:
+            self.buffer.append(0)
+        view = {"buffer": 0, "byteOffset": len(self.buffer), "byteLength": len(data)}
+        if target is not None:
+            view["target"] = target
+        if stride is not None:
+            view["byteStride"] = stride
+        self.views.append(view)
+        self.buffer.extend(data)
+        return len(self.views) - 1
+
+    def attribute(self, values: np.ndarray, component: int = 5126, normalized: bool = False,
+                  bounds: bool = False) -> int:
+        """A VEC3 vertex attribute. Integer components are padded to a four-byte stride."""
+        array = np.asarray(values, dtype=self._DTYPES[component])
+        stride = None
+        if component in (self.BYTE, self.SHORT):
+            width = 4 if component == self.BYTE else 4
+            padded = np.zeros((len(array), width), dtype=array.dtype)
+            padded[:, :3] = array
+            data = padded.tobytes()
+            stride = 4 if component == self.BYTE else 8
+            self.extensions.add("KHR_mesh_quantization")
+        else:
+            data = array.tobytes()
+        accessor = {"bufferView": self._view(data, 34962, stride), "componentType": component,
+                    "count": len(array), "type": "VEC3"}
+        if normalized:
+            accessor["normalized"] = True
+        if bounds:
+            cast = float if component == self.FLOAT else int
+            accessor["min"] = [cast(x) for x in array.min(0)]
+            accessor["max"] = [cast(x) for x in array.max(0)]
+        self.accessors.append(accessor)
+        return len(self.accessors) - 1
+
+    def indices(self, faces: np.ndarray, vertex_count: int) -> int:
+        component = self.UNSIGNED_SHORT if vertex_count < 65535 else self.UNSIGNED_INT
+        array = np.asarray(faces).reshape(-1).astype(self._DTYPES[component])
+        self.accessors.append({"bufferView": self._view(array.tobytes(), 34963, None), "componentType": component,
+                               "count": int(array.size), "type": "SCALAR"})
+        return len(self.accessors) - 1
+
+    def mesh(self, name: str, primitives: list[dict], weights: list[float] | None = None,
+             extras: dict | None = None) -> int:
+        mesh = {"name": name, "primitives": primitives}
+        if weights is not None:
+            mesh["weights"] = weights
+        if extras:
+            mesh["extras"] = extras
+        self.meshes.append(mesh)
+        return len(self.meshes) - 1
+
+    def node(self, name: str, mesh: int | None = None, children: list[int] | None = None, extras: dict | None = None,
+             translation: list[float] | None = None, scale: list[float] | None = None) -> int:
+        node: dict = {"name": name}
+        for key, value in (("mesh", mesh), ("children", children), ("translation", translation), ("scale", scale)):
+            if value is not None:
+                node[key] = value
+        if extras:
+            node["extras"] = extras
+        self.nodes.append(node)
+        return len(self.nodes) - 1
+
+    def write(self, path: Path, root: int) -> None:
+        document = {
+            "asset": {"version": "2.0", "generator": self.generator},
+            "scene": 0,
+            "scenes": [{"nodes": [root]}],
+            "nodes": self.nodes,
+            "meshes": self.meshes,
+            "accessors": self.accessors,
+            "bufferViews": self.views,
+            "buffers": [{"byteLength": len(self.buffer)}],
+        }
+        if self.extensions:
+            document["extensionsUsed"] = sorted(self.extensions)
+            document["extensionsRequired"] = sorted(self.extensions)
+        body = json.dumps(document, separators=(",", ":"), sort_keys=True, ensure_ascii=False).encode()
+        while len(body) % 4:
+            body += b" "
+        binary = bytes(self.buffer) + b"\0" * ((4 - len(self.buffer) % 4) % 4)
+        with path.open("wb") as handle:
+            handle.write(struct.pack("<III", 0x46546C67, 2, 12 + 8 + len(body) + 8 + len(binary)))
+            handle.write(struct.pack("<II", len(body), 0x4E4F534A))
+            handle.write(body)
+            handle.write(struct.pack("<II", len(binary), 0x004E4942))
+            handle.write(binary)
+
+
+def glb_accessor(document: dict, binary: bytes, index: int) -> np.ndarray:
+    """An accessor's values as floats, dequantised if normalized, read without a library. Handles
+    the strides `GlbBuilder` writes."""
+    entry = document["accessors"][index]
+    view = document["bufferViews"][entry["bufferView"]]
+    dtype = GlbBuilder._DTYPES[entry["componentType"]]
+    width = {"SCALAR": 1, "VEC3": 3, "VEC4": 4}[entry["type"]]
+    item = np.dtype(dtype).itemsize
+    stride = view.get("byteStride", item * width)
+    offset = view.get("byteOffset", 0) + entry.get("byteOffset", 0)
+    raw = np.frombuffer(binary, dtype=np.uint8, count=stride * (entry["count"] - 1) + item * width, offset=offset)
+    rows = np.lib.stride_tricks.as_strided(raw, shape=(entry["count"], item * width), strides=(stride, 1)).copy()
+    values = rows.view(dtype).reshape(entry["count"], width).astype(np.float64)
+    if entry.get("normalized"):
+        values = np.maximum(values / float(np.iinfo(dtype).max), -1.0)
+    return values if width > 1 else values[:, 0]
 
 
 def read_glb(path: Path) -> tuple[dict, bytes]:

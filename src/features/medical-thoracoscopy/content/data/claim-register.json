@@ -51,6 +51,11 @@
           "state": "written"
         },
         {
+          "kind": "asset",
+          "id": "lung-states",
+          "state": "written"
+        },
+        {
           "kind": "prototype",
           "id": "tool-contact",
           "state": "planned"
@@ -101,7 +106,7 @@
         {
           "kind": "asset",
           "id": "lung-states",
-          "state": "planned"
+          "state": "written"
         }
       ],
       "dependentRules": [

@@ -10,9 +10,9 @@ the code that wrote it, and checks:
   vertex array; together they hold every face exactly once, with no face repeated; joined, they
   make a watertight surface, every edge shared by exactly two faces, oriented outward, with the
   volume and area the record gives;
-- each zone is one connected piece;
+- each zone is one connected piece, and no face of the surface passes through another;
 - the ribs: twelve right ribs, numbered 1 to 12, each watertight; the left ribs and the sternum;
-- the context: the named structures, the skin open where the scan ends;
+- the context: the named structures, no face repeated, the skin open where the scan ends;
 - every file carries the label, the attribution, the frame and the presentation in its root extras.
 
 A report is written to the owner's local data; the exit status is 1 on any failure.
@@ -24,6 +24,7 @@ import sys
 
 import numpy as np
 
+from thorax_mesh_checks import crossing_pairs
 from thorax_common import ATTRIBUTION, GRAVITY_LPS, LABEL, PRESENTATION_FROM_LPS, RECORDS, ZONES, read_glb, sha256_file, work_path
 
 ZONE_IDS = [zone["id"] for zone in json.loads(ZONES.read_text())["zones"]]
@@ -92,6 +93,7 @@ def main() -> int:
             check(len(np.unique(np.sort(faces, axis=1), axis=0)) == len(faces), "pleural space: no face is in two zones")
             check(len(faces) == RECORD["pleuralSpace"]["faces"], "pleural space: every face is in a zone")
             check(edges_shared_twice(faces), "pleural space: watertight, every edge shared by two faces")
+            check(len(crossing_pairs(vertices, faces)) == 0, "pleural space: no face passes through another")
             volume = signed_volume(vertices, faces) / 1000.0
             check(volume > 0, "pleural space: oriented outward")
             check(abs(volume - RECORD["pleuralSpace"]["meshVolumeMl"]) < 0.5, "pleural space: volume equals the record")
@@ -127,12 +129,18 @@ def main() -> int:
                 primitive = document["meshes"][child["mesh"]]["primitives"][0]
                 faces = accessor(document, binary, primitive["indices"], np.uint32, 1).reshape(-1, 3).astype(np.int64)
                 check(edges_shared_twice(faces), f"ribs: {child['name']} is watertight")
+                positions = accessor(document, binary, primitive["attributes"]["POSITION"], np.float32, 3).astype(float)
+                check(len(crossing_pairs(positions, faces)) == 0, f"ribs: {child['name']} does not pass through itself")
 
         if name == "context":
             names = {child["name"] for child in children}
             expected = {f"context:{s}" for s in ("diaphragm", "heart", "aorta", "superior-vena-cava",
                                                  "inferior-vena-cava", "pulmonary-artery", "skin")}
             check(names == expected, "context: the named structures")
+            for child in children:
+                primitive = document["meshes"][child["mesh"]]["primitives"][0]
+                faces = accessor(document, binary, primitive["indices"], np.uint32, 1).reshape(-1, 3).astype(np.int64)
+                check(len(np.unique(np.sort(faces, axis=1), axis=0)) == len(faces), f"context: {child['name']} repeats no face")
             skin = next(child for child in children if child["name"] == "context:skin")
             check(skin.get("extras", {}).get("open") == "where the scan's field ends", "context: the skin is open where the scan ends")
 

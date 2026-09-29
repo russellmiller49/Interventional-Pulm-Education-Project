@@ -1,0 +1,60 @@
+{
+  "record": "medical-thoracoscopy-zone-samples",
+  "version": 1,
+  "script": "scripts/medical-thoracoscopy/build_lung_states.py",
+  "statement": "Numbers only. The files are built in the owner's local data and are not in the repository: the segmentation's terms are not settled (rights register, R-ANATOMY-SEGMENTATION).",
+  "frame": "LPS millimetres",
+  "label": "Authored construct",
+  "method": {
+    "perCm2": 1.0,
+    "minimumPerZone": 32,
+    "insideProxyMm": 0.25,
+    "placement": "Area-weighted, stratified along each zone's faces in order; each point starts at a face centre, moves to the nearest point of the pleural-space proxy and then insideProxyMm inside it; where the proxy ends in a thin edge, it goes instead to the nearest point checked to lie that far inside, one of a set just in from each proxy vertex and face centre. liftMm is how far the points moved."
+  },
+  "file": "proxy-pleural-space.glb",
+  "zones": [
+    {
+      "id": "diaphragm",
+      "points": 234,
+      "liftMm": [0.689, 2.719],
+      "placedFromTheSet": 0
+    },
+    {
+      "id": "costophrenic-recess",
+      "points": 113,
+      "liftMm": [0.842, 8.161],
+      "placedFromTheSet": 6
+    },
+    {
+      "id": "posterior-chest-wall",
+      "points": 390,
+      "liftMm": [0.639, 2.948],
+      "placedFromTheSet": 0
+    },
+    {
+      "id": "apex",
+      "points": 146,
+      "liftMm": [0.814, 2.374],
+      "placedFromTheSet": 0
+    },
+    {
+      "id": "anterior-chest-wall",
+      "points": 266,
+      "liftMm": [0.726, 2.27],
+      "placedFromTheSet": 0
+    },
+    {
+      "id": "mediastinum",
+      "points": 342,
+      "liftMm": [0.673, 4.764],
+      "placedFromTheSet": 2
+    },
+    {
+      "id": "lateral-chest-wall",
+      "points": 145,
+      "liftMm": [0.726, 2.056],
+      "placedFromTheSet": 0
+    }
+  ],
+  "total": 1636
+}
