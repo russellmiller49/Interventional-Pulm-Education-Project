@@ -50,7 +50,7 @@ const bronchoscopyFoundationsUnlistedPathPrefixes =
     : ([] as const)
 
 const medicalThoracoscopyUnlistedPathPrefixes =
-  MEDICAL_THORACOSCOPY_RELEASE_STAGE === 'unlisted-preview'
+  MEDICAL_THORACOSCOPY_RELEASE_STAGE !== 'published'
     ? (['/medical-thoracoscopy'] as const)
     : ([] as const)
 
