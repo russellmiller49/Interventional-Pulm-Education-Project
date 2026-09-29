@@ -131,8 +131,8 @@ async function main() {
   await signIn(page, 'MTW-WRONG-WRONG-WRONG-WRONG-WRONG')
   check(
     'wrong code refused with one generic message',
-    (await page.getByRole('alert').textContent())?.trim() === 'Review code not recognized.' &&
-      (await page.locator('canvas').count()) === 0,
+    (await page.locator('main p[role="alert"]').textContent())?.trim() ===
+      'Review code not recognized.' && (await page.locator('canvas').count()) === 0,
   )
   const cookiesBefore = await reviewer.cookies()
   check(
