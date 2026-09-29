@@ -23,10 +23,11 @@ import { VIEW } from './spatial/visibility'
  * snapshot but the scenario, and the grid it was computed on; if either differs from now, there is
  * no reach (independent review, R4).
  */
-export type ReachIdentity = Omit<SpaceSnapshotId, 'scenario'>
+export type ReachIdentity = Omit<SpaceSnapshotId, 'scenario' | 'tool'>
 
 const REACH_PARTS = SNAPSHOT_PARTS.filter(
-  (part): part is Exclude<(typeof SNAPSHOT_PARTS)[number], 'scenario'> => part !== 'scenario',
+  (part): part is Exclude<(typeof SNAPSHOT_PARTS)[number], 'scenario' | 'tool'> =>
+    part !== 'scenario' && part !== 'tool',
 )
 
 export function reachIdentity(lungStep: number): ReachIdentity {

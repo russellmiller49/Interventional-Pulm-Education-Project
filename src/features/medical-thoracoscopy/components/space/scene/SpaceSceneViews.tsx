@@ -32,8 +32,9 @@ import {
 
 import { anatomyManifest } from '../../../content/data/generated/anatomy'
 import { pleuralZone, type PleuralZoneId } from '../../../content/pleuralZones'
-import { scopeGeometry } from '../../../engine/space/fulcrum'
+import { scopeGeometry, type ScopeGeometry } from '../../../engine/space/fulcrum'
 import type { LoadedSpace } from '../../../engine/space/loadSpace'
+import { forceps, toolCapsules } from '../../../engine/space/toolChannel'
 import type { Vec3 } from '../../../engine/space/vec'
 import styles from '../space-pane.module.css'
 import { READINESS_WORDS, SCENE_WORDS, VIEW_WORDS } from '../spaceWords'
@@ -54,6 +55,9 @@ import { loadAnatomyAssets, type AnatomyAssets } from './anatomyAssets'
  *
  * A failure to create the renderer, to load the anatomy or to draw is reported to the pane, which
  * shows the Chest view as a cut instead; a lost context remounts the canvas and loads again.
+ *
+ * Where the scenario has them (the contact spike, slice 13), both views draw the teaching target and
+ * the forceps out beyond the tip, from the same engine geometry.
  */
 export type SceneStatus = 'loading' | 'ready' | 'failed'
 
@@ -227,6 +231,9 @@ function useMaterials() {
       }),
       pleura: new MeshStandardMaterial({ color: '#ecc9bf', roughness: 0.45, side: DoubleSide }),
       lungInside: new MeshStandardMaterial({ color: '#b97f86', roughness: 0.5 }),
+      nodule: new MeshStandardMaterial({ color: '#efe2b8', roughness: 0.6 }),
+      forceps: new MeshStandardMaterial({ color: '#9aa6b2', metalness: 0.7, roughness: 0.35 }),
+      jaws: new MeshStandardMaterial({ color: '#cfd8e2', metalness: 0.8, roughness: 0.25 }),
     }
   }, [])
   useEffect(
@@ -241,6 +248,52 @@ function useMaterials() {
     [materials],
   )
   return materials
+}
+
+/** The teaching target and the forceps out beyond the tip, where the scenario has them. */
+function ContactParts({
+  state,
+  space,
+  geometry,
+  materials,
+}: {
+  state: SpacePaneState
+  space: LoadedSpace
+  geometry: ScopeGeometry
+  materials: ReturnType<typeof useMaterials>
+}) {
+  const tools = useMemo(() => forceps(), [])
+  const { shaft, workingElement } = state.tool
+    ? toolCapsules(geometry, state.tool, tools)
+    : { shaft: null, workingElement: null }
+  return (
+    <>
+      {space.target ? (
+        <mesh
+          position={space.target.centre as [number, number, number]}
+          material={materials.nodule}
+        >
+          <sphereGeometry args={[space.target.radiusMm, 32, 20]} />
+        </mesh>
+      ) : null}
+      {shaft ? (
+        <Segment
+          start={shaft.start}
+          end={shaft.end}
+          radius={shaft.radius}
+          material={materials.forceps}
+        />
+      ) : null}
+      {workingElement ? (
+        <Segment
+          start={workingElement.start}
+          end={workingElement.end}
+          radius={workingElement.radius}
+          material={materials.jaws}
+        />
+      ) : null}
+    </>
+  )
 }
 
 /** The scope camera the development probe reports; set by the Scope view as it moves its camera. */
@@ -366,6 +419,7 @@ function ChestView({
           material={materials.instrument}
         />
       ) : null}
+      <ContactParts state={state} space={space} geometry={geometry} materials={materials} />
       <mesh position={cone.position} quaternion={cone.quaternion}>
         <coneGeometry args={[fieldCone.radius, fieldCone.length, 32, 1, true]} />
         <meshBasicMaterial
@@ -392,7 +446,8 @@ function ScopeView({
   const materials = useMaterials()
   const camera = useRef<ThreePerspectiveCamera>(null)
   const light = useRef<PointLight>(null)
-  const { camera: frame } = scopeGeometry(state.pose, space.port, space.device)
+  const geometry = scopeGeometry(state.pose, space.port, space.device)
+  const frame = geometry.camera
   useLayoutEffect(() => {
     const c = camera.current
     if (!c) return
@@ -434,11 +489,16 @@ function ScopeView({
           material={materials.lungInside}
         />
       ))}
+      <ContactParts state={state} space={space} geometry={geometry} materials={materials} />
     </>
   )
 }
 
-/** Development only: what the real canvas drew, and where its scope camera is, for the browser checks. */
+/**
+ * Development only: what the real canvas drew, and where its scope camera is, for the browser checks;
+ * one frame on demand, for a pane the browser has hidden, where no animation frame comes; and the
+ * colour at a point of either view.
+ */
 function DevelopmentProbe({
   chest,
   scope,
@@ -447,6 +507,7 @@ function DevelopmentProbe({
   scope: RefObject<HTMLDivElement | null>
 }) {
   const { gl } = useThree()
+  const advance = useThree((three) => three.advance)
   useEffect(() => {
     if (process.env.NODE_ENV === 'production') return
     const read = (element: HTMLDivElement | null, round: boolean, background: string) => {
@@ -483,7 +544,21 @@ function DevelopmentProbe({
       }
       return { drawnShare: counted ? tissue / counted : 0, width, height }
     }
+    const sample = (which: 'chest' | 'scope', u: number, v: number) => {
+      const element = which === 'chest' ? chest.current : scope.current
+      if (!element) return null
+      const rect = element.getBoundingClientRect()
+      const ratio = gl.getPixelRatio()
+      const context = gl.getContext()
+      const x = Math.floor((rect.left + u * rect.width) * ratio)
+      const y = context.drawingBufferHeight - Math.floor((rect.top + v * rect.height) * ratio)
+      const pixel = new Uint8Array(4)
+      context.readPixels(x, y, 1, 1, context.RGBA, context.UNSIGNED_BYTE, pixel)
+      return Array.from(pixel.slice(0, 3))
+    }
     const hook = {
+      frame: () => advance(performance.now(), true),
+      sample,
       probe: () => ({
         chest: read(chest.current, false, CHEST_BACKGROUND),
         scope: read(scope.current, true, SCOPE_BACKGROUND),
@@ -505,7 +580,7 @@ function DevelopmentProbe({
     return () => {
       delete (window as unknown as { __thoracoscopySpace?: typeof hook }).__thoracoscopySpace
     }
-  }, [gl, chest, scope])
+  }, [gl, chest, scope, advance])
   return null
 }
 

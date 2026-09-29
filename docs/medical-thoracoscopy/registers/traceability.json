@@ -175,14 +175,30 @@
       "kind": "prototype",
       "number": null,
       "outcome": "None. An engineering prototype, outside the curriculum",
-      "state": "planned",
-      "content": [],
-      "claims": ["MT-C-0001", "MT-C-0003"],
-      "assets": [],
-      "tests": [],
+      "state": "written",
+      "content": [
+        "src/features/medical-thoracoscopy/components/prototype/ToolContactPrototype.tsx",
+        "src/app/[locale]/medical-thoracoscopy/prototype/tool-contact/page.tsx",
+        "src/features/medical-thoracoscopy/content/data/anatomy/tool-contact.json"
+      ],
+      "claims": ["MT-C-0001", "MT-C-0002", "MT-C-0003"],
+      "assets": [
+        "pleural-space",
+        "ribs",
+        "context",
+        "lung-states",
+        "proxy-pleural-space",
+        "proxy-lung"
+      ],
+      "tests": [
+        "src/features/medical-thoracoscopy/__tests__/spaceContact.test.ts",
+        "src/features/medical-thoracoscopy/__tests__/toolContactPrototype.test.tsx",
+        "src/features/medical-thoracoscopy/__tests__/spacePane.test.tsx",
+        "src/app/[locale]/medical-thoracoscopy/prototype/tool-contact/page.test.tsx"
+      ],
       "reviewDecisions": [],
       "releaseEvidence": [],
-      "missing": ["content", "assets", "tests", "review decisions", "release evidence"]
+      "missing": ["review decisions", "release evidence"]
     }
   ]
 }

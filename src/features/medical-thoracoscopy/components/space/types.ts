@@ -35,6 +35,12 @@ export interface SpaceSnapshotId {
    * (added after the independent review, R4).
    */
   readonly rules: string
+  /**
+   * The forceps and the contact table, for a scenario that has the forceps: the touching distance
+   * and skin, the forceps' step and reach, the open jaws' envelope and a digest of the table's rows;
+   * `none` without them (added after the independent review, R4 and R8).
+   */
+  readonly tool: string
 }
 
 export const SNAPSHOT_PARTS = [
@@ -46,6 +52,7 @@ export const SNAPSHOT_PARTS = [
   'lungAndFluid',
   'geometry',
   'rules',
+  'tool',
 ] as const satisfies readonly (keyof SpaceSnapshotId)[]
 
 export function sameSnapshot(a: SpaceSnapshotId, b: SpaceSnapshotId): boolean {
@@ -143,6 +150,17 @@ export interface CrossSection {
   readonly field: readonly [PlanePoint, PlanePoint]
   /** Which way the cut is seen, in words: for example "from the patient’s front". */
   readonly seenFrom: string
+  /** A teaching target where the cut meets it, as closed outlines (added in slice 13). */
+  readonly target?: readonly (readonly PlanePoint[])[]
+  /**
+   * The forceps out beyond the tip, projected onto the cut: from the channel's exit to the base of
+   * the jaws, and on to their tip. Absent while they are in the channel (added in slice 13).
+   */
+  readonly tool?: {
+    readonly exit: PlanePoint
+    readonly jawBase: PlanePoint
+    readonly tip: PlanePoint
+  }
 }
 
 /** Whether the spatial controls can act, and if not, why, in the learner's words. */
@@ -150,6 +168,19 @@ export type SpaceReadiness =
   | { readonly kind: 'ready' }
   | { readonly kind: 'loading'; readonly what: string }
   | { readonly kind: 'unavailable'; readonly why: string; readonly canRetry: boolean }
+
+/**
+ * The forceps in the working channel, for a scenario that has them (added in slice 13): in the
+ * channel, or out beyond the tip; and whether the jaws are touching the teaching target, which the
+ * contact table allows only them, and only when the target is authorised.
+ */
+export interface SpaceToolState {
+  readonly phase: 'in-channel' | 'extended'
+  /** How far the jaws are out beyond the telescope's tip, for a scene to draw; no pane prints it. */
+  readonly extensionMm: number
+  readonly touching: boolean
+  readonly authorised: boolean
+}
 
 /** A movement the model refused, with the part that stopped it named (fidelity contract). */
 export interface SpaceRefusal {
@@ -171,6 +202,8 @@ export interface SpacePaneState {
   readonly clock: { readonly held: boolean }
   /** The lung's step, the one the snapshot names, for a scene to draw (added in slice 11). */
   readonly lungStep: number
+  /** The forceps, when the scenario has them (added in slice 13). */
+  readonly tool?: SpaceToolState
 }
 
 // ── What the pane sends back ─────────────────────────────────────────────────────────────────
@@ -189,6 +222,13 @@ export type SpaceCommand =
   | { readonly kind: 'roll'; readonly direction: 'clockwise' | 'anticlockwise' }
   | { readonly kind: 'step-clock' }
   | { readonly kind: 'retry-geometry' }
+  /** The forceps along the working channel, the telescope held still (added in slice 13). */
+  | { readonly kind: 'tool'; readonly direction: 'extend' | 'retract' }
+  /**
+   * The forceps' jaws opened or closed, the telescope and the forceps held still (added after the
+   * independent review, R8). No dock control sends it yet; it is part of the contact contract.
+   */
+  | { readonly kind: 'jaws'; readonly action: 'open' | 'close' }
 
 export type SpaceInputMode = 'keyboard' | 'pointer' | 'touch' | 'scripted'
 
@@ -197,6 +237,12 @@ export function commandPart(command: SpaceCommand): 'pivot' | 'depth' | 'roll' |
   return command.kind === 'pivot' || command.kind === 'depth' || command.kind === 'roll'
     ? command.kind
     : null
+}
+
+/** The control of the model a command belongs to, or none for the clock and retry (slice 13). */
+export function commandControl(command: SpaceCommand): 'scope' | 'tool' | null {
+  if (command.kind === 'tool' || command.kind === 'jaws') return 'tool'
+  return commandPart(command) === null ? null : 'scope'
 }
 
 export interface SpacePaneProps {

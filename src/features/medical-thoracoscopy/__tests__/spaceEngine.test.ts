@@ -18,6 +18,7 @@ import { anatomyManifest } from '../content/data/generated/anatomy'
 import { PLEURAL_ZONE_IDS } from '../content/pleuralZones'
 import {
   AUTHORISATIONS,
+  JAW_STATES,
   CONTACT_PARTS,
   CONTACT_REGIONS,
   CONTACT_TABLE,
@@ -816,27 +817,34 @@ describe('the tour’s stops', () => {
 // ── Contact, outcomes, snapshot ────────────────────────────────────────────────────────────────
 
 describe('contact', () => {
-  it('has one row for every part, region, phase of the tool and authorisation', () => {
+  it('has one row for every part, region, phase of the tool, state of the jaws and authorisation', () => {
     expect(CONTACT_TABLE).toHaveLength(
-      CONTACT_PARTS.length * CONTACT_REGIONS.length * TOOL_PHASES.length * AUTHORISATIONS.length,
+      CONTACT_PARTS.length *
+        CONTACT_REGIONS.length *
+        TOOL_PHASES.length *
+        JAW_STATES.length *
+        AUTHORISATIONS.length,
     )
     const keys = new Set(
-      CONTACT_TABLE.map((row) => [row.part, row.region, row.phase, row.authorisation].join('|')),
+      CONTACT_TABLE.map((row) =>
+        [row.part, row.region, row.phase, row.jaws, row.authorisation].join('|'),
+      ),
     )
     expect(keys.size).toBe(CONTACT_TABLE.length)
     expect(CONTACT_REGIONS).toEqual([...PLEURAL_ZONE_IDS, 'lung', 'teaching-target'])
   })
 
-  it('lets only the extended working element touch an authorised teaching target', () => {
-    expect(CONTACT_TABLE.filter((row) => row.rule === 'may-touch')).toEqual([
-      {
-        part: 'working-element',
-        region: 'teaching-target',
-        phase: 'extended',
-        authorisation: 'authorised',
-        rule: 'may-touch',
-      },
-    ])
+  it('lets only the extended working element touch, only an authorised region, never the lung (R8)', () => {
+    const touching = CONTACT_TABLE.filter((row) => row.rule === 'may-touch')
+    expect(touching.every((row) => row.part === 'working-element')).toBe(true)
+    expect(touching.every((row) => row.phase === 'extended')).toBe(true)
+    expect(touching.every((row) => row.authorisation === 'authorised')).toBe(true)
+    expect(touching.some((row) => row.region === 'lung')).toBe(false)
+    // every other region can be authorised, the jaws open or closed alike
+    expect(new Set(touching.map((row) => row.region))).toEqual(
+      new Set([...PLEURAL_ZONE_IDS, 'teaching-target']),
+    )
+    expect(touching).toHaveLength((PLEURAL_ZONE_IDS.length + 1) * JAW_STATES.length)
   })
 })
 

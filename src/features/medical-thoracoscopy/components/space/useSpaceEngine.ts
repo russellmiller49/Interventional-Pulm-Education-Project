@@ -17,6 +17,7 @@ import {
   type EngineState,
   type SimulatedAction,
 } from '../../engine/space/spaceReducer'
+import type { TeachingTarget } from '../../engine/space/teachingTarget'
 import { currentReach } from '../../engine/space/zoneReach'
 import { frameClock } from './lungClock'
 import { READINESS_WORDS } from './spaceWords'
@@ -43,6 +44,10 @@ export interface SpaceEngineStart {
   readonly scenario: string
   readonly pose: ScopePose
   readonly lungStep: number
+  /** The forceps in the channel, and whether the target is authorised (the contact spike). */
+  readonly tool?: { readonly authorised: boolean }
+  /** The teaching target's name, which the snapshot's geometry carries (the contact spike). */
+  readonly target?: string
 }
 
 export type SpaceLoader = (signal: AbortSignal) => Promise<LoadedSpace>
@@ -60,20 +65,42 @@ export interface SpaceEngineSession {
   restart(start: SpaceEngineStart): void
 }
 
-/** The packaged proxies, over the network, from the generated anatomy manifest. */
-export const loadPackagedSpace: SpaceLoader = async (signal) => {
-  const fetchBytes = async (id: string) => {
-    const file = anatomyManifest.files.find((entry) => entry.id === id)
-    if (!file) throw new Error(`The anatomy manifest has no ${id}`)
-    const response = await fetch(file.url, { signal })
-    if (!response.ok) throw new Error(`${file.url}: ${response.status}`)
-    return new Uint8Array(await response.arrayBuffer())
+/**
+ * The packaged proxies, over the network, from the generated anatomy manifest, with a teaching
+ * target set in the space if one is given.
+ */
+export function packagedSpaceLoader(
+  options: { readonly target?: TeachingTarget } = {},
+): SpaceLoader {
+  return async (signal) => {
+    const fetchBytes = async (id: string) => {
+      const file = anatomyManifest.files.find((entry) => entry.id === id)
+      if (!file) throw new Error(`The anatomy manifest has no ${id}`)
+      const response = await fetch(file.url, { signal })
+      if (!response.ok) throw new Error(`${file.url}: ${response.status}`)
+      return new Uint8Array(await response.arrayBuffer())
+    }
+    const [space, lung] = await Promise.all([
+      fetchBytes('proxy-pleural-space'),
+      fetchBytes('proxy-lung'),
+    ])
+    return loadSpace(space, lung, options)
   }
-  const [space, lung] = await Promise.all([
-    fetchBytes('proxy-pleural-space'),
-    fetchBytes('proxy-lung'),
-  ])
-  return loadSpace(space, lung)
+}
+
+/** The packaged proxies, as the lessons use them. */
+export const loadPackagedSpace: SpaceLoader = packagedSpaceLoader()
+
+/** What the engine starts from, for a start. */
+function engineStart(start: SpaceEngineStart, reducedMotion: boolean) {
+  return {
+    scenario: start.scenario,
+    lungStep: start.lungStep,
+    pose: start.pose,
+    reducedMotion,
+    snapshot: spaceSnapshot(start.scenario, start.lungStep, start.target, Boolean(start.tool)),
+    ...(start.tool ? { tool: start.tool } : {}),
+  }
 }
 
 type Loaded =
@@ -101,18 +128,9 @@ export function useSpaceEngine(
       (space) => {
         if (!current) return
         const resolver = createResolver(space)
-        const { scenario, pose, lungStep } = begin
         try {
-          setEngine(
-            startEngine(resolver, {
-              scenario,
-              lungStep,
-              pose,
-              // the preference follows below, once the engine exists
-              reducedMotion: true,
-              snapshot: spaceSnapshot(scenario, lungStep),
-            }),
-          )
+          // the motion preference follows below, once the engine exists
+          setEngine(startEngine(resolver, engineStart(begin, true)))
           setLoaded({ kind: 'ready', space, resolver })
         } catch {
           // a start the engine refuses is the scenario's fault, and loading again will not mend it
@@ -196,15 +214,7 @@ export function useSpaceEngine(
   const restart = useCallback(
     (next: SpaceEngineStart) => {
       if (!resolver) return
-      setEngine(
-        startEngine(resolver, {
-          scenario: next.scenario,
-          lungStep: next.lungStep,
-          pose: next.pose,
-          reducedMotion,
-          snapshot: spaceSnapshot(next.scenario, next.lungStep),
-        }),
-      )
+      setEngine(startEngine(resolver, engineStart(next, reducedMotion)))
     },
     [resolver, reducedMotion],
   )
@@ -215,7 +225,7 @@ export function useSpaceEngine(
       return paneStateOf(engine, loaded.space, reach)
     }
     return {
-      snapshot: spaceSnapshot(start.scenario, start.lungStep),
+      snapshot: spaceSnapshot(start.scenario, start.lungStep, start.target, Boolean(start.tool)),
       readiness:
         loaded.kind === 'failed'
           ? { kind: 'unavailable', why: READINESS_WORDS.unavailable, canRetry: loaded.canRetry }
@@ -234,7 +244,7 @@ export function useSpaceEngine(
       crossSection: null,
       clock: { held: false },
     }
-  }, [loaded, engine, reach, start.scenario, start.lungStep, start.pose])
+  }, [loaded, engine, reach, start.scenario, start.lungStep, start.pose, start.target, start.tool])
 
   return {
     paneState,

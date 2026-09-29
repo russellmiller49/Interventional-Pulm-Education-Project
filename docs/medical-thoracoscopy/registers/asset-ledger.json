@@ -440,6 +440,13 @@
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-03c-survey-lesson",
       "compiledIntoPageCode": true
+    },
+    {
+      "path": "src/features/medical-thoracoscopy/content/data/anatomy/tool-contact.json",
+      "what": "Tool contact: the spike's nodule and its two starting places (computed from the proxies)",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "addedIn": "claude/mt-03d-contact-spike",
+      "compiledIntoPageCode": true
     }
   ]
 }

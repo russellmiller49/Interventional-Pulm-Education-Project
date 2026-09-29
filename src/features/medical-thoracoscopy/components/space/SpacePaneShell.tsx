@@ -7,7 +7,7 @@ import { KeyMapHelp } from './KeyMapHelp'
 import styles from './space-pane.module.css'
 import { spaceKeyAction } from './spaceKeyMap'
 import { VIEW_WORDS } from './spaceWords'
-import { commandPart, type SpacePaneProps } from './types'
+import { commandControl, type SpacePaneProps } from './types'
 import { ZoneLedger } from './ZoneLedger'
 
 /**
@@ -23,7 +23,11 @@ export function SpacePaneShell(
 ) {
   const { state, operable, reducedMotion, onCommand, views, note } = props
   const [helpOpen, setHelpOpen] = useState(false)
-  const scopeUsable = state.readiness.kind === 'ready' && operable.includes('scope')
+  const ready = state.readiness.kind === 'ready'
+  const usable = {
+    scope: ready && operable.includes('scope'),
+    tool: ready && operable.includes('tool') && state.tool !== undefined,
+  }
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.altKey || event.metaKey || event.ctrlKey) return
@@ -43,7 +47,8 @@ export function SpacePaneShell(
       onCommand(action, 'keyboard')
       return
     }
-    if (commandPart(action) === null || !scopeUsable) return
+    const control = commandControl(action)
+    if (control === null || !usable[control]) return
     event.preventDefault()
     // Under reduced motion a key held down still moves one step per press.
     if (reducedMotion && event.repeat) return
@@ -71,6 +76,7 @@ export function SpacePaneShell(
         open={helpOpen}
         onToggle={() => setHelpOpen((open) => !open)}
         reducedMotion={reducedMotion}
+        withTool={usable.tool}
       />
     </section>
   )

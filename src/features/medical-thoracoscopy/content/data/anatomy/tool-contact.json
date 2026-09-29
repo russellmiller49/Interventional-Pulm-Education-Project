@@ -1,0 +1,54 @@
+{
+  "record": "medical-thoracoscopy-tool-contact",
+  "version": 1,
+  "script": "scripts/medical-thoracoscopy/build-tool-contact.ts",
+  "statement": "Numbers only: an illustrative nodule for the contact spike, on the costal pleura where the plan puts it or, when the lung lies in front of every line the port allows, on the lung’s surface; and the two positions of the telescope the spike starts from, with the lung fallen away, each checked by running its demonstration through the space engine. Computed from the collision proxies, which are not in the repository.",
+  "label": "Authored construct",
+  "computedFor": {
+    "anatomy": "1fa8ff210d66",
+    "device": "9894b86b08af",
+    "optics": "sleeveBeyondPleuraMm=5;viewRangeMm=200;alongRibsLimitDeg=40",
+    "port": "b93d6e7d31ff+1945bf88138f",
+    "lungAndFluid": "lung step 8",
+    "geometry": "6c4048f8e9ee+9d7a1a5818da",
+    "rules": "step tilt 2 depth 2 roll 5;skin 0.25 piece 0.9 numeric 0.001;port patch 10;lung room 0.5;occlusion 0.001",
+    "tool": "touch 0.3 skin 0.15;step 2 reach 40;open jaws 5.37;table 30ee2fb5dd63"
+  },
+  "lungStep": 8,
+  "nodule": {
+    "on": "lung-surface",
+    "zone": null,
+    "centre": [-104.225, -189.451, -353.693],
+    "radiusMm": 5,
+    "onSurface": [-105.204, -189.266, -353.605],
+    "towardTelescope": [-0.9788, 0.1849, 0.0879]
+  },
+  "costalPleura": {
+    "linesTried": 6623,
+    "linesMeetingTheLungFirst": 6623,
+    "nearestLungFromTheTipMm": 22.4
+  },
+  "places": [
+    {
+      "id": "facing-the-nodule",
+      "pose": { "tiltAcrossRibsDeg": 6.88, "tiltAlongRibsDeg": 3, "depthMm": 9.98, "rollDeg": 0 }
+    },
+    {
+      "id": "beside-the-lung",
+      "pose": {
+        "tiltAcrossRibsDeg": 31.54,
+        "tiltAlongRibsDeg": 9.65,
+        "depthMm": 25.5,
+        "rollDeg": 0
+      }
+    }
+  ],
+  "towardTheLung": "head",
+  "found": {
+    "telescopeStopsAfterSteps": 7,
+    "forcepsTouchAtMm": 7.05,
+    "besideTheLungStoppedBy": "working-element",
+    "besideTheLungPivotSteps": 1,
+    "withoutTheForcepsPivotSteps": 5
+  }
+}

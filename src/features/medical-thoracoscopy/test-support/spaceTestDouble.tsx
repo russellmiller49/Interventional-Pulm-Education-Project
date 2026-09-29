@@ -30,6 +30,7 @@ export const DOUBLE_SNAPSHOT = {
   lungAndFluid: 'double-lung',
   geometry: 'double-geometry',
   rules: 'double-rules',
+  tool: 'none',
 } as const
 
 const TILT_STEP_DEG = 5
@@ -147,6 +148,8 @@ export function createSpaceDouble({
       return state
     }
     if (state.readiness.kind !== 'ready') return state
+    // the double has no forceps' jaws
+    if (command.kind === 'jaws') return state
     const pose = { ...state.pose }
     let refusal: SpacePaneState['refusal'] = null
     if (command.kind === 'pivot') {

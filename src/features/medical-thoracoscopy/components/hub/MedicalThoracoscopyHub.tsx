@@ -1,3 +1,5 @@
+import { Link } from '@/i18n/navigation'
+
 import {
   compositionLine,
   COURSE_AUDIENCE,
@@ -5,6 +7,11 @@ import {
   MODEL_BOUNDARIES,
   practiceScenarios,
 } from '../../content/curriculum'
+import { MEDICAL_THORACOSCOPY_RELEASE_STAGE } from '../../content/release'
+import {
+  MEDICAL_THORACOSCOPY_SPACE_PROTOTYPE_HREF,
+  MEDICAL_THORACOSCOPY_TOOL_CONTACT_PROTOTYPE_HREF,
+} from '../../content/routes'
 import { spineSentence } from '../../content/spine'
 import { ContinueCta } from './ContinueCta'
 import { StoredCourseOutline } from './CourseOutline'
@@ -13,8 +20,13 @@ import styles from './medical-thoracoscopy-hub.module.css'
 
 /**
  * The course's front page: what it covers and for whom, the one door, the outline, what practice
- * and cases there will be, and what the simulation does not show.
+ * and cases there will be, and what the simulation does not show. While the module is in
+ * development, it links the engineering prototypes too, which are outside the course.
  */
+export const PROTOTYPE_LINKS = [
+  { href: MEDICAL_THORACOSCOPY_SPACE_PROTOTYPE_HREF, title: 'The pleural space' },
+  { href: MEDICAL_THORACOSCOPY_TOOL_CONTACT_PROTOTYPE_HREF, title: 'Tool contact' },
+] as const
 export function MedicalThoracoscopyHub() {
   return (
     <div className={styles.hub}>
@@ -45,6 +57,24 @@ export function MedicalThoracoscopyHub() {
         </h2>
         <InPreparationList items={integratedCases} />
       </section>
+      {MEDICAL_THORACOSCOPY_RELEASE_STAGE !== 'published' ? (
+        <section aria-labelledby="prototypes-heading" data-prototypes>
+          <h2 id="prototypes-heading" className={styles.sectionHeading}>
+            Engineering prototypes
+          </h2>
+          <p className={styles.prototypeNote}>
+            While the course is in development, these pages show the model on its own, outside the
+            course. They record nothing, and nothing on them has been clinically reviewed.
+          </p>
+          <ul className={styles.plainList}>
+            {PROTOTYPE_LINKS.map((link) => (
+              <li key={link.href} className={styles.sectionItem}>
+                <Link href={link.href}>{link.title}</Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       <section aria-labelledby="boundaries-heading">
         <h2 id="boundaries-heading" className={styles.sectionHeading}>
           What the simulation does not show

@@ -129,6 +129,27 @@ code; everything that owns a BVH is in `engine/space/spatial/`, and the state is
 See the [space-engine handoff](handoffs/mt-02e-space-engine.md): what the model lets a survey see,
 and the values the engine authors.
 
+## Tool contact
+
+One table of contact (`engine/space/contactPolicy.ts`) serves moving about the space and touching a
+target: every part of the instrument, against every region, in every phase of the tool, authorised
+or not. Only the forceps' jaws may touch, and only an authorised teaching target, with the forceps
+out of the channel; everything else is refused with the part named. `toolChannel.ts` makes the
+forceps into capsules beyond the tip; `spatial/spatialWorld.ts` measures every part against every
+surface under the table's rule, each pair keeping its own skin; `spatial/sweep.ts` moves the
+forceps with the telescope and along the channel. Drawing the telescope out, or the forceps in, is
+never refused by a surface: each passes only through space the instrument already fills.
+
+The engineering prototype at `/medical-thoracoscopy/prototype/tool-contact` shows it with the
+forceps and one illustrative nodule, outside the curriculum and the progress record; the hub links
+it while the module is in development. It is not a biopsy lesson and shows no effect on tissue. The
+nodule and the two places the page starts from come from
+`npx tsx scripts/medical-thoracoscopy/build-tool-contact.ts`, which writes
+`content/data/anatomy/tool-contact.json`; recompute it after any change to the proxies, the port,
+the device or the engine's authored values. With the lung the model has now, the lung lies in front
+of every line the port allows, so the nodule sits on the lung's surface rather than the chest wall.
+See the [contact-spike handoff](handoffs/mt-03d-contact-spike.md).
+
 ## Written sections
 
 A section is data: one file in `src/features/medical-thoracoscopy/content/sections/`, in the shape
