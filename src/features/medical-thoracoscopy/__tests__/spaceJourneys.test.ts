@@ -245,8 +245,8 @@ describe('the real proxies, where the owner’s local data holds them', () => {
     )
     expect(proxies.lung.states.map((s) => s.step)).toEqual(lungStates.states.map((s) => s.step))
     // both files are the ones the lung-states record was built with
-    expect(lungStates.files['lung-states'].sha256).toBe(drawn?.sha256)
-    expect(lungStates.files['proxy-lung'].sha256).toBe(proxy?.sha256)
+    expect(lungStates.files['lung-states']?.sha256).toBe(drawn?.sha256)
+    expect(lungStates.files['proxy-lung']?.sha256).toBe(proxy?.sha256)
     // and the build checked the drawn lung between steps as well as at them
     for (const between of lungStates.between) {
       expect(between).toMatchObject({ foldedFaces: 0, crossingFaces: 0, facesThroughPleura: 0 })
