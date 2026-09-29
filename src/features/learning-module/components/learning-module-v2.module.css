@@ -187,6 +187,33 @@
   color: var(--lm-v2-text);
 }
 
+/*
+ * Sponsorship disclosure. Rendered only when a module passes `sponsorNotice`, and never in
+ * activity mode. It is an `aside` so `[data-activity-frame] > div` rules in module stylesheets
+ * cannot reach it.
+ */
+.sponsorNotice {
+  margin: 0.6rem clamp(1rem, 3vw, 2.5rem) 0;
+  border: 1px solid var(--lm-v2-border);
+  border-radius: 0.9rem;
+  background: var(--lm-v2-panel);
+  padding: 0.7rem 1rem;
+  color: var(--lm-v2-muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.sponsorNotice strong {
+  color: var(--lm-v2-text);
+}
+
+.sponsorNotice a {
+  color: var(--lm-v2-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 .activityShell {
   --lm-v2-surface: hsl(var(--background));
   --lm-v2-panel: hsl(var(--card));
