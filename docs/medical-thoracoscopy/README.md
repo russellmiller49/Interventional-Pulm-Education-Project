@@ -31,6 +31,9 @@ gives the date.
 | [Sponsorship policy](../sponsorship/POLICY.md)          | Draft. Who decides what when a module is sponsored                                                                                          |
 | [Repository baseline](repository-baseline.md)           | Where the build started: commit, packages, policies, file boundaries                                                                        |
 | [Handoffs](handoffs/)                                   | One per slice: what changed, what was checked, what was not                                                                                 |
+| [Prototype gate packet](gate/prototype-gate-packet.md)  | The first round's gate, criterion by criterion: what was shown, how, and what is NOT TESTED or NOT RUN                                      |
+| [Revised forecast](gate/forecast.md)                    | What the first round took, and the forecast from it                                                                                         |
+| [Gate forms](gate/forms/)                               | Blank forms for what the gate leaves to people and devices: device measurements, the fellows' pilot, the Scope view, a screen reader        |
 
 ## Device kit
 
@@ -162,6 +165,18 @@ available section as its lesson (`components/lesson/SectionLesson.tsx`), the par
 the order the section's question sets, with the course, the teaching example and the scope controls
 kept apart. The lesson session (`engine/stageSession.ts`) holds nothing that is stored. See the
 [survey-lesson handoff](handoffs/mt-03c-survey-lesson.md).
+
+## Checks in a real browser
+
+`e2e/medical-thoracoscopy.spec.ts`, against a local server only:
+
+    MT_BASE_URL=http://localhost:3134 npx playwright test -c playwright.medical-thoracoscopy.config.ts
+
+It walks a fresh learner's path, refuses and corrupts storage, reads the canvas's pixels, does the
+survey by keyboard alone, taps, scrolls, reduces motion, takes WebGL away, breaks a file, the decoder
+and the context, checks five layouts, the words a learner reads or hears and axe, drives the contact
+spike, and writes the first measurements to `test-results/medical-thoracoscopy/`. The prototype
+gate's fuzz on the real proxies is `npx tsx scripts/medical-thoracoscopy/fuzz-real-proxies.ts`.
 
 ## Status words
 

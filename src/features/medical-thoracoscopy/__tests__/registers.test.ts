@@ -723,6 +723,18 @@ describe('performance table', () => {
     expect(performance.statement).toMatch(/emulation of a phone or tablet is not a measurement/)
   })
 
+  it('keeps measurements on other machines apart from every target’s result', () => {
+    for (const other of performance.otherMeasurements as {
+      readonly target: string
+      readonly why: string
+      readonly device: string
+    }[]) {
+      expect(other.target).toBe('none')
+      expect(other.why).toMatch(/not the hardware any target names/i)
+      for (const target of performance.targets) expect(other.device).not.toContain(target.hardware)
+    }
+  })
+
   it('accepts a result only with its measurement', () => {
     const copy = JSON.parse(JSON.stringify(performance)) as typeof performance
     copy.results[0] = { target: 'PT-1', result: 'met' }

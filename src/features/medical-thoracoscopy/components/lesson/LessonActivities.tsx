@@ -269,72 +269,76 @@ export function SurveyView({
   const complete = surveyNoteComplete(session, activity.order)
   return (
     <div className={styles.activityWork} data-survey>
-      <table className={styles.surveyTable}>
-        <caption className={styles.subHeading}>{ACTIVITY_WORDS.surveyNote}</caption>
-        <thead>
-          <tr>
-            <th scope="col">{ACTIVITY_WORDS.surveyRegion}</th>
-            <th scope="col">{ACTIVITY_WORDS.surveySeen}</th>
-            <th scope="col">{ACTIVITY_WORDS.surveyWhy}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {activity.order.map((zone) => {
-            const row = note[zone]
-            const name = pleuralZone(zone).name
-            return (
-              <tr key={zone} data-note-zone={zone}>
-                <th scope="row">{name}</th>
-                <td>
-                  <select
-                    aria-label={`${ACTIVITY_WORDS.surveySeen} ${name}`}
-                    value={row.seen ?? ''}
-                    onChange={(event) => {
-                      const seen = (event.target.value || null) as SeenState | null
-                      dispatch({
-                        type: 'survey-note',
-                        zone,
-                        row: { seen, reason: seen === 'seen' ? null : row.reason },
-                      })
-                    }}
-                  >
-                    <option value="">{ACTIVITY_WORDS.surveyChoose}</option>
-                    {SEEN_STATES.map((state) => (
-                      <option key={state} value={state}>
-                        {SEEN_WORDS[state]}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td>
-                  <select
-                    aria-label={`${ACTIVITY_WORDS.surveyWhy} ${name}`}
-                    value={row.reason ?? ''}
-                    disabled={row.seen === 'seen' || row.seen === null}
-                    onChange={(event) =>
-                      dispatch({
-                        type: 'survey-note',
-                        zone,
-                        row: {
-                          seen: row.seen,
-                          reason: (event.target.value || null) as UnseenReason | null,
-                        },
-                      })
-                    }
-                  >
-                    <option value="">{ACTIVITY_WORDS.surveyChoose}</option>
-                    {UNSEEN_REASONS.map((reason) => (
-                      <option key={reason} value={reason}>
-                        {REASON_WORDS[reason]}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+      {/* a table of choices cannot wrap below its choices' width: on a narrow screen it scrolls
+          sideways in its own box, and the page does not */}
+      <div className={styles.tableScroll}>
+        <table className={styles.surveyTable}>
+          <caption className={styles.subHeading}>{ACTIVITY_WORDS.surveyNote}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{ACTIVITY_WORDS.surveyRegion}</th>
+              <th scope="col">{ACTIVITY_WORDS.surveySeen}</th>
+              <th scope="col">{ACTIVITY_WORDS.surveyWhy}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {activity.order.map((zone) => {
+              const row = note[zone]
+              const name = pleuralZone(zone).name
+              return (
+                <tr key={zone} data-note-zone={zone}>
+                  <th scope="row">{name}</th>
+                  <td>
+                    <select
+                      aria-label={`${ACTIVITY_WORDS.surveySeen} ${name}`}
+                      value={row.seen ?? ''}
+                      onChange={(event) => {
+                        const seen = (event.target.value || null) as SeenState | null
+                        dispatch({
+                          type: 'survey-note',
+                          zone,
+                          row: { seen, reason: seen === 'seen' ? null : row.reason },
+                        })
+                      }}
+                    >
+                      <option value="">{ACTIVITY_WORDS.surveyChoose}</option>
+                      {SEEN_STATES.map((state) => (
+                        <option key={state} value={state}>
+                          {SEEN_WORDS[state]}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <select
+                      aria-label={`${ACTIVITY_WORDS.surveyWhy} ${name}`}
+                      value={row.reason ?? ''}
+                      disabled={row.seen === 'seen' || row.seen === null}
+                      onChange={(event) =>
+                        dispatch({
+                          type: 'survey-note',
+                          zone,
+                          row: {
+                            seen: row.seen,
+                            reason: (event.target.value || null) as UnseenReason | null,
+                          },
+                        })
+                      }
+                    >
+                      <option value="">{ACTIVITY_WORDS.surveyChoose}</option>
+                      {UNSEEN_REASONS.map((reason) => (
+                        <option key={reason} value={reason}>
+                          {REASON_WORDS[reason]}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
       <p className={styles.note}>{ACTIVITY_WORDS.surveyKept}</p>
       <div className={styles.questionActions}>
         <button
@@ -356,37 +360,39 @@ export function SurveyView({
         )}
       </div>
       {session.survey.compared && complete ? (
-        <table className={styles.surveyTable} data-survey-comparison>
-          <caption className={styles.subHeading}>{ACTIVITY_WORDS.surveyCompare}</caption>
-          <thead>
-            <tr>
-              <th scope="col">{ACTIVITY_WORDS.surveyRegion}</th>
-              <th scope="col">{ACTIVITY_WORDS.surveyNote}</th>
-              <th scope="col">{ACTIVITY_WORDS.surveyModel}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {activity.order.map((zone) => {
-              const row = note[zone]
-              const model = space.paneState.ledger.find((entry) => entry.zone === zone)
-              return (
-                <tr key={zone}>
-                  <th scope="row">{pleuralZone(zone).name}</th>
-                  <td>
-                    {row.seen
-                      ? ledgerWords({
-                          zone,
-                          seen: row.seen,
-                          reason: row.seen === 'seen' ? null : row.reason,
-                        })
-                      : ''}
-                  </td>
-                  <td>{model ? ledgerWords(model) : ''}</td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+        <div className={styles.tableScroll}>
+          <table className={styles.surveyTable} data-survey-comparison>
+            <caption className={styles.subHeading}>{ACTIVITY_WORDS.surveyCompare}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{ACTIVITY_WORDS.surveyRegion}</th>
+                <th scope="col">{ACTIVITY_WORDS.surveyNote}</th>
+                <th scope="col">{ACTIVITY_WORDS.surveyModel}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activity.order.map((zone) => {
+                const row = note[zone]
+                const model = space.paneState.ledger.find((entry) => entry.zone === zone)
+                return (
+                  <tr key={zone}>
+                    <th scope="row">{pleuralZone(zone).name}</th>
+                    <td>
+                      {row.seen
+                        ? ledgerWords({
+                            zone,
+                            seen: row.seen,
+                            reason: row.seen === 'seen' ? null : row.reason,
+                          })
+                        : ''}
+                    </td>
+                    <td>{model ? ledgerWords(model) : ''}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       ) : null}
       {session.survey.compared && complete ? (
         <p className={styles.note}>{LEDGER_WORDS.caption}</p>

@@ -59,7 +59,8 @@
         "src/features/medical-thoracoscopy/__tests__/surveyContent.test.ts",
         "src/features/medical-thoracoscopy/__tests__/sectionLesson.test.tsx",
         "src/features/medical-thoracoscopy/__tests__/stageSession.test.ts",
-        "src/features/medical-thoracoscopy/__tests__/spaceScenePane.test.tsx"
+        "src/features/medical-thoracoscopy/__tests__/spaceScenePane.test.tsx",
+        "e2e/medical-thoracoscopy.spec.ts"
       ],
       "reviewDecisions": [],
       "releaseEvidence": [],
@@ -110,7 +111,8 @@
         "src/features/medical-thoracoscopy/__tests__/surveyContent.test.ts",
         "src/features/medical-thoracoscopy/__tests__/sectionLesson.test.tsx",
         "src/features/medical-thoracoscopy/__tests__/stageSession.test.ts",
-        "src/features/medical-thoracoscopy/__tests__/spaceScenePane.test.tsx"
+        "src/features/medical-thoracoscopy/__tests__/spaceScenePane.test.tsx",
+        "e2e/medical-thoracoscopy.spec.ts"
       ],
       "reviewDecisions": [],
       "releaseEvidence": [],
@@ -164,7 +166,8 @@
         "src/features/medical-thoracoscopy/__tests__/surveyContent.test.ts",
         "src/features/medical-thoracoscopy/__tests__/sectionLesson.test.tsx",
         "src/features/medical-thoracoscopy/__tests__/stageSession.test.ts",
-        "src/features/medical-thoracoscopy/__tests__/spaceScenePane.test.tsx"
+        "src/features/medical-thoracoscopy/__tests__/spaceScenePane.test.tsx",
+        "e2e/medical-thoracoscopy.spec.ts"
       ],
       "reviewDecisions": [],
       "releaseEvidence": [],
@@ -194,7 +197,8 @@
         "src/features/medical-thoracoscopy/__tests__/spaceContact.test.ts",
         "src/features/medical-thoracoscopy/__tests__/toolContactPrototype.test.tsx",
         "src/features/medical-thoracoscopy/__tests__/spacePane.test.tsx",
-        "src/app/[locale]/medical-thoracoscopy/prototype/tool-contact/page.test.tsx"
+        "src/app/[locale]/medical-thoracoscopy/prototype/tool-contact/page.test.tsx",
+        "e2e/medical-thoracoscopy.spec.ts"
       ],
       "reviewDecisions": [],
       "releaseEvidence": [],

@@ -86,7 +86,11 @@
       "result": "NOT TESTED",
       "reason": "No M1 or Iris Xe laptop has been used."
     },
-    { "target": "PT-2", "result": "NOT TESTED", "reason": "No A14 iPad has been used." },
+    {
+      "target": "PT-2",
+      "result": "NOT TESTED",
+      "reason": "No A14 iPad has been used."
+    },
     {
       "target": "PT-3",
       "result": "NOT TESTED",
@@ -97,7 +101,245 @@
       "result": "NOT TESTED",
       "reason": "Hardware and network profile are unresolved."
     },
-    { "target": "PT-5", "result": "NOT TESTED", "reason": "Hardware is unresolved." }
+    {
+      "target": "PT-5",
+      "result": "NOT TESTED",
+      "reason": "Hardware is unresolved."
+    }
   ],
-  "otherMeasurements": []
+  "otherMeasurements": [
+    {
+      "id": "OM-1",
+      "date": "2026-09-28",
+      "ranBy": "AI authoring assistant (Claude), with Playwright, at the owner's request",
+      "device": "MacBook Pro (Mac17,6), Apple M5 Max, 18 cores, 128 GB",
+      "operatingSystem": "macOS 27.2",
+      "browser": "Playwright chromium 151.0.7922.34, headless; the Desktop Chrome device preset (its user agent names Windows)",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "rendererNote": "Chromium asked for Metal (--use-angle=metal): drawn on this machine's graphics processor.",
+      "viewport": "1440 × 900, device pixel ratio 1",
+      "quality": "the default; the prototype has no quality setting yet",
+      "server": "next dev on this machine (localhost:3134): scripts unminified and compiled on demand, so the script bytes and the loading times are the development server's, not a production build's",
+      "cache": "cold: a new browser context; warm: the same page reloaded, the HTTP cache on",
+      "commit": "e74c8067814854cc555142713807bb71d7855f54",
+      "assetManifestSha256": "dccb18fb7861486b3d4214a474f33012143ac85c062c50b274387fdae4323695",
+      "scene": "The space prototype, both views drawing, roll held for five seconds",
+      "frames": {
+        "count": 603,
+        "medianMs": 8.3,
+        "p95Ms": 9.7,
+        "p99Ms": 10.3,
+        "worstMs": 16.8,
+        "durationSeconds": 5,
+        "note": "Intervals between animation frames while the control was held; the demand-drawn scene redraws on every step. The median sits at the browser's frame cadence."
+      },
+      "commandTurn": {
+        "scene": "The space prototype: a roll key on the pane until the scope camera has turned, forty times",
+        "count": 40,
+        "medianMs": 10.1,
+        "p95Ms": 11.1,
+        "worstMs": 11.7,
+        "note": "From the key to the scope camera standing where the engine put it: the engine's step and view, and the render. Not PT-5's visibility update alone."
+      },
+      "loads": {
+        "spacePrototype": [
+          {
+            "cache": "cold",
+            "controlsReadyMs": 1022,
+            "sceneDrawnMs": 1672,
+            "transferBytes": 12184227,
+            "anatomyTransferBytes": 2073538,
+            "scriptTransferBytes": 9767933,
+            "memoryAfterLoadBytes": 239000000
+          },
+          {
+            "cache": "warm",
+            "controlsReadyMs": 748,
+            "sceneDrawnMs": 1554,
+            "transferBytes": 3078721,
+            "anatomyTransferBytes": 0,
+            "scriptTransferBytes": 2838751,
+            "memoryAfterLoadBytes": 239000000
+          }
+        ],
+        "toolContact": [
+          {
+            "cache": "cold",
+            "controlsReadyMs": 1027,
+            "sceneDrawnMs": 1674,
+            "transferBytes": 12207574,
+            "anatomyTransferBytes": 2073538,
+            "scriptTransferBytes": 9790298,
+            "memoryAfterLoadBytes": 239000000
+          },
+          {
+            "cache": "warm",
+            "controlsReadyMs": 743,
+            "sceneDrawnMs": 1560,
+            "transferBytes": 3079701,
+            "anatomyTransferBytes": 0,
+            "scriptTransferBytes": 2838751,
+            "memoryAfterLoadBytes": 239000000
+          }
+        ]
+      },
+      "memoryNote": "memoryAfterLoadBytes is Chromium's performance.memory, which it rounds; an approximation.",
+      "target": "none",
+      "why": "Not the hardware any target names (PT-1 names an M1 or Iris Xe laptop, PT-2 an A14 iPad), and not a production build; no target's result changes. The first measurements on the machine the module is built on."
+    },
+    {
+      "id": "OM-2",
+      "date": "2026-09-28",
+      "ranBy": "AI authoring assistant (Claude), with Playwright, at the owner's request",
+      "device": "MacBook Pro (Mac17,6), Apple M5 Max, 18 cores, 128 GB",
+      "operatingSystem": "macOS 27.2",
+      "browser": "Playwright chromium 151.0.7922.34, headless; the Desktop Chrome device preset (its user agent names Windows)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "rendererNote": "Chromium's default when headless: SwiftShader, drawn on the processor, not the graphics processor.",
+      "viewport": "1440 × 900, device pixel ratio 1",
+      "quality": "the default; the prototype has no quality setting yet",
+      "server": "next dev on this machine (localhost:3134): scripts unminified and compiled on demand, so the script bytes and the loading times are the development server's, not a production build's",
+      "cache": "both loads effectively cold: routing a request turned Playwright's HTTP cache off",
+      "commit": "e74c8067814854cc555142713807bb71d7855f54",
+      "assetManifestSha256": "dccb18fb7861486b3d4214a474f33012143ac85c062c50b274387fdae4323695",
+      "scene": "The space prototype, both views drawing, roll held for five seconds",
+      "frames": {
+        "count": 601,
+        "medianMs": 8.3,
+        "p95Ms": 9.9,
+        "p99Ms": 10.3,
+        "worstMs": 66.7,
+        "durationSeconds": 5,
+        "note": "Intervals between animation frames while the control was held; the demand-drawn scene redraws on every step. The median sits at the browser's frame cadence."
+      },
+      "commandTurn": {
+        "scene": "The space prototype: a roll key on the pane until the scope camera has turned, forty times",
+        "count": 40,
+        "medianMs": 12.3,
+        "p95Ms": 15.5,
+        "worstMs": 17.7,
+        "note": "From the key to the scope camera standing where the engine put it: the engine's step and view, and the render. Not PT-5's visibility update alone."
+      },
+      "loads": {
+        "spacePrototype": [
+          {
+            "cache": "cold",
+            "controlsReadyMs": 1106,
+            "sceneDrawnMs": 2336,
+            "transferBytes": 12198209,
+            "anatomyTransferBytes": 2073538,
+            "scriptTransferBytes": 9767933,
+            "memoryAfterLoadBytes": 239000000
+          },
+          {
+            "cache": "warm",
+            "controlsReadyMs": 1030,
+            "sceneDrawnMs": 2224,
+            "transferBytes": 12198210,
+            "anatomyTransferBytes": 2073538,
+            "scriptTransferBytes": 9767933,
+            "memoryAfterLoadBytes": 239000000
+          }
+        ],
+        "toolContact": [
+          {
+            "cache": "cold",
+            "controlsReadyMs": 1109,
+            "sceneDrawnMs": 2358,
+            "transferBytes": 12221557,
+            "anatomyTransferBytes": 2073538,
+            "scriptTransferBytes": 9790298,
+            "memoryAfterLoadBytes": 239000000
+          },
+          {
+            "cache": "warm",
+            "controlsReadyMs": 1039,
+            "sceneDrawnMs": 2237,
+            "transferBytes": 12207574,
+            "anatomyTransferBytes": 2073538,
+            "scriptTransferBytes": 9790298,
+            "memoryAfterLoadBytes": 239000000
+          }
+        ]
+      },
+      "memoryNote": "memoryAfterLoadBytes is Chromium's performance.memory, which it rounds; an approximation.",
+      "target": "none",
+      "why": "Not the hardware any target names (PT-1 names an M1 or Iris Xe laptop, PT-2 an A14 iPad), and not a production build; no target's result changes. The first measurements on the machine the module is built on."
+    },
+    {
+      "id": "OM-3",
+      "date": "2026-09-28",
+      "ranBy": "AI authoring assistant (Claude), with Playwright, at the owner's request",
+      "device": "MacBook Pro (Mac17,6), Apple M5 Max, 18 cores, 128 GB",
+      "operatingSystem": "macOS 27.2",
+      "browser": "Playwright chromium 151.0.7922.34, headless; the Desktop Chrome device preset (its user agent names Windows)",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "rendererNote": "Chromium asked for Metal (--use-angle=metal): drawn on this machine's graphics processor.",
+      "viewport": "1440 × 900, device pixel ratio 1",
+      "quality": "the default; the prototype has no quality setting yet",
+      "server": "next start on this machine (localhost:3136): this branch's production build, minified and compressed, with the anatomy served from public/, the same files a deployment would serve from the module asset host. No network in between, so no network profile applies",
+      "cache": "cold: a new browser context; warm: the same page reloaded, the HTTP cache on",
+      "commit": "e74c8067814854cc555142713807bb71d7855f54",
+      "assetManifestSha256": "dccb18fb7861486b3d4214a474f33012143ac85c062c50b274387fdae4323695",
+      "scene": "The space prototype, both views drawing, roll held for five seconds",
+      "frames": {
+        "count": 603,
+        "medianMs": 8.3,
+        "p95Ms": 9.6,
+        "p99Ms": 10.3,
+        "worstMs": 16.7,
+        "durationSeconds": 5,
+        "note": "Intervals between animation frames while the control was held; the demand-drawn scene redraws on every step. The median sits at the browser's frame cadence."
+      },
+      "commandTurn": {
+        "note": "Not measured: a production build has no development probe to read the scope camera from."
+      },
+      "loads": {
+        "spacePrototype": [
+          {
+            "cache": "cold",
+            "controlsReadyMs": 375,
+            "sceneDrawnMs": 869,
+            "transferBytes": 3651123,
+            "anatomyTransferBytes": 2073538,
+            "scriptTransferBytes": 1221579,
+            "memoryAfterLoadBytes": 53500000
+          },
+          {
+            "cache": "warm",
+            "controlsReadyMs": 238,
+            "sceneDrawnMs": 1051,
+            "transferBytes": 253222,
+            "anatomyTransferBytes": 0,
+            "scriptTransferBytes": 0,
+            "memoryAfterLoadBytes": 53500000
+          }
+        ],
+        "toolContact": [
+          {
+            "cache": "cold",
+            "controlsReadyMs": 370,
+            "sceneDrawnMs": 862,
+            "transferBytes": 3654757,
+            "anatomyTransferBytes": 2073538,
+            "scriptTransferBytes": 1224211,
+            "memoryAfterLoadBytes": 53500000
+          },
+          {
+            "cache": "warm",
+            "controlsReadyMs": 236,
+            "sceneDrawnMs": 1043,
+            "transferBytes": 245098,
+            "anatomyTransferBytes": 0,
+            "scriptTransferBytes": 0,
+            "memoryAfterLoadBytes": 53500000
+          }
+        ]
+      },
+      "memoryNote": "memoryAfterLoadBytes is Chromium's performance.memory, which it rounds; an approximation.",
+      "target": "none",
+      "why": "Not the hardware any target names (PT-1 names an M1 or Iris Xe laptop, PT-2 an A14 iPad), and not a production build; no target's result changes. The first measurements on the machine the module is built on.",
+      "payload": "The cold load's transfer, every request of the page included: 3,651,123 bytes for the space prototype and 3,654,757 for the tool-contact prototype, of which the anatomy is 2,073,538 and the scripts about 1.22 MB."
+    }
+  ]
 }
