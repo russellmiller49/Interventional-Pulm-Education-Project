@@ -582,6 +582,7 @@ const snapshotPartsSchema = z
     port: z.string().min(1),
     lungAndFluid: z.string().min(1),
     geometry: z.string().min(1),
+    rules: z.string().min(1),
   })
   .strict()
 

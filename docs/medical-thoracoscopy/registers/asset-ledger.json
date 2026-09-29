@@ -433,6 +433,13 @@
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-02e-space-engine",
       "compiledIntoPageCode": true
+    },
+    {
+      "path": "src/features/medical-thoracoscopy/content/data/anatomy/tour-stops.json",
+      "what": "Tour stops: for each survey region, the position that shows the most of it (computed from the proxies)",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "addedIn": "claude/mt-03c-survey-lesson",
+      "compiledIntoPageCode": true
     }
   ]
 }

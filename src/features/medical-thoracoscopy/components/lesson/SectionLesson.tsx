@@ -16,6 +16,7 @@ import { teachingExample } from '../../content/teachingExamples'
 import type { ThoracoscopySectionSpec } from '../../content/types'
 import { recordLocation, setSectionReviewed } from '../../engine/selfPacedProgress'
 import { exampleStart } from '../../engine/space/exampleStarts'
+import { outcomeStanding } from '../../engine/space/outcomes'
 import {
   lessonReducer,
   partDone,
@@ -32,6 +33,13 @@ import { PivotView, SurveyView, TourView } from './LessonActivities'
 import { QuestionView } from './QuestionView'
 import styles from './lesson.module.css'
 import { LESSON_WORDS, partTitle } from './lessonWords'
+
+/**
+ * Owner decision OD-11: while the lung-change claim awaits clinical review, the lung's fallen-away
+ * state in a lesson is an authored teaching state loaded with the space, and says so wherever the
+ * space is used, never the learner's own physiological consequence.
+ */
+const lungIsAuthored = outcomeStanding('lung-falls-away').kind === 'authored-awaiting-review'
 
 /**
  * One written section, as a lesson in document flow (plan, section 4.2, "Lesson host"). The parts
@@ -355,6 +363,9 @@ function PartBody({
           <h3 className={styles.subHeading}>{example.title}</h3>
           <p>{example.loaded}</p>
           <p>{example.notPerformed}</p>
+          {example.state.lung === 'fallen-away' && lungIsAuthored ? (
+            <p data-lung-authored>{LESSON_WORDS.lungAuthored}</p>
+          ) : null}
           <p className={styles.listLabel}>{LESSON_WORDS.exampleTaughtIn}</p>
           <ul>
             {example.stepsTaughtIn.map((id) => {
@@ -519,6 +530,11 @@ function ActivityPart({
   return (
     <div className={styles.activity} data-activity={activity.kind}>
       <p className={styles.prompt}>{activity.prompt}</p>
+      {lungIsAuthored ? (
+        <p className={styles.note} data-lung-authored>
+          {LESSON_WORDS.lungAuthored}
+        </p>
+      ) : null}
       {activity.kind === 'tour' ? (
         <TourView activity={activity} session={session} dispatch={dispatch} space={space} />
       ) : activity.kind === 'pivot' ? (

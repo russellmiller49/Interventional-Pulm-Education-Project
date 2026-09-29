@@ -74,6 +74,15 @@ assertThoracoscopyCopy(
 
 const ready = (space: SpaceEngineSession) => space.paneState.readiness.kind === 'ready'
 
+/**
+ * The states the learner notes, as section 11 teaches them: seen, partly seen or not seen. The
+ * model's own estimate adds "seen as far as this model reaches" (OD-16), which the comparison
+ * shows beside the learner's note; the section's words are not changed here.
+ */
+const NOTE_SEEN_STATES = SEEN_STATES.filter(
+  (state): state is Exclude<SeenState, 'seen-to-reach'> => state !== 'seen-to-reach',
+)
+
 export function TourView({
   activity,
   session,
@@ -299,7 +308,7 @@ export function SurveyView({
                     }}
                   >
                     <option value="">{ACTIVITY_WORDS.surveyChoose}</option>
-                    {SEEN_STATES.map((state) => (
+                    {NOTE_SEEN_STATES.map((state) => (
                       <option key={state} value={state}>
                         {SEEN_WORDS[state]}
                       </option>

@@ -169,7 +169,10 @@ describe('the lesson host', () => {
     expect(within(example).getByText(words.label)).toBeInTheDocument()
     expect(within(example).getByText(words.notPerformed)).toBeInTheDocument()
     expect(within(example).getByRole('group', { name: 'Teaching example' })).toBeInTheDocument()
-    await reachPart('activity')
+    // OD-11: the lung's state is an authored teaching state, said with the example and with the space
+    expect(within(example).getByText(LESSON_WORDS.lungAuthored)).toBeInTheDocument()
+    const activity = await reachPart('activity')
+    expect(within(activity).getByText(LESSON_WORDS.lungAuthored)).toBeInTheDocument()
     await spaceReady()
     act(() => {
       for (let n = 0; n < 12; n += 1) fireEvent.keyDown(pane(), { key: 'ArrowUp' })
@@ -283,6 +286,14 @@ describe('the lesson host', () => {
     })) {
       fireEvent.change(select, { target: { value: 'not-looked-at' } })
     }
+    // the note offers the three states the section teaches; the model's estimate may say more
+    const firstNote = within(activity).getAllByRole('combobox', { name: /^Seen\?/ })[0]
+    expect(
+      within(firstNote)
+        .getAllByRole('option')
+        .map((option) => (option as HTMLOptionElement).value)
+        .filter(Boolean),
+    ).toEqual(['seen', 'partly-seen', 'not-seen'])
     fireEvent.click(compare)
     expect(activity.querySelector('[data-survey-comparison]')).not.toBeNull()
     expect(window.localStorage.getItem(THORACOSCOPY_PROGRESS_STORAGE_KEY)).not.toMatch(
