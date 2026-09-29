@@ -99,6 +99,29 @@ describe('course hub', () => {
     expect(within(boundaries).getAllByRole('listitem')).toHaveLength(6)
   })
 
+  it('links the engineering prototypes while the module is in development, outside the course', () => {
+    const { container } = render(<MedicalThoracoscopyHub />)
+    const prototypes = container.querySelector('[data-prototypes]') as HTMLElement
+
+    expect(within(prototypes).getByRole('heading', { level: 2 })).toHaveTextContent(
+      'Engineering prototypes',
+    )
+    expect(
+      within(prototypes)
+        .getAllByRole('link')
+        .map((link) => link.getAttribute('href')),
+    ).toEqual([
+      '/medical-thoracoscopy/prototype/space',
+      '/medical-thoracoscopy/prototype/tool-contact',
+    ])
+    // neither is a section of the course, nor its door
+    const outline = container.querySelector('[data-course-outline]') as HTMLElement
+    expect(outline.querySelector('a[href*="prototype"]')).toBeNull()
+    expect(container.querySelector('[data-continue]')?.getAttribute('href')).not.toMatch(
+      /prototype/,
+    )
+  })
+
   it('writes nothing to storage by being opened', () => {
     render(<MedicalThoracoscopyHub />)
 

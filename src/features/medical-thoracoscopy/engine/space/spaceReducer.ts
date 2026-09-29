@@ -7,9 +7,10 @@ import {
 } from '../../components/space/types'
 import type { PleuralZoneId } from '../../content/pleuralZones'
 import { addView, emptyCoverage, zonesInView, type Coverage } from './coverage'
-import type { SpaceResolver } from './loadSpace'
+import type { SpaceResolver, ToolInHand } from './loadSpace'
 import { CLEARANCE_SKIN_MM } from './spatial/spatialWorld'
 import type { Limit } from './spatial/sweep'
+import { TOOL_IN_CHANNEL } from './toolChannel'
 
 /**
  * The space engine's state and the one reducer that changes it (plan, section 4.5). The state is
@@ -27,14 +28,29 @@ import type { Limit } from './spatial/sweep'
  * next moves, going on from then at the same pace. Under reduced motion the lung waits for Step.
  * Every event is stamped with the time it was due, not the time a tick happened to reach it, so
  * whatever the ticks, the same actions at the same times give the same events.
+ *
+ * A scenario may put the forceps in the working channel (the contact spike, slice 13). They move with
+ * the telescope and along the channel, and meet the contact table: only their jaws may touch, and
+ * only an authorised teaching target, with the forceps out. In the channel they change nothing: the
+ * telescope moves exactly as it does with no tool.
  */
 export const LUNG_STEP_MS = 400
 export const LUNG_ROOM_MM = 0.5
 
 export interface EngineEvent {
   readonly atMs: number
-  readonly kind: 'moved' | 'stopped' | 'lung-moved' | 'lung-held' | 'lung-waits'
+  readonly kind: 'moved' | 'stopped' | 'lung-moved' | 'lung-held' | 'lung-waits' | 'tool-moved'
   readonly detail: string
+}
+
+/** The forceps, for a scenario that has them. */
+export interface EngineTool {
+  readonly phase: 'in-channel' | 'extended'
+  readonly extensionMm: number
+  /** Whether the scenario's teaching target is one the jaws may touch. */
+  readonly authorised: boolean
+  /** The jaws are within touching distance of the target. */
+  readonly touching: boolean
 }
 
 export interface EngineState {
@@ -52,6 +68,8 @@ export interface EngineState {
   readonly inView: readonly PleuralZoneId[]
   readonly limit: Limit | null
   readonly events: readonly EngineEvent[]
+  /** The forceps in the channel, when the scenario has them. */
+  readonly tool?: EngineTool
 }
 
 export interface NavigationAction {
@@ -83,7 +101,10 @@ export function isSimulatedAction(action: { readonly type: string }): action is 
   return SIMULATED.has(action.type)
 }
 
-/** A new state for a scenario: the lung at a step, the telescope at a pose that must be clear. */
+/**
+ * A new state for a scenario: the lung at a step, the telescope at a pose that must be clear, and,
+ * if the scenario has them, the forceps in the channel.
+ */
 export function startEngine(
   resolver: SpaceResolver,
   {
@@ -92,12 +113,14 @@ export function startEngine(
     pose,
     reducedMotion,
     snapshot,
+    tool,
   }: {
     readonly scenario: string
     readonly lungStep: number
     readonly pose: ScopePose
     readonly reducedMotion: boolean
     readonly snapshot: SpaceSnapshotId
+    readonly tool?: { readonly authorised: boolean }
   },
 ): EngineState {
   const problem = resolver.startProblem(pose, lungStep)
@@ -118,6 +141,24 @@ export function startEngine(
     inView: zonesInView(view, resolver.samples),
     limit: null,
     events: [],
+    ...(tool
+      ? {
+          tool: {
+            phase: TOOL_IN_CHANNEL.phase,
+            extensionMm: TOOL_IN_CHANNEL.extensionMm,
+            authorised: tool.authorised,
+            touching: false,
+          } as EngineTool,
+        }
+      : {}),
+  }
+}
+
+/** The forceps as the resolver takes them. */
+export function toolInHand(tool: EngineTool): ToolInHand {
+  return {
+    state: { phase: tool.phase, extensionMm: tool.extensionMm },
+    authorised: tool.authorised,
   }
 }
 
@@ -144,7 +185,8 @@ function moveLung(state: EngineState, resolver: SpaceResolver, atMs: number): En
   if (state.lungStep === state.lungTarget)
     return { ...state, nextLungMoveAtMs: null, clockHeld: false }
   const next = state.lungStep + Math.sign(state.lungTarget - state.lungStep)
-  if (resolver.lungClearance(state.pose, next) < CLEARANCE_SKIN_MM + LUNG_ROOM_MM) {
+  const tool = state.tool ? toolInHand(state.tool) : undefined
+  if (resolver.lungClearance(state.pose, next, tool) < CLEARANCE_SKIN_MM + LUNG_ROOM_MM) {
     return state.lungHeld
       ? state
       : event({ ...state, lungHeld: true }, atMs, 'lung-held', `step ${state.lungStep}`)
@@ -242,13 +284,48 @@ export function reduce(
           ? moveLung(state, resolver, state.clockMs)
           : state
       }
-      const result = resolver.step(state.pose, command, state.lungStep)
+      if (command.kind === 'tool') {
+        if (!state.tool) return state
+        const moved = resolver.toolStep(
+          state.pose,
+          command.direction,
+          state.lungStep,
+          toolInHand(state.tool),
+        )
+        const reached = moved.tool ?? toolInHand(state.tool).state
+        let next: EngineState = {
+          ...state,
+          limit: moved.limit,
+          tool: {
+            ...state.tool,
+            phase: reached.phase === 'extended' ? 'extended' : 'in-channel',
+            extensionMm: reached.extensionMm,
+            touching: moved.touching ?? false,
+          },
+        }
+        if (reached.extensionMm !== state.tool.extensionMm)
+          next = event(next, state.clockMs, 'tool-moved', command.direction)
+        if (moved.limit)
+          next = event(next, state.clockMs, 'stopped', `${moved.limit.part} ${moved.limit.kind}`)
+        return next
+      }
+      const result = resolver.step(
+        state.pose,
+        command,
+        state.lungStep,
+        state.tool ? toolInHand(state.tool) : undefined,
+      )
       const movedPose =
         result.pose.depthMm !== state.pose.depthMm ||
         result.pose.tiltAcrossRibsDeg !== state.pose.tiltAcrossRibsDeg ||
         result.pose.tiltAlongRibsDeg !== state.pose.tiltAlongRibsDeg ||
         result.pose.rollDeg !== state.pose.rollDeg
-      let next: EngineState = { ...state, pose: result.pose, limit: result.limit }
+      let next: EngineState = {
+        ...state,
+        pose: result.pose,
+        limit: result.limit,
+        ...(state.tool ? { tool: { ...state.tool, touching: result.touching ?? false } } : {}),
+      }
       if (movedPose) next = event(withView(next, resolver), state.clockMs, 'moved', command.kind)
       if (result.limit)
         next = event(next, state.clockMs, 'stopped', `${result.limit.part} ${result.limit.kind}`)

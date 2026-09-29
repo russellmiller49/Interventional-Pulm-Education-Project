@@ -161,6 +161,13 @@
   line-height: 1.6;
 }
 
+.prototypeNote {
+  max-width: 44rem;
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
 .note {
   padding: 0.85rem 1.1rem;
   border: 1px solid var(--line);

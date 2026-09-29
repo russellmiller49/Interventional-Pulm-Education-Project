@@ -54,6 +54,17 @@ export const ROLL_WORDS = {
   anticlockwise: 'Turn anticlockwise',
 } as const
 
+/** The forceps in the working channel (slice 13). */
+export const TOOL_WORDS = {
+  partName: 'Forceps',
+  extend: 'Forceps out',
+  retract: 'Forceps back in',
+  note: 'They move along the channel; the telescope stays where it is.',
+  inChannel: 'The forceps are in the channel.',
+  extended: 'The forceps are out beyond the tip.',
+  touching: 'The jaws are touching the nodule.',
+} as const
+
 export const DOCK_WORDS = {
   pivotNote: 'The tip swings the other way.',
   rollNote: 'As you look down the telescope.',
@@ -82,6 +93,9 @@ export const VIEW_WORDS = {
   lung: 'Lung',
   port: 'Port',
   refusedPrefix: 'Stopped:',
+  nodule: 'Nodule',
+  forcepsShaft: 'Forceps',
+  forcepsJaws: 'Forceps’ jaws',
 } as const
 
 /** While the anatomy loads or cannot be had. */
@@ -126,6 +140,8 @@ export function commandWords(command: SpaceCommand): string {
       return 'Step the waiting model on'
     case 'retry-geometry':
       return DOCK_WORDS.retry
+    case 'tool':
+      return `${TOOL_WORDS.partName}: ${command.direction === 'extend' ? 'out' : 'back in'}`
   }
 }
 
@@ -185,6 +201,16 @@ function validate(): void {
     ...Object.entries(KEY_WORDS).map(([key, text]) => ({
       where: `keys ${key}`,
       text,
+      options: label,
+    })),
+    ...Object.entries(TOOL_WORDS).map(([key, text]) => ({
+      where: `tool ${key}`,
+      text,
+      options: label,
+    })),
+    ...(['extend', 'retract'] as const).map((direction) => ({
+      where: `tool command ${direction}`,
+      text: commandWords({ kind: 'tool', direction }),
       options: label,
     })),
     { where: 'taught in', text: taughtInWords('Four controls'), options: label },

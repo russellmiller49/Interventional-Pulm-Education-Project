@@ -19,6 +19,7 @@ let lastCut: {
   readonly space: LoadedSpace
   readonly pose: ScopePose
   readonly lungStep: number
+  readonly toolMm: number | null
   readonly cut: CrossSection
 } | null = null
 let lastLedger: {
@@ -28,17 +29,29 @@ let lastLedger: {
   readonly ledger: ZoneLedger
 } | null = null
 
-function cutOf(space: LoadedSpace, pose: ScopePose, lungStep: number): CrossSection {
+function cutOf(
+  space: LoadedSpace,
+  pose: ScopePose,
+  lungStep: number,
+  tool: EngineState['tool'],
+): CrossSection {
+  const toolMm = tool && tool.phase === 'extended' ? tool.extensionMm : null
   if (
     lastCut &&
     lastCut.space === space &&
     lastCut.pose === pose &&
-    lastCut.lungStep === lungStep
+    lastCut.lungStep === lungStep &&
+    lastCut.toolMm === toolMm
   ) {
     return lastCut.cut
   }
-  const cut = crossSectionOf(space, pose, lungStep)
-  lastCut = { space, pose, lungStep, cut }
+  const cut = crossSectionOf(
+    space,
+    pose,
+    lungStep,
+    tool ? { phase: tool.phase, extensionMm: tool.extensionMm } : undefined,
+  )
+  lastCut = { space, pose, lungStep, toolMm, cut }
   return cut
 }
 
@@ -77,9 +90,20 @@ export function paneStateOf(
     pose: state.pose,
     inView: state.inView,
     ledger: ledgerOf(state.coverage, space, reach),
-    refusal: refusalOf(state.limit, state.lungHeld, wallZone),
-    crossSection: readiness.kind === 'ready' ? cutOf(space, state.pose, state.lungStep) : null,
+    refusal: refusalOf(state.limit, state.lungHeld, wallZone, state.tool?.touching ?? false),
+    crossSection:
+      readiness.kind === 'ready' ? cutOf(space, state.pose, state.lungStep, state.tool) : null,
     clock: { held: state.clockHeld },
     lungStep: state.lungStep,
+    ...(state.tool
+      ? {
+          tool: {
+            phase: state.tool.phase,
+            extensionMm: state.tool.extensionMm,
+            touching: state.tool.touching,
+            authorised: state.tool.authorised,
+          },
+        }
+      : {}),
   }
 }

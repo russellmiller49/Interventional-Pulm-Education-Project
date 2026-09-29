@@ -8,9 +8,11 @@ import rawProxies from './data/anatomy/proxies.json'
 import rawRibs from './data/anatomy/ribs.json'
 import rawAudit from './data/anatomy/source-audit.json'
 import rawSurfaces from './data/anatomy/surfaces.json'
+import rawToolContact from './data/anatomy/tool-contact.json'
 import rawTourStops from './data/anatomy/tour-stops.json'
 import rawZoneReach from './data/anatomy/zone-reach.json'
 import rawZoneSamples from './data/anatomy/zone-samples.json'
+import { PIVOT_HAND_DIRECTIONS } from '../components/space/types'
 import { PLEURAL_ZONE_IDS } from './pleuralZones'
 
 /**
@@ -616,6 +618,79 @@ export const tourStopsSchema = z
   })
   .strict()
 
+const poseSchema = z
+  .object({
+    tiltAcrossRibsDeg: z.number(),
+    tiltAlongRibsDeg: z.number(),
+    depthMm: z.number().positive(),
+    rollDeg: z.number(),
+  })
+  .strict()
+
+/**
+ * The contact spike's nodule and the two places it starts from (slice 13), computed by the space
+ * engine, with what the script found when it tried each demonstration there.
+ */
+export const toolContactSchema = z
+  .object({
+    record: z.literal('medical-thoracoscopy-tool-contact'),
+    version: z.number().int().positive(),
+    script: z.string().min(1),
+    statement: z.string().min(1),
+    label: z.literal('Authored construct'),
+    computedFor: snapshotPartsSchema,
+    lungStep: z.number().int().nonnegative(),
+    nodule: z
+      .object({
+        /**
+         * The costal pleura, as the plan has it; or the lung's surface, when the lung lies in front
+         * of every line the port allows and nothing on the chest wall can be reached.
+         */
+        on: z.enum(['costal-pleura', 'lung-surface']),
+        zone: z
+          .enum(['anterior-chest-wall', 'lateral-chest-wall', 'posterior-chest-wall'])
+          .nullable(),
+        centre: vec3,
+        radiusMm: z.number().positive(),
+        /** Where the telescope's line meets the surface, and the surface's normal toward it. */
+        onSurface: vec3,
+        towardTelescope: vec3,
+      })
+      .strict()
+      .refine((nodule) => (nodule.on === 'costal-pleura') === (nodule.zone !== null), {
+        message: 'A region of the chest wall exactly when the nodule is on the costal pleura',
+      }),
+    /** How many of the lines the port allows met the lung before the wall. */
+    costalPleura: z
+      .object({
+        linesTried: z.number().int().positive(),
+        linesMeetingTheLungFirst: z.number().int().nonnegative(),
+        nearestLungFromTheTipMm: z.number().positive(),
+      })
+      .strict(),
+    places: z
+      .array(
+        z
+          .object({ id: z.enum(['facing-the-nodule', 'beside-the-lung']), pose: poseSchema })
+          .strict(),
+      )
+      .length(2)
+      .refine((places) => new Set(places.map((place) => place.id)).size === 2, {
+        message: 'Each place once',
+      }),
+    towardTheLung: z.enum(PIVOT_HAND_DIRECTIONS),
+    found: z
+      .object({
+        telescopeStopsAfterSteps: z.number().int().positive(),
+        forcepsTouchAtMm: z.number().positive(),
+        besideTheLungStoppedBy: z.enum(['tool-shaft', 'working-element']),
+        besideTheLungPivotSteps: z.number().int().positive(),
+        withoutTheForcepsPivotSteps: z.number().int().positive(),
+      })
+      .strict(),
+  })
+  .strict()
+
 export type SourceAudit = z.infer<typeof sourceAuditSchema>
 export type AnatomySurfaces = z.infer<typeof surfacesSchema>
 export type RightRibs = z.infer<typeof ribsSchema>
@@ -634,6 +709,7 @@ export type ZoneSamples = z.infer<typeof zoneSamplesSchema>
 export type FluidTable = z.infer<typeof fluidTableSchema>
 export type ZoneReach = z.infer<typeof zoneReachSchema>
 export type TourStops = z.infer<typeof tourStopsSchema>
+export type ToolContact = z.infer<typeof toolContactSchema>
 
 export const lungStates: LungStates = lungStatesSchema.parse(rawLungStates)
 export const collisionProxies: CollisionProxies = proxiesSchema.parse(rawProxies)
@@ -641,3 +717,4 @@ export const zoneSamples: ZoneSamples = zoneSamplesSchema.parse(rawZoneSamples)
 export const fluidTable: FluidTable = fluidTableSchema.parse(rawFluidTable)
 export const zoneReach: ZoneReach = zoneReachSchema.parse(rawZoneReach)
 export const tourStops: TourStops = tourStopsSchema.parse(rawTourStops)
+export const toolContact: ToolContact = toolContactSchema.parse(rawToolContact)

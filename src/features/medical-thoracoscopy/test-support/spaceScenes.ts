@@ -23,6 +23,8 @@ import {
 } from '../engine/space/spatial/spatialWorld'
 import { advance, stepTarget, takeStep } from '../engine/space/spatial/sweep'
 import type { ZoneSamples } from '../engine/space/spatial/visibility'
+import { teachingTarget } from '../engine/space/teachingTarget'
+import type { Vec3 } from '../engine/space/vec'
 import {
   boxMesh,
   gridBoxMesh,
@@ -292,4 +294,63 @@ export function fuzzSweep(
     }
   }
   return { moves, stopped, problems }
+}
+
+// ── The contact spike's scene (slice 13) ───────────────────────────────────────────────────────
+
+/** The nodule, on the far wall straight ahead of the port, a millimetre sunk into it. */
+export const CONTACT_NODULE: { readonly centre: Vec3; readonly radiusMm: number } = {
+  centre: [ROOM.x[1] + 1, 0, 0],
+  radiusMm: 5,
+}
+
+/** The lung, one sphere off to the side of the port's line, the same at both of its steps. */
+export const CONTACT_LUNG = { centre: [70, -30, 0] as Vec3, radiusMm: 22 }
+
+export interface ContactScene extends Scene {
+  /** The judge's copy of the nodule. */
+  readonly target: JudgedMesh
+}
+
+let contact: ContactScene | null = null
+
+/**
+ * The room, a lung beside the port's line, and a nodule on the far wall: the forceps can reach the
+ * nodule along the telescope's line, and a pivot with the forceps out sweeps them toward the lung.
+ */
+export function contactScene(): ContactScene {
+  if (contact) return contact
+  const cuts = ([lo, hi]: readonly [number, number]) => [
+    lo,
+    ...Array.from({ length: 10 }, (_, i) => (i - 5) * 40).filter((v) => v > lo && v < hi),
+    hi,
+  ]
+  const room = gridBoxMesh({ x: cuts(ROOM.x), y: cuts(ROOM.y), z: cuts(ROOM.z) })
+  const lung = sphereMesh(CONTACT_LUNG.radiusMm, [...CONTACT_LUNG.centre], 12, 24)
+  const target = teachingTarget(CONTACT_NODULE.centre, CONTACT_NODULE.radiusMm)
+  const device = instrument()
+  const world = createSpatialWorld({
+    space: room,
+    lungSteps: [lung, lung],
+    port: SCENE_PORT,
+    target: target.mesh,
+  })
+  contact = {
+    kind: 'spheres',
+    space: assembleSpace({
+      port: SCENE_PORT,
+      device,
+      world,
+      samples: roomSamples(),
+      depthLimits: [sleeveTipDepth(SCENE_PORT, device), 150],
+      target,
+    }),
+    wall: judgedMesh(
+      room,
+      (a, b, c) => judgePointTriangle(SCENE_PORT.pleura, a, b, c) >= PORT_EXCLUSION_MM,
+    ),
+    lungs: [judgedMesh(lung), judgedMesh(lung)],
+    target: judgedMesh(target.mesh),
+  }
+  return contact
 }

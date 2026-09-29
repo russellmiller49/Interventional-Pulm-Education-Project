@@ -3,10 +3,14 @@ import { axe } from 'jest-axe'
 
 import { flaggedLearnerCopyTerms } from '@/features/learning-module/activity/clinicalLearningItem'
 
-import { ControlDock, DOCK_OPERABLE_CONTROLS } from '../components/space/ControlDock'
+import {
+  ControlDock,
+  DOCK_OPERABLE_CONTROLS,
+  toolStatusWords,
+} from '../components/space/ControlDock'
 import { SpaceFallbackPane } from '../components/space/SpaceFallbackPane'
 import { SPACE_KEY_HELP, SPACE_KEY_MAP, spaceKeyAction } from '../components/space/spaceKeyMap'
-import { ledgerWords, SEEN_WORDS } from '../components/space/spaceWords'
+import { ledgerWords, SEEN_WORDS, TOOL_WORDS } from '../components/space/spaceWords'
 import {
   emptyLedger,
   ledgerProblems,
@@ -15,6 +19,7 @@ import {
   type SpaceCommand,
   type SpacePaneProps,
   type SpacePaneState,
+  type SpaceToolState,
 } from '../components/space/types'
 import { HOLD_DELAY_MS, HOLD_INTERVAL_MS } from '../components/space/useHeldCommand'
 import { MODEL_CONTROLS } from '../content/controlPanel'
@@ -54,6 +59,18 @@ beforeAll(() => {
 
 const SECTION_SEVEN = { shown: ['port', 'scope', 'tool', 'space'], operable: ['scope'] } as const
 const SECTION_ELEVEN = { shown: ['scope'], operable: ['scope'] } as const
+/** The contact spike: the scope and the forceps (slice 13). */
+const SPIKE = { shown: ['scope', 'tool'], operable: ['scope', 'tool'] } as const
+const IN_CHANNEL: SpaceToolState = {
+  phase: 'in-channel',
+  extensionMm: 0,
+  touching: false,
+  authorised: true,
+}
+const withTool = (state: SpacePaneState, tool: SpaceToolState = IN_CHANNEL): SpacePaneState => ({
+  ...state,
+  tool,
+})
 
 function props(state: SpacePaneState, overrides: Partial<SpacePaneProps> = {}): SpacePaneProps {
   return {
@@ -157,9 +174,64 @@ describe('the control dock', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {})
     const state = createSpaceDouble().state
     expect(() =>
-      render(<ControlDock {...props(state, { operable: ['tool'], shown: ['tool'] })} />),
-    ).toThrow(/no commands for: tool/)
+      render(<ControlDock {...props(state, { operable: ['space'], shown: ['space'] })} />),
+    ).toThrow(/no commands for: space/)
     ;(console.error as jest.Mock).mockRestore()
+  })
+
+  it('offers the forceps where the scenario has them, and says where they are', () => {
+    jest.useFakeTimers()
+    const onCommand = jest.fn()
+    const state = withTool(createSpaceDouble().state)
+    const { rerender } = render(<ControlDock {...props(state, { ...SPIKE, onCommand })} />)
+    const block = document.querySelector('[data-control="tool"]') as HTMLElement
+    expect(within(block).getByRole('group', { name: TOOL_WORDS.partName })).toBeInTheDocument()
+    expect(within(block).getByText(TOOL_WORDS.inChannel)).toBeInTheDocument()
+    const out = document.getElementById(spaceControlId('tool-extend')) as HTMLElement
+    expect(out).toHaveAccessibleName(TOOL_WORDS.extend)
+    expect(out).toHaveAttribute('aria-disabled', 'false')
+    fireEvent.click(out, { detail: 0 })
+    expect(onCommand).toHaveBeenLastCalledWith({ kind: 'tool', direction: 'extend' }, 'keyboard')
+    fireEvent.pointerDown(document.getElementById(spaceControlId('tool-retract')) as HTMLElement, {
+      button: 0,
+      pointerId: 1,
+      pointerType: 'mouse',
+    })
+    act(() => jest.advanceTimersByTime(HOLD_DELAY_MS + 2 * HOLD_INTERVAL_MS))
+    expect(onCommand).toHaveBeenLastCalledWith({ kind: 'tool', direction: 'retract' }, 'pointer')
+    expect(onCommand).toHaveBeenCalledTimes(4)
+    const touching = withTool(state, {
+      ...IN_CHANNEL,
+      phase: 'extended',
+      extensionMm: 7,
+      touching: true,
+    })
+    rerender(<ControlDock {...props(touching, { ...SPIKE, onCommand })} />)
+    expect(
+      within(document.querySelector('[data-control="tool"]') as HTMLElement).getByText(
+        toolStatusWords(touching.tool),
+      ),
+    ).toHaveAttribute('data-touching', 'true')
+    expect(toolStatusWords(touching.tool)).toBe(`${TOOL_WORDS.extended} ${TOOL_WORDS.touching}`)
+  })
+
+  it('shows the forceps only as a control used elsewhere where the section does not let the learner use them', () => {
+    render(<ControlDock {...props(withTool(createSpaceDouble().state), SECTION_SEVEN)} />)
+    expect(document.getElementById(spaceControlId('tool-extend'))).toBeNull()
+    const block = document.querySelector('[data-control="tool"]') as HTMLElement
+    expect(within(block).getByText(/^Shown here, used from “.+”\.$/)).toBeInTheDocument()
+  })
+
+  it('keeps the forceps waiting while the anatomy loads', () => {
+    const onCommand = jest.fn()
+    const loading = createSpaceDouble({
+      readiness: { kind: 'loading', what: 'Loading the anatomy.' },
+    }).state
+    render(<ControlDock {...props(loading, { ...SPIKE, onCommand })} />)
+    const out = document.getElementById(spaceControlId('tool-extend')) as HTMLElement
+    expect(out).toHaveAttribute('aria-disabled', 'true')
+    fireEvent.click(out, { detail: 0 })
+    expect(onCommand).not.toHaveBeenCalled()
   })
 
   it('takes one step for a click from the keyboard, and keeps stepping while held', () => {
@@ -303,6 +375,32 @@ describe('the pane without WebGL', () => {
     fireEvent.keyDown(pane, { key: 'w', repeat: true })
     fireEvent.keyDown(pane, { key: 'w', repeat: true })
     expect(onCommand).toHaveBeenCalledTimes(1)
+  })
+
+  it('takes the forceps keys only where the forceps can be used', () => {
+    const onCommand = jest.fn()
+    const { unmount } = render(
+      <SpaceFallbackPane
+        {...props(withTool(createSpaceDouble().state), { ...SPIKE, onCommand })}
+      />,
+    )
+    const pane = screen.getByRole('region', { name: 'The pleural space' })
+    expect(fireEvent.keyDown(pane, { key: 'f' })).toBe(false)
+    expect(onCommand).toHaveBeenLastCalledWith({ kind: 'tool', direction: 'extend' }, 'keyboard')
+    fireEvent.keyDown(pane, { key: 'B' })
+    expect(onCommand).toHaveBeenLastCalledWith({ kind: 'tool', direction: 'retract' }, 'keyboard')
+    fireEvent.click(screen.getByRole('button', { name: 'Show the keys' }))
+    expect(screen.getByText('Forceps: out')).toBeInTheDocument()
+    expect(screen.getByText('Forceps: back in')).toBeInTheDocument()
+    unmount()
+    onCommand.mockClear()
+    // a section without the forceps: the keys are the page's, and the help does not list them
+    render(<SpaceFallbackPane {...props(createSpaceDouble().state, { onCommand })} />)
+    const plain = screen.getByRole('region', { name: 'The pleural space' })
+    expect(fireEvent.keyDown(plain, { key: 'f' })).toBe(true)
+    expect(onCommand).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Show the keys' }))
+    expect(screen.queryByText('Forceps: out')).toBeNull()
   })
 
   it('shows and hides the keys with ?, the table read from the key map', () => {

@@ -1,4 +1,5 @@
 import { PLEURAL_ZONE_IDS } from '../../content/pleuralZones'
+import type { ContactRuleFn } from './spatial/spatialWorld'
 
 /**
  * One complete table of contact (plan, section 4.5; fidelity contract, "Contact"): every part of
@@ -52,3 +53,20 @@ export const CONTACT_TABLE: readonly {
     ),
   ),
 )
+
+/**
+ * The table as the collider asks it, for one phase of the tool and one authorisation: a part against
+ * the wall, the lung or the teaching target. The wall is every region of the parietal pleura at once,
+ * so a part may touch it only if every region allows it.
+ */
+export function colliderRule(phase: ToolPhase, authorisation: Authorisation): ContactRuleFn {
+  return (part, obstacle) => {
+    if (obstacle === 'lung') return contactRule(part, 'lung', phase, authorisation)
+    if (obstacle === 'target') return contactRule(part, 'teaching-target', phase, authorisation)
+    return PLEURAL_ZONE_IDS.every(
+      (zone) => contactRule(part, zone, phase, authorisation) === 'may-touch',
+    )
+      ? 'may-touch'
+      : 'refuse'
+  }
+}

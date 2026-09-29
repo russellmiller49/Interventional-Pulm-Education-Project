@@ -4,6 +4,7 @@ import { scopeGeometry } from './fulcrum'
 import type { LoadedSpace } from './loadSpace'
 import type { TriangleMesh } from './spatial/proxyGlb'
 import { CROSS_SECTION_SEEN_FROM } from './spaceWords'
+import { forceps, toolCapsules, type ToolState } from './toolChannel'
 import { add, cross, dot, length, normalize, radians, rotate, scale, sub, type Vec3 } from './vec'
 
 /**
@@ -12,6 +13,7 @@ import { add, cross, dot, length, normalize, radians, rotate, scale, sub, type V
  * patient's front with the head to the right, the patient's right side up. The wall is the space
  * proxy cut by the plane, run by run in the zone of each triangle; the lung is the lung proxy of the
  * current step cut the same way. Computed from the geometry the engine uses for everything else.
+ * A teaching target is cut the same way, and the forceps out beyond the tip are projected onto it.
  */
 interface Plane {
   readonly origin: Vec3
@@ -99,6 +101,7 @@ export function crossSectionOf(
   space: LoadedSpace,
   pose: ScopePose,
   lungStep: number,
+  tool?: ToolState,
 ): CrossSection {
   const plane = planeFor(space, pose)
   const geometry = scopeGeometry(pose, space.port, space.device)
@@ -127,6 +130,15 @@ export function crossSectionOf(
         scale(rotate(geometry.axis, plane.normal, sign * half), space.device.viewRangeMm),
       ),
     )
+  const outlines = (mesh: TriangleMesh) =>
+    chain(
+      cut(mesh, plane).map(
+        (s) => [project(plane, s.a), project(plane, s.b)] as [PlanePoint, PlanePoint],
+      ),
+    )
+  const { shaft, workingElement } = tool
+    ? toolCapsules(geometry, tool, forceps())
+    : { shaft: null, workingElement: null }
   return {
     wall,
     lung,
@@ -134,5 +146,15 @@ export function crossSectionOf(
     tip: project(plane, geometry.tip),
     field: [edge(-1), edge(1)],
     seenFrom: CROSS_SECTION_SEEN_FROM,
+    ...(space.target ? { target: outlines(space.target.mesh) } : {}),
+    ...(workingElement
+      ? {
+          tool: {
+            exit: project(plane, shaft?.start ?? workingElement.start),
+            jawBase: project(plane, workingElement.start),
+            tip: project(plane, workingElement.end),
+          },
+        }
+      : {}),
   }
 }

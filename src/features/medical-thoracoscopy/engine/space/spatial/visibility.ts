@@ -11,7 +11,7 @@ import type { SpatialWorld } from './spatialWorld'
 /**
  * What the telescope can see of each survey region (plan, section 4.5; owner decisions, T12): a
  * sample point is in view when it lies within the round field, within range, facing the telescope
- * and with nothing between, neither the wall of the space nor the lung. Samples come from the space
+ * and with nothing between: not the wall of the space, not the lung, and not a teaching target. Samples come from the space
  * proxy's file, lifted just inside it so that the proxy never hides its own region.
  */
 export interface ZoneSamples {
@@ -73,6 +73,7 @@ export function viewSamples(
   const origin = new Vector3(...camera.origin)
   const ray = new Ray()
   const lung = world.lungIndex(lungStep).bvh
+  const target = world.targetIndex?.bvh ?? null
   for (let s = 0; s < samples.zones.length; s += 1) {
     const p: Vec3 = [samples.points[s * 3], samples.points[s * 3 + 1], samples.points[s * 3 + 2]]
     const toSample = sub(p, camera.origin)
@@ -90,7 +91,8 @@ export function viewSamples(
     const far = range - 1e-3
     const blocked =
       world.spaceIndex.bvh.raycastFirst(ray, DoubleSide, 0, far) ||
-      lung.raycastFirst(ray, DoubleSide, 0, far)
+      lung.raycastFirst(ray, DoubleSide, 0, far) ||
+      (target?.raycastFirst(ray, DoubleSide, 0, far) ?? null)
     out[s] = blocked ? VIEW.hidden : VIEW.inView
   }
   return out

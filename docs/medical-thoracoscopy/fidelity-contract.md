@@ -92,6 +92,7 @@ never presented as clinical margins.
 | -------------- | -------: | ------------------------------------------------------------------ |
 | Clearance skin |  0.25 mm | Distance kept between an instrument capsule and a surface          |
 | Touch          |   0.3 mm | Distance at which a working element counts as touching its target  |
+| Touch skin     |  0.15 mm | Distance a working element allowed to touch keeps from its target  |
 | Numeric        | 0.001 mm | Rounding. A clearance below −0.001 mm is recorded as a penetration |
 
 ## Snapshot identity

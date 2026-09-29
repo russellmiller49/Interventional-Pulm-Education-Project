@@ -115,6 +115,39 @@
   fill: var(--cyan-bright);
 }
 
+/* The contact spike's nodule and forceps (slice 13): a dotted outline and a thinner, lighter line. */
+.target {
+  fill: rgba(242, 226, 170, 0.45);
+  stroke: #f2e2aa;
+  stroke-width: 0.8;
+  stroke-dasharray: 1.2 1;
+}
+
+.forcepsShaft,
+.forcepsJaws {
+  stroke-linecap: round;
+}
+
+.forcepsShaft {
+  stroke: var(--muted);
+  stroke-width: 1.4;
+}
+
+.forcepsJaws {
+  stroke: var(--cyan-bright);
+  stroke-width: 1.8;
+}
+
+.toolStatus {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.toolStatus[data-touching='true'] {
+  color: var(--cyan-bright);
+  font-weight: 600;
+}
+
 .refusal {
   margin: 0;
   min-height: 1.5em;
@@ -315,6 +348,20 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
+}
+
+.tryList {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 48rem;
+  margin: 0;
+  padding-left: 1.5rem;
+  list-style: decimal;
+  line-height: 1.5;
+}
+
+.actionButton[aria-pressed='true'] {
+  border-color: var(--cyan-bright);
 }
 
 .actionButton:disabled {

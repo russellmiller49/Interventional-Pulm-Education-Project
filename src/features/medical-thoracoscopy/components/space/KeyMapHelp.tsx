@@ -3,15 +3,20 @@ import { spaceKeyAction, SPACE_KEY_HELP } from './spaceKeyMap'
 import { commandWords, KEY_WORDS } from './spaceWords'
 import { spaceControlId } from './types'
 
-/** The key help panel, read from the key map itself, so the table cannot drift from the keys. */
+/**
+ * The key help panel, read from the key map itself, so the table cannot drift from the keys. The
+ * forceps' keys are listed only where the forceps can be used.
+ */
 export function KeyMapHelp({
   open,
   onToggle,
   reducedMotion,
+  withTool = false,
 }: {
   readonly open: boolean
   readonly onToggle: () => void
   readonly reducedMotion: boolean
+  readonly withTool?: boolean
 }) {
   const panelId = spaceControlId('key-help')
   return (
@@ -43,6 +48,7 @@ export function KeyMapHelp({
           <tbody>
             {SPACE_KEY_HELP.map((row) => {
               const action = spaceKeyAction(row.key)
+              if (action?.kind === 'tool' && !withTool) return null
               return (
                 <tr key={row.key}>
                   <th scope="row">
