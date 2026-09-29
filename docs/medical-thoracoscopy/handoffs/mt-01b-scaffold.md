@@ -111,4 +111,25 @@ from outside the module: `GET /en` (the site's home page, which needs sign-in) a
 - Do not change the release stage, the sitemap or navigation without the owner's decision.
 - Do not touch `/pleural-procedures/pleuroscopy` before the retirement slice.
 
+## Repair after the independent review (2026-09-29): admin preview (OD-15)
+
+The independent review found that the public-unlisted prefix let anyone with the link open the hub,
+the lessons with their clinical statements awaiting review, and both engineering prototypes, and
+that merging this slice would deploy that. The owner decided (OD-15, recorded in
+`owner-decisions.md` with the T-items) that development and review use the site's admin gate until
+the claims and rights are resolved. Changed here:
+
+| Path                                                                       | Change                                                                                                                                                                                           |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/lib/site-auth/access.ts`                                              | `/medical-thoracoscopy` left both public-unlisted lists; `isAdminPreviewModulePath` makes it and everything under it need sign-in and `site_admin`, like `/admin`, files under the path included |
+| `content/release.ts`                                                       | A third stage, `admin-preview`, now current. The module stays out of navigation, search and the sitemap, and noindex                                                                             |
+| `src/lib/draft-modules.ts`                                                 | Unlisted for any stage but `published`                                                                                                                                                           |
+| `src/lib/non-public-modules.ts`, `src/app/[locale]/admin/modules/page.tsx` | The computed access mode gains `admin-only`, so the admin index says what the proxy enforces                                                                                                     |
+| `components/MedicalThoracoscopyModuleFrame.tsx`                            | The badge reads "In development · admin preview"                                                                                                                                                 |
+
+Authentication is not weakened for testing: a local development server reaches the module only
+through the existing local-dev auth cookie, which a production build and any host but localhost
+refuse. Models under `/models/` are still static files that the page gate does not cover; that is
+recorded in the rights register (`exposure`).
+
 This does not change publication status or constitute clinical approval.

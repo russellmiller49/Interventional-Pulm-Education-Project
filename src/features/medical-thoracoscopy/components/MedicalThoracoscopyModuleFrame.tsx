@@ -65,10 +65,11 @@ export const MEDICAL_THORACOSCOPY_SAFETY_NOTICE = (
  * What the module is right now, in the learner's words. Keep it short: the shared frame renders
  * this badge without wrapping.
  */
-const releaseLabel =
-  MEDICAL_THORACOSCOPY_RELEASE_STAGE === 'unlisted-preview'
-    ? 'In development · direct link'
-    : 'Published'
+const releaseLabel: string = {
+  'admin-preview': 'In development · admin preview',
+  'unlisted-preview': 'In development · direct link',
+  published: 'Published',
+}[MEDICAL_THORACOSCOPY_RELEASE_STAGE]
 
 /**
  * Shared shell for the hub and every page of the course: identity row, section tabs, the safety

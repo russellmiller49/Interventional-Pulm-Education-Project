@@ -249,4 +249,12 @@ Not opened: no page shows the anatomy yet. The scene arrives in slice 11.
 - Do not show the collapsed lung, its depth or the fluid level as measured: they are authored.
 - Do not describe the prototype port as a safe, recommended or usual site.
 
+## Repair after the independent review (2026-09-29, R0)
+
+The four records this slice adds under `content/data/anatomy/` (fluid table, lung states, proxies,
+zone samples) are anatomy-derived and in the public repository on the pushed branches; they are now
+in the asset ledger's `bundledRecords`. The packaged anatomy files themselves stay out of Git
+(Local-Data and the git-ignored dev copy) and have not been uploaded. Recorded, not approved. The
+lung's collapse is unchanged (OD-11, OD-14).
+
 This does not change publication status or constitute clinical approval.
