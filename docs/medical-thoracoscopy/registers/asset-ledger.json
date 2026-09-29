@@ -3,7 +3,7 @@
   "version": 1,
   "preparedOn": "2026-09-28",
   "preparedBy": "AI authoring assistant (Claude) at the owner's request",
-  "statement": "Every file the module serves, with its size, its cost once decoded, the rights item that covers it and the claims it depends on. The ledger is empty until the first asset is built. A small download is not evidence of acceptable memory or frame rate, so the two are reported separately.",
+  "statement": "Every file the module serves, with its size, its cost once decoded, the rights item that covers it and the claims it depends on. A small download is not evidence of acceptable memory or frame rate, so the two are reported separately. A file not in the repository is held in the owner’s local data and, for the dev server, in a folder Git ignores; its path is where the dev server serves it.",
   "budgets": {
     "source": "docs/medical-thoracoscopy/implementation-manifest.json, budgets",
     "pleuralScenePayloadMb": 8,
@@ -36,6 +36,7 @@
       "claims": [],
       "definitionSha256": "9894b86b08af7908f23a2fd200e8da92b14d809f5cbe4cb11342e9f4777478db",
       "builtBy": "scripts/medical-thoracoscopy/build_device_kit.py",
+      "inRepository": true,
       "uploaded": false
     },
     {
@@ -51,6 +52,7 @@
       "claims": [],
       "definitionSha256": "9894b86b08af7908f23a2fd200e8da92b14d809f5cbe4cb11342e9f4777478db",
       "builtBy": "scripts/medical-thoracoscopy/build_device_kit.py",
+      "inRepository": true,
       "uploaded": false
     },
     {
@@ -66,6 +68,7 @@
       "claims": [],
       "definitionSha256": "9894b86b08af7908f23a2fd200e8da92b14d809f5cbe4cb11342e9f4777478db",
       "builtBy": "scripts/medical-thoracoscopy/build_device_kit.py",
+      "inRepository": true,
       "uploaded": false
     },
     {
@@ -81,6 +84,7 @@
       "claims": [],
       "definitionSha256": "9894b86b08af7908f23a2fd200e8da92b14d809f5cbe4cb11342e9f4777478db",
       "builtBy": "scripts/medical-thoracoscopy/build_device_kit.py",
+      "inRepository": true,
       "uploaded": false
     },
     {
@@ -96,6 +100,7 @@
       "claims": [],
       "definitionSha256": "9894b86b08af7908f23a2fd200e8da92b14d809f5cbe4cb11342e9f4777478db",
       "builtBy": "scripts/medical-thoracoscopy/build_device_kit.py",
+      "inRepository": true,
       "uploaded": false
     },
     {
@@ -111,6 +116,7 @@
       "claims": [],
       "definitionSha256": "9894b86b08af7908f23a2fd200e8da92b14d809f5cbe4cb11342e9f4777478db",
       "builtBy": "scripts/medical-thoracoscopy/build_device_kit.py",
+      "inRepository": true,
       "uploaded": false
     },
     {
@@ -126,6 +132,7 @@
       "claims": [],
       "definitionSha256": "9894b86b08af7908f23a2fd200e8da92b14d809f5cbe4cb11342e9f4777478db",
       "builtBy": "scripts/medical-thoracoscopy/build_device_kit.py",
+      "inRepository": true,
       "uploaded": false
     },
     {
@@ -141,6 +148,7 @@
       "claims": [],
       "definitionSha256": "9894b86b08af7908f23a2fd200e8da92b14d809f5cbe4cb11342e9f4777478db",
       "builtBy": "scripts/medical-thoracoscopy/build_device_kit.py",
+      "inRepository": true,
       "uploaded": false
     },
     {
@@ -156,6 +164,7 @@
       "claims": [],
       "definitionSha256": "9894b86b08af7908f23a2fd200e8da92b14d809f5cbe4cb11342e9f4777478db",
       "builtBy": "scripts/medical-thoracoscopy/build_device_kit.py",
+      "inRepository": true,
       "uploaded": false
     },
     {
@@ -171,6 +180,7 @@
       "claims": [],
       "definitionSha256": "9894b86b08af7908f23a2fd200e8da92b14d809f5cbe4cb11342e9f4777478db",
       "builtBy": "scripts/medical-thoracoscopy/build_device_kit.py",
+      "inRepository": true,
       "uploaded": false
     },
     {
@@ -186,6 +196,7 @@
       "claims": [],
       "definitionSha256": "9894b86b08af7908f23a2fd200e8da92b14d809f5cbe4cb11342e9f4777478db",
       "builtBy": "scripts/medical-thoracoscopy/build_device_kit.py",
+      "inRepository": true,
       "uploaded": false
     },
     {
@@ -201,6 +212,7 @@
       "claims": [],
       "definitionSha256": "9894b86b08af7908f23a2fd200e8da92b14d809f5cbe4cb11342e9f4777478db",
       "builtBy": "scripts/medical-thoracoscopy/build_device_kit.py",
+      "inRepository": true,
       "uploaded": false
     },
     {
@@ -216,6 +228,119 @@
       "claims": [],
       "definitionSha256": "9894b86b08af7908f23a2fd200e8da92b14d809f5cbe4cb11342e9f4777478db",
       "builtBy": "scripts/medical-thoracoscopy/package-device-kit.ts",
+      "inRepository": true,
+      "uploaded": false
+    },
+    {
+      "id": "pleural-space",
+      "kind": "anatomy",
+      "path": "public/models/medical-thoracoscopy/v1/anatomy/pleural-space.465b3f983aa8.glb",
+      "sha256": "465b3f983aa8bc3bb6e41e724e43ec38045698c639b00c663bffd1cbc6a23f62",
+      "bytes": 113240,
+      "triangles": 39620,
+      "decodedBytes": 713208,
+      "label": "Derived from CT segmentation",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "claims": ["MT-C-0009", "MT-C-0017", "MT-C-0023"],
+      "definitionSha256": null,
+      "builtBy": "scripts/medical-thoracoscopy/build_thorax_surfaces.py",
+      "inRepository": false,
+      "uploaded": false
+    },
+    {
+      "id": "ribs",
+      "kind": "anatomy",
+      "path": "public/models/medical-thoracoscopy/v1/anatomy/ribs.dd18bf62b25c.glb",
+      "sha256": "dd18bf62b25c44219741b2903bbc7fc1a9413310306723f3a196160e98fc54f3",
+      "bytes": 364936,
+      "triangles": 105382,
+      "decodedBytes": 1897596,
+      "label": "Derived from CT segmentation",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "claims": ["MT-C-0017"],
+      "definitionSha256": null,
+      "builtBy": "scripts/medical-thoracoscopy/build_thorax_surfaces.py",
+      "inRepository": false,
+      "uploaded": false
+    },
+    {
+      "id": "context",
+      "kind": "anatomy",
+      "path": "public/models/medical-thoracoscopy/v1/anatomy/context.ab9834532cfa.glb",
+      "sha256": "ab9834532cfa0e7501d6cd19abce9309ae09afe7684b17a058808e0e91ec5556",
+      "bytes": 184896,
+      "triangles": 53925,
+      "decodedBytes": 974598,
+      "label": "Derived from CT segmentation",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "claims": ["MT-C-0017"],
+      "definitionSha256": null,
+      "builtBy": "scripts/medical-thoracoscopy/build_thorax_surfaces.py",
+      "inRepository": false,
+      "uploaded": false
+    },
+    {
+      "id": "lung-states",
+      "kind": "anatomy",
+      "path": "public/models/medical-thoracoscopy/v1/anatomy/lung-states.272603d8d95a.glb",
+      "sha256": "272603d8d95a6acc92cd74cf0e37d1bb417de30d9b9687dc144cb012d23a1665",
+      "bytes": 1308408,
+      "triangles": 29610,
+      "decodedBytes": 1954500,
+      "label": "Derived from CT segmentation; states authored, illustrative",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "claims": ["MT-C-0001", "MT-C-0002"],
+      "definitionSha256": null,
+      "builtBy": "scripts/medical-thoracoscopy/build_lung_states.py",
+      "inRepository": false,
+      "uploaded": false
+    },
+    {
+      "id": "proxy-pleural-space",
+      "kind": "proxy",
+      "path": "public/models/medical-thoracoscopy/v1/anatomy/proxy-pleural-space.6c4048f8e9ee.glb",
+      "sha256": "6c4048f8e9ee7205c213b80cc2a6bc1ac7fb1c13ee8f0b1b833e201b32e93937",
+      "bytes": 108408,
+      "triangles": 6954,
+      "decodedBytes": 103104,
+      "label": "Derived from CT segmentation",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "claims": ["MT-C-0009", "MT-C-0023"],
+      "definitionSha256": null,
+      "builtBy": "scripts/medical-thoracoscopy/build_lung_states.py",
+      "inRepository": false,
+      "uploaded": false
+    },
+    {
+      "id": "proxy-lung",
+      "kind": "proxy",
+      "path": "public/models/medical-thoracoscopy/v1/anatomy/proxy-lung.9d7a1a5818da.glb",
+      "sha256": "9d7a1a5818da9d265f98a323ecb250caa2e7cea6a5675f39ab16acbe96d35e8a",
+      "bytes": 484500,
+      "triangles": 39788,
+      "decodedBytes": 477624,
+      "label": "Derived from CT segmentation; states authored, illustrative",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "claims": ["MT-C-0001", "MT-C-0002"],
+      "definitionSha256": null,
+      "builtBy": "scripts/medical-thoracoscopy/build_lung_states.py",
+      "inRepository": false,
+      "uploaded": false
+    },
+    {
+      "id": "anatomy-manifest",
+      "kind": "manifest",
+      "path": "public/models/medical-thoracoscopy/v1/anatomy/manifest.json",
+      "sha256": "e646c3f1008377fa8d5423e57a4ee2cc8f9aa28397144a0398eb2ec6dce27630",
+      "bytes": 8329,
+      "triangles": null,
+      "decodedBytes": null,
+      "label": "Derived from CT segmentation",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "claims": [],
+      "definitionSha256": null,
+      "builtBy": "scripts/medical-thoracoscopy/package-anatomy.ts",
+      "inRepository": false,
       "uploaded": false
     }
   ],

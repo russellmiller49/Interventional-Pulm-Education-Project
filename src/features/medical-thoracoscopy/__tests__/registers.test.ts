@@ -511,7 +511,9 @@ describe('claim register', () => {
           const written = curriculumSections.find((section) => section.id === surface.id)?.state
           expect(surface.state).toBe(written === 'in-preparation' ? 'planned' : 'written')
         } else if (surface.kind === 'asset') {
-          const built = ['thorax-surfaces', 'survey-zones', 'port-record'].includes(surface.id)
+          const built = ['thorax-surfaces', 'survey-zones', 'port-record', 'lung-states'].includes(
+            surface.id,
+          )
           expect(surface.state).toBe(built ? 'written' : 'planned')
         } else {
           expect(surface.state).toBe('planned')
@@ -644,11 +646,19 @@ describe('rights register', () => {
 })
 
 describe('asset ledger', () => {
-  it('lists the device kit, and nothing uploaded', () => {
+  it('lists the device kit and the anatomy, and nothing uploaded', () => {
     expect(ledger.assets.length).toBeGreaterThan(0)
     for (const asset of ledger.assets) {
       expect(asset.uploaded).toBe(false)
-      expect(asset.label).toBe(deviceDefinitions.labelUntilCad)
+      if (asset.path.startsWith('public/models/medical-thoracoscopy/v1/devices/')) {
+        expect(asset.label).toBe(deviceDefinitions.labelUntilCad)
+        expect(asset.inRepository).toBe(true)
+      } else {
+        expect(asset.path).toMatch(/^public\/models\/medical-thoracoscopy\/v1\/anatomy\//)
+        expect(asset.label).toMatch(/^Derived from CT segmentation/)
+        expect(asset.inRepository).toBe(false)
+        expect(asset.rights).toEqual(['R-ANATOMY-CT', 'R-ANATOMY-SEGMENTATION'])
+      }
     }
     expect(ledger.scenes).toEqual([])
   })

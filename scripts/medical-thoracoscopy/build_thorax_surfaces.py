@@ -1,13 +1,14 @@
 """Build the thorax surfaces the course's space is made of, from the audited CT segmentation.
 
     python3 scripts/medical-thoracoscopy/audit_thorax_sources.py --check
-    python3 scripts/medical-thoracoscopy/build_thorax_surfaces.py [--install-dev]
+    python3 scripts/medical-thoracoscopy/build_thorax_surfaces.py
 
 Built, in LPS millimetres, and written to the owner's local data (never to the repository, because
 the segmentation's terms are not settled: rights register, R-ANATOMY-SEGMENTATION):
 
-- `pleural-space.glb`: the surface of the right pleural space, the right lung and effusion joined,
-  closed at 3 mm and meshed as one watertight volume. It is divided into the seven survey zones of
+- `pleural-space.glb`: the surface of the right pleural space, the right lung and effusion joined
+  with what lies between them, closed at 3 mm and meshed as one watertight volume of even triangles (`thorax_remesh.py`): the
+  surface is seen close up through the telescope, where slivers and long thin triangles shade badly. It is divided into the seven survey zones of
   `pleural-zones.json`: one named node per zone, all sharing one vertex array, so together they hold
   every face of the surface exactly once.
 - `ribs.glb`: the right ribs as twelve nodes, numbered 1 to 12 from their spinal ends, and the left
@@ -27,17 +28,16 @@ Measured, and written to the repository as numbers only (`content/data/anatomy/`
 - `port-record.json`: the prototype port (owner decisions, T6, a default): the pivot, the corridor
   axis, and the patch of chest wall the shaft may cross.
 
-`--install-dev` copies the GLBs into `public/models/medical-thoracoscopy/v1/anatomy/`, which Git
-ignores, so the dev server can show them. They are not uploaded and not published.
+`package-anatomy.ts` compresses them and, with `--install-dev`, copies them into
+`public/models/medical-thoracoscopy/v1/anatomy/`, which Git ignores, so the dev server can show
+them. They are not uploaded and not published.
 """
 from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import sys
 import time
-from pathlib import Path
 
 import manifold3d
 import numpy as np
@@ -47,9 +47,10 @@ from scipy.spatial import cKDTree
 from skimage.measure import marching_cubes
 from skimage.segmentation import watershed
 
+from thorax_mesh_checks import repair_crossings
+from thorax_remesh import Field, even_surface, min_angles
 from thorax_common import (
     ATTRIBUTION,
-    DEV_INSTALL,
     GRAVITY_LPS,
     LABEL,
     PRESENTATION_FROM_LPS,
@@ -67,9 +68,18 @@ from thorax_common import (
 ZONE_LIST = json.loads(ZONES.read_text())
 SPLIT = ZONE_LIST["split"]
 ZONE_IDS = [zone["id"] for zone in ZONE_LIST["zones"]]
+SPACE_PARTS = ("right-lung-upper", "right-lung-middle", "right-lung-lower", "right-effusion")
+SPACE_GAP_FILL_MM = 5.0
+SOLID_STRUCTURES = ("rib-cage", "spine", "diaphragm", "liver", "heart", "aorta", "superior-vena-cava",
+                    "inferior-vena-cava", "pulmonary-artery", "pulmonary-vein", "esophagus", "airway",
+                    "left-lung-upper", "left-lung-lower")
 SPACE_CLOSING_MM = 3.0
 SMOOTH_SIGMA_VOXELS = 1.0
-SIMPLIFY_MM = {"pleural-space": 0.5, "rib": 0.5}
+SIMPLIFY_MM = {"rib": 0.5}
+# The pleural space: the mask smoothed by a gaussian of 1 mm, sampled on a 1 mm grid, and meshed with
+# triangles of about 3 mm a side. `build_lung_states.py` builds the same field again to keep the lung
+# inside this surface, so the two must not drift apart.
+SPACE_FIELD = {"gridMm": 1.0, "smoothingMm": 1.0, "edgeMm": 3.0, "marchingStep": 2}
 # The Chest view shows context small: each structure is meshed on a coarser grid (voxels per cell)
 # and reduced to about this many triangles.
 CONTEXT_FACES = {"diaphragm": 6000, "heart": 6000, "aorta": 4000, "superior-vena-cava": 1200,
@@ -131,6 +141,8 @@ def mesh_mask(volume: Volume, mask: np.ndarray, simplify_mm: float | None, close
         mesh = trimesh.Trimesh(simplified.vert_properties[:, :3], simplified.tri_verts, process=True)
         if mesh.volume < 0:
             mesh.invert()
+        repaired, _ = repair_crossings(np.asarray(mesh.vertices), np.asarray(mesh.faces))
+        mesh = trimesh.Trimesh(repaired, np.asarray(mesh.faces), process=False)
     return mesh
 
 
@@ -163,9 +175,22 @@ def decimate_open(mesh: trimesh.Trimesh, target_faces: int) -> trimesh.Trimesh:
     centres /= counts[:, None]
     faces = inverse[mesh.faces]
     keep = (faces[:, 0] != faces[:, 1]) & (faces[:, 1] != faces[:, 2]) & (faces[:, 0] != faces[:, 2])
-    out = trimesh.Trimesh(centres, faces[keep], process=True)
+    faces = faces[keep]
+    # Clustering can bring two faces onto the same three vertices; keep one.
+    _, first = np.unique(np.sort(faces, axis=1), axis=0, return_index=True)
+    out = trimesh.Trimesh(centres, faces[np.sort(first)], process=True)
     out.remove_unreferenced_vertices()
     return out
+
+
+def space_field(volume: Volume, space: np.ndarray) -> Field:
+    return Field(volume, space, SPACE_FIELD["gridMm"], sigma_mm=SPACE_FIELD["smoothingMm"])
+
+
+def space_surface(volume: Volume, space: np.ndarray) -> trimesh.Trimesh:
+    """The pleural space as an even, watertight, outward surface on its smoothed field's iso-surface."""
+    vertices, faces = even_surface(space_field(volume, space), SPACE_FIELD["edgeMm"], step=SPACE_FIELD["marchingStep"])
+    return trimesh.Trimesh(vertices, faces, process=False)
 
 
 def central(volume: Volume, mask: np.ndarray, half_width_mm: float = 45.0) -> np.ndarray:
@@ -187,8 +212,22 @@ def largest_piece(mask: np.ndarray) -> np.ndarray:
 # ── the pleural space ─────────────────────────────────────────────────────────────────────────
 
 def pleural_space_mask(volume: Volume) -> np.ndarray:
-    union = (volume.mask("right-lung-upper") | volume.mask("right-lung-middle")
-             | volume.mask("right-lung-lower") | volume.mask("right-effusion"))
+    """The right pleural space: the right lobes and the right effusion, with what lies between them."""
+    parts = [volume.mask(key) for key in SPACE_PARTS]
+    union = np.logical_or.reduce(parts)
+    # What lies within SPACE_GAP_FILL_MM of two different parts belongs to the space too: the notches
+    # where a fissure meets the lung's surface, and the rim the segmentation left unlabelled between
+    # the lung and the fluid. The named solid structures stay out.
+    idx = np.argwhere(union)
+    pad = np.ceil((SPACE_GAP_FILL_MM + 2.0) / volume.spacing).astype(int)
+    lo = np.maximum(idx.min(0) - pad, 0)
+    hi = np.minimum(idx.max(0) + pad + 1, volume.shape)
+    box = tuple(slice(a, b) for a, b in zip(lo, hi))
+    near = np.zeros(tuple(hi - lo), dtype=np.uint8)
+    for part in parts:
+        near += ndimage.distance_transform_edt(~part[box], sampling=volume.spacing) <= SPACE_GAP_FILL_MM
+    solid = np.logical_or.reduce([volume.mask(key)[box] for key in SOLID_STRUCTURES])
+    union[box] |= (near >= 2) & ~solid
     rad = np.ceil(SPACE_CLOSING_MM / volume.spacing).astype(int)
     grid = np.ogrid[tuple(slice(-r, r + 1) for r in rad)]
     ball = sum((g * s) ** 2 for g, s in zip(grid, volume.spacing)) <= SPACE_CLOSING_MM ** 2
@@ -334,13 +373,13 @@ def zone_pieces(mesh: trimesh.Trimesh, zone: np.ndarray, zone_id: str) -> list[n
     return trimesh.graph.connected_components(edges, nodes=faces, min_len=1)
 
 
-def absorb_islands(mesh: trimesh.Trimesh, zone: np.ndarray) -> np.ndarray:
+def absorb_islands(mesh: trimesh.Trimesh, zone: np.ndarray, ids: list[str] | None = None) -> np.ndarray:
     """Give each small, stray piece of a zone to the zone that surrounds it most."""
     adj = mesh.face_adjacency
     area = mesh.area_faces
     for _ in range(20):
         changed = False
-        for zone_id in ZONE_IDS:
+        for zone_id in ZONE_IDS if ids is None else ids:
             pieces = zone_pieces(mesh, zone, zone_id)
             if len(pieces) <= 1:
                 continue
@@ -516,16 +555,15 @@ def port_record(rows: list[dict], sleeve_mm: float) -> dict:
 # ── main ──────────────────────────────────────────────────────────────────────────────────────
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--install-dev", action="store_true")
-    args = parser.parse_args()
+    argparse.ArgumentParser(description=__doc__.split("\n")[0]).parse_args()
 
     volume = Volume()
     log("segmentation loaded")
     space = pleural_space_mask(volume)
     space_ml = float(space.sum() * volume.voxel_ml)
-    mesh = mesh_mask(volume, space, SIMPLIFY_MM["pleural-space"])
-    log(f"pleural space: {space_ml:.1f} mL of voxels, {len(mesh.faces)} faces, {mesh.volume / 1000:.1f} mL meshed")
+    mesh = space_surface(volume, space)
+    log(f"pleural space: {space_ml:.1f} mL of voxels, {len(mesh.faces)} faces, {mesh.volume / 1000:.1f} mL meshed, "
+        f"smallest angle {min_angles(np.asarray(mesh.vertices), np.asarray(mesh.faces)).min():.1f} degrees")
     rib_labels, rib_record, left_cage, sternum = number_right_ribs(volume)
     log("right ribs numbered 1 to 12")
     zone, z_apex = split_zones(volume, mesh, space, rib_labels)
@@ -616,7 +654,10 @@ def main() -> int:
             "watertight": bool(mesh.is_watertight),
             "outward": bool(mesh.volume > 0),
             "closingMm": SPACE_CLOSING_MM,
-            "simplifyMm": SIMPLIFY_MM["pleural-space"],
+            "gapFillMm": SPACE_GAP_FILL_MM,
+            "mesh": {**SPACE_FIELD,
+                     "smallestAngleDeg": float(min_angles(np.asarray(mesh.vertices), np.asarray(mesh.faces)).min()),
+                     "edgeMmRange": [float(x) for x in np.percentile(mesh.edges_unique_length, [0, 100])]},
             "boundsLps": mesh.bounds.tolist(),
             "apexPlaneZ": z_apex,
             "zones": [{
@@ -655,11 +696,6 @@ def main() -> int:
     }, 2))
     write_record(RECORDS / "port-record.json", rounded(port, 2))
 
-    if args.install_dev:
-        DEV_INSTALL.mkdir(parents=True, exist_ok=True)
-        for name in ("pleural-space", "ribs", "context"):
-            shutil.copy2(raw / f"{name}.glb", DEV_INSTALL / f"{name}.glb")
-        log(f"installed for the dev server in {DEV_INSTALL} (ignored by Git)")
     log("done")
     return 0
 

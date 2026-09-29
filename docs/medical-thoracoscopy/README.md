@@ -51,15 +51,31 @@ run in this order:
 1. `scripts/medical-thoracoscopy/audit_thorax_sources.py`: pins both files by hash and every
    segment the build uses by its measured content. `--check` fails if either has changed.
 2. `build_thorax_surfaces.py`: the pleural space divided into the survey zones, the numbered ribs,
-   the Chest view's context, the port-candidate table and the port record. `--install-dev` copies
-   the surfaces to a folder Git ignores, for the dev server.
+   the Chest view's context, the port-candidate table and the port record.
 3. `validate_thorax_surfaces.py`: reads the surfaces back with its own code and checks them against
    the committed record.
+4. `build_lung_states.py`: the lung from expanded to collapsed in eight steps (authored, awaiting
+   clinical review: MT-C-0001, MT-C-0002), the collision proxies of the pleural space and of the
+   lung at each step, the zone sample points and the fluid table. Every step, and the blends between
+   steps, is checked for folded and crossing triangles and for staying inside the pleura.
+5. `validate_lung_states.py`: reads those files back with its own code and checks them against the
+   committed records.
+6. `npx tsx scripts/medical-thoracoscopy/package-anatomy.ts --install-dev`: compresses the drawn
+   surfaces, names every file by its content, writes the manifest (and its generated copy,
+   `content/data/generated/anatomy.ts`) and the ledger rows, and copies the files to a folder Git
+   ignores, for the dev server.
+7. `validate_anatomy_blender.py`, in Blender 5.1: imports every packaged file and compares it with
+   the file as built, the lung state by state.
 
-The surfaces are not in the repository: the segmentation's terms are not settled (rights register,
+Surfaces meant to be seen close up or to move (the pleural space, the lung) are meshed as even
+triangles on the mask's smoothed surface (`thorax_remesh.py`); `thorax_mesh_checks.py` holds the
+checks every script shares, written without mesh libraries.
+
+The files are not in the repository: the segmentation's terms are not settled (rights register,
 R-ANATOMY-SEGMENTATION), and the repository is public. What is committed is the numbers measured
 from them, in `src/features/medical-thoracoscopy/content/data/anatomy/`. See the
-[thorax-surfaces handoff](handoffs/mt-02b-thorax-surfaces.md).
+[thorax-surfaces handoff](handoffs/mt-02b-thorax-surfaces.md) and the
+[lung-states handoff](handoffs/mt-02c-lung-states.md).
 
 ## Written sections
 

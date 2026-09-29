@@ -251,6 +251,7 @@ async function main(): Promise<void> {
       claims: [],
       definitionSha256: definitionsSha256,
       builtBy: 'scripts/medical-thoracoscopy/build_device_kit.py',
+      inRepository: true,
       uploaded: false,
     })),
     {
@@ -266,6 +267,7 @@ async function main(): Promise<void> {
       claims: [],
       definitionSha256: definitionsSha256,
       builtBy: 'scripts/medical-thoracoscopy/package-device-kit.ts',
+      inRepository: true,
       uploaded: false,
     },
   ]

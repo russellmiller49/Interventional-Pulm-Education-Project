@@ -89,6 +89,7 @@ export const assetLedgerSchema = z
             .regex(/^[0-9a-f]{64}$/)
             .nullable(),
           builtBy: z.string().min(1),
+          inRepository: z.boolean(),
           uploaded: z.boolean(),
         })
         .strict(),

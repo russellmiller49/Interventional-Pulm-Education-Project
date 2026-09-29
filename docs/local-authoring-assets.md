@@ -132,11 +132,13 @@ The module's anatomy comes from `raw-assets/pleural-effusion-simulation/`, above
 that segmentation are identified by measured content, because its segment names do not match what
 the segments contain: the one named "thoracic cavity" holds the rib cage.
 
-`scripts/medical-thoracoscopy/build_thorax_surfaces.py` writes the surfaces it builds from them to
-`raw-assets/medical-thoracoscopy/anatomy/raw/`, keeps a cache of the decoded segmentation in
-`anatomy/cache/`, and `validate_thorax_surfaces.py` writes its report to `anatomy/`. The surfaces
-stay out of the repository until the segmentation's terms are settled; the repository holds only
-the numbers measured from them.
+`scripts/medical-thoracoscopy/build_thorax_surfaces.py` and `build_lung_states.py` write the
+surfaces, the lung's states and the collision proxies they build from them to
+`raw-assets/medical-thoracoscopy/anatomy/raw/`, and keep a cache of the decoded segmentation in
+`anatomy/cache/`. `package-anatomy.ts` writes the compressed, content-named files and their
+manifest to `anatomy/packaged/`. The validators write their reports to `anatomy/`. The files stay
+out of the repository until the segmentation's terms are settled; the repository holds only the
+numbers measured from them.
 
 ### Folders that predate this map
 
