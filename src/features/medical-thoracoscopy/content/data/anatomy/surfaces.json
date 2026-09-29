@@ -1,0 +1,141 @@
+{
+  "record": "medical-thoracoscopy-anatomy-surfaces",
+  "version": 1,
+  "script": "scripts/medical-thoracoscopy/build_thorax_surfaces.py",
+  "statement": "Numbers only. The surfaces are built in the owner's local data and are not in the repository: the segmentation's terms are not settled (rights register, R-ANATOMY-SEGMENTATION).",
+  "label": "Derived from CT segmentation",
+  "frame": "LPS millimetres",
+  "presentationFromLps": [
+    [0.0, 0.0, 1.0],
+    [-1.0, 0.0, 0.0],
+    [0.0, -1.0, 0.0]
+  ],
+  "gravityLps": [1.0, 0.0, 0.0],
+  "attribution": {
+    "dataset": "Hofstad E, Bouget D, Pedersen A, Støverud K-H, Langø T, Leira HO. AeroPath: An airway segmentation benchmark dataset with challenging pathology. Zenodo; 2023, version 1. https://doi.org/10.5281/zenodo.10069289",
+    "describedIn": "Støverud KH, Bouget D, Pedersen A, et al. AeroPath: An airway segmentation benchmark dataset with challenging pathology and baseline method. PLoS One. 2024;19(10):e0311416. https://doi.org/10.1371/journal.pone.0311416",
+    "licence": "Creative Commons Attribution 4.0 International, https://creativecommons.org/licenses/by/4.0/",
+    "changes": "The material was modified. Surfaces were built from a segmentation of the scan, remeshed or simplified, divided into named regions and, for the lung, reshaped into authored states. The scan was taken with the patient lying on their back and is shown with the patient lying on their side. Nothing shown is the scan itself.",
+    "identity": "Asserted to be case 19 of the dataset; not verified against the archive."
+  },
+  "files": {
+    "pleural-space": {
+      "file": "pleural-space.glb",
+      "sha256": "47c0585d798ad05a2e5b451e4fe7f653c0cb7150276df4a8ecec878e6d2c469e",
+      "bytes": 955252
+    },
+    "ribs": {
+      "file": "ribs.glb",
+      "sha256": "721320ebcfe22b408849827860ff303748b297d293bcbcd931bce4ff78c3ee42",
+      "bytes": 2541124
+    },
+    "context": {
+      "file": "context.glb",
+      "sha256": "6df6885eb6eac4892bf23fc6c4d159fc87e536f157beb9a332ec9b50c245fd3e",
+      "bytes": 1304612
+    }
+  },
+  "pleuralSpace": {
+    "voxelVolumeMl": 3421.652,
+    "meshVolumeMl": 3417.641,
+    "faces": 39620,
+    "vertices": 19812,
+    "areaCm2": 1635.667,
+    "watertight": true,
+    "outward": true,
+    "closingMm": 3.0,
+    "gapFillMm": 5.0,
+    "mesh": {
+      "gridMm": 1.0,
+      "smoothingMm": 1.0,
+      "edgeMm": 3.0,
+      "marchingStep": 2,
+      "smallestAngleDeg": 34.274,
+      "edgeMmRange": [1.869, 4.07]
+    },
+    "boundsLps": [
+      [-150.205, -292.844, -470.691],
+      [22.186, -70.565, -198.139]
+    ],
+    "apexPlaneZ": -237.808,
+    "zones": [
+      {
+        "id": "diaphragm",
+        "faces": 5652,
+        "areaCm2": 233.898,
+        "shareOfSurface": 0.143,
+        "pieces": 1
+      },
+      {
+        "id": "costophrenic-recess",
+        "faces": 2715,
+        "areaCm2": 112.504,
+        "shareOfSurface": 0.069,
+        "pieces": 1
+      },
+      {
+        "id": "posterior-chest-wall",
+        "faces": 9480,
+        "areaCm2": 390.48,
+        "shareOfSurface": 0.239,
+        "pieces": 1
+      },
+      {
+        "id": "apex",
+        "faces": 3552,
+        "areaCm2": 146.121,
+        "shareOfSurface": 0.089,
+        "pieces": 1
+      },
+      {
+        "id": "anterior-chest-wall",
+        "faces": 6464,
+        "areaCm2": 265.588,
+        "shareOfSurface": 0.162,
+        "pieces": 1
+      },
+      {
+        "id": "mediastinum",
+        "faces": 8264,
+        "areaCm2": 341.822,
+        "shareOfSurface": 0.209,
+        "pieces": 1
+      },
+      {
+        "id": "lateral-chest-wall",
+        "faces": 3493,
+        "areaCm2": 145.253,
+        "shareOfSurface": 0.089,
+        "pieces": 1
+      }
+    ],
+    "facesInExactlyOneZone": 39620
+  },
+  "context": {
+    "diaphragm": {
+      "faces": 7688
+    },
+    "heart": {
+      "faces": 7375
+    },
+    "aorta": {
+      "faces": 5077
+    },
+    "superior-vena-cava": {
+      "faces": 1374
+    },
+    "inferior-vena-cava": {
+      "faces": 1550
+    },
+    "pulmonary-artery": {
+      "faces": 5408
+    },
+    "skin": {
+      "faces": 25453
+    }
+  },
+  "sternum": {
+    "faces": 5770,
+    "volumeMl": 84.401
+  }
+}

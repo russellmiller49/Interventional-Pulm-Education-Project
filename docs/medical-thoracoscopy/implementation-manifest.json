@@ -1,0 +1,989 @@
+{
+  "manifest": "medical-thoracoscopy-implementation-manifest",
+  "version": 1,
+  "preparedOn": "2026-09-28",
+  "preparedBy": "AI authoring assistant (Claude) at the owner's request",
+  "statement": "Imported inventory for the Medical Thoracoscopy module. Every item was copied from the owner's planning documents, which are kept outside the repository, and carries the layer and line it came from. Nothing was reconstructed or invented. Nothing in this file is clinical approval, a manufacturer fact-check or a rights permission. Section minutes are authoring estimates and have not been piloted.",
+  "sources": {
+    "v1": {
+      "title": "Medical Thoracoscopy (sponsored by Richard Wolf) — Build Plan",
+      "date": "2026-09-23",
+      "lines": 338,
+      "sha256": "6c06f25dc0422e2d5511757b58de35258ee5d28984c67f314cdb83f6ed1f942e",
+      "keptAt": "Interventional-Pulm-Local-Data/medical_thoracoscopy/plans/",
+      "role": "Original plan. Supplies the inventory, the module tree and the asset pipeline."
+    },
+    "P": {
+      "title": "Medical Thoracoscopy — Revised Build Plan",
+      "date": "2026-09-23",
+      "lines": 177,
+      "sha256": "d1d3bddc43573046b428ffa6bb2354b89dee3c698110dd6406b8a84c82ba2e69",
+      "keptAt": "Interventional-Pulm-Local-Data/medical_thoracoscopy/plans/",
+      "recovery": "Recovered from a session log. Its two wrapper lines were removed, which makes the line numbers match the ones v2 cites.",
+      "role": "First revision. Supplies the five chapter names, the outcome alignment and the corrected assumptions. v2 cites it as [P]."
+    },
+    "v2": {
+      "title": "Medical Thoracoscopy — Revised Build Plan v2",
+      "date": "2026-09-23",
+      "lines": 305,
+      "sha256": "35f837ac44d1adde7b25167b5e065e3e58741cafc4a882956c54b5c6e0025e49",
+      "keptAt": "Interventional-Pulm-Local-Data/medical_thoracoscopy/",
+      "role": "Contract overlay. Governs wherever it differs from v1 (owner decision OD-07)."
+    }
+  },
+  "statusVocabulary": {
+    "values": [
+      "retained decision",
+      "proposed change",
+      "unresolved input",
+      "review pending",
+      "accepted with attributable approval"
+    ],
+    "source": {
+      "layer": "v2",
+      "line": 29
+    }
+  },
+  "ownerDecisions": {
+    "imported": [
+      {
+        "id": "OD-01",
+        "decidedOn": "2026-09-23",
+        "text": "Full module in about 3–4 months, targeting mid-January 2027.",
+        "source": {
+          "layer": "v1",
+          "line": 18
+        }
+      },
+      {
+        "id": "OD-02",
+        "decidedOn": "2026-09-23",
+        "text": "3D coverage: the Mini-Thoracoscopy Set, the ENDOCAM Logic 4K tower and a generic electrosurgical generator.",
+        "source": {
+          "layer": "v1",
+          "line": 19
+        }
+      },
+      {
+        "id": "OD-03",
+        "decidedOn": "2026-09-23",
+        "text": "Wolf has not yet been asked for CAD, a brand kit or video.",
+        "source": {
+          "layer": "v1",
+          "line": 20
+        }
+      },
+      {
+        "id": "OD-04",
+        "decidedOn": "2026-09-23",
+        "text": "Wolf is the sponsor, and the owner keeps editorial control. This is the site's first sponsored module.",
+        "source": {
+          "layer": "v1",
+          "line": 21
+        }
+      },
+      {
+        "id": "OD-05",
+        "decidedOn": "2026-09-23",
+        "text": "It is a new top-level module at `/[locale]/medical-thoracoscopy`.",
+        "source": {
+          "layer": "v1",
+          "line": 22
+        }
+      },
+      {
+        "id": "OD-06",
+        "decidedOn": "2026-09-23",
+        "text": "The old module is retired, with permanent redirects.",
+        "source": {
+          "layer": "v1",
+          "line": 23
+        }
+      }
+    ],
+    "note": "OD-07 to OD-10 were made on 2026-09-27 and are recorded in owner-decisions.md."
+  },
+  "learner": {
+    "primary": "IP and pulmonary fellows and attendings starting thoracoscopy.",
+    "secondary": "nurses and techs, for the room section.",
+    "prerequisites": "pleural ultrasound, thoracentesis and drains, fluid analysis, malignant effusion basics.",
+    "source": {
+      "layer": "v1",
+      "line": 48,
+      "endLine": 51
+    }
+  },
+  "spine": {
+    "phases": ["Decide", "Set up", "Enter", "Make room", "Survey", "Sample", "Treat", "Finish"],
+    "source": {
+      "layer": "v1",
+      "line": 52
+    }
+  },
+  "controls": {
+    "statement": "You change four things: where the port goes; where the scope points (pivot, depth, roll); which tool is in the channel; what is in the space (fluid out, air in).",
+    "items": [
+      "where the port goes",
+      "where the scope points (pivot, depth, roll)",
+      "which tool is in the channel",
+      "what is in the space (fluid out, air in)"
+    ],
+    "source": {
+      "layer": "v1",
+      "line": 55
+    },
+    "learnerWording": {
+      "status": "proposed change",
+      "reason": "The second item trips the learner-copy gate on the word \"points\".",
+      "proposal": "where the scope looks (pivot, depth, roll)",
+      "note": "The imported statement above is unchanged."
+    }
+  },
+  "grammar": {
+    "name": "Reading the pleura",
+    "columns": ["what you see", "where", "consider", "next move"],
+    "rows": [
+      "discrete nodules or masses",
+      "diffuse thickening",
+      "innumerable small nodules with inflammation",
+      "pearly plaques",
+      "fibrin and septations",
+      "a visceral peel with a non-expanding lung",
+      "inflamed but no focal lesion"
+    ],
+    "label": "authored construct",
+    "source": {
+      "layer": "v1",
+      "line": 58,
+      "endLine": 59
+    }
+  },
+  "chapters": {
+    "names": [
+      "Decide",
+      "Equipment and anatomy",
+      "Access and orientation",
+      "Survey and intervention",
+      "Finish and complications"
+    ],
+    "source": {
+      "layer": "P",
+      "line": 31
+    },
+    "assignment": {
+      "status": "proposed change",
+      "decidedBy": null,
+      "decidedOn": null,
+      "note": "No planning layer assigns sections to chapters. v2 asks that none be inferred until the inventory is imported. This proposal was made after the import and awaits the owner.",
+      "source": {
+        "layer": "v2",
+        "line": 45
+      },
+      "proposal": [
+        {
+          "chapter": "Decide",
+          "sections": [1, 2]
+        },
+        {
+          "chapter": "Equipment and anatomy",
+          "sections": [3, 4, 5, 6]
+        },
+        {
+          "chapter": "Access and orientation",
+          "sections": [7, 8, 9, 10]
+        },
+        {
+          "chapter": "Survey and intervention",
+          "sections": [11, 12, 13, 14, 15, 16]
+        },
+        {
+          "chapter": "Finish and complications",
+          "sections": [17, 18, 19]
+        }
+      ]
+    }
+  },
+  "learnSections": [
+    {
+      "number": 1,
+      "id": "why-thoracoscopy",
+      "title": "What looking inside adds",
+      "activity": "Sort the clinical questions",
+      "minutesEstimate": 6,
+      "source": {
+        "layer": "v1",
+        "line": 90
+      }
+    },
+    {
+      "number": 2,
+      "id": "patient-selection",
+      "title": "Who is a candidate",
+      "activity": "Sort micro-cases",
+      "minutesEstimate": 7,
+      "source": {
+        "layer": "v1",
+        "line": 91
+      }
+    },
+    {
+      "number": 3,
+      "id": "the-instrument",
+      "title": "The Mini-Thoracoscopy Set",
+      "activity": "Device explorer: exploded, assemble, cutaway",
+      "minutesEstimate": 9,
+      "source": {
+        "layer": "v1",
+        "line": 92
+      }
+    },
+    {
+      "number": 4,
+      "id": "room-and-tower",
+      "title": "Room, tower and team",
+      "activity": "Diorama: positioning, sight line to the monitor, cable/port matching, return pad",
+      "minutesEstimate": 8,
+      "source": {
+        "layer": "v1",
+        "line": 93
+      }
+    },
+    {
+      "number": 5,
+      "id": "the-chest-wall",
+      "title": "The wall you cross",
+      "activity": "Layer peel, costal groove, safe-triangle overlay",
+      "minutesEstimate": 8,
+      "source": {
+        "layer": "v1",
+        "line": 94
+      }
+    },
+    {
+      "number": 6,
+      "id": "normal-pleural-space",
+      "title": "A normal hemithorax from inside",
+      "activity": "Guided endoscopic tour of the zones (right side)",
+      "minutesEstimate": 9,
+      "source": {
+        "layer": "v1",
+        "line": 95
+      }
+    },
+    {
+      "number": 7,
+      "id": "four-controls",
+      "title": "Four things you control",
+      "activity": "Fulcrum sandbox",
+      "minutesEstimate": 7,
+      "source": {
+        "layer": "v1",
+        "line": 96
+      }
+    },
+    {
+      "number": 8,
+      "id": "choosing-the-port",
+      "title": "Choosing the port site",
+      "activity": "Ultrasound station plus reachability map",
+      "minutesEstimate": 9,
+      "source": {
+        "layer": "v1",
+        "line": 97
+      }
+    },
+    {
+      "number": 9,
+      "id": "entry",
+      "title": "Entering the pleural space",
+      "activity": "Anesthesia down to the pleura (principle), incision, blunt dissection, trocar and sleeve. Little or no fluid is taught as a field in motion: guideline advice to induce a pneumothorax vs the 2025 RCT finding direct entry noninferior",
+      "minutesEstimate": 8,
+      "source": {
+        "layer": "v1",
+        "line": 98
+      }
+    },
+    {
+      "number": 10,
+      "id": "making-room",
+      "title": "Fluid out, air in",
+      "activity": "Paired scenarios: sealed port vs open port; lung collapse morph",
+      "minutesEstimate": 8,
+      "source": {
+        "layer": "v1",
+        "line": 99
+      }
+    },
+    {
+      "number": 11,
+      "id": "systematic-survey",
+      "title": "Look everywhere, in order",
+      "activity": "Zone ledger (not seen / partly seen / seen) lit on the Chest view",
+      "minutesEstimate": 9,
+      "source": {
+        "layer": "v1",
+        "line": 100
+      }
+    },
+    {
+      "number": 12,
+      "id": "reading-the-pleura",
+      "title": "What you see and where",
+      "activity": "Grammar built from side-by-side pathology variants",
+      "minutesEstimate": 10,
+      "source": {
+        "layer": "v1",
+        "line": 101
+      }
+    },
+    {
+      "number": 13,
+      "id": "taking-biopsies",
+      "title": "Parietal biopsies",
+      "activity": "Forceps drill; site classified over the rib vs costal groove vs visceral vs mediastinal",
+      "minutesEstimate": 9,
+      "source": {
+        "layer": "v1",
+        "line": 102
+      }
+    },
+    {
+      "number": 14,
+      "id": "energy-and-bleeding",
+      "title": "Energy, bleeding and hemostasis",
+      "activity": "Hook and button electrodes (principles; settings per IFU)",
+      "minutesEstimate": 8,
+      "source": {
+        "layer": "v1",
+        "line": 103
+      }
+    },
+    {
+      "number": 15,
+      "id": "adhesions",
+      "title": "When the lung won't fall away",
+      "activity": "Filmy vs fibrous vs vascular bands; trapped lung",
+      "minutesEstimate": 8,
+      "source": {
+        "layer": "v1",
+        "line": 104
+      }
+    },
+    {
+      "number": 16,
+      "id": "talc-poudrage",
+      "title": "Talc poudrage",
+      "activity": "Particle spray and zone deposition; talc vs IPC vs both",
+      "minutesEstimate": 9,
+      "source": {
+        "layer": "v1",
+        "line": 105
+      }
+    },
+    {
+      "number": 17,
+      "id": "finishing",
+      "title": "Drain, re-expansion, recovery",
+      "activity": "Drain through the port, re-expansion morph",
+      "minutesEstimate": 8,
+      "source": {
+        "layer": "v1",
+        "line": 106
+      }
+    },
+    {
+      "number": 18,
+      "id": "complications",
+      "title": "When something goes wrong",
+      "activity": "Recognition, first moves, escalation",
+      "minutesEstimate": 9,
+      "source": {
+        "layer": "v1",
+        "line": 107
+      }
+    },
+    {
+      "number": 19,
+      "id": "what-completion-means",
+      "title": "What this course does and doesn't show",
+      "activity": "Supervised training and credentialing (sourced)",
+      "minutesEstimate": 5,
+      "source": {
+        "layer": "v1",
+        "line": 108
+      }
+    }
+  ],
+  "learnMinutesEstimateTotal": 154,
+  "practiceScenarios": [
+    {
+      "id": "P1",
+      "title": "High hemidiaphragm",
+      "pairsWithLearn": [8],
+      "source": {
+        "layer": "v1",
+        "line": 114
+      }
+    },
+    {
+      "id": "P2",
+      "title": "Lung won't fall away",
+      "pairsWithLearn": [10, 15],
+      "source": {
+        "layer": "v1",
+        "line": 115
+      }
+    },
+    {
+      "id": "P3",
+      "title": "Scattered parietal nodules",
+      "pairsWithLearn": [11, 12],
+      "source": {
+        "layer": "v1",
+        "line": 116
+      }
+    },
+    {
+      "id": "P4",
+      "title": "Over the rib vs in the groove",
+      "pairsWithLearn": [13],
+      "source": {
+        "layer": "v1",
+        "line": 117
+      }
+    },
+    {
+      "id": "P5",
+      "title": "Non-expandable lung at the end",
+      "pairsWithLearn": [16],
+      "source": {
+        "layer": "v1",
+        "line": 118
+      }
+    },
+    {
+      "id": "P6",
+      "title": "Bleeding after a biopsy",
+      "pairsWithLearn": [14],
+      "source": {
+        "layer": "v1",
+        "line": 119
+      }
+    },
+    {
+      "id": "P7",
+      "title": "Air leak or subcutaneous emphysema",
+      "pairsWithLearn": [17, 18],
+      "source": {
+        "layer": "v1",
+        "line": 120
+      }
+    }
+  ],
+  "integratedCases": [
+    {
+      "id": "C1",
+      "title": "Undiagnosed lymphocytic exudate",
+      "source": {
+        "layer": "v1",
+        "line": 126
+      }
+    },
+    {
+      "id": "C2",
+      "title": "Recurrent malignant effusion with an expandable lung",
+      "source": {
+        "layer": "v1",
+        "line": 127
+      }
+    },
+    {
+      "id": "C3",
+      "title": "Asbestos exposure with plaques and nodularity",
+      "source": {
+        "layer": "v1",
+        "line": 128
+      }
+    },
+    {
+      "id": "C4",
+      "title": "Malignant effusion with a non-expandable lung",
+      "source": {
+        "layer": "v1",
+        "line": 129
+      }
+    }
+  ],
+  "outcomeAlignment": {
+    "target": "knows how",
+    "rows": [
+      {
+        "learnerCan": "Distinguish appropriate clinical questions and candidate considerations",
+        "teachingAndApplication": "Sections 1–2; integrated cases",
+        "source": {
+          "layer": "P",
+          "line": 39
+        }
+      },
+      {
+        "learnerCan": "Identify equipment components and explain setup relationships",
+        "teachingAndApplication": "Sections 3–4; assembly and room activities",
+        "source": {
+          "layer": "P",
+          "line": 40
+        }
+      },
+      {
+        "learnerCan": "Relate anatomy and ultrasound findings to access considerations",
+        "teachingAndApplication": "Sections 5, 8–10; P1–P2",
+        "source": {
+          "layer": "P",
+          "line": 41
+        }
+      },
+      {
+        "learnerCan": "Explain scope control and conduct a systematic modeled survey",
+        "teachingAndApplication": "Sections 6–7, 11–12; P3",
+        "source": {
+          "layer": "P",
+          "line": 42
+        }
+      },
+      {
+        "learnerCan": "Explain sampling, treatment and escalation decisions within their limits",
+        "teachingAndApplication": "Sections 13–16, 18; P4–P6",
+        "source": {
+          "layer": "P",
+          "line": 43
+        }
+      },
+      {
+        "learnerCan": "Explain completion, recovery and the supervised training still required",
+        "teachingAndApplication": "Sections 17–19; P7 and integrated cases",
+        "source": {
+          "layer": "P",
+          "line": 44
+        }
+      }
+    ],
+    "source": {
+      "layer": "P",
+      "line": 37,
+      "endLine": 46
+    }
+  },
+  "correctedAssumptions": [
+    {
+      "originalProposal": "Combine airway colliders using minimum clearance",
+      "requiredImprovement": "Use explicit cavity-versus-obstacle semantics. The existing airway helper returns positive clearance **inside** its mesh; that convention is wrong for lung obstacles.",
+      "source": {
+        "layer": "P",
+        "line": 19
+      }
+    },
+    {
+      "originalProposal": "Refit a BVH when lung state changes",
+      "requiredImprovement": "Update CPU collision geometry to match every supported morph state before refitting. GPU morphing alone does not update collision queries.",
+      "source": {
+        "layer": "P",
+        "line": 20
+      }
+    },
+    {
+      "originalProposal": "Tool diameter ≤ channel diameter proves fit",
+      "requiredImprovement": "Separate dimensional comparison from manufacturer-confirmed compatibility, including market, accessory, valve and adapter combinations.",
+      "source": {
+        "layer": "P",
+        "line": 21
+      }
+    },
+    {
+      "originalProposal": "Matching LPS coordinates establishes ultrasound alignment",
+      "requiredImprovement": "Verify source-case identity, transforms, units, landmarks and patient position. Shared axis names alone are insufficient.",
+      "source": {
+        "layer": "P",
+        "line": 22
+      }
+    },
+    {
+      "originalProposal": "Re-expansion requires drain + seal",
+      "requiredImprovement": "Model these as prerequisites within a reviewed scenario; they must not guarantee expansion despite non-expandable lung, obstruction or ongoing air leak.",
+      "source": {
+        "layer": "P",
+        "line": 23
+      }
+    },
+    {
+      "originalProposal": "Existing self-paced policy automatically governs this module",
+      "requiredImprovement": "Explicitly adopt its learning contract for this module; the current document names nine other modules.",
+      "source": {
+        "layer": "P",
+        "line": 24
+      }
+    },
+    {
+      "originalProposal": "Failed week-four gate triggers a reduced simulator",
+      "requiredImprovement": "Failed gates trigger remediation and schedule revision, consistent with the owner’s full-3D priority.",
+      "source": {
+        "layer": "P",
+        "line": 25
+      }
+    }
+  ],
+  "teachingAdditions": [
+    {
+      "name": "opening whole-procedure demonstration",
+      "text": "Open with a short, annotated whole-procedure demonstration before teaching individual components. Use original animation initially; licensed footage can supplement it.",
+      "source": {
+        "layer": "P",
+        "line": 50
+      },
+      "status": "retained decision",
+      "definedBeyondThisSentence": false
+    },
+    {
+      "name": "procedural decision guide",
+      "text": "Retain the four simulator controls, but label them as controls of the model. Add a separate procedural decision guide covering whether to proceed, sample, treat, stop or escalate.",
+      "source": {
+        "layer": "P",
+        "line": 51
+      },
+      "status": "retained decision",
+      "definedBeyondThisSentence": false
+    },
+    {
+      "name": "step, hazard, early sign, first response table",
+      "text": "Keep “Reading the pleura” for visual interpretation. Add a reusable **step → hazard → early sign → first response** table for procedural complications.",
+      "source": {
+        "layer": "P",
+        "line": 52
+      },
+      "status": "retained decision",
+      "definedBeyondThisSentence": false
+    }
+  ],
+  "modelBoundaries": [
+    {
+      "text": "No haptics, tissue forces or bleeding physiology.",
+      "source": {
+        "layer": "v1",
+        "line": 62
+      }
+    },
+    {
+      "text": "Pressure is shown as qualitative authored states.",
+      "source": {
+        "layer": "v1",
+        "line": 63
+      }
+    },
+    {
+      "text": "Pathology and the talc spray are illustrative.",
+      "source": {
+        "layer": "v1",
+        "line": 64
+      }
+    },
+    {
+      "text": "Anatomy the scan doesn't contain (pleura, intercostal muscles, NV bundles) is authored teaching geometry.",
+      "source": {
+        "layer": "v1",
+        "line": 65
+      }
+    },
+    {
+      "text": "Sedation, energy settings and reprocessing follow the IFU and local protocol.",
+      "source": {
+        "layer": "v1",
+        "line": 66
+      }
+    },
+    {
+      "text": "Completing the module is not competence.",
+      "source": {
+        "layer": "v1",
+        "line": 67
+      }
+    }
+  ],
+  "harmfulReflexes": {
+    "items": [
+      {
+        "text": "An entry site too low or too anterior-medial.",
+        "source": {
+          "layer": "v1",
+          "line": 134
+        }
+      },
+      {
+        "text": "Forcing the scope into lung.",
+        "source": {
+          "layer": "v1",
+          "line": 135
+        }
+      },
+      {
+        "text": "Biopsy at the inferior rib margin or of mediastinal structures.",
+        "source": {
+          "layer": "v1",
+          "line": 136
+        }
+      },
+      {
+        "text": "Activating energy out of view.",
+        "source": {
+          "layer": "v1",
+          "line": 137
+        }
+      },
+      {
+        "text": "Suctioning a sealed space.",
+        "source": {
+          "layer": "v1",
+          "line": 138
+        }
+      }
+    ],
+    "source": {
+      "layer": "v1",
+      "line": 133,
+      "endLine": 138
+    },
+    "governingRule": {
+      "text": "Unsafe actions must not be endorsed, conceal their risks, or generate fabricated procedural success. Their modeled consequences must remain clinically reviewed and causally plausible. A favorable immediate observation does not establish that the action was appropriate or safe.",
+      "source": {
+        "layer": "v2",
+        "line": 37
+      },
+      "status": "proposed change",
+      "note": "Replaces the v1 rule that these actions must never look beneficial. Unsupported consequences are \"not modeled\"."
+    }
+  },
+  "budgets": {
+    "source": {
+      "layer": "v1",
+      "line": 213,
+      "endLine": 215
+    },
+    "items": [
+      {
+        "name": "pleural-space scene payload",
+        "limit": 8,
+        "unit": "MB"
+      },
+      {
+        "name": "anatomy GLB",
+        "limit": 3,
+        "unit": "MB"
+      },
+      {
+        "name": "device GLB",
+        "limit": 2.5,
+        "unit": "MB"
+      },
+      {
+        "name": "device GLB triangles",
+        "limit": 50000,
+        "unit": "triangles"
+      },
+      {
+        "name": "texture edge",
+        "limit": 1024,
+        "unit": "px"
+      },
+      {
+        "name": "rendered triangles, high quality",
+        "limit": 250000,
+        "unit": "triangles"
+      },
+      {
+        "name": "rendered triangles, low quality",
+        "limit": 120000,
+        "unit": "triangles"
+      },
+      {
+        "name": "draw calls",
+        "limit": 150,
+        "unit": "calls"
+      },
+      {
+        "name": "collision proxy triangles",
+        "limit": 12000,
+        "unit": "triangles"
+      },
+      {
+        "name": "coverage update",
+        "limit": 4,
+        "unit": "ms"
+      }
+    ]
+  },
+  "prototypeGate": {
+    "v1Criteria": [
+      {
+        "text": "Median ≥ 45 fps on an M1/Iris Xe laptop and ≥ 30 fps on an A14 iPad at low quality.",
+        "source": {
+          "layer": "v1",
+          "line": 289
+        }
+      },
+      {
+        "text": "Payload ≤ 8 MB; interactive ≤ 4 s fast and ≤ 8 s on throttled 4G.",
+        "source": {
+          "layer": "v1",
+          "line": 290
+        }
+      },
+      {
+        "text": "Zero wall or lung penetration across 10k seeded fuzz commands.",
+        "source": {
+          "layer": "v1",
+          "line": 291
+        }
+      },
+      {
+        "text": "The owner judges the scope view plausible.",
+        "source": {
+          "layer": "v1",
+          "line": 292
+        }
+      },
+      {
+        "text": "3–5 fellows grasp the inverted mapping (owner-run).",
+        "source": {
+          "layer": "v1",
+          "line": 293
+        }
+      },
+      {
+        "text": "Full fallback parity; axe clean.",
+        "source": {
+          "layer": "v1",
+          "line": 294
+        }
+      }
+    ],
+    "v1OnFailure": {
+      "text": "If it fails: authored survey poses with free look only.",
+      "source": {
+        "layer": "v1",
+        "line": 295
+      },
+      "status": "superseded by v2"
+    },
+    "v2OnFailure": {
+      "text": "A failed gate triggers repair and a revised forecast, not silent scope reduction.",
+      "source": {
+        "layer": "v2",
+        "line": 11
+      },
+      "status": "retained decision"
+    },
+    "v2Additions": {
+      "text": "One complete survey lesson using real anatomy, free scope movement, collision, lung transition, visibility, keyboard and accessible alternative; **plus a narrow intentional-tool-contact spike** that proves the intervention contract. Independent geometry fixtures, stale-result tests, real browser rendering, and first hardware measurements are required.",
+      "source": {
+        "layer": "v2",
+        "line": 191
+      }
+    }
+  },
+  "performanceTargets": {
+    "source": {
+      "layer": "v1",
+      "line": 289,
+      "endLine": 290
+    },
+    "note": "v1 names hardware and, for one target, quality. It names no browser, viewport, network profile or cache state. Those cells are unresolved inputs, not defaults.",
+    "rows": [
+      {
+        "target": "median frame rate at least 45 fps",
+        "hardware": "M1 or Iris Xe laptop",
+        "quality": "UNRESOLVED",
+        "browser": "UNRESOLVED",
+        "viewport": "UNRESOLVED",
+        "network": "not applicable",
+        "cache": "not applicable",
+        "result": "NOT TESTED"
+      },
+      {
+        "target": "frame rate at least 30 fps",
+        "hardware": "A14 iPad",
+        "quality": "low",
+        "browser": "UNRESOLVED",
+        "viewport": "UNRESOLVED",
+        "network": "not applicable",
+        "cache": "not applicable",
+        "result": "NOT TESTED"
+      },
+      {
+        "target": "interactive within 4 s",
+        "hardware": "UNRESOLVED",
+        "quality": "UNRESOLVED",
+        "browser": "UNRESOLVED",
+        "viewport": "UNRESOLVED",
+        "network": "fast; profile UNRESOLVED",
+        "cache": "UNRESOLVED",
+        "result": "NOT TESTED"
+      },
+      {
+        "target": "interactive within 8 s",
+        "hardware": "UNRESOLVED",
+        "quality": "UNRESOLVED",
+        "browser": "UNRESOLVED",
+        "viewport": "UNRESOLVED",
+        "network": "throttled 4G; profile UNRESOLVED",
+        "cache": "UNRESOLVED",
+        "result": "NOT TESTED"
+      }
+    ]
+  },
+  "routes": {
+    "base": "/medical-thoracoscopy",
+    "source": {
+      "layer": "v1",
+      "line": 22
+    },
+    "learnerLabels": {
+      "assess": "Cases",
+      "source": {
+        "layer": "v2",
+        "line": 66
+      }
+    },
+    "legacy": {
+      "base": "/pleural-procedures/pleuroscopy",
+      "mappings": [
+        {
+          "from": "/assessment",
+          "to": "/assess"
+        },
+        {
+          "from": "/references",
+          "to": "/reference"
+        }
+      ],
+      "source": {
+        "layer": "v2",
+        "line": 235
+      },
+      "status": "retained decision",
+      "note": "Redirects wait for a reviewed destination."
+    }
+  },
+  "progress": {
+    "storageKey": "ip-medical-thoracoscopy-self-paced-v1",
+    "source": {
+      "layer": "v1",
+      "line": 158
+    },
+    "neverTouch": [
+      {
+        "key": "ip-pleural-module-progress-v1",
+        "source": {
+          "layer": "v1",
+          "line": 177
+        }
+      }
+    ]
+  }
+}
