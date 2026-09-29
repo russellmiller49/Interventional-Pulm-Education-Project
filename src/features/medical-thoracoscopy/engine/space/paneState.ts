@@ -1,9 +1,64 @@
-import type { SpacePaneState, SpaceReadiness } from '../../components/space/types'
-import { ledgerFrom } from './coverage'
+import type {
+  CrossSection,
+  ScopePose,
+  SpacePaneState,
+  SpaceReadiness,
+  ZoneLedger,
+} from '../../components/space/types'
+import { ledgerFrom, type Coverage } from './coverage'
 import { crossSectionOf } from './crossSection'
 import type { LoadedSpace } from './loadSpace'
 import type { EngineState } from './spaceReducer'
 import { refusalOf } from './spaceWords'
+
+/**
+ * The last cut and the last ledger, kept by the identity of what they were made from: a tick of the
+ * clock changes neither the pose nor what has been seen, so it need not cut the proxies again.
+ */
+let lastCut: {
+  readonly space: LoadedSpace
+  readonly pose: ScopePose
+  readonly lungStep: number
+  readonly cut: CrossSection
+} | null = null
+let lastLedger: {
+  readonly coverage: Coverage
+  readonly space: LoadedSpace
+  readonly reach: readonly number[] | null
+  readonly ledger: ZoneLedger
+} | null = null
+
+function cutOf(space: LoadedSpace, pose: ScopePose, lungStep: number): CrossSection {
+  if (
+    lastCut &&
+    lastCut.space === space &&
+    lastCut.pose === pose &&
+    lastCut.lungStep === lungStep
+  ) {
+    return lastCut.cut
+  }
+  const cut = crossSectionOf(space, pose, lungStep)
+  lastCut = { space, pose, lungStep, cut }
+  return cut
+}
+
+function ledgerOf(
+  coverage: Coverage,
+  space: LoadedSpace,
+  reach: readonly number[] | null,
+): ZoneLedger {
+  if (
+    lastLedger &&
+    lastLedger.coverage === coverage &&
+    lastLedger.space === space &&
+    lastLedger.reach === reach
+  ) {
+    return lastLedger.ledger
+  }
+  const ledger = ledgerFrom(coverage, space.samples, reach)
+  lastLedger = { coverage, space, reach, ledger }
+  return ledger
+}
 
 /** The engine's state as the pane contract has it (slice 9): what every pane draws. */
 export function paneStateOf(
@@ -21,10 +76,10 @@ export function paneStateOf(
     readiness,
     pose: state.pose,
     inView: state.inView,
-    ledger: ledgerFrom(state.coverage, space.samples, reach),
+    ledger: ledgerOf(state.coverage, space, reach),
     refusal: refusalOf(state.limit, state.lungHeld, wallZone),
-    crossSection:
-      readiness.kind === 'ready' ? crossSectionOf(space, state.pose, state.lungStep) : null,
+    crossSection: readiness.kind === 'ready' ? cutOf(space, state.pose, state.lungStep) : null,
     clock: { held: state.clockHeld },
+    lungStep: state.lungStep,
   }
 }

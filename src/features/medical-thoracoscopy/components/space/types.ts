@@ -152,6 +152,8 @@ export interface SpacePaneState {
   readonly crossSection: CrossSection | null
   /** Under reduced motion the clock waits: `held` says something is waiting for the Step control. */
   readonly clock: { readonly held: boolean }
+  /** The lung's step, the one the snapshot names, for a scene to draw (added in slice 11). */
+  readonly lungStep: number
 }
 
 // ── What the pane sends back ─────────────────────────────────────────────────────────────────

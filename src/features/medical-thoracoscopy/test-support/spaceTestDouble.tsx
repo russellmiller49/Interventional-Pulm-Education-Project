@@ -104,6 +104,7 @@ export function createSpaceDouble({
     refusal: null,
     crossSection: readiness.kind === 'ready' ? doubleCrossSection(0, 40) : null,
     clock: { held: false },
+    lungStep: 0,
   }
 
   const look = (next: SpacePaneState): SpacePaneState => {

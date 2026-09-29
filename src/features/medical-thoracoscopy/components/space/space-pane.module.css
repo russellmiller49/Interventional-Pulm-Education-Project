@@ -232,3 +232,92 @@
   font: inherit;
   font-weight: 600;
 }
+
+/*
+ * The 3D views (slice 11). The canvas is fixed to the viewport, as drei's View needs, and this box
+ * clips it to the pane: `isolation` and `clip-path` keep it from painting over anything else.
+ */
+.sceneViews {
+  position: relative;
+  isolation: isolate;
+  clip-path: inset(0 round 0.6rem);
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .sceneViews {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+.sceneCanvas {
+  z-index: 0;
+}
+
+.sceneViews .chestView,
+.sceneViews .scopeView {
+  position: relative;
+  z-index: 1;
+}
+
+.sceneViewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+/* Square, as the scope camera is: the lens paints everything outside the round field. */
+.scopeViewport {
+  aspect-ratio: 1 / 1;
+  max-width: 26rem;
+  margin-inline: auto;
+  border: 0;
+  border-radius: 0;
+}
+
+.sceneViewportInner {
+  position: absolute;
+  inset: 0;
+}
+
+/* The telescope's round field: a dark rim, and outside it the panel, as a cut-out. */
+.lens {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle closest-side, transparent 94%, #050303 98%, var(--panel) 99%);
+}
+
+.paneNote {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--amber);
+  background: var(--panel-3);
+  line-height: 1.45;
+}
+
+.prototype {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.prototypeControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.actionButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
