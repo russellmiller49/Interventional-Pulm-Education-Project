@@ -21,3 +21,18 @@ describe('pleuroscopy quiz integrity', () => {
     }
   })
 })
+
+/**
+ * The drainage-volume item was removed with its Practice scenario; see
+ * scenarioIntegrity.test.ts.
+ */
+describe('pleuroscopy quiz: removed drainage-volume teaching', () => {
+  it('asks nothing about re-expansion or volume-limited drainage', () => {
+    const text = pleuroscopyQuizQuestions
+      .flatMap((question) => [question.prompt, ...question.options, question.explanation])
+      .join('\n')
+
+    expect(text).not.toMatch(/re-?expansion/i)
+    expect(text).not.toMatch(/volume-limited/i)
+  })
+})
