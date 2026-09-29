@@ -77,6 +77,27 @@ from them, in `src/features/medical-thoracoscopy/content/data/anatomy/`. See the
 [thorax-surfaces handoff](handoffs/mt-02b-thorax-surfaces.md) and the
 [lung-states handoff](handoffs/mt-02c-lung-states.md).
 
+## Space pane
+
+The pane that shows the pleural space is a seam, written before anything that draws it:
+`src/features/medical-thoracoscopy/components/space/types.ts`. A lesson hands the pane the space
+engine's state, plain JSON; the pane sends commands back, one step of one control each. The pane
+works nothing out: what is in view, what has been seen and what stops the telescope all come from
+the engine, so the same commands give the same ledger whichever pane draws them.
+
+- `SpaceFallbackPane` draws it without WebGL: the Chest view as a cut through the space along the
+  telescope, the Scope view in words, the control dock, the model's estimate and the keys.
+- `ControlDock` holds the second control's three parts; a held button repeats and lets go when the
+  window loses focus or the tab is hidden; under reduced motion a press is one step, and a waiting
+  model moves on with Step. While the anatomy loads or cannot be had, the controls say why they wait.
+- `ZoneLedger` is the model's estimate, in the survey section's words, with no number and no total.
+- `spaceKeyMap.ts` is the key map as data; the help panel reads it.
+- `test-support/spaceTestDouble.tsx` stands in for the engine, and `SpacePaneDouble` for the pane,
+  in tests.
+
+The 3D scene (slice 11) arrives behind the same contract. The contract changes only by adding. See
+the [space-contract handoff](handoffs/mt-02d-space-contract.md).
+
 ## Written sections
 
 A section is data: one file in `src/features/medical-thoracoscopy/content/sections/`, in the shape
