@@ -203,4 +203,13 @@ have not been decoded by three.js's Draco loader, which happens in slice 11.
 - Do not commit anything from `devices/comparisons/` or `devices/previews/`.
 - Do not describe a measured or authored value to a learner as a fact about the device.
 
+## Repair after the independent review (2026-09-29, R0)
+
+"None uploaded" was true of the module asset storage and nothing more. The repository is public:
+since this branch was pushed, the twelve models and their manifest can be downloaded from GitHub by
+anyone, on this branch and every later one (a raw address answered HTTP 200 on 2026-09-29). They are
+not on main and not served by the production site. The rights register's `heldAt` and `exposure`
+for R-DEVICE-MODELS now say so. Recorded, not approved: whether the exposure is acceptable is the
+owner's decision, and R-DEVICE-MODELS stays unresolved and blocking upload.
+
 This does not change publication status or constitute clinical approval.
