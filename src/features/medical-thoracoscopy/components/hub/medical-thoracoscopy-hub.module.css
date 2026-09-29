@@ -1,0 +1,180 @@
+.hub {
+  display: grid;
+  gap: 2rem;
+  max-width: 64rem;
+  margin: 1.5rem 0 0;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
+  line-height: 1.2;
+}
+
+.hero p {
+  max-width: 44rem;
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.composition {
+  margin-top: 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.continue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding: 0.85rem 1.1rem;
+  border: 1px solid var(--cyan);
+  border-radius: 0.9rem;
+  color: var(--ink);
+  background: var(--panel-2);
+  text-decoration: none;
+}
+
+.continue small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.continue svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: none;
+}
+
+.status {
+  max-width: 44rem;
+  margin-top: 1.25rem;
+  padding: 0.85rem 1.1rem;
+  border: 1px dashed var(--line);
+  border-radius: 0.9rem;
+  color: var(--muted);
+}
+
+.sectionHeading {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+}
+
+.groupList {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.groupCard {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--panel);
+}
+
+.groupSummary {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.9rem 1.1rem;
+  cursor: pointer;
+}
+
+.groupSummary > span:first-child {
+  color: var(--cyan-bright);
+  font-weight: 600;
+}
+
+.groupSummaryText {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.groupSummaryText small {
+  color: var(--muted);
+}
+
+.groupBody {
+  margin: 0 1.1rem 0.75rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.sectionList {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0 1.1rem 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.sectionItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.6rem;
+  background: var(--panel-2);
+}
+
+.sectionItem a {
+  color: var(--ink);
+}
+
+.sectionMeta {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.inPreparationTag {
+  color: var(--amber);
+  font-size: 0.8rem;
+  letter-spacing: 0.01em;
+}
+
+.upNext {
+  margin-left: 0.5rem;
+  color: var(--cyan-bright);
+  font-style: normal;
+  font-size: 0.8rem;
+}
+
+.plainList {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.boundaries {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.prototypeNote {
+  max-width: 44rem;
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.note {
+  padding: 0.85rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  color: var(--muted);
+}
+
+.backLink {
+  color: var(--cyan-bright);
+}

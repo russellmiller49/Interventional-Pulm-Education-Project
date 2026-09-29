@@ -168,6 +168,13 @@
         "NEXT_PUBLIC_SUPABASE_ANON_KEY": "public-anon-key-placeholder",
         "NEXT_PUBLIC_SUPABASE_PROJECT_REF": "YOUR_PROJECT_REF"
       }
+    },
+    {
+      "name": "claude-thoracoscopy",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/dev-with-training-apps.mjs", "--port", "3134"],
+      "port": 3134,
+      "autoPort": false
     }
   ]
 }

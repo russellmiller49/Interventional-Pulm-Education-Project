@@ -1,0 +1,271 @@
+{
+  "record": "medical-thoracoscopy-lung-states",
+  "version": 1,
+  "script": "scripts/medical-thoracoscopy/build_lung_states.py",
+  "statement": "Numbers only. The files are built in the owner's local data and are not in the repository: the segmentation's terms are not settled (rights register, R-ANATOMY-SEGMENTATION).",
+  "frame": "LPS millimetres",
+  "label": "Derived from CT segmentation",
+  "statesLabel": "Authored, illustrative",
+  "claims": ["MT-C-0001", "MT-C-0002"],
+  "files": {
+    "lung-states": {
+      "file": "lung-states.glb",
+      "sha256": "272603d8d95a6acc92cd74cf0e37d1bb417de30d9b9687dc144cb012d23a1665",
+      "bytes": 1308408
+    },
+    "proxy-pleural-space": {
+      "file": "proxy-pleural-space.glb",
+      "sha256": "6c4048f8e9ee7205c213b80cc2a6bc1ac7fb1c13ee8f0b1b833e201b32e93937",
+      "bytes": 108408
+    },
+    "proxy-lung": {
+      "file": "proxy-lung.glb",
+      "sha256": "9d7a1a5818da9d265f98a323ecb250caa2e7cea6a5675f39ab16acbe96d35e8a",
+      "bytes": 484500
+    }
+  },
+  "lung": {
+    "closingMm": 2.0,
+    "erosionMm": 1.0,
+    "gridMm": 1.0,
+    "smoothingMm": 1.0,
+    "edgeMm": 3.0,
+    "marchingStep": 2,
+    "lobes": [
+      {
+        "id": "upper",
+        "segment": "right-lung-upper",
+        "faces": 14194,
+        "areaCm2": 582.971
+      },
+      {
+        "id": "middle",
+        "segment": "right-lung-middle",
+        "faces": 5577,
+        "areaCm2": 229.631
+      },
+      {
+        "id": "lower",
+        "segment": "right-lung-lower",
+        "faces": 9839,
+        "areaCm2": 405.508
+      }
+    ],
+    "voxelVolumeMl": 2342.84,
+    "faces": 29610,
+    "vertices": 14807,
+    "watertight": true,
+    "smallestAngleDeg": 34.26
+  },
+  "collapse": {
+    "gapAtPortMm": 30.0,
+    "steps": 8,
+    "hilumSearchMm": 12.0,
+    "targetDepthMm": 12.0,
+    "gravityDriftMm": 40.0,
+    "wallClearanceMm": 1.2,
+    "wallReachMm": 10.0,
+    "friction": 0.5,
+    "barrierMm": 2.0,
+    "barrierSpeed": 20.0,
+    "fieldCellMm": 2.5,
+    "fieldSmoothingCells": 1.5,
+    "timeStep": 0.004,
+    "tangentialRelaxation": 0.3,
+    "creaseLimitDeg": 45.0,
+    "hilarCentroidLps": [-34.998, -184.647, -319.355],
+    "targetLps": [-68.55, -201.363, -320.386],
+    "flowTime": 0.348,
+    "portPleuraPointLps": [-132.01, -184.09, -350.58],
+    "smoothings": 54,
+    "verticesTouched": 504,
+    "tangentialDriftMm": {
+      "median": 0.254,
+      "max": 7.281
+    }
+  },
+  "checks": {
+    "clearanceFloorMm": 0.25,
+    "blendsCheckedAt": [0.25, 0.5, 0.75],
+    "foldedMeans": "the angle between a face and a neighbour has grown by more than 90 degrees since the expanded state, or the face has shrunk below 5 per cent of its area"
+  },
+  "states": [
+    {
+      "step": 0,
+      "flowTimeFraction": 0.0,
+      "volumeMl": 2339.592,
+      "gapAtPortMm": 0.867,
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 0.377,
+      "volumeFraction": 1.0
+    },
+    {
+      "step": 1,
+      "flowTimeFraction": 0.125,
+      "volumeMl": 2008.268,
+      "gapAtPortMm": 5.067,
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 0.799,
+      "volumeFraction": 0.858
+    },
+    {
+      "step": 2,
+      "flowTimeFraction": 0.25,
+      "volumeMl": 1730.193,
+      "gapAtPortMm": 9.098,
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 0.905,
+      "volumeFraction": 0.74
+    },
+    {
+      "step": 3,
+      "flowTimeFraction": 0.375,
+      "volumeMl": 1489.581,
+      "gapAtPortMm": 13.001,
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 0.979,
+      "volumeFraction": 0.637
+    },
+    {
+      "step": 4,
+      "flowTimeFraction": 0.5,
+      "volumeMl": 1298.956,
+      "gapAtPortMm": 16.417,
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 1.326,
+      "volumeFraction": 0.555
+    },
+    {
+      "step": 5,
+      "flowTimeFraction": 0.625,
+      "volumeMl": 1116.132,
+      "gapAtPortMm": 20.043,
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 1.439,
+      "volumeFraction": 0.477
+    },
+    {
+      "step": 6,
+      "flowTimeFraction": 0.75,
+      "volumeMl": 957.783,
+      "gapAtPortMm": 23.513,
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 1.496,
+      "volumeFraction": 0.409
+    },
+    {
+      "step": 7,
+      "flowTimeFraction": 0.875,
+      "volumeMl": 820.823,
+      "gapAtPortMm": 26.85,
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 1.592,
+      "volumeFraction": 0.351
+    },
+    {
+      "step": 8,
+      "flowTimeFraction": 1.0,
+      "volumeMl": 702.527,
+      "gapAtPortMm": 30.103,
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 1.632,
+      "volumeFraction": 0.3
+    }
+  ],
+  "between": [
+    {
+      "from": 0,
+      "to": 1,
+      "checkedAt": [0.25, 0.5, 0.75],
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 0.611
+    },
+    {
+      "from": 1,
+      "to": 2,
+      "checkedAt": [0.25, 0.5, 0.75],
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 0.89
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "checkedAt": [0.25, 0.5, 0.75],
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 0.954
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "checkedAt": [0.25, 0.5, 0.75],
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 1.086
+    },
+    {
+      "from": 4,
+      "to": 5,
+      "checkedAt": [0.25, 0.5, 0.75],
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 1.395
+    },
+    {
+      "from": 5,
+      "to": 6,
+      "checkedAt": [0.25, 0.5, 0.75],
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 1.413
+    },
+    {
+      "from": 6,
+      "to": 7,
+      "checkedAt": [0.25, 0.5, 0.75],
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 1.514
+    },
+    {
+      "from": 7,
+      "to": 8,
+      "checkedAt": [0.25, 0.5, 0.75],
+      "foldedFaces": 0,
+      "crossingFaces": 0,
+      "facesThroughPleura": 0,
+      "clearanceMm": 1.596
+    }
+  ],
+  "quantisation": {
+    "positionStepMm": 0.003,
+    "largestErrorMm": 0.003
+  }
+}
