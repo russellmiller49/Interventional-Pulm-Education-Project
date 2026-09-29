@@ -381,6 +381,34 @@
       "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
       "addedIn": "claude/mt-02b-thorax-surfaces",
       "compiledIntoPageCode": false
+    },
+    {
+      "path": "src/features/medical-thoracoscopy/content/data/anatomy/fluid-table.json",
+      "what": "Fluid level: volume against height in the presented position",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "addedIn": "claude/mt-02c-lung-states",
+      "compiledIntoPageCode": false
+    },
+    {
+      "path": "src/features/medical-thoracoscopy/content/data/anatomy/lung-states.json",
+      "what": "Lung states: per-step gap at the port, deviation and fold checks",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "addedIn": "claude/mt-02c-lung-states",
+      "compiledIntoPageCode": false
+    },
+    {
+      "path": "src/features/medical-thoracoscopy/content/data/anatomy/proxies.json",
+      "what": "Collision proxy records: triangle counts, hashes and recorded deviation from the drawn surfaces",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "addedIn": "claude/mt-02c-lung-states",
+      "compiledIntoPageCode": false
+    },
+    {
+      "path": "src/features/medical-thoracoscopy/content/data/anatomy/zone-samples.json",
+      "what": "Zone sample records: counts per survey zone and lift off the proxy",
+      "rights": ["R-ANATOMY-CT", "R-ANATOMY-SEGMENTATION"],
+      "addedIn": "claude/mt-02c-lung-states",
+      "compiledIntoPageCode": false
     }
   ]
 }
