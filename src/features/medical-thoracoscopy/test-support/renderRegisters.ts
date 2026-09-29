@@ -3,6 +3,7 @@ import {
   deviceDefinitions,
   type DeviceDefinition,
   type DeviceFact,
+  type DeviceForm,
 } from '../content/deviceDefinitions'
 import type { ReviewDecision } from '../content/reviewRecords'
 import { citationLocator, doiUrl, sourceRegister } from '../content/sources'
@@ -38,18 +39,46 @@ function decisionWords(decision: ReviewDecision): string {
   return `${decision.decision}, ${decision.reviewer} (${decision.role}), ${decision.date}, revision ${decision.reviewedRevision}`
 }
 
+function withUnit(value: number, unit: 'mm' | 'deg' | null): string {
+  if (unit === 'deg') return `${value}°`
+  return unit === null ? String(value) : `${value} ${unit}`
+}
+
 function factValue(entry: DeviceFact): string {
   if (entry.value === null) return 'Not known'
   if (typeof entry.value === 'number') {
-    const unit = entry.unit === 'deg' ? '°' : ` ${entry.unit}`
-    return `${entry.value}${unit}`
+    const tolerance =
+      entry.tolerance === undefined ? '' : ` ± ${withUnit(entry.tolerance, entry.unit)}`
+    return `${withUnit(entry.value, entry.unit)}${tolerance}`
   }
   return entry.value
 }
 
-function factSources(entry: DeviceFact): string {
+function factSources(entry: DeviceFact | DeviceForm): string {
   if (entry.sources.length === 0) return 'None'
-  return entry.sources.map((source) => `${source.document}, ${source.locator}`).join('; ')
+  const read = entry.sources.map((source) => `${source.document}, ${source.locator}`).join('; ')
+  return entry.measurement ? `${read} (${entry.measurement.join(', ')})` : read
+}
+
+/** `baseAtMm: 258` reads "base at 258 mm"; `elevationDeg: 12` reads "elevation 12°". */
+function parameterWords(name: string, value: number | string): string {
+  const unit = name.endsWith('Mm') ? 'mm' : name.endsWith('Deg') ? 'deg' : null
+  const stem = unit === null ? name : name.slice(0, -(unit === 'mm' ? 2 : 3))
+  const words = stem.replace(/([A-Z])/g, ' $1').toLowerCase()
+  return `${words} ${typeof value === 'number' ? withUnit(value, unit) : value}`
+}
+
+function formValue(entry: DeviceForm): string {
+  if (entry.kind === 'parameters') {
+    return Object.entries(entry.parameters ?? {})
+      .map(([name, value]) => parameterWords(name, value))
+      .join('; ')
+  }
+  const points = entry.points ?? []
+  const first = Math.min(...points.map(([along]) => along))
+  const last = Math.max(...points.map(([along]) => along))
+  const tolerance = entry.tolerance === undefined ? '' : `, ± ${entry.tolerance} mm`
+  return `${points.length} points of ${entry.axes?.[1]} against ${entry.axes?.[0]}, ${first} to ${last} mm${tolerance}`
 }
 
 function deviceSection(device: DeviceDefinition): string {
@@ -65,12 +94,39 @@ function deviceSection(device: DeviceDefinition): string {
       : 'Modelled'
     : 'Not modelled in the first round'
 
+  const standard =
+    device.standard === 'full'
+      ? ' Held to the full standard.'
+      : device.standard === 'draft'
+        ? ' Draft standard, for review.'
+        : ''
+  const forms =
+    device.forms.length === 0
+      ? []
+      : [
+          '',
+          'Forms:',
+          '',
+          table(
+            ['Item', 'Form', 'Kind of claim', 'Status', 'Read in', 'Fact check', 'Note'],
+            device.forms.map((entry) => [
+              entry.label,
+              formValue(entry),
+              entry.category,
+              entry.status,
+              factSources(entry),
+              decisionWords(entry.factCheck),
+              entry.note ?? '',
+            ]),
+          ),
+        ]
+
   return [
     `### ${device.name}`,
     '',
     `Product numbers: ${numbers}`,
     '',
-    `${modelled}.`,
+    `${modelled}.${standard}`,
     '',
     table(
       ['Item', 'Value', 'Kind of claim', 'Status', 'Read in', 'Fact check', 'Note'],
@@ -84,6 +140,7 @@ function deviceSection(device: DeviceDefinition): string {
         entry.note ?? '',
       ]),
     ),
+    ...forms,
   ].join('\n')
 }
 
@@ -100,6 +157,8 @@ export function renderDeviceRegister(): string {
     `Intended market: ${definitions.intendedMarket.value} (${definitions.intendedMarket.status}). ${definitions.intendedMarket.note}`,
     '',
     `Every model is labelled "${definitions.labelUntilCad}" until it is built from manufacturer CAD.`,
+    '',
+    "A value followed by ± was measured from the manufacturer's reference frames (`S-FRAMES`); the names in brackets are its entries in `content/data/reference-measurements.json`, which records how each was measured and how its tolerance was found. A measured value is not a device fact.",
     '',
     '## Documents',
     '',

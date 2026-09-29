@@ -14,9 +14,17 @@ import {
   deviceDefinitions,
   deviceDefinitionsSchema,
   factOf,
+  formOf,
+  MEASURED_FROM,
+  modelledNumber,
   prototypeDevices,
   publishedNumber,
 } from '../content/deviceDefinitions'
+import {
+  measurementById,
+  referenceMeasurements,
+  referenceMeasurementsSchema,
+} from '../content/referenceMeasurements'
 import { NOT_A_REVIEWER, reviewDecisionSchema, type ReviewDecision } from '../content/reviewRecords'
 import { KNOWN_SOURCE_IDS, literatureSources, sourceRegister } from '../content/sources'
 import {
@@ -88,6 +96,7 @@ function decidedIds(): string[] {
   }
   for (const device of deviceDefinitions.devices) {
     for (const entry of device.facts) note(`${device.id}.${entry.key}`, entry.factCheck)
+    for (const entry of device.forms) note(`${device.id}.${entry.key}`, entry.factCheck)
   }
   for (const entry of deviceDefinitions.fit) note(`fit:${entry.id}`, entry.factCheck)
   for (const claim of claims) note(claim.id, claim.decision)
@@ -137,12 +146,16 @@ describe('device definitions', () => {
     expect(deviceDefinitions.preparedBy).toMatch(/AI authoring assistant/)
   })
 
-  it('load three parts for the week-4 pages', () => {
+  it('load three parts for the week-4 pages, held to the full standard', () => {
     expect(prototypeDevices.map((device) => device.id)).toEqual([
       'operative-telescope',
       'trocar-sleeve-flexible',
       'double-spoon-forceps',
     ])
+    for (const device of deviceDefinitions.devices) {
+      if (device.inPrototype) expect(device.standard).toBe('full')
+      else expect(device.standard).not.toBe('full')
+    }
   })
 
   it('give the published dimensions the space engine is built on', () => {
@@ -158,12 +171,38 @@ describe('device definitions', () => {
   })
 
   it('refuse to hand out a value that is not known', () => {
-    expect(factOf('operative-telescope', 'fieldOfView').value).toBeNull()
-    expect(() => publishedNumber('operative-telescope', 'fieldOfView')).toThrow(
+    expect(factOf('probe', 'graduationInterval').value).toBeNull()
+    expect(() => publishedNumber('probe', 'graduationInterval')).toThrow(
       /no numeric value \(unresolved input\)/,
     )
-    expect(() => publishedNumber('trocar-sleeve-flexible', 'outerDiameter')).toThrow()
+    expect(() => modelledNumber('probe', 'graduationInterval')).toThrow(/no numeric value/)
     expect(() => factOf('operative-telescope', 'weight')).toThrow(/Unknown fact/)
+    expect(() => formOf('operative-telescope', 'handle')).toThrow(/Unknown form/)
+  })
+
+  it('never hand out a measured or authored value as a published one', () => {
+    expect(() => publishedNumber('operative-telescope', 'fieldOfView')).toThrow(
+      /not a device fact \(authored simulation assumption\)/,
+    )
+    expect(() => publishedNumber('trocar-sleeve-flexible', 'outerDiameter')).toThrow(
+      /not a device fact \(derived measurement\)/,
+    )
+    expect(modelledNumber('operative-telescope', 'fieldOfView')).toEqual({
+      value: 75,
+      unit: 'deg',
+      category: 'authored simulation assumption',
+      tolerance: null,
+    })
+    expect(modelledNumber('trocar-sleeve-flexible', 'outerDiameter')).toMatchObject({
+      category: 'derived measurement',
+      tolerance: measurementById('sleeve.tubeOuterDiameter').tolerance,
+    })
+    expect(modelledNumber('operative-telescope', 'shaftLength')).toEqual({
+      value: 215,
+      unit: 'mm',
+      category: 'device fact',
+      tolerance: null,
+    })
   })
 
   it('name a document for every device fact that has a value', () => {
@@ -176,17 +215,90 @@ describe('device definitions', () => {
     }
   })
 
-  it('never describe a measurement or an assumption as a device fact', () => {
+  it('copy every measured value from the measurement record, with its tolerance', () => {
+    const measured = deviceDefinitions.devices.flatMap((device) =>
+      device.facts.filter(
+        (entry) => entry.category === 'derived measurement' && entry.value !== null,
+      ),
+    )
+
+    expect(measured.length).toBeGreaterThan(20)
+    for (const entry of measured) {
+      const [first] = entry.measurement ?? []
+      const record = measurementById(first)
+
+      expect('value' in record && record.value).toBe(entry.value)
+      expect(entry.tolerance).toBe(record.tolerance)
+      expect(entry.unit).toBe(record.unit)
+      expect(entry.sources).toEqual([{ document: MEASURED_FROM, locator: `frame ${record.frame}` }])
+      expect(entry.status).toBe('review pending')
+    }
+  })
+
+  it('copy every measured outline from the record', () => {
+    const body = formOf('operative-telescope', 'bodyOutline')
+    const bodyRecord = measurementById('telescope.bodyOutline')
+    expect('points' in bodyRecord && bodyRecord.points).toEqual(body.points)
+    expect(body.tolerance).toBe(bodyRecord.tolerance)
+
+    // The channel is measured in units of the inner wall radius and kept here in millimetres.
+    const channel = formOf('operative-telescope', 'channelOutline')
+    const channelRecord = measurementById('telescope.channelOutline')
+    const inner =
+      publishedNumber('operative-telescope', 'shaftOuterDiameter') / 2 -
+      modelledNumber('operative-telescope', 'wallThickness').value
+    const expected =
+      'points' in channelRecord
+        ? channelRecord.points.map(([height, half]) => [height * inner, half * inner])
+        : []
+    expect(channel.points).toHaveLength(expected.length)
+    channel.points?.forEach(([height, half], index) => {
+      expect(height).toBeCloseTo(expected[index][0], 3)
+      expect(half).toBeCloseTo(expected[index][1], 3)
+    })
+  })
+
+  it('leave unmeasured values empty, and say how every authored value was chosen', () => {
     for (const device of deviceDefinitions.devices) {
-      for (const entry of device.facts) {
-        if (entry.category !== 'device fact') {
-          // Nothing has been measured or chosen yet, so each of these is still missing.
+      for (const entry of [...device.facts, ...device.forms]) {
+        const value = 'value' in entry ? entry.value : true
+        if (entry.category === 'derived measurement' && value === null) {
           expect(entry.sources).toEqual([])
-          expect(entry.value).toBeNull()
           expect(entry.status).toBe('unresolved input')
+        }
+        if (entry.category === 'authored simulation assumption') {
+          expect(entry.note).toMatch(/authored|drawn|assumed|chosen|stand-in|not measured/i)
+          expect(entry.status).toBe('unresolved input')
+          for (const source of entry.sources) expect(source.document).toBe(MEASURED_FROM)
         }
       }
     }
+  })
+
+  it('refuse a measured value without its measurement or its tolerance', () => {
+    const lookUp = (copy: typeof deviceDefinitions) =>
+      copy.devices
+        .find((device) => device.id === 'operative-telescope')
+        ?.facts.find((entry) => entry.key === 'eyepieceAngle')
+    const withoutTolerance = JSON.parse(
+      JSON.stringify(deviceDefinitions),
+    ) as typeof deviceDefinitions
+    delete lookUp(withoutTolerance)?.tolerance
+    expect(deviceDefinitionsSchema.safeParse(withoutTolerance).success).toBe(false)
+
+    const withoutFrame = JSON.parse(JSON.stringify(deviceDefinitions)) as typeof deviceDefinitions
+    const entry = lookUp(withoutFrame)
+    if (entry) entry.sources = [{ document: 'S-US', locator: 'page 2' }]
+    expect(deviceDefinitionsSchema.safeParse(withoutFrame).success).toBe(false)
+
+    const publishedWithTolerance = JSON.parse(
+      JSON.stringify(deviceDefinitions),
+    ) as typeof deviceDefinitions
+    const shaft = publishedWithTolerance.devices[0].facts.find(
+      (candidate) => candidate.key === 'shaftLength',
+    )
+    if (shaft) shaft.tolerance = 1
+    expect(deviceDefinitionsSchema.safeParse(publishedWithTolerance).success).toBe(false)
   })
 
   it('point every missing value at sections that exist', () => {
@@ -253,6 +365,60 @@ describe('device definitions', () => {
     expect(text).not.toMatch(
       /\b(unique|best|superior|leading|optimum|optimal|maximum versatility|atraumatic|future of)\b/i,
     )
+  })
+})
+
+describe('reference measurements', () => {
+  it('are the record the measuring script wrote, and hold numbers only', () => {
+    expect(referenceMeasurementsSchema.safeParse(referenceMeasurements).success).toBe(true)
+    expect(referenceMeasurements.statement).toMatch(/no image is/)
+    expect(referenceMeasurements.statement).toMatch(/not a\s+device fact/)
+    expect(JSON.stringify(referenceMeasurements)).not.toMatch(/data:image|base64|\.png"\s*:/)
+  })
+
+  it('name the presentation the device definitions cite, by the same hash', () => {
+    const frames = deviceDefinitions.documents.find((document) => document.id === MEASURED_FROM)
+
+    expect(frames?.kind).toBe('manufacturer product animation')
+    expect(frames?.sha256).toBe(referenceMeasurements.document.sha256)
+    expect(frames?.url).toBeNull()
+  })
+
+  it('rest on the published values the definitions still give', () => {
+    for (const [path, value] of Object.entries(referenceMeasurements.publishedValuesUsed)) {
+      const [device, key] = path.split('.')
+      expect(publishedNumber(device, key)).toBe(value)
+    }
+  })
+
+  it('cover every measurement the definitions name', () => {
+    const named = deviceDefinitions.devices.flatMap((device) =>
+      [...device.facts, ...device.forms].flatMap((entry) => entry.measurement ?? []),
+    )
+
+    expect(named.length).toBeGreaterThan(20)
+    for (const id of named) expect(() => measurementById(id)).not.toThrow()
+  })
+
+  it('agree between two views of the same eyepiece, within their tolerances', () => {
+    for (const [first, second] of [
+      ['telescope.eyepieceAngle', 'telescope.eyepieceAngleSecondView'],
+      ['telescope.eyepieceMeetsShaftAt', 'telescope.eyepieceMeetsShaftSecondView'],
+    ]) {
+      const a = measurementById(first)
+      const b = measurementById(second)
+      if (!('value' in a) || !('value' in b)) throw new Error('expected single values')
+
+      expect(a.frame).not.toBe(b.frame)
+      expect(Math.abs(a.value - b.value)).toBeLessThanOrEqual(a.tolerance + b.tolerance)
+    }
+  })
+
+  it('record a tolerance for every value, from the variations listed for its frame', () => {
+    for (const entry of referenceMeasurements.measurements) {
+      expect(entry.tolerance).toBeGreaterThan(0)
+      expect(referenceMeasurements.variations[String(entry.frame)].length).toBeGreaterThan(0)
+    }
   })
 })
 
@@ -454,8 +620,12 @@ describe('rights register', () => {
 })
 
 describe('asset ledger', () => {
-  it('is empty until the first asset is built', () => {
-    expect(ledger.assets).toEqual([])
+  it('lists the device kit, and nothing uploaded', () => {
+    expect(ledger.assets.length).toBeGreaterThan(0)
+    for (const asset of ledger.assets) {
+      expect(asset.uploaded).toBe(false)
+      expect(asset.label).toBe(deviceDefinitions.labelUntilCad)
+    }
     expect(ledger.scenes).toEqual([])
   })
 
