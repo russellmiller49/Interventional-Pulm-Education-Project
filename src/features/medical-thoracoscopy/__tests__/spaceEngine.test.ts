@@ -362,6 +362,7 @@ describe('the engine’s state', () => {
   it('takes only simulated actions: navigating or loading an example is not a procedure event', () => {
     const { state, resolver } = sceneEngine()
     expect(isSimulatedAction({ type: 'navigate' })).toBe(false)
+    expect(isSimulatedAction({ type: 'motion' })).toBe(true)
     expect(isSimulatedAction({ type: 'load-teaching-example' })).toBe(false)
     expect(() =>
       reduce(state, { type: 'navigate', to: 'x' } as unknown as SimulatedAction, resolver),
@@ -467,6 +468,27 @@ describe('the engine’s state', () => {
     expect(s.lungStep).toBe(2)
     expect(s.clockHeld).toBe(false)
     expect(paneStateOf(s, sceneEngine().space, null).clock).toEqual({ held: false })
+  })
+
+  it('follows the motion preference while the space is open: reduced holds the clock, released lets it run', () => {
+    const { state, resolver } = sceneEngine()
+    let s = reduce(state, { type: 'lung-target', step: 2 }, resolver)
+    s = reduce(s, { type: 'tick', ms: 500 }, resolver)
+    expect(s.lungStep).toBe(1)
+    s = reduce(s, { type: 'motion', reduced: true }, resolver)
+    expect(s.clockHeld).toBe(true)
+    s = reduce(s, { type: 'tick', ms: 5000 }, resolver)
+    expect(s.lungStep).toBe(1)
+    s = reduce(s, { type: 'motion', reduced: false }, resolver)
+    expect(s.clockHeld).toBe(false)
+    s = reduce(s, { type: 'tick', ms: LUNG_STEP_MS }, resolver)
+    expect(s.lungStep).toBe(2)
+    expect(s.events.at(-1)).toEqual({
+      atMs: 5500 + LUNG_STEP_MS,
+      kind: 'lung-moved',
+      detail: 'step 2',
+    })
+    expect(reduce(s, { type: 'motion', reduced: false }, resolver)).toBe(s)
   })
 
   it('starts afresh when a scenario is reset mid-way through the lung’s move', () => {

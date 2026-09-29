@@ -74,8 +74,10 @@ export type SimulatedAction =
     }
   | { readonly type: 'tick'; readonly ms: number }
   | { readonly type: 'lung-target'; readonly step: number }
+  /** The learner's motion preference, which may change while the space is open. */
+  | { readonly type: 'motion'; readonly reduced: boolean }
 
-const SIMULATED = new Set(['command', 'tick', 'lung-target'])
+const SIMULATED = new Set(['command', 'tick', 'lung-target', 'motion'])
 
 export function isSimulatedAction(action: { readonly type: string }): action is SimulatedAction {
   return SIMULATED.has(action.type)
@@ -222,6 +224,19 @@ export function reduce(
         lungHeld: false,
         nextLungMoveAtMs: moving ? state.clockMs + LUNG_STEP_MS : null,
       }
+    }
+    case 'motion': {
+      if (action.reduced === state.reducedMotion) return state
+      const moving = state.lungStep !== state.lungTarget
+      // Reduced, the clock waits for Step; released, the lung goes on from now at its own pace.
+      return action.reduced
+        ? { ...state, reducedMotion: true, clockHeld: moving, nextLungMoveAtMs: null }
+        : {
+            ...state,
+            reducedMotion: false,
+            clockHeld: false,
+            nextLungMoveAtMs: moving ? state.clockMs + LUNG_STEP_MS : null,
+          }
     }
     case 'command': {
       if (!sameSnapshot(action.snapshot, state.snapshot)) return state

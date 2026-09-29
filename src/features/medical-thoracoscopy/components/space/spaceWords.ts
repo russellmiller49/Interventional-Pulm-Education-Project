@@ -85,6 +85,24 @@ export const VIEW_WORDS = {
   refusedPrefix: 'Stopped:',
 } as const
 
+/** While the anatomy loads or cannot be had. */
+export const READINESS_WORDS = {
+  loading: 'Loading the anatomy.',
+  loadingAgain: 'Loading the anatomy again.',
+  unavailable: 'The anatomy could not be loaded.',
+} as const
+
+/** The 3D scene's views (slice 11). */
+export const SCENE_WORDS = {
+  chestHeading: 'Chest view',
+  chestNote:
+    'The chest seen from the patient’s front, with the head to the right and the patient on the left side. Each region of the wall is shaded by the model’s estimate.',
+  scopeHeading: 'Scope view',
+  scopeNote: 'What the telescope shows, in its round field.',
+  drawnWithout:
+    'The chest cannot be drawn in three dimensions here, so the Chest view is shown as a cut through the space.',
+} as const
+
 export const KEY_WORDS = {
   heading: 'Keys',
   focusNote: 'The keys work while the pane has focus.',
@@ -152,6 +170,16 @@ function validate(): void {
     })),
     ...Object.entries(VIEW_WORDS).map(([key, text]) => ({
       where: `view ${key}`,
+      text,
+      options: label,
+    })),
+    ...Object.entries(READINESS_WORDS).map(([key, text]) => ({
+      where: `readiness ${key}`,
+      text,
+      options: label,
+    })),
+    ...Object.entries(SCENE_WORDS).map(([key, text]) => ({
+      where: `scene ${key}`,
       text,
       options: label,
     })),

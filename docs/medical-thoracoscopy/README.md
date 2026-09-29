@@ -95,8 +95,15 @@ the engine, so the same commands give the same ledger whichever pane draws them.
 - `test-support/spaceTestDouble.tsx` stands in for the engine, and `SpacePaneDouble` for the pane,
   in tests.
 
-The 3D scene (slice 11) arrives behind the same contract. The contract changes only by adding. See
-the [space-contract handoff](handoffs/mt-02d-space-contract.md).
+The contract changes only by adding. See the
+[space-contract handoff](handoffs/mt-02d-space-contract.md).
+
+`SpacePane` (slice 11) draws the Chest and Scope views in 3D where the browser can, on one canvas,
+lazily loaded, and the cut otherwise, saying why; `SpacePaneShell` holds everything the two share.
+`useSpaceEngine` hosts the engine in the browser: it loads the proxies, turns commands into simulated
+actions and runs the clock while the lung moves. The engineering prototype at
+`/medical-thoracoscopy/prototype/space` shows the pane with no lesson around it, outside the
+curriculum and the progress record. See the [space-scene handoff](handoffs/mt-03b-space-scene.md).
 
 ## Space engine
 
