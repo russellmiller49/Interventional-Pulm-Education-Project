@@ -1,6 +1,6 @@
 {
   "register": "medical-thoracoscopy-claims",
-  "version": 1,
+  "version": 2,
   "preparedOn": "2026-09-28",
   "preparedBy": "AI authoring assistant (Claude) at the owner's request",
   "statement": "Every statement the course teaches, and every rule the simulation follows, is a claim with an entry here. Nothing in this register is clinical approval. Every decision reads NOT REVIEWED: no reviewer, role, date or reviewed revision is recorded, and an empty decision is not approval. Device facts are held in the device definitions, with their own fact-check records.",
@@ -8,17 +8,53 @@
   "claims": [
     {
       "id": "MT-C-0001",
-      "revision": 1,
+      "revision": 2,
       "category": "authored simulation assumption",
       "lane": "clinical",
       "assertion": "With the port open and the fluid drained, air enters the pleural space and the lung falls away from the chest wall.",
       "context": "An adult breathing spontaneously, lying on the side with the examined side up, with a free pleural space and no adhesions.",
-      "sources": [],
-      "sourceNote": "No source has been read for this relationship yet. It is the one relationship the survey lesson cannot exist without.",
+      "sources": [
+        {
+          "source": "jin-consensus-2020",
+          "locator": "Standard operating specification, Operational techniques, paragraph 1, step (III)",
+          "read": "full text",
+          "supports": "As the effusion is aspirated through the suction tube or working channel, air can enter the pleural cavity and take the place of the fluid."
+        },
+        {
+          "source": "li-lat-review-2022",
+          "locator": "Section 3.2, Technique, paragraph 1",
+          "read": "full text",
+          "supports": "Once the parietal pleura is pierced, some 10 to 20 spontaneous breaths induce a pneumothorax so that the lung peels away from the parietal pleura."
+        },
+        {
+          "source": "nccp-ics-thoracoscopy-2024",
+          "locator": "Q 14 (ii), How much pleural fluid should be removed during thoracoscopy, paragraph 1",
+          "read": "full text",
+          "supports": "Slow removal of pleural fluid is advised so that air can replace the fluid."
+        }
+      ],
+      "sourceNote": "The sources describe air replacing the fluid and the lung coming away from the chest wall. How far the lung falls, and how quickly, is the author’s choice (MT-C-0002).",
       "surfaces": [
-        { "kind": "section", "id": "four-controls", "state": "planned" },
-        { "kind": "section", "id": "systematic-survey", "state": "planned" },
-        { "kind": "prototype", "id": "tool-contact", "state": "planned" }
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        },
+        {
+          "kind": "section",
+          "id": "four-controls",
+          "state": "written"
+        },
+        {
+          "kind": "section",
+          "id": "systematic-survey",
+          "state": "written"
+        },
+        {
+          "kind": "prototype",
+          "id": "tool-contact",
+          "state": "planned"
+        }
       ],
       "dependentRules": ["The lung state follows the learner's air-entry control."],
       "limitations": "The model shows a change of shape. It shows no pressure, no physiology and no rate, and it does not show a lung that fails to fall away.",
@@ -47,8 +83,26 @@
       "sources": [],
       "sourceNote": "The distance is chosen by the author. It is not measured and not taken from a source.",
       "surfaces": [
-        { "kind": "section", "id": "systematic-survey", "state": "planned" },
-        { "kind": "asset", "id": "lung-states", "state": "planned" }
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        },
+        {
+          "kind": "section",
+          "id": "four-controls",
+          "state": "written"
+        },
+        {
+          "kind": "section",
+          "id": "systematic-survey",
+          "state": "written"
+        },
+        {
+          "kind": "asset",
+          "id": "lung-states",
+          "state": "planned"
+        }
       ],
       "dependentRules": [
         "What the survey can reach and see depends on where the collapsed lung sits."
@@ -79,9 +133,26 @@
       "sources": [],
       "sourceNote": "Chosen by the author from measurements of the scan. It is a teaching example and is not taken from a source.",
       "surfaces": [
-        { "kind": "section", "id": "four-controls", "state": "planned" },
-        { "kind": "section", "id": "systematic-survey", "state": "planned" },
-        { "kind": "asset", "id": "port-record", "state": "planned" }
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        },
+        {
+          "kind": "section",
+          "id": "four-controls",
+          "state": "written"
+        },
+        {
+          "kind": "section",
+          "id": "systematic-survey",
+          "state": "written"
+        },
+        {
+          "kind": "asset",
+          "id": "port-record",
+          "state": "planned"
+        }
       ],
       "dependentRules": [
         "The pivot, the corridor through the wall and the tilt limits all follow from the port."
@@ -92,6 +163,915 @@
         "allowed": true,
         "learnerLabel": "Authored construct",
         "basis": "Owner decisions, open item T6. A default, not a decision."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0004",
+      "revision": 1,
+      "category": "authored simulation assumption",
+      "lane": "clinical",
+      "assertion": "The model gives the learner four controls: where the port goes; where the scope looks, by pivot, depth and roll; which tool is in the channel; and what is in the space, fluid out and air in. The lung, the heart, the diaphragm, breathing and sedation are watched or managed by the team and are not controls.",
+      "context": "The controls of the simulation, labelled as controls of the model. Whether to go on, sample, treat, stop or call for help is a clinical decision and not one of them.",
+      "sources": [],
+      "sourceNote": "The control panel of the original plan, imported unchanged in the implementation manifest.",
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "four-controls",
+          "state": "written"
+        }
+      ],
+      "dependentRules": [
+        "The lesson offers only these four controls, and names each by the words printed on it."
+      ],
+      "limitations": "A way of dividing what the simulation lets the learner change, for teaching. It does not describe how the procedure is performed.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": true,
+        "learnerLabel": "Authored construct",
+        "basis": "The control panel of the original plan; the wording of the second control is owner decisions, T8. A default, not a decision."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0005",
+      "revision": 1,
+      "category": "authored simulation assumption",
+      "lane": "clinical",
+      "assertion": "The port is modelled as a fixed pivot in a rigid chest wall. Tilting the telescope about it moves the tip the opposite way to the hand, and further when more of the telescope is inside the chest; pushing in or drawing back moves the tip along the line the telescope lies on.",
+      "context": "The rigid telescope through the flexible sleeve at the prototype port. The pivot is where the sleeve crosses the chest wall.",
+      "sources": [
+        {
+          "source": "gallagher-fulcrum-1998",
+          "locator": "Abstract",
+          "read": "abstract",
+          "supports": "Names the fulcrum effect of the body wall on instruments passed through it, in a laparoscopic trainer."
+        }
+      ],
+      "sourceNote": "No thoracoscopy source read for the course describes the pivot. The rule is the geometry of a straight telescope turning about the point where it crosses the chest wall.",
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "four-controls",
+          "state": "written"
+        },
+        {
+          "kind": "section",
+          "id": "systematic-survey",
+          "state": "written"
+        },
+        {
+          "kind": "prototype",
+          "id": "tool-contact",
+          "state": "planned"
+        }
+      ],
+      "dependentRules": [
+        "Every movement of the telescope is a rotation about the port or a change of depth along its line.",
+        "Steering is described from the hand: the hand moves and the tip goes the other way."
+      ],
+      "limitations": "The port does not move and the ribs do not give, so the model’s limits on tilting are firmer than a patient’s chest wall, and the pivot is a point rather than a length of tissue.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": true,
+        "learnerLabel": "Authored construct",
+        "basis": "The simulation’s movement rule; owner decisions, T5, for steering from the hand. A default, not a decision."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0006",
+      "revision": 1,
+      "category": "clinical evidence",
+      "lane": "clinical",
+      "assertion": "The reversal of movement at a fixed entry point, the fulcrum effect, makes early endoscopic skill harder to learn.",
+      "context": "Novices in a laboratory, with a laparoscopic trainer; not thoracoscopy.",
+      "sources": [
+        {
+          "source": "gallagher-fulcrum-1998",
+          "locator": "Abstract",
+          "read": "abstract",
+          "supports": "Of 22 people with no endoscopic experience, those working with the image inverted made more incisions, and more of the required incisions, over up to 50 trials; the authors conclude that the fulcrum effect has a major detrimental influence on acquiring endoscopic skills."
+        }
+      ],
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "four-controls",
+          "state": "written"
+        }
+      ],
+      "dependentRules": [],
+      "limitations": "A laboratory study of novices. It does not show the size of the effect in thoracoscopy or in trained operators.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": false,
+        "learnerLabel": "Awaiting clinical review",
+        "basis": "Clinical evidence is not shown as fact before review."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0007",
+      "revision": 1,
+      "category": "authored simulation assumption",
+      "lane": "clinical",
+      "assertion": "The telescope in the model looks straight ahead. Rolling it turns the picture, and the working channel with it, and does not move the line of sight. The camera is fixed to the eyepiece, so a tool in the channel keeps its place in the picture.",
+      "context": "The operative telescope as modelled, with its published straight-ahead direction of view.",
+      "sources": [],
+      "sourceNote": "The direction of view is a device fact held in the device definitions. What the picture does when the telescope rolls is the author’s default.",
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        },
+        {
+          "kind": "section",
+          "id": "four-controls",
+          "state": "written"
+        }
+      ],
+      "dependentRules": ["Roll changes the picture’s orientation and nothing else."],
+      "limitations": "A picture whose horizon stays level while the telescope turns is not offered. Angled telescopes are not modelled.",
+      "status": "proposed change",
+      "shownBeforeReview": {
+        "allowed": true,
+        "learnerLabel": "Authored construct",
+        "basis": "Owner decisions, T4. A default, not a decision."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0008",
+      "revision": 1,
+      "category": "clinical evidence",
+      "lane": "clinical",
+      "assertion": "A telescope or trocar pushed into the lung can injure it, and a torn lung can bleed and leak air.",
+      "context": "Entry into the pleural space and movement of instruments within it.",
+      "sources": [
+        {
+          "source": "jin-consensus-2020",
+          "locator": "Standard operating specification, Thoracoscopic insertion path, paragraph 1",
+          "read": "full text",
+          "supports": "The premise of the procedure is that the sheath and the thoracoscope can be placed without damaging the lungs or other organs."
+        },
+        {
+          "source": "jin-consensus-2020",
+          "locator": "Standard operating specification, Operational techniques, paragraph 1, step (VII)",
+          "read": "full text",
+          "supports": "Biopsies are taken from the parietal pleura to prevent bleeding, gas leakage and the other complications of lung laceration."
+        },
+        {
+          "source": "nccp-ics-thoracoscopy-2024",
+          "locator": "Dissection and trocar placement, paragraph 1",
+          "read": "full text",
+          "supports": "A finger or thumb on the chest wall guards against sudden inward movement of the trocar and potential lung injury."
+        }
+      ],
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        },
+        {
+          "kind": "section",
+          "id": "four-controls",
+          "state": "written"
+        }
+      ],
+      "dependentRules": [
+        "The model stops an instrument before it enters the lung and names the part in the way."
+      ],
+      "limitations": "The sources name the injury and its effects. They give no rate for injury from the telescope itself, and the model shows no injury.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": false,
+        "learnerLabel": "Awaiting clinical review",
+        "basis": "Clinical evidence is not shown as fact before review."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0009",
+      "revision": 1,
+      "category": "authored simulation assumption",
+      "lane": "clinical",
+      "assertion": "The course divides the parietal pleura of the right side into seven regions and surveys them in one order: diaphragm, costophrenic recess, back of the chest wall, apex, front of the chest wall, mediastinum, and side of the chest wall.",
+      "context": "The survey zones in content/data/pleural-zones.json, used by the lessons and by the anatomy asset.",
+      "sources": [
+        {
+          "source": "nccp-ics-thoracoscopy-2024",
+          "locator": "Visual examination, paragraph 1; consensus statement 14 (i)",
+          "read": "full text",
+          "supports": "The entire parietal pleura must be examined, there is no standard sequence for the examination, and none is recommended."
+        }
+      ],
+      "sourceNote": "The division and the order are the author’s. The source says only that no standard order exists.",
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        },
+        {
+          "kind": "section",
+          "id": "four-controls",
+          "state": "written"
+        },
+        {
+          "kind": "section",
+          "id": "systematic-survey",
+          "state": "written"
+        },
+        {
+          "kind": "asset",
+          "id": "survey-zones",
+          "state": "planned"
+        }
+      ],
+      "dependentRules": ["The survey ledger has one entry for each region, in this order."],
+      "limitations": "One order among several possible. The regions are drawn by the author on the scan; their edges are not boundaries a patient has.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": true,
+        "learnerLabel": "Authored construct",
+        "basis": "The module plan’s survey zones."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0010",
+      "revision": 1,
+      "category": "clinical evidence",
+      "lane": "clinical",
+      "assertion": "The parietal pleura lines the chest wall, the upper surface of the diaphragm, the side of the mediastinum and the apex. The visceral pleura covers the lung, and the space between them is the pleural space.",
+      "context": "Normal anatomy of one side of the chest.",
+      "sources": [
+        {
+          "source": "nccp-ics-thoracoscopy-2024",
+          "locator": "Visual examination, paragraph 1",
+          "read": "full text",
+          "supports": "Names the surfaces to be inspected: the pleura over the diaphragm, the chest wall, the mediastinum and the apex, and the lung surface covered by visceral pleura."
+        },
+        {
+          "source": "charalampidis-pleura-anatomy-2015",
+          "locator": "Figure 9 caption; main text, paragraph 1",
+          "read": "full text",
+          "supports": "The parietal pleura lines the thoracic wall and the upper surface of the diaphragm and forms the lateral walls of the mediastinum; the visceral pleura covers the lungs; the pleural cavity lies between them."
+        }
+      ],
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        }
+      ],
+      "dependentRules": [],
+      "limitations": "Anatomy in general terms. The pleura is not in the scan the model is built from and is drawn by the author.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": false,
+        "learnerLabel": "Awaiting clinical review",
+        "basis": "Clinical evidence is not shown as fact before review."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0011",
+      "revision": 1,
+      "category": "clinical evidence",
+      "lane": "clinical",
+      "assertion": "The heart lies in the mediastinum, enclosed by the pericardium, behind the mediastinal pleura that forms the inner wall of each pleural space.",
+      "context": "Normal anatomy.",
+      "sources": [
+        {
+          "source": "charalampidis-pleura-anatomy-2015",
+          "locator": "Main text, paragraph 10; Figure 9 caption",
+          "read": "full text",
+          "supports": "The heart is in the mediastinum, enclosed by the pericardium, and the pleura lining each half of the thorax forms the lateral boundary of the mediastinum."
+        }
+      ],
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        }
+      ],
+      "dependentRules": [],
+      "limitations": "General anatomy. No thoracoscopy source read for the course describes how the heart shows through the mediastinal pleura.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": false,
+        "learnerLabel": "Awaiting clinical review",
+        "basis": "Clinical evidence is not shown as fact before review."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0012",
+      "revision": 1,
+      "category": "clinical evidence",
+      "lane": "clinical",
+      "assertion": "At thoracoscopy the diaphragm is recognised by its movement with breathing, and it and the costophrenic recess can be seen directly. The telescope is first turned toward them to drain the fluid.",
+      "context": "A breathing patient on their side, after entry.",
+      "sources": [
+        {
+          "source": "jin-consensus-2020",
+          "locator": "Standard operating specification, Operational techniques, paragraph 1, steps (IV) and (V)",
+          "read": "full text",
+          "supports": "The diaphragm is identified by respiratory motion; the diaphragm and the \"rib angle\", read here as the costophrenic recess, can be viewed directly."
+        },
+        {
+          "source": "nccp-ics-thoracoscopy-2024",
+          "locator": "Visual examination, paragraph 1",
+          "read": "full text",
+          "supports": "The thoracoscope is initially directed caudally and posteriorly toward the diaphragm and the costophrenic recess to drain the pleural fluid."
+        }
+      ],
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        },
+        {
+          "kind": "section",
+          "id": "systematic-survey",
+          "state": "written"
+        }
+      ],
+      "dependentRules": ["The survey order starts at the diaphragm."],
+      "limitations": "Jin et al. is a translation, and \"rib angle\" is read as the costophrenic recess. The movement is a cue in a breathing patient; the model does not move with breathing (owner decisions, T13).",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": false,
+        "learnerLabel": "Awaiting clinical review",
+        "basis": "Clinical evidence is not shown as fact before review."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0013",
+      "revision": 1,
+      "category": "clinical evidence",
+      "lane": "clinical",
+      "assertion": "The top of the space narrows like a cone around the apex of the lung.",
+      "context": "The normal view at thoracoscopy.",
+      "sources": [
+        {
+          "source": "jin-consensus-2020",
+          "locator": "Standard operating specification, Operational techniques, paragraph 1, step (V)",
+          "read": "full text",
+          "supports": "The top of the lung is narrower, like a cone."
+        }
+      ],
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        }
+      ],
+      "dependentRules": [],
+      "limitations": "The source describes the lung’s apex; the pleural apex around it is inferred.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": false,
+        "learnerLabel": "Awaiting clinical review",
+        "basis": "Clinical evidence is not shown as fact before review."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0014",
+      "revision": 1,
+      "category": "clinical evidence",
+      "lane": "clinical",
+      "assertion": "On the right, the oblique and horizontal fissures meet where the three lobes join, and that junction helps orientation.",
+      "context": "The normal view of the right lung at thoracoscopy.",
+      "sources": [
+        {
+          "source": "jin-consensus-2020",
+          "locator": "Standard operating specification, Operational techniques, paragraph 1, step (V)",
+          "read": "full text",
+          "supports": "Among the structures to distinguish: on the right, the junction of the three lobes where the oblique and horizontal fissures lie; on the left, the oblique fissure."
+        }
+      ],
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        }
+      ],
+      "dependentRules": [],
+      "limitations": "Translated text; \"splits\" is read as fissures.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": false,
+        "learnerLabel": "Awaiting clinical review",
+        "basis": "Clinical evidence is not shown as fact before review."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0015",
+      "revision": 1,
+      "category": "clinical evidence",
+      "lane": "clinical",
+      "assertion": "The normal lung surface is pink and soft, with a network of lobules and scattered anthracotic pigment.",
+      "context": "The normal view at thoracoscopy.",
+      "sources": [
+        {
+          "source": "jin-consensus-2020",
+          "locator": "Standard operating specification, Operational techniques, paragraph 1, step (VI); Figure 3 caption",
+          "read": "full text",
+          "supports": "The surface of the normal lung is pink and soft with a network of lobules, and carbon black pigmentation is scattered on it."
+        }
+      ],
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        }
+      ],
+      "dependentRules": [],
+      "limitations": "The model’s lung surface is drawn by the author and does not reproduce it.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": false,
+        "learnerLabel": "Awaiting clinical review",
+        "basis": "Clinical evidence is not shown as fact before review."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0016",
+      "revision": 1,
+      "category": "clinical evidence",
+      "lane": "clinical",
+      "assertion": "Through normal parietal pleura the anatomy beneath is clearly seen: the ribs show as firm bands with the intercostal spaces between them.",
+      "context": "The normal view at thoracoscopy.",
+      "sources": [
+        {
+          "source": "bhatnagar-advanced-interventions-2016",
+          "locator": "Figure 4 caption, panel b",
+          "read": "full text",
+          "supports": "Normal parietal pleura with clearly defined anatomy."
+        },
+        {
+          "source": "bts-pleural-procedures-2023",
+          "locator": "Appendix 4, LAT troubleshooting guidance, online-first PDF page 25",
+          "read": "full text",
+          "supports": "Lists being unable to see the ribs on inspection as a situation common in significant or chronic pleural inflammation, fibrosis or malignant infiltration, which implies they are seen when the pleura is normal."
+        },
+        {
+          "source": "nccp-ics-thoracoscopy-2024",
+          "locator": "Q 14 (vi), Techniques of pleural biopsy, paragraph 1",
+          "read": "full text",
+          "supports": "Biopsy forceps are used to probe the rib and its hard surface."
+        }
+      ],
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        }
+      ],
+      "dependentRules": [],
+      "limitations": "The sources show the ribs are normally seen; none describes their appearance in detail.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": false,
+        "learnerLabel": "Awaiting clinical review",
+        "basis": "Clinical evidence is not shown as fact before review."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0017",
+      "revision": 1,
+      "category": "derived measurement",
+      "lane": "clinical",
+      "assertion": "The ribs, the diaphragm, the heart and the great vessels in the model are built from the segmentation of one CT scan, each identified by what the scan shows. The pleura is drawn on them by the author.",
+      "context": "The anatomy of the model.",
+      "sources": [
+        {
+          "source": "aeropath-2023",
+          "locator": "The Zenodo record; case 19, asserted",
+          "read": "abstract",
+          "supports": "The dataset and its licence. That the scan is its case 19 is asserted and not verified (source register)."
+        }
+      ],
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        },
+        {
+          "kind": "section",
+          "id": "systematic-survey",
+          "state": "written"
+        },
+        {
+          "kind": "asset",
+          "id": "thorax-surfaces",
+          "state": "planned"
+        }
+      ],
+      "dependentRules": [
+        "Every surface drawn from the scan is labelled \"Derived from CT segmentation\"; the pleura is labelled as authored."
+      ],
+      "limitations": "One scan, taken lying on the back. The segment names in the file are not trusted; the anatomy slice identifies each segment by its content.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": true,
+        "learnerLabel": "Derived from CT segmentation",
+        "basis": "Fidelity contract, the labels a learner is told."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0018",
+      "revision": 1,
+      "category": "clinical evidence",
+      "lane": "clinical",
+      "assertion": "The whole pleural space is inspected systematically before biopsies are taken: the chest wall, the diaphragm, the mediastinum, the apex and the lung surface. No standard order is laid down, and the space is not called clear until the paraspinal gutter and the diaphragmatic recesses have been inspected, because early metastatic deposits often lie posterobasally.",
+      "context": "Diagnostic thoracoscopy for an effusion.",
+      "sources": [
+        {
+          "source": "nccp-ics-thoracoscopy-2024",
+          "locator": "Visual examination, paragraph 1; consensus statement 14 (i)",
+          "read": "full text",
+          "supports": "The entire pleural space should be inspected systematically, including the diaphragm, chest wall, mediastinum, apex and lung surface; the entire parietal pleura must be examined, and there is no standard sequence."
+        },
+        {
+          "source": "bhatnagar-advanced-interventions-2016",
+          "locator": "Medical thoracoscopy and closed pleural biopsy, Technical considerations, paragraph 3",
+          "read": "full text",
+          "supports": "Early metastatic deposits frequently favour a posterobasal location, so the pleural space cannot be cleared without careful inspection of the paraspinal gutter and diaphragmatic recesses; biopsies follow a complete inspection."
+        }
+      ],
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "systematic-survey",
+          "state": "written"
+        }
+      ],
+      "dependentRules": [
+        "The survey ledger lists every region, and the survey is not described as complete while any is not fully seen."
+      ],
+      "limitations": "Statements of expert practice. No study compares one order of inspection with another.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": false,
+        "learnerLabel": "Awaiting clinical review",
+        "basis": "Clinical evidence is not shown as fact before review."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0019",
+      "revision": 1,
+      "category": "clinical evidence",
+      "lane": "clinical",
+      "assertion": "Biopsies are taken mainly from the parietal pleura rather than the lung, and when the cause of an effusion is not known, from more than one area, such as the front and the back of the chest wall and the diaphragm.",
+      "context": "Diagnostic thoracoscopy for an effusion.",
+      "sources": [
+        {
+          "source": "jin-consensus-2020",
+          "locator": "Standard operating specification, Operational techniques, paragraph 1, step (VII)",
+          "read": "full text",
+          "supports": "The biopsy site is chosen mainly on the parietal pleura to prevent the complications of lung laceration; for unexplained effusions, biopsies are taken in different areas such as the anterior chest wall, the posterior thoracic cavity and the diaphragm."
+        },
+        {
+          "source": "bts-pleural-procedures-2023",
+          "locator": "Medical thoracoscopy, Additional techniques during LAT, online-first PDF page 16",
+          "read": "full text",
+          "supports": "The scope of activity for physicians in the UK is usually limited to parietal pleural biopsies, talc poudrage and limited manual adhesiolysis."
+        },
+        {
+          "source": "bhatnagar-advanced-interventions-2016",
+          "locator": "Medical thoracoscopy and closed pleural biopsy, Technical considerations, paragraph 3",
+          "read": "full text",
+          "supports": "Multiple biopsies from different sites of the parietal pleura are advised."
+        }
+      ],
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        }
+      ],
+      "dependentRules": [],
+      "limitations": "Sampling is taught in its own section. Here it explains why the surface in view must be named before anything is done to it.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": false,
+        "learnerLabel": "Awaiting clinical review",
+        "basis": "Clinical evidence is not shown as fact before review."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0020",
+      "revision": 1,
+      "category": "authored simulation assumption",
+      "lane": "clinical",
+      "assertion": "For each region the model estimates whether the telescope could see it. A region is seen when every sample point on it has at some moment been within the field of view, within range, facing the telescope and unobstructed; partly seen when some have; not seen when none have. A region not fully seen carries a reason: not looked at yet, hidden at the moment, or out of reach from this port. There is no number and no hold time, so the model cannot tell a glimpse from a careful look, and seeing every region is not an adequate examination.",
+      "context": "The Chest view beside the Scope view, set against the learner’s own note, which is not stored.",
+      "sources": [],
+      "sourceNote": "The ledger is the author’s construct, from the learning contract and the build plan. No source read for the course addresses how findings at thoracoscopy are recorded.",
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "systematic-survey",
+          "state": "written"
+        }
+      ],
+      "dependentRules": [
+        "A region changes state only when the telescope has looked at it; loading a teaching example records nothing.",
+        "The learner’s note is compared with the estimate and never stored."
+      ],
+      "limitations": "An estimate from the model’s geometry and an authored field of view the manufacturer has not published. What counts as seen is the author’s default, not a clinical standard.",
+      "status": "proposed change",
+      "shownBeforeReview": {
+        "allowed": true,
+        "learnerLabel": "Authored construct",
+        "basis": "Owner decisions, T12. A default, not a decision."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0021",
+      "revision": 1,
+      "category": "clinical evidence",
+      "lane": "clinical",
+      "assertion": "From one port a rigid telescope does not see the whole space. The area around its own entry site, and at times the back of the chest wall and the mediastinum when the lung has partly collapsed, may need a second port; a semi-rigid scope reaches more of the cavity.",
+      "context": "Single-port thoracoscopy with a rigid telescope.",
+      "sources": [
+        {
+          "source": "nccp-ics-thoracoscopy-2024",
+          "locator": "Q 19, Should a second port be used, paragraph 1; Table 6",
+          "read": "full text",
+          "supports": "A second port may be needed to evaluate the pleural space completely with a rigid telescope, especially when the posterior and mediastinal aspects are inaccessible because the lung has partly collapsed, and for sampling lesions around the first entry site."
+        },
+        {
+          "source": "bts-pleural-procedures-2023",
+          "locator": "Medical thoracoscopy, Rigid versus semi-rigid LAT, online-first PDF page 16",
+          "read": "full text",
+          "supports": "A benefit of the semi-rigid system may be its ability to access and visualise a greater proportion of the thoracic cavity."
+        }
+      ],
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "systematic-survey",
+          "state": "written"
+        }
+      ],
+      "dependentRules": [
+        "The survey ledger has a reason for a region out of the telescope’s reach."
+      ],
+      "limitations": "In the model, what is out of reach follows from its geometry and its authored field of view. The sources give no measure of how much is out of reach.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": false,
+        "learnerLabel": "Awaiting clinical review",
+        "basis": "Clinical evidence is not shown as fact before review."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0022",
+      "revision": 1,
+      "category": "clinical evidence",
+      "lane": "clinical",
+      "assertion": "Adhesions or loculations can hide the back of the chest wall.",
+      "context": "Patients with adhesions or septations; not the normal space of this section.",
+      "sources": [
+        {
+          "source": "bts-pleural-procedures-2023",
+          "locator": "Appendix 4, LAT troubleshooting guidance, online-first PDF page 25",
+          "read": "full text",
+          "supports": "Lists being unable to see the posterior thoracic wall because of adhesions or loculations, and how it may be managed."
+        },
+        {
+          "source": "nccp-ics-thoracoscopy-2024",
+          "locator": "Visual examination, paragraph 1",
+          "read": "full text",
+          "supports": "Adhesions can interfere with proper visualisation."
+        }
+      ],
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "systematic-survey",
+          "state": "written"
+        }
+      ],
+      "dependentRules": [],
+      "limitations": "Mentioned only as a pointer. Adhesions are taught in their own section.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": false,
+        "learnerLabel": "Awaiting clinical review",
+        "basis": "Clinical evidence is not shown as fact before review."
+      },
+      "blocksPublication": true,
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
+      "id": "MT-C-0023",
+      "revision": 1,
+      "category": "authored simulation assumption",
+      "lane": "clinical",
+      "assertion": "A straight-viewing telescope in a fixed port cannot look back at the chest wall immediately around the port: in the model, that area lies outside its field of view from every position.",
+      "context": "The rigid, straight-viewing telescope at the prototype port.",
+      "sources": [
+        {
+          "source": "nccp-ics-thoracoscopy-2024",
+          "locator": "Q 19, Should a second port be used, Table 6",
+          "read": "full text",
+          "supports": "Lists sampling lesions around the first entry site among the reasons for a second port."
+        }
+      ],
+      "sourceNote": "The geometry of a straight-viewing telescope turning about a fixed port. How large the unseen area is in the model follows from its authored field of view.",
+      "surfaces": [
+        {
+          "kind": "section",
+          "id": "normal-pleural-space",
+          "state": "written"
+        },
+        {
+          "kind": "section",
+          "id": "systematic-survey",
+          "state": "written"
+        },
+        {
+          "kind": "asset",
+          "id": "survey-zones",
+          "state": "planned"
+        }
+      ],
+      "dependentRules": [
+        "The side of the chest wall around the port is surveyed last, and part of it is recorded as out of reach."
+      ],
+      "limitations": "The size of the area follows from an authored field of view the manufacturer has not published.",
+      "status": "review pending",
+      "shownBeforeReview": {
+        "allowed": true,
+        "learnerLabel": "Authored construct",
+        "basis": "The geometry of the modelled telescope and port."
       },
       "blocksPublication": true,
       "decision": {

@@ -71,7 +71,7 @@ needs. No section rests on a later one.
 |   3 | `the-instrument`        | Equipment and anatomy    | Foundation  | One telescope carries the optic and the working channel through one port | 1                  | 4, 7, 13, 14      |
 |   4 | `room-and-tower`        | Equipment and anatomy    | Foundation  | Each connection has one destination, and the sight line sets the room    | 3                  | 14                |
 |   5 | `the-chest-wall`        | Equipment and anatomy    | Foundation  | The layers crossed, and where the intercostal bundle runs                | Assumed background | 8, 9, 13          |
-|   6 | `normal-pleural-space`  | Equipment and anatomy    | Foundation  | The named regions of a normal hemithorax and their landmarks             | 5                  | 7, 11, 12         |
+|   6 | `normal-pleural-space`  | Equipment and anatomy    | Foundation  | The named regions of a normal hemithorax and their landmarks             | 3, 5               | 7, 11, 12         |
 |   7 | `four-controls`         | Access and orientation   | Mechanism   | The port is a pivot: the hand and the tip move opposite ways             | 3, 6               | 8, 10, 11, 13     |
 |   8 | `choosing-the-port`     | Access and orientation   | Mechanism   | The port decides what can be reached                                     | 5, 7               | 9, P1             |
 |   9 | `entry`                 | Access and orientation   | Mechanism   | Crossing the wall into a space confirmed beforehand                      | 5, 8               | 10, 18            |

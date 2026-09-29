@@ -1,9 +1,9 @@
 {
   "register": "medical-thoracoscopy-sources",
-  "version": 1,
+  "version": 2,
   "preparedOn": "2026-09-28",
   "preparedBy": "AI authoring assistant (Claude) at the owner's request",
-  "statement": "Each citation was checked against PubMed on the date shown. No source has been read in full. Listing a source here does not mean any statement in the course is supported by it: support is recorded claim by claim, with a locator, in the claim register. Textbook chapters named in the original plan are not listed because they were not available to the build.",
+  "statement": "Each citation was checked against PubMed on the date shown. Read says how much of each source was read: the citation only, the abstract or the full text, with the parts named when a full text was read only in part. Listing a source here does not mean any statement in the course is supported by it: support is recorded claim by claim, with a locator, in the claim register. Textbook chapters named in the original plan are not listed because they were not available to the build.",
   "sources": [
     {
       "id": "bts-pleural-guideline-2023",
@@ -65,10 +65,11 @@
       "publishedOnline": null,
       "checked": {
         "on": "2026-09-28",
-        "against": "PubMed",
-        "read": "citation only"
+        "against": "PubMed, and the society's PDF of the version published online first (Thorax 2023;0:1-25)",
+        "read": "full text",
+        "readParts": "In the online-first PDF: the medical thoracoscopy section (pages 15 to 18), the clinical practice points on image-guided pleural biopsy (page 14) and appendix 4, troubleshooting in local anaesthetic thoracoscopy (page 25). The rest was searched for terms, not read."
       },
-      "limits": "A clinical statement, not a guideline. PubMed holds no abstract. Its online appendix on medical thoracoscopy is listed by the society and has not been read.",
+      "limits": "A clinical statement, not a guideline. PubMed holds no abstract. Read only in the parts named, and cited by the page numbers of the online-first PDF. Its online supplemental appendix on medical thoracoscopy is listed by the society and has not been read.",
       "heldLocally": false
     },
     {
@@ -201,6 +202,138 @@
         "read": "abstract"
       },
       "limits": "Patients with minimal or absent pleural effusion. The primary outcome was pleural access success, tested for noninferiority. It is not a general rule about entry. Abstract read; full text not read.",
+      "heldLocally": false
+    },
+    {
+      "id": "jin-consensus-2020",
+      "class": "consensus statement",
+      "title": "Expert consensus for diagnosis and treatment using medical thoracoscopy in China",
+      "authors": "Jin F, Wang H, Li Q, et al.",
+      "journal": "J Thorac Dis",
+      "year": 2020,
+      "volume": "12",
+      "issue": "5",
+      "pages": "1799-1810",
+      "doi": "10.21037/jtd-19-2276",
+      "pmid": "32642085",
+      "pmc": "PMC7330357",
+      "publishedOnline": null,
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed and PubMed Central",
+        "read": "full text"
+      },
+      "limits": "A national expert consensus written for practice in China, not a guideline. Its English is uneven in places, and a statement is used only where its meaning is clear. Read in full.",
+      "heldLocally": false
+    },
+    {
+      "id": "gallagher-fulcrum-1998",
+      "class": "randomised trial",
+      "title": "An ergonomic analysis of the fulcrum effect in the acquisition of endoscopic skills",
+      "authors": "Gallagher AG, McClure N, McGuigan J, Ritchie K, Sheehy NP.",
+      "journal": "Endoscopy",
+      "year": 1998,
+      "volume": "30",
+      "issue": "7",
+      "pages": "617-620",
+      "doi": "10.1055/s-2007-1001366",
+      "pmid": "9826140",
+      "pmc": null,
+      "publishedOnline": null,
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed",
+        "read": "abstract"
+      },
+      "limits": "A laboratory study of 22 people with no endoscopic experience making incisions in a laparoscopic trainer, half of them with the image inverted. Not thoracoscopy and not patients. Abstract read; full text not read.",
+      "heldLocally": false
+    },
+    {
+      "id": "nccp-ics-thoracoscopy-2024",
+      "class": "guideline",
+      "title": "NCCP-ICS joint consensus-based clinical practice guidelines on medical thoracoscopy",
+      "authors": "Chawla RK, Kumar M, Madan A, et al.",
+      "journal": "Lung India",
+      "year": 2024,
+      "volume": "41",
+      "issue": "2",
+      "pages": "151-167",
+      "doi": "10.4103/lungindia.lungindia_5_24",
+      "pmid": "38700413",
+      "pmc": "PMC10959315",
+      "publishedOnline": null,
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed and PubMed Central",
+        "read": "full text"
+      },
+      "limits": "A consensus-based guideline from India. Many of its technique statements are usual practice points drawn from the experience of its authors, and it says that no studies address the technique or order of the visual examination. Read in full.",
+      "heldLocally": false
+    },
+    {
+      "id": "bhatnagar-advanced-interventions-2016",
+      "class": "review",
+      "title": "Advanced medical interventions in pleural disease",
+      "authors": "Bhatnagar R, Corcoran JP, Maldonado F, et al.",
+      "journal": "Eur Respir Rev",
+      "year": 2016,
+      "volume": "25",
+      "issue": "140",
+      "pages": "199-213",
+      "doi": "10.1183/16000617.0020-2016",
+      "pmid": "27246597",
+      "pmc": "PMC9487240",
+      "publishedOnline": null,
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed and PubMed Central",
+        "read": "full text"
+      },
+      "limits": "A narrative review. Its technique section gives the practice of its authors. Read in full.",
+      "heldLocally": false
+    },
+    {
+      "id": "li-lat-review-2022",
+      "class": "review",
+      "title": "Local Anaesthetic Thoracoscopy for Pleural Effusion—A Narrative Review",
+      "authors": "Li D, Jackson K, Panchal R, Aujayeb A.",
+      "journal": "Healthcare (Basel)",
+      "year": 2022,
+      "volume": "10",
+      "issue": "10",
+      "pages": "1978",
+      "doi": "10.3390/healthcare10101978",
+      "pmid": "36292425",
+      "pmc": "PMC9601808",
+      "publishedOnline": "2022-10-09",
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed and PubMed Central",
+        "read": "full text"
+      },
+      "limits": "A narrative review of UK practice. Its step-by-step supplement was not available and has not been read.",
+      "heldLocally": false
+    },
+    {
+      "id": "charalampidis-pleura-anatomy-2015",
+      "class": "review",
+      "title": "Pleura space anatomy",
+      "authors": "Charalampidis C, Youroukou A, Lazaridis G, et al.",
+      "journal": "J Thorac Dis",
+      "year": 2015,
+      "volume": "7",
+      "issue": "Suppl 1",
+      "pages": "S27-S32",
+      "doi": "10.3978/j.issn.2072-1439.2015.01.48",
+      "pmid": "25774304",
+      "pmc": "PMC4332049",
+      "publishedOnline": null,
+      "checked": {
+        "on": "2026-09-28",
+        "against": "PubMed and PubMed Central",
+        "read": "full text"
+      },
+      "limits": "A general anatomy review, not about thoracoscopy, and its text has many errors of wording. Used only for the relations of the pleura, the mediastinum and the heart. Read in full.",
       "heldLocally": false
     }
   ],

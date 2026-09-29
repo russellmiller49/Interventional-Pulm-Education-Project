@@ -4,8 +4,9 @@ For whoever writes one Learn section, person or agent. Read the
 [learning contract](learning-contract.md), the [fidelity contract](fidelity-contract.md) and the
 [module plan](module-plan.md) first.
 
-A section is data: one file, checked when it is imported. The exact field names arrive with the
-section types in the curriculum slice. The rules below do not depend on them.
+A section is data: one file in `content/sections/`, in the shape `content/types.ts` gives, checked
+by `content/sectionValidation.ts` when it is imported. The rules below are the reasons for those
+fields; the validator enforces the ones a program can check.
 
 ## Before writing
 

@@ -25,8 +25,14 @@ import {
   referenceMeasurements,
   referenceMeasurementsSchema,
 } from '../content/referenceMeasurements'
+import { curriculumSections } from '../content/curriculum'
 import { NOT_A_REVIEWER, reviewDecisionSchema, type ReviewDecision } from '../content/reviewRecords'
-import { KNOWN_SOURCE_IDS, literatureSources, sourceRegister } from '../content/sources'
+import {
+  KNOWN_SOURCE_IDS,
+  literatureSourceById,
+  literatureSources,
+  sourceRegister,
+} from '../content/sources'
 import {
   assetLedgerSchema,
   performanceTableSchema,
@@ -423,15 +429,24 @@ describe('reference measurements', () => {
 })
 
 describe('source register', () => {
-  it('says how much of each source was read', () => {
-    expect(sourceRegister.statement).toMatch(/No source has been read in full/)
+  it('says how much of each source was read, and names the parts of one read in part', () => {
+    expect(sourceRegister.statement).toMatch(/Read says how much of each source was read/)
     for (const source of literatureSources) {
-      expect(source.checked.read).not.toBe('full text')
-      expect(source.limits).toMatch(/not read|not been read/i)
+      if (source.checked.readParts) {
+        expect(source.checked.read).toBe('full text')
+        expect(source.limits).toMatch(/Read only in the parts named/)
+      } else if (source.checked.read === 'full text') {
+        expect(source.limits).toMatch(/Read in full|has not been read/)
+      } else {
+        expect(source.limits).toMatch(/not read|not been read/i)
+      }
     }
+    expect(literatureSourceById('bts-pleural-procedures-2023').checked.readParts).toMatch(
+      /medical thoracoscopy section/,
+    )
   })
 
-  it('lists the nine citations checked, each once', () => {
+  it('lists the citations checked, each once', () => {
     expect(literatureSources.map((source) => source.id)).toEqual([
       'bts-pleural-guideline-2023',
       'bts-pleural-guideline-2023-summary',
@@ -442,6 +457,12 @@ describe('source register', () => {
       'tapps-2020',
       'tactic-2026',
       'wang-artificial-pneumothorax-2026',
+      'jin-consensus-2020',
+      'gallagher-fulcrum-1998',
+      'nccp-ics-thoracoscopy-2024',
+      'bhatnagar-advanced-interventions-2016',
+      'li-lat-review-2022',
+      'charalampidis-pleura-anatomy-2015',
     ])
   })
 
@@ -479,13 +500,27 @@ describe('claim register', () => {
     expect(claimRegister.statement).toMatch(/an empty decision is not approval/)
   })
 
-  it('points every claim at surfaces that exist in the plan', () => {
-    expect(claims.map((claim) => claim.id)).toEqual(['MT-C-0001', 'MT-C-0002', 'MT-C-0003'])
+  it('points every claim at surfaces that exist, written only where the section is written', () => {
+    expect(claims.map((claim) => claim.id)).toEqual(
+      Array.from({ length: 23 }, (_, n) => `MT-C-${String(n + 1).padStart(4, '0')}`),
+    )
     for (const claim of claims) {
       for (const surface of claim.surfaces) {
-        if (surface.kind === 'section') expect(sectionIds.has(surface.id)).toBe(true)
-        expect(surface.state).toBe('planned')
+        if (surface.kind === 'section') {
+          expect(sectionIds.has(surface.id)).toBe(true)
+          const written = curriculumSections.find((section) => section.id === surface.id)?.state
+          expect(surface.state).toBe(written === 'in-preparation' ? 'planned' : 'written')
+        } else {
+          expect(surface.state).toBe('planned')
+        }
       }
+    }
+  })
+
+  it('keeps every clinical statement from being shown as fact before review', () => {
+    for (const claim of claims.filter((entry) => entry.category === 'clinical evidence')) {
+      expect(claim.sources.length).toBeGreaterThan(0)
+      expect(claimStanding(claim)).toEqual({ kind: 'not-modeled' })
     }
   })
 
@@ -519,11 +554,10 @@ describe('claim register', () => {
   })
 
   it('blocks publication while any claim is not accepted', () => {
-    expect(claimsBlockingPublication().map((claim) => claim.id)).toEqual([
-      'MT-C-0001',
-      'MT-C-0002',
-      'MT-C-0003',
-    ])
+    expect(claimsBlockingPublication().map((claim) => claim.id)).toEqual(
+      claims.map((claim) => claim.id),
+    )
+    expect(claims.every((claim) => claim.decision.decision === 'NOT REVIEWED')).toBe(true)
   })
 
   it('refuses the entries that would make it dishonest', () => {
@@ -539,6 +573,7 @@ describe('claim register', () => {
       withClaim((claim) => {
         claim.category = 'clinical evidence'
         claim.shownBeforeReview.allowed = false
+        claim.sources = []
       }),
     ).toBe(false)
     // Accepted status with no decision behind it.
