@@ -36,6 +36,11 @@ const accessCopy: Record<
     variant: 'outline',
     help: 'The visitor needs a site account. A beta tester without one is sent to the login page.',
   },
+  'admin-only': {
+    label: 'Site admin only',
+    variant: 'outline',
+    help: 'The visitor needs a site account with the site-admin entitlement. Anyone else is sent to the login page or refused.',
+  },
   public: {
     label: 'Public and indexable',
     variant: 'info',
