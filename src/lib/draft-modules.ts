@@ -70,6 +70,7 @@ const draftModulePathPrefixes = [
 
 const unlistedModulePathPrefixes = [
   '/ebus-guided',
+  '/medical-thoracoscopy/wolf-preview',
   '/development-beta',
   '/admin/module-feedback',
   '/admin/therapeutic-bronchoscopy',
