@@ -3828,6 +3828,7 @@
   font-size: 0.84rem;
   line-height: 1.5;
 }
+.atlasPanel,
 .atlasFigure,
 .recognitionDrill {
   --ink: #15323a;
@@ -3992,7 +3993,7 @@
 }
 .atlasBoundary {
   margin: 0;
-  color: #5a7a74;
+  color: #54726c;
   font-size: 0.7rem;
   line-height: 1.45;
 }
