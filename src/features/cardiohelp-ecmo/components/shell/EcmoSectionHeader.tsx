@@ -1,6 +1,13 @@
 'use client'
 
-import { useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from 'react'
+import {
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+  type RefObject,
+} from 'react'
 
 import { useIsomorphicLayoutEffect } from '../useIsomorphicLayoutEffect'
 
@@ -69,6 +76,7 @@ export function EcmoSectionHeader({
   readonly onSaveAndExit?: () => void
   readonly resumedNote?: string
 }) {
+  const saveLocationNoteId = useId()
   const phone = useSyncExternalStore(subscribePhone, phoneSnapshot, () => false)
   const mainMenuButton = onMainMenu ? (
     <button type="button" className={styles.headerButton} data-ecmo-main-menu onClick={onMainMenu}>
@@ -155,6 +163,7 @@ export function EcmoSectionHeader({
             className={styles.headerButton}
             data-primary="true"
             data-ecmo-save-exit
+            aria-describedby={saveLocationNoteId}
             onClick={onSaveAndExit}
           >
             Save &amp; exit
@@ -162,6 +171,12 @@ export function EcmoSectionHeader({
         ) : null}
         {responsiveOptions}
       </div>
+      {onSaveAndExit ? (
+        <p id={saveLocationNoteId} className={styles.resumedNote} data-ecmo-save-location-note>
+          Only your location is saved. Reopening starts a fresh teaching or case state; answers,
+          snapshots and simulator actions are not restored.
+        </p>
+      ) : null}
       {resumedNote ? (
         <p className={styles.resumedNote} role="note" data-ecmo-resumed-note>
           {resumedNote}
