@@ -864,7 +864,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: "During an interfacility transport on venovenous support, the vehicle's supply to the console drops out. The power-source indicator changes over to internal battery on its own, the transport screen shows a battery reserve reading of 24 and falling steadily, and the console is showing a low-priority power message rather than an insistent alarm. Circuit blood flow, the circuit pressures and the patient's oxygenation are all unchanged from the readings taken before the supply dropped out, and the receiving unit is still some distance away. What does this moment call for?",
+      stem: "During an interfacility transport on venovenous support, the vehicle's supply to the console drops out. The power-source indicator changes over to internal battery on its own, the transport screen shows a battery reserve reading of 24 percent and falling steadily, and the console is showing a low-priority power message rather than an insistent alarm. Circuit blood flow, the circuit pressures and the patient's oxygenation are all unchanged from the readings taken before the supply dropped out, and the receiving unit is still some distance away. What does this moment call for?",
       choices: [
         {
           id: 'secure-verified-supply-now',
@@ -908,6 +908,8 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
         'bounded-educational-model',
       ],
       reviewStatus: 'draft',
+      learnerCopyOverrideReason:
+        'Percent denotes the authored device.batteryPercent value (24) and the console battery-charge unit, not a learner score or competence claim.',
     },
     commitments: {
       'secure-verified-supply-now': {
