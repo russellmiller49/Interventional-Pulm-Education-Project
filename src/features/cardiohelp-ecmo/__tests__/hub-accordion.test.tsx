@@ -136,7 +136,7 @@ describe('the hub browses the map in place', () => {
     )
     render(<CardiohelpHub />)
     expect(
-      screen.getByRole('link', { name: `Return to your saved work: ${scenario.title}` }),
+      screen.getByRole('link', { name: `Return to your saved location: ${scenario.title}` }),
     ).toHaveAttribute('href', `/cardiohelp-ecmo/practice?case=${scenario.id}&track=${track}`)
     const stored = JSON.parse(window.localStorage.getItem(CARDIOHELP_PROGRESS_STORAGE_KEY)!)
     expect(stored.bestScores).toEqual(historical.bestScores)
