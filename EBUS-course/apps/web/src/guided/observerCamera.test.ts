@@ -45,7 +45,7 @@ describe('observer camera math (EBUS-PRE-REVIEW-03)', () => {
     expect(tall).toBeGreaterThan(d)
     expect(fitSphereDistance(0, 38, NaN)).toBeGreaterThanOrEqual(1)
   })
-  it('keeps a marker in its column until its anchor is clearly across the midline', () => {
+  it('keeps each existing marker in its initial column through repeated rotation and resize', () => {
     const width = 400
     const first = assignColumns(
       [
@@ -71,9 +71,32 @@ describe('observer camera math (EBUS-PRE-REVIEW-03)', () => {
     )
     expect(drifted.get('a')).toBe('left')
     expect(drifted.get('c')).toBe('right')
-    // A large move past the hysteresis band does swap.
-    const swapped = assignColumns([{ id: 'a', x: 390 }], width, first)
-    expect(swapped.get('a')).toBe('right')
+    // Crossing the entire canvas must not swap an existing marker, even on repeated passes.
+    let columns = first
+    for (const resizedWidth of [400, 180, 900, 400, 180, 900]) {
+      columns = assignColumns([
+        { id: 'a', x: resizedWidth * 1.2 },
+        { id: 'b', x: resizedWidth },
+        { id: 'c', x: -resizedWidth * 0.2 },
+        { id: 'd', x: 0 },
+      ], resizedWidth, columns)
+      expect([...columns.entries()].sort()).toEqual([...first.entries()].sort())
+    }
+  })
+  it('assigns only new markers and preserves a returning hidden marker by canonical ID', () => {
+    const remembered = new Map<string, 'left' | 'right'>([['a', 'left'], ['c', 'right']])
+    const original = [...remembered.entries()]
+    const next = assignColumns([
+      { id: 'a', x: 390 }, { id: 'b', x: 300 }, { id: 'd', x: 100 },
+    ], 400, remembered)
+    expect(next.get('a')).toBe('left')
+    expect(next.get('d')).toBe('left')
+    expect(next.get('b')).toBe('right')
+    expect(next.has('c')).toBe(false)
+    expect([...remembered.entries()]).toEqual(original)
+    next.forEach((side, id) => remembered.set(id, side))
+    const returned = assignColumns([{ id: 'c', x: 0 }], 200, remembered)
+    expect(returned.get('c')).toBe('right')
   })
   it('spreads a column with a minimum gap inside the margins', () => {
     const ys = spreadColumn(
