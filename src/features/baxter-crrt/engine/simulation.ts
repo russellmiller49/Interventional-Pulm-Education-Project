@@ -183,6 +183,9 @@ export function applyScheduledEventAction(
     }
   }
   if (action.type === 'SET_DELIVERY_STATE') {
+    // End is terminal for scenario events. A checkpoint cannot reopen delivery;
+    // explicit user transitions still go through the simulation reducer.
+    if (state.device.deliveryState === 'ended') return state
     if (action.deliveryState === 'running' && !canEnterRunningState(state)) return state
     return { ...state, device: deviceStateForDeliveryState(state.device, action.deliveryState) }
   }
