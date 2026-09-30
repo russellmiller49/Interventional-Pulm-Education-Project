@@ -61,14 +61,14 @@ export function compassDirections(camera: THREE.Camera) {
 export type CalloutSide = 'left' | 'right'
 /**
  * Which column each label sits in. Letters used to swap columns whenever their anchor crossed the
- * canvas midline (L3-3: "letters swap sides as the scope rotates"); a marker now keeps its column
- * until its anchor is clearly on the other side. The first assignment is a balanced median split.
+ * canvas midline (L3-3: "letters swap sides as the scope rotates"). Keep each marker's initial
+ * column for the callout view's lifetime, including large rotations and resize. Only new IDs
+ * receive a balanced median split; leader endpoints still follow the real projected anchors.
  */
 export function assignColumns(
   items: { id: string; x: number }[],
-  width: number,
+  _width: number,
   previous: Map<string, CalloutSide>,
-  hysteresis = 0.16,
 ): Map<string, CalloutSide> {
   const result = new Map<string, CalloutSide>()
   const fresh = items.filter((item) => !previous.has(item.id)).sort((a, b) => a.x - b.x)
@@ -77,16 +77,7 @@ export function assignColumns(
   for (const item of items) {
     const kept = previous.get(item.id)
     if (!kept) continue
-    const mid = width / 2
-    const band = hysteresis * width
-    result.set(
-      item.id,
-      kept === 'left' && item.x > mid + band
-        ? 'right'
-        : kept === 'right' && item.x < mid - band
-          ? 'left'
-          : kept,
-    )
+    result.set(item.id, kept)
   }
   return result
 }
