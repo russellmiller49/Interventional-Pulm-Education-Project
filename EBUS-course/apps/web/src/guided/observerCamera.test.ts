@@ -118,6 +118,16 @@ describe('observer camera math (EBUS-PRE-REVIEW-03)', () => {
       expect(v).toBeLessThanOrEqual(300 - 26)
     }
   })
+  it('fits six clustered 34 px named labels with clearance in the route-model viewport', () => {
+    const height = 412
+    const labels = Array.from({ length: 6 }, (_, i) => ({ id: `label-${i}`, y: 400 + i }))
+    const ys = [...spreadColumn(labels, height, 40, 18).values()]
+    for (let i = 0; i < ys.length; i++) {
+      expect(ys[i] - 17).toBeGreaterThanOrEqual(0)
+      expect(ys[i] + 17).toBeLessThanOrEqual(height)
+      if (i) expect(ys[i] - ys[i - 1] - 34).toBeGreaterThanOrEqual(6)
+    }
+  })
   it('places the route observer so the contract arrow is not seen end-on', () => {
     const camera = new THREE.PerspectiveCamera(38, 473.5 / 355.1, 0.1, 5000)
     for (const route of contract.routes) {
