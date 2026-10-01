@@ -7,7 +7,8 @@ import { DeviceExplorer } from '../components/device-explorer/DeviceExplorer'
 import { preloadExplorerModel } from '../components/device-explorer/explorerModels'
 import type { ExplorerAssetSource } from '../components/device-explorer/sceneLink'
 import { catalogue, EXPLORER_DEVICES } from '../content/deviceExplorerCatalogue'
-import { WOLF_PREVIEW_END_ENDPOINT, WOLF_PREVIEW_WORDS, wolfPreviewModelUrl } from './paths'
+import { WOLF_PREVIEW_WORDS, wolfPreviewModelUrl } from './paths'
+import { WolfPreviewEndForm, WolfPreviewHubLink } from './WolfPreviewChrome'
 import styles from './wolf-preview.module.css'
 
 const ExplorerViewport = dynamic(() => import('../components/device-explorer/ExplorerViewport'), {
@@ -23,7 +24,7 @@ const FOOTER = [
 ]
 
 /**
- * The device explorer for a signed-in reviewer. Models come only from the preview's own
+ * The device explorer for a signed-in reviewer, one of the pages the preview's hub opens. Models come only from the preview's own
  * authorised endpoint; if one cannot be had, that model says so and the rest keeps working.
  */
 export function WolfPreviewExplorer({ locale }: { locale: string }) {
@@ -59,12 +60,10 @@ export function WolfPreviewExplorer({ locale }: { locale: string }) {
       notice={WOLF_PREVIEW_WORDS.disclosure}
       footer={FOOTER}
       headerActions={
-        <form method="post" action={WOLF_PREVIEW_END_ENDPOINT}>
-          <input type="hidden" name="locale" value={locale} />
-          <button type="submit" className={styles.endButton}>
-            {WOLF_PREVIEW_WORDS.end}
-          </button>
-        </form>
+        <div className={styles.headerControls}>
+          <WolfPreviewHubLink locale={locale} />
+          <WolfPreviewEndForm locale={locale} />
+        </div>
       }
     />
   )
