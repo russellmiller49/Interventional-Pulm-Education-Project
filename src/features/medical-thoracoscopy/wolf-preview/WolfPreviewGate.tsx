@@ -1,11 +1,25 @@
-import { WOLF_PREVIEW_SESSION_ENDPOINT, WOLF_PREVIEW_WORDS, type ReviewState } from './paths'
+import {
+  WOLF_PREVIEW_SESSION_ENDPOINT,
+  WOLF_PREVIEW_WORDS,
+  type ReviewState,
+  type WolfPreviewItem,
+} from './paths'
 import styles from './wolf-preview.module.css'
 
 /**
- * The review-code screen. A plain form that posts to the server; nothing about the codes or the
- * reviewers is on this page, and it works without JavaScript.
+ * The review-code screen, on the hub and on each page it opens. A plain form that posts to the
+ * server and comes back to the same page; nothing about the codes or the reviewers is on this
+ * page, and it works without JavaScript.
  */
-export function WolfPreviewGate({ locale, state }: { locale: string; state: ReviewState | null }) {
+export function WolfPreviewGate({
+  locale,
+  state,
+  item = null,
+}: {
+  locale: string
+  state: ReviewState | null
+  item?: WolfPreviewItem | null
+}) {
   const words = WOLF_PREVIEW_WORDS
   return (
     <main className={styles.gate}>
@@ -26,6 +40,7 @@ export function WolfPreviewGate({ locale, state }: { locale: string; state: Revi
         )}
         <form method="post" action={WOLF_PREVIEW_SESSION_ENDPOINT} className={styles.form}>
           <input type="hidden" name="locale" value={locale} />
+          {item && <input type="hidden" name="item" value={item} />}
           <label htmlFor="wolf-preview-code" className={styles.label}>
             {words.codeLabel}
           </label>
@@ -44,7 +59,7 @@ export function WolfPreviewGate({ locale, state }: { locale: string; state: Revi
           </button>
         </form>
         <p className={styles.help}>{words.help}</p>
-        <p className={styles.disclosure}>{words.disclosure}</p>
+        <p className={styles.disclosure}>{words.hubDisclosure}</p>
       </section>
     </main>
   )
