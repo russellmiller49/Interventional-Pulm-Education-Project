@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 
+import { isSafeObjectPath, SIGNABLE_BUCKETS } from '@/lib/storage/signable-buckets'
+
 function encodeSupabasePath(path: string): string {
   return path
     .split('/')
@@ -13,11 +15,10 @@ function resolveSupabaseBaseUrl(projectRef?: string): string | null {
   if (explicitUrl && explicitUrl.length > 0) {
     return explicitUrl.replace(/\/$/, '')
   }
-  const ref =
-    projectRef ||
-    process.env.SUPABASE_PROJECT_REF ||
-    process.env.NEXT_PUBLIC_SUPABASE_PROJECT_REF ||
-    ''
+  // Only the configured project: a caller never chooses where the service key is sent.
+  const configured =
+    process.env.SUPABASE_PROJECT_REF || process.env.NEXT_PUBLIC_SUPABASE_PROJECT_REF || ''
+  const ref = projectRef && projectRef === configured ? projectRef : configured
   if (!ref) {
     return null
   }
@@ -35,6 +36,13 @@ export async function GET(request: Request) {
     return NextResponse.json(
       { error: 'Supabase bucket and path query parameters are required.' },
       { status: 400 },
+    )
+  }
+
+  if (!SIGNABLE_BUCKETS.has(bucket) || !isSafeObjectPath(pathParam)) {
+    return NextResponse.json(
+      { error: 'Not found.' },
+      { status: 404, headers: { 'Cache-Control': 'no-store' } },
     )
   }
 

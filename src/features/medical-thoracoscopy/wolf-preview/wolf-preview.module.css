@@ -1,0 +1,149 @@
+/* The review-code screen and the End preview control. */
+
+.gate {
+  --wp-panel: #ffffff;
+  --wp-ink: #16181d;
+  --wp-muted: #5b616b;
+  --wp-line: #d9dde3;
+  --wp-accent: #1858c4;
+
+  display: flex;
+  min-height: calc(100vh - 160px);
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  color: var(--wp-ink);
+}
+
+:global(.dark) .gate {
+  --wp-panel: #1a1d23;
+  --wp-ink: #eceef2;
+  --wp-muted: #a3a9b4;
+  --wp-line: #2e333c;
+  --wp-accent: #7aa7f5;
+}
+
+.panel {
+  width: min(100%, 30rem);
+  padding: 28px 28px 22px;
+  border: 1px solid var(--wp-line);
+  border-radius: 16px;
+  background: var(--wp-panel);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.08);
+}
+
+.course {
+  margin: 0;
+  color: var(--wp-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 4px 0 0;
+  font-size: 1.35rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.intro {
+  margin: 10px 0 0;
+  color: var(--wp-muted);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.input {
+  padding: 10px 12px;
+  border: 1px solid var(--wp-line);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: 0.04em;
+}
+
+.input:focus-visible,
+.submit:focus-visible,
+.endButton:focus-visible {
+  outline: 2px solid var(--wp-accent, #1858c4);
+  outline-offset: 2px;
+}
+
+.submit {
+  margin-top: 6px;
+  padding: 10px 14px;
+  border: 1px solid var(--wp-accent);
+  border-radius: 8px;
+  background: var(--wp-accent);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+:global(.dark) .submit {
+  color: #0d1422;
+}
+
+.message {
+  margin: 16px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.message[data-kind='error'] {
+  border: 1px solid #e3a1ad;
+  background: #fdf0f2;
+  color: #8a1c31;
+}
+
+.message[data-kind='info'] {
+  border: 1px solid var(--wp-line);
+  color: var(--wp-muted);
+}
+
+:global(.dark) .message[data-kind='error'] {
+  border-color: #7a2c3b;
+  background: #3a1820;
+  color: #f5b8c4;
+}
+
+.help {
+  margin: 14px 0 0;
+  color: var(--wp-muted);
+  font-size: 0.82rem;
+}
+
+.disclosure {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--wp-line);
+  color: var(--wp-muted);
+  font-size: 0.78rem;
+}
+
+.endButton {
+  padding: 6px 12px;
+  border: 1px solid #c7ccd4;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
