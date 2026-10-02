@@ -17,6 +17,7 @@ import { saveOwnerFeedback } from './ownerFeedbackStore'
 import { betaModuleForPath, feedbackPagePath, type BetaModule } from './catalog'
 import {
   ScreenshotEditor,
+  createScreenshotDraft,
   type ScreenshotDraft,
   type ScreenshotEditorHandle,
 } from './ScreenshotEditor'
@@ -30,7 +31,7 @@ export function BetaTestingFrame({
 }) {
   const local = feedbackMode() === 'owner-local'
   const frame = useRef<HTMLIFrameElement>(null)
-  const screenshotDraft = useRef<ScreenshotDraft>({ source: null, rects: [] })
+  const screenshotDraft = useRef<ScreenshotDraft>(createScreenshotDraft())
   const editor = useRef<ScreenshotEditorHandle>(null)
   const [open, setOpen] = useState(false)
   const [comment, setComment] = useState('')
@@ -105,7 +106,7 @@ export function BetaTestingFrame({
       setComment('')
       setSelectedText('')
       setReportId('')
-      screenshotDraft.current = { source: null, rects: [] }
+      screenshotDraft.current = createScreenshotDraft()
       setSuccess(`Feedback saved${local ? ' locally' : ''}. Reference ${savedId.slice(0, 8)}.`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Feedback could not be saved. Please retry.')
@@ -163,12 +164,12 @@ export function BetaTestingFrame({
       <Dialog
         open={open}
         onOpenChange={(value) => {
-          if (!sending) setOpen(value)
+          if (!sending && !capturing) setOpen(value)
         }}
       >
         <DialogContent
           overlayClassName={capturing ? 'invisible' : undefined}
-          className={`max-h-[90dvh] max-w-2xl overflow-y-auto ${capturing ? 'invisible' : ''}`}
+          className={`max-h-[90dvh] max-w-4xl overflow-y-auto p-4 sm:p-6 ${capturing ? 'invisible' : ''}`}
           onInteractOutside={(event) => event.preventDefault()}
         >
           <DialogHeader>
@@ -222,7 +223,7 @@ export function BetaTestingFrame({
                 onClick={() => {
                   setOpen(false)
                   setReportId('')
-                  screenshotDraft.current = { source: null, rects: [] }
+                  screenshotDraft.current = createScreenshotDraft()
                   setComment('')
                   setSelectedText('')
                   setError('')
