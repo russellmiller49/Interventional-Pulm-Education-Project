@@ -48,12 +48,18 @@ and its `/admin/therapeutic-bronchoscopy` page requires `site_admin` access.
 
 The feedback button records the current module page, supported lesson/view query parameters,
 and fragment, plus any selected text. Testers can edit the quoted text, write a comment, upload
-or paste an image, or use the browser's screen-sharing picker to capture a screenshot. Screen
-capture is user initiated and its media tracks stop immediately after capture. Browsers without
-screen capture support still accept uploads and pasted images.
+or paste an image, or choose **Capture this tab**. On supported browsers the permission picker
+prefers **This Tab**, excludes entire screens, and disables switching the shared surface. A unique
+Capture Handle verifies the exact beta-testing tab before any pixels are attached; selecting
+another tab, a window, or a screen is rejected without replacing the current screenshot. Capture
+is user initiated and its media tracks stop immediately after one frame, cancellation, or failure.
+Browsers without verified current-tab capture still accept uploads and pasted images.
 
 Images are resized to a maximum dimension of 2,000 pixels in the browser and converted to PNG.
-Testers can draw highlight rectangles and undo them. The final annotated image is submitted
+The visible annotation toolbar offers **Box**, **Arrow**, **Draw**, and **Text**. Testers can
+undo the last annotation, clear all marks, remove the image, or retake the tab. Text notes can be
+placed by clicking the screenshot or using the keyboard-accessible **Add note at top** button.
+The enlarged feedback dialog gives the screenshot more room. The final annotated image is submitted
 with the report, limited to 3 MB. Screenshots are optional; a comment is required. Drafts remain
 in the current testing page when the feedback dialog closes or a save fails; reloading or
 leaving that testing page discards the draft. A save confirmation is shown only after the
@@ -113,8 +119,11 @@ Owner-local validation and commands are documented in [Owner review feedback](mo
   review updates, and existing development-navigation behavior.
 - `npx playwright test --config playwright.module-beta.config.ts`: unlisted sign-in gate,
   real standard-route HTTP checks, normal pages without feedback controls, image upload and
-  highlighting, selected-text/page context, draft preservation, failed-save retry, review edits,
-  and mobile layout. Persistence responses use fixtures; real API calls confirm that preview
+  all four annotation tools, exact annotated PNG submission, selected-text/page context,
+  draft preservation, failed-save retry, review edits, and mobile upload fallback. Native Chromium
+  capture verifies the module is visible without the feedback overlay and the media track stops.
+  Other tabs/windows/screens and cancelled retakes preserve the previous annotated screenshot.
+  Persistence responses use fixtures; real API calls confirm that preview
   cookies cannot access feedback data.
 - During initial implementation, the base migration was executed against an isolated in-memory PostgreSQL (PGlite) database with
   representative auth/storage schemas. Service-role insert/read/review, check constraints,
