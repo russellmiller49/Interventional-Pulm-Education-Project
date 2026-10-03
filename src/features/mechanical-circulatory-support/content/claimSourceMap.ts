@@ -61,7 +61,7 @@ export interface McsClaimSourceMapping {
 }
 
 const SYNTHESIS_FIRST =
-  'First cited source; the only named basis for the sentence beside an unopened record.'
+  'The lesson or case led with the supplied synthesis beside registered records. The broader section footer could include other sources; this ordering did not establish a checked passage for this sentence.'
 
 export const MCS_CLAIM_SOURCE_MAP: readonly McsClaimSourceMapping[] = Object.freeze([
   {
@@ -315,11 +315,16 @@ export const MCS_CLAIM_SOURCE_MAP: readonly McsClaimSourceMapping[] = Object.fre
     learnerSurface: 'Section 6 identification and its pathway label',
     currentWording: ['Into the pulmonary artery, bypassing the right ventricle'],
     previousSourceIds: [
-      'mcs-bedside-reference-supplied',
+      'master-hemodynamics-reference',
       'ishlt-hfsa-acute-mcs-2023',
+      'fda-impella-cp-labeling',
+      'fda-impella-55-labeling',
+      'jnj-impella-55-current',
       'fda-impella-rp-labeling',
+      'jnj-impella-rp-current',
     ],
-    synthesisRole: SYNTHESIS_FIRST,
+    synthesisRole:
+      'The lesson led with the master synthesis; its prediction and transfer items separately cited the bedside synthesis. Neither supplied independent evidence for the RP pathway.',
     opened: [
       {
         sourceId: 'impella-rp-ifu-rev-n-supplied',
