@@ -68,11 +68,9 @@ export function updateHoldAcquisition(
         s.time > (pending!.waveforms.at(-1)?.time ?? -Infinity),
     ),
   ]
-  // Bound persisted samples while preserving time and both ends. Clinical state still keeps 50 Hz.
-  const waveforms =
-    recorded.length > 150
-      ? recorded.filter((_, i) => i % 2 === 0 || i === recorded.length - 1)
-      : recorded
+  // Every occluded sample at the engine's own 20 ms spacing. This was halved above 150 samples to
+  // bound a saved checkpoint; nothing saves one now, and the figure should show what was acquired.
+  const waveforms = recorded
   const next: HoldAcquisition = {
     ...pending,
     waveforms,

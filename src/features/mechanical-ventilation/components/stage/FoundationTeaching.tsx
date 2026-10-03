@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react'
 import { foundationTeaching, type FoundationUnitId } from '../../content/foundations'
-import { ventilationSectionSpec } from '../../content/sectionSpecs'
 import { getVentilatorDeviceProfile } from '../../content/deviceProfiles'
 import { createLabSimulation } from '../../engine/learningLab'
 import { advanceSimulation, HOLD_SECONDS } from '../../engine/simulation'
@@ -12,12 +11,12 @@ import { plateauAcquisition } from '../../content/plateauAcquisition'
 import { ventilationReferenceMarker } from '../../content/referenceEvidence'
 import type { VentilationSimulationState } from '../../engine/types'
 import type { VentilationStageStep } from '../../content/stageLessons'
-import type { BreathStopId } from '../../content/breathSpine'
+import { breathStop, type BreathStopId } from '../../content/breathSpine'
 import { IdealizedComparison } from '../teaching/IdealizedComparison'
 import { CapturedBreath } from './CapturedBreath'
 import styles from './ventilation-stage.module.css'
 
-function SettingMap({ state }: { state: VentilationSimulationState }) {
+export function SettingMap({ state }: { state: VentilationSimulationState }) {
   const profile = getVentilatorDeviceProfile(state.deviceId)
   const s = state.ventilator.settings
   const monitor = (metric: string, fallback: string) =>
@@ -87,7 +86,7 @@ function SettingMap({ state }: { state: VentilationSimulationState }) {
  * clinical question and is in the review queue, not answered here — and the two values are not
  * averaged, rounded together or renamed to make them agree.
  */
-function WorkedHold({ device }: { device: VentilationSimulationState['deviceId'] }) {
+export function WorkedHold({ device }: { device: VentilationSimulationState['deviceId'] }) {
   const reference = useMemo(() => {
     const baseline = createLabSimulation('mechanics-load-and-pressure', 0, device)
     const held = ventilationSimulationReducer(baseline, {
@@ -132,19 +131,42 @@ function WorkedHold({ device }: { device: VentilationSimulationState['deviceId']
   )
 }
 
-export function FoundationTeaching({
+/**
+ * The worked sentence for Section 2 reads "At the cursor in the inspiratory interval…". The walk
+ * moves the same figure's cursor to whichever landmark the learner picks, so on Trigger the
+ * sentence sat beside a cursor at 0.00 s (walkthrough S2-1). A worked sentence that is written for
+ * one landmark is printed where the cursor is on it, and otherwise says where it applies.
+ */
+const WORKED_READING_STOP: Partial<Record<FoundationUnitId, BreathStopId>> = {
+  'waveform-anatomy': 'inspiration',
+}
+
+/** Steps on which a foundation section's own worked figure is the evidence being read. */
+export function foundationFigureStep(step: VentilationStageStep): boolean {
+  return (
+    step.phase === 'recognize' ||
+    ['prediction', 'sort', 'interpret', 'explain'].includes(step.interaction.kind)
+  )
+}
+
+/**
+ * The foundation section's worked evidence — the engine-generated reference breath, the setting
+ * map, the reference hold or the idealized comparison — with the sentence that says how to read it
+ * placed before it, and the limit that applies to it directly after it.
+ */
+export function FoundationEvidence({
   unitId,
-  step,
   state,
   stops,
   roundIndex = 0,
   showCapturedReference = true,
-  onShowControl,
+  landmarkChooser = false,
 }: {
   unitId: FoundationUnitId
-  step: VentilationStageStep
   state: VentilationSimulationState
   stops: readonly BreathStopId[]
+  /** True on the walk, where the landmark buttons above move this figure's cursor. */
+  landmarkChooser?: boolean
   /**
    * Which application this step belongs to. The reference used to be built from round 0 always,
    * so Section 1 step 10 — "A new complete breath is shown on a longer respiratory cycle" —
@@ -153,7 +175,6 @@ export function FoundationTeaching({
   roundIndex?: 0 | 1
   /** False when the step already shows the marked reference beside its own instruction. */
   showCapturedReference?: boolean
-  onShowControl?: () => void
 }) {
   const content = foundationTeaching[unitId]
   const reference = useMemo(
@@ -161,83 +182,66 @@ export function FoundationTeaching({
     [unitId, roundIndex, state.deviceId],
   )
   const marker = ventilationReferenceMarker(unitId, roundIndex)
-  const worked =
-    step.phase === 'recognize' ||
-    ['prediction', 'sort', 'interpret'].includes(step.interaction.kind)
-  if (!worked && step.interaction.kind !== 'explain')
-    return (
-      <section
-        className={styles.block}
-        data-teaching-block="guide"
-        data-maneuver={step.guide?.maneuver}
-      >
-        <h2>
-          {unitId === 'mechanics-load-and-pressure' || unitId === 'modes-and-breath-delivery'
-            ? 'Change one simulated patient property'
-            : 'Perform and observe this experiment'}
-        </h2>
-        <p>{step.guide?.look}</p>
-        <p>{step.guide?.note}</p>
-        {onShowControl ? (
-          <button type="button" className={styles.toolButton} onClick={onShowControl}>
-            Show the active control
-          </button>
-        ) : null}
-        <p>
-          Read the recorded baseline and result before explaining the response. An unchanged
-          measurement can be informative.
-        </p>
-      </section>
-    )
+  const readingStop = WORKED_READING_STOP[unitId]
+  /*
+   * On the walk the learner's landmark places the cursor. Elsewhere a step that lights several
+   * stops shows the figure at the one its worked sentence reads, rather than at the first.
+   */
+  const figureStop =
+    !landmarkChooser && readingStop !== undefined && stops.includes(readingStop)
+      ? readingStop
+      : stops[0]
+  const figure =
+    showCapturedReference &&
+    (unitId === 'breathing-with-support' || unitId === 'waveform-anatomy') ? (
+      <CapturedBreath
+        key={`${roundIndex}:${figureStop ?? 'reference'}`}
+        label={`Captured reference · application ${roundIndex + 1}`}
+        samples={reference.waveforms}
+        guided
+        stop={figureStop}
+        marker={marker ?? undefined}
+      />
+    ) : null
+  const cursorElsewhere =
+    figure !== null &&
+    readingStop !== undefined &&
+    figureStop !== undefined &&
+    figureStop !== readingStop
   return (
-    <section
-      className={styles.block}
-      data-foundation-teaching
-      data-teaching-block="method"
-      id="mv-foundation-teaching"
-      tabIndex={-1}
-    >
-      <p className={styles.kicker}>
-        {worked ? 'Learn the concept · worked demonstration' : 'Review the mechanism'}
-      </p>
-      <h2>{content.title}</h2>
+    <div data-foundation-teaching data-lesson-part="evidence" id="mv-foundation-teaching">
+      <h4>Worked demonstration · {content.title}</h4>
       <p>
-        <strong>By the end:</strong> {content.purpose}
+        <strong>This demonstration:</strong> {content.purpose}
       </p>
       <p>{content.explanation}</p>
-      {showCapturedReference &&
-      (unitId === 'breathing-with-support' || unitId === 'waveform-anatomy') ? (
-        <CapturedBreath
-          key={`${roundIndex}:${stops[0] ?? 'reference'}`}
-          label={`Captured reference · application ${roundIndex + 1}`}
-          samples={reference.waveforms}
-          guided
-          stop={stops[0]}
-          marker={marker ?? undefined}
-        />
+      {!cursorElsewhere ? (
+        <p data-worked-reading>{content.worked}</p>
+      ) : landmarkChooser ? (
+        <p data-worked-reading-stop={readingStop}>
+          The worked reading for this figure is at {breathStop(readingStop!).title}; choose that
+          landmark above to put the cursor there.
+        </p>
       ) : null}
+      {figure}
       {unitId === 'controls-and-goals' ? <SettingMap state={state} /> : null}
       {unitId === 'mechanics-load-and-pressure' ? <WorkedHold device={state.deviceId} /> : null}
       {unitId === 'modes-and-breath-delivery' ? <IdealizedComparison /> : null}
-      <p>{content.worked}</p>
-      <p className={styles.quickNote}>{content.boundary}</p>
-      {unitId === 'breathing-with-support' ? (
-        <details data-teaching-block="orientation">
-          <summary>Why a ventilator exists</summary>
-          {ventilationSectionSpec(unitId).orientation?.map((text) => (
-            <p key={text}>{text}</p>
-          ))}
-        </details>
-      ) : null}
-      <details>
-        <summary>Playback, patient properties and measurements</summary>
-        <p>
-          Run, Pause, step and speed control playback and elapsed simulated time. A hold is a
-          measurement maneuver that occludes flow at a breath boundary. Patient compliance and
-          resistance controls alter simulated patient properties; they are not bedside ventilator
-          settings. The native console and educational setting shortcuts use the same patient state.
-        </p>
-      </details>
-    </section>
+      <p className={styles.quickNote} data-point-of-use-limit>
+        {content.boundary}
+      </p>
+    </div>
+  )
+}
+
+/** What playback, a hold and the patient-property controls each do — for the More detail disclosure. */
+export function PlaybackAndMeasurementNote() {
+  return (
+    <p>
+      Run, Pause, step and speed control playback and elapsed simulated time. A hold is a
+      measurement maneuver that occludes flow at a breath boundary. Patient compliance and
+      resistance controls alter simulated patient properties; they are not bedside ventilator
+      settings. The native console and educational setting shortcuts use the same patient state.
+    </p>
   )
 }

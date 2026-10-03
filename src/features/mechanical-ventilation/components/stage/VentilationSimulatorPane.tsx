@@ -181,7 +181,7 @@ export function VentilationSimulatorPane({
             type="button"
             className={styles.toolButton}
             disabled={readOnly}
-            onClick={() => engine({ type: 'SET_PAUSED', paused: !state.paused })}
+            onClick={() => engine({ type: 'SET_PAUSED', paused: !state.paused, origin: 'learner' })}
             aria-pressed={!state.paused}
           >
             {state.paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}

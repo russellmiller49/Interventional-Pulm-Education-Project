@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { BookOpenCheck, GraduationCap } from 'lucide-react'
 
 import { mechanicalVentilationNavBase } from '@/features/learning-module/moduleRoutes'
@@ -23,24 +24,40 @@ import { useVentilationSelfPacedProgress } from './useVentilationSelfPacedProgre
  * the worked state in words as well as in state, and case chips name the presentation, never the
  * diagnosis. Flattening the groups reproduces the canonical order, and the "Up next" chip is the
  * same section the Continue call to action resolves to.
+ *
+ * Which group opens, and which chip says "Up next", depend on progress stored on this device, which
+ * is read only after the page has hydrated. Both used to be computed from the empty progress the
+ * server and the first client render see, and computed again when the stored progress arrived: for a
+ * returning learner the first paint opened stage 1 with Section 1 as "Up next", then collapsed it
+ * and opened a later stage, so a click aimed at that chip in between landed on nothing and the page
+ * jumped (MV-PRE-REVIEW-03 B2, reproduced on the Learn landing). Now nothing opens and no chip is
+ * marked until `ready`; the open group is chosen once, when it is, and belongs to the learner after
+ * that — a later progress change never collapses a group under the pointer.
  */
 export function VentilationPathwayAccordion({
   progress,
   visitedCaseIds,
   id,
+  ready = true,
 }: {
   readonly progress: VentilationSelfPacedProgress
   readonly visitedCaseIds: ReadonlySet<string>
   readonly id?: string
+  /** False until stored progress has been read; see above. */
+  readonly ready?: boolean
 }) {
   const groups = ventilationPathwayGroups()
   const worked = new Set(progress.visited)
-  const next = nextSelfPacedVentilationSection(progress)
+  const next = ready ? nextSelfPacedVentilationSection(progress) : null
   const nextId = next?.unit.id ?? null
-  const openStage =
+  const chosenStage =
     groups.find((group) => group.units.some((unit) => unit.id === nextId))?.stage ??
     groups[0]?.stage ??
     null
+  const [openStage, setOpenStage] = useState<string | null | undefined>(
+    ready ? chosenStage : undefined,
+  )
+  if (ready && openStage === undefined) setOpenStage(chosenStage)
 
   return (
     <ol className={styles.unitList} id={id} data-pathway-accordion>
@@ -48,7 +65,7 @@ export function VentilationPathwayAccordion({
         <li key={group.stage}>
           <details
             className={styles.unitCard}
-            open={group.stage === openStage}
+            open={openStage !== undefined && group.stage === openStage}
             data-unit={group.stage}
             data-stage={group.stage}
           >
@@ -140,7 +157,12 @@ export function VentilationStoredPathwayAccordion({ id }: { readonly id?: string
   const visitedCases = new Set(progress.visited)
   return (
     <div data-hydrated={ready}>
-      <VentilationPathwayAccordion progress={progress} visitedCaseIds={visitedCases} id={id} />
+      <VentilationPathwayAccordion
+        progress={progress}
+        visitedCaseIds={visitedCases}
+        id={id}
+        ready={ready}
+      />
     </div>
   )
 }
