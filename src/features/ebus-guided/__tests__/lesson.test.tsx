@@ -377,9 +377,9 @@ it.each([
     // Both optional questions on this task may be passed over before the next task.
     next()
     next()
-    fireEvent.click(screen.getByRole('button', { name: 'Back', exact: true }))
+    fireEvent.click(screen.getByRole('button', { name: /^Back$/ }))
     assertAuthoredReference()
-    fireEvent.click(screen.getByRole('button', { name: 'Restart lesson', exact: true }))
+    fireEvent.click(screen.getByRole('button', { name: /^Restart lesson$/ }))
     next()
     expect(reference()).toBeNull()
     expect(screen.getByRole('button', { name: revealLabel })).toBeEnabled()
