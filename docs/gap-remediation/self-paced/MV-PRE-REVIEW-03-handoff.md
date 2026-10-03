@@ -13,6 +13,515 @@ trajectory, gas model, alarm policy, answer key, source or review status, device
 site chrome, or D1–D5 decision. The four console facsimiles were checked for display only; visual
 parity is not manufacturer-workflow validation.
 
+> **Read first.** An independent sanity review of this PR found six defects in the batch recorded
+> below. The repair is the next section; where it supersedes a statement further down, that
+> statement is marked.
+
+## Sanity-review repair pass (2026-10-03)
+
+An independent Codex sanity review of PR #290 at `02eb66e46dfdee0c716edf08f24211308e8b0872` returned
+**NOT READY TO MERGE** with six bounded Batch-03 defects (R1–R6) and two notes (a pinned-chrome
+probe, and whether a captured result always has a complete breath). This section records the
+repair. Prepared by an AI authoring assistant (Claude) at the owner's request.
+
+**Nothing here is clinical, device, media, source or release approval.** The repair changed how a
+pause is credited, what a figure and its text call their origin, how a navigation request is scoped,
+and module-local console layout. It changed no physiology, BreathClock, alarm history, PEEP
+reversal, trigger-estimate semantics, ABG specimen, plateau acquisition, post-action evidence, case
+trajectory, answer key, option, stem, authored marker or evidence phase. Batch 04 was not started;
+nothing was merged or deployed; the branch was not reset, rebased, force-pushed or re-created.
+Sections below this one are the original batch record; statements the repair supersedes are marked
+there.
+
+### Heads and drift
+
+|                        |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Previous reviewed head | `02eb66e46dfdee0c716edf08f24211308e8b0872`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Repair commits         | `88660c6e` R5 (console layout) · `f804d3ac` R1–R4, R6, the capture gate and the regression suite · `945bf07a` R3 (observation feedback)                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Implementation head    | `945bf07a` — every test, type-check, lint, build and production browser result below is from this commit                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Repaired final head    | the commit that adds this section and its screenshots (docs only; recorded in the PR)                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Branch base            | `756c9aee7d7119f3817b5d85aaf73f9efa573418`, unchanged                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Expected `origin/main` | `756c9aee7d7119f3817b5d85aaf73f9efa573418`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Fetched `origin/main`  | **Drift recorded, twice.** At the start of the pass: `754bed0e362a57e804d104ca99da8a8eaefbbeb5` (50 commits past the base). Re-fetched before the push: `60e3bd642a92fc25714141ad8e6c8d877510f8e7` (82 commits past the base; merges of PRs #273, #279, #284, #289, #291–#293, #309–#319 and #322). Neither touches `src/features/mechanical-ventilation` or the MV routes. `src/features/learning-module` gained the MT-01a sponsor-notice slot (`ModuleFrameV2.tsx`, its stylesheet and two test files). See [Integration](#integration-status). |
+| Worktree               | Commits were made in `…/claude-mechanical-vent-03-9-25`, where the branch is checked out. The session opened in `…/codex-mv-03`, detached at the reviewed head; it was used only as the reviewed-head checkout (a probe test file and a dev server on port 3128, both removed; `git status` clean before and after).                                                                                                                                                                                                                               |
+| Files                  | 24 runtime, content and test files, all under `src/features/mechanical-ventilation`; this document and 21 screenshots. No shared `learning-module` file, global site chrome, other module, backend, dependency or deployment change. No `.env.local` was created, modified or deleted.                                                                                                                                                                                                                                                             |
+
+### Disposition
+
+| ID                    | Review finding                                                                                    | Disposition                                                                                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **R1**                | A background suspension counted as the learner's pause and, with automatic capture on, captured   | **Reproduced (browser and Jest) → repaired.** The pause carries its origin; only the learner's own pause of a running model can be their inspection.                                       |
+| **Capture readiness** | No explicit complete-breath gate                                                                  | **Verified: not guaranteed → smallest gate added.** 39 % of instants after Section 11's first interval held no complete breath. Post-change provenance _is_ transitive, and is now tested. |
+| **R2**                | Section 1 step 3 names "interval A, marked on the captured breath" and shows no marker            | **Reproduced → repaired.** The step's figure carries the authoritative marker; the sentence follows the figure on screen.                                                                  |
+| **R3**                | "Breath start" overstates the origin; calculated 0.63 s read as measured                          | **Reproduced → repaired (disposition B).** Origin named as the first recorded inspiratory sample everywhere; calculated and sampled times labelled as such.                                |
+| **R4**                | A Command-click left a reveal request behind that an unrelated arrival consumed                   | **Reproduced (browser and Jest) → repaired.** The request names its destination and is made only by a same-tab activation.                                                                 |
+| **N4 probe**          | Hidden fixed / non-header sticky elements could set the inset                                     | **Repaired narrowly.** Unpainted elements and sticky elements with no top offset are ignored; ordinary-route geometry re-measured identical.                                               |
+| **R5**                | C6 monitor column overlaps Ppeak / Pplateau at 200 % root text                                    | **Reproduced on the reviewed head → repaired (module-local).** Column floors in rem; narrow-screen reflow by container width.                                                              |
+| **R6**                | Overlay text equivalent omits the effort row; time-axis caption collides with its tick on a phone | **Reproduced → repaired.** Sample-derived effort description; the axis title is page text under the figure.                                                                                |
+
+### R1 — who paused decides what a pause counts for
+
+**Reproduction on the reviewed head** (dev build of `02eb66e4` on port 3128, headless Chromium,
+1280×1000, page visible and its own clock running): Section 1, step 3 → tick "Capture automatically
+when the result is ready" → Run experiment → at model time 4.6 s the page's `visibilityState` was
+scripted to `hidden` and `visibilitychange` dispatched. The panel went straight to
+`data-experiment-stage="captured"`: "Result captured at 4.6 s of model time", the goal ticked, a
+retained result on the page. It stayed captured after visibility was restored.
+
+**Cause**, four links, each sufficient to need repair:
+
+1. `useVentilationLabSession` answered a hidden page with the same `SET_PAUSED` the Pause button sends.
+2. `learningLabReducer` wrote the Section 1 `inspection` record for _any_ `SET_PAUSED` in the
+   experiment once four seconds had passed and the last sample was expiratory with gas leaving.
+3. `labGoalMet` did not even need the record: with none, the `pause-expiration` goal fell through to
+   "`simulation.paused`, past four seconds, last sample expiratory" — intent read off `paused === true`.
+   That is also true after **Advance one breath** from an early pause, and at the model-time limit.
+4. The panel's automatic capture dispatched `COMPARE` the moment the gate opened.
+
+**Contract now** (`engine/types.ts`, `engine/learningLab.ts`):
+
+- The pause action carries who asked: `origin: 'learner'` (the three Pause buttons), `'background'`
+  (the page hidden or suspended), or nothing (the program itself: reset, restart, device change,
+  replay). The physiology reducer ignores it — the engine state after a pause is identical for every
+  origin (asserted with `toEqual`).
+- The inspection record is written in exactly two places: the learner's **Use this captured
+  interval**, and a `'learner'` pause that **stopped a running model** in the experiment, at least
+  four model seconds in, in expiration with gas leaving. Nothing else writes it.
+- The `pause-expiration` goal is met by that record and by nothing else. The `paused === true`
+  fall-through is deleted.
+- A background pause therefore records no inspection, meets no goal, sets no `readySince`, opens no
+  gate and triggers no capture — while hidden and after the page is visible again, because there is
+  nothing recorded to become true later. The capture effect was **not** given a `document.hidden`
+  check; it reads the gate, and the gate is closed.
+- The lab layer reads the origin, not the browser: `visibilityState` appears only in
+  `useVentilationLabSession` (asserted by a source test over the lab, the status projection and the
+  panel).
+- `LabSession.pauseOrigin` remembers the origin of the pause in force so the panel can say why the
+  clock stopped ("The model clock stopped because this page went to the background. That was not
+  your pause, so nothing was recorded for it…"). It is presentation state: never part of a
+  checkpoint, never read by a goal, cleared by Run, one breath, capture, reset, restart, device
+  change and a new round.
+
+**After, production build** (same sequence, 1280×1000):
+
+| Moment                                       | Stage             | Goal  | Model time | Capture                           | Captured result |
+| -------------------------------------------- | ----------------- | ----- | ---------- | --------------------------------- | --------------- |
+| Scripted hidden at 4.6 s                     | `awaiting-action` | to do | 4.6 s      | disabled                          | none            |
+| Hidden + 2.5 s                               | `awaiting-action` | to do | 4.6 s      | disabled                          | none            |
+| Visible again + 2.5 s                        | `awaiting-action` | to do | 4.6 s      | disabled                          | none            |
+| Learner: Run experiment, then Pause at 8.6 s | `captured`        | done  | 8.6 s      | — (automatic capture was left on) | present         |
+
+**Native tab hiding was not exercised.** It was attempted — a second page opened and brought to the
+front in the same headless Chromium context — and the first page kept
+`visibilityState === 'visible'` and kept running, so it is not evidence either way. Only the
+scripted transition (the same one the review used) is claimed.
+
+**Tests** (`mv-pre-review-03-repairs.test.tsx`, "R1"; numbers are the review's list):
+
+| #   | Required                                              | Test                                                                                                                                                                          |
+| --- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Learner Pause at the right time may progress the goal | lab: `'learner'` pause at 4.6 s → inspection in expiration, `ready`. Rendered: Run, 4.6 s, Pause → `ready`, Capture enabled, nothing captured without the option.             |
+| 2   | Background suspension → no credit                     | lab: `'background'` pause at the same instant → no inspection, no `readySince`, goal unmet, `COMPARE` refused. Rendered: hidden → `awaiting-action`, the note, no capture.    |
+| 3   | Visibility returns → still no credit                  | lab: six later actions (speed, tick, further pauses of every origin) leave it unmet. Rendered: visible again, 2 s later, still `awaiting-action`, goal `to-do`.               |
+| 4   | With automatic capture on → no capture                | Rendered, option ticked before Run: no `[data-captured-result]` hidden, 5 s later, or after return.                                                                           |
+| 5   | Learner's later inspection → capture proceeds         | Rendered, same run: Run, 3.8 s, Pause → `captured` (the option was still on and the gate was really open).                                                                    |
+| 6   | Pause on an unrelated step                            | lab: Section 2 (no pause goal), Section 1's second application (asks for an interval), Section 1 before its experiment. Rendered: Run/Pause on the reading step, then step 3. |
+| 7   | One-breath stepping is not a pause                    | lab: early pause at 2 s + Advance one breath → paused, past 4 s, expiratory, gas leaving, **not ready**. Rendered with the option on: nothing captured.                       |
+| 8   | Reset / new round clears transient state              | lab: RESET, RESTART, OPEN_ROUND, DEVICE each clear `pauseOrigin`, the inspection and `readySince`. Rendered: Reset patient removes the note and un-ticks the option.          |
+
+Also asserted: a pause naming no origin earns nothing; a `'learner'` pause of an already-stopped
+model earns nothing; `labCheckpoint` drops `pauseOrigin`.
+
+The Practice case flow has its own hidden-page pause and no pause-based credit; it was not touched.
+
+### Capture readiness — verified, and not guaranteed
+
+The review asked whether a captured result is already guaranteed to hold a complete breath. Every
+authored change round was run on all four consoles, with the change made at four different points
+in the breath, and sampled every 0.1 s for 20 s from the first moment `labReadyToCompare` was true
+(800 instants per round and console):
+
+- **Section 11, first application** (inspect the circuit, clear the condensate): the corrected
+  patient breathes at 8/min, 7.5 s a breath, and the record is the engine's 12-second window. **314
+  of 800 instants (39 %) held no complete breath**, on every console. A manual capture at one of
+  them retained a result with nothing to draw. Not guaranteed.
+- **Every other change round**: a complete breath at every instant.
+- **In no round, at no instant, did the drawn breath begin before `readySince`** — each interval is
+  longer than two breath periods at the rate that follows the change. That half _is_ guaranteed
+  transitively by the existing gate.
+
+So the smallest authoritative gate was added, once: `labReadyToCompare` also requires
+`labRecordHoldsCompleteBreath(session)` (`completedBreath(record).length >= 4`, the same test the
+figure uses to draw). The status projection names the state ("Everything requested is in place.
+Waiting for one complete breath on the record before the result can be captured."), so the panel
+does not show an interval at its full length and a disabled button with no reason. Clean runs of the
+other 25 change rounds are unaffected. The relationship is documented on `labReadyToCompare` and held
+by a test over all 26 change rounds (two action timings, 80 instants each).
+
+**Found while verifying, pre-existing, presentation corrected only:** Section 8's first application
+opens at 10/min, where the 12-second window begins exactly on an onset and holds one _verifiable_
+onset, so its **baseline** — captured when the experiment starts, before anything runs — holds no
+complete breath on any console. The retained comparison used to print "A complete breath is not yet
+available. Run or advance one breath, then capture again", which cannot be done to a retained
+record. It now says the retained record holds no complete breath and that its readings are still in
+the table; the overlay says the same. Drawing a baseline there needs a decision about the record
+window or the warm-up alignment, which is engine work and was not started.
+
+### R2 — the experiment step shows the interval it names
+
+**Reproduction** (reviewed head, 1280×1000 and 390×844): step 3's card printed "Read all three
+traces at interval A, marked on the captured breath below. The phase label under the figure can be
+hidden while you decide…" over a figure captioned "Baseline reference · select an interval to
+inspect" with **0 marker elements** and no phase label.
+
+**Repair** — both halves of the review's preferred repair, because both halves of the sentence were
+wrong on that step:
+
+- The experiment panel's captured breath now carries the **authoritative** marker:
+  `ventilationReferenceMarker(unit, round)` from Batch 01's `referenceEvidence.ts`, resolved against
+  this breath's own samples by `markerEvidence`. No marker was added, no phase logic duplicated, and
+  the captured baseline is the same reference breath the question step marks (both are
+  `createLabSimulation(unit, round, device)`), so the figure prints the same evidence sentence —
+  asserted equal to `markerEvidenceSentence(...)` on both steps.
+- The look line on the steps that _perform_ a marked round follows the figure that is on screen
+  (`inspectionFigureState` → `markedIntervalLook`): the marked figure is open ("Read all three
+  traces at interval A, marked on the captured breath in the Experiment panel. Interval A stays
+  where it is; the exploration cursor is yours to move…"), not started yet, or replaced by the
+  retained comparison after capture. The lesson's "What to look at" prints the same sentence. The
+  authored `look` line is unchanged and still printed on the question step, beside the marked,
+  guided reference whose phase label it describes.
+
+**After, production:** marker line on all three rows at one x (652 px at 1280×1000, 209 px at
+390×844), letter "A" on each, `data-marker-resolved="true"`, "Interval A is at 1.86 s on this
+breath: flow -4.0 L/min (gas moving out) and volume falling by 1 mL over the preceding 0.02 s."
+Moving the exploration cursor 25 samples left the marker where it was (x 588.32 → 588.32 in figure
+units). Interval B behaves the same on the second application.
+
+Tests ("R2", 7): the exact step's instruction and figure agree; the marker's identity, stop and
+phase come from the Batch-01 contract; the cursor is independent; no card in Section 1 — before or
+after a capture — prints "marked on the captured breath" without a marker on it; the three figure
+states; interval B; and no key, option, goal or authored look line changed.
+
+### R3 — the origin is the first recorded inspiratory sample
+
+Measured on the Section 2 baseline, agreeing with the review: the sample before the breath reads
+0.7 mL; the first inspiratory sample 14.1 mL; it already holds one 20-ms step of 40 L/min
+(13.3 mL). A figure that subtracts the first sample draws a breath that received 413 mL rising
+400 mL (427 → 413). **Disposition B**: the origin stays where it is and is called what it is.
+Nothing sampled changed: no engine volume altered, no zero-time sample synthesised or interpolated,
+no timestamp moved, the drawn rise not stretched to the delivered volume (asserted: one drawn vertex
+per sample, the first at the plot's left edge, the evidence byte-identical after rendering).
+
+One set of words, in `content/breathOrigin.ts`, used by every path:
+
+| Path                                  | Before                                                                   | After                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Volume row label (figure and overlay) | "Volume from breath start (mL)"                                          | "Volume from first inspiratory sample (mL)"                                                                                                                                                                                                                                                                                                                                                   |
+| Time axis (figure and overlay)        | "Time (s)" / "Time from breath start (s)"                                | "Time from first recorded inspiratory sample (s)" (a hold slice: "Time from the first sample of this trace (s)")                                                                                                                                                                                                                                                                              |
+| Figure caption                        | "Volume is drawn from this breath's start. The lung held 14 mL…"         | "Volume and time are counted from this breath's first recorded inspiratory sample: a convention of the sampled trace, not the instant inspiration began. A sample is recorded after each 20-ms step, so that sample already holds one step of flow: … 0.7 mL … in the sample before it and 14.1 mL in it. The drawn rise is therefore about 13 mL less than the volume this breath received." |
+| Duration line                         | "…onset to next onset"                                                   | "…from its first inspiratory sample to the next breath's"                                                                                                                                                                                                                                                                                                                                     |
+| Cursor text / accessible name         | "…mL above this breath's start"                                          | "…mL above this breath's first inspiratory sample"                                                                                                                                                                                                                                                                                                                                            |
+| Overlay caption                       | "each from its own breath start"                                         | "each from its own first recorded inspiratory sample"                                                                                                                                                                                                                                                                                                                                         |
+| Zoom notes                            | "from each breath's start"                                               | "from each breath's first recorded inspiratory sample" / "counted from its first recorded inspiratory sample"                                                                                                                                                                                                                                                                                 |
+| Text equivalent                       | "it received 413 mL (peak volume less the volume just before its onset)" | adds the origin sentence and "its drawn volume rises 400 mL, because the first inspiratory sample it is drawn from already holds 13 mL" (a pressure-targeted breath whose first step is under 1 mL says that instead)                                                                                                                                                                         |
+
+No path in the comparison says "breath start" in either view, zoomed or not (asserted). Authored
+teaching copy that speaks of "breath-relative volume" or "the breath's starting reference" as a
+display concept (`foundations.ts`, round rationales, the waveform-anatomy panel) names no sampled
+origin and was left alone.
+
+**S2-1 timing**, now explicit:
+
+- The reading: "Inspiratory time · calculated", with "Calculated from the settings, not timed on the
+  trace: 420 mL at 40 L/min is 0.63 s of inspiratory flow. The trace is sampled every 20 ms, so a
+  drawn breath shows flow for 31 or 32 samples: 0.62 or 0.64 s." (At 60 L/min, a whole number of
+  steps, only the provenance sentence.) The captured table's row is "Inspiratory time · calculated (s)".
+- The drawn breaths: "inspiratory flow over 31 samples (0.62 s as sampled)".
+- Between them: "The Inspiratory time reading (0.63 s before, 0.42 s after) is calculated from the
+  selected volume and flow; it is not timed on the trace."
+- The Section 2 observation feedback: "Recorded inspiratory time (the reading calculated from the
+  settings): 0.63 → 0.42 s." Stem, choices and key unchanged (asserted).
+
+The 413 / 427 mL alternation and the 3.74 / 3.76 s sampled periods are untouched (their Batch-03
+tests pass unchanged).
+
+### R4 — the reveal request belongs to one same-tab navigation
+
+**Reproduction** (reviewed head, browser): on Section 1's last step, Command-click "Continue to …"
+opened the next section in a new tab; in the original tab, All sections → Section 1 within the old
+15-second window → **the Section 1 heading took focus** (`document.activeElement` was the `<h2>`).
+
+**Repair** (`revealTaskHeading.ts`, `VentilationStageHost.tsx`):
+
+- The request is `{ sectionId, requestedAt }`, and only the section it names can take it. A
+  different section arriving takes nothing and leaves it for its owner.
+- It is made only by an activation that navigates this tab (`activatesThisTab`: primary button, no
+  modifier, no `target` or `download` of its own — the rule the framework's link uses). A modified
+  click is left entirely to the browser: not prevented, no request, no push.
+- The chooser and the last step's link go through one `navigateToSection`, which runs the router
+  push as a transition. Arriving unmounts the section, so if the transition settles and the section
+  is still mounted the navigation did not happen and its own request is withdrawn.
+- Browser back/forward withdraws a pending request (a one-shot `popstate` listener that exists only
+  while a request does). The 15-second age limit remains as a last bound; it is no longer what
+  identifies the request. No timer waits for or forces a navigation.
+
+**After, production (1280×1000):**
+
+| Scenario                                             | Result                                                                              |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Same-tab Continue to the next section                | arrived, heading focused (430 px: already comfortable, so not scrolled — as before) |
+| Same-tab section chooser                             | arrived, heading focused                                                            |
+| Back, then Forward                                   | arrived, **not** focused, both                                                      |
+| Command-click the link                               | new tab opened (its heading not focused); original tab still on its last step       |
+| …then, in the original tab, All sections → Section 1 | **not focused** (`activeElement` is `BODY`); before the repair: the heading         |
+| …then All sections → the section the link pointed at | not focused                                                                         |
+| Control-click (macOS)                                | no navigation, no new tab, no request; later arrivals not focused                   |
+| Capture, then Overlay, on the experiment step        | focus stays on the control used; page moved 0 px                                    |
+
+Jest ("R4", 17) adds Shift-, Alt- and middle-click, a link with its own `target`, a navigation that
+never happens, an unrelated arrival inside the lifetime, expiry, `popstate`, and rapid successive
+choices (the section finally shown is the one revealed).
+
+**N4, ordinary navigation, re-measured on production** — identical to the table in
+[N4](#n4--explicit-navigation-only): 3 × bottom Continue, 2 × Back, step chooser, keyboard Enter on
+Continue and Restart land the heading at 93 px under 81 px of chrome at 1280×900 and 1024×768, and
+85 under 73 at 390×844, focused each time; 3 s of Run from the keyboard leaves focus on the button
+and the page where it was; the section chooser lands at 430 / 93 / 85.
+
+**Pinned-chrome probe.** `pinnedTopInset` now ignores an element that is not painted
+(`display: none`, `visibility: hidden | collapse`, `opacity: 0`, or `checkVisibility()` false, which
+also answers for hidden ancestors) and a sticky element with no top offset. The fixed-position
+discovery was not redesigned. A unit test injects the review's cases and the two exclusions that
+already existed.
+
+### R5 — the console at 200 % root text
+
+The review found it on the exact base and on the reviewed head; it was reproduced here on the
+reviewed head, and repaired because the surface is one this batch changed. Root-text enlargement (`html { font-size: 32px }`), Practice case MV-14.
+
+**Cause.** The monitored-value column's floor was in pixels (112 px on the C6) while the values in
+it are in rem. At 200 % the C6 column was 125 px wide holding 169 px of text, which spilled 44 px
+over the waveform label column: nine text collisions at 1280×1000 ("58 × Paw", "cmH2O × Pplateau",
+"10.1 × Pmean" …). The same cause pushed the AVEA's values 71 px out of their column — past the
+right edge of the console, 9 px of page overflow at 1024×768 — and the Evita's units 8–14 px.
+
+**Repair** (`mechanical-ventilation.module.css`, module-local; the global site header is untouched):
+
+- The three floors are rem: 6.5625 / 7 / 8.25 rem, which are the 105 / 112 / 132 px they had, so
+  **nothing moves at the default text size** (C6 column measured identical at 100 %: 134, 160 and
+  112 px at 1280, 1024 and 390). The phone rule's 84 px is 5.25 rem.
+- The console screen is a query container. Narrower than 16 rem it puts the values in a band above
+  or below the waveforms. No font size is reduced. 16 rem is below every console width at the
+  default size down to a 320-px phone, so it is reached only with enlarged text.
+- A slash-joined readout label ("PEEP/CPAP") may wrap after its slash. In a phone-width label
+  column at 200 % it ran 19 px under its own value.
+
+**After, production, 200 % root text** — four consoles × 1280×1000, 1024×768, 390×844, 320×740, and
+the C6 at 100 % at the same four sizes: **20 of 20 runs with no text collision and no text outside
+its column.**
+
+| Console                | 1280×1000: value column / collisions | 1024×768          | 390×844 and 320×740 | Plateau row              | PEEP |
+| ---------------------- | ------------------------------------ | ----------------- | ------------------- | ------------------------ | ---- |
+| hamilton-c6            | 125 → 224 px / 9 → 0                 | 153 → 224 / 0     | stacked band; 9 → 0 | "Pplateau 46 · estimate" | "12" |
+| drager-evita-v800-v600 | 132 → 264 px / units no longer spill | 0                 | stacked; 0          | "Pplat 46 · estimate"    | "12" |
+| puritan-bennett-980    | banner layout, no column / 0         | 0                 | 0                   | "PPL 46 · estimate"      | "12" |
+| carefusion-avea        | 105 → 210 px / values back inside    | 9 px → 0 overflow | stacked; 0          | "Pplat 46 · estimate"    | "12" |
+
+Every readout value is on one line and clear of its label (smallest gap 5 px, "Pplateau" on the C6
+at 390×844); the status word is readable; no bare `?`. The plateau word was also driven through each
+console's own hold control at 1280×1000 (C6 Tools, Evita Procedures, PB980 front panel, AVEA
+MANEUVER): `46 · estimate` → `46 · hold running` → `52 · not valid` on all four.
+
+Page overflow at 200 %, by owner: at 1280×1000 and 1024×768 the page overflows 51 and 125 px from a
+global site link outside `<main>` (platform lane, unchanged) and **0 px from anything inside the
+module** (the AVEA's 9 px is gone). At 390×844 and 320×740 the Practice case layout itself is 98 and
+103 px wider than the viewport at 200 % — the case workspace and the console's six-button nav — on
+the reviewed head and after, unchanged by this repair and not new (the AVEA was 185 / 190 px and is
+now 98 / 103).
+
+### R6 — the effort row in words; the time axis on a narrow figure
+
+**Reproduction** (reviewed head, Section 7's second application, captured): the retained comparison
+drew "Effort · model (cmH₂O)" in both views and its description mentioned pressure, flow and volume
+only. At 390×844 the zoomed time-axis title overlapped its first tick; at 320×740 it overlapped both
+ticks zoomed and the first tick un-zoomed ("Time 0.00m breath start (s) · zoo2.25").
+
+**Repair.**
+
+- `content/effortDescription.ts` reads the retained samples of the breath that is drawn. Where the
+  modeled effort is at or above the engine's own `EFFORT_DETECTION_FLOOR_CMH2O` it reports the first
+  and last such sample as times from the first recorded inspiratory sample, the largest value and
+  its time, the machine's sampled inspiration on the same axis, and the difference between the two
+  ends as arithmetic. Section 7, second application, from the page:
+
+  > Baseline breath: modeled effort is first at or above 1.5 cmH₂O 0.02 s after the first recorded
+  > inspiratory sample, last at or above it at 0.58 s (largest 8.0 cmH₂O at 0.30 s); that is 0.92 s
+  > before the machine's first expiratory sample. Machine inspiration, on the same axis, runs from
+  > 0.00 s to its first expiratory sample at 1.50 s. Result breath: … that is 0.62 s before the
+  > machine's first expiratory sample. … to its first expiratory sample at 1.20 s.
+
+  It is introduced as "this simulator's modeled signal, not a measurement from a patient" and closed
+  with "These are sample times on two modeled signals: they do not show that an effort started a
+  breath, and no interval here is a measured delay." It never says trigger, never calls the signal a
+  patient's effort, and reintroduces no measured trigger delay (asserted). A quiet record says the
+  effort stays below the floor; a record with no complete breath says its effort row is not
+  described. A test recomputes every number independently from the samples.
+
+- The time axis keeps its two end ticks in the figure and its title is page text under it, in both
+  figures. It wraps, grows with the reader's text and cannot reach a tick. The axis, its scale, the
+  crop and the samples are unchanged (asserted: same end ticks, evidence byte-identical).
+- The longer volume row label wraps onto two lines on a figure narrower than it (one row pitch for
+  the whole figure), instead of spilling: at 320×740 the figure is 252 px wide.
+
+**After, production:** Section 7's second application at 390×844, 320×740 and 1280×1000, side by
+side and overlay, whole and zoomed — the effort description present in all 12 states; **0 axis
+collisions and no figure text outside its figure in all 12** (reviewed head: collisions in 5 of the 8
+phone states).
+
+### Terminology after the repair
+
+| Term                              | Means                                                                                                                                                                |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| First recorded inspiratory sample | The first sample of a breath whose phase is inspiration. The origin of drawn time and drawn volume. It is recorded after one 20-ms step and already holds that step. |
+| Received                          | Peak volume less the volume in the sample _before_ the first inspiratory sample: the ventilator's own exhaled-volume definition (413 or 427 mL at 40 L/min).         |
+| Drawn rise                        | Peak volume less the volume _at_ the first inspiratory sample: one step smaller (400 or 413 mL).                                                                     |
+| Inspiratory time · calculated     | The published reading in volume control: flow time from the selected volume and flow (0.63 s). Not timed on the trace.                                               |
+| … s as sampled                    | Inspiratory samples × 20 ms on the drawn breath (0.62 or 0.64 s).                                                                                                    |
+| Modeled effort                    | The simulator's effort signal. Never "measured", never the patient's, never a trigger event.                                                                         |
+| Learner pause / background pause  | The origin carried on the pause action. Only the first can be the learner's inspection.                                                                              |
+
+### Tests and commands (repair pass)
+
+Node 26.5.0; `NODE_OPTIONS=--max-old-space-size=8192`. All at the implementation head.
+
+**New:** `__tests__/mv-pre-review-03-repairs.test.tsx` — 82 tests: R1 (13), capture gate (28: one per
+authored change round, the Section 11 gap, the Section 8 baseline), R2 (7), R3 (8), R4 (17),
+R5 (3), R6 (6).
+
+**Fails on the reviewed head for the defect.** A 10-assertion probe using only symbols that exist on
+`02eb66e4` was run in the reviewed-head checkout, then removed: **10 failed on the reviewed head, 10
+passed on the repaired tree** — hidden page with automatic capture (rendered); the hidden-page pause
+(lab); one-breath stepping; capture offered with no complete breath; step 3's missing marker;
+"breath start" in the comparison; Command-click then a later arrival; px column floors; no effort in
+the comparison's text; a centred time-axis title inside the figure.
+
+**Changed test contracts** (three; each encoded a label or signature this repair supersedes, not an
+evidence rule):
+
+- `mv-pre-review-01-evidence` — the volume-row label assertion follows the rename (and now also
+  asserts the old label is gone). The invariant it protects — anchored display, engine volume
+  untouched — is unchanged.
+- `mv-pre-review-03-workbench` — the description assertion follows "(0.62 s as sampled)";
+  `requestTaskHeadingReveal` is called with its destination.
+- `test-support/live-learning.ts` — the Section 1 driver's pause says it is the learner's.
+
+| Command                                                                                                                                                                                                                         | Result                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npx jest src/features/mechanical-ventilation`                                                                                                                                                                                  | 44 suites, **1199 tests, all passing** (reviewed head: 43 suites, 1117)                                                                                  |
+| Batch-03 suites                                                                                                                                                                                                                 | `mv-pre-review-03-workbench` 64/64 · `mv-pre-review-03-repairs` 82/82                                                                                    |
+| Batch-01 suites                                                                                                                                                                                                                 | `mv-pre-review-01-evidence` 34/34 · `-01-sanity-repairs` 37/37 · `waveform-annotations` 17/17                                                            |
+| Batch-02 suites                                                                                                                                                                                                                 | `-02-causality` 126/126 · `-02-sanity-repairs` 43/43 · `-02-rereview-repairs` 31/31 · `-02-alarm-history` 25/25 · `peep-comparison` 21/21 + rendered 4/4 |
+| Post-action coaching, lab, routes                                                                                                                                                                                               | `post-action-coaching` 51/51 · `learning-lab` 16/16 · `src/app/[locale]/mechanical-ventilation/routes.test.tsx` 9/9                                      |
+| MV + consumers: `…/mechanical-ventilation`, `src/app/[locale]/mechanical-ventilation`, `src/features/critical-care`, `src/features/learning-module`, `src/features/icu-simulation`, `src/lib/draft-modules.hamilton-c6.test.ts` | 94 suites, 1663 tests: 1660 passed, **3 failed — baseline** (below)                                                                                      |
+| `npx tsc --noEmit -p tsconfig.json` (full, tests included)                                                                                                                                                                      | clean, exit 0                                                                                                                                            |
+| `npx eslint src/features/mechanical-ventilation`                                                                                                                                                                                | clean, exit 0                                                                                                                                            |
+| `npx prettier --check "src/features/mechanical-ventilation/**/*.{ts,tsx,css}"`                                                                                                                                                  | clean                                                                                                                                                    |
+| `git diff --check 756c9aee..HEAD`                                                                                                                                                                                               | clean                                                                                                                                                    |
+| `npm run build`                                                                                                                                                                                                                 | succeeded (exit 0) at `f804d3ac` and again at the implementation head                                                                                    |
+
+**Baseline debt, reproduced before classifying.** The same three tests fail, and only those, on the
+exact base `756c9aee`, on main at both fetches (`754bed0e` and `60e3bd64`), on the reviewed head and
+on the repaired tree (each run in its own read-only checkout with this worktree's `node_modules`;
+3 failed / 38 passed in the three files every time): `critical-care/__tests__/accessibility.test.tsx` ("keeps color-coded
+circuit, pressure, alarm, and trend states readable without color"), `curriculum-sequencing.test.tsx`
+("renders CRRT cases in authored station order…"), `learner-copy.test.ts`. The full output of the
+three suites is identical on the reviewed head and the repaired tree, and the learner-copy scanner's
+set of flagged (file, copy) pairs is identical on base, reviewed head and repaired tree — its one MV
+entry (`VentilationPeepComparison.tsx`, "Engine-generated example values · no hold acquired")
+predates Batch 03. This repair's copy adds no flagged string.
+
+### Browser checks (repair pass)
+
+Headless Playwright Chromium, fresh context per run, `deviceScaleFactor` 1, pages visible so the
+page's own clock ran. **After** evidence is from the production build of the implementation head
+(`npm run build` → `node server.js` on 127.0.0.1:3127). **Before** evidence is from a dev server of
+the reviewed head `02eb66e4` on port 3128, except R5's before images, which are this worktree's dev
+server with the reviewed head's stylesheet swapped in for the capture. The built-in browser pane was
+not used (it reports `document.hidden`, which suspends the clock).
+
+| Check                  | Viewports                                                                                             | Result                                                                                                       |
+| ---------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| R1                     | 1280×1000                                                                                             | as tabulated; no page error                                                                                  |
+| R2                     | 1280×1000, 390×844                                                                                    | marker on three rows, resolved, cursor independent, no page overflow                                         |
+| R3                     | 1280×1000, 390×844; Section 2 captured; side by side, zoomed, overlay zoomed, overlay                 | origin wording in every state; no "breath start"; calculated / sampled labels; no overflow                   |
+| R4                     | 1280×1000                                                                                             | as tabulated                                                                                                 |
+| N4 ordinary navigation | 1280×900, 1024×768, 390×844 (reduced-motion context)                                                  | geometry and focus identical to the original table                                                           |
+| R5                     | 200 % root text: 1280×1000, 1024×768, 390×844, 320×740 × four consoles; C6 at 100 % × the same four   | 20/20 clean; 100 % geometry unchanged                                                                        |
+| Plateau words          | 1280×1000, four consoles, each console's own hold control                                             | estimate → hold running → not valid on all four                                                              |
+| R6                     | 390×844, 320×740, 1280×1000; Section 7 second application; side by side and overlay, whole and zoomed | effort text in 12/12 states; 0 axis collisions in 12/12                                                      |
+| Smoke                  | Sections 5, 9, 14 at 1280×1000 and 390×844                                                            | 6/6: change or hold made, run at 5×, captured, Continue lands the heading at 93 / 85 px focused, no overflow |
+
+No uncaught page error in any run (a `pageerror` listener was on every page).
+
+### Screenshots (repair pass)
+
+In `MV-PRE-REVIEW-03-screenshots/`, prefixed `repair-`; downscaled to at most 900 px wide and
+palette-reduced; signed-out, no account data. For the R5 console captures only, the global sticky
+site header was un-pinned by an injected style so it would not paint over the element (at 200 % it
+is about 377 px tall); nothing else on the page was altered.
+
+| Finding | Before (reviewed head)                                                                                                                | After (production)                                                                                                                                                            |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1      | `repair-r1-before-hidden-auto-captured-1280x1000.png`                                                                                 | `repair-r1-after-hidden-nothing-recorded-1280x1000.png`, `repair-r1-after-learner-pause-captured-1280x1000.png`                                                               |
+| R2      | `repair-r2-before-s1-step3-1280x1000.png`, `repair-r2-before-s1-step3-390x844.png`                                                    | `repair-r2-after-s1-step3-1280x1000.png`, `repair-r2-after-s1-step3-390x844.png`                                                                                              |
+| R3      | `repair-r3-before-s2-side-by-side-1280x1000.png`                                                                                      | `repair-r3-after-s2-side-by-side-1280x1000.png`, `repair-r3-after-s2-overlay-zoomed-1280x1000.png`                                                                            |
+| R5      | `repair-r5-before-c6-root200-1280x1000.png`, `repair-r5-before-c6-root200-390x844.png`, `repair-r5-before-avea-root200-1280x1000.png` | `repair-r5-after-c6-root200-1280x1000.png`, `repair-r5-after-c6-root200-1024x768.png`, `repair-r5-after-c6-root200-390x844.png`, `repair-r5-after-avea-root200-1280x1000.png` |
+| R6      | `repair-r6-before-s7-overlay-zoomed-390x844.png`, `repair-r6-before-s7-overlay-zoomed-320x740.png`                                    | `repair-r6-after-s7-overlay-zoomed-390x844.png`, `repair-r6-after-s7-overlay-zoomed-320x740.png`                                                                              |
+
+R4 is a focus result and has no screenshot; its evidence is the table above.
+
+### Integration status
+
+Not merged, not rebased. The branch is still based on `756c9aee`; `origin/main` was `754bed0e` when
+the pass began and `60e3bd64` when it was re-fetched before the push. GitHub reports the PR
+mergeable with a clean merge state.
+
+A trial merge of the implementation head `945bf07a` into `60e3bd64`, in a temporary worktree (not
+committed, not pushed, removed afterwards), applied with **no conflicts**. On the merge result the
+MV-and-consumers suite ran 96 suites, 1708 tests — 1705 passed and the same three baseline tests
+failed; the 44 MV suites (1199 tests) all passed — and the full type-check was clean. The same trial
+against `754bed0e` with `f804d3ac` earlier in the pass gave the same picture (no conflicts; 1707
+tests, 1704 passed, the same three; type-check clean).
+
+### NOT RUN (repair pass)
+
+- **Native tab hiding / OS-level suspension** — attempted, not achieved in headless Chromium (above).
+  Only the scripted `visibilitychange` was exercised.
+- Native browser zoom; Firefox and Safari; real devices; DPR 2. 200 % was root-text enlargement only.
+- Real assistive technology. The effort description, the background-pause note and the status
+  region were checked as text and semantics, not with a screen reader.
+- The `measured` and `outdated` plateau words in the browser this round (Jest renders all five
+  states on all four consoles; the browser exercised three).
+- Middle-click and Shift/Alt-click in the browser (Jest only); a navigation that fails over the
+  network in the browser (Jest only, with a router that does not navigate).
+- The trial merge's production build and browser run; the es and zh-CN locales; the deployed build.
+- Bounded all-case physiology replays: no physiology, clock or alarm code changed; the Batch-01/02
+  protection suites were run instead and pass with unchanged counts.
+- Any clinical, device, media or source review.
+
+### Seen, not changed (repair pass)
+
+- **Section 8, first application: the baseline record holds no complete breath** (10/min against a
+  12-second window). Message corrected; drawing it is engine work.
+- **Practice case layout on a phone at 200 % root text** is 98–103 px wider than the viewport
+  (case workspace and console nav). Present before; outside the console/waveform layout R5 names.
+- **Global site link at 200 % root text** overflows 51 / 125 px at 1280 / 1024 wide. Platform lane.
+- **The PEEP/CPAP knob's own caption** wraps mid-word at 200 % root text ("PEEP/CPA P"). The value
+  is intact; the knob is a control, not a waveform readout.
+- **Authored conceptual copy** ("breath-relative volume", "the breath's starting reference") was
+  not reworded; it describes the display concept, not the sampled origin.
+
 ## Delivery and scope
 
 |                                     |                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -118,7 +627,8 @@ the document is the only scroll owner (no element had its own vertical scroll).
 
 - **Pinned chrome is measured at the moment of navigation**: every `position: fixed | sticky`
   element currently pinned across the top (top ≤ 1 px, at least half the viewport wide, at most half
-  its height). Measured values: 81 px at desktop sizes, 73 px at 390/320, ~377 px at 1280×1000 with
+  its height). _Repair pass:_ an element that is not painted, and a sticky element with no top
+  offset, no longer count. Measured values: 81 px at desktop sizes, 73 px at 390/320, ~377 px at 1280×1000 with
   200 % root text (the site header wraps). No fixed offset exists anywhere.
 - **Scroll owner**: `heading.scrollIntoView({ block: 'start', behavior: 'instant' })` with
   `scroll-margin-top` set to the measured inset + 12 px, so whichever ancestor scrolls is moved. In
@@ -134,7 +644,9 @@ the document is the only scroll owner (no element had its own vertical scroll).
   line) with `preventScroll`. `:focus-visible` shows the ring for keyboard users.
 - A section change goes through the router and remounts the host; the chooser leaves a one-shot,
   15-second request that the new section's first render consumes. A reload, a link from elsewhere
-  or browser back never sets it.
+  or browser back never sets it. _Superseded by the repair pass (R4):_ the request now names its
+  destination, is made only by a same-tab activation, and is withdrawn when its navigation does not
+  happen; a Command-click used to leave it behind for any section to take.
 - Nothing listens for focus. Ticks, Run/Pause, captures, control edits and disclosures never call it.
 
 Production build, measured (`nav-keyboard` probe, reduced-motion context):
@@ -170,7 +682,9 @@ Production build, measured (`nav-keyboard` probe, reduced-motion context):
   change. It dispatches the ordinary `COMPARE` when `labReadyToCompare` becomes true and the
   comparison has no confounds; with confounds it says it is held and leaves Capture to the learner.
   It runs from session state (model time), so it does nothing while paused or hidden, and respects
-  speed and one-breath stepping. Manual Capture and Pause/inspect remain.
+  speed and one-breath stepping. Manual Capture and Pause/inspect remain. _Corrected by the repair
+  pass (R1):_ in Section 1 a hidden page _was_ recorded as the learner's pause and captured; a pause
+  now carries its origin, and `labReadyToCompare` also requires a complete breath on the record.
 - **Announcements**: a polite status region whose text depends only on the stage and the run state
   — identical at 4 s and 7 s of the same interval (asserted) — so it speaks transitions, not ticks.
   The model-time readout is `aria-live="off"`.
@@ -266,7 +780,9 @@ In the retained comparison (beside the task after capture, and in the explanatio
   seconds, its onset-to-onset duration, the volume it received (peak less the sample before its
   onset — the ventilator's own exhaled-volume definition), peak flow and peak pressure, and a line
   saying the readings table is what the ventilator published at capture and is not all taken from the
-  drawn breath.
+  drawn breath. _Repair pass (R3, R6):_ the origin is named as the first recorded inspiratory
+  sample, the drawn rise is given beside the received volume, and the effort row has its own
+  sample-derived description where it is drawn.
 - Changing the view changes no evidence (the captured record is byte-identical before and after,
   asserted).
 
@@ -302,7 +818,7 @@ starts at the first inspiratory sample, which already holds one step (13 mL at 4
 ## S7-2 — visual completion
 
 Section 7 steps 6 and 7: the live figure has four rows with the third "Volume from breath start (mL)"
-and the fourth "Effort · model (cmH₂O)", scale −25 to 5 with zero marked, the same x-scale as the
+(since the repair pass: "Volume from first inspiratory sample (mL)") and the fourth "Effort · model (cmH₂O)", scale −25 to 5 with zero marked, the same x-scale as the
 others, and the model-signal note under the figure. Present at 1280 and 390 px. The retained
 comparison now draws the effort row too when the step's presentation asks for it. No trigger
 physiology was touched.
@@ -476,18 +992,15 @@ after the lesson restructure but before the V2 change, when that panel was still
 
 ## Seen, not changed (deferred)
 
-- **"Inspiratory time" reading vs drawn inspiration** (Section 2): the reading is the calculated flow
-  time (0.63 s); drawn breaths flow for 31 or 32 samples (0.62 or 0.64 s). Both are true; whether the
-  reading should be relabelled "set/calculated" is a copy decision for batch 04 or the owner.
-- **Volume anchor one step late** (Batch 01 `anchorBreathVolume`): "Volume from breath start" is
-  zeroed at the first inspiratory sample, which already holds one 20 ms step (13 mL at 40 L/min), so
-  the drawn rise is one step smaller than the received volume. Rendering-boundary only; left for the
-  batch that owns that contract.
-- **Section 1 step 3 look line** says "Read all three traces at interval A, marked on the captured
-  breath below" on the experiment step, where the inspection figure carries no marker. Authored copy;
-  batch 04.
-- **C6 left monitor column at 200 % root text** overlaps the waveform label column (present before and
-  after; fixed-px console grid). The overlap no longer splits numbers.
+- ~~**"Inspiratory time" reading vs drawn inspiration** (Section 2)~~ — **repaired in the repair pass
+  (R3)**: the reading is labelled as calculated and the sampled flow times as sampled.
+- ~~**Volume anchor one step late**~~ — **addressed in the repair pass (R3, disposition B)**: the
+  anchor is unchanged and is now named as the first recorded inspiratory sample, with the step it
+  holds and both the received volume and the drawn rise stated.
+- ~~**Section 1 step 3 look line**~~ — **repaired in the repair pass (R2)**: the figure carries the
+  authoritative marker and the sentence follows the figure on screen.
+- ~~**C6 left monitor column at 200 % root text**~~ — **repaired in the repair pass (R5)**, on all
+  four consoles.
 - **Global site header** at 200 % root text: wraps to ~377 px and overflows 51 px at 1280 wide.
   Platform lane (PI prompt 05); not an MV change.
 - **`VentilationWaveformAnatomy` panel** (render-harness only; not mounted by the Learn host) has one
@@ -520,6 +1033,26 @@ after the lesson restructure but before the V2 change, when that panel was still
 - The plateau word comes from `plateauAcquisition`; do not reintroduce a glyph without a legend.
 - The pathway accordion must not choose its open group or "Up next" before stored progress is read.
 
+Added by the repair pass:
+
+- A pause is credited by its origin, never by `paused === true`. Only the learner's own Pause that
+  stopped a running model, or Use this captured interval, writes the inspection record; the
+  `pause-expiration` goal reads that record and nothing else. Page visibility is read in
+  `useVentilationLabSession` only.
+- `labReadyToCompare` requires a complete breath on the record. Do not remove it because "all
+  authored cases pass": Section 11's first application does not, 39 % of the time.
+- A marked interval is named only beside a figure that draws it; the marker comes from
+  `referenceEvidence.ts` and nowhere else.
+- The figures' origin is the first recorded inspiratory sample and is called that, from
+  `content/breathOrigin.ts`. Do not rename it "breath start", shift a timestamp, add a zero-time
+  sample or stretch the drawn rise to the delivered volume.
+- A heading-reveal request names its destination and is made only by a same-tab activation.
+- The console's value-column floors stay in rem; its narrow-screen reflow stays a reflow.
+- The effort row's text is sample facts about a modeled signal: no cause, no measured delay.
+
 ## Stop
 
 One PR, opened and stopped. No merge, no deploy, no batch 04, no G02 restart.
+
+Repair pass, 2026-10-03: the bounded R1–R6 repairs pushed to the same PR #290, and stopped. No
+merge, no deploy, no batch 04, no unrelated cleanup.
