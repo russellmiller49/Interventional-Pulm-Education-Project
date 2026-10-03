@@ -22,7 +22,6 @@ import { ScopePane } from '../scope/ScopePane'
 import { goalHelp } from '../../engine/scope/goalHelp'
 import {
   scopeControlId,
-  type AirwayLabel,
   type ScopeControlKey,
   type ScopeGoal,
   type ScopeViewSpec,
@@ -225,12 +224,13 @@ function BronchStageSessionView({
   } | null>(null)
   const [viewIndex, setViewIndex] = useState<number | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
+  // "Show me where" is on for this step. Only that, and the control to put the focus on once, is
+  // kept: what the help says and highlights is read from the current goals and scope state on
+  // every render, so it cannot stay attached to a requirement the learner has since met.
   const [spotlight, setSpotlight] = useState<{
     readonly stepId: string
-    readonly key: string
     readonly count: number
-    readonly target: AirwayLabel | null
-    readonly sentence: string
+    readonly focusKey: ScopeControlKey
   } | null>(null)
   // Opening names on request (A30): the pane draws them; nothing is sent to the scope or recorded.
   const [referenceNames, setReferenceNames] = useState<{
@@ -439,6 +439,7 @@ function BronchStageSessionView({
     const target = activeIndex - 1
     if (target < 0 || target > commitments.confirmed) return
     setViewIndex(target)
+    setSpotlight(null)
   }
 
   function returnToLive() {
@@ -460,6 +461,7 @@ function BronchStageSessionView({
     demonstration.stop()
     dispatch({ type: 'SCOPE_RESET', stepId: activeStep.id, view: paneView, scopeCase })
     setPilotAttempts((current) => ({ ...current, [activeStep.id]: true }))
+    setSpotlight(null)
   }
 
   /** The nearest earlier teaching the learner has already been through, for "Review the teaching". */
@@ -523,28 +525,32 @@ function BronchStageSessionView({
     return help?.control && goalInteraction.view.controls.includes(help.control) ? help : null
   })()
   const firstUnmetKey = firstUnmetHelp?.control ?? null
+  // What the pane shows while help is on: the help for the requirement the learner is on now. A
+  // goal met since the request, a move that changes the useful control, or the last goal being
+  // met all change this without another request; with nothing left to help with it is null.
+  const helpNow = spotlight?.stepId === activeStep.id ? firstUnmetHelp : null
 
+  // The focus moves once, when the learner asks. It never follows a later change of advice: that
+  // would take the keyboard from the control in use and hand its next key to a different one.
   useEffect(() => {
-    if (!spotlight || spotlight.stepId !== activeStep.id) return
+    if (!spotlight) return
     const timer = window.setTimeout(() => {
-      const control = document.getElementById(scopeControlId(spotlight.key))
+      const control = document.getElementById(scopeControlId(spotlight.focusKey))
       if (!control) return
       const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
       control.focus({ preventScroll: true })
       control.scrollIntoView?.({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' })
     }, 0)
     return () => window.clearTimeout(timer)
-  }, [activeStep.id, spotlight])
+  }, [spotlight])
 
   function showWhere() {
-    if (!firstUnmetHelp?.control) return
-    const help = firstUnmetHelp
+    const focusKey = firstUnmetHelp?.control
+    if (!focusKey) return
     setSpotlight((current) => ({
       stepId: activeStep.id,
-      key: help.control!,
       count: current?.stepId === activeStep.id ? current.count + 1 : 1,
-      target: help.target,
-      sentence: help.sentence,
+      focusKey,
     }))
   }
   // Offered only where the step has no in-view labels of its own, and never while the engine is
@@ -1304,6 +1310,8 @@ function BronchStageSessionView({
               }}
               onReset={() => {
                 dispatch({ type: 'SCOPE_RESET', stepId: paneStep.id, view: liveView, scopeCase })
+                // A new attempt starts without the last one's help; it is there to ask for again.
+                setSpotlight(null)
                 // A new attempt starts: the names count as used in it only if they are still on.
                 setReferenceNames((current) =>
                   current?.stepId === paneStep.id ? { ...current, used: current.on } : current,
@@ -1315,11 +1323,9 @@ function BronchStageSessionView({
               goals={!demonstration.state && activeStep.id === paneStep.id ? goalStatuses : []}
               caption={locationCaption}
               treeAnswer={treeAnswer}
-              spotlightKey={
-                spotlight?.stepId === activeStep.id ? (spotlight.key as ScopeControlKey) : undefined
-              }
-              helpTarget={spotlight?.stepId === activeStep.id ? spotlight.target : null}
-              helpSentence={spotlight?.stepId === activeStep.id ? spotlight.sentence : undefined}
+              spotlightKey={helpNow?.control ?? undefined}
+              helpTarget={helpNow?.target ?? null}
+              helpSentence={helpNow?.sentence}
               referenceLabels={
                 referenceNamesOffered
                   ? {
