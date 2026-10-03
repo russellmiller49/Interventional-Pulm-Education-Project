@@ -124,7 +124,8 @@ describe('the hub', () => {
     render(<McsHub />)
     await settle()
     const references = document.querySelectorAll('[data-reference]')
-    expect(references).toHaveLength(4)
+    // MCS-PRE-REVIEW-04 (F42): the glossary and naming crosswalk is a fifth folded reference.
+    expect(references).toHaveLength(5)
     for (const block of references) expect((block as HTMLDetailsElement).open).toBe(false)
     expect(screen.getByText(/9 sections, in one order/)).toBeInTheDocument()
   })

@@ -88,7 +88,7 @@ export const mcsLearnControls: Readonly<Record<McsLearnControlId, McsLearnContro
     }),
     'control:select-iabp': control({
       id: 'control:select-iabp',
-      label: 'Select the counterpulsation mechanism',
+      label: 'Select IABP (counterpulsation)',
       location: 'guided-actions',
       actionId: 'device:select:iabp',
       deviceKind: null,
@@ -99,7 +99,7 @@ export const mcsLearnControls: Readonly<Record<McsLearnControlId, McsLearnContro
     }),
     'control:select-impella': control({
       id: 'control:select-impella',
-      label: 'Select the transvalvular pump mechanism',
+      label: 'Select Impella CP (LV-to-aorta microaxial pump)',
       location: 'guided-actions',
       actionId: 'device:select:impella',
       deviceKind: null,
@@ -110,7 +110,7 @@ export const mcsLearnControls: Readonly<Record<McsLearnControlId, McsLearnContro
     }),
     'control:select-lvad': control({
       id: 'control:select-lvad',
-      label: 'Select the durable continuous-flow mechanism',
+      label: 'Select durable LVAD (generic continuous-flow pump)',
       location: 'guided-actions',
       actionId: 'device:select:lvad',
       deviceKind: null,

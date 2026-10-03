@@ -178,10 +178,8 @@ export function McsIntroTeaching({
           ]}
         />
       ) : null}
-      <p className={styles.footnote}>
-        Teaching revision: September 2026 · draft for faculty review. Device principles follow the
-        section’s references; response magnitudes and observation intervals are authored simulation
-        behavior.
+      <p className={styles.footnote} data-draft-status>
+        Draft teaching copy for faculty review · see Limits of this simulation, above.
       </p>
     </section>
   )

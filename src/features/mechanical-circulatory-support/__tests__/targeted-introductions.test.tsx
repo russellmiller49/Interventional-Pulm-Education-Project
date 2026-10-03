@@ -91,9 +91,9 @@ describe('targeted introductions through the actual host', () => {
     const identity = sessionIdentity()
     const seed = Number(identity.match(/seed (\d+)/)![1])
     for (const [device, label] of [
-      ['lvad', /Select the durable/],
-      ['impella', /Select the transvalvular/],
-      ['iabp', /Select the counterpulsation/],
+      ['lvad', /Select durable LVAD/],
+      ['impella', /Select Impella CP/],
+      ['iabp', /Select IABP/],
     ] as const) {
       fireEvent.click(within(nowCard()).getByRole('button', { name: label }))
       const row = document.querySelector(`[data-comparison-device="${device}"]`)!

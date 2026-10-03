@@ -490,7 +490,7 @@ const authoredContracts: readonly AuthoredSectionContract[] = [
         state.actionIds.includes(id),
       ),
     observationFocus:
-      'Compare the device line and the pulse pressure across the three mechanisms, and notice that effective systemic delivery does not move by the size of the device number.',
+      'Compare the device line and the pulse pressure across the three mechanisms, then check the arithmetic under the table: effective systemic delivery rises by less than the pump number, because native flow falls as the pump takes over.',
     observedSignals: [
       signal('nativeFlowLMin', 'Native contribution', 'L/min', 1, 'flow'),
       signal('deviceFlowLMin', 'Displayed device contribution', 'L/min', 1, 'device-display'),

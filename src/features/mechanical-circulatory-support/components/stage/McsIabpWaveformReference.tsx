@@ -63,7 +63,16 @@ function contourPath(): string {
   ].join(' ')
 }
 
-export function McsIabpWaveformReference() {
+/**
+ * `detailOpen` decides only whether the legend and provenance start open (F39).
+ *
+ * The diagram, its identity ("not this patient's trace, not a run of this simulation") and its
+ * scale are printed on every timing step, because that is the limit a reader needs at the point of
+ * use. The five-landmark legend, the booklet provenance and the review note are the same ~190
+ * words on eight consecutive steps; they start open where the diagram is first met and where the
+ * relationship is being named, and are one click away on the steps between.
+ */
+export function McsIabpWaveformReference({ detailOpen = true }: { detailOpen?: boolean } = {}) {
   const { minMmHg, maxMmHg } = MCS_IABP_PRESSURE_SCALE
   const unassistedEnd = at('unassisted-end-diastolic')
   const unassistedSystole = at('unassisted-systole')
@@ -123,18 +132,21 @@ export function McsIabpWaveformReference() {
             Dashed lines: unassisted systole ({unassistedSystole.mmHg}) and unassisted end-diastolic
             pressure ({unassistedEnd.mmHg}). These are drawing coordinates.
           </p>
-          <p>{MCS_IABP_REFERENCE_IDENTITY.sourceLead}</p>
         </figcaption>
       </figure>
-      <ol data-iabp-reference-landmark-list>
-        {MCS_IABP_REFERENCE_LANDMARKS.map((landmark) => (
-          <li key={landmark.id}>
-            <strong>{landmark.label}.</strong> {landmark.relationship}
-          </li>
-        ))}
-      </ol>
-      <p>{MCS_IABP_REFERENCE_IDENTITY.noMagnitude}</p>
-      <p>{MCS_IABP_REFERENCE_IDENTITY.reviewNote}</p>
+      <details open={detailOpen} data-iabp-reference-detail>
+        <summary>The five numbered landmarks, and where this drawing comes from</summary>
+        <ol data-iabp-reference-landmark-list>
+          {MCS_IABP_REFERENCE_LANDMARKS.map((landmark) => (
+            <li key={landmark.id}>
+              <strong>{landmark.label}.</strong> {landmark.relationship}
+            </li>
+          ))}
+        </ol>
+        <p>{MCS_IABP_REFERENCE_IDENTITY.sourceLead}</p>
+        <p>{MCS_IABP_REFERENCE_IDENTITY.noMagnitude}</p>
+        <p>{MCS_IABP_REFERENCE_IDENTITY.reviewNote}</p>
+      </details>
     </section>
   )
 }
@@ -144,14 +156,16 @@ export function McsIabpWaveformReference() {
  *
  * Separate from the diagram because it is about the simulation, not about the principle.
  */
-export function McsIabpLiveTraceLimits() {
+export function McsIabpLiveTraceLimits({ detailOpen = true }: { detailOpen?: boolean } = {}) {
   return (
     <div data-iabp-live-trace-limits>
-      <p>
-        <strong>{MCS_IABP_LIVE_TRACE_LIMITS.heading}.</strong> {MCS_IABP_LIVE_TRACE_LIMITS.shows}
-      </p>
-      <p>{MCS_IABP_LIVE_TRACE_LIMITS.doesNotShow}</p>
-      <p>{MCS_IABP_LIVE_TRACE_LIMITS.soRead}</p>
+      {/* The instruction that carries the limit stays in the open on every step. */}
+      <p data-iabp-live-trace-rule>{MCS_IABP_LIVE_TRACE_LIMITS.soRead}</p>
+      <details open={detailOpen} data-iabp-live-trace-detail>
+        <summary>{MCS_IABP_LIVE_TRACE_LIMITS.heading}</summary>
+        <p>{MCS_IABP_LIVE_TRACE_LIMITS.shows}</p>
+        <p>{MCS_IABP_LIVE_TRACE_LIMITS.doesNotShow}</p>
+      </details>
     </div>
   )
 }

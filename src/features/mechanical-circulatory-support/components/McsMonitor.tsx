@@ -284,7 +284,9 @@ export function McsMonitor({
           : state.device.right.enabled
             ? 'IMPELLA RP · RV SUPPORT'
             : 'IMPELLA · SUPPORT OFF'
-      : state.deviceKind.toUpperCase()
+      : state.deviceKind === 'lvad'
+        ? 'DURABLE LVAD · GENERIC CONTINUOUS-FLOW'
+        : 'IABP'
   return (
     <section
       className={styles.monitorCard}
@@ -293,7 +295,12 @@ export function McsMonitor({
       <header className={styles.monitorHeader}>
         <div>
           <span className={styles.monitorLabel}>MCS // EDU</span>
-          <strong>{impellaMode} · 50 Hz deterministic model</strong>
+          {/*
+           * The header named the software ("50 Hz deterministic model") rather than what a learner
+           * is looking at. It now says what this is — a simulated teaching monitor — and names the
+           * durable pump as the generic model it is (F16); the sampling detail is in the sources.
+           */}
+          <strong>{impellaMode} · simulated teaching monitor</strong>
         </div>
         <time>{state.timeSeconds.toFixed(1)} s</time>
       </header>

@@ -227,9 +227,9 @@ const actionDrivers: Readonly<Record<string, () => void>> = {
   },
   'mcs-foundations-mechanisms': () => {
     for (const label of [
-      'Select the counterpulsation mechanism',
-      'Select the transvalvular pump mechanism',
-      'Select the durable continuous-flow mechanism',
+      'Select IABP (counterpulsation)',
+      'Select Impella CP (LV-to-aorta microaxial pump)',
+      'Select durable LVAD (generic continuous-flow pump)',
     ]) {
       fireEvent.click(screen.getByRole('button', { name: new RegExp(escape(label)) }))
     }
@@ -305,7 +305,11 @@ const transferDrivers: Readonly<Record<string, () => void>> = {
     }
   },
   'mcs-foundations-mechanisms': () => {
-    fireEvent.click(screen.getByRole('button', { name: 'Select the transvalvular pump mechanism' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Select Impella CP (LV-to-aorta microaxial pump)',
+      }),
+    )
   },
   'iabp-timing-triggering': () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Trigger source' }), {
