@@ -20,6 +20,8 @@ export async function getCompareLabels(locale: string): Promise<CompareLabels> {
     trayNeedTwo: t('trayNeedTwo'),
     trayRemove: t('trayRemove'),
     trayClear: t('trayClear'),
+    trayLookupFailed: t('trayLookupFailed'),
+    trayRetry: t('trayRetry'),
     navCompare: t('navCompare'),
   }
 }
