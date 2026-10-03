@@ -1,3 +1,4 @@
+import { writeFileSync } from 'fs'
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import sharp from 'sharp'
 import { bronchStageLesson } from '../src/features/bronchoscopy-foundations/content/stageLessons'
@@ -10,6 +11,12 @@ import { capstoneStageItem } from '../src/features/bronchoscopy-foundations/cont
 import { BRONCH_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/learnProgress'
 import { BRONCH_SELF_PACED_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/selfPacedProgress'
 import { scopeControlId } from '../src/features/bronchoscopy-foundations/components/scope/types'
+import {
+  benchTipOrientation,
+  compassRadius,
+} from '../src/features/bronchoscopy-foundations/engine/scope/benchOrientation'
+import { authoredScopePose } from '../src/features/bronchoscopy-foundations/engine/scope/scopeAuthoredPose'
+import { DEFAULT_SCOPE_INPUTS } from '../src/features/bronchoscopy-foundations/engine/scope/scopeInputs'
 import {
   BRONCH_GRAMMAR,
   grammarRowControl,
@@ -1601,4 +1608,1049 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       /\b\d+\s*(?:of|out of|\/)\s*\d+\b/,
     )
   })
+})
+
+test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces', () => {
+  /** Move on through a section's steps with the Now card's own actions until one is reached. */
+  async function goToStep(page: Page, id: BronchSectionId, stepId: string) {
+    const lesson = await openSection(page, id)
+    const index = lesson.steps.findIndex((step) => step.id === stepId)
+    for (let i = 0; i < index; i += 1) {
+      if (await skip(page).count()) await skip(page).click()
+      else await primary(page).click()
+      await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[i + 1].id)
+    }
+    return { lesson, step: lesson.steps[index] }
+  }
+
+  /** The outline's screen box against the photograph's: registered if it is the file's own box, scaled. */
+  async function registration(figure: Locator) {
+    return figure.evaluate((element) => {
+      const frame = element.querySelector('[data-media-frame-size]')!
+      const img = frame.querySelector('img')!
+      const polygon = frame.querySelector('polygon[data-media-outline]') as SVGPolygonElement | null
+      if (!polygon) return null
+      const svg = polygon.ownerSVGElement!
+      const [, , vw, vh] = svg.getAttribute('viewBox')!.split(' ').map(Number)
+      const points = polygon.getAttribute('points')!.split(' ').map(Number)
+      const xs = points.filter((_, i) => i % 2 === 0)
+      const ys = points.filter((_, i) => i % 2 === 1)
+      const box = img.getBoundingClientRect()
+      const drawn = polygon.getBoundingClientRect()
+      const expected = {
+        left: box.left + (Math.min(...xs) / vw) * box.width,
+        top: box.top + (Math.min(...ys) / vh) * box.height,
+        width: ((Math.max(...xs) - Math.min(...xs)) / vw) * box.width,
+        height: ((Math.max(...ys) - Math.min(...ys)) / vh) * box.height,
+      }
+      return {
+        error: Math.max(
+          Math.abs(drawn.left - expected.left),
+          Math.abs(drawn.top - expected.top),
+          Math.abs(drawn.width - expected.width),
+          Math.abs(drawn.height - expected.height),
+        ),
+        width: drawn.width,
+        height: drawn.height,
+      }
+    })
+  }
+
+  test('S3: the instrument views are readable, open full size by keyboard and keep the chosen name', async ({
+    page,
+  }, info) => {
+    for (const viewport of [
+      { width: 1204, height: 987 },
+      { width: 1024, height: 768 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport)
+      await goToStep(page, 'pre-use-check', 'pre-use-check-flow-v1-application')
+      const rows = page.locator('[data-identify-row]')
+      await expect(rows).toHaveCount(8)
+      const alts = await rows.evaluateAll((elements) =>
+        elements.map((row) => row.querySelector('figure img')?.getAttribute('alt')),
+      )
+      expect(new Set(alts).size).toBe(8)
+      await expect(page.locator('details[data-part-reference] dt')).toHaveCount(8)
+      for (const view of [2, 3, 6, 8]) {
+        const row = rows.nth(view - 1)
+        await row.scrollIntoViewIfNeeded()
+        // The whole photograph keeps its registered outline at this size...
+        const card = await registration(row.locator('figure'))
+        expect(card!.error).toBeLessThan(1.5)
+        // ...and the detail beside it shows the same outline large enough to read.
+        const detail = await row
+          .locator('svg[data-media-detail="card"] polygon')
+          .evaluate((polygon) => polygon.getBoundingClientRect().width)
+        expect(detail).toBeGreaterThan(40)
+        expect(detail).toBeGreaterThan(card!.width * 1.5)
+      }
+      if (viewport.width === 1204) {
+        await rows.nth(2).screenshot({ path: info.outputPath('s3-view3-card-1204.png') })
+        // Choose a name, open the enlarged view by keyboard, close it with Escape.
+        const row = rows.nth(2)
+        await row.locator('input[value="working-channel-port"]').check()
+        const enlarge = row.getByRole('button', { name: 'Enlarge view 3 of 8' })
+        await enlarge.focus()
+        await page.keyboard.press('Enter')
+        const dialog = page.locator('dialog[data-media-dialog][open]')
+        await expect(dialog).toBeVisible()
+        await expect(dialog.getByRole('heading', { name: 'View 3 of 8, enlarged' })).toBeVisible()
+        await expect(dialog.locator('[data-media-dialog-close]')).toBeFocused()
+        const enlarged = await registration(dialog)
+        const cardOutline = await registration(row.locator('figure'))
+        expect(enlarged!.error).toBeLessThan(1.5)
+        // The whole photograph is shown larger than on the card, and the detail beside it makes
+        // the outlined part itself large.
+        expect(enlarged!.width).toBeGreaterThan(cardOutline!.width * 1.5)
+        const enlargedDetail = await dialog
+          .locator('svg[data-media-detail="enlarged"] polygon')
+          .evaluate((polygon) => polygon.getBoundingClientRect().width)
+        expect(enlargedDetail).toBeGreaterThan(100)
+        await page.screenshot({ path: info.outputPath('s3-view3-enlarged-1204.png') })
+        await page.keyboard.press('Escape')
+        await expect(page.locator('dialog[data-media-dialog][open]')).toHaveCount(0)
+        await expect(enlarge).toBeFocused()
+        await expect(row.locator('input[value="working-channel-port"]')).toBeChecked()
+        // Resizing the window keeps the outline on its part.
+        await page.setViewportSize({ width: 760, height: 900 })
+        expect((await registration(row.locator('figure')))!.error).toBeLessThan(1.5)
+      }
+    }
+  })
+
+  test('S9, S10: honest still captions, real enlargement and a tour grouped by the tree', async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width: 1204, height: 987 })
+    await openSection(page, 'larynx-and-entry')
+    await expect(page.locator('[data-workspace-caption]')).not.toContainText('annotated')
+    const larynx = page.locator('[data-media-workspace] figure').first()
+    await larynx.scrollIntoViewIfNeeded()
+    await larynx.getByRole('button', { name: 'Enlarge this image' }).click()
+    const dialog = page.locator('dialog[data-media-dialog][open]')
+    await expect(dialog).toContainText('part of the recorded video frame, not a control')
+    await page.screenshot({ path: info.outputPath('s9-larynx-enlarged.png') })
+    await page.keyboard.press('Escape')
+    await expect(larynx.getByRole('button', { name: 'Enlarge this image' })).toBeFocused()
+
+    await openSection(page, 'right-side')
+    const tour = page.locator('[data-normal-airway-tour]')
+    await expect(tour.locator('[data-tour-group]')).toHaveCount(4)
+    for (const label of ['RB1', 'RB6', 'RB10']) {
+      await tour.locator(`button[data-tour-airway="${label}"]`).click()
+      const figure = tour.locator(`figure[data-media-id="${label.toLowerCase()}"]`)
+      await expect(figure.locator('img')).toBeVisible()
+      await expect.poll(async () => (await registration(figure))?.error ?? 99).toBeLessThan(1.5)
+    }
+    await tour.locator('button[data-tour-compare-toggle]').click()
+    await expect(tour.locator('[data-tour-compare-grid] figure')).toHaveCount(5)
+    await expect(tour.locator('[data-tour-frame]')).toContainText('no orientation or camera-roll')
+    await tour.screenshot({ path: info.outputPath('s10-tour-compare.png') })
+  })
+
+  test('S5: the bench says where the tip points at every angle, read from the model', async ({
+    page,
+  }, info) => {
+    test.setTimeout(240_000)
+    await page.setViewportSize({ width: 1204, height: 987 })
+    await goToStep(page, 'five-controls', 'five-controls-learn-bend')
+    // While the model loads, the dock is disabled, so no press can count.
+    const dock = page.locator('[data-scope-controls]')
+    if ((await page.locator('[data-three-state]').getAttribute('data-three-state')) !== 'ready')
+      await expect(dock).toHaveAttribute('disabled', '')
+    await pilotAction(page, 'Try with guidance')
+    await ready(page)
+    const compass = page.locator('[data-tip-compass]')
+    for (const angle of [0, 15, 60, -60, 120, -120]) {
+      await setRange(page, 'deflect', angle)
+      await expect(page.locator('[data-control-head]')).toHaveAttribute(
+        'data-lever-deflection',
+        angle.toFixed(2),
+      )
+      await expect(compass).toHaveAttribute('data-tip-angle', Math.abs(angle).toFixed(1))
+      const toward = await compass.getAttribute('data-tip-toward')
+      if (angle === 0) expect(toward).toBe('center')
+      else expect(toward).toBe(`0.000,${angle > 0 ? '1.000' : '-1.000'}`)
+      await expect(page.locator('[data-bench-off-card]')).toHaveCount(Math.abs(angle) >= 60 ? 1 : 0)
+      await expect(compass).toHaveAttribute(
+        'data-card-in-view',
+        Math.abs(angle) >= 60 ? 'false' : 'true',
+      )
+      await page.locator('[data-three-state]').scrollIntoViewIfNeeded()
+      await page.screenshot({ path: info.outputPath(`s5-deflection-${angle}.png`) })
+    }
+    await setRange(page, 'deflect', 0)
+
+    await goToStep(page, 'five-controls', 'five-controls-learn-rotation')
+    await pilotAction(page, 'Try with guidance')
+    await ready(page)
+    await setRange(page, 'deflect', 30)
+    for (const [rotation, bendUp, words] of [
+      [0, '0.000,1.000', 'U toward the card’s top'],
+      [90, '1.000,0.000', 'U toward the card’s right'],
+      [180, '0.000,-1.000', 'U toward the card’s bottom'],
+      [-90, '-1.000,0.000', 'U toward the card’s left'],
+    ] as const) {
+      await setRange(page, 'rotate', rotation)
+      await expect(page.locator('[data-control-head]')).toHaveAttribute(
+        'data-handle-rotation',
+        rotation.toFixed(2),
+      )
+      await expect(compass).toHaveAttribute('data-tip-angle', '30.0')
+      await expect(compass).toHaveAttribute('data-bend-up', bendUp)
+      await expect(compass).toContainText(words)
+      await compass.scrollIntoViewIfNeeded()
+      await page.screenshot({ path: info.outputPath(`s5-rotation-${rotation}.png`) })
+    }
+    await expect(compass).toContainText('the scope view turns 90° clockwise')
+    // The keys the page now names still work: select the view, then the arrow deflects.
+    await expect(page.locator('[data-keyboard-help]')).toContainText(
+      'the up and down arrows deflect',
+    )
+    await page.locator('[data-three-state] [aria-label^="Scope view"]').first().click()
+    await page.keyboard.press('ArrowUp')
+    await expect(compass).toHaveAttribute('data-tip-angle', '35.0')
+  })
+
+  test('S6: at the main carina the labels point at their own openings and each view states its frame', async ({
+    page,
+  }, info) => {
+    test.setTimeout(240_000)
+    await page.setViewportSize({ width: 1204, height: 987 })
+    await goToStep(page, 'branch-entry', 'branch-entry-flow-v1-application')
+    await ready(page)
+    // Held keys are discoverable, and W advances once the view is selected.
+    await expect(page.locator('[data-keyboard-help]')).toContainText('Hold a movement key')
+    await page.locator('[data-three-state] [aria-label^="Scope view"]').first().click()
+    const carina = page.locator('[data-goal="reach-carina"]')
+    for (let i = 0; i < 60 && (await carina.getAttribute('data-met')) !== 'true'; i++)
+      await page.keyboard.press('w')
+    await expect(carina).toHaveAttribute('data-met', 'true')
+    await page.locator('[data-three-state]').scrollIntoViewIfNeeded()
+    const pins = page.locator('[data-three-state] [data-ostium-pin]')
+    await expect(pins).toHaveCount(2)
+    const boxes = await pins.evaluateAll((elements) =>
+      elements.map((element) => {
+        const r = element.getBoundingClientRect()
+        return { left: r.left, right: r.right, top: r.top, bottom: r.bottom }
+      }),
+    )
+    const gap = Math.max(
+      Math.max(boxes[0].left, boxes[1].left) - Math.min(boxes[0].right, boxes[1].right),
+      Math.max(boxes[0].top, boxes[1].top) - Math.min(boxes[0].bottom, boxes[1].bottom),
+    )
+    expect(gap).toBeGreaterThanOrEqual(8)
+    // Every moved caption keeps a dot on its own opening and a line to it.
+    const leaders = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-ostium-leader]')].map((line) => {
+        const label = line.getAttribute('data-ostium-leader')!
+        const anchor = document.querySelector(`[data-ostium-anchor="${label}"]`) as HTMLElement
+        return {
+          label,
+          x: Number(line.getAttribute('x1')),
+          y: Number(line.getAttribute('y1')),
+          anchorLeft: parseFloat(anchor.style.left),
+          anchorTop: parseFloat(anchor.style.top),
+        }
+      }),
+    )
+    for (const leader of leaders) {
+      expect(leader.x).toBeCloseTo(leader.anchorLeft, 3)
+      expect(leader.y).toBeCloseTo(leader.anchorTop, 3)
+    }
+    await expect(page.locator('[data-patient-tick]')).toHaveText(['A', 'L'])
+    await expect(page.locator('[data-frame-badge="map"]')).toContainText(
+      'patient’s right is on the map’s left',
+    )
+    await expect(page.locator('[data-frame-badge="scope"]')).toContainText(
+      'A marks the patient’s front',
+    )
+    await page
+      .locator('[data-three-state]')
+      .screenshot({ path: info.outputPath('s6-carina-1204.png') })
+    // The ticks turn with the picture: a quarter turn of the control section moves A by a quarter.
+    const angleOf = () =>
+      page.locator('[data-patient-tick="A"]').evaluate((tick) => {
+        const view = tick.parentElement!.getBoundingClientRect()
+        const box = tick.getBoundingClientRect()
+        const x = box.left + box.width / 2 - (view.left + view.width / 2)
+        const y = view.top + view.height / 2 - (box.top + box.height / 2)
+        return (Math.atan2(y, x) * 180) / Math.PI
+      })
+    const before = await angleOf()
+    await setRange(page, 'rotate', 90)
+    const turned = await angleOf()
+    const delta = ((((turned - before + 180) % 360) + 360) % 360) - 180
+    expect(Math.abs(delta - 90)).toBeLessThan(8)
+    await setRange(page, 'rotate', 0)
+
+    // "Show me where" names a control from the model, and following it enters the bronchus.
+    const inputs = () =>
+      page.evaluate(() => {
+        const line = document.querySelector('[data-input-mode]')!
+        return `${line.getAttribute('data-input-mode')}|${line.getAttribute('data-assists-used')}|${document.querySelector('[data-readouts]')?.textContent}`
+      })
+    const right = page.locator('[data-goal="enter-right"]')
+    for (let step = 0; step < 60 && (await right.getAttribute('data-met')) !== 'true'; step++) {
+      const snapshot = await inputs()
+      const where = page
+        .locator('[data-now-card]')
+        .getByRole('button', { name: /^(Show me where|Highlight it again)$/ })
+      await where.click()
+      const help = (await page.locator('[data-goal-help]').textContent()) ?? ''
+      const spot = await page.locator('[data-spotlight="true"]').getAttribute('data-control')
+      // Asking changes nothing.
+      expect(await inputs()).toBe(snapshot)
+      expect(help.split(/[\s:]/)[0].toLowerCase()).toBe(spot === 'rotate' ? 'rotate' : spot)
+      if (step === 0) {
+        await page.locator('[data-three-state]').scrollIntoViewIfNeeded()
+        await page.screenshot({ path: info.outputPath('s6-show-me-where.png') })
+      }
+      if (spot === 'advance') await control(page, 'advance').click()
+      else if (spot === 'rotate') {
+        const now = Number(await control(page, 'rotate').inputValue())
+        await setRange(page, 'rotate', now + (help.startsWith('Rotate counterclockwise') ? -5 : 5))
+      } else if (spot === 'deflect') {
+        const now = Number(await control(page, 'deflect').inputValue())
+        await setRange(page, 'deflect', now + (help.startsWith('Deflect toward D') ? -5 : 5))
+      } else throw new Error(`Unexpected help for entering: ${help}`)
+    }
+    await expect(right).toHaveAttribute('data-met', 'true')
+  })
+
+  test('S10: in the less-assisted lesson, help and opening names are advice that records nothing', async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width: 1204, height: 987 })
+    await goToStep(page, 'right-side', 'right-side-flow-v1-application')
+    await ready(page)
+    const performance = page.locator('[data-input-mode]')
+    const goals = () =>
+      page
+        .locator('[data-step-goals] li')
+        .evaluateAll((rows) => rows.map((row) => row.getAttribute('data-met')))
+    const before = {
+      mode: await performance.getAttribute('data-input-mode'),
+      assists: await performance.getAttribute('data-assists-used'),
+      goals: await goals(),
+      record: await record(page),
+    }
+    await page.locator('[data-now-card]').getByRole('button', { name: 'Show me where' }).click()
+    await expect(page.locator('[data-spotlight="true"]')).toHaveAttribute(
+      'data-control',
+      'withdraw',
+    )
+    await expect(page.locator('[data-goal-help]')).toContainText(/^Withdraw/)
+    const names = page.getByRole('button', { name: 'Show the opening names' })
+    await names.click()
+    await expect(page.getByRole('button', { name: 'Hide the opening names' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await expect(page.locator('[data-reference-label]').first()).toBeVisible()
+    await page
+      .locator('[data-three-state]')
+      .screenshot({ path: info.outputPath('s10-reference-names.png') })
+    await expect(performance).toContainText('opening names shown for reference')
+    expect(await performance.getAttribute('data-input-mode')).toBe(before.mode)
+    expect(await performance.getAttribute('data-assists-used')).toBe(before.assists)
+    expect(await goals()).toEqual(before.goals)
+    expect(await record(page)).toEqual(before.record)
+    await page.getByRole('button', { name: 'Hide the opening names' }).click()
+    await expect(page.locator('[data-reference-label]')).toHaveCount(0)
+    expect(await goals()).toEqual(before.goals)
+  })
+
+  for (const { viewport, text } of [
+    { viewport: { width: 390, height: 844 }, text: 100 },
+    { viewport: { width: 320, height: 740 }, text: 100 },
+    { viewport: { width: 390, height: 844 }, text: 200 },
+    { viewport: { width: 1204, height: 987 }, text: 200 },
+  ])
+    test(`mobile and enlarged text: the current goal sits beside the scope and its controls at ${viewport.width}px, ${text}% root text`, async ({
+      page,
+    }, info) => {
+      await page.setViewportSize(viewport)
+      await goToStep(page, 'branch-entry', 'branch-entry-flow-v1-application')
+      if (text === 200)
+        await page.evaluate(() => {
+          document.documentElement.style.fontSize = '200%'
+        })
+      await ready(page)
+      await page
+        .locator('[data-scope-goal-now]')
+        .evaluate((element) => element.scrollIntoView({ block: 'start' }))
+      const layout = await page.evaluate(() => {
+        const box = (selector: string) => document.querySelector(selector)!.getBoundingClientRect()
+        const course = document.querySelector<HTMLElement>(
+          '[data-module="bronchoscopy-foundations"]',
+        )!
+        const header = document.getElementById('main-content')?.previousElementSibling
+        // The view's own header: the Scope/Airway map tabs and the review-status line.
+        const tabs = document.querySelector('[role="tablist"][aria-label="Scope and airway map"]')
+        const status = document.querySelector('[data-three-state]')?.previousElementSibling
+        const own = [tabs, status].reduce((sum, element) => {
+          if (!element) return sum
+          const style = getComputedStyle(element)
+          return (
+            sum +
+            element.getBoundingClientRect().height +
+            parseFloat(style.marginTop) +
+            parseFloat(style.marginBottom)
+          )
+        }, 0)
+        // The pane's grid gaps (0.75rem each) on either side of that header, at this root size.
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize)
+        return {
+          viewHeader: own + 2 * 0.75 * rem,
+          header: header ? header.getBoundingClientRect().height : 0,
+          goal: box('[data-scope-goal-now]').top,
+          goalBottom: box('[data-scope-goal-now]').bottom,
+          view: box('[data-three-state]').top,
+          viewBottom: box('[data-three-state]').bottom,
+          advance: box('[id="bronchoscopy-foundations-scope-advance"]').bottom,
+          dock: box('[data-scope-controls]').top,
+          courseFits: course.scrollWidth <= course.clientWidth + 1,
+          rows: document.querySelectorAll('[data-scope-goals] li').length,
+        }
+      })
+      // The current goal directly above the view (only the view's own tabs and review line
+      // between), and the view directly above its controls.
+      expect(layout.goalBottom).toBeLessThanOrEqual(layout.view)
+      expect(layout.view - layout.goalBottom).toBeLessThanOrEqual(layout.viewHeader + 2)
+      expect(layout.viewBottom).toBeLessThanOrEqual(layout.dock)
+      expect(layout.rows).toBe(1)
+      expect(layout.courseFits).toBe(true)
+      if (text === 100 && viewport.width <= 390) {
+        // The current goal, the view and the first controls on one phone screen.
+        expect(layout.advance - layout.goal).toBeLessThanOrEqual(viewport.height - layout.header)
+      }
+      await page.screenshot({ path: info.outputPath(`s6-${viewport.width}-${text}.png`) })
+      // The full list stays reachable from the card, and a focused control stays visible.
+      await page.locator('a[data-all-goals-link]').click()
+      await expect(page.locator('[data-step-goals]')).toBeFocused()
+      await expect(page.locator('[data-step-goals] li')).toHaveCount(5)
+      await control(page, 'advance').focus()
+      const focus = await page.evaluate(() => {
+        const header = document.getElementById('main-content')?.previousElementSibling
+        const r = document.activeElement!.getBoundingClientRect()
+        return { top: r.top, bottom: r.bottom, header: header?.getBoundingClientRect().bottom ?? 0 }
+      })
+      expect(focus.top).toBeGreaterThanOrEqual(focus.header - 1)
+      expect(focus.bottom).toBeLessThanOrEqual(viewport.height + 1)
+    })
+
+  test('S7: the CT and the still are compared side by side at laptop sizes, each for what it is', async ({
+    page,
+  }, info) => {
+    for (const viewport of [
+      { width: 1204, height: 987 },
+      { width: 1024, height: 768 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport)
+      await goToStep(page, 'reference-frames', 'reference-frames-flow-v1-ct-display')
+      const figures = page.locator('[data-media-workspace] figure')
+      await expect(figures).toHaveCount(2)
+      await expect(figures.nth(1).locator('img')).toBeVisible()
+      await figures.first().scrollIntoViewIfNeeded()
+      const [ct, still] = await figures.evaluateAll((elements) =>
+        elements.map((figure) => {
+          const r = figure.querySelector('img')!.getBoundingClientRect()
+          return { top: r.top, bottom: r.bottom, left: r.left, width: r.width }
+        }),
+      )
+      if (viewport.width >= 1024) {
+        expect(Math.abs(ct.top - still.top)).toBeLessThan(2)
+        expect(Math.max(ct.bottom, still.bottom) - Math.min(ct.top, still.top)).toBeLessThan(
+          viewport.height - 100,
+        )
+        expect(still.left).toBeGreaterThan(ct.left + ct.width)
+      } else expect(still.top).toBeGreaterThan(ct.bottom)
+      await expect(page.locator('[data-media-frame]')).toHaveCount(2)
+      await expect(page.locator('[data-media-comparison]')).toContainText('not a registered pair')
+      await expect(page.locator('[data-media-comparison]')).toContainText(
+        'this panel shows one axial slice',
+      )
+      await page.screenshot({ path: info.outputPath(`s7-${viewport.width}.png`) })
+    }
+  })
+
+  test('S20: the scope in the tube is drawn in cross-section, to scale, from the readouts’ numbers', async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width: 1204, height: 987 })
+    for (const [stepId, tube, scope, mm2, share] of [
+      ['scope-in-a-tube-flow-v1-application', 8, 6, '22 mm²', '0.44'],
+      ['scope-in-a-tube-flow-v1-changed-tube', 7.5, 6.2, '14 mm²', '0.32'],
+    ] as const) {
+      await goToStep(page, 'scope-in-a-tube', stepId)
+      await ready(page)
+      const figure = page.locator('[data-tube-cross-section]')
+      await figure.scrollIntoViewIfNeeded()
+      const ratio = await figure.evaluate((element) => {
+        const outer = element
+          .querySelector('[data-cross-section-tube-radius]')!
+          .getBoundingClientRect()
+        const inner = element
+          .querySelector('[data-cross-section-scope-radius]')!
+          .getBoundingClientRect()
+        return { ratio: inner.width / outer.width, outer: outer.width }
+      })
+      expect(ratio.ratio).toBeCloseTo(scope / tube, 2)
+      expect(ratio.outer).toBeGreaterThan(120)
+      await expect(page.locator('[data-readout="annularAreaMm2"] dd')).toContainText(mm2)
+      await expect(page.locator('[data-readout="annularAreaFraction"] dd')).toContainText(share)
+      await expect(figure).toContainText(mm2)
+      await expect(figure).toContainText(`${share} of the tube’s lumen`)
+      await expect(figure).toContainText('not a ventilation, airway-fit or device recommendation')
+      await page.screenshot({ path: info.outputPath(`s20-${tube}-${scope}.png`) })
+    }
+  })
+
+  /* ------------------------------------------------------------------ *
+   * Independent review of this batch: four repairs
+   * ------------------------------------------------------------------ */
+
+  test('review repair 1: Show me where follows the learner past a goal they have met, unasked', async ({
+    page,
+  }, info) => {
+    test.setTimeout(240_000)
+    await page.setViewportSize({ width: 1204, height: 987 })
+    const practice = 'branch-entry-flow-v1-application'
+    await goToStep(page, 'branch-entry', practice)
+    await ready(page)
+    const now = page.locator('[data-now-card]')
+    const help = page.locator('[data-goal-help]')
+    const lit = page.locator('[data-spotlight="true"]')
+    const goalNow = page.locator('[data-scope-goal-now]')
+    const goals = () =>
+      page
+        .locator('[data-step-goals] li')
+        .evaluateAll((rows) =>
+          rows.map((row) => `${row.getAttribute('data-goal')}:${row.getAttribute('data-met')}`),
+        )
+    const attempt = page.locator('[data-input-mode]')
+    const before = {
+      goals: await goals(),
+      mode: await attempt.getAttribute('data-input-mode'),
+      assists: await attempt.getAttribute('data-assists-used'),
+      record: await record(page),
+    }
+
+    await now.getByRole('button', { name: 'Show me where' }).click()
+    await expect(help).toHaveText('Advance down the trachea to the main carina.')
+    await expect(lit).toHaveCount(1)
+    await expect(lit).toHaveAttribute('data-control', 'advance')
+    await expect(control(page, 'advance')).toBeFocused()
+    // Asking is not a move: no goal, no input mode, no assist, no record.
+    expect(await goals()).toEqual(before.goals)
+    expect(await attempt.getAttribute('data-input-mode')).toBe(before.mode)
+    expect(await attempt.getAttribute('data-assists-used')).toBe(before.assists)
+    expect(await record(page)).toEqual(before.record)
+    await page.screenshot({ path: info.outputPath('repair1-help-before-carina.png') })
+
+    // Reach the carina with the Advance button itself. Help is not asked for again.
+    const carina = page.locator('[data-goal="reach-carina"]')
+    for (let i = 0; i < 80 && (await carina.getAttribute('data-met')) !== 'true'; i += 1)
+      await control(page, 'advance').click()
+    await expect(carina).toHaveAttribute('data-met', 'true')
+    await expect(goalNow).toHaveAttribute('data-scope-goal-now', 'enter-right')
+
+    // The reviewed build still said to advance to the carina here, and still lit Advance.
+    await expect(help).not.toContainText(/carina/i)
+    await expect(help).toContainText(/^Rotate (counter)?clockwise/)
+    await expect(help).toContainText('right main bronchus')
+    await expect(lit).toHaveCount(1)
+    await expect(lit).toHaveAttribute('data-control', 'rotate')
+    await expect(now.getByRole('button', { name: 'Highlight it again' })).toBeVisible()
+    // The keyboard stays on the control in use; the advice changing does not move it.
+    await expect(control(page, 'advance')).toBeFocused()
+    await page.screenshot({ path: info.outputPath('repair1-help-after-carina.png') })
+
+    // Do only what the help says. On the same goal it moves from Rotate to Deflect to Advance.
+    const right = page.locator('[data-goal="enter-right"]')
+    const seen: string[] = []
+    for (let i = 0; i < 80 && (await right.getAttribute('data-met')) !== 'true'; i += 1) {
+      const key = await lit.getAttribute('data-control')
+      const sentence = (await help.textContent()) ?? ''
+      if (seen[seen.length - 1] !== key) seen.push(key!)
+      if (key === 'rotate') {
+        const at = Number(await control(page, 'rotate').inputValue())
+        await setRange(page, 'rotate', at + (/counterclockwise/.test(sentence) ? -15 : 15))
+      } else if (key === 'deflect') {
+        const at = Number(await control(page, 'deflect').inputValue())
+        await setRange(page, 'deflect', at + (/toward U/.test(sentence) ? 5 : -5))
+      } else if (key === 'advance') await control(page, 'advance').click()
+      else throw new Error(`Unexpected help control ${key}: ${sentence}`)
+    }
+    await expect(right).toHaveAttribute('data-met', 'true')
+    expect(seen).toEqual(['rotate', 'deflect', 'advance'])
+
+    // Goal two to goal three, again unasked: the way on is back out, not further in.
+    await expect(goalNow).toHaveAttribute('data-scope-goal-now', 'back-to-trachea')
+    await expect(help).not.toContainText('goes into the opening of the right main bronchus')
+    await expect(lit).toHaveCount(1)
+    await expect(lit).toHaveAttribute('data-control', 'withdraw')
+    await page.screenshot({ path: info.outputPath('repair1-help-after-right-main.png') })
+
+    // A reset starts a new attempt without the last one's help.
+    await control(page, 'reset').click()
+    await expect(carina).toHaveAttribute('data-met', 'false')
+    await expect(help).toHaveCount(0)
+    await expect(lit).toHaveCount(0)
+    await now.getByRole('button', { name: 'Show me where' }).click()
+    await expect(help).toHaveText('Advance down the trachea to the main carina.')
+
+    // Leaving the step ends it; coming back does not bring it back.
+    await now.getByRole('button', { name: 'Back', exact: true }).click()
+    await expect(stage(page)).not.toHaveAttribute('data-stage', practice)
+    await expect(help).toHaveCount(0)
+    await expect(lit).toHaveCount(0)
+    for (let i = 0; i < 4 && (await stage(page).getAttribute('data-stage')) !== practice; i += 1)
+      await primary(page).click()
+    await expect(stage(page)).toHaveAttribute('data-stage', practice)
+    await expect(help).toHaveCount(0)
+    await expect(lit).toHaveCount(0)
+    await expect(now.getByRole('button', { name: 'Show me where' })).toBeVisible()
+    // Nothing above was written as the learner's record by the help itself.
+    expect(await attempt.getAttribute('data-assists-used')).toBe(before.assists)
+  })
+
+  /** What the bench and the end-on drawing show, read once per animation frame in the page. */
+  interface BenchFrame {
+    readonly t: number
+    readonly rotation: number
+    readonly deflection: number
+    readonly cx: number
+    readonly cy: number
+    readonly tipX: number
+    readonly tipY: number
+    readonly planeX: number
+    readonly planeY: number
+    readonly overlay: boolean
+    readonly note: boolean
+    readonly words: string
+  }
+  async function startBenchSampler(page: Page) {
+    await page.evaluate(() => {
+      const frames: unknown[] = []
+      const w = window as unknown as { __bench?: { frames: unknown[]; stop: boolean } }
+      w.__bench = { frames, stop: false }
+      const sample = () => {
+        const head = document.querySelector('[data-control-head]')
+        const compass = document.querySelector('[data-tip-compass]')
+        if (head && compass) {
+          const svg = compass.querySelector('svg')!
+          const tip = compass.querySelector('[data-compass-tip]') as SVGCircleElement
+          const plane = compass.querySelector('[data-compass-plane]') as SVGLineElement
+          const frame = svg.getBoundingClientRect()
+          const dot = tip.getBoundingClientRect()
+          const [x0, y0, vw, vh] = svg.getAttribute('viewBox')!.split(' ').map(Number)
+          frames.push({
+            t: performance.now(),
+            // What the 3D control head and bending section were handed for this frame.
+            rotation: Number(head.getAttribute('data-handle-rotation')),
+            deflection: Number(head.getAttribute('data-lever-deflection')),
+            cx: tip.cx.baseVal.value,
+            cy: tip.cy.baseVal.value,
+            // Where the tip mark is actually painted, back in the drawing's own units.
+            tipX: x0 + ((dot.left + dot.width / 2 - frame.left) / frame.width) * vw,
+            tipY: y0 + ((dot.top + dot.height / 2 - frame.top) / frame.height) * vh,
+            planeX: plane.x2.baseVal.value,
+            planeY: plane.y2.baseVal.value,
+            overlay: document.querySelector('[data-bench-off-card]') !== null,
+            note: /outside the field of view/.test(
+              [...compass.querySelectorAll(':not([aria-hidden="true"])')]
+                .filter((element) => element.children.length === 0)
+                .map((element) => element.textContent)
+                .join(' '),
+            ),
+            words: compass.querySelector('figcaption')!.textContent ?? '',
+          })
+        }
+        if (!w.__bench!.stop) requestAnimationFrame(sample)
+      }
+      requestAnimationFrame(sample)
+    })
+  }
+  async function stopBenchSampler(page: Page): Promise<BenchFrame[]> {
+    return page.evaluate(() => {
+      const w = window as unknown as { __bench: { frames: unknown[]; stop: boolean } }
+      w.__bench.stop = true
+      return w.__bench.frames as BenchFrame[]
+    }) as Promise<BenchFrame[]>
+  }
+  /** The end-on drawing for a control-head reading, from the engine's own frame. */
+  function compassFor(rotationDeg: number, deflectionDeg: number) {
+    const inputs = { ...DEFAULT_SCOPE_INPUTS, rotationDeg, deflectionDeg }
+    const orientation = benchTipOrientation({
+      place: 'bench',
+      inputs,
+      pose: authoredScopePose('bench', 0, inputs),
+    })!
+    const radius = compassRadius(orientation.angleDeg)
+    return {
+      angle: orientation.angleDeg,
+      tip: orientation.toward
+        ? { x: orientation.toward.x * radius, y: -orientation.toward.y * radius }
+        : { x: 0, y: 0 },
+      up: { x: orientation.bendUp.x, y: -orientation.bendUp.y },
+    }
+  }
+  /** One native press or click on a slider, sampled from before it until the bench has settled. */
+  async function sampledMove(page: Page, move: () => Promise<void>) {
+    await startBenchSampler(page)
+    await page.waitForTimeout(60)
+    await move()
+    await page.waitForTimeout(520)
+    return stopBenchSampler(page)
+  }
+  /**
+   * Every frame: the drawing is the one for the bench reading taken in that same frame.
+   *
+   * `painted` also compares where the tip mark is on screen. With reduced motion the site's own
+   * stylesheet gives every property change a 0.001 ms transition, so a box measured inside the
+   * frame that made a change is still the previous one; there the mark is measured once settled.
+   */
+  function expectFramesAgree(frames: readonly BenchFrame[], painted = true) {
+    expect(frames.length).toBeGreaterThan(10)
+    for (const [index, frame] of frames.entries()) {
+      const expected = compassFor(frame.rotation, frame.deflection)
+      const at = `frame at ${frame.t.toFixed(1)} ms, head ${frame.rotation}°/${frame.deflection}°`
+      expect(Math.abs(frame.cx - expected.tip.x), at).toBeLessThan(0.002)
+      expect(Math.abs(frame.cy - expected.tip.y), at).toBeLessThan(0.002)
+      expect(Math.abs(frame.planeX - expected.up.x), at).toBeLessThan(0.002)
+      expect(Math.abs(frame.planeY - expected.up.y), at).toBeLessThan(0.002)
+      // As painted, to within a pixel and a half of a drawing about 140 px across.
+      if (painted || index === frames.length - 1) {
+        expect(Math.abs(frame.tipX - expected.tip.x), at).toBeLessThan(0.04)
+        expect(Math.abs(frame.tipY - expected.tip.y), at).toBeLessThan(0.04)
+      }
+      // The note on the scope view and its words for assistive technology are the same state too.
+      expect(frame.note, at).toBe(frame.overlay)
+    }
+  }
+  /** Frames where the bench reading is strictly between two settled values. */
+  const between = (frames: readonly BenchFrame[], key: 'rotation' | 'deflection') => {
+    const first = frames[0][key]
+    const last = frames[frames.length - 1][key]
+    return frames.filter(
+      (frame) => Math.abs(frame[key] - first) > 0.5 && Math.abs(frame[key] - last) > 0.5,
+    )
+  }
+  /** Click a slider's track at a value; the browser's own hit-testing sets it. */
+  async function clickTrackAt(page: Page, key: 'rotate' | 'deflect', value: number) {
+    const slider = control(page, key)
+    const box = (await slider.boundingBox())!
+    const min = Number(await slider.getAttribute('min'))
+    const max = Number(await slider.getAttribute('max'))
+    await page.mouse.click(
+      box.x + ((value - min) / (max - min)) * box.width,
+      box.y + box.height / 2,
+    )
+  }
+
+  test('review repair 2: the end-on drawing moves with the animated bench on every frame', async ({
+    page,
+  }, info) => {
+    test.setTimeout(240_000)
+    await page.setViewportSize({ width: 1204, height: 987 })
+    await goToStep(page, 'five-controls', 'five-controls-learn-rotation')
+    await pilotAction(page, 'Try with guidance')
+    await ready(page)
+    await setRange(page, 'deflect', 0)
+    await setRange(page, 'rotate', 0)
+    const head = page.locator('[data-control-head]')
+    const compass = page.locator('[data-tip-compass]')
+    await head.scrollIntoViewIfNeeded()
+    // Ordinary motion from here: the bench takes about 220 ms to reach a commanded state.
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.waitForTimeout(100)
+    const report: Record<string, unknown> = {}
+    const deflect = control(page, 'deflect')
+    const rotate = control(page, 'rotate')
+
+    // Deflection, by the slider's own keys and track: 0 → +120 → −120 → about 0.
+    await deflect.focus()
+    for (const [name, move] of [
+      ['deflection 0 to +120 (End)', () => page.keyboard.press('End')],
+      ['deflection +120 to -120 (Home)', () => page.keyboard.press('Home')],
+      ['deflection -120 to 0 (track click)', () => clickTrackAt(page, 'deflect', 0)],
+    ] as const) {
+      const frames = await sampledMove(page, move)
+      report[name] = frames
+      writeFileSync(info.outputPath('bench-frames.json'), JSON.stringify(report, null, 1))
+      const moving = between(frames, 'deflection')
+      // Several frames part-way, and the drawing is the bench's on each of them.
+      expect(moving.length, name).toBeGreaterThanOrEqual(3)
+      expectFramesAgree(frames)
+      const settled = frames[frames.length - 1]
+      expect(settled.deflection).toBe(Number(await deflect.inputValue()))
+      await expect(compass).toHaveAttribute(
+        'data-tip-angle',
+        Math.abs(settled.deflection).toFixed(1),
+      )
+    }
+    expect(Math.abs(Number(await deflect.inputValue()))).toBeLessThanOrEqual(6)
+
+    // Rotation with a fixed bend to show it: about 0 → 90 → 180 → 270 (the model's −90).
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await setRange(page, 'deflect', 30)
+    await setRange(page, 'rotate', 0)
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.waitForTimeout(100)
+    for (const [name, move] of [
+      ['rotation 0 to 90 (track click)', () => clickTrackAt(page, 'rotate', 90)],
+      [
+        'rotation 90 to 180 (End)',
+        async () => {
+          await rotate.focus()
+          await page.keyboard.press('End')
+        },
+      ],
+      ['rotation 180 to 270 (track click)', () => clickTrackAt(page, 'rotate', -90)],
+    ] as const) {
+      const frames = await sampledMove(page, move)
+      report[name] = frames
+      writeFileSync(info.outputPath('bench-frames.json'), JSON.stringify(report, null, 1))
+      expect(between(frames, 'rotation').length, name).toBeGreaterThanOrEqual(3)
+      expectFramesAgree(frames)
+    }
+    // 180° to −90° goes the short way, through 270°, and settles on the model's own value.
+    const wrap = report['rotation 180 to 270 (track click)'] as BenchFrame[]
+    expect(Math.max(...wrap.map((frame) => frame.rotation))).toBeGreaterThan(200)
+    const settledRotation = Number(await rotate.inputValue())
+    expect(Math.abs(settledRotation + 90)).toBeLessThanOrEqual(6)
+    await expect(head).toHaveAttribute('data-handle-rotation', settledRotation.toFixed(2))
+    const settled = compassFor(settledRotation, 30)
+    await expect(compass).toHaveAttribute(
+      'data-bend-up',
+      `${settled.up.x.toFixed(3)},${(-settled.up.y).toFixed(3)}`,
+    )
+
+    // Both at once: the lever goes to its stop while the control section is still turning.
+    const frames = await sampledMove(page, async () => {
+      await clickTrackAt(page, 'rotate', 60)
+      await deflect.focus()
+      await page.keyboard.press('Home')
+    })
+    report['rotation and deflection together'] = frames
+    writeFileSync(info.outputPath('bench-frames.json'), JSON.stringify(report, null, 1))
+    expect(between(frames, 'deflection').length).toBeGreaterThanOrEqual(3)
+    expect(between(frames, 'rotation').length).toBeGreaterThanOrEqual(3)
+    expectFramesAgree(frames)
+
+    await page.screenshot({ path: info.outputPath('repair2-bench-settled.png') })
+  })
+
+  test('review repair 2: with reduced motion the bench and the drawing change together, at once', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1204, height: 987 })
+    await goToStep(page, 'five-controls', 'five-controls-learn-rotation')
+    await pilotAction(page, 'Try with guidance')
+    await ready(page)
+    await setRange(page, 'deflect', 0)
+    await control(page, 'deflect').focus()
+    const frames = await sampledMove(page, () => page.keyboard.press('End'))
+    expectFramesAgree(frames, false)
+    // No frame part-way: the suite's reduced-motion setting leaves no transition to be out of step with.
+    expect(between(frames, 'deflection')).toHaveLength(0)
+    expect(frames[frames.length - 1].deflection).toBe(120)
+    // Settled geometry is the accepted one: 120° up, at the rim, U toward the card's top.
+    const compass = page.locator('[data-tip-compass]')
+    await expect(compass).toHaveAttribute('data-tip-angle', '120.0')
+    await expect(compass).toHaveAttribute('data-tip-toward', '0.000,1.000')
+    await expect(compass).toHaveAttribute('data-bend-up', '0.000,1.000')
+  })
+
+  test('review repair 3: the bench’s out-of-view note is in the accessibility tree once, and goes when the card returns', async ({
+    page,
+  }, info) => {
+    test.setTimeout(240_000)
+    await page.setViewportSize({ width: 1204, height: 987 })
+    await goToStep(page, 'five-controls', 'five-controls-learn-rotation')
+    await pilotAction(page, 'Try with guidance')
+    await ready(page)
+    const pane = page.locator('[data-scope-scene]')
+    const overlay = page.locator('[data-bench-off-card]')
+    const count = (text: string, part: string) => text.split(part).length - 1
+    const signal = page.locator('[data-three-state] [data-view-signal]')
+    const savedBefore = await record(page)
+    const trees: Record<string, string> = {}
+    await setRange(page, 'rotate', 0)
+    for (const [rotation, deflection, out] of [
+      [0, 0, false],
+      [0, 60, true],
+      [0, -60, true],
+      [0, 120, true],
+      [0, -120, true],
+      [0, 15, false],
+      [90, 60, true],
+      [180, 120, true],
+      [-90, -60, true],
+      [-90, 0, false],
+    ] as const) {
+      await setRange(page, 'rotate', rotation)
+      await setRange(page, 'deflect', deflection)
+      await expect(page.locator('[data-control-head]')).toHaveAttribute(
+        'data-lever-deflection',
+        deflection.toFixed(2),
+      )
+      const tree = await pane.ariaSnapshot()
+      trees[`${rotation},${deflection}`] = tree
+      writeFileSync(info.outputPath('accessibility-trees.json'), JSON.stringify(trees, null, 1))
+      const where = `rotation ${rotation}°, deflection ${deflection}°`
+      if (out) {
+        // What the eye is shown on the scope view, hidden from assistive technology there…
+        await expect(overlay).toHaveCount(1)
+        await expect(overlay).toHaveAttribute('aria-hidden', 'true')
+        const visible = ((await overlay.textContent()) ?? '').replace(/\s+/g, ' ').trim()
+        expect(visible).toBe(
+          `The card is outside the field of view: the tip points ${Math.abs(deflection)}° from straight ahead. This is the bench, not a lost view of an airway.`,
+        )
+        // …is in the accessibility tree, in the same words, exactly once.
+        expect(count(tree, 'The card is outside the field of view'), where).toBe(1)
+        expect(count(tree, 'This is the bench, not a lost view of an airway'), where).toBe(1)
+        expect(tree, where).toContain(visible)
+        // It says where the card is and what this is, and claims nothing about an airway or safety.
+        expect(visible).not.toMatch(/red-out|obstruct|contact|mucosa|wall|unsafe|injur/i)
+        // By role, which leaves out what is hidden from assistive technology: one paragraph.
+        await expect(pane.getByRole('paragraph').filter({ hasText: visible })).toHaveCount(1)
+      } else {
+        await expect(overlay).toHaveCount(0)
+        expect(count(tree, 'outside the field of view'), where).toBe(0)
+        expect(count(tree, 'lost view'), where).toBe(0)
+      }
+      // The bench is not an airway: the view signal never leaves "clear".
+      await expect(signal).toHaveAttribute('data-view-signal', 'clear')
+    }
+    // Nothing about any of it reached the learner's record.
+    const savedAfter = await record(page)
+    expect({ ...savedAfter, updatedAt: null }).toEqual({ ...savedBefore, updatedAt: null })
+  })
+
+  /** The image inside a figure's card frame and inside its open enlarged view, as painted. */
+  async function imageBox(image: Locator) {
+    return image.evaluate((element) => {
+      const img = element as HTMLImageElement
+      const box = img.getBoundingClientRect()
+      return {
+        width: box.width,
+        height: box.height,
+        left: box.left,
+        right: box.right,
+        top: box.top,
+        bottom: box.bottom,
+        src: img.currentSrc,
+        natural: img.naturalWidth / img.naturalHeight,
+      }
+    })
+  }
+  for (const viewport of [
+    { width: 1204, height: 987 },
+    { width: 1024, height: 768 },
+    { width: 390, height: 844 },
+  ])
+    test(`review repair 4: S7 Enlarge shows each image at the size the screen allows at ${viewport.width}×${viewport.height}`, async ({
+      page,
+    }, info) => {
+      await page.setViewportSize(viewport)
+      await goToStep(page, 'reference-frames', 'reference-frames-flow-v1-ct-display')
+      const figures = page.locator('[data-media-workspace] figure')
+      await expect(figures).toHaveCount(2)
+      const desktop = viewport.width >= 1024
+      const measured: Record<string, unknown> = { viewport }
+      for (const [index, name] of [
+        [0, 'ct'],
+        [1, 'still'],
+      ] as const) {
+        const figure = figures.nth(index)
+        const cardImage = figure.locator('[data-media-frame-size="card"] img')
+        await expect(cardImage).toBeVisible()
+        await cardImage.scrollIntoViewIfNeeded()
+        const card = await imageBox(cardImage)
+        const enlarge = figure.getByRole('button', { name: `Enlarge image ${index + 1} of 2` })
+        await enlarge.click()
+        const dialog = page.locator('dialog[data-media-dialog][open]')
+        await expect(dialog).toBeVisible()
+        await expect(
+          dialog.getByRole('heading', { name: `Image ${index + 1} of 2, enlarged` }),
+        ).toBeVisible()
+        await expect(dialog.locator('[data-media-dialog-close]')).toBeFocused()
+        const largeImage = dialog.locator('[data-media-frame-size="enlarged"] img')
+        await expect(largeImage).toBeVisible()
+        const large = await imageBox(largeImage)
+        const frame = await dialog.evaluate((element) => {
+          const box = element.getBoundingClientRect()
+          return {
+            left: box.left,
+            right: box.right,
+            top: box.top,
+            bottom: box.bottom,
+            scrollHeight: element.scrollHeight,
+            clientHeight: element.clientHeight,
+            scrollWidth: element.scrollWidth,
+            clientWidth: element.clientWidth,
+          }
+        })
+        measured[name] = {
+          card: { width: card.width, height: card.height },
+          dialog: { width: large.width, height: large.height },
+          ratio: large.width / card.width,
+        }
+        writeFileSync(info.outputPath('s7-sizes.json'), JSON.stringify(measured, null, 1))
+
+        // The same file at its own proportions, not a stretched or substituted one.
+        expect(large.src).toBe(card.src)
+        expect(large.width / large.height).toBeCloseTo(large.natural, 2)
+        expect(card.width / card.height).toBeCloseTo(card.natural, 2)
+        if (desktop) {
+          // Materially larger: the reviewed build showed it at exactly the card's size.
+          expect(large.width).toBeGreaterThan(card.width * 1.3)
+          expect(large.height).toBeGreaterThan(card.height * 1.3)
+        } else {
+          // A phone's card already spans the column, so the enlarged view cannot be larger than
+          // it: the dialog is the screen less its own border and padding. It stays close to it.
+          expect(large.width).toBeGreaterThan(card.width * 0.9)
+          expect(large.width).toBeGreaterThan(viewport.width * 0.85)
+        }
+        // It uses the screen without spilling off it or needing the dialog scrolled.
+        expect(frame.left).toBeGreaterThanOrEqual(0)
+        expect(frame.right).toBeLessThanOrEqual(viewport.width)
+        expect(frame.top).toBeGreaterThanOrEqual(0)
+        expect(frame.bottom).toBeLessThanOrEqual(viewport.height)
+        expect(frame.scrollWidth).toBeLessThanOrEqual(frame.clientWidth + 1)
+        expect(large.left).toBeGreaterThanOrEqual(frame.left)
+        expect(large.right).toBeLessThanOrEqual(frame.right)
+        if (desktop) {
+          expect(frame.scrollHeight).toBeLessThanOrEqual(frame.clientHeight + 1)
+          expect(large.bottom).toBeLessThanOrEqual(frame.bottom)
+        }
+        await page.screenshot({
+          path: info.outputPath(`repair4-s7-${name}-enlarged-${viewport.width}.png`),
+        })
+
+        // Close returns the focus to this figure's own Enlarge button; so does Escape.
+        await dialog.locator('[data-media-dialog-close]').click()
+        await expect(page.locator('dialog[data-media-dialog][open]')).toHaveCount(0)
+        await expect(enlarge).toBeFocused()
+        await page.keyboard.press('Enter')
+        await expect(page.locator('dialog[data-media-dialog][open]')).toBeVisible()
+        await page.keyboard.press('Escape')
+        await expect(page.locator('dialog[data-media-dialog][open]')).toHaveCount(0)
+        await expect(enlarge).toBeFocused()
+        // The card is as it was: the comparison row is not made larger to fake the enlargement.
+        const after = await imageBox(cardImage)
+        expect(after.width).toBeCloseTo(card.width, 0)
+      }
+      // The side-by-side comparison and its wording are untouched.
+      await expect(page.locator('[data-media-comparison]')).toContainText('not a registered pair')
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
+      ).toBeLessThanOrEqual(0)
+    })
 })

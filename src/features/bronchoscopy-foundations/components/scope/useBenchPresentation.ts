@@ -3,10 +3,37 @@
 import { useEffect, useRef, useState } from 'react'
 import { authoredScopePose } from '../../engine/scope/scopeAuthoredPose'
 import { BENCH_TRANSITION_MS, interpolateBenchMotion, type BenchMotion } from './benchPresentation'
-import type { ScopeState } from './types'
+import type { ScopeState, ScopeViewSpec } from './types'
 
-/** Brief visual transitions only: no dispatch, elapsed simulation time, scoring or persistence. */
-export function useBenchPresentation(state: ScopeState, enabled: boolean, visible: boolean) {
+/** The five-controls bench with its control-head and bending-section close-ups. */
+export function isDetailedBench(
+  view: Pick<ScopeViewSpec, 'sectionId' | 'physicalControlLabels'>,
+  state: Pick<ScopeState, 'place'>,
+): boolean {
+  return (
+    view.sectionId === 'five-controls' && !!view.physicalControlLabels && state.place === 'bench'
+  )
+}
+
+/** What the bench is showing right now: the state every drawing of it reads, and the valve's travel. */
+export interface BenchPresentation {
+  readonly state: ScopeState
+  readonly suctionTravel: number
+}
+
+/**
+ * Brief visual transitions only: no dispatch, elapsed simulation time, scoring or persistence.
+ *
+ * Called once, by the pane, and handed to everything that draws the bench — the scope view, the
+ * control head, the bending section and the end-on tip drawing — so that during a transition they
+ * all show the same intermediate state. The controls, readouts and goals keep reading the model's
+ * own state, which is where the learner's command already is.
+ */
+export function useBenchPresentation(
+  state: ScopeState,
+  enabled: boolean,
+  visible: boolean,
+): BenchPresentation {
   const target: BenchMotion = {
     depth: state.depthMm,
     rotation: state.inputs.rotationDeg,
@@ -42,7 +69,9 @@ export function useBenchPresentation(state: ScopeState, enabled: boolean, visibl
     const started = performance.now()
     const animate = (now: number) => {
       const fraction = Math.min(1, (now - started) / BENCH_TRANSITION_MS)
-      current.current = interpolateBenchMotion(from, to, fraction)
+      // The transition ends on the model's own values, not on an equivalent of them: a turn taken
+      // the short way round would otherwise settle at 270° where the model says −90°.
+      current.current = fraction < 1 ? interpolateBenchMotion(from, to, fraction) : to
       setMotion(current.current)
       if (fraction < 1) frame = requestAnimationFrame(animate)
     }

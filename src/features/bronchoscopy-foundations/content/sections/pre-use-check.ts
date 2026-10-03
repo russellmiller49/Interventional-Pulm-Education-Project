@@ -286,6 +286,10 @@ export const section: BronchSectionDefinition = {
           answerId: 'control-section',
           rationale:
             'The handle held in one hand. It carries the lever that bends the distal tip, the suction valve and the working-channel port; the universal cord leaves it near the top and the insertion tube at the bottom.',
+          mediaDescription:
+            'Photograph of the whole bronchoscope on a white background. Outlined: the large handle in the middle of the instrument; a cord leaves near its upper end and a long, thin shaft leaves at its lower end.',
+          partNote:
+            'The handle held in one hand. It carries the lever that bends the distal tip, the suction valve and the working-channel port.',
         },
         {
           id: 'suction-valve',
@@ -304,6 +308,10 @@ export const section: BronchSectionDefinition = {
           answerId: 'suction-valve',
           rationale:
             'The valve at the top of the control section, pressed to apply suction through the working channel. It has to be seated in its port: a valve that is missing or not seated leaves suction requested but not delivered.',
+          mediaDescription:
+            'Photograph of the whole bronchoscope. Outlined: a small white-topped button at the upper end of the handle.',
+          partNote:
+            'The valve at the top of the control section, pressed to apply suction through the working channel. It works only when it is seated in its port.',
         },
         {
           id: 'biopsy-valve-adapter',
@@ -322,6 +330,10 @@ export const section: BronchSectionDefinition = {
           answerId: 'biopsy-valve-adapter',
           rationale:
             'The cap on the working-channel port, lower on the control section. It keeps the port sealed, with or without an instrument through it; left open or missing, the port leaks and suction at the tip is reduced or lost.',
+          mediaDescription:
+            'Photograph of the whole bronchoscope. Outlined: a small grey cap on the side of the handle, below its upper end and beside a yellow label.',
+          partNote:
+            'The cap on the working-channel port, lower on the control section. It keeps the port sealed, with or without an instrument through it.',
         },
         {
           id: 'insertion-tube',
@@ -339,6 +351,10 @@ export const section: BronchSectionDefinition = {
           answerId: 'insertion-tube',
           rationale:
             'The flexible shaft that leaves the bottom of the control section and ends free at the bending section and tip; the universal cord ends in a connector instead. It carries the working channel into the airway and is not made to be sharply kinked, forcibly twisted, trapped under equipment or bitten — a bite block protects it throughout an oral procedure, however deep the sedation appears. The bending section at its end holds vulnerable steering components, and the tip is kept from being dropped or struck.',
+          mediaDescription:
+            'Photograph of the whole bronchoscope. Outlined: the long, thin flexible shaft that leaves the lower end of the handle and ends free.',
+          partNote:
+            'The flexible shaft that leaves the bottom of the control section and ends free at the bending section and tip. It carries the working channel into the airway.',
         },
         {
           id: 'universal-cord',
@@ -356,6 +372,10 @@ export const section: BronchSectionDefinition = {
           answerId: 'universal-cord',
           rationale:
             'The cord from the control section to the connector that joins the imaging and illumination system. It stays outside the patient, and is kept from bearing loads or bending sharply because the image and the light depend on it.',
+          mediaDescription:
+            'Photograph of the whole bronchoscope. Outlined: the cord that leaves the handle near its upper end, loops across the photograph and ends in a connector.',
+          partNote:
+            'The cord from the control section to the connector that joins the imaging and illumination system. It stays outside the patient.',
         },
         {
           id: 'rotary-function',
@@ -374,6 +394,10 @@ export const section: BronchSectionDefinition = {
           answerId: 'rotary-function',
           rationale:
             'The ring where the insertion tube leaves the control section. On models that have this function it turns the insertion tube relative to the control section; what turning the scope does to the image and the tip comes in the Handle phase. Whether a scope has the function, and how it is used, comes from its instructions.',
+          mediaDescription:
+            'Photograph of the whole bronchoscope. Outlined: the ribbed ring at the lower end of the handle, where the long shaft continues from it.',
+          partNote:
+            'On models that have this function, the ring where the insertion tube leaves the control section. It turns the insertion tube relative to the control section.',
         },
         {
           id: 'suction-valve-port',
@@ -392,6 +416,10 @@ export const section: BronchSectionDefinition = {
           answerId: 'suction-valve-port',
           rationale:
             'The opening at the top of the control section that the suction valve, held above it here, seats into. Controlled suction is available only once the valve is fully seated; an unseated valve is one of the faults a suction check finds.',
+          mediaDescription:
+            'Close-up photograph of the upper end of the handle, with a grey valve held just above it by a hand. Outlined: the metal opening on the handle that the valve seats into.',
+          partNote:
+            'The opening at the top of the control section that the suction valve seats into.',
         },
         {
           id: 'working-channel-port',
@@ -410,6 +438,10 @@ export const section: BronchSectionDefinition = {
           answerId: 'working-channel-port',
           rationale:
             'The entry to the working channel (also called the accessory port), with the biopsy valve adapter held beside it. Accessories, fluid and suction share this channel, so an open port is a leak in the suction path, not a second suction lumen. The printed label beside it can help identify the model; the device’s instructions confirm the channel’s dimension.',
+          mediaDescription:
+            'Close-up photograph of the side of the handle, with a grey cap held beside it by a hand. Outlined: the small round metal opening on the handle, beside a yellow label, that the cap fits onto.',
+          partNote:
+            'The entry to the working channel, also called the accessory port. Accessories, fluid and suction share this channel.',
         },
       ],
       sourceRefs: [

@@ -13,6 +13,11 @@ import { asSentence, MATCHED_WORDS, UNMATCHED_WORDS } from './verdictWords'
  * rationale afterwards is in landmarks and parentage. After the check each row says what the learner
  * chose and, where it differs, the name, in the questions' own words (fellow walkthrough A43). The learner may open the names and their
  * reasoning without answering (`revealed`); that records nothing.
+ *
+ * Every view has its own text alternative, which says where the outline sits without the name the
+ * row asks for, and its own Enlarge button (A18, A20). The set's text reference lists the parts it
+ * names, alphabetically so its order says nothing about which view is which, with where each part
+ * is and what it does; it is open to everyone before any answer, like the explanation.
  */
 export function BronchIdentifyControl({
   identify,
@@ -34,7 +39,8 @@ export function BronchIdentifyControl({
       data-committed={committed !== null}
     >
       <p className={styles.verdict}>{identify.prompt}</p>
-      {identify.rows.map((row) => {
+      <PartReference identify={identify} />
+      {identify.rows.map((row, index) => {
         const answer = committed?.[row.id] ?? draft[row.id] ?? null
         const outcome = committed
           ? committed[row.id] === row.answerId
@@ -50,7 +56,13 @@ export function BronchIdentifyControl({
             data-identify-row={row.id}
             data-outcome={outcome}
           >
-            <MediaFigure media={row.media} compact />
+            <MediaFigure
+              media={row.media}
+              compact
+              alt={row.mediaDescription}
+              enlargeLabel={`Enlarge view ${index + 1} of ${identify.rows.length}`}
+              dialogTitle={`View ${index + 1} of ${identify.rows.length}, enlarged`}
+            />
             <fieldset className={styles.choices} disabled={committed !== null}>
               <legend>{row.prompt}</legend>
               {orderChoices(row.id, row.choices).map((choice) => (
@@ -95,5 +107,29 @@ export function BronchIdentifyControl({
         )
       })}
     </div>
+  )
+}
+
+/** The parts the set names, with where each is and what it does: a text route through the set. */
+function PartReference({ identify }: { readonly identify: BronchIdentify }) {
+  const parts = identify.rows
+    .flatMap((row) => {
+      const name = row.choices.find((choice) => choice.id === row.answerId)?.label
+      return name && row.partNote ? [{ name, note: row.partNote }] : []
+    })
+    .sort((a, b) => a.name.localeCompare(b.name))
+  if (parts.length === 0) return null
+  return (
+    <details className={styles.partReference} data-part-reference>
+      <summary>The parts this set names: a text reference</summary>
+      <dl>
+        {parts.map((part) => (
+          <div key={part.name}>
+            <dt>{part.name}</dt>
+            <dd>{part.note}</dd>
+          </div>
+        ))}
+      </dl>
+    </details>
   )
 }

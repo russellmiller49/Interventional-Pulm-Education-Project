@@ -221,6 +221,13 @@ export const section: BronchSectionDefinition = {
     ],
     caption:
       'An axial CT slice with letters at its edges, and a camera still looking down the right main bronchus — authored teaching media, pending review',
+    // What each file and its manifest establish, and nothing more (fellow walkthrough A25).
+    mediaNotes: [
+      'Axial CT, shown as if viewed from the patient’s feet: the letters at its edges name the patient’s directions (A front, P back, R right, L left). The crosshair is the lesson’s marked point in the right main bronchus. From the airway-anatomy teaching case’s preview CT.',
+      'Camera still from the course’s normal survey, looking down the right main bronchus from the tip. Its orientation and camera roll were not recorded, so no wall is labelled.',
+    ],
+    comparisonNote:
+      'Two teaching views to compare, not a registered pair: they are not offered as one patient’s matched study. The explanation traces five levels; this panel shows one axial slice. A slice-by-slice trace through those levels is not part of this course’s media.',
   },
 
   steps: {

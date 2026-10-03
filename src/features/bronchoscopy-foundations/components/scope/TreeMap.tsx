@@ -33,6 +33,14 @@ export interface TreeMapProps {
 
 const TIP_RADIUS = 2.5
 
+/**
+ * The map's frame, said on the map (fellow walkthrough A24): the coronal projection `treeLayout`
+ * draws, as a coronal CT is shown. The scope view has its own frame, from the tip, so the two can
+ * put the same airway on opposite sides.
+ */
+export const MAP_FRAME_NOTE =
+  'Map: a front (coronal) view, so the patient’s right is on the map’s left, head at the top.'
+
 export function TreeMap({ map, lit, current, tipLps, treeAnswer }: TreeMapProps) {
   if (!map) {
     return (
@@ -114,6 +122,9 @@ export function TreeMap({ map, lit, current, tipLps, treeAnswer }: TreeMapProps)
           )
         })}
       </div>
+      <p className={styles.mapFrame} data-frame-badge="map">
+        {MAP_FRAME_NOTE}
+      </p>
     </div>
   )
 }

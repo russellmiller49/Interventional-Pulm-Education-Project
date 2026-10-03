@@ -64,23 +64,29 @@ function Studio({
   )
 }
 
-/** Printed U/D markings on the faceplate, attached to the rotating control head. */
+/**
+ * Printed U/D markings on the faceplate, attached to the rotating control head: D at the top of the
+ * arc, U at its foot, the model's own convention ("Lever toward U" bends the tip toward the top of
+ * the image). The letters are drawn large enough to read at the close-up's size (SUP-08); their
+ * places on the arc are unchanged.
+ */
 function DirectionMarkings() {
   const texture = useMemo(() => {
     const canvas = document.createElement('canvas')
     canvas.width = 400
     canvas.height = 560
     const context = canvas.getContext('2d')!
-    context.strokeStyle = '#e8e8df'
-    context.lineWidth = 6
+    context.strokeStyle = '#f4f4ea'
+    context.lineWidth = 9
     context.lineCap = 'round'
     context.beginPath()
     context.ellipse(230, 280, 195, 220, 0, 2.08, 4.2)
     context.stroke()
-    context.font = 'bold 43px Arial'
-    context.fillStyle = '#e8e8df'
-    context.fillText('D', 140, 71)
-    context.fillText('U', 139, 530)
+    context.font = 'bold 76px Arial'
+    context.fillStyle = '#f4f4ea'
+    context.textAlign = 'center'
+    context.fillText('D', 150, 74)
+    context.fillText('U', 150, 552)
     const result = new THREE.CanvasTexture(canvas)
     result.colorSpace = THREE.SRGBColorSpace
     return result

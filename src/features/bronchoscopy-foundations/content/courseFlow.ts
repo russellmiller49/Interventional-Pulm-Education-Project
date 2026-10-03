@@ -315,7 +315,8 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       'inspection',
       'Watch the authored vocal-fold cycle. Use the controls to cross under vision while the opening permits entry; contact and closed-fold attempts do not establish safe entry.',
     ),
-    check('check', 'Identify the structures in view'),
+    // The question asks when to cross, not what is in view (fellow walkthrough SUP-13).
+    check('check', 'Decide when to cross the glottis'),
     debrief(['common-errors', 'entry-and-withdrawal']),
     check('transfer', 'Interpret what a different entry permits'),
   ],

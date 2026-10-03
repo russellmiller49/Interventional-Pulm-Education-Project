@@ -304,7 +304,7 @@ export const section: BronchSectionDefinition = {
   workspace: {
     kind: 'media',
     caption:
-      'A normal right main bronchus from an annotated survey, for comparison. The finding in this section has no image; it is given in words.',
+      'A normal right main bronchus from the course’s normal survey, with nothing marked on it, for comparison. The finding in this section has no image; it is given in words.',
     media: [{ kind: 'endoscopic-still', structureId: 'rmb', outline: false }],
   },
 
