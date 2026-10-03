@@ -218,7 +218,7 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
           {saved ? (
             <p className={styles.hubSavedAside}>
               <Link href={{ pathname: saved.pathname, query: saved.query }}>
-                Return to your saved work: {saved.label}
+                Return to your saved location: {saved.label}
               </Link>
             </p>
           ) : null}
