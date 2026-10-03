@@ -1,3 +1,4 @@
+import { writeFileSync } from 'fs'
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import sharp from 'sharp'
 import { bronchStageLesson } from '../src/features/bronchoscopy-foundations/content/stageLessons'
@@ -10,6 +11,12 @@ import { capstoneStageItem } from '../src/features/bronchoscopy-foundations/cont
 import { BRONCH_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/learnProgress'
 import { BRONCH_SELF_PACED_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/selfPacedProgress'
 import { scopeControlId } from '../src/features/bronchoscopy-foundations/components/scope/types'
+import {
+  benchTipOrientation,
+  compassRadius,
+} from '../src/features/bronchoscopy-foundations/engine/scope/benchOrientation'
+import { authoredScopePose } from '../src/features/bronchoscopy-foundations/engine/scope/scopeAuthoredPose'
+import { DEFAULT_SCOPE_INPUTS } from '../src/features/bronchoscopy-foundations/engine/scope/scopeInputs'
 import {
   BRONCH_GRAMMAR,
   grammarRowControl,
@@ -2102,4 +2109,548 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
       await page.screenshot({ path: info.outputPath(`s20-${tube}-${scope}.png`) })
     }
   })
+
+  /* ------------------------------------------------------------------ *
+   * Independent review of this batch: four repairs
+   * ------------------------------------------------------------------ */
+
+  test('review repair 1: Show me where follows the learner past a goal they have met, unasked', async ({
+    page,
+  }, info) => {
+    test.setTimeout(240_000)
+    await page.setViewportSize({ width: 1204, height: 987 })
+    const practice = 'branch-entry-flow-v1-application'
+    await goToStep(page, 'branch-entry', practice)
+    await ready(page)
+    const now = page.locator('[data-now-card]')
+    const help = page.locator('[data-goal-help]')
+    const lit = page.locator('[data-spotlight="true"]')
+    const goalNow = page.locator('[data-scope-goal-now]')
+    const goals = () =>
+      page
+        .locator('[data-step-goals] li')
+        .evaluateAll((rows) =>
+          rows.map((row) => `${row.getAttribute('data-goal')}:${row.getAttribute('data-met')}`),
+        )
+    const attempt = page.locator('[data-input-mode]')
+    const before = {
+      goals: await goals(),
+      mode: await attempt.getAttribute('data-input-mode'),
+      assists: await attempt.getAttribute('data-assists-used'),
+      record: await record(page),
+    }
+
+    await now.getByRole('button', { name: 'Show me where' }).click()
+    await expect(help).toHaveText('Advance down the trachea to the main carina.')
+    await expect(lit).toHaveCount(1)
+    await expect(lit).toHaveAttribute('data-control', 'advance')
+    await expect(control(page, 'advance')).toBeFocused()
+    // Asking is not a move: no goal, no input mode, no assist, no record.
+    expect(await goals()).toEqual(before.goals)
+    expect(await attempt.getAttribute('data-input-mode')).toBe(before.mode)
+    expect(await attempt.getAttribute('data-assists-used')).toBe(before.assists)
+    expect(await record(page)).toEqual(before.record)
+    await page.screenshot({ path: info.outputPath('repair1-help-before-carina.png') })
+
+    // Reach the carina with the Advance button itself. Help is not asked for again.
+    const carina = page.locator('[data-goal="reach-carina"]')
+    for (let i = 0; i < 80 && (await carina.getAttribute('data-met')) !== 'true'; i += 1)
+      await control(page, 'advance').click()
+    await expect(carina).toHaveAttribute('data-met', 'true')
+    await expect(goalNow).toHaveAttribute('data-scope-goal-now', 'enter-right')
+
+    // The reviewed build still said to advance to the carina here, and still lit Advance.
+    await expect(help).not.toContainText(/carina/i)
+    await expect(help).toContainText(/^Rotate (counter)?clockwise/)
+    await expect(help).toContainText('right main bronchus')
+    await expect(lit).toHaveCount(1)
+    await expect(lit).toHaveAttribute('data-control', 'rotate')
+    await expect(now.getByRole('button', { name: 'Highlight it again' })).toBeVisible()
+    // The keyboard stays on the control in use; the advice changing does not move it.
+    await expect(control(page, 'advance')).toBeFocused()
+    await page.screenshot({ path: info.outputPath('repair1-help-after-carina.png') })
+
+    // Do only what the help says. On the same goal it moves from Rotate to Deflect to Advance.
+    const right = page.locator('[data-goal="enter-right"]')
+    const seen: string[] = []
+    for (let i = 0; i < 80 && (await right.getAttribute('data-met')) !== 'true'; i += 1) {
+      const key = await lit.getAttribute('data-control')
+      const sentence = (await help.textContent()) ?? ''
+      if (seen[seen.length - 1] !== key) seen.push(key!)
+      if (key === 'rotate') {
+        const at = Number(await control(page, 'rotate').inputValue())
+        await setRange(page, 'rotate', at + (/counterclockwise/.test(sentence) ? -15 : 15))
+      } else if (key === 'deflect') {
+        const at = Number(await control(page, 'deflect').inputValue())
+        await setRange(page, 'deflect', at + (/toward U/.test(sentence) ? 5 : -5))
+      } else if (key === 'advance') await control(page, 'advance').click()
+      else throw new Error(`Unexpected help control ${key}: ${sentence}`)
+    }
+    await expect(right).toHaveAttribute('data-met', 'true')
+    expect(seen).toEqual(['rotate', 'deflect', 'advance'])
+
+    // Goal two to goal three, again unasked: the way on is back out, not further in.
+    await expect(goalNow).toHaveAttribute('data-scope-goal-now', 'back-to-trachea')
+    await expect(help).not.toContainText('goes into the opening of the right main bronchus')
+    await expect(lit).toHaveCount(1)
+    await expect(lit).toHaveAttribute('data-control', 'withdraw')
+    await page.screenshot({ path: info.outputPath('repair1-help-after-right-main.png') })
+
+    // A reset starts a new attempt without the last one's help.
+    await control(page, 'reset').click()
+    await expect(carina).toHaveAttribute('data-met', 'false')
+    await expect(help).toHaveCount(0)
+    await expect(lit).toHaveCount(0)
+    await now.getByRole('button', { name: 'Show me where' }).click()
+    await expect(help).toHaveText('Advance down the trachea to the main carina.')
+
+    // Leaving the step ends it; coming back does not bring it back.
+    await now.getByRole('button', { name: 'Back', exact: true }).click()
+    await expect(stage(page)).not.toHaveAttribute('data-stage', practice)
+    await expect(help).toHaveCount(0)
+    await expect(lit).toHaveCount(0)
+    for (let i = 0; i < 4 && (await stage(page).getAttribute('data-stage')) !== practice; i += 1)
+      await primary(page).click()
+    await expect(stage(page)).toHaveAttribute('data-stage', practice)
+    await expect(help).toHaveCount(0)
+    await expect(lit).toHaveCount(0)
+    await expect(now.getByRole('button', { name: 'Show me where' })).toBeVisible()
+    // Nothing above was written as the learner's record by the help itself.
+    expect(await attempt.getAttribute('data-assists-used')).toBe(before.assists)
+  })
+
+  /** What the bench and the end-on drawing show, read once per animation frame in the page. */
+  interface BenchFrame {
+    readonly t: number
+    readonly rotation: number
+    readonly deflection: number
+    readonly cx: number
+    readonly cy: number
+    readonly tipX: number
+    readonly tipY: number
+    readonly planeX: number
+    readonly planeY: number
+    readonly overlay: boolean
+    readonly note: boolean
+    readonly words: string
+  }
+  async function startBenchSampler(page: Page) {
+    await page.evaluate(() => {
+      const frames: unknown[] = []
+      const w = window as unknown as { __bench?: { frames: unknown[]; stop: boolean } }
+      w.__bench = { frames, stop: false }
+      const sample = () => {
+        const head = document.querySelector('[data-control-head]')
+        const compass = document.querySelector('[data-tip-compass]')
+        if (head && compass) {
+          const svg = compass.querySelector('svg')!
+          const tip = compass.querySelector('[data-compass-tip]') as SVGCircleElement
+          const plane = compass.querySelector('[data-compass-plane]') as SVGLineElement
+          const frame = svg.getBoundingClientRect()
+          const dot = tip.getBoundingClientRect()
+          const [x0, y0, vw, vh] = svg.getAttribute('viewBox')!.split(' ').map(Number)
+          frames.push({
+            t: performance.now(),
+            // What the 3D control head and bending section were handed for this frame.
+            rotation: Number(head.getAttribute('data-handle-rotation')),
+            deflection: Number(head.getAttribute('data-lever-deflection')),
+            cx: tip.cx.baseVal.value,
+            cy: tip.cy.baseVal.value,
+            // Where the tip mark is actually painted, back in the drawing's own units.
+            tipX: x0 + ((dot.left + dot.width / 2 - frame.left) / frame.width) * vw,
+            tipY: y0 + ((dot.top + dot.height / 2 - frame.top) / frame.height) * vh,
+            planeX: plane.x2.baseVal.value,
+            planeY: plane.y2.baseVal.value,
+            overlay: document.querySelector('[data-bench-off-card]') !== null,
+            note: /outside the field of view/.test(
+              [...compass.querySelectorAll(':not([aria-hidden="true"])')]
+                .filter((element) => element.children.length === 0)
+                .map((element) => element.textContent)
+                .join(' '),
+            ),
+            words: compass.querySelector('figcaption')!.textContent ?? '',
+          })
+        }
+        if (!w.__bench!.stop) requestAnimationFrame(sample)
+      }
+      requestAnimationFrame(sample)
+    })
+  }
+  async function stopBenchSampler(page: Page): Promise<BenchFrame[]> {
+    return page.evaluate(() => {
+      const w = window as unknown as { __bench: { frames: unknown[]; stop: boolean } }
+      w.__bench.stop = true
+      return w.__bench.frames as BenchFrame[]
+    }) as Promise<BenchFrame[]>
+  }
+  /** The end-on drawing for a control-head reading, from the engine's own frame. */
+  function compassFor(rotationDeg: number, deflectionDeg: number) {
+    const inputs = { ...DEFAULT_SCOPE_INPUTS, rotationDeg, deflectionDeg }
+    const orientation = benchTipOrientation({
+      place: 'bench',
+      inputs,
+      pose: authoredScopePose('bench', 0, inputs),
+    })!
+    const radius = compassRadius(orientation.angleDeg)
+    return {
+      angle: orientation.angleDeg,
+      tip: orientation.toward
+        ? { x: orientation.toward.x * radius, y: -orientation.toward.y * radius }
+        : { x: 0, y: 0 },
+      up: { x: orientation.bendUp.x, y: -orientation.bendUp.y },
+    }
+  }
+  /** One native press or click on a slider, sampled from before it until the bench has settled. */
+  async function sampledMove(page: Page, move: () => Promise<void>) {
+    await startBenchSampler(page)
+    await page.waitForTimeout(60)
+    await move()
+    await page.waitForTimeout(520)
+    return stopBenchSampler(page)
+  }
+  /**
+   * Every frame: the drawing is the one for the bench reading taken in that same frame.
+   *
+   * `painted` also compares where the tip mark is on screen. With reduced motion the site's own
+   * stylesheet gives every property change a 0.001 ms transition, so a box measured inside the
+   * frame that made a change is still the previous one; there the mark is measured once settled.
+   */
+  function expectFramesAgree(frames: readonly BenchFrame[], painted = true) {
+    expect(frames.length).toBeGreaterThan(10)
+    for (const [index, frame] of frames.entries()) {
+      const expected = compassFor(frame.rotation, frame.deflection)
+      const at = `frame at ${frame.t.toFixed(1)} ms, head ${frame.rotation}°/${frame.deflection}°`
+      expect(Math.abs(frame.cx - expected.tip.x), at).toBeLessThan(0.002)
+      expect(Math.abs(frame.cy - expected.tip.y), at).toBeLessThan(0.002)
+      expect(Math.abs(frame.planeX - expected.up.x), at).toBeLessThan(0.002)
+      expect(Math.abs(frame.planeY - expected.up.y), at).toBeLessThan(0.002)
+      // As painted, to within a pixel and a half of a drawing about 140 px across.
+      if (painted || index === frames.length - 1) {
+        expect(Math.abs(frame.tipX - expected.tip.x), at).toBeLessThan(0.04)
+        expect(Math.abs(frame.tipY - expected.tip.y), at).toBeLessThan(0.04)
+      }
+      // The note on the scope view and its words for assistive technology are the same state too.
+      expect(frame.note, at).toBe(frame.overlay)
+    }
+  }
+  /** Frames where the bench reading is strictly between two settled values. */
+  const between = (frames: readonly BenchFrame[], key: 'rotation' | 'deflection') => {
+    const first = frames[0][key]
+    const last = frames[frames.length - 1][key]
+    return frames.filter(
+      (frame) => Math.abs(frame[key] - first) > 0.5 && Math.abs(frame[key] - last) > 0.5,
+    )
+  }
+  /** Click a slider's track at a value; the browser's own hit-testing sets it. */
+  async function clickTrackAt(page: Page, key: 'rotate' | 'deflect', value: number) {
+    const slider = control(page, key)
+    const box = (await slider.boundingBox())!
+    const min = Number(await slider.getAttribute('min'))
+    const max = Number(await slider.getAttribute('max'))
+    await page.mouse.click(
+      box.x + ((value - min) / (max - min)) * box.width,
+      box.y + box.height / 2,
+    )
+  }
+
+  test('review repair 2: the end-on drawing moves with the animated bench on every frame', async ({
+    page,
+  }, info) => {
+    test.setTimeout(240_000)
+    await page.setViewportSize({ width: 1204, height: 987 })
+    await goToStep(page, 'five-controls', 'five-controls-learn-rotation')
+    await pilotAction(page, 'Try with guidance')
+    await ready(page)
+    await setRange(page, 'deflect', 0)
+    await setRange(page, 'rotate', 0)
+    const head = page.locator('[data-control-head]')
+    const compass = page.locator('[data-tip-compass]')
+    await head.scrollIntoViewIfNeeded()
+    // Ordinary motion from here: the bench takes about 220 ms to reach a commanded state.
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.waitForTimeout(100)
+    const report: Record<string, unknown> = {}
+    const deflect = control(page, 'deflect')
+    const rotate = control(page, 'rotate')
+
+    // Deflection, by the slider's own keys and track: 0 → +120 → −120 → about 0.
+    await deflect.focus()
+    for (const [name, move] of [
+      ['deflection 0 to +120 (End)', () => page.keyboard.press('End')],
+      ['deflection +120 to -120 (Home)', () => page.keyboard.press('Home')],
+      ['deflection -120 to 0 (track click)', () => clickTrackAt(page, 'deflect', 0)],
+    ] as const) {
+      const frames = await sampledMove(page, move)
+      report[name] = frames
+      writeFileSync(info.outputPath('bench-frames.json'), JSON.stringify(report, null, 1))
+      const moving = between(frames, 'deflection')
+      // Several frames part-way, and the drawing is the bench's on each of them.
+      expect(moving.length, name).toBeGreaterThanOrEqual(3)
+      expectFramesAgree(frames)
+      const settled = frames[frames.length - 1]
+      expect(settled.deflection).toBe(Number(await deflect.inputValue()))
+      await expect(compass).toHaveAttribute(
+        'data-tip-angle',
+        Math.abs(settled.deflection).toFixed(1),
+      )
+    }
+    expect(Math.abs(Number(await deflect.inputValue()))).toBeLessThanOrEqual(6)
+
+    // Rotation with a fixed bend to show it: about 0 → 90 → 180 → 270 (the model's −90).
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await setRange(page, 'deflect', 30)
+    await setRange(page, 'rotate', 0)
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.waitForTimeout(100)
+    for (const [name, move] of [
+      ['rotation 0 to 90 (track click)', () => clickTrackAt(page, 'rotate', 90)],
+      [
+        'rotation 90 to 180 (End)',
+        async () => {
+          await rotate.focus()
+          await page.keyboard.press('End')
+        },
+      ],
+      ['rotation 180 to 270 (track click)', () => clickTrackAt(page, 'rotate', -90)],
+    ] as const) {
+      const frames = await sampledMove(page, move)
+      report[name] = frames
+      writeFileSync(info.outputPath('bench-frames.json'), JSON.stringify(report, null, 1))
+      expect(between(frames, 'rotation').length, name).toBeGreaterThanOrEqual(3)
+      expectFramesAgree(frames)
+    }
+    // 180° to −90° goes the short way, through 270°, and settles on the model's own value.
+    const wrap = report['rotation 180 to 270 (track click)'] as BenchFrame[]
+    expect(Math.max(...wrap.map((frame) => frame.rotation))).toBeGreaterThan(200)
+    const settledRotation = Number(await rotate.inputValue())
+    expect(Math.abs(settledRotation + 90)).toBeLessThanOrEqual(6)
+    await expect(head).toHaveAttribute('data-handle-rotation', settledRotation.toFixed(2))
+    const settled = compassFor(settledRotation, 30)
+    await expect(compass).toHaveAttribute(
+      'data-bend-up',
+      `${settled.up.x.toFixed(3)},${(-settled.up.y).toFixed(3)}`,
+    )
+
+    // Both at once: the lever goes to its stop while the control section is still turning.
+    const frames = await sampledMove(page, async () => {
+      await clickTrackAt(page, 'rotate', 60)
+      await deflect.focus()
+      await page.keyboard.press('Home')
+    })
+    report['rotation and deflection together'] = frames
+    writeFileSync(info.outputPath('bench-frames.json'), JSON.stringify(report, null, 1))
+    expect(between(frames, 'deflection').length).toBeGreaterThanOrEqual(3)
+    expect(between(frames, 'rotation').length).toBeGreaterThanOrEqual(3)
+    expectFramesAgree(frames)
+
+    await page.screenshot({ path: info.outputPath('repair2-bench-settled.png') })
+  })
+
+  test('review repair 2: with reduced motion the bench and the drawing change together, at once', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1204, height: 987 })
+    await goToStep(page, 'five-controls', 'five-controls-learn-rotation')
+    await pilotAction(page, 'Try with guidance')
+    await ready(page)
+    await setRange(page, 'deflect', 0)
+    await control(page, 'deflect').focus()
+    const frames = await sampledMove(page, () => page.keyboard.press('End'))
+    expectFramesAgree(frames, false)
+    // No frame part-way: the suite's reduced-motion setting leaves no transition to be out of step with.
+    expect(between(frames, 'deflection')).toHaveLength(0)
+    expect(frames[frames.length - 1].deflection).toBe(120)
+    // Settled geometry is the accepted one: 120° up, at the rim, U toward the card's top.
+    const compass = page.locator('[data-tip-compass]')
+    await expect(compass).toHaveAttribute('data-tip-angle', '120.0')
+    await expect(compass).toHaveAttribute('data-tip-toward', '0.000,1.000')
+    await expect(compass).toHaveAttribute('data-bend-up', '0.000,1.000')
+  })
+
+  test('review repair 3: the bench’s out-of-view note is in the accessibility tree once, and goes when the card returns', async ({
+    page,
+  }, info) => {
+    test.setTimeout(240_000)
+    await page.setViewportSize({ width: 1204, height: 987 })
+    await goToStep(page, 'five-controls', 'five-controls-learn-rotation')
+    await pilotAction(page, 'Try with guidance')
+    await ready(page)
+    const pane = page.locator('[data-scope-scene]')
+    const overlay = page.locator('[data-bench-off-card]')
+    const count = (text: string, part: string) => text.split(part).length - 1
+    const signal = page.locator('[data-three-state] [data-view-signal]')
+    const savedBefore = await record(page)
+    const trees: Record<string, string> = {}
+    await setRange(page, 'rotate', 0)
+    for (const [rotation, deflection, out] of [
+      [0, 0, false],
+      [0, 60, true],
+      [0, -60, true],
+      [0, 120, true],
+      [0, -120, true],
+      [0, 15, false],
+      [90, 60, true],
+      [180, 120, true],
+      [-90, -60, true],
+      [-90, 0, false],
+    ] as const) {
+      await setRange(page, 'rotate', rotation)
+      await setRange(page, 'deflect', deflection)
+      await expect(page.locator('[data-control-head]')).toHaveAttribute(
+        'data-lever-deflection',
+        deflection.toFixed(2),
+      )
+      const tree = await pane.ariaSnapshot()
+      trees[`${rotation},${deflection}`] = tree
+      writeFileSync(info.outputPath('accessibility-trees.json'), JSON.stringify(trees, null, 1))
+      const where = `rotation ${rotation}°, deflection ${deflection}°`
+      if (out) {
+        // What the eye is shown on the scope view, hidden from assistive technology there…
+        await expect(overlay).toHaveCount(1)
+        await expect(overlay).toHaveAttribute('aria-hidden', 'true')
+        const visible = ((await overlay.textContent()) ?? '').replace(/\s+/g, ' ').trim()
+        expect(visible).toBe(
+          `The card is outside the field of view: the tip points ${Math.abs(deflection)}° from straight ahead. This is the bench, not a lost view of an airway.`,
+        )
+        // …is in the accessibility tree, in the same words, exactly once.
+        expect(count(tree, 'The card is outside the field of view'), where).toBe(1)
+        expect(count(tree, 'This is the bench, not a lost view of an airway'), where).toBe(1)
+        expect(tree, where).toContain(visible)
+        // It says where the card is and what this is, and claims nothing about an airway or safety.
+        expect(visible).not.toMatch(/red-out|obstruct|contact|mucosa|wall|unsafe|injur/i)
+        // By role, which leaves out what is hidden from assistive technology: one paragraph.
+        await expect(pane.getByRole('paragraph').filter({ hasText: visible })).toHaveCount(1)
+      } else {
+        await expect(overlay).toHaveCount(0)
+        expect(count(tree, 'outside the field of view'), where).toBe(0)
+        expect(count(tree, 'lost view'), where).toBe(0)
+      }
+      // The bench is not an airway: the view signal never leaves "clear".
+      await expect(signal).toHaveAttribute('data-view-signal', 'clear')
+    }
+    // Nothing about any of it reached the learner's record.
+    const savedAfter = await record(page)
+    expect({ ...savedAfter, updatedAt: null }).toEqual({ ...savedBefore, updatedAt: null })
+  })
+
+  /** The image inside a figure's card frame and inside its open enlarged view, as painted. */
+  async function imageBox(image: Locator) {
+    return image.evaluate((element) => {
+      const img = element as HTMLImageElement
+      const box = img.getBoundingClientRect()
+      return {
+        width: box.width,
+        height: box.height,
+        left: box.left,
+        right: box.right,
+        top: box.top,
+        bottom: box.bottom,
+        src: img.currentSrc,
+        natural: img.naturalWidth / img.naturalHeight,
+      }
+    })
+  }
+  for (const viewport of [
+    { width: 1204, height: 987 },
+    { width: 1024, height: 768 },
+    { width: 390, height: 844 },
+  ])
+    test(`review repair 4: S7 Enlarge shows each image at the size the screen allows at ${viewport.width}×${viewport.height}`, async ({
+      page,
+    }, info) => {
+      await page.setViewportSize(viewport)
+      await goToStep(page, 'reference-frames', 'reference-frames-flow-v1-ct-display')
+      const figures = page.locator('[data-media-workspace] figure')
+      await expect(figures).toHaveCount(2)
+      const desktop = viewport.width >= 1024
+      const measured: Record<string, unknown> = { viewport }
+      for (const [index, name] of [
+        [0, 'ct'],
+        [1, 'still'],
+      ] as const) {
+        const figure = figures.nth(index)
+        const cardImage = figure.locator('[data-media-frame-size="card"] img')
+        await expect(cardImage).toBeVisible()
+        await cardImage.scrollIntoViewIfNeeded()
+        const card = await imageBox(cardImage)
+        const enlarge = figure.getByRole('button', { name: `Enlarge image ${index + 1} of 2` })
+        await enlarge.click()
+        const dialog = page.locator('dialog[data-media-dialog][open]')
+        await expect(dialog).toBeVisible()
+        await expect(
+          dialog.getByRole('heading', { name: `Image ${index + 1} of 2, enlarged` }),
+        ).toBeVisible()
+        await expect(dialog.locator('[data-media-dialog-close]')).toBeFocused()
+        const largeImage = dialog.locator('[data-media-frame-size="enlarged"] img')
+        await expect(largeImage).toBeVisible()
+        const large = await imageBox(largeImage)
+        const frame = await dialog.evaluate((element) => {
+          const box = element.getBoundingClientRect()
+          return {
+            left: box.left,
+            right: box.right,
+            top: box.top,
+            bottom: box.bottom,
+            scrollHeight: element.scrollHeight,
+            clientHeight: element.clientHeight,
+            scrollWidth: element.scrollWidth,
+            clientWidth: element.clientWidth,
+          }
+        })
+        measured[name] = {
+          card: { width: card.width, height: card.height },
+          dialog: { width: large.width, height: large.height },
+          ratio: large.width / card.width,
+        }
+        writeFileSync(info.outputPath('s7-sizes.json'), JSON.stringify(measured, null, 1))
+
+        // The same file at its own proportions, not a stretched or substituted one.
+        expect(large.src).toBe(card.src)
+        expect(large.width / large.height).toBeCloseTo(large.natural, 2)
+        expect(card.width / card.height).toBeCloseTo(card.natural, 2)
+        if (desktop) {
+          // Materially larger: the reviewed build showed it at exactly the card's size.
+          expect(large.width).toBeGreaterThan(card.width * 1.3)
+          expect(large.height).toBeGreaterThan(card.height * 1.3)
+        } else {
+          // A phone's card already spans the column, so the enlarged view cannot be larger than
+          // it: the dialog is the screen less its own border and padding. It stays close to it.
+          expect(large.width).toBeGreaterThan(card.width * 0.9)
+          expect(large.width).toBeGreaterThan(viewport.width * 0.85)
+        }
+        // It uses the screen without spilling off it or needing the dialog scrolled.
+        expect(frame.left).toBeGreaterThanOrEqual(0)
+        expect(frame.right).toBeLessThanOrEqual(viewport.width)
+        expect(frame.top).toBeGreaterThanOrEqual(0)
+        expect(frame.bottom).toBeLessThanOrEqual(viewport.height)
+        expect(frame.scrollWidth).toBeLessThanOrEqual(frame.clientWidth + 1)
+        expect(large.left).toBeGreaterThanOrEqual(frame.left)
+        expect(large.right).toBeLessThanOrEqual(frame.right)
+        if (desktop) {
+          expect(frame.scrollHeight).toBeLessThanOrEqual(frame.clientHeight + 1)
+          expect(large.bottom).toBeLessThanOrEqual(frame.bottom)
+        }
+        await page.screenshot({
+          path: info.outputPath(`repair4-s7-${name}-enlarged-${viewport.width}.png`),
+        })
+
+        // Close returns the focus to this figure's own Enlarge button; so does Escape.
+        await dialog.locator('[data-media-dialog-close]').click()
+        await expect(page.locator('dialog[data-media-dialog][open]')).toHaveCount(0)
+        await expect(enlarge).toBeFocused()
+        await page.keyboard.press('Enter')
+        await expect(page.locator('dialog[data-media-dialog][open]')).toBeVisible()
+        await page.keyboard.press('Escape')
+        await expect(page.locator('dialog[data-media-dialog][open]')).toHaveCount(0)
+        await expect(enlarge).toBeFocused()
+        // The card is as it was: the comparison row is not made larger to fake the enlargement.
+        const after = await imageBox(cardImage)
+        expect(after.width).toBeCloseTo(card.width, 0)
+      }
+      // The side-by-side comparison and its wording are untouched.
+      await expect(page.locator('[data-media-comparison]')).toContainText('not a registered pair')
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
+      ).toBeLessThanOrEqual(0)
+    })
 })
