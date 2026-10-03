@@ -5,6 +5,7 @@ import { useCallback, useRef, useState, type KeyboardEvent } from 'react'
 import { ScopePaneFrame } from './ScopeFallback'
 import { ScopeDock } from './ScopeDock'
 import { useScopePlayback } from './useScopePlayback'
+import { isDetailedBench, useBenchPresentation } from './useBenchPresentation'
 import { SCOPE_KEY_MAP, scopeKeyCommand, scopeKeyboardHint } from './scopeKeyMap'
 import { SCOPE_MODES, type ScopeMode, type ScopePaneProps } from './types'
 import styles from './scope-scene.module.css'
@@ -60,6 +61,13 @@ function ScenePane(props: ScopePaneProps) {
   const [visualTab, setVisualTab] = useState<'scope' | 'map'>('scope')
   const ready = schematic || status === 'ready'
   const playback = useScopePlayback(props, playbackRoot, ready, schematic)
+  // One displayed bench state for the scene and for the end-on drawing under the controls. The
+  // schematic view has no transition, so there the drawing reads the model's state directly.
+  const presentation = useBenchPresentation(
+    props.state,
+    isDetailedBench(props.view, props.state) && !schematic,
+    playback.visible,
+  )
   const report = useCallback((next: 'loading' | 'ready' | 'failed') => setStatus(next), [])
   const enabled = props.controlsEnabled && ready
   const keyboard = (event: KeyboardEvent) => {
@@ -118,6 +126,7 @@ function ScenePane(props: ScopePaneProps) {
           hideMap
           controlsEnabled={enabled}
           renderState={status === 'failed' ? 'failed' : ready ? 'ready' : 'fallback'}
+          benchState={presentation.state}
           opticalView={
             <>
               {props.state.place !== 'bench' ? (
@@ -151,6 +160,7 @@ function ScenePane(props: ScopePaneProps) {
                     controlsEnabled={enabled}
                     visible={playback.visible}
                     onStatus={report}
+                    presentation={presentation}
                   />
                   {status === 'failed' ? (
                     <button

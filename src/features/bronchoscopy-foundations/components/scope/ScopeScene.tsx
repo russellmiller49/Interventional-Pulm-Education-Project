@@ -10,8 +10,8 @@ import { OPTICAL_ASPECT } from '../../engine/scope/scopeOstia'
 import { ScopeOpticalView } from './ScopeOpticalView'
 import { ObserverView } from './ObserverView'
 import { ControlHeadCloseup, DistalTipCloseup } from './BronchoscopeCloseup'
-import { useBenchPresentation } from './useBenchPresentation'
-import { benchTipOrientation } from '../../engine/scope/benchOrientation'
+import { isDetailedBench, type BenchPresentation } from './useBenchPresentation'
+import { benchOffCardNote, benchTipOrientation } from '../../engine/scope/benchOrientation'
 import { CORDS_STATE_WORDS } from '../../engine/scope/scopeMetrics'
 import { loadSceneAssets, type ScopeSceneAssets } from './scopeSceneAssets'
 import {
@@ -27,6 +27,8 @@ type SceneStatus = 'loading' | 'ready' | 'failed'
 interface SceneProps extends ScopePaneProps {
   visible: boolean
   onStatus: (status: SceneStatus) => void
+  /** The bench as it is being shown; the pane owns it so the drawings outside this scene agree. */
+  presentation: BenchPresentation
 }
 
 class SceneBoundary extends Component<
@@ -89,15 +91,14 @@ export default function ScopeScene(props: SceneProps) {
   const [assets, setAssets] = useState<ScopeSceneAssets | null>(null)
   const [status, setStatus] = useState<SceneStatus>('loading')
   const [generation, setGeneration] = useState(0)
-  const { onStatus, view, state } = props
-  const detailedBench =
-    view.sectionId === 'five-controls' && !!view.physicalControlLabels && state.place === 'bench'
-  const presentation = useBenchPresentation(state, detailedBench, props.visible)
+  const { onStatus, view, state, presentation } = props
+  const detailedBench = isDetailedBench(view, state)
   // Read from the frame this pane draws, so the note and the picture cannot disagree.
   const benchOrientation =
     view.physicalControlLabels && state.place === 'bench'
       ? benchTipOrientation(presentation.state)
       : null
+  const benchOffCard = benchOrientation ? benchOffCardNote(benchOrientation) : null
   const visualProps = { ...props, state: presentation.state }
   const root = useRef<HTMLDivElement>(null)
   const opticalRoot = useRef<HTMLDivElement>(null)
@@ -242,12 +243,11 @@ export default function ScopeScene(props: SceneProps) {
                   +
                 </span>
               ) : null}
-              {benchOrientation && !benchOrientation.cardInView ? (
-                // The end-on drawing under the views carries this in words for assistive technology.
+              {benchOffCard ? (
+                // Hidden from assistive technology here: the end-on drawing under the controls
+                // carries the same sentence for it, read from the same displayed state.
                 <span className={styles.benchOffCard} aria-hidden="true" data-bench-off-card>
-                  The card is outside the field of view: the tip points{' '}
-                  {Math.round(benchOrientation.angleDeg)}° from straight ahead. This is the bench,
-                  not a lost view of an airway.
+                  {benchOffCard}
                 </span>
               ) : null}
               {optical ? (
@@ -426,9 +426,9 @@ export default function ScopeScene(props: SceneProps) {
                       <span className={styles.closeupState}>
                         {state.inputs.suction
                           ? 'Suction valve pressed'
-                          : state.inputs.deflectionDeg > 0
+                          : presentation.state.inputs.deflectionDeg > 0
                             ? 'Lever toward U'
-                            : state.inputs.deflectionDeg < 0
+                            : presentation.state.inputs.deflectionDeg < 0
                               ? 'Lever toward D'
                               : 'Thumb lever · neutral'}
                       </span>

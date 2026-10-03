@@ -80,6 +80,18 @@ export function benchTipOrientation(
   }
 }
 
+/**
+ * The bench card has left the scope view's field: one sentence, or null while the card is in view.
+ *
+ * The scope view prints it over the picture and the end-on drawing carries the same words for
+ * assistive technology, so both read this function and cannot drift apart. It is a statement about
+ * the bench drawing only: no airway view has been lost, and nothing is recorded or judged.
+ */
+export function benchOffCardNote(orientation: BenchTipOrientation): string | null {
+  if (orientation.cardInView) return null
+  return `The card is outside the field of view: the tip points ${Math.round(orientation.angleDeg)}° from straight ahead. This is the bench, not a lost view of an airway.`
+}
+
 /** The compass radius for an angle: the model's full deflection range reaches the rim. */
 export function compassRadius(angleDeg: number): number {
   return Math.min(1, Math.max(0, angleDeg / MODEL_DEFLECTION_LIMIT_DEG))

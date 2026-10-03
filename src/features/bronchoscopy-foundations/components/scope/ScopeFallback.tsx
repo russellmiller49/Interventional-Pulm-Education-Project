@@ -149,6 +149,11 @@ export function ScopePaneFrame(
     hideMap?: boolean
     dock?: ReactNode
     renderState?: 'ready' | 'failed' | 'fallback'
+    /**
+     * The bench as the 3D scene is showing it, mid-transition included. The end-on tip drawing
+     * reads it so it never describes an orientation the animated bench has not reached.
+     */
+    benchState?: ScopeState
   },
 ) {
   const {
@@ -579,7 +584,9 @@ export function ScopePaneFrame(
         ) : null)}
 
       {/* After the controls, so the bench and its controls stay together (SYSTEMIC-UX-01). */}
-      {state.place === 'bench' && view.physicalControlLabels ? <TipCompass state={state} /> : null}
+      {state.place === 'bench' && view.physicalControlLabels ? (
+        <TipCompass state={props.benchState ?? state} />
+      ) : null}
       {goalCardFirst ? null : goalCard}
       {readouts.length > 0 ? (
         <dl

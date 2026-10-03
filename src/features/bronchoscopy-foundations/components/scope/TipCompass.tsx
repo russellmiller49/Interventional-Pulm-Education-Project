@@ -3,11 +3,12 @@
 import { useId } from 'react'
 
 import {
+  benchOffCardNote,
   benchOrientationLines,
   benchTipOrientation,
   compassRadius,
 } from '../../engine/scope/benchOrientation'
-import { MODEL_DEFLECTION_LIMIT_DEG } from '../../engine/scope/scopeInputs'
+import { MODEL_DEFLECTION_LIMIT_DEG, normalizeRotationDeg } from '../../engine/scope/scopeInputs'
 import type { ScopeState } from './types'
 import styles from './scope-fallback.module.css'
 
@@ -22,6 +23,15 @@ const RINGS = [30, 60, 90, 120].filter((ring) => ring <= MODEL_DEFLECTION_LIMIT_
  * viewer. The rings are angles from straight ahead, out to the model's deflection limit, so +60°
  * and −60° land on opposite sides and 120° sits beyond 90° instead of folding back. The words
  * under it say the same thing for a learner who cannot see the drawing.
+ *
+ * `state` is the bench as it is being shown. On the animated bench that is the pane's presentation
+ * state, so during a transition this drawing passes through the same intermediate orientations as
+ * the control head, the bending section and the scope view; it never shows the commanded
+ * orientation before they reach it.
+ *
+ * While the card is outside the scope view's field, the note the scope view prints over the picture
+ * is repeated here once for assistive technology (it is hidden from it there). It goes when the
+ * card is back in view.
  */
 export function TipCompass({ state }: { readonly state: ScopeState }) {
   const captionId = useId()
@@ -32,7 +42,9 @@ export function TipCompass({ state }: { readonly state: ScopeState }) {
     ? { x: orientation.toward.x * radius, y: -orientation.toward.y * radius }
     : { x: 0, y: 0 }
   const up = { x: orientation.bendUp.x, y: -orientation.bendUp.y }
-  const lines = benchOrientationLines(orientation, state.inputs.rotationDeg)
+  // A transition takes the short way round, so a turn in progress can sit outside ±180°.
+  const lines = benchOrientationLines(orientation, normalizeRotationDeg(state.inputs.rotationDeg))
+  const offCard = benchOffCardNote(orientation)
   return (
     <figure
       className={styles.compass}
@@ -94,6 +106,11 @@ export function TipCompass({ state }: { readonly state: ScopeState }) {
         <line className={styles.compassTipLine} x1={0} y1={0} x2={tip.x} y2={tip.y} />
         <circle className={styles.compassTip} cx={tip.x} cy={tip.y} r={0.09} data-compass-tip />
       </svg>
+      {offCard ? (
+        <p className={styles.compassOffCard} data-bench-off-card-note>
+          {offCard}
+        </p>
+      ) : null}
       <figcaption id={captionId}>
         <strong>The tip end-on, looking along the shaft toward the card</strong>
         {lines.map((line) => (
