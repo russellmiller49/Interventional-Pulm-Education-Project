@@ -14,8 +14,401 @@ site chrome, or D1–D5 decision. The four console facsimiles were checked for d
 parity is not manufacturer-workflow validation.
 
 > **Read first.** An independent sanity review of this PR found six defects in the batch recorded
-> below. The repair is the next section; where it supersedes a statement further down, that
-> statement is marked.
+> below (R1–R6), and the re-review of their repair found one more: an experiment could retain a
+> baseline with no complete breath. The baseline-evidence repair is the next section and the R1–R6
+> repair the one after; where either supersedes a statement further down, that statement is marked.
+
+## Baseline-evidence repair (2026-10-03)
+
+The re-review of the R1–R6 repair at `f2635a0f18e4bfc4f8efbf4d2d2b46eed74521cf` considered R1–R6
+repaired and held the PR on one evidence-contract blocker: **Section 8's first application can
+retain a baseline with no complete breath**, so "Set the flow-trigger threshold to 1.5 L/min.
+Compare efforts with delivered breaths" had a drawable result and no baseline trace. This section
+records that repair. Prepared by an AI authoring assistant (Claude) at the owner's request.
+
+**Nothing here is clinical, device, media, source or release approval.** The repair changed what
+record an experiment's baseline keeps, when a baseline may be taken, and one label. It changed no
+physiology, BreathClock, prepared-history, warm-up, alarm, PEEP, ABG, plateau or trigger-estimate
+behaviour, no case trajectory, answer key, option, stem, authored round, interval or marker, and
+not the result gate. Batch 04 was not started; nothing was merged or deployed; the branch was not
+reset, rebased or force-pushed.
+
+### Heads and drift (baseline repair)
+
+|                          |                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Previous head            | `f2635a0f18e4bfc4f8efbf4d2d2b46eed74521cf` (its implementation head: `945bf07a5cdaaa30e7403f2df9a9fa85e80f15f2`)                                                                                                                                                                                                                                                                                  |
+| Repair commits           | `b66223f5` the baseline record and when a baseline may be taken · `621f6bcd` the requested trigger change is not an "additional input" · `ecdf1e3a` the retained no-breath note                                                                                                                                                                                                                   |
+| Implementation head      | `ecdf1e3a11dead698ea18367fc61c15bd2855014` — every test, type-check, lint, build and production browser result below is from this commit                                                                                                                                                                                                                                                          |
+| Repaired final head      | the commit that adds this section and its screenshots (docs only; recorded in the PR)                                                                                                                                                                                                                                                                                                             |
+| Branch base              | `756c9aee7d7119f3817b5d85aaf73f9efa573418`, unchanged                                                                                                                                                                                                                                                                                                                                             |
+| `origin/main`            | `60e3bd642a92fc25714141ad8e6c8d877510f8e7` when the pass began and when it was re-fetched before the push: **no drift during this pass**. It is 82 commits past the base.                                                                                                                                                                                                                         |
+| Path overlap, recomputed | `git diff --name-only 756c9aee...origin/main`: 288 paths. The PR now changes 100 paths (the 85 reviewed, `engine/simulation.ts`, the new test file and this pass's 13 screenshots). **Zero exact-path overlaps.** No main path is under `src/features/mechanical-ventilation` or the MV routes; `src/features/learning-module` differs on main by the same four files recorded in the R1–R6 pass. |
+| Worktree                 | Commits were made in `…/claude-mechanical-vent-03-9-25`. The session opened in `…/codex-mv-03` (detached at `02eb66e4`) and changed nothing there. Two temporary checkouts in the session scratchpad — `f2635a0f` for before-evidence, `60e3bd64` for the baseline reproduction and the trial merge — were removed afterwards.                                                                    |
+| Files                    | Four runtime files, two test files, all under `src/features/mechanical-ventilation`; this document and 13 screenshots. No shared `learning-module` file, other module, route, dependency, backend or deployment change. No `.env.local` was created, modified or deleted (the primary checkout's was read into the build and server processes).                                                   |
+
+### Reproduction and exact cause
+
+Reproduced on `f2635a0f`: through the lab reducer, from a fresh session on each of the four
+consoles, before any edit; and in the browser on Hamilton C6 (a dev build of `f2635a0f` on port
+3128, 1280×1000 and 390×844): open Section 8, first application, **Start the experiment from its
+baseline** from a fresh session, read the retained baseline.
+
+| Recorded on `f2635a0f` (identical on Hamilton C6, Dräger, PB 980, AVEA) |                                                                                                                                                                                                                                     |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `completedBreath(baseline.waveforms)`                                   | **empty** (0 samples)                                                                                                                                                                                                               |
+| Baseline model time                                                     | 0 s (`baseline.at`), taken before anything runs                                                                                                                                                                                     |
+| Record                                                                  | 600 samples at 20 ms, **−11.98 s to 0.00 s**                                                                                                                                                                                        |
+| Respiratory rate                                                        | 10/min delivered (MV-07, pressure support; the modeled patient makes 26 efforts a minute)                                                                                                                                           |
+| BreathClock                                                             | `{ periodSeconds: 6, anchorSeconds: −24, nextOnsetSeconds: 0 }`                                                                                                                                                                     |
+| Machine inspirations actually in the warm-up                            | first inspiratory samples at −17.98, −11.98 and −5.98 s (onsets due at −18, −12, −6); the next is due at 0.00 s                                                                                                                     |
+| Onsets the record can verify                                            | **one**: −5.98 s (expiratory sample at −6.00 s, inspiratory at −5.98 s)                                                                                                                                                             |
+| Why the second is absent                                                | The record's first sample _is_ the −11.98 s inspiratory sample; the expiratory sample that verifies it (−12.00 s) is the one the 600-sample cap dropped. The next onset's first inspiratory sample (+0.02 s) has not been produced. |
+
+**How `START_EXPERIMENT` took it.** `createLabSimulation` → `createInitialSimulationState` (60 s of
+prepared history at negative time, Batch 02, untouched) → the round's authored setup → a warm-up of
+`4 × 60 / rate` seconds in one `advanceSimulation` call, which keeps the last
+`MAX_WAVEFORM_SAMPLES = 600` → the clock and the samples re-based by the warm-up so model time is 0
+→ `labSnapshot(simulation)` copies `simulation.waveforms` as the baseline.
+
+**The cause is the conjunction of four things, none sufficient alone:**
+
+1. the warm-up is a whole number of breaths (deliberately, so the schedule is continuous across
+   zero), which puts a breath boundary exactly at model time 0;
+2. at 10/min the 600-sample window is exactly two 6-second cycles;
+3. an onset is verified by the expiratory sample _before_ it, so a window that starts on a first
+   inspiratory sample cannot verify that breath;
+4. a baseline is taken at model time 0, before the next onset's first sample exists.
+
+**It is not "10/min against a 12-second window".** The same unchanged patient one 20-ms step later
+holds a complete 301-sample, 6.00-s breath, and over one whole cycle the 12-second window lacks a
+breath at exactly **1 of 300** instants — the next breath boundary. The R1–R6 section's
+explanation, and the learner-facing sentence "The breaths in it are too far apart for the record's
+length", were wrong on this point; both are corrected. Against the candidate causes the review
+listed: the prepared opening-history boundary is not involved (the 60-second history is intact);
+the 12-second retained window, the exact onset timing and the baseline capture timing each are.
+
+Both breaths had happened, at baseline conditions, in the lab's own 24-second warm-up. The retained
+window dropped one sample of the evidence for them.
+
+### Chosen contract — approach A, at the lab's own warm-up
+
+**A baseline is the opening of a round and nothing else, and its record verifies one complete
+breath from the engine's own samples.**
+
+- `advanceSimulation` takes an optional fourth argument, a tap that receives every sample a call
+  adds to the trace, in order, before the buffer trims to its window. The state returned is
+  identical with or without it (`toEqual`, tested); no existing caller passes it.
+- `openLabRound(unit, round, device)` runs the warm-up exactly as before — the same single call —
+  with the tap, and returns `{ simulation, baselineRecord }`. `createLabSimulation` is
+  `openLabRound(...).simulation`. The opened patient is **the same, sample for sample, as on
+  `f2635a0f`** for all 28 rounds on all four consoles (tested against the previous function body
+  kept in the test file).
+- `baselineRecord` is `simulation.waveforms` itself whenever that window verifies a complete
+  breath: **27 of 28 authored rounds, the same array, untouched.** Otherwise it is the window
+  preceded by the same warm-up's earlier samples, as many as a saved record may hold (the existing
+  800-sample schema bound: 16 s). Section 8's first application is the one round that needs it:
+  800 samples, −15.98 s to 0.00 s, onsets verified at −11.98 and −5.98 s, a 301-sample breath of
+  6.00 s. The extra samples are asserted **equal to an independent run** of the same case (the
+  same 24 seconds in two 12-second calls, so nothing is trimmed) — no interpolation could
+  reproduce that. Nothing is synthesised, interpolated, rounded, stretched or retimed; no warm-up
+  length, onset, clock or physiological value moved.
+- If a record still could not verify a breath (a patient slower than about 7.5/min; none is
+  authored) it is returned as the window and the figure says it holds none. The census test fails
+  first.
+
+**Why not B (an explicit "preparing baseline" state).** The genuine breath already exists when the
+experiment starts; the learner would be asked to run an unchanged patient to re-create evidence
+the model had just produced and thrown away, on one round of 28. A leaves the flow, the status
+stages, Run/Pause and every other round's record as they were.
+
+**The result gate is unchanged.** `labReadyToCompare` still requires
+`labRecordHoldsCompleteBreath(session)` on the live 12-second record; a complete baseline does not
+open it (tested on Section 11's real gap instants and on a Section 8 session whose live record is
+cut to one onset). The waiting message is unchanged.
+
+### Found while tracing: a changed patient could be retained as the baseline
+
+Required test 5 asked that a learner cannot make the requested change and then have the
+post-change trace labelled baseline. On `f2635a0f` they could, and it is the same contract:
+
+- `COMMIT` set `baseline: evidence.baseline ?? labSnapshot(session.simulation)`. The prediction
+  step shows the live patient with its controls and Run. Set the trigger to 1.5 L/min there, run,
+  then answer the optional prediction: the lab moved to `experiment` with a "baseline" taken at
+  30 s of model time whose trigger was already 1.5 L/min and whose rate was 26/min; the experiment
+  step's `START_EXPERIMENT` was then a no-op and a result could be captured against it.
+  Reproduced in the lab (probe P5) and rendered (P6: the experiment step opened at
+  `awaiting-interval`).
+- **Now:** a baseline is built only from an opening (`labBaselineSnapshot`). `COMMIT` keeps a
+  baseline already retained; takes one only from a patient nothing has been run on or changed since
+  it opened (model time 0, no recorded action — then it is that round's opening); and otherwise
+  records the prediction and leaves the experiment to **Start the experiment**, which opens a fresh
+  patient. `PREDICT`, `RESET` and `START_EXPERIMENT` already opened a fresh patient; they now take
+  the opening's record. Production: on the prediction step the trigger was set to 1.5 L/min and
+  run for 4 s, the prediction answered (phase stayed `explore`, no baseline), and the experiment
+  step opened at `awaiting-action`, goal to do, model time 0.0 s, trigger 4 L/min, with a complete
+  baseline at 4 L/min.
+- Once an experiment has started nothing replaces its baseline: a second `START_EXPERIMENT` is
+  refused, a second prediction keeps the same record (identity asserted through to the capture).
+
+### Found while checking required test 9: the requested change was labelled an additional input
+
+Pre-existing, and on `main` (the same code is on the base `756c9aee`); fixed in its own commit
+(`621f6bcd`) so it can be dropped without touching the baseline repair.
+
+- The trigger is one measurement input (`trigger`) with two controls (type, threshold). The round
+  asks for `triggerThreshold`; the confound check compared changed input names with goal control
+  names, so the requested change itself was recorded as **"Additional input changed: trigger"**.
+- On `f2635a0f`, on a run that did only what the task asks: the captured result printed "Plateau:
+  modeled; not interpretable. Additional input changed: trigger"; the workbench printed "Comparison
+  no longer isolates one input: Additional input changed: trigger. Reset patient for a clean
+  repeat."; and automatic capture was held with "this comparison no longer isolates one change".
+- **Now** the changed part of the trigger has to be the requested part. A threshold change under a
+  threshold request is the experiment. A change of trigger type under it, any other setting, and a
+  threshold change in a round that asks for something else (Section 8's second application) are
+  still reported — each tested.
+- It was fixed rather than listed because required test 9 is that Section 8's result comparison is
+  truthful, and that line was false in it. No other authored round has the mismatch (all 28 run
+  with only their requested goals: Section 7's first application still, correctly, reports its
+  pressure alarm).
+
+### Two wording corrections
+
+- **The retained no-breath note** no longer says "The breaths in it are too far apart for the
+  record's length." It says that a breath is drawn only between two inspiratory onsets the record
+  can verify, and that this record does not hold two. No authored round reaches the note now.
+- **An effort peak before the breath's first sample** is worded ("largest 3.5 cmH₂O 0.06 s before
+  the first recorded inspiratory sample"), not printed as "at -0.06 s". Section 8's baseline is the
+  first drawn breath where an effort is under way at its first sample. A peak at or after the
+  origin reads as it did (R6's exact-string test is unchanged).
+
+### All-authored-round baseline census
+
+Every authored round, immediately after baseline capture, on all four consoles (identical on all
+four for every round). **Every round is a waveform comparison**: `CapturedResult` draws
+`RecordedBreathComparison` for every round with no per-round switch, so none is numeric-only and
+none is exempt. One authored round is not reached by the Learn stage (9.2, behind the PEEP
+comparison); it is held to the same contract.
+
+| Round | Case   | Rate /min | Cycle s | Verified onsets in the 12-s window | Window complete on `f2635a0f` | Baseline record samples | Complete breath samples | Breath s | Effort row · modeled efforts in the breath | Consoles      |
+| ----- | ------ | --------- | ------- | ---------------------------------- | ----------------------------- | ----------------------- | ----------------------- | -------- | ------------------------------------------ | ------------- |
+| 1.1   | MV-LAB | 16        | 3.75    | 3                                  | yes                           | 600                     | 188                     | 3.74     | not drawn                                  | 4/4 identical |
+| 1.2   | MV-LAB | 12        | 5.00    | 2                                  | yes                           | 600                     | 251                     | 5.00     | not drawn                                  | 4/4 identical |
+| 2.1   | MV-LAB | 16        | 3.75    | 3                                  | yes                           | 600                     | 188                     | 3.74     | not drawn                                  | 4/4 identical |
+| 2.2   | MV-LAB | 16        | 3.75    | 3                                  | yes                           | 600                     | 188                     | 3.74     | not drawn                                  | 4/4 identical |
+| 3.1   | MV-LAB | 16        | 3.75    | 3                                  | yes                           | 600                     | 188                     | 3.74     | not drawn                                  | 4/4 identical |
+| 3.2   | MV-LAB | 16        | 3.75    | 3                                  | yes                           | 600                     | 188                     | 3.74     | not drawn                                  | 4/4 identical |
+| 4.1   | MV-LAB | 16        | 3.75    | 3                                  | yes                           | 600                     | 188                     | 3.74     | drawn · 0 (passive)                        | 4/4 identical |
+| 4.2   | MV-LAB | 16        | 3.75    | 3                                  | yes                           | 600                     | 188                     | 3.74     | not drawn                                  | 4/4 identical |
+| 5.1   | MV-LAB | 16        | 3.75    | 3                                  | yes                           | 600                     | 188                     | 3.74     | not drawn                                  | 4/4 identical |
+| 5.2   | MV-LAB | 16        | 3.75    | 3                                  | yes                           | 600                     | 188                     | 3.74     | not drawn                                  | 4/4 identical |
+| 6.1   | MV-LAB | 16        | 3.75    | 3                                  | yes                           | 600                     | 188                     | 3.74     | drawn · 0 (passive)                        | 4/4 identical |
+| 6.2   | MV-01  | 24        | 2.50    | 4                                  | yes                           | 600                     | 126                     | 2.50     | drawn · 1                                  | 4/4 identical |
+| 7.1   | MV-LAB | 12        | 5.00    | 2                                  | yes                           | 600                     | 251                     | 5.00     | not drawn                                  | 4/4 identical |
+| 7.2   | MV-10  | 24        | 2.50    | 4                                  | yes                           | 600                     | 126                     | 2.50     | drawn · 1                                  | 4/4 identical |
+| 8.1   | MV-07  | 10        | 6.00    | **1**                              | **no**                        | **800**                 | **301**                 | 6.00     | drawn · 3                                  | 4/4 identical |
+| 8.2   | MV-09  | 30        | 2.00    | 5                                  | yes                           | 600                     | 102                     | 2.02     | drawn · 1                                  | 4/4 identical |
+| 9.1   | MV-01  | 24        | 2.50    | 4                                  | yes                           | 600                     | 126                     | 2.50     | drawn · 1                                  | 4/4 identical |
+| 9.2   | MV-LAB | 16        | 3.75    | 3                                  | yes                           | 600                     | 188                     | 3.74     | not reached by the stage                   | 4/4 identical |
+| 10.1  | MV-LAB | 16        | 3.75    | 3                                  | yes                           | 600                     | 188                     | 3.74     | not drawn                                  | 4/4 identical |
+| 10.2  | MV-LAB | 16        | 3.75    | 3                                  | yes                           | 600                     | 188                     | 3.74     | not drawn                                  | 4/4 identical |
+| 11.1  | MV-08  | 28        | 2.14    | 5                                  | yes                           | 600                     | 108                     | 2.14     | drawn · 0 (no effort in this case)         | 4/4 identical |
+| 11.2  | MV-02  | 34        | 1.76    | 7                                  | yes                           | 600                     | 89                      | 1.76     | drawn · 1                                  | 4/4 identical |
+| 12.1  | MV-11  | 28        | 2.14    | 5                                  | yes                           | 600                     | 108                     | 2.14     | drawn · 1                                  | 4/4 identical |
+| 12.2  | MV-10  | 24        | 2.50    | 4                                  | yes                           | 600                     | 126                     | 2.50     | drawn · 1                                  | 4/4 identical |
+| 13.1  | MV-15  | 31        | 1.94    | 7                                  | yes                           | 600                     | 98                      | 1.94     | drawn · 1                                  | 4/4 identical |
+| 13.2  | MV-15  | 31        | 1.94    | 7                                  | yes                           | 600                     | 98                      | 1.94     | drawn · 1                                  | 4/4 identical |
+| 14.1  | MV-LAB | 16        | 3.75    | 3                                  | yes                           | 600                     | 188                     | 3.74     | drawn · 0 (passive)                        | 4/4 identical |
+| 14.2  | MV-LAB | 16        | 3.75    | 3                                  | yes                           | 600                     | 188                     | 3.74     | drawn · 0 (passive)                        | 4/4 identical |
+
+**Failures: one before (8.1, on every console); none after.** In every round, on every console,
+the retained baseline holds two verified onsets and one complete breath between them; pressure,
+flow, volume and modeled effort are finite on every sample of it; every sample is from before the
+experiment (model time ≤ 0), 20 ms apart with no gap; and its recorded inputs and rate are the
+round's own opening conditions. Where the step draws the effort row, the effort description is
+derivable. The same baseline (`toEqual`) is retained however it is acquired: Start the experiment,
+the prediction on an untouched patient, PREDICT then COMMIT, and Reset patient.
+
+Two rounds open with only two verified onsets (1.2 and 7.1, at 12/min). They are complete, with
+1.98 s to spare before the window's edge; they would need the extension only below about
+10.02/min.
+
+### Section 8, first application — before and after
+
+|                                      | Before (`f2635a0f`, dev build)                                                                                                                                  | After (`ecdf1e3a`, production build)                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Retained baseline, before the change | at 0 s · 600 samples, −11.98…0.00 s · verified onsets: −5.98 · **no complete breath** · trigger 4 L/min                                                         | at 0 s · 800 samples, −15.98…0.00 s · verified onsets: −11.98, −5.98 · **301-sample breath, −11.98…−5.98 s** · trigger 4 L/min · no recorded action, model time 0.0 s, paused                                                                                                                                                                             |
+| After the change, before Run         | live trigger 1.5 L/min; baseline unchanged                                                                                                                      | live trigger 1.5 L/min; baseline unchanged (same record)                                                                                                                                                                                                                                                                                                  |
+| Captured result                      | at 22.5 s (22.0 s at 390×844) · breath 18.48…20.78 s · trigger 1.5 L/min · issues: "Additional input changed: trigger"                                          | at 21.5 s · breath 18.48…20.78 s · trigger 1.5 L/min · issues: none                                                                                                                                                                                                                                                                                       |
+| Side by side                         | one figure (result); "Captured baseline: this retained record does not hold one complete breath … The breaths in it are too far apart for the record's length." | two figures, four rows each (pressure, flow, volume, effort · model); baseline 6.00 s, result 2.30 s                                                                                                                                                                                                                                                      |
+| Overlay                              | "The retained baseline holds no complete breath, so it is not drawn in this overlay."; baseline traces empty                                                    | baseline (dashed) and result (solid) on all four rows                                                                                                                                                                                                                                                                                                     |
+| Inspiration zoom                     | offered; result only                                                                                                                                            | offered; both cropped to the same 0.00–1.26 s (1.29 s on the other three consoles), in both views                                                                                                                                                                                                                                                         |
+| Effort text                          | "Baseline: no complete breath in the record, so its effort row is not described."                                                                               | "Baseline breath: modeled effort is first at or above 1.5 cmH₂O 0.36 s before the first recorded inspiratory sample … A further modeled effort … A further modeled effort …" — three modeled efforts in one 6.00-s machine breath; one in the 2.30-s result breath                                                                                        |
+| Readings table                       | Missed efforts 63 → 0 %; delivered rate 10 → 26 /min; end-inspiratory effort 3.5 → 0.3 cmH₂O (C6)                                                               | Missed efforts 63 → 0 %; delivered rate 10 → 26 /min; end-inspiratory effort 3.5 → 0.2 cmH₂O (C6). The two columns were captured at different moments (whenever the script pressed Capture after readiness); replayed in the lab on both heads the reading is 0.2 until 21.6 s and 0.3 from 21.7 s, so the difference is the capture time, not the repair |
+| Workbench, clean run                 | "Comparison no longer isolates one input: Additional input changed: trigger. Reset patient for a clean repeat."                                                 | no such line                                                                                                                                                                                                                                                                                                                                              |
+| Automatic capture, clean run         | held, with "this comparison no longer isolates one change" (rendered probe P8; the option was not ticked in the before browser run)                             | captures when the gate opens on the learner's own Run (rendered test, and the Section 8 R1 smoke below)                                                                                                                                                                                                                                                   |
+
+The drawn baseline breath is the last one the record verifies: the breath that began 12 s before
+the experiment started. The one after it (−6 to 0 s) is in the record too, and would be verified
+by the first sample of a run that has not happened. The R6 limits are unchanged and printed under
+it: effort is a modeled signal, "they do not show that an effort started a breath, and no interval
+here is a measured delay". D5 (trigger causality) is still open and nothing here bears on it.
+
+The retained baseline is not drawn on the experiment step until a result is captured (unchanged
+design; only Section 1's rounds show it in the panel). Before the change it was read from the
+page's state; it is seen in the comparison.
+
+### Tests (baseline repair)
+
+**New:** `__tests__/mv-pre-review-03-baseline-evidence.test.tsx` — **153 tests.** Numbers are the
+review's required list.
+
+| #     | Required                                                             | Tests                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| cause | (reproduction)                                                       | 5 — the opening window on each console (600 samples, −11.98…0.00, clock `{6, −24, 0}`, one verified onset, no breath); one step later the same patient holds a 301-sample breath, and 1 instant in 300 does not                                                                                                                                                                                                                                                                                  |
+| —     | the acquisition                                                      | 2 the tap (state `toEqual` without it; 1200 samples, the same objects as the buffer's; nothing while frozen) · 33 the opening (28 rounds × 4 consoles `toEqual` the `f2635a0f` construction; the record ends in the window's own sample objects; exactly one round is extended, to 800; Section 8's record `toEqual` an independent run on each console; the verifying sample is expiratory at −12.00 s)                                                                                         |
+| 1, 2  | fresh baseline holds a complete breath, wholly at unchanged baseline | 4 (one per console): 301 samples, −11.98…−5.98 s, both onsets verified, all samples ≤ 0 s and 20 ms apart, inputs equal the opening's, trigger 4 L/min in the record and the patient, no recorded action, model time 0, paused                                                                                                                                                                                                                                                                   |
+| 3     | effort row present                                                   | 1 lab (three intervals, the first followed back to where it began, the other two after the machine cycles off; no negative time in the text) · 1 rendered (below)                                                                                                                                                                                                                                                                                                                                |
+| 4     | result still needs its own complete breath                           | 2 — Section 11's real gap instants with a complete baseline (gate closed, the waiting headline, `COMPARE` refused); Section 8 with the live record cut to one onset (gate closed although the baseline is complete; captures with its own breath)                                                                                                                                                                                                                                                |
+| 5     | a changed patient is never the baseline                              | 34 — the reproduced path; changed-only, run-only and changed-back patients; **all 28 rounds** (requested change, 5 s run, prediction → no baseline; Start the experiment → complete unchanged baseline); the untouched patient keeps its own simulation object; PREDICT/change/COMMIT for a foundation and another section; no replacement once started (identity through capture); rendered host: change on the prediction step, answer, experiment step at `awaiting-action`, 0.0 s, control 4 |
+| 6     | reset / restart                                                      | 4 — Reset after a capture (new object, `toEqual` the first, result gone, history kept); Reset mid-run (rate back to 10); Restart (no baseline until started, then complete); rendered Reset patient                                                                                                                                                                                                                                                                                              |
+| 7     | device change                                                        | 3 (each other console): evidence emptied, the old run in history under the old console's name with its own baseline, `COMPARE` refused, the new baseline a new object equal to that console's opening record                                                                                                                                                                                                                                                                                     |
+| 8     | census                                                               | 57 — every round is a waveform comparison (one authored round not reached, named); 28 × Start the experiment on four consoles; 28 × the three other acquisition paths, each `toEqual` the first                                                                                                                                                                                                                                                                                                  |
+| 9     | Section 8's comparison is truthful                                   | 1 rendered (two figures with four rows, 6.00 s; overlay with both traces on four rows; zoom on and off; both descriptions; the modeled-signal, no-cause and no-measured-delay sentences) · 1 lab (result breath after `readySince`, readings each record's own, 3 efforts against 1, no causal word) · 3 the additional-input label (clean run, what is still reported, rendered automatic capture)                                                                                              |
+| 10    | R1                                                                   | 3 — Section 1 hidden at the counting instant (no inspection, no `readySince`, `COMPARE` refused, still nothing after one breath and further pauses; the learner's pause at the same instant counts); Section 8 hidden mid-interval (gate, baseline and `readySince` unchanged); rendered with automatic capture on                                                                                                                                                                               |
+
+**Changed test contract (one).** `mv-pre-review-03-repairs` › "says so when a retained baseline
+holds no complete breath (Section 8, first application)" asserted the defect
+(`completedBreath(baseline) → length 0`). It is now "says so when a retained record holds no
+complete breath, instead of asking for a re-capture": the same assertions on the note, the overlay
+and the effort text, made on Section 8's real 12-second opening window used as a retained record,
+plus that the note assigns no cause. The suite is still 82 tests.
+
+**Fails on the previous head for the defect.** An 8-assertion probe using only symbols that exist
+on `f2635a0f` was run in a temporary `f2635a0f` checkout and on the repaired tree, then removed:
+**8 failed on `f2635a0f`, 8 passed on `ecdf1e3a`** — no complete baseline breath (0 samples); no
+effort facts; the side-by-side no-breath note; the overlay's missing-baseline note; the baseline
+retained with trigger 1.5 L/min after a prediction-step change; rendered, that change reaching the
+experiment step (`awaiting-interval`); `issues: ["Additional input changed: trigger"]`; rendered,
+automatic capture held.
+
+| Command (node 26.5.0; `NODE_OPTIONS=--max-old-space-size=8192`; all at `ecdf1e3a`)                                                                                                                                              | Result                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npx jest src/features/mechanical-ventilation`                                                                                                                                                                                  | 45 suites, **1352 tests, all passing** (`f2635a0f`: 44 suites, 1199)                                                                                                        |
+| New baseline-evidence suite                                                                                                                                                                                                     | 153/153                                                                                                                                                                     |
+| R1–R6 repair suite; Batch-03 workbench                                                                                                                                                                                          | `mv-pre-review-03-repairs` 82/82 · `mv-pre-review-03-workbench` 64/64                                                                                                       |
+| Batch-01 suites                                                                                                                                                                                                                 | `mv-pre-review-01-evidence` 34/34 · `-01-sanity-repairs` 37/37 · `waveform-annotations` 17/17                                                                               |
+| Batch-02 suites                                                                                                                                                                                                                 | `-02-causality` 126/126 · `-02-sanity-repairs` 43/43 · `-02-rereview-repairs` 31/31 · `-02-alarm-history` 25/25 · `peep-comparison` 21/21 + rendered 4/4                    |
+| Engine, coaching, lab, routes                                                                                                                                                                                                   | `physics-waveforms` 173/173 · `post-action-coaching` 51/51 · `learning-lab` 16/16 · `causal-experiment` 5/5 · `src/app/[locale]/mechanical-ventilation/routes.test.tsx` 9/9 |
+| MV + consumers: `…/mechanical-ventilation`, `src/app/[locale]/mechanical-ventilation`, `src/features/critical-care`, `src/features/learning-module`, `src/features/icu-simulation`, `src/lib/draft-modules.hamilton-c6.test.ts` | 95 suites, 1816 tests: 1813 passed, **3 failed — baseline** (below)                                                                                                         |
+| `npx tsc --noEmit -p tsconfig.json` (full, tests included)                                                                                                                                                                      | clean, exit 0                                                                                                                                                               |
+| `npx eslint src/features/mechanical-ventilation`                                                                                                                                                                                | clean, exit 0                                                                                                                                                               |
+| `npx prettier --check "src/features/mechanical-ventilation/**/*.{ts,tsx,css}"` and this document                                                                                                                                | clean                                                                                                                                                                       |
+| `git diff --check 756c9aee..HEAD`                                                                                                                                                                                               | clean                                                                                                                                                                       |
+| `npm run build`                                                                                                                                                                                                                 | succeeded (exit 0) at `621f6bcd` and again at `ecdf1e3a`                                                                                                                    |
+
+The Batch-01/02 counts are the same numbers as at `f2635a0f`. The contracts the review named —
+plateau acquisition identity, `supportsMechanicsClaim`, hold invalidation, frozen acquisition, ABG
+specimen immutability and overlapping results, post-action evidence, A/B markers, prepared
+negative-time history, BreathClock invariance, PEEP reversal, trigger model-estimate labelling and
+alarm-history batching invariance — are held by those suites, which pass unchanged. The repair
+touched waveform retention only as a tap on the lab's warm-up call; the prepared-history and
+speed-invariance suites (`-02-causality`, `-02-rereview-repairs`, `-02-alarm-history`) were read for
+exactly that and pass with unchanged counts, and the opened patient is asserted identical to the
+previous head's on every round and console.
+
+**Baseline debt, reproduced on current main before classifying.** The same three tests fail, and
+only those, on `origin/main` `60e3bd64` in its own temporary checkout (3 failed / 38 passed in the
+three files), at `ecdf1e3a`, and on the trial merge: `critical-care/__tests__/accessibility.test.tsx`
+("keeps color-coded circuit, pressure, alarm, and trend states readable without color"),
+`curriculum-sequencing.test.tsx` ("renders CRRT cases in authored station order…"),
+`learner-copy.test.ts`. The learner-copy scanner's only MV entry is the same one on main and here
+(`VentilationPeepComparison.tsx`, "Engine-generated example values · no hold acquired"); this
+repair's copy adds no flagged string.
+
+### Browser journeys (baseline repair)
+
+Headless Playwright Chromium, fresh context per journey, `deviceScaleFactor` 1, pages visible so
+the page's own clock ran. **After** is the production build of `ecdf1e3a` (`npm run build` →
+`node server.js` on 127.0.0.1:3127). **Before** is a dev server of `f2635a0f` on port 3128. Lab
+state was read from the page's current React tree. The built-in browser pane was not used (it
+reports `document.hidden`).
+
+| Journey                                                                                                                                                                                                                                                                           | Viewport / console                                                          | Result                                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Section 8, first application, fresh session: open → **Start the experiment from its baseline** → read baseline → set trigger to 1.5 L/min (keyboard; confirmed where the console holds it pending) → Run at 5× → interval → Capture → side by side, zoom, overlay zoomed, overlay | 1280×1000 and **390×844** on Hamilton C6; 1280×1000 on Dräger, PB 980, AVEA | 5/5. Arrived `not-started`, button shown. Baseline as in the table above **before** the change, unchanged after it and after capture. Result at 21.5 s, issues none. Two figures × four rows; overlay 4 + 4 traces; zoom on in both views. No page overflow (0 px), no page error. On the three pending-confirm consoles "Delivery has not changed" was shown until confirmed. |
+| Prediction-step change                                                                                                                                                                                                                                                            | 1280×1000                                                                   | Trigger set to 1.5 L/min and run 4 s on the prediction step; answered; experiment step: `awaiting-action`, goal to do, "Model time 0.0 s", control 4, baseline at 4 L/min with a complete breath.                                                                                                                                                                              |
+| Reset patient, then a change of console                                                                                                                                                                                                                                           | 1280×1000                                                                   | After a capture, Reset patient: `awaiting-action`, result gone, 0.0 s, trigger 4, complete baseline. Console → PB 980: evidence empty, phase `explore`; experiment step started on PB 980 with its own complete baseline; changed, run, captured: two figures, no no-breath note.                                                                                              |
+| **R1 smoke**, Section 1, automatic capture on, scripted `visibilitychange`                                                                                                                                                                                                        | 1280×1000                                                                   | Hidden at 4.5 s: `awaiting-action`, goal to do, Capture disabled, nothing captured, the background note shown, origin `background`, no inspection. Same 2.5 s later and 2.5 s after returning. Learner's Run then Pause in expiration: `captured`.                                                                                                                             |
+| **R1 smoke**, Section 8, automatic capture on, hidden mid-interval                                                                                                                                                                                                                | 1280×1000                                                                   | Hidden at 8 s: paused (`background`), `awaiting-interval`, nothing captured, baseline unchanged; the same 2.5 s later and after returning. Learner's Run: the interval completes and the result is captured at 20.5 s.                                                                                                                                                         |
+
+**Before, on `f2635a0f`** (same Section 8 journey, 1280×1000 and 390×844): baseline at 0 s, 600
+samples, one verified onset, no breath; one figure and the no-breath note; overlay with no baseline
+trace; "Additional input changed: trigger" on the result and in the workbench.
+
+### Screenshots (baseline repair)
+
+In `MV-PRE-REVIEW-03-screenshots/`, prefixed `baseline-`; downscaled to at most 900 px wide and
+palette-reduced (the trace colour is muted by that); signed-out, no account data. For the captures
+only, the global sticky site header was un-pinned by an injected style so it would not paint over
+the element; nothing else on the page was altered, and the overflow and layout checks were made
+without it.
+
+| View                                    | Before (`f2635a0f`)                                                                            | After (production, `ecdf1e3a`)                                                                                         |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Side by side, whole breath              | `baseline-before-s8-side-by-side-1280x1000.png`, `baseline-before-s8-side-by-side-390x844.png` | `baseline-after-s8-side-by-side-1280x1000.png`, `baseline-after-s8-side-by-side-390x844.png`                           |
+| Side by side, inspiration zoom          | —                                                                                              | `baseline-after-s8-side-by-side-zoomed-1280x1000.png`                                                                  |
+| Overlay, whole breath                   | `baseline-before-s8-overlay-1280x1000.png`                                                     | `baseline-after-s8-overlay-1280x1000.png`, `baseline-after-s8-overlay-390x844.png`                                     |
+| Overlay, inspiration zoom               | —                                                                                              | `baseline-after-s8-overlay-zoomed-1280x1000.png`                                                                       |
+| The additional-input line               | `baseline-before-s8-additional-input-line-1280x1000.png`                                       | (absent)                                                                                                               |
+| Prediction-step change, experiment step | —                                                                                              | `baseline-after-s8-prediction-step-change-not-carried-1280x1000.png`                                                   |
+| R1 smoke                                | —                                                                                              | `baseline-after-r1-s1-hidden-nothing-recorded-1280x1000.png`, `baseline-after-r1-s8-hidden-mid-interval-1280x1000.png` |
+
+### Integration status (baseline repair)
+
+Not merged, not rebased. The branch is still based on `756c9aee`; `origin/main` was
+`60e3bd642a92fc25714141ad8e6c8d877510f8e7` at the start of the pass and at the re-fetch before the
+push.
+
+A trial merge of the implementation head `ecdf1e3a` into `60e3bd64`, in a temporary checkout (not
+committed, not pushed, aborted and removed afterwards), applied with **no conflicts**. On the merge
+result the full type-check was clean and the MV-and-consumers suite ran 97 suites, 1861 tests —
+1858 passed and the same three baseline tests failed; the 45 MV suites (1352 tests) all passed.
+
+### NOT RUN (baseline repair)
+
+- **Native tab hiding / OS-level suspension.** Not achievable in headless Chromium (recorded in the
+  R1–R6 pass); only the scripted `visibilitychange` was exercised.
+- The **before** browser evidence is a dev build of `f2635a0f`, not a production build of it.
+- The **trial merge's** production build and browser run; the es and zh-CN locales; the deployed
+  build.
+- The four console screenshots at 390×844 other than Hamilton C6; 200 % root text, R2's marker,
+  R3's origin wording, R4's navigation and R5's console reflow in the browser this round — no file
+  they depend on changed except `CapturedBreath.tsx` (one sentence in a note no authored round
+  reaches) and their Jest suites pass unchanged.
+- Firefox, Safari, real devices, DPR 2, native browser zoom, real assistive technology.
+- Bounded all-case physiology replays (`mv-causal-inventory`): no physiology, clock or alarm code
+  changed; the opened patient is asserted identical on every round and console, and the Batch-01/02
+  suites pass with unchanged counts.
+- Any clinical, device, media or source review.
+
+### Seen, not changed (baseline repair)
+
+- **A baseline is taken on a breath boundary by construction.** Every round's 12-second window
+  ends on the last expiratory sample before an onset. That is why a cycle of exactly 6 s failed,
+  and it is left as it is: moving the warm-up off the boundary would move every round's timing.
+  The record contract now covers any opening cycle down to about 7.5/min; a slower authored
+  baseline would need a larger saved-record bound, and the census test fails first.
+- **The retained baseline is not drawn on the experiment step until a result is captured** (except
+  Section 1). Unchanged design.
+- **End-inspiratory effort reads 0.2 cmH₂O on Hamilton C6 and 0.0 on the other three consoles** at
+  the same model time after the Section 8 change (the consoles' own cycling differs by a sample or
+  two; the result zoom is 1.26 s against 1.29 s). Deterministic, the same on `f2635a0f`, not part
+  of this repair.
+- **"Plateau: modeled; not interpretable."** under Section 8's captured table: a spontaneously
+  breathing pressure-support patient has no hold in this round. Existing wording.
+- The three items still listed under the R1–R6 pass (Practice layout on a phone at 200 % root text,
+  the global site link at 200 %, the PEEP/CPAP knob caption) and D1–D5.
 
 ## Sanity-review repair pass (2026-10-03)
 
@@ -158,6 +551,10 @@ Waiting for one complete breath on the record before the result can be captured.
 does not show an interval at its full length and a disabled button with no reason. Clean runs of the
 other 25 change rounds are unaffected. The relationship is documented on `labReadyToCompare` and held
 by a test over all 26 change rounds (two action timings, 80 instants each).
+
+_Superseded by the baseline-evidence repair above:_ Section 8's baseline now holds a complete breath;
+the cause was the window's alignment on a breath boundary, not the rate alone; and the note no
+longer gives a cause. What was written at the time follows.
 
 **Found while verifying, pre-existing, presentation corrected only:** Section 8's first application
 opens at 10/min, where the 12-second window begins exactly on an onset and holds one _verifiable_
@@ -397,7 +794,8 @@ Node 26.5.0; `NODE_OPTIONS=--max-old-space-size=8192`. All at the implementation
 
 **New:** `__tests__/mv-pre-review-03-repairs.test.tsx` — 82 tests: R1 (13), capture gate (28: one per
 authored change round, the Section 11 gap, the Section 8 baseline), R2 (7), R3 (8), R4 (17),
-R5 (3), R6 (6).
+R5 (3), R6 (6). _The Section 8 baseline test was re-based by the baseline-evidence repair (above):
+it asserted the defect._
 
 **Fails on the reviewed head for the defect.** A 10-assertion probe using only symbols that exist on
 `02eb66e4` was run in the reviewed-head checkout, then removed: **10 failed on the reviewed head, 10
@@ -513,7 +911,9 @@ tests, 1704 passed, the same three; type-check clean).
 ### Seen, not changed (repair pass)
 
 - **Section 8, first application: the baseline record holds no complete breath** (10/min against a
-  12-second window). Message corrected; drawing it is engine work.
+  12-second window). Message corrected; drawing it is engine work. _Superseded by the
+  baseline-evidence repair above: repaired, and "10/min against a 12-second window" was not the
+  cause._
 - **Practice case layout on a phone at 200 % root text** is 98–103 px wider than the viewport
   (case workspace and console nav). Present before; outside the console/waveform layout R5 names.
 - **Global site link at 200 % root text** overflows 51 / 125 px at 1280 / 1024 wide. Platform lane.
