@@ -13,6 +13,7 @@ jest.mock('../components/ImpellaVariantPreview', () =>
   jest.requireActual('../test-support/mcsWorkbenchStubs').impellaPreviewModule(),
 )
 
+import { McsStageHost } from '../components/stage/McsStageHost'
 import { McsSourcesPanel } from '../components/McsSourcesPanel'
 import { McsCaseWorkflow } from '../components/McsCaseWorkflow'
 import { mcsActionDisplayName, mcsHasActionDisplayName } from '../content/actionDisplayNames'
@@ -132,3 +133,22 @@ it.each(['future:control', 'toString', 'constructor', '__proto__'])(
     expect(mcsActionDisplayName(id)).toBe('Used a simulator control')
   },
 )
+
+it('does not invent a fixed-level reference history for IMP-03', () => {
+  const scenario = mcsScenarioById.get('IMP-03')!
+  const base = createInitialMcsState('practice', 'impella', null, 417)
+  const state = createInitialMcsState('practice', 'impella', scenario, 417)
+  if (base.device.kind !== 'impella' || state.device.kind !== 'impella')
+    throw new Error('Expected microaxial states')
+  expect(state.device.left.performanceLevel).not.toBe(base.device.left.performanceLevel)
+  expect(mcsCasePredictionReasoning('IMP-03', 'normal')).not.toMatch(/unchanged level/)
+})
+
+it('shows the source hold on the optional preparatory reference before entering the model', () => {
+  render(<McsStageHost sectionId="impella-suction-purge-rv" />)
+  expect(document.querySelector('[data-prerequisite-reference]')).not.toBeNull()
+  const notice = screen.getByText(/MCS-03-10.*NOT REVIEWED.*source-owner review required/i)
+  expect(notice.closest('details')).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: 'Continue to the model' }))
+  expect(document.querySelectorAll('[data-source-review-hold]')).toHaveLength(1)
+})

@@ -19,6 +19,9 @@ async function open(page: Page, section: string) {
   await page.goto(`${route}/learn?lesson=${section}`)
   await page.waitForSelector('[data-now-card], [data-prerequisite-reference]')
   await page.waitForTimeout(800)
+  if (await page.locator('[data-prerequisite-reference]').count()) {
+    await expect(page.locator('[data-source-review-hold]')).toBeVisible()
+  }
   for (let i = 0; i < 6; i++) {
     const button = page.locator('[data-prerequisite-reference] button', {
       hasText: /Next reference|Begin the patient example|Continue/,

@@ -2118,10 +2118,13 @@ function McsStageSession({
               {referenceViewed ? (
                 task
               ) : (
-                <McsPrerequisiteReference
-                  sectionId={sectionId}
-                  onContinue={() => setReferenceViewed(true)}
-                />
+                <>
+                  <McsSourceReviewNotice />
+                  <McsPrerequisiteReference
+                    sectionId={sectionId}
+                    onContinue={() => setReferenceViewed(true)}
+                  />
+                </>
               )}
               <footer>
                 <StageSourcesFooter

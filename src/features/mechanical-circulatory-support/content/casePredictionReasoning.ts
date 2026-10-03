@@ -24,9 +24,9 @@ export const MCS_CASE_PREDICTION_REASONING: Readonly<
     'late-deflation':
       'This case combines later deflation with weaker left-ventricular contractility than the reference patient. The model’s late-deflation alarm is active; this is not an isolated timing comparison. The balloon is still inflated when the next ejection begins, so the ventricle ejects against it.',
     underfilled:
-      'Nothing about filling was changed in this case: preload is the reference patient’s and the wedge pressure reads elevated, not low. The finding appeared after a timing change and is seen on the assisted beats.',
+      'Nothing about filling was changed in this case: preload is the reference patient’s and the wedge pressure reads elevated, not low. The timing alarm concerns assisted-beat deflation; the case also changes LV contractility.',
     'low-svr':
-      'Systemic vascular resistance is at the reference value in this case. The finding is on the assisted beats and follows a timing change, which a change in resistance would not single out.',
+      'Systemic vascular resistance is at the reference value in this case. The late-deflation alarm identifies an authored timing offset; it does not establish that timing is the only difference from the reference patient.',
   },
   'IABP-02': {
     trigger:
@@ -66,7 +66,7 @@ export const MCS_CASE_PREDICTION_REASONING: Readonly<
     'suction-only':
       'No suction alarm is active, and neither preload nor the wedge pressure is low in this case. Suction is a filling problem at the inlet; this state is built at the outlet.',
     normal:
-      'A purge-pressure alarm is active and the estimated flow has fallen at an unchanged level. Both are findings to evaluate under current device instructions, not an expected state.',
+      'A purge-pressure alarm is active and estimated flow is low at the authored performance level. Both are findings to evaluate under current device instructions, not an expected state.',
   },
   'LVAD-01': {
     hypertension:
