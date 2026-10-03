@@ -150,7 +150,8 @@ export function createStructureCallouts(
       columns.forEach((side, id) => sides.set(id, side))
       const named = !!names
       const glyphSize = 34
-      const gap = named ? 30 : 40
+      // Named pills have the same 34 px height as letters; keep 6 px of clearance for both.
+      const gap = 40
       const margin = named ? 18 : 26
       last = []
       for (const side of ['left', 'right'] as const) {

@@ -787,6 +787,45 @@ function LessonSession({
                       : lesson.sequence?.explanation}
                   </p>
                 )}
+              {!finished &&
+                taskOutcome === 'shown' &&
+                current.interaction === 'matching' &&
+                lesson.matching && (
+                  <section
+                    className={styles.sequence}
+                    aria-label="Authored matches"
+                    data-task-reference="matching"
+                  >
+                    <h3>Authored matches</h3>
+                    <dl>
+                      {lesson.matching.pairs.map((pair) => (
+                        <div key={pair.id} className={styles.sequence}>
+                          <dt>
+                            <strong>{pair.cue}</strong>
+                          </dt>
+                          <dd>{pair.response}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </section>
+                )}
+              {!finished &&
+                taskOutcome === 'shown' &&
+                current.interaction === 'sequence' &&
+                lesson.sequence && (
+                  <section
+                    className={styles.sequence}
+                    aria-label="Authored sequence"
+                    data-task-reference="sequence"
+                  >
+                    <h3>Authored sequence</h3>
+                    <ol style={{ listStylePosition: 'inside' }}>
+                      {lesson.sequence.steps.map((step) => (
+                        <li key={step.id}>{step.text}</li>
+                      ))}
+                    </ol>
+                  </section>
+                )}
               {!finished && taskOpen && !reviewId && (
                 <>
                   {current.interaction === 'matching' && lesson.matching && (
