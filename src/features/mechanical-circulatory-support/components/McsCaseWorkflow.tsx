@@ -91,12 +91,27 @@ export function McsCaseWorkflow({
           <dd>{scenario.learningObjectives[0]}</dd>
         </div>
       </dl>
-      <nav className={styles.caseActions} aria-label="Case sections">
-        {['inspect', 'predict', 'response', 'actions'].map((part) => (
-          <a key={part} href={`#mcs-case-${part}`}>
-            {part === 'actions' ? 'Explanation and next steps' : part}
-          </a>
-        ))}
+      {/*
+       * Jump links to the parts of this case. They were four bare lower-case words in a grid styled
+       * for buttons, so they rendered as plain text that looked like a row of broken tabs (F31).
+       * They are links, so they now look like links, under a label that says what they are.
+       */}
+      <nav className={styles.caseJumpLinks} aria-label="Parts of this case" data-case-jump-links>
+        <span aria-hidden="true">Jump to</span>
+        <ul>
+          {(
+            [
+              ['inspect', 'Inspect the readings'],
+              ['predict', 'Optional prediction'],
+              ['response', 'Model response'],
+              ['actions', 'Explanation and next steps'],
+            ] as const
+          ).map(([part, label]) => (
+            <li key={part}>
+              <a href={`#mcs-case-${part}`}>{label}</a>
+            </li>
+          ))}
+        </ul>
       </nav>
       <div className={styles.caseObservation} data-case-observations>
         {observations}
@@ -210,78 +225,93 @@ export function McsCaseWorkflow({
       ) : null}
       {state.completed ? (
         <section className={styles.debriefCard} data-worked-explanation>
-          <div>
+          {/*
+           * One column of blocks that share the card's width. This card was a two-column grid
+           * whose first 105 px column held a score ring; the ring went, the grid stayed, and the
+           * whole explanation fell into that 105 px column beside an empty one (F33). The three
+           * blocks — what the case teaches, the conditions and what they are, and this run — now
+           * sit side by side where there is room and stack where there is not, at a readable size.
+           */}
+          <header className={styles.debriefHeader}>
             <h3>Worked case explanation</h3>
             <p>
               Authored teaching for this case. Viewing it does not perform an action or establish a
               successful outcome in your run.
             </p>
-            <ul>
-              {scenario.debrief.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <h4>Signals to reconcile</h4>
-            {/*
-             * Where each number comes from, beside the number.
-             *
-             * This list used to read "Timing quality ≥80%, MAP ≥58 mm Hg" and nothing else, in
-             * twelve cases, with no source and no note — so "MAP ≥50" in the integrated IABP case
-             * read as a bedside target against the 65 a fellow has been taught (F33). None of the
-             * twenty-one conditions has a clinical source behind it; they are tests this module
-             * wrote so its own cases have an end. Two of them are quarantined outright.
-             */}
-            <p data-condition-contract>
-              Each condition below is a test on this simulation, not a treatment target and not a
-              sign that the support is clinically adequate. Meeting one says the model reached a
-              number this module chose; it does not say a device was correctly operated.
-            </p>
-            <ul data-condition-list>
-              {scenario.successCriteria.map((item) => (
-                <li
-                  key={item.label}
-                  data-condition-class={item.classification.kind}
-                  data-condition-held={item.classification.held ? 'true' : undefined}
-                >
-                  <strong>{item.label}</strong>
-                  <small>
-                    {item.classification.kind === 'source-supported-clinical'
-                      ? `Clinical criterion from ${item.classification.sourceId}${
-                          item.classification.scope ? ` · ${item.classification.scope}` : ''
-                        }`
-                      : item.classification.kind === 'device-reported-quantity'
-                        ? 'A quantity a console reports, at a value authored for this simulation'
-                        : 'Authored for this simulation'}{' '}
-                    · {item.classification.quantity}
-                  </small>
-                  {item.classification.held ? (
-                    <em data-condition-hold>
-                      Held, and not treated as an outcome: {item.classification.held.reason}.
-                      Whether this run reached it is not shown and is not a result. Open item{' '}
-                      {item.classification.held.openItemId}, still NOT REVIEWED.
-                    </em>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-            <h4>Actions performed in this run</h4>
-            {state.actionIds.length ? (
+          </header>
+          <div className={styles.debriefColumns}>
+            <div data-debrief-teaching>
               <ul>
-                {state.actionIds.map((id) => (
-                  <li key={id}>{id}</li>
+                {scenario.debrief.map((item) => (
+                  <li key={item}>{item}</li>
                 ))}
               </ul>
-            ) : (
-              <p>No actions performed.</p>
-            )}
-            <p>
-              {state.selectedPredictionId
-                ? `Your prediction: ${scenario.predictionOptions.find((option) => option.id === state.selectedPredictionId)?.label}`
-                : 'No prediction submitted.'}
-            </p>
-            <button type="button" onClick={() => dispatch({ type: 'RESET' })}>
-              Try again from the case baseline
-            </button>
+            </div>
+            <div data-debrief-conditions>
+              <h4>Signals to reconcile</h4>
+              {/*
+               * Where each number comes from, beside the number.
+               *
+               * This list used to read "Timing quality ≥80%, MAP ≥58 mm Hg" and nothing else, in
+               * twelve cases, with no source and no note — so "MAP ≥50" in the integrated IABP case
+               * read as a bedside target against the 65 a fellow has been taught (F33). None of the
+               * twenty-one conditions has a clinical source behind it; they are tests this module
+               * wrote so its own cases have an end. Two of them are quarantined outright.
+               */}
+              <p data-condition-contract>
+                Each condition below is a test on this simulation, not a treatment target and not a
+                sign that the support is clinically adequate. Meeting one says the model reached a
+                number this module chose; it does not say a device was correctly operated.
+              </p>
+              <ul data-condition-list>
+                {scenario.successCriteria.map((item) => (
+                  <li
+                    key={item.label}
+                    data-condition-class={item.classification.kind}
+                    data-condition-held={item.classification.held ? 'true' : undefined}
+                  >
+                    <strong>{item.label}</strong>
+                    <small>
+                      {item.classification.kind === 'source-supported-clinical'
+                        ? `Clinical criterion from ${item.classification.sourceId}${
+                            item.classification.scope ? ` · ${item.classification.scope}` : ''
+                          }`
+                        : item.classification.kind === 'device-reported-quantity'
+                          ? 'A quantity a console reports, at a value authored for this simulation'
+                          : 'Authored for this simulation'}{' '}
+                      · {item.classification.quantity}
+                    </small>
+                    {item.classification.held ? (
+                      <em data-condition-hold>
+                        Held, and not treated as an outcome: {item.classification.held.reason}.
+                        Whether this run reached it is not shown and is not a result. Open item{' '}
+                        {item.classification.held.openItemId}, still NOT REVIEWED.
+                      </em>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div data-debrief-run>
+              <h4>Actions performed in this run</h4>
+              {state.actionIds.length ? (
+                <ul>
+                  {state.actionIds.map((id) => (
+                    <li key={id}>{id}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No actions performed.</p>
+              )}
+              <p>
+                {state.selectedPredictionId
+                  ? `Your prediction: ${scenario.predictionOptions.find((option) => option.id === state.selectedPredictionId)?.label}`
+                  : 'No prediction submitted.'}
+              </p>
+              <button type="button" onClick={() => dispatch({ type: 'RESET' })}>
+                Try again from the case baseline
+              </button>
+            </div>
           </div>
         </section>
       ) : null}

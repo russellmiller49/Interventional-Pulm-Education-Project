@@ -180,7 +180,7 @@ export function ImpellaUnloadingPlacementPanel({
     <div className={styles.panel} data-teaching-panel={contract.sectionId}>
       <PanelSection title="The pathway, and the position it depends on" id="placement-pathway">
         <PathwayGraphic pathway={mcsComparisonPathways.impellaLeft} />
-        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
           <LiveSetting
             label="Placement state"
             value={pump?.leftPositionWords ?? 'not applicable'}
@@ -269,7 +269,7 @@ export function ImpellaUnloadingPlacementPanel({
       {reveal === 'transfer' ? (
         <PanelSection title="The transfer patient, read live" id="placement-transfer">
           <TransferState principle="A displayed pump flow that falls at an unchanged setting is a statement about the pathway — position, filling, or the pressure at the outlet. Which of the three it is has to be worked out before the setting is touched.">
-            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <LiveSetting
                 label="Placement state"
                 value={pump?.leftPositionWords ?? 'not applicable'}

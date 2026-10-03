@@ -1,4 +1,5 @@
 import { mcsDerivedValueGuides } from '../../content/derivedValueGuides'
+import { MCS_TREND_PRESSURE_AND_DELIVERY, McsPressureFlowTrend } from '../McsPressureFlowTrend'
 import type { McsTeachingPanelProps } from './panelProps'
 import { mcsComparesAgainstActionBaseline, mcsMechanismDisclosed } from './revealStage'
 import {
@@ -8,7 +9,6 @@ import {
   flowAccountView,
   iabpTimingView,
   reading,
-  tracePath,
   trendTrace,
 } from './selectors'
 import {
@@ -34,18 +34,18 @@ import {
 /**
  * Section 4 — a device that is working correctly beside a circulation that is not.
  *
- * The figure is two lines on one time axis: mean arterial pressure and effective systemic delivery,
- * each normalized to its own range so that the *shape* of the separation is visible in a pane this
- * narrow. Normalizing them separately is a real distortion, and it is labelled as one — the axis
- * ends are printed beside each line so nobody reads a crossing point as a physiological event.
+ * The figure is mean arterial pressure and effective systemic delivery on one time axis, in two
+ * panels with fixed scales from zero. It used to stretch each line to fill the pane by its own
+ * minimum and maximum, which drew a 71–78 mm Hg wobble as wild swings and laid a flat flow on the
+ * frame; a learner read the picture as labile pressure before reaching the footnote (F20).
  *
  * Beside the trend sits the technical-performance block: synchrony, ratio, trigger. The whole
  * teaching of the section is that this block can stay perfect while the other one deteriorates, so
  * they are drawn as two separate accounts rather than as one summary.
  */
 
-const TREND_WIDTH = 320
-const TREND_HEIGHT = 64
+/** The panel's trend window: the model keeps 120 simulated seconds of trend. */
+const MCS_TREND_PANEL_WINDOW_SECONDS = 120
 
 export function IabpEfficacyLimitsPanel({
   contract,
@@ -105,7 +105,7 @@ export function IabpEfficacyLimitsPanel({
   return (
     <div className={styles.panel} data-teaching-panel={contract.sectionId}>
       <PanelSection title="Two accounts, kept apart" id="efficacy-two-accounts">
-        <div className="mt-3 grid gap-3 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+        <div className="mt-3 grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
           <div className="min-w-0 rounded-xl border p-3" data-account="technical">
             <p className={styles.subheading}>How the device is performing</p>
             <p className="mt-2 text-lg font-semibold">
@@ -157,34 +157,14 @@ export function IabpEfficacyLimitsPanel({
       <PanelSection title="Pressure and flow on one time axis" id="efficacy-trend">
         {mapTrace && flowTrace ? (
           <>
-            <svg
-              viewBox={`0 0 ${TREND_WIDTH} ${TREND_HEIGHT + 16}`}
-              className="mt-3 h-auto w-full"
-              role="img"
-              aria-label="Mean arterial pressure and effective systemic flow drawn on one time axis, each scaled to its own range"
-              data-response-trend
-            >
-              <path
-                d={tracePath(mapTrace, TREND_WIDTH, TREND_HEIGHT)}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                data-trend-line="map"
+            <div className="mt-3" data-response-trend>
+              <McsPressureFlowTrend
+                samples={state.trends}
+                windowSeconds={MCS_TREND_PANEL_WINDOW_SECONDS}
+                series={MCS_TREND_PRESSURE_AND_DELIVERY}
+                tone="inherit"
               />
-              <path
-                d={tracePath(flowTrace, TREND_WIDTH, TREND_HEIGHT)}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeDasharray="5 3"
-                data-trend-line="effective-flow"
-              />
-              <text x="0" y={TREND_HEIGHT + 12} fontSize="7" fill="currentColor">
-                solid — mean pressure {mapTrace.minimum.toFixed(0)} to {mapTrace.maximum.toFixed(0)}{' '}
-                mm Hg · dashed — effective flow {flowTrace.minimum.toFixed(1)} to{' '}
-                {flowTrace.maximum.toFixed(1)} L/min
-              </text>
-            </svg>
+            </div>
             <TextEquivalent>
               Over the retained trend, mean arterial pressure ranged from{' '}
               {mapTrace.minimum.toFixed(0)} to {mapTrace.maximum.toFixed(0)} mm Hg and effective
@@ -194,10 +174,12 @@ export function IabpEfficacyLimitsPanel({
               {reading(metrics.effectiveSystemicFlowLMin, 1)} L/min.
             </TextEquivalent>
             <ModelBoundary>
-              The two lines are drawn on separate scales so that both fit a narrow pane, and the
-              ends of each scale are printed above. A crossing of the two lines is an artefact of
-              that choice and means nothing. The retained trend is short; this figure shows the last
-              few modeled minutes, not a shift.
+              Pressure and flow are drawn in two panels because they are different quantities in
+              different units; each panel has its own fixed scale starting at zero, and the two
+              share one simulated-time axis. A few mm Hg of movement therefore looks like a few mm
+              Hg, and a steady flow draws as a flat line inside its panel. The retained trend is
+              short; this figure shows the last {MCS_TREND_PANEL_WINDOW_SECONDS} modeled seconds,
+              not a shift.
             </ModelBoundary>
           </>
         ) : (
@@ -227,7 +209,7 @@ export function IabpEfficacyLimitsPanel({
           guide={mcsDerivedValueGuides.cardiacPowerOutputW}
           value={metrics.cardiacPowerOutputW}
         />
-        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
           <LiveValue
             label="Mixed venous saturation"
             value={metrics.svo2Percent}
@@ -279,7 +261,7 @@ export function IabpEfficacyLimitsPanel({
       {reveal === 'transfer' ? (
         <PanelSection title="The transfer patient, read live" id="efficacy-transfer">
           <TransferState principle="A device that reports it is performing correctly has not reported that the circulation is adequate. When the two accounts disagree, the limitation is somewhere the device display cannot see.">
-            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <LiveValue
                 label="Timing synchrony"
                 value={metrics.timingQualityPercent}

@@ -131,6 +131,8 @@ export interface CompareLabels {
   trayNeedTwo: string
   trayRemove: string
   trayClear: string
+  trayLookupFailed: string
+  trayRetry: string
   navCompare: string
 }
 
@@ -210,6 +212,10 @@ export function CompareTray({ locale, labels }: { locale: string; labels: Compar
   const selection = useCompareSelection()
   const pathname = usePathname()
   const [resolved, setResolved] = useState<{ key: string; devices: TrayDevice[] } | null>(null)
+  const [failureKey, setFailureKey] = useState<string | null>(null)
+  const [retry, setRetry] = useState(0)
+  const trayRef = useRef<HTMLElement>(null)
+  const [trayHeight, setTrayHeight] = useState(96)
   const idsKey = selection?.ids.join(',') ?? ''
 
   useEffect(() => {
@@ -223,16 +229,31 @@ export function CompareTray({ locale, labels }: { locale: string; labels: Compar
       .then(async (response) => {
         if (!response.ok) throw new Error('Lookup failed')
         const data = (await response.json()) as { devices: TrayDevice[] }
-        if (active) setResolved({ key: idsKey, devices: data.devices })
+        if (active) {
+          setResolved({ key: idsKey, devices: data.devices })
+          setFailureKey(null)
+        }
       })
       .catch(() => {
-        if (active) setResolved({ key: idsKey, devices: [] })
+        if (active) setFailureKey(idsKey)
       })
     return () => {
       active = false
       controller.abort()
     }
-  }, [idsKey])
+  }, [idsKey, retry])
+
+  useEffect(() => {
+    const tray = trayRef.current
+    if (!tray) return
+    const measure = () =>
+      setTrayHeight(Math.max(96, Math.ceil(tray.getBoundingClientRect().height)))
+    measure()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(measure)
+    observer.observe(tray)
+    return () => observer.disconnect()
+  }, [idsKey, pathname, selection?.ready, failureKey])
 
   if (!selection?.ready || selection.ids.length === 0) return null
   // The comparison page already IS the comparison; a tray over it would only repeat it.
@@ -245,13 +266,37 @@ export function CompareTray({ locale, labels }: { locale: string; labels: Compar
   return (
     <>
       {/* Reserve room so the fixed tray never covers the end of the page. */}
-      <div aria-hidden="true" className="h-24 print:hidden" />
+      <div
+        aria-hidden="true"
+        data-compare-tray-spacer
+        className="print:hidden"
+        style={{ height: trayHeight }}
+      />
       <section
+        ref={trayRef}
         aria-label={labels.trayHeading}
         data-compare-tray
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur print:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 max-h-[40dvh] overflow-y-auto border-t border-border bg-background/95 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur print:hidden"
       >
         <div className="container flex flex-wrap items-center gap-x-4 gap-y-2 py-2 sm:py-3">
+          {failureKey === idsKey ? (
+            <div
+              role="alert"
+              className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 text-sm"
+            >
+              <p>{labels.trayLookupFailed}</p>
+              <button
+                type="button"
+                className="min-h-11 rounded px-2 font-semibold underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={() => {
+                  setFailureKey(null)
+                  setRetry((value) => value + 1)
+                }}
+              >
+                {labels.trayRetry}
+              </button>
+            </div>
+          ) : null}
           <h2 className="text-sm font-bold">
             {labels.trayHeading}{' '}
             <span role="status" className="font-normal text-muted-foreground">

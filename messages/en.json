@@ -9532,6 +9532,8 @@
       "trayNeedTwo": "Add one more device to compare.",
       "trayRemove": "Remove from comparison",
       "trayClear": "Clear",
+      "trayLookupFailed": "Device names could not be loaded. Your comparison selection is unchanged.",
+      "trayRetry": "Retry device lookup",
       "navCompare": "Compare"
     }
   }

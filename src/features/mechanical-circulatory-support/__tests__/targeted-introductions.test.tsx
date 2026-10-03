@@ -54,6 +54,17 @@ function reachAct(id: string) {
   continueFromVerdict()
 }
 
+/**
+ * The run's identity line with its seed. MCS-PRE-REVIEW-03 moved the seed out of the always-visible
+ * line into the step bar's "Run details" disclosure (F03); the identity these assertions compare is
+ * unchanged, so the helper reads the seed from where it now lives.
+ */
+function sessionIdentity(): string {
+  const line = document.querySelector('[data-session-identity]')?.textContent ?? ''
+  const seed = document.querySelector('[data-run-details] p')?.textContent?.match(/Seed (\d+)/)?.[1]
+  return seed ? `${line} seed ${seed}` : line
+}
+
 describe('targeted introductions through the actual host', () => {
   it.each(Object.keys(mcsIntroductions))(
     '%s offers introductory teaching and an optional question',
@@ -77,7 +88,7 @@ describe('targeted introductions through the actual host', () => {
     const id = 'mcs-foundations-mechanisms'
     mountSection(id)
     reachAct(id)
-    const identity = document.querySelector('[data-session-identity]')!.textContent!
+    const identity = sessionIdentity()
     const seed = Number(identity.match(/seed (\d+)/)![1])
     for (const [device, label] of [
       ['lvad', /Select the durable/],
@@ -156,26 +167,22 @@ describe('targeted introductions through the actual host', () => {
     performAction(id)
     continueStep()
     continueStep()
-    const priorIdentity = document.querySelector('[data-session-identity]')!.textContent!
+    const priorIdentity = sessionIdentity()
     continueStep()
-    const transferIdentity = document.querySelector('[data-session-identity]')!.textContent!
+    const transferIdentity = sessionIdentity()
     expect(transferIdentity.match(/seed \d+/)?.[0]).not.toBe(priorIdentity.match(/seed \d+/)?.[0])
     commitTransfer(id)
     fireEvent.change(screen.getByRole('combobox', { name: 'Trigger source' }), {
       target: { value: 'pressure' },
     })
     expect(storedLessonIds()).toEqual([]) // Changing source alone is insufficient.
-    const current = document.querySelector('[data-session-identity]')!.textContent!
+    const current = sessionIdentity()
     fireEvent.click(document.querySelector('[data-now-back]')!)
-    expect(document.querySelector('[data-session-identity]')?.textContent).toContain(
-      priorIdentity.match(/seed \d+/)![0],
-    )
-    expect(document.querySelector('[data-session-identity]')?.textContent).toMatch(
-      /^Captured review/,
-    )
+    expect(sessionIdentity()).toContain(priorIdentity.match(/seed \d+/)![0])
+    expect(sessionIdentity()).toMatch(/^Captured review/)
     expect(document.querySelectorAll('[data-task-controls] input:not(:disabled)')).toHaveLength(0)
     continueStep()
-    expect(document.querySelector('[data-session-identity]')?.textContent).toBe(current)
+    expect(sessionIdentity()).toBe(current)
     expect(screen.getByRole('combobox', { name: 'Trigger source' })).toHaveValue('pressure')
     const observation = document.querySelector('[data-transfer-observation]')! as HTMLElement
     fireEvent.click(

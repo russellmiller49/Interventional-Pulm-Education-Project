@@ -95,28 +95,50 @@ export function McsUnloadingComparison() {
                 aria-label={`${label} pressure and flow comparison`}
                 tabIndex={0}
               >
-                <table>
+                {/*
+                 * On a narrow card the rows stack — each quantity with its three values labelled —
+                 * instead of scrolling the values off to the right, where on a phone only the
+                 * quantity names were on screen (F24, presentation only). The explicit roles keep
+                 * it a table for assistive technology when the stacked layout changes its display.
+                 */}
+                <table role="table">
                   <caption>
                     Provided outputs at {changed.timeSeconds.toFixed(2)} simulated seconds
                   </caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Modeled quantity</th>
-                      <th scope="col">P5 control</th>
-                      <th scope="col">P{level}</th>
-                      <th scope="col">Difference at the same instant</th>
+                  <thead role="rowgroup">
+                    <tr role="row">
+                      <th scope="col" role="columnheader">
+                        Modeled quantity
+                      </th>
+                      <th scope="col" role="columnheader">
+                        P5 control
+                      </th>
+                      <th scope="col" role="columnheader">
+                        P{level}
+                      </th>
+                      <th scope="col" role="columnheader">
+                        Difference at the same instant
+                      </th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody role="rowgroup">
                     {mcsUnloadingSignals.map(([key, name, unit, digits]) => (
-                      <tr key={key} data-unloading-signal={key}>
-                        <th scope="row">
+                      <tr key={key} role="row" data-unloading-signal={key}>
+                        <th scope="row" role="rowheader">
                           {name}
                           <small>{unit}</small>
                         </th>
-                        <td>{control.metrics[key].toFixed(digits)}</td>
-                        <td>{changed.metrics[key].toFixed(digits)}</td>
-                        <td data-unloading-delta={key}>
+                        <td role="cell" data-column-label="P5 control">
+                          {control.metrics[key].toFixed(digits)}
+                        </td>
+                        <td role="cell" data-column-label={`P${level}`}>
+                          {changed.metrics[key].toFixed(digits)}
+                        </td>
+                        <td
+                          role="cell"
+                          data-unloading-delta={key}
+                          data-column-label="Difference at the same instant"
+                        >
                           {deltaText(control.metrics[key], changed.metrics[key], unit, digits)}
                         </td>
                       </tr>

@@ -223,7 +223,7 @@ export function LvadAlarmsEmergenciesPanel({
       <PanelSection title="Active alarms, with their priority in words" id="alarms-band">
         <AlarmBand alarms={alarms} disclosed={disclosed} />
         <TextEquivalent>{alarmSentence(alarms)}.</TextEquivalent>
-        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
           <LiveSetting
             label="External power"
             value={controller?.powerConnected ? 'connected' : 'not connected'}
@@ -423,7 +423,7 @@ export function LvadAlarmsEmergenciesPanel({
       {reveal === 'transfer' ? (
         <PanelSection title="The transfer patient, read live" id="alarms-transfer">
           <TransferState principle="A power signature that has stopped tracking the flow it is supposed to imply is a reason to preserve the power path, examine the patient, and call the mechanical-support team — in any patient, and before any number has been explained.">
-            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <LiveSetting
                 label="External power"
                 value={controller?.powerConnected ? 'connected' : 'not connected'}
