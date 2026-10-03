@@ -41,6 +41,12 @@ import {
 } from '../engine/learningProgress'
 import { CirculationMap } from './circulation-map/CirculationMap'
 import { mcsPresentationTitle } from '../content/casePresentation'
+import {
+  MCS_SOURCE_CLASS_LABELS,
+  mcsSourceClass,
+  mcsSourceIdsByClass,
+  mcsSourceVerificationLabel,
+} from '../content/sourceClasses'
 import { MCS_AF_TRIGGER_CONTAINMENT, mcsAfTriggerLimitApplies } from '../content/afTriggerLimit'
 const McsAnatomy3D = lazy(() =>
   import('./McsAnatomy3D').then((module) => ({ default: module.McsAnatomy3D })),
@@ -287,12 +293,17 @@ export function McsWorkbench({
   const evidenceEntries = Array.from(
     new Map(
       [
-        ...mcsSources
-          .filter((source) => activeSourceIds.includes(source.id))
+        /*
+         * Opened documents first, authoring provenance last, each labelled with what it is (F10).
+         * This list was in registry order, which put a supplied synthesis at the top of a case's
+         * evidence.
+         */
+        ...mcsSourceIdsByClass(activeSourceIds)
+          .flatMap((id) => mcsSources.filter((source) => source.id === id))
           .map((source) => ({
             id: source.id,
             title: source.title,
-            sourceLabel: source.citation,
+            sourceLabel: `${MCS_SOURCE_CLASS_LABELS[mcsSourceClass(source.id)]} · ${mcsSourceVerificationLabel(source.id)}. ${source.citation}`,
             limitation:
               source.limitation ??
               'Use the current source, manufacturer instructions, local policy, and supervised clinical judgment.',
@@ -548,8 +559,8 @@ export function McsWorkbench({
                     id: state.scenario?.id ?? studioLesson.id,
                     title: activeTitle,
                     summary: state.scenario?.presentation ?? studioLesson.summary,
-                    meta: mcsSources
-                      .filter((source) => activeSourceIds.includes(source.id))
+                    meta: mcsSourceIdsByClass(activeSourceIds)
+                      .flatMap((id) => mcsSources.filter((source) => source.id === id))
                       .map((source) => source.title)
                       .join(' · '),
                   },

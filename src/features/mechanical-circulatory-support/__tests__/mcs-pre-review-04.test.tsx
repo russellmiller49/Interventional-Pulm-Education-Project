@@ -654,6 +654,20 @@ describe('F31, F32 and F33 — a case, by its own description', () => {
     )
   })
 
+  it('orders a case’s evidence with the opened document first and the synthesis last', async () => {
+    render(<McsWorkbench section="practice" initialActivityId="IABP-01" />)
+    await settle()
+    fireEvent.click(screen.getByRole('button', { name: 'Evidence' }))
+    const text = document.body.textContent ?? ''
+    const opened = text.indexOf('CARDIOSAVE Hybrid Operating Instructions')
+    const registered = text.indexOf('ISHLT/HFSA Guideline on Acute Mechanical Circulatory Support')
+    const synthesis = text.indexOf('Master Hemodynamics and Hemodynamic Monitoring Reference')
+    expect(opened).toBeGreaterThan(-1)
+    expect(opened).toBeLessThan(registered)
+    expect(registered).toBeLessThan(synthesis)
+    expect(text).toContain('Authoring provenance — not independent clinical evidence')
+  })
+
   it('lists the claim checks for a case under its worked explanation, marked not reviewed', async () => {
     render(<McsWorkbench section="practice" initialActivityId="IMP-01" />)
     await settle()

@@ -435,6 +435,31 @@ describe('F10 — sources by class, and claims checked against a document that w
     }
   })
 
+  it('lists what was opened before what is only registered, on sections and on cases', () => {
+    const rank = (id: string) =>
+      mcsSourceClass(id) === 'authoring-provenance'
+        ? 3
+        : mcsSourceClass(id) === 'model-provenance'
+          ? 2
+          : mcsSourceVerification(id) === 'read-first-hand'
+            ? 0
+            : 1
+    const lists = [
+      ...mcsLessons.map((lesson) => mcsStageSources(lesson.id).sourceIds),
+      ...allScenarios.map((scenario) => [...scenario.sourceIds, ...scenario.evidenceSourceIds]),
+    ]
+    for (const ids of lists) {
+      const ordered = mcsSourceIdsByClass([...new Set(ids)])
+      expect([...new Set(ids)].sort()).toEqual([...ordered].sort())
+      const ranks = ordered.map(rank)
+      expect(ranks).toEqual([...ranks].sort((left, right) => left - right))
+    }
+    // The durable sections lead with the textbook that was read, not the guideline that was not.
+    expect(mcsSourceIdsByClass(mcsStageSources('lvad-parameters-assessment').sourceIds)[0]).toBe(
+      'guide-mcs-vad-clinicians-2022',
+    )
+  })
+
   it('maps at most ten claims, each to an opened source that is not a synthesis', () => {
     expect(MCS_CLAIM_SOURCE_MAP.length).toBeLessThanOrEqual(MCS_CLAIM_SOURCE_MAP_LIMIT)
     expect(MCS_CLAIM_SOURCE_MAP_LIMIT).toBe(10)

@@ -131,11 +131,28 @@ export const MCS_AUTHORING_PROVENANCE_SOURCE_IDS: readonly string[] = Object.key
   (id) => RECORDS[id].sourceClass === 'authoring-provenance',
 )
 
-/** Source ids in class order, each class in the order it was given. */
+/**
+ * Source ids in the order a learner should meet them.
+ *
+ * What was actually opened comes first — primary, then secondary. Then what is only registered,
+ * primary then secondary. Then the model's own provenance, and last the authoring provenance. So
+ * an unopened guideline never stands above a document someone read, and a synthesis never stands
+ * above either. Within a group the given order is kept.
+ */
 export function mcsSourceIdsByClass(sourceIds: readonly string[]): readonly string[] {
-  return MCS_SOURCE_CLASS_ORDER.flatMap((sourceClass) =>
-    sourceIds.filter((id) => RECORDS[id]?.sourceClass === sourceClass),
-  )
+  const evidence: readonly McsSourceClass[] = ['primary-clinical-device', 'secondary-educational']
+  const pick = (sourceClass: McsSourceClass, verification?: McsSourceVerification) =>
+    sourceIds.filter(
+      (id) =>
+        RECORDS[id]?.sourceClass === sourceClass &&
+        (verification === undefined || RECORDS[id].verification === verification),
+    )
+  return [
+    ...evidence.flatMap((sourceClass) => pick(sourceClass, 'read-first-hand')),
+    ...evidence.flatMap((sourceClass) => pick(sourceClass, 'registered-not-opened')),
+    ...pick('model-provenance'),
+    ...pick('authoring-provenance'),
+  ]
 }
 
 function validateSourceClasses(): readonly string[] {
