@@ -39,7 +39,7 @@ describe('BedsideMonitor position-aware display', () => {
       /CO \/ CI.*—.*not established/i,
     )
     expect(screen.getByRole('group', { name: 'Mixed venous oxygen saturation' })).toHaveTextContent(
-      /SvO₂.*—.*not available before PA/i,
+      /SvO₂.*—.*unoccluded distal PA position is required/i,
     )
   })
 

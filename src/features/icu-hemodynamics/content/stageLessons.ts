@@ -588,7 +588,7 @@ function waveformComponentsSteps(): readonly StepInput[] {
       phase: 'recognize',
       title: 'When the atrial contour changes',
       instruction:
-        'Compare the existing abnormal reference patterns in a known chamber. Use the ECG and the affected wave or descent to distinguish mechanisms. A pattern supports a mechanism in context; it does not establish a diagnosis alone.',
+        'Compare the existing abnormal reference patterns in a known chamber. Compare the affected pressure wave or descent. These schematics do not include a rhythm-specific ECG; rhythm diagnosis requires separate ECG evidence. A pattern supports a mechanism in context; it does not establish a diagnosis alone.',
       lookIn: { pane: 'teaching', landmark: 'Contrasting abnormal atrial patterns' },
       actionLabel: CONTINUE,
       interaction: { kind: 'read' },

@@ -77,10 +77,7 @@ for (const condition of [
         .first()
       await expect(figure).toBeVisible()
       await expect(figure.getByText(/Trace exceeds the displayed 0–20 mmHg axis/)).toBeVisible()
-      await expect(figure.locator('svg')).toHaveAttribute(
-        'aria-label',
-        /out-of-range portions are clipped/,
-      )
+      await expect(figure.locator('svg')).toHaveAttribute('aria-describedby', /.+/)
       const evidence = await geometry(figure)
       expect(evidence.minimumY).toBeLessThan(66)
       expect(evidence.topBoundaryPoints).toBeLessThan(3)

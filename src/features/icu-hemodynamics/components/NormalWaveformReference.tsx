@@ -114,31 +114,42 @@ export function NormalWaveformReference({
       )}
 
       <div
-        role="tablist"
+        role={fixedPosition ? 'list' : 'tablist'}
         aria-label="Normal waveform reference, in insertion order"
         className={styles.referenceTabs}
         onKeyDown={moveTab}
       >
-        {normalWaveformReference.map((candidate, index) => (
-          <button
-            key={candidate.position}
-            ref={(node) => {
-              tabRefs.current[index] = node
-            }}
-            id={`${tabIdPrefix}-${candidate.position}`}
-            type="button"
-            role="tab"
-            aria-selected={candidate.position === entry.position}
-            aria-controls={panelId}
-            tabIndex={candidate.position === entry.position ? 0 : -1}
-            className={styles.referenceTab}
-            disabled={Boolean(fixedPosition)}
-            onClick={() => setActivePosition(candidate.position)}
-          >
-            <span aria-hidden="true">{candidate.order}</span>
-            {normalWaveformAtlasEntry(candidate).shortLabel}
-          </button>
-        ))}
+        {normalWaveformReference.map((candidate, index) =>
+          fixedPosition ? (
+            <span
+              key={candidate.position}
+              role="listitem"
+              className={styles.referenceIndicator}
+              aria-current={candidate.position === entry.position ? 'step' : undefined}
+            >
+              {index + 1}. {normalWaveformAtlasEntry(candidate).shortLabel}
+            </span>
+          ) : (
+            <button
+              key={candidate.position}
+              ref={(node) => {
+                tabRefs.current[index] = node
+              }}
+              id={`${tabIdPrefix}-${candidate.position}`}
+              type="button"
+              role="tab"
+              aria-selected={candidate.position === entry.position}
+              aria-controls={panelId}
+              tabIndex={candidate.position === entry.position ? 0 : -1}
+              className={styles.referenceTab}
+              disabled={Boolean(fixedPosition)}
+              onClick={() => setActivePosition(candidate.position)}
+            >
+              <span aria-hidden="true">{candidate.order}</span>
+              {normalWaveformAtlasEntry(candidate).shortLabel}
+            </button>
+          ),
+        )}
       </div>
 
       <fieldset className={styles.referenceScaleControl}>
@@ -169,8 +180,8 @@ export function NormalWaveformReference({
 
       <div
         id={panelId}
-        role="tabpanel"
-        aria-labelledby={`${tabIdPrefix}-${entry.position}`}
+        role={fixedPosition ? 'group' : 'tabpanel'}
+        aria-labelledby={fixedPosition ? headingId : `${tabIdPrefix}-${entry.position}`}
         tabIndex={0}
         className={styles.referencePanel}
       >

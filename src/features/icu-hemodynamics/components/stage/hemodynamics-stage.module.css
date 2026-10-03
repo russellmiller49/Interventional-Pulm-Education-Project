@@ -258,6 +258,8 @@
 
 .choiceGroup {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 0.35rem;
   margin: 0;
   padding: 0;
@@ -265,11 +267,15 @@
 }
 
 .choiceGroup > legend {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   margin-bottom: 0.25rem;
   font-weight: 700;
 }
 
 .choiceGroup label {
+  min-width: 0;
+  max-width: 100%;
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
@@ -285,6 +291,8 @@
 
 .choiceGroup label span {
   display: grid;
+  min-width: 0;
+  overflow-wrap: anywhere;
   gap: 0.1rem;
 }
 
@@ -791,4 +799,65 @@
 
 .dockVerdict p:last-child {
   margin-bottom: 0;
+}
+
+.alignedComparisons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+.alignedComparisons > * {
+  min-width: 0;
+}
+
+.alignedComparisons figcaption {
+  min-height: 5rem;
+}
+
+.teachingCard {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.grammarTable {
+  width: 100%;
+  table-layout: fixed;
+}
+.grammarTable :is(th, td) {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .dockRow {
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+  }
+  .slider {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .slider input {
+    min-width: 0;
+  }
+  .dockButton {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.simulator,
+.teachingCard {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.dock,
+.docks,
+.controlStrip {
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+.controlStrip li {
+  min-width: 0;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
 }

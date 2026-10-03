@@ -74,6 +74,11 @@ export function NormalWaveformAnatomyFigure({
 
   return (
     <figure className={styles.referenceAnatomyFigure}>
+      <p className={styles.readingCaption}>
+        SVC: superior vena cava · RA: right atrium · RV: right ventricle · PA: pulmonary artery ·
+        TV: tricuspid valve · PV: pulmonic valve. The gold route and tip show the catheter position
+        in this teaching schematic.
+      </p>
       <svg
         viewBox="0 0 340 176"
         role="img"

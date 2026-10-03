@@ -114,7 +114,11 @@ function labelXs(figure: Element): ReadonlyMap<string, number> {
   for (const group of figure.querySelectorAll('svg g')) {
     const circle = group.querySelector('circle')
     const text = group.querySelector('text')
-    if (circle && text) found.push([text.textContent ?? '', Number(circle.getAttribute('cx'))])
+    if (circle && text)
+      found.push([
+        group.getAttribute('data-annotation-label') ?? text.textContent ?? '',
+        Number(circle.getAttribute('cx')),
+      ])
   }
   return new Map(found)
 }

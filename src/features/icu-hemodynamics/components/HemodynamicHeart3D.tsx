@@ -241,9 +241,10 @@ function PacCatheterOverlay({
         points={PAC_ROUTE}
         progress={renderedFraction}
         radius={CARDIAC_RIG.pac.radius}
-        color="#e8bd4d"
+        color="#ffd166"
+        opacity={0.98}
         depthTest={false}
-        emissiveIntensity={0.08}
+        emissiveIntensity={0.48}
         radialSegments={12}
         renderOrder={31}
       />
@@ -385,6 +386,7 @@ export function HemodynamicHeart3D({ state }: { state: HemodynamicSimulationStat
             <pointLight position={[0, -1, 4]} intensity={0.75} color="#ffd9cf" />
             <Suspense fallback={null}>
               <CardiacHeartModel
+                deviceEmphasis
                 heartRateBpm={state.parameters.heartRateBpm}
                 paused={state.paused}
                 reducedMotion={reducedMotion}

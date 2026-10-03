@@ -238,12 +238,10 @@ describe('H2 canonical normal waveform reference', () => {
       const figure = screen.getByRole('img', { name: /Displayed axis: 0 to/i })
       // The figure's own description is the state's text equivalent, so the graphic and its
       // alternative cannot describe different axes or different chambers. Any geometric clipping
-      // notice is appended verbatim, preserving the complete canonical description.
+      // notice remains a separate accessible description linked to the visible warning.
       const rangeNotice = figure.closest('figure')?.querySelector('[data-waveform-range-note]')
-      expect(figure.getAttribute('aria-label')).toBe(
-        normalWaveformReferenceTextEquivalent(entry) +
-          (rangeNotice ? ` ${rangeNotice.textContent}` : ''),
-      )
+      expect(figure.getAttribute('aria-label')).toBe(normalWaveformReferenceTextEquivalent(entry))
+      if (rangeNotice) expect(figure).toHaveAccessibleDescription(rangeNotice.textContent ?? '')
       expect(figure.getAttribute('aria-label')).toContain(
         `0 to ${NORMAL_WAVEFORM_SHARED_SCALE_MAX_MMHG} mmHg`,
       )

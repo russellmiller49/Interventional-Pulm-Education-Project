@@ -76,7 +76,11 @@ export function LineDock({
   dispatch,
   enabled,
   only,
-}: DockProps & { readonly only?: 'level' | 'zero' | 'scale' }) {
+  showArterialScale = true,
+}: DockProps & {
+  readonly showArterialScale?: boolean
+  readonly only?: 'level' | 'zero' | 'scale'
+}) {
   const level = state.measurementSystem.transducerLevelCm
   const levelled = Math.abs(level) <= LEVEL_TOLERANCE_CM
   return (
@@ -142,7 +146,7 @@ export function LineDock({
           Zeroing does not move the transducer.
         </p>
       ) : null}
-      {!only || only === 'scale' ? (
+      {showArterialScale && (!only || only === 'scale') ? (
         <div className={styles.dockRow}>
           <label htmlFor={quickControlId('scale')}>
             <span>The display scale</span>

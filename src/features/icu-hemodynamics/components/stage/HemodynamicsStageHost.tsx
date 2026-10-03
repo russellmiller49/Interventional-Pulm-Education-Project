@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { ArrowRight, Check, Circle, LocateFixed } from 'lucide-react'
+import { ArrowRight, Check, Square, LocateFixed } from 'lucide-react'
 
 import {
   useCriticalCareActivityAnalytics,
@@ -24,7 +24,7 @@ import { StageSourcesScope } from '@/features/learning-module/stage/StageSources
 import { StageTeachingScope } from '@/features/learning-module/stage/StageTeachingScope'
 import shellStyles from '@/features/learning-module/stage/lesson-shell.module.css'
 import stageStyles from '@/features/learning-module/stage/lesson-stage.module.css'
-import { useRouter } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 
 import {
   pawpPlausibilityCommitment,
@@ -1022,7 +1022,7 @@ function HemodynamicsStageSession({
         return (
           <section className={styles.walk} data-walk-stop={stop.id} aria-label={stop.title}>
             <p className={styles.kicker}>
-              Stop {routeStopNumber(stop.id)} · {stop.title}
+              Map stop {routeStopNumber(stop.id)} · {stop.title}
             </p>
             <p className={styles.analogy}>{stop.analogy}</p>
             <dl>
@@ -1084,7 +1084,7 @@ function HemodynamicsStageSession({
               'Read a boundary inside its context, not as a universal number',
             ].map((label) => (
               <li key={label}>
-                <Circle aria-hidden="true" />
+                <Square aria-hidden="true" />
                 <span>{label}</span>
               </li>
             ))}
@@ -1155,7 +1155,7 @@ function HemodynamicsStageSession({
                     {goalsMetNow[index] ? (
                       <Check aria-hidden="true" />
                     ) : (
-                      <Circle aria-hidden="true" />
+                      <Square aria-hidden="true" />
                     )}
                     <span>{stageGoalLabel(goal)}</span>
                   </li>
@@ -1754,11 +1754,35 @@ function HemodynamicsStageSession({
                 Professional education only. All values are simulated. Follow current manufacturer
                 instructions and local protocol.
               </p>
+              {['pressure-system', 'pawp-capture', 'thermodilution-series'].includes(
+                lesson.sectionId,
+              ) ? (
+                <p>
+                  <Link href="/icu-hemodynamics/practice?case=HD-01" target="_blank">
+                    Open the Practice pressure troubleshooting atlas and cardiac-output lab
+                  </Link>
+                  . This opens a separate simulated patient; expand its measurement tools from the
+                  actions checkpoint.
+                </p>
+              ) : null}
               <StageSourcesFooter
                 count={stageSources.evidenceIds.length}
                 label="Sources for this section"
                 claimsVisible={revealOpen}
               >
+                <button
+                  type="button"
+                  className={styles.dockButton}
+                  onClick={(event) => {
+                    const details = event.currentTarget.closest('details')
+                    if (details) {
+                      details.open = false
+                      details.querySelector<HTMLElement>('summary')?.focus()
+                    }
+                  }}
+                >
+                  Close sources
+                </button>
                 <HemodynamicsSourceList records={stageSources.records} claimsVisible={revealOpen} />
               </StageSourcesFooter>
             </footer>
@@ -2167,7 +2191,7 @@ function StepRecap({
     <ul className={stageStyles.taskList} data-step-review>
       {lines.map((line) => (
         <li key={line.text} data-met={line.met}>
-          {line.met ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
+          {line.met ? <Check aria-hidden="true" /> : <Square aria-hidden="true" />}
           <span>{line.text}</span>
         </li>
       ))}

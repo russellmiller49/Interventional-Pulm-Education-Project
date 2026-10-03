@@ -251,7 +251,7 @@ export const pacGuidedLearningItems: Readonly<
       contextRequirement: 'technical',
       clinicalContextId: 'pac-waveform-morphology',
       visualAssetIds: ['pac-waveform-recognition-drill'],
-      stem: 'A right-sided tracing shows a broad systolic c-v wave with loss of the normal x descent. Which mechanism best explains the morphology?',
+      stem: 'The described clinical finding is a broad systolic c-v wave with loss of the normal x descent. The accompanying schematic retains separate peaks and a residual dip, so it does not reproduce that complete morphology. Which mechanism explains the described finding?',
       choices: [
         {
           id: 'tricuspid-regurgitation',
@@ -410,12 +410,12 @@ export const pacGuidedLearningItems: Readonly<
       contextRequirement: 'technical',
       clinicalContextId: 'pac-thermodilution-series',
       visualAssetIds: ['thermodilution-curve-series'],
-      stem: 'Three curves were generated with consistent injectate volume and timing. Two are smooth and similar; one has an irregular double peak after a prolonged injection. Which trials belong in the average?',
+      stem: 'Three curves use the same injectate volume and temperature. Two have consistent injection and respiratory timing; the third used a prolonged injection and variable respiratory timing, despite a smooth-looking temperature curve. Which trials belong in the average?',
       choices: [
         {
           id: 'accept-two-repeat-one',
           label:
-            'Accept the two technically valid curves and repeat the irregular prolonged-injection trial.',
+            'Accept the two technically valid curves and repeat the prolonged-injection trial.',
           rationale:
             'Curve quality must be reviewed before averaging, and an invalid trial should be replaced rather than forced into agreement.',
           plausibility: 'best',
