@@ -15,6 +15,10 @@ import { toClinicalLearningItem } from './stageItems'
  * cases, their items, their stable ids and the item bank's safety flag stay: each case is open at
  * any time, can show its explanation before an answer, and links to the section whose mechanism
  * it applies. Presentation titles name the situation, never the answer.
+ *
+ * Prompt 04 (OD4-05, 2026-09-22) revised three cases. Their questions changed, so they are new
+ * cases under new ids in the same slots; the earlier items stay in the bank and their addresses
+ * redirect (`LEGACY_INTEGRATED_CASE_ADDRESSES`).
  */
 
 /** Stable item identity. The name predates the conversion and is kept so item ids do not move. */
@@ -46,13 +50,15 @@ const CASE_DEFINITIONS: readonly {
     pairedSectionId: 'dts-interpretation',
   },
   {
-    id: 'case-4',
+    id: 'case-4-v2',
     presentationTitle: 'Collision check after robot docking',
     pairedSectionId: 'cbct-acquisition',
   },
   {
-    id: 'case-5',
-    presentationTitle: 'Needle tip beyond the lesion',
+    // The slot's title used to be "Needle tip beyond the lesion", which states the finding the
+    // image-based version asks the learner to read off the planes.
+    id: 'case-5-v2',
+    presentationTitle: 'Needle and lesion on linked thin planes',
     pairedSectionId: 'tool-confirmation',
   },
   {
@@ -66,11 +72,34 @@ const CASE_DEFINITIONS: readonly {
     pairedSectionId: 'staff-protection',
   },
   {
-    id: 'case-8',
+    id: 'case-8-v2',
     presentationTitle: 'KAP components on the dose report',
     pairedSectionId: 'dose-reporting',
   },
 ]
+
+/**
+ * Old case addresses whose slot a revised case now occupies (owner decision OD4-05, 2026-09-22:
+ * "old integrated-case addresses redirect if their slot is replaced"). A case is keyed by its
+ * question id, so a revised question is a new case id; the old question stays in the bank under its
+ * own id. `?case=case-4` and the others keep working by redirecting to the case in their slot.
+ *
+ * Nothing stored is rewritten. A device that opened `case-4` keeps that entry exactly as written;
+ * it records that the earlier case was opened, which says nothing about the revised one.
+ */
+export const LEGACY_INTEGRATED_CASE_ADDRESSES: Readonly<Record<string, string>> = {
+  'case-4': 'case-4-v2',
+  'case-5': 'case-5-v2',
+  'case-8': 'case-8-v2',
+}
+
+/** The case an address opens now: a current id opens itself, a replaced one its successor. */
+export function resolveIntegratedCaseAddress(caseId: string): string | null {
+  const current = Object.hasOwn(LEGACY_INTEGRATED_CASE_ADDRESSES, caseId)
+    ? LEGACY_INTEGRATED_CASE_ADDRESSES[caseId]
+    : caseId
+  return CASE_DEFINITIONS.some((definition) => definition.id === current) ? current : null
+}
 
 /** Stable item id for a case, `capstone:<case id>`, unchanged by the conversion. */
 export function capstoneItemId(caseId: string): string {
@@ -123,6 +152,13 @@ export function validateImagingCases(): readonly string[] {
     if (firstWords && imagingCase.presentationTitle.toLowerCase().includes(firstWords)) {
       errors.push(`${where} title repeats its keyed answer.`)
     }
+  }
+  for (const [legacy, current] of Object.entries(LEGACY_INTEGRATED_CASE_ADDRESSES)) {
+    const where = `Legacy case address ${legacy}`
+    if (ids.has(legacy)) errors.push(`${where} is still a current case, so it cannot redirect.`)
+    if (!ids.has(current)) errors.push(`${where} redirects to ${current}, which is not a case.`)
+    // The replaced item stays in the bank under its own id, so old records keep their meaning.
+    if (!QUESTION_BY_ID[legacy]) errors.push(`${where} no longer has its item in the bank.`)
   }
   return errors
 }

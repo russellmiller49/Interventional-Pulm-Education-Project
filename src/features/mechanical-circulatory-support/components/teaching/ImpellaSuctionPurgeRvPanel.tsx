@@ -189,7 +189,7 @@ export function ImpellaSuctionPurgeRvPanel({
 
       <PanelSection title="The flow account, with the sides kept apart" id="rv-flow">
         <FlowAccount account={account} disclosed={disclosed} />
-        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
           <LiveValue
             label="Pump balance"
             value={metrics.pumpBalanceLMin}
@@ -266,7 +266,7 @@ export function ImpellaSuctionPurgeRvPanel({
             .join('. ')}
           .
         </TextEquivalent>
-        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
           <LiveSetting
             label="Left-sided purge state"
             value={pump?.leftPurgeWords ?? 'not applicable'}
@@ -311,7 +311,7 @@ export function ImpellaSuctionPurgeRvPanel({
       </PanelSection>
 
       <PanelSection title="Right-sided filling, and the ratio that will not report it" id="rv-papi">
-        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
           <LiveValue
             label="Right atrial pressure"
             value={metrics.rapMmHg}
@@ -371,7 +371,7 @@ export function ImpellaSuctionPurgeRvPanel({
       {reveal === 'transfer' ? (
         <PanelSection title="The transfer patient, read live" id="rv-transfer">
           <TransferState principle="A suction state means inlet conditions are inadequate for the requested support — because of underfilling, restricted inflow, or position — not that the performance level is too low. Raising support against those inlet conditions worsens both the underfilling and the blood trauma.">
-            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <LiveValue
                 label="Preload"
                 value={state.patient.preloadPercent}

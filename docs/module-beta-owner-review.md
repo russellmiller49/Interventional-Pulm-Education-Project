@@ -38,8 +38,11 @@ never writes into owner storage.
 1. Open **Test with feedback** for a module. The toolbar says **Owner review · saved locally on
    this browser**. The standard module URLs have no feedback toolbar.
 2. Navigate inside the module, select text if useful, and choose **Give feedback**. Check the
-   displayed page address. Write a comment and optionally upload, paste, or capture an image.
-   Highlight rectangles are included in the saved PNG.
+   displayed page address. Write a comment and optionally upload or paste an image, or choose
+   **Capture this tab** and approve **This Tab** in the browser. Use **Box**, **Arrow**, **Draw**,
+   or **Text** to annotate it; all marks are included in the saved PNG. Capture verifies this
+   exact tab and rejects other tabs, windows, and screens. Upload/paste remains available in
+   browsers without current-tab capture support.
 3. Choose **Save feedback locally**. The confirmation says **Feedback saved locally** and gives
    a report reference. It appears only after the IndexedDB transaction commits.
 4. Use **Review feedback** or the hub's review/export link. The workspace says **Owner review
@@ -48,7 +51,7 @@ never writes into owner storage.
    browser data (including changes from another tab). Reports display full IDs and timestamps.
 
 **Continue testing** closes the dialog but preserves the unsent draft, including its original
-page context, selected text, image, rectangles, and retry ID. **Discard draft** clears that draft.
+page context, selected text, image, annotations, and retry ID. **Discard draft** clears that draft.
 A failed save leaves it open and intact. Unsent drafts remain in memory only and are lost on
 navigation/reload; successfully saved reports survive reload and browser restart.
 

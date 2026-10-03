@@ -112,6 +112,40 @@ export const WARNING_INVENTORY: readonly WarningSurface[] = [
     treatment: 'kept',
     note: 'Checklist confirmations are learner-declared; the scene detects no collision.',
   },
+  // Prompt 04 (OD4-04, OD4-06, OD4-09, OD4-10): each new figure and aid says what it is before
+  // anything else, on its own surface; none of these is folded into the shared sentence.
+  {
+    id: 'case-figure-model-label',
+    category: 'figure-limitation',
+    where: 'The label on a figure inside a practice or integrated case',
+    selector: '[data-case-figure] [data-model-label]',
+    treatment: 'kept',
+    note: 'Teaching model or schematic, and what it is not (a patient acquisition, a scatter measurement); printed before the image.',
+  },
+  {
+    id: 'teaching-figure-model-label',
+    category: 'figure-limitation',
+    where: 'The label on a Prompt 04 teaching figure (Sections 6, 9 and 16)',
+    selector: '[data-teaching-figure] [data-model-label]',
+    treatment: 'kept',
+    note: 'Names the CT-derived model, which effects are simulated or drawn, and where no honest image exists.',
+  },
+  {
+    id: 'fixed-mobile-model-note',
+    category: 'figure-limitation',
+    where: 'Under the fixed and mobile comparison (Sections 13 and 14)',
+    selector: '[data-fixed-mobile-comparison] [data-model-note]',
+    treatment: 'kept',
+    note: 'The scenes draw the same field for both; they are authored illustrations, not a device comparison.',
+  },
+  {
+    id: 'readiness-aid-status',
+    category: 'figure-limitation',
+    where: 'The first line of the team-readiness aid (Section 12)',
+    selector: '[data-team-readiness] [data-readiness-status]',
+    treatment: 'kept',
+    note: 'A teaching aid, not an institutional, anesthesia or credentialing protocol or a universal checklist.',
+  },
   {
     id: 'draft-illustrations',
     category: 'unresolved-status',

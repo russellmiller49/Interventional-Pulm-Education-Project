@@ -80,8 +80,7 @@ interface WaveformAtlasFigureProps {
 }
 
 function pressureToY(value: number, scaleMaxMmHg: number): number {
-  const clamped = Math.max(0, Math.min(scaleMaxMmHg, value))
-  return TRACE_BOTTOM - (clamped / scaleMaxMmHg) * (TRACE_BOTTOM - TRACE_TOP)
+  return TRACE_BOTTOM - (value / scaleMaxMmHg) * (TRACE_BOTTOM - TRACE_TOP)
 }
 
 function phaseToX(phase: number, beat: number, beats: number, plotRight = PLOT_RIGHT): number {
@@ -145,6 +144,7 @@ export function WaveformAtlasFigure({
   figureDescription,
 }: WaveformAtlasFigureProps) {
   const gradientId = useId()
+  const clipId = useId()
   const viewWidth = readable ? 360 : VIEW_WIDTH
   const plotRight = viewWidth - (VIEW_WIDTH - PLOT_RIGHT)
   const scaleMax = fault?.scaleMaxMmHg ?? scaleMaxMmHg ?? entry.scaleMaxMmHg
@@ -185,18 +185,22 @@ export function WaveformAtlasFigure({
     return distorted + (fault?.levelOffsetMmHg ?? 0)
   }
 
-  const tracePath = (() => {
+  const trace = (() => {
     const steps = Math.round(SAMPLES_PER_BEAT * beats)
     const commands: string[] = []
+    let exceedsScale = false
     for (let step = 0; step <= steps; step += 1) {
       const progress = step / steps
       const phase = (progress * beats) % 1
       const x = PLOT_LEFT + progress * (plotRight - PLOT_LEFT)
-      const y = pressureToY(sampleAt(progress, phase), scaleMax)
+      const value = sampleAt(progress, phase)
+      exceedsScale ||= value < 0 || value > scaleMax
+      const y = pressureToY(value, scaleMax)
       commands.push(`${step === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`)
     }
-    return commands.join(' ')
+    return { path: commands.join(' '), exceedsScale }
   })()
+  const tracePath = trace.path
 
   const ecgPath = (() => {
     if (!showEcg) return ''
@@ -248,6 +252,8 @@ export function WaveformAtlasFigure({
           labelY: 0,
         }
       })
+      // Do not pin an off-axis landmark to the boundary and imply it is a measured peak there.
+      .filter(({ y }) => y >= TRACE_TOP && y <= TRACE_BOTTOM)
       .sort((left, right) => left.x - right.x)
 
     // Long labels on neighbouring landmarks would otherwise overlap, so each label that lands
@@ -276,7 +282,10 @@ export function WaveformAtlasFigure({
       ? 'end expiration'
       : 'reading point')
 
-  const description =
+  const rangeNotice = trace.exceedsScale
+    ? `Trace exceeds the displayed 0–${scaleMax} mmHg axis; out-of-range portions are clipped and their landmarks are not shown. Sampled pressures are unchanged.`
+    : ''
+  const baseDescription =
     figureDescription ??
     `${channelLabel ? `Channel labelled ${channelLabel}. ` : ''}${entry.label}. ${entry.summary} Drawn against a 0 to ${scaleMax} mmHg axis.${
       respiration
@@ -285,6 +294,7 @@ export function WaveformAtlasFigure({
     } ${entry.annotations
       .map((annotation) => `${annotation.label}: ${annotation.description}`)
       .join(' ')}`
+  const description = rangeNotice ? `${baseDescription} ${rangeNotice}` : baseDescription
 
   return (
     <figure
@@ -307,6 +317,14 @@ export function WaveformAtlasFigure({
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
+          <clipPath id={clipId}>
+            <rect
+              x={PLOT_LEFT}
+              y={TRACE_TOP}
+              width={plotRight - PLOT_LEFT}
+              height={TRACE_BOTTOM - TRACE_TOP}
+            />
+          </clipPath>
           <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="var(--atlas-trace)" stopOpacity="0.28" />
             <stop offset="100%" stopColor="var(--atlas-trace)" stopOpacity="0" />
@@ -354,8 +372,9 @@ export function WaveformAtlasFigure({
           className={styles.atlasTraceFill}
           d={`${tracePath} L ${plotRight} ${TRACE_BOTTOM} L ${PLOT_LEFT} ${TRACE_BOTTOM} Z`}
           fill={`url(#${gradientId})`}
+          clipPath={`url(#${clipId})`}
         />
-        <path className={styles.atlasTrace} d={tracePath} />
+        <path className={styles.atlasTrace} d={tracePath} clipPath={`url(#${clipId})`} />
 
         {placedAnnotations.map(({ annotation, x, y, labelY }) => (
           <g key={annotation.id} className={styles.atlasAnnotation}>
@@ -386,6 +405,12 @@ export function WaveformAtlasFigure({
           </>
         ) : null}
       </svg>
+
+      {rangeNotice ? (
+        <p className={styles.paneCaveat} data-waveform-range-note>
+          {rangeNotice}
+        </p>
+      ) : null}
 
       {showLegend && annotated && entry.annotations.length > 0 ? (
         <dl className={styles.atlasLegend}>

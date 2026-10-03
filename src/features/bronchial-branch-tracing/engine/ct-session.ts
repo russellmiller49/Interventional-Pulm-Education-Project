@@ -85,9 +85,22 @@ export const lastUnlocked = (recorded: boolean[]) => {
   const next = recorded.findIndex((value) => !value)
   return next < 0 ? recorded.length - 1 : next
 }
-/** Junctions the learner can open: recorded ones, the next unrecorded one, and any reached by continuing. */
-export const reachableThrough = (recorded: boolean[], reached: number) =>
-  Math.min(Math.max(lastUnlocked(recorded), reached), Math.max(recorded.length - 1, 0))
+/**
+ * Junctions the learner can open: recorded ones, the next unrecorded one, any reached by continuing,
+ * and the stop after the furthest one opened once that stop is recorded.
+ *
+ * `lastUnlocked` stops at the first unrecorded stop, so after a skip it points back at the skipped
+ * junction. Recording the stop the learner skipped to must still open the next one, or Continue
+ * becomes a no-op (PR #273 review, finding 4). Skipped stops stay unrecorded; nothing is filled in.
+ */
+export const reachableThrough = (recorded: boolean[], reached: number) => {
+  const last = Math.max(recorded.length - 1, 0)
+  let through = Math.max(lastUnlocked(recorded), reached)
+  while (through < last && recorded[through]) through++
+  return Math.min(through, last)
+}
+/** No stop after this one: the route's stops have all been passed, recorded or not. */
+export const atLastStop = (trace: CtTrace, active: number) => active >= trace.checkpoints.length - 1
 /** Reference marks shown on the CT: every junction recorded or explicitly revealed, and those before it. */
 export function referenceIndex(recorded: boolean[], shown: ReadonlySet<number>) {
   let through = -1

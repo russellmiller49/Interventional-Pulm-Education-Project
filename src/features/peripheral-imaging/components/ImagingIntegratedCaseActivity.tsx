@@ -12,6 +12,7 @@ import {
 } from '../content/routes'
 import { recordImagingLocation } from '../engine/selfPacedProgress'
 import { ImagingCaseDecision } from './ImagingCaseDecision'
+import { CaseFigure } from './figures/CaseFigure'
 
 /**
  * One integrated case, open at any time.
@@ -66,6 +67,9 @@ export function ImagingIntegratedCaseActivity({ caseId }: { readonly caseId: str
         item={imagingCase.item}
         choiceGroup={`integrated-${imagingCase.id}`}
         conceptSectionId={imagingCase.pairedSectionId}
+        renderEvidence={(revealed) => (
+          <CaseFigure caseKind="integrated" caseId={imagingCase.id} revealed={revealed} />
+        )}
       />
 
       <nav className="flex flex-wrap items-center gap-4 text-sm" aria-label="Integrated cases">

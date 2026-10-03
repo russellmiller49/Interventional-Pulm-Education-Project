@@ -1,6 +1,14 @@
 'use client'
 
-import { useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from 'react'
 import { ArrowRight, Check } from 'lucide-react'
 
 import { ChoiceReasoningFeedback } from '@/features/learning-module/components/ChoiceReasoningFeedback'
@@ -265,11 +273,13 @@ function McsStageSession({
     expandedTeachingStepId: null,
     transferLoaded: lesson.steps[mount.index].interaction.kind === 'transfer',
   }))
+  const [monitorPreferences, setMonitorPreferences] = useState<Record<string, boolean>>({})
   const [helpOpen, setHelpOpen] = useState(false)
   const [explorationOpen, setExplorationOpen] = useState(false)
   const [revealedStepIds, setRevealedStepIds] = useState<readonly string[]>([])
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
+  const stepBarRef = useRef<HTMLDivElement>(null)
 
   const activeIndex = Math.min(progression.index, lesson.steps.length - 1)
   const activeStep = lesson.steps[activeIndex]
@@ -371,9 +381,10 @@ function McsStageSession({
     const node = nowFocusRef.current
     if (!node) return
     node.focus({ preventScroll: true })
-    // A new step starts at the top of its pane, whatever the previous step left it scrolled to.
-    node.closest<HTMLElement>('[role="region"]')?.scrollTo({ top: 0 })
-  }, [activeStep.id])
+    // The flowing lesson uses document scroll. Resetting an ancestor region alone leaves the
+    // new task thousands of pixels above a learner who used the bottom Continue.
+    stepBarRef.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+  }, [activeStep.id, referenceViewed])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -649,8 +660,21 @@ function McsStageSession({
     const stops = litStopIds.map((id) => mcsSpineStop(id))
     const segmentIds = stops.flatMap((stop) => stop.segmentIds)
     const names = stops.map((stop) => stop.plainName).join(' · ')
-    return walking
-      ? { segmentIds, caption: `You are here: ${names}.`, tone: 'you-are-here' }
+    if (walking) return { segmentIds, caption: `You are here: ${names}.`, tone: 'you-are-here' }
+    /*
+     * "This section stands at: A · B" named two places and marked neither, so a learner could not
+     * tell which glow was which or where to start (F03). With more than one place, each is numbered
+     * in the sentence and on the drawing beside its lit segment.
+     */
+    return stops.length > 1
+      ? {
+          segmentIds,
+          caption: `This section uses ${stops.length} places on the loop, numbered on the map: ${stops
+            .map((stop, index) => `${index + 1}. ${stop.plainName}`)
+            .join('; ')}.`,
+          tone: 'you-are-here',
+          stops: stops.map((stop) => ({ name: stop.plainName, segmentIds: stop.segmentIds })),
+        }
       : { segmentIds, caption: `This section stands at: ${names}.`, tone: 'you-are-here' }
   })()
 
@@ -670,6 +694,22 @@ function McsStageSession({
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
   const canGoBack = previousStep !== undefined
 
+  function handleContinue(event?: MouseEvent<HTMLButtonElement>) {
+    // A native double-click is one navigation intent, even when the top button stays put.
+    // Both Continue controls use this handler; keyboard activation has detail zero.
+    if (event && event.detail > 1) {
+      event.currentTarget
+        .closest('[data-critical-care-activity-shell]')
+        ?.querySelector<HTMLElement>('[data-now-focus]')
+        ?.focus({ preventScroll: true })
+      return
+    }
+    if (!lookingBack && isLastStep) {
+      if (nextSection) goToSection(nextSection.id)
+      else router.push(`${mechanicalCirculatorySupportNavBase}/learn`)
+    } else advance()
+  }
+
   const continueAction = {
     label: lookingBack
       ? 'Return to current task'
@@ -678,13 +718,7 @@ function McsStageSession({
           ? `Continue to next section: ${nextSection.title}`
           : 'Return to lesson map'
         : 'Continue',
-    onActivate:
-      !lookingBack && isLastStep
-        ? () =>
-            nextSection
-              ? goToSection(nextSection.id)
-              : router.push(`${mechanicalCirculatorySupportNavBase}/learn`)
-        : advance,
+    onActivate: handleContinue,
     icon: <ArrowRight aria-hidden="true" />,
   }
 
@@ -1399,6 +1433,19 @@ function McsStageSession({
         ? transferHighlightControl(lesson)
         : undefined
 
+  /*
+   * Does the screen say "Look here" at the monitor? The teaching column prints the section's
+   * pointer — "Look here: Arterial pressure trace", "Look here: Response trend" — on the loop walk
+   * and on the Recognize and Predict steps of the four application sections, and for the five
+   * sections whose primary surface is the monitor that pointer names a monitor region.
+   */
+  const monitorPointedAt =
+    lesson.contract.primarySurface === 'monitor' &&
+    activeStep.interaction.kind !== 'teaching' &&
+    (walking ||
+      (!lesson.introductory &&
+        (activeStep.phase === 'recognize' || activeStep.phase === 'predict')))
+
   const simulator = (
     <McsSimulatorPane
       lesson={lesson}
@@ -1417,6 +1464,14 @@ function McsStageSession({
       openSurfaces={openSurfaces}
       onToggleSurface={toggleSurface}
       mapPreference={activeStep.surfaces.includes('map') ? activeStep.id : null}
+      monitorPointedAt={monitorPointedAt}
+      monitorOpen={monitorPreferences[activeStep.id] ?? monitorPointedAt}
+      onMonitorToggle={(open) => {
+        setMonitorPreferences((previous) =>
+          previous[activeStep.id] === open ? previous : { ...previous, [activeStep.id]: open },
+        )
+      }}
+      stepKey={activeStep.id}
     />
   )
 
@@ -1542,24 +1597,69 @@ function McsStageSession({
     </div>
   )
 
+  /*
+   * The step bar: which run is on screen, and the way on.
+   *
+   * On arrival the brightest control was Save & exit in the header, and Continue sat at the foot
+   * of the step — 1,100 to 8,700 px down depending on the step — so the first thing a learner met
+   * was the way out (F03). The bar puts the same Continue, with the same handler, at the top of
+   * the step, beside the run's identity; the one at the foot is unchanged. Both are always enabled,
+   * so neither moves or changes under the pointer. Save & exit stays in the header, styled as the
+   * secondary control it is.
+   *
+   * The identity keeps what a learner needs to know — which run this is and the simulated time
+   * it is at — and moves the seed, which is provenance rather than something to read, into a
+   * disclosure. Opening it is not an action: it changes nothing in the model or the progress.
+   */
+  const runLabel = unloadingExample
+    ? null
+    : lookingBack
+      ? 'Captured review'
+      : progression.transferLoaded
+        ? 'Transfer patient'
+        : teachingStep
+          ? 'Guided reference'
+          : 'Current exercise'
+  const stepBar = (
+    <div ref={stepBarRef} className={styles.stepBar} data-step-bar>
+      <div className={styles.stepBarIdentity}>
+        <p className={styles.footnote} data-session-identity>
+          {runLabel === null
+            ? 'Provided model comparison · observation times are shown with each example.'
+            : `${runLabel} · ${state.timeSeconds.toFixed(2)} simulated seconds.`}
+        </p>
+        {runLabel === null ? null : (
+          <details className={styles.runDetails} data-run-details>
+            <summary>Run details</summary>
+            <p>
+              Seed {state.seed} · the run’s identifier for reproducing it, not a clinical value. The
+              simulated clock moves only while display playback runs or a step runs the model;
+              opening a panel, changing the theme or resizing the window adds no simulated time.
+            </p>
+          </details>
+        )}
+      </div>
+      <button
+        type="button"
+        className={shellStyles.nowPrimary}
+        data-step-bar-continue
+        onClick={continueAction.onActivate}
+      >
+        {continueAction.icon}
+        {continueAction.label}
+        {!lookingBack && !isLastStep ? (
+          <span className={styles.visuallyHidden}>
+            {' '}
+            to step {activeStep.ordinal + 1} of {lesson.steps.length}
+          </span>
+        ) : null}
+      </button>
+    </div>
+  )
+
   const task = (
     <>
-      <p className={styles.footnote} data-session-identity>
-        {unloadingExample ? (
-          'Provided model comparison · observation times are shown with each example.'
-        ) : (
-          <>
-            {lookingBack
-              ? 'Captured review'
-              : progression.transferLoaded
-                ? 'Transfer patient'
-                : teachingStep
-                  ? 'Guided reference'
-                  : 'Current exercise'}{' '}
-            · seed {state.seed} · {state.timeSeconds.toFixed(2)} simulated seconds.
-          </>
-        )}
-      </p>
+      {stepBar}
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus>
         <NowCard
           model={

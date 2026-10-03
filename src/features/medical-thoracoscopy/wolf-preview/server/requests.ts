@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server'
 
 import { defaultLocale, isActiveLocale } from '@/i18n/locale'
 
-import { WOLF_PREVIEW_PATH, type ReviewState } from '../paths'
+import {
+  wolfPreviewItem,
+  wolfPreviewPagePath,
+  type ReviewState,
+  type WolfPreviewItem,
+} from '../paths'
 
 /**
  * Small helpers the preview's endpoints share: a same-site check for form posts, and redirects
@@ -32,8 +37,17 @@ export function localeFrom(value: FormDataEntryValue | null | undefined): string
   return typeof value === 'string' && isActiveLocale(value) ? value : defaultLocale
 }
 
-export function backToPreview(locale: string, state?: ReviewState): NextResponse {
-  const location = `/${locale}${WOLF_PREVIEW_PATH}${state ? `?review=${state}` : ''}`
+/** The page a form came from: one of the hub's items, or the hub itself for anything else. */
+export function itemFrom(value: FormDataEntryValue | null | undefined): WolfPreviewItem | null {
+  return wolfPreviewItem(value)
+}
+
+export function backToPreview(
+  locale: string,
+  state?: ReviewState,
+  item: WolfPreviewItem | null = null,
+): NextResponse {
+  const location = `/${locale}${wolfPreviewPagePath(item)}${state ? `?review=${state}` : ''}`
   return new NextResponse(null, {
     status: 303,
     headers: { Location: location, 'Cache-Control': 'no-store' },

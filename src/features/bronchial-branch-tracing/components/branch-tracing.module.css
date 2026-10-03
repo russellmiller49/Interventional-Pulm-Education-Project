@@ -2129,3 +2129,138 @@
 .branchIdentities li {
   margin: 0.15rem 0;
 }
+
+/* BBT-PRE-REVIEW-04: course map, local course reference, mode notes and the division primer. */
+.courseMap {
+  margin: 1.5rem 0 2rem;
+}
+.courseMap > ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  list-style: none;
+  padding: 0 !important;
+  margin: 0 0 1rem;
+}
+.courseMap > ol > li {
+  margin: 0 !important;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+.courseMap h3 {
+  margin: 0 0 0.4rem;
+}
+.courseMap h3 a {
+  color: #b3e5e3;
+}
+.courseMap ul {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #c7d6d8;
+}
+@media (max-width: 900px) {
+  .courseMap > ol {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.namingKey {
+  max-width: 36rem;
+  font-size: 0.85rem;
+  color: #c7d6d8 !important;
+  border-left: 3px solid #537b78;
+  padding-left: 0.6rem;
+}
+.patternTag {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0 0.45rem;
+  border: 1px solid #537b78;
+  border-radius: 999px;
+  color: #b3e5e3;
+  font-size: 0.72rem;
+  vertical-align: middle;
+}
+.courseReference h3,
+.courseReference h4 {
+  margin: 0.8rem 0 0.35rem;
+  font-size: 0.95rem;
+}
+.courseReference p,
+.courseReference li,
+.courseReference dd {
+  font-size: 0.87rem;
+}
+.courseReference a {
+  color: #b3e5e3;
+}
+.courseReferenceDisclosure {
+  margin: 0.6rem 0;
+  font-size: 0.87rem;
+}
+.courseReferenceDisclosure > summary {
+  cursor: pointer;
+  color: #bddcde;
+}
+.patternList {
+  margin: 0 0 0.6rem;
+}
+.patternList li[aria-current] {
+  border-left: 3px solid #f6c66c;
+  padding-left: 0.45rem;
+  margin-left: -0.6rem;
+}
+.termList {
+  margin: 0;
+}
+.termList > div {
+  margin: 0 0 0.5rem;
+}
+.termList dt {
+  font-weight: 650;
+}
+.termList dd {
+  margin: 0.1rem 0 0;
+  color: #c7d6d8;
+}
+.modeNote {
+  margin: 0.2rem 0 0.8rem;
+  padding: 0.5rem 0.65rem;
+  border-left: 3px solid #a5e9e7;
+  border-radius: 0 6px 6px 0;
+  background: #14252c;
+  font-size: 0.87rem;
+}
+.modeNote p {
+  margin: 0 0 0.5rem;
+}
+.modeNote p:last-child,
+.modeNote details {
+  margin-bottom: 0;
+}
+.divisionPrimer {
+  margin: 0.2rem 0 0.8rem;
+  font-size: 0.87rem;
+}
+.divisionPrimer h4 {
+  margin: 0.6rem 0 0.25rem;
+  font-size: 0.92rem;
+}
+.routeRoles {
+  margin: 0.4rem 0 0.8rem;
+  font-size: 0.87rem;
+}
+.routeRoles h3 {
+  margin: 0 0 0.35rem;
+}
+.routeRoles li[aria-current] {
+  color: #f6e2b7;
+}
+.footerDetails summary {
+  cursor: pointer;
+}
+.footerDetails[open] span {
+  display: block;
+  max-width: 40rem;
+}

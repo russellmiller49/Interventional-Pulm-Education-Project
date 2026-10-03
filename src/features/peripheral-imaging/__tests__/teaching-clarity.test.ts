@@ -221,9 +221,11 @@ describe('report CW1 — a reused closing question is labelled as the optional r
     })
     expect(table).toEqual([
       ['imaging-questions', 'choose-transfer-1', null, []],
-      ['chain-walk', 'choose-1', 'imaging-questions', ['imaging-questions']],
+      // Section 1 renders its QS-1 check (OD4-05) instead of choose-1, so the worked example's twin
+      // is first met as Section 2's review, and the label says so rather than "asked again".
+      ['chain-walk', 'choose-1', 'imaging-questions', []],
       ['good-image', 'walk-1', 'chain-walk', ['chain-walk']],
-      ['current-anatomy', 'choose-1', 'imaging-questions', ['imaging-questions', 'chain-walk']],
+      ['current-anatomy', 'choose-1', 'imaging-questions', ['chain-walk']],
       ['projection', 'anatomy-1', 'current-anatomy', ['current-anatomy']],
       ['signal', 'geometry-1', 'projection', []],
       ['field', 'signal-1', 'signal', []],

@@ -7,21 +7,33 @@ import sitemap from '@/app/sitemap'
 import { isVisibleModulePath } from '@/lib/draft-modules'
 import { isPublicPath, isPublicUnlistedPath, isStaticAssetPath } from '@/lib/site-auth/access'
 
+import { WOLF_PREVIEW_CARDS, WOLF_PREVIEW_DEMOS } from '../demos'
+import { WOLF_PREVIEW_ITEMS } from '../paths'
 import { wolfPreviewAssets } from '../server/assetManifest'
+import { wolfPreviewDemoAssets } from '../server/demoManifest'
 
 /**
- * What the preview opens, and what it does not: one page past the site's sign-in gate (which
- * then checks its own session), nothing else of the course, no public copy of a model, no secret
- * or code in the repository, and nothing server-only reachable from page code.
+ * What the preview opens, and what it does not: the hub and its three pages past the site's
+ * sign-in gate (each then checks its own session), nothing else of the course, no public copy of
+ * a model or demonstration file, no secret or code in the repository, and nothing server-only
+ * reachable from page code.
  */
 const ROOT = process.cwd()
 const tracked = execFileSync('git', ['ls-files'], { cwd: ROOT }).toString().trim().split('\n')
 
+const PAGES = [
+  '/medical-thoracoscopy/wolf-preview',
+  ...WOLF_PREVIEW_ITEMS.map((item) => `/medical-thoracoscopy/wolf-preview/${item}`),
+]
+
 describe('site access', () => {
-  it('lets only the preview page past the site sign-in gate, noindex', () => {
+  it('lets only the hub and its three pages past the site sign-in gate, noindex', () => {
+    expect(PAGES).toHaveLength(4)
     for (const locale of ['', '/en', '/es', '/zh-CN']) {
-      expect(isPublicPath(`${locale}/medical-thoracoscopy/wolf-preview`)).toBe(true)
-      expect(isPublicUnlistedPath(`${locale}/medical-thoracoscopy/wolf-preview`)).toBe(true)
+      for (const page of PAGES) {
+        expect({ page, public: isPublicPath(`${locale}${page}`) }).toEqual({ page, public: true })
+        expect(isPublicUnlistedPath(`${locale}${page}`)).toBe(true)
+      }
     }
   })
 
@@ -35,21 +47,31 @@ describe('site access', () => {
       '/medical-thoracoscopy/prototype/device-explorer',
       '/medical-thoracoscopy/wolf-preview/anything',
       '/medical-thoracoscopy/wolf-preview-other',
+      '/medical-thoracoscopy/wolf-preview/device-explorer/more',
+      '/medical-thoracoscopy/wolf-preview/pleural-model-progress/stills',
+      '/medical-thoracoscopy/wolf-preview/portable-trainer-concept/viewer',
+      '/medical-thoracoscopy/wolf-preview/hub',
+      '/medical-thoracoscopy/pleural-model-progress',
     ]) {
       expect({ other, public: isPublicPath(other) }).toEqual({ other, public: false })
     }
   })
 
-  it('keeps the model endpoint’s own check as the guard for asset-like addresses', () => {
+  it('keeps the endpoints’ own checks as the guard for asset-like addresses', () => {
     // The site treats any address ending like a file as static, and all of /api/ skips the site
-    // gate; the endpoint therefore checks the session itself (endpoints.test.ts).
+    // gate; the endpoints therefore check the session themselves (endpoints.test.ts).
     expect(isStaticAssetPath('/api/medical-thoracoscopy/wolf-preview/models/probe.glb')).toBe(true)
+    expect(
+      isStaticAssetPath(
+        '/api/medical-thoracoscopy/wolf-preview/files/pleural-model-progress/media/a.mp4',
+      ),
+    ).toBe(true)
   })
 
   it('stays out of navigation and the sitemap', () => {
-    expect(
-      isVisibleModulePath('/medical-thoracoscopy/wolf-preview', { canViewDraftModules: true }),
-    ).toBe(false)
+    for (const page of PAGES) {
+      expect(isVisibleModulePath(page, { isAdmin: true })).toBe(false)
+    }
     const urls = sitemap().map((entry) => entry.url)
     expect(urls.filter((url) => /medical-thoracoscopy|wolf/.test(url))).toEqual([])
     const robots = readFileSync(path.join(ROOT, 'src/app/robots.txt'), 'utf8')
@@ -85,8 +107,76 @@ describe('no public copy of a model', () => {
     }
   })
 
-  it('keeps the private bucket out of the public module-assets bucket', () => {
+  it('keeps the private buckets out of the public module-assets bucket', () => {
     expect(wolfPreviewAssets.bucket).not.toBe('module-assets')
+    expect(wolfPreviewDemoAssets.bucket).not.toBe('module-assets')
+  })
+})
+
+describe('no public copy of a demonstration file', () => {
+  const entries = Object.values(wolfPreviewDemoAssets.groups).flatMap((files) =>
+    Object.values(files as Record<string, { object: string; sha256: string }>),
+  )
+
+  it('commits no demonstration file anywhere', () => {
+    const objects = new Set(entries.map((entry) => entry.object))
+    expect(tracked.filter((file) => objects.has(path.basename(file)))).toEqual([])
+    const media = tracked.filter((file) => /\.(mp4|glb)$/i.test(file))
+    for (const name of ['pleural-model-progress', 'portable-thoracoscopy', 'trainer.glb']) {
+      expect(media.filter((file) => file.includes(name))).toEqual([])
+    }
+  })
+
+  it('adds no rewrite, public upload prefix or standalone path for the demonstrations', () => {
+    for (const file of [
+      'next.config.mjs',
+      'scripts/upload-module-assets-to-supabase.mjs',
+      'scripts/prepare-standalone.mjs',
+    ]) {
+      const text = readFileSync(path.join(ROOT, file), 'utf8')
+      expect({
+        file,
+        hit: /pleural-model-progress|portable-trainer|wolf-preview/.test(text),
+      }).toEqual({ file, hit: false })
+    }
+  })
+
+  it('distributes nothing the demonstrations withheld', () => {
+    const published = Object.values(wolfPreviewDemoAssets.groups).flatMap((files) =>
+      Object.keys(files),
+    )
+    expect(
+      published.filter((file) =>
+        /comparison|scope-tracker|README|SERVE|diagrams|build\/|LICENSE|\.py$|\.mjs$|capture/i.test(
+          file,
+        ),
+      ),
+    ).toEqual([])
+    expect(Object.keys(wolfPreviewDemoAssets.groups).sort()).toEqual(
+      ['hub', 'pleural-model-progress', 'portable-trainer-concept'].sort(),
+    )
+  })
+
+  it('names in page content only files the server can serve', () => {
+    const groups = wolfPreviewDemoAssets.groups as Record<string, Record<string, unknown>>
+    const missing: string[] = []
+    const need = (group: string, file: string) => {
+      if (!Object.prototype.hasOwnProperty.call(groups[group] ?? {}, file)) {
+        missing.push(`${group}/${file}`)
+      }
+    }
+    for (const card of WOLF_PREVIEW_CARDS) need('hub', card.image)
+    for (const demo of Object.values(WOLF_PREVIEW_DEMOS)) {
+      need(demo.id, demo.viewer.file)
+      need(demo.id, demo.video.file)
+      need(demo.id, demo.video.poster)
+      for (const still of demo.stills) {
+        need(demo.id, still.file)
+        need(demo.id, still.preview)
+      }
+    }
+    expect(missing).toEqual([])
+    expect(WOLF_PREVIEW_CARDS.map((card) => card.item)).toEqual([...WOLF_PREVIEW_ITEMS])
   })
 })
 
@@ -103,6 +193,38 @@ describe('secrets and boundaries', () => {
         return code.test(text) || assignment.test(text)
       })
     expect(hits).toEqual([])
+  })
+
+  it('keeps server-only modules out of the preview’s page components', () => {
+    const dir = path.join(ROOT, 'src/features/medical-thoracoscopy/wolf-preview')
+    for (const file of readdirSync(dir).filter((name) => /\.tsx?$/.test(name))) {
+      const text = readFileSync(path.join(dir, file), 'utf8')
+      expect({
+        file,
+        imports: text.match(/from '[^']*(server\/|supabase\/admin|node:)[^']*'/g),
+      }).toEqual({ file, imports: null })
+    }
+  })
+
+  it('ships page content without storage objects, hashes or the bucket', () => {
+    const text = ['demos.ts', 'paths.ts']
+      .map((file) =>
+        readFileSync(
+          path.join(ROOT, 'src/features/medical-thoracoscopy/wolf-preview', file),
+          'utf8',
+        ),
+      )
+      .join('\n')
+    expect(text).not.toContain(wolfPreviewDemoAssets.bucket)
+    for (const files of Object.values(wolfPreviewDemoAssets.groups)) {
+      for (const entry of Object.values(
+        files as Record<string, { object: string; sha256: string }>,
+      )) {
+        expect(text).not.toContain(entry.object)
+        expect(text).not.toContain(entry.sha256)
+      }
+    }
+    expect(text).not.toMatch(/Local-Data|\/Users\/|R-DEVICE|NOT REVIEWED|Internal presentation/)
   })
 
   it('keeps server-only code out of everything a page ships', () => {

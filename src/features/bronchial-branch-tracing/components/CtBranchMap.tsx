@@ -164,6 +164,7 @@ export function CtProgressiveMap({
   active = 0,
   reveal = true,
   onReview,
+  worked = false,
 }: {
   trace: CtTrace
   recorded: boolean[]
@@ -171,6 +172,11 @@ export function CtProgressiveMap({
   active?: number
   reveal?: boolean
   onReview?: (index: number) => void
+  /**
+   * The worked example's route, not the learner's (BBTF-08): `recorded` then marks the divisions
+   * shown so far, and nothing on the map is attributed to the learner.
+   */
+  worked?: boolean
 }) {
   const mapRef = useRef<HTMLElement>(null)
   const recordedKey = recorded.join(',')
@@ -189,10 +195,17 @@ export function CtProgressiveMap({
     .filter(({ i }) => !recorded[i])
     .map(({ p, i }) => `${i + 1}. ${p.decision?.parent.airway.code ?? 'Distal approach'}`)
   return (
-    <section ref={mapRef} className={styles.progressiveMap} aria-label="Connected route map">
-      <h3 data-map-state={recordedCount === total ? 'complete' : 'partial'}>
-        Your route map · {recordedCount} of {total} stops recorded
-        {recordedCount < total && (
+    <section
+      ref={mapRef}
+      className={styles.progressiveMap}
+      aria-label={worked ? 'Worked route map' : 'Connected route map'}
+      data-map-owner={worked ? 'worked-example' : 'learner'}
+    >
+      <h3 data-map-state={worked ? 'worked' : recordedCount === total ? 'complete' : 'partial'}>
+        {worked
+          ? `Worked route map · ${recordedCount} of ${total} stops shown · model reference, not your route`
+          : `Your route map · ${recordedCount} of ${total} ${total === 1 ? 'stop' : 'stops'} recorded`}
+        {!worked && recordedCount < total && (
           <>
             {' '}
             <span className={styles.partialTag} data-map-partial>
@@ -240,10 +253,16 @@ export function CtProgressiveMap({
           )
         })}
       </ol>
-      {!recorded.some(Boolean) && (
+      {!worked && !recorded.some(Boolean) && (
         <p>Record a division to add your interpretation. Future continuations are not prefilled.</p>
       )}
-      {missing.length > 0 && recorded.some(Boolean) && (
+      {worked && (
+        <p>
+          The worked example’s divisions, added as you step through them. None of this is your work,
+          and it is not carried into your own trace.
+        </p>
+      )}
+      {!worked && missing.length > 0 && recorded.some(Boolean) && (
         <p data-map-missing>
           Not recorded here: {missing.join(', ')}. Moving past a division without recording it is a
           valid way to work; those stops stay off this map rather than being filled in, and nothing

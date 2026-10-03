@@ -103,7 +103,9 @@ test('owner saves a real PI finding, reviews after browser restart, and exports 
     await page.mouse.down()
     await page.mouse.move(box.x + 100, box.y + 70)
     await page.mouse.up()
-    await expect(page.getByText('1 highlighted area', { exact: true })).toBeVisible()
+    await expect(
+      page.getByText('1 annotation · Included with your feedback', { exact: true }),
+    ).toBeVisible()
     const annotated = await canvas.evaluate(
       (element) => (element as HTMLCanvasElement).toDataURL('image/png').split(',')[1],
     )
@@ -228,11 +230,15 @@ test('narrow EBUS feedback preserves a failed draft, filters and clears only aft
   await expect(page.getByRole('dialog')).toBeVisible()
   await expect(page.getByLabel('What should we know?')).toHaveValue('EBUS finding')
   await expect(page.getByLabel('Text or section')).toHaveValue('Acoustic contact')
-  await expect(page.getByText('1 highlighted area', { exact: true })).toBeVisible()
+  await expect(
+    page.getByText('1 annotation · Included with your feedback', { exact: true }),
+  ).toBeVisible()
   await page.getByRole('button', { name: 'Continue testing' }).click()
   await page.getByRole('button', { name: 'Continue feedback' }).click()
   await expect(canvas).toBeVisible()
-  await expect(page.getByText('1 highlighted area', { exact: true })).toBeVisible()
+  await expect(
+    page.getByText('1 annotation · Included with your feedback', { exact: true }),
+  ).toBeVisible()
   expect(
     await page
       .getByRole('dialog')

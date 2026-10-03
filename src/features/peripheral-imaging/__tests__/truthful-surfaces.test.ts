@@ -66,13 +66,16 @@ describe('report 1.2 — a prompt names the evidence the screen actually carries
     expect(fixedExampleEvidence('cbct-acquisition', 0)).toBe('depicts-the-question')
   })
 
-  it('the five text-only checks read as scenarios', () => {
+  it('the six text-only checks read as scenarios', () => {
     const textOnly = peripheralImagingSectionIds.filter((sectionId) => {
       const lesson = imagingStageLesson(sectionId)
       return lesson.steps[lesson.predictionStepIndex].activity.visual === 'case'
     })
     expect(textOnly).toEqual([
       'imaging-questions',
+      // PR #279 sanity review (F3, CHK-S10): Section 10's conceptual check lost the single
+      // reconstructed plane beside it, which could not show the elongation its stem describes.
+      'dts-acquisition',
       'dts-interpretation',
       'fixed-suite',
       'mobile-suite',

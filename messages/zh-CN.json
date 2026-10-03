@@ -9532,6 +9532,8 @@
       "trayNeedTwo": "再添加一个器械即可比较。",
       "trayRemove": "从比较中移除",
       "trayClear": "清除",
+      "trayLookupFailed": "无法加载设备名称。所选比较设备未更改。",
+      "trayRetry": "重试设备查询",
       "navCompare": "比较"
     }
   }
