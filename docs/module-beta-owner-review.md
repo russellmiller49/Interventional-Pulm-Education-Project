@@ -85,11 +85,36 @@ simulator state is not restored. The hub lists the testing pages that hold unsen
 testing page presents one draft at a time; if another tab left a second draft for the same page,
 it is offered after the first is saved or discarded.
 
+**The same draft open in two tabs.** This is not shared live editing: a tab shows what it loaded
+and does not update while the other tab types. What is guaranteed is that neither tab's unsent
+work is lost and that a draft which has been saved or discarded never comes back under its old
+ID.
+
+- **Save in one tab.** The report holds what that tab showed. If the other tab had already stored
+  a newer version, that version is kept as a new unsent draft and the saving tab says so. If the
+  other tab edits afterwards, its changes are kept as a new unsent draft and its dialog says that
+  another tab already saved an earlier version; saving there adds a second, separate report.
+- **Discard in one tab.** The same, without a report: a newer version the other tab had stored,
+  or an edit it makes afterwards, is kept as a new unsent draft. The discarded draft itself does
+  not reappear.
+- **Nothing changed in the other tab.** No extra draft is created. That tab's button may still
+  read **Continue feedback** until it is used; opening it then says the draft was already saved
+  or discarded in another tab and returns to **Give feedback**.
+- **Both tabs edit before either saves or discards.** The first stored edit keeps the draft; the
+  other tab's version is kept as a separate unsent draft and its dialog says so. Neither
+  overwrites the other.
+
+A kept draft has a new ID and the original module, page address, comment, referenced text, source
+image, editable annotations and creation time. It is unsent work: it is never saved as a report
+automatically.
+
 **What clears it.** **Discard draft** removes that draft only. **Save feedback locally** removes it
 only after the report's IndexedDB transaction has committed; the report keeps the draft's ID, so a
-retry cannot create a second report. If the browser stops between that commit and the removal, the
-next load finds the committed report by ID and finishes clearing the draft instead of offering it
-again. A failed save leaves the dialog open and the stored draft in place. Export, **Clear local
+retry cannot create a second report. Before the report is written, the save records which stored
+version of the draft it covers. If the browser stops between the report's commit and the removal,
+the next load uses that record to finish: the covered version is removed, and a different stored
+version is kept as a new draft. A report with the same ID is never, by itself, a reason to remove
+a draft. A failed save leaves the dialog open and the stored draft in place. Export, **Clear saved
 feedback**, sign-out and switching modules do not remove a draft, and discarding a draft never
 removes a saved report or learner progress.
 
@@ -109,13 +134,23 @@ notes, `storage_mode`, `schema_version`, and an optional PNG Blob with MIME, byt
 Retries with the same ID return the existing report without replacing its image or review notes.
 Unknown record/database versions produce an explicit error without resetting or deleting data.
 
-Unsent drafts: a separate database, `module-owner-feedback-drafts`, version 1, with object stores
-`drafts` (one record per draft, keyed by report UUID, record schema version 1) and `images` (the
-draft's source PNG Blob, keyed by the same UUID and written only when the image changes). Adding
+Unsent drafts: a separate database, `module-owner-feedback-drafts`, version 2, with object stores
+`drafts` (one record per draft, keyed by report UUID, record schema version 2), `images` (the
+draft's source PNG Blob, keyed by the same UUID and written only when the image changes) and
+`finalizations` (one small record per draft ID that has been saved or discarded, or whose save
+has started). Each draft record carries a `revision` that changes on every write and, for a draft
+kept apart from another, the ID it came from. A tab writes a draft under its ID only while that
+ID has not been saved or discarded and the stored revision is the one the tab last saw; otherwise
+its content is written under a new ID. Draft, image and finalization records are changed together
+in one IndexedDB transaction. Finalization records are kept so that a tab left open cannot write
+under a closed ID later; they hold IDs and times, no feedback text or image. Version 1 of this
+database (no revisions, no `finalizations` store) is upgraded in place: the store is added and
+existing drafts and images are left as they are and stay readable. Adding
 drafts did not change the reports database: it is still version 1 with its single `reports` store
 and unchanged record schema, so existing reports were not migrated, rewritten or made unreadable
 to an older build. A newer drafts database than this version understands produces an explicit
-error and is not reset. Draft records are validated on every read and write with the same page
+error and is not reset. A build that only knows drafts database version 1 gets that same explicit
+error for drafts once this version has opened the database; saved reports are unaffected. Draft records are validated on every read and write with the same page
 allowlist, text limits, PNG signature/IHDR check, 3 MB and 4,096-pixel limits as saved reports,
 plus bounds of 500 annotations and 20,000 points per drawn stroke.
 
@@ -160,13 +195,14 @@ Upload the ZIP to ChatGPT for consolidated analysis. Export is a browser downloa
 sharing it is a separate owner action. It contains private notes and screenshots: treat the ZIP
 accordingly. JSZip is the existing browser archive dependency. Export never deletes local records.
 
-## Clear local feedback
+## Clear saved feedback
 
-**Clear local feedback** asks for explicit confirmation that **all** local reports and screenshots
-will be permanently removed from this browser, even when filters are active. Cancel keeps them.
-Export a copy first if needed. Clearing is irreversible and never runs automatically after export.
-It clears only the feedback object store, not learner progress, accounts, or server feedback.
-Unsent drafts are in a separate database and are not removed; use **Discard draft** for those.
+**Clear saved feedback** asks for explicit confirmation that **all** saved local reports and
+screenshots will be permanently removed from this browser, even when filters are active. Cancel
+keeps them. Export a copy first if needed. Clearing is irreversible and never runs automatically
+after export. It clears only the saved-report object store, not learner progress, accounts, or
+server feedback. The page states beside the button that unsent drafts are kept separately and are
+not removed by this action; use **Discard draft** for those.
 
 ## Audited page context
 
@@ -233,7 +269,12 @@ drafts it checks, in real IndexedDB: empty open/close; comment-, selection- and 
 all four annotation tools restored pixel-for-pixel and still editable; the original page kept
 after the module navigates; reload and persistent-profile restart; discard; a failed save; the
 report committing under the draft's ID before the draft is cleared; a damaged record; and the
-draft's absence from the workspace and the ZIP. It also compares the PI and EBUS direct routes
+draft's absence from the workspace and the ZIP. With two tabs of one persistent profile on one
+stored draft it checks: Save in one tab with newer content already stored by the other, and with
+an edit made afterwards; the same two cases for Discard; a tab that changed nothing; a screenshot
+with annotations carried through the conflict; both tabs editing before either finalizes; survival
+across reload and a browser restart; and that no stored image is left without its draft. A
+version 1 drafts database is opened and upgraded with its draft and image intact. It also compares the PI and EBUS direct routes
 with their review shells at 1280, 1024, 390 and 320 pixels wide and opens every module in the
 current catalog in the shell.
 The server suite retains API fixtures for successful authenticated persistence, and checks that

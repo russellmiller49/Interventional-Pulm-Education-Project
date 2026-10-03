@@ -136,7 +136,9 @@ async function transaction<T>(
   })
 }
 
-export async function saveOwnerFeedback(
+// As `saveOwnerFeedback`, and also whether this call wrote the report. `created: false` means a
+// report with this ID was already there and was left exactly as it was.
+export async function createOwnerFeedback(
   input: z.input<typeof feedbackSchema>,
   image?: Blob | null,
 ) {
@@ -174,21 +176,31 @@ export async function saveOwnerFeedback(
     schema_version: ownerFeedbackVersion,
     screenshot,
   }
-  return transaction<OwnerFeedbackEntry>('readwrite', (store, finish, fail) => {
-    const request = store.get(record.id)
-    request.onsuccess = () => {
-      try {
-        // The same ID is a retry, never an overwrite (including existing review notes).
-        if (request.result) finish(readRecord(request.result))
-        else {
-          store.add(record)
-          finish(record)
+  return transaction<{ entry: OwnerFeedbackEntry; created: boolean }>(
+    'readwrite',
+    (store, finish, fail) => {
+      const request = store.get(record.id)
+      request.onsuccess = () => {
+        try {
+          // The same ID is a retry, never an overwrite (including existing review notes).
+          if (request.result) finish({ entry: readRecord(request.result), created: false })
+          else {
+            store.add(record)
+            finish({ entry: record, created: true })
+          }
+        } catch (error) {
+          fail(error as Error)
         }
-      } catch (error) {
-        fail(error as Error)
       }
-    }
-  })
+    },
+  )
+}
+
+export async function saveOwnerFeedback(
+  input: z.input<typeof feedbackSchema>,
+  image?: Blob | null,
+) {
+  return (await createOwnerFeedback(input, image)).entry
 }
 
 // Whether a report ID has committed, without parsing (or depending on) any stored record.
@@ -196,6 +208,33 @@ export function ownerFeedbackExists(id: string) {
   return transaction<boolean>('readonly', (store, finish) => {
     const request = store.count(id)
     request.onsuccess = () => finish(request.result > 0)
+  })
+}
+
+// The fields an unsent draft is compared against, read without parsing the stored record.
+export function ownerFeedbackContent(id: string) {
+  return transaction<{
+    module_id: unknown
+    page_path: unknown
+    comment: unknown
+    selected_text: unknown
+    hasScreenshot: boolean
+  } | null>('readonly', (store, finish) => {
+    const request = store.get(id)
+    request.onsuccess = () => {
+      const record = request.result as Record<string, unknown> | undefined
+      finish(
+        record
+          ? {
+              module_id: record.module_id,
+              page_path: record.page_path,
+              comment: record.comment,
+              selected_text: record.selected_text,
+              hasScreenshot: Boolean(record.screenshot),
+            }
+          : null,
+      )
+    }
   })
 }
 

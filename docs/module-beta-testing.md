@@ -43,8 +43,12 @@ runs in a same-origin frame with a compact feedback toolbar outside it, so lesso
 and simulator state stay intact. Inside the frame the module is the standard route unchanged,
 including the site header, so what a tester sees and captures matches what a learner gets. The
 site page that sits underneath the review shell is covered by it; while the shell is open that
-page cannot be scrolled and its navigation is inert, so the module frame is the only scrolling
-document and the keyboard goes from the skip link straight to the toolbar. The usual module URLs
+page cannot be scrolled by wheel, touch or keyboard, scrolling past the end of the module does not
+chain into it, and its navigation is inert, so the module frame is the only scrolling document and
+the keyboard goes from the skip link straight to the toolbar. Activating the skip link may move
+that covered page to the link's target (about one site-header height); the fixed shell still
+covers the whole viewport, so nothing underneath becomes visible. The site header inside the
+frame is kept by owner decision. The usual module URLs
 have no feedback UI and open without an account. Therapeutic Bronchoscopy is not in the beta hub. It remains in **Modules in development**,
 and its `/admin/therapeutic-bronchoscopy` page requires `site_admin` access.
 

@@ -4,8 +4,8 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { useEffect, useState } from 'react'
 import { betaModuleById } from './catalog'
-import { readOwnerDrafts } from './ownerDraftStore'
-import { ownerFeedbackExists } from './ownerFeedbackStore'
+import { finalizedOwnerDraftIds, readOwnerDrafts } from './ownerDraftStore'
+import { ownerFeedbackContent } from './ownerFeedbackStore'
 
 // Owner-local only. Points back to the testing pages that still hold unsent work; it never
 // opens, saves, or removes a draft.
@@ -17,13 +17,13 @@ export function OwnerDraftNotice({ locale }: { locale: string }) {
     void (async () => {
       try {
         const { drafts, unreadable } = await readOwnerDrafts()
+        // A stored copy of exactly what was saved or discarded is cleared when its testing page
+        // next opens. Anything that differs from it is still unsent work.
+        const finalized = await finalizedOwnerDraftIds(ownerFeedbackContent)
         const pending: string[] = []
-        for (const draft of drafts) {
-          // A draft whose report already committed is cleared when its testing page next opens.
-          if (pending.includes(draft.host_module_id)) continue
-          if (!(await ownerFeedbackExists(draft.id).catch(() => false)))
+        for (const draft of drafts)
+          if (!finalized.has(draft.id) && !pending.includes(draft.host_module_id))
             pending.push(draft.host_module_id)
-        }
         if (!current) return
         setHosts(pending)
         setProblem(

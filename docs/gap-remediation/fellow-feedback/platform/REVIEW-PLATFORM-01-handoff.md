@@ -19,15 +19,22 @@ the SHA below; it does not mean a human tester met it.
 
 ## Dispositions
 
-| ID  | Reported issue                                  | Disposition                                                                                                                                                                                                                                                                                |
-| --- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| P1  | Feedback submission returned 503                | **Configuration/deployment finding, already resolved.** The current code and tests implement the documented mode contract; no storage change was made. Live storage was not re-verified by this task.                                                                                      |
-| P2  | Unsent feedback lost on reload                  | **Reproduced and repaired** in owner-local mode. Server-mode drafts are unchanged: memory only.                                                                                                                                                                                            |
-| P3  | Empty dialog creates "Continue feedback"        | **Reproduced and repaired** in both modes.                                                                                                                                                                                                                                                 |
-| P4  | Beta wrapper stacked headers / nested scrolling | **Split.** Hidden second scroll range, covered duplicate site navigation, and toolbar height: reproduced and repaired inside the wrapper. The site header shown inside the module frame: measured, left as it is, and **needs an owner/shared-platform decision**. See [P4](#p4--wrapper). |
+| ID  | Reported issue                                  | Disposition                                                                                                                                                                                                                                                                        |
+| --- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1  | Feedback submission returned 503                | **Configuration/deployment finding, already resolved.** The current code and tests implement the documented mode contract; no storage change was made. Live storage was not re-verified by this task.                                                                              |
+| P2  | Unsent feedback lost on reload                  | **Reproduced and repaired** in owner-local mode. Server-mode drafts are unchanged: memory only.                                                                                                                                                                                    |
+| P3  | Empty dialog creates "Continue feedback"        | **Reproduced and repaired** in both modes.                                                                                                                                                                                                                                         |
+| P4  | Beta wrapper stacked headers / nested scrolling | **Split.** Hidden second scroll range, covered duplicate site navigation, and toolbar height: reproduced and repaired inside the wrapper. The site header shown inside the module frame: measured and **kept by owner decision** (see the repair section). See [P4](#p4--wrapper). |
 
 One further defect was found and repaired while verifying P2; see
 [Save could wait about seven seconds](#save-could-wait-about-seven-seconds).
+
+An independent sanity review of head `92488747` then found one merge-blocking defect: with the
+same draft open in two tabs, unsent work could be lost or a discarded draft revived. That repair,
+and what it changes in the sections below, is recorded in
+[Sanity-review repair: one draft in two tabs](#sanity-review-repair-one-draft-in-two-tabs).
+Where an earlier section describes storage version 1, a draft being cleared because a report
+with its ID exists, or "last write wins", the repair section supersedes it.
 
 ### Implemented
 
@@ -62,10 +69,12 @@ One further defect was found and repaired while verifying P2; see
   course outline and sources panel), the same site-header height and the same horizontal-overflow
   state as the direct route.
 
-### Needs owner/shared-platform decision
+### Owner-decided, and smaller open items
 
-- Whether the site header should be removed from the module frame in review, which needs a shared
-  header contract ([details](#what-is-left-for-a-decision-the-site-header-inside-the-frame)).
+- The site header stays in the module frame in review. The owner decided this after the first
+  review; the shared header contract described
+  [below](#what-is-left-for-a-decision-the-site-header-inside-the-frame) is not being pursued and
+  no shared layout or module offset was edited.
 - Smaller items listed under [Remaining decisions and limits](#remaining-decisions-and-limits).
 
 ## P1 — feedback mode contract
@@ -468,16 +477,16 @@ the server-mode fixture), not on the production build. **Nothing here verifies t
 
 ## Remaining decisions and limits
 
-1. **Site header inside the review frame** — described above. Owner authorization needed for the
-   shared patch; nothing is blocked meanwhile.
+1. **Site header inside the review frame** — owner-decided: it stays. This is an accepted
+   limitation, not a pending decision.
 2. **Toolbar at 200% root text on a phone** is still 337–377 px of 844. The remaining height is the
    storage label and module title wrapping at double size. Shortening the visible label at
    enlarged text would need a decision, because that label is the explicit local/server marker.
-3. **Clear local feedback** still removes saved reports only. Whether it should also remove unsent
-   drafts is a product choice; today it does not, the doc says so, and **Discard draft** does.
-4. **One draft per testing page is presented at a time.** A second draft left by another tab for
-   the same page is kept and offered after the first is saved or discarded; there is no list.
-   Two tabs editing the same draft overwrite each other's record, last write wins.
+3. The button is now **Clear saved feedback**; it removes saved reports only, and the page says
+   beside it that unsent drafts are kept separately. **Discard draft** removes a draft.
+4. **One draft per testing page is presented at a time.** A second draft, including one kept
+   apart by a two-tab conflict, is offered after the first is saved or discarded; there is no
+   list. Two tabs no longer overwrite each other: see the repair section.
 5. **Last-moment edits.** A change made within about 0.4 s of an abrupt reload or crash may not be
    stored. Closing the dialog, hiding the tab and leaving the page all write immediately.
 6. **Server-mode drafts** remain memory-only by design. Persisting them would need its own
@@ -487,6 +496,163 @@ the server-mode fixture), not on the production build. **Nothing here verifies t
    server, Next reloaded every open page after a first-time route compile (three requests for the
    testing page in the trace), which returned the frame to the module's first page mid-test. That
    is development-server behaviour; it was not seen on the production build.
+
+## Sanity-review repair: one draft in two tabs
+
+Bounded repair on the same PR and branch, starting from the reviewed head
+`92488747b3f6b4176b3967e39245b78ae352eeaf`. `origin/main` was `60e3bd64` when the repair started;
+nothing it added since the branch point touches `src/features/module-beta/**`, the
+development-beta routes, authentication, package or build configuration, or shared layout, and
+the branch was not rebased.
+
+### The defect
+
+Tabs A and B restore the same stored draft. B edits and its edit is stored. A saves its older
+version as the report, under the shared ID. On the next load the old restore logic saw "a report
+with this ID exists" and deleted the stored draft, which by then held B's newer text. Discard had
+the mirror problem: after A discarded, B's next write put the draft back under the same ID. The
+per-page promise queue orders one tab's own storage work; it never coordinated two tabs.
+
+### Design
+
+All of it is durable state in the drafts database, changed in single IndexedDB transactions over
+`drafts`, `images` and a new `finalizations` store. No BroadcastChannel, lock, or in-memory flag
+is relied on.
+
+- **Revision.** Every draft write stores a new random `revision`. A tab remembers the revision it
+  last read or wrote and names it on every later operation.
+- **Finalization record.** One per draft ID: `outcome` (`saving`, `saved`, `discarded`), the
+  `revision` the save or discard covered, a time, and `fork` (the ID and revision of a stored
+  version that was moved aside). `saved` and `discarded` close the ID permanently.
+- **Write rule.** A draft is written under its ID only if the ID is not closed and the stored
+  revision is the one the tab named. If the ID is closed, or another tab stored a different
+  revision, the content is written under a fresh ID in the same transaction, with `forked_from`,
+  and the tab continues under that ID.
+- **Close rule (Save and Discard).** If the stored draft is at the revision the finalizing tab
+  named, it and its image are removed. If it is at any other revision, it is another tab's newer
+  work: record and image are moved to a fresh ID, unchanged, and the finalization record points
+  to it.
+- **No duplicate.** The moved copy keeps its revision. When the tab that wrote it later writes
+  under the closed ID, storage recognises that revision in the finalization record and continues
+  the moved copy instead of creating a second one.
+- **Save across two databases.** (1) The drafts database records `saving` with the revision the
+  save covers; if the ID is already closed, the save stops there and the tab's work is kept.
+  (2) The report transaction commits, and reports whether it wrote the report or found the ID
+  already present. (3) The drafts database closes the ID as `saved` under the close rule. If the
+  browser stops between (2) and (3), the next load finds `saving` plus a committed report and
+  performs (3) from the recorded revision. If the report was already there, this tab's content
+  is not in it, so the tab keeps its work as a new draft instead of reporting success.
+- **Restore.** Before offering a draft, a testing page settles stored drafts: a closed ID's
+  covered revision is removed and any other is moved to a fresh ID; an interrupted save is
+  finished as above. A report existing with the same ID is never sufficient to remove a draft.
+  For a draft stored by the reviewed head, which had no finalization records, a same-ID report
+  removes it only when both are text-only and identical; otherwise it is kept under a fresh ID.
+  Unreadable records are still reported and left in place.
+
+| Database / store                    | After the repair                                                                           |
+| ----------------------------------- | ------------------------------------------------------------------------------------------ |
+| `module-owner-feedback` / `reports` | Version 1, unchanged. No migration, no rewrite                                             |
+| `module-owner-feedback-drafts`      | Version 2 (was 1)                                                                          |
+| … `drafts`                          | Record schema 2: adds `revision` and `forked_from`. Version 1 records are read as they are |
+| … `images`                          | Unchanged                                                                                  |
+| … `finalizations` (new)             | `id`, `outcome`, `revision`, `at`, `fork`. No feedback text or image                       |
+
+The upgrade only adds the store. Existing drafts and images are not rewritten; a version 1 record
+takes the current shape the next time it is edited. A database newer than version 2 still fails
+with the explicit message and is not modified. A build that knows only version 1 gets that
+message for drafts once this build has opened the database; reports are unaffected.
+
+### What the owner sees
+
+| Situation                                      | Result                                                                                                                                                |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A saves; B had already stored newer content    | Report holds A's content. B's content is an unsent draft under a new ID. A says a newer version from another tab was kept                             |
+| A saves; B edits afterwards                    | B's content becomes an unsent draft under a new ID; B's dialog says another tab already saved an earlier version. The saved ID is never written again |
+| A discards; B had already stored newer content | B's content is an unsent draft under a new ID; A says so. The discarded ID stays closed                                                               |
+| A discards; B edits afterwards                 | B's content becomes an unsent draft under a new ID. The discarded draft does not return                                                               |
+| B changed nothing                              | No draft is created. B's button can read **Continue feedback** until used; opening it says the draft was already saved or discarded elsewhere         |
+| B presses Save on a draft A already saved      | No report is overwritten or duplicated silently: B's edits stay open as a new draft and B is told to save again to add a new report                   |
+| Both edit before either finalizes              | First stored edit keeps the ID; the other tab's version becomes a separate unsent draft and its dialog says so                                        |
+
+A kept draft carries the original module, sanitized page address, comment, referenced text,
+source image, editable annotations and creation time. It is never saved as a report on its own.
+This is conflict handling, not live shared editing: a tab does not update while another types.
+
+### Other changes in this repair
+
+- **Clear saved feedback** replaces "Clear local feedback", with "Unsent drafts are kept
+  separately and are not removed by this action." beside it and matching confirmation and result
+  wording. Deletion behaviour is unchanged.
+- **Skip link.** Unchanged. The shell test now states the claim precisely: wheel, keyboard and
+  scroll chaining leave the covered page at 0; activating the skip link may move that hidden
+  page to its target while the fixed shell still covers the whole viewport, which the test
+  checks at five points. No scroll position is forced.
+- **Orphan images.** Draft and image are removed, moved or replaced in one transaction in every
+  path. The browser tests check that no image is stored without its draft after save, discard,
+  conflict and screenshot replacement. No garbage collection of pre-existing orphans was added.
+- The 0.4 s write delay, the synchronous PNG export and server-mode behaviour are unchanged.
+  Server mode still never opens the drafts database.
+
+### Files changed by the repair
+
+`ownerDraftStore.ts` (revisions, finalizations, conflict rules, version 2), `ownerFeedbackStore.ts`
+(`createOwnerFeedback` reports whether the save wrote the report; `ownerFeedbackContent` reads one
+report's text fields; database unchanged), `BetaTestingFrame.tsx`, `OwnerDraftNotice.tsx`,
+`FeedbackWorkspace.tsx` (wording only), their two test files, `e2e/module-beta-owner.spec.ts`, and
+the three docs. `components/layout/**`, module stylesheets, curriculum, API routes, migrations and
+authentication were not touched.
+
+### Test results for the repair
+
+Final repair code, local builds only.
+
+| Check                                                                                                                                | Result                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| `npx jest --runInBand src/features/module-beta`                                                                                      | 6 suites, 91 tests, all pass (74 at the reviewed head) |
+| `npx jest --runInBand src/features/module-beta src/app/api/module-feedback src/lib/site-auth src/lib/supabase/auth-redirect.test.ts` | 13 suites, 158 tests, all pass                         |
+| `npx playwright test --config playwright.module-beta-owner.config.ts`                                                                | 19 of 19 pass (11 at the reviewed head)                |
+| `npx playwright test --config playwright.module-beta.config.ts`                                                                      | 8 of 8 pass                                            |
+| `NODE_OPTIONS=--max-old-space-size=12288 npm run type-check`                                                                         | Exit 0                                                 |
+| `eslint --max-warnings 0` and `prettier --check` on changed paths; `git diff --check`                                                | Clean                                                  |
+| `npm run build` (12 GB heap)                                                                                                         | Exit 0                                                 |
+
+The eight new browser tests use two pages of one persistent Chromium profile and real IndexedDB:
+Save in A with newer content already stored by B (through reload and a browser restart, then
+saving the kept draft as its own report); Save in A then an edit in B; the same two for Discard;
+no divergence for Save and for Discard; a screenshot with annotations through the conflict
+(report bytes equal A's preview, kept draft's preview equal B's, Undo still works, image record
+moved with the draft, replacement and discard leave no image); both tabs editing before either
+finalizes; and a version 1 database created by hand, upgraded on open with its record unrewritten
+and its image intact. Each two-tab case first asserts that tab A is still the original page.
+
+Runs that did not pass during the repair, kept separate from the final results:
+
+1. Owner suite, first full run: 15 of 19. One failure was the new upgrade test seeding version 1
+   from the hub, which had already opened the database at version 2 (test error; it now seeds
+   from a page that never opens drafts). Two were locators matching the notice twice, in the
+   toolbar and in the still-closing dialog (test error). One was the cold-server case below.
+2. Two subset runs on a cold development server: the first two-tab test failed because the
+   server reloaded tab A when tab B first loaded, so A re-read the stored draft and was no longer
+   stale. This is the development-server reload already described for this suite. The describe
+   block now takes that reload in a throwaway context first, and the precondition check fails
+   the test plainly if it ever recurs. Not seen on a warm server; not a product behaviour.
+3. One Jest run during development: the aborted-transaction test received a different error
+   message after the transaction helper was rewritten; the helper now reports every storage
+   failure with the one documented message.
+
+### Limits that remain
+
+1. Finalization records are not pruned. Each is a few hundred bytes with no feedback content;
+   removing one would let a tab left open since then write under that ID again.
+2. A tab that changed nothing learns its draft was finalized elsewhere when it is next used or
+   reloaded, not at the moment it happens.
+3. If two tabs press Save on the same draft within the same few milliseconds and the browser
+   then stops before either finishes, the recorded revision can belong to the tab whose report
+   did not win. Outside that double fault the save is finished from the right revision.
+4. A draft stored by the reviewed head beside a same-ID report is kept as a new draft unless it
+   is text-only and identical to the report, so an interrupted save from that head can leave one
+   extra draft of already-saved content. It is never the other way round.
+5. The 0.4 s abrupt-reload limit and the retained site header are as before.
 
 ## Confirmations
 

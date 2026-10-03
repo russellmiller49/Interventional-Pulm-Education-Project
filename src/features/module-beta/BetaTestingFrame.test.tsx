@@ -4,13 +4,18 @@ import { BetaTestingFrame } from './BetaTestingFrame'
 import { betaModuleById } from './catalog'
 import { feedbackMode } from './config'
 import {
+  beginOwnerDraftSave,
   deleteOwnerDraft,
   deleteUnreadableOwnerDrafts,
+  discardOwnerDraft,
+  finishOwnerDraftSave,
+  ownerDraftStatus,
   readOwnerDrafts,
   saveOwnerDraft,
+  settleOwnerDrafts,
   type OwnerFeedbackDraft,
 } from './ownerDraftStore'
-import { ownerFeedbackExists, saveOwnerFeedback } from './ownerFeedbackStore'
+import { createOwnerFeedback, ownerFeedbackContent } from './ownerFeedbackStore'
 
 jest.mock('./config', () => ({ feedbackMode: jest.fn() }))
 jest.mock('./ownerDraftStore', () => ({
@@ -18,10 +23,15 @@ jest.mock('./ownerDraftStore', () => ({
   readOwnerDrafts: jest.fn(),
   deleteOwnerDraft: jest.fn(),
   deleteUnreadableOwnerDrafts: jest.fn(),
+  discardOwnerDraft: jest.fn(),
+  beginOwnerDraftSave: jest.fn(),
+  finishOwnerDraftSave: jest.fn(),
+  ownerDraftStatus: jest.fn(),
+  settleOwnerDrafts: jest.fn(),
 }))
 jest.mock('./ownerFeedbackStore', () => ({
-  saveOwnerFeedback: jest.fn(),
-  ownerFeedbackExists: jest.fn(),
+  createOwnerFeedback: jest.fn(),
+  ownerFeedbackContent: jest.fn(),
 }))
 jest.mock('./screenshotDraftImage', () => ({
   encodeScreenshotSource: jest.fn(() => ({ blob: new Blob(['png']), token: 'image-token' })),
@@ -74,12 +84,35 @@ const saveDraft = jest.mocked(saveOwnerDraft)
 const readDrafts = jest.mocked(readOwnerDrafts)
 const deleteDraft = jest.mocked(deleteOwnerDraft)
 const deleteUnreadable = jest.mocked(deleteUnreadableOwnerDrafts)
-const saveReport = jest.mocked(saveOwnerFeedback)
-const reportExists = jest.mocked(ownerFeedbackExists)
+const discardStored = jest.mocked(discardOwnerDraft)
+const beginSave = jest.mocked(beginOwnerDraftSave)
+const finishSave = jest.mocked(finishOwnerDraftSave)
+const draftStatus = jest.mocked(ownerDraftStatus)
+const settle = jest.mocked(settleOwnerDrafts)
+const saveReport = jest.mocked(createOwnerFeedback)
+const reportContent = jest.mocked(ownerFeedbackContent)
+type Report = Awaited<ReturnType<typeof createOwnerFeedback>>
+const first = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+const sharedId = '11111111-1111-4111-8111-111111111111'
 
 const pi = betaModuleById('peripheral-imaging')!
 const piPath = '/en/peripheral-imaging/learn?section=imaging-questions&phase=recognize'
+// A stand-in for the draft database with the same rules: a write lands under its own ID only
+// while that ID is open and at the revision the caller last saw.
 let stored: OwnerFeedbackDraft[]
+let closedIds: Map<string, 'saved' | 'discarded'>
+let revisions: number
+let forks: number
+const forkId = () => `ffffffff-ffff-4fff-8fff-${String(++forks).padStart(12, '0')}`
+// What another tab's Save or Discard does to the stored draft.
+function closeElsewhere(id: string, outcome: 'saved' | 'discarded', covered: string) {
+  closedIds.set(id, outcome)
+  const row = stored.find((entry) => entry.id === id)
+  stored = stored.filter((entry) => entry.id !== id)
+  if (!row || row.revision === covered) return false
+  stored = [{ ...row, id: forkId(), forked_from: id }, ...stored]
+  return true
+}
 let unreadable: IDBValidKey[]
 let location: string
 let selection: string
@@ -101,17 +134,22 @@ function storedDraft(overrides: Partial<OwnerFeedbackDraft> = {}): OwnerFeedback
     updated_at: '2026-10-02T10:00:00.000Z',
     storage_mode: 'owner-local',
     record_kind: 'draft',
-    schema_version: 1,
+    revision: 'r0',
+    forked_from: null,
+    schema_version: 2,
     screenshot: null,
     ...overrides,
   }
 }
 beforeEach(() => {
   stored = []
+  closedIds = new Map()
+  revisions = 0
+  forks = 0
   unreadable = []
   location = `https://site.test${piPath}&token=secret`
   selection = ''
-  ids = ['aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb']
+  ids = [first, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb']
   mode.mockReturnValue('owner-local')
   Object.defineProperty(HTMLIFrameElement.prototype, 'contentWindow', {
     configurable: true,
@@ -125,9 +163,13 @@ beforeEach(() => {
     value: () => ids.shift()!,
   })
   readDrafts.mockImplementation(async () => ({ drafts: [...stored], unreadable: [...unreadable] }))
-  saveDraft.mockImplementation(async (input, image) => {
+  saveDraft.mockImplementation(async (input, image, base = '') => {
+    const existing = stored.find((entry) => entry.id === input.id)
+    const superseded =
+      closedIds.get(input.id) ?? (existing && existing.revision !== base ? 'edited' : null)
+    const id = superseded ? forkId() : input.id
     const row = storedDraft({
-      id: input.id,
+      id,
       host_module_id: input.hostModuleId,
       module_id: input.moduleId,
       page_path: input.pagePath,
@@ -135,19 +177,37 @@ beforeEach(() => {
       selected_text: input.selectedText,
       annotations: input.annotations as OwnerFeedbackDraft['annotations'],
       screenshot: image ?? null,
+      revision: `r${++revisions}`,
+      forked_from: superseded ? input.id : null,
     })
-    stored = [row, ...stored.filter((entry) => entry.id !== row.id)]
-    return row
+    stored = [row, ...stored.filter((entry) => entry.id !== id)]
+    return { draft: row, superseded }
   })
-  deleteDraft.mockImplementation(async (id) => {
-    stored = stored.filter((entry) => entry.id !== id)
+  deleteDraft.mockImplementation(async (id, base) => {
+    stored = stored.filter((entry) => entry.id !== id || entry.revision !== base)
+  })
+  discardStored.mockImplementation(async (id, base) => ({
+    preserved: closedIds.has(id) ? false : closeElsewhere(id, 'discarded', base),
+  }))
+  beginSave.mockImplementation(async (id) => ({ closed: closedIds.get(id) ?? null }))
+  finishSave.mockImplementation(async (id, base, created) =>
+    created
+      ? { closed: null, preserved: closeElsewhere(id, 'saved', base) }
+      : { closed: closedIds.get(id) ?? 'saved', preserved: false },
+  )
+  draftStatus.mockImplementation(async (id) => ({
+    closed: closedIds.get(id) ?? null,
+    keptAs: null,
+  }))
+  settle.mockImplementation(async (report) => {
+    for (const row of [...stored]) if (await report(row.id)) closeElsewhere(row.id, 'saved', 'r0')
   })
   deleteUnreadable.mockImplementation(async () => {
     unreadable = []
   })
-  reportExists.mockResolvedValue(false)
+  reportContent.mockResolvedValue(null)
   saveReport.mockImplementation(
-    async (input) => ({ id: input.id }) as Awaited<ReturnType<typeof saveOwnerFeedback>>,
+    async (input) => ({ entry: { id: input.id }, created: true }) as Report,
   )
 })
 afterEach(() => {
@@ -180,6 +240,8 @@ describe('truthful pending-draft label', () => {
     expect(feedbackButton()).toHaveTextContent('Give feedback')
     expect(saveDraft).not.toHaveBeenCalled()
     expect(deleteDraft).not.toHaveBeenCalled()
+    // A draft that was never stored has no ID to close.
+    expect(discardStored).not.toHaveBeenCalled()
   })
   it('ignores a whitespace-only selection but keeps real referenced text', async () => {
     const user = userEvent.setup()
@@ -211,6 +273,7 @@ describe('truthful pending-draft label', () => {
     expect(saveDraft).toHaveBeenLastCalledWith(
       expect.objectContaining({ comment: '', selectedText: '', annotations: [{ tool: 'box' }] }),
       expect.objectContaining({ token: 'image-token' }),
+      '',
     )
     await user.click(feedbackButton())
     expect(screen.getByLabelText('marks')).toHaveTextContent('image:1')
@@ -234,7 +297,8 @@ describe('truthful pending-draft label', () => {
     await closed()
     expect(feedbackButton()).toHaveTextContent('Give feedback')
     await waitFor(() => expect(stored).toEqual([]))
-    expect(deleteDraft).toHaveBeenCalledWith('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')
+    await waitFor(() => expect(discardStored).toHaveBeenCalledWith(first, expect.any(String)))
+    expect(closedIds.get(first)).toBe('discarded')
   })
 })
 
@@ -304,8 +368,9 @@ describe('owner-local draft recovery', () => {
     await user.click(screen.getByRole('button', { name: 'Discard draft' }))
     await closed()
     await waitFor(() => expect(stored).toEqual([]))
-    expect(deleteDraft).toHaveBeenCalledTimes(1)
-    expect(deleteDraft).toHaveBeenCalledWith('11111111-1111-4111-8111-111111111111')
+    expect(discardStored).toHaveBeenCalledTimes(1)
+    expect(discardStored).toHaveBeenCalledWith(sharedId, 'r0')
+    expect(deleteDraft).not.toHaveBeenCalled()
     expect(saveReport).not.toHaveBeenCalled()
     expect(feedbackButton()).toHaveTextContent('Give feedback')
   })
@@ -314,7 +379,7 @@ describe('owner-local draft recovery', () => {
     saveReport.mockImplementation(
       (input) =>
         new Promise((resolve) => {
-          commit = () => resolve({ id: input.id } as Awaited<ReturnType<typeof saveOwnerFeedback>>)
+          commit = () => resolve({ entry: { id: input.id }, created: true } as Report)
         }),
     )
     const user = userEvent.setup()
@@ -325,12 +390,15 @@ describe('owner-local draft recovery', () => {
     await user.click(screen.getByRole('button', { name: 'Save feedback locally' }))
     await waitFor(() => expect(saveReport).toHaveBeenCalledTimes(1))
     // The request is in flight but nothing has committed: the draft must still be recoverable.
-    expect(deleteDraft).not.toHaveBeenCalled()
+    expect(beginSave).toHaveBeenCalledWith(first, 'r1')
+    expect(finishSave).not.toHaveBeenCalled()
+    expect(closedIds.size).toBe(0)
     expect(stored).toHaveLength(1)
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     commit()
     await waitFor(() => expect(stored).toEqual([]))
-    expect(deleteDraft).toHaveBeenCalledWith('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')
+    expect(finishSave).toHaveBeenCalledWith(first, 'r1', true)
+    expect(closedIds.get(first)).toBe('saved')
     expect(screen.getByRole('status')).toHaveTextContent(
       'Feedback saved locally. Reference aaaaaaaa',
     )
@@ -345,18 +413,22 @@ describe('owner-local draft recovery', () => {
     await user.click(screen.getByRole('button', { name: 'Save feedback locally' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Keep your draft and retry.')
     expect(commentBox()).toHaveValue('Still here')
-    expect(deleteDraft).not.toHaveBeenCalled()
+    expect(finishSave).not.toHaveBeenCalled()
+    expect(closedIds.size).toBe(0)
     await waitFor(() => expect(stored).toHaveLength(1))
     await user.click(screen.getByRole('button', { name: 'Save feedback locally' }))
     await waitFor(() => expect(stored).toEqual([]))
-    expect(saveReport.mock.calls.map(([input]) => input.id)).toEqual([
-      'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-      'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-    ])
+    expect(saveReport.mock.calls.map(([input]) => input.id)).toEqual([first, first])
   })
   it('finishes clearing a draft whose report already committed instead of offering it again', async () => {
     stored = [storedDraft()]
-    reportExists.mockResolvedValue(true)
+    reportContent.mockResolvedValue({
+      module_id: 'peripheral-imaging',
+      page_path: piPath,
+      comment: 'Stored unsent comment',
+      selected_text: 'Stored selection',
+      hasScreenshot: false,
+    })
     await mount()
     await waitFor(() => expect(stored).toEqual([]))
     expect(feedbackButton()).toHaveTextContent('Give feedback')
@@ -388,6 +460,123 @@ describe('owner-local draft recovery', () => {
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
     expect(deleteUnreadable).toHaveBeenCalledWith(['damaged'])
     expect(deleteDraft).not.toHaveBeenCalled()
+  })
+})
+
+describe('a draft another tab saved or discarded', () => {
+  const restored = async () => {
+    stored = [storedDraft({ id: sharedId })]
+    await mount()
+    await waitFor(() => expect(feedbackButton()).toHaveTextContent('Continue feedback'))
+  }
+  it.each(['saved', 'discarded'] as const)(
+    'keeps a later edit as a new draft once the other tab has %s it',
+    async (outcome) => {
+      const user = userEvent.setup()
+      await restored()
+      closeElsewhere(sharedId, outcome, 'r0')
+      draftStatus.mockResolvedValueOnce({ closed: null, keptAs: null })
+      await user.click(feedbackButton())
+      await user.type(commentBox(), ' plus newer words')
+      await waitFor(() => expect(stored).toHaveLength(1), { timeout: 3000 })
+      expect(stored[0]).toMatchObject({
+        comment: 'Stored unsent comment plus newer words',
+        selected_text: 'Stored selection',
+        page_path: piPath,
+        forked_from: sharedId,
+        created_at: '2026-10-02T10:00:00.000Z',
+      })
+      expect(stored[0].id).not.toBe(sharedId)
+      expect(
+        await within(screen.getByRole('dialog')).findByText(
+          new RegExp(`Another tab (already )?${outcome} an earlier version of this draft`),
+        ),
+      ).toBeInTheDocument()
+      // Still the same open draft: nothing typed is lost and further edits update the new one.
+      await user.type(commentBox(), '!')
+      await waitFor(() => expect(stored[0].comment).toBe('Stored unsent comment plus newer words!'))
+      expect(stored).toHaveLength(1)
+      await user.click(screen.getByRole('button', { name: 'Save feedback locally' }))
+      await waitFor(() => expect(saveReport).toHaveBeenCalledTimes(1))
+      expect(saveReport.mock.calls[0][0]).toMatchObject({
+        id: stored[0]?.id ?? expect.any(String),
+        comment: 'Stored unsent comment plus newer words!',
+      })
+      expect(saveReport.mock.calls[0][0].id).not.toBe(sharedId)
+    },
+  )
+  it('puts away an unchanged copy without creating a draft or a report', async () => {
+    const user = userEvent.setup()
+    await restored()
+    closeElsewhere(sharedId, 'saved', 'r0')
+    await user.click(feedbackButton())
+    await closed()
+    expect(screen.getByText('This draft was already saved in another tab.')).toBeInTheDocument()
+    expect(feedbackButton()).toHaveTextContent('Give feedback')
+    expect(stored).toEqual([])
+    expect(saveDraft).not.toHaveBeenCalled()
+    expect(saveReport).not.toHaveBeenCalled()
+  })
+  it('never saves over the other tab’s report: unsaved edits stay open as a new draft', async () => {
+    const user = userEvent.setup()
+    await restored()
+    await user.click(feedbackButton())
+    await user.type(commentBox(), ' edited here')
+    closeElsewhere(sharedId, 'saved', 'r0')
+    await user.click(screen.getByRole('button', { name: 'Save feedback locally' }))
+    expect(
+      await within(screen.getByRole('dialog')).findByText(/Save again to add it as a new report/),
+    ).toBeInTheDocument()
+    expect(saveReport).not.toHaveBeenCalled()
+    expect(commentBox()).toHaveValue('Stored unsent comment edited here')
+    expect(stored.map((entry) => entry.comment)).toEqual(['Stored unsent comment edited here'])
+    await user.click(screen.getByRole('button', { name: 'Save feedback locally' }))
+    await waitFor(() => expect(stored).toEqual([]))
+    expect(saveReport).toHaveBeenCalledTimes(1)
+    expect(saveReport.mock.calls[0][0].id).toMatch(/^ffffffff/)
+  })
+  it('keeps this tab’s work when the report ID turns out to be taken', async () => {
+    saveReport.mockImplementationOnce(async (input) => {
+      closedIds.set(input.id, 'saved')
+      return { entry: { id: input.id }, created: false } as Report
+    })
+    const user = userEvent.setup()
+    await restored()
+    await user.click(feedbackButton())
+    await user.click(screen.getByRole('button', { name: 'Save feedback locally' }))
+    expect(
+      await within(screen.getByRole('dialog')).findByText(/Save again to add it as a new report/),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/Feedback saved/)).not.toBeInTheDocument()
+    expect(stored.some((entry) => entry.id.startsWith('ffffffff'))).toBe(true)
+  })
+  it('says when discarding here kept a newer version from another tab', async () => {
+    const user = userEvent.setup()
+    await restored()
+    stored = [storedDraft({ id: sharedId, comment: 'Newer from the other tab', revision: 'r9' })]
+    await user.click(feedbackButton())
+    await user.click(screen.getByRole('button', { name: 'Discard draft' }))
+    await closed()
+    expect(await screen.findByText(/A newer version stored by another tab was kept/)).toBeVisible()
+    expect(closedIds.get(sharedId)).toBe('discarded')
+    expect(stored.map((entry) => entry.comment)).toEqual(['Newer from the other tab'])
+    expect(stored[0].id).not.toBe(sharedId)
+    await waitFor(() => expect(feedbackButton()).toHaveTextContent('Continue feedback'))
+  })
+  it('keeps both versions when the other tab edited the same draft first', async () => {
+    const user = userEvent.setup()
+    await restored()
+    stored = [storedDraft({ id: sharedId, comment: 'Other tab edit', revision: 'r9' })]
+    await user.click(feedbackButton())
+    await user.type(commentBox(), ' mine')
+    await waitFor(() => expect(stored).toHaveLength(2), { timeout: 3000 })
+    expect(stored.map((entry) => entry.comment).sort()).toEqual([
+      'Other tab edit',
+      'Stored unsent comment mine',
+    ])
+    expect(
+      await within(screen.getByRole('dialog')).findByText(/also changed in another tab/),
+    ).toBeInTheDocument()
   })
 })
 
@@ -427,9 +616,20 @@ describe('server mode', () => {
     } finally {
       globalThis.fetch = original
     }
-    for (const call of [readDrafts, saveDraft, deleteDraft, deleteUnreadable, saveReport])
+    for (const call of [
+      readDrafts,
+      saveDraft,
+      deleteDraft,
+      deleteUnreadable,
+      discardStored,
+      beginSave,
+      finishSave,
+      draftStatus,
+      settle,
+      saveReport,
+      reportContent,
+    ])
       expect(call).not.toHaveBeenCalled()
-    expect(reportExists).not.toHaveBeenCalled()
   })
 })
 
