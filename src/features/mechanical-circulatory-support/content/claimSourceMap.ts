@@ -114,7 +114,7 @@ export const MCS_CLAIM_SOURCE_MAP: readonly McsClaimSourceMapping[] = Object.fre
         sourceId: 'getinge-cardiosave-hybrid-operating-instructions',
         locator: 'Printed page vi (warnings)',
         passage:
-          'Deflation is to be completed prior to systole to avoid interfering with systolic ejection; late deflation timing reduces and delays detection of the systolic pulse pressure.',
+          'In the pressure-trigger warning, deflation is to be completed prior to systole to avoid interfering with systolic ejection; late deflation timing reduces and delays detection of the systolic pulse pressure.',
       },
     ],
     supports:
@@ -243,13 +243,14 @@ export const MCS_CLAIM_SOURCE_MAP: readonly McsClaimSourceMapping[] = Object.fre
       {
         sourceId: 'impella-55-ifu-rev-l-supplied',
         locator: 'Printed page 5.26, Table 5.3',
-        passage: 'Impella 5.5 mean flow at P-8 is 4.3–4.9 L/min and at P-9 5.0–5.5 L/min.',
+        passage:
+          'The Impella 5.5 table labels mean flow at 30–60 mmHg: P-8 is 4.3–4.9 L/min and P-9 5.0–5.5 L/min. Its footnote says suction or incorrect position can reduce flow.',
       },
     ],
     supports:
       'That the same P-level corresponds to a different mean flow range and motor speed on the two pumps.',
     doesNotSupport:
-      'The word “dose”, which is the module’s, and any conversion between the two pumps. Which CP flow figure is which measurand stays open (MCS-03-01).',
+      'The word “dose”, which is the module’s, and any conversion between the two pumps. These tabulated ranges are conditional, not patient-specific targets or a matched loading comparison. Which CP flow figure is which measurand stays open (MCS-03-01).',
     disposition: 'primary-source-supports-current-wording',
     dispositionNote:
       'Wording unchanged. Both supplied instructions now stand first on the section.',

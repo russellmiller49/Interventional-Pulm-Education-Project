@@ -47,7 +47,7 @@ export const MCS_EXPLAIN_REFLECTIONS: readonly McsExplainReflection[] = Object.f
     sectionId: 'mcs-foundations-mechanisms',
     workedResponse: [
       'Effective systemic flow would not have changed. In this model, effective systemic flow is the concurrent native forward flow plus the left-pump flow, less any represented regurgitant recirculation, so an equal rise and fall cancel.',
-      'What would have changed is who is doing the work: the ventricle ejects less and gets smaller, the pulse narrows, and the pump carries more. That is unloading without added delivery.',
+      'The pump would carry more of the total while the native forward contribution fell. That arithmetic alone does not establish ventricular size, pulse pressure or unloading; those require their own modeled readings.',
       'In the comparison you can capture in this section the fall is smaller than the rise, which is why effective flow goes up — by less than the pump number. The arithmetic is printed under the comparison table on the Observe step.',
     ],
     drawnFrom: 'This section’s flow-level explanation and the captured three-device comparison.',
@@ -56,7 +56,7 @@ export const MCS_EXPLAIN_REFLECTIONS: readonly McsExplainReflection[] = Object.f
     sectionId: 'iabp-timing-triggering',
     workedResponse: [
       'Correct timing is a precondition, not an outcome. A taller diastolic peak is a finding at the pressure level.',
-      'Next come the things the trace cannot say: how much effective systemic flow actually moved, the filling pressures, and at the bedside mentation, urine output, skin perfusion and the lactate trend over the next hours — none of which this model represents.',
+      'Next come the things the trace cannot say: how much effective systemic flow actually moved, the filling pressures, which this model represents, plus bedside mentation, urine output, skin perfusion and the lactate trend over the next hours, which it does not represent.',
       'A balloon can be correctly timed and still not be enough; this section does not establish that it is sufficient for this patient.',
     ],
     drawnFrom: 'This section’s organ-response level and its "does not establish" statement.',
@@ -113,7 +113,7 @@ export const MCS_EXPLAIN_REFLECTIONS: readonly McsExplainReflection[] = Object.f
     sectionId: 'mcs-device-selection-integration',
     workedResponse: [
       'A different filling-pressure picture: a right atrial pressure that sits well below the wedge pressure instead of rising to meet it, a pump that is not in suction, and an effective systemic flow that rises by about as much as the displayed pump flow when support is added.',
-      'That would be a delivering circulation, where the same change buys far more than the fraction it bought here.',
+      'That would show a larger modeled gain in effective flow; it would not establish adequate bedside perfusion or a calibrated diagnosis from filling pressures.',
       'Not the pulmonary pulsatility ratio alone: in this model it moves only weakly with right-sided support. And naming the limiting side is not choosing a device — that stays a team decision.',
     ],
     drawnFrom: 'This section’s explanation and its "does not establish" statement.',

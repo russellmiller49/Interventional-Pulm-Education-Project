@@ -64,7 +64,7 @@ const DISPLAY_NAMES: Readonly<Record<string, string>> = Object.freeze({
 export const MCS_NAMED_ACTION_IDS: readonly string[] = Object.keys(DISPLAY_NAMES)
 
 export function mcsHasActionDisplayName(actionId: string): boolean {
-  return actionId in DISPLAY_NAMES
+  return Object.prototype.hasOwnProperty.call(DISPLAY_NAMES, actionId)
 }
 
 /**
@@ -75,7 +75,7 @@ export function mcsHasActionDisplayName(actionId: string): boolean {
  * hold the registry to the reducer's vocabulary so that fallback is not relied on.
  */
 export function mcsActionDisplayName(actionId: string): string {
-  return DISPLAY_NAMES[actionId] ?? 'Used a simulator control'
+  return mcsHasActionDisplayName(actionId) ? DISPLAY_NAMES[actionId] : 'Used a simulator control'
 }
 
 /**

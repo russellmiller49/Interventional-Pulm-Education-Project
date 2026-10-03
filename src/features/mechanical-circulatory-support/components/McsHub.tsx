@@ -24,6 +24,7 @@ import { McsModuleFrame } from './McsModuleFrame'
 import { McsStoredPathwayAccordion } from './McsPathwayAccordion'
 import { McsRouteOrientation } from './McsRouteOrientation'
 import { McsSourcesPanel } from './McsSourcesPanel'
+import { McsSourceReviewNotice } from './McsClaimSourceChecks'
 import { McsSupportPathwayCards } from './McsSupportPathwayCards'
 import styles from './mechanical-circulatory-support.module.css'
 
@@ -62,6 +63,7 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
           <p data-hub-audience>
             {MCS_HUB_AUDIENCE.who} {MCS_HUB_AUDIENCE.assumes}
           </p>
+          <McsSourceReviewNotice />
           <div className={styles.hubObjectives} data-hub-objectives>
             <h2 id="mcs-hub-objectives-heading">After this module you will be able to</h2>
             <ol aria-labelledby="mcs-hub-objectives-heading">

@@ -85,7 +85,7 @@ export const mcsSources: readonly McsSource[] = [
     id: 'getinge-cardiosave-hybrid-operating-instructions',
     title: 'CARDIOSAVE Hybrid Operating Instructions',
     citation:
-      'Datascope Corp. CARDIOSAVE Hybrid Operating Instructions, English, 0070-00-0638-01. © 2015. Supplied PDF; trigger warnings on printed pages vi and 2-18; the description of balloon timing on printed page xiv.',
+      'Datascope Corp. CARDIOSAVE Hybrid Operating Instructions, English, 0070-00-0638-01, Rev S 11/15. © 2015. Supplied PDF; trigger warnings on printed pages vi and 2-18; the description of balloon timing on printed page xiv.',
     sourceType: 'manufacturer',
     year: 2015,
     intendedUse:
@@ -355,7 +355,8 @@ export const mcsSources: readonly McsSource[] = [
   {
     id: 'fda-heartmate3-pma-current',
     title: 'HeartMate 3 PMA supplement index',
-    citation: 'FDA PMA P160054 supplement index, reviewed July 19, 2026.',
+    citation:
+      'FDA PMA P160054 supplement index. Historical registry date July 19, 2026; record not opened for this module.',
     sourceType: 'fda-labeling',
     year: 2026,
     url: 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpma/pma.cfm?ID=P160054',

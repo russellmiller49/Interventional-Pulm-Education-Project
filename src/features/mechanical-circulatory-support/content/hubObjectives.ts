@@ -53,7 +53,7 @@ export const MCS_HUB_OBJECTIVES: readonly McsHubObjective[] = Object.freeze([
   {
     id: 'impella-unloading-suction',
     statement:
-      'Reason through a modeled Impella placement, unloading or suction state: whether a falling flow or a suction alarm is asking for more support or for more filling at the inlet.',
+      'Reason through a modeled Impella placement, unloading or suction state: compare inlet filling, outlet pressure and position without treating a flow reading as a diagnosis or a setting instruction.',
     sectionIds: ['impella-unloading-placement', 'impella-suction-purge-rv'],
   },
   {
@@ -65,7 +65,7 @@ export const MCS_HUB_OBJECTIVES: readonly McsHubObjective[] = Object.freeze([
   {
     id: 'transfer-versus-delivery',
     statement:
-      'Tell what a device transfers from what the circulation effectively receives, and name the limiting side from the filling pressures before naming a device.',
+      'Tell what a device transfers from what the circulation effectively receives, and compare the modeled filling pressures, suction pattern and flow without treating them as a calibrated diagnosis or a device-selection rule.',
     sectionIds: ['mcs-device-selection-integration'],
   },
 ])

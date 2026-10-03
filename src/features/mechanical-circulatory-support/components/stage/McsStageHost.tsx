@@ -59,7 +59,7 @@ import {
 import { createInitialMcsState, mcsReducer } from '../../engine'
 import { recordMcsVisit } from '../../engine/learningProgress'
 import { McsControls } from '../McsControls'
-import { McsClaimSourceChecks } from '../McsClaimSourceChecks'
+import { McsClaimSourceChecks, McsSourceReviewNotice } from '../McsClaimSourceChecks'
 import { McsGlossary } from '../McsGlossary'
 import type { McsAction, McsDerivedMetrics, McsSimulationState } from '../../engine/types'
 import type { ClinicalLearningItem } from '@/features/learning-module/activity'
@@ -582,6 +582,9 @@ function McsStageSession({
         Object.entries(current.firstObservationByStepId).filter(([id]) => !retryIds.has(id)),
       ),
       performedIds: current.performedIds.filter((id) => id !== activeStep.id),
+      sortByStepId: Object.fromEntries(
+        Object.entries(current.sortByStepId).filter(([id]) => id !== activeStep.id),
+      ),
       sortCommittedStepIds: current.sortCommittedStepIds.filter((id) => id !== activeStep.id),
     }))
   }
@@ -1265,7 +1268,15 @@ function McsStageSession({
                     key={candidate.id}
                     className={styles.sortRow}
                     data-sort-candidate={candidate.id}
-                    data-sort-outcome={revealed ? (right ? 'correct' : 'not-correct') : undefined}
+                    data-sort-outcome={
+                      revealed
+                        ? chosen
+                          ? right
+                            ? 'correct'
+                            : 'not-correct'
+                          : 'example'
+                        : undefined
+                    }
                   >
                     <label htmlFor={selectId}>{candidate.label}</label>
                     <select
@@ -1651,6 +1662,7 @@ function McsStageSession({
   const explanationOffered =
     question.kind !== 'teaching' && question.kind !== 'walk' && question.kind !== 'explain'
   const somethingToRetry =
+    (question.kind === 'explain' && Boolean(question.sort) && showExplanation) ||
     committedChoiceId !== null ||
     progression.sortCommittedStepIds.includes(activeStep.id) ||
     progression.committedByStepId[`${activeStep.id}-observation`] !== undefined
@@ -1663,9 +1675,18 @@ function McsStageSession({
       ) : null}
       {question.kind === 'explain' &&
       question.sort &&
+      !showExplanation &&
       !progression.sortCommittedStepIds.includes(activeStep.id) ? (
         <button type="button" onClick={commitSort}>
           Compare classifications
+        </button>
+      ) : null}
+      {question.kind === 'explain' && question.sort && !showExplanation ? (
+        <button
+          type="button"
+          onClick={() => setRevealedStepIds((ids) => [...new Set([...ids, activeStep.id])])}
+        >
+          Show example classifications
         </button>
       ) : null}
       {walking && !walkIsLast ? (
@@ -1807,6 +1828,7 @@ function McsStageSession({
   const task = (
     <>
       {stepBar}
+      <McsSourceReviewNotice />
       <div ref={nowFocusRef} tabIndex={-1} data-now-focus>
         <NowCard
           model={

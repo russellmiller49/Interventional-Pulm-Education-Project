@@ -66,3 +66,15 @@ export function McsClaimSourceChecks({
     </details>
   )
 }
+
+/** Visible at the point of use, including sections with no mapped claim. */
+export function McsSourceReviewNotice() {
+  return (
+    <p data-source-review-hold>
+      <strong>MCS-03-10 · NOT REVIEWED · source-owner review required.</strong> Other
+      synthesis-backed clinical and device statements remain unverified. The ten listed source
+      checks do not approve other claims; supplied syntheses record authoring provenance, not
+      independent evidence.
+    </p>
+  )
+}

@@ -11,7 +11,7 @@ import {
 } from '../content/casePredictionReasoning'
 import { mcsPresentationTitle } from '../content/casePresentation'
 import { mcsNameWithMechanism } from '../content/deviceNaming'
-import { McsClaimSourceChecks } from './McsClaimSourceChecks'
+import { McsClaimSourceChecks, McsSourceReviewNotice } from './McsClaimSourceChecks'
 import styles from './mechanical-circulatory-support.module.css'
 
 export function McsCaseWorkflow({
@@ -47,6 +47,7 @@ export function McsCaseWorkflow({
          */}
         <span className={styles.kicker}>OPEN SANDBOX · REFERENCE PATIENT</span>
         <h2>Mechanism Studio</h2>
+        <McsSourceReviewNotice />
         <p data-studio-identity>
           An open sandbox on this module’s reference patient. There is no case to solve, no question
           to answer and no debrief to reach: nothing here is a task, and nothing you do here is
@@ -94,6 +95,7 @@ export function McsCaseWorkflow({
           <RotateCcw aria-hidden="true" /> Reset
         </button>
       </header>
+      <McsSourceReviewNotice />
       <dl className={styles.caseIdentity} data-case-identity>
         <div>
           <dt>Patient problem</dt>

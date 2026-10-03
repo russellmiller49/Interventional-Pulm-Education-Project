@@ -22,7 +22,7 @@ export const MCS_CASE_PREDICTION_REASONING: Readonly<
 > = Object.freeze({
   'IABP-01': {
     'late-deflation':
-      'This case is built with deflation set later than its reference and nothing else moved, and the model’s late-deflation alarm is active. The balloon is still inflated when the next ejection begins, so the ventricle ejects against it.',
+      'This case combines later deflation with weaker left-ventricular contractility than the reference patient. The model’s late-deflation alarm is active; this is not an isolated timing comparison. The balloon is still inflated when the next ejection begins, so the ventricle ejects against it.',
     underfilled:
       'Nothing about filling was changed in this case: preload is the reference patient’s and the wedge pressure reads elevated, not low. The finding appeared after a timing change and is seen on the assisted beats.',
     'low-svr':
@@ -32,7 +32,7 @@ export const MCS_CASE_PREDICTION_REASONING: Readonly<
     trigger:
       'The case is built in atrial fibrillation, with the model’s trigger-reliability alarm active and inconsistent assisted beats. Which signal the balloon is triggering from, and whether each beat is recognized, is what the trace can confirm first. This does not say which trigger to choose: in atrial fibrillation this model rates pressure triggering above ECG triggering, which the supplied Cardiosave material advises against, and that rating is held as NOT REVIEWED.',
     'more-volume':
-      'Preload is the reference patient’s in this case and the wedge pressure reads elevated. Nothing on the screen shows a filling problem, and the option skips the bedside review.',
+      'Preload is the reference patient’s in this case and the wedge pressure reads elevated. These readings do not establish a volume deficit, and the option skips the bedside review.',
     'inflate-early':
       'Inflation is at its reference in this case. Moving it ahead of valve closure is the early-inflation relationship Section 3 demonstrates: the balloon would inflate while ejection is still under way.',
   },
@@ -110,7 +110,7 @@ export const MCS_CASE_PREDICTION_REASONING: Readonly<
   },
   'CAP-LVAD-01': {
     'constrained-filling':
-      'The case is built with the modeled pericardial constraint switched on. Both filling pressures read high and close together, pump flow is low, and speed and power are unchanged.',
+      'The case is built with the modeled pericardial constraint switched on. Both filling pressures read high and close together, pump flow is low at unchanged speed, and the power path is connected. Derived pump power is lower than in the reference run; the high-power pattern is not switched on.',
     hypertension:
       'Systemic vascular resistance is at the reference value in this case and the mean pressure is not high.',
     thrombosis:

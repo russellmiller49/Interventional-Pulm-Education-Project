@@ -39,7 +39,7 @@ export const mcsReleaseGates: readonly McsReleaseGate[] = [
     owner: 'Content lead',
     complete: false,
     evidence:
-      'FDA PMA indexes and manufacturer update pages reviewed 2026-07-19; current local IFUs still require signed reconciliation.',
+      'FDA PMA indexes and manufacturer pages are registered but were not opened for this module; current local IFUs still require signed reconciliation.',
   },
   {
     id: 'recall-check-content-freeze',
@@ -47,7 +47,7 @@ export const mcsReleaseGates: readonly McsReleaseGate[] = [
     owner: 'Content lead',
     complete: false,
     evidence:
-      'Current FDA Impella CP, Impella RP sensor, Impella controller, and HeartMate power-system notices are recorded; a formal all-device content-freeze sweep remains required.',
+      'FDA Impella CP, Impella RP sensor, Impella controller, and HeartMate power-system notice records are registered, not opened; current status is unverified and a formal all-device content-freeze sweep remains required.',
   },
   {
     id: 'recall-check-prepublication',

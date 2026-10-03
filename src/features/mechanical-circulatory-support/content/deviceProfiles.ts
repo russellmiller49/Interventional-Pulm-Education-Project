@@ -8,7 +8,7 @@ export const mcsDeviceProfiles: readonly McsDeviceProfile[] = [
     category: 'Temporary counterpulsation support',
     jurisdiction: 'US',
     labelingRevision:
-      'Current US IABP update-center material; formal local-IFU reconciliation remains a release gate',
+      'Registered US IABP update-center material, not opened for this module; local-IFU reconciliation remains a release gate',
     softwareOrModelRevision:
       'Neutral facsimile informed by Cardiosave B.17 reference material; not console-specific',
     reviewedAt: '2026-07-19',
@@ -75,9 +75,8 @@ export const mcsDeviceProfiles: readonly McsDeviceProfile[] = [
     category: 'Temporary left, right, or biventricular microaxial support',
     jurisdiction: 'US',
     labelingRevision:
-      'FDA PMA P140003 supplement index reviewed 2026-07-19; current local IFU still required',
-    softwareOrModelRevision:
-      'SmartAssist-family neutral facsimile; current FDA safety notices flagged below',
+      'Registered FDA PMA P140003 supplement index, not opened for this module; current local IFU still required',
+    softwareOrModelRevision: 'Generic microaxial model; unopened FDA notice records listed below',
     reviewedAt: '2026-07-19',
     mechanism:
       'CP/5.5 move blood from LV to aorta; RP moves systemic venous blood from an IVC/atrial inlet to the pulmonary artery. When combined, the two serial pump flows must be reconciled rather than summed as systemic flow.',
@@ -194,9 +193,9 @@ export const mcsDeviceProfiles: readonly McsDeviceProfile[] = [
     category: 'Implanted LV-to-aorta support',
     jurisdiction: 'US',
     labelingRevision:
-      'P160054/S008 IFU teaching anchor; current PMA supplement/local-IFU reconciliation remains pending',
+      'Registered P160054/S008 IFU anchor, not opened for this module; current PMA supplement/local-IFU reconciliation remains pending',
     softwareOrModelRevision:
-      'Neutral HeartMate 3-concept facsimile; current power-system safety notices flagged below',
+      'Generic continuous-flow model, not a HeartMate 3 simulator; unopened power-system notice records listed below',
     reviewedAt: '2026-07-19',
     mechanism:
       'An apical inflow cannula and ascending-aortic outflow graft provide continuous LV support.',

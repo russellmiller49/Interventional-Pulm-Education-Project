@@ -89,7 +89,7 @@ export const MCS_DEVICE_NAMING: readonly McsDeviceNaming[] = Object.freeze([
     mechanism: 'right-sided microaxial pump, vena cava to pulmonary artery',
     alsoCalled: ['right-sided pump', 'right-sided support', 'RP'],
     productIdentity:
-      'The supplied instructions are for the Impella RP. The registered product page describes the Impella RP Flex, a different product.',
+      'The supplied instructions are for the Impella RP. The registry names an Impella RP Flex product page; that page was not opened for this module.',
     modelIdentity:
       'A right-sided pump of the RP family, modeled for direction only. Which right-sided product is being taught is not settled.',
     notTheSameAs:
