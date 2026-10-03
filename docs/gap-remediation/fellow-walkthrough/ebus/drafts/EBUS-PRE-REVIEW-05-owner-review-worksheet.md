@@ -1,18 +1,23 @@
 # EBUS-PRE-REVIEW-05 — OWNER DECISION REVIEW
 
 Prepared 2026-10-03 from `origin/main` **60e3bd642a92fc25714141ad8e6c8d877510f8e7**.
-**18 decisions: Tier 1 = 4; Tier 2 = 12; Tier 3 = 2. No choices are selected.**
+**18 decision groups: Tier 1 = 4; Tier 2 = 12; Tier 3 = 2.**
+Owner decisions recorded 2026-10-03 from Russell Miller's explicit instructions: **OD-01 OPTION A;
+OD-02 OPTION A (true vascular flow), annotation RETAIN CURRENT; OD-03 APPROVE WITH EDIT / MODIFY;
+OD-04A APPROVE MEDIA by owner attestation; OD-04B HOLD for historical Git policy.**
 
 Use the checkboxes under **Decision requested**; record any edit, scope limitation, reviewer/role,
-and actual decision date there. An unchecked choice remains **NOT REVIEWED**. A choice about one
-subpart does not approve the other subparts. HOLD records an exclusion, not acceptance of the
-underlying claim or asset. These are owner review priorities, not learner progression gates.
+and actual decision date there. OD-01–OD-04 instead record **Owner decision / Owner disposition**
+below. All other unchecked choices remain **NOT REVIEWED**. A decision about one subpart does not
+approve the others. HOLD preserves an unresolved issue within its stated scope. These are owner
+review priorities, not learner progression gates.
 
 Evidence references below: [Packet](EBUS-PRE-REVIEW-05-decision-packet.md),
 [Drafts](EBUS-PRE-REVIEW-05-teaching-drafts.md),
 [Manifest](EBUS-PRE-REVIEW-05-asset-source-manifest.json), and
 [Status](EBUS-PRE-REVIEW-05-status.json). Source verification is carried forward from their
-2026-09-23 review; no new literature review or clinical approval occurred here. **Source fact**,
+2026-09-23 review; no new literature review occurred here. The owner decisions below are recorded
+from the current instructions; they do not upgrade literature verification. **Source fact**,
 **course/model behavior**, **draft wording**, **engineering observation**, **local-protocol
 dependency**, **media/rights dependency**, and **owner clinical judgment** remain distinct.
 Course content files have no diff between the packet baseline `85acc113` and this baseline;
@@ -22,8 +27,13 @@ Two existing owner decisions are preserved: fasting is required (OD-10), and the
 finding was reviewed (OD-04). Per the owner's current task instructions, Depth3 redaction was
 merged, the production object replaced, stable cache versioning merged, and browser-cache
 remediation completed. This supersedes the packet's stale “candidate/not yet published” language
-only; it does not clear rights or history. PRs #316/#322 are **CLOSED** engineering work. Their
-repairs are not reopened. Prompt 06 is not started by this worksheet; this is not Prompt 06.
+only. The subsequent OD-04A owner attestation resolves the rights/provenance hold for current
+clinical course media; OD-04B holds historical repository cleanup/removal policy. Other asset-specific
+de-identification reviews are not declared complete. PRs #316/#322 are **CLOSED** engineering work.
+Their repairs are not reopened. Prompt 06 is not started by this worksheet; this is not Prompt 06.
+Elsewhere, recorded media UNKNOWN/input-required statuses describe the source packet's evidence or
+proposed additions; OD-04A governs rights/provenance of current clinical course media. Image identity,
+annotations, unused/new media, and source-verification holds remain unresolved unless decided below.
 
 ## TIER 1 — Must decide before Prompt 06
 
@@ -37,18 +47,19 @@ that does not block unrelated scoped work or confer whole-course acceptance.
 
 **Topic:** L5-1 held-image/question alignment.
 
-**Why owner input is required:** The question assumes a reflector image, while the held condition
+**Why owner input was required:** The question assumes a reflector image, while the held condition
 can differ. Choosing the teaching intent determines later question and acquisition behavior.
 
-**Current state:** “Why did changing gain fail to remove the dark region behind the reflector?”
-The learner inspects five conditions but may hold any one; gain is raised in the air-gap step.
-The Prompt-04 mismatch note and Prompt-02 evidence contract remain. **UNRESOLVED.**
+**Current state:** Runtime still asks “Why did changing gain fail to remove the dark region behind
+the reflector?” The learner inspects five conditions but may hold any one; gain is raised in the
+air-gap step. The mismatch note and evidence contract remain. The owner has selected the
+condition-neutral comparison; runtime implementation is pending a separate task.
 
-**Verified evidence:** Course/model behavior, not a clinical-image finding: Drafts R4 and Packet §6.
-The recorded Prompt-04 engineering comparison distinguishes shadow in the echo schematic only;
-the 3D reflector and direct-contact views were identical.
+**Verified evidence:** Course/model behavior: Drafts R4 and Packet §6. The recorded Prompt-04
+engineering comparison distinguishes shadow in the echo schematic only; the 3D reflector and
+direct-contact views were identical. The owner selection is a teaching decision, not new source verification.
 
-**Draft/proposed option(s):**
+**Draft/proposed option(s):** Options considered; the selection is recorded below.
 
 | Choice                                        | Learner problem addressed                                                                            | Later content/runtime burden                                                                 | Self-paced effect / wording review                                                                                       |
 | --------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
@@ -57,10 +68,13 @@ the 3D reflector and direct-contact views were identical.
 | C — variants matched to actual held condition | Makes the check refer to the learner's evidence                                                      | Five authored variants, condition routing, review of each rationale and evidence association | Can remain self-paced; additional condition-specific clinical/teaching wording required                                  |
 | D — require reflector before checking         | Ensures the frame matches the question; does not itself establish that gain was changed there        | New acquisition gate and revised instructions/acceptance logic                               | Previously considered undesirable because it changes self-paced policy; additional rationale and wording review required |
 
-**Dependencies / holds:** No option selected. No ID, key, gate, or evidence contract changes in
-this pass. A/C require wording approval; D requires an explicit policy decision.
+**Dependencies / holds:** Final wording and held-image policy/question identity are later scoped
+content/engineering work. No runtime, ID, key, gate, or evidence contract changes occur here.
 
-**Decision requested:** ☐ OPTION A ☐ OPTION B ☐ OPTION C ☐ OPTION D ☐ HOLD ☐ MODIFY: `______`
+**Owner decision:** **OWNER DECISION: OPTION A** — Russell Miller, repository owner; recorded
+2026-10-03 from the current instructions. Use the condition-neutral air-gap versus reflector
+mechanism comparison. This resolves the held-image mismatch in the chosen teaching design without
+creating an acquisition gate or requiring multiple condition-specific variants.
 
 ### OD-02
 
@@ -68,30 +82,36 @@ this pass. A/C require wording approval; D requires an explicit policy decision.
 
 **Topic:** Doppler purpose, interpretation, and annotations.
 
-**Why owner input is required:** The current answer asserts detected flow in this recording;
-only an expert can decide whether these pixels support that claim.
+**Why owner input was required:** The current answer asserts detected flow in this recording;
+clinical interpretation of the asset required an owner decision.
 
 **Current state:** Lesson 8 uses `Depth4_Color_Flow`, 32–34 s of `Depth4.mp4`; Doppler-off uses
-6–8 s. The key says color represents detected flow. The course also teaches “Absent color is not
-clearance for puncture.” Asset interpretation is **NOT REVIEWED**.
+6–8 s. The key says color represents detected flow. The course teaches “Absent color is not
+clearance for puncture.” The owner has resolved the current clip's interpretation as true vascular
+flow and chosen to retain the current unlabeled task initially. Runtime/media remain unchanged.
 
-**Verified evidence:** Packet §1a separates the generic teaching from this asset. The generic
-principle is present in course text; the packet records no separate primary-source verification
-of that exact absent-color sentence. Engineering observation: a roughly one-second box-filling
-color episode, with compact/near-zero intervals. Pixel counts do not verify flow, artifact,
-vessel identity, or a safe path. No local/device color convention or acquisition settings are verified.
+**Verified evidence:** Packet §1a records generic course teaching and a roughly one-second
+box-filling color episode with compact/near-zero intervals. Pixel counts do not establish clinical
+interpretation; **true vascular flow is the owner's current clinical judgment**. The packet records
+no separate primary-source verification of the exact absent-color sentence. No local/device color
+convention or acquisition settings are newly verified.
 
-**Draft/proposed option(s):** A vascular-flow demonstration (expert selects/annotates suitable
-frames); B artifact demonstration (new reviewed clinical content); C both (both reviews);
-D unsuitable (replacement needed). Preserve the absent-color safety principle while deciding
-whether to commission target/vessel labels or retain an unlabeled task with an explicit limitation.
+**Draft/proposed option(s):** Options considered: A vascular-flow demonstration; B artifact
+teaching; C both; D unsuitable/replacement. Annotation options were expert labels, retained
+unlabeled task, or hold. The selected dispositions are below; no frame selection or annotation is
+required by the owner's initial choice to retain the current task.
 
-**Dependencies / holds:** Expert asset interpretation, frame-specific annotation if used,
-OD-04 rights/provenance, and device documentation for any settings or color-direction claim.
-No asset is clinically approved by the generic teaching principle.
+**Dependencies / holds:** OD-04A records rights/provenance approval by owner attestation. New
+frame-specific labels or settings/color-direction teaching require separate review and device
+evidence where applicable. The absent-color safety principle remains; no vessel/target label or
+safe puncture path is assigned by this worksheet. Asset-specific de-identification limits remain.
 
-**Decision requested:** Purpose: ☐ OPTION A ☐ OPTION B ☐ OPTION C ☐ OPTION D ☐ HOLD ☐ MODIFY: `______`
-Annotation: ☐ SUPPLY/APPROVE MEDIA ☐ RETAIN CURRENT unlabeled task, subject to purpose decision ☐ HOLD
+**Owner decision:** **OWNER DECISION: OPTION A** — Russell Miller, repository owner; recorded
+2026-10-03 from the current instructions. The Doppler clip represents **true vascular flow**.
+This resolves clinical interpretation of the current clip as a vascular-flow demonstration.
+
+Annotation field: **RETAIN CURRENT** — retain the current unlabeled task initially. No new
+annotations or lesson/media changes are implemented in this pass.
 
 ### OD-03
 
@@ -99,63 +119,85 @@ Annotation: ☐ SUPPLY/APPROVE MEDIA ☐ RETAIN CURRENT unlabeled task, subject 
 
 **Topic:** Lesson-20 clinical sequence and needle workflow.
 
-**Why owner input is required:** Accepted ordering affects learner feedback; protected assembly
+**Why owner input was required:** Accepted ordering affects learner feedback; protected assembly
 preparation and exposing/advancing a needle must not be treated as interchangeable steps.
 
-**Current state:** First: “Confirm the labeled target, live image, and acceptable vascular path.”
-Second: “Confirm protected needle position and prepare the assembly per the IFU.” Reversed order
-receives “Reconsider the order.” Course text leaves extension limits, sheath adjustment, suction,
-stylet handling, and sampling motions to the device/protocol.
+**Current state:** Runtime orders target/live-image/path confirmation before protected assembly
+preparation per the IFU; reversed order receives “Reconsider the order.” The owner has modified
+the wording concept below. Accepted sequence behavior has not been changed in this recording pass.
 
 **Verified evidence:** Packet §4 / Manifest L20-2/L20-3: no primary source fixes the order of the
 first two checkpoints. CHEST 2016 and ICS/IAB 2023 verify some elements, including optional
-suction/stylet use, but not a universal pass sequence or the intended local workflow.
+suction/stylet use, not a universal pass sequence or local workflow. The approved wording below
+is an owner content decision, not newly verified procedural guidance.
 
-**Draft/proposed option(s):** D9: “The target and path are confirmed before the needle is prepared
-for this pass, so a lost target never meets an exposed needle.” A enforce that proposed teaching
-sequence with this explanation; B accept more than one reviewed order; C retain current behavior;
-D hold pending local/faculty protocol. Optional sourced suction/stylet wording is a separate subpart.
+**Draft/proposed option(s):** D9 originally placed confirmation before needle preparation “so a
+lost target never meets an exposed needle.” Alternatives were enforcing that order, accepting more
+than one order, retaining behavior, or holding for protocol. The owner modified this concept to
+distinguish protected preparation from exposure/advancement, as recorded below.
 
-**Dependencies / holds:** Faculty must resolve what “prepared” means before approving D9;
-no assumption that protected preparation exposes the needle. Device IFU/local protocol required
-for detailed maneuvers. B changes accepted sequences and needs later engineering review.
+**Dependencies / holds:** Detailed sheath/stylet/suction technique remains **IFU/local-protocol
+dependent**. Optional sourced-element additions remain undecided. Any later accepted-sequence
+implementation requires its own scoped review; this decision does not itself change runtime behavior.
 
-**Decision requested:** ☐ OPTION A ☐ OPTION B ☐ OPTION C ☐ OPTION D / HOLD
-☐ SUPPLY LOCAL PROTOCOL ☐ OTHER: `______`
+**Owner decision:** **OWNER DECISION: APPROVE WITH EDIT / MODIFY** — Russell Miller, repository
+owner; recorded 2026-10-03 from the current instructions. Owner-approved concept:
+
+> Protected needle/assembly preparation may occur according to the device and local workflow.
+> Confirm the intended target, live ultrasound image, and an acceptable vascular path immediately
+> before needle exposure and advancement.
+
+The owner does not want wording that incorrectly equates protected preparation with unsafe
+premature needle exposure. This is a wording/content decision only, not an implementation step.
+
 Optional sourced elements: ☐ APPROVE ☐ APPROVE WITH EDIT: `______` ☐ RETAIN CURRENT ☐ HOLD
 
 ### OD-04
 
-**ID:** OD-04
+**ID:** OD-04 (sub-decisions OD-04A and OD-04B)
 
-**Topic:** Media already in use; Depth3 rights/provenance and historical Git policy.
+**Topic:** Current media rights/provenance and historical Git cleanup/removal policy.
 
-**Why owner input is required:** Existing recordings and station images lack documented clearance.
-Technical redaction cannot establish publication authority or decide historical-object policy.
+**Why owner input was required:** Permission to use current media required an owner attestation;
+historical repository-object policy required a separate disposition. Technical redaction alone
+could not decide either issue.
 
-**Current state:** Depth3 metadata review and technical remediation are **COMPLETED**, per the
-owner's current instructions. No repeat redaction/adoption/cache approval requested. Recording,
-station-image, and recorded-frame screenshot rights/provenance remain unresolved in Prompt-05.
+**Current state:** Depth3's metadata finding was owner-reviewed; redacted serving copies,
+production-object replacement, stable cache versioning, and browser-cache remediation are
+**COMPLETED**. Current clinical course media rights/provenance are now approved by owner attestation
+(OD-04A). Historical Git cleanup/removal policy remains **HOLD** (OD-04B).
 
-**Verified evidence:** Packet §1c records the owner's 2026-09-24 full-video metadata review and a
-separate technical screenshot review finding no flagged Depth3 window. Manifest records UNKNOWN
-provenance/consent/rights, not clearance. Model assets are course-built, but source-CT clearance was
-not audited. Gemini-related XMP in two processor stills is an engineering observation, not proof of
-image accuracy or rights. Replacing current files does not remove historical Git objects.
+**Verified evidence:** Packet §1c records the 2026-09-24 metadata review and separate technical
+screenshot review. The Manifest's UNKNOWN rights/provenance entries are the earlier record;
+OD-04A supersedes that hold for the current clinical videos/images through an explicit owner
+attestation, not an independent provenance audit. Replacing serving copies does not remove
+historical Git objects. Other asset-specific de-identification findings retain their documented scope.
 
-**Draft/proposed option(s):** For current media, supply substantiated acquisition/provenance,
-consent or applicable determination, de-identification and publication-rights records; or specify
-restriction/replacement/exclusion. Separately, history A accept the old blob remaining after the
-completed current-file replacement; B commission an intentional history purge; C another
-repository/GitHub remediation route. These are policy choices, not actions authorized here.
+**Draft/proposed option(s):** Current-media options were substantiated permission/provenance,
+restriction/replacement, or hold. History options were accepting the old blob remaining,
+commissioning an intentional purge, another remediation route, or hold. The two selected
+sub-decisions follow; no cleanup/removal action is authorized or performed here.
 
-**Dependencies / holds:** Record each affected asset/use; no blanket clearance from Depth3.
-History may remain separately held if explicitly excluded from Prompt-06 acceptance. Any later
-history action needs its own authorization and must respect repository rules.
+**Dependencies / holds:** Current-media permission does not retroactively declare every asset's
+de-identification review complete. Source-CT audit, unused/proposed media, and rights of documentation
+screenshots outside current clinical course use are not newly approved. Historical remediation/policy
+remains a separate task; it does not reopen the completed technical redaction remediation.
 
-**Decision requested:** Current media: ☐ SUPPLY/APPROVE MEDIA with records ☐ HOLD / restrict or
-replace these uses: `______` ☐ OTHER: `______`
-Historical Git object: ☐ OPTION A ☐ OPTION B ☐ OPTION C ☐ HOLD ☐ OTHER: `______`
+**Owner disposition:** Russell Miller, repository owner; recorded 2026-10-03 from the current instructions.
+
+**OD-04A — Current media rights/provenance: OWNER DECISION: APPROVE MEDIA.** Owner attestation:
+
+- The clinical videos and images used in the EBUS course are owner-provided and/or owner-controlled materials.
+- The owner has permission to use them for this educational course.
+
+This resolves the rights/provenance hold for the current media as an **owner attestation**. It does
+not retroactively declare every asset de-identification review complete beyond already documented
+asset-specific findings. The Depth3 technical metadata issue was already remediated.
+
+**OD-04B — Historical Git object: OWNER DECISION: HOLD.** The historical unredacted Git object
+remains a separate remediation/policy task. Current serving copies have already been remediated;
+this hold applies only to historical repository cleanup/removal policy and does not reopen the
+technical redaction remediation.
 
 ## TIER 2 — Can remain held through Prompt 06 if explicitly documented
 
@@ -583,8 +625,10 @@ later lossy trial: `______` ☐ HOLD
 
 The following tables account for all 52 lane-05 IDs, all 12 Prompt-04 carry-forward entries, all
 7 related accounted rows, and all 7 amendment objects: **78/78 Manifest decision objects**.
-Grouping is not approval. The Tier-2/3 dependencies explain why proposed additions can remain
-held; existing retain/closed dispositions stay intact.
+Grouping alone is not approval. The explicitly recorded OD-01–OD-04 owner dispositions supersede
+only their stated subparts. Other table statuses retain the original source dispositions; OD-04A
+resolves current clinical-media rights/provenance, not new-image identity/annotation or unused-media
+holds. Tier-2/3 choices, all source-verification statuses, and existing retain/closed dispositions stay intact.
 
 ### All 52 lane-05 rows
 
@@ -603,10 +647,10 @@ held; existing retain/closed dispositions stay intact.
 | L6-2      | OD-08        | EXPERT IMAGE ANNOTATION REQUIRED; related OD-02, OD-07                       |
 | L6-4      | OD-15        | READY FOR OWNER DECISION                                                     |
 | L6-5      | OD-18        | Future performance work; historical inventory is not current Depth3 metadata |
-| L6-7      | OD-04        | MEDIA / RIGHTS INPUT REQUIRED                                                |
+| L6-7      | OD-04A       | APPROVE MEDIA by owner attestation; de-identification scope unchanged        |
 | L7-2      | OD-15        | RETAIN CURRENT BEHAVIOR                                                      |
-| L8-1      | OD-02        | EXPERT IMAGE ANNOTATION REQUIRED                                             |
-| L8-2      | OD-02        | EXPERT IMAGE ANNOTATION REQUIRED                                             |
+| L8-1      | OD-02        | OPTION A — true vascular flow; unlabeled task RETAIN CURRENT                 |
+| L8-2      | OD-02        | RETAIN CURRENT unlabeled; new annotation remains unapproved                  |
 | L8-3      | OD-15        | RETAIN CURRENT BEHAVIOR; related OD-02                                       |
 | L9-5      | OD-15        | READY FOR OWNER DECISION                                                     |
 | L11-2     | OD-07        | EXPERT IMAGE ANNOTATION REQUIRED                                             |
@@ -624,7 +668,7 @@ held; existing retain/closed dispositions stay intact.
 | L18-2     | OD-07        | READY FOR OWNER DECISION                                                     |
 | L18-3     | OD-15        | READY FOR OWNER DECISION                                                     |
 | L19-4     | OD-15        | READY FOR OWNER DECISION                                                     |
-| L20-2     | OD-03        | READY FOR OWNER DECISION                                                     |
+| L20-2     | OD-03        | APPROVE WITH EDIT / MODIFY; wording only, runtime unchanged                  |
 | L20-3     | OD-03        | LOCAL PROTOCOL REQUIRED; related OD-11                                       |
 | L20-6     | OD-08        | MEDIA / RIGHTS INPUT REQUIRED; related OD-16                                 |
 | L21-3     | OD-16        | READY FOR OWNER DECISION                                                     |
@@ -649,7 +693,7 @@ held; existing retain/closed dispositions stay intact.
 | --------------- | ------------ | ----------------------------------------------------------------- |
 | L20-4           | OD-09        | Q1; READY FOR OWNER DECISION                                      |
 | L17-5           | OD-07        | Q2; READY FOR OWNER DECISION                                      |
-| L5-1            | OD-01        | Q3; READY FOR OWNER DECISION                                      |
+| L5-1            | OD-01        | Q3; OPTION A — condition-neutral mechanism comparison             |
 | NAV-3-Q4        | OD-12        | Q4; READY FOR OWNER DECISION                                      |
 | L19-2           | OD-07        | Q5; READY FOR OWNER DECISION                                      |
 | L2-6            | OD-15        | Q6; READY FOR OWNER DECISION                                      |
@@ -674,56 +718,58 @@ held; existing retain/closed dispositions stay intact.
 
 ### All 7 amendment decision objects
 
-| Source ID                        | Worksheet ID | Grouping / retained disposition                                    |
-| -------------------------------- | ------------ | ------------------------------------------------------------------ |
-| OWNER-FASTING-REQUIRED           | OD-10        | OWNER DECIDED; substance preserved, only wording pending           |
-| LOCAL-FASTING-INTERVAL           | OD-10        | LOCAL PROTOCOL REQUIRED; no duration selected                      |
-| DEPTH3-METADATA                  | OD-04        | OWNER REVIEWED; do not reopen technical repair                     |
-| DEPTH3-REPLACEMENT-CANDIDATE     | OD-04        | Completed per current owner update; stale adoption hold superseded |
-| DEPTH3-RIGHTS-PROVENANCE         | OD-04        | UNKNOWN; separate from completed redaction                         |
-| DEPTH3-HISTORICAL-BLOB           | OD-04        | Separate owner A/B/C/HOLD decision; no history action              |
-| PUBLIC-SCREENSHOTS-FLOW-REDESIGN | OD-04        | Technical metadata check completed; rights remain separate         |
+| Source ID                        | Worksheet ID | Grouping / retained disposition                                     |
+| -------------------------------- | ------------ | ------------------------------------------------------------------- |
+| OWNER-FASTING-REQUIRED           | OD-10        | OWNER DECIDED; substance preserved, only wording pending            |
+| LOCAL-FASTING-INTERVAL           | OD-10        | LOCAL PROTOCOL REQUIRED; no duration selected                       |
+| DEPTH3-METADATA                  | OD-04        | OWNER REVIEWED; do not reopen technical repair                      |
+| DEPTH3-REPLACEMENT-CANDIDATE     | OD-04        | Completed per current owner update; stale adoption hold superseded  |
+| DEPTH3-RIGHTS-PROVENANCE         | OD-04A       | APPROVE MEDIA; owner attestation, de-identification scope unchanged |
+| DEPTH3-HISTORICAL-BLOB           | OD-04B       | HOLD — historical policy only; technical remediation complete       |
+| PUBLIC-SCREENSHOTS-FLOW-REDESIGN | OD-04        | Technical check complete; rights outside course use unresolved      |
 
 ### Other packet/source references and Prompt-04 disposition context
 
 These references add no decisions and do not reopen resolved or rejected proposals.
 
-| Row/source ID                                                 | Worksheet decision ID                                                              | Accounting / rationale                                                                                                                                               |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Packet G1–G7                                                  | OD-01–OD-18                                                                        | All executive groups decomposed above; original statuses remain in the source documents                                                                              |
-| Drafts R1, R2, R3, R5, R6, R7, R8, R9, R10                    | OD-15                                                                              | Revision classes, with clinical subparts explicitly held for review                                                                                                  |
-| Drafts R4; §A.12                                              | OD-01; OD-16                                                                       | Held-image choice and separate recognition example                                                                                                                   |
-| Storyboard A; B; §C                                           | OD-07; OD-08; OD-17                                                                | Image formats and later consolidation                                                                                                                                |
-| D1, D2, D3                                                    | OD-11                                                                              | Guideline wording and registry corrections                                                                                                                           |
-| D4, D5; D6; D7; D8; D9; D10                                   | OD-05; OD-06; OD-09; OD-12; OD-03; OD-10                                           | All ten copy proposals accounted                                                                                                                                     |
-| ers2026; chest2024; combined2015; ests2014                    | OD-11                                                                              | Recorded source statuses preserved; no new verification                                                                                                              |
-| accp2022; bts2013; ics2023; chest2016                         | OD-10, OD-11; OD-03, OD-14                                                         | Local preparation / needle / specimen claims remain bounded                                                                                                          |
-| aquire2013; fujiwara2010; clns2020                            | OD-11                                                                              | Abstract-only holds; morphology imagery also OD-07                                                                                                                   |
-| iaslc-n9; accp2013-staging                                    | OD-13, OD-11                                                                       | N descriptors / historical staging guidance; no new staging rule                                                                                                     |
-| olympus-bf-uc190f; IFU                                        | OD-11, OD-05, OD-09, OD-12                                                         | Brochure ≠ IFU; convention/harm/definition gaps remain                                                                                                               |
-| mediastrial-lead; local-ucsd-ip                               | OD-11; OD-10, OD-14, OD-09                                                         | Unread trial lead; private references are not authorized course protocols                                                                                            |
-| Manifest assets (128), privateEvidence, replacementCandidates | OD-04; OD-02, OD-07, OD-08, OD-18                                                  | Inventory/evidence supports these decisions; no pixel review, asset clearance, or rehash claimed here; Depth3 historical metadata is superseded only as stated above |
-| Packet owner checklist 1–11                                   | OD-02, OD-04, OD-07, OD-08, OD-06, OD-05                                           | Image, model and measurement choices grouped                                                                                                                         |
-| Packet owner checklist 12–22                                  | OD-11, OD-10, OD-14, OD-09, OD-03, OD-12, OD-13, OD-15, OD-01, OD-16, OD-17, OD-18 | Clinical, glossary, case, question and future-work choices grouped                                                                                                   |
-| Packet owner checklist 23–29                                  | OD-10, OD-04                                                                       | Two owner decisions preserved; Depth3 technical adoption completed; rights/history separate                                                                          |
-| Prompt-04 Q8 / L16-3 alternative                              | OD-15                                                                              | Deferred/not planned: new feature-picker task; current retitle already makes the task truthful                                                                       |
-| Prompt-04 Q9 / L23-2 alternative                              | OD-14, OD-15                                                                       | Concealing lab instructions remains rejected; new media options require local protocol                                                                               |
-| Prompt-04 Q10 / L10-3, L1-10, L4-6, L17-4, L6-3               | OD-15, OD-17                                                                       | Concealment/goal-only alternatives remain rejected; guided teaching and limits stay visible                                                                          |
-| Prompt-04 Q12 / L24-2 second half                             | OD-08                                                                              | Future case-flow reuse remains not planned; adding case teaching is outside current acceptance                                                                       |
-| Prompt-04 Q13 / L12-7, L13-5, §D                              | OD-17                                                                              | Four-lesson navigation proposal; not implementation                                                                                                                  |
-| Prompt-04 Q14 / L1-3                                          | OD-07                                                                              | Optional local CT primer; existing links can remain                                                                                                                  |
-| Drafts Storyboard A PR-2 context; B L4/L7 context             | OD-07; OD-08                                                                       | Context for model/image teaching, not reopened engineering rows                                                                                                      |
-| Drafts §C L10-4 and acquisition-context rows                  | OD-17, OD-06                                                                       | Preserve acquisition/progress semantics; no new calibration or capture task                                                                                          |
-| Prompt-03 L3-7, L11-6, L12-4; orientation/image/caliper holds | OD-06, OD-05, OD-07, OD-02                                                         | Carry forward clinical/model questions only; presentation/status repairs remain closed                                                                               |
+| Row/source ID                                                 | Worksheet decision ID                                                              | Accounting / rationale                                                                                                                       |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Packet G1–G7                                                  | OD-01–OD-18                                                                        | All executive groups decomposed above; original statuses remain in the source documents                                                      |
+| Drafts R1, R2, R3, R5, R6, R7, R8, R9, R10                    | OD-15                                                                              | Revision classes, with clinical subparts explicitly held for review                                                                          |
+| Drafts R4; §A.12                                              | OD-01; OD-16                                                                       | Held-image choice and separate recognition example                                                                                           |
+| Storyboard A; B; §C                                           | OD-07; OD-08; OD-17                                                                | Image formats and later consolidation                                                                                                        |
+| D1, D2, D3                                                    | OD-11                                                                              | Guideline wording and registry corrections                                                                                                   |
+| D4, D5; D6; D7; D8; D9; D10                                   | OD-05; OD-06; OD-09; OD-12; OD-03; OD-10                                           | All ten copy proposals accounted                                                                                                             |
+| ers2026; chest2024; combined2015; ests2014                    | OD-11                                                                              | Recorded source statuses preserved; no new verification                                                                                      |
+| accp2022; bts2013; ics2023; chest2016                         | OD-10, OD-11; OD-03, OD-14                                                         | Local preparation / needle / specimen claims remain bounded                                                                                  |
+| aquire2013; fujiwara2010; clns2020                            | OD-11                                                                              | Abstract-only holds; morphology imagery also OD-07                                                                                           |
+| iaslc-n9; accp2013-staging                                    | OD-13, OD-11                                                                       | N descriptors / historical staging guidance; no new staging rule                                                                             |
+| olympus-bf-uc190f; IFU                                        | OD-11, OD-05, OD-09, OD-12                                                         | Brochure ≠ IFU; convention/harm/definition gaps remain                                                                                       |
+| mediastrial-lead; local-ucsd-ip                               | OD-11; OD-10, OD-14, OD-09                                                         | Unread trial lead; private references are not authorized course protocols                                                                    |
+| Manifest assets (128), privateEvidence, replacementCandidates | OD-04; OD-02, OD-07, OD-08, OD-18                                                  | Current clinical media approved by owner attestation (OD-04A); no new pixel review or audit; historical Git policy HOLD (OD-04B)             |
+| Packet owner checklist 1–11                                   | OD-02, OD-04, OD-07, OD-08, OD-06, OD-05                                           | Image, model and measurement choices grouped                                                                                                 |
+| Packet owner checklist 12–22                                  | OD-11, OD-10, OD-14, OD-09, OD-03, OD-12, OD-13, OD-15, OD-01, OD-16, OD-17, OD-18 | Clinical, glossary, case, question and future-work choices grouped                                                                           |
+| Packet owner checklist 23–29                                  | OD-10, OD-04                                                                       | Earlier fasting/metadata decisions preserved; current media attestation OD-04A recorded; technical remediation complete; history OD-04B HOLD |
+| Prompt-04 Q8 / L16-3 alternative                              | OD-15                                                                              | Deferred/not planned: new feature-picker task; current retitle already makes the task truthful                                               |
+| Prompt-04 Q9 / L23-2 alternative                              | OD-14, OD-15                                                                       | Concealing lab instructions remains rejected; new media options require local protocol                                                       |
+| Prompt-04 Q10 / L10-3, L1-10, L4-6, L17-4, L6-3               | OD-15, OD-17                                                                       | Concealment/goal-only alternatives remain rejected; guided teaching and limits stay visible                                                  |
+| Prompt-04 Q12 / L24-2 second half                             | OD-08                                                                              | Future case-flow reuse remains not planned; adding case teaching is outside current acceptance                                               |
+| Prompt-04 Q13 / L12-7, L13-5, §D                              | OD-17                                                                              | Four-lesson navigation proposal; not implementation                                                                                          |
+| Prompt-04 Q14 / L1-3                                          | OD-07                                                                              | Optional local CT primer; existing links can remain                                                                                          |
+| Drafts Storyboard A PR-2 context; B L4/L7 context             | OD-07; OD-08                                                                       | Context for model/image teaching, not reopened engineering rows                                                                              |
+| Drafts §C L10-4 and acquisition-context rows                  | OD-17, OD-06                                                                       | Preserve acquisition/progress semantics; no new calibration or capture task                                                                  |
+| Prompt-03 L3-7, L11-6, L12-4; orientation/image/caliper holds | OD-06, OD-05, OD-07, OD-02                                                         | Carry forward clinical/model questions only; presentation/status repairs remain closed                                                       |
 
 ### Validation record
 
 ID accounting checked against the current Status and all Manifest decision objects: 52 lane rows,
 12 carry-forward entries, 7 related rows, and 7 amendment objects, with no omissions. Prompt-04
-Q1–Q15 context is accounted for, including Q8/Q9/Q10/Q12's non-active dispositions. All decisions
-use the eight requested fields. No new owner clinical decision, NOT REVIEWED → approval conversion,
-source-status upgrade, rights or de-identification inference, or local protocol was made. Fasting
-required and the Depth3 metadata review are preserved; technical remediation is complete per the
-owner update, rights/history unresolved separately. Only this worksheet is added; the four Prompt-05
-sources, runtime, tests, media, schemas, question IDs and keys are unchanged. No Prompt-06 work,
-merge, or deployment is performed by this task.
+Q1–Q15 context remains accounted for. OD-01–OD-04 use the requested topic, rationale, current state,
+evidence, options and dependencies fields, with Owner decision/disposition replacing Decision requested.
+The remaining 14 decision groups retain their undecided choices and tiers. Only the owner's explicit
+OD-01 OPTION A, OD-02 true vascular flow / unlabeled-task RETAIN CURRENT, OD-03 modified concept,
+OD-04A media attestation and OD-04B historical HOLD are newly recorded. No other unresolved item is
+approved, no source status is upgraded, and no local protocol or global de-identification clearance
+is inferred. Fasting-required and the earlier Depth3 metadata review remain preserved. Only this
+worksheet is updated; the four Prompt-05 source files, runtime, tests, media, schemas, question IDs
+and keys are unchanged. Prompt 06 is not started; no merge or deployment is performed.
