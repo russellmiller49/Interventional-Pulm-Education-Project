@@ -92,7 +92,9 @@ export function CapturedBreath({
   /**
    * True for a record that was captured earlier and cannot be taken again by running the patient
    * (the retained baseline and result). If it holds no complete breath, the figure says so instead
-   * of asking for a new capture.
+   * of asking for a new capture — and says only that. It used to add that the breaths were too far
+   * apart for the record's length, which was not the reason in the one place it appeared: Section
+   * 8's 12-second window held two whole 6-second cycles and could verify one onset.
    */
   retained?: boolean
 }) {
@@ -122,8 +124,8 @@ export function CapturedBreath({
         {label}: this retained record does not hold one complete breath — an inspiratory onset to
         the next — in its{' '}
         {samples.length > 1 ? (samples.at(-1)!.time - samples[0].time).toFixed(0) : '0'} seconds, so
-        no breath is drawn for it. The breaths in it are too far apart for the record’s length. Its
-        readings are still in the table.
+        no breath is drawn for it. A breath is drawn only between two inspiratory onsets the record
+        can verify, and this record does not hold two. Its readings are still in the table.
       </p>
     ) : (
       <p role="status">

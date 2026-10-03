@@ -496,6 +496,9 @@ describe('capture gate: a result is captured only with a complete breath deliver
     render(<RecordedBreathComparison evidence={evidence} effort />)
     const note = document.querySelector('[data-no-complete-breath]')!
     expect(note.textContent).toMatch(/Captured baseline: this retained record does not hold/)
+    // It states what the record lacks and assigns no cause: this one holds two whole cycles.
+    expect(note.textContent).toMatch(/two inspiratory onsets the record\s+can verify/)
+    expect(note.textContent).not.toMatch(/too far apart/)
     expect(document.body.textContent).not.toMatch(/then capture again/)
     fireEvent.click(screen.getByRole('button', { name: 'Overlay' }))
     expect(document.querySelector('[data-overlay-missing-breath]')?.textContent).toMatch(
