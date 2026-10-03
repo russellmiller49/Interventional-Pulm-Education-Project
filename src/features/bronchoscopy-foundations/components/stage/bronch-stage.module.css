@@ -358,7 +358,11 @@
   gap: 1rem;
   --compare-height: min(52vh, 30rem);
 }
-.mediaGrid[data-media-compare='true'] .figureFrame {
+/*
+ * The card's own frame only. The enlarge dialog is nested in the same figure, and a descendant
+ * selector here held the enlarged image to the card's size.
+ */
+.mediaGrid[data-media-compare='true'] .figureBody > .figureFrame {
   width: min(100%, calc(var(--compare-height) * var(--media-aspect, 1)));
   margin-inline: auto;
 }
