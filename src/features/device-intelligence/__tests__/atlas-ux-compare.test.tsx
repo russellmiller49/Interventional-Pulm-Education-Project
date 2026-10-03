@@ -106,6 +106,93 @@ describe('compare button and tray', () => {
     global.fetch = originalFetch
   })
 
+  it.each(['http', 'network'])(
+    'retries a %s name-lookup failure without changing either list',
+    async (failure) => {
+      const selected = ids.slice(0, 2)
+      const stored = serializeCompareSelection(selected)
+      localStorage.setItem(COMPARE_SELECTION_KEY, stored)
+      const fetchMock = jest.fn()
+      if (failure === 'http') fetchMock.mockResolvedValueOnce({ ok: false })
+      else fetchMock.mockRejectedValueOnce(new Error('Offline'))
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          devices: selected.map((id) => ({
+            productId: id,
+            productName: `Name ${id}`,
+            catalogNumber: null,
+          })),
+        }),
+      })
+      global.fetch = fetchMock
+      show()
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Device names could not be loaded. Your comparison selection is unchanged.',
+      )
+      expect(localStorage.getItem(COMPARE_SELECTION_KEY)).toBe(stored)
+      fireEvent.click(screen.getByRole('button', { name: 'Retry device lookup' }))
+      await screen.findByText(`Name ${selected[0]}`)
+      expect(screen.queryByRole('alert')).toBeNull()
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+      expect(fetchMock.mock.calls[0][0]).toBe(fetchMock.mock.calls[1][0])
+      expect(localStorage.getItem(COMPARE_SELECTION_KEY)).toBe(stored)
+      expect(localStorage.getItem(SAVED_DEVICES_KEY)).toBeNull()
+    },
+  )
+
+  it('ignores a late retry result after the selection changes', async () => {
+    localStorage.setItem(COMPARE_SELECTION_KEY, serializeCompareSelection(ids.slice(0, 2)))
+    let finish!: (response: unknown) => void
+    global.fetch = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('Offline'))
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finish = resolve
+          }),
+      )
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          devices: [{ productId: ids[1], productName: 'Current device', catalogNumber: null }],
+        }),
+      })
+    show()
+    await screen.findByRole('alert')
+    fireEvent.click(screen.getByRole('button', { name: 'Retry device lookup' }))
+    await waitFor(() => expect(finish).toBeDefined())
+    fireEvent.click(compareButton(1))
+    await screen.findByText('Current device')
+    await act(async () =>
+      finish({
+        ok: true,
+        json: async () => ({
+          devices: [{ productId: ids[0], productName: 'Obsolete device', catalogNumber: null }],
+        }),
+      }),
+    )
+    expect(screen.queryByText('Obsolete device')).toBeNull()
+    expect(screen.getByText('Current device')).toBeInTheDocument()
+    expect(parseCompareSelection(localStorage.getItem(COMPARE_SELECTION_KEY))).toEqual([ids[1]])
+  })
+
+  it('does not mislabel a successful empty lookup as a transport failure', async () => {
+    localStorage.setItem(COMPARE_SELECTION_KEY, serializeCompareSelection(ids.slice(0, 2)))
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ devices: [], unavailableCount: 2 }),
+    })
+    show()
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1))
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Retry device lookup' })).toBeNull()
+    expect(parseCompareSelection(localStorage.getItem(COMPARE_SELECTION_KEY))).toEqual(
+      ids.slice(0, 2),
+    )
+  })
+
   it('shows no tray until a device is selected, then links the exact identifiers', async () => {
     show()
     await waitFor(() => expect(compareButton(1)).toBeEnabled())

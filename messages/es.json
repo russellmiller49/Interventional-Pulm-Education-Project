@@ -9532,6 +9532,8 @@
       "trayNeedTwo": "Añada un dispositivo más para comparar.",
       "trayRemove": "Quitar de la comparación",
       "trayClear": "Borrar",
+      "trayLookupFailed": "No se pudieron cargar los nombres de los dispositivos. La selección para comparar no ha cambiado.",
+      "trayRetry": "Reintentar la búsqueda de dispositivos",
       "navCompare": "Comparar"
     }
   }
