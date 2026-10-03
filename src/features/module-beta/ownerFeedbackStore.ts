@@ -191,6 +191,14 @@ export async function saveOwnerFeedback(
   })
 }
 
+// Whether a report ID has committed, without parsing (or depending on) any stored record.
+export function ownerFeedbackExists(id: string) {
+  return transaction<boolean>('readonly', (store, finish) => {
+    const request = store.count(id)
+    request.onsuccess = () => finish(request.result > 0)
+  })
+}
+
 export async function listOwnerFeedback(filter: OwnerFeedbackFilter = {}) {
   return transaction<OwnerFeedbackEntry[]>('readonly', (store, finish, fail) => {
     const request = store.getAll()
