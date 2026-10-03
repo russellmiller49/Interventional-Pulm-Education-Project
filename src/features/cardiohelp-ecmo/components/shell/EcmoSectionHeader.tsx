@@ -173,8 +173,9 @@ export function EcmoSectionHeader({
       </div>
       {onSaveAndExit ? (
         <p id={saveLocationNoteId} className={styles.resumedNote} data-ecmo-save-location-note>
-          Only your location is saved. Reopening starts a fresh teaching or case state; answers,
-          snapshots and simulator actions are not restored.
+          Save &amp; exit saves your location, not the current teaching or case state. Your existing
+          progress history is retained. Reopening starts fresh; answers, snapshots, and simulator
+          actions from this run are not restored.
         </p>
       ) : null}
       {resumedNote ? (
