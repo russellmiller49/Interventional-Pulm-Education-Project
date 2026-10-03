@@ -104,7 +104,7 @@ function FeedbackCard({ entry, onSaved }: { entry: ReviewEntry; onSaved: () => v
               {/* Local Blob URL or authenticated endpoint; never a public screenshot asset. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                alt={`Screenshot attached by ${localEntry ? 'the owner' : 'the beta tester'}, including their highlighted areas`}
+                alt={`Screenshot attached by ${localEntry ? 'the owner' : 'the beta tester'}, including their annotations`}
                 src={imageUrl}
                 className="h-auto max-h-[800px] max-w-full rounded-lg border object-contain"
                 onError={() => setImageError(true)}

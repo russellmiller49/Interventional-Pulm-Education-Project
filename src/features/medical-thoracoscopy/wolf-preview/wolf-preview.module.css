@@ -1,4 +1,4 @@
-/* The review-code screen and the End preview control. */
+/* The review-code screen, the End preview control and the link back to the hub. */
 
 .gate {
   --wp-panel: #ffffff;
@@ -146,4 +146,42 @@
   font-size: 0.875rem;
   white-space: nowrap;
   cursor: pointer;
+}
+
+.hubLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 2px;
+  color: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.hubLink:hover {
+  text-decoration: underline;
+}
+
+.hubLink:focus-visible {
+  outline: 2px solid var(--wp-accent, #1858c4);
+  outline-offset: 2px;
+}
+
+/* The explorer's action slot does not shrink, so on a phone the two controls stack. */
+.headerControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 16px;
+}
+
+@media (max-width: 559px) {
+  .headerControls {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
 }
