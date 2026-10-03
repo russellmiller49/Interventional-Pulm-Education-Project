@@ -22,6 +22,8 @@ import { FIELD_CONTEXT, LESION_CENTER, projectToDetector } from '../../lib/physi
 import { collimator, suiteFrame } from '../suite/suiteModel'
 import { TimeSamples } from '../suite/views/TimeView'
 import { temporal } from '../suite/suiteModel'
+import { ConspicuityComparison } from '../figures/ConspicuityComparison'
+import { CopyTextButton } from '../figures/CopyTextButton'
 import styles from './imaging-stage.module.css'
 
 /** Vector teaching panels, not device captures or a calibrated noise/scatter simulation. */
@@ -91,54 +93,21 @@ export function SignalImage({
   )
 }
 
-export function SignalComparison({ independent = false }: { independent?: boolean }) {
-  const [factor, setFactor] = useState<'noise' | 'contrast' | 'overlap'>('noise')
+/**
+ * The Section 6 check's Image A and Image B: optional companions to QS-3's text variant, which
+ * carries its evidence in the stem (OD4-02). The section's reading steps show the CT-derived
+ * comparison instead (`ConspicuityComparison`, OD4-06); the image variant of this check waits for
+ * honest media.
+ */
+export function SignalComparison() {
   return (
     <section className={styles.teachingCard} data-signal-comparison>
       <p className={styles.kicker} data-draft-status>
         Matched conceptual images · draft illustrations
       </p>
-      {!independent && (
-        <div className={styles.demoButtons} aria-label="Conceptual comparison">
-          <button
-            type="button"
-            aria-pressed={factor === 'noise'}
-            onClick={() => setFactor('noise')}
-          >
-            Quantum noise
-          </button>
-          <button
-            type="button"
-            aria-pressed={factor === 'contrast'}
-            onClick={() => setFactor('contrast')}
-          >
-            Contrast loss
-          </button>
-          <button
-            type="button"
-            aria-pressed={factor === 'overlap'}
-            onClick={() => setFactor('overlap')}
-          >
-            Superimposition
-          </button>
-        </div>
-      )}
       <div className={styles.exampleGrid}>
-        <SignalImage label={independent ? 'Image A' : 'Reference'} />
-        {independent ? (
-          <SignalImage factor="contrast" label="Image B" />
-        ) : (
-          <SignalImage
-            factor={factor}
-            label={
-              factor === 'noise'
-                ? 'Quantum noise · irregular mottling'
-                : factor === 'contrast'
-                  ? 'Scatter-related contrast loss · smooth veil'
-                  : 'Superimposition · projected silhouettes'
-            }
-          />
-        )}
+        <SignalImage label="Image A" />
+        <SignalImage factor="contrast" label="Image B" />
       </div>
       {/* Report CW2: one caveat where there were two overlapping ones. */}
       <p>
@@ -146,13 +115,6 @@ export function SignalComparison({ independent = false }: { independent?: boolea
         not calculate photon statistics, scatter, dose response or patient anatomy, and none of them
         establishes lesion identity.
       </p>
-      {!independent && (
-        <p>
-          Noise concerns limited signal statistics; review exposure/image-quality mode with the
-          imaging team. Scatter can reduce contrast; review the irradiated field and beam path.
-          Superimposition depends on projection; compare the CT geometry below.
-        </p>
-      )}
     </section>
   )
 }
@@ -253,7 +215,6 @@ export function DoseQuantityTable() {
 }
 
 export function DoseNoteTemplate() {
-  const [copied, setCopied] = useState<'copied' | 'unavailable' | null>(null)
   return (
     <section className={styles.teachingCard} data-dose-note-template>
       <p className={styles.kicker}>Record the whole procedure once · copyable aid</p>
@@ -265,26 +226,11 @@ export function DoseNoteTemplate() {
         {DOSE_NOTE_TEMPLATE_LINES.join('\n')}
       </pre>
       <div className={styles.demoButtons}>
-        <button
-          type="button"
-          data-copy-dose-note
-          onClick={() => {
-            const clipboard = navigator.clipboard
-            if (!clipboard) {
-              setCopied('unavailable')
-              return
-            }
-            void clipboard.writeText(DOSE_NOTE_TEMPLATE_TEXT).then(
-              () => setCopied('copied'),
-              () => setCopied('unavailable'),
-            )
-          }}
-        >
-          {copied === 'copied' ? 'Copied' : 'Copy the template'}
-        </button>
-        {copied === 'unavailable' ? (
-          <span role="status">Copying is not available here; select the lines above instead.</span>
-        ) : null}
+        <CopyTextButton
+          text={DOSE_NOTE_TEMPLATE_TEXT}
+          label="Copy the template"
+          dataAttribute="data-copy-dose-note"
+        />
       </div>
     </section>
   )
@@ -551,7 +497,7 @@ export function TeachingPanels({
         modality={sectionId === 'mobile-suite' || sectionId === 'fixed-suite' ? 'cbct' : 'dts'}
       />
     )
-  if (sectionId === 'signal') return <SignalComparison independent={independent} />
+  if (sectionId === 'signal') return independent ? <SignalComparison /> : <ConspicuityComparison />
   if (sectionId === 'dose-reporting')
     return independent ? (
       <DoseRecord independent />

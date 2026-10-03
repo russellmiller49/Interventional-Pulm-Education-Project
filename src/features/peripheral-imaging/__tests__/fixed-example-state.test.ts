@@ -82,8 +82,8 @@ it('authored example settings fit their control ranges without silent clamping',
   }
 })
 
-it('the four separately authored rounds are unchanged', () => {
-  // These four sections author a different image for the check and the transfer. The repair added
+it('the separately authored rounds are unchanged', () => {
+  // These sections author a different image for the check and the transfer. The repair added
   // states for the sections that had none; it did not re-key or re-author these.
   expect(independentValues('projection', 0)).toEqual({
     orbit: -28,
@@ -100,13 +100,23 @@ it('the four separately authored rounds are unchanged', () => {
     zoom: 1,
   })
   expect(independentValues('two-dimensional', 0)?.field).toBe(45)
-  expect(independentValues('dts-acquisition', 0)).toEqual({ sweep: 20, plane: 10 })
   expect(independentValues('tool-confirmation', 0)?.revealed).toBe(false)
-  for (const sectionId of ['projection', 'two-dimensional', 'dts-acquisition', 'tool-confirmation'])
+  for (const sectionId of ['projection', 'two-dimensional', 'tool-confirmation'])
     for (const round of [0, 1] as const)
       expect(fixedExampleValues(sectionId as ImagingSectionId, round)).toEqual(
         independentValues(sectionId as ImagingSectionId, round),
       )
+})
+
+it('Section 10’s check is written and has no authored image state (PR #279 sanity review, F3)', () => {
+  // Its check drew one reconstructed plane at sweep 20 / plane 10, which cannot show the
+  // elongation through depth its stem describes. The check now renders no image, so no state is
+  // authored for one, and it is not in the suite-backed set above.
+  const lesson = imagingStageLesson('dts-acquisition')
+  expect(lesson.steps[lesson.predictionStepIndex].activity.visual).toBe('case')
+  expect(SUITE_BACKED_CHECKS).not.toContain('dts-acquisition')
+  expect(independentValues('dts-acquisition', 0)).toBeNull()
+  expect(fixedExampleValues('dts-acquisition', 0)).toEqual({})
 })
 
 it("the component walk's fixed example shows the superimposition its own question describes", () => {
