@@ -79,7 +79,7 @@ function StopCard({ stopId }: { stopId: BreathStopId }) {
   )
 }
 
-function GuideBlock({ guide }: { guide: VentilationStepGuide }) {
+function GuideBlock({ guide, look }: { guide: VentilationStepGuide; look?: string }) {
   return (
     <section className={styles.block} data-teaching-block="guide" data-maneuver={guide.maneuver}>
       <p className={styles.kicker}>While you do this</p>
@@ -92,7 +92,7 @@ function GuideBlock({ guide }: { guide: VentilationStepGuide }) {
       </h4>
       <p>{guide.note}</p>
       <p>
-        <strong>What to look at:</strong> {guide.look}
+        <strong>What to look at:</strong> {look ?? guide.look}
       </p>
       {guide.maneuver === 'pause' ? (
         <dl>
@@ -206,6 +206,7 @@ export function VentilationTeachingColumn({
   roundIndex = 0,
   showCapturedReference = true,
   landmarkChooser = false,
+  guideLook,
 }: {
   readonly lesson: VentilationStageLesson
   readonly step: VentilationStageStep
@@ -218,6 +219,11 @@ export function VentilationTeachingColumn({
   readonly showCapturedReference?: boolean
   /** True on the walk, where the landmark buttons above choose the stop. */
   readonly landmarkChooser?: boolean
+  /**
+   * The look line the step card is printing, when it differs from the round's authored one: a
+   * step working on a marked interval names the figure that is on screen. Said once, the same way.
+   */
+  readonly guideLook?: string
 }) {
   const headingId = useId()
   const { unit } = lesson
@@ -261,7 +267,7 @@ export function VentilationTeachingColumn({
       </div>
 
       <div data-lesson-part="task">
-        {taskStep && step.guide ? <GuideBlock guide={step.guide} /> : null}
+        {taskStep && step.guide ? <GuideBlock guide={step.guide} look={guideLook} /> : null}
         {!taskStep ? stopCards.map((stopId) => <StopCard key={stopId} stopId={stopId} />) : null}
         {!taskStep ? (
           <section data-teaching-block="method">

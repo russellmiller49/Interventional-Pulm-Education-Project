@@ -2,11 +2,12 @@
 
 import { useEffect, useId, useState, type Dispatch } from 'react'
 import {
+  inspectionFigureState,
   ventilationExperimentStatus,
   type ExperimentGoalState,
   type ExperimentStage,
 } from '../../content/experimentStatus'
-import { ventilationExperimentByUnit } from '../../content/learningExperiments'
+import { ventilationReferenceMarker } from '../../content/referenceEvidence'
 import type { LabAction, LabSession } from '../../engine/learningLab'
 import type { VentilationAction } from '../../engine/types'
 import { CapturedBreath } from './CapturedBreath'
@@ -51,6 +52,10 @@ const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1
  * of the session changing, so it runs only when model time actually advances (Run, one breath) and
  * does nothing while the page is hidden and paused. The panel is remounted on reset, device change
  * and a new application, which also turns the option off again.
+ *
+ * It trusts the gate rather than the page: a background suspension pauses the model with its origin
+ * on the action, the lab records no inspection for it, so the gate stays closed and there is
+ * nothing here to suppress — while the page is hidden or after it comes back.
  */
 export function VentilationExperimentPanel({
   session,
@@ -63,7 +68,6 @@ export function VentilationExperimentPanel({
 }) {
   const headingId = useId()
   const status = ventilationExperimentStatus(session)
-  const round = ventilationExperimentByUnit.get(session.unitId)!.rounds[session.round]
   const evidence = session.evidence[session.round]
   const state = session.simulation
   const confounds = session.confounds ?? []
@@ -89,12 +93,15 @@ export function VentilationExperimentPanel({
       lab({ type: 'COMPARE' })
   }, [autoCapture, status.canCapture, evidence.response, confounds.length, lab])
 
-  const inspectable =
-    round.goals.some(
-      (goal) => goal.type === 'pause-expiration' || goal.type === 'inspect-inspiration',
-    ) &&
-    evidence.baseline &&
-    status.stage !== 'captured'
+  const inspectable = inspectionFigureState(session) === 'open'
+  /*
+   * The authored marker for this application, from the one evidence contract (Batch 01). The
+   * captured baseline is the same reference breath the question was asked about, so the instruction
+   * that says "interval A, marked on the captured breath" is read beside a figure that carries it.
+   * It is resolved from this breath's own samples by `markerEvidence`, as everywhere else; nothing
+   * is positioned here.
+   */
+  const marker = ventilationReferenceMarker(session.unitId, session.round)
   const announcement = interrupted
     ? 'Response interval stopped: the requested change is no longer in place.'
     : status.announcement
@@ -131,6 +138,13 @@ export function VentilationExperimentPanel({
           ))}
         </ol>
       ) : null}
+      {status.backgroundPaused && status.stage !== 'captured' && status.stage !== 'ready' ? (
+        <p className={styles.boundary} data-background-pause>
+          The model clock stopped because this page went to the background. That was not your pause,
+          so nothing was recorded for it: no inspection and no captured result. Run the experiment
+          to carry on from here.
+        </p>
+      ) : null}
       {interrupted ? (
         <p className={styles.boundary} data-interval-interrupted>
           The requested change is no longer in place, so the response interval stopped. Make it
@@ -162,7 +176,7 @@ export function VentilationExperimentPanel({
           type="button"
           data-run-experiment
           data-paused={state.paused}
-          onClick={() => engine({ type: 'SET_PAUSED', paused: !state.paused })}
+          onClick={() => engine({ type: 'SET_PAUSED', paused: !state.paused, origin: 'learner' })}
         >
           {!state.paused
             ? 'Pause'
@@ -207,8 +221,13 @@ export function VentilationExperimentPanel({
       </div>
       {inspectable ? (
         <CapturedBreath
-          label="Baseline reference · select an interval to inspect"
+          label={
+            marker
+              ? `Captured baseline breath · interval ${marker.markerId} marked · select an interval to inspect`
+              : 'Baseline reference · select an interval to inspect'
+          }
           samples={evidence.baseline!.waveforms}
+          marker={marker ?? undefined}
           onInspect={(sample) => lab({ type: 'INSPECT', sampleTime: sample.time })}
         />
       ) : null}

@@ -18,15 +18,18 @@ import {
   markerEvidenceSentence,
   type VentilationReferenceMarker,
 } from '../../content/referenceEvidence'
+import {
+  BREATH_ORIGIN,
+  BREATH_ROW_LABELS,
+  BREATH_TIME_AXIS_LABEL,
+  RAW_VOLUME_ROW_LABEL,
+  TRACE_TIME_AXIS_LABEL,
+  breathOriginFacts,
+} from '../../content/breathOrigin'
+import { BREATH_LABEL_LINE_PX, breathRowLayout } from './breathFigureLayout'
 import styles from './ventilation-stage.module.css'
 
-const labels = {
-  pawCmH2O: 'Airway pressure (cmH₂O)',
-  flowLMin: 'Flow (L/min)',
-  volumeMl: 'Volume (mL)',
-  pmusCmH2O: 'Effort · model (cmH₂O)',
-}
-/**
+/*
  * Two volume rows, because there are two quantities and the figure used to print one label over
  * whichever it happened to be drawing.
  *
@@ -35,16 +38,13 @@ const labels = {
  * 486 mL, peaked near 917 and ended at 518, next to an exhaled volume of 426 mL. It was read, as
  * the report said, as a 900-mL breath.
  *
- * When the figure has a *verified* breath start — `completedBreath` found two real inspiration
- * onsets, so sample 0 is the start of this breath — the row is drawn relative to that anchor and
- * says so, and the raw offset is kept in the caption. When it does not (a paused partial breath, a
- * hold slice), the raw signal is drawn under its own name. Nothing is subtracted from the engine:
- * this is a rendering choice at the boundary, and expiration is never forced back to zero.
+ * When the figure has a *verified* onset — `completedBreath` found two real inspiration onsets, so
+ * sample 0 is this breath's first recorded inspiratory sample — the row is drawn relative to that
+ * sample and says so, and the raw offset is kept in the caption. When it does not (a paused partial
+ * breath, a hold slice), the raw signal is drawn under its own name. Nothing is subtracted from the
+ * engine: this is a rendering choice at the boundary, and expiration is never forced back to zero.
+ * The words for the origin are `content/breathOrigin.ts`'s, shared with the overlay.
  */
-const volumeLabels = {
-  anchored: 'Volume from breath start (mL)',
-  raw: 'Raw lung volume (mL)',
-}
 const stopNames: Record<BreathStopId, string> = {
   trigger: 'Trigger',
   inspiration: 'Inspiration',
@@ -65,6 +65,7 @@ export function CapturedBreath({
   effort = false,
   durationSeconds,
   timeWindow,
+  retained = false,
 }: {
   samples: readonly WaveformSample[]
   label: string
@@ -88,6 +89,12 @@ export function CapturedBreath({
    * the window are simply not drawn. The figure says what it is showing and of how long a breath.
    */
   timeWindow?: { readonly from: number; readonly to: number }
+  /**
+   * True for a record that was captured earlier and cannot be taken again by running the patient
+   * (the retained baseline and result). If it holds no complete breath, the figure says so instead
+   * of asking for a new capture.
+   */
+  retained?: boolean
 }) {
   const id = useId()
   const figureRef = useRef<HTMLElement>(null)
@@ -110,21 +117,36 @@ export function CapturedBreath({
       (stop ? breathStopIndex(breath, stop) : (position ?? breathStopIndex(breath, 'inspiration'))),
   )
   if (breath.length < 4)
-    return (
+    return retained ? (
+      <p role="status" data-no-complete-breath>
+        {label}: this retained record does not hold one complete breath — an inspiratory onset to
+        the next — in its{' '}
+        {samples.length > 1 ? (samples.at(-1)!.time - samples[0].time).toFixed(0) : '0'} seconds, so
+        no breath is drawn for it. The breaths in it are too far apart for the record’s length. Its
+        readings are still in the table.
+      </p>
+    ) : (
       <p role="status">
         A complete breath is not yet available. Run or advance one breath, then capture again.
       </p>
     )
   /*
    * A verified anchor, not an assumed one: `completedBreath` slices between two real inspiration
-   * onsets, so only then is sample 0 the start of a breath.
+   * onsets, so only then is sample 0 a breath's first recorded inspiratory sample.
    */
   const anchored = whole
   const anchorMl = anchored ? breath[0].volumeMl : 0
+  const origin = anchored ? breathOriginFacts(samples, breath) : null
   const plotted = anchored ? anchorBreathVolume(breath) : breath
   const evidence = marker ? markerEvidence(breath, marker) : null
   const bounds = { ...(axes ?? waveformAxes(plotted)), pmusCmH2O: [-25, 5] as const }
   const fields = effort ? [...waveformFields, 'pmusCmH2O' as const] : waveformFields
+  const layout = breathRowLayout(
+    fields.map((field) =>
+      field === 'volumeMl' && !anchored ? RAW_VOLUME_ROW_LABEL : BREATH_ROW_LABELS[field],
+    ),
+    width,
+  )
   const first = breath[0].time
   const duration = breath.at(-1)!.time - first
   const timeRange = Math.max(duration, durationSeconds ?? 0)
@@ -161,7 +183,7 @@ export function CapturedBreath({
   const from = highlighted === 'expiration' ? breath[cycling]?.time : first
   const to = highlighted === 'inspiration' ? breath[cycling]?.time : breath.at(-1)!.time
   const volumeClause = anchored
-    ? `volume ${previous.volumeMl.toFixed(0)} to ${sample.volumeMl.toFixed(0)} mL above this breath’s start`
+    ? `volume ${previous.volumeMl.toFixed(0)} to ${sample.volumeMl.toFixed(0)} mL above this breath’s first inspiratory sample`
     : `lung volume ${previous.volumeMl.toFixed(0)} to ${sample.volumeMl.toFixed(0)} mL above the trace baseline`
   const cursorText = `Cursor at ${(rawSample.time - first).toFixed(2)} s. Airway pressure ${rawSample.pawCmH2O.toFixed(1)} cmH₂O; flow ${rawSample.flowLMin.toFixed(1)} L/min; ${volumeClause} over the preceding ${(rawSample.time - rawPrevious.time).toFixed(2)} s.${effort ? ` Model effort ${rawSample.pmusCmH2O.toFixed(1)} cmH₂O; machine ${rawSample.phase}.` : ''}`
   const markerText = marker
@@ -183,20 +205,24 @@ export function CapturedBreath({
         <strong>{label}</strong>
         {guided ? ' · Worked demonstration; no independent credit' : ''}
       </figcaption>
-      <svg viewBox={`0 0 ${width} ${fields.length * 85 + 23}`} role="img" aria-label={text}>
+      <svg viewBox={`0 0 ${width} ${layout.rowsHeight + 23}`} role="img" aria-label={text}>
         {zoomed ? (
           <defs>
             <clipPath id={clipId}>
-              <rect x="50" y="0" width={Math.max(0, width - 70)} height={fields.length * 85} />
+              <rect x="50" y="0" width={Math.max(0, width - 70)} height={layout.rowsHeight} />
             </clipPath>
           </defs>
         ) : null}
         {fields.map((field, row) => (
-          <g key={field} transform={`translate(0 ${row * 85})`}>
-            <text x="0" y="12">
-              {field === 'volumeMl' ? volumeLabels[anchored ? 'anchored' : 'raw'] : labels[field]}
+          <g key={field} transform={`translate(0 ${row * layout.pitch})`}>
+            <text x="0" y="12" data-row-label={field}>
+              {layout.labels[row].map((line, i, lines) => (
+                <tspan key={line} x="0" dy={i === 0 ? 0 : BREATH_LABEL_LINE_PX}>
+                  {i < lines.length - 1 ? `${line} ` : line}
+                </tspan>
+              ))}
             </text>
-            <g transform="translate(0 15)">
+            <g transform={`translate(0 ${layout.plotTop})`}>
               {guided &&
               cycling > 0 &&
               (highlighted === 'inspiration' || highlighted === 'expiration') ? (
@@ -293,23 +319,29 @@ export function CapturedBreath({
             </g>
           </g>
         ))}
-        <text x="50" y={fields.length * 85 + 20}>
+        {/*
+         * Only the two ends of the time axis are drawn here. Its title is the line under the
+         * figure: as SVG text centred between them it ran into the first tick on a phone-width
+         * figure, and it cannot wrap. The axis and its scale are unchanged.
+         */}
+        <text x="50" y={layout.rowsHeight + 20} data-time-tick="start">
           {windowFrom.toFixed(zoomed ? 2 : 0)}
         </text>
-        <text x={width / 2} y={fields.length * 85 + 20} textAnchor="middle">
-          {zoomed ? 'Time from breath start (s) · zoomed' : 'Time (s)'}
-        </text>
-        <text x={width - 20} y={fields.length * 85 + 20} textAnchor="end">
+        <text x={width - 20} y={layout.rowsHeight + 20} textAnchor="end" data-time-tick="end">
           {windowTo.toFixed(2)}
         </text>
       </svg>
+      <p className={styles.axisCaption} data-time-axis>
+        {whole ? BREATH_TIME_AXIS_LABEL : TRACE_TIME_AXIS_LABEL}
+        {zoomed ? ' · zoomed' : ''}
+      </p>
       <p
         className={styles.quickNote}
         data-breath-duration={duration.toFixed(2)}
         data-sample-spacing={spacing.toFixed(3)}
       >
         {whole ? 'Breath duration' : 'Trace length'} {duration.toFixed(2)} s
-        {whole ? ', onset to next onset' : ''}
+        {whole ? ', from its first inspiratory sample to the next breath’s' : ''}
         {spacing > 0
           ? ` · samples every ${Math.round(spacing * 1000)} ms, so a time is resolved to one sample`
           : ''}{' '}
@@ -321,21 +353,34 @@ export function CapturedBreath({
       {zoomed ? (
         <p className={styles.quickNote} data-zoom-window>
           Showing {windowFrom.toFixed(2)}–{windowTo.toFixed(2)} s of this {duration.toFixed(2)}-s
-          breath. The same seconds are spread wider; nothing is retimed or resampled.
+          breath{whole ? `, counted from its ${BREATH_ORIGIN}` : ''}. The same seconds are spread
+          wider; nothing is retimed or resampled.
         </p>
       ) : null}
       {anchored ? (
-        <p className={styles.quickNote} data-volume-anchor={anchorMl.toFixed(0)}>
-          Volume is drawn from this breath’s start. The lung held {anchorMl.toFixed(0)} mL above the
-          trace baseline when the breath began and {breath.at(-1)!.volumeMl.toFixed(0)} mL when it
-          ended; gas that has not left is still in the raw signal, and the trace is not forced back
-          to zero. A rise from the start and the ventilator’s exhaled volume are different
-          quantities and need not agree.
+        <p
+          className={styles.quickNote}
+          data-volume-anchor={anchorMl.toFixed(0)}
+          data-first-step-ml={origin?.firstStepMl?.toFixed(1)}
+        >
+          Volume and time are counted from this breath’s {BREATH_ORIGIN}: a convention of the
+          sampled trace, not the instant inspiration began.{' '}
+          {origin && origin.precedingMl !== null && origin.firstStepMl !== null && spacing > 0
+            ? `A sample is recorded after each ${Math.round(spacing * 1000)}-ms step, so that sample already holds one step of flow: raw lung volume was ${origin.precedingMl.toFixed(1)} mL above the trace baseline in the sample before it and ${origin.originMl.toFixed(1)} mL in it. ${
+                Math.abs(origin.firstStepMl) < 0.5
+                  ? 'Here that step is under 1 mL, so the drawn rise is within 1 mL of the volume this breath received.'
+                  : `The drawn rise is therefore about ${Math.abs(origin.firstStepMl).toFixed(0)} mL ${origin.firstStepMl >= 0 ? 'less' : 'more'} than the volume this breath received.`
+              } `
+            : ''}
+          Raw lung volume was {breath.at(-1)!.volumeMl.toFixed(0)} mL when the breath ended; gas
+          that has not left is still in the raw signal, and the trace is not forced back to zero.
+          The drawn rise and the ventilator’s exhaled volume are different quantities and need not
+          agree.
         </p>
       ) : (
         <p className={styles.quickNote}>
-          This slice has no verified breath start, so the raw lung-volume signal is drawn under its
-          own name rather than re-zeroed.
+          This slice does not begin at a verified inspiratory onset, so the raw lung-volume signal
+          is drawn under its own name rather than re-zeroed.
         </p>
       )}
       {effort ? (

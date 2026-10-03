@@ -9,7 +9,7 @@ import { labMetricLabels, labSnapshot, type LabSession } from '../../engine/lear
 import { holdStatus } from '../../engine/learningMeasurements'
 import { plateauAcquisition } from '../../content/plateauAcquisition'
 import { PATIENT_REPORT_METRICS, patientReportAvailability } from '../../content/patientReport'
-import { deliveredVolumeStepNote } from '../../content/deliveredVolume'
+import { deliveredVolumeStepNote, inspiratoryTimeStepNote } from '../../content/deliveredVolume'
 import type { VentilationAction, VentilatorDeviceId, WaveformSample } from '../../engine/types'
 import { BedsidePanel } from '../BedsidePanel'
 import { MechanicalVentilatorConsole } from '../MechanicalVentilatorConsole'
@@ -76,6 +76,7 @@ export function VentilationTaskWorkbench({
   const withholdUnacquiredPlateau = integration && !acquisition.supportsMechanicsClaim
   const report = patientReportAvailability(state)
   const volumeStepNote = deliveredVolumeStepNote(state)
+  const inspiratoryTimeNote = inspiratoryTimeStepNote(state)
   const showPatient = presentation.patient === 'bedside'
   const bedsideActionIds = [
     ...new Set([
@@ -134,7 +135,7 @@ export function VentilationTaskWorkbench({
             disabled={readOnly}
             aria-pressed={!state.paused}
             data-paused={state.paused}
-            onClick={() => engine({ type: 'SET_PAUSED', paused: !state.paused })}
+            onClick={() => engine({ type: 'SET_PAUSED', paused: !state.paused, origin: 'learner' })}
           >
             {state.paused ? 'Run' : 'Pause'}
           </button>
@@ -198,7 +199,9 @@ export function VentilationTaskWorkbench({
                           ? ` · ${acquisition.label}`
                           : metric === 'intrinsicPeep'
                             ? ' · model estimate'
-                            : ''}
+                            : metric === 'ti' && inspiratoryTimeNote
+                              ? ' · calculated'
+                              : ''}
                       </dt>
                       <dd>
                         {/*
@@ -226,6 +229,9 @@ export function VentilationTaskWorkbench({
                         ) : null}
                         {metric === 'volume' && volumeStepNote ? (
                           <small data-volume-step-note>{volumeStepNote}</small>
+                        ) : null}
+                        {metric === 'ti' && inspiratoryTimeNote ? (
+                          <small data-inspiratory-time-step-note>{inspiratoryTimeNote}</small>
                         ) : null}
                       </dd>
                     </div>

@@ -11,7 +11,12 @@
  * model time from the session's own `readySince`. This file only names the state those already
  * define, so the panel beside the task and the capture gate cannot disagree.
  */
-import { labGoalMet, labReadyToCompare, type LabSession } from '../engine/learningLab'
+import {
+  labGoalMet,
+  labReadyToCompare,
+  labRecordHoldsCompleteBreath,
+  type LabSession,
+} from '../engine/learningLab'
 import { ventilationExperimentByUnit, type LabGoal } from './learningExperiments'
 import { labGoalPhrase } from './stageLessons'
 
@@ -45,6 +50,12 @@ export interface ExperimentStatus {
   readonly stage: ExperimentStage
   /** True while model time is advancing. */
   readonly running: boolean
+  /**
+   * True while the model is stopped because the page went to the background while it was running.
+   * It is said beside the task so a clock that stopped by itself is not read as the learner's
+   * pause; it never counts toward a goal, here or in the lab.
+   */
+  readonly backgroundPaused: boolean
   readonly goals: readonly ExperimentGoalStatus[]
   /** The round's response interval in model seconds; 0 when nothing has to be observed. */
   readonly intervalSeconds: number
@@ -106,15 +117,57 @@ function goalStatus(session: LabSession, goal: LabGoal): ExperimentGoalStatus {
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 
+/**
+ * Whether the captured breath a pause-or-inspect round works on is on screen, and if not, why.
+ *
+ * `'open'`: the round's baseline breath is drawn in the experiment panel for the learner to choose
+ * an interval on. `'not-started'`: no baseline has been captured for this application yet.
+ * `'captured'`: the result is in, and the retained comparison has replaced the figure. Null for a
+ * round that asks for neither a pause nor an interval. The panel draws the figure from this and the
+ * step's instruction names the figure from this, so a sentence cannot point at a figure that is not
+ * there (PR #290 review, R2).
+ */
+export type InspectionFigureState = 'open' | 'not-started' | 'captured'
+export function inspectionFigureState(session: LabSession): InspectionFigureState | null {
+  const round = ventilationExperimentByUnit.get(session.unitId)!.rounds[session.round]
+  if (
+    !round.goals.some(
+      (goal) => goal.type === 'pause-expiration' || goal.type === 'inspect-inspiration',
+    )
+  )
+    return null
+  const evidence = session.evidence[session.round]
+  if (evidence.response) return 'captured'
+  return evidence.baseline ? 'open' : 'not-started'
+}
+
+/**
+ * The look line for a step that works on a marked interval, said about what is actually shown.
+ *
+ * The round's authored look line was written beside the question, where the marked worked
+ * reference and its phase label sit under it. On the steps that perform the round the figure is
+ * the experiment panel's captured breath — or nothing yet, or the retained comparison — so the
+ * sentence is chosen by which of those is on screen. It names the authored marker by its own
+ * letter and decides nothing about it.
+ */
+export function markedIntervalLook(markerId: string, figure: InspectionFigureState): string {
+  if (figure === 'open')
+    return `Read all three traces at interval ${markerId}, marked on the captured breath in the Experiment panel. Interval ${markerId} stays where it is; the exploration cursor is yours to move to the interval you choose.`
+  if (figure === 'captured')
+    return 'The result for this application is captured. Read the retained baseline and result.'
+  return `Start the experiment to capture the baseline breath for this application; interval ${markerId} is marked on it in the Experiment panel.`
+}
+
 export function ventilationExperimentStatus(session: LabSession): ExperimentStatus {
   const round = ventilationExperimentByUnit.get(session.unitId)!.rounds[session.round]
   const evidence = session.evidence[session.round]
   const running = !session.simulation.paused
+  const backgroundPaused = !running && session.pauseOrigin === 'background'
   const goals = round.goals.map((goal) => goalStatus(session, goal))
   const intervalSeconds = Math.max(0, round.seconds)
   const now = session.simulation.simulationTime
   const canCapture = labReadyToCompare(session)
-  const base = { running, goals, intervalSeconds, canCapture }
+  const base = { running, backgroundPaused, goals, intervalSeconds, canCapture }
 
   if (evidence.response)
     return {
@@ -188,6 +241,28 @@ export function ventilationExperimentStatus(session: LabSession): ExperimentStat
     }
 
   const elapsed = Math.min(intervalSeconds, Math.max(0, now - (session.readySince ?? now)))
+  /*
+   * Everything requested is in place and the interval is over, and the gate is still closed: the
+   * record holds no complete breath to draw at this instant (slow breathing against a 12-second
+   * record). Said as that, not as an interval still running at its own full length.
+   */
+  if (
+    session.readySince !== null &&
+    now - session.readySince >= intervalSeconds &&
+    !labRecordHoldsCompleteBreath(session)
+  )
+    return {
+      ...base,
+      stage: 'awaiting-measurement',
+      elapsedSeconds: intervalSeconds,
+      capturedAtSeconds: null,
+      headline: running
+        ? 'Everything requested is in place. Waiting for one complete breath on the record before the result can be captured.'
+        : 'Everything requested is in place, but the record does not hold one complete breath yet. Run the experiment until the next breath begins.',
+      announcement: running
+        ? 'Waiting for one complete breath on the record.'
+        : 'Waiting for one complete breath on the record; paused.',
+    }
   return {
     ...base,
     stage: 'awaiting-interval',

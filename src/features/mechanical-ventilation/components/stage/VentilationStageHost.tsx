@@ -1,6 +1,15 @@
 'use client'
 
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type MouseEvent,
+} from 'react'
 import { Link, useRouter } from '@/i18n/navigation'
 import { LessonShell } from '@/features/learning-module/stage/LessonShell'
 import { ventilationLearningUnits } from '../../content/learningCurriculum'
@@ -25,7 +34,10 @@ import { VentilationSourceList } from './VentilationSourceList'
 import { CapturedBreath } from './CapturedBreath'
 import { CapturedResult } from './RecordedBreathComparison'
 import { VentilationExperimentPanel } from './VentilationExperimentPanel'
+import { inspectionFigureState, markedIntervalLook } from '../../content/experimentStatus'
 import {
+  activatesThisTab,
+  cancelTaskHeadingReveal,
   consumeTaskHeadingReveal,
   requestTaskHeadingReveal,
   revealTaskHeading,
@@ -115,11 +127,42 @@ function VentilationStageSession({
     revealRequested.current = false
     if (headingRef.current) revealTaskHeading(headingRef.current)
   }, [index, restartCount])
-  // A section chosen from the section chooser or the last step's link lands on its first heading.
+  // A section chosen from the section chooser or the last step's link lands on its first heading
+  // — this section, and only when the request names it.
   useLayoutEffect(() => {
-    if (consumeTaskHeadingReveal() && headingRef.current)
+    if (consumeTaskHeadingReveal(unitId) && headingRef.current)
       revealTaskHeading(headingRef.current, 'if-needed')
-  }, [])
+  }, [unitId])
+  /*
+   * Explicit same-tab navigation to another section. The request names its destination, and the
+   * navigation runs as a transition so this component can tell when it settles: arriving unmounts
+   * this section, so if the transition ends and this section is still here, the navigation did not
+   * happen and its request is withdrawn rather than left for a later arrival.
+   */
+  const [sectionPending, startSectionNavigation] = useTransition()
+  const requestedSection = useRef<string | null>(null)
+  function navigateToSection(sectionId: string) {
+    requestedSection.current = sectionId
+    requestTaskHeadingReveal(sectionId)
+    startSectionNavigation(() => {
+      router.push({ pathname: '/mechanical-ventilation/learn', query: { activity: sectionId } })
+    })
+  }
+  useEffect(() => {
+    if (sectionPending || requestedSection.current === null) return
+    cancelTaskHeadingReveal(requestedSection.current)
+    requestedSection.current = null
+  }, [sectionPending])
+  /*
+   * The last step's link. A plain click navigates this tab through the same path as the chooser.
+   * A modified click, another button or a new-context activation is left to the browser, which
+   * opens the destination elsewhere: this tab makes no request and its focus does not move.
+   */
+  function continueToSection(event: MouseEvent<HTMLAnchorElement>, sectionId: string) {
+    if (event.defaultPrevented || !activatesThisTab(event)) return
+    event.preventDefault()
+    navigateToSection(sectionId)
+  }
 
   function goToStep(next: number) {
     const target = Math.max(0, Math.min(next, lesson.steps.length - 1))
@@ -168,6 +211,17 @@ function VentilationStageSession({
     [markerStep, unitId, session.round, session.device],
   )
   /*
+   * What to look at, for this step. On a step that performs a round with a marked interval, the
+   * sentence follows the figure that is actually on screen — the experiment panel's captured
+   * breath with the marker on it, nothing yet, or the retained comparison — instead of repeating
+   * the line written beside the question's worked reference.
+   */
+  const inspectionFigure = simulationStep ? inspectionFigureState(session) : null
+  const lookLine =
+    marker && inspectionFigure
+      ? markedIntervalLook(marker.markerId, inspectionFigure)
+      : (step.guide?.look ?? round.look)
+  /*
    * The lead-in over an optional question, per item kind. "Predict the observable response to one
    * change, then compare it with a real run" sat over "Which phase is shown at cursor A?", which
    * involves no change and no run.
@@ -211,13 +265,7 @@ function VentilationStageSession({
                   <select
                     aria-label="Choose section"
                     value={unitId}
-                    onChange={(event) => {
-                      requestTaskHeadingReveal()
-                      router.push({
-                        pathname: '/mechanical-ventilation/learn',
-                        query: { activity: event.target.value },
-                      })
-                    }}
+                    onChange={(event) => navigateToSection(event.target.value)}
                   >
                     {ventilationLearningUnits.map((unit) => (
                       <option key={unit.id} value={unit.id}>
@@ -290,7 +338,7 @@ function VentilationStageSession({
                       ? step.instruction
                       : round.introduction}
               </p>
-              <p>{step.guide?.look ?? round.look}</p>
+              <p data-step-look>{lookLine}</p>
               {marker && markerReference ? (
                 <CapturedBreath
                   key={`marker:${session.round}:${session.device}:${restartCount}`}
@@ -326,7 +374,7 @@ function VentilationStageSession({
                       pathname: '/mechanical-ventilation/learn',
                       query: { activity: nextUnit.id },
                     }}
-                    onClick={requestTaskHeadingReveal}
+                    onClick={(event) => continueToSection(event, nextUnit.id)}
                   >
                     Continue to {nextUnit.title}
                   </Link>
@@ -458,6 +506,7 @@ function VentilationStageSession({
                 stops={step.stops}
                 roundIndex={session.round}
                 showCapturedReference={!markerStep}
+                guideLook={lookLine}
               />
             ) : null}
             {showExplanation || interaction.kind === 'interpret' ? (

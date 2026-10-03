@@ -9,8 +9,9 @@
  * Restart). Nothing here listens for focus or state: simulation ticks, Run/Pause, captures,
  * control changes and disclosures never reach it.
  *
- *   - The pinned chrome is measured when the navigation happens, not assumed: every fixed or
- *     sticky element that is currently pinned across the top of the viewport. No fixed offset.
+ *   - The pinned chrome is measured when the navigation happens, not assumed: every painted fixed
+ *     or sticky element that is currently pinned across the top of the viewport. No fixed offset,
+ *     and a hidden element's box counts for nothing.
  *   - A step change puts the heading just under that chrome, so the instruction, the experiment
  *     panel, the control and the readings that follow it start at the top of the view: measured
  *     at 1280×900, a heading left where the top Continue happened to be put the requested control
@@ -28,6 +29,21 @@
 
 const COMFORT_MARGIN_PX = 12
 
+/**
+ * Whether an element is actually painted. A hidden fixed or sticky element — a closed drawer, a
+ * dismissed banner, a measuring probe — keeps its box across the top of the viewport and covers
+ * nothing, so it must not set the inset. `checkVisibility` also answers for hidden ancestors;
+ * where a renderer lacks it, the element's own computed style is the test.
+ */
+function isPainted(element: HTMLElement, style: CSSStyleDeclaration): boolean {
+  if (style.display === 'none') return false
+  if (style.visibility === 'hidden' || style.visibility === 'collapse') return false
+  if (Number(style.opacity) === 0) return false
+  if (typeof element.checkVisibility === 'function')
+    return element.checkVisibility({ visibilityProperty: true, opacityProperty: true })
+  return true
+}
+
 /** Bottom edge of the chrome pinned across the top of the viewport right now, in CSS pixels. */
 export function pinnedTopInset(doc: Document = document): number {
   const view = doc.defaultView
@@ -35,8 +51,12 @@ export function pinnedTopInset(doc: Document = document): number {
   const width = view.innerWidth || doc.documentElement.clientWidth
   let inset = 0
   for (const element of Array.from(doc.body?.querySelectorAll<HTMLElement>('*') ?? [])) {
-    const position = view.getComputedStyle(element).position
+    const style = view.getComputedStyle(element)
+    const position = style.position
     if (position !== 'fixed' && position !== 'sticky') continue
+    // Sticky with no top offset is not held at the top edge; it is content passing under it.
+    if (position === 'sticky' && style.top === 'auto') continue
+    if (!isPainted(element, style)) continue
     const rect = element.getBoundingClientRect()
     if (rect.height <= 0 || rect.top > 1 || rect.bottom <= 0) continue
     // Chrome across the page, not a floating button or a small badge in a corner.
@@ -83,20 +103,93 @@ export function revealTaskHeading(
 
 /*
  * A section change goes through the router and remounts the Learn host, so the handler that asked
- * for it is gone by the time the new section renders. It leaves this one-shot flag; the new
- * section's first render reads and clears it. A reload, a link from elsewhere, or the back button
- * never sets it, so an ordinary page load does not move focus.
+ * for it is gone by the time the new section renders. It leaves a request naming the section it is
+ * navigating to; that section's first render takes it. A reload, a link from elsewhere or the back
+ * button never makes one, so an ordinary page load does not move focus.
+ *
+ * The request belongs to one same-tab navigation, not to "whichever section renders next":
+ *
+ *   - It names its destination, and only that section can take it. It used to be a bare
+ *     module-global timestamp: Command-clicking "Continue to …" opened the next section in a new
+ *     tab and left the request behind in this one, where the next section to render within 15
+ *     seconds — any section — took focus for a navigation that had happened somewhere else
+ *     (PR #290 review, R4).
+ *   - An activation that does not navigate this tab (a modified click, another mouse button, a link
+ *     with its own target) never makes one: `activatesThisTab`.
+ *   - A navigation that settles with its origin still on screen, or that is overtaken by the
+ *     browser's back or forward, withdraws it: `cancelTaskHeadingReveal` and the one-shot
+ *     `popstate` listener that lives only as long as the request does.
+ *   - The age limit is kept as a last bound for a navigation that never arrives and never reports
+ *     it. It is no longer what identifies the request.
+ *
+ * No timer waits for or forces a navigation: the request is data that the destination reads.
  */
-let headingRevealRequestedAt: number | null = null
+interface HeadingRevealRequest {
+  readonly sectionId: string
+  readonly requestedAt: number
+}
+let pendingReveal: HeadingRevealRequest | null = null
 /* A request older than this belongs to a navigation that never arrived; it is dropped. */
 const REQUEST_LIFETIME_MS = 15_000
 
-export function requestTaskHeadingReveal(): void {
-  headingRevealRequestedAt = Date.now()
+function dropPendingReveal(): void {
+  pendingReveal = null
+  if (typeof window !== 'undefined') window.removeEventListener('popstate', dropPendingReveal)
 }
 
-export function consumeTaskHeadingReveal(): boolean {
-  const requestedAt = headingRevealRequestedAt
-  headingRevealRequestedAt = null
-  return requestedAt !== null && Date.now() - requestedAt <= REQUEST_LIFETIME_MS
+/**
+ * Whether a click navigates this tab: the primary button, no modifier key, and no target or
+ * download of its own on the link. Anything else is the browser opening the destination somewhere
+ * else (or saving it), and this tab stays where it is. The same rule the framework's link uses to
+ * decide whether to handle a click itself.
+ */
+export function activatesThisTab(event: {
+  readonly metaKey?: boolean
+  readonly ctrlKey?: boolean
+  readonly shiftKey?: boolean
+  readonly altKey?: boolean
+  readonly button?: number
+  readonly currentTarget?: EventTarget | null
+}): boolean {
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return false
+  if (event.button !== undefined && event.button !== 0) return false
+  const link = event.currentTarget
+  if (typeof HTMLAnchorElement !== 'undefined' && link instanceof HTMLAnchorElement) {
+    const target = link.getAttribute('target')
+    if (target && target !== '_self') return false
+    if (link.hasAttribute('download')) return false
+  }
+  return true
+}
+
+/** Ask the named section to reveal its first heading when this tab arrives at it. */
+export function requestTaskHeadingReveal(sectionId: string): void {
+  dropPendingReveal()
+  pendingReveal = { sectionId, requestedAt: Date.now() }
+  if (typeof window !== 'undefined') window.addEventListener('popstate', dropPendingReveal)
+}
+
+/**
+ * Withdraw a request whose navigation did not happen. With a section, only a request for that
+ * section is withdrawn, so a handler cannot cancel a newer navigation it did not start.
+ */
+export function cancelTaskHeadingReveal(sectionId?: string): void {
+  if (sectionId !== undefined && pendingReveal?.sectionId !== sectionId) return
+  dropPendingReveal()
+}
+
+/**
+ * True, once, for the section the pending request names. A request for another section is left
+ * for that section: this arrival is not the navigation that was asked for, and takes nothing.
+ */
+export function consumeTaskHeadingReveal(sectionId: string): boolean {
+  const request = pendingReveal
+  if (request === null) return false
+  if (Date.now() - request.requestedAt > REQUEST_LIFETIME_MS) {
+    dropPendingReveal()
+    return false
+  }
+  if (request.sectionId !== sectionId) return false
+  dropPendingReveal()
+  return true
 }

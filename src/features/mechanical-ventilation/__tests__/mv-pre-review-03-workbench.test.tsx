@@ -316,7 +316,7 @@ describe('N4: navigation, focus and scroll', () => {
   })
 
   it('focuses a new section’s heading only when a section change asked for it', () => {
-    requestTaskHeadingReveal()
+    requestTaskHeadingReveal('waveform-anatomy')
     mount('waveform-anatomy')
     expect(document.activeElement).toBe(heading())
     cleanup()
@@ -551,10 +551,10 @@ describe('V3: baseline and result, overlaid or zoomed without retiming', () => {
     expect(overlay.textContent).toMatch(/Baseline \(dashed\) and result \(solid\)/)
     const description = document.querySelector('[data-comparison-description]')!.textContent
     expect(description).toMatch(
-      /Baseline breath drawn above: inspiratory flow over 3[12] samples \(0\.6[24] s\)/,
+      /Baseline breath drawn above: inspiratory flow over 3[12] samples \(0\.6[24] s as sampled\)/,
     )
     expect(description).toMatch(
-      /Result breath drawn above: inspiratory flow over 21 samples \(0\.42 s\)/,
+      /Result breath drawn above: inspiratory flow over 21 samples \(0\.42 s as sampled\)/,
     )
     expect(description).toMatch(/not all taken from the drawn\s+breath/)
   })

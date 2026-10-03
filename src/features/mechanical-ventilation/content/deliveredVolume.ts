@@ -46,6 +46,26 @@ export function volumeDeliverySteps(state: VentilationSimulationState): VolumeDe
   }
 }
 
+/**
+ * What the Inspiratory time reading is in volume control, beside what the sampled trace shows.
+ *
+ * The reading is the flow time the selected volume and flow calculate (0.63 s at 420 mL and
+ * 40 L/min); it is not timed on the trace. A drawn breath shows inspiratory flow for a whole number
+ * of samples, so at 31.5 steps it shows 0.62 or 0.64 s. The first S2-1 pass left the calculated
+ * value beside the sampled ones with nothing saying which was which (PR #290 review, R3). Printed
+ * under the same conditions as the volume note above; where the flow time is a whole number of
+ * steps the two agree and only the provenance is stated.
+ */
+export function inspiratoryTimeStepNote(state: VentilationSimulationState): string | null {
+  const settings = state.ventilator.settings
+  const delivery = volumeDeliverySteps(state)
+  if (delivery === null || settings.mode !== 'volume-ac') return null
+  const stepMs = Math.round(WAVEFORM_STEP_SECONDS * 1000)
+  const calculated = `Calculated from the settings, not timed on the trace: ${settings.vtMl} mL at ${settings.peakFlowLMin} L/min is ${(delivery.steps * WAVEFORM_STEP_SECONDS).toFixed(2)} s of inspiratory flow.`
+  if (Math.abs(delivery.steps - Math.round(delivery.steps)) < 0.01) return calculated
+  return `${calculated} The trace is sampled every ${stepMs} ms, so a drawn breath shows flow for ${Math.floor(delivery.steps)} or ${Math.ceil(delivery.steps)} samples: ${(Math.floor(delivery.steps) * WAVEFORM_STEP_SECONDS).toFixed(2)} or ${(Math.ceil(delivery.steps) * WAVEFORM_STEP_SECONDS).toFixed(2)} s.`
+}
+
 export function deliveredVolumeStepNote(state: VentilationSimulationState): string | null {
   const settings = state.ventilator.settings
   const measurements = state.measurements

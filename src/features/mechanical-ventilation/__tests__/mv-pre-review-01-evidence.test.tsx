@@ -188,7 +188,9 @@ describe('what the volume row is, and what it is not', () => {
     )
     const anchor = container.querySelector('[data-volume-anchor]')
     expect(anchor?.getAttribute('data-volume-anchor')).toBe(breath[0].volumeMl.toFixed(0))
-    expect(container.textContent).toContain('Volume from breath start (mL)')
+    // Named for what the anchor is (PR #290 review, R3): the first recorded inspiratory sample.
+    expect(container.textContent).toContain('Volume from first inspiratory sample (mL)')
+    expect(container.textContent).not.toContain('Volume from breath start (mL)')
     expect(container.textContent).not.toContain('Breath-relative volume (mL)')
     // The engine state is untouched by the rendering choice.
     expect(trapped.waveforms.at(-1)!.volumeMl).toBe(trapped.waveforms.at(-1)!.volumeMl)

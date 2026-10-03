@@ -45,7 +45,7 @@ export function performLabRound(initial: LabSession, prediction?: number): LabSe
     ) {
       session = learningLabReducer(session, {
         type: 'ENGINE',
-        action: { type: 'SET_PAUSED', paused: true },
+        action: { type: 'SET_PAUSED', paused: true, origin: 'learner' },
       })
     }
   }
