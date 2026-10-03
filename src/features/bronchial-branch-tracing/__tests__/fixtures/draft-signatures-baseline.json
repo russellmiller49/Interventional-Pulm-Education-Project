@@ -1,0 +1,27 @@
+{
+  "base": "a306d8250ec10207c750f46407f151c06d487707",
+  "note": "Every lesson, Practice and More routes draft signature at the BBT-PRE-REVIEW-04 base. The batch changes wording and flow only; no signature may move.",
+  "signatures": {
+    "learn.follow-one-airway": "c6-local-teaching-r1.95260c11",
+    "learn.orientation": "c6-local-teaching-r1.9fd5eccd",
+    "learn.continuity": "c6-local-teaching-r1.71168219",
+    "learn.vertical": "c6-local-teaching-r1.e1832196",
+    "learn.horizontal-horizontal": "c6-local-teaching-r1.775e75c0",
+    "learn.horizontal-vertical": "c6-local-teaching-r1.c31265d3",
+    "learn.horizontal-oblique": "c6-local-teaching-r1.9cb27899",
+    "learn.orientation-changes": "c6-local-teaching-r1.ed4e2f28",
+    "learn.variants-limits": "c6-local-teaching-r1.64b88cd0",
+    "practice.middle-lobe-entry.right-upper-apical.left-upper-division.left-lower-returning": "c6-local-teaching-r1.46ea78c7",
+    "assess.left-lingula.upper-oblique-lateral.right-lower-basal.left-upper-anterior": "c6-local-teaching-r1.75f10d17",
+    "practice.right-upper-apical": "c6-local-teaching-r1.a9ab6acd",
+    "practice.upper-oblique-lateral": "c6-local-teaching-r1.68ea9055",
+    "practice.middle-lobe-lateral": "c6-local-teaching-r1.a7f1232",
+    "practice.middle-lobe-caudal": "c6-local-teaching-r1.65b51739",
+    "practice.right-lower-basal": "c6-local-teaching-r1.6cd743bd",
+    "practice.left-upper-division": "c6-local-teaching-r1.b72bb18",
+    "practice.left-upper-anterior": "c6-local-teaching-r1.21b6a1ab",
+    "practice.left-lingula": "c6-local-teaching-r1.fe0b9811",
+    "practice.left-lower-returning": "c6-local-teaching-r1.2a81d439",
+    "practice.left-lower-basal": "c6-local-teaching-r1.29f2327c"
+  }
+}

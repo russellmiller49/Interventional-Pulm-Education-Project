@@ -1,21 +1,47 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { ArrowRight, GitBranch } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { BASE_PATH, LESSONS, SOURCE } from '../content/lessons'
-import { recommendedLesson } from '../engine/selfPacedProgress'
+import {
+  LESSON_GROUPS,
+  NAMING_KEY,
+  courseMap,
+  lessonNumber,
+  moreRoutesSet,
+  patternFor,
+  targetNaming,
+} from '../content/course-guide'
+import { targetForTrace, traceById } from '../geometry/native-ct'
+import { browserStorage, recommendedLesson } from '../engine/selfPacedProgress'
+import { savedRouteDrafts } from '../engine/route-drafts'
 import { useSelfPacedProgress } from './useSelfPacedProgress'
+import { CourseReference } from './CourseReference'
 import { ModuleFrame } from './ModuleFrame'
 import { TargetCtPreview } from './TargetCtPreview'
 import styles from './branch-tracing.module.css'
+
+const HERO_TRACE = 'middle-lobe-caudal'
 
 export function BranchTracingOverview() {
   const { ready, status, record } = useSelfPacedProgress()
   const recommendation = recommendedLesson(record)
   const opened = LESSONS.filter((l) => record.visitedLessonIds.includes(l.id))
   const reviewed = LESSONS.filter((l) => record.reviewedLessonIds.includes(l.id))
-  const savedForReview = LESSONS.filter((l) => record.reviewLaterLessonIds.includes(l.id))
+  const savedForLater = LESSONS.filter((l) => record.reviewLaterLessonIds.includes(l.id))
   const door = recommendation?.lesson ?? LESSONS[0]
+  const map = courseMap()
+  const heroTarget = targetForTrace(traceById(HERO_TRACE))
+  // Which route drafts this device already keeps. Read after hydration; a draft is a saved place,
+  // never a result, and nothing here is written.
+  const [routeDrafts, setRouteDrafts] = useState({ practice: false, assess: false })
+  useEffect(() => {
+    // Read the saved drafts from browser storage after hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setRouteDrafts(savedRouteDrafts(browserStorage()))
+  }, [])
+  const minutesEstimate = (minutes: number) => `about ${minutes} min`
   return (
     <ModuleFrame section="overview">
       <main className={styles.overview} data-course-overview>
@@ -51,12 +77,22 @@ export function BranchTracingOverview() {
               <ArrowRight size={18} aria-hidden />
             </Link>
             <p className={styles.small}>
-              {LESSONS.length} lessons · about {LESSONS.reduce((n, l) => n + l.minutes, 0)} minutes
-              · every lesson open · {opened.length} opened and {reviewed.length} reviewed on this
-              device
+              {map.lessons} lessons · about {map.estimatedMinutes} minutes by the authors’ estimate
+              · every lesson open · {opened.length} opened and {reviewed.length} marked reviewed on
+              this device
+            </p>
+            {ready && !recommendation && (
+              <p className={styles.small} data-after-learn>
+                Every lesson is marked reviewed on this device.{' '}
+                <Link href={`${BASE_PATH}/practice`}>Practice</Link> is the suggested next step;
+                every lesson stays open.
+              </p>
+            )}
+            <p className={styles.namingKey} data-naming-key>
+              <strong>Naming:</strong> {NAMING_KEY} {targetNaming(heroTarget).sentence}
             </p>
           </div>
-          <TargetCtPreview />
+          <TargetCtPreview traceId={HERO_TRACE} />
         </header>
         {status === 'unavailable' && (
           <p className={styles.notice} role="status">
@@ -71,16 +107,34 @@ export function BranchTracingOverview() {
         )}
         <div className={styles.introGrid}>
           <section>
-            <h2>What you will learn to do</h2>
+            <h2>What you will practise</h2>
             <ul>
-              <li>Rotate or reflect standard axial CT while comparing the virtual airway view.</li>
-              <li>Choose the continuing daughter at every fork and verify its lumen on CT.</li>
-              <li>Relate the four tracing patterns to the parent-airway viewpoint.</li>
-              <li>Separate patient direction, camera roll, and screen position.</li>
               <li>
-                Plan a segmental airway approach to a nodule and record uncertain distal continuity.
+                Keep the same air-filled lumen across adjacent 0.5 mm CT slices instead of switching
+                to a nearby airway.
+              </li>
+              <li>
+                Turn or reflect the CT display while keeping patient directions straight, and
+                compare it with the parent airway view: the model camera looking down the parent
+                airway.
+              </li>
+              <li>
+                At each fork, choose the daughter that continues toward a named target and mark its
+                lumen on CT.
+              </li>
+              <li>
+                Recognise the four tracing patterns this course uses and relate each to the view
+                from the parent airway.
+              </li>
+              <li>
+                Plan a segmental airway approach to a simulated nodule and record where distal
+                continuity stays uncertain.
               </li>
             </ul>
+            <p className={styles.small}>
+              New terms such as parent viewpoint and camera roll are defined in the course reference
+              below and again where each is first used.
+            </p>
           </section>
           <section>
             <h2>Before you begin</h2>
@@ -94,26 +148,80 @@ export function BranchTracingOverview() {
             </p>
           </section>
         </div>
-        <section className={styles.notice}>
-          <h2>What this preview contains</h2>
+        <section className={styles.courseMap} aria-labelledby="bbt-course-map" data-course-map>
+          <h2 id="bbt-course-map">How the course is organised</h2>
+          <ol>
+            <li>
+              <h3>
+                <Link href={`${BASE_PATH}/learn?lesson=${LESSONS[0].id}`}>Learn</Link>
+              </h3>
+              <p>
+                {map.lessons} lessons, about {map.estimatedMinutes} minutes in total by the authors’
+                estimate: a planning aid, not a measured learner time. The suggested order is 1 to{' '}
+                {map.lessons}, and every lesson is open.
+              </p>
+              <ul>
+                {LESSON_GROUPS.map((group) => (
+                  <li key={group.label}>
+                    {group.ids.length > 1
+                      ? `Lessons ${lessonNumber(group.ids[0])}–${lessonNumber(group.ids.at(-1)!)}`
+                      : `Lesson ${lessonNumber(group.ids[0])}`}
+                    : {group.label}
+                  </li>
+                ))}
+              </ul>
+            </li>
+            <li>
+              <h3>
+                <Link href={`${BASE_PATH}/practice`}>Practice</Link>
+              </h3>
+              <p>
+                Full routes from the trachea to a simulated nodule in one of {map.practiceTargets}{' '}
+                segments, or a mixed set of {map.mixedSet}. Suggested after Learn and open now. The
+                reference is available at every junction.
+                {routeDrafts.practice ? ' A Practice draft is saved on this device.' : ''}
+              </p>
+            </li>
+            <li>
+              <h3>
+                <Link href={`${BASE_PATH}/assess`}>More routes</Link> (optional)
+              </h3>
+              <p>
+                A mixed set of {map.moreRoutes} further routes in the same teaching CT:{' '}
+                {moreRoutesSet()
+                  .map((e) => e.target.segment.code)
+                  .join(', ')}
+                . {map.moreRoutesAlsoInLearn} of them also appear in{' '}
+                {map.moreRoutesLearnLessons.map((n) => `Lesson ${n}`).join(' and ')} and{' '}
+                {map.moreRoutesAlsoInPractice === map.moreRoutes
+                  ? 'all'
+                  : map.moreRoutesAlsoInPractice}{' '}
+                can be chosen in Practice, so treat the set as a revisit, not a new patient or a
+                test. The reference stays available.
+                {routeDrafts.assess ? ' A More routes draft is saved on this device.' : ''}
+              </p>
+            </li>
+          </ol>
           <p>
-            Foundations isolate a single lumen or bifurcation. Local pattern exercises follow, then
-            a three-division route and complete nodule approaches. In Learn, Practice and More
-            routes you can show the reference before you mark, compare after you check, or continue
-            without marking. Nothing is scored, and no lesson waits on a correct branch. All
-            exercises use one teaching scan. Different targets in that scan do not demonstrate
-            transfer to an unfamiliar patient CT.
+            In Learn, Practice and More routes you can show the reference before you mark, compare
+            after you check, or continue without marking. Nothing is scored, and no lesson waits on
+            a correct branch. All exercises use one teaching scan. Different targets in that scan do
+            not demonstrate transfer to an unfamiliar patient CT.
           </p>
           <p>
             Educational spatial reasoning only. This module does not establish device reach,
             patient-specific routes, or independent procedural competence.
           </p>
         </section>
-        {savedForReview.length > 0 && (
+        <section className={styles.notice} aria-labelledby="bbt-course-reference">
+          <h2 id="bbt-course-reference">Course reference</h2>
+          <CourseReference disclosure={false} target={heroTarget} />
+        </section>
+        {savedForLater.length > 0 && (
           <section>
-            <h2>Saved for review</h2>
+            <h2>Saved for later</h2>
             <ul>
-              {savedForReview.map((lesson) => (
+              {savedForLater.map((lesson) => (
                 <li key={lesson.id}>
                   <Link href={`${BASE_PATH}/learn?lesson=${lesson.id}`}>{lesson.title}</Link>
                 </li>
@@ -125,28 +233,40 @@ export function BranchTracingOverview() {
           <div className={styles.sectionTitle}>
             <h2>Your lesson pathway</h2>
             <span>
-              {reviewed.length}/{LESSONS.length} reviewed on this device
+              {reviewed.length}/{LESSONS.length} marked reviewed on this device
             </span>
           </div>
           <ol className={styles.lessonList}>
-            {LESSONS.map((lesson, i) => (
-              <li key={lesson.id}>
-                <span className={styles.lessonNumber}>{String(i + 1).padStart(2, '0')}</span>
-                <div>
-                  <Link href={`${BASE_PATH}/learn?lesson=${lesson.id}`}>{lesson.title}</Link>
-                  <p>{lesson.objective}</p>
-                </div>
-                <span>
-                  {record.reviewedLessonIds.includes(lesson.id)
-                    ? 'Reviewed'
-                    : record.visitedLessonIds.includes(lesson.id)
-                      ? `Opened · ${lesson.minutes} min`
-                      : `${lesson.minutes} min`}
-                  {record.reviewLaterLessonIds.includes(lesson.id) ? ' · Saved for review' : ''}
-                </span>
-              </li>
-            ))}
+            {LESSONS.map((lesson, i) => {
+              const pattern = patternFor(lesson.id)
+              return (
+                <li key={lesson.id}>
+                  <span className={styles.lessonNumber}>{String(i + 1).padStart(2, '0')}</span>
+                  <div>
+                    <Link href={`${BASE_PATH}/learn?lesson=${lesson.id}`}>{lesson.title}</Link>
+                    {pattern && <span className={styles.patternTag}>Pattern: {pattern.name}</span>}
+                    <p>{lesson.objective}</p>
+                  </div>
+                  <span>
+                    {record.reviewedLessonIds.includes(lesson.id) ? (
+                      <>
+                        <strong>Reviewed</strong> · {minutesEstimate(lesson.minutes)}
+                      </>
+                    ) : record.visitedLessonIds.includes(lesson.id) ? (
+                      `Opened · ${minutesEstimate(lesson.minutes)}`
+                    ) : (
+                      minutesEstimate(lesson.minutes)
+                    )}
+                    {record.reviewLaterLessonIds.includes(lesson.id) ? ' · Saved for later' : ''}
+                  </span>
+                </li>
+              )
+            })}
           </ol>
+          <p className={styles.small}>
+            Times are the authors’ estimates. Reviewed is your own note that you reached the end of
+            a lesson; Saved for later is a bookmark. Neither is a result.
+          </p>
         </section>
         <section className={styles.source}>
           <h2>Source and model limits</h2>
@@ -165,8 +285,8 @@ export function BranchTracingOverview() {
           </p>
           <p>
             This device keeps your place: the last lesson, lessons opened or finished, lessons saved
-            for review, and a draft of your current marks, CT slice, orientation and viewing state
-            so you can resume. Nothing is scored and hint use is not counted. Participation records
+            for later, and a draft of your current marks, CT slice, orientation and viewing state so
+            you can resume. Nothing is scored and hint use is not counted. Participation records
             from earlier versions stay on this device untouched and are not shown as progress. A
             changed lesson or annotation version explains why an older draft cannot be resumed.
             Saving failures are disclosed before you leave.

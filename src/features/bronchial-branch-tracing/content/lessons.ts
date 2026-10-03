@@ -107,7 +107,7 @@ const ROUTE_LESSONS: CtLesson[] = [
       'For caudal tracing in the middle lobe, lingula and lower lobes, the book reflects the image left-to-right. For the right upper lobe it rotates standard axial images 90° counterclockwise; for the left upper division, 90° clockwise. These change the display, not the patient anatomy.',
     ],
     worked:
-      'This central-airway example starts in standard axial. Use Flip left–right, then Reset to standard: the airway moves across the screen, while its patient-space location and CT level stay the same. Compare the parent lumen with the virtual bronchoscopy beside it.',
+      'This central-airway example starts in standard axial. Use Flip left–right, then Return to standard axial: the airway moves across the screen, while its patient-space location and CT level stay the same. Compare the parent lumen with the virtual bronchoscopy beside it.',
     interpretation:
       'A left/right reflection changes the displayed branch positions. The R and L labels move with the anatomy. Following the same lumen through adjacent levels is the check that branch identity has been preserved.',
     transferPrompt:
@@ -244,7 +244,9 @@ const ROUTE_LESSONS: CtLesson[] = [
     concept: 'The slice direction can reverse without changing the airway connection.',
     teaching: [
       'A route can descend and then turn cranially. Do not force every distal step to move toward a lower slice number. Follow the lumen from the last certain connection.',
-      'For the left upper division, the book rotates axial images clockwise by 90°. Its term “left superior segment” in this discussion refers to the upper division, not the lower-lobe superior segment. A lower-lobe returning route still uses the lower-lobe reflection convention.',
+      // BBTF-45: the left-upper-division convention moved, verbatim, to REGIONAL_NOTES in
+      // course-guide.ts; this lesson's three divisions are LB6 in the lower lobe.
+      'A lower-lobe returning route still uses the lower-lobe reflection convention.',
     ],
     worked:
       'Use Rotate 90° right, then follow the left upper division into the apicoposterior bronchus (LB1+2). The direction labels rotate with the image, while cranial and caudal remain defined by the CT level.',
@@ -395,7 +397,7 @@ export const LESSONS: CtLesson[] = [
     transferPrompt:
       'Repeat the task in the left main bronchus: keep the outlined lumen in view across the adjacent slices, then mark it or record uncertainty.',
     // The method is the book's; the exact page for single-lumen continuity awaits faculty review.
-    sourcePages: 'Chapter 1 · page reference pending review',
+    sourcePages: 'Chapter 1 · exact page not yet confirmed',
     // Demonstration and first try share the tracheal interval; the repeat moves to the LMSB.
     example: 'central-right',
     prediction: 'central-right',

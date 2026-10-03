@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { HelpDialog } from '@/features/learning-module/stage/HelpDialog'
 import type { CtJunctionAttempt, CtTrace } from '../content/ct-types'
 import { STANDARD_ORIENTATION } from '../geometry/orientation'
+import { displayOptionLabel } from '../engine/display-text'
 import { NativeCtViewer } from './NativeCtViewer'
 
 /**
@@ -47,7 +48,7 @@ export function CtRouteAttemptHistory({
               {attempt.branch === 'unresolved'
                 ? 'Continuation unresolved.'
                 : attempt.branch !== null
-                  ? `Selected ${trace.checkpoints[active].decision?.options.find((o) => o.sourceEdgeId === attempt.branch)?.label}.`
+                  ? `Selected ${displayOptionLabel(trace.checkpoints[active].decision?.options.find((o) => o.sourceEdgeId === attempt.branch)?.label ?? '')}.`
                   : ''}
             </p>
             {!attempt.orientation && (
