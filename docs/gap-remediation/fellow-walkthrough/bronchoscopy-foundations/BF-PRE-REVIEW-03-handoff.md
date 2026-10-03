@@ -8,6 +8,10 @@ and the visual part of A2. **No clinical approval, no source, media or anatomy r
 real-learner validation, no release, no deployment and no merge is claimed or performed.** Lane 04
 (teaching and survey flow) and lane 05 (media and clinical decisions) are not started.
 
+**Status, 2 October 2026.** Independently reviewed at `4126103b`: four P2 blockers reproduced,
+the rest accepted. The four are repaired in "Independent review repair" below (code
+`c9f4477d`); the branch awaits independent re-review. Not merged, not deployed.
+
 The walkthrough this repairs is Claude in a first-year-fellow persona, not a fellow, technologist
 or faculty reviewer. Its severity labels are kept as its own; the dispositions below are this
 batch's. "Image larger" is not anatomical approval: every image here keeps its pending review
@@ -228,6 +232,244 @@ the view's own tabs and rem-based gaps; the bound was changed to the measured vi
 Browser acceptance used real routes of the production build with native pointer and keyboard input
 (clicks, keyboard slider presses, W and ArrowUp on the selected scope view, Enter/Escape on the
 dialog, typed focus); no reducer injection, forced clicks, fabricated captures or always-open folds.
+
+## Independent review repair (2 October 2026)
+
+The independent pre-merge review of head `4126103b3d67a4377b235c4670a7dc0712caecb8` (this branch
+with `origin/main` `46c5bb94` merged in) reproduced four P2 defects and accepted the rest of the
+batch. This section records the bounded repair of those four and nothing else. No accepted area was
+redesigned, no owner or source hold was resolved, nothing was merged or deployed, and Batch 04 was
+not started. Where an earlier section of this handoff says more than the reviewed build did, the
+correction is listed under "Statements this repair corrects" below; the earlier text is left as the
+record of what was claimed at the time.
+
+| Field           | Value                                                                                                                                                                                                                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Reviewed head   | `4126103b3d67a4377b235c4670a7dc0712caecb8`, production build `DFHwTB0JTl-OKF0VGOfYL`, served on **3143** from a copy outside the checkout                                                                                                                                |
+| Repair code     | `c9f4477de56bc76c501f7593465007f29b032a7a`, production build `9jpWZv3QtfOj_kknLKuPG`, served on **3144**                                                                                                                                                                 |
+| `origin/main`   | `f962a3819b5e8d946de59b2401532a3ed681ae6a` at the fetch for this repair. **Not merged:** `git diff --name-only 46c5bb94 origin/main` lists 36 files, none under BF, the shared learning-module, the BF e2e spec, launch or build/package configuration                   |
+| Changed runtime | Nine files, all under `src/features/bronchoscopy-foundations/`; no shared stage, `ModuleFrameV2`, `AnswerVerdict`, `HelpDialog`, global CSS, public asset, media file, manifest or other module                                                                          |
+| Evidence        | `Interventional-Pulm-Local-Data/renders/output/bf-pre-review-03-2026-09-28/review-repair-2026-10-02/{before,after,logs}/` — the per-frame samples, accessibility trees, measured image sizes and screenshots from both builds, and the Jest and Playwright logs for both |
+
+### Blocker 1 — "Show me where" kept advice for a goal already met (A30)
+
+- **Reproduction (reviewed build, S6 Part 3, 1204×987).** Show me where, then advance until the
+  carina goal is met. The goal the step is waiting for becomes "enter the right main bronchus"; the
+  help still reads "Advance down the trachea to the main carina." and Advance is still lit.
+  Pressing Highlight it again gives the correct rotation advice.
+- **Root cause.** `firstUnmetHelp` in `BronchStageHost` was already computed on every render from
+  the current goal statuses and scope state, but `showWhere()` copied its control, target and
+  sentence into the `spotlight` state, and the pane drew that copy until help was asked for again.
+- **Repair.** The stored state is now only "help is on for this step" (and the control to focus
+  once, at the moment of asking). What the pane shows — sentence, lit control, ringed opening — is
+  `firstUnmetHelp` itself, read on every render (`helpNow`). `goalHelp` was not changed. Help ends
+  on a reset (a new attempt), on leaving the step (Back, Continue, Continue without completing) and
+  has nothing to show once every goal is met.
+- **Focus.** The focus moves to the control when help is asked for and never when the advice
+  changes afterwards: moving it then would hand the learner's next key press to a different control.
+- **Before / after (production builds, same steps, no second request).**
+
+  | After…                                | Reviewed build                                               | Repair                                                                                             |
+  | ------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+  | Show me where at the start            | "Advance down the trachea to the main carina." · Advance lit | the same                                                                                           |
+  | the carina goal is met                | the same sentence · Advance still lit                        | "Rotate counterclockwise: the opening of the right main bronchus is off the plane…" · Rotation lit |
+  | following the advice on the same goal | not reachable without asking again                           | Rotate → Deflect → Advance, each as the state makes it the useful control                          |
+  | the right main bronchus is entered    | —                                                            | the next goal's help: Withdraw lit                                                                 |
+  | Reset the scope                       | the stored sentence stays                                    | no help shown; Show me where is offered again                                                      |
+  | Back, then return to the step         | the stored sentence returns                                  | no help shown; Show me where is offered again                                                      |
+  | every goal met                        | the stored sentence stays under "all recorded"               | no help shown, no control lit, no help button                                                      |
+
+- **Preserved.** Help sends no scope command, records no input mode or assist, meets no goal, marks
+  no opening seen or airway inspected and writes nothing to the device record: an attempt with help
+  asked for three times ends in a byte-identical scope state, goal list and record (less its
+  timestamp) to the same attempt without it. The opening-names reference is a separate state and
+  was not touched.
+- **Files.** `components/stage/BronchStageHost.tsx`.
+- **Regression.** `__tests__/review-repair-help.test.tsx` (7 cases on the real host: the S6
+  transition; control change within one goal; focus; every command of the whole step; reset; leave
+  and return; nothing written). Browser: `review repair 1`.
+
+### Blocker 2 — the end-on tip drawing ran ahead of the animated bench (A21, A22)
+
+- **Reproduction (reviewed build, S5 rotation lesson, ordinary motion).** Try with guidance,
+  deflection 0°, press End. The end-on drawing is at 120° on the first frame; the control head and
+  bending section take about 220 ms to get there.
+- **Root cause.** The 3D scene held its own displayed state (`useBenchPresentation`, called inside
+  `ScopeScene`) and interpolated it; `TipCompass` is drawn by the pane frame outside the scene and
+  was handed the reducer's state.
+- **Repair.** One displayed bench state. `useBenchPresentation` is now called once, by the pane
+  (`ScopeScenePane`), and that one object is handed to the scene (scope view, control head, bending
+  section, the note over the scope view, the lever's caption) and to the frame for `TipCompass`.
+  Interpolation, its 220 ms duration and easing, the deflection and rotation semantics, the model
+  geometry and the reducer are unchanged, and nothing is delayed: the sliders, readouts, target
+  status and goals still read the model's own state, which is where the learner's command already
+  is. When a transition ends, the displayed state is now the model's state value for value (a turn
+  taken the short way round used to settle at 270° where the model says −90°). The schematic view
+  has no transition, so there the drawing reads the model's state directly, as the picture does.
+- **Before / after, per animation frame (production builds, Chromium, native End key; the control
+  head's reading is `data-lever-deflection`, the drawing's is the tip mark's distance from centre
+  × 120°).**
+
+  | Reviewed build: ms after the press | 4    | 65   | 116    | 161    | 201    | 242     | 284  |
+  | ---------------------------------- | ---- | ---- | ------ | ------ | ------ | ------- | ---- |
+  | control head                       | 0°   | 0°   | 19.49° | 56.97° | 89.85° | 113.76° | 120° |
+  | end-on drawing                     | 120° | 120° | 120°   | 120°   | 120°   | 120°    | 120° |
+
+  | Repair: ms after the press | 40    | 83     | 123    | 162    | 202     | 241  |
+  | -------------------------- | ----- | ------ | ------ | ------ | ------- | ---- |
+  | control head               | 7.21° | 31.96° | 65.07° | 96.71° | 117.07° | 120° |
+  | end-on drawing             | 7.21° | 31.96° | 65.07° | 96.71° | 117.07° | 120° |
+
+  The same agreement holds on every sampled frame of +120° → −120° (through 106.16°, 99.57°,
+  57.1°, −8.83°, −59.56°, −108.14°), −120° → 0° (−110.21°, −83.33°, −56.57°, −24.69°, −3.54°),
+  rotation 0° → 95° → 180° → −95° (the last by way of 186.5°, 204.48°, 223.83°, 246.59°, 262.1°,
+  the drawing's U mark at the same angle on each frame; the two track clicks landed on 95° and
+  −95°), and a turn with the lever moved while it was still turning: 196 frames in all, 45 of
+  them part-way through a transition, the drawing's attributes within 0.002 of the
+  engine's value for the control head's reading and the painted mark within 0.04 drawing units
+  (about a pixel and a half). The note over the scope view and its words for assistive technology
+  switch on the same frame.
+
+- **Settled geometry.** Unchanged and re-asserted: 0° centre; ±deflection at `0.000,±1.000`;
+  30° at U toward the card's top, right, bottom and left for 0°, 90°, 180° and −90°.
+- **Reduced motion.** No transition, as before: the bench and the drawing change together on the
+  command (browser case and Jest case).
+- **Files.** `components/scope/useBenchPresentation.ts`, `ScopeScenePane.tsx`, `ScopeScene.tsx`,
+  `ScopeFallback.tsx`, `TipCompass.tsx`.
+- **Regression.** `__tests__/review-repair-visuals.test.tsx` (12 cases: eight transitions stepped
+  frame by frame against an independent interpolation and against the state the scene was handed;
+  mid-transition position; the short way round; reduced motion; schematic view). Browser:
+  `review repair 2` (two cases).
+
+### Blocker 3 — the bench's out-of-view note was not in the accessibility tree (A21)
+
+- **Reproduction (reviewed build, S5 at ±60° and ±120°).** The scope view prints "The card is
+  outside the field of view… This is the bench, not a lost view of an airway."; the accessibility
+  tree of the pane has no such sentence.
+- **Root cause.** The note is `aria-hidden` on the scope view, with a code comment saying the
+  end-on drawing carries it in words. The drawing's caption gave only the angle and direction.
+- **Repair.** The sentence comes from one function (`benchOffCardNote`) read by both places. The
+  scope view prints it for the eye, still hidden from assistive technology there; the end-on
+  drawing carries the same sentence as a paragraph inside its figure, visually hidden, outside the
+  caption that names the image — so it is in the tree once, not once more in the image's name. It
+  is read from the same displayed state as the picture and is removed when the card is back in
+  view. It is not a live region: it is not announced on every lever movement.
+- **Accessibility tree, before / after (Playwright `ariaSnapshot` of the pane, production
+  builds).** At 0° and at 15° both builds: no such text. At +60° the reviewed build's figure has
+  the image and its caption only; the repair adds
+  `paragraph: "The card is outside the field of view: the tip points 60° from straight ahead. This is the bench, not a lost view of an airway."`.
+  The same at −60°, ±120°, 90°/60°, 180°/120° and −90°/−60°, once each; absent again at −90°/0°.
+- **Not an airway event.** The view signal stays `clear`, the lost-view and contact counts stay 0,
+  no red-out, blind-advance, contact, entry or ostium event is recorded, the inspection ledger is
+  untouched and the device record is unchanged. The sentence claims no obstruction, contact,
+  clinical lost view or safety judgement.
+- **Files.** `engine/scope/benchOrientation.ts`, `components/scope/TipCompass.tsx`,
+  `ScopeScene.tsx`, `scope-fallback.module.css`.
+- **Regression.** `__tests__/review-repair-visuals.test.tsx` (15 cases: seven out-of-view states,
+  five in-view states, the return to view, the pane in 3D and schematic views, nothing recorded).
+  Browser: `review repair 3` (ten states, read from the accessibility tree).
+
+### Blocker 4 — S7 Enlarge did not enlarge the CT (A25)
+
+- **Reproduction (reviewed build, S7 Part 2).** Card CT and enlarged CT both 478×478 px at
+  1204×987, both 397.36×397.36 px at 1024×768.
+- **Root cause.** `.mediaGrid[data-media-compare='true'] .figureFrame` — the comparison row's
+  size limit — is a descendant selector, and the enlarge dialog is nested in the same figure; with
+  three selector parts it outranked `.figureFrameLarge`.
+- **Repair.** The selector is `.mediaGrid[data-media-compare='true'] .figureBody > .figureFrame`:
+  the card's own frame, by structure. One CSS rule; no media file, manifest, markup, comparison
+  wording or card size changed.
+- **Measured, the image itself (production builds).**
+
+  | Viewport | Image | Card          | Enlarged, reviewed build | Enlarged, repair      |
+  | -------- | ----- | ------------- | ------------------------ | --------------------- |
+  | 1204×987 | CT    | 478 × 478     | 478 × 478 (1.00×)        | 753.5 × 753.5 (1.58×) |
+  | 1204×987 | still | 510 × 402.4   | 606 × 478.1 (1.19×)      | 955.0 × 753.5 (1.87×) |
+  | 1024×768 | CT    | 397.4 × 397.4 | 397.4 × 397.4 (1.00×)    | 543.3 × 543.3 (1.37×) |
+  | 1024×768 | still | 471.3 × 371.8 | 503.8 × 397.5 (1.07×)    | 688.7 × 543.4 (1.46×) |
+  | 390×844  | CT    | 364 × 364     | 338.4 × 338.4 (0.93×)    | 338.4 × 338.4 (0.93×) |
+  | 390×844  | still | 364 × 287.2   | 338.4 × 267.0 (0.93×)    | 338.4 × 267.0 (0.93×) |
+
+  Same file and natural proportions in both; the dialog stays inside the viewport and needs no
+  scrolling at the two desktop sizes; Close and Escape return the focus to the figure's own Enlarge
+  button; the card is the size it was. **Phone:** unchanged by this repair. The card already spans
+  the column, so the dialog — the screen less its own border and padding — shows the image slightly
+  smaller than the card. That is how every enlarged view behaves at 390 px and is recorded in the
+  backlog below, not changed here.
+
+- **Files.** `components/stage/bronch-stage.module.css`.
+- **Regression.** `__tests__/review-repair-visuals.test.tsx` (the stylesheet's own selectors
+  matched against the rendered card and dialog frames, for the CT and the still). Browser:
+  `review repair 4` at 1204×987, 1024×768 and 390×844.
+
+### Statements this repair corrects
+
+- A21, "Lever, drawing and engine agree at every sampled state": true of settled states, which is
+  all the original cases sampled (the suite runs with reduced motion). During an ordinary-motion
+  transition the drawing was ahead of the bench. Repaired (blocker 2).
+- A21, the note "in words for assistive technology": the words were not there. Repaired
+  (blocker 3).
+- A25 / the media workspace, "each still opens full size from its own Enlarge button": not so for
+  the S7 comparison at laptop sizes. Repaired (blocker 4). A25 stays **partially repaired**: the
+  five-level trace is still held.
+- A30, "help from the first unmet requirement": true at the moment help was asked for, and stale
+  afterwards. Repaired (blocker 1).
+
+A21, A22 and A30 are recorded in the dispositions file as repaired **pending independent
+re-review**, not as closed.
+
+### Validation of the repair
+
+Unique tests are counted once. Commands were read from `package.json` and the Playwright configs.
+
+| Check                                                                                          | Result                                                                                                                                                                                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| New Jest cases (`review-repair-help`, `review-repair-visuals`) on the repair                   | 2 suites, **35 passed**                                                                                                                                                                                                                                                                                            |
+| The same 35 on the reviewed head (detached worktree at `4126103b`, test files only, no shims)  | **26 fail, 9 pass.** 25 fail on the reproduced defects; 1 (reduced motion) fails only because the reviewed pane handed the scene no displayed state to compare. The 9 that pass are preservation guards: card in view says nothing (5), nothing recorded, help writes nothing, schematic view, the short way round |
+| Batch-03 Jest (`workbench-and-visuals`, `workbench-host`, `goal-truth`, and the two new files) | 5 suites, **84 passed** (49 existing, 35 new)                                                                                                                                                                                                                                                                      |
+| Complete BF Jest, routes included (`'src/app/\[locale\]/bronchoscopy-foundations'` escaped)    | **36 suites, 523 passed, 1 todo** (reviewed head: 34 suites, 488 passed, 1 todo; two suites and 35 cases added, no existing case changed)                                                                                                                                                                          |
+| Shared learning-module Jest (not touched; run as a guard)                                      | 17 suites, 184 passed                                                                                                                                                                                                                                                                                              |
+| `NODE_OPTIONS=--max-old-space-size=8192 npx tsc --noEmit`                                      | exit 2 with **one** diagnostic, the known one on main: `src/features/medical-thoracoscopy/wolf-preview/__tests__/boundaries.test.ts(51,67): TS2353`. Identical on the reviewed head. **No new diagnostic.** The separate fix on main was not merged in                                                             |
+| `npx eslint --max-warnings=0` on every changed `.ts`/`.tsx`                                    | 10 files, 0 errors, 0 warnings                                                                                                                                                                                                                                                                                     |
+| `npx prettier --check` on every changed path                                                   | clean on all 14 changed paths, these two documents included                                                                                                                                                                                                                                                        |
+| `git diff --check 4126103b HEAD`                                                               | clean                                                                                                                                                                                                                                                                                                              |
+| `npm run build`                                                                                | exit 0, build `9jpWZv3QtfOj_kknLKuPG`; "Compiled with warnings" block identical to the reviewed head's                                                                                                                                                                                                             |
+| New browser cases on the reviewed build (3143)                                                 | **6 of 7 fail**: the stale sentence; the drawing at 120° with the head at 0°; no note in the tree at 60°; the CT at 478 and at 397.36 px; and the reduced-motion case, which fails there only on the missing accessible note. The phone case passes on both builds: it is a guard                                  |
+| Complete BF Playwright suite on the repair build (3144)                                        | **68 unique tests, 68 passed** in one run with no retries (61 existing, 7 new)                                                                                                                                                                                                                                     |
+| Systemic-UX checks that load BF (`bf:` × 6 sizes and the nine public entry routes)             | 7 passed                                                                                                                                                                                                                                                                                                           |
+
+Reruns, not counted again. While the new browser cases were being written they were run alone
+four more times on the reviewed build and twice more on the repair build. Three assertions of the
+cases' own were corrected in that time, with no source change: a word check that matched the
+pane's existing goal text, a phone bound the dialog cannot meet on either build, and a text query
+that also matched the note hidden from assistive technology (now a query by role). One further
+invocation did not start (a syntax error in the spec). There was one production build of the
+repair, and no source file changed after it.
+
+### Owner and source holds — unchanged, none resolved here
+
+1. Showing the registered "Vocal cords" outline on the S9 still (A28; owner).
+2. Authoring or reusing the five-level S7 CT trace (A25; source and owner) — A25 stays partially
+   repaired even with the enlargement fixed.
+3. Owner approval of A/L as the teaching frame (A24 / SUP-09; the implementation matches the
+   teaching model, the choice of frame is the owner's).
+4. Whether the optional opening-name reveal should count as an assist (A30; owner).
+5. New head-on airway-tour stills (A29; source).
+6. Close-up laryngeal anatomy and geometry (A2; owner).
+
+### Not run, and limits of this repair
+
+- No human review of any kind; no screen-reader was listened to. Blocker 3 is asserted on
+  Chromium's accessibility tree, not on what VoiceOver, NVDA or JAWS say.
+- Chromium only. The frame samples are from headless Chromium, which drew about one frame every
+  40 ms here; a 60 Hz display shows more frames of the same transition.
+- The agreement between the drawing and the 3D picture is asserted through the state both are
+  handed in one render (the control head's own `data-handle-rotation` / `data-lever-deflection`
+  and the drawing's painted mark). The WebGL pixels were not read back.
+- Hidden-tab behaviour of the bench transition (it does not animate in a background tab) is the
+  same code, moved; it was not exercised in a browser.
+- Backlog, not changed here: on a 390 px phone an enlarged view is slightly narrower than a card
+  that already spans the column (S7: 338 px against 364 px).
 
 ## Unresolved media, anatomy and source dependencies
 
