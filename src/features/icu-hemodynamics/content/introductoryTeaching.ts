@@ -4,11 +4,11 @@ import { waveformAtlasById, type WaveformAtlasEntry } from './waveformAtlas'
 export const measurementOrigins = [
   {
     label: 'Arterial line · ART',
-    text: 'A separate arterial catheter and transducer display systemic arterial pressure. This is not the distal PAC pressure channel.',
+    text: 'A separate arterial catheter and transducer display systemic arterial pressure. This is not the distal pressure channel of the pulmonary artery catheter (PAC).',
   },
   {
-    label: 'PAC pressure channel',
-    text: 'Pressure at the distal opening changes as the tip moves through the right atrium, right ventricle and pulmonary artery. During a valid brief occlusion, PAWP reflects pressure transmitted from the pulmonary venous side. The proximal port can measure right-atrial pressure when correctly positioned.',
+    label: 'Pulmonary artery catheter (PAC) pressure channel',
+    text: 'Pressure at the distal opening changes as the tip moves through the right atrium, right ventricle and pulmonary artery. During a valid brief occlusion, the pulmonary artery wedge pressure (PAWP) reflects pressure transmitted from the pulmonary venous side. The proximal port can measure right-atrial pressure when correctly positioned.',
   },
   {
     label: 'Thermodilution cardiac output',

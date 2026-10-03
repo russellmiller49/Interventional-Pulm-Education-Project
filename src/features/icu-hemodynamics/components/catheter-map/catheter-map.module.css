@@ -8,6 +8,7 @@
  */
 
 .map {
+  container-type: inline-size;
   display: grid;
   gap: 0.5rem;
   min-width: 0;
@@ -70,12 +71,34 @@
   overflow: visible;
 }
 
-.label {
-  fill: var(--stage-muted, #9fb4b7);
-  font-size: 10px;
+.labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.labels > span {
+  position: absolute;
+  color: var(--stage-muted, #b4c7ca);
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-anchor: middle;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.labels > span[data-anchor='below'] {
+  transform: translateX(-50%);
+}
+.labels > span[data-anchor='above'] {
+  transform: translate(-50%, -100%);
+}
+.labels > span[data-anchor='left'] {
+  transform: translate(-100%, -50%);
+}
+.abbreviations {
+  margin: 0;
+  color: var(--stage-muted, #b4c7ca);
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 .monitor {
@@ -354,4 +377,21 @@
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/*
+ * A drawing too narrow for its words uses one-letter keys for the line's parts and lists them
+ * beneath. The threshold is in rem, so it also applies when the reader's text is enlarged and the
+ * words no longer fit a drawing of the same width.
+ */
+.map [data-label-form='short'] {
+  display: none;
+}
+@container (max-width: 30rem) {
+  .map [data-label-form='full'] {
+    display: none;
+  }
+  .map [data-label-form='short'] {
+    display: inline;
+  }
 }

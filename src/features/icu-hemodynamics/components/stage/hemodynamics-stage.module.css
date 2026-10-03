@@ -792,3 +792,130 @@
 .dockVerdict p:last-child {
   margin-bottom: 0;
 }
+
+/*
+ * A step's goals as a progress list. Nothing here is an input, so nothing here is drawn like one:
+ * no box around a row, no empty circle in front of it.
+ */
+.goalList {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0 0 0 0.25rem;
+  list-style: none;
+  border-left: 2px solid var(--line, rgba(163, 206, 209, 0.22));
+}
+.goalList li {
+  display: grid;
+  grid-template-columns: 1.4rem minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.3rem 0.5rem;
+}
+.goalList li > small {
+  color: var(--muted, #b1c8ca);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.goalList li[data-met='true'] > small {
+  color: var(--green, #76d69b);
+  font-weight: 700;
+}
+.goalMark {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  width: 1.4rem;
+  height: 1.1rem;
+}
+/* Not yet done: a short dash on the rail. */
+.goalMark:empty::before {
+  width: 0.7rem;
+  border-top: 2px solid var(--muted, #b1c8ca);
+  content: '';
+}
+.goalMark svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  color: var(--green, #76d69b);
+}
+
+/*
+ * Two reference figures compared: one row where both stay readable, one column where they do not.
+ * The figures share an axis and a time base, so in a row a height on one is the same pressure on
+ * the other.
+ */
+.alignedFigures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
+  column-gap: 0.75rem;
+  min-width: 0;
+}
+/*
+ * Each figure is two rows of the shared grid — its caption, then its drawing — so a caption that
+ * wraps to another line on one figure moves both drawings down together.
+ */
+.alignedFigures > * {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 2;
+  min-width: 0;
+  margin-bottom: 0.75rem;
+}
+.comparisonKey {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.comparisonKey caption {
+  padding-bottom: 0.35rem;
+  font-weight: 700;
+  text-align: left;
+}
+.comparisonKey th,
+.comparisonKey td {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  text-align: left;
+  vertical-align: top;
+}
+.comparisonKey thead th {
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+@media (max-width: 40rem) {
+  .comparisonKey,
+  .comparisonKey caption,
+  .comparisonKey tbody,
+  .comparisonKey tr,
+  .comparisonKey td,
+  .comparisonKey th {
+    display: block;
+  }
+  .comparisonKey thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .comparisonKey tbody tr {
+    padding-block: 0.4rem;
+    border-bottom: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  }
+  .comparisonKey tbody th,
+  .comparisonKey tbody td {
+    padding: 0.2rem 0;
+    border: 0;
+  }
+  .comparisonKey tbody td:nth-of-type(1)::before {
+    content: 'Right ventricle: ';
+    font-weight: 700;
+  }
+  .comparisonKey tbody td:nth-of-type(2)::before {
+    content: 'Pulmonary artery: ';
+    font-weight: 700;
+  }
+}

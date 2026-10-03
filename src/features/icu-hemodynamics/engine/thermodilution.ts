@@ -755,6 +755,33 @@ export function thermodilutionSeriesSummary(
   }
 }
 
+/** The alerts the generator raises about how the bolus was injected. */
+export const INJECTION_TECHNIQUE_ALERTS = {
+  tooSlow: 'Injection was too slow.',
+  abrupt: 'Injection was abrupt and may mix irregularly.',
+  notSmooth: 'Injection was not smooth and continuous.',
+} as const
+
+/**
+ * Whether a trial carries an injection-technique alert that its curve does not show.
+ *
+ * In this model the length and smoothness of an injection change the computed output and the
+ * trace's noise, and nothing else: the curve's onset, its time to peak and its decay come from the
+ * modeled flow alone. A prolonged or interrupted bolus therefore draws the same single smooth
+ * excursion as a clean one — shallower and noisier, never notched or double-peaked. A learner told
+ * to look for an irregular curve was looking for a feature this trace cannot have (report L7-02),
+ * so the surfaces that show such a trial say what the model does and does not draw.
+ */
+export function injectionTechniqueNotDrawnInCurve(
+  trial: Pick<ThermodilutionTrial, 'alerts'>,
+): boolean {
+  const technique: readonly string[] = Object.values(INJECTION_TECHNIQUE_ALERTS)
+  return trial.alerts.some((alert) => technique.includes(alert))
+}
+
+export const INJECTION_TECHNIQUE_CURVE_NOTE =
+  'What this model draws: a prolonged or interrupted injection does not add a second peak or a notch here. It shows only as a shallower, noisier curve with the same timing, so the technique record above — not the curve’s contour — is what marks this trial.'
+
 export function generateThermodilutionCurve(
   input: ThermodilutionGenerationInput,
 ): ThermodilutionTrial {
@@ -772,10 +799,9 @@ export function generateThermodilutionCurve(
   if (Math.abs(technique.injectateTemperatureC - configuredTemperature) > 3) {
     alerts.push('Injectate temperature differs materially from the configured value.')
   }
-  if (technique.injectionDurationSeconds > 4) alerts.push('Injection was too slow.')
-  if (technique.injectionDurationSeconds < 0.6)
-    alerts.push('Injection was abrupt and may mix irregularly.')
-  if (technique.smoothness < 0.7) alerts.push('Injection was not smooth and continuous.')
+  if (technique.injectionDurationSeconds > 4) alerts.push(INJECTION_TECHNIQUE_ALERTS.tooSlow)
+  if (technique.injectionDurationSeconds < 0.6) alerts.push(INJECTION_TECHNIQUE_ALERTS.abrupt)
+  if (technique.smoothness < 0.7) alerts.push(INJECTION_TECHNIQUE_ALERTS.notSmooth)
   if (technique.respiratoryPhase === 'variable')
     alerts.push('Respiratory timing varied between trials.')
   if (modifiers.catheterPosition !== undefined && modifiers.catheterPosition !== 'pa') {
