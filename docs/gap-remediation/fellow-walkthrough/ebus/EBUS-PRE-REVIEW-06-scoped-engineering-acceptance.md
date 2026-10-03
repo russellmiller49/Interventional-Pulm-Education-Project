@@ -145,3 +145,114 @@ changed. The preview is stopped and ephemeral credentials/dependency links remov
 The **authored-answer visibility repair is ready for independent engineering review**. The scoped
 combined pass remains incomplete for whole-module acceptance. No push, PR publication, merge,
 deployment, release approval, new services or owner-only action occurred.
+
+## Integration addendum — 2026-10-02 (America/Los_Angeles)
+
+The original scoped combined pass above found the marker-C column defect. That finding and the
+original results describe the state tested on 2026-09-30; they remain historical evidence, including
+the failed column assertion and the then-unperformed publication and full production build. They
+have not been erased, rewritten or retroactively counted as passes.
+
+The column defect was subsequently repaired and independently reviewed. The later named-label
+spacing repair was also reviewed. **[Draft PR #316](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/316)
+now integrates all three reviewed repairs** and is the current combined publication/integration
+vehicle:
+
+| Integrated repair                                                    | Exact commit                               |
+| -------------------------------------------------------------------- | ------------------------------------------ |
+| Authored matching/sequence reference retained on same-session return | `bac4d9859d39cff2e26b2c9650095ad8bdda4305` |
+| Existing marker columns retained by canonical ID                     | `d6cf5fbcdfcce5de91e8ad78d0785146fdbbac82` |
+| 34 px named labels receive 40 px center spacing                      | `7255b8e34aa1a082354200f55192d16e0529c1fd` |
+
+The two separate marker-column and named-spacing repair reports retain their original evidence and
+review handoffs unchanged. Their historical no-publication language, and the same language in this
+report, do not describe the current combined PR's publication status.
+
+### Main reconciliation and effective scope
+
+- Fetched prior PR head: `7255b8e34aa1a082354200f55192d16e0529c1fd`.
+- Integrated `origin/main`: `f962a3819b5e8d946de59b2401532a3ed681ae6a`.
+- Prior merge base: `46c5bb94f779a1464da6198bba4bcf8550379419`.
+- Normal merge-forward commit: `73381fc2d0fcf76451250a8908868c7af9361876`; no conflict,
+  rebase, force push or dropped change.
+- The active worktree started clean on `codex/ebus-10-3` at the integrated main revision.
+  Because the PR branch was already checked out elsewhere, integration used local branch
+  `codex/ebus-316-main-integration-20261002` in
+  `/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/codex-ebus-10-3`,
+  with the existing PR branch as the normal push destination.
+- Main contained the same four intervening commits identified at prompt preparation:
+  Wolf preview #318 and beta-feedback #319, including their merge commits. No further main
+  advance was found. None of their 36 changed paths overlap #316's 11 changed paths.
+- Fresh inventory: **27 open PRs**, including #316; no other open PR overlaps its changed paths.
+  Shared-consumer work in #297 and shared verdict/stage work in #134 remain outside this branch.
+  Their eventual integration still needs affected compatibility checks.
+- The effective runtime/test patch against integrated main is byte-for-byte identical to the
+  reviewed PR patch against its old merge base. This update adds only this documentation
+  addendum beyond the main merge. Geometry, anatomical assets, anchor selection, canonical
+  IDs/letters, acquisition pose, sweep thresholds, observer calibration and persistence contracts
+  are unchanged.
+
+### Combined engineering verification after the merge
+
+| Check                                                               | Actual result and scope                                                                                                                                                                                                       |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| EBUS host Jest plus shared AnswerVerdict                            | **258 passed / 15 suites**, including bridge, acquisition, retained evidence, examination and legacy/self-paced compatibility                                                                                                 |
+| Embedded guided Vitest                                              | **49 passed / 8 files**, including returning hidden canonical IDs, nonmutation, anchor vertices, geometry and acquisition windows                                                                                             |
+| Embedded TypeScript                                                 | Exit **0**                                                                                                                                                                                                                    |
+| Fresh production EBUS embed                                         | Exit **0**; built from this integration checkout and used by the browser checks                                                                                                                                               |
+| Requested reveal, columns, spacing and existing anatomy/sweep specs | **23 passed**: six reveal cases, four column/fallback cases, four spacing cases and nine anatomy/sweep cases; the latter include one pure reset-readiness helper                                                              |
+| Recording/lookup failure compatibility                              | **2 passed**; deliberate resource aborts, not successful acquisitions                                                                                                                                                         |
+| Supplemental native reveal/session checks                           | **2 passed**: matching and sequence each retain the same storage bytes on reveal, clear on reload, distinguish skip from genuine completion, keep Continue available and create no legacy record/new storage key/schema       |
+| Supplemental route labels and leader endpoints                      | **1 passed** across six target/approach combinations; returning IDs keep remembered columns, named boxes stay 34 px high with at least 40 px same-column center spacing, SVG leaders/dots terminate at the projected anchors  |
+| Matched current-main/integration projections                        | **3 passed**, covering **36 matched snapshots** at 1246×1021, 768×1024 and 1024×768 with 200% root text, repeated rotation and resize; canvas sizes, canonical IDs, letters and projected `ax`/`ay` coordinates match exactly |
+| Named-label stress measurements                                     | **111 rendered states**, zero overlapping label pairs; actual labels stay present and contained, without shrinking or hiding labels to obtain a pass                                                                          |
+| Scoped lint/formatting and diff check                               | Host/tests ESLint, explicit embedded ESLint with `--no-ignore`, host/test/report Prettier and `git diff --check` passed; embedded imported source retains the repository's existing Prettier exemption                        |
+
+The requested browser run totals **25 tests** (24 browser journeys and one pure helper); the
+supplemental session/route run and matched-anchor run are separate focused checks, not additional
+curriculum acceptances. The supported scope/route controls exercised orbit, zoom, reset,
+whole-scope/distal-tip reconstruction, supported resize/reentry, target/approach changes, keyboard
+selection and genuine sweep/reset events. Desktop/tablet and 200% root-text coverage passed. The
+390/320 px phone fallback is unchanged; no phone model rendering or native browser zoom claim is
+made. Screenshots of the enlarged-text scope labels and route labels were visually inspected.
+
+The matched projection check builds current main's tracked embedded source separately with the
+same dependencies and unchanged tracked assets, and serves that production bundle to the same
+host through a test-only static-resource override. It compares native control results with the
+integration bundle at equal canvas sizes and poses. It injects no observations, acquisition
+records or clinical state. Historical screenshots alone were not treated as a matched baseline:
+the earlier recorded desktop canvas width differs from this environment's width.
+
+The optional training-app packaging check initially reported two missing navigation-output files
+before the navigation embed had been generated in this fresh checkout. That run is retained as a
+setup prerequisite failure; the repository's standard build generates those ignored outputs, and
+the packaging check is rerun afterward. A scratch baseline embed build similarly needed its omitted
+tracked sponsor directory linked before succeeding; this was a harness preparation error.
+
+The standard **`npm run build` is run from the final documentation/integration commit**, after the
+isolated browser server stops. Its exact exit status, full production/standalone log and the
+post-build packaging result are recorded in the final validation receipt in the evidence directory
+below and in the PR review handoff. The historical unperformed-build statement above applies to the
+original pass. A separate all-source root `npm run type-check`, physical devices, other browsers,
+DPR/theme qualification, screen readers and real learner/faculty sessions are not newly claimed.
+
+### Evidence, holds and review disposition
+
+Integration evidence:
+`/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/ebus-pr316-integration-20261002/`.
+It includes the fetched-ref/open-PR reconciliation, full test/build logs, browser results,
+label/anchor measurements, screenshots and the final validation receipt. Temporary authentication
+material is excluded. The local preview used an ephemeral localhost-only token and isolated
+Playwright contexts; no owner browser profile, private environment file or saved learner progress
+was used. Generated outputs and local harnesses are not part of the PR diff.
+
+**No clinical/anatomical/source/media-rights owner hold has been converted to approval.** Difficult
+image identity/purpose, expert annotations, orientation/model limitations, measurement teaching,
+clinical/protocol drafts, report/staging/pathology meanings, selected storyboards/consolidation,
+media reuse/de-identification/provenance and release scope remain owner-held. No owner-approved
+clinical/anatomical/media decision was changed.
+
+This remains **scoped engineering acceptance**, not whole-module clinical or release acceptance and
+**not final whole-module Prompt 06**. PR #316 stays draft for independent review of the integrated
+repairs and this reconciliation. No new PR, merge, deployment or release acceptance is authorized
+or performed by this update.
