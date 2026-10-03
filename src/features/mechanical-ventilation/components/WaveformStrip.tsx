@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, type CSSProperties } from 'react'
+import { Fragment, useMemo, type CSSProperties, type ReactNode } from 'react'
 
 import type { WaveformSample } from '../engine'
 import styles from './mechanical-ventilation.module.css'
@@ -124,6 +124,26 @@ interface WaveformStripProps {
   color?: string
 }
 
+/**
+ * A readout label with a slash in it ("PEEP/CPAP") may wrap after the slash. It is one unbreakable
+ * word otherwise, and in a phone-width label column at 200 % text it ran under its own value. The
+ * text is unchanged; only a line-break opportunity is added.
+ */
+function breakAfterSlash(label: string): ReactNode {
+  const parts = label.split('/')
+  if (parts.length === 1) return label
+  return parts.map((part, index) => (
+    <Fragment key={index}>
+      {part}
+      {index < parts.length - 1 ? (
+        <>
+          /<wbr />
+        </>
+      ) : null}
+    </Fragment>
+  ))
+}
+
 function linePoints(
   samples: readonly WaveformSample[],
   field: WaveformField | 'pmusCmH2O',
@@ -200,7 +220,7 @@ export function WaveformStrip({
                 data-unreliable={readout.unreliable ? 'true' : undefined}
                 data-readout-status={readout.status}
               >
-                <dt>{readout.label}</dt>
+                <dt>{breakAfterSlash(readout.label)}</dt>
                 <dd>{readout.value.toFixed(readout.precision ?? 0)}</dd>
                 {readout.status ? (
                   <dd className={styles.readoutStatus} title={readout.statusDetail}>

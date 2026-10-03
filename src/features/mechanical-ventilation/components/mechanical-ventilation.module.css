@@ -712,26 +712,41 @@
 }
 
 .consoleScreen {
+  /*
+   * The screen is the query container for its own monitoring layout, so the reflow below follows
+   * the width the screen actually has — beside a case panel, inside the Learn workbench, on a
+   * phone — rather than the viewport's, and its rem threshold grows with the reader's text.
+   */
+  container: mv-console-screen / inline-size;
   min-height: 470px;
   color: var(--screen-text);
   background:
     radial-gradient(circle at 45% 35%, rgba(32, 72, 75, 0.28), transparent 45%), var(--screen);
 }
 
+/*
+ * The monitored-value column's floor is in rem (6.5625 / 7 / 8.25 rem are the 105 / 112 / 132 px
+ * these columns had at the default text size, so nothing moves there).
+ *
+ * In px the floor stayed put while the values inside it grew with root text: at 200 % the C6's
+ * column was 125 px wide holding 169 px of text, which spilled over the waveform label column and
+ * covered Ppeak, Pplateau and the readouts beside them (PR #290 review, R5). The AVEA's and the
+ * Evita's columns spilled the same way, out of the right of the screen.
+ */
 .monitoringScreen {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(105px, 0.19fr);
+  grid-template-columns: minmax(0, 1fr) minmax(6.5625rem, 0.19fr);
   min-height: 470px;
 }
 
 /* C6: the MMP column runs down the left of the display, ahead of the waveforms. */
 .monitoringScreen[data-layout='left-column'] {
-  grid-template-columns: minmax(112px, 0.2fr) minmax(0, 1fr);
+  grid-template-columns: minmax(7rem, 0.2fr) minmax(0, 1fr);
 }
 
 /* Evita: a wider column so the large values it prints beside the waveform fields fit. */
 .monitoringScreen[data-layout='right-column'] {
-  grid-template-columns: minmax(0, 1fr) minmax(132px, 0.24fr);
+  grid-template-columns: minmax(0, 1fr) minmax(8.25rem, 0.24fr);
 }
 
 /* PB980: the patient-data banner runs across the top; waveforms take the full width beneath it. */
@@ -3646,7 +3661,7 @@
   }
 
   .monitoringScreen {
-    grid-template-columns: minmax(0, 1fr) 84px;
+    grid-template-columns: minmax(0, 1fr) 5.25rem;
   }
 
   .waveformFigure,
@@ -4056,5 +4071,41 @@ line.waveformAnnotation {
 @media (max-width: 850px) {
   [data-live-learning='true'] .monitoringScreen {
     height: 345px;
+  }
+}
+
+/*
+ * A screen too narrow, at the reader's text size, for the value column, the waveform labels and a
+ * trace side by side: the values become a band above or below the waveforms (in the order the
+ * device has them) and the waveforms take the full width. A reflow, not a smaller font. 16 rem is
+ * under the width of every console at the default text size down to a 320-px phone, so this is
+ * reached only with enlarged text or a narrower box than any the module lays out today. Last in the
+ * file so the viewport rules above, which share its selectors, do not override it.
+ */
+@container mv-console-screen (max-width: 16rem) {
+  .monitoringScreen,
+  .monitoringScreen[data-layout='left-column'],
+  .monitoringScreen[data-layout='right-column'] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: auto;
+  }
+
+  .mmpPanel,
+  .mmpPanel[data-layout='left-column'] {
+    border-right: 0;
+    border-left: 0;
+    border-block: 1px solid var(--screen-line);
+  }
+
+  .mmpValues {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .mmpValues > div,
+  .mmpValues > div:last-child {
+    flex: 1 1 6rem;
+    border-right: 1px solid var(--screen-line);
+    border-bottom: 1px solid var(--screen-line);
   }
 }
