@@ -404,7 +404,7 @@ describe('F10 — sources by class, and claims checked against a document that w
       const source = mcsSourceById.get(id)!
       expect(source.citation).toMatch(/^Authoring provenance, not independent clinical evidence/)
       // The identity the record has always stated is still stated.
-      expect(source.citation).toMatch(/names no author, publisher, date or reference list/)
+      expect(source.citation).toMatch(/names no human author, publisher or publication date/)
       expect(source.citation).toMatch(/OpenAI/)
       expect(source.limitation).toMatch(/no clinical statement should rest on it alone/)
     }

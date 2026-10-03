@@ -261,3 +261,8 @@ led with the master synthesis, while its prediction and transfer items cited the
 The broader Section 3 footer already contained Cardiosave references; the original claim map’s
 “only named basis” phrase overstated the absence of other citations. Neither correction changes
 the reproduced source passage or grants source-owner approval.
+
+The independent review also opened the exact two synthesis DOCX files. Their source chapter/resource
+lists exist, so current citations now say “incomplete bibliographic provenance” rather than “no
+reference list.” This corrects provenance description only; authoring-provenance classification,
+MCS-03-10 containment and all owner decisions remain unchanged.

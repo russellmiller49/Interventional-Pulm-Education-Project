@@ -17,27 +17,27 @@ export const mcsSources: readonly McsSource[] = [
     id: 'mcs-bedside-reference-supplied',
     title: 'Bedside Mechanical Circulatory Support Reference',
     citation:
-      'Authoring provenance, not independent clinical evidence: a supplied Word document headed “Mechanical Circulatory Support at the Bedside”. It names no author, publisher, date or reference list and describes itself as a synthesis of four supplied chapters; its file properties name OpenAI as the creator.',
+      'Authoring provenance, not independent clinical evidence: a supplied Word document headed “Mechanical Circulatory Support at the Bedside”. It names no human author, publisher or publication date. It lists four source chapters and manufacturer/ELSO resources without complete bibliographic provenance; its file properties name OpenAI as the creator.',
     sourceType: 'reference-package',
     year: null,
     suppliedFilename: 'Bedside_Mechanical_Circulatory_Support_Reference.docx',
     intendedUse:
       'Whole-patient review, supported-chamber and circuit-path checks, loading-condition troubleshooting, device-flow interpretation, and escalation boundaries.',
     limitation:
-      'A synthesis whose authorship and underlying sources are not stated, so no clinical statement should rest on it alone. Educational bedside framework only; current manufacturer instructions, imaging, local policy, and the responsible shock or MCS team remain authoritative.',
+      'A synthesis with incomplete authorship and source provenance, so no clinical statement should rest on it alone. Educational bedside framework only; current manufacturer instructions, imaging, local policy, and the responsible shock or MCS team remain authoritative.',
   },
   {
     id: 'master-hemodynamics-reference',
     title: 'Master Hemodynamics and Hemodynamic Monitoring Reference',
     citation:
-      'Authoring provenance, not independent clinical evidence: a supplied Word document headed “Master Reference”, on clinical hemodynamics and hemodynamic monitoring. It names no author, publisher, date or reference list; its file properties name OpenAI as the creator. Registered locator pp. 39–41, not checked: the document has no fixed pagination.',
+      'Authoring provenance, not independent clinical evidence: a supplied Word document headed “Master Reference”, on clinical hemodynamics and hemodynamic monitoring. It names no human author, publisher or publication date. It lists source chapters without complete bibliographic provenance; its file properties name OpenAI as the creator. Registered locator pp. 39–41, not checked: the document has no fixed pagination.',
     sourceType: 'reference-package',
     year: null,
     suppliedFilename: 'Master_Hemodynamics_and_Hemodynamic_Monitoring_Reference.docx',
     intendedUse:
       'Temporary MCS mechanisms, IABP timing, Impella unloading, device comparison, and response/warning patterns.',
     limitation:
-      'A synthesis whose authorship and underlying sources are not stated, so no clinical statement should rest on it alone. Durable LVAD operations require separate current guidance and labeling.',
+      'A synthesis with incomplete authorship and source provenance, so no clinical statement should rest on it alone. Durable LVAD operations require separate current guidance and labeling.',
   },
   {
     id: 'ishlt-hfsa-acute-mcs-2023',

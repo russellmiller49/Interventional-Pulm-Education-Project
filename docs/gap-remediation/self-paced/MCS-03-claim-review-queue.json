@@ -957,7 +957,7 @@
         {
           "file": "src/features/mechanical-circulatory-support/content/sources.ts",
           "locator": "Source list, bedside reference citation (rewritten)",
-          "excerpt": "It names no author, publisher, date or reference list and describes itself as a synthesis of four supplied chapters"
+          "excerpt": "It lists four source chapters and manufacturer/ELSO resources without complete bibliographic provenance"
         },
         {
           "file": "src/features/mechanical-circulatory-support/content/sources.ts",
