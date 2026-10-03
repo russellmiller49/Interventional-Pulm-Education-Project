@@ -17,6 +17,8 @@ import {
   dtsOverlayObjects,
   dtsPlaneQuad,
   missingWedge,
+  priorPlaneGray,
+  priorPlanePoint,
   smearWidth,
 } from '../dtsModel'
 import { Quad } from '../SceneGeometry'
@@ -86,15 +88,8 @@ export function useTomosynthesis(
     if (selectedLayer !== 'measured' && volume) {
       for (let row = 0; row < 256; row++)
         for (let col = 0; col < 256; col++) {
-          const point = add(LESION_CENTER, [
-            -20 + (col / 256 - 0.5) * 140,
-            inputs.planeDepth,
-            (0.5 - row / 256) * 140,
-          ])
-          const gray = Math.max(
-            0,
-            Math.min(255, ((sampleAnatomy(volume, point) + 1350) / 1500) * 255),
-          )
+          const point = priorPlanePoint(col, row, inputs.planeDepth)
+          const gray = priorPlaneGray(sampleAnatomy(volume, point))
           const i = (row * 256 + col) * 4,
             alpha = selectedLayer === 'prior' ? 1 : 0.5
           for (let c = 0; c < 3; c++)

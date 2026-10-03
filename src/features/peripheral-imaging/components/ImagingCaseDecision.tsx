@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { ArrowRight, RotateCcw } from 'lucide-react'
 
 import type { ClinicalLearningItem } from '@/features/learning-module/activity'
@@ -22,24 +22,33 @@ import { ImagingExplanation } from './ImagingExplanation'
  * no first attempt, no correctness, no record that the explanation was opened (PI-01). The section
  * that teaches the mechanism is linked above the choices, because a chapter title is how a learner
  * finds the teaching, not an answer to protect.
+ *
+ * A case with a figure (Prompt 04, OD4-04) renders it above everything else through
+ * `renderEvidence`. The figure is told only whether the case is revealed — the explanation open or
+ * an answer checked — so that readouts stating the answer wait for that moment; it is never handed
+ * the selection, and trying again hides those readouts again.
  */
 export function ImagingCaseDecision({
   item,
   choiceGroup,
   conceptSectionId,
+  renderEvidence,
 }: {
   readonly item: ClinicalLearningItem
   readonly choiceGroup: string
   readonly conceptSectionId: ImagingSectionId
+  readonly renderEvidence?: (revealed: boolean) => ReactNode
 }) {
   const [selected, setSelected] = useState<string | null>(null)
   const [checked, setChecked] = useState<string | null>(null)
   const [explanationOpen, setExplanationOpen] = useState(false)
   const explanationId = useId()
   const lesson = imagingLesson(conceptSectionId)
+  const revealed = checked !== null || explanationOpen
 
   return (
     <div className="grid gap-4" data-case-decision>
+      {renderEvidence ? renderEvidence(revealed) : null}
       <p className="text-sm text-muted-foreground" data-case-pairing>
         Review the concept:{' '}
         <Link

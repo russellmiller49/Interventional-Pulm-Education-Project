@@ -1,4 +1,7 @@
-import { INTERPRETATION_CHECKS } from '../content/interpretationChecks'
+import {
+  INTERPRETATION_CHECKS,
+  RETIRED_INTERPRETATION_CHECKS,
+} from '../content/interpretationChecks'
 import type { ObjectiveId, Question, SourceId } from '../types'
 
 function item(
@@ -560,6 +563,79 @@ export const QUESTIONS: Question[] = [
     'Count every acquisition mode once and state the units.',
     ['wabip', 'aapm12'],
   ),
+  /*
+   * Prompt 04 integrated-case revisions (owner decision OD4-05, 2026-09-22; samples QS-6, QS-8 and
+   * QS-7, approved as drafts, not clinically reviewed). Each changes stem evidence and choices, so
+   * each has a new id; `case-4`, `case-5` and `case-8` above stay in the bank exactly as they were,
+   * and their old case addresses redirect to these (`content/cases.ts`).
+   */
+  item(
+    'case-4-v2',
+    'cbct',
+    'A mobile C-arm cleared the patient in the frontal position during setup. The robot has since docked, the full CBCT spin path has not been checked, and ventilator tubing now crosses where the C-arm will travel. The system supports a non-irradiating trial rotation. What is the best next action?',
+    'c',
+    [
+      [
+        'Run the trial rotation now, and move the tubing only if the C-arm touches it.',
+        'It uses the right tool, but it sends the C-arm toward a known obstruction in the anesthesia circuit. The check exists to prevent that contact.',
+      ],
+      [
+        'Shorten the rotation so the C-arm stops before the tubing, then acquire.',
+        'It avoids the tubing, but a shorter rotation is a different acquisition with fewer projection directions, used only as a supported protocol, and it still leaves the docked path unchecked.',
+      ],
+      [
+        'Move the tubing with anesthesia, then check clearance for the docked setup, including the trial rotation.',
+        'Readiness is a team check: confirm clearance through the complete spin, perform a non-irradiating trial rotation when supported, and account for the lines and the anesthesia equipment. A known obstruction is removed first; the trial rotation then confirms a setup that is meant to be ready. The check covers the table, robot, tube, detector, patient and anesthesia access.',
+      ],
+    ],
+    'The collision check must match the setup that will actually be scanned.',
+    ['setser', 'mobile'],
+    true,
+  ),
+  item(
+    'case-5-v2',
+    'verify',
+    'Linked thin axial, coronal and sagittal planes from a CBCT spin show the modeled lesion, the needle tip and the needle’s side-cutting window. Nothing has moved since the acquisition. Which documentation is most accurate?',
+    'a',
+    [
+      [
+        'The side-cutting window partly intersects the modeled lesion in this acquisition; the tip lies beyond it.',
+        'Follow the tool, not the streak. The part that acquires tissue is the side-cutting window, not the tip. Here the linked thin planes show the window partly inside the modeled lesion and the tip beyond it; document that, in that acquisition.',
+      ],
+      [
+        'The needle tip is in the lesion, since part of the needle crosses it.',
+        'Overlap of any part of the needle is easy to read as in the lesion, but the planes show the tip beyond it. Tip and window are different parts of the tool.',
+      ],
+      [
+        'The needle is in the lesion in this acquisition; whether the sample is adequate is a separate question.',
+        'It is careful about adequacy, but “the needle is in the lesion” loses what the images show: which part of the tool, and how much of it. That is what the note needs.',
+      ],
+    ],
+    'Document which part of the biopsy tool is in the lesion, and in which acquisition. Tool-in-lesion confirmation does not guarantee diagnostic tissue, and a model intersection is not a clinical safety decision.',
+    ['setser', 'confirm'],
+  ),
+  item(
+    'case-8-v2',
+    'protect',
+    'An authored dose summary for one procedure lists a total kerma–area product (KAP) of 12 Gy·cm², made up of 8 Gy·cm² from fluoroscopy and 4 Gy·cm² from CBCT spins, and a cumulative reference air kerma in mGy. What should the whole-procedure dose entry say?',
+    'a',
+    [
+      [
+        'Total KAP 12 Gy·cm² with its fluoroscopy and CBCT parts, plus the cumulative reference air kerma in mGy.',
+        'Name the quantity before the number. The total KAP already includes both parts, so record it once, with the parts identified, and record the cumulative reference air kerma separately, with its unit.',
+      ],
+      [
+        'Total KAP 12 Gy·cm², entered as the patient’s peak skin dose.',
+        'KAP is air kerma integrated over the beam area, not the highest dose to any area of skin. Neither index is peak skin dose, which depends on geometry, field overlap and tissue corrections.',
+      ],
+      [
+        'An effective dose in mSv calculated from the 12 Gy·cm² total, recorded instead of the indices.',
+        'An mSv value can feel more comparable, but effective dose is a modeled estimate with disclosed assumptions that needs its method stated. It is not a measured index and does not replace the recorded indices.',
+      ],
+    ],
+    'Name the quantity before the number: count every acquisition mode once and state the units.',
+    ['wabip', 'aapm12', 'skin'],
+  ),
   item(
     'choose-transfer-1',
     'choose',
@@ -852,15 +928,27 @@ export const QUESTIONS: Question[] = [
     'DTS places the tip and nodule far more reliably across the image than along the beam. Repeating the same arc in finer steps leaves depth resolution unchanged; an acquisition from a different angular range is what improves it.',
     ['saad'],
   ),
+  // QS-5 (owner decision OD4-05, 2026-09-22): the one approved exception to the versioning rule.
+  // The decision, choices and key are unchanged, and the evidence moves from narration to a
+  // teaching-model figure, so the id is kept. The stem's "view" became "planes" with the figure.
+  // c's rationale said "the airway around it"; the modeled catheter runs through lung-density CT
+  // with no airway on the planes (OD4-04 rule 3: case text matches the model), so it now says
+  // "the anatomy around it". The argument is unchanged.
+  //
+  // Independent sanity review of PR #279 (finding F2, 2026-09-24): the key's rationale and the
+  // takeaway turned this authored model into a rule for every real pipeline ("could not be missed",
+  // "cannot be absent", "its absence marks prior-derived content"). They now say what this figure
+  // establishes and bind the inference to it, and say that catheter absence alone is not a
+  // universal sign. Choices, key and decision are unchanged.
   item(
     'dts-interpretation-practice-1',
     'dts',
-    'Which interpretation of the reconstructed view is best supported?',
+    'Which interpretation of the reconstructed planes is best supported?',
     'a',
     [
       [
         'The lesion margin on these planes comes from another acquisition, since the catheter is absent from them.',
-        'Each DTS plane is built from X-ray paths that crossed whatever lay in the field during the acquisition, and a catheter that live fluoroscopy shows this clearly could not be missed. Its absence means these pixels were not acquired while the catheter was there: the margin was supplied by another acquisition, such as the planning CT, and describes the lesion as it was then.',
+        'In this teaching figure, the projection stands for the current acquisition and deliberately contains the modeled catheter, while the three planes match the planning CT and contain no catheter. In this model, planes reconstructed from the current acquisition would carry that catheter, at least blurred on the planes near its depth. So, in this authored example, the planes were drawn from the planning CT, and their margin describes the lesion as it was when that CT was acquired. The inference rests on what this figure shows: catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system.',
       ],
       [
         'The catheter is too thin to appear on these planes, so the lesion margin comes from this DTS acquisition.',
@@ -868,10 +956,10 @@ export const QUESTIONS: Question[] = [
       ],
       [
         'Registration has drifted, so the catheter lies on other planes and the margin comes from this DTS.',
-        'Registration drift does occur, but a shift moves the catheter and the airway around it together, because one set of projections drew both. The planes that show that airway would show the catheter, and waiting for a refreshed registration cannot add a catheter those planes never contained.',
+        'Registration drift does occur, but a shift moves the catheter and the anatomy around it together, because one set of projections drew both. The planes that show that anatomy would show the catheter, and waiting for a refreshed registration cannot add a catheter those planes never contained.',
       ],
     ],
-    'A catheter present throughout a DTS acquisition cannot be absent from planes built from that acquisition. Its absence marks prior-derived content: the margin describes the lesion when the prior was acquired. Finding the catheter elsewhere in the volume would show only that some of the display was acquired now, because a reconstruction can carry a live catheter over a contour from an older scan.',
+    'Before reading a margin from a displayed plane, identify whether it was reconstructed from the current acquisition or drawn from an earlier study. In this teaching case, the current acquisition contains the catheter and the prior-derived planes match the planning CT without it, so here the missing catheter identifies those planes. Outside this case, catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system. Finding the catheter elsewhere in the volume would show only that some of the display was acquired now, because a reconstruction can carry a live catheter over a contour from an older scan.',
     ['saad', 'pritchett'],
   ),
   item(
@@ -1030,9 +1118,12 @@ export const QUESTIONS: Question[] = [
   ),
 ]
 
+/**
+ * Every item the course has shipped, under its own id. Retired checks stay here so a record written
+ * under their ids keeps its meaning (OD4-05); nothing renders them.
+ */
 export const QUESTION_BY_ID = Object.fromEntries(
-  [...QUESTIONS, ...Object.values(INTERPRETATION_CHECKS)].map((question) => [
-    question.id,
-    question,
-  ]),
+  [...QUESTIONS, ...Object.values(INTERPRETATION_CHECKS), ...RETIRED_INTERPRETATION_CHECKS].map(
+    (question) => [question.id, question],
+  ),
 ) as Record<string, Question>
