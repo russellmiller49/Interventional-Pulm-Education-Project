@@ -1087,6 +1087,25 @@ function assistedIabpBeat(device: McsDeviceState, patient: McsPatientState, time
   )
 }
 
+/**
+ * The modeled ECG, in millivolts, at any instant: three fixed-amplitude Gaussian deflections per
+ * cycle, placed by the cycle phase alone. Nothing in it varies QRS amplitude from beat to beat.
+ *
+ * It is exported, unchanged, so the monitor can draw the trace between the 50 Hz samples. The QRS
+ * deflection is 0.012 of a cycle wide — about 9 ms at 80 per minute — so a 20 ms sample lands at a
+ * different point on each spike, and straight lines between samples drew a different peak height
+ * on every beat, which a learner read as possible electrical alternans (F04). The samples
+ * themselves are generated from this same expression and are not changed.
+ */
+export function mcsEcgMillivolts(time: number, heartRateBpm: number): number {
+  const phase = cyclePhase(time, heartRateBpm)
+  const p = (center: number, width: number) => gaussian(phase, center, width)
+  return p(0.08, 0.012) - 0.22 * p(0.105, 0.014) + 0.42 * p(0.3, 0.045)
+}
+
+/** The phases, as fractions of a cycle, at which the three ECG deflections peak. */
+export const MCS_ECG_DEFLECTION_PHASES = [0.08, 0.105, 0.3] as const
+
 export function generateMcsWaveformSample(
   time: number,
   patient: McsPatientState,
@@ -1096,7 +1115,7 @@ export function generateMcsWaveformSample(
   const phase = cyclePhase(time, patient.heartRateBpm)
   const assistedBeat = assistedIabpBeat(device, patient, time)
   const p = (center: number, width: number) => gaussian(phase, center, width)
-  const ecg = p(0.08, 0.012) - 0.22 * p(0.105, 0.014) + 0.42 * p(0.3, 0.045)
+  const ecg = mcsEcgMillivolts(time, patient.heartRateBpm)
   const systolicPulse = p(0.24, 0.1) + 0.22 * p(0.39, 0.13)
   let iabpAugmentation = 0
   if (device.kind === 'iabp' && device.running && assistedBeat) {

@@ -12,6 +12,9 @@ import type { ChainStopId } from '../../content/imagingChain'
 import { RECONSTRUCTION_SECTIONS } from '../../content/reconstruction'
 import { ReconstructionComparison } from './ReconstructionComparison'
 import { SectionGlossary } from './SectionGlossary'
+import { ArtifactCauseStrip } from '../figures/ArtifactCauseStrip'
+import { FixedMobileComparison, TeamReadinessAid } from '../figures/CbctReferenceAids'
+import { TwoAxisWorkedExample } from '../figures/TwoAxisWorkedExample'
 import { imagingSectionLinkTarget } from '../../content/pathwayResolver'
 import { Link } from '@/i18n/navigation'
 import styles from './imaging-stage.module.css'
@@ -48,9 +51,14 @@ export function ImagingTeachingColumn({
       .flatMap((step) => step.activity.content)
     return (
       <div className={styles.teaching} data-teaching-panel data-check-teaching>
-        <p>
-          Choose the interpretation this image and its acquisition context support. You can show the
-          explanation first, reread the section’s teaching, or continue without answering.
+        {/* A check with no visual is a written scenario (PR #279 sanity review, F3): it must not
+            send the learner to an image that is not there. */}
+        <p data-check-prompt>
+          {activity.visual === 'case'
+            ? 'Choose the interpretation the written scenario supports.'
+            : 'Choose the interpretation this image and its acquisition context support.'}{' '}
+          You can show the explanation first, reread the section’s teaching, or continue without
+          answering.
         </p>
         {earlier.length > 0 ? (
           <details data-teaching-review>
@@ -83,6 +91,12 @@ function TeachingReference({
   readonly review?: boolean
 }) {
   const { spec } = lesson
+  // Prompt 04 figures and reference aids sit beside the block they illustrate. Rereading the
+  // section's teaching at a check is text: the figure stays on its own step.
+  if (ref === '@two-axis-example') return review ? null : <TwoAxisWorkedExample />
+  if (ref === '@artifact-strip') return review ? null : <ArtifactCauseStrip />
+  if (ref === '@fixed-mobile-comparison') return review ? null : <FixedMobileComparison />
+  if (ref === '@team-readiness') return review ? null : <TeamReadinessAid />
   if (ref === '@purpose')
     return (
       <div data-teaching-block="purpose">

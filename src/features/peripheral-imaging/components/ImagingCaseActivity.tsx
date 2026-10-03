@@ -9,6 +9,7 @@ import { imagingMicroCaseById, imagingMicroCasesInPathwayOrder } from '../conten
 import { imagingCaseLinkTarget, PERIPHERAL_IMAGING_PRACTICE_HREF } from '../content/routes'
 import { recordImagingLocation } from '../engine/selfPacedProgress'
 import { ImagingCaseDecision } from './ImagingCaseDecision'
+import { CaseFigure } from './figures/CaseFigure'
 import { SignalImage } from './stage/TeachingPanels'
 import styles from './stage/imaging-stage.module.css'
 
@@ -74,6 +75,9 @@ export function ImagingCaseActivity({ caseId }: { readonly caseId: string }) {
         item={microCase.item}
         choiceGroup={`practice-${microCase.id}`}
         conceptSectionId={microCase.sectionId}
+        renderEvidence={(revealed) => (
+          <CaseFigure caseKind="practice" caseId={microCase.id} revealed={revealed} />
+        )}
       />
 
       <nav className="flex flex-wrap items-center gap-4 text-sm" aria-label="Practice cases">

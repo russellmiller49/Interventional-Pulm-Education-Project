@@ -115,7 +115,7 @@ export function LvadParametersAssessmentPanel({
         title="Controller parameters and separate patient measurements"
         id="lvad-parameter-set"
       >
-        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
           <LiveValue
             label="Speed"
             value={controller ? controller.speedRpm : null}
@@ -231,7 +231,7 @@ export function LvadParametersAssessmentPanel({
       </PanelSection>
 
       <PanelSection title="Loading, on both sides of the pump" id="lvad-loading">
-        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
           <LiveValue
             label="Mean arterial pressure"
             value={metrics.mapMmHg}
@@ -363,7 +363,7 @@ export function LvadParametersAssessmentPanel({
       {reveal === 'transfer' ? (
         <PanelSection title="The transfer patient, read live" id="lvad-transfer">
           <TransferState principle="The displayed flow is an estimate that inherits the loading at both ends of the pump. A low number is read together with the pressures, not on its own — and a rising cardiac power beside a falling flow is a property of the product, not a sign of improvement.">
-            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <LiveValue
                 label="Speed"
                 value={controller ? controller.speedRpm : null}

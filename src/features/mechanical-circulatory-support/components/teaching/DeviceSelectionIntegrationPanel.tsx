@@ -165,7 +165,7 @@ export function DeviceSelectionIntegrationPanel({
   return (
     <div className={styles.panel} data-teaching-panel={contract.sectionId}>
       <PanelSection title="Filling-pressure congestion pattern" id="integration-congestion">
-        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
           <LiveValue
             label="Right atrial pressure"
             value={metrics.rapMmHg}
@@ -603,7 +603,7 @@ export function DeviceSelectionIntegrationPanel({
       {reveal === 'transfer' ? (
         <PanelSection title="The transfer patient, read live" id="integration-transfer">
           <TransferState principle="Read the congestion pattern before naming a device, and keep the two apart. Where filling pressures are elevated is the start of the reasoning; it is not the cause of shock, and no single number on any screen finishes the decision.">
-            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <LiveValue
                 label="Right atrial pressure"
                 value={metrics.rapMmHg}

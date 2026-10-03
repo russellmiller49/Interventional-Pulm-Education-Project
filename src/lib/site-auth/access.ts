@@ -51,11 +51,14 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   '/procedures',
   '/socrates-demo',
   '/socrates',
-  // The private manufacturer review of the Medical Thoracoscopy device explorer. Only this one
-  // page, never the rest of `/medical-thoracoscopy`: the page, its sign-in endpoints and its model
-  // endpoint check their own server-side review session on every request, and the page is not
-  // found unless the host enables it.
+  // The private manufacturer review of Medical Thoracoscopy: its hub and the three pages the hub
+  // opens, never the rest of `/medical-thoracoscopy`. Every one of these pages, the sign-in
+  // endpoints and the model and file endpoints check their own server-side review session on
+  // every request, and all of them are not found unless the host enables the preview.
   '/medical-thoracoscopy/wolf-preview',
+  '/medical-thoracoscopy/wolf-preview/device-explorer',
+  '/medical-thoracoscopy/wolf-preview/pleural-model-progress',
+  '/medical-thoracoscopy/wolf-preview/portable-trainer-concept',
 ])
 
 // Public-unlisted modules whose subroutes (e.g. /cardiohelp-ecmo/learn) share

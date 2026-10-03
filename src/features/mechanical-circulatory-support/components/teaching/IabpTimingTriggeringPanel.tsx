@@ -229,7 +229,7 @@ export function IabpTimingTriggeringPanel({
       </PanelSection>
 
       <PanelSection title="Trigger, ratio, and the synchrony reading" id="timing-settings">
-        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+        <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
           <LiveSetting
             label="Trigger source"
             value={timing.triggerSource}
@@ -390,7 +390,7 @@ export function IabpTimingTriggeringPanel({
       {reveal === 'transfer' ? (
         <PanelSection title="The transfer patient, read live" id="timing-transfer">
           <TransferState principle="Timing is a relationship between four moments in the beat, and a trigger only helps if the inflation and deflation it produces still land in the right places — beat by beat, in whatever rhythm this patient has.">
-            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
+            <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <LiveSetting label="Rhythm" value={state.patient.rhythm} kind="modeled" />
               <LiveSetting label="Trigger source" value={timing.triggerSource} />
               <LiveSetting label="Assist ratio" value={timing.assistRatio} />

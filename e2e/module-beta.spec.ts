@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, chromium } from '@playwright/test'
 import { betaModules } from '../src/features/module-beta/catalog'
 
 const id = 'b8b3da51-5068-4c58-9ebd-3f846a27b337'
@@ -41,7 +41,7 @@ test('beta hub requires sign-in, is noindex, and feedback APIs reject preview co
   ).toBe(401)
 })
 
-test('feedback preserves the page, selection and highlighted screenshot across continue testing', async ({
+test('feedback preserves the page, selection and all annotation tools across continue testing', async ({
   page,
   context,
 }) => {
@@ -105,12 +105,44 @@ test('feedback preserves the page, selection and highlighted screenshot across c
   await page.mouse.down()
   await page.mouse.move(rect.x + 180, rect.y + 65)
   await page.mouse.up()
-  await expect(page.getByText('1 highlighted area', { exact: true })).toBeVisible()
+  await expect(
+    page.getByText('1 annotation · Included with your feedback', { exact: true }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Arrow', exact: true }).click()
+  await canvas.scrollIntoViewIfNeeded()
+  const arrowBox = (await canvas.boundingBox())!
+  await page.mouse.move(arrowBox.x + 40, arrowBox.y + 100)
+  await page.mouse.down()
+  await page.mouse.move(arrowBox.x + 200, arrowBox.y + 100)
+  await page.mouse.up()
+  await page.getByRole('button', { name: 'Draw', exact: true }).click()
+  await canvas.scrollIntoViewIfNeeded()
+  const drawBox = (await canvas.boundingBox())!
+  await page.mouse.move(drawBox.x + 80, drawBox.y + 140)
+  await page.mouse.down()
+  await page.mouse.move(drawBox.x + 160, drawBox.y + 160)
+  await page.mouse.move(drawBox.x + 200, drawBox.y + 140)
+  await page.mouse.up()
+  await page.getByRole('button', { name: 'Text', exact: true }).click()
+  await page.getByLabel('Text note', { exact: true }).fill('Needs more contrast')
+  await page.getByRole('button', { name: 'Add note at top' }).focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('4 annotations · Included with your feedback')).toBeVisible()
+  const annotated = await canvas.evaluate(
+    (element) => (element as HTMLCanvasElement).toDataURL('image/png').split(',')[1],
+  )
   await page.getByRole('button', { name: 'Continue testing' }).click()
   await expect(page.getByRole('dialog')).not.toBeVisible()
   await page.getByRole('button', { name: 'Continue feedback' }).click()
   await expect(canvas).toBeVisible()
-  await expect(page.getByText('1 highlighted area', { exact: true })).toBeVisible()
+  await expect(
+    page.getByText('4 annotations · Included with your feedback', { exact: true }),
+  ).toBeVisible()
+  expect(
+    await canvas.evaluate(
+      (element) => (element as HTMLCanvasElement).toDataURL('image/png').split(',')[1],
+    ),
+  ).toBe(annotated)
   await page.screenshot({
     path: 'artifacts/module-beta-feedback.png',
     fullPage: true,
@@ -133,6 +165,7 @@ test('feedback preserves the page, selection and highlighted screenshot across c
   const attachment = submitted!.get('screenshot') as File
   expect(attachment.type).toBe('image/png')
   expect(attachment.size).toBeGreaterThan(100)
+  expect(Buffer.from(await attachment.arrayBuffer())).toEqual(Buffer.from(annotated, 'base64'))
   await page.goto('/en/devices')
   await expect(page.getByRole('button', { name: /feedback/i })).toHaveCount(0)
 })
@@ -231,7 +264,7 @@ test('real standard module pages permit same-origin beta framing and have no fee
   await expect(page.getByRole('button', { name: 'Give feedback' })).toHaveCount(0)
 })
 
-test('screen capture hides the form and stops the media stream after one screenshot', async ({
+test('tab capture hides the form, verifies this tab and stops sharing after one screenshot', async ({
   page,
   context,
 }) => {
@@ -251,12 +284,32 @@ test('screen capture hides the form and stops the media stream after one screens
     page.frameLocator('iframe').getByRole('heading', { name: 'Device Atlas' }),
   ).toBeVisible()
   await page.evaluate(() => {
-    const state = window as Window & { finishCapture?: () => void; captureStopped?: boolean }
+    const state = window as Window & {
+      finishCapture?: () => void
+      captureStopped?: boolean
+      captureOptions?: unknown
+      captureConfig?: { handle?: string }
+      captureSurface?: string
+      wrongTab?: boolean
+      cancelCapture?: boolean
+    }
+    Object.defineProperty(navigator.mediaDevices, 'setCaptureHandleConfig', {
+      configurable: true,
+      value: (config: { handle?: string }) => {
+        state.captureConfig = config
+      },
+    })
     Object.defineProperty(navigator.mediaDevices, 'getDisplayMedia', {
       configurable: true,
-      value: () =>
-        new Promise<MediaStream>((resolve) => {
+      value: (options: unknown) => {
+        state.captureOptions = options
+        state.captureStopped = false
+        return new Promise<MediaStream>((resolve, reject) => {
           state.finishCapture = () => {
+            if (state.cancelCapture) {
+              reject(new DOMException('Cancelled', 'NotAllowedError'))
+              return
+            }
             const canvas = document.createElement('canvas')
             canvas.width = 320
             canvas.height = 200
@@ -267,8 +320,14 @@ test('screen capture hides the form and stops the media stream after one screens
               ctx.fillStyle = 'black'
               ctx.fillText('Module screenshot', 20, 40)
             }, 16)
-            const stream = canvas.captureStream(30),
-              track = stream.getVideoTracks()[0]
+            const stream = canvas.captureStream(30)
+            const track = stream.getVideoTracks()[0] as MediaStreamTrack & {
+              getCaptureHandle: () => { handle: string } | null
+            }
+            track.getSettings = () => ({ displaySurface: state.captureSurface ?? 'browser' })
+            track.getCaptureHandle = () => ({
+              handle: state.wrongTab ? 'another-tab' : state.captureConfig!.handle!,
+            })
             const stop = track.stop.bind(track)
             track.stop = () => {
               clearInterval(interval)
@@ -277,16 +336,182 @@ test('screen capture hides the form and stops the media stream after one screens
             }
             resolve(stream)
           }
-        }),
+        })
+      },
     })
   })
   await page.getByRole('button', { name: 'Give feedback' }).click()
-  await page.getByRole('button', { name: 'Capture screen' }).click()
+  await page.getByRole('button', { name: 'Capture this tab' }).click()
   await expect(page.getByRole('dialog')).not.toBeVisible()
   await page.evaluate(() => (window as Window & { finishCapture?: () => void }).finishCapture?.())
   await expect(page.getByRole('dialog')).toBeVisible()
-  await expect(page.getByLabel('Screenshot preview.', { exact: false })).toBeVisible()
+  const canvas = page.getByLabel('Screenshot preview.', { exact: false })
+  await expect(canvas).toBeVisible()
   expect(
     await page.evaluate(() => (window as Window & { captureStopped?: boolean }).captureStopped),
+  ).toBe(true)
+  expect(
+    await page.evaluate(() => (window as Window & { captureOptions?: unknown }).captureOptions),
+  ).toMatchObject({
+    video: { displaySurface: 'browser' },
+    audio: false,
+    preferCurrentTab: true,
+    selfBrowserSurface: 'include',
+    monitorTypeSurfaces: 'exclude',
+    surfaceSwitching: 'exclude',
+    systemAudio: 'exclude',
+  })
+  await page.getByRole('button', { name: 'Text', exact: true }).click()
+  await page.getByLabel('Text note', { exact: true }).fill('Keep this annotation')
+  await page.getByRole('button', { name: 'Add note at top' }).click()
+  const original = await canvas.evaluate((element) => (element as HTMLCanvasElement).toDataURL())
+  for (const mode of ['other-tab', 'window', 'monitor', 'cancel']) {
+    await page.evaluate((mode) => {
+      Object.assign(window, {
+        wrongTab: mode === 'other-tab',
+        captureSurface: ['window', 'monitor'].includes(mode) ? mode : 'browser',
+        cancelCapture: mode === 'cancel',
+      })
+    }, mode)
+    await page.getByRole('button', { name: 'Retake this tab' }).click()
+    await expect(page.getByRole('dialog')).not.toBeVisible()
+    await page.evaluate(() => (window as Window & { finishCapture?: () => void }).finishCapture?.())
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await expect(page.getByRole('alert')).toContainText(
+      mode === 'cancel' ? 'Capture cancelled' : 'Choose “This Tab”',
+    )
+    if (mode !== 'cancel')
+      expect(
+        await page.evaluate(() => (window as Window & { captureStopped?: boolean }).captureStopped),
+      ).toBe(true)
+    expect(await canvas.evaluate((element) => (element as HTMLCanvasElement).toDataURL())).toBe(
+      original,
+    )
+    await expect(
+      page.getByText('1 annotation · Included with your feedback', { exact: true }),
+    ).toBeVisible()
+    expect(
+      await page.evaluate(() => (window as Window & { captureConfig?: unknown }).captureConfig),
+    ).toEqual({})
+  }
+  await page.getByRole('button', { name: 'Undo', exact: true }).click()
+  await expect(page.getByText('0 annotations · Included with your feedback')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeDisabled()
+  await page.getByRole('button', { name: 'Text', exact: true }).click()
+  await page.getByRole('button', { name: 'Add note at top' }).click()
+  await page.getByRole('button', { name: 'Clear marks' }).click()
+  await expect(page.getByText('0 annotations · Included with your feedback')).toBeVisible()
+  await page.getByRole('button', { name: 'Remove image' }).click()
+  await expect(canvas).not.toBeVisible()
+})
+
+test('native Chromium capture includes the module without the feedback overlay', async ({}, testInfo) => {
+  const browser = await chromium.launch({
+    channel: 'chromium',
+    args: ['--auto-accept-this-tab-capture'],
+  })
+  try {
+    const context = await browser.newContext({
+      baseURL: 'http://127.0.0.1:3110',
+      viewport: { width: 1440, height: 1000 },
+    })
+    await context.addCookies([
+      {
+        name: 'ip_local_dev_auth',
+        value: process.env.MODULE_BETA_TEST_TOKEN!,
+        domain: '127.0.0.1',
+        path: '/',
+      },
+    ])
+    const page = await context.newPage()
+    await page.addInitScript(() => {
+      if (!navigator.mediaDevices?.getDisplayMedia) return
+      const nativeCapture = navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices)
+      navigator.mediaDevices.getDisplayMedia = async (options) => {
+        const stream = await nativeCapture(options)
+        Object.assign(window, { capturedStream: stream })
+        return stream
+      }
+    })
+    await page.route('**/en/devices', (route) =>
+      route.fulfill({
+        contentType: 'text/html',
+        body: '<body style="background:rgb(0,120,140);color:white"><h1>Device Atlas capture target</h1></body>',
+      }),
+    )
+    await page.goto('/en/development-beta/devices')
+    await expect(
+      page.frameLocator('iframe').getByRole('heading', { name: 'Device Atlas capture target' }),
+    ).toBeVisible()
+    await page.getByRole('button', { name: 'Give feedback' }).click()
+    await page.getByRole('button', { name: 'Capture this tab' }).click()
+    const canvas = page.getByLabel('Screenshot preview.', { exact: false })
+    await expect(canvas).toBeVisible()
+    expect(
+      await canvas.evaluate((element) => {
+        const c = element as HTMLCanvasElement
+        return Array.from(c.getContext('2d')!.getImageData(c.width / 2, c.height / 2, 1, 1).data)
+      }),
+    ).toEqual([0, 120, 140, 255])
+    await canvas.screenshot({ path: testInfo.outputPath('native-tab-capture.png') })
+    expect(
+      await page.evaluate(() =>
+        (window as Window & { capturedStream?: MediaStream }).capturedStream
+          ?.getTracks()
+          .map((track) => track.readyState),
+      ),
+    ).toEqual(['ended'])
+  } finally {
+    await browser.close()
+  }
+})
+
+test('unsupported tab capture keeps upload and annotation tools available on mobile', async ({
+  page,
+  context,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await context.addCookies([
+    {
+      name: 'ip_local_dev_auth',
+      value: process.env.MODULE_BETA_TEST_TOKEN!,
+      domain: '127.0.0.1',
+      path: '/',
+    },
+  ])
+  await page.route('**/en/devices', (route) =>
+    route.fulfill({ contentType: 'text/html', body: '<h1>Device Atlas</h1>' }),
+  )
+  await page.goto('/en/development-beta/devices')
+  await expect(
+    page.frameLocator('iframe').getByRole('heading', { name: 'Device Atlas' }),
+  ).toBeVisible()
+  const source = await page.locator('iframe').screenshot()
+  await page.evaluate(() =>
+    Object.defineProperty(navigator.mediaDevices, 'setCaptureHandleConfig', {
+      configurable: true,
+      value: undefined,
+    }),
+  )
+  await page.getByRole('button', { name: 'Give feedback' }).click()
+  await expect(page.getByRole('button', { name: 'Capture this tab' })).toHaveCount(0)
+  await expect(
+    page.getByText('Tab capture is unavailable in this browser.', { exact: false }),
+  ).toBeVisible()
+  await page
+    .getByLabel('Upload screenshot')
+    .setInputFiles({ name: 'mobile.png', mimeType: 'image/png', buffer: source })
+  const canvas = page.getByLabel('Screenshot preview.', { exact: false })
+  await expect(canvas).toBeVisible()
+  await page.getByRole('button', { name: 'Text', exact: true }).click()
+  await page.getByLabel('Text note', { exact: true }).fill('Mobile note')
+  await page.getByRole('button', { name: 'Add note at top' }).click()
+  await expect(
+    page.getByText('1 annotation · Included with your feedback', { exact: true }),
+  ).toBeVisible()
+  expect(
+    await page
+      .getByRole('dialog')
+      .evaluate((element) => element.scrollWidth <= element.clientWidth),
   ).toBe(true)
 })
