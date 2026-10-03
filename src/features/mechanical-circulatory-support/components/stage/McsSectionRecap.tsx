@@ -54,16 +54,19 @@ export function McsSectionRecap({
       <p data-recap-limit>{contract.whatThisDoesNotEstablish}</p>
       {contract.unmodeledNote ? <p data-recap-unmodeled>{contract.unmodeledNote}</p> : null}
 
-      <h4>Go back to any part</h4>
-      <ul className={styles.recapLinks} data-recap-revisit>
-        {lesson.steps.map((step, index) => (
-          <li key={step.id}>
-            <button type="button" onClick={() => onRevisit(index)} data-recap-step={step.id}>
-              {STAGE_PHASE_LABELS[step.phase]} · {step.title}
-            </button>
-          </li>
-        ))}
-      </ul>
+      {/* The way back to each step, folded so the recap itself stays a few lines. */}
+      <details data-recap-revisit-disclosure>
+        <summary>Go back to any part of this section</summary>
+        <ul className={styles.recapLinks} data-recap-revisit>
+          {lesson.steps.map((step, index) => (
+            <li key={step.id}>
+              <button type="button" onClick={() => onRevisit(index)} data-recap-step={step.id}>
+                {STAGE_PHASE_LABELS[step.phase]} · {step.title}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </details>
 
       {explainIndex >= 0 ? (
         <p data-recap-reflection>

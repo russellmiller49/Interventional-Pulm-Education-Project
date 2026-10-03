@@ -2052,7 +2052,7 @@ function McsStageSession({
       <HelpDialog
         open={hintOpen && hint !== undefined}
         onClose={() => setHintOpen(false)}
-        title="Hint for this step"
+        title="Hint"
         returnFocusTo={hintButtonRef}
       >
         <p className={shellStyles.kicker}>{stepPosition}</p>
@@ -2065,7 +2065,7 @@ function McsStageSession({
       <HelpDialog
         open={glossaryOpen}
         onClose={() => setGlossaryOpen(false)}
-        title="Glossary and device names"
+        title="Glossary"
         returnFocusTo={glossaryButtonRef}
       >
         <McsGlossary />

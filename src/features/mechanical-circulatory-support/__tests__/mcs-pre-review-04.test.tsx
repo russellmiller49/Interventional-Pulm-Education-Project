@@ -218,7 +218,7 @@ describe('F11 — Hint, Help, Try again and the reflection', () => {
     const step = goToKind(sectionId, 'identify')
 
     fireEvent.click(within(nowCard()).getByRole('button', { name: 'Hint' }))
-    const hintDialog = screen.getByRole('dialog', { name: 'Hint for this step' })
+    const hintDialog = screen.getByRole('dialog', { name: 'Hint' })
     expect(hintDialog).toHaveTextContent(mcsStepHint(sectionId, 'identify')!)
     expect(hintDialog).not.toHaveTextContent(step.instruction)
     fireEvent.click(within(hintDialog).getByRole('button', { name: /close/i }))
@@ -383,7 +383,7 @@ describe('F42 — the glossary from inside a lesson', () => {
     const step = currentStepId()
 
     fireEvent.click(screen.getByRole('button', { name: 'Glossary' }))
-    const dialog = screen.getByRole('dialog', { name: 'Glossary and device names' })
+    const dialog = screen.getByRole('dialog', { name: 'Glossary' })
     expect(dialog.querySelectorAll('[data-term-id]')).toHaveLength(8)
     expect(dialog.querySelector('[data-glossary-abbreviations]')).toHaveTextContent(/PAPi/)
     expect(dialog.querySelector('[data-naming-row="impella-rp"]')).toHaveTextContent(/RP Flex/)

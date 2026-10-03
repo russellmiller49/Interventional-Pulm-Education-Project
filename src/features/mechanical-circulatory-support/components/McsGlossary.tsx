@@ -20,46 +20,46 @@ export function McsNamingCrosswalk() {
     <section aria-labelledby="mcs-naming-crosswalk-heading" data-mcs-naming-crosswalk>
       <h3 id="mcs-naming-crosswalk-heading">Device names: which words mean the same thing</h3>
       <p>
-        The short name is what buttons and tables use. The mechanism is what the device does. The
-        last two columns say which product the cited sources describe and what this simulation
-        actually is — they are not always the same.
+        The short name is what buttons and tables use, and the mechanism in brackets is what the
+        device does. Each entry also says which product the cited sources describe and what this
+        simulation actually is — they are not always the same.
       </p>
-      <div style={{ overflowX: 'auto' }}>
-        <table data-naming-table>
-          <caption style={{ textAlign: 'left' }}>
-            Naming crosswalk for the devices in this module
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col">Short name</th>
-              <th scope="col">Mechanism</th>
-              <th scope="col">Also called here</th>
-              <th scope="col">Product in the sources</th>
-              <th scope="col">What this model is</th>
-              <th scope="col">Not the same as</th>
-            </tr>
-          </thead>
-          <tbody>
-            {MCS_DEVICE_NAMING.map((row) => (
-              <tr key={row.id} data-naming-row={row.id}>
-                <th scope="row">{row.shortLabel}</th>
-                <td>{row.mechanism}</td>
-                <td>{row.alsoCalled.join(' · ')}</td>
-                <td>{row.productIdentity}</td>
-                <td>{row.modelIdentity}</td>
-                <td>
-                  {row.notTheSameAs}
-                  {row.openItem ? (
-                    <>
-                      {' '}
-                      <em data-naming-open-item>Unresolved: {row.openItem}</em>
-                    </>
-                  ) : null}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/*
+       * One block per device rather than a six-column table: the same six facts, readable at a
+       * phone width and at 200% text without scrolling sideways inside a dialog.
+       */}
+      <div data-naming-table>
+        {MCS_DEVICE_NAMING.map((row) => (
+          <div key={row.id} data-naming-row={row.id}>
+            <h4>
+              {row.shortLabel} <span>({row.mechanism})</span>
+            </h4>
+            <dl>
+              <div>
+                <dt>Also called here</dt>
+                <dd>{row.alsoCalled.join(' · ')}</dd>
+              </div>
+              <div>
+                <dt>Product in the sources</dt>
+                <dd>{row.productIdentity}</dd>
+              </div>
+              <div>
+                <dt>What this model is</dt>
+                <dd>{row.modelIdentity}</dd>
+              </div>
+              <div>
+                <dt>Not the same as</dt>
+                <dd>{row.notTheSameAs}</dd>
+              </div>
+              {row.openItem ? (
+                <div data-naming-open-item>
+                  <dt>Unresolved</dt>
+                  <dd>{row.openItem}</dd>
+                </div>
+              ) : null}
+            </dl>
+          </div>
+        ))}
       </div>
     </section>
   )
