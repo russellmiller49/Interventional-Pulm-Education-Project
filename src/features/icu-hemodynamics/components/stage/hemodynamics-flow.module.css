@@ -257,3 +257,74 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Local HD workbench additions; shared stage and scroll ownership are unchanged. */
+.alignedComparisons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+.alignedComparisons > * {
+  min-width: 0;
+}
+.toolGroups[hidden] {
+  display: none;
+}
+.references [data-stage-sources] > div {
+  position: static;
+  width: 100%;
+  max-height: none;
+  overflow: visible;
+  margin-top: 0.75rem;
+}
+.flow :is(button, input, select, summary, [tabindex]):focus-visible,
+.caseFlow :is(button, input, select, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--cyan-bright, #168f83);
+  outline-offset: 3px;
+}
+.flow [data-walk-checklist] {
+  list-style-type: square;
+  padding-left: 1.5rem;
+}
+
+.references {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.references [data-stage-sources],
+.references [data-stage-sources] * {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.references [data-stage-sources] summary {
+  flex-wrap: wrap;
+}
+
+.alignedComparisons figcaption {
+  min-height: 7rem;
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+}
+.alignedComparisons figcaption span {
+  text-align: left;
+}
+
+.taskContent {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.comparison {
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  overflow-wrap: anywhere;
+}
+.comparison table {
+  width: 100%;
+  table-layout: fixed;
+}
+.comparison :is(th, td) {
+  overflow-wrap: anywhere;
+}

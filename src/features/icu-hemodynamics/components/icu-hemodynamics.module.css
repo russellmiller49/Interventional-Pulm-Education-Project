@@ -7111,3 +7111,215 @@
   font-size: 0.82rem;
   line-height: 1.5;
 }
+
+/* Screen-space plots: words reflow in HTML, feature coordinates remain sample-derived. */
+.atlasAnnotation path {
+  fill: none;
+  stroke: #8a4d0d;
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+}
+.annotationTracks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0;
+  margin: 0.6rem 0;
+  list-style: none;
+  color: #75420c;
+}
+.annotationTracks li {
+  font-size: 0.9rem;
+}
+.atlasFigure .atlasAnnotation text,
+.atlasFigure .atlasAxisLabel,
+.atlasFigure .atlasAxisUnit,
+.atlasFigure .atlasLaneLabel {
+  font-size: 0.8rem;
+}
+.atlasLegend > div {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.15rem;
+}
+.readingCaption,
+.plotContext {
+  color: #244e49;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.stripReadouts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  padding: 0.4rem;
+  font-size: 0.85rem;
+  color: #dbeee9;
+}
+.stripReadouts [data-strip-range-note] {
+  flex-basis: 100%;
+  color: #ffd166;
+}
+.waveformStrip .stripScale text,
+.waveformStrip .stripLandmark text {
+  font-size: 0.8rem;
+}
+.stripLandmark line {
+  stroke: #ffd166;
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+.referenceIndicator {
+  padding: 0.4rem;
+  color: #526e68;
+  font-size: 0.95rem;
+  border-bottom: 2px solid transparent;
+}
+.referenceIndicator[aria-current] {
+  font-weight: 750;
+  color: #164f49;
+  border-bottom-color: #17655d;
+}
+.levelingVisualGrid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.levelingTeachingCard {
+  --navy: #153d3a;
+  --ink: #244e49;
+}
+.traceInspection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  color: #dbeee9;
+  background: #071b23;
+  font-size: 0.85rem;
+}
+.traceInspection p {
+  flex-basis: 100%;
+  margin: 0;
+}
+.traceInspection button {
+  min-height: 44px;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #769992;
+  border-radius: 0.4rem;
+}
+.traceInspection button:focus-visible {
+  outline: 3px solid #61e294;
+  outline-offset: 2px;
+}
+.fastFlushTrace text {
+  font-size: 0.8rem;
+}
+
+.atlasFigure[data-readable='true']
+  :is(.atlasAxisLabel, .atlasAxisUnit, .atlasLaneLabel, .atlasAnnotation text) {
+  font-size: 0.8rem;
+}
+.atlasEcgLandmark text {
+  font-size: 0.8rem;
+}
+
+.fastFlushTrace .plotContext {
+  color: #dbeee9;
+}
+.fastFlushTrace figcaption,
+.fastFlushTrace[data-compact='true'] figcaption {
+  font-size: 0.85rem;
+}
+.fastFlushTrace figcaption span,
+.fastFlushTrace[data-compact='true'] figcaption span {
+  font-size: 0.8rem;
+}
+
+.formulaGrid article {
+  --navy: #153d3a;
+  --teal: #17655d;
+}
+
+.stripReadouts {
+  grid-column: 1 / -1;
+}
+.waveformStrip svg {
+  height: auto;
+}
+.monitor,
+.monitorHeader,
+.monitorHeader > *,
+.numericRail,
+.numericRail > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.alarmBar .alarmClear {
+  white-space: normal;
+}
+@media (max-width: 760px) {
+  .monitorBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .numericRail {
+    grid-template-rows: auto;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+    gap: 0.5rem;
+  }
+  .numericRail > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .numericRail strong {
+    grid-row: auto;
+    font-size: 1.15rem;
+  }
+  .waveformStrip {
+    display: block;
+  }
+  .waveformStrip figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .waveformStrip figcaption strong,
+  :global([data-case-workspace]) .waveformStrip figcaption strong {
+    font-size: 0.85rem;
+  }
+  .waveformStrip figcaption span {
+    font-size: 0.8rem;
+    color: #a6c5c4;
+  }
+}
+
+.alarmBar {
+  flex-wrap: wrap;
+  overflow-x: visible;
+}
+.alarmBar span {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.focusedMonitor > *,
+.focusedMonitor header > *,
+.traceInspection > * {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.physiologyKeyboardControls {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.levelingTeachingCard,
+.levelingVisualGrid,
+.levelingPressureComparison {
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  overflow-wrap: anywhere;
+}
+.levelingTeachingCard > header {
+  flex-wrap: wrap;
+}

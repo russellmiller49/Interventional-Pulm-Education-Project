@@ -191,7 +191,9 @@ describe('one place, one number', () => {
   it('numbers the walk card by the map, and says the walk position in words', () => {
     mountSection('pressure-system')
     const card = document.querySelector('[data-walk-stop="line"]')
-    expect(card?.querySelector('p')?.textContent).toBe(`Stop ${routeStopNumber('line')} · The line`)
+    expect(card?.querySelector('p')?.textContent).toBe(
+      `Map stop ${routeStopNumber('line')} · The line`,
+    )
     expect(routeStopNumber('line')).toBe(1)
     const legendRow = [...document.querySelectorAll('[aria-label="The five stops"] li')].find(
       (row) => /The line/.test(row.textContent ?? ''),
@@ -211,7 +213,7 @@ describe('one place, one number', () => {
     stops.forEach((stopId, index) => {
       const card = document.querySelector(`[data-walk-stop="${stopId}"]`)
       expect(card?.querySelector('p')?.textContent).toBe(
-        `Stop ${routeStopNumber(stopId)} · ${routeStop(stopId).title}`,
+        `Map stop ${routeStopNumber(stopId)} · ${routeStop(stopId).title}`,
       )
       const legendRow = [...document.querySelectorAll('[aria-label="The five stops"] li')].find(
         (row) => row.textContent?.endsWith(routeStop(stopId).title),

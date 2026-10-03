@@ -109,7 +109,7 @@ export function unidentifiedTraceDescription(entry: WaveformAtlasEntry) {
     case 'ra-normal':
       return 'PAC pressure and synchronized ECG. Small peaks follow the P wave and QRS, with a late systolic peak and two intervening descents.'
     case 'ra-tricuspid-regurgitation':
-      return 'Confirmed right-atrial question trace and synchronized ECG. A broad systolic pressure wave obscures the systolic descent; pressure falls in early diastole.'
+      return 'Confirmed right-atrial schematic with a reference ECG timing strip. A large systolic wave and residual systolic dip remain visible; complete c-v fusion and loss of the x descent are not represented.'
     case 'ra-tamponade':
       return 'Confirmed right-atrial question trace and synchronized ECG. The systolic descent remains visible, while the early diastolic descent is markedly attenuated.'
     case 'wedge-large-v-wave':

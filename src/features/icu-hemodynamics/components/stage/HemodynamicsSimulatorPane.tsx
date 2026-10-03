@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, type Dispatch, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type Dispatch, type ReactNode } from 'react'
 
 import { catheterTransitionHold } from '../../engine/catheterSafety'
 import type { RouteStopId } from '../../content/routeSpine'
@@ -94,6 +94,7 @@ export function HemodynamicsSimulatorPane({
   readonly onResetDemonstration?: () => void
 }) {
   const panelRef = useRef<HTMLDivElement>(null)
+  const [releaseDetail, setReleaseDetail] = useState(false)
   useEffect(() => {
     if (
       !stepKey ||
@@ -118,7 +119,7 @@ export function HemodynamicsSimulatorPane({
         return (
           <>
             <LineDock {...props} only="level" />
-            <LevelingVisual state={state} />
+            <LevelingVisual state={state} channel="pac" />
           </>
         )
       case 'zero-demo':
@@ -147,28 +148,43 @@ export function HemodynamicsSimulatorPane({
         return (
           <section className={styles.surfaceCard} aria-label="Reference flush responses">
             <h3>Reference flush responses</h3>
+            <button
+              type="button"
+              className={styles.dockButton}
+              aria-pressed={releaseDetail}
+              onClick={() => setReleaseDetail(!releaseDetail)}
+            >
+              View {releaseDetail ? 'complete traces' : 'release detail'}
+            </button>
             <p>
               Guided demonstration · PAC pressure channel · identical reference scale. These labeled
               examples are not captured observations from your attempt.
             </p>
-            {dynamicResponseDefinitions.map((definition) => (
-              <div key={definition.id}>
-                <FastFlushTrace response={definition.id} lineType="pulmonary-artery" revealLabel />
-                <p>
-                  {definition.interpretation} {definition.pressureEffect}
-                </p>
-              </div>
-            ))}
+            <div className={flowStyles.alignedComparisons} data-comparison="dynamic-response">
+              {dynamicResponseDefinitions.map((definition) => (
+                <div key={definition.id}>
+                  <FastFlushTrace
+                    response={definition.id}
+                    lineType="pulmonary-artery"
+                    revealLabel
+                    view={releaseDetail ? 'release' : 'full'}
+                  />
+                  <p>
+                    {definition.interpretation} {definition.pressureEffect}
+                  </p>
+                </div>
+              ))}
+            </div>
           </section>
         )
       case 'component-demo':
         return <AtrialComponentDemonstration />
       case 'line':
-        return <LineDock {...props} />
+        return <LineDock {...props} showArterialScale={presentation?.monitor !== 'pac'} />
       case 'flush':
         return (
           <>
-            <LineDock {...props} />
+            <LineDock {...props} showArterialScale={presentation?.monitor !== 'pac'} />
             <FlushDock
               key={stepKey}
               {...props}
@@ -208,7 +224,7 @@ export function HemodynamicsSimulatorPane({
             <details>
               <summary>Pressure measurement</summary>
               <div>
-                <LineDock {...props} />
+                <LineDock {...props} showArterialScale={presentation?.monitor !== 'pac'} />
                 <FlushDock {...props} lineType="pulmonary-artery" />
               </div>
             </details>
@@ -253,6 +269,13 @@ export function HemodynamicsSimulatorPane({
         dispatch={dispatch}
         chamberLabel={chamberLabel}
         showControls={false}
+        inspectionEnabled={controlsEnabled && surface !== 'wedge' && surface !== 'thermodilution'}
+        pacScaleMaximum={surface === 'level-demo' ? 80 : undefined}
+        displaySettingKey={
+          surface === 'level-demo'
+            ? `${state.measurementSystem.transducerLevelCm}:${state.measurementSystem.zeroed}`
+            : undefined
+        }
         focus={presentation?.monitor === 'none' ? 'all' : presentation?.monitor}
       />
     </div>
@@ -266,8 +289,8 @@ export function HemodynamicsSimulatorPane({
     >
       <h3>Catheter course · synchronized teaching model</h3>
       <p className={styles.dockNote}>
-        Drag to rotate, or use the arrow and Reset view buttons. Resistance and ectopy are not
-        modeled.
+        Translucent teaching view: the gold catheter follows the existing anatomical route. Drag to
+        rotate, or use the arrow and Reset view buttons. Resistance and ectopy are not modeled.
       </p>
       {tipVisible ? (
         <HemodynamicHeart3DDynamic state={state} />
@@ -295,6 +318,9 @@ export function HemodynamicsSimulatorPane({
           className={
             presentation.anatomy === 'paired' ||
             (presentation.kind === 'signal-lab' &&
+              surface !== 'flush' &&
+              surface !== 'flush-then-tip' &&
+              surface !== 'level-demo' &&
               presentation.monitor !== 'none' &&
               presentation.controls)
               ? flowStyles.paired

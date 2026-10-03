@@ -5,6 +5,8 @@ import { measurementOrigins } from '../../content/introductoryTeaching'
 import { waveformAtlasById } from '../../content/waveformAtlas'
 import type { IntroTeaching } from '../../content/stageLessons'
 import type { HemodynamicSimulationState } from '../../engine/types'
+import { Link } from '@/i18n/navigation'
+import { NormalWaveformAnatomyFigure } from '../NormalWaveformAnatomyFigure'
 import { NormalWaveformReference } from '../NormalWaveformReference'
 import { WaveformAtlasFigure } from '../WaveformAtlasFigure'
 import styles from './hemodynamics-stage.module.css'
@@ -26,6 +28,11 @@ export function IntroductoryTeaching({
             several processes coexist? Start with the clinical question before choosing a monitoring
             method.
           </p>
+          <p>PAC means pulmonary artery catheter; PAWP means pulmonary artery wedge pressure.</p>
+          <NormalWaveformAnatomyFigure
+            position="pa"
+            physicalLocation="Schematic route of the distal pressure channel into the pulmonary artery. Component distances depend on the device and are not represented here."
+          />
           <dl className={styles.stopFacts}>
             {measurementOrigins.map((origin) => (
               <div key={origin.label}>
@@ -133,7 +140,15 @@ export function IntroductoryTeaching({
     case 'response':
       return (
         <section className={styles.teachingCard}>
-          <h3>Dynamic response</h3>
+          <h3>Dynamic response · square-wave / fast-flush test</h3>
+          <p>
+            <Link href="/icu-hemodynamics/practice?case=HD-01">
+              Open the existing pressure troubleshooting atlas and thermodilution workbench in
+              Practice HD-01
+            </Link>
+            . Choose the actions checkpoint, then the named measurement tool. This opens a separate
+            practice patient; the reference generators and sources are the same.
+          </p>
           <p>
             After a brief flush plateau, an acceptable system settles promptly. An overdamped system
             suppresses rapid changes; an underdamped system oscillates and exaggerates them. Neither
@@ -176,15 +191,24 @@ export function IntroductoryTeaching({
             the PA diastolic step-up and valve-closure notch. Systolic height alone cannot
             distinguish them.
           </p>
-          {['rv-normal', 'pa-normal'].map((id) => (
-            <WaveformAtlasFigure
-              key={id}
-              entry={waveformAtlasById.get(id)!}
-              scaleMaxMmHg={40}
-              ecgLandmarks
-              readable
-            />
-          ))}
+          <p>
+            These authored shapes share an ECG phase clock but do not model valve-opening or
+            pressure-transmission delays. The RV downslope contains an angular shoulder. Use the
+            diastolic step-up, runoff and PA notch together; this schematic does not establish the
+            shoulder as valve closure.
+          </p>
+          <div className={styles.alignedComparisons} data-comparison="rv-pa">
+            {['rv-normal', 'pa-normal'].map((id) => (
+              <WaveformAtlasFigure
+                key={id}
+                entry={waveformAtlasById.get(id)!}
+                scaleMaxMmHg={40}
+                beats={1}
+                ecgLandmarks
+                readable
+              />
+            ))}
+          </div>
         </section>
       )
     case 'components':
@@ -214,8 +238,9 @@ export function IntroductoryTeaching({
           <h3>Contrasting abnormal atrial patterns</h3>
           <p>
             Authored right-atrial pressure patterns on a shared axis illustrate altered atrial
-            contraction. Rhythm-specific ECG timing is not modeled in these examples. Interpret the
-            pressure pattern alongside the patient and echocardiography.
+            contraction. Rhythm-specific ECG timing, irregular RR intervals and intermittent cannon
+            waves are not modeled in these repeated pressure schematics. Interpret the pressure
+            pattern alongside the patient and echocardiography.
           </p>
           {['ra-cannon-a-wave', 'ra-atrial-fibrillation'].map((id) => (
             <div key={id}>

@@ -738,6 +738,14 @@ export function HemodynamicCaseActivity({
         <button
           type="button"
           className="min-h-11 rounded-xl border px-4 py-2.5 text-sm font-semibold"
+          disabled={balloonActive}
+          onClick={() => checkpoint('act')}
+        >
+          Return to actions and measurement tools
+        </button>
+        <button
+          type="button"
+          className="min-h-11 rounded-xl border px-4 py-2.5 text-sm font-semibold"
           onClick={() => dispatch({ type: 'TICK', seconds: 15 })}
         >
           Observe 15 model seconds
@@ -923,7 +931,7 @@ export function HemodynamicCaseActivity({
                 trigger={<button type="button">Evidence</button>}
               />
             </div>
-            <details>
+            <details open>
               <summary>Case checkpoints · open any of them</summary>
               <nav aria-label="Case checkpoints">
                 {(['recognize', 'predict', 'act', 'observe', 'explain', 'transfer'] as const).map(
@@ -948,6 +956,10 @@ export function HemodynamicCaseActivity({
             <p>
               Adult ICU · simulated · HR {metricValue(state.measurements.heartRateBpm)} /min · PEEP{' '}
               {state.parameters.peepCmH2O} cm H₂O
+            </p>
+            <p>
+              The pressure system starts unzeroed. Use the measurement tools to establish its
+              reference; patient-directed actions remain available.
             </p>
             <p data-model-time>
               Model time: the clock on the monitor counts simulation seconds. Responses here are
@@ -1026,12 +1038,6 @@ export function HemodynamicCaseActivity({
                 </button>
               </div>
               <p>This debrief does not establish clinical competence.</p>
-              <HemodynamicNativeWorkspace
-                state={state}
-                dispatch={dispatch}
-                interactive={false}
-                revealModel
-              />
             </section>
           ) : (
             <>
@@ -1042,17 +1048,18 @@ export function HemodynamicCaseActivity({
                   elapsedSeconds={state.timeSeconds - baseline.timeSeconds}
                 />
               ) : null}
-              <HemodynamicNativeWorkspace
-                state={state}
-                dispatch={dispatch}
-                interactive={phase === 'act' || phase === 'transfer'}
-                task={currentTask}
-                pressureChallengeMode={
-                  definition.id === 'HD-08' || phase === 'transfer' ? 'current-state' : 'selectable'
-                }
-              />
             </>
           )}
+          <HemodynamicNativeWorkspace
+            state={state}
+            dispatch={dispatch}
+            interactive={phase === 'act' || phase === 'transfer'}
+            revealModel={phase === 'explain'}
+            task={phase === 'explain' ? undefined : currentTask}
+            pressureChallengeMode={
+              definition.id === 'HD-08' || phase === 'transfer' ? 'current-state' : 'selectable'
+            }
+          />
           {message ? <p role="status">{message}</p> : null}
           {transferComplete ? (
             <p role="status" data-transfer-complete>

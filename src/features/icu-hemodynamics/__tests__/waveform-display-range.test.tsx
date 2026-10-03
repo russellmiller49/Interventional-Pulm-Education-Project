@@ -23,7 +23,7 @@ describe('atlas display-range integrity', () => {
       expect(Math.min(...coordinates.map(({ y }) => y))).toBeLessThan(66)
       expect(path).toHaveAttribute('clip-path')
       expect(screen.getByText(/Trace exceeds the displayed/)).toBeVisible()
-      expect(path.closest('svg')).toHaveAccessibleName(/out-of-range portions are clipped/)
+      expect(path.closest('svg')).toHaveAccessibleDescription(/out-of-range portions are clipped/)
       for (const circle of container.querySelectorAll('.atlasAnnotation circle')) {
         expect(Number(circle.getAttribute('cy'))).toBeGreaterThanOrEqual(66)
         expect(Number(circle.getAttribute('cy'))).toBeLessThanOrEqual(192)
@@ -56,7 +56,8 @@ describe('atlas display-range integrity', () => {
     const { path, coordinates } = traceCoordinates(container)
     expect(Math.max(...coordinates.map(({ y }) => y))).toBeGreaterThan(192)
     expect(path).toHaveAttribute('clip-path')
-    expect(path.closest('svg')).toHaveAccessibleName(/Authored display-fault example.*out-of-range/)
+    expect(path.closest('svg')).toHaveAccessibleName('Authored display-fault example.')
+    expect(path.closest('svg')).toHaveAccessibleDescription(/out-of-range portions are clipped/)
     expect(container.querySelectorAll('.atlasAnnotation circle')).toHaveLength(0)
   })
 

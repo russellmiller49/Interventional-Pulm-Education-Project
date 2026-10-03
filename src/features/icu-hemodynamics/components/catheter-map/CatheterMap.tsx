@@ -286,6 +286,12 @@ export function CatheterMap({
           : null}
       </div>
 
+      <p className={styles.readableKey} data-schematic-key>
+        Line, left to right: monitor → transducer → stopcock → catheter hub; the flush bag connects
+        above the tubing. Heart labels: SVC = superior vena cava; RA = right atrium; RV = right
+        ventricle; PA = pulmonary artery; TV = tricuspid valve; PV = pulmonic valve. Numbers
+        identify map stops; this is a schematic, not device dimensions.
+      </p>
       {!answer ? (
         <ol className={styles.legend} aria-label="The five stops">
           {STOP_ORDER.map((stopId) => (
