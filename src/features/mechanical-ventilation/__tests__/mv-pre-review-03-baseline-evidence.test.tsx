@@ -880,6 +880,7 @@ describe('9 · Section 8’s result comparison stays truthful', () => {
     expect(before.at(-1)!.time).toBeLessThanOrEqual(0)
     expect(after[0].time).toBeGreaterThanOrEqual(ready.readySince! - 1e-9)
     expect(response.at - ready.readySince!).toBeGreaterThanOrEqual(roundOf(SECTION_8, 0).seconds)
+    expect(response.issues).toEqual([])
     // The watched readings are each record's own, as the ventilator published them at capture.
     expect(roundOf(SECTION_8, 0).watch).toEqual(['missed', 'rate', 'effort'])
     expect(baseline.values.rate).toBe(10)
@@ -898,6 +899,63 @@ describe('9 · Section 8’s result comparison stays truthful', () => {
       describeModeledEffort('Result', response.waveforms),
     ])
       expect(text).not.toMatch(/trigger(ed)?|delay|caused|started the breath|measured/i)
+  })
+})
+
+describe('9 · Section 8: the requested change is not reported as an additional input', () => {
+  const additional = 'Additional input changed: trigger'
+  const set = (
+    control: 'triggerThreshold' | 'triggerType' | 'etsPercent',
+    value: number | string,
+  ) => engine({ type: 'SET_CONTROL', control, value })
+
+  it('reproduces the label: the only change made is the one the task asks for', () => {
+    // On f2635a0f (and on main) this clean run carried "Additional input changed: trigger".
+    const changed = requested(reduce(started(SECTION_8, 0), learnerRun))
+    expect(changed.events.map((event) => event.action)).toEqual([
+      { type: 'SET_CONTROL', control: 'triggerThreshold', value: 1.5 },
+    ])
+    expect(changed.confounds).toEqual([])
+    const captured = reduce(untilReady(changed), { type: 'COMPARE' })
+    expect(captured.confounds).toEqual([])
+    expect(responseOf(captured)!.issues).toEqual([])
+  })
+
+  it('still reports what was not asked for', () => {
+    const begun = reduce(started(SECTION_8, 0), learnerRun)
+    // The trigger type, under a request for its threshold.
+    expect(reduce(begun, set('triggerType', 'pressure')).confounds).toEqual([additional])
+    // Another setting altogether.
+    expect(reduce(requested(begun), set('etsPercent', 40)).confounds).toEqual([
+      'Additional input changed: etsPercent',
+    ])
+    // The threshold itself, in a round that asks for something else (the second application).
+    const other = reduce(started(SECTION_8, 1), learnerRun)
+    expect(roundOf(SECTION_8, 1).goals).toEqual([{ type: 'control', key: 'etsPercent', value: 15 }])
+    expect(reduce(other, set('triggerThreshold', 1.5)).confounds).toEqual([additional])
+    expect(requested(other).confounds).toEqual([])
+  })
+
+  it('rendered: a clean run is captured automatically when asked, and prints no such line', () => {
+    render(<VentilationStageHost unitId={SECTION_8} />)
+    act(() => jest.advanceTimersByTime(10))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
+      target: { value: 2 },
+    })
+    fireEvent.click(screen.getByRole('checkbox', { name: /Capture automatically/ }))
+    fireEvent.change(document.getElementById('mv-quick-triggerThreshold')!, {
+      target: { value: '1.5' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Run experiment' }))
+    act(() => jest.advanceTimersByTime(25_000))
+    // It was held here, with "this comparison no longer isolates one change".
+    expect(document.querySelector('[data-auto-capture-held]')).toBeNull()
+    expect(
+      document.querySelector('[data-experiment-panel]')!.getAttribute('data-experiment-stage'),
+    ).toBe('captured')
+    const result = document.querySelector('[data-captured-result]')!
+    expect(result.textContent).not.toMatch(/Additional input changed/)
+    expect(result.querySelectorAll('[data-captured-breath]')).toHaveLength(2)
   })
 })
 

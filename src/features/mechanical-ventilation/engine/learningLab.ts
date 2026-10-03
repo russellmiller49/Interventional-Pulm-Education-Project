@@ -848,9 +848,28 @@ function reduceLearningLab(session: LabSession, action: LabAction): LabSession {
         ? ['interventions']
         : [],
   )
+  /*
+   * The trigger is one measurement input with two controls: its type and its threshold. A round
+   * that asks for the threshold (Section 8's first application: flow trigger to 1.5 L/min) changes
+   * the input `trigger`, which is not the control's own name, so the requested change itself was
+   * reported as "Additional input changed: trigger" — on the captured result, and as the reason
+   * automatic capture was held on a run that did only what was asked. The part of the trigger
+   * that changed has to be the part that was requested; a change of type under a threshold request
+   * is still an additional input.
+   */
+  const triggerChangeRequested = round.goals.some(
+    (g) =>
+      g.type === 'control' &&
+      g.key ===
+        (before.ventilator.settings.trigger.type === simulation.ventilator.settings.trigger.type
+          ? 'triggerThreshold'
+          : 'triggerType'),
+  )
+  const requestedInput = (key: string) =>
+    key === 'trigger' ? triggerChangeRequested : allowedKeys.includes(key)
   const issues =
     session.phase === 'experiment'
-      ? changed.filter((k) => !allowedKeys.includes(k)).map((k) => `Additional input changed: ${k}`)
+      ? changed.filter((k) => !requestedInput(k)).map((k) => `Additional input changed: ${k}`)
       : []
   if (
     session.phase === 'experiment' &&
