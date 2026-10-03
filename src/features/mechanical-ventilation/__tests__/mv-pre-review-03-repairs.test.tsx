@@ -57,6 +57,7 @@ import {
   type LabAction,
   type LabSession,
 } from '../engine/learningLab'
+import { observationFor } from '../engine/learningObservation'
 import { EFFORT_DETECTION_FLOOR_CMH2O } from '../engine/physics'
 import { ventilationSimulationReducer } from '../engine/reducer'
 import { completedBreath } from '../engine/teachingBreath'
@@ -775,6 +776,23 @@ describe('R3: the figures name their origin as what was sampled', () => {
     )
     expect(document.querySelector('[data-inspiratory-time-note]')!.textContent).toBe(
       'The Inspiratory time reading (0.63 s before, 0.42 s after) is calculated from the selected volume and flow; it is not timed on the trace. The sampled flow times above are what the drawn breaths show, to the nearest 20-ms sample.',
+    )
+  })
+
+  it('S2-1: the observation feedback names the reading as calculated, with the same question and key', () => {
+    const item = observationFor(captured())
+    expect(item.prompt).toBe(
+      'Compared with the captured baseline, what happened to inspiratory time in this controlled experiment?',
+    )
+    expect(item.correct).toBe('fell')
+    expect(item.choices.map((choice) => choice.id)).toEqual([
+      'rose',
+      'fell',
+      'similar',
+      'indeterminate',
+    ])
+    expect(item.feedback).toMatch(
+      /^Recorded inspiratory time \(the reading calculated from the settings\): 0\.63 → 0\.42 s\. The recorded value fell\./,
     )
   })
 
