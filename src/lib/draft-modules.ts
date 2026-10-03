@@ -73,6 +73,7 @@ const unlistedModulePathPrefixes = [
   ...(!courseAvailability.socalEbusCourseOpen ? ['/socal-ebus-course'] : []),
   ...(!courseAvailability.pccmIntroCourseOpen ? ['/pccm-intro-course'] : []),
   '/ebus-guided',
+  '/eus-b-simulator',
   '/medical-thoracoscopy/wolf-preview',
   '/development-beta',
   '/admin/module-feedback',

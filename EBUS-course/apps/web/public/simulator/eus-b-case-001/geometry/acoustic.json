@@ -1,0 +1,748 @@
+{
+  "schema": "acoustic-volume/v1",
+  "assetVersion": "eus-b-v1",
+  "coordinateSystem": "LPS",
+  "units": "mm",
+  "sourceGeometrySha256": "8d9189a3002dc56e384fca59f2a89089ca486613291204c2863a4fb1321ea39a",
+  "dataSha256": "c89094526a2886efc9ddb949678a2642bd6c4d603dd2758427383da2c1217286",
+  "decodedSha256": "fbdf38dc9f7e56f5b9b463d40611bc6edb52f15d499fba7b71ea42897cef7f12",
+  "format": "uint8-labels-gzip",
+  "sizeXyz": [
+    230,
+    249,
+    423
+  ],
+  "spacingXyzMm": [
+    1.0,
+    1.0,
+    1.0
+  ],
+  "originLps": [
+    -98.0,
+    -301.0,
+    918.0
+  ],
+  "labels": [
+    {
+      "id": 0,
+      "key": "air",
+      "label": "Air (lung or outside the body)",
+      "kind": "air",
+      "medium": "air",
+      "group": "background",
+      "reportable": false
+    },
+    {
+      "id": 1,
+      "key": "soft_tissue",
+      "label": "Soft tissue (not segmented)",
+      "kind": "soft",
+      "medium": "soft",
+      "group": "background",
+      "reportable": false
+    },
+    {
+      "id": 2,
+      "key": "airway",
+      "label": "Airway lumen",
+      "kind": "air",
+      "medium": "air",
+      "group": "airway",
+      "reportable": false
+    },
+    {
+      "id": 3,
+      "key": "fat",
+      "label": "Fat (not segmented)",
+      "kind": "soft",
+      "medium": "fat",
+      "group": "background",
+      "reportable": false
+    },
+    {
+      "id": 4,
+      "key": "bone",
+      "label": "Bone (CT threshold)",
+      "kind": "wall",
+      "medium": "bone",
+      "group": "background",
+      "reportable": false
+    },
+    {
+      "id": 5,
+      "key": "liver",
+      "label": "Liver",
+      "kind": "soft",
+      "medium": "liver",
+      "group": "organ",
+      "reportable": true
+    },
+    {
+      "id": 6,
+      "key": "left_kidney",
+      "label": "Left kidney",
+      "kind": "soft",
+      "medium": "kidney",
+      "group": "organ",
+      "reportable": true
+    },
+    {
+      "id": 7,
+      "key": "right_kidney",
+      "label": "Right kidney",
+      "kind": "soft",
+      "medium": "kidney",
+      "group": "organ",
+      "reportable": true
+    },
+    {
+      "id": 8,
+      "key": "pancreas",
+      "label": "Pancreas",
+      "kind": "soft",
+      "medium": "pancreas",
+      "group": "organ",
+      "reportable": true
+    },
+    {
+      "id": 9,
+      "key": "gallbladder",
+      "label": "Gallbladder",
+      "kind": "blood",
+      "medium": "fluid",
+      "group": "organ",
+      "reportable": true
+    },
+    {
+      "id": 10,
+      "key": "right_adrenal",
+      "label": "Right adrenal gland",
+      "kind": "node",
+      "medium": "adrenal",
+      "group": "organ",
+      "reportable": true
+    },
+    {
+      "id": 11,
+      "key": "left_adrenal",
+      "label": "Left adrenal gland",
+      "kind": "node",
+      "medium": "adrenal",
+      "group": "organ",
+      "reportable": true
+    },
+    {
+      "id": 12,
+      "key": "duodenum",
+      "label": "Duodenum",
+      "kind": "wall",
+      "medium": "gi_wall",
+      "group": "gi",
+      "reportable": true
+    },
+    {
+      "id": 13,
+      "key": "stomach",
+      "label": "Stomach",
+      "kind": "wall",
+      "medium": "gi_wall",
+      "group": "gi",
+      "reportable": true
+    },
+    {
+      "id": 14,
+      "key": "gastric_contents",
+      "label": "Gastric contents",
+      "kind": "blood",
+      "medium": "fluid",
+      "group": "gi",
+      "reportable": false
+    },
+    {
+      "id": 15,
+      "key": "gastric_gas",
+      "label": "Gastric gas",
+      "kind": "air",
+      "medium": "air",
+      "group": "gi",
+      "reportable": false
+    },
+    {
+      "id": 16,
+      "key": "left_ventricle",
+      "label": "Left ventricle",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "heart",
+      "reportable": true
+    },
+    {
+      "id": 17,
+      "key": "right_ventricle",
+      "label": "Right ventricle",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "heart",
+      "reportable": true
+    },
+    {
+      "id": 18,
+      "key": "right_atrium",
+      "label": "Right atrium",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "heart",
+      "reportable": true
+    },
+    {
+      "id": 19,
+      "key": "left_atrium",
+      "label": "Left atrium",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "heart",
+      "reportable": true
+    },
+    {
+      "id": 20,
+      "key": "left_atrial_appendage",
+      "label": "Left atrial appendage",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "heart",
+      "reportable": true
+    },
+    {
+      "id": 21,
+      "key": "pulmonary_veins",
+      "label": "Pulmonary veins",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 22,
+      "key": "pulmonary_artery",
+      "label": "Pulmonary artery",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 23,
+      "key": "aorta",
+      "label": "Aorta",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 24,
+      "key": "inferior_vena_cava",
+      "label": "Inferior vena cava",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 25,
+      "key": "superior_vena_cava",
+      "label": "Superior vena cava",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 26,
+      "key": "azygos_vein",
+      "label": "Azygos vein",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 27,
+      "key": "portal_splenic_vein",
+      "label": "Portal and splenic veins",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 28,
+      "key": "brachiocephalic_trunk",
+      "label": "Brachiocephalic trunk",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 29,
+      "key": "right_subclavian_artery",
+      "label": "Right subclavian artery",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 30,
+      "key": "left_subclavian_artery",
+      "label": "Left subclavian artery",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 31,
+      "key": "right_common_carotid_artery",
+      "label": "Right common carotid artery",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 32,
+      "key": "left_common_carotid_artery",
+      "label": "Left common carotid artery",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 33,
+      "key": "left_brachiocephalic_vein",
+      "label": "Left brachiocephalic vein",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 34,
+      "key": "right_brachiocephalic_vein",
+      "label": "Right brachiocephalic vein",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 35,
+      "key": "esophagus",
+      "label": "Esophagus",
+      "kind": "wall",
+      "medium": "gi_wall",
+      "group": "gi",
+      "reportable": true
+    },
+    {
+      "id": 36,
+      "key": "station_1r",
+      "label": "Station 1R",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 37,
+      "key": "station_1l",
+      "label": "Station 1L",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 38,
+      "key": "station_2r",
+      "label": "Station 2R",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 39,
+      "key": "station_2l",
+      "label": "Station 2L",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 40,
+      "key": "station_3a",
+      "label": "Station 3A",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 41,
+      "key": "station_4r",
+      "label": "Station 4R",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 42,
+      "key": "station_4l",
+      "label": "Station 4L",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 43,
+      "key": "station_5",
+      "label": "Station 5",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 44,
+      "key": "station_6",
+      "label": "Station 6",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 45,
+      "key": "station_7",
+      "label": "Station 7",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 46,
+      "key": "station_8",
+      "label": "Station 8",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 47,
+      "key": "station_9",
+      "label": "Station 9",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 48,
+      "key": "station_10r",
+      "label": "Station 10R",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 49,
+      "key": "station_10l",
+      "label": "Station 10L",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 50,
+      "key": "station_11rs",
+      "label": "Station 11Rs",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 51,
+      "key": "station_11ri",
+      "label": "Station 11Ri",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    },
+    {
+      "id": 52,
+      "key": "station_11l",
+      "label": "Station 11L",
+      "kind": "node",
+      "medium": "node",
+      "group": "node",
+      "reportable": true
+    }
+  ],
+  "review": [
+    {
+      "key": "liver",
+      "sourceVoxels": 1029757,
+      "occupiedVoxels": 911365
+    },
+    {
+      "key": "left_kidney",
+      "sourceVoxels": 87216,
+      "occupiedVoxels": 113000
+    },
+    {
+      "key": "right_kidney",
+      "sourceVoxels": 102662,
+      "occupiedVoxels": 120689
+    },
+    {
+      "key": "pancreas",
+      "sourceVoxels": 44270,
+      "occupiedVoxels": 56619
+    },
+    {
+      "key": "gallbladder",
+      "sourceVoxels": 22451,
+      "occupiedVoxels": 28785
+    },
+    {
+      "key": "right_adrenal",
+      "sourceVoxels": 1601,
+      "occupiedVoxels": 1935
+    },
+    {
+      "key": "left_adrenal",
+      "sourceVoxels": 1745,
+      "occupiedVoxels": 2098
+    },
+    {
+      "key": "duodenum",
+      "sourceVoxels": 28634,
+      "occupiedVoxels": 36772
+    },
+    {
+      "key": "stomach",
+      "sourceVoxels": 133290,
+      "occupiedVoxels": 171626
+    },
+    {
+      "key": "left_ventricle",
+      "sourceVoxels": 143698,
+      "occupiedVoxels": 185746
+    },
+    {
+      "key": "right_ventricle",
+      "sourceVoxels": 54648,
+      "occupiedVoxels": 70376
+    },
+    {
+      "key": "right_atrium",
+      "sourceVoxels": 65231,
+      "occupiedVoxels": 84206
+    },
+    {
+      "key": "left_atrium",
+      "sourceVoxels": 70686,
+      "occupiedVoxels": 91102
+    },
+    {
+      "key": "left_atrial_appendage",
+      "sourceVoxels": 14999,
+      "occupiedVoxels": 19163
+    },
+    {
+      "key": "pulmonary_veins",
+      "sourceVoxels": 16467,
+      "occupiedVoxels": 20717
+    },
+    {
+      "key": "pulmonary_artery",
+      "sourceVoxels": 90243,
+      "occupiedVoxels": 107518
+    },
+    {
+      "key": "aorta",
+      "sourceVoxels": 189045,
+      "occupiedVoxels": 243999
+    },
+    {
+      "key": "inferior_vena_cava",
+      "sourceVoxels": 61669,
+      "occupiedVoxels": 79688
+    },
+    {
+      "key": "superior_vena_cava",
+      "sourceVoxels": 25908,
+      "occupiedVoxels": 33265
+    },
+    {
+      "key": "azygos_vein",
+      "sourceVoxels": 6348,
+      "occupiedVoxels": 8037
+    },
+    {
+      "key": "portal_splenic_vein",
+      "sourceVoxels": 15591,
+      "occupiedVoxels": 19448
+    },
+    {
+      "key": "brachiocephalic_trunk",
+      "sourceVoxels": 3630,
+      "occupiedVoxels": 4542
+    },
+    {
+      "key": "right_subclavian_artery",
+      "sourceVoxels": 6497,
+      "occupiedVoxels": 8092
+    },
+    {
+      "key": "left_subclavian_artery",
+      "sourceVoxels": 6886,
+      "occupiedVoxels": 8560
+    },
+    {
+      "key": "right_common_carotid_artery",
+      "sourceVoxels": 2968,
+      "occupiedVoxels": 3672
+    },
+    {
+      "key": "left_common_carotid_artery",
+      "sourceVoxels": 4052,
+      "occupiedVoxels": 5081
+    },
+    {
+      "key": "left_brachiocephalic_vein",
+      "sourceVoxels": 9844,
+      "occupiedVoxels": 12515
+    },
+    {
+      "key": "right_brachiocephalic_vein",
+      "sourceVoxels": 6820,
+      "occupiedVoxels": 8734
+    },
+    {
+      "key": "esophagus",
+      "sourceVoxels": 37034,
+      "occupiedVoxels": 47662
+    },
+    {
+      "key": "station_1r",
+      "sourceVoxels": 149,
+      "occupiedVoxels": 158
+    },
+    {
+      "key": "station_1l",
+      "sourceVoxels": 224,
+      "occupiedVoxels": 244
+    },
+    {
+      "key": "station_2r",
+      "sourceVoxels": 407,
+      "occupiedVoxels": 488
+    },
+    {
+      "key": "station_2l",
+      "sourceVoxels": 173,
+      "occupiedVoxels": 189
+    },
+    {
+      "key": "station_3a",
+      "sourceVoxels": 2522,
+      "occupiedVoxels": 3020
+    },
+    {
+      "key": "station_4r",
+      "sourceVoxels": 5436,
+      "occupiedVoxels": 6807
+    },
+    {
+      "key": "station_4l",
+      "sourceVoxels": 6467,
+      "occupiedVoxels": 8107
+    },
+    {
+      "key": "station_5",
+      "sourceVoxels": 1287,
+      "occupiedVoxels": 1596
+    },
+    {
+      "key": "station_6",
+      "sourceVoxels": 1015,
+      "occupiedVoxels": 1236
+    },
+    {
+      "key": "station_7",
+      "sourceVoxels": 8520,
+      "occupiedVoxels": 10907
+    },
+    {
+      "key": "station_8",
+      "sourceVoxels": 532,
+      "occupiedVoxels": 611
+    },
+    {
+      "key": "station_9",
+      "sourceVoxels": 258,
+      "occupiedVoxels": 270
+    },
+    {
+      "key": "station_10r",
+      "sourceVoxels": 2245,
+      "occupiedVoxels": 2753
+    },
+    {
+      "key": "station_10l",
+      "sourceVoxels": 96,
+      "occupiedVoxels": 89
+    },
+    {
+      "key": "station_11rs",
+      "sourceVoxels": 1188,
+      "occupiedVoxels": 1427
+    },
+    {
+      "key": "station_11ri",
+      "sourceVoxels": 124,
+      "occupiedVoxels": 126
+    },
+    {
+      "key": "station_11l",
+      "sourceVoxels": 78,
+      "occupiedVoxels": 75
+    },
+    {
+      "key": "airway",
+      "sourceVoxels": 32044,
+      "occupiedVoxels": 39836
+    }
+  ],
+  "assumptions": [
+    "Tissue outside the segmentation is classed from CT attenuation into air, fat, soft tissue and bone.",
+    "Unsegmented organs and vessels are generic soft tissue.",
+    "The esophagus is solid wall tissue: lumen air in the CT is ignored because the scope occupies the lumen.",
+    "The stomach is a wall shell with CT-classed gas or fluid contents.",
+    "Where masks overlap, the later structure in the build order wins and the airway lumen wins last."
+  ]
+}

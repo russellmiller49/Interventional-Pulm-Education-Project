@@ -1,0 +1,738 @@
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: #0b1114;
+  color: #e8eeec;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  line-height: 1.45;
+}
+
+.eus-page {
+  display: grid;
+  gap: 12px;
+  max-width: 1680px;
+  margin: 0 auto;
+  padding: 14px;
+  overflow-wrap: anywhere;
+}
+
+.eus-page *,
+.eus-page *::before,
+.eus-page *::after {
+  box-sizing: border-box;
+}
+
+.eus-card,
+.eus-pane {
+  border: 1px solid rgba(222, 232, 226, 0.14);
+  border-radius: 8px;
+  background: rgba(23, 29, 31, 0.92);
+}
+
+.eus-card {
+  padding: 16px;
+}
+
+.eus-card h1,
+.eus-card h2,
+.eus-card h3,
+.eus-pane h2 {
+  margin: 0;
+}
+
+.eus-card h1 {
+  font-size: 1.6rem;
+}
+
+.eus-card h2,
+.eus-pane h2 {
+  font-size: 1.02rem;
+}
+
+.eus-card h3 {
+  font-size: 0.86rem;
+  color: #b8c7c4;
+}
+
+.eus-card p {
+  margin: 8px 0 0;
+}
+
+.eus-eyebrow {
+  display: block;
+  color: #8bd4ff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.eus-muted {
+  color: #9aa7a7;
+  font-size: 0.84rem;
+}
+
+.eus-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 9px;
+  border: 1px solid rgba(230, 189, 121, 0.55);
+  border-radius: 999px;
+  color: #e6bd79;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+/* ---- Header -------------------------------------------------------------------------- */
+
+.eus-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr);
+  gap: 18px;
+}
+
+.eus-header-notes {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.eus-header-notes details {
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.eus-header-notes summary {
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.eus-header-notes ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #c6d2cf;
+  font-size: 0.86rem;
+}
+
+.eus-header-notes li + li {
+  margin-top: 5px;
+}
+
+/* ---- Mode bar ------------------------------------------------------------------------ */
+
+.eus-modebar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 18px;
+}
+
+.eus-position {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  color: #c6d2cf;
+  font-size: 0.9rem;
+}
+
+.eus-position strong {
+  color: #8fe0c0;
+}
+
+.eus-position em {
+  color: #9aa7a7;
+  font-style: normal;
+}
+
+.eus-segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 7px;
+  background: #101416;
+}
+
+.eus-segmented button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #c6d2cf;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.eus-segmented button[aria-pressed='true'] {
+  background: #23404f;
+  color: #fff;
+}
+
+.eus-segmented button:hover {
+  color: #fff;
+}
+
+/* ---- Workspace ----------------------------------------------------------------------- */
+
+.eus-workspace {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+  border-radius: 8px;
+}
+
+.eus-workspace--single {
+  grid-template-columns: minmax(0, 560px);
+  justify-content: center;
+}
+
+.eus-workspace:focus-visible,
+.eus-page button:focus-visible,
+.eus-page input:focus-visible,
+.eus-page select:focus-visible,
+.eus-page summary:focus-visible {
+  outline: 2px solid #8bd4ff;
+  outline-offset: 2px;
+}
+
+.eus-pane {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+}
+
+.eus-pane-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.eus-sector-image,
+.eus-ct-image,
+.eus-anatomy-canvas {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #000;
+}
+
+.eus-anatomy-canvas {
+  background: radial-gradient(circle at 50% 35%, #1b262b, #0a0f11 75%);
+}
+
+.eus-sector-image canvas,
+.eus-ct-image canvas,
+.eus-anatomy-canvas canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.eus-ct-image--axial canvas {
+  object-fit: contain;
+}
+
+.eus-sector-image canvas + canvas {
+  pointer-events: none;
+}
+
+.eus-image-mark,
+.eus-image-badge,
+.eus-image-readout {
+  position: absolute;
+  color: #dce3e8;
+  font-size: 0.72rem;
+  font-weight: 650;
+  pointer-events: none;
+}
+
+.eus-image-mark {
+  top: 8px;
+}
+
+.eus-image-mark--left {
+  left: 10px;
+}
+
+.eus-image-mark--right {
+  right: 10px;
+}
+
+.eus-image-badge {
+  bottom: 8px;
+  right: 10px;
+  color: #e6bd79;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.eus-image-readout {
+  bottom: 8px;
+  left: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.eus-image-message {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  color: #c6d2cf;
+  text-align: center;
+}
+
+.eus-pointer-readout,
+.eus-pane-caption {
+  min-height: 1.4em;
+  margin: 0;
+  color: #b8c7c4;
+  font-size: 0.84rem;
+}
+
+.eus-image-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+}
+
+.eus-image-controls label,
+.eus-field {
+  display: grid;
+  gap: 4px;
+  color: #9aa7a7;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.eus-page input[type='range'] {
+  width: 100%;
+  min-height: 24px;
+  accent-color: #8bd4ff;
+}
+
+.eus-check {
+  display: flex !important;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  color: #dce3e8;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.eus-image-controls .eus-check {
+  grid-column: 1 / -1;
+}
+
+.eus-in-view {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.eus-in-view__label {
+  color: #9aa7a7;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.eus-structure-chip,
+.eus-chip-button,
+.eus-step-button,
+.eus-primary-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: #151b1e;
+  color: #eef4f2;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 650;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.eus-step-button,
+.eus-primary-button,
+.eus-chip-button {
+  flex: none;
+  white-space: nowrap;
+}
+
+.eus-structure-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 9px;
+  font-weight: 600;
+}
+
+.eus-structure-chip[aria-pressed='true'],
+.eus-chip-button[aria-pressed='true'] {
+  border-color: #8bd4ff;
+  background: #1d3440;
+}
+
+.eus-step-button:hover,
+.eus-chip-button:hover,
+.eus-structure-chip:hover {
+  border-color: rgba(139, 212, 255, 0.7);
+}
+
+.eus-primary-button {
+  border-color: #3d8fb8;
+  background: #1f5f7f;
+}
+
+.eus-primary-button:hover {
+  background: #26739a;
+}
+
+.eus-swatch {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 3px;
+}
+
+.eus-anatomy-tools {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: grid;
+  gap: 4px;
+}
+
+.eus-anatomy-tools button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 6px;
+  background: rgba(16, 20, 22, 0.85);
+  color: #eef4f2;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.eus-anatomy-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+/* ---- Scope controls ------------------------------------------------------------------ */
+
+.eus-drive {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.8fr);
+  gap: 12px 22px;
+}
+
+.eus-drive__lede,
+.eus-drive__keys {
+  grid-column: 1 / -1;
+  margin: 0 !important;
+}
+
+.eus-drive__lede {
+  font-weight: 650;
+}
+
+.eus-control {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  min-width: 0;
+}
+
+.eus-control__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 10px;
+}
+
+.eus-control__name {
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.eus-control__value {
+  color: #8fe0c0;
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.eus-control__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.eus-control__row > input,
+.eus-track {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.eus-control__row > input {
+  flex: 1 1 0;
+  width: auto;
+  margin-top: 5px;
+}
+
+.eus-ruler {
+  position: relative;
+  height: 36px;
+  margin: 2px 8px 0;
+}
+
+.eus-ruler__level {
+  position: absolute;
+  top: 0;
+  height: 5px;
+  border-right: 2px solid #0b1114;
+  background: #33444b;
+}
+
+.eus-ruler__level.is-current {
+  background: #8fe0c0;
+}
+
+.eus-ruler__tick {
+  position: absolute;
+  top: 8px;
+  transform: translateX(-50%);
+  color: #b8c7c4;
+  font-size: 0.68rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+/* The junction label sits on its own row so it never collides with a landmark beside it. */
+.eus-ruler__tick--junction {
+  top: 20px;
+  color: #e6bd79;
+}
+
+.eus-ruler__tick--junction::before {
+  top: -20px !important;
+  height: 19px !important;
+  background: #e6bd79 !important;
+}
+
+.eus-ruler__tick::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 1px;
+  height: 7px;
+  background: #b8c7c4;
+}
+
+/* ---- Landmarks, find mode and layers --------------------------------------------------- */
+
+.eus-landmarks,
+.eus-find {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.eus-landmarks__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+}
+
+.eus-landmarks__head p,
+.eus-find p {
+  margin: 0;
+}
+
+.eus-landmark-rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+}
+
+.eus-landmark-rail__group {
+  display: grid;
+  gap: 5px;
+  align-content: start;
+}
+
+.eus-landmark-rail__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.eus-landmark-button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  background: #131a1d;
+  color: #eef4f2;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 650;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.eus-landmark-button:hover {
+  border-color: rgba(139, 212, 255, 0.7);
+}
+
+.eus-landmark-button[aria-pressed='true'] {
+  border-color: #8bd4ff;
+  background: #1d3440;
+}
+
+.eus-landmark-card {
+  padding: 10px 14px;
+  border-left: 3px solid #8fe0c0;
+  border-radius: 0 6px 6px 0;
+  background: rgba(143, 224, 192, 0.07);
+}
+
+.eus-landmark-card h3 {
+  color: #eef4f2;
+  font-size: 0.98rem;
+}
+
+.eus-landmark-card small {
+  color: #b8c7c4;
+  font-weight: 500;
+}
+
+.eus-landmark-card p {
+  margin: 6px 0 0;
+}
+
+.eus-landmark-card .eus-step-button {
+  margin-top: 8px;
+}
+
+.eus-note {
+  padding: 7px 10px;
+  border-left: 3px solid #e6bd79;
+  background: rgba(230, 189, 121, 0.08);
+  color: #e9dcc3;
+  font-size: 0.86rem;
+}
+
+.eus-find select {
+  min-height: 38px;
+  max-width: 420px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  background: #101416;
+  color: #eef4f2;
+  font: inherit;
+}
+
+.eus-find .eus-primary-button {
+  justify-self: start;
+}
+
+.eus-find__target {
+  font-size: 1rem;
+}
+
+.eus-find__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.eus-layer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 12px;
+  margin: 0;
+  padding: 6px 10px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+}
+
+.eus-layer-grid legend {
+  padding: 0 5px;
+  color: #9aa7a7;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+/* ---- Narrow layouts -------------------------------------------------------------------- */
+
+@media (max-width: 1180px) {
+  .eus-workspace {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .eus-drive {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+}
+
+@media (max-width: 760px) {
+  .eus-page {
+    padding: 8px;
+  }
+
+  .eus-header,
+  .eus-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .eus-control__row {
+    flex-wrap: wrap;
+  }
+
+  .eus-track {
+    flex-basis: 100%;
+    order: 3;
+  }
+}

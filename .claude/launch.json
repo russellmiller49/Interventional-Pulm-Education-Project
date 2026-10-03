@@ -155,6 +155,35 @@
       }
     },
     {
+      "name": "claude-eus-b-vite",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "EBUS-course/apps/web",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5183",
+        "--strictPort"
+      ],
+      "port": 5183,
+      "autoPort": false
+    },
+    {
+      "name": "claude-eus-b",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3138", "--webpack"],
+      "port": 3138,
+      "autoPort": false,
+      "env": {
+        "NEXT_PUBLIC_SITE_URL": "http://localhost:3138",
+        "NEXT_PUBLIC_SUPABASE_URL": "https://YOUR_PROJECT_REF.supabase.co",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY": "public-anon-key-placeholder",
+        "NEXT_PUBLIC_SUPABASE_PROJECT_REF": "YOUR_PROJECT_REF"
+      }
+    },
+    {
       "name": "claude-bbt-03-prod",
       "runtimeExecutable": "node",
       "runtimeArgs": [".next/standalone/server.js"],

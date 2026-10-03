@@ -1,0 +1,1352 @@
+{
+  "schema": "eus-b-case/v1",
+  "caseId": "eus-b-case-001",
+  "assetVersion": "eus-b-v1",
+  "sourceGeometrySha256": "8d9189a3002dc56e384fca59f2a89089ca486613291204c2863a4fb1321ea39a",
+  "coordinateFrame": {
+    "source": "LPS_mm",
+    "web": "x=L, y=S, z=-P"
+  },
+  "probe": {
+    "sectorAngleDeg": 60.0,
+    "defaultDepthMm": 50.0,
+    "frequencyMHz": 7.5,
+    "rollConvention": "positive = clockwise seen from the operator, looking along the insertion direction",
+    "imageConvention": "image right = proximal (toward the operator)"
+  },
+  "path": {
+    "totalLengthMm": 357.0,
+    "gejSMm": 247.0,
+    "levels": [
+      {
+        "key": "above_arch",
+        "label": "Above the aortic arch",
+        "fromSMm": 0.0,
+        "toSMm": 68.0
+      },
+      {
+        "key": "aortic_arch",
+        "label": "Aortic arch",
+        "fromSMm": 68.0,
+        "toSMm": 95.0
+      },
+      {
+        "key": "subcarinal",
+        "label": "Subcarinal",
+        "fromSMm": 95.0,
+        "toSMm": 140.0
+      },
+      {
+        "key": "left_atrium",
+        "label": "Behind the left atrium",
+        "fromSMm": 140.0,
+        "toSMm": 196.0
+      },
+      {
+        "key": "lower_esophagus",
+        "label": "Lower esophagus",
+        "fromSMm": 196.0,
+        "toSMm": 247.0
+      },
+      {
+        "key": "stomach",
+        "label": "Proximal stomach",
+        "fromSMm": 247.0,
+        "toSMm": 357.0
+      }
+    ],
+    "incisorOffsetMm": 175.0,
+    "incisorOffsetBasis": "Estimate. The segmented esophagus is assumed to begin 17.5 cm from the incisors."
+  },
+  "assets": {
+    "acoustic": {
+      "metadata": "geometry/acoustic.json",
+      "data": "geometry/acoustic.u8.gz"
+    },
+    "path": "geometry/scope_path.json",
+    "ct": {
+      "data": "geometry/ct.u8.gz",
+      "sizeXyz": [
+        153,
+        166,
+        212
+      ],
+      "spacingXyzMm": [
+        1.5,
+        1.5,
+        2.0
+      ],
+      "originLps": [
+        -98.0,
+        -301.0,
+        918.0
+      ],
+      "windowHu": [
+        -160.0,
+        240.0
+      ],
+      "dataSha256": "ffea0f0cffd278c2fe2dd4dd2c18beca25d25d392502acd3c6e37f923b08e7d8"
+    },
+    "model": {
+      "asset": "models/eus_b_anatomy.glb",
+      "frame": "web_mm",
+      "sha256": "e6d53c48407ff43ce473e16c1f441a22377471793d06ca2e565700f46151992f"
+    }
+  },
+  "bounds": {
+    "min": [
+      -142.2,
+      918.8,
+      58.0
+    ],
+    "max": [
+      91.0,
+      1340.0,
+      250.5
+    ]
+  },
+  "structures": [
+    {
+      "key": "liver",
+      "label": "Liver",
+      "group": "organ",
+      "medium": "liver",
+      "color": "#9a5b3f",
+      "volumeMl": 1333.6,
+      "sourceSegment": "liver",
+      "labelId": 5,
+      "triangles": 14000,
+      "centroidLps": [
+        -62.0,
+        -190.9,
+        1029.8
+      ]
+    },
+    {
+      "key": "left_kidney",
+      "label": "Left kidney",
+      "group": "organ",
+      "medium": "kidney",
+      "color": "#b06a4a",
+      "volumeMl": 112.9,
+      "sourceSegment": "Kidney_left",
+      "labelId": 6,
+      "triangles": 5000,
+      "centroidLps": [
+        32.2,
+        -127.5,
+        1030.9
+      ]
+    },
+    {
+      "key": "right_kidney",
+      "label": "Right kidney",
+      "group": "organ",
+      "medium": "kidney",
+      "color": "#b06a4a",
+      "volumeMl": 133.0,
+      "sourceSegment": "Kidney_right",
+      "labelId": 7,
+      "triangles": 4000,
+      "centroidLps": [
+        -76.9,
+        -130.1,
+        1018.5
+      ]
+    },
+    {
+      "key": "pancreas",
+      "label": "Pancreas",
+      "group": "organ",
+      "medium": "pancreas",
+      "color": "#e3b071",
+      "volumeMl": 57.3,
+      "sourceSegment": "pancreas",
+      "labelId": 8,
+      "triangles": 5000,
+      "centroidLps": [
+        6.3,
+        -182.8,
+        1012.4
+      ]
+    },
+    {
+      "key": "gallbladder",
+      "label": "Gallbladder",
+      "group": "organ",
+      "medium": "fluid",
+      "color": "#4f9d69",
+      "volumeMl": 29.1,
+      "sourceSegment": "gallbladder",
+      "labelId": 9,
+      "triangles": 2000,
+      "centroidLps": [
+        -65.6,
+        -213.9,
+        965.8
+      ]
+    },
+    {
+      "key": "right_adrenal",
+      "label": "Right adrenal gland",
+      "group": "organ",
+      "medium": "adrenal",
+      "color": "#f0c24b",
+      "volumeMl": 2.1,
+      "sourceSegment": "adrenal_gland_right",
+      "labelId": 10,
+      "triangles": 1200,
+      "centroidLps": [
+        -52.5,
+        -145.4,
+        1055.3
+      ]
+    },
+    {
+      "key": "left_adrenal",
+      "label": "Left adrenal gland",
+      "group": "organ",
+      "medium": "adrenal",
+      "color": "#f0c24b",
+      "volumeMl": 2.3,
+      "sourceSegment": "adrenal_gland_left",
+      "labelId": 11,
+      "triangles": 1500,
+      "centroidLps": [
+        14.5,
+        -157.2,
+        1053.8
+      ]
+    },
+    {
+      "key": "duodenum",
+      "label": "Duodenum",
+      "group": "gi",
+      "medium": "gi_wall",
+      "color": "#cf9f86",
+      "volumeMl": 37.1,
+      "sourceSegment": "duodenum",
+      "labelId": 12,
+      "triangles": 4000,
+      "centroidLps": [
+        -35.4,
+        -186.1,
+        977.4
+      ]
+    },
+    {
+      "key": "stomach",
+      "label": "Stomach",
+      "group": "gi",
+      "medium": "gi_wall",
+      "color": "#d58f8a",
+      "volumeMl": 172.6,
+      "sourceSegment": "stomach",
+      "labelId": 13,
+      "triangles": 9000,
+      "centroidLps": [
+        27.9,
+        -202.0,
+        1019.8
+      ]
+    },
+    {
+      "key": "left_ventricle",
+      "label": "Left ventricle",
+      "group": "heart",
+      "medium": "blood",
+      "color": "#c8484a",
+      "volumeMl": 186.1,
+      "sourceSegment": "Left Ventricle",
+      "labelId": 16,
+      "triangles": 5998,
+      "centroidLps": [
+        36.6,
+        -199.0,
+        1115.7
+      ]
+    },
+    {
+      "key": "right_ventricle",
+      "label": "Right ventricle",
+      "group": "heart",
+      "medium": "blood",
+      "color": "#3d7fc4",
+      "volumeMl": 70.8,
+      "sourceSegment": "Right Ventricle",
+      "labelId": 17,
+      "triangles": 5000,
+      "centroidLps": [
+        8.7,
+        -217.9,
+        1118.2
+      ]
+    },
+    {
+      "key": "right_atrium",
+      "label": "Right atrium",
+      "group": "heart",
+      "medium": "blood",
+      "color": "#3d7fc4",
+      "volumeMl": 84.5,
+      "sourceSegment": "Right Atrium",
+      "labelId": 18,
+      "triangles": 5000,
+      "centroidLps": [
+        -27.4,
+        -201.9,
+        1130.0
+      ]
+    },
+    {
+      "key": "left_atrium",
+      "label": "Left atrium",
+      "group": "heart",
+      "medium": "blood",
+      "color": "#c8484a",
+      "volumeMl": 91.5,
+      "sourceSegment": "Left Atrium",
+      "labelId": 19,
+      "triangles": 6000,
+      "centroidLps": [
+        -3.7,
+        -170.0,
+        1152.0
+      ]
+    },
+    {
+      "key": "left_atrial_appendage",
+      "label": "Left atrial appendage",
+      "group": "heart",
+      "medium": "blood",
+      "color": "#e07a76",
+      "volumeMl": 19.4,
+      "sourceSegment": "atrial_appendage_left",
+      "labelId": 20,
+      "triangles": 2500,
+      "centroidLps": [
+        29.9,
+        -187.9,
+        1167.7
+      ]
+    },
+    {
+      "key": "pulmonary_veins",
+      "label": "Pulmonary veins",
+      "group": "vessel",
+      "medium": "blood",
+      "color": "#e07a76",
+      "volumeMl": 21.3,
+      "sourceSegment": "pulmonary venous system",
+      "labelId": 21,
+      "triangles": 5000,
+      "centroidLps": [
+        -11.9,
+        -152.3,
+        1166.5
+      ]
+    },
+    {
+      "key": "pulmonary_artery",
+      "label": "Pulmonary artery",
+      "group": "vessel",
+      "medium": "blood",
+      "color": "#1f5fae",
+      "volumeMl": 116.9,
+      "sourceSegment": "pulmonary artery",
+      "labelId": 22,
+      "triangles": 8874,
+      "centroidLps": [
+        -10.4,
+        -153.0,
+        1170.5
+      ]
+    },
+    {
+      "key": "aorta",
+      "label": "Aorta",
+      "group": "vessel",
+      "medium": "blood",
+      "color": "#cf3d3d",
+      "volumeMl": 244.8,
+      "sourceSegment": "aorta",
+      "labelId": 23,
+      "triangles": 11999,
+      "centroidLps": [
+        -1.5,
+        -170.2,
+        1150.7
+      ]
+    },
+    {
+      "key": "inferior_vena_cava",
+      "label": "Inferior vena cava",
+      "group": "vessel",
+      "medium": "blood",
+      "color": "#2d78c8",
+      "volumeMl": 79.9,
+      "sourceSegment": "inferior vena cava",
+      "labelId": 24,
+      "triangles": 4000,
+      "centroidLps": [
+        -38.1,
+        -170.4,
+        1042.7
+      ]
+    },
+    {
+      "key": "superior_vena_cava",
+      "label": "Superior vena cava",
+      "group": "vessel",
+      "medium": "blood",
+      "color": "#2d78c8",
+      "volumeMl": 33.6,
+      "sourceSegment": "superior_vena_cava",
+      "labelId": 25,
+      "triangles": 3000,
+      "centroidLps": [
+        -33.3,
+        -188.4,
+        1208.6
+      ]
+    },
+    {
+      "key": "azygos_vein",
+      "label": "Azygos vein",
+      "group": "vessel",
+      "medium": "blood",
+      "color": "#2d78c8",
+      "volumeMl": 8.2,
+      "sourceSegment": "azygous",
+      "labelId": 26,
+      "triangles": 2500,
+      "centroidLps": [
+        -19.7,
+        -150.6,
+        1231.2
+      ]
+    },
+    {
+      "key": "portal_splenic_vein",
+      "label": "Portal and splenic veins",
+      "group": "vessel",
+      "medium": "blood",
+      "color": "#5a6fd0",
+      "volumeMl": 20.2,
+      "sourceSegment": "portal_vein_and_splenic_vein",
+      "labelId": 27,
+      "triangles": 3500,
+      "centroidLps": [
+        -22.3,
+        -186.7,
+        1028.0
+      ]
+    },
+    {
+      "key": "brachiocephalic_trunk",
+      "label": "Brachiocephalic trunk",
+      "group": "vessel",
+      "medium": "blood",
+      "color": "#cf3d3d",
+      "volumeMl": 4.7,
+      "sourceSegment": "brachiocephalic trunk",
+      "labelId": 28,
+      "triangles": 1500,
+      "centroidLps": [
+        -2.4,
+        -197.0,
+        1256.1
+      ]
+    },
+    {
+      "key": "right_subclavian_artery",
+      "label": "Right subclavian artery",
+      "group": "vessel",
+      "medium": "blood",
+      "color": "#cf3d3d",
+      "volumeMl": 8.4,
+      "sourceSegment": "right subclavian artery",
+      "labelId": 29,
+      "triangles": 1998,
+      "centroidLps": [
+        -45.8,
+        -178.8,
+        1284.8
+      ]
+    },
+    {
+      "key": "left_subclavian_artery",
+      "label": "Left subclavian artery",
+      "group": "vessel",
+      "medium": "blood",
+      "color": "#cf3d3d",
+      "volumeMl": 8.9,
+      "sourceSegment": "left subclavian artery",
+      "labelId": 30,
+      "triangles": 2000,
+      "centroidLps": [
+        35.5,
+        -178.2,
+        1277.7
+      ]
+    },
+    {
+      "key": "right_common_carotid_artery",
+      "label": "Right common carotid artery",
+      "group": "vessel",
+      "medium": "blood",
+      "color": "#cf3d3d",
+      "volumeMl": 3.8,
+      "sourceSegment": "right common carotid artery",
+      "labelId": 31,
+      "triangles": 1499,
+      "centroidLps": [
+        -14.6,
+        -187.9,
+        1302.6
+      ]
+    },
+    {
+      "key": "left_common_carotid_artery",
+      "label": "Left common carotid artery",
+      "group": "vessel",
+      "medium": "blood",
+      "color": "#cf3d3d",
+      "volumeMl": 5.2,
+      "sourceSegment": "left common carotid artery",
+      "labelId": 32,
+      "triangles": 1500,
+      "centroidLps": [
+        12.8,
+        -188.3,
+        1289.1
+      ]
+    },
+    {
+      "key": "left_brachiocephalic_vein",
+      "label": "Left brachiocephalic vein",
+      "group": "vessel",
+      "medium": "blood",
+      "color": "#2d78c8",
+      "volumeMl": 12.7,
+      "sourceSegment": "left brachiocephalic vein",
+      "labelId": 33,
+      "triangles": 2498,
+      "centroidLps": [
+        2.5,
+        -203.1,
+        1260.9
+      ]
+    },
+    {
+      "key": "right_brachiocephalic_vein",
+      "label": "Right brachiocephalic vein",
+      "group": "vessel",
+      "medium": "blood",
+      "color": "#2d78c8",
+      "volumeMl": 8.8,
+      "sourceSegment": "right brachiocephalic vein",
+      "labelId": 34,
+      "triangles": 2000,
+      "centroidLps": [
+        -28.6,
+        -192.1,
+        1262.6
+      ]
+    },
+    {
+      "key": "esophagus",
+      "label": "Esophagus",
+      "group": "gi",
+      "medium": "gi_wall",
+      "color": "#c9a36c",
+      "volumeMl": 48.0,
+      "sourceSegment": "esophagus",
+      "labelId": 35,
+      "triangles": 6000,
+      "centroidLps": [
+        -6.0,
+        -156.5,
+        1190.6
+      ]
+    },
+    {
+      "key": "station_1r",
+      "label": "Station 1R",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 0.2,
+      "sourceSegment": "Station 1R",
+      "labelId": 36,
+      "triangles": 396,
+      "centroidLps": [
+        -9.8,
+        -197.8,
+        1287.7
+      ]
+    },
+    {
+      "key": "station_1l",
+      "label": "Station 1L",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 0.3,
+      "sourceSegment": "Station 1L",
+      "labelId": 37,
+      "triangles": 400,
+      "centroidLps": [
+        -0.1,
+        -200.1,
+        1276.1
+      ]
+    },
+    {
+      "key": "station_2r",
+      "label": "Station 2R",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 0.5,
+      "sourceSegment": "Station 2R",
+      "labelId": 38,
+      "triangles": 500,
+      "centroidLps": [
+        -13.7,
+        -171.5,
+        1282.2
+      ]
+    },
+    {
+      "key": "station_2l",
+      "label": "Station 2L",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 0.2,
+      "sourceSegment": "Station 2L",
+      "labelId": 39,
+      "triangles": 400,
+      "centroidLps": [
+        0.9,
+        -169.3,
+        1247.4
+      ]
+    },
+    {
+      "key": "station_3a",
+      "label": "Station 3A",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 3.3,
+      "sourceSegment": "Station 3A",
+      "labelId": 40,
+      "triangles": 900,
+      "centroidLps": [
+        -17.1,
+        -215.1,
+        1238.3
+      ]
+    },
+    {
+      "key": "station_4r",
+      "label": "Station 4R",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 7.0,
+      "sourceSegment": "Station 4R",
+      "labelId": 41,
+      "triangles": 1200,
+      "centroidLps": [
+        -15.2,
+        -181.5,
+        1235.9
+      ]
+    },
+    {
+      "key": "station_4l",
+      "label": "Station 4L",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 8.4,
+      "sourceSegment": "Station 4L",
+      "labelId": 42,
+      "triangles": 1200,
+      "centroidLps": [
+        5.3,
+        -170.1,
+        1212.7
+      ]
+    },
+    {
+      "key": "station_5",
+      "label": "Station 5",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 1.7,
+      "sourceSegment": "Station 5",
+      "labelId": 43,
+      "triangles": 600,
+      "centroidLps": [
+        22.2,
+        -177.6,
+        1211.0
+      ]
+    },
+    {
+      "key": "station_6",
+      "label": "Station 6",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 1.3,
+      "sourceSegment": "Staion 6",
+      "labelId": 44,
+      "triangles": 600,
+      "centroidLps": [
+        25.1,
+        -174.4,
+        1228.8
+      ]
+    },
+    {
+      "key": "station_7",
+      "label": "Station 7",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 11.0,
+      "sourceSegment": "Station 7",
+      "labelId": 45,
+      "triangles": 1400,
+      "centroidLps": [
+        -17.3,
+        -152.1,
+        1188.0
+      ]
+    },
+    {
+      "key": "station_8",
+      "label": "Station 8",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 0.7,
+      "sourceSegment": "Station 8",
+      "labelId": 46,
+      "triangles": 500,
+      "centroidLps": [
+        -17.9,
+        -155.5,
+        1139.5
+      ]
+    },
+    {
+      "key": "station_9",
+      "label": "Station 9",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 0.3,
+      "sourceSegment": "Station 9",
+      "labelId": 47,
+      "triangles": 400,
+      "centroidLps": [
+        -3.2,
+        -145.2,
+        1154.1
+      ]
+    },
+    {
+      "key": "station_10r",
+      "label": "Station 10R",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 2.9,
+      "sourceSegment": "Station 10R",
+      "labelId": 48,
+      "triangles": 700,
+      "centroidLps": [
+        -25.7,
+        -174.2,
+        1209.1
+      ]
+    },
+    {
+      "key": "station_10l",
+      "label": "Station 10L",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 0.1,
+      "sourceSegment": "Station 10L",
+      "labelId": 49,
+      "triangles": 280,
+      "centroidLps": [
+        18.9,
+        -159.8,
+        1188.8
+      ]
+    },
+    {
+      "key": "station_11rs",
+      "label": "Station 11Rs",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 1.5,
+      "sourceSegment": "Station 11Rs",
+      "labelId": 50,
+      "triangles": 500,
+      "centroidLps": [
+        -46.1,
+        -163.4,
+        1195.5
+      ]
+    },
+    {
+      "key": "station_11ri",
+      "label": "Station 11Ri",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 0.2,
+      "sourceSegment": "Station 11Ri",
+      "labelId": 51,
+      "triangles": 298,
+      "centroidLps": [
+        -58.7,
+        -155.8,
+        1165.7
+      ]
+    },
+    {
+      "key": "station_11l",
+      "label": "Station 11L",
+      "group": "node",
+      "medium": "node",
+      "color": "#8fca6b",
+      "volumeMl": 0.1,
+      "sourceSegment": "Station 11L",
+      "labelId": 52,
+      "triangles": 236,
+      "centroidLps": [
+        34.9,
+        -149.0,
+        1182.0
+      ]
+    },
+    {
+      "key": "airway",
+      "label": "Airway",
+      "group": "airway",
+      "medium": "air",
+      "color": "#27c4c6",
+      "volumeMl": 41.5,
+      "sourceSegment": "airway",
+      "labelId": 2,
+      "triangles": 8992,
+      "centroidLps": [
+        -9.1,
+        -155.7,
+        1202.3
+      ]
+    },
+    {
+      "key": "spine",
+      "label": "Spine (CT threshold)",
+      "group": "bone",
+      "color": "#d9d2bd",
+      "triangles": 11949
+    }
+  ],
+  "landmarks": [
+    {
+      "key": "station_2l",
+      "sMm": 62.0,
+      "rollDeg": -29.0,
+      "flexDeg": 0,
+      "score": 201.0,
+      "inView": [
+        "aorta",
+        "station_2l",
+        "left_subclavian_artery",
+        "esophagus",
+        "left_common_carotid_artery",
+        "left_brachiocephalic_vein"
+      ],
+      "expectedPose": {
+        "originLps": [
+          -1.737,
+          -163.406,
+          1250.322
+        ],
+        "depthAxisLps": [
+          0.38508,
+          -0.87316,
+          -0.29884
+        ],
+        "lateralAxisLps": [
+          -0.00379,
+          -0.3253,
+          0.9456
+        ]
+      }
+    },
+    {
+      "key": "station_4l",
+      "sMm": 95.0,
+      "rollDeg": -21.0,
+      "flexDeg": 0,
+      "score": 530.4,
+      "inView": [
+        "station_4l",
+        "pulmonary_artery",
+        "aorta",
+        "esophagus"
+      ],
+      "expectedPose": {
+        "originLps": [
+          -4.145,
+          -151.167,
+          1220.155
+        ],
+        "depthAxisLps": [
+          0.25334,
+          -0.93715,
+          -0.23995
+        ],
+        "lateralAxisLps": [
+          0.03733,
+          -0.23838,
+          0.97045
+        ]
+      }
+    },
+    {
+      "key": "station_5",
+      "sMm": 96.0,
+      "rollDeg": -48.0,
+      "flexDeg": 0,
+      "score": 116.6,
+      "inView": [
+        "station_4l",
+        "pulmonary_artery",
+        "station_5",
+        "aorta",
+        "esophagus",
+        "station_6"
+      ],
+      "expectedPose": {
+        "originLps": [
+          -1.461,
+          -149.969,
+          1219.318
+        ],
+        "depthAxisLps": [
+          0.66459,
+          -0.71941,
+          -0.20191
+        ],
+        "lateralAxisLps": [
+          0.04017,
+          -0.23542,
+          0.97106
+        ]
+      }
+    },
+    {
+      "key": "station_6",
+      "sMm": 80.0,
+      "rollDeg": -52.0,
+      "flexDeg": 0,
+      "score": 101.5,
+      "inView": [
+        "aorta",
+        "station_6",
+        "esophagus",
+        "station_5"
+      ],
+      "expectedPose": {
+        "originLps": [
+          -1.971,
+          -152.724,
+          1235.11
+        ],
+        "depthAxisLps": [
+          0.71496,
+          -0.67059,
+          -0.19787
+        ],
+        "lateralAxisLps": [
+          0.00341,
+          -0.27966,
+          0.96009
+        ]
+      }
+    },
+    {
+      "key": "station_7",
+      "sMm": 128.0,
+      "rollDeg": 36.0,
+      "flexDeg": 0,
+      "score": 738.0,
+      "inView": [
+        "station_7",
+        "pulmonary_artery",
+        "superior_vena_cava",
+        "pulmonary_veins",
+        "esophagus"
+      ],
+      "expectedPose": {
+        "originLps": [
+          -9.306,
+          -141.099,
+          1189.204
+        ],
+        "depthAxisLps": [
+          -0.66203,
+          -0.74938,
+          -0.01197
+        ],
+        "lateralAxisLps": [
+          0.09904,
+          -0.1033,
+          0.98971
+        ]
+      }
+    },
+    {
+      "key": "station_8",
+      "sMm": 202.0,
+      "rollDeg": 27.0,
+      "flexDeg": 0,
+      "score": 264.0,
+      "inView": [
+        "right_atrium",
+        "inferior_vena_cava",
+        "left_atrium",
+        "station_8",
+        "esophagus"
+      ],
+      "expectedPose": {
+        "originLps": [
+          -14.744,
+          -157.794,
+          1120.346
+        ],
+        "depthAxisLps": [
+          -0.51475,
+          -0.76523,
+          0.3866
+        ],
+        "lateralAxisLps": [
+          -0.08997,
+          0.49665,
+          0.86328
+        ]
+      }
+    },
+    {
+      "key": "station_9",
+      "sMm": 167.0,
+      "rollDeg": 62.0,
+      "flexDeg": 0,
+      "score": 179.4,
+      "inView": [
+        "pulmonary_veins",
+        "station_9",
+        "esophagus"
+      ],
+      "expectedPose": {
+        "originLps": [
+          -16.21,
+          -142.729,
+          1151.202
+        ],
+        "depthAxisLps": [
+          -0.91302,
+          -0.38568,
+          0.13282
+        ],
+        "lateralAxisLps": [
+          0.0635,
+          0.18726,
+          0.98026
+        ]
+      }
+    },
+    {
+      "key": "aorta",
+      "sMm": 116.0,
+      "rollDeg": -131.0,
+      "flexDeg": 0,
+      "score": 1045.4,
+      "inView": [
+        "aorta",
+        "esophagus"
+      ],
+      "expectedPose": {
+        "originLps": [
+          -2.829,
+          -138.424,
+          1201.185
+        ],
+        "depthAxisLps": [
+          0.8164,
+          0.57698,
+          0.02428
+        ],
+        "lateralAxisLps": [
+          0.08551,
+          -0.16235,
+          0.98302
+        ]
+      }
+    },
+    {
+      "key": "pulmonary_artery",
+      "sMm": 117.0,
+      "rollDeg": -84.0,
+      "flexDeg": 0,
+      "score": 558.0,
+      "inView": [
+        "pulmonary_artery",
+        "esophagus"
+      ],
+      "expectedPose": {
+        "originLps": [
+          2.179,
+          -143.028,
+          1198.967
+        ],
+        "depthAxisLps": [
+          0.97443,
+          -0.19183,
+          -0.11701
+        ],
+        "lateralAxisLps": [
+          0.08703,
+          -0.1579,
+          0.98361
+        ]
+      }
+    },
+    {
+      "key": "left_atrium",
+      "sMm": 172.0,
+      "rollDeg": -40.0,
+      "flexDeg": 0,
+      "score": 1488.2,
+      "inView": [
+        "left_atrium",
+        "left_ventricle",
+        "left_atrial_appendage",
+        "esophagus"
+      ],
+      "expectedPose": {
+        "originLps": [
+          -10.37,
+          -144.123,
+          1146.129
+        ],
+        "depthAxisLps": [
+          0.58668,
+          -0.79332,
+          0.16264
+        ],
+        "lateralAxisLps": [
+          0.04914,
+          0.23534,
+          0.97067
+        ]
+      }
+    },
+    {
+      "key": "azygos_vein",
+      "sMm": 73.0,
+      "rollDeg": 47.0,
+      "flexDeg": 0,
+      "score": 623.4,
+      "inView": [
+        "azygos_vein",
+        "esophagus",
+        "station_10r"
+      ],
+      "expectedPose": {
+        "originLps": [
+          -11.097,
+          -155.604,
+          1241.467
+        ],
+        "depthAxisLps": [
+          -0.80239,
+          -0.56877,
+          -0.18076
+        ],
+        "lateralAxisLps": [
+          -0.00393,
+          -0.29784,
+          0.95461
+        ]
+      }
+    },
+    {
+      "key": "left_adrenal",
+      "sMm": 272.0,
+      "rollDeg": 153.0,
+      "flexDeg": 0,
+      "score": 314.7,
+      "inView": [
+        "left_adrenal",
+        "stomach",
+        "left_kidney"
+      ],
+      "expectedPose": {
+        "originLps": [
+          15.016,
+          -168.37,
+          1055.353
+        ],
+        "depthAxisLps": [
+          -0.34625,
+          0.70341,
+          -0.62074
+        ],
+        "lateralAxisLps": [
+          -0.75272,
+          0.18662,
+          0.63134
+        ]
+      }
+    },
+    {
+      "key": "left_kidney",
+      "sMm": 275.0,
+      "rollDeg": -167.0,
+      "flexDeg": 0,
+      "score": 1308.8,
+      "inView": [
+        "left_kidney",
+        "stomach",
+        "left_adrenal"
+      ],
+      "expectedPose": {
+        "originLps": [
+          25.154,
+          -159.884,
+          1059.775
+        ],
+        "depthAxisLps": [
+          0.10379,
+          0.97736,
+          -0.18437
+        ],
+        "lateralAxisLps": [
+          -0.74951,
+          0.19871,
+          0.63147
+        ]
+      }
+    },
+    {
+      "key": "liver",
+      "sMm": 260.0,
+      "rollDeg": 45.0,
+      "flexDeg": 0,
+      "score": 1930.8,
+      "inView": [
+        "liver",
+        "stomach"
+      ],
+      "expectedPose": {
+        "originLps": [
+          8.408,
+          -184.252,
+          1071.441
+        ],
+        "depthAxisLps": [
+          -0.44218,
+          -0.86543,
+          -0.23559
+        ],
+        "lateralAxisLps": [
+          -0.72972,
+          0.19439,
+          0.65553
+        ]
+      }
+    },
+    {
+      "key": "pancreas",
+      "sMm": 305.0,
+      "rollDeg": -162.0,
+      "flexDeg": 0,
+      "score": 820.8,
+      "inView": [
+        "pancreas",
+        "stomach"
+      ],
+      "expectedPose": {
+        "originLps": [
+          46.901,
+          -183.167,
+          1039.11
+        ],
+        "depthAxisLps": [
+          0.45167,
+          0.77272,
+          -0.44597
+        ],
+        "lateralAxisLps": [
+          -0.39251,
+          0.621,
+          0.67845
+        ]
+      }
+    },
+    {
+      "key": "portal_splenic_vein",
+      "sMm": 335.0,
+      "rollDeg": 96.0,
+      "flexDeg": 0,
+      "score": 254.0,
+      "inView": [
+        "pancreas",
+        "portal_splenic_vein",
+        "stomach",
+        "aorta",
+        "inferior_vena_cava"
+      ],
+      "expectedPose": {
+        "originLps": [
+          26.581,
+          -204.615,
+          1022.628
+        ],
+        "depthAxisLps": [
+          -0.91699,
+          0.39798,
+          -0.02711
+        ],
+        "lateralAxisLps": [
+          0.1992,
+          0.51572,
+          0.83328
+        ]
+      }
+    }
+  ],
+  "notes": {
+    "intent": "Educational EUS-B orientation trainer. Simulated images are not clinically validated.",
+    "path": "Authored centered route through the segmented esophagus and proximal stomach.",
+    "contact": "The transducer is placed on the wall it faces; coupling is not simulated.",
+    "background": "Unsegmented tissue is classed from CT attenuation (air, fat, soft tissue, bone)."
+  }
+}
