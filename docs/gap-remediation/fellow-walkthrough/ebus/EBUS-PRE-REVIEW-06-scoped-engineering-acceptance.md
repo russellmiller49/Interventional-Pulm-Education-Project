@@ -171,19 +171,24 @@ report, do not describe the current combined PR's publication status.
 ### Main reconciliation and effective scope
 
 - Fetched prior PR head: `7255b8e34aa1a082354200f55192d16e0529c1fd`.
-- Integrated `origin/main`: `f962a3819b5e8d946de59b2401532a3ed681ae6a`.
+- Initial fetched/integrated `origin/main`: `f962a3819b5e8d946de59b2401532a3ed681ae6a`.
+- Final fetched/integrated `origin/main`: `e961695391bebdadb7c5f3fb95438ea3f6b1acbe`.
 - Prior merge base: `46c5bb94f779a1464da6198bba4bcf8550379419`.
-- Normal merge-forward commit: `73381fc2d0fcf76451250a8908868c7af9361876`; no conflict,
-  rebase, force push or dropped change.
-- The active worktree started clean on `codex/ebus-10-3` at the integrated main revision.
+- Normal merge-forward commits: `73381fc2d0fcf76451250a8908868c7af9361876`,
+  `c51d43e45a7dfec71ad199bc70d21d1cfb97a1d2` and
+  `59fbc9dfdde62aab72ae77de81e353e3923250f1`; no conflict, rebase, force push or dropped change.
+- The active worktree started clean on `codex/ebus-10-3` at the initial main revision.
   Because the PR branch was already checked out elsewhere, integration used local branch
   `codex/ebus-316-main-integration-20261002` in
   `/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/codex-ebus-10-3`,
   with the existing PR branch as the normal push destination.
-- Main contained the same four intervening commits identified at prompt preparation:
-  Wolf preview #318 and beta-feedback #319, including their merge commits. No further main
-  advance was found. None of their 36 changed paths overlap #316's 11 changed paths.
-- Fresh inventory: **27 open PRs**, including #316; no other open PR overlaps its changed paths.
+- The initial fetch found the same four intervening Wolf preview #318/beta-feedback #319
+  commits identified at prompt preparation. Main then advanced during validation: a further
+  fetch found Device Intelligence #317, MCS #284 and Peripheral Imaging #279. All additional
+  changed paths were inspected; none overlap #316's 11 paths. Shared translation changes are
+  confined to Device Intelligence keys. The final-main merge preserves all of these changes.
+- Open PR inventory was refreshed from **27** to **24**, including #316; no other open PR
+  overlaps its changed paths.
   Shared-consumer work in #297 and shared verdict/stage work in #134 remain outside this branch.
   Their eventual integration still needs affected compatibility checks.
 - The effective runtime/test patch against integrated main is byte-for-byte identical to the
@@ -208,6 +213,9 @@ report, do not describe the current combined PR's publication status.
 | Named-label stress measurements                                     | **111 rendered states**, zero overlapping label pairs; actual labels stay present and contained, without shrinking or hiding labels to obtain a pass                                                                          |
 | Scoped lint/formatting and diff check                               | Host/tests ESLint, explicit embedded ESLint with `--no-ignore`, host/test/report Prettier and `git diff --check` passed; embedded imported source retains the repository's existing Prettier exemption                        |
 
+All listed focused unit/type/embed checks and the browser checks were rerun after the final
+main integration. Earlier passes are retained but are not added to these final counts.
+
 The requested browser run totals **25 tests** (24 browser journeys and one pure helper); the
 supplemental session/route run and matched-anchor run are separate focused checks, not additional
 curriculum acceptances. The supported scope/route controls exercised orbit, zoom, reset,
@@ -216,10 +224,12 @@ selection and genuine sweep/reset events. Desktop/tablet and 200% root-text cove
 390/320 px phone fallback is unchanged; no phone model rendering or native browser zoom claim is
 made. Screenshots of the enlarged-text scope labels and route labels were visually inspected.
 
-The matched projection check builds current main's tracked embedded source separately with the
+The matched projection check builds main's tracked embedded source separately with the
 same dependencies and unchanged tracked assets, and serves that production bundle to the same
 host through a test-only static-resource override. It compares native control results with the
-integration bundle at equal canvas sizes and poses. It injects no observations, acquisition
+integration bundle at equal canvas sizes and poses. EBUS/shared-library build inputs are identical
+between the initial and final main revisions; the final comparisons run against the final merged
+host. It injects no observations, acquisition
 records or clinical state. Historical screenshots alone were not treated as a matched baseline:
 the earlier recorded desktop canvas width differs from this environment's width.
 
