@@ -3,7 +3,15 @@
 import { useState, type Dispatch, type ReactNode } from 'react'
 import { Eye, RotateCcw, ShieldAlert } from 'lucide-react'
 import type { McsAction, McsSimulationState } from '../engine'
+import { mcsActionDisplayList } from '../content/actionDisplayNames'
+import { mcsClaimChecksForCase } from '../content/claimSourceMap'
+import {
+  mcsCasePredictionReasoning,
+  mcsCaseReasoningHeading,
+} from '../content/casePredictionReasoning'
 import { mcsPresentationTitle } from '../content/casePresentation'
+import { mcsNameWithMechanism } from '../content/deviceNaming'
+import { McsClaimSourceChecks } from './McsClaimSourceChecks'
 import styles from './mechanical-circulatory-support.module.css'
 
 export function McsCaseWorkflow({
@@ -19,19 +27,41 @@ export function McsCaseWorkflow({
 }) {
   const [hintVisible, setHintVisible] = useState(false)
   const scenario = state.scenario
+  const selectedOption = scenario?.predictionOptions.find(
+    (option) => option.id === state.selectedPredictionId,
+  )
+  const selectedFits = selectedOption?.id === scenario?.correctPredictionId
   if (!scenario)
     return (
-      <section className={styles.workflowCard} aria-label="Mechanism Studio instructions">
-        <span className={styles.kicker}>OPEN EXPLORATION</span>
+      <section
+        className={styles.workflowCard}
+        aria-label="Mechanism Studio instructions"
+        data-mechanism-studio
+      >
+        {/*
+         * Said for what it is (F36). The hub called the Studio a place with "no patient and no
+         * debrief", and the page then opened on a patient context row, a mode chip and a six-stage
+         * stepper, so a learner went looking for the assignment. There is a patient — the module's
+         * reference patient, which is what makes a change readable — and there is no assignment:
+         * no case, no question, no worked explanation to reach, and nothing recorded.
+         */}
+        <span className={styles.kicker}>OPEN SANDBOX · REFERENCE PATIENT</span>
         <h2>Mechanism Studio</h2>
+        <p data-studio-identity>
+          An open sandbox on this module’s reference patient. There is no case to solve, no question
+          to answer and no debrief to reach: nothing here is a task, and nothing you do here is
+          recorded or counted.
+        </p>
         <p>
-          Start with one device and reference physiology. Change a setting or simulated condition,
-          then compare native flow, device flow, effective flow, ventricular loading, pressure, and
-          alarms.
+          The patient context above is the reference patient the sandbox starts from, shown so a
+          change has something to be read against. Change one setting or simulated condition, then
+          compare native flow, device flow, effective flow, ventricular loading, pressure, and
+          alarms. Every control and every safety interlock works as it does in a case.
         </p>
         <p>
           Reset restores the reference patient and device configuration and clears current actions.
-          Display playback changes model time; it does not turn off device support.
+          Display playback changes model time; it does not turn off device support. For a patient
+          with a problem to work through and a worked explanation, open a case instead.
         </p>
         <div className={styles.studioWorkspace}>
           {observations}
@@ -72,11 +102,9 @@ export function McsCaseWorkflow({
         <div>
           <dt>Support pathway</dt>
           <dd>
-            {scenario.device === 'iabp'
-              ? 'IABP counterpulsation'
-              : scenario.device === 'impella'
-                ? 'Microaxial support'
-                : 'Durable continuous-flow LVAD'}
+            {scenario.device === 'impella'
+              ? 'Impella (microaxial pump) · the pump in use is named in the Support row above'
+              : mcsNameWithMechanism(scenario.device)}
           </dd>
         </div>
         <div>
@@ -84,6 +112,20 @@ export function McsCaseWorkflow({
           <dd>
             Explore the simulated conditions, compare observations, and open the explanation
             whenever useful. Predictions and actions are optional.
+          </dd>
+        </div>
+        {/*
+         * What kind of case this is, said plainly (F31). The title, the topic and the alarm name
+         * the problem before the prediction is asked, and they are meant to: this is a teaching
+         * case to work through and come back to, not a blind diagnostic exercise. Hiding a real
+         * alarm or neutralizing the title to manufacture difficulty would take information away
+         * from a learner for no gain, so the case says what it is instead.
+         */}
+        <div data-case-kind>
+          <dt>Kind of case</dt>
+          <dd>
+            A worked teaching case. Its title, topic and alarms name the problem on purpose, so the
+            optional prediction is a self-check on the reasoning rather than a blind diagnosis.
           </dd>
         </div>
         <div>
@@ -160,24 +202,63 @@ export function McsCaseWorkflow({
           <button type="button" onClick={() => dispatch({ type: 'COMPLETE' })}>
             Show explanation
           </button>
-          <button type="button" onClick={() => dispatch({ type: 'SELECT_PREDICTION', id: null })}>
-            Try prediction again
-          </button>
+          {/* Offered once a prediction has been compared: before that there is nothing to retry. */}
+          {state.predictionCommitted ? (
+            <button
+              type="button"
+              data-try-prediction-again
+              onClick={() => dispatch({ type: 'SELECT_PREDICTION', id: null })}
+            >
+              Try prediction again
+            </button>
+          ) : null}
         </div>
       </fieldset>
-      {hintVisible || state.predictionCommitted ? (
-        <aside className={styles.guidedPrompt}>
-          <strong>{state.predictionCommitted ? 'Prediction explanation' : 'Hint'}</strong>
+      {hintVisible && !state.predictionCommitted ? (
+        <aside className={styles.guidedPrompt} data-case-hint>
+          <strong>Hint</strong>
           <p>{scenario.guidedPrompt || scenario.debrief[0]}</p>
-          {state.predictionCommitted ? (
-            <p>
-              {
-                scenario.predictionOptions.find(
-                  (option) => option.id === scenario.correctPredictionId,
-                )?.label
-              }
-            </p>
-          ) : null}
+        </aside>
+      ) : null}
+      {/*
+       * The reasoning for the option the learner compared, then for every other option (F32).
+       *
+       * This block used to show the case's one-line hint and the keyed label, and nothing about
+       * the option actually chosen. Each option now has its own reasoning about the modeled state
+       * the case is built in. It names a fit to the model rather than a result for the learner:
+       * nothing is totalled, no attempt is kept, and the same reasoning is on the worked
+       * explanation for anyone who never answers.
+       */}
+      {state.predictionCommitted && selectedOption ? (
+        <aside className={styles.guidedPrompt} data-prediction-reasoning-list role="status">
+          <strong>Your prediction: {selectedOption.label}</strong>
+          <p data-prediction-reasoning={selectedOption.id} data-fits={selectedFits}>
+            <em>{mcsCaseReasoningHeading(selectedFits)}.</em>{' '}
+            {mcsCasePredictionReasoning(scenario.id, selectedOption.id)}
+          </p>
+          <p>
+            <strong>The other options, against the same modeled state</strong>
+          </p>
+          <ul>
+            {scenario.predictionOptions
+              .filter((option) => option.id !== selectedOption.id)
+              .map((option) => {
+                const fits = option.id === scenario.correctPredictionId
+                return (
+                  <li key={option.id} data-prediction-reasoning={option.id} data-fits={fits}>
+                    <span>{option.label}.</span> <em>{mcsCaseReasoningHeading(fits)}.</em>{' '}
+                    {mcsCasePredictionReasoning(scenario.id, option.id)}
+                  </li>
+                )
+              })}
+          </ul>
+          <p>
+            <em>Where to look:</em> {scenario.guidedPrompt || scenario.debrief[0]}
+          </p>
+          <p data-prediction-reasoning-boundary>
+            This compares each option with the state this case is built in. It is draft teaching
+            copy, not a clinical rule, and it is not kept: no answer is counted or stored.
+          </p>
         </aside>
       ) : null}
       <section className={styles.casePermittedActions}>
@@ -246,6 +327,10 @@ export function McsCaseWorkflow({
                   <li key={item}>{item}</li>
                 ))}
               </ul>
+              <McsClaimSourceChecks
+                claims={mcsClaimChecksForCase(scenario.id)}
+                context="this case"
+              />
             </div>
             <div data-debrief-conditions>
               <h4>Signals to reconcile</h4>
@@ -294,10 +379,18 @@ export function McsCaseWorkflow({
             </div>
             <div data-debrief-run>
               <h4>Actions performed in this run</h4>
+              {/*
+               * The learner's own actions, by name (F33). This list printed the reducer's ids —
+               * `inspect:arterial`, `iabp:set-deflation` — which are the stored contract and were
+               * never meant to be read. The ids are unchanged and stay on each row as a data
+               * attribute for anyone tracing a run; what is read is the control's name.
+               */}
               {state.actionIds.length ? (
-                <ul>
-                  {state.actionIds.map((id) => (
-                    <li key={id}>{id}</li>
+                <ul data-run-actions>
+                  {mcsActionDisplayList(state.actionIds).map((action) => (
+                    <li key={action.id} data-action-id={action.id}>
+                      {action.name}
+                    </li>
                   ))}
                 </ul>
               ) : (
@@ -308,6 +401,20 @@ export function McsCaseWorkflow({
                   ? `Your prediction: ${scenario.predictionOptions.find((option) => option.id === state.selectedPredictionId)?.label}`
                   : 'No prediction submitted.'}
               </p>
+              <details data-all-option-reasoning>
+                <summary>Reasoning for every prediction option</summary>
+                <ul>
+                  {scenario.predictionOptions.map((option) => {
+                    const fits = option.id === scenario.correctPredictionId
+                    return (
+                      <li key={option.id} data-option-reasoning={option.id} data-fits={fits}>
+                        <span>{option.label}.</span> <em>{mcsCaseReasoningHeading(fits)}.</em>{' '}
+                        {mcsCasePredictionReasoning(scenario.id, option.id)}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </details>
               <button type="button" onClick={() => dispatch({ type: 'RESET' })}>
                 Try again from the case baseline
               </button>

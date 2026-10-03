@@ -17,7 +17,7 @@ export const mcsSources: readonly McsSource[] = [
     id: 'mcs-bedside-reference-supplied',
     title: 'Bedside Mechanical Circulatory Support Reference',
     citation:
-      'Supplied Word document headed “Mechanical Circulatory Support at the Bedside”. It names no author, publisher, date or reference list and describes itself as a synthesis of four supplied chapters; its file properties name OpenAI as the creator.',
+      'Authoring provenance, not independent clinical evidence: a supplied Word document headed “Mechanical Circulatory Support at the Bedside”. It names no author, publisher, date or reference list and describes itself as a synthesis of four supplied chapters; its file properties name OpenAI as the creator.',
     sourceType: 'reference-package',
     year: null,
     suppliedFilename: 'Bedside_Mechanical_Circulatory_Support_Reference.docx',
@@ -30,7 +30,7 @@ export const mcsSources: readonly McsSource[] = [
     id: 'master-hemodynamics-reference',
     title: 'Master Hemodynamics and Hemodynamic Monitoring Reference',
     citation:
-      'Supplied Word document headed “Master Reference”, on clinical hemodynamics and hemodynamic monitoring. It names no author, publisher, date or reference list; its file properties name OpenAI as the creator. Registered locator pp. 39–41, not checked: the document has no fixed pagination.',
+      'Authoring provenance, not independent clinical evidence: a supplied Word document headed “Master Reference”, on clinical hemodynamics and hemodynamic monitoring. It names no author, publisher, date or reference list; its file properties name OpenAI as the creator. Registered locator pp. 39–41, not checked: the document has no fixed pagination.',
     sourceType: 'reference-package',
     year: null,
     suppliedFilename: 'Master_Hemodynamics_and_Hemodynamic_Monitoring_Reference.docx',
@@ -85,11 +85,11 @@ export const mcsSources: readonly McsSource[] = [
     id: 'getinge-cardiosave-hybrid-operating-instructions',
     title: 'CARDIOSAVE Hybrid Operating Instructions',
     citation:
-      'Datascope Corp. CARDIOSAVE Hybrid Operating Instructions, English, 0070-00-0638-01. © 2015. Supplied PDF; trigger warnings on printed pages vi and 2-18.',
+      'Datascope Corp. CARDIOSAVE Hybrid Operating Instructions, English, 0070-00-0638-01. © 2015. Supplied PDF; trigger warnings on printed pages vi and 2-18; the description of balloon timing on printed page xiv.',
     sourceType: 'manufacturer',
     year: 2015,
     intendedUse:
-      'Trigger-source warnings: pressure triggering is not recommended in a sustained irregular rhythm or tachyarrhythmia, and internal triggering is not to be kept while the patient generates a cardiac output.',
+      'Trigger-source warnings: pressure triggering is not recommended in a sustained irregular rhythm or tachyarrhythmia, and internal triggering is not to be kept while the patient generates a cardiac output. Also the timing relationship itself (printed page xiv): inflation is initiated at the onset of diastole at the dicrotic notch, and the balloon is deflated at, or just prior to, the onset of systole.',
     limitation:
       'An operating manual for one console family, dated 2015. Whether it is the current revision for a local console has not been verified, and the balloon pump in this module is a console-neutral model rather than this console.',
   },
@@ -121,6 +121,61 @@ export const mcsSources: readonly McsSource[] = [
       'Names the five landmarks of an assisted arterial trace — unassisted systole, diastolic augmentation, assisted systole, unassisted end-diastolic pressure and assisted end-diastolic pressure — and states the relationships to look for: inflation at the dicrotic notch appearing as a sharp V, diastolic augmentation that ideally rises above systole, and deflation just before ejection that reduces the assisted end-diastolic and assisted systolic pressures.',
     limitation:
       'An educational booklet, not operating instructions and not a specification. It gives no millimetre-of-mercury magnitude for any of those reductions, says augmentation rises above systole ideally rather than always, and describes a real patient on a real console — not this simulation. Its figures are the manufacturer’s and are not reproduced here; the module’s reference diagram is drawn from the text relationships and its rights question is open as OD-06.',
+  },
+  /*
+   * Added by MCS-PRE-REVIEW-04 (F10). These four are the documents opened and read, page by page,
+   * for the claim-level source map in `claimSourceMap.ts` — registered as what they are, with the
+   * revision printed on each, rather than cited through a record that points somewhere else. Each
+   * `intendedUse` says only what the passages read support.
+   */
+  {
+    id: 'guide-mcs-vad-clinicians-2022',
+    title: 'A Guide to Mechanical Circulatory Support: A Primer for VAD Clinicians',
+    citation:
+      'Stewart S, Blood P, eds. A Guide to Mechanical Circulatory Support: A Primer for Ventricular Assist Device (VAD) Clinicians. Cham: Springer Nature Switzerland; 2022 (corrected publication 2023). ISBN 978-3-031-05712-0. Chapters read: Mody K, et al., Temporary Mechanical Circulatory Support (printed page 220); Washenko A, Bennett J, Hamm J, Ventricular Assist Device Complications (printed page 101). Owner-licensed private copy.',
+    sourceType: 'reference-package',
+    year: 2022,
+    url: 'https://doi.org/10.1007/978-3-031-05713-7',
+    intendedUse:
+      'A textbook for bedside VAD clinicians, read for two statements: what mistimed balloon inflation and deflation do (early inflation and late deflation raise afterload; early deflation gives little or no afterload reduction; early deflation and late inflation shorten diastolic augmentation), and that high blood pressure on a durable pump raises afterload and can reduce flow through the pump.',
+    limitation:
+      'A secondary educational text, not a guideline and not device instructions. It gives no magnitudes, thresholds or blood-pressure targets for these statements, and none is taken from it.',
+  },
+  {
+    id: 'impella-cp-ifu-rev-v-supplied',
+    title: 'Impella CP with SmartAssist Instructions for Use (supplied revision V)',
+    citation:
+      'Abiomed, Inc. Impella CP with SmartAssist: Instructions for Use and Clinical Reference Manual (United States only). Document No. 0048-9007 rV, February 2026; cover shows V11.1. Supplied PDF; printed pages 4.11, 5.25, 7.17, 7.18–7.19 and 8.5 read.',
+    sourceType: 'manufacturer',
+    year: 2026,
+    intendedUse:
+      'Where the inlet and outlet sit when the catheter is positioned correctly; the P-level flow table and its note that flow can vary with suction or incorrect positioning; what suction is, that it may indicate right heart failure, and the recommended checks; catheter position as a factor in hemolysis; and high afterload pressure as a named check for a low-flow alarm.',
+    limitation:
+      'One supplied revision for the United States. Whether revision V is the current revision for a local device has not been verified, and its flow figures remain under open items MCS-03-01 and MCS-03-02.',
+  },
+  {
+    id: 'impella-55-ifu-rev-l-supplied',
+    title: 'Impella 5.5 with SmartAssist Instructions for Use (supplied revision L)',
+    citation:
+      'Abiomed, Inc. Impella 5.5 with SmartAssist: Instructions for Use and Clinical Reference Manual (United States only). Document No. 10003049 rL, February 2026. Supplied PDF; printed page 5.26 read.',
+    sourceType: 'manufacturer',
+    year: 2026,
+    intendedUse:
+      'The Impella 5.5 P-level flow table, read beside the Impella CP table: the same P-level corresponds to a different mean flow range on each pump.',
+    limitation:
+      'One supplied revision for the United States; currency for a local device is not verified (open item MCS-03-03). The table gives flow ranges, not an equivalence between the two pumps.',
+  },
+  {
+    id: 'impella-rp-ifu-rev-n-supplied',
+    title: 'Impella RP System Instructions for Use (supplied revision N)',
+    citation:
+      'Abiomed, Inc. Impella RP System with the Automated Impella Controller: Instructions for Use and Clinical Reference Manual (United States only). Document No. 0046-9062 Rev. N, April 2024. Supplied PDF; printed page 3.1 read.',
+    sourceType: 'manufacturer',
+    year: 2024,
+    intendedUse:
+      'The right-sided pathway: when properly positioned the catheter delivers blood from an inlet area in the inferior vena cava, through the cannula, to an outlet opening in the pulmonary artery.',
+    limitation:
+      'This document is for the Impella RP System. It is not the Impella RP Flex, and which right-sided product this module teaches is open (MCS-03-04). It says nothing about adding right- and left-sided flows.',
   },
   {
     id: 'fda-impella-cp-labeling',

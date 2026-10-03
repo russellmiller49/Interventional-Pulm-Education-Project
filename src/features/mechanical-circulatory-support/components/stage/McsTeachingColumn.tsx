@@ -72,6 +72,18 @@ export function McsTeachingColumn({
     const pending = !predictionCommitted && (phase === 'recognize' || phase === 'predict')
     return (
       <section className={styles.block} data-teaching-panel data-teaching-focus={phase}>
+        {/*
+         * Labelled for what it is (F07). On an identification or a prediction step this explanation
+         * is on the page before any answer — deliberately: the module is self-paced and nothing is
+         * withheld. What was wrong was the silence about it, which let the step read as "predict,
+         * then reveal". The label says the explanation is a worked one and the question an optional
+         * check, so nobody is told an answer is hidden when it is not.
+         */}
+        {!pending && (phase === 'recognize' || phase === 'predict') ? (
+          <p className={styles.kicker} data-worked-explanation-label>
+            Worked explanation · open before, during or after the optional question
+          </p>
+        ) : null}
         <h3>{pending ? 'Apply the concept' : 'Why it moved'}</h3>
         {pending ? (
           <p>
@@ -86,24 +98,36 @@ export function McsTeachingColumn({
               {contract.teaching.howTheActionAffectsTheModel}
             </p>
             <p data-flow-account-note>{contract.teaching.flowAccountNote}</p>
-            <p>
-              Use the captured results in this task to establish what actually changed in this run.
-              Expected direction is a hypothesis; unchanged values remain valid observations.
-            </p>
-            <div data-causal-ladder-summary>
-              <p>
-                <strong>Pressure and blood flow:</strong> mm Hg and L/min answer different
-                questions. A change in MAP alone cannot establish a change in flow.
-              </p>
-              <p>
-                <strong>Oxygen delivery and patient response:</strong> oxygen content and
-                consumption matter. Mentation, urine output, skin findings and lactate trend require
-                clinical assessment; these responses are not simulated.
-              </p>
-            </div>
             <p data-does-not-establish>
               <strong>This exercise does not establish:</strong> {contract.whatThisDoesNotEstablish}
             </p>
+            {/*
+             * The same three paragraphs stood open on every step of the five introductory sections
+             * — about seventy words, twenty times over (F39). They are the reading rule for any
+             * captured result and the two-line version of the four levels, so they stay on every
+             * step, folded: one click for anyone, and the limit that belongs to this exercise
+             * stays in the open above them.
+             */}
+            <details data-reading-the-result>
+              <summary>
+                Reading the result: pressure, flow, oxygen delivery, patient response
+              </summary>
+              <p>
+                Use the captured results in this task to establish what actually changed in this
+                run. Expected direction is a hypothesis; unchanged values remain valid observations.
+              </p>
+              <div data-causal-ladder-summary>
+                <p>
+                  <strong>Pressure and blood flow:</strong> mm Hg and L/min answer different
+                  questions. A change in MAP alone cannot establish a change in flow.
+                </p>
+                <p>
+                  <strong>Oxygen delivery and patient response:</strong> oxygen content and
+                  consumption matter. Mentation, urine output, skin findings and lactate trend
+                  require clinical assessment; these responses are not simulated.
+                </p>
+              </div>
+            </details>
             <details>
               <summary>Relevant reference: interpreting the constraint</summary>
               <ul>
@@ -126,10 +150,8 @@ export function McsTeachingColumn({
             </details>
           </>
         )}
-        <p className={styles.footnote}>
-          Every value is simulated. Device estimates, modeled flow and volume, calculated
-          pressure–flow products, and patient measurements have distinct meanings. Clinical device
-          operation requires current instructions and the responsible MCS team.
+        <p className={styles.footnote} data-simulated-values-note>
+          Every value is simulated · see Limits of this simulation, above.
         </p>
       </section>
     )
@@ -160,6 +182,22 @@ export function McsTeachingColumn({
     : predictionCommitted
       ? 'collapsed'
       : 'hidden'
+  /*
+   * The live panel is open where a step is read from it, and folded where it would only repeat.
+   *
+   * It stood open on every stop of the loop walk and on Recognize, Predict and Explain alike, so
+   * the same thousand-to-four-thousand-word panel was the first thing on three steps running and
+   * on all five stops of the walk (F06, F30, F39). It now opens on the walk's first stop, on
+   * Recognize and on Explain; on the later stops and on Predict it is one click away under its own
+   * heading. Folding is a default, not a gate: nothing in it waits for an answer.
+   */
+  const livePanel: StageBlockVisibility = walkStop
+    ? walkStop.ordinal === 1
+      ? 'shown'
+      : 'collapsed'
+    : phase === 'recognize' || explaining
+      ? 'shown'
+      : 'collapsed'
   const rows = mcsGrammarRowsFor(lesson.sectionId)
   const stripControls = mcsControlsForDevice(lesson.startingDevice).filter(
     (control) => spec.controlStrip[control.id] !== undefined,
@@ -369,13 +407,7 @@ export function McsTeachingColumn({
 
       {/* 7b. The live panel: what is on the screen, disclosed by the section's own reveal rule. Shown
           while the learner is reading the screen and on the explanation; folded while acting. */}
-      <StageBlock
-        kind="signals"
-        heading="The readings, live"
-        visibility={
-          phase === 'recognize' || phase === 'predict' || explaining ? 'shown' : 'collapsed'
-        }
-      >
+      <StageBlock kind="signals" heading="The readings, live" visibility={livePanel}>
         <section
           className={styles.block}
           data-teaching-block="live-panel"

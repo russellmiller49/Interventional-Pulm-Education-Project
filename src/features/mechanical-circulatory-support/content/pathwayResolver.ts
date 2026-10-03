@@ -148,8 +148,8 @@ export interface McsPathwayGroup {
 
 const GROUP_TITLES: Readonly<Record<McsDeviceKind, string>> = {
   iabp: 'IABP · counterpulsation',
-  impella: 'Microaxial support',
-  lvad: 'Existing durable LVAD · patient assessment',
+  impella: 'Impella · microaxial pumps',
+  lvad: 'Durable LVAD · assessing a patient who already has one',
 }
 
 /**

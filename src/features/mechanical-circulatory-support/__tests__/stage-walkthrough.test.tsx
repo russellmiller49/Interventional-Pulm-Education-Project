@@ -109,7 +109,8 @@ describe('the stage: one progression per section', () => {
       expect(nowPrimary()).toBeEnabled()
       performAction(sectionId)
       expect(nowPrimary()).not.toBeDisabled()
-      expect(nowStatus()).toMatch(/Optional activity/)
+      // MCS-PRE-REVIEW-04 (F07/F39): the status names the kind of step instead of one boilerplate line.
+      expect(nowStatus()).toMatch(/Optional model exercise/)
       continueStep()
 
       // Observe: the readings captured on entry to Act beside the live ones.
@@ -149,7 +150,7 @@ describe('the stage: one progression per section', () => {
       expect(document.querySelector('[data-transfer-work]')).toHaveAttribute('data-met', 'true')
       expect(document.querySelector('[data-stage-completion]')).toBeInTheDocument()
       expect(storedLessonIds()).toEqual([])
-      expect(nowStatus()).toMatch(/Optional activity/i)
+      expect(nowStatus()).toMatch(/Optional self-check on a new patient/i)
     },
   )
 })

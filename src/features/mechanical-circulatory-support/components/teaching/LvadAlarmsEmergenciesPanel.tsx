@@ -269,7 +269,11 @@ export function LvadAlarmsEmergenciesPanel({
         <ModelBoundary>{MCS_ESTIMATED_FLOW_BOUNDARY}</ModelBoundary>
       </PanelSection>
 
-      <PanelSection title="Where an alarm on this pathway comes from" id="alarms-localization">
+      <PanelSection
+        title="Where an alarm on this pathway comes from"
+        id="alarms-localization"
+        reference
+      >
         <div className={styles.scroller}>
           <table className={`${styles.table} min-w-[36rem]`} data-alarm-localization>
             <caption className="text-left text-xs leading-5 text-muted-foreground">

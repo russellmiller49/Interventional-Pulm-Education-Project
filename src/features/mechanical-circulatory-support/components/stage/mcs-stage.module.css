@@ -833,3 +833,49 @@
   font-size: 0.8125rem;
   max-width: 70ch;
 }
+
+/*
+ * MCS-PRE-REVIEW-04 — the optional reflection, the section recap, and the dialogs' reading width.
+ */
+.reflection {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px dashed var(--stage-border, #3b5a60);
+  border-radius: 0.75rem;
+}
+.reflection > p {
+  margin: 0;
+}
+.reflection details > p {
+  margin: 0.4rem 0 0;
+  max-width: 72ch;
+}
+.recapLinks {
+  list-style: none !important;
+  padding-left: 0 !important;
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.5rem !important;
+}
+.recapLinks button,
+.block [data-recap-reflection] button {
+  border: 1px solid #487078;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.7rem;
+  text-align: left;
+}
+.recapLinks button:focus-visible,
+.block [data-recap-reflection] button:focus-visible {
+  outline: 2px solid #77e1e5;
+  outline-offset: 3px;
+}
+.runDetails > ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--stage-muted);
+  font-size: 0.8125rem;
+  max-width: 70ch;
+  list-style: disc;
+}

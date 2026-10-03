@@ -3,6 +3,15 @@
 import { ExternalLink } from 'lucide-react'
 
 import { mcsDeviceProfiles, mcsSources } from '../content'
+import { MCS_CLAIM_SOURCE_MAP } from '../content/claimSourceMap'
+import {
+  MCS_SOURCE_CLASS_LABELS,
+  MCS_SOURCE_CLASS_MEANING,
+  MCS_SOURCE_CLASS_ORDER,
+  mcsSourceClass,
+  mcsSourceVerificationLabel,
+} from '../content/sourceClasses'
+import { McsClaimSourceChecks } from './McsClaimSourceChecks'
 import styles from './mechanical-circulatory-support.module.css'
 
 export function McsSourcesPanel() {
@@ -14,10 +23,22 @@ export function McsSourcesPanel() {
         <span className={styles.kicker}>EVIDENCE & MODEL CARD</span>
         <h2 id="mcs-sources-heading">Source-backed, bounded, and revision-aware</h2>
         <p>
-          Clinical concepts are linked to supplied syntheses, society guidelines, FDA labeling
-          records, and manufacturer material. Whether a labeling record is the current revision for
-          a local device has not been verified here. Directional outputs are educational estimates.
+          Sources are listed by kind. Society guidelines, instructions for use and regulator records
+          are primary sources; textbook chapters and manufacturer teaching material are secondary;
+          two supplied Word syntheses are authoring provenance, kept on record as the documents this
+          module was drafted from and not as evidence for it. Whether a labeling record is the
+          current revision for a local device has not been verified here. Directional outputs are
+          educational estimates.
         </p>
+        <dl data-source-class-key>
+          {MCS_SOURCE_CLASS_ORDER.map((sourceClass) => (
+            <div key={sourceClass} data-source-class={sourceClass}>
+              <dt>{MCS_SOURCE_CLASS_LABELS[sourceClass]}</dt>
+              <dd>{MCS_SOURCE_CLASS_MEANING[sourceClass]}</dd>
+            </div>
+          ))}
+        </dl>
+        <McsClaimSourceChecks claims={MCS_CLAIM_SOURCE_MAP} context="this module" />
       </div>
       <aside className={styles.safetyReview} aria-label="Current FDA safety-review flags">
         <strong>Current safety-review flags</strong>
@@ -83,11 +104,15 @@ export function McsSourcesPanel() {
       <details className={styles.sourceDetails}>
         <summary>Open citations and intended use</summary>
         <div className={styles.sourceList}>
-          {mcsSources.map((source) => (
-            <article key={source.id}>
+          {MCS_SOURCE_CLASS_ORDER.flatMap((sourceClass) =>
+            mcsSources.filter((source) => mcsSourceClass(source.id) === sourceClass),
+          ).map((source) => (
+            <article key={source.id} data-source-class={mcsSourceClass(source.id)}>
               <span>
+                {MCS_SOURCE_CLASS_LABELS[mcsSourceClass(source.id)]} ·{' '}
                 {source.sourceType.replaceAll('-', ' ')} · {source.year ?? 'date not stated'}
               </span>
+              <small data-source-verification>{mcsSourceVerificationLabel(source.id)}.</small>
               <h3>{source.title}</h3>
               <p>{source.citation}</p>
               <p>

@@ -227,7 +227,22 @@ export function McsSimulatorPane({
         data-simulator-surfaces
         data-map-leads={showMap || undefined}
       >
-        {presentation === 'timing-lab' ? <McsTimingFigure state={state} /> : null}
+        {/*
+         * The reference's legend and measured limits start open on the first timing step and on
+         * the step that names the relationship; on the demonstrations between they are folded,
+         * keyed by step so each step starts from its own default (F39).
+         */}
+        {presentation === 'timing-lab' ? (
+          <McsTimingFigure
+            key={`timing-${stepKey ?? ''}`}
+            state={state}
+            detailOpen={
+              stepKey === undefined ||
+              stepKey.endsWith('-normal-beat') ||
+              stepKey.endsWith('-recognize')
+            }
+          />
+        ) : null}
         {showMap ? (
           <section data-surface="map">
             <h3>Circulation map</h3>

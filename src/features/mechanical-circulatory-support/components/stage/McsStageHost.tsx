@@ -36,6 +36,14 @@ import stageStyles from '@/features/learning-module/stage/lesson-stage.module.cs
 import { useRouter } from '@/i18n/navigation'
 
 import { MCS_AF_TRIGGER_CONTAINMENT, mcsAfTriggerLimitApplies } from '../../content/afTriggerLimit'
+import { mcsClaimChecksForSection } from '../../content/claimSourceMap'
+import { mcsDeviceStatusLabel } from '../../content/deviceNaming'
+import {
+  MCS_REFLECTION_REVIEW_STATUS,
+  mcsExplainReflection,
+} from '../../content/explainReflections'
+import { MCS_MODEL_LIMITS, MCS_MODEL_LIMITS_HEADING } from '../../content/modelLimits'
+import { mcsStepHint } from '../../content/stepHints'
 import { mcsLearnControls, type McsLearnControlId } from '../../content/learnControls'
 import { mcsMapAnswerTargets } from '../../content/mapAnswerTargets'
 import { mcsPathway } from '../../content/pathwayResolver'
@@ -51,6 +59,8 @@ import {
 import { createInitialMcsState, mcsReducer } from '../../engine'
 import { recordMcsVisit } from '../../engine/learningProgress'
 import { McsControls } from '../McsControls'
+import { McsClaimSourceChecks } from '../McsClaimSourceChecks'
+import { McsGlossary } from '../McsGlossary'
 import type { McsAction, McsDerivedMetrics, McsSimulationState } from '../../engine/types'
 import type { ClinicalLearningItem } from '@/features/learning-module/activity'
 import type {
@@ -59,6 +69,7 @@ import type {
 } from '../circulation-map/CirculationMap'
 import { McsModuleFrame } from '../McsModuleFrame'
 import { McsSimulatorPane } from './McsSimulatorPane'
+import { McsSectionRecap } from './McsSectionRecap'
 import { McsSourceList } from './McsSourceList'
 import { McsStoryProblems } from './McsStoryProblems'
 import { McsTeachingColumn } from './McsTeachingColumn'
@@ -67,6 +78,7 @@ import { McsIntroTeaching } from './McsIntroTeaching'
 import {
   McsCapturedResults,
   McsDeviceComparisonTable,
+  McsFlowArithmetic,
   type McsComparisonRecords,
 } from './McsCapturedResults'
 import { advanceMcsSimulation } from '../../engine/model'
@@ -87,6 +99,31 @@ import { MCS_TASK_PRESENTATIONS_ENABLED } from '../../content/taskPresentation'
  * Navigation never manufactures a response, performed action, capture or achievement.
  * Historical grading records are read-only; only topic visits and location are saved.
  */
+
+/*
+ * One line under each step saying what kind of step it is.
+ *
+ * It read "Optional activity · explanations and navigation are always available." on all
+ * seventy-odd screens, which told a learner nothing about the step in front of them and let a step
+ * whose explanation was already on the page pass as "predict, then reveal" (F07, F39). Each kind of
+ * step now says what it is: a reading step, an optional self-check beside a worked explanation, an
+ * optional model exercise, a worked comparison, an optional reflection. None of them is required
+ * and none of them is counted — the line says so where a learner might wonder.
+ */
+const STEP_STATUS = {
+  teaching: 'Reading step · nothing to answer here.',
+  walk: 'Reading step · one stop at a time, or Continue to move on.',
+  identify:
+    'Optional self-check · the worked explanation is already on this page, and nothing is counted.',
+  prediction:
+    'Optional self-check · the worked explanation is already on this page, and nothing is counted.',
+  action: 'Optional model exercise · Continue works whether or not you change anything.',
+  observe: 'Worked comparison · the read-back question is optional.',
+  explain:
+    'Optional reflection · its worked response opens at any time. Nothing is typed or saved.',
+  transfer:
+    'Optional self-check on a new patient · the explanation is available without answering.',
+} as const
 
 const LOOKING_BACK =
   'Review: captured state from this earlier task. The current patient is preserved; controls are locked. Return to the current task to continue.'
@@ -275,9 +312,13 @@ function McsStageSession({
   }))
   const [monitorPreferences, setMonitorPreferences] = useState<Record<string, boolean>>({})
   const [helpOpen, setHelpOpen] = useState(false)
+  const [hintOpen, setHintOpen] = useState(false)
+  const [glossaryOpen, setGlossaryOpen] = useState(false)
   const [explorationOpen, setExplorationOpen] = useState(false)
   const [revealedStepIds, setRevealedStepIds] = useState<readonly string[]>([])
   const helpButtonRef = useRef<HTMLButtonElement>(null)
+  const hintButtonRef = useRef<HTMLButtonElement>(null)
+  const glossaryButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
   const stepBarRef = useRef<HTMLDivElement>(null)
 
@@ -744,9 +785,7 @@ function McsStageSession({
     }
     return {
       ...base,
-      status: lookingBack
-        ? LOOKING_BACK
-        : 'Optional activity · explanations and navigation are always available.',
+      status: lookingBack ? LOOKING_BACK : STEP_STATUS[activeStep.interaction.kind],
       primary: continueAction,
     }
   })()
@@ -1062,7 +1101,7 @@ function McsStageSession({
                 />
               )}
               {choiceFieldset(
-                `In these captured results, how did ${label} change?`,
+                `Optional read-back: in these captured results, how did ${label} change?`,
                 ['increased', 'decreased', 'unchanged'].map((id) => ({
                   id,
                   label:
@@ -1176,74 +1215,114 @@ function McsStageSession({
           </>
         )
       case 'explain': {
+        /*
+         * The Explain question, as what it is: an optional reflection with a worked response.
+         *
+         * It used to be the card's instruction, with no way to answer it and no answer to compare
+         * with — and on the section that carries the sort it sat above a task about something else
+         * (F11, F15). The question is unchanged; it now stands under its own label, beneath the
+         * step's real task, with a response that opens at once. No text box: nothing a learner
+         * thinks here is typed, stored or sent.
+         */
+        const reflection = mcsExplainReflection(sectionId)
+        const reflectionBlock = (
+          <section className={styles.reflection} data-optional-reflection>
+            <p className={styles.kicker}>Optional reflection · nothing to type, nothing saved</p>
+            <p className={styles.stem} data-reflection-prompt>
+              {reflection.promptOverride ?? interaction.prompt}
+            </p>
+            <p>Think it through if that helps, or open the worked response straight away.</p>
+            <details data-worked-response>
+              <summary>Show a worked response</summary>
+              {reflection.workedResponse.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+              {sectionId === 'mcs-foundations-mechanisms' ? (
+                <McsFlowArithmetic records={progression.comparisons} />
+              ) : null}
+              <p className={styles.footnote} data-worked-response-provenance>
+                Drawn from: {reflection.drawnFrom} {MCS_REFLECTION_REVIEW_STATUS}.
+              </p>
+            </details>
+          </section>
+        )
         const sort = interaction.sort
-        if (!sort) return null
+        if (!sort) return reflectionBlock
         const answers = progression.sortByStepId[activeStep.id] ?? {}
         const revealed =
           progression.sortCommittedStepIds.includes(activeStep.id) ||
           revealedStepIds.includes(activeStep.id)
         return (
-          <div className={styles.sort} data-control-panel-sort>
-            <p className={styles.stem}>{sort.prompt}</p>
-            {sort.candidates.map((candidate) => {
-              const chosen = answers[candidate.id]
-              const right = chosen === candidate.bin
-              const selectId = `sort-${candidate.id}`
-              return (
-                <div
-                  key={candidate.id}
-                  className={styles.sortRow}
-                  data-sort-candidate={candidate.id}
-                  data-sort-outcome={revealed ? (right ? 'correct' : 'not-correct') : undefined}
-                >
-                  <label htmlFor={selectId}>{candidate.label}</label>
-                  <select
-                    id={selectId}
-                    className={styles.sortSelect}
-                    value={chosen ?? ''}
-                    disabled={revealed}
-                    onChange={(event) =>
-                      setProgression((current) => ({
-                        ...current,
-                        sortByStepId: {
-                          ...current.sortByStepId,
-                          [activeStep.id]: {
-                            ...(current.sortByStepId[activeStep.id] ?? {}),
-                            [candidate.id]: event.target.value,
-                          },
-                        },
-                      }))
-                    }
+          <>
+            <div className={styles.sort} data-control-panel-sort>
+              <p className={styles.stem}>{sort.prompt}</p>
+              {sort.candidates.map((candidate) => {
+                const chosen = answers[candidate.id]
+                const right = chosen === candidate.bin
+                const selectId = `sort-${candidate.id}`
+                return (
+                  <div
+                    key={candidate.id}
+                    className={styles.sortRow}
+                    data-sort-candidate={candidate.id}
+                    data-sort-outcome={revealed ? (right ? 'correct' : 'not-correct') : undefined}
                   >
-                    <option value="">Choose…</option>
-                    {sort.bins.map((bin) => (
-                      <option key={bin.id} value={bin.id}>
-                        {bin.label}
-                      </option>
-                    ))}
-                  </select>
-                  {revealed ? (
-                    <p className={styles.sortVerdict}>
-                      <strong data-sort-outcome-label>
-                        {chosen ? (right ? 'Correct.' : 'Not correct.') : 'Example classification.'}
-                      </strong>{' '}
-                      {right ? '' : `${sort.bins.find((bin) => bin.id === candidate.bin)?.label}. `}
-                      {candidate.rationale}
+                    <label htmlFor={selectId}>{candidate.label}</label>
+                    <select
+                      id={selectId}
+                      className={styles.sortSelect}
+                      value={chosen ?? ''}
+                      disabled={revealed}
+                      onChange={(event) =>
+                        setProgression((current) => ({
+                          ...current,
+                          sortByStepId: {
+                            ...current.sortByStepId,
+                            [activeStep.id]: {
+                              ...(current.sortByStepId[activeStep.id] ?? {}),
+                              [candidate.id]: event.target.value,
+                            },
+                          },
+                        }))
+                      }
+                    >
+                      <option value="">Choose…</option>
+                      {sort.bins.map((bin) => (
+                        <option key={bin.id} value={bin.id}>
+                          {bin.label}
+                        </option>
+                      ))}
+                    </select>
+                    {revealed ? (
+                      <p className={styles.sortVerdict}>
+                        <strong data-sort-outcome-label>
+                          {chosen
+                            ? right
+                              ? 'Correct.'
+                              : 'Not correct.'
+                            : 'Example classification.'}
+                        </strong>{' '}
+                        {right
+                          ? ''
+                          : `${sort.bins.find((bin) => bin.id === candidate.bin)?.label}. `}
+                        {candidate.rationale}
+                      </p>
+                    ) : null}
+                  </div>
+                )
+              })}
+              {revealed ? (
+                <div className={styles.sortBins} data-sort-bins>
+                  {sort.bins.map((bin) => (
+                    <p key={bin.id}>
+                      <strong>{bin.label}.</strong> {bin.definition}
                     </p>
-                  ) : null}
+                  ))}
                 </div>
-              )
-            })}
-            {revealed ? (
-              <div className={styles.sortBins} data-sort-bins>
-                {sort.bins.map((bin) => (
-                  <p key={bin.id}>
-                    <strong>{bin.label}.</strong> {bin.definition}
-                  </p>
-                ))}
-              </div>
-            ) : null}
-          </div>
+              ) : null}
+            </div>
+            {reflectionBlock}
+          </>
         )
       }
       case 'transfer': {
@@ -1401,7 +1480,7 @@ function McsStageSession({
   const pendingTimingIdentification = false
   const flowAccountWithheld = false
   const contextItems: ContextStripItem[] = [
-    { label: 'Mechanism', value: mechanismLabel(state) },
+    { label: 'Device · mechanism', value: mcsDeviceStatusLabel(state) },
     { label: 'Setting', value: settingLabel(state) },
     {
       label: 'Displayed flow',
@@ -1546,6 +1625,35 @@ function McsStageSession({
         : question.kind === 'transfer'
           ? question.transfer.item.explanation
           : lesson.contract.teaching.howTheActionAffectsTheModel
+  /*
+   * Hint, Show explanation and Try again, each only where it means something (F11).
+   *
+   * Hint opened the navigational "What do I do now?" dialog, which repeats the instruction. It now
+   * opens this item's own nudge, and Help stays in the header for navigation. Show explanation is
+   * offered where there is an explanation of this step to show — not on a reading step, and not on
+   * the reflection, whose worked response is its own disclosure. Try again appears once an answer
+   * has been compared, because until then there is nothing to try again; it clears that answer and
+   * nothing else, and says so.
+   */
+  const hintKind =
+    question.kind === 'explain'
+      ? question.sort
+        ? ('sort' as const)
+        : undefined
+      : question.kind === 'identify' ||
+          question.kind === 'prediction' ||
+          question.kind === 'action' ||
+          question.kind === 'observe' ||
+          question.kind === 'transfer'
+        ? question.kind
+        : undefined
+  const hint = hintKind ? mcsStepHint(sectionId, hintKind) : undefined
+  const explanationOffered =
+    question.kind !== 'teaching' && question.kind !== 'walk' && question.kind !== 'explain'
+  const somethingToRetry =
+    committedChoiceId !== null ||
+    progression.sortCommittedStepIds.includes(activeStep.id) ||
+    progression.committedByStepId[`${activeStep.id}-observation`] !== undefined
   const optionalActions = (
     <div className={styles.optionalActions}>
       {canAnswer && !committedChoiceId ? (
@@ -1565,17 +1673,26 @@ function McsStageSession({
           Next stop
         </button>
       ) : null}
-      <button type="button" onClick={() => setHelpOpen(true)}>
-        Hint
-      </button>
-      <button
-        type="button"
-        onClick={() => setRevealedStepIds((ids) => [...new Set([...ids, activeStep.id])])}
-      >
-        Show explanation
-      </button>
-      {questionKind || question.kind === 'explain' ? (
-        <button type="button" onClick={retryQuestion} disabled={lookingBack}>
+      {hint ? (
+        <button
+          ref={hintButtonRef}
+          type="button"
+          data-step-hint-trigger
+          onClick={() => setHintOpen(true)}
+        >
+          Hint
+        </button>
+      ) : null}
+      {explanationOffered ? (
+        <button
+          type="button"
+          onClick={() => setRevealedStepIds((ids) => [...new Set([...ids, activeStep.id])])}
+        >
+          Show explanation
+        </button>
+      ) : null}
+      {somethingToRetry ? (
+        <button type="button" onClick={retryQuestion} disabled={lookingBack} data-try-again>
           Try again
         </button>
       ) : null}
@@ -1593,6 +1710,12 @@ function McsStageSession({
         >
           Explore this task again
         </button>
+      ) : null}
+      {somethingToRetry ? (
+        <p className={styles.footnote} data-try-again-note>
+          Trying again clears your answer to this question only. Model actions, captures and the
+          steps you have visited are kept.
+        </p>
       ) : null}
     </div>
   )
@@ -1638,7 +1761,31 @@ function McsStageSession({
             </p>
           </details>
         )}
+        {/* The general limits, once, in the same place on every step (F39). */}
+        <details className={styles.runDetails} data-model-limits>
+          <summary>{MCS_MODEL_LIMITS_HEADING}</summary>
+          <ul>
+            {MCS_MODEL_LIMITS.map((limit) => (
+              <li key={limit.id} data-model-limit={limit.id}>
+                {limit.statement}
+              </li>
+            ))}
+          </ul>
+        </details>
       </div>
+      {/*
+       * The glossary, from inside the lesson (F42). It opens over the step and closes back to this
+       * button: the step, its answers, the model and the scroll position are exactly as they were.
+       */}
+      <button
+        ref={glossaryButtonRef}
+        type="button"
+        className={shellStyles.nowSecondary}
+        data-glossary-trigger
+        onClick={() => setGlossaryOpen(true)}
+      >
+        Glossary
+      </button>
       <button
         type="button"
         className={shellStyles.nowPrimary}
@@ -1809,6 +1956,7 @@ function McsStageSession({
           ))}
         </ol>
       </details>
+      {isLastStep ? <McsSectionRecap lesson={lesson} onRevisit={goToStep} /> : null}
       {isLastStep ? (
         <section
           className={stageStyles.completion}
@@ -1898,6 +2046,33 @@ function McsStageSession({
     </HelpDialog>
   )
 
+  const dialogs = (
+    <>
+      {helpDialog}
+      <HelpDialog
+        open={hintOpen && hint !== undefined}
+        onClose={() => setHintOpen(false)}
+        title="Hint"
+        returnFocusTo={hintButtonRef}
+      >
+        <p className={shellStyles.kicker}>{stepPosition}</p>
+        <p data-step-hint>{hint}</p>
+        <p className={styles.footnote}>
+          A hint points at what is on the screen. For what the step is and where it is worked, use
+          Help in the header; for the reasoning itself, use Show explanation.
+        </p>
+      </HelpDialog>
+      <HelpDialog
+        open={glossaryOpen}
+        onClose={() => setGlossaryOpen(false)}
+        title="Glossary"
+        returnFocusTo={glossaryButtonRef}
+      >
+        <McsGlossary />
+      </HelpDialog>
+    </>
+  )
+
   return (
     <McsModuleFrame
       locale={locale}
@@ -1933,9 +2108,13 @@ function McsStageSession({
                   claimsVisible={true}
                 >
                   <McsSourceList sourceIds={stageSources.sourceIds} claimsVisible={true} />
+                  <McsClaimSourceChecks
+                    claims={mcsClaimChecksForSection(sectionId)}
+                    context="this section"
+                  />
                 </StageSourcesFooter>
               </footer>
-              {helpDialog}
+              {dialogs}
             </div>
           ) : (
             <StageLayout
@@ -1968,10 +2147,14 @@ function McsStageSession({
                     claimsVisible={true}
                   >
                     <McsSourceList sourceIds={stageSources.sourceIds} claimsVisible={true} />
+                    <McsClaimSourceChecks
+                      claims={mcsClaimChecksForSection(sectionId)}
+                      context="this section"
+                    />
                   </StageSourcesFooter>
                 </>
               }
-              overlay={helpDialog}
+              overlay={dialogs}
             />
           )}
         </div>
@@ -1983,15 +2166,6 @@ function McsStageSession({
 /* -------------------------------------------------------------------- *
  * Context-strip derivations
  * -------------------------------------------------------------------- */
-
-function mechanismLabel(state: McsSimulationState): string {
-  if (state.device.kind === 'iabp') return 'Counterpulsation'
-  if (state.device.kind === 'lvad') return 'Durable pump'
-  const { left, right } = state.device
-  if (left.enabled && right.enabled) return 'Left and right pumps'
-  if (right.enabled) return 'Right-sided pump'
-  return 'Transvalvular pump'
-}
 
 function settingLabel(state: McsSimulationState): string {
   if (state.device.kind === 'iabp') {

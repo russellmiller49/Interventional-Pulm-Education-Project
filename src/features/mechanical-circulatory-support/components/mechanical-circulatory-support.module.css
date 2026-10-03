@@ -5120,3 +5120,73 @@
   /* Rapid Tab/Shift+Tab must not leave a stale native smooth-scroll destination in flight. */
   scroll-behavior: auto;
 }
+
+/*
+ * MCS-PRE-REVIEW-04 — the hub's way in (F02): who the module is for, what a learner will be able to
+ * do, one Start/Resume, and the optional refresher. Light surface, the hero's own ink.
+ */
+.hubObjectives {
+  position: relative;
+  z-index: 1;
+  max-width: 850px;
+  margin-top: 1.25rem;
+}
+.hubObjectives h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.hubObjectives ol {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.6rem 0 0;
+  padding-left: 1.35rem;
+  color: #2f4a50;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  list-style: decimal;
+}
+.hubObjectiveSections {
+  display: inline-block;
+  color: #49656a;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.hubObjectiveSections a {
+  color: var(--navy-2);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+.hubObjectiveSections a:focus-visible,
+.hubRefresher a:focus-visible {
+  outline: 2px solid var(--navy-2);
+  outline-offset: 2px;
+  border-radius: 0.2rem;
+}
+.hubHero > div > p.hubTimeNote,
+.hubHero > div > p.hubRefresher {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.hubRefresher a {
+  color: var(--navy-2);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+/*
+ * The Studio scope (F36). `display: contents` keeps the workbench's layout exactly as it was; the
+ * two rules below remove the shared chrome's six-stage stepper and its mode badge for the open
+ * sandbox only. A case never carries the attribute, so every case keeps both.
+ */
+.workbenchScope {
+  display: contents;
+}
+.workbenchScope[data-mcs-studio='true'] [role='group'][aria-label='MCS shared activity phases'],
+.workbenchScope[data-mcs-studio='true'] [data-critical-care-activity-shell] header h1 + span {
+  display: none;
+}

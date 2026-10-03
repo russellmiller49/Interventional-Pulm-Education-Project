@@ -120,6 +120,18 @@ const lvadSources = [
   'mcs-educational-model-v1',
 ] as const
 
+/*
+ * The documents opened for the MCS-PRE-REVIEW-04 claim map, on the cases whose debrief statements
+ * were checked against them (`claimSourceMap.ts`). They stand first on those cases because they
+ * are what the statement was read in; the registered records after them are unchanged.
+ */
+const iabpTimingAuditedSources = [
+  'getinge-cardiosave-hybrid-operating-instructions',
+  'guide-mcs-vad-clinicians-2022',
+] as const
+const impellaCpAuditedSources = ['impella-cp-ifu-rev-v-supplied'] as const
+const lvadAfterloadAuditedSources = ['guide-mcs-vad-clinicians-2022'] as const
+
 export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
   {
     id: 'IABP-01',
@@ -179,8 +191,8 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
       'Deflation should be complete before ejection.',
       'Late deflation can worsen rather than reduce LV afterload.',
     ],
-    sourceIds: [...commonSources, 'getinge-iabp-current'],
-    evidenceSourceIds: [...commonSources, 'getinge-iabp-current'],
+    sourceIds: [...iabpTimingAuditedSources, ...commonSources, 'getinge-iabp-current'],
+    evidenceSourceIds: [...iabpTimingAuditedSources, ...commonSources, 'getinge-iabp-current'],
   },
   {
     id: 'IABP-02',
@@ -360,10 +372,10 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
       'Do not escalate through suction. Reconcile RAP, PCWP, RV delivery, and LV volume.',
     debrief: [
       'Suction is a cause-finding problem, not simply a low-setting problem.',
-      'RV failure can be the first explanation for falling LV-device flow.',
+      'Suction can itself be an indicator of right heart failure, so right ventricular function is part of the evaluation.',
     ],
-    sourceIds: [...commonSources, 'fda-impella-cp-labeling'],
-    evidenceSourceIds: [...commonSources, 'fda-impella-cp-labeling'],
+    sourceIds: [...impellaCpAuditedSources, ...commonSources, 'fda-impella-cp-labeling'],
+    evidenceSourceIds: [...impellaCpAuditedSources, ...commonSources, 'fda-impella-cp-labeling'],
   },
   {
     id: 'IMP-02',
@@ -414,8 +426,8 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
       'Malposition can reduce flow and increase hemolysis risk.',
       'Real repositioning requires imaging and qualified operators.',
     ],
-    sourceIds: [...commonSources, 'fda-impella-cp-labeling'],
-    evidenceSourceIds: [...commonSources, 'fda-impella-cp-labeling'],
+    sourceIds: [...impellaCpAuditedSources, ...commonSources, 'fda-impella-cp-labeling'],
+    evidenceSourceIds: [...impellaCpAuditedSources, ...commonSources, 'fda-impella-cp-labeling'],
   },
   {
     id: 'IMP-03',
@@ -478,8 +490,8 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
       'Higher aortic pressure can reduce microaxial flow at the same setting.',
       'Purge abnormalities require current device instructions and expert support.',
     ],
-    sourceIds: [...commonSources, 'fda-impella-cp-labeling'],
-    evidenceSourceIds: [...commonSources, 'fda-impella-cp-labeling'],
+    sourceIds: [...impellaCpAuditedSources, ...commonSources, 'fda-impella-cp-labeling'],
+    evidenceSourceIds: [...impellaCpAuditedSources, ...commonSources, 'fda-impella-cp-labeling'],
   },
   {
     id: 'LVAD-01',
@@ -538,8 +550,8 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
       'Continuous-flow LVAD output is afterload sensitive.',
       'Low flow does not automatically mean low volume.',
     ],
-    sourceIds: lvadSources,
-    evidenceSourceIds: lvadSources,
+    sourceIds: [...lvadAfterloadAuditedSources, ...lvadSources],
+    evidenceSourceIds: [...lvadAfterloadAuditedSources, ...lvadSources],
   },
   {
     id: 'LVAD-02',
