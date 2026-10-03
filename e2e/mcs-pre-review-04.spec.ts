@@ -280,6 +280,41 @@ test('F11 · the Explain question is an optional reflection with a worked respon
   await expect.poll(() => stepKicker(page)).toMatch(/Transfer/)
 })
 
+test('review all: every optional explanation and reference opened on every step, then continue', async ({
+  page,
+}) => {
+  await openLesson(page, 'mcs-device-selection-integration')
+  for (let step = 1; step <= 6; step += 1) {
+    await expect.poll(() => stepKicker(page)).toMatch(new RegExp(`Step ${step} of 6`))
+    // Open every closed disclosure in the lesson, innermost last, until none is left closed.
+    for (let pass = 0; pass < 6; pass += 1) {
+      const opened = await page.evaluate(() => {
+        const closed = [
+          ...document.querySelectorAll<HTMLDetailsElement>('[data-mcs-stage] details:not([open])'),
+        ]
+        for (const details of closed)
+          details.querySelector<HTMLElement>(':scope > summary')?.click()
+        return closed.length
+      })
+      if (opened === 0) break
+      await page.waitForTimeout(100)
+    }
+    expect(await page.locator('[data-mcs-stage] details:not([open])').count()).toBe(0)
+    const show = page.locator('[data-now-card]').getByRole('button', { name: 'Show explanation' })
+    if (await show.count()) {
+      await show.click()
+      await expect(page.locator('[data-provided-explanation]')).toBeVisible()
+    }
+    // Nothing was answered by reading, and the way on still works.
+    expect(await page.locator('[data-mcs-stage] input[type="radio"]:checked').count()).toBe(0)
+    await expect(page.locator('[data-step-bar-continue]')).toBeEnabled()
+    if (step < 6) await page.locator('[data-step-bar-continue]').click()
+  }
+  await expect(page.locator('[data-section-recap]')).toBeVisible()
+  expect(await page.locator('[data-mcs-stage]').innerText()).not.toMatch(SCORE_LANGUAGE)
+  expect(await storedProgress(page)).not.toMatch(/explanation|opened|reviewed|answer/i)
+})
+
 /* ------------------------------------------------------------------ F13 / F15 Section 2 */
 
 for (const size of SIZES) {
