@@ -864,10 +864,10 @@
   font-size: 0.56rem;
 }
 
-.waveformStrip svg {
-  width: 100%;
-  height: 100%;
-  min-height: 92px;
+/* The strip's plot, gutters and labels live in waveform-strip.module.css. */
+.waveformStrip > .srOnly,
+.waveformStrip > .stripAvailabilityNote {
+  grid-column: 1 / -1;
 }
 
 .numericRail {
@@ -1394,10 +1394,9 @@
   color: #c9dddb;
   background: rgba(4, 22, 28, 0.74);
   backdrop-filter: blur(8px);
-  font-size: 0.55rem;
+  font-size: 0.75rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 .physiologyOrientation button {
   display: inline-flex;
@@ -1409,7 +1408,7 @@
   color: #dcf4f0;
   background: rgba(7, 45, 53, 0.9);
   cursor: pointer;
-  font-size: 0.55rem;
+  font-size: 0.75rem;
   font-weight: 800;
   pointer-events: auto;
 }
@@ -1434,31 +1433,61 @@
   opacity: 0.45;
 }
 
-.physiologyAnatomyHud {
-  position: absolute;
-  right: 0.65rem;
-  bottom: 0.65rem;
-  left: 0.65rem;
+.heartFigure {
   display: grid;
-  gap: 0.12rem;
-  padding: 0.58rem 0.68rem;
-  border: 1px solid rgba(126, 219, 210, 0.34);
-  border-radius: 0.55rem;
-  color: #cbdedc;
-  background: rgba(4, 23, 29, 0.8);
-  backdrop-filter: blur(10px);
-  pointer-events: none;
+  gap: 0;
+  min-width: 0;
+  margin: 0.8rem 0;
+}
+.heartFigure .physiologyViewport {
+  margin: 0;
+  border-radius: 0.9rem 0.9rem 0 0;
+}
+.physiologyAnatomyHud {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid #244955;
+  border-top: 0;
+  border-radius: 0 0 0.9rem 0.9rem;
+  color: #d5e6e4;
+  background: #071c26;
 }
 
 .physiologyAnatomyHud strong {
   color: #ffd166;
-  font-size: 0.7rem;
-  letter-spacing: 0.04em;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
 }
 
 .physiologyAnatomyHud span {
-  font-size: 0.58rem;
-  line-height: 1.35;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+.heartStopName {
+  display: block;
+  width: max-content;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid rgba(255, 210, 63, 0.7);
+  border-radius: 0.35rem;
+  color: #fff7d6;
+  background: rgba(4, 23, 29, 0.86);
+  font-size: 0.8rem;
+  font-weight: 750;
+  overflow-wrap: normal;
+  white-space: nowrap;
+  /* Beside the stop it names, not on top of the catheter there. */
+  transform: translate(0.6rem, -50%);
+}
+/* Neighbouring stops project close together, so each name hangs a different way from its point. */
+.heartStopName[data-heart-stop-name='ra'] {
+  transform: translate(calc(-100% - 0.6rem), -50%);
+}
+.heartStopName[data-heart-stop-name='rv'] {
+  transform: translate(0.6rem, 40%);
+}
+.heartStopName[data-heart-stop-name='pa'] {
+  transform: translate(0.6rem, -140%);
 }
 
 .physiologyBalloonStatus[data-inflated='true'] {
@@ -1734,7 +1763,6 @@
   margin-top: 1rem;
 }
 
-.levelingTeachingCard,
 .fastFlushTeachingCard {
   padding: 0.85rem;
   border: 1px solid #cfe0dc;
@@ -1742,7 +1770,6 @@
   background: #f4f9f7;
 }
 
-.levelingTeachingCard > header,
 .fastFlushTeachingCard > header {
   display: flex;
   gap: 0.75rem;
@@ -1750,9 +1777,7 @@
   justify-content: space-between;
 }
 
-.levelingTeachingCard > header span,
-.fastFlushTeachingCard > header span,
-.dynamicResponseAtlas > header span {
+.fastFlushTeachingCard > header span {
   color: #367870;
   font-size: 0.61rem;
   font-weight: 850;
@@ -1760,97 +1785,11 @@
   text-transform: uppercase;
 }
 
-.levelingTeachingCard h4,
-.fastFlushTeachingCard h4,
-.dynamicResponseAtlas h5 {
+.fastFlushTeachingCard h4 {
   margin: 0.16rem 0 0;
   color: var(--navy);
   font-size: 0.88rem;
   line-height: 1.35;
-}
-
-.levelingTeachingCard > header > strong {
-  flex: 0 0 auto;
-  padding: 0.38rem 0.5rem;
-  border: 1px solid #9fcfc4;
-  border-radius: 999px;
-  color: #17655d;
-  background: #e1f4ee;
-  font-size: 0.72rem;
-}
-
-.levelingTeachingCard > header > strong[data-offset='high'] {
-  border-color: #d9ab64;
-  color: #7a4a08;
-  background: #fff2d8;
-}
-
-.levelingTeachingCard > header > strong[data-offset='low'] {
-  border-color: #9ebbdc;
-  color: #275784;
-  background: #e8f1fb;
-}
-
-.levelingVisualGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: 0.75rem;
-  align-items: stretch;
-  margin-top: 0.7rem;
-}
-
-.levelingPatientDiagram,
-.levelingPressureComparison {
-  width: 100%;
-  min-width: 0;
-  border: 1px solid #d6e4e1;
-  border-radius: 0.65rem;
-  background: #fff;
-}
-
-.levelingPatientDiagram {
-  display: block;
-  min-height: 155px;
-}
-
-.levelingBed {
-  fill: #cad8d5;
-}
-
-.levelingPatient {
-  fill: #dbe9e6;
-  stroke: #789691;
-  stroke-width: 2;
-}
-
-.levelingAxis {
-  stroke: #168f83;
-  stroke-width: 2;
-  stroke-dasharray: 7 5;
-}
-
-.levelingAxisPoint {
-  fill: #168f83;
-  stroke: #fff;
-  stroke-width: 3;
-}
-
-.levelingAxisLabel,
-.levelingDeltaLabel,
-.transducerLabel {
-  fill: #2d5e5b;
-  font-size: 12px;
-  font-weight: 750;
-}
-
-.levelingMeasure {
-  stroke: #c9821f;
-  stroke-width: 3;
-}
-
-.levelingMeasureCap {
-  stroke: #c9821f;
-  stroke-width: 2;
 }
 
 .transducerBody {
@@ -1863,107 +1802,6 @@
   fill: #188d82;
 }
 
-.transducerLabel {
-  font-size: 9px;
-}
-
-.levelingDeltaLabel {
-  fill: #8b570f;
-  text-anchor: end;
-}
-
-.levelingPressureComparison {
-  display: grid;
-  align-content: start;
-  padding: 0.65rem;
-}
-
-.levelingPressureComparison > svg {
-  display: block;
-  width: 100%;
-  min-height: 82px;
-  overflow: visible;
-}
-
-.levelingLegend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem;
-  margin-bottom: 0.25rem;
-  color: #506c6d;
-  font-size: 0.62rem;
-  font-weight: 700;
-}
-
-.levelingLegend span {
-  display: inline-flex;
-  gap: 0.35rem;
-  align-items: center;
-}
-
-.levelingLegend span::before {
-  width: 1.5rem;
-  border-top: 2px solid #168f83;
-  content: '';
-}
-
-.levelingLegend span[data-line='reference']::before {
-  border-top-color: #758986;
-  border-top-style: dashed;
-}
-
-.pressureGrid {
-  fill: none;
-  stroke: #dce8e5;
-  stroke-width: 1;
-}
-
-.levelingReferenceTrace,
-.levelingCurrentTrace {
-  fill: none;
-  vector-effect: non-scaling-stroke;
-}
-
-.levelingReferenceTrace {
-  stroke: #758986;
-  stroke-width: 1.8;
-  stroke-dasharray: 6 4;
-}
-
-.levelingCurrentTrace {
-  stroke: #168f83;
-  stroke-width: 2.4;
-}
-
-.levelingPressureComparison dl {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.35rem;
-  margin: 0.3rem 0 0;
-}
-
-.levelingPressureComparison dl > div {
-  padding: 0.45rem;
-  border-radius: 0.45rem;
-  background: #eef5f3;
-}
-
-.levelingPressureComparison dt {
-  color: #607878;
-  font-size: 0.56rem;
-  line-height: 1.3;
-}
-
-.levelingPressureComparison dd {
-  margin: 0.16rem 0 0;
-  color: #143f3d;
-  font-size: 0.68rem;
-  font-weight: 850;
-  line-height: 1.25;
-  text-transform: capitalize;
-}
-
-.levelingBoundary,
 .pressureVisualBoundary {
   margin: 0.65rem 0 0;
   color: #5f7374;
@@ -2122,110 +1960,6 @@
   text-align: center;
 }
 
-.fastFlushTrace {
-  margin: 0.7rem 0 0;
-  overflow: hidden;
-  border: 1px solid #cfdedb;
-  border-radius: 0.65rem;
-  background: #092323;
-}
-
-.fastFlushTrace figcaption {
-  display: flex;
-  gap: 0.6rem;
-  align-items: baseline;
-  justify-content: space-between;
-  padding: 0.45rem 0.55rem;
-  color: #d9f6f0;
-  background: #103332;
-  font-size: 0.61rem;
-}
-
-.fastFlushTrace figcaption span {
-  color: #9fc5be;
-  text-align: right;
-}
-
-.fastFlushTrace svg {
-  display: block;
-  width: 100%;
-  min-height: 152px;
-}
-
-.fastFlushTrace text {
-  fill: #82aaa3;
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.fastFlushTrace .pressureGrid {
-  stroke: rgba(137, 199, 188, 0.13);
-}
-
-.fastFlushPlotBackground {
-  fill: #092323;
-}
-
-.fastFlushAxis line {
-  stroke: rgba(137, 199, 188, 0.15);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-
-.fastFlushAxis text,
-.fastFlushAxisTitle,
-.fastFlushTimeMarker text {
-  fill: #82aaa3;
-  font-size: 8px;
-  font-weight: 700;
-}
-
-.fastFlushAxisTitle {
-  letter-spacing: 0.02em;
-}
-
-.fastFlushTimeMarker line {
-  stroke: rgba(137, 199, 188, 0.08);
-  stroke-width: 1;
-  stroke-dasharray: 3 4;
-  vector-effect: non-scaling-stroke;
-}
-
-.flushTrace {
-  fill: none;
-  stroke: #63e6cf;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2.3;
-  vector-effect: non-scaling-stroke;
-}
-
-.fastFlushTrace[data-line-type='pulmonary-artery'] .flushTrace {
-  stroke: #ffd166;
-}
-
-.fastFlushTrace[data-line-type='systemic-arterial'] .flushTrace {
-  stroke: #ff7087;
-}
-
-.flushMarker {
-  stroke: rgba(255, 255, 255, 0.18);
-  stroke-width: 1;
-  stroke-dasharray: 4 4;
-}
-
-.flushOffScaleLabel {
-  fill: #ffd166 !important;
-  font-size: 8px !important;
-  font-weight: 850 !important;
-  paint-order: stroke;
-  stroke: #092323;
-  stroke-width: 3px;
-  stroke-linejoin: round;
-}
-
 .dynamicResponsePrediction {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2308,60 +2042,9 @@
   background: #e7f5f0;
 }
 
-.dynamicResponseAtlas {
-  margin-top: 0.8rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #d3e2df;
-}
-
-.dynamicResponseAtlas h5 {
-  font-size: 0.76rem;
-}
-
-.dynamicResponseAtlas > div {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.45rem;
-}
-
-.dynamicResponseAtlas article {
-  min-width: 0;
-}
-
-.dynamicResponseAtlas article p {
-  margin: 0.35rem 0 0;
-  color: #5c7373;
-  font-size: 0.58rem;
-  line-height: 1.4;
-}
-
-.fastFlushTrace[data-compact='true'] figcaption {
-  display: grid;
-  gap: 0.15rem;
-  min-height: 3.1rem;
-}
-
-.fastFlushTrace[data-compact='true'] figcaption span {
-  font-size: 0.55rem;
-  text-align: left;
-}
-
-.fastFlushTrace[data-compact='true'] svg {
-  min-height: 112px;
-}
-
 @media (max-width: 42rem) {
   .fastFlushLineToggle {
     grid-template-columns: 1fr;
-  }
-
-  .fastFlushTrace figcaption {
-    display: grid;
-    gap: 0.18rem;
-  }
-
-  .fastFlushTrace figcaption span {
-    text-align: left;
   }
 }
 
@@ -3054,7 +2737,7 @@
   font-weight: 820;
 }
 .formulaGrid code {
-  color: #6e8184;
+  color: #556b6f;
   font-size: 0.64rem;
 }
 .formulaGrid article > strong {
@@ -3523,16 +3206,11 @@
   .sourcesPanel {
     grid-template-columns: 1fr;
   }
-  .levelingVisualGrid,
   .fastFlushTeachingCard > header {
     grid-template-columns: 1fr;
   }
-  .dynamicResponsePrediction,
-  .dynamicResponseAtlas > div {
+  .dynamicResponsePrediction {
     grid-template-columns: 1fr;
-  }
-  .levelingPressureComparison dl {
-    grid-template-columns: 1fr 1fr;
   }
   .skillSequence {
     grid-template-columns: 1fr;
@@ -3874,35 +3552,99 @@
   color: #5a7a74;
   font-size: 0.68rem;
 }
+/*
+ * The drawing has a least width, in rem: below it the labels at the reader's text size no longer fit
+ * beside a plot worth reading. A card narrower than that — a phone with enlarged text — scrolls the
+ * drawing sideways inside the figure, which a diagram may do, rather than crushing it or widening
+ * the page.
+ */
+/* Inline-size containment: the drawing's least width must not widen the card around it. */
+.atlasBody {
+  min-width: 0;
+  overflow-x: auto;
+  contain: inline-size;
+}
+.atlasFrame {
+  position: relative;
+  min-width: 12.5rem;
+}
 .atlasFigure svg {
   display: block;
   width: 100%;
   height: auto;
 }
-.atlasFigure[data-compact='true'] svg {
-  max-height: 9rem;
-}
-.atlasFigure[data-readable='true'] .atlasAxisLabel,
-.atlasFigure[data-readable='true'] .atlasAxisUnit,
-.atlasFigure[data-readable='true'] .atlasLaneLabel,
-.atlasFigure[data-readable='true'] .atlasAnnotation text {
-  font-size: 13px;
-}
 .atlasGridline {
   stroke: #dbe9e5;
   stroke-width: 1;
 }
-.atlasAxisLabel,
-.atlasAxisUnit,
-.atlasLaneLabel {
-  fill: #5a7a74;
-  font-size: 10px;
-  text-anchor: end;
+/*
+ * The figure's labels: page text over the drawing. Sizes are in rem, so a label is the same size
+ * in a wide card and a narrow one and grows only with the reader's own text size; positions are
+ * percentages of the drawing, so a label stays on its track however the figure is scaled.
+ */
+.atlasLabels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
-.atlasAxisUnit,
-.atlasLaneLabel {
+.atlasLabels > span {
+  position: absolute;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.atlasLaneName,
+.atlasUnitName {
+  left: 0;
+  color: #47635e;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.04em;
+  transform: translateY(-50%);
+}
+.atlasUnitName {
+  transform: translateY(-100%);
+}
+.atlasTick {
+  color: #47635e;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  transform: translate(-100%, -50%);
+}
+.atlasEcgName {
+  color: #2f6f4f;
+  font-size: 0.75rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+.atlasLabel {
+  padding-inline: 0.2rem;
+  border-radius: 0.2rem;
+  color: #7a4208;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+  font-style: italic;
+  font-weight: 850;
+}
+.atlasLabel[data-placement='above'] {
+  transform: translateY(-100%);
+}
+.atlasReadName {
+  color: #8f2f3d;
+  font-size: 0.75rem;
+  font-weight: 850;
+  text-align: center;
+}
+/* Wider than the plot: the name wraps inside the figure instead of leaving the card. */
+.atlasLabels > .atlasReadName[data-wrapped],
+.atlasLabels > .atlasLabel[data-wrapped] {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.atlasLeader {
+  stroke: #b06a1f;
+  stroke-width: 1.1;
+  stroke-dasharray: 3 2;
 }
 .atlasTrace {
   fill: none;
@@ -3918,42 +3660,40 @@
   stroke: #4b8f6b;
   stroke-width: 1.4;
 }
-.atlasAnnotation line {
-  stroke: #b06a1f;
-  stroke-width: 1.1;
-  stroke-dasharray: 3 2;
-}
 .atlasAnnotation circle {
   fill: #b06a1f;
-}
-.atlasAnnotation text {
-  fill: #8a4d0d;
-  font-size: 11px;
-  font-weight: 850;
-  font-style: italic;
 }
 .atlasLegend {
   display: grid;
   gap: 0.4rem;
   margin: 0.6rem 0 0;
 }
+/* The term is as wide as the term: a long label used to overflow a fixed 2.6rem column and print
+   across its own definition (report L4-02). Where the row cannot give the definition a readable
+   measure beside its term, the definition goes beneath it. */
 .atlasLegend > div {
-  display: grid;
-  grid-template-columns: 2.6rem 1fr;
-  gap: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.6rem;
   align-items: baseline;
+  min-width: 0;
 }
 .atlasLegend dt {
+  flex: 0 1 auto;
+  max-width: 100%;
   color: #8a4d0d;
   font-size: 0.78rem;
   font-style: italic;
   font-weight: 850;
 }
 .atlasLegend dd {
+  flex: 1 1 11rem;
+  min-width: 0;
   margin: 0;
   color: var(--ink);
   font-size: 0.76rem;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 .atlasDetailGrid {
   display: grid;
@@ -4110,67 +3850,36 @@
 }
 
 .artifactWaveformFigure figcaption strong {
-  font-size: 0.72rem;
+  font-size: 0.9rem;
 }
 
 .artifactWaveformFigure figcaption span {
-  color: #8fbdb4;
-  font-size: 0.58rem;
+  color: #a9d2c9;
+  font-size: 0.8rem;
   text-align: right;
 }
 
-.artifactWaveformFigure svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  min-height: 10.5rem;
+/* The atlas figure's plot, gutters and labels use the fast-flush figure's frame. */
+.artifactWaveformFigure figcaption {
+  font-size: 0.85rem;
 }
-
-.artifactPlotBackground {
-  fill: #06222b;
-}
-
-.artifactAxis line {
-  stroke: rgba(146, 205, 194, 0.17);
+.artifactCalloutLeader {
+  stroke: rgba(255, 209, 102, 0.75);
   stroke-width: 1;
-  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 3 3;
 }
-
-.artifactAxis text,
-.artifactAxisTitle,
-.artifactBeatMarker text,
-.artifactSystoleMarker text {
-  fill: #8fb5af;
-  font-size: 8px;
-  font-weight: 700;
+.artifactCalloutPoints {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
-
-.artifactAxisTitle {
-  letter-spacing: 0.03em;
-}
-
-.artifactBeatMarker line {
-  stroke: rgba(146, 205, 194, 0.1);
-  stroke-width: 1;
-  stroke-dasharray: 3 4;
-  vector-effect: non-scaling-stroke;
-}
-
-.artifactBeatMarker text {
-  font-size: 7.5px;
-  text-transform: uppercase;
-}
-
-.artifactSystoleMarker line {
-  stroke: rgba(255, 209, 102, 0.48);
-  stroke-width: 1;
-  stroke-dasharray: 4 3;
-  vector-effect: non-scaling-stroke;
-}
-
-.artifactSystoleMarker text {
-  fill: #ffd166;
-  font-size: 7px;
+.artifactCalloutPoints span {
+  position: absolute;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #ffd166;
+  transform: translate(-50%, -50%);
 }
 
 .artifactTracePath {
@@ -4180,30 +3889,6 @@
   stroke-linejoin: round;
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
-}
-
-.artifactCallout circle {
-  fill: #ffd166;
-  stroke: #06222b;
-  stroke-width: 1.5;
-  vector-effect: non-scaling-stroke;
-}
-
-.artifactCallout line {
-  stroke: #ffd166;
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-
-.artifactCallout text {
-  fill: #ffd166;
-  font-size: 7px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  paint-order: stroke;
-  stroke: #06222b;
-  stroke-width: 2px;
-  stroke-linejoin: round;
 }
 
 .artifactEffectGrid {
@@ -4614,74 +4299,6 @@
   border: 1px solid #cfe0dc;
   border-radius: 0.6rem;
   background: #fff;
-}
-
-.stripScale line {
-  stroke: rgba(143, 214, 200, 0.22);
-  stroke-width: 1;
-  stroke-dasharray: 4 4;
-}
-.stripScale text {
-  fill: rgba(143, 214, 200, 0.72);
-  font-size: 9px;
-  font-weight: 700;
-}
-.stripReference line {
-  stroke: rgba(255, 209, 102, 0.72);
-  stroke-width: 1.2;
-  stroke-dasharray: 7 5;
-}
-.stripReference text {
-  fill: rgba(255, 224, 146, 0.92);
-  font-size: 9px;
-  font-weight: 800;
-}
-.stripLandmark circle {
-  fill: #ffd166;
-}
-.stripLandmark text {
-  fill: #ffd166;
-  font-size: 11px;
-  font-weight: 850;
-  font-style: italic;
-}
-.stripUnavailable {
-  fill: #8ea4a8;
-  font-size: 18px;
-  font-weight: 750;
-  letter-spacing: 0.02em;
-}
-.stripTransition line {
-  stroke: #ffcf65;
-  stroke-width: 2;
-  stroke-dasharray: 7 5;
-}
-.stripTransition text {
-  fill: #ffe3a3;
-  font-size: 10px;
-  font-weight: 850;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.stripPhaseCursor line {
-  stroke: rgba(110, 231, 224, 0.8);
-  stroke-width: 1.4;
-  stroke-dasharray: 3 4;
-}
-.stripPhaseCursor text {
-  fill: #b6f4ef;
-  font-size: 9px;
-  font-weight: 850;
-  letter-spacing: 0.03em;
-}
-.stripPhaseCursorPoint line {
-  stroke: #f7e4a8;
-  stroke-width: 1.5;
-}
-.stripPhaseCursorPoint circle {
-  fill: #07171d;
-  stroke: #f7e4a8;
-  stroke-width: 2;
 }
 
 .recognitionDrill {
@@ -5292,17 +4909,10 @@
 }
 
 /* ECG landmarks, respiration lane, and the reading marker on the shared figure. */
-.atlasEcgLandmark line {
+.atlasEcgLandmarkLine {
   stroke: #9db9b4;
   stroke-width: 1;
   stroke-dasharray: 2 4;
-}
-
-.atlasEcgLandmark text {
-  fill: #4b8f6b;
-  font-size: 9px;
-  font-weight: 850;
-  letter-spacing: 0.05em;
 }
 
 .atlasRespirationTrace {
@@ -5311,16 +4921,10 @@
   stroke-width: 1.6;
 }
 
-.atlasReadMarker line {
+.atlasReadMarkerLine {
   stroke: #b64152;
   stroke-width: 1.5;
   stroke-dasharray: 5 3;
-}
-
-.atlasReadMarker text {
-  fill: #8f2f3d;
-  font-size: 10px;
-  font-weight: 850;
 }
 
 /* Scale control: the only way the axis changes, and it says so. */
@@ -6387,10 +5991,20 @@
   background: var(--teal, #147d7b);
 }
 
+/*
+ * A control that is not yet available is still read: what it will do is part of the task. Fading it
+ * to half opacity left its label at 2.4:1, and the reason list — whose text took the dark stage's
+ * near-white ink on a white field — at 1.1:1 (the HD-02 carry-forward). Unavailable is now said
+ * with a muted field and a dashed edge, at a contrast that can be read.
+ */
 .thermoTrialActions button:disabled,
-.thermoExcludeRow button:disabled {
-  opacity: 0.5;
+.thermoExcludeRow button:disabled,
+.thermoExcludeRow select:disabled {
+  border-style: dashed;
+  color: #4f666b;
+  background: #eef3f2;
   cursor: not-allowed;
+  opacity: 1;
 }
 
 .thermoExcludeRow label {
@@ -7071,9 +6685,8 @@
   margin: 0.6rem 0 0;
   font-size: 0.9rem;
 }
-.focusedMonitor svg {
-  min-height: 100px;
-  max-height: 150px;
+.focusedMonitor [data-strip-plot] {
+  height: clamp(6.5rem, 22vh, 9.5rem);
 }
 
 /* Case document flow keeps all channels legible at compact widths. */
@@ -7110,4 +6723,263 @@
   color: #ffe6a8;
   font-size: 0.82rem;
   line-height: 1.5;
+}
+
+/*
+ * The monitor's statements about its own view: frozen, held, axis changed. They describe the
+ * display, never the patient, and sit outside the plot so they cover no part of a tracing.
+ */
+.monitorViewNote {
+  margin: 0;
+  padding: 0.4rem 0.7rem;
+  border-bottom: 1px solid #263f48;
+  color: #ffe2ad;
+  background: #1d2a22;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+.focusedMonitor .monitorViewNote {
+  margin: 0 0 0.5rem;
+  border: 1px solid #4c5a3a;
+  border-radius: 0.5rem;
+}
+.monitorViewTools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.7rem;
+  margin-top: 0.6rem;
+}
+.monitorViewTools button {
+  min-height: 2.75rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #5f8188;
+  border-radius: 0.5rem;
+  color: #eaf4f4;
+  background: #12303a;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.monitorViewTools button[aria-pressed='true'] {
+  border-color: #ffd166;
+  background: #2a3520;
+}
+.monitorViewTools button:focus-visible {
+  outline: 3px solid #ffd166;
+  outline-offset: 2px;
+}
+.monitorViewTools small {
+  flex: 1 1 12rem;
+  color: #bacdd0;
+  font-size: 0.8rem;
+}
+.heldCopy {
+  margin-top: 0.6rem;
+  padding: 0.6rem;
+  border: 1px dashed #5f8188;
+  border-radius: 0.6rem;
+  background: #081b21;
+}
+.heldCopy > p {
+  margin: 0 0 0.5rem;
+  color: #dbeae7;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+.heldCopy [data-strip-plot] {
+  height: clamp(9rem, 30vh, 13rem);
+}
+
+/*
+ * Where the walk is among the four chambers: an indicator, not a set of tabs. No border that reads
+ * as a button, no pointer cursor; the current chamber is named by weight and by a rule beneath it.
+ */
+.referenceProgress {
+  display: grid;
+  gap: 0.35rem;
+}
+.referenceProgress ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.referenceProgress li {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: baseline;
+  padding-bottom: 0.15rem;
+  border-bottom: 3px solid transparent;
+}
+.referenceProgress li > span[aria-hidden] {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+.referenceProgress li[aria-current='step'] {
+  border-bottom-color: var(--teal, #17655d);
+  color: var(--ink, #15323a);
+  font-weight: 800;
+}
+.referenceProgress p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+/*
+ * The catheter's parts on the right-heart schematic. Numbers and chamber names are page text over
+ * the drawing, so they keep their size when the drawing is small.
+ */
+.pacSchematic {
+  --ink: #15323a;
+  --muted: #47635e;
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid #cfe0dc;
+  border-radius: 0.7rem;
+  color: var(--ink);
+  background: #fff;
+}
+/* As for the reference figures: a least width in rem, scrolled inside the figure when it must be. */
+.pacSchematicScroll {
+  overflow-x: auto;
+  contain: inline-size;
+}
+.pacSchematicDrawing {
+  position: relative;
+  min-width: 13.5rem;
+  max-width: 34rem;
+  margin-inline: auto;
+}
+.pacSchematicDrawing svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.pacSchematicThermistor {
+  fill: #fff;
+  stroke: #7a4208;
+  stroke-width: 1.6;
+}
+.pacSchematicPort {
+  fill: #fff;
+  stroke: #0d5e5c;
+  stroke-width: 1.8;
+}
+.pacSchematicLabels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.pacSchematicLabels > span {
+  position: absolute;
+  line-height: 1.15;
+}
+.pacSchematicChamber {
+  max-width: 19%;
+  color: #3c5b62;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transform: translateY(-50%);
+}
+.pacSchematicChamber[data-anchor='middle'] {
+  max-width: 34%;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+.pacSchematicMark {
+  display: grid;
+  place-items: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding-inline: 0.2rem;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  color: #fff;
+  background: #7a4208;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 850;
+  transform: translate(-50%, -50%);
+}
+.pacSchematicLeader {
+  stroke: #7a4208;
+  stroke-width: 1.2;
+}
+.pacSchematic figcaption {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.4rem;
+  overflow-wrap: anywhere;
+  margin-top: 0.6rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.pacSchematic figcaption ol {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding-left: 1.6rem;
+  list-style: decimal;
+}
+.pacSchematic figcaption span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/*
+ * Light cards that can be shown inside the dark lesson stage. Each declares the ink its own rules
+ * refer to; without that, `var(--navy)` and `var(--teal)` resolve to nothing there and the text
+ * falls back to the stage's near-white on the card's near-white (the HD-02 carry-forward on the
+ * derived-value cards, and the troubleshooting atlas now reachable from Learn).
+ */
+.troubleshootingPanel,
+.wedgeValidityPanel,
+.thermoTrialCard,
+.formulaGrid article {
+  --ink: #15323a;
+  --muted: #4f666b;
+  --navy: #092934;
+  --teal: #17655d;
+  color: var(--ink);
+  color-scheme: light;
+}
+
+/* The troubleshooting atlas and the Practice lab, opened from a Learn section's reference. */
+.learnToolLink {
+  display: grid;
+  gap: 0.5rem;
+}
+.learnToolLink > summary {
+  min-height: 2.75rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* The reading point: a ring, so it is told from the wave landmarks' filled dots without colour. */
+.atlasReadingPoint circle {
+  fill: #fff;
+  stroke: #8f2f3d;
+  stroke-width: 2.4;
+}
+.atlasLabel[data-reading-point] {
+  color: #8f2f3d;
+  font-style: normal;
+}
+
+/* What the model draws for a technique fault, said beside the curve it is about. */
+.thermoTrialModelNote {
+  margin: 0.4rem 0 0;
+  padding: 0.45rem 0.6rem;
+  border-left: 3px solid #b06a1f;
+  color: inherit;
+  font-size: 0.85rem;
+  line-height: 1.45;
 }

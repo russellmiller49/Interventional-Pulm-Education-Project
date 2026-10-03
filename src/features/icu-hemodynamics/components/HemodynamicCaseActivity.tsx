@@ -726,7 +726,7 @@ export function HemodynamicCaseActivity({
                 ? 'No action taken yet'
                 : requiredCompleted === definition.requiredInterventionIds.length
                   ? 'Ready to observe'
-                  : 'Continue the action sequence'}
+                  : 'More actions remain available'}
             </dd>
           </div>
           <div className="flex justify-between">
@@ -735,6 +735,28 @@ export function HemodynamicCaseActivity({
           </div>
         </dl>
         {legRaise ? <LegRaiseModelOnly record={legRaise} state={state} /> : null}
+        {/*
+          The way back to the action cards, said in place. It changes the view only: the same
+          patient, monitor, measurements and decision trace carry over, and nothing is reset.
+        */}
+        <button
+          type="button"
+          disabled={balloonActive}
+          data-return-to-actions
+          className="min-h-11 rounded-xl border px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
+          onClick={() => {
+            checkpoint('act')
+            setMessage(
+              'Back at the actions. The patient, the monitor and everything measured so far are unchanged.',
+            )
+          }}
+        >
+          Back to actions and measurements
+        </button>
+        <p className="text-xs text-muted-foreground">
+          The measurement tools below stay available while you observe. Going back keeps this
+          patient exactly as they are now.
+        </p>
         <button
           type="button"
           className="min-h-11 rounded-xl border px-4 py-2.5 text-sm font-semibold"
@@ -923,11 +945,18 @@ export function HemodynamicCaseActivity({
                 trigger={<button type="button">Evidence</button>}
               />
             </div>
-            <details>
-              <summary>Case checkpoints · open any of them</summary>
+            {/*
+              The checkpoints, in view. "Act in any order" was true only for a learner who found
+              and opened a collapsed list: after observing a response the action cards were gone
+              and this was the one way back to them (report P-03). The list is now always shown,
+              with the current checkpoint marked; opening one changes the view and nothing else —
+              the patient, the measurements and the decision trace are the same engine state.
+            */}
+            <div className={flowStyles.caseSteps} data-case-checkpoints>
+              <p id="case-checkpoints-label">Case checkpoints · open any of them, in any order</p>
               <nav aria-label="Case checkpoints">
                 {(['recognize', 'predict', 'act', 'observe', 'explain', 'transfer'] as const).map(
-                  (candidate) => (
+                  (candidate, index) => (
                     <button
                       type="button"
                       key={candidate}
@@ -935,12 +964,13 @@ export function HemodynamicCaseActivity({
                       aria-current={candidate === phase ? 'step' : undefined}
                       onClick={() => selectPhase(candidate)}
                     >
+                      <span aria-hidden="true">{index + 1}</span>
                       {objectives[candidate]}
                     </button>
                   ),
                 )}
               </nav>
-            </details>
+            </div>
           </header>
           <section className={flowStyles.caseBrief} aria-label="Patient brief">
             <h2>Patient brief</h2>
@@ -953,6 +983,14 @@ export function HemodynamicCaseActivity({
               Model time: the clock on the monitor counts simulation seconds. Responses here are
               compressed, and their timing is not a clinical time course.
             </p>
+            {!state.measurementSystem.zeroed ? (
+              <p data-zero-expectation>
+                The monitor opens with ZERO REQUIRED: this case&apos;s pressure line has not been
+                zeroed. Zeroing it is one of the things you can do here, when you choose; it is not
+                a condition for any action, and the debrief notes which pressures were read on an
+                unzeroed line.
+              </p>
+            ) : null}
           </section>
           {state.catheter.balloonInflated ? (
             <aside className={flowStyles.safety} role="status">
@@ -1045,7 +1083,8 @@ export function HemodynamicCaseActivity({
               <HemodynamicNativeWorkspace
                 state={state}
                 dispatch={dispatch}
-                interactive={phase === 'act' || phase === 'transfer'}
+                // The measurement tools stay usable while a response is observed (report P-03).
+                interactive={phase === 'act' || phase === 'observe' || phase === 'transfer'}
                 task={currentTask}
                 pressureChallengeMode={
                   definition.id === 'HD-08' || phase === 'transfer' ? 'current-state' : 'selectable'

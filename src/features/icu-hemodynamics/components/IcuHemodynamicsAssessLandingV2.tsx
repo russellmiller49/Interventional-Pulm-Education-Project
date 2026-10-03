@@ -10,7 +10,8 @@ import { Link } from '@/i18n/navigation'
  */
 export function IcuHemodynamicsAssessLandingV2() {
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+    // The page's `main` landmark is the site layout's; a second one inside it was nested (P-07).
+    <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 lg:px-8" data-assess-landing>
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Applied case</p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight">Apply the pathway to a harder case</h1>
       <p className="mt-3 max-w-2xl leading-7 text-muted-foreground">
@@ -50,6 +51,6 @@ export function IcuHemodynamicsAssessLandingV2() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   )
 }

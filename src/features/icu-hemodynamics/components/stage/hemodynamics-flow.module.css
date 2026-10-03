@@ -116,6 +116,22 @@
 .paired > * {
   min-width: 0;
 }
+/*
+ * The monitor stays beside the controls that act on it.
+ *
+ * On a flush task the right-hand column runs to the release tracing, the three choices and the
+ * repair, and the monitor that shows the flush scrolled out of view above an empty half-card
+ * (report L2-11). It now keeps its place while that column scrolls. Only where there is room: not in
+ * a single-column layout, not on a short viewport, and not while the held copy makes it taller than
+ * the space it would be pinned in — a pinned panel taller than the window can never be scrolled to
+ * its end.
+ */
+@media (min-width: 761px) and (min-height: 700px) {
+  .pairedLead:not(:has([data-held-view])) {
+    position: sticky;
+    top: calc(var(--site-header-height, 5rem) + 0.75rem);
+  }
+}
 .toolGroups {
   display: grid;
   gap: 0.75rem;
@@ -256,4 +272,60 @@
   .caseTask [aria-label='Bounded simulated interventions'] {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* The case's checkpoints as a visible row of steps; the current one is marked, none is hidden. */
+.caseSteps {
+  display: grid;
+  gap: 0.35rem;
+}
+.caseSteps > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.caseSteps nav {
+  margin: 0;
+}
+.caseSteps nav button {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: baseline;
+  text-align: left;
+}
+.caseSteps nav button > span {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  opacity: 0.8;
+}
+.caseSteps nav button[aria-current='step'] {
+  border-color: var(--cyan-bright);
+  box-shadow: inset 0 -3px 0 var(--cyan-bright);
+  font-weight: 700;
+}
+.caseSteps nav button:focus-visible,
+.caseTask button:focus-visible {
+  outline: 3px solid var(--cyan-bright);
+  outline-offset: 2px;
+}
+
+/*
+ * Sources, opened in the page.
+ *
+ * The shared footer floats its list over whatever is above it — right for a lesson held in fixed
+ * panes, wrong for this one, which is a scrolling document: the list landed on "Tasks in this
+ * section" and the tasks could not be reached until it was closed (report L1-05). Here it opens in
+ * place beneath the lesson, where it covers nothing and scrolls with the page. The shared component
+ * is untouched and still supplies the disclosure, Escape-to-close and the return of focus to its
+ * trigger; only where its list is laid out changes, and only inside this module.
+ */
+.references :global([data-stage-sources]) > div {
+  position: static;
+  z-index: auto;
+  width: auto;
+  max-height: none;
+  overflow: visible;
+  margin-top: 0.5rem;
+  box-shadow: none;
+  backdrop-filter: none;
 }

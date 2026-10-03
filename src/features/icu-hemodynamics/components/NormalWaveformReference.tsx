@@ -14,6 +14,7 @@ import {
   type NormalWaveformReferenceEntry,
   type NormalWaveformScaleId,
 } from '../content'
+import { RIGHT_ATRIAL_C_WAVE_BASE_PHASE } from '../engine/monitorDisplay'
 import styles from './icu-hemodynamics.module.css'
 import { NormalWaveformAnatomyFigure } from './NormalWaveformAnatomyFigure'
 import { WaveformAtlasFigure } from './WaveformAtlasFigure'
@@ -113,33 +114,60 @@ export function NormalWaveformReference({
         <p>{NORMAL_WAVEFORM_RHYTHM_CONTEXT.assumption}</p>
       )}
 
-      <div
-        role="tablist"
-        aria-label="Normal waveform reference, in insertion order"
-        className={styles.referenceTabs}
-        onKeyDown={moveTab}
-      >
-        {normalWaveformReference.map((candidate, index) => (
-          <button
-            key={candidate.position}
-            ref={(node) => {
-              tabRefs.current[index] = node
-            }}
-            id={`${tabIdPrefix}-${candidate.position}`}
-            type="button"
-            role="tab"
-            aria-selected={candidate.position === entry.position}
-            aria-controls={panelId}
-            tabIndex={candidate.position === entry.position ? 0 : -1}
-            className={styles.referenceTab}
-            disabled={Boolean(fixedPosition)}
-            onClick={() => setActivePosition(candidate.position)}
-          >
-            <span aria-hidden="true">{candidate.order}</span>
-            {normalWaveformAtlasEntry(candidate).shortLabel}
-          </button>
-        ))}
-      </div>
+      {fixedPosition ? (
+        /*
+         * While the walk chooses the chamber, these are not controls: they were buttons that looked
+         * pressable and were disabled (report L3-05). They are drawn as what they are — a marker of
+         * where the walk is — and say what does move it.
+         */
+        <div className={styles.referenceProgress} data-reference-progress>
+          <ol aria-label="Chambers in insertion order">
+            {normalWaveformReference.map((candidate) => (
+              <li
+                key={candidate.position}
+                aria-current={candidate.position === entry.position ? 'step' : undefined}
+              >
+                <span aria-hidden="true">{candidate.order}</span>
+                {normalWaveformAtlasEntry(candidate).shortLabel}
+                {candidate.position === entry.position ? (
+                  <span className={styles.srOnly}> (shown now)</span>
+                ) : null}
+              </li>
+            ))}
+          </ol>
+          <p>
+            The walk chooses the chamber shown here: use Next stop and Previous stop below. The
+            whole reference opens for free browsing in this section&apos;s later tasks.
+          </p>
+        </div>
+      ) : (
+        <div
+          role="tablist"
+          aria-label="Normal waveform reference, in insertion order"
+          className={styles.referenceTabs}
+          onKeyDown={moveTab}
+        >
+          {normalWaveformReference.map((candidate, index) => (
+            <button
+              key={candidate.position}
+              ref={(node) => {
+                tabRefs.current[index] = node
+              }}
+              id={`${tabIdPrefix}-${candidate.position}`}
+              type="button"
+              role="tab"
+              aria-selected={candidate.position === entry.position}
+              aria-controls={panelId}
+              tabIndex={candidate.position === entry.position ? 0 : -1}
+              className={styles.referenceTab}
+              onClick={() => setActivePosition(candidate.position)}
+            >
+              <span aria-hidden="true">{candidate.order}</span>
+              {normalWaveformAtlasEntry(candidate).shortLabel}
+            </button>
+          ))}
+        </div>
+      )}
 
       <fieldset className={styles.referenceScaleControl}>
         <legend>Displayed axis</legend>
@@ -169,9 +197,10 @@ export function NormalWaveformReference({
 
       <div
         id={panelId}
-        role="tabpanel"
-        aria-labelledby={`${tabIdPrefix}-${entry.position}`}
-        tabIndex={0}
+        role={fixedPosition ? 'group' : 'tabpanel'}
+        aria-labelledby={fixedPosition ? undefined : `${tabIdPrefix}-${entry.position}`}
+        aria-label={fixedPosition ? `${atlasEntry.label} reference` : undefined}
+        tabIndex={fixedPosition ? undefined : 0}
         className={styles.referencePanel}
       >
         <p className={styles.referenceStateLine}>
@@ -197,6 +226,17 @@ export function NormalWaveformReference({
               modeLabel: NORMAL_WAVEFORM_RESPIRATORY_CONTEXT.mode,
             }}
             figureDescription={normalWaveformReferenceTextEquivalent(entry, scale)}
+            // The point the reference, the monitor's own cursor and the cited source all name.
+            readingPoint={
+              entry.position === 'ra'
+                ? {
+                    cardiacPhase: RIGHT_ATRIAL_C_WAVE_BASE_PHASE,
+                    label: 'read here',
+                    description:
+                      'Where the right-atrial value is read: at end expiration, at the base of the c wave. The live monitor’s right-atrial cursor uses the same point.',
+                  }
+                : undefined
+            }
           />
         </div>
 

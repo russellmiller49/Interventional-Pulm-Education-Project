@@ -1,0 +1,256 @@
+/*
+ * The live strip, laid out in the page rather than inside the plot.
+ *
+ * The strip's SVG is stretched to its box, so text drawn inside it was stretched with it and sat on
+ * the trace: the mean tag and the scale labels were written across the very line they describe
+ * (reports L2-01, L9-04, X-01). Every label is now HTML beside the plot — ticks in a gutter on the
+ * left, the reference value in a gutter on the right, the markers' names in a track above — sized
+ * in rem so it follows the reader's text size, and never drawn over a sample.
+ */
+/*
+ * The gutters are the same width on every strip, scaled or not, so the plots of stacked channels
+ * begin and end at the same place: a cursor at one instant is one vertical line down the monitor.
+ */
+.frame {
+  min-width: 0;
+  container-type: inline-size;
+}
+.body {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--strip-axis-width, 2.6rem) minmax(0, 1fr) var(
+      --strip-tags-width,
+      7rem
+    );
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  height: 100%;
+}
+.markerTrack {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  min-height: calc(var(--strip-marker-rows, 1) * 1.15rem);
+}
+/*
+ * A marker's name slides along its track with the marker: at the left edge it starts at the mark,
+ * at the right edge it ends there, in between it straddles it. Shifting the label back by the same
+ * fraction of its own width as the mark is along the track keeps it over its mark and inside the
+ * track at any width — a centred label ran out of a phone-width strip.
+ */
+.markerLabel {
+  position: absolute;
+  top: calc(var(--strip-row, 0) * 1.15rem);
+  left: var(--strip-x);
+  max-width: 100%;
+  overflow: hidden;
+  color: #b6f4ef;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1.15rem;
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateX(calc(-1 * var(--strip-x)));
+}
+.markerLabel[data-kind='transition'] {
+  color: #ffe3a3;
+}
+.markerLabel[data-kind='seam'] {
+  color: #f3c98b;
+  font-style: italic;
+}
+.axis,
+.tags {
+  position: relative;
+  grid-row: 2;
+  min-width: 0;
+}
+.axis {
+  grid-column: 1;
+  padding-inline: 0.2rem 0.3rem;
+  text-align: right;
+}
+.tags {
+  grid-column: 3;
+  padding-inline: 0.35rem 0.25rem;
+}
+.tick,
+.tag {
+  position: absolute;
+  top: var(--strip-y);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  transform: translateY(-50%);
+}
+.tick {
+  white-space: nowrap;
+}
+.tick[data-anchor='top'],
+.tag[data-anchor='top'] {
+  transform: none;
+}
+.tick[data-anchor='bottom'],
+.tag[data-anchor='bottom'] {
+  transform: translateY(-100%);
+}
+.tick {
+  right: 0.3rem;
+  color: rgba(163, 226, 214, 0.9);
+  font-weight: 700;
+}
+.tag {
+  right: 0.25rem;
+  left: 0.35rem;
+  color: #ffe092;
+  font-weight: 800;
+}
+/* A short dashed stroke ties the tag to the dashed reference line it names. */
+.tag::before {
+  display: inline-block;
+  width: 0.9rem;
+  margin-right: 0.3rem;
+  border-top: 2px dashed rgba(255, 209, 102, 0.85);
+  vertical-align: middle;
+  content: '';
+}
+.tag small {
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+.plot {
+  position: relative;
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  min-height: 92px;
+}
+.plot svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.scaleLine {
+  stroke: rgba(143, 214, 200, 0.22);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+.referenceLine {
+  stroke: rgba(255, 209, 102, 0.72);
+  stroke-width: 1.2;
+  stroke-dasharray: 7 5;
+}
+.phaseCursorLine {
+  stroke: rgba(110, 231, 224, 0.8);
+  stroke-width: 1.4;
+  stroke-dasharray: 3 4;
+}
+.transitionLine {
+  stroke: #ffcf65;
+  stroke-width: 2;
+  stroke-dasharray: 7 5;
+}
+/* The erase bar where a measurement setting changed: the line is open across it. */
+.seam {
+  fill: rgba(243, 201, 139, 0.2);
+  stroke: rgba(243, 201, 139, 0.7);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  vector-effect: non-scaling-stroke;
+}
+/* Where the trace has left the axis: a mark on the edge it left by, never a line at the edge. */
+.offScale {
+  fill: #ffb84f;
+}
+.overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.unavailable {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0.25rem 0.5rem;
+  color: #a9bdc1;
+  font-size: 0.85rem;
+  font-weight: 750;
+  text-align: center;
+}
+.cursorPoint {
+  position: absolute;
+  top: var(--strip-y);
+  left: var(--strip-x);
+  width: 0.6rem;
+  height: 0.6rem;
+  border: 2px solid #f7e4a8;
+  border-radius: 50%;
+  background: #07171d;
+  transform: translate(-50%, -50%);
+}
+.landmark {
+  position: absolute;
+  top: var(--strip-y);
+  left: var(--strip-x);
+}
+.landmark i {
+  position: absolute;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: #ffd166;
+  transform: translate(-50%, -50%);
+}
+.landmark b {
+  position: absolute;
+  color: #ffd166;
+  font-size: 0.75rem;
+  font-style: italic;
+  font-weight: 850;
+  line-height: 1;
+  white-space: nowrap;
+  transform: translate(-50%, calc(-100% - 0.3rem - var(--strip-landmark-lift, 0rem)));
+}
+.landmark[data-row='1'] b {
+  --strip-landmark-lift: 0.8rem;
+}
+.landmark[data-placement='below'] b {
+  transform: translate(-50%, calc(0.3rem + var(--strip-landmark-lift, 0rem)));
+}
+.rangeNote {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0.3rem 0.55rem;
+  color: #ffd9a0;
+  background: rgba(60, 38, 8, 0.55);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+.stillCopy {
+  border: 1px dashed #5f8188;
+}
+
+/*
+ * A strip too narrow to give up a gutter to its tag puts the tag in a row beneath the plot, so the
+ * plot keeps the width. The threshold is in rem: enlarged text moves the tag down sooner. The
+ * gutter's column goes with it — while the body was its own size container it could move the tag
+ * but not release the column, and a phone-width strip was left with a plot a few pixels wide.
+ */
+@container (max-width: 26rem) {
+  .body {
+    grid-template-columns: var(--strip-axis-width, 2.6rem) minmax(0, 1fr);
+  }
+  .tags {
+    grid-column: 2 / -1;
+    grid-row: 3;
+    padding: 0.2rem 0.25rem;
+  }
+  .tag {
+    position: static;
+    transform: none;
+  }
+}

@@ -1,13 +1,23 @@
 'use client'
 
-import { useMemo, type Dispatch } from 'react'
+import { useMemo, useState, type Dispatch } from 'react'
 
 import type {
   HemodynamicAction,
   HemodynamicSimulationState,
   PressureWaveformField,
 } from '../engine'
-import { monitorPressureReadouts, recentTracePressureMetrics } from '../engine'
+import {
+  displaySeamWords,
+  displaySeamsFor,
+  fittedPressureAxis,
+  fixedWithoutNegativeZero,
+  mixedVenousAvailability,
+  monitorPressureReadouts,
+  recentTracePressureMetrics,
+  referenceComparisonAxis,
+  type PressureAxis,
+} from '../engine'
 import { catheterSimulationNotice } from '../engine/catheterSafety'
 import {
   physiologicalEpisodeWords,
@@ -15,7 +25,12 @@ import {
   thermodilutionSeriesView,
 } from '../engine/measurementProvenance'
 import { CARDIAC_PHASE } from '../engine/waveformMorphology'
-import { WaveformStrip, type WaveformLandmark, type WaveformPhaseCursor } from './WaveformStrip'
+import {
+  WaveformStrip,
+  type WaveformLandmark,
+  type WaveformPhaseCursor,
+  type WaveformStripSeam,
+} from './WaveformStrip'
 import styles from './icu-hemodynamics.module.css'
 
 interface BedsideMonitorProps {
@@ -33,6 +48,12 @@ interface BedsideMonitorProps {
   showControls?: boolean
   /** A focused channel uses the same samples and readout calculation as the full monitor. */
   focus?: 'all' | 'pac' | 'arterial'
+  /**
+   * The retained starting state of a reference comparison. When supplied, the catheter channel
+   * keeps one axis — sized from this state's own tracing for every position of the height and zero
+   * controls — instead of an axis refitted to each new value (report L2-06).
+   */
+  comparisonBaseline?: Pick<HemodynamicSimulationState, 'waveforms'>
 }
 
 interface PacTraceConfiguration {
@@ -97,7 +118,11 @@ const ARTERIAL_LANDMARKS: readonly WaveformLandmark[] = [
 ]
 
 function value(value: number | null, digits = 0): string {
-  return value === null || !Number.isFinite(value) ? '—' : value.toFixed(digits)
+  return value === null || !Number.isFinite(value) ? '—' : fixedWithoutNegativeZero(value, digits)
+}
+
+function axisWords(axis: PressureAxis): string {
+  return `${fixedWithoutNegativeZero(axis.minimum)} to ${fixedWithoutNegativeZero(axis.maximum)} mmHg`
 }
 
 /** How the stored wedge was read, and whether it still describes this patient. */
@@ -117,6 +142,50 @@ function lowPressureScaleMaximum(targetMmHg: number): 20 | 40 | 80 | 160 {
   return 160
 }
 
+/**
+ * Says when a channel's axis changed under a tracing that stayed on the same channel.
+ *
+ * The monitor fits each axis to the pressure it is showing. When that fit changes, the same
+ * waveform is suddenly drawn at half or twice the size, and a learner reads it as the waveform
+ * changing (report L2-06). The fit is kept — it is what stops a raised pressure being cut off —
+ * and the change is announced instead of left to be noticed. A change of channel is not a change
+ * of axis and announces nothing: the channel's own label already changed.
+ */
+function useAxisChangeNotice(channel: string, axis: PressureAxis): string | null {
+  const [memory, setMemory] = useState<{
+    channel: string
+    axis: PressureAxis
+    change: { from: PressureAxis; to: PressureAxis } | null
+  }>({ channel, axis, change: null })
+  if (
+    memory.channel !== channel ||
+    memory.axis.minimum !== axis.minimum ||
+    memory.axis.maximum !== axis.maximum
+  ) {
+    setMemory({
+      channel,
+      axis,
+      change: memory.channel === channel ? { from: memory.axis, to: axis } : null,
+    })
+  }
+  return memory.change
+    ? `Axis changed from ${axisWords(memory.change.from)} to ${axisWords(memory.change.to)}. The axis changed; the pressure did not.`
+    : null
+}
+
+/** A still copy of the last two beats, kept in the monitor and never written to the engine. */
+interface HeldView {
+  readonly samples: HemodynamicSimulationState['waveforms']
+  readonly field: PressureWaveformField
+  readonly label: string
+  readonly color: string
+  readonly heartRateBpm: number
+  readonly landmarks?: readonly WaveformLandmark[]
+  readonly transitionFrom?: PacTraceConfiguration['transitionFrom']
+  readonly takenAtSeconds: number
+  readonly liveAxis: PressureAxis
+}
+
 export function BedsideMonitor({
   state,
   dispatch,
@@ -124,6 +193,7 @@ export function BedsideMonitor({
   chamberLabel = 'shown',
   showControls = true,
   focus = 'all',
+  comparisonBaseline,
 }: BedsideMonitorProps) {
   const measurements = state.measurements
   const withheld = chamberLabel === 'withheld'
@@ -170,6 +240,14 @@ export function BedsideMonitor({
         state.catheter.position === 'pa' ||
         state.catheter.position === 'wedge'),
   )
+  // Which pressure channel an alarm is about, for a focused monitor that draws only one of them.
+  const alarmIsArterial = (alarm: (typeof activeAlarms)[number]) => alarm.id === 'low-map'
+  const alarmIsCatheter = (alarm: (typeof activeAlarms)[number]) =>
+    alarm.id === 'high-pap' || alarm.id === 'wedge-safety'
+  const alarmsOnOtherChannel = activeAlarms.filter((alarm) =>
+    focus === 'arterial' ? alarmIsCatheter(alarm) : alarmIsArterial(alarm),
+  )
+  const alarmsOnThisChannel = activeAlarms.filter((alarm) => !alarmsOnOtherChannel.includes(alarm))
   const cvpScaleMaximum = lowPressureScaleMaximum(measurements.rapMmHg + 10)
   const falseWedge = state.measurementSystem.artifact === 'false-wedge'
   // What the simulation itself is restricting, named as a simulation notice rather than smuggled
@@ -258,6 +336,47 @@ export function BedsideMonitor({
         unavailableMessage: namedPacTrace.unavailableMessage,
       }
     : namedPacTrace
+  /*
+   * The catheter channel's axis: fitted to the pressure, unless a reference comparison pins one
+   * axis for its whole length (report L2-06). An unavailable channel has no trace to fit.
+   */
+  const pinnedPacAxis =
+    comparisonBaseline && pacTrace.unavailableMessage === undefined
+      ? referenceComparisonAxis(comparisonBaseline, pacTrace.field)
+      : null
+  const pacAxis: PressureAxis = pinnedPacAxis ?? {
+    minimum: pacTrace.minimum,
+    maximum: pacTrace.maximum,
+  }
+  // Entering or leaving a pinned comparison is a change of mode, not a refit under the learner.
+  const pacAxisNotice = useAxisChangeNotice(
+    `pac:${pacTrace.field}:${pinnedPacAxis ? 'pinned' : 'fitted'}`,
+    pacAxis,
+  )
+  const cvpAxis: PressureAxis = { minimum: -5, maximum: cvpScaleMaximum }
+  const cvpAxisNotice = useAxisChangeNotice('cvp', cvpAxis)
+  const pressureSeams: readonly WaveformStripSeam[] = displaySeamsFor(state, 'other-pressure').map(
+    (seam) => ({
+      fromTime: seam.fromSeconds,
+      untilTime: seam.untilSeconds,
+      label: displaySeamWords(seam),
+    }),
+  )
+  const arterialSeams: readonly WaveformStripSeam[] = displaySeamsFor(
+    state,
+    'systemic-arterial',
+  ).map((seam) => ({
+    fromTime: seam.fromSeconds,
+    untilTime: seam.untilSeconds,
+    label: displaySeamWords(seam),
+  }))
+  /*
+   * Frozen is a property of the tracings, not of the model: the engine keeps running and only the
+   * waveform buffer stops. The monitor says when the tracings stopped and that they are not live,
+   * so a frozen strip is never read as the current state.
+   */
+  const frozenAtSeconds = state.frozen ? (state.waveforms.at(-1)?.time ?? null) : null
+  const [held, setHeld] = useState<HeldView | null>(null)
   // Labels would smear across a sweeping trace, so they appear only on a frozen strip.
   const annotate = state.frozen
   /*
@@ -294,10 +413,8 @@ export function BedsideMonitor({
     thermodilutionAverage === null
       ? null
       : thermodilutionAverage / state.parameters.bodySurfaceAreaM2
-  const mixedVenousAvailable =
-    state.catheter.position === 'pa' &&
-    state.catheter.targetPosition === null &&
-    !state.catheter.balloonInflated
+  const mixedVenous = mixedVenousAvailability(state)
+  const mixedVenousAvailable = mixedVenous.available
 
   const pacPressureDisplay = withheld
     ? {
@@ -383,8 +500,25 @@ export function BedsideMonitor({
           <small>
             Simulated · {state.sweepSeconds} s sweep · {state.parameters.respiratoryRateBpm}{' '}
             breaths/min · PEEP {state.parameters.peepCmH2O} cm H₂O
+            {!arterial && pinnedPacAxis ? (
+              <span data-pinned-axis>
+                {' '}
+                · axis fixed at {axisWords(pacAxis)} for this comparison
+              </span>
+            ) : null}
           </small>
         </header>
+        {frozenAtSeconds !== null ? (
+          <p className={styles.monitorViewNote} role="status" data-frozen-note>
+            Frozen. These tracings stopped at {frozenAtSeconds.toFixed(1)} s of model time and are
+            not live; the model has continued to {state.timeSeconds.toFixed(1)} s.
+          </p>
+        ) : null}
+        {!arterial && pacAxisNotice ? (
+          <p className={styles.monitorViewNote} role="status" data-scale-change-note>
+            {pacAxisNotice}
+          </p>
+        ) : null}
         <WaveformStrip
           samples={state.waveforms}
           field="ecgMv"
@@ -401,8 +535,9 @@ export function BedsideMonitor({
           field={arterial ? 'artMmHg' : pacTrace.field}
           label={arterial ? 'ART' : pacTrace.label}
           unit="mmHg"
-          minimum={arterial ? 0 : pacTrace.minimum}
-          maximum={arterial ? state.pressureScaleMmHg : pacTrace.maximum}
+          minimum={arterial ? 0 : pacAxis.minimum}
+          maximum={arterial ? state.pressureScaleMmHg : pacAxis.maximum}
+          seams={arterial ? arterialSeams : pressureSeams}
           color={arterial ? '#ff647c' : pacTrace.color}
           sweepSeconds={state.sweepSeconds}
           showScale
@@ -415,6 +550,42 @@ export function BedsideMonitor({
           unavailableMessage={arterial ? undefined : pacTrace.unavailableMessage}
           phaseCursor={withheld ? undefined : arterial ? endExpirationMarker : pacPhaseCursor}
         />
+        {(arterial || pacTrace.unavailableMessage === undefined) && state.waveforms.length > 1 ? (
+          <div className={styles.monitorViewTools} data-monitor-view-tools>
+            <button
+              type="button"
+              aria-pressed={held !== null}
+              data-hold-view
+              onClick={() =>
+                setHeld(
+                  held
+                    ? null
+                    : {
+                        samples: state.waveforms,
+                        field: arterial ? 'artMmHg' : pacTrace.field,
+                        label: arterial ? 'ART' : pacTrace.label,
+                        color: arterial ? '#ff647c' : pacTrace.color,
+                        heartRateBpm: measurements.heartRateBpm,
+                        landmarks: arterial ? ARTERIAL_LANDMARKS : pacTrace.landmarks,
+                        transitionFrom: arterial ? undefined : pacTrace.transitionFrom,
+                        takenAtSeconds: state.waveforms.at(-1)?.time ?? state.timeSeconds,
+                        liveAxis: arterial
+                          ? { minimum: 0, maximum: state.pressureScaleMmHg }
+                          : pacAxis,
+                      },
+                )
+              }
+            >
+              {held ? 'Release the held copy' : 'Hold and enlarge the last two beats'}
+            </button>
+            <small>
+              {held
+                ? 'The strip above is still live.'
+                : 'Keeps a still, enlarged copy to read wave by wave. Nothing in the simulation stops.'}
+            </small>
+          </div>
+        ) : null}
+        {held ? <HeldCopy held={held} /> : null}
         {state.catheter.balloonInflated || state.catheter.storedWedgeMmHg !== null ? (
           <p data-stored-wedge-line>
             Balloon {state.catheter.balloonInflated ? 'inflated' : 'down'} · stored PAWP{' '}
@@ -423,7 +594,22 @@ export function BedsideMonitor({
           </p>
         ) : null}
         {activeAlarms.length > 0 ? (
-          <p role="status">{activeAlarms.map((alarm) => alarm.label).join(' · ')}</p>
+          <p role="status">
+            {alarmsOnThisChannel.map((alarm) => alarm.label).join(' · ')}
+            {alarmsOnOtherChannel.length > 0 ? (
+              /*
+               * An alarm from a channel this monitor does not draw is still reported, with the
+               * channel it belongs to: "ART MAP LOW" under a tracing of pulmonary-artery pressure
+               * read as a statement about that tracing (report L2-06).
+               */
+              <span data-alarm-other-channel>
+                {alarmsOnThisChannel.length > 0 ? ' · ' : ''}
+                {arterial ? 'On the catheter’s channel' : 'On the arterial line'}, which this task’s
+                monitor does not show:{' '}
+                {alarmsOnOtherChannel.map((alarm) => alarm.label).join(' · ')}
+              </span>
+            ) : null}
+          </p>
         ) : null}
       </section>
     )
@@ -444,6 +630,23 @@ export function BedsideMonitor({
         </div>
         <time>{state.timeSeconds.toFixed(1)} s</time>
       </header>
+
+      {frozenAtSeconds !== null ? (
+        <p className={styles.monitorViewNote} role="status" data-frozen-note>
+          Frozen. These tracings stopped at {frozenAtSeconds.toFixed(1)} s of model time and are not
+          live; the model has continued to {state.timeSeconds.toFixed(1)} s.
+        </p>
+      ) : null}
+      {pacAxisNotice || cvpAxisNotice ? (
+        <p className={styles.monitorViewNote} role="status" data-scale-change-note>
+          {[
+            cvpAxisNotice ? `CVP: ${cvpAxisNotice}` : null,
+            pacAxisNotice ? `${pacTrace.label}: ${pacAxisNotice}` : null,
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        </p>
+      ) : null}
 
       {simulationNotice && !withheld ? (
         <p className={styles.simulationNotice} role="status" data-simulation-safety-notice>
@@ -498,14 +701,15 @@ export function BedsideMonitor({
             referenceValue={artMean}
             referenceLabel="MAP"
             phaseCursor={endExpirationMarker}
+            seams={arterialSeams}
           />
           <WaveformStrip
             samples={state.waveforms}
             field="cvpMmHg"
             label="CVP"
             unit="mmHg"
-            minimum={-5}
-            maximum={cvpScaleMaximum}
+            minimum={cvpAxis.minimum}
+            maximum={cvpAxis.maximum}
             color="#55c6ff"
             sweepSeconds={state.sweepSeconds}
             readable
@@ -513,18 +717,20 @@ export function BedsideMonitor({
             heartRateBpm={measurements.heartRateBpm}
             landmarks={annotate ? ATRIAL_LANDMARKS : undefined}
             phaseCursor={cvpMeasurementCursor}
+            seams={pressureSeams}
           />
           <WaveformStrip
             samples={state.waveforms}
             field={pacTrace.field}
             label={pacTrace.label}
             unit="mmHg"
-            minimum={pacTrace.minimum}
-            maximum={pacTrace.maximum}
+            minimum={pacAxis.minimum}
+            maximum={pacAxis.maximum}
             color={pacTrace.color}
             sweepSeconds={state.sweepSeconds}
             readable
             showScale
+            seams={pressureSeams}
             heartRateBpm={measurements.heartRateBpm}
             landmarks={annotate ? pacTrace.landmarks : undefined}
             referenceValue={pacTrace.referenceValue}
@@ -612,7 +818,7 @@ export function BedsideMonitor({
             <small>
               {mixedVenousAvailable
                 ? '% · distal PA sample · usual reference 65–75%'
-                : 'not available before PA'}
+                : mixedVenous.reason}
             </small>
           </div>
         </aside>
@@ -673,6 +879,60 @@ export function BedsideMonitor({
           ) : null}
         </footer>
       ) : null}
+    </section>
+  )
+}
+
+/**
+ * The held copy: two beats, still, on an axis fitted to them.
+ *
+ * On a six-second sweep and an axis sized for the whole venous range, a right-atrial tracing is a
+ * few millimetres of line and its a, c and v waves cannot be told apart (report L5-05). This is the
+ * same buffer the strip above draws from, cut to its last two cardiac cycles and enlarged. It is a
+ * view: no sample is filtered, smoothed or resampled, nothing is written to the engine, and the
+ * axis is fitted to the samples so a raised pressure is enlarged where it sits rather than clipped.
+ */
+function HeldCopy({ held }: { readonly held: HeldView }) {
+  const windowSeconds = (60 / held.heartRateBpm) * 2
+  const visible = held.samples.filter(
+    (sample) => sample.time >= held.takenAtSeconds - windowSeconds,
+  )
+  const axis =
+    fittedPressureAxis(
+      visible.map((sample) =>
+        held.transitionFrom && sample.time < held.transitionFrom.untilTime
+          ? sample[held.transitionFrom.field]
+          : sample[held.field],
+      ),
+    ) ?? held.liveAxis
+  return (
+    <section
+      className={styles.heldCopy}
+      data-held-view
+      aria-label={`Held copy of the ${held.label} tracing`}
+    >
+      <p data-held-view-note>
+        <strong>Held copy · not live.</strong> The two beats that ended at{' '}
+        {held.takenAtSeconds.toFixed(1)} s of model time, on an axis fitted to them (
+        {axisWords(axis)}; the live strip uses {axisWords(held.liveAxis)}). The same samples, drawn
+        larger: only the time window and the axis differ.
+      </p>
+      <WaveformStrip
+        samples={held.samples}
+        field={held.field}
+        label={held.label}
+        unit="mmHg"
+        minimum={axis.minimum}
+        maximum={axis.maximum}
+        color={held.color}
+        sweepSeconds={windowSeconds}
+        showScale
+        readable
+        stillCopy
+        heartRateBpm={held.heartRateBpm}
+        landmarks={held.landmarks}
+        transitionFrom={held.transitionFrom}
+      />
     </section>
   )
 }

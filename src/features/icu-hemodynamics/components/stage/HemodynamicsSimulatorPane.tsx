@@ -16,9 +16,9 @@ import { HemodynamicHeart3DDynamic } from '../HemodynamicHeart3DDynamic'
 import { WaveformRecognitionDrill } from '../WaveformRecognitionDrill'
 import type { RecognitionRecord } from '../WaveformRecognitionDrill'
 import { AtrialComponentDemonstration } from './AtrialComponentActivity'
-import { LevelingVisual, FastFlushTrace } from '../PressureSystemTeachingVisual'
+import { DynamicResponseComparison } from '../FastFlushTrace'
+import { LevelingVisual } from '../PressureSystemTeachingVisual'
 import {
-  dynamicResponseDefinitions,
   formatSignedPressure,
   hydrostaticPressureOffsetMmHg,
 } from '../../content/pressureSystemVisuals'
@@ -113,12 +113,15 @@ export function HemodynamicsSimulatorPane({
 
   const dock = (() => {
     const props = { state, dispatch, enabled: controlsEnabled }
+    // The arterial tracing is on screen in every layout except a catheter-channel-only monitor.
+    const arterialTraceVisible = presentation?.monitor !== 'pac'
     switch (surface) {
       case 'level-demo':
         return (
           <>
             <LineDock {...props} only="level" />
-            <LevelingVisual state={state} />
+            {/* The card reports the channel on the monitor beside it (report L2-06). */}
+            <LevelingVisual state={state} channel="pac" />
           </>
         )
       case 'zero-demo':
@@ -145,30 +148,18 @@ export function HemodynamicsSimulatorPane({
         )
       case 'response-demo':
         return (
-          <section className={styles.surfaceCard} aria-label="Reference flush responses">
-            <h3>Reference flush responses</h3>
-            <p>
-              Guided demonstration · PAC pressure channel · identical reference scale. These labeled
-              examples are not captured observations from your attempt.
-            </p>
-            {dynamicResponseDefinitions.map((definition) => (
-              <div key={definition.id}>
-                <FastFlushTrace response={definition.id} lineType="pulmonary-artery" revealLabel />
-                <p>
-                  {definition.interpretation} {definition.pressureEffect}
-                </p>
-              </div>
-            ))}
-          </section>
+          <div className={styles.surfaceCard}>
+            <DynamicResponseComparison lineType="pulmonary-artery" />
+          </div>
         )
       case 'component-demo':
         return <AtrialComponentDemonstration />
       case 'line':
-        return <LineDock {...props} />
+        return <LineDock {...props} arterialTraceVisible={arterialTraceVisible} />
       case 'flush':
         return (
           <>
-            <LineDock {...props} />
+            <LineDock {...props} arterialTraceVisible={arterialTraceVisible} />
             <FlushDock
               key={stepKey}
               {...props}
@@ -254,6 +245,10 @@ export function HemodynamicsSimulatorPane({
         chamberLabel={chamberLabel}
         showControls={false}
         focus={presentation?.monitor === 'none' ? 'all' : presentation?.monitor}
+        // The height and zero demonstrations compare a pure offset, so they keep one axis.
+        comparisonBaseline={
+          surface === 'level-demo' || surface === 'zero-demo' ? baseline : undefined
+        }
       />
     </div>
   )
@@ -301,7 +296,14 @@ export function HemodynamicsSimulatorPane({
               : undefined
           }
         >
-          <div>
+          <div
+            className={
+              presentation.kind === 'signal-lab' && presentation.anatomy !== 'paired'
+                ? flowStyles.pairedLead
+                : undefined
+            }
+            data-monitor-column
+          >
             {presentation.monitor !== 'none' ? monitor : null}
             {presentation.anatomy === 'paired' && showControls && dock ? (
               <div className={styles.docks}>{dock}</div>
