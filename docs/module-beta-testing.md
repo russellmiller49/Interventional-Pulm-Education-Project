@@ -40,8 +40,16 @@ Bronchoscopy Anatomy**; the synchronized simulator is a separate entry at
 
 Each **Test with feedback** link opens `/en/development-beta/<module-id>`. The actual module
 runs in a same-origin frame with a compact feedback toolbar outside it, so lesson navigation
-and simulator state stay intact. The usual module URLs have no feedback UI and open without
-an account. Therapeutic Bronchoscopy is not in the beta hub. It remains in **Modules in development**,
+and simulator state stay intact. Inside the frame the module is the standard route unchanged,
+including the site header, so what a tester sees and captures matches what a learner gets. The
+site page that sits underneath the review shell is covered by it; while the shell is open that
+page cannot be scrolled by wheel, touch or keyboard, scrolling past the end of the module does not
+chain into it, and its navigation is inert, so the module frame is the only scrolling document and
+the keyboard goes from the skip link straight to the toolbar. Activating the skip link may move
+that covered page to the link's target (about one site-header height); the fixed shell still
+covers the whole viewport, so nothing underneath becomes visible. The site header inside the
+frame is kept by owner decision. The usual module URLs
+have no feedback UI and open without an account. Therapeutic Bronchoscopy is not in the beta hub. It remains in **Modules in development**,
 and its `/admin/therapeutic-bronchoscopy` page requires `site_admin` access.
 
 ## Tester feedback
@@ -60,9 +68,13 @@ The visible annotation toolbar offers **Box**, **Arrow**, **Draw**, and **Text**
 undo the last annotation, clear all marks, remove the image, or retake the tab. Text notes can be
 placed by clicking the screenshot or using the keyboard-accessible **Add note at top** button.
 The enlarged feedback dialog gives the screenshot more room. The final annotated image is submitted
-with the report, limited to 3 MB. Screenshots are optional; a comment is required. Drafts remain
-in the current testing page when the feedback dialog closes or a save fails; reloading or
-leaving that testing page discards the draft. A save confirmation is shown only after the
+with the report, limited to 3 MB. Screenshots are optional; a comment is required. On the
+deployed beta, drafts are held in memory in the current testing page when the feedback dialog
+closes or a save fails; reloading or leaving that testing page discards the draft, and nothing
+about it is written to browser storage. The toolbar button reads **Continue feedback** only
+while the draft holds a comment, referenced text or an image; an empty dialog that is opened and
+closed leaves **Give feedback**. Local owner review keeps unsent drafts in that browser instead;
+see [Unsent drafts](module-beta-owner-review.md#unsent-drafts). A save confirmation is shown only after the
 server persists the report. Report IDs make retries idempotent, and submissions are limited to
 30 per account per hour.
 
@@ -120,7 +132,9 @@ Owner-local validation and commands are documented in [Owner review feedback](mo
 - `npx playwright test --config playwright.module-beta.config.ts`: unlisted sign-in gate,
   real standard-route HTTP checks, normal pages without feedback controls, image upload and
   all four annotation tools, exact annotated PNG submission, selected-text/page context,
-  draft preservation, failed-save retry, review edits, and mobile upload fallback. Native Chromium
+  draft preservation, failed-save retry, review edits, and mobile upload fallback; an empty dialog
+  leaving no draft, and a server-mode draft leaving no IndexedDB database or storage key behind and
+  not surviving a reload. Native Chromium
   capture verifies the module is visible without the feedback overlay and the media track stops.
   Other tabs/windows/screens and cancelled retakes preserve the previous annotated screenshot.
   Persistence responses use fixtures; real API calls confirm that preview

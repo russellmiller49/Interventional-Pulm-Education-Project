@@ -50,22 +50,115 @@ never writes into owner storage.
    and save New / In review / Resolved status and private review notes. **Refresh** reads current
    browser data (including changes from another tab). Reports display full IDs and timestamps.
 
-**Continue testing** closes the dialog but preserves the unsent draft, including its original
-page context, selected text, image, annotations, and retry ID. **Discard draft** clears that draft.
-A failed save leaves it open and intact. Unsent drafts remain in memory only and are lost on
-navigation/reload; successfully saved reports survive reload and browser restart.
+Successfully saved reports survive reload and browser restart. So do unsent drafts, described next.
+
+## Unsent drafts
+
+An unsent draft is feedback you started and have not saved. In owner-local mode it is kept in this
+browser, apart from saved reports, until you save or discard it. It is never a saved report: it
+does not appear in the review workspace, is not exported, and is never submitted for you.
+
+**What counts as a draft.** At least one of: a comment with a non-whitespace character; referenced
+text with a visible character (whitespace or zero-width characters picked up by a stray selection
+do not count); or a screenshot, with or without annotations. Opening the dialog and closing it
+without adding anything is not a draft, and neither is a reserved report ID. The toolbar button
+reads **Continue feedback** only while such content exists, and **Give feedback** otherwise. If you
+remove everything you added, the draft is dropped and the next report starts from the page you are
+on then.
+
+**What is kept.** The report/retry ID; the testing page the draft was started on; the reported
+module; the original page address (the same audited, sanitized context a saved report uses); the
+comment and referenced text exactly as typed; and the screenshot as its unannotated source image
+plus each Box, Arrow, Draw and Text mark as separate, still-editable annotations (Undo, Clear
+marks, further marks and Remove image all work after recovery). A text note typed but not yet
+placed on the image is not part of the draft.
+
+**When it is written.** About 0.4 seconds after a change, immediately on **Continue testing** or
+closing the dialog, and when the tab is hidden or the page is left. A change made in the last
+fraction of a second before an abrupt reload or crash may not be captured.
+
+**Recovery.** Reopen that module's testing page after a reload or a browser restart: the button
+reads **Continue feedback** and the dialog reopens the draft with its original page, not the page
+the module happens to show now. Moving around the module after starting a draft never rewrites its
+page. The dialog is not opened automatically, the module frame is not navigated back, and live
+simulator state is not restored. The hub lists the testing pages that hold unsent feedback. Each
+testing page presents one draft at a time; if another tab left a second draft for the same page,
+it is offered after the first is saved or discarded.
+
+**The same draft open in two tabs.** This is not shared live editing: a tab shows what it loaded
+and does not update while the other tab types. What is guaranteed is that neither tab's unsent
+work is lost and that a draft which has been saved or discarded never comes back under its old
+ID.
+
+- **Save in one tab.** The report holds what that tab showed. If the other tab had already stored
+  a newer version, that version is kept as a new unsent draft and the saving tab says so. If the
+  other tab edits afterwards, its changes are kept as a new unsent draft and its dialog says that
+  another tab already saved an earlier version; saving there adds a second, separate report.
+- **Discard in one tab.** The same, without a report: a newer version the other tab had stored,
+  or an edit it makes afterwards, is kept as a new unsent draft. The discarded draft itself does
+  not reappear.
+- **Nothing changed in the other tab.** No extra draft is created. That tab's button may still
+  read **Continue feedback** until it is used; opening it then says the draft was already saved
+  or discarded in another tab and returns to **Give feedback**.
+- **Both tabs edit before either saves or discards.** The first stored edit keeps the draft; the
+  other tab's version is kept as a separate unsent draft and its dialog says so. Neither
+  overwrites the other.
+
+A kept draft has a new ID and the original module, page address, comment, referenced text, source
+image, editable annotations and creation time. It is unsent work: it is never saved as a report
+automatically.
+
+**What clears it.** **Discard draft** removes that draft only. **Save feedback locally** removes it
+only after the report's IndexedDB transaction has committed; the report keeps the draft's ID, so a
+retry cannot create a second report. Before the report is written, the save records which stored
+version of the draft it covers. If the browser stops between the report's commit and the removal,
+the next load uses that record to finish: the covered version is removed, and a different stored
+version is kept as a new draft. A report with the same ID is never, by itself, a reason to remove
+a draft. A failed save leaves the dialog open and the stored draft in place. Export, **Clear saved
+feedback**, sign-out and switching modules do not remove a draft, and discarding a draft never
+removes a saved report or learner progress.
+
+**When it cannot be kept.** If the draft cannot be written (storage full, disabled, or unavailable
+in private browsing), the dialog and toolbar say so and the draft stays open in memory until you
+reload. A screenshot whose processed source image exceeds 3 MB is not kept in the draft, and the
+dialog says that while keeping the text; the same image would also be refused on save. A stored
+draft this version cannot read (unsupported version, damaged record, or an image that no longer
+matches its record) is reported on the testing page and the hub and is left in place; **Remove
+unreadable draft** deletes only those records, and only when you choose it.
 
 ## Persistence, privacy, and limits
 
-Database: `module-owner-feedback`, schema version 1, object store `reports`, keyed by report UUID.
+Saved reports: database `module-owner-feedback`, version 1, object store `reports`, keyed by report UUID.
 Each record stores module/page, verbatim comment and selected text, creation/update times, status,
 notes, `storage_mode`, `schema_version`, and an optional PNG Blob with MIME, byte size, and dimensions.
 Retries with the same ID return the existing report without replacing its image or review notes.
 Unknown record/database versions produce an explicit error without resetting or deleting data.
 
+Unsent drafts: a separate database, `module-owner-feedback-drafts`, version 2, with object stores
+`drafts` (one record per draft, keyed by report UUID, record schema version 2), `images` (the
+draft's source PNG Blob, keyed by the same UUID and written only when the image changes) and
+`finalizations` (one small record per draft ID that has been saved or discarded, or whose save
+has started). Each draft record carries a `revision` that changes on every write and, for a draft
+kept apart from another, the ID it came from. A tab writes a draft under its ID only while that
+ID has not been saved or discarded and the stored revision is the one the tab last saw; otherwise
+its content is written under a new ID. Draft, image and finalization records are changed together
+in one IndexedDB transaction. Finalization records are kept so that a tab left open cannot write
+under a closed ID later; they hold IDs and times, no feedback text or image. Version 1 of this
+database (no revisions, no `finalizations` store) is upgraded in place: the store is added and
+existing drafts and images are left as they are and stay readable. Adding
+drafts did not change the reports database: it is still version 1 with its single `reports` store
+and unchanged record schema, so existing reports were not migrated, rewritten or made unreadable
+to an older build. A newer drafts database than this version understands produces an explicit
+error and is not reset. A build that only knows drafts database version 1 gets that same explicit
+error for drafts once this version has opened the database; saved reports are unaffected. Draft records are validated on every read and write with the same page
+allowlist, text limits, PNG signature/IHDR check, 3 MB and 4,096-pixel limits as saved reports,
+plus bounds of 500 annotations and 20,000 points per drawn stroke.
+
 Storage belongs to the current browser profile and origin (scheme, host, and port). For example,
-localhost and 127.0.0.1, or ports 3110 and 3001, have different stores. Local records do not sync
-between browsers, devices, accounts, or Supabase. They remain on disk after sign-out. Anyone
+localhost and 127.0.0.1, or ports 3110 and 3001, have different stores. Local records, saved or
+unsent, do not sync between browsers, devices, accounts, or Supabase, and are never uploaded.
+They remain on disk after sign-out, and a draft is offered to whoever next opens that testing
+page in this browser profile. Anyone
 with access to this browser profile, and scripts running on this origin, can access them. There
 is no additional encryption or account isolation. Do not include patient information, passwords,
 tokens, or secrets in comments or screenshots. The adapter stores no account credentials or
@@ -87,7 +180,9 @@ by a page link; use a screenshot/comment for that state.
 
 Choose **Export feedback** for all local records, regardless of pagination or active filters.
 Choose **Export filtered feedback** to include all reports matching the current module/status
-filters, including other result pages. An empty selection still produces a valid empty export.
+filters, including other result pages. An empty selection still produces a valid empty export. Unsent drafts are never exported: they
+do not appear in `feedback.md`, `feedback.json` or `screenshots/`. Save a draft first if it should
+be in the export.
 The download is `module-owner-feedback-YYYY-MM-DD.zip` (UTC export date), containing:
 
 - `feedback.md`: grouped by module, then oldest first; full report IDs, timestamps, page paths,
@@ -100,12 +195,14 @@ Upload the ZIP to ChatGPT for consolidated analysis. Export is a browser downloa
 sharing it is a separate owner action. It contains private notes and screenshots: treat the ZIP
 accordingly. JSZip is the existing browser archive dependency. Export never deletes local records.
 
-## Clear local feedback
+## Clear saved feedback
 
-**Clear local feedback** asks for explicit confirmation that **all** local reports and screenshots
-will be permanently removed from this browser, even when filters are active. Cancel keeps them.
-Export a copy first if needed. Clearing is irreversible and never runs automatically after export.
-It clears only the feedback object store, not learner progress, accounts, or server feedback.
+**Clear saved feedback** asks for explicit confirmation that **all** saved local reports and
+screenshots will be permanently removed from this browser, even when filters are active. Cancel
+keeps them. Export a copy first if needed. Clearing is irreversible and never runs automatically
+after export. It clears only the saved-report object store, not learner progress, accounts, or
+server feedback. The page states beside the button that unsent drafts are kept separately and are
+not removed by this action; use **Discard draft** for those.
 
 ## Audited page context
 
@@ -135,13 +232,15 @@ Atlas comparison/filter state are excluded. Device Intelligence functionality is
 
 Before sending links to external testers:
 
-1. Export owner records, then set `NEXT_PUBLIC_MODULE_FEEDBACK_MODE=server` and rebuild/restart.
-   Local records stay in that browser; server mode neither uploads nor displays them.
+1. Save or discard unsent drafts, export owner records, then set
+   `NEXT_PUBLIC_MODULE_FEEDBACK_MODE=server` and rebuild/restart. Local records and drafts stay in
+   that browser; server mode neither uploads, reads nor displays them, and keeps its own unsent
+   drafts in memory only.
 2. Configure the **main-site** Supabase URL, anonymous key, and server-only service role key.
-3. Apply the feedback migration to the main-site project through the authorized primary-checkout
-   workflow. The existing migration predates EBUS Guided and its module-ID check does not include
-   `ebus-guided`; extend that constraint in a separately reviewed migration before enabling EBUS
-   server feedback. Do not use the literature project. This task leaves database migrations intact.
+3. The two feedback migrations, including the catalog expansion that permits EBUS Guided, were
+   applied to the main-site project on 2026-09-25 UTC; see [Deployment](module-beta-testing.md#deployment).
+   A new environment needs both, through the authorized primary-checkout workflow. Do not use the
+   literature project.
 4. Verify sign-in, email verification, and profile completion with a real tester account.
 5. Submit a real report with an image. Confirm server persistence and private screenshot access.
 6. Verify an active, unexpired `site_admin` account can filter, view, and update the report; confirm
@@ -165,7 +264,19 @@ npm run type-check
 The owner Chromium suite starts with empty Supabase configuration and local preview auth disabled.
 It uses actual PI/EBUS sections, real IndexedDB, an annotated screenshot, a failed transaction,
 reload and persistent-profile browser restart, review updates, ZIP inspection/byte comparison,
-filters, mobile layout, clear confirmation, and checks for feedback/learner API writes.
-The server suite retains API fixtures for successful authenticated persistence; Jest covers the
-real handlers with missing storage and denied identities. No real Supabase secrets or shared
-migrations are needed for these checks.
+filters, mobile layout, clear confirmation, and checks for feedback/learner API writes. For
+drafts it checks, in real IndexedDB: empty open/close; comment-, selection- and image-only drafts;
+all four annotation tools restored pixel-for-pixel and still editable; the original page kept
+after the module navigates; reload and persistent-profile restart; discard; a failed save; the
+report committing under the draft's ID before the draft is cleared; a damaged record; and the
+draft's absence from the workspace and the ZIP. With two tabs of one persistent profile on one
+stored draft it checks: Save in one tab with newer content already stored by the other, and with
+an edit made afterwards; the same two cases for Discard; a tab that changed nothing; a screenshot
+with annotations carried through the conflict; both tabs editing before either finalizes; survival
+across reload and a browser restart; and that no stored image is left without its draft. A
+version 1 drafts database is opened and upgraded with its draft and image intact. It also compares the PI and EBUS direct routes
+with their review shells at 1280, 1024, 390 and 320 pixels wide and opens every module in the
+current catalog in the shell.
+The server suite retains API fixtures for successful authenticated persistence, and checks that
+server mode writes no draft to browser storage; Jest covers the real handlers with missing storage
+and denied identities. No real Supabase secrets or shared migrations are needed for these checks.

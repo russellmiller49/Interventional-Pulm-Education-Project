@@ -4,6 +4,7 @@ import { setRequestLocale } from 'next-intl/server'
 import { ArrowUpRight, MessageSquare, FlaskConical } from 'lucide-react'
 import { feedbackMode } from '@/features/module-beta/config'
 import { betaModules } from '@/features/module-beta/catalog'
+import { OwnerDraftNotice } from '@/features/module-beta/OwnerDraftNotice'
 
 export default async function BetaHub({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
@@ -41,6 +42,7 @@ export default async function BetaHub({ params }: { params: Promise<{ locale: st
             Review and export owner feedback
           </Link>
         )}
+        {local && <OwnerDraftNotice locale={locale} />}
       </header>
       {['Bronchoscopy', 'Devices', 'Critical care'].map((group) => (
         <section key={group} className="space-y-4">
