@@ -112,7 +112,13 @@ export function describeModeledEffort(name: string, record: readonly WaveformSam
     const ends = interval.openAtBreathEnd
       ? `still at or above it when the next breath’s first inspiratory sample is recorded at ${facts.durationSeconds.toFixed(2)} s`
       : `last at or above it at ${interval.toSeconds.toFixed(2)} s`
-    const peak = `largest ${interval.peakCmH2O.toFixed(1)} cmH₂O at ${interval.peakAtSeconds.toFixed(2)} s`
+    // An effort under way at the breath's first sample can peak before it; that is said in words,
+    // not printed as a negative time.
+    const peak = `largest ${interval.peakCmH2O.toFixed(1)} cmH₂O ${
+      interval.peakAtSeconds < -0.005
+        ? relative(interval.peakAtSeconds)
+        : `at ${interval.peakAtSeconds.toFixed(2)} s`
+    }`
     let relation = ''
     if (
       position === 0 &&

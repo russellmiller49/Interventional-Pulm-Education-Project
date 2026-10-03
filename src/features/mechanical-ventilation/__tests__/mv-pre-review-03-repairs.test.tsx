@@ -472,17 +472,28 @@ describe('capture gate: a result is captured only with a complete breath deliver
     expect(learningLabReducer(gap, { type: 'COMPARE' }).evidence[0].response).toBeUndefined()
   })
 
-  it('says so when a retained baseline holds no complete breath (Section 8, first application)', () => {
+  it('says so when a retained record holds no complete breath, instead of asking for a re-capture', () => {
+    /*
+     * Section 8's first application. Its 12-second opening window is exactly two 6-second cycles
+     * and verifies one onset, so it holds no complete breath. The round's baseline is no longer
+     * that window alone (`mv-pre-review-03-baseline-evidence.test.tsx`); it is used here as what
+     * it is — a real retained record with no breath to draw — so the wording stays covered.
+     */
     const unitId = 'triggering-and-cycling'
     const round = ventilationExperimentByUnit.get(unitId)!.rounds[0]
     let current = learningLabReducer(session(unitId, 0), learnerRun)
-    expect(completedBreath(current.evidence[0].baseline!.waveforms)).toHaveLength(0)
     for (const goal of round.goals)
       current = learningLabReducer(current, engine(labGoalAction(goal)!))
     while (!labReadyToCompare(current)) current = learningLabReducer(current, tick)
     const captured = learningLabReducer(current, { type: 'COMPARE' })
     expect(completedBreath(captured.evidence[0].response!.waveforms).length).toBeGreaterThan(3)
-    render(<RecordedBreathComparison evidence={captured.evidence[0]} effort />)
+    const windowOnly = createLabSimulation(unitId, 0, DEVICE).waveforms
+    expect(completedBreath(windowOnly)).toHaveLength(0)
+    const evidence = {
+      ...captured.evidence[0],
+      baseline: { ...captured.evidence[0].baseline!, waveforms: windowOnly },
+    }
+    render(<RecordedBreathComparison evidence={evidence} effort />)
     const note = document.querySelector('[data-no-complete-breath]')!
     expect(note.textContent).toMatch(/Captured baseline: this retained record does not hold/)
     expect(document.body.textContent).not.toMatch(/then capture again/)
