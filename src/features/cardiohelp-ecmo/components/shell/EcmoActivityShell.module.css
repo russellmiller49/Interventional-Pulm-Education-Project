@@ -619,6 +619,15 @@
   min-width: 0;
 }
 
+/*
+ * The circuit surface is a size container, so the circuit panel inside it can set its readings and
+ * clamps beside the drawing when the surface is wide enough and stack them when it is not, whatever
+ * the window's own width (`cardiohelp-ecmo.module.css`, the `ecmo-circuit` rules).
+ */
+.surfaces [data-surface='circuit'] {
+  container: ecmo-circuit / inline-size;
+}
+
 .surface {
   min-width: 0;
   border: 1px solid var(--ecmo-shell-line);
