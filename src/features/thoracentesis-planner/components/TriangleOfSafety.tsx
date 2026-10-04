@@ -9,11 +9,13 @@ export function TriangleOfSafety() {
   return (
     <HandoffContent>
       {
+        // A reference drawing, not a workspace: at the column's full width it stood about 700px tall
+        // and pushed the entry-site choices and the manometry trainer a screen further down.
         <svg
           role="img"
           aria-labelledby="triangle-title triangle-description"
           viewBox="0 0 420 320"
-          className="h-auto w-full"
+          className="mx-auto h-auto w-full max-w-xl"
         >
           <title id="triangle-title">{t('title')}</title>
           <desc id="triangle-description">{t('desc')}</desc>

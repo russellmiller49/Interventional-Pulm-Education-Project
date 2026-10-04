@@ -590,6 +590,9 @@ export function EusBSimulatorPage() {
       </section>
       )}
 
+      {/* One block for the views and the scope controls, so the controls can stay pinned in view
+          beneath the images they move (see `.eus-stage`). */}
+      <div className="eus-stage">
       <div
         className={`eus-workspace${hideCorrelates ? ' eus-workspace--single' : ''}`}
         tabIndex={0}
@@ -785,6 +788,7 @@ export function EusBSimulatorPage() {
           the tip. Hold Shift for larger steps.
         </p>
       </section>
+      </div>
 
     </main>
   );

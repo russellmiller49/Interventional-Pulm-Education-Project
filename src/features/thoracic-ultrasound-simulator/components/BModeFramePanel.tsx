@@ -124,7 +124,12 @@ export function BModeFramePanel({
               <span>{depthCm.toFixed(1)} cm</span>
             </div>
           </div>
-          <div className="relative bg-black p-3">
+          {/* Sized to the window's height as well as the column's width, so the whole portrait image
+              stays on screen beside the probe controls that drive it. */}
+          <div
+            className="relative mx-auto w-full bg-black p-3"
+            style={{ maxWidth: 'max(18rem, calc((100dvh - 17rem) * 5 / 6))' }}
+          >
             {frame?.imageUrl ? (
               <Image
                 src={frame.imageUrl}

@@ -1,5 +1,6 @@
 'use client'
 
+import { simulatorPage } from '@/components/layout/simulator-page'
 import { bronchNavigationTrainerAppPath, buildEmbeddedAppSrc } from '@/lib/embedded-app-locale'
 
 interface TrainerEmbedShellProps {
@@ -14,12 +15,12 @@ export function TrainerEmbedShell({ locale }: TrainerEmbedShellProps) {
   const embedSrc = getTrainerEmbedSrc(locale)
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-border/70 bg-card/70 shadow-sm">
+    <div className={simulatorPage.frame}>
       <iframe
         title="Bronch Navigation Trainer"
         src={embedSrc}
         allow="gamepad"
-        className="h-[calc(100vh-10rem)] min-h-[860px] w-full bg-slate-950"
+        className={`${simulatorPage.iframe} bg-slate-950`}
       />
     </div>
   )

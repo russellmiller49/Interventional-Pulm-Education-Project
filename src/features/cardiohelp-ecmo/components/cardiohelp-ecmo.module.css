@@ -3095,6 +3095,126 @@
   overflow: hidden;
 }
 
+/*
+ * The panel's own arrangement on the lesson stage, by the width of the surface it sits in.
+ *
+ * Stacked, the panel put a heading, a configuration card, the view tabs, the full-width toggle and
+ * the "you are here" caption above the drawing — about 330px of it — and the legend, the live
+ * readings and the clamps below. On a 1700 × 900 window the map began a full screen down the task
+ * and the clamps that act on it were under the fold beneath it. Two things change with room:
+ *
+ *  - from about 44rem the heading and the configuration share a row, and so do the view tabs and
+ *    the full-width toggle, which returns roughly 140px to the drawing;
+ *  - from about 62rem the live readings and the clamps move into a rail beside the drawing, so
+ *    closing a clamp and reading the pressures it changes are on one screen.
+ *
+ * The lesson shell names the circuit surface as the `ecmo-circuit` container
+ * (`EcmoActivityShell.module.css`); the Practice workbench has no such container and keeps the
+ * stacked panel. The panel's children are placed by one grid with dense auto-placement, so the
+ * markup and its reading order are untouched and nothing is hidden at any width.
+ */
+@container ecmo-circuit (min-width: 44rem) {
+  .circuitPanel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) auto;
+    grid-auto-flow: row dense;
+    column-gap: 0.75rem;
+    align-items: start;
+  }
+
+  .circuitPanel > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  /* A grid item stretches; the guided-focus flag stays the pill it is in the stacked panel. */
+  .circuitPanel > .guidedFocusFlag {
+    justify-self: start;
+  }
+
+  .circuitPanel > .panelHeading {
+    grid-column: 1;
+    align-self: center;
+    margin-bottom: 0.6rem;
+  }
+
+  .circuitPanel > .panelHeading h2 {
+    font-size: 1.2rem;
+  }
+
+  .circuitPanel > .circuitModeSummary {
+    grid-column: 2 / -1;
+    margin-bottom: 0.6rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .circuitPanel > .circuitViewTabs {
+    grid-column: 1 / 3;
+    margin-bottom: 0.6rem;
+  }
+
+  .circuitPanel > .circuitEnlargeToggle {
+    grid-column: 3;
+    align-self: stretch;
+    margin-bottom: 0.6rem;
+  }
+
+  /* Without the toggle (a viewport under the two-column task) the tabs keep the whole row. */
+  .circuitPanel:not(:has(> .circuitEnlargeToggle)) > .circuitViewTabs {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 1099px) {
+  @container ecmo-circuit (min-width: 44rem) {
+    .circuitPanel > .circuitViewTabs {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+@container ecmo-circuit (min-width: 62rem) {
+  .circuitPanel:has(> .circuitReadouts, > .clampControlPanel) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) minmax(15rem, 18rem);
+  }
+
+  /* The visible view takes the two wide columns; the readings and the clamps stack beside it. */
+  .circuitPanel:has(> .circuitReadouts, > .clampControlPanel)
+    > :is(.bedsideView, [id='cardiohelp-diagnostic-view']) {
+    grid-column: 1 / 3;
+    grid-row: span 3;
+  }
+
+  .circuitPanel > .circuitReadouts,
+  .circuitPanel > .clampControlPanel {
+    grid-column: 3;
+  }
+
+  .circuitPanel > .circuitReadouts {
+    margin-bottom: 0.75rem;
+  }
+
+  /* The fitted drawing bleeds through the panel's padding; beside the rail only on its outer side. */
+  .circuitPanel:has(> .circuitReadouts, > .clampControlPanel) .circuitDiagramFit {
+    margin-inline-end: 0;
+  }
+
+  .circuitPanel > .circuitReadouts .circuitReadoutGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 0.4rem;
+  }
+
+  .circuitPanel > .clampControlPanel,
+  .circuitPanel > .clampControlPanel .clampControlGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Above the views (a read-the-pattern step), the readings run in one row instead of two. */
+  .circuitReadingsFirst .circuitReadoutGrid {
+    grid-template-columns: repeat(auto-fit, minmax(7.25rem, 1fr));
+  }
+}
+
 /* Readings above the views on a read-the-pattern step (S8-2). */
 .circuitReadingsFirst {
   margin: 0 0 0.75rem;
