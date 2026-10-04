@@ -47,6 +47,9 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   // which keeps `/intro-bronchoscopy` and its enrollment gate until the owner decides on a cutover.
   '/bronchoscopy-foundations',
   '/ebus-guided',
+  // The EUS-B simulator is a development preview: reachable by direct link, noindex. Its page
+  // embeds a standalone entry of the EBUS course build, which is already a public training embed.
+  '/eus-b-simulator',
   '/pleural-procedures/pleural-ultrasound-simulator',
   '/preference-cards',
   '/procedures',
@@ -475,6 +478,8 @@ export function resolveSiteModuleId(pathname: string) {
   }
 
   if (first === 'ebus-guided') return 'ebus-guided'
+
+  if (first === 'eus-b-simulator') return 'eus-b-simulator'
 
   if (first === 'bronchoscopy-foundations') {
     return 'bronchoscopy-foundations'

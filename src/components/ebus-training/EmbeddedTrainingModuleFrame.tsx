@@ -66,13 +66,17 @@ export function EmbeddedTrainingModuleFrame({
             </div>
           </section>
 
-          <section className="container">
+          <section
+            className={
+              module.frame === 'wide' ? 'mx-auto w-full max-w-[2400px] px-3 sm:px-4' : 'container'
+            }
+          >
             <div className="overflow-hidden rounded-3xl border border-border/70 bg-card/70 shadow-sm">
               <iframe
                 title={module.title}
                 src={embedSrc}
                 suppressHydrationWarning
-                className="h-[calc(100vh-10rem)] min-h-[820px] w-full bg-slate-950"
+                className="h-[calc(100vh-10rem)] min-h-[820px] w-full bg-background"
               />
             </div>
           </section>

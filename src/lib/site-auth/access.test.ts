@@ -270,6 +270,30 @@ describe('main site auth access helpers', () => {
     )
   })
 
+  it('keeps the EUS-B simulator preview public-unlisted and opens its embed only as a training embed', () => {
+    for (const path of ['/eus-b-simulator', '/es/eus-b-simulator', '/zh-CN/eus-b-simulator']) {
+      expect(isPublicPath(path)).toBe(true)
+      expect(isPublicUnlistedPath(path)).toBe(true)
+      expect(getRequiredEntitlement(path, params())).toBeNull()
+      expect(resolveSiteModuleId(path)).toBe('eus-b-simulator')
+    }
+    // The standalone entry is generated html: public only with the training-embed query, like
+    // the guided workbench, and never as a bare URL.
+    expect(isPublicPath('/socal-ebus-course/app/eus-b.html')).toBe(false)
+    expect(
+      getRequiredEntitlement(
+        '/socal-ebus-course/app/eus-b.html',
+        params('publicTraining=1&publicScope=ebus'),
+      ),
+    ).toBeNull()
+    expect(getRequiredEntitlement('/socal-ebus-course/app/eus-b.html', params())).toBe(
+      'socal_ebus_course',
+    )
+    expect(isPublicPath('/socal-ebus-course/app/simulator/eus-b-case-001/case_manifest.json')).toBe(
+      true,
+    )
+  })
+
   it('requires site admin for the virtual bronchoscopy EBUS preview embed', () => {
     expect(
       isAdminEbusPreviewEmbed('/socal-ebus-course/app/index.html', params('adminPreview=1')),

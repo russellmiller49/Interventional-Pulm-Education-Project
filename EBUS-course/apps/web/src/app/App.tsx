@@ -194,20 +194,6 @@ function getPublicNavItems(items: NavigationItem[], scope: PublicTrainingScope) 
   return items.filter((item) => routeIds.has(item.id));
 }
 
-function getPublicModeHeader(scope: PublicTrainingScope, t: (source: string) => string) {
-  if (scope === 'tnm') {
-    return {
-      title: t('TNM-9 Staging'),
-      subtitle: t('Standalone lung cancer staging module'),
-    };
-  }
-
-  return {
-    title: t('Public EBUS Training'),
-    subtitle: t('Open knobology, stations, and simulator modules'),
-  };
-}
-
 function useSiteAdminEntitlement(
   user: ReturnType<typeof useAuth>['user'],
   isSupabaseEnabled: boolean,
@@ -318,7 +304,6 @@ export function App() {
   const routeId = resolveRouteId(location.pathname);
   const publicTrainingScope = getPublicTrainingScope();
   const publicTrainingMode = isRouteInPublicTrainingScope(routeId, publicTrainingScope);
-  const publicModeHeader = publicTrainingMode && publicTrainingScope ? getPublicModeHeader(publicTrainingScope, t) : undefined;
   const isAuthPath = location.pathname.startsWith('/auth');
   const isAdminPath = location.pathname.startsWith('/admin');
   const isSuppressedCasePath = location.pathname.startsWith('/cases/case-001');
@@ -467,7 +452,7 @@ export function App() {
     (isSupabaseEnabled && Boolean(user) && siteAdminEntitlement.isLoading && !previewSessionActive)
   ) {
     return (
-      <AppShell navItems={gatedNavItems} publicMode={publicModeHeader}>
+      <AppShell navItems={gatedNavItems} siteModule={publicTrainingMode}>
         <div className="page-stack">
           <section className="section-card">
             <div className="eyebrow">{t('Loading workspace')}</div>
@@ -513,7 +498,7 @@ export function App() {
   }
 
   return (
-    <AppShell navItems={gatedNavItems} publicMode={publicModeHeader}>
+    <AppShell navItems={gatedNavItems} siteModule={publicTrainingMode}>
       <Suspense fallback={<RouteLoadingFallback />}>
         <Routes>
           <Route element={<HomePage />} path="/" />
