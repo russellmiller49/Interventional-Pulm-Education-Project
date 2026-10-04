@@ -1,14 +1,25 @@
 # EBUS-PRE-REVIEW-05 — OWNER DECISION REVIEW
 
 Prepared 2026-10-03 from `origin/main` **60e3bd642a92fc25714141ad8e6c8d877510f8e7**.
+Updated 2026-10-04 after normally merging `origin/main`
+**fd6805119d9de8bb454d8dcf7f879f4e8165f420** into PR #324 head
+`c8649931ff790df947f46452903532897c8d9bd4`. Main advanced 47 commits from the original baseline;
+no changed-path overlap with the worksheet; merge was conflict-free.
 **18 decision groups: Tier 1 = 4; Tier 2 = 12; Tier 3 = 2.**
 Owner decisions recorded 2026-10-03 from Russell Miller's explicit instructions: **OD-01 OPTION A;
 OD-02 OPTION A (true vascular flow), annotation RETAIN CURRENT; OD-03 APPROVE WITH EDIT / MODIFY;
 OD-04A APPROVE MEDIA by owner attestation; OD-04B HOLD for historical Git policy.**
 
-Use the checkboxes under **Decision requested**; record any edit, scope limitation, reviewer/role,
-and actual decision date there. OD-01–OD-04 instead record **Owner decision / Owner disposition**
-below. All other unchecked choices remain **NOT REVIEWED**. A decision about one subpart does not
+Additional owner decisions recorded 2026-10-04: **OD-05 APPROVE WITH EDIT, marker HOLD;
+OD-06 APPROVE D6 and retain educational millimeter display, recorded calipers RETAIN CURRENT;
+OD-10 APPROVE D10, generic guidance RETAIN CURRENT; OD-11 source-specific dispositions and AABIP
+2025 core future reference; OD-12 FULL EXPANDED GLOSSARY with source holds; OD-17/OD-18 RETAIN CURRENT
+for beta testing.** Reviewer: Russell Miller. Role: repository owner / physician author.
+Earlier decisions retain their 2026-10-03 recording date; today's additional decisions are dated 2026-10-04.
+
+Use the checkboxes under **Decision requested** for **OD-07/08/09/13/14/15/16**, which remain
+unresolved in their current tiers. The other groups record **Owner decision / Owner disposition**.
+Remaining unchecked subparts are **NOT REVIEWED**. A decision about one subpart does not
 approve the others. HOLD preserves an unresolved issue within its stated scope. These are owner
 review priorities, not learner progression gates.
 
@@ -20,8 +31,9 @@ Evidence references below: [Packet](EBUS-PRE-REVIEW-05-decision-packet.md),
 from the current instructions; they do not upgrade literature verification. **Source fact**,
 **course/model behavior**, **draft wording**, **engineering observation**, **local-protocol
 dependency**, **media/rights dependency**, and **owner clinical judgment** remain distinct.
-Course content files have no diff between the packet baseline `85acc113` and this baseline;
-engineering observations below are attributed to the packet, not newly measured.
+Engineering observations and current-state descriptions below are carried forward from the packet
+and earlier worksheet; no runtime re-review is claimed after integrating current main. Newer EUS-B,
+course-shell and beta-testing work is preserved without modification or reinterpretation.
 
 Two existing owner decisions are preserved: fasting is required (OD-10), and the Depth3 metadata
 finding was reviewed (OD-04). Per the owner's current task instructions, Depth3 redaction was
@@ -210,9 +222,10 @@ A HOLD does not approve an image, definition, clinical claim, or local workflow.
 
 **Topic:** Orientation, scope axis, ultrasound plane, and processor caveat.
 
-**Why owner input is required:** Model facts need clear wording without implying a clinical device convention.
+**Why owner input was required:** Model facts need clear wording without implying a clinical device convention.
 
-**Current state:** No explicit 0° reference or image head/foot marker. D4/D5 are drafts.
+**Current state:** Orientation wording is approved with edits below; optional head/foot marker is HOLD.
+No wording or marker is implemented in this documentation pass.
 
 **Verified evidence:** Packet §3 / Manifest L3-14/L3-15: model 0° is the preset's authored depth
 axis carried along the centerline; the sector plane contains the shaft and model image-right
@@ -225,11 +238,24 @@ use.” D5 says “0° is the direction the assisted start faces the target; it 
 direction.” Alternative precision edit for review: “In this model, 0° is the preset's authored
 depth axis; it is not a universal anatomical direction.” Optional model-only head/foot marker.
 
-**Dependencies / holds:** Faculty wording choice; verified device documentation before any
-processor-specific rule. Defer markers/general clinical claim while preserving model-only scope.
+**Dependencies / holds:** Optional head/foot marker: **HOLD**. No universal Olympus/Fujifilm or other
+device-specific convention may be added without verified device documentation. The approved
+wording retains the explicit model convention and processor caveat.
 
-**Decision requested:** Wording: ☐ APPROVE D4/D5 as drafts ☐ APPROVE WITH EDIT: `______`
-☐ RETAIN CURRENT ☐ HOLD. Marker: ☐ APPROVE ☐ HOLD ☐ OTHER: `______`
+**Owner decision:** **OWNER DECISION: APPROVE WITH EDIT.**
+
+Reviewer: Russell Miller. Role: repository owner / physician author. Decision date: **2026-10-04**.
+
+Owner-approved wording:
+
+> The ultrasound sector lies in a plane that contains the scope’s long axis.
+> In this model, image right is toward the patient’s head; check the orientation
+> convention of the processor you use.
+
+> In this model, 0° is the preset’s authored depth axis; it is not a universal
+> anatomical direction.
+
+Marker disposition: **HOLD** the optional head/foot marker for now.
 
 ### OD-06
 
@@ -237,11 +263,12 @@ processor-specific rule. Defer markers/general clinical claim while preserving m
 
 **Topic:** Model fidelity, station representation, and measurement limits.
 
-**Why owner input is required:** Fellows must not infer clinical calibration from model visibility,
+**Why owner input was required:** Fellows must not infer clinical calibration from model visibility,
 coordinates, or practice calipers.
 
-**Current state:** Broad rotation windows; model labels simplify anatomy. Phantom reference exists;
-recorded-frame calipers measure pixels. No clinical accuracy score or expert recording caliper.
+**Current state:** D6 limitation wording and millimeter display for model/phantom teaching are approved.
+Recorded-video calipers retain current control-practice behavior. Model-derived dimensions remain
+distinct from validated measurements of real patients; runtime is unchanged here.
 
 **Verified evidence:** Packet §3 records an RMS model window of −71° to +49°, driven by label
 geometry/visibility, not a clinical tolerance. The phantom central elongated section is 16/32
@@ -251,16 +278,34 @@ facts, not source-verified patient measurements; Prompt-03 status repairs remain
 **Draft/proposed option(s):** D6: “In this model the target stays visible over a wide rotation
 range because the modeled node is large and close to the airway. Do not read the range as the
 rotation a real node tolerates.” Retain with explicit limitations, or commission later calibration.
-Optional phantom reference/difference and reflection after recording, without scoring; label
+Earlier options included phantom reference/difference and reflection after recording, without scoring; label
 coordinates “phantom mm” and origin, or hide them. Keep recorded calipers as control practice.
 
-**Dependencies / holds:** No clinical calibration may be implied. Recalibration needs real evidence;
-expert overlays need attributable annotation plus verified calibration. Optional measurement
-feedback and station-model enrichment can remain held without changing geometry or thresholds.
+**Dependencies / holds:** No clinical calibration may be implied. Do not hide model/phantom millimeter
+measurements merely because they are model-derived. No clinical millimeter values may be assigned
+to recorded video without verified pixel-to-mm calibration. Optional phantom reference/difference
+feedback, reflection, and expert overlays are not approved by this display decision.
 
-**Decision requested:** Model: ☐ APPROVE D6 ☐ APPROVE WITH EDIT ☐ RETAIN CURRENT ☐ HOLD /
-commission evidence: `______`. Phantom: ☐ APPROVE reference/reflection ☐ LABEL units ☐ HIDE fields
-☐ RETAIN CURRENT ☐ HOLD. Recorded calipers: ☐ RETAIN CURRENT ☐ HOLD proposed overlay
+**Owner decision:** **OWNER DECISION: APPROVE D6; APPROVE millimeter display for teaching;
+RETAIN CURRENT recorded-video control-practice behavior.**
+
+Reviewer: Russell Miller. Role: repository owner / physician author. Decision date: **2026-10-04**.
+
+Approved D6:
+
+> In this model the target stays visible over a wide rotation range because the
+> modeled node is large and close to the airway. Do not read the range as the
+> rotation a real node tolerates.
+
+The owner wants millimeter measurements retained because they are educationally useful even if
+the model is not calibrated to reproduce the exact size of a real lymph node. Record this limitation:
+
+> Measurements in this simulator are shown in millimeters for teaching and
+> relative comparison. They reflect the model geometry and should not be
+> interpreted as validated measurements of a real patient or exact lymph-node
+> dimensions.
+
+Recorded-video calipers: **RETAIN CURRENT** control practice; no clinical millimeter assignment.
 
 ### OD-07
 
@@ -358,7 +403,7 @@ Boundary D7: ☐ APPROVE ☐ APPROVE WITH EDIT ☐ RETAIN CURRENT ☐ SUPPLY LOC
 
 **Topic:** Fasting, antithrombotics, and preparation policy.
 
-**Why owner input is required:** Fasting wording can be finalized; exact intervals and drug-specific
+**Why owner input was required:** Fasting wording can be finalized; exact intervals and drug-specific
 examples require the applicable policy.
 
 **Current state:** **OWNER DECIDED, Russell Miller, 2026-09-24: patients should not eat or drink
@@ -375,12 +420,19 @@ references were not authorized as this course's policy.
 anesthesia and local procedural policy for the required fasting interval.” Keep drug handling
 individualized; add aspirin/P2Y12/DOAC examples only after authorized policy and owner scope choice.
 
-**Dependencies / holds:** Exact fasting interval and drug-hold details: **LOCAL PROTOCOL REQUIRED**.
-No interval or dose inferred. Specific policy additions may remain held while generic preparation
-teaching and the fasting-required owner decision are preserved.
+**Dependencies / holds:** Exact fasting intervals and specific aspirin/P2Y12/DOAC or other drug-hold
+timing remain **LOCAL PROTOCOL REQUIRED** unless an authorized applicable policy is provided later.
+The earlier fasting-required decision is preserved; no interval, dose or local policy is invented.
 
-**Decision requested:** Final D10 wording only: ☐ APPROVE ☐ APPROVE WITH EDIT: `______` ☐ HOLD wording
-Policy-specific additions: ☐ SUPPLY LOCAL PROTOCOL ☐ RETAIN CURRENT generic guidance ☐ HOLD
+**Owner decision:** **OWNER DECISION: APPROVE final D10 wording.
+Policy-specific additions: RETAIN CURRENT generic guidance.**
+
+Reviewer: Russell Miller. Role: repository owner / physician author. Decision date: **2026-10-04**.
+
+> Patients should fast before EBUS. Follow the applicable anesthesia and local
+> procedural policy for the required fasting interval.
+
+This records final wording approval; runtime implementation is deferred.
 
 ### OD-11
 
@@ -388,11 +440,12 @@ Policy-specific additions: ☐ SUPPLY LOCAL PROTOCOL ☐ RETAIN CURRENT generic 
 
 **Topic:** Source-dependent claims and source-registry wording.
 
-**Why owner input is required:** Verification supports bounded claims; it does not approve course
+**Why owner input was required:** Verification supports bounded claims; it does not approve course
 wording, select a device, or authorize local practice.
 
-**Current state:** Source statuses below are copied from Prompt-05, not upgraded. Current source
-claims can remain while unsupported additions stay held.
+**Current state:** Owner wording/source dispositions are recorded below. Source-verification statuses
+in the evidence table remain unchanged. AABIP 2025 is owner-approved as a core future reference;
+no production source-registry or runtime update occurs here.
 
 **Verified evidence:** Packet §4 and Manifest `sources` (retrieved 2026-09-23):
 
@@ -406,19 +459,59 @@ claims can remain while unsupported additions stay held.
 | Device dimensions / IFU, L2-2                    | Olympus brochure read; **not an IFU**, no scope/needle revision supplied                                                                                                                                                     | Keep generic device/conduit language; name devices/dimensions only with selected device and verified IFU. No Olympus/Fujifilm convention inferred                                                  |
 | Preparation references, L2-7                     | ACCP 2022 full text; BTS 2013 partial, flowchart unread, excludes EBUS; ICS 2023 full text                                                                                                                                   | Optional ACCP context with limits; optional BTS only explicitly as non-EBUS context; neither supplies local holds                                                                                  |
 
-**Draft/proposed option(s):** Choose per row. D2 corrects the ERS guideline title; D3 corrects the
+**Draft/proposed option(s):** Original row alternatives remain above. D2 corrects the ERS guideline title; D3 corrects the
 CHEST year label without changing source IDs. Older 2014/2015 guidance differs on surgical staging;
 owner may choose to explain that conflict. `combined2015` was read through the ERJ co-publication,
 not the registry's Thieme PDF; MEDIASTrial is an unread lead, not guideline verification. CHEST
 2016/ICS 2023, IASLC ninth-edition N descriptors, and ACCP 2013 staging retain their recorded
 full-text status; their workflow/case uses are bounded in OD-03/OD-13/OD-14.
 
-**Dependencies / holds:** Missing full texts, IFU revisions, and local protocols stay missing.
-HOLD affects the proposed addition, not permission to silently alter existing claims.
+**Dependencies / holds:** Missing full texts, selected device IFU/revisions, and local protocols remain
+required. AABIP reference adoption does not replace these inputs or upgrade other source statuses.
+Explanation of older-guidance conflicts remains an unselected subpart.
 
-**Decision requested:** For **each unresolved row** (record row + choice): `______`
-☐ APPROVE CURRENT WORDING ☐ USE PROPOSED WORDING ☐ HOLD FOR SOURCE ☐ MODIFY: `______`
-Registry D2/D3 / older-guidance context: ☐ APPROVE ☐ APPROVE WITH EDIT ☐ RETAIN CURRENT ☐ HOLD
+**Owner disposition:** Source-specific decisions follow.
+
+Reviewer: Russell Miller. Role: repository owner / physician author. Decision date: **2026-10-04**.
+
+| Claim / proposal              | Owner disposition                  | Scope / remaining hold                                                                               |
+| ----------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 2026 ERS/ESGE/ESTS            | **USE PROPOSED WORDING**           | Preserve negative systematic examination premise and high-false-negative-risk qualification          |
+| CHEST sampling                | **APPROVE CURRENT WORDING**        | Keep claims within verified recommendation population/scope                                          |
+| Systematic / combined staging | **APPROVE CURRENT WORDING**        | No universal >5 mm sampling threshold from feasibility/visualization language                        |
+| Fujiwara 2010 / CLNS 2020     | **HOLD FOR SOURCE**                | Full-text-dependent expansions held; abstract-only status unchanged                                  |
+| AQuIRE                        | **HOLD FOR SOURCE**                | Numerical benchmark/expanded claims held for relevant full text and population verification          |
+| Device dimensions / IFU       | **RETAIN CURRENT** generic wording | Manufacturer dimensions/conventions held for selected device IFU/revision                            |
+| Preparation references        | **RETAIN CURRENT**                 | Generic/local-policy framing retained                                                                |
+| Registry D2/D3                | **APPROVE**                        | Proposed ERS guideline-title and CHEST publication-year labeling corrections; no registry edits here |
+
+Approved 2026 wording concept, preserving its documented scope:
+
+> After a negative systematic endosonographic staging examination, the 2026 ERS/ESGE/ESTS guideline
+> recommends against routine add-on confirmatory mediastinoscopy; it may still be considered when
+> the risk of a false-negative result is high.
+
+**AABIP-2025-CORE — OWNER DECISION: ADD AS CORE EBUS REFERENCE for future implementation.**
+
+Miller RJ, Chrissian AA, Kheir F, et al. American Association for Bronchology and Interventional
+Pulmonology (AABIP) Evidence-Based Guidelines on Bronchoscopic Diagnosis and Staging of Lung Cancer.
+_J Bronchol Intervent Pulmonol._ 2025;32:e1034. doi:10.1097/LBR.0000000000001034.
+
+Owner context: Russell Miller was first author and approves this guideline as a core reference for
+the EBUS educational module. The owner identifies it as appropriate primary/core support for:
+
+- Systematic CP-EBUS staging rather than radiographically targeted sampling alone.
+- Selective rather than routine confirmatory mediastinoscopy after negative CP-EBUS in the guideline’s specified population.
+- Tumor size >3 cm as a risk factor supporting consideration of invasive mediastinal staging.
+- Implications of ninth-edition N2a/N2b classification for comprehensive nodal assessment/sampling.
+
+**Evidence status for this addition:** owner-supplied citation and owner-approved reference scope;
+full text was not independently read or source-verified in this pass. Future claim-level wording
+must preserve the guideline’s specified population and scope. AABIP and ERS/ESGE/ESTS are
+complementary contemporary sources; adding AABIP does not invalidate or replace ERS/ESGE/ESTS.
+AABIP is not a substitute for device IFU, local fasting/antithrombotic policy, local specimen-handling
+protocol, or source-specific sonographic morphology definitions. Production registry/content
+implementation belongs to a later approved scope; Prompt 06 remains unstarted.
 
 ### OD-12
 
@@ -426,9 +519,10 @@ Registry D2/D3 / older-guidance context: ☐ APPROVE ☐ APPROVE WITH EDIT ☐ R
 
 **Topic:** Glossary expansion (Prompt-04 Q4).
 
-**Why owner input is required:** External definitions would relax the existing “course sentences only” rule.
+**Why owner input was required:** External definitions would relax the existing “course sentences only” rule.
 
-**Current state:** Nine term groups remain unexpanded/undefined; D8 is **NOT REVIEWED**.
+**Current state:** Full expanded glossary is approved subject to source holds; no glossary implementation
+occurs here. Source verification retains the statuses below.
 
 **Verified evidence:** Manifest NAV-3-Q4 / Drafts D8 record official expansion support except IFU
 (search-result-only status). ICS/IAB 2023 Table 5 was read for CHS; Fujiwara's definition was not
@@ -443,11 +537,17 @@ guideline series (draft contextual wording). IFU — instructions for use, manuf
 (expansion still source-incomplete). Central hilar structure / CHS is source-dependent: D8 points
 to ICS's linear, flat, hyperechoic central area; no Fujiwara-specific definition claimed.
 
-**Dependencies / holds:** Full expansion may be approved in scope while IFU/CHS remain held for
-source/wording review. No source status upgrade or automatic adoption.
+**Dependencies / holds:** Use only source-supported descriptive CHS wording; no Fujiwara-specific definition
+until full text is verified. Expanding IFU does not authorize manufacturer-specific interpretation
+without verified documentation. These decisions do not upgrade source-verification status.
 
-**Decision requested:** ☐ FULL EXPANDED GLOSSARY, subject to stated holds ☐ ONLY COMMON
-ABBREVIATIONS ☐ RETAIN CURRENT GLOSSARY ☐ MODIFY: `______` ☐ HOLD
+**Owner decision:** **OWNER DECISION: FULL EXPANDED GLOSSARY, subject to stated source holds.**
+
+Reviewer: Russell Miller. Role: repository owner / physician author. Decision date: **2026-10-04**.
+
+Approve straightforward definitions/expansions for TNM, IASLC, NSCLC, PET, FNA, ERS/ESGE/ESTS,
+and CHEST. IFU may expand to “instructions for use”; manufacturer-specific interpretation remains
+source-dependent. CHS uses only source-supported descriptive wording, with the Fujiwara full-text hold preserved.
 
 ### OD-13
 
@@ -576,7 +676,7 @@ scenario can remain held with existing demonstrations retained.
 
 **Topic:** Progressive workbench / four-lesson structure.
 
-**Why owner input is required:** Consolidation changes curriculum navigation and evidence handling.
+**Why owner input was required:** Consolidation changes curriculum navigation and evidence handling.
 
 **Current state:** Depth, Gain/contrast, Doppler, Capture are four separate lessons and Practice labs.
 
@@ -587,13 +687,17 @@ session-only. Existing technical repairs are closed.
 **Draft/proposed option(s):** 1 retain four lessons; 2 later progressive single-page workbench;
 3 hold consolidation until Doppler/image decisions are complete.
 
-**Dependencies / holds:** Preserve lesson IDs, activity/question IDs and keys, task IDs, acquisition
-criteria, deep links, Practice-lab entries, legacy keys and self-paced progress semantics. Hold
-still requires genuine acquisition; Continue without an image remains available. No carryover of
-one station's evidence into another. OD-02/OD-04 precede any consolidation.
+**Dependencies / holds:** Preserve lesson IDs, task IDs, acquisition criteria, deep links, separate
+Practice-lab entries, self-paced progress semantics and evidence boundaries, along with the existing
+activity/question IDs, keys and legacy records. No consolidation is approved for the upcoming beta phase.
 
-**Decision requested:** ☐ OPTION 1 — RETAIN CURRENT ☐ OPTION 2 — later consolidation
-☐ OPTION 3 — HOLD until image decisions ☐ OTHER: `______`
+**Owner decision:** **OWNER DECISION: OPTION 1 — RETAIN CURRENT.**
+
+Reviewer: Russell Miller. Role: repository owner / physician author. Decision date: **2026-10-04**.
+
+Keep Depth, Gain/contrast, Doppler and Capture as four separate lessons and separate Practice labs
+for upcoming beta testing. Do not consolidate now. Consolidation can be reconsidered after beta
+feedback if it appears to improve usability.
 
 ### OD-18
 
@@ -601,10 +705,10 @@ one station's evidence into another. OD-02/OD-04 precede any consolidation.
 
 **Topic:** Recording delivery / reversible derivatives.
 
-**Why owner input is required:** Smaller files must preserve teaching fidelity and approved media use.
+**Why owner input was required:** Smaller files must preserve teaching fidelity and approved media use.
 
-**Current state:** L6-5 is backlog; no derivative trial approved. Packet size/keyframe inventory is
-historical, particularly for the now-replaced Depth3 file.
+**Current state:** Current recording delivery is retained for beta testing. No derivative trial is
+approved now. The packet’s format/size inventory remains historical, particularly for Depth3.
 
 **Verified evidence:** Packet §7 describes full-file retrieval for short windows and a proposed
 lossless window-cut strategy. No produced derivative or acceptable lossy setting was verified;
@@ -614,21 +718,28 @@ current files would need fresh timing/format checks in a later trial.
 per-window trial; or commission separately reviewed lossy trials. “Preserve originals” must mean
 preserve the current redacted runtime asset, never restore unredacted Depth3.
 
-**Dependencies / holds:** OD-04, per-file provenance mapping and fidelity review at enlarged size;
-retain texture, borders, color evolution, depth scale, whole-frame view, and seek/loop behavior.
-Future performance work is unnecessary for this documentation acceptance.
+**Dependencies / holds:** Any future derivative work must preserve the current redacted source asset
+and teaching fidelity, including texture, borders, color evolution, scale, whole-frame view and
+seek/loop behavior. Revisit only for meaningful beta feedback on the performance categories below.
 
-**Decision requested:** ☐ RETAIN CURRENT ☐ APPROVE later lossless trial ☐ APPROVE WITH EDIT /
-later lossy trial: `______` ☐ HOLD
+**Owner decision:** **OWNER DECISION: RETAIN CURRENT.**
+
+Reviewer: Russell Miller. Role: repository owner / physician author. Decision date: **2026-10-04**.
+
+Keep current recording delivery for beta testing; create neither lossless per-window derivatives
+nor lossy replacements now. Revisit only if beta feedback identifies meaningful load-time,
+seek-latency, bandwidth, playback-reliability or mobile-performance problems.
 
 ## Mapping appendix — Prompt-05 row/source ID → worksheet decision ID
 
 The following tables account for all 52 lane-05 IDs, all 12 Prompt-04 carry-forward entries, all
 7 related accounted rows, and all 7 amendment objects: **78/78 Manifest decision objects**.
-Grouping alone is not approval. The explicitly recorded OD-01–OD-04 owner dispositions supersede
-only their stated subparts. Other table statuses retain the original source dispositions; OD-04A
+Grouping alone is not approval. The explicitly recorded owner dispositions supersede only their
+stated subparts, including the 2026-10-04 decisions above. Other table statuses retain the original source dispositions; OD-04A
 resolves current clinical-media rights/provenance, not new-image identity/annotation or unused-media
-holds. Tier-2/3 choices, all source-verification statuses, and existing retain/closed dispositions stay intact.
+holds. Other unresolved choices, all source-verification statuses, and existing closed dispositions stay intact.
+Table statuses below retain the source-packet accounting context; current owner dispositions are in
+the linked decision groups. The new AABIP pointer adds a reference decision, not a lane item.
 
 ### All 52 lane-05 rows
 
@@ -759,17 +870,16 @@ These references add no decisions and do not reopen resolved or rejected proposa
 | Drafts Storyboard A PR-2 context; B L4/L7 context             | OD-07; OD-08                                                                       | Context for model/image teaching, not reopened engineering rows                                                                              |
 | Drafts §C L10-4 and acquisition-context rows                  | OD-17, OD-06                                                                       | Preserve acquisition/progress semantics; no new calibration or capture task                                                                  |
 | Prompt-03 L3-7, L11-6, L12-4; orientation/image/caliper holds | OD-06, OD-05, OD-07, OD-02                                                         | Carry forward clinical/model questions only; presentation/status repairs remain closed                                                       |
+| AABIP-2025-CORE / doi:10.1097/LBR.0000000000001034            | OD-11                                                                              | Owner-approved core future reference; no full-text verification or runtime registry change in this pass                                      |
 
 ### Validation record
 
-ID accounting checked against the current Status and all Manifest decision objects: 52 lane rows,
-12 carry-forward entries, 7 related rows, and 7 amendment objects, with no omissions. Prompt-04
-Q1–Q15 context remains accounted for. OD-01–OD-04 use the requested topic, rationale, current state,
-evidence, options and dependencies fields, with Owner decision/disposition replacing Decision requested.
-The remaining 14 decision groups retain their undecided choices and tiers. Only the owner's explicit
-OD-01 OPTION A, OD-02 true vascular flow / unlabeled-task RETAIN CURRENT, OD-03 modified concept,
-OD-04A media attestation and OD-04B historical HOLD are newly recorded. No other unresolved item is
-approved, no source status is upgraded, and no local protocol or global de-identification clearance
-is inferred. Fasting-required and the earlier Depth3 metadata review remain preserved. Only this
-worksheet is updated; the four Prompt-05 source files, runtime, tests, media, schemas, question IDs
-and keys are unchanged. Prompt 06 is not started; no merge or deployment is performed.
+All 52 lane items, 12 Prompt-04 carry-forwards, 7 related rows and 7 amendment objects remain mapped
+(78/78 original Manifest decision objects), with an added AABIP-2025-CORE pointer inside OD-11.
+OD-01–OD-04 and historical Depth3 HOLD are preserved. OD-05/06/10/11/12/17/18 record only the explicit
+2026-10-04 owner decisions and their bounded subparts. OD-07/08/09/13/14/15/16 remain unresolved in
+their existing tiers; beta testing does not approve them. No unverified source status is upgraded,
+no local protocol is invented, and media permission does not imply de-identification clearance.
+Only the worksheet is authored in this pass. Current main was merged normally, preserving its
+EUS-B/course-shell/beta work; the authored delta changes no runtime, tests, media, schema, question
+IDs or learner state. No production registry changes, Prompt-06 work, PR merge or deployment occur.
