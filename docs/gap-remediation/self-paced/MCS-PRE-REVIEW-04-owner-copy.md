@@ -7,6 +7,11 @@ behalf. Source checking by an authoring assistant is not clinical approval.
 
 - Branch: `claude/mcs-pre-review-04-10-03`, from the authorized baseline `754bed0e`.
 - Full record: [MCS-PRE-REVIEW-04-handoff.md](MCS-PRE-REVIEW-04-handoff.md).
+- State: the independent sanity review's repairs are integrated. The runtime wording quoted in
+  this packet is that of the repaired head `ec51f049`; what the review corrected is summarized in
+  “Independent sanity-review corrections” at the end and recorded in full in the
+  [sanity review](MCS-PRE-REVIEW-04-sanity-review.md) and
+  [source audit](MCS-PRE-REVIEW-04-source-audit.md). Reproducing a source passage is not approval.
 - Decision groups touched: **OD-05** (source provenance) and **OD-07** (selected teaching choices).
   OD-01, OD-02, OD-03, OD-04 and OD-06 are untouched and still held.
 
@@ -266,3 +271,10 @@ The independent review also opened the exact two synthesis DOCX files. Their sou
 lists exist, so current citations now say “incomplete bibliographic provenance” rather than “no
 reference list.” This corrects provenance description only; authoring-provenance classification,
 MCS-03-10 containment and all owner decisions remain unchanged.
+
+One further wording point for OD-07, observed while integrating the repairs and **not changed**:
+the CAP-LVAD-01 case stem (baseline text, not edited by this slice) still ends “speed and power are
+unchanged.” The repaired option reasoning beside it says derived pump power is lower than in the
+reference run. The stem describes the patient's history rather than a comparison with the reference
+run, so the two are not strictly contradictory, but a learner reads them together. Decision needed:
+leave the stem, or reword it. NOT REVIEWED.
