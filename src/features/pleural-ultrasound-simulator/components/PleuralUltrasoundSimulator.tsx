@@ -47,6 +47,19 @@ function asEffusionPattern(value: string | null): EffusionPattern | null {
   return patternOptions.some((option) => option.id === value) ? (value as EffusionPattern) : null
 }
 
+/** The simulator spans the window: its three panels are a workspace, not a reading column. */
+const STAGE_CLASS = 'mx-auto w-full max-w-[2400px] space-y-4 px-3 sm:px-4'
+
+function ExperimentalNotice() {
+  return (
+    <Callout variant="warning" title="Experimental — not part of the core path">
+      This is a single-case research prototype that generates synthetic B-mode and procedural
+      cardiac motion from a 3D model. It is not a validated diagnostic or competency tool. For the
+      core pleural curriculum, use the Pleural Ultrasound module (Learn → Practice → Assess).
+    </Callout>
+  )
+}
+
 export function PleuralUltrasoundSimulator() {
   const [loaded, setLoaded] = useState<LoadedThoracicCase | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -83,7 +96,8 @@ export function PleuralUltrasoundSimulator() {
     return (
       <HandoffContent>
         {
-          <section className="container">
+          <section className={STAGE_CLASS}>
+            <ExperimentalNotice />
             <Callout variant="warning" title="Simulator assets could not load">
               {error}
             </Callout>
@@ -97,7 +111,8 @@ export function PleuralUltrasoundSimulator() {
     return (
       <HandoffContent>
         {
-          <section className="container">
+          <section className={STAGE_CLASS}>
+            <ExperimentalNotice />
             <div className="flex min-h-[28rem] items-center justify-center rounded-lg border border-border/80 bg-card text-sm text-muted-foreground">
               Loading pleural simulator case...
             </div>
@@ -164,14 +179,23 @@ function LoadedSimulator({ loaded, store }: { loaded: LoadedThoracicCase; store:
   return (
     <HandoffContent>
       {
-        <section className="container space-y-6">
-          <Callout variant="warning" title="Educational simulation only">
-            {manifest.safetyLabel} The image is synthetic and should not be used for diagnosis,
-            treatment, or real procedure guidance.
-          </Callout>
+        <section className={STAGE_CLASS}>
+          <div className="grid gap-3 lg:grid-cols-2">
+            <ExperimentalNotice />
+            <Callout variant="warning" title="Educational simulation only">
+              {manifest.safetyLabel} The image is synthetic and should not be used for diagnosis,
+              treatment, or real procedure guidance.
+            </Callout>
+          </div>
 
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(24rem,0.9fr)]">
-            <div className="space-y-6">
+          {/*
+            On a wide window the probe controls take a third column beside the 3D view and the
+            B-mode image. Stacked under the 3D view they were a full screen below the image they
+            drive, so every slider move meant scrolling back up to see what it did. The two column
+            wrappers become `contents` there so the one grid places all five panels.
+          */}
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(24rem,0.9fr)] min-[1600px]:grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(20rem,0.72fr)] min-[1600px]:items-start min-[1600px]:gap-4">
+            <div className="space-y-6 min-[1600px]:contents min-[1600px]:space-y-0">
               <ThoracicScene3D
                 manifest={manifest}
                 store={store}
@@ -179,10 +203,12 @@ function LoadedSimulator({ loaded, store }: { loaded: LoadedThoracicCase; store:
                 selected={selectedStructure}
                 onSelectStructure={setSelectedStructure}
               />
-              <ThoracicProbeControls manifest={manifest} store={store} />
+              <div className="min-[1600px]:col-start-3 min-[1600px]:row-start-1">
+                <ThoracicProbeControls manifest={manifest} store={store} />
+              </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-6 min-[1600px]:contents min-[1600px]:space-y-0">
               <BModeFramePanel
                 frame={frame}
                 depthCm={probe.depthCm}
