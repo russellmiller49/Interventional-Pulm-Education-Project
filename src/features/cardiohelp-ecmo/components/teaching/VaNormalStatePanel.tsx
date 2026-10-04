@@ -315,7 +315,7 @@ function baselineRows(
     {
       id: 'deltaP',
       group: 'membrane-and-return',
-      label: 'ΔP across the membrane',
+      label: 'Δp across the membrane',
       unit: 'mmHg',
       precision: 0,
       current: circuit.readouts.deltaP.displayed,
@@ -880,7 +880,7 @@ export function VaNormalStatePanel({
                   pVen
                 </th>
                 <th scope="col" className="pb-1 pr-3 font-semibold">
-                  ΔP
+                  Δp
                 </th>
                 <th scope="col" className="pb-1 pr-3 font-semibold">
                   SpO₂
@@ -905,7 +905,7 @@ export function VaNormalStatePanel({
                   <td className="py-1 pr-3" data-column-label="pVen">
                     {trendCell(sample.pVen)}
                   </td>
-                  <td className="py-1 pr-3" data-column-label="ΔP">
+                  <td className="py-1 pr-3" data-column-label="Δp">
                     {trendCell(sample.deltaP)}
                   </td>
                   <td className="py-1 pr-3" data-column-label="SpO₂">

@@ -25,6 +25,16 @@ export interface EcmoFoundationSection {
   readonly minutes: number
   readonly paragraphs: readonly string[]
   readonly bullets?: readonly string[]
+  /**
+   * An optional recap for a section whose tasks never print its narrative.
+   *
+   * The four introductory sections are worked as focused tasks, so their `bullets` are not shown
+   * anywhere, and a fellow walkthrough found the first of them ending with no key points (S1-7).
+   * A recap is a subset of the section's own `bullets`, verbatim — it adds no claim — and it names
+   * only points the section's tasks actually teach on screen. A section whose remaining bullets
+   * reach past its tasks, or rest on a claim still held for source review, carries no recap.
+   */
+  readonly recap?: readonly string[]
   /** Rendered as an explicitly unreconciled disagreement rather than as a threshold. */
   readonly heldDisagreementId?: string
   readonly sourceIds: readonly string[]
@@ -50,6 +60,12 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
       'Delivery is flow multiplied by content; a normal saturation does not establish adequate delivery.',
       'Oxygen consumption is part of the same balance and can change independently of support.',
       'CO₂ removal and oxygenation are governed by different parts of the circuit.',
+      'Support substitutes for a failing step; it does not treat the cause of the failure.',
+    ],
+    // S1-7: the three this section's tasks teach on screen. The CO₂ point is the control panel's.
+    recap: [
+      'Delivery is flow multiplied by content; a normal saturation does not establish adequate delivery.',
+      'Oxygen consumption is part of the same balance and can change independently of support.',
       'Support substitutes for a failing step; it does not treat the cause of the failure.',
     ],
     // A physiology audit in September 2026 found this section citing the module-wide circuit sources
@@ -193,7 +209,7 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
       'Separate the four explanations by what each predicts elsewhere in the circuit.',
       'Check the gas side explicitly; it fails silently with respect to flow.',
       'A patient-side cause is a real member of the differential, not a diagnosis of exclusion.',
-      'Commit to the expected finding before measuring, so the measurement can contradict you.',
+      'An optional prediction names an expected finding so it can be compared with the measurements.',
     ],
     sourceIds: [...coreSources, 'elso-adult-vv-2021', 'ecmo-book-ch16', 'ecmo-book-ch17'],
   },

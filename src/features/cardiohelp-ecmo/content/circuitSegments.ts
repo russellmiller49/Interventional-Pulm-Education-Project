@@ -294,9 +294,9 @@ export const ecmoSensorSites: readonly EcmoSensorSite[] = Object.freeze([
   {
     id: 'deltaP',
     plainName: 'the gradient across the membrane',
-    deviceLabel: 'ΔP',
-    stopLabel: 'ΔP spans this',
-    mapLabel: 'ΔP',
+    deviceLabel: 'Δp',
+    stopLabel: 'Δp spans this',
+    mapLabel: 'Δp',
     kind: 'derived',
     segmentId: 'membrane',
     derivedFromSiteIds: ['pInt', 'pArt'],

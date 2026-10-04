@@ -94,7 +94,7 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
             'A circuit pressure, not the patient arterial blood pressure.',
           ),
           channelSignalRow(
-            'ΔP',
+            'Δp',
             'Derived across the membrane',
             readouts.deltaP,
             'mmHg',
@@ -133,7 +133,7 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
             reading:
               readouts.deltaP.displayed === null
                 ? 'Not reporting in this state'
-                : `ΔP ${readouts.deltaP.displayed.toFixed(0)} mmHg`,
+                : `Δp ${readouts.deltaP.displayed.toFixed(0)} mmHg`,
             movement:
               'Note whether it has widened or narrowed, and compare that with what the flow did.',
           },
@@ -157,7 +157,7 @@ export function PreloadDrainageCollapsePanel({ state }: { readonly state: EcmoSi
           {
             question: 'Did the gradient across the membrane widen or narrow as flow fell?',
             whereToLook:
-              'The ΔP row. A membrane that is resisting and a membrane simply receiving less blood move it in opposite directions.',
+              'The Δp row. A membrane that is resisting and a membrane simply receiving less blood move it in opposite directions.',
           },
           {
             question:

@@ -26,6 +26,7 @@ import {
   type EcmoSessionLoadReason,
 } from '../../session/useEcmoSessionCore'
 import { EcmoOptionalExplanation } from '../shell/EcmoOptionalExplanation'
+import { ECMO_DRILL_VERDICT_FRAMES } from '../shell/EcmoOtherAnswers'
 import { advanceSimulation } from '../PracticeCasePlayer'
 import { CircuitLiveReadings } from '../CircuitAndMonitors'
 import { CardiohelpConsole } from '../CardiohelpConsole'
@@ -606,6 +607,8 @@ export function DrillStageHost({
               // This module's owner asked for the outcome in as many words; the other labs
               // render the descriptive form until each of their owners has looked at it.
               outcome="stated"
+              // VA6-2: nothing stops here, so the unsafe title does not say that anything did.
+              frames={ECMO_DRILL_VERDICT_FRAMES}
               timing="immediate-after-commit"
               theme="dark"
               onContinue={undefined}
@@ -723,8 +726,17 @@ export function DrillStageHost({
     pairing?.kind === 'mechanism-match'
       ? 'You can review this section at any time. Apply it to the paired clinical case in Practice, starting fresh with less prompting.'
       : pairing?.kind === 'next-in-unit'
-        ? 'You can review this section at any time. The next case in this unit is ready in Practice, starting fresh with less prompting.'
+        ? 'You can review this section at any time. The next section continues the teaching; the next case in this unit is also open in Practice, in either order.'
         : 'You can review this section at any time. Continue to the next section to keep building on this.'
+  /*
+   * S9-3 (ECMO-FELLOW-04). A unit's next case applies a mechanism this lesson did not teach — the
+   * return-obstruction lesson ended by offering the oxygenator case ahead of the oxygenator lesson —
+   * so on that card the next section leads and the case follows. A case that applies this lesson's
+   * own mechanism still leads. Both links are always offered and neither is required first. The
+   * card does not say where the other mechanism is taught: for three of the six such pairings it is
+   * a later section, for one an earlier section, and for two no section at all.
+   */
+  const lessonLeads = pairing?.kind === 'next-in-unit' && Boolean(nextSection)
 
   const explanation = (
     <EcmoOptionalExplanation
@@ -833,14 +845,36 @@ export function DrillStageHost({
         >
           <h3>Section reviewed</h3>
           <p>{completionLead}</p>
+          {/*
+            What "reviewed" means (S9-3). It marks where the learner has been. A step that was
+            skipped is still a skipped step, and nothing here records one as performed.
+          */}
+          <p data-section-reviewed-meaning>
+            “Reviewed” marks where you have been in this section. It does not record that a step was
+            performed or answered.
+          </p>
           {pairing?.kind === 'next-in-unit' ? (
             <p data-practice-pairing-note>It applies a different mechanism from this lesson.</p>
           ) : null}
-          <div className={styles.completionActions}>
-            {pairing ? (
+          <div
+            className={styles.completionActions}
+            data-completion-lead={lessonLeads ? 'section' : 'practice'}
+          >
+            {lessonLeads && nextSection ? (
               <button
                 type="button"
                 className={shellStyles.nowPrimary}
+                data-next-section
+                onClick={() => goToSection(nextSection.id)}
+              >
+                Continue to next section: {nextSection.title}
+                <ArrowRight aria-hidden="true" />
+              </button>
+            ) : null}
+            {pairing ? (
+              <button
+                type="button"
+                className={lessonLeads ? shellStyles.nowSecondary : shellStyles.nowPrimary}
                 data-practice-pairing={pairing.kind}
                 onClick={() =>
                   router.push({
@@ -852,13 +886,14 @@ export function DrillStageHost({
                 {pairing.kind === 'mechanism-match'
                   ? `Apply this in Practice: ${pairing.title}`
                   : `Next case in this unit: ${pairing.title}`}
-                <ArrowRight aria-hidden="true" />
+                {lessonLeads ? null : <ArrowRight aria-hidden="true" />}
               </button>
             ) : null}
-            {nextSection ? (
+            {!lessonLeads && nextSection ? (
               <button
                 type="button"
                 className={shellStyles.nowSecondary}
+                data-next-section
                 onClick={() => goToSection(nextSection.id)}
               >
                 Continue to next section: {nextSection.title}

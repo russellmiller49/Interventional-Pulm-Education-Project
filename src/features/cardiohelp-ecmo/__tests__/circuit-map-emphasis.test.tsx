@@ -217,7 +217,7 @@ describe('what the map is asked to mark', () => {
     // only the ringed ones — the venous cell has no marker, so it is not claimed as ringed.
     const caption = circuitMapEmphasisCaption(presentation, 'vv', { sensorFlagsDrawn: true }) ?? ''
     expect(caption).toMatch(/Ringed on the map: .*pre-membrane pressure \(pInt\)/)
-    expect(caption).toMatch(/the gradient across the membrane \(ΔP\)/)
+    expect(caption).toMatch(/the gradient across the membrane \(Δp\)/)
     expect(caption).not.toMatch(/SvO/)
     // And not said while the placements are withheld.
     expect(circuitMapEmphasisCaption(presentation, 'vv', { sensorFlagsDrawn: false })).not.toMatch(

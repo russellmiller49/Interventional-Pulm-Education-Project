@@ -276,7 +276,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       diagnosis: 'Downstream/return-side resistance',
       causalChain: [
         'Resistance after the oxygenator raises return pressure.',
-        'pArt and pInt rise together while flow falls; delta-p need not rise substantially.',
+        'pArt and pInt rise together while flow falls; Δp need not rise substantially.',
       ],
       correctWorkflow: [
         'Inspect return tubing, clamps, connectors, cannula position, and pressure-sensor plausibility.',
@@ -307,14 +307,14 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       diagnosis: 'Increased oxygenator resistance/dysfunction pattern',
       causalChain: [
         'Resistance across the oxygenator raises pre-oxygenator pressure relative to post-oxygenator pressure.',
-        'The delta-p trend rises and available flow may fall at the same RPM.',
+        'The Δp trend rises and available flow may fall at the same RPM.',
       ],
       correctWorkflow: [
-        'Compare pInt, pArt, delta-p trend, flow, gas transfer, and sensor plausibility.',
+        'Compare pInt, pArt, Δp trend, flow, gas transfer, and sensor plausibility.',
         'Inspect the oxygenator/circuit and escalate according to local exchange protocol.',
       ],
       safetyNotes: [
-        'No fixed delta-p alarm priority is taught because the supplied IFU is internally inconsistent on that point.',
+        'No fixed Δp alarm priority is taught because the supplied IFU is internally inconsistent on that point.',
       ],
     },
     evidenceIds: [

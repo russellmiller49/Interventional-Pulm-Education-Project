@@ -91,7 +91,7 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
             'The independent reading, produced by the patient rather than by the circuit.',
           ),
           channelSignalRow(
-            'ΔP',
+            'Δp',
             'Derived across the membrane',
             readouts.deltaP,
             'mmHg',
@@ -143,7 +143,7 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
           {
             question:
               'If the membrane were the problem, what would the post-oxygenator saturation and the gradient across it be doing?',
-            whereToLook: 'The post-oxygenator and ΔP rows of the signal table.',
+            whereToLook: 'The post-oxygenator and Δp rows of the signal table.',
           },
           {
             question:

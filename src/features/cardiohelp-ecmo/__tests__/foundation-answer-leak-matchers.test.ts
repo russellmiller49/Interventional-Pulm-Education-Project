@@ -25,7 +25,7 @@ import { ANSWER_LEAK_MATCHERS, answerLeakMatcher } from '../test-support/answerL
  * until it matches everything.
  *
  * The final targeted review found one form unprotected. Nine matchers place pInt somewhere; none
- * held the relationship that discloses the placement without naming a position — ΔP is pInt minus
+ * held the relationship that discloses the placement without naming a position — Δp is pInt minus
  * pArt, read across the membrane. All three of the review's probes returned no match against the
  * nine, and the tenth matcher is the contract that they now must. The learner-facing page was not
  * leaking any of them; this is a regression contract, not a repair.
@@ -40,11 +40,11 @@ interface MatcherContract {
 }
 
 /** The stable name of the relationship matcher, so its own contract can be named in a failure. */
-const DELTA_P_MATCHER = 'ΔP relationship … pInt … pArt … membrane'
+const DELTA_P_MATCHER = 'Δp relationship … pInt … pArt … membrane'
 
 /** The three probes the final review supplied verbatim. Every one must match. */
 const DELTA_P_REVIEW_PROBES: readonly string[] = [
-  'ΔP trend = pInt − pArt across the membrane oxygenator',
+  'Δp trend = pInt − pArt across the membrane oxygenator',
   'Transmembrane gradient compares pInt with pArt',
   'pInt and pArt define the pressure drop across the membrane',
 ]
@@ -114,7 +114,7 @@ const CONTRACTS: readonly MatcherContract[] = [
       'pInt and pArt are displayed beside the membrane diagram.',
       'pInt and pArt changed while the oxygenator continued to run.',
       // A gradient, but not tied to the channel pair.
-      'ΔP is displayed on the console.',
+      'Δp is displayed on the console.',
       // A gradient across the membrane, but only one of the two channels.
       'The membrane pressure drop is reviewed after pInt is recorded.',
     ],
@@ -163,7 +163,7 @@ describe('every required semantic matcher is individually represented', () => {
  * The transmembrane-gradient form, named on its own so a deletion or a narrowing says which
  * disclosure stopped being detected rather than only that a list changed length.
  *
- * ΔP is pInt minus pArt and the subtraction is read across the membrane, so a sentence that ties
+ * Δp is pInt minus pArt and the subtraction is read across the membrane, so a sentence that ties
  * both channels to that gradient has located pInt without ever using a positional word. None of the
  * nine placement matchers catches any of the review's three probes — verified before this matcher
  * existed, and the reason it does.
@@ -192,8 +192,8 @@ describe(`the ${DELTA_P_MATCHER} contract`, () => {
 
   it('is order-free across the channel pair', () => {
     const pattern = answerLeakMatcher(DELTA_P_MATCHER)!.pattern
-    expect(pattern.test('ΔP trend = pInt − pArt across the membrane oxygenator')).toBe(true)
-    expect(pattern.test('ΔP trend = pArt − pInt across the membrane oxygenator')).toBe(true)
+    expect(pattern.test('Δp trend = pInt − pArt across the membrane oxygenator')).toBe(true)
+    expect(pattern.test('Δp trend = pArt − pInt across the membrane oxygenator')).toBe(true)
   })
 
   it('accepts the connectives the same claim is written with', () => {
@@ -208,7 +208,7 @@ describe(`the ${DELTA_P_MATCHER} contract`, () => {
     const pattern = answerLeakMatcher(DELTA_P_MATCHER)!.pattern
     // Each of these carries exactly one gradient concept, so removing that concept from the
     // pattern kills exactly one of these lines rather than being covered by a broader alternative.
-    expect(pattern.test('ΔP across the membrane is pInt against pArt.')).toBe(true)
+    expect(pattern.test('Δp across the membrane is pInt against pArt.')).toBe(true)
     expect(pattern.test('Delta P across the membrane is pInt against pArt.')).toBe(true)
     expect(pattern.test('Transmembrane gradient compares pInt with pArt')).toBe(true)
     expect(pattern.test('The transmembrane pressure gradient relates pInt to pArt.')).toBe(true)

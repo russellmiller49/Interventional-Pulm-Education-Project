@@ -103,7 +103,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Find the pressure measurements',
       block: 'pressure-sites',
       instruction:
-        'Select each pressure label beside the map. Its location is named beside the reading and marked on the map. Finish with the derived pressure difference, ΔP.',
+        'Select each pressure label beside the map. Its location is named beside the reading and marked on the map. Finish with Δp, the pressure drop the console calculates between pInt and pArt; the readouts show its running value as the Δp trend.',
       lookIn: teaching('Pressure measurements'),
     },
     {
@@ -118,11 +118,14 @@ export const ecmoFoundationTeachingTasks: Readonly<
     {
       id: 'predict',
       phase: 'predict',
-      title: 'Locate a measurement from memory',
+      // S2-1 (ECMO-FELLOW-04): this said "from memory" and that the map "now omits pressure labels",
+      // while the stage draws the map with its sensor flags and Δp bracket on every task. The labels
+      // stay — they are the teaching — and the task now describes the optional check it actually is.
+      title: 'Locate a measurement on the map',
       block: 'application',
       mapRetrieval: true,
       instruction:
-        'The map now omits pressure labels and stop highlighting for this retrieval check. Select a numbered location, then submit beside the map.',
+        'An optional check on the circuit map. The map keeps its pressure labels; only the circuit-walk highlighting is off. Select the numbered location that answers the question, then submit beside the map.',
       lookIn: { pane: 'simulator', landmark: 'the map question and Submit answer control' },
     },
     {
@@ -184,7 +187,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       title: 'Predict a different speed change',
       block: 'application',
       instruction:
-        'Apply what you observed to a speed decrease on a circuit with unchanged loading. Submit your prediction before reading the explanation.',
+        'Apply what you observed to a speed decrease on a circuit with unchanged loading. Choose an answer if you want to check your reasoning; the explanation can also be opened without answering.',
       lookIn: steps('the answer choices below'),
     },
     {

@@ -50,7 +50,7 @@ function signalsFor(actionId: string, mode: SupportMode): readonly Signal[] {
       flow,
       ...(['pVen', 'pInt', 'pArt', 'deltaP'] as const).map((key) => ({
         key,
-        label: key === 'deltaP' ? 'ΔP · derived difference' : key,
+        label: key === 'deltaP' ? 'Δp · derived difference' : key,
         unit: 'mmHg',
         precision: 0,
       })),

@@ -93,7 +93,11 @@ const ATTRIBUTIONS: Readonly<
       },
       {
         id: 'raise-sweep-oxygen-fraction',
-        label: 'Raise the oxygen fraction on the sweep gas.',
+        // S1-3 (ECMO-FELLOW-04): this names the sweep gas three sections before the control panel
+        // teaches it, so the label says what the sweep gas is and where its control is introduced.
+        // The question, its key and its rationale are unchanged, and nothing is required first.
+        label:
+          'Raise the oxygen fraction of the sweep gas — the gas the external blender sends through the membrane lung. Its control is introduced later, with the control panel.',
         componentId: 'oxygen-content',
         rationale:
           'This acts on content too, by the other route: it raises how loaded the carrier is rather than how much carrier there is. When the saturation is already close to its ceiling there is very little room left there, which is why this can feel like acting while changing little.',
