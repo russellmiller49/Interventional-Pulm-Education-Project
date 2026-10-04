@@ -140,9 +140,11 @@ export function SourcesPanel({
         carries its own line unchanged.
       */}
       <p className={styles.externalBoundary} data-source-registry-status>
-        {cardiohelpEvidence.length} sources are registered. No source has a clinical or device
-        review on record; the registry below gives each source&rsquo;s own claim, limits and
-        document check.
+        {/*
+          One string, so the space after the count is in the text itself: the production build
+          drops a leading space that only the JSX layout implies (the "serieswith" trap).
+        */}
+        {`${cardiohelpEvidence.length} sources are registered. No source has a clinical or device review on record; the registry below gives each source’s own claim, limits and document check.`}
       </p>
       <details className={styles.reviewChecklist} data-source-registry>
         <summary className={evidenceStyles.checklistSummary}>

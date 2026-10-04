@@ -200,10 +200,11 @@ export function CircuitFlowPathPanel({
         the venous probe) and is kept.
       */}
       <p className={`${styles.section} text-sm leading-6`} data-first-use="venous-line-saturation">
-        <strong>One reading, several names.</strong> The console labels its venous oxygen saturation
-        SvO₂. The venous probe measures it on the drainage side, before the oxygenator, so these
-        lessons also call it the pre-oxygenator, venous-line or drainage-line saturation. It is not
-        the patient&rsquo;s own mixed-venous saturation, which no sensor on this circuit reads.
+        <strong>One reading, several names.</strong>
+        {/* A string with its own leading space: the production build drops one the layout implies. */}
+        {
+          ' The console labels its venous oxygen saturation SvO₂. The venous probe measures it on the drainage side, before the oxygenator, so these lessons also call it the pre-oxygenator, venous-line or drainage-line saturation. It is not the patient’s own mixed-venous saturation, which no sensor on this circuit reads.'
+        }
       </p>
       <details className={styles.section}>
         <summary className="cursor-pointer font-semibold">

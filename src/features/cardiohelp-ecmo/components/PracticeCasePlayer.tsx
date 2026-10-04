@@ -637,7 +637,7 @@ export function ActionPanel({
         establish, said beside the action rather than only after it. See `integratedCaseScope`.
       */}
       {caseScope ? (
-        <div className={styles.presentationNote} role="note" data-integrated-case-scope>
+        <div className={styles.caseScopeNote} role="note" data-integrated-case-scope>
           <p>
             <strong>What this exercise covers.</strong> {caseScope.rehearses}
           </p>
