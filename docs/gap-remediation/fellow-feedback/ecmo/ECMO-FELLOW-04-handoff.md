@@ -53,17 +53,21 @@ against the code where it is not.
 - **`origin/main` at completion:** `9086f2af0a538a0afabf964273cf15a219e165d6`, fetched again after the
   final checks. It had not moved, so there was nothing to integrate and no check to rerun on a
   combined tree.
+- **Pull request:**
+  [#327](https://github.com/russellmiller49/Interventional-Pulm-Education-Project/pull/327), opened
+  against `main` and not merged. Its head is the docs commit that adds this line; every runtime and
+  test file is as built and tested at `925b0d7c`.
 - **Commits:**
 
-| SHA        | What                                                                        |
-| ---------- | --------------------------------------------------------------------------- |
-| `a7c896aa` | Runtime: honest self-paced teaching and case flow                           |
-| `68b17da2` | Tests: the Prompt-04 contract; existing suites follow renamed copy          |
-| `9387fb1c` | Runtime: two spaces the production build dropped; the case-scope note's box |
-| `1e59371a` | Tests: fixture typing                                                       |
-| `7567f91d` | Runtime: S3-4 control name, with its check                                  |
-| `925b0d7c` | A count in one code comment. **The production build under test.**           |
-| _(this)_   | Docs: this handoff and the copy ledger                                      |
+| SHA        | What                                                                                  |
+| ---------- | ------------------------------------------------------------------------------------- |
+| `a7c896aa` | Runtime: honest self-paced teaching and case flow                                     |
+| `68b17da2` | Tests: the Prompt-04 contract; existing suites follow renamed copy                    |
+| `9387fb1c` | Runtime: two spaces the production build dropped; the case-scope note's box           |
+| `1e59371a` | Tests: fixture typing                                                                 |
+| `7567f91d` | Runtime: S3-4 control name, with its check                                            |
+| `925b0d7c` | A count in one code comment. **The production build under test.**                     |
+| `6a5f9fad` | Docs: this handoff and the copy ledger (then one docs commit recording the PR number) |
 
 - **Ports** (this worktree's own processes only; no other worktree's server or watcher was stopped):
   - 3164: baseline production standalone, an APFS clone of the `9086f2af` build;
