@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { AirwayAnatomyModuleDynamic } from '@/components/airway-anatomy/AirwayAnatomyModuleDynamic'
+import { SIMULATOR_ABOUT_ID, simulatorPage } from '@/components/layout/simulator-page'
 import { Badge } from '@/components/ui/badge'
 import { HandoffContent } from '@/i18n/handoff'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
@@ -27,23 +28,32 @@ export default function AirwayAnatomyPage() {
   return (
     <HandoffContent>
       {
-        <div className="space-y-10 py-16">
-          <section className="container space-y-6">
-            <div className="space-y-3">
-              <Badge
-                variant="info"
-                className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
-              >
-                Simulation · Anatomy
-              </Badge>
-              <h1 className="max-w-4xl text-4xl font-bold tracking-tight md:text-5xl">
-                Airway Anatomy Synchronized Bronchoscopy
-              </h1>
-              <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-                A synchronized airway anatomy workspace using the same scope-tip state for virtual
-                bronchoscopy, the transparent 3D airway tree, and CT slice correlation.
-              </p>
+        <div className={simulatorPage.root}>
+          <section className={simulatorPage.stage}>
+            <div className={simulatorPage.header}>
+              <div className={simulatorPage.identity}>
+                <Badge
+                  variant="info"
+                  className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+                >
+                  Simulation · Anatomy
+                </Badge>
+                <h1 className={simulatorPage.title}>Airway Anatomy Synchronized Bronchoscopy</h1>
+              </div>
+              <div className={simulatorPage.actions}>
+                <a href={`#${SIMULATOR_ABOUT_ID}`} className={simulatorPage.aboutLink}>
+                  Learning objectives
+                </a>
+              </div>
             </div>
+            <AirwayAnatomyModuleDynamic />
+          </section>
+
+          <section id={SIMULATOR_ABOUT_ID} className={simulatorPage.about}>
+            <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
+              A synchronized airway anatomy workspace using the same scope-tip state for virtual
+              bronchoscopy, the transparent 3D airway tree, and CT slice correlation.
+            </p>
 
             <div className="rounded-lg border border-border/70 bg-card/70 p-6">
               <h2 className="text-lg font-semibold text-foreground">Learning objectives</h2>
@@ -56,10 +66,6 @@ export default function AirwayAnatomyPage() {
                 ))}
               </ul>
             </div>
-          </section>
-
-          <section className="container">
-            <AirwayAnatomyModuleDynamic />
           </section>
         </div>
       }
