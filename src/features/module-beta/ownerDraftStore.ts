@@ -554,8 +554,9 @@ export function discardOwnerDraft(id: string, base: string) {
 }
 
 /**
- * First step of Save, before the report is written: this Save's own attempt record, naming the
- * stored revision it replaces and the fingerprint of exactly what it sends. No other attempt is
+ * The step of Save that must commit before the report is written: this Save's own attempt
+ * record, naming the stored revision that holds its submission and the fingerprint of exactly
+ * what it sends. It rejects if the record cannot be stored, and the caller must then not save. No other attempt is
  * read, changed or replaced. Reports an ID that is already closed instead, with the fingerprint
  * of what was saved, so the tab can tell "already saved" from "different work to keep".
  */
@@ -593,17 +594,16 @@ export function releaseOwnerDraftSave(attemptId: string) {
  * Last step of Save, once a report with this ID is known to be committed, by this tab or by
  * another. `reportFingerprint` is the fingerprint of what that report holds. The ID is closed as
  * saved: the revision covered by the attempt that sent exactly that submission is removed, and
- * any other stored revision is kept under a fresh ID (`preserved`). `ownRevision` is given only
- * by the tab whose own write created the report, in case its attempt record could not be
- * stored. Safe to repeat, from any tab, in any order.
+ * any other stored revision is kept under a fresh ID (`preserved`). The stored attempts are the
+ * only evidence used: a Save writes its attempt before its report, so the winner's is on record.
+ * Safe to repeat, from any tab, in any order.
  */
-export function finishOwnerDraftSave(id: string, reportFingerprint: string, ownRevision?: string) {
+export function finishOwnerDraftSave(id: string, reportFingerprint: string) {
   return transaction<{ preserved: boolean }>('readwrite', async (stores) => {
     const entry = readFinalization(await result(stores.finalizations.get(id)))
     if (isClosed(entry) && (await result(stores.drafts.get(id))) === undefined)
       return { preserved: false }
     const covered = coveredBy(await attemptsFor(stores, id), reportFingerprint)
-    if (ownRevision) covered.push(ownRevision)
     if (isClosed(entry) && entry.revision !== null) covered.push(entry.revision)
     return {
       preserved: (await closeDraftId(stores, id, 'saved', covered, reportFingerprint)).moved,

@@ -36,7 +36,11 @@ import {
   type ScreenshotDraft,
   type ScreenshotEditorHandle,
 } from './ScreenshotEditor'
-import { decodeScreenshotSource, encodeScreenshotSource } from './screenshotDraftImage'
+import {
+  decodeScreenshotSource,
+  encodeScreenshotSource,
+  type DraftImage,
+} from './screenshotDraftImage'
 
 const message = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback
@@ -50,6 +54,31 @@ const keptApart: Record<OwnerDraftSupersededBy, string> = {
     'This draft was also changed in another tab. The version here was kept as a separate unsent draft.',
 }
 const saveAgain = 'Save again to add it as a new report.'
+const notStored =
+  'Not saved: this feedback could not first be stored on this browser, so nothing was submitted. Your draft is still open here. Try saving again.'
+// What one stored revision of a draft holds, for telling whether a later state is the same.
+type DraftContent = {
+  id: string
+  moduleId: string
+  pagePath: string
+  comment: string
+  selectedText: string
+  image: DraftImage | null
+  annotations: ScreenshotDraft['annotations']
+}
+const signatureOf = (content: DraftContent) =>
+  JSON.stringify([
+    content.moduleId,
+    content.pagePath,
+    content.comment,
+    content.selectedText,
+    content.image?.token ?? null,
+    content.image ? content.annotations : [],
+  ])
+// Everything one Save sends, taken in a single synchronous step when Save is pressed. The stored
+// draft revision, the attempt's fingerprint and the report are all made from this and from
+// nothing read later.
+type SaveSnapshot = DraftContent & { png: Blob | null }
 
 export function BetaTestingFrame({
   moduleEntry,
@@ -90,9 +119,14 @@ export function BetaTestingFrame({
   // The stored record this tab last read or wrote: the open draft it belongs to, the ID it is
   // stored under, and its revision ('' once this tab has removed it). Another tab may have
   // changed or closed that record since; every write names the revision so storage can tell.
-  const kept = useRef<{ draft: string; id: string; revision: string; createdAt: string } | null>(
-    null,
-  )
+  // `signature` is the content that revision holds.
+  const kept = useRef<{
+    draft: string
+    id: string
+    revision: string
+    createdAt: string
+    signature: string
+  } | null>(null)
   // A save is in flight: nothing else may store this draft until it has settled.
   const saving = useRef(false)
   const queue = useRef<Promise<unknown>>(Promise.resolve())
@@ -124,6 +158,44 @@ export function BetaTestingFrame({
     setDraftNotice(keptApart[why])
   }, [])
 
+  // Writes exactly this content as the draft's next stored revision and records what this tab
+  // now holds. Runs inside the queue. If another tab changed or closed the draft, storage keeps
+  // the content under a new ID and this tab follows it there.
+  const storeDraft = useCallback(
+    async (content: DraftContent) => {
+      // Taken before anything is awaited: the caller's content may be live editor state.
+      const signature = signatureOf(content)
+      const annotations: unknown[] = content.image
+        ? JSON.parse(JSON.stringify(content.annotations))
+        : []
+      const record = kept.current?.draft === content.id ? kept.current : null
+      const stored = await saveOwnerDraft(
+        {
+          id: content.id,
+          hostModuleId: moduleEntry.id,
+          moduleId: content.moduleId,
+          pagePath: content.pagePath,
+          comment: content.comment,
+          selectedText: content.selectedText,
+          annotations,
+          createdAt: record?.createdAt,
+        },
+        content.image,
+        record?.revision ?? '',
+      )
+      kept.current = {
+        draft: content.id,
+        id: stored.draft.id,
+        revision: stored.draft.revision,
+        createdAt: stored.draft.created_at,
+        signature,
+      }
+      if (stored.superseded) follow(content.id, stored.draft.id, stored.superseded)
+      return { id: stored.draft.id, revision: stored.draft.revision }
+    },
+    [follow, moduleEntry.id],
+  )
+
   const persistDraft = useCallback(
     () =>
       enqueue(async () => {
@@ -153,32 +225,20 @@ export function BetaTestingFrame({
             if (record?.draft === draft.reportId && record.revision) {
               await deleteOwnerDraft(draft.reportId, record.revision)
               record.revision = ''
+              record.signature = ''
             }
             setDraftProblem(imageProblem)
             return
           }
-          const stored = await saveOwnerDraft(
-            {
-              id: draft.reportId,
-              hostModuleId: moduleEntry.id,
-              moduleId: draft.moduleId,
-              pagePath: draft.pagePath,
-              comment: draft.comment,
-              selectedText: draft.selectedText,
-              annotations: image ? screenshotDraft.current.annotations : [],
-              createdAt:
-                kept.current?.draft === draft.reportId ? kept.current.createdAt : undefined,
-            },
+          await storeDraft({
+            id: draft.reportId,
+            moduleId: draft.moduleId,
+            pagePath: draft.pagePath,
+            comment: draft.comment,
+            selectedText: draft.selectedText,
             image,
-            baseOf(draft.reportId),
-          )
-          kept.current = {
-            draft: draft.reportId,
-            id: stored.draft.id,
-            revision: stored.draft.revision,
-            createdAt: stored.draft.created_at,
-          }
-          if (stored.superseded) follow(draft.reportId, stored.draft.id, stored.superseded)
+            annotations: screenshotDraft.current.annotations,
+          })
           setDraftProblem(imageProblem)
         } catch (err) {
           // A draft that was saved or discarded while this write ran has nothing left to report.
@@ -187,7 +247,7 @@ export function BetaTestingFrame({
           setDraftProblem(message(err, 'This draft could not be kept on this browser.'))
         }
       }),
-    [enqueue, follow, local, moduleEntry.id],
+    [enqueue, local, storeDraft],
   )
 
   // Discard: closes the stored draft's ID for every tab. Queued behind any write still in flight
@@ -238,6 +298,15 @@ export function BetaTestingFrame({
               id: draft.id,
               revision: draft.revision,
               createdAt: draft.created_at,
+              signature: signatureOf({
+                id: draft.id,
+                moduleId: draft.module_id,
+                pagePath: draft.page_path,
+                comment: draft.comment,
+                selectedText: draft.selected_text,
+                image: draft.screenshot,
+                annotations: draft.annotations,
+              }),
             }
             dirty.current = false
             setReportId(draft.id)
@@ -447,37 +516,95 @@ export function BetaTestingFrame({
     }
     void restoreDraft()
   }
+  // Step 0 of Save. Synchronous: the text, the source image with a copy of its marks, and the
+  // final annotated PNG are all taken in one turn, before anything can be awaited.
+  function captureSaveSnapshot(): SaveSnapshot {
+    const source = screenshotDraft.current.source
+    return {
+      id: (local && activeDraftId.current) || reportId,
+      moduleId: reportModule.id,
+      pagePath,
+      comment,
+      selectedText,
+      image: local && source ? encodeScreenshotSource(source) : null,
+      annotations: JSON.parse(JSON.stringify(screenshotDraft.current.annotations)),
+      png: editor.current?.exportImage() ?? null,
+    }
+  }
+  // Step 1 of an owner-local Save, run in the queue behind any earlier draft write. Returns the
+  // draft ID and the stored revision that holds exactly this snapshot: the revision this tab
+  // already stored if its content is the snapshot's, otherwise a new one written from it.
+  function persistSaveSnapshot(snapshot: SaveSnapshot) {
+    return enqueue(async () => {
+      const record = kept.current
+      if (
+        record?.draft === snapshot.id &&
+        record.revision &&
+        record.signature === signatureOf(snapshot)
+      )
+        return { id: record.id, revision: record.revision }
+      return storeDraft(snapshot)
+    })
+  }
   async function submit(event: React.FormEvent) {
     event.preventDefault()
-    setSending(true)
+    // One Save at a time; set before anything is awaited, so no draft write can start under it.
+    if (saving.current) return
     setError('')
+    let snapshot: SaveSnapshot
     try {
-      // Store what is about to be sent first, so the save covers a revision holding exactly
-      // this content wherever this tab is still allowed to write. If that moved the work to a
-      // new draft because of another tab, say so and let the owner decide to save it.
-      if (local) await persistDraft()
-      const id = (local && activeDraftId.current) || reportId
-      if (id !== reportId) {
-        setDraftNotice((notice) => `${notice} ${saveAgain}`.trim())
-        return
-      }
-      saving.current = true
-      const image = await editor.current?.exportImage()
+      snapshot = captureSaveSnapshot()
+    } catch (err) {
+      setError(message(err, 'Feedback could not be saved. Please retry.'))
+      return
+    }
+    saving.current = true
+    setSending(true)
+    const {
+      id,
+      moduleId,
+      pagePath: page,
+      comment: wording,
+      selectedText: referenced,
+      png,
+    } = snapshot
+    try {
       let savedId: string
       let preserved = false
       if (local) {
-        // This Save's own record: the stored revision it replaces and the fingerprint of exactly
-        // what it sends. Draft storage never decides whether a report can be saved; if the
-        // record cannot be written, the save goes ahead and the next load settles the draft.
+        // Step 1: the snapshot is a stored revision. If that fails, nothing is submitted. If it
+        // could only be kept under a new ID because of another tab, say so and stop: saving
+        // that draft is the owner's next choice.
+        let persisted: { id: string; revision: string }
+        try {
+          persisted = await persistSaveSnapshot(snapshot)
+        } catch {
+          dirty.current = true
+          setError(notStored)
+          return
+        }
+        if (persisted.id !== id) {
+          setDraftNotice((notice) => `${notice} ${saveAgain}`.trim())
+          return
+        }
+        // Step 2: the fingerprint of exactly what the report will hold.
         const fingerprint = await submissionFingerprint(
-          { moduleId: reportModule.id, pagePath, comment, selectedText },
-          image,
+          { moduleId, pagePath: page, comment: wording, selectedText: referenced },
+          png,
         )
+        // Step 3: this Save's own immutable record, naming that revision and that fingerprint.
+        // It must be committed before any report is written: no record, no report.
         const attemptId = crypto.randomUUID()
-        const begun = await enqueue(() =>
-          beginOwnerDraftSave({ attemptId, id, base: baseOf(id), fingerprint }),
-        ).catch(() => null)
-        if (begun?.closed) {
+        let begun: Awaited<ReturnType<typeof beginOwnerDraftSave>>
+        try {
+          begun = await enqueue(() =>
+            beginOwnerDraftSave({ attemptId, id, base: persisted.revision, fingerprint }),
+          )
+        } catch {
+          setError(notStored)
+          return
+        }
+        if (begun.closed) {
           await settleLostSave(
             id,
             begun.closed,
@@ -485,22 +612,18 @@ export function BetaTestingFrame({
           )
           return
         }
+        // Step 4: the report, from the same snapshot.
         const saved = await createOwnerFeedback(
-          {
-            id,
-            moduleId: reportModule.id,
-            pagePath,
-            comment,
-            selectedText,
-          },
-          image,
+          { id, moduleId, pagePath: page, comment: wording, selectedText: referenced },
+          png,
         ).catch((err) => {
           void enqueue(() => releaseOwnerDraftSave(attemptId)).catch(() => undefined)
           throw err
         })
-        // A report with this ID is now committed: by this save, or already by another tab's.
-        // What it holds, not who finished first, decides which stored revision it accounts
-        // for. If closing the ID fails here, the attempt is on record and the next load does it.
+        // Step 5. A report with this ID is now committed: by this save, or already by another
+        // tab's. What it holds, not who finished first, decides which stored revision it
+        // accounts for. If closing the ID fails here, the attempt is on record and the next
+        // load does it.
         const reportFingerprint = saved.created
           ? fingerprint
           : await submissionFingerprint(
@@ -512,9 +635,9 @@ export function BetaTestingFrame({
               },
               saved.entry.screenshot?.blob,
             )
-        const finished = await enqueue(() =>
-          finishOwnerDraftSave(id, reportFingerprint, (saved.created && baseOf(id)) || undefined),
-        ).catch(() => null)
+        const finished = await enqueue(() => finishOwnerDraftSave(id, reportFingerprint)).catch(
+          () => null,
+        )
         if (reportFingerprint !== fingerprint) {
           await settleLostSave(id, 'saved', false)
           return
@@ -524,11 +647,11 @@ export function BetaTestingFrame({
       } else {
         const body = new FormData()
         body.set('id', id)
-        body.set('moduleId', reportModule.id)
-        body.set('pagePath', pagePath)
-        body.set('comment', comment)
-        body.set('selectedText', selectedText)
-        if (image) body.set('screenshot', image, 'feedback.png')
+        body.set('moduleId', moduleId)
+        body.set('pagePath', page)
+        body.set('comment', wording)
+        body.set('selectedText', referenced)
+        if (png) body.set('screenshot', png, 'feedback.png')
         const response = await fetch('/api/module-feedback', { method: 'POST', body })
         const result = await response.json()
         if (!response.ok) throw new Error(result.error || 'Feedback could not be saved.')
@@ -653,51 +776,56 @@ export function BetaTestingFrame({
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
             <p className="break-all text-xs text-muted-foreground">Page: {pagePath}</p>
-            <label className="block space-y-2 text-sm font-medium">
-              What should we know?
-              <textarea
-                required
-                maxLength={10000}
-                value={comment}
-                onChange={(event) => {
+            {/* While a save is in progress nothing it is sending can be edited. What is sent is
+                the snapshot taken when Save was pressed, whatever happens here. */}
+            <fieldset disabled={sending} className="m-0 min-w-0 space-y-4 border-0 p-0">
+              <label className="block space-y-2 text-sm font-medium">
+                What should we know?
+                <textarea
+                  required
+                  maxLength={10000}
+                  value={comment}
+                  onChange={(event) => {
+                    dirty.current = true
+                    setComment(event.target.value)
+                  }}
+                  className="min-h-32 w-full rounded-lg border bg-background p-3"
+                  placeholder="What happened, what you expected, or what would make this clearer…"
+                />
+              </label>
+              <label className="block space-y-2 text-sm font-medium">
+                Text or section you’re referring to (optional)
+                <textarea
+                  maxLength={3000}
+                  value={selectedText}
+                  onChange={(event) => {
+                    dirty.current = true
+                    setSelectedText(event.target.value)
+                  }}
+                  className="min-h-16 w-full rounded-lg border bg-background p-3"
+                  placeholder="Select text in the module before opening feedback, or paste it here."
+                />
+              </label>
+              <ScreenshotEditor
+                key={editorKey}
+                ref={editor}
+                draft={screenshotDraft}
+                onCaptureVisibilityChange={setCapturing}
+                locked={sending}
+                onDraftChange={() => {
+                  const source = screenshotDraft.current.source
                   dirty.current = true
-                  setComment(event.target.value)
+                  // Encode a new image once, now, while the editor is still showing it as loading;
+                  // later draft writes reuse those bytes. A failure is reported when it is written.
+                  if (local && source)
+                    try {
+                      encodeScreenshotSource(source)
+                    } catch {}
+                  setHasImage(Boolean(source))
+                  setScreenshotRevision((revision) => revision + 1)
                 }}
-                className="min-h-32 w-full rounded-lg border bg-background p-3"
-                placeholder="What happened, what you expected, or what would make this clearer…"
               />
-            </label>
-            <label className="block space-y-2 text-sm font-medium">
-              Text or section you’re referring to (optional)
-              <textarea
-                maxLength={3000}
-                value={selectedText}
-                onChange={(event) => {
-                  dirty.current = true
-                  setSelectedText(event.target.value)
-                }}
-                className="min-h-16 w-full rounded-lg border bg-background p-3"
-                placeholder="Select text in the module before opening feedback, or paste it here."
-              />
-            </label>
-            <ScreenshotEditor
-              key={editorKey}
-              ref={editor}
-              draft={screenshotDraft}
-              onCaptureVisibilityChange={setCapturing}
-              onDraftChange={() => {
-                const source = screenshotDraft.current.source
-                dirty.current = true
-                // Encode a new image once, now, while the editor is still showing it as loading;
-                // later draft writes reuse those bytes. A failure is reported when it is written.
-                if (local && source)
-                  try {
-                    encodeScreenshotSource(source)
-                  } catch {}
-                setHasImage(Boolean(source))
-                setScreenshotRevision((revision) => revision + 1)
-              }}
-            />
+            </fieldset>
             {local && (
               <p className="text-xs leading-5 text-muted-foreground">
                 Not saved yet. What you add here is kept on this browser until you save or discard

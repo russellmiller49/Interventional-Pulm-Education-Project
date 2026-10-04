@@ -116,6 +116,16 @@ A kept draft has a new ID and the original module, page address, comment, refere
 image, editable annotations and creation time. It is unsent work: it is never saved as a report
 automatically.
 
+**What one Save sends.** When **Save feedback locally** is pressed, the comment, referenced text,
+page, source image with its marks, and the final annotated image are taken together in one step,
+and the form is frozen until the save settles. Everything after that uses this one snapshot:
+it is first stored as a draft revision (after any autosave already under way has finished), then
+the save's own record is stored, and only then is the report written. A change made after the
+click, by any means, is not part of that save. If the snapshot or the save's record cannot be
+stored, no report is written: the dialog says "Not saved", nothing is cleared, the draft stays
+open and recoverable, and pressing Save again retries. There is no transaction spanning the
+drafts and reports databases; this ordering is what keeps them consistent.
+
 **What clears it.** **Discard draft** removes that draft only. **Save feedback locally** removes it
 only after the report's IndexedDB transaction has committed; the report keeps the draft's ID, so a
 retry cannot create a second report. Before the report is written, each save stores its own

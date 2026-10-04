@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BetaTestingFrame } from './BetaTestingFrame'
 import { betaModuleById } from './catalog'
@@ -53,11 +53,13 @@ jest.mock('./ScreenshotEditor', () => {
     createScreenshotDraft: () => ({ source: null, annotations: [] }),
     ScreenshotEditor: React.forwardRef(function Editor(
       { draft, onDraftChange }: { draft: Draft; onDraftChange?: () => void },
-      ref: React.Ref<{ exportImage: () => Promise<Blob | null> }>,
+      ref: React.Ref<{ exportImage: () => Blob | null }>,
     ) {
       React.useImperativeHandle(ref, () => ({
-        exportImage: async () =>
-          draft.current.source ? new Blob(['annotated'], { type: 'image/png' }) : null,
+        exportImage: () =>
+          draft.current.source
+            ? new Blob([`annotated:${draft.current.annotations.length}`], { type: 'image/png' })
+            : null,
       }))
       const change = (source: unknown, annotations: unknown[]) => () => {
         draft.current.source = source
@@ -219,16 +221,17 @@ beforeEach(() => {
     return { closed, fingerprint: savedPrints.get(id) ?? null }
   })
   releaseSave.mockResolvedValue(undefined)
-  finishSave.mockImplementation(async (id, reportFingerprint, ownRevision) => {
+  finishSave.mockImplementation(async (id, reportFingerprint) => {
     if (closedIds.has(id)) return { preserved: false }
     savedPrints.set(id, reportFingerprint)
     return {
-      preserved: closeElsewhere(id, 'saved', [
-        ...attemptsMade
+      preserved: closeElsewhere(
+        id,
+        'saved',
+        attemptsMade
           .filter((attempt) => attempt.id === id && attempt.fingerprint === reportFingerprint)
           .map((attempt) => attempt.base),
-        ...(ownRevision ? [ownRevision] : []),
-      ]),
+      ),
     }
   })
   draftStatus.mockImplementation(async (id, base) => {
@@ -455,7 +458,7 @@ describe('owner-local draft recovery', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     commit()
     await waitFor(() => expect(stored).toEqual([]))
-    expect(finishSave).toHaveBeenCalledWith(first, expect.any(String), 'r1')
+    expect(finishSave).toHaveBeenCalledWith(first, expect.any(String))
     expect(closedIds.get(first)).toBe('saved')
     expect(screen.getByRole('status')).toHaveTextContent(
       'Feedback saved locally. Reference aaaaaaaa',
@@ -518,6 +521,148 @@ describe('owner-local draft recovery', () => {
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
     expect(deleteUnreadable).toHaveBeenCalledWith(['damaged'])
     expect(deleteDraft).not.toHaveBeenCalled()
+  })
+})
+
+describe('one Save, one snapshot', () => {
+  const save = () => screen.getByRole('button', { name: /Save feedback locally|Saving/ })
+  // The fingerprint stand-in is the submitted content itself.
+  const sent = (comment: string, image = false) => JSON.stringify([comment, '', image])
+
+  it('submits nothing when its attempt record cannot be stored, and saves once on retry', async () => {
+    beginSave.mockRejectedValueOnce(new Error('Local draft storage failed'))
+    const user = userEvent.setup()
+    await mount()
+    await user.click(feedbackButton())
+    await user.type(commentBox(), 'Keep me')
+    await user.click(screen.getByRole('button', { name: 'attach annotated image' }))
+    await user.click(save())
+    expect(await within(screen.getByRole('dialog')).findByRole('alert')).toHaveTextContent(
+      /Not saved: this feedback could not first be stored on this browser, so nothing was submitted/,
+    )
+    expect(saveReport).not.toHaveBeenCalled()
+    expect(finishSave).not.toHaveBeenCalled()
+    expect(reports.size).toBe(0)
+    expect(screen.queryByText(/Feedback saved/)).not.toBeInTheDocument()
+    // The same work is still open and still stored, image and marks included.
+    expect(commentBox()).toHaveValue('Keep me')
+    expect(commentBox()).toBeEnabled()
+    expect(screen.getByLabelText('marks')).toHaveTextContent('image:1')
+    expect(stored).toHaveLength(1)
+    expect(stored[0]).toMatchObject({
+      id: first,
+      comment: 'Keep me',
+      annotations: [{ tool: 'box' }],
+    })
+    expect(stored[0].screenshot).not.toBeNull()
+    await user.click(save())
+    await waitFor(() => expect(stored).toEqual([]))
+    expect(saveReport).toHaveBeenCalledTimes(1)
+    expect([...reports.values()].map((entry) => entry.comment)).toEqual(['Keep me'])
+    expect(await screen.findByText(/Feedback saved locally\. Reference aaaaaaaa/)).toBeVisible()
+  })
+  it('submits nothing when the snapshot itself cannot be stored', async () => {
+    const user = userEvent.setup()
+    await mount()
+    await user.click(feedbackButton())
+    saveDraft.mockRejectedValue(new Error('Local draft storage failed'))
+    await user.type(commentBox(), 'Never stored')
+    await user.click(save())
+    expect(await within(screen.getByRole('dialog')).findAllByRole('alert')).not.toHaveLength(0)
+    expect(screen.getByRole('dialog')).toHaveTextContent(/Not saved: this feedback could not first/)
+    expect(beginSave).not.toHaveBeenCalled()
+    expect(saveReport).not.toHaveBeenCalled()
+    expect(commentBox()).toHaveValue('Never stored')
+    expect(screen.queryByText(/Feedback saved/)).not.toBeInTheDocument()
+  })
+  it('names the revision that holds what it sends, not what an earlier autosave stored', async () => {
+    const user = userEvent.setup()
+    await mount()
+    await user.click(feedbackButton())
+    await user.type(commentBox(), 'A')
+    await waitFor(() => expect(stored[0]?.comment).toBe('A'), { timeout: 3000 })
+    // An autosave of A is in flight when the text becomes B and Save is pressed.
+    let finishAutosave!: () => void
+    const original = saveDraft.getMockImplementation()!
+    saveDraft.mockImplementationOnce(async (...args) => {
+      await new Promise<void>((resolve) => {
+        finishAutosave = resolve
+      })
+      return original(...args)
+    })
+    await user.type(commentBox(), 'A2')
+    await waitFor(() => expect(saveDraft).toHaveBeenCalledTimes(2), { timeout: 3000 })
+    await user.clear(commentBox())
+    await user.type(commentBox(), 'B')
+    await user.click(save())
+    expect(saveReport).not.toHaveBeenCalled()
+    finishAutosave()
+    await waitFor(() => expect(saveReport).toHaveBeenCalledTimes(1))
+    // The autosave finished first (AA2), then Save stored B and covered exactly that revision.
+    expect(saveDraft.mock.calls.map(([input]) => input.comment)).toEqual(['A', 'AA2', 'B'])
+    const revisionOfB = (await saveDraft.mock.results[2].value).draft.revision
+    expect(beginSave).toHaveBeenCalledWith(
+      expect.objectContaining({ id: first, base: revisionOfB, fingerprint: sent('B') }),
+    )
+    expect(saveReport.mock.calls[0][0]).toMatchObject({ id: first, comment: 'B' })
+    await waitFor(() => expect(stored).toEqual([]))
+    expect(feedbackButton()).toHaveTextContent('Give feedback')
+  })
+  it('freezes the form and ignores any change made after Save was pressed', async () => {
+    const user = userEvent.setup()
+    await mount()
+    await user.click(feedbackButton())
+    await user.type(commentBox(), 'B')
+    await user.click(screen.getByRole('button', { name: 'attach annotated image' }))
+    // Save's own write of the snapshot is held, so the save is in progress.
+    let release!: () => void
+    const original = saveDraft.getMockImplementation()!
+    saveDraft.mockImplementationOnce(async (...args) => {
+      await new Promise<void>((resolve) => {
+        release = resolve
+      })
+      return original(...args)
+    })
+    await user.click(save())
+    await waitFor(() => expect(saveDraft).toHaveBeenCalledTimes(1))
+    // The owner cannot edit while it runs.
+    expect(commentBox()).toBeDisabled()
+    expect(referenceBox()).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'remove image' })).toBeDisabled()
+    expect(save()).toBeDisabled()
+    await user.type(commentBox(), 'C')
+    expect(commentBox()).toHaveValue('B')
+    // Even state changed from outside the controls does not reach the submission.
+    fireEvent.change(commentBox(), { target: { value: 'C' } })
+    fireEvent.change(referenceBox(), { target: { value: 'C selection' } })
+    fireEvent.submit(commentBox().closest('form')!)
+    release()
+    await waitFor(() => expect(saveReport).toHaveBeenCalledTimes(1))
+    expect(saveDraft.mock.calls.map(([input]) => [input.comment, input.selectedText])).toEqual([
+      ['B', ''],
+    ])
+    expect(saveDraft.mock.calls[0][0].annotations).toEqual([{ tool: 'box' }])
+    const revisionOfB = (await saveDraft.mock.results[0].value).draft.revision
+    expect(beginSave).toHaveBeenCalledTimes(1)
+    expect(beginSave).toHaveBeenCalledWith(
+      expect.objectContaining({ base: revisionOfB, fingerprint: sent('B', true) }),
+    )
+    expect(saveReport.mock.calls[0][0]).toMatchObject({ comment: 'B', selectedText: '' })
+    // The image is the one exported when Save was pressed (one mark).
+    expect((saveReport.mock.calls[0][1] as Blob).size).toBe('annotated:1'.length)
+    await waitFor(() => expect(stored).toEqual([]))
+    expect([...reports.values()].map((entry) => entry.comment)).toEqual(['B'])
+  })
+  it('reuses the stored revision when nothing changed since it was stored', async () => {
+    stored = [storedDraft({ id: sharedId })]
+    const user = userEvent.setup()
+    await mount()
+    await waitFor(() => expect(feedbackButton()).toHaveTextContent('Continue feedback'))
+    await user.click(feedbackButton())
+    await user.click(save())
+    await waitFor(() => expect(stored).toEqual([]))
+    expect(saveDraft).not.toHaveBeenCalled()
+    expect(beginSave).toHaveBeenCalledWith(expect.objectContaining({ id: sharedId, base: 'r0' }))
   })
 })
 

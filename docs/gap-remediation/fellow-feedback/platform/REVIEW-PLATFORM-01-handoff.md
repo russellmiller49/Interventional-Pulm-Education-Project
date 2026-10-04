@@ -676,10 +676,8 @@ the branch was not rebased.
 - **Fingerprint.** SHA-256 over the module, page address, comment, referenced text and the
   SHA-256 of the final annotated PNG bytes: exactly what a report holds. It is computed from the
   submission before the report is written, and can be computed again from any stored report.
-- **Submission tied to storage.** Save first stores what the tab is showing (the ordinary write
-  rule). If that moves the tab's work to a new draft because another tab changed or closed the
-  original, Save stops and says so; the owner saves the new draft if wanted. Otherwise the
-  attempt covers the tab's stored revision and carries the fingerprint of the exact bytes sent.
+- **Submission tied to storage.** Superseded by
+  [Third repair: one snapshot, attempt before report](#third-repair-one-snapshot-attempt-before-report).
 - **One winner.** The reports database is unchanged: the first write of a report ID creates it,
   later writes return the existing report untouched. No metadata was added to report records.
 - **Which attempt won** is read from the report, not from the draft database's history: the
@@ -771,12 +769,116 @@ Runs that did not pass during this repair:
 2. Work that was only in a tab's memory when the browser stopped is lost, as before. The
    guarantees are about stored revisions. A losing Save stores its work before it does anything
    else, so this window is the existing 0.4 s one.
-3. If the draft database cannot be written at all during a Save, the report is still saved and
-   the stored draft is settled on a later load; with no attempt record, that load keeps the
-   stored draft as a new draft unless it is text-only and identical to the report.
+3. (Changed by the third repair.) A Save no longer proceeds when the draft database cannot be
+   written; see below.
 4. A tab that changed nothing still learns of a finalization elsewhere only when next used.
 5. Fingerprints need Web Crypto, which browsers provide on HTTPS and on localhost, the same
    condition `crypto.randomUUID` already imposed.
+
+## Third repair: one snapshot, attempt before report
+
+A third independent review of head `54e29bfddf664cf9941b909b7de02510fe4d4014` accepted the
+attempt-and-fingerprint model and found two defects at the edge of the Save path itself.
+
+- **A. A failed attempt write did not stop the Save.** `submit` swallowed the error from
+  `beginOwnerDraftSave` and went on to write the report. With the real `save_attempts`
+  transaction aborted, the report committed, the draft was removed and the dialog said "saved",
+  with no attempt on record.
+- **B. The pieces of one Save were read at different times.** Save waited on a queued autosave
+  while the form stayed editable. Pressed with text B, then edited to C: the queued write stored
+  C and returned C's revision, while the fingerprint and report were built from B. The attempt
+  tied B's fingerprint to C's revision, and finalization deleted the stored C.
+
+`origin/main` was `1dfc5845` at the start of this repair.
+
+### What changed
+
+- **One snapshot.** `captureSaveSnapshot()` runs synchronously when Save is pressed, before any
+  await: draft ID, module, page, comment, referenced text, the encoded source image, a copy of
+  the annotation list, and the final annotated PNG. The editor's export is now synchronous so it
+  is part of the same step. Nothing later in the Save reads React state, `latest.current` or the
+  live editor draft.
+- **Frozen form.** The Save flag is set in that same turn, so a second Save is ignored and no
+  autosave can start under it. While `sending`, the text fields and the screenshot editor are
+  inside a disabled fieldset and the editor ignores pointer, paste, upload and capture input.
+  This is protection for the owner; correctness comes from the snapshot.
+- **Explicit persistence of the snapshot.** `persistSaveSnapshot(snapshot)` runs in the storage
+  queue, so an autosave already in flight finishes first. It returns the draft ID and the stored
+  revision that holds exactly the snapshot: the revision this tab last stored or restored if its
+  recorded content signature equals the snapshot's, otherwise a new revision written from the
+  snapshot. That revision, not "whatever is stored now", is what the attempt names. If storage
+  could only keep it under a new ID because another tab changed or closed the draft, Save stops,
+  the tab follows the new draft, and the owner is asked to save again. If the write fails, Save
+  stops with "Not saved".
+- **Mandatory attempt.** The attempt record (draft ID, that revision, the snapshot's fingerprint)
+  must commit before `createOwnerFeedback` is called. If it does not, Save stops with "Not
+  saved": no report, no success message, nothing cleared, the draft still stored and open.
+- **No fallback.** `finishOwnerDraftSave` lost its `ownRevision` parameter. Closing a draft uses
+  the stored attempts only; a report can no longer exist under a draft ID without the winner's
+  attempt on record.
+- **A signature fix found by the new browser test.** The record of "what this tab last stored"
+  was computed after the write returned, from the live annotation list. A mark added while an
+  autosave was in flight made that record describe four marks when three were stored, and Save
+  reused the three-mark revision. The signature and the annotation copy are now taken before
+  the write is awaited.
+
+Owner-local Save order: (0) capture snapshot and freeze; (1) store the snapshot as a draft
+revision; (2) fingerprint the snapshot; (3) commit the attempt naming that revision and
+fingerprint; (4) write the report from the snapshot; (5) close the draft by fingerprint, as
+before. Server mode is unchanged apart from sending the same snapshot: no draft database, no
+attempts, memory-only drafts, no local fallback.
+
+### Results
+
+Final code of the third repair, local builds only.
+
+| Check                                                                                                                                | Result                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| `npx jest --runInBand src/features/module-beta`                                                                                      | 6 suites, 106 tests, all pass (101 before this repair) |
+| `npx jest --runInBand src/features/module-beta src/app/api/module-feedback src/lib/site-auth src/lib/supabase/auth-redirect.test.ts` | 13 suites, 173 tests, all pass                         |
+| `npx playwright test --config playwright.module-beta-owner.config.ts`                                                                | 34 of 34 pass (31 before this repair)                  |
+| `npx playwright test --config playwright.module-beta.config.ts`                                                                      | 8 of 8 pass                                            |
+| `NODE_OPTIONS=--max-old-space-size=12288 npm run type-check`                                                                         | Exit 0                                                 |
+| `eslint --max-warnings 0` and `prettier --check` on changed paths; `git diff --check`                                                | Clean                                                  |
+| `npm run build` (12 GB heap)                                                                                                         | Exit 0                                                 |
+
+New real-browser tests (real Chromium, real IndexedDB):
+
+| Case                                                                                              | Result                                                                                                                                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| The real `save_attempts.add` transaction is aborted, with a screenshot and Box, Arrow, Draw, Text | Twice in a row: "Not saved" shown, no reports database content, no success message, the same draft with its four marks and its one image still stored, form editable, preview unchanged. After a reload it is offered again. It then saves exactly once, and the report image equals the preview |
+| Autosave in flight, text becomes B, Save pressed, then C typed and C forced in from script        | The fields are disabled and typing does nothing. Before the report is written: the stored draft is B, and the one attempt names B's revision with the fingerprint of B (computed independently in the test). The report is B. No draft, image or attempt remains                                 |
+| A third mark autosaving, a fourth added just before Save, a drag on the frozen image afterwards   | The covered revision holds the same source image and exactly the four marks; the attempt's fingerprint equals the one computed from the previewed PNG; the report PNG equals the preview; nothing is left stored                                                                                 |
+
+Jest adds: attempt failure and snapshot-store failure each submitting nothing; the A-then-B
+queued autosave order with the attempt naming B's revision; a frozen form, a second submit
+ignored, and state forced to C after the click not reaching the draft write, the attempt or the
+report; and reuse of the stored revision when nothing changed.
+
+All earlier competing-Save browser cases (S1 to S6, the four stop phases, the screenshot
+conflict), the Discard cases and both database upgrades pass unchanged in the same run.
+
+Runs that did not pass during this repair:
+
+1. One new frame test called `Blob.text()`, which the Jest DOM does not provide (test error).
+2. First run of the three new browser tests: 1 of 3.
+   - The image test failed for a real reason, described above as the signature fix: the attempt
+     named a revision that held three marks while the report held four. Fixed in the product.
+   - The attempt-failure test hung in a test helper that opened the reports database before any
+     report existed (helper error; it now returns an empty list when the database is absent).
+
+### Limits after the third repair
+
+1. Owner-local Save now needs working draft storage. Where the drafts database cannot be
+   written (storage full or disabled, a newer database version, some private-browsing modes),
+   feedback cannot be saved locally until that is resolved; the dialog says so and keeps the
+   draft open in memory.
+2. A change made after Save is pressed is not sent and, if the save succeeds, is not kept. The
+   form is frozen so the owner cannot make one.
+3. If closing the draft fails after the report commits, the report stands and the next load
+   closes the draft from the stored attempt. The two databases are not one transaction.
+4. The earlier limits on pruning, in-memory work at a browser stop, and stale unchanged tabs
+   are unchanged.
 
 ## Confirmations
 

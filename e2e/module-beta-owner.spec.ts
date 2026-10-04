@@ -1,6 +1,7 @@
 import { test, expect, chromium, type Page } from '@playwright/test'
 import JSZip from 'jszip'
 import { readFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
 import { betaModules } from '../src/features/module-beta/catalog'
 
 const piPath = '/en/peripheral-imaging/learn?section=imaging-questions&phase=recognize'
@@ -53,6 +54,9 @@ async function openSection(page: Page, moduleId: string, path: string) {
 }
 async function databaseReports(page: Page) {
   return page.evaluate(async () => {
+    // Before anything has been saved there is no reports database, and opening it here would
+    // create one without its store.
+    if (!(await indexedDB.databases()).some((db) => db.name === 'module-owner-feedback')) return []
     return new Promise<Array<{ id: string; status: string; screenshot: { blob: Blob } | null }>>(
       (resolve, reject) => {
         const open = indexedDB.open('module-owner-feedback', 1)
@@ -128,7 +132,12 @@ async function draftDatabase(page: Page) {
       }>
       images: Array<{ id: string; token: string }>
       finalizations: Array<{ id: string; outcome: string; fork: { id: string } | null }>
-      attempts: Array<{ attempt_id: string; draft_id: string; revision: string | null }>
+      attempts: Array<{
+        attempt_id: string
+        draft_id: string
+        revision: string | null
+        fingerprint: string
+      }>
     }
     return new Promise<Stored>((resolve, reject) => {
       const open = indexedDB.open('module-owner-feedback-drafts')
@@ -2154,4 +2163,275 @@ test('a version 2 draft database is upgraded in place; its replaceable saving ma
   expect(reports.map((report) => [report.id, report.comment])).toEqual([
     [seeded.id, 'Older saved wording'],
   ])
+})
+
+// ---- One Save, one snapshot ----
+const sha256 = (value: string | Buffer) => createHash('sha256').update(value).digest('hex')
+// The same fingerprint the app computes for a submission, worked out independently here.
+const expectedFingerprint = (comment: string, selectedText: string, pngBase64: string | null) =>
+  sha256(
+    JSON.stringify([
+      'peripheral-imaging',
+      piPath,
+      comment,
+      selectedText,
+      pngBase64 === null ? null : sha256(Buffer.from(pngBase64, 'base64')),
+    ]),
+  )
+// Reads storage without going through the gated tab.
+async function storageObserver(page: Page) {
+  const observer = await page.context().newPage()
+  await observer.goto('/en/admin/module-feedback')
+  await expect(observer.getByRole('button', { name: 'Clear saved feedback' })).toBeVisible()
+  return observer
+}
+// Changes a controlled field from script, the way no owner can once the form is frozen.
+const forceValue = (page: Page, label: string, value: string) =>
+  page.getByLabel(label).evaluate((element, value) => {
+    const field = element as HTMLTextAreaElement
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(field, value)
+    field.dispatchEvent(new Event('input', { bubbles: true }))
+  }, value)
+async function attachAnnotatedImage(page: Page) {
+  await page.getByLabel('Upload screenshot').setInputFiles({
+    name: 'snapshot.png',
+    mimeType: 'image/png',
+    buffer: await page.locator('iframe').screenshot(),
+  })
+  await expect(page.getByLabel('Screenshot preview.', { exact: false })).toBeVisible()
+  await drag(page, [10, 10], [180, 70])
+  await page.getByRole('button', { name: 'Arrow', exact: true }).click()
+  await drag(page, [40, 110], [220, 110])
+  await page.getByRole('button', { name: 'Draw', exact: true }).click()
+  await drag(page, [80, 150], [210, 150])
+  await expect(page.getByText('3 annotations · Included with your feedback')).toBeVisible()
+}
+async function addTextNote(page: Page, note: string) {
+  await page.getByRole('button', { name: 'Text', exact: true }).click()
+  await page.getByLabel('Text note', { exact: true }).fill(note)
+  await page.getByRole('button', { name: 'Add note at top' }).click()
+}
+
+test('a Save whose attempt record cannot be stored submits nothing, keeps the draft with its image, and saves once on retry', async ({
+  page,
+}) => {
+  test.setTimeout(240000)
+  await openSection(page, 'peripheral-imaging', piPath)
+  await page.getByRole('button', { name: 'Give feedback' }).click()
+  await page.getByLabel('What should we know?').fill('Attempt must be stored first')
+  await attachAnnotatedImage(page)
+  await addTextNote(page, 'Fourth mark')
+  await expect(page.getByText('4 annotations · Included with your feedback')).toBeVisible()
+  const shown = await previewData(page)
+  await page.getByRole('button', { name: 'Continue testing' }).click()
+  await expect.poll(async () => (await databaseDrafts(page)).drafts).toHaveLength(1)
+  const before = await draftDatabase(page)
+  await page.getByRole('button', { name: 'Continue feedback' }).click()
+
+  // Abort the real transaction that adds this Save's attempt record, every time it is tried.
+  await page.evaluate(() => {
+    const add = IDBObjectStore.prototype.add
+    IDBObjectStore.prototype.add = function (...args) {
+      const request = add.apply(this, args)
+      if (this.name === 'save_attempts') this.transaction.abort()
+      return request
+    }
+    Object.assign(window, { restoreAdd: () => (IDBObjectStore.prototype.add = add) })
+  })
+  for (let press = 0; press < 2; press++) {
+    await page.getByRole('button', { name: 'Save feedback locally' }).click()
+    await expect(
+      page
+        .getByRole('dialog')
+        .getByText('Not saved: this feedback could not first be stored on this browser', {
+          exact: false,
+        }),
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Save feedback locally' })).toBeEnabled()
+    await expect(page.getByText(/Feedback saved/)).toHaveCount(0)
+    expect(await databaseReports(page)).toEqual([])
+    const stored = await draftDatabase(page)
+    expect(stored.attempts).toEqual([])
+    expect(stored.finalizations).toEqual([])
+    expect(stored.drafts.map((draft) => draft.id)).toEqual([before.drafts[0].id])
+    expect(stored.drafts[0]).toMatchObject({ comment: 'Attempt must be stored first' })
+    expect(stored.drafts[0].annotations.map((mark) => mark.tool)).toEqual([
+      'box',
+      'arrow',
+      'draw',
+      'text',
+    ])
+    expect(stored.images).toEqual(before.images)
+    // The dialog is still the owner's to edit.
+    await expect(page.getByLabel('What should we know?')).toBeEnabled()
+    await expect(page.getByLabel('What should we know?')).toHaveValue(
+      'Attempt must be stored first',
+    )
+    expect(await previewData(page)).toBe(shown)
+  }
+  // Still there after a reload, image and marks included.
+  await page.reload()
+  await expect(feedbackButton(page)).toHaveText('Continue feedback')
+  await page.getByRole('button', { name: 'Continue feedback' }).click()
+  await expect(page.getByText('4 annotations · Included with your feedback')).toBeVisible()
+  expect(await previewData(page)).toBe(shown)
+  // Without the failure the same draft saves, once.
+  await page.getByRole('button', { name: 'Save feedback locally' }).click()
+  await expect(
+    page.getByText(`Feedback saved locally. Reference ${before.drafts[0].id.slice(0, 8)}`),
+  ).toBeVisible()
+  const reports = await databaseReports(page)
+  expect(reports.map((report) => report.id)).toEqual([before.drafts[0].id])
+  expect(await reportPng(page, reports[0].id)).toEqual({
+    page_path: piPath,
+    comment: 'Attempt must be stored first',
+    png: shown,
+  })
+  await expect
+    .poll(async () => {
+      const end = await draftDatabase(page)
+      return [end.drafts.length, end.images.length, end.attempts.length]
+    })
+    .toEqual([0, 0, 0])
+})
+
+test('Save sends the text shown when it was pressed: a queued autosave finishes first, later changes are not sent, and the covered revision is that text', async ({
+  page,
+}) => {
+  test.setTimeout(240000)
+  await page.addInitScript(storageGate)
+  await openSection(page, 'peripheral-imaging', piPath)
+  const observer = await storageObserver(page)
+  const box = page.getByLabel('What should we know?')
+  await page.getByRole('button', { name: 'Give feedback' }).click()
+  await box.fill('A')
+  await expect.poll(async () => (await draftDatabase(observer)).drafts[0]?.comment).toBe('A')
+  const id = (await draftDatabase(observer)).drafts[0].id
+
+  // An autosave of newer text starts and cannot finish yet.
+  await gate(page, 'hold', draftsDatabase)
+  await gate(page, 'hold', reportsDatabase)
+  await box.fill('A, autosaving')
+  await page.waitForTimeout(900)
+  // The text becomes B and Save is pressed while that autosave is still in flight.
+  await box.fill('B')
+  await page.getByRole('button', { name: 'Save feedback locally' }).click()
+  // The form is frozen for the owner…
+  await expect(box).toBeDisabled()
+  await expect(page.getByLabel('Text or section')).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Saving…' })).toBeDisabled()
+  await box.click({ force: true })
+  await page.keyboard.type('C typed by the owner')
+  await expect(box).toHaveValue('B')
+  // …and a change made from script after the click does not reach the submission either.
+  await forceValue(page, 'What should we know?', 'C')
+  await forceValue(page, 'Text or section', 'C selection')
+  await expect(box).toHaveValue('C')
+  expect((await draftDatabase(observer)).drafts[0].comment).toBe('A')
+
+  // The autosave finishes, then Save stores its own snapshot and records its attempt.
+  await gate(page, 'release', draftsDatabase)
+  await expect.poll(async () => (await draftDatabase(observer)).attempts.length).toBe(1)
+  const waiting = await draftDatabase(observer)
+  expect(waiting.drafts.map((draft) => [draft.id, draft.comment, draft.selected_text])).toEqual([
+    [id, 'B', ''],
+  ])
+  expect(waiting.attempts[0]).toMatchObject({
+    draft_id: id,
+    revision: waiting.drafts[0].revision,
+    fingerprint: expectedFingerprint('B', '', null),
+  })
+  expect(await databaseReports(observer)).toEqual([])
+
+  await gate(page, 'release', reportsDatabase)
+  await expect(page.getByText(`Feedback saved locally. Reference ${id.slice(0, 8)}`)).toBeVisible()
+  const reports = (await databaseReports(observer)) as unknown as Array<{
+    id: string
+    comment: string
+    selected_text: string
+  }>
+  expect(reports.map((report) => [report.id, report.comment, report.selected_text])).toEqual([
+    [id, 'B', ''],
+  ])
+  // B is saved and gone as a draft; nothing holding A or C is left behind.
+  await page.waitForTimeout(900)
+  const end = await draftDatabase(observer)
+  expect([end.drafts, end.images, end.attempts]).toEqual([[], [], []])
+  await expect(feedbackButton(page)).toHaveText('Give feedback')
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Give feedback' })).toBeEnabled()
+  expect((await draftDatabase(observer)).drafts).toEqual([])
+})
+
+test('Save sends the image and marks shown when it was pressed, and its attempt names exactly that revision', async ({
+  page,
+}) => {
+  test.setTimeout(240000)
+  await page.addInitScript(storageGate)
+  await openSection(page, 'peripheral-imaging', piPath)
+  const observer = await storageObserver(page)
+  await page.getByRole('button', { name: 'Give feedback' }).click()
+  await page.getByLabel('What should we know?').fill('Image snapshot')
+  await page.getByLabel('Upload screenshot').setInputFiles({
+    name: 'snapshot.png',
+    mimeType: 'image/png',
+    buffer: await page.locator('iframe').screenshot(),
+  })
+  await expect(page.getByLabel('Screenshot preview.', { exact: false })).toBeVisible()
+  await drag(page, [10, 10], [180, 70])
+  await page.getByRole('button', { name: 'Arrow', exact: true }).click()
+  await drag(page, [40, 110], [220, 110])
+  await expect
+    .poll(async () => (await draftDatabase(observer)).drafts[0]?.annotations.length)
+    .toBe(2)
+  const id = (await draftDatabase(observer)).drafts[0].id
+  const token = (await draftDatabase(observer)).images[0].token
+
+  // A third mark starts an autosave that cannot finish; a fourth is added just before Save.
+  await gate(page, 'hold', draftsDatabase)
+  await gate(page, 'hold', reportsDatabase)
+  await page.getByRole('button', { name: 'Draw', exact: true }).click()
+  await drag(page, [80, 150], [210, 150])
+  await page.waitForTimeout(900)
+  await addTextNote(page, 'Added just before Save')
+  await expect(page.getByText('4 annotations · Included with your feedback')).toBeVisible()
+  const shown = await previewData(page)
+  await page.getByRole('button', { name: 'Save feedback locally' }).click()
+  await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Remove image' })).toBeDisabled()
+  // A drag on the frozen image adds nothing.
+  await drag(page, [30, 30], [120, 90])
+  expect((await draftDatabase(observer)).drafts[0].annotations).toHaveLength(2)
+
+  await gate(page, 'release', draftsDatabase)
+  await expect.poll(async () => (await draftDatabase(observer)).attempts.length).toBe(1)
+  const waiting = await draftDatabase(observer)
+  expect(waiting.drafts).toHaveLength(1)
+  // The covered revision holds the same source image and the four marks the PNG was made from.
+  expect(waiting.drafts[0].annotations.map((mark) => mark.tool)).toEqual([
+    'box',
+    'arrow',
+    'draw',
+    'text',
+  ])
+  expect(waiting.images).toEqual([{ id, token }])
+  expect(waiting.attempts[0]).toMatchObject({
+    draft_id: id,
+    revision: waiting.drafts[0].revision,
+    fingerprint: expectedFingerprint('Image snapshot', '', shown),
+  })
+
+  await gate(page, 'release', reportsDatabase)
+  await expect(page.getByText(`Feedback saved locally. Reference ${id.slice(0, 8)}`)).toBeVisible()
+  expect(await reportPng(observer, id)).toEqual({
+    page_path: piPath,
+    comment: 'Image snapshot',
+    png: shown,
+  })
+  await expect
+    .poll(async () => {
+      const end = await draftDatabase(observer)
+      return [end.drafts.length, end.images.length, end.attempts.length]
+    })
+    .toEqual([0, 0, 0])
 })

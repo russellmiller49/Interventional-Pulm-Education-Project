@@ -471,7 +471,7 @@ describe('one draft open in two tabs', () => {
     )
     expect(await begin(base)).toEqual(open)
     await report()
-    expect(await finishOwnerDraftSave(draft.id, await print(), base)).toEqual({ preserved: true })
+    expect(await finishOwnerDraftSave(draft.id, await print())).toEqual({ preserved: true })
     // Finishing again, from any tab, changes nothing.
     expect(await finishOwnerDraftSave(draft.id, await print())).toEqual({ preserved: false })
     const after = await stored()
@@ -520,7 +520,7 @@ describe('one draft open in two tabs', () => {
     const base = await shared()
     await begin(base)
     await report()
-    expect(await finishOwnerDraftSave(draft.id, await print(), base)).toEqual({ preserved: false })
+    expect(await finishOwnerDraftSave(draft.id, await print())).toEqual({ preserved: false })
     expect(await stored()).toMatchObject({ drafts: [], attempts: [] })
     const late = await saveOwnerDraft(
       { ...draft, comment: 'Tab B later', createdAt: '2026-10-01T09:00:00.000Z' },
@@ -584,7 +584,7 @@ describe('one draft open in two tabs', () => {
       async (base: string) => {
         await begin(base)
         await report()
-        await finishOwnerDraftSave(draft.id, await print(), base)
+        await finishOwnerDraftSave(draft.id, await print())
       },
       (base: string) => discardOwnerDraft(draft.id, base),
     ]) {
@@ -751,7 +751,7 @@ describe('two tabs saving the same draft', () => {
     expect(status).toMatchObject({ closed: 'saved' })
     expect(status.keptAs).not.toBeNull()
     // A finishes afterwards, then everything is settled again on two more loads.
-    expect(await finishOwnerDraftSave(draft.id, held, r1)).toEqual({ preserved: false })
+    expect(await finishOwnerDraftSave(draft.id, held)).toEqual({ preserved: false })
     for (let load = 0; load < 2; load++) await settleOwnerDrafts(ownerFeedbackContent)
     expect(await comments()).toEqual({ reports: ['A wording'], drafts: ['B wording'] })
     const after = await stored()
@@ -771,7 +771,7 @@ describe('two tabs saving the same draft', () => {
     expect((await save('Same wording')).created).toBe(false)
     const held = await fingerprint('Same wording')
     expect(await finishOwnerDraftSave(draft.id, held)).toEqual({ preserved: false })
-    expect(await finishOwnerDraftSave(draft.id, held, only.revision)).toEqual({ preserved: false })
+    expect(await finishOwnerDraftSave(draft.id, held)).toEqual({ preserved: false })
     expect(await comments()).toEqual({ reports: ['Same wording'], drafts: [] })
   })
 
