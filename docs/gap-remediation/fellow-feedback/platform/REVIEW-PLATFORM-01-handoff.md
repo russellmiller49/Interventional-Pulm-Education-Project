@@ -521,9 +521,11 @@ is relied on.
 
 - **Revision.** Every draft write stores a new random `revision`. A tab remembers the revision it
   last read or wrote and names it on every later operation.
-- **Finalization record.** One per draft ID: `outcome` (`saving`, `saved`, `discarded`), the
-  `revision` the save or discard covered, a time, and `fork` (the ID and revision of a stored
-  version that was moved aside). `saved` and `discarded` close the ID permanently.
+- **Finalization record.** One per closed draft ID: `outcome` (`saved`, `discarded`), the
+  `revision` the save or discard covered, for a save the fingerprint of what the report holds, a
+  time, and `fork` (the ID and revision of a stored version that was moved aside). Both outcomes
+  close the ID permanently. (The first repair also wrote a replaceable `saving` outcome here;
+  see the second repair below, which replaced it.)
 - **Write rule.** A draft is written under its ID only if the ID is not closed and the stored
   revision is the one the tab named. If the ID is closed, or another tab stored a different
   revision, the content is written under a fresh ID in the same transaction, with `forked_from`,
@@ -535,13 +537,8 @@ is relied on.
 - **No duplicate.** The moved copy keeps its revision. When the tab that wrote it later writes
   under the closed ID, storage recognises that revision in the finalization record and continues
   the moved copy instead of creating a second one.
-- **Save across two databases.** (1) The drafts database records `saving` with the revision the
-  save covers; if the ID is already closed, the save stops there and the tab's work is kept.
-  (2) The report transaction commits, and reports whether it wrote the report or found the ID
-  already present. (3) The drafts database closes the ID as `saved` under the close rule. If the
-  browser stops between (2) and (3), the next load finds `saving` plus a committed report and
-  performs (3) from the recorded revision. If the report was already there, this tab's content
-  is not in it, so the tab keeps its work as a new draft instead of reporting success.
+- **Save across two databases.** Superseded by
+  [Second repair: competing Saves](#second-repair-competing-saves).
 - **Restore.** Before offering a draft, a testing page settles stored drafts: a closed ID's
   covered revision is removed and any other is moved to a fresh ID; an interrupted save is
   finished as above. A report existing with the same ID is never sufficient to remove a draft.
@@ -552,7 +549,7 @@ is relied on.
 | Database / store                    | After the repair                                                                           |
 | ----------------------------------- | ------------------------------------------------------------------------------------------ |
 | `module-owner-feedback` / `reports` | Version 1, unchanged. No migration, no rewrite                                             |
-| `module-owner-feedback-drafts`      | Version 2 (was 1)                                                                          |
+| `module-owner-feedback-drafts`      | Version 2 after this repair; version 3 after the second repair                             |
 | … `drafts`                          | Record schema 2: adds `revision` and `forked_from`. Version 1 records are read as they are |
 | … `images`                          | Unchanged                                                                                  |
 | … `finalizations` (new)             | `id`, `outcome`, `revision`, `at`, `fork`. No feedback text or image                       |
@@ -646,13 +643,140 @@ Runs that did not pass during the repair, kept separate from the final results:
    removing one would let a tab left open since then write under that ID again.
 2. A tab that changed nothing learns its draft was finalized elsewhere when it is next used or
    reloaded, not at the moment it happens.
-3. If two tabs press Save on the same draft within the same few milliseconds and the browser
-   then stops before either finishes, the recorded revision can belong to the tab whose report
-   did not win. Outside that double fault the save is finished from the right revision.
+3. (Closed by the second repair.) Two Saves could replace each other's `saving` record, so a
+   stop after the report committed could finish from the wrong revision.
 4. A draft stored by the reviewed head beside a same-ID report is kept as a new draft unless it
    is text-only and identical to the report, so an interrupted save from that head can leave one
    extra draft of already-saved content. It is never the other way round.
 5. The 0.4 s abrupt-reload limit and the retained site header are as before.
+
+## Second repair: competing Saves
+
+A second independent review of head `3775ed642f915b10879bc638cd5dc4375ff23d41` reproduced two
+defects, both from one cause: an in-progress Save was one replaceable `saving(revision)` record
+per draft ID, so a second Save overwrote the first Save's recovery identity.
+
+- **Durable loss.** B had stored a different revision R2. A began Save of R1; B began Save and
+  replaced `saving(R1)` with `saving(R2)`; A's report won; the browser stopped. Recovery read
+  "report exists, `saving(R2)`", concluded R2 was what had been saved, and deleted it.
+- **Duplicate.** With B's losing Save finishing first, B kept its work as a new draft while its
+  stored revision stayed under the original ID; A's later finalization moved that revision to
+  another new ID. Two identical drafts.
+
+`origin/main` was `9086f2af` at the start of this repair, with nothing overlapping these paths;
+the branch was not rebased.
+
+### Model
+
+- **One immutable record per Save.** Store `save_attempts`, keyed by a fresh `attempt_id`:
+  `draft_id`, the stored `revision` the save covers, the `fingerprint` of the submission, a time.
+  It is added once and never updated. A Save never reads, replaces or removes another Save's
+  record. Records are removed only when their draft ID closes, or by their own Save when its
+  report write fails.
+- **Fingerprint.** SHA-256 over the module, page address, comment, referenced text and the
+  SHA-256 of the final annotated PNG bytes: exactly what a report holds. It is computed from the
+  submission before the report is written, and can be computed again from any stored report.
+- **Submission tied to storage.** Save first stores what the tab is showing (the ordinary write
+  rule). If that moves the tab's work to a new draft because another tab changed or closed the
+  original, Save stops and says so; the owner saves the new draft if wanted. Otherwise the
+  attempt covers the tab's stored revision and carries the fingerprint of the exact bytes sent.
+- **One winner.** The reports database is unchanged: the first write of a report ID creates it,
+  later writes return the existing report untouched. No metadata was added to report records.
+- **Which attempt won** is read from the report, not from the draft database's history: the
+  winning attempts are those whose fingerprint equals the report's. Only the revisions they
+  covered count as saved. Time stamps, which record was written last, the current stored
+  revision and enumeration order are not consulted. If no attempt matches, no stored revision
+  counts as saved and the stored draft is kept.
+- **Closing is idempotent.** `finishOwnerDraftSave(id, reportFingerprint)` is the same operation
+  for the winner, a loser and recovery: remove the stored draft if its revision is one a winning
+  attempt covered, otherwise move it (record and image) to a fresh ID; write the finalization
+  record; delete the draft's attempts. A stored draft can be moved only once because moving
+  removes it from the original ID, so a later call, from any tab or load, finds nothing to move.
+- **Loser.** A Save that finds the report already written, or the ID already closed, compares
+  fingerprints. Equal: the report holds this tab's content; no draft is made and a stored copy
+  of that same revision is removed. Different: the tab continues the copy that closing already
+  made of its stored revision if there is one, otherwise its content is written once under a
+  fresh ID. It is told the work was kept as a draft, never that it was saved, and no second
+  report is created until the owner saves that draft.
+- **Recovery.** Report absent: nothing is removed, whatever was attempted. Report present and
+  the ID not closed: the load fingerprints the report and performs the same close. Version 2
+  `saving` records are read as "not closed" and carry no weight.
+
+| Database / store               | After the second repair                                   |
+| ------------------------------ | --------------------------------------------------------- |
+| `module-owner-feedback`        | Version 1, one `reports` store, record shape unchanged    |
+| `module-owner-feedback-drafts` | Version 3                                                 |
+| … `drafts`, `images`           | Unchanged from version 2 (draft record schema 2)          |
+| … `finalizations`              | Adds optional `fingerprint`; `saving` no longer written   |
+| … `save_attempts` (new)        | `attempt_id`, `draft_id`, `revision`, `fingerprint`, `at` |
+
+Upgrades from version 1 and from version 2 only add stores; drafts, images and finalization
+records are not rewritten.
+
+### Results
+
+Final code of the second repair, local builds only.
+
+| Check                                                                                                                                | Result                                                |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
+| `npx jest --runInBand src/features/module-beta`                                                                                      | 6 suites, 101 tests, all pass (91 before this repair) |
+| `npx jest --runInBand src/features/module-beta src/app/api/module-feedback src/lib/site-auth src/lib/supabase/auth-redirect.test.ts` | 13 suites, 168 tests, all pass                        |
+| `npx playwright test --config playwright.module-beta-owner.config.ts`                                                                | 31 of 31 pass (19 before this repair)                 |
+| `npx playwright test --config playwright.module-beta.config.ts`                                                                      | 8 of 8 pass                                           |
+| `NODE_OPTIONS=--max-old-space-size=12288 npm run type-check`                                                                         | Exit 0                                                |
+| `eslint --max-warnings 0` and `prettier --check` on changed paths; `git diff --check`                                                | Clean                                                 |
+| `npm run build` (12 GB heap)                                                                                                         | Exit 0                                                |
+
+The twelve new browser tests run in real Chromium tabs of one persistent profile on real
+IndexedDB. To force exact orders, an init script lets the test hold, release or fail a tab's next
+open of one database; a released open is the browser's own. Storage is read through a separate
+page so the tabs under test are not disturbed.
+
+| Case                                                                | Result                                                                                                                                            |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1: both attempts stored, A's report commits, browser stops         | After restart and three loads: report holds A; B's stored version is one draft under a new ID; original ID closed; no attempts left               |
+| S2: B's losing Save finishes before A's finalization                | Report holds A; B kept exactly once; B continues that one draft; unchanged after reloads and restart                                              |
+| S3: both Save, A wins                                               | One report (A); B one draft, not in the review workspace; saving it later adds exactly one more report                                            |
+| S4: both Save, B wins                                               | One report (B); A's content one draft                                                                                                             |
+| S5: identical content, both Save                                    | One report; no draft, image or attempt left; both tabs report it saved                                                                            |
+| S6: three tabs, three versions, all Save                            | One report; the other two versions one draft each; same two IDs after restart and reload                                                          |
+| Stop after both attempts, before any report                         | No report; the stored draft is unchanged under its ID and still saves normally                                                                    |
+| Stop after the report commits, before the draft is closed           | Report holds A; B's stored version kept once                                                                                                      |
+| Stop after the winner closed the draft, before the loser was told   | Same                                                                                                                                              |
+| Stop after the loser's work was moved, before its tab was told      | Same                                                                                                                                              |
+| Competing Saves with screenshots (A: Box, Arrow; B adds Draw, Text) | Report image equals A's preview; B's draft preview equals B's; one image record, same source token, no orphan; Undo works before and after reload |
+| Version 2 database with a `saving` mark naming the newer revision   | Opens at version 3; the newer wording is kept as a draft; the existing report is untouched                                                        |
+
+Jest adds the same S1 and S2 sequences at the store level, the mirrored winner, both attempt
+orders, a report that no attempt matches, release of a failed save's own attempt, and a version 2
+upgrade with drafts, images and finalizations intact.
+
+Runs that did not pass during this repair:
+
+1. One store test asserted a hard-coded attempt ID while sharing a counter with other tests
+   (test error).
+2. One frame test showed two kept drafts. The test's stand-in for the draft store did not
+   continue an already-kept copy the way the real store does; the stand-in was corrected. The
+   real store and the browser tests never produced two.
+3. Owner suite, first full run: 30 of 31. The existing failed-save test aborts "the next
+   `add`", which is now the Save's own attempt record rather than the report; the report then
+   saved, correctly, since draft storage must not block a save. The injection now targets the
+   reports store, which is what the test is about.
+
+### Limits that remain after the second repair
+
+1. Finalization records are still not pruned. Attempt records for a draft that is never saved
+   or discarded (for example, emptied and abandoned after a failed save) also remain; each holds
+   IDs, a revision and a hash.
+2. Work that was only in a tab's memory when the browser stopped is lost, as before. The
+   guarantees are about stored revisions. A losing Save stores its work before it does anything
+   else, so this window is the existing 0.4 s one.
+3. If the draft database cannot be written at all during a Save, the report is still saved and
+   the stored draft is settled on a later load; with no attempt record, that load keeps the
+   stored draft as a new draft unless it is text-only and identical to the report.
+4. A tab that changed nothing still learns of a finalization elsewhere only when next used.
+5. Fingerprints need Web Crypto, which browsers provide on HTTPS and on localhost, the same
+   condition `crypto.randomUUID` already imposed.
 
 ## Confirmations
 

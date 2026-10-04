@@ -128,12 +128,14 @@ async function draftDatabase(page: Page) {
       }>
       images: Array<{ id: string; token: string }>
       finalizations: Array<{ id: string; outcome: string; fork: { id: string } | null }>
+      attempts: Array<{ attempt_id: string; draft_id: string; revision: string | null }>
     }
     return new Promise<Stored>((resolve, reject) => {
       const open = indexedDB.open('module-owner-feedback-drafts')
       open.onsuccess = () => {
         const db = open.result
-        const tx = db.transaction(['drafts', 'images', 'finalizations'])
+        const tx = db.transaction(['drafts', 'images', 'finalizations', 'save_attempts'])
+        const attempts = tx.objectStore('save_attempts').getAll()
         const drafts = tx.objectStore('drafts').getAll()
         const images = tx.objectStore('images').getAll()
         const finalizations = tx.objectStore('finalizations').getAll()
@@ -144,6 +146,7 @@ async function draftDatabase(page: Page) {
             drafts: drafts.result,
             images: images.result.map(({ id, token }) => ({ id, token })),
             finalizations: finalizations.result,
+            attempts: attempts.result,
           })
         }
         tx.onerror = () => {
@@ -364,6 +367,8 @@ test('narrow EBUS feedback preserves a failed draft, filters and clears only aft
   await page.evaluate(() => {
     const add = IDBObjectStore.prototype.add
     IDBObjectStore.prototype.add = function (...args) {
+      // Fail the report write itself, not the save's own record in the draft database.
+      if (this.name !== 'reports') return add.apply(this, args)
       IDBObjectStore.prototype.add = add
       const result = add.apply(this, args)
       this.transaction.abort()
@@ -986,6 +991,80 @@ test('every module in the current beta catalog opens in the review shell without
   }
 })
 
+// Lets a test hold, release or fail a tab's next opens of one IndexedDB database, so two tabs'
+// saves can be interleaved exactly and a tab can be stopped between two storage steps. Nothing
+// is mocked: a released open is the browser's own, on the real database.
+function storageGate() {
+  type Handler = ((event: Event) => void) | null
+  const real = IDBFactory.prototype.open
+  const modes: Record<string, 'hold' | 'fail'> = {}
+  const waiting: Record<string, Array<() => void>> = {}
+  const flush = (name: string) => {
+    for (const run of (waiting[name] ?? []).splice(0)) run()
+  }
+  Object.assign(window, {
+    storageGate: {
+      hold: (name: string) => {
+        modes[name] = 'hold'
+      },
+      fail: (name: string) => {
+        modes[name] = 'fail'
+        flush(name)
+      },
+      release: (name: string) => {
+        delete modes[name]
+        flush(name)
+      },
+    },
+  })
+  IDBFactory.prototype.open = function (this: IDBFactory, name: string, version?: number) {
+    if (!modes[name])
+      return version === undefined ? real.call(this, name) : real.call(this, name, version)
+    const proxy = {
+      result: undefined as IDBDatabase | undefined,
+      error: null as DOMException | null,
+      onsuccess: null as Handler,
+      onerror: null as Handler,
+      onupgradeneeded: null as Handler,
+      onblocked: null as Handler,
+    }
+    const run = () => {
+      if (modes[name] === 'fail') {
+        proxy.error = new DOMException('stopped by the test', 'AbortError')
+        proxy.onerror?.(new Event('error'))
+        return
+      }
+      const request = version === undefined ? real.call(this, name) : real.call(this, name, version)
+      request.onupgradeneeded = (event) => {
+        proxy.result = request.result
+        proxy.onupgradeneeded?.(event)
+      }
+      request.onsuccess = (event) => {
+        proxy.result = request.result
+        proxy.onsuccess?.(event)
+      }
+      request.onerror = (event) => {
+        proxy.error = request.error
+        proxy.onerror?.(event)
+      }
+      request.onblocked = (event) => proxy.onblocked?.(event)
+    }
+    if (modes[name] === 'fail') setTimeout(run, 0)
+    else (waiting[name] ??= []).push(run)
+    return proxy as unknown as IDBOpenDBRequest
+  }
+}
+const reportsDatabase = 'module-owner-feedback'
+const draftsDatabase = 'module-owner-feedback-drafts'
+const gate = (page: Page, action: 'hold' | 'release' | 'fail', database: string) =>
+  page.evaluate(
+    ([action, database]) =>
+      (window as unknown as { storageGate: Record<string, (name: string) => void> }).storageGate[
+        action
+      ](database),
+    [action, database],
+  )
+
 // One owner, two tabs of the same browser profile, one stored draft. Every case below runs in a
 // real persistent profile against real IndexedDB; nothing about the stores is mocked.
 test.describe('one draft open in two tabs', () => {
@@ -1006,13 +1085,19 @@ test.describe('one draft open in two tabs', () => {
     await second.waitForTimeout(3000)
     await context.close()
   })
-  async function profile(testInfo: { outputPath: (name: string) => string }) {
-    const directory = testInfo.outputPath('two-tab-profile')
-    const launch = () =>
-      chromium.launchPersistentContext(directory, {
+  async function profile(
+    testInfo: { outputPath: (name: string) => string },
+    name = 'two-tab-profile',
+  ) {
+    const directory = testInfo.outputPath(name)
+    const launch = async () => {
+      const context = await chromium.launchPersistentContext(directory, {
         baseURL: 'http://127.0.0.1:3110',
         viewport: { width: 1440, height: 1000 },
       })
+      await context.addInitScript(storageGate)
+      return context
+    }
     return { launch, context: await launch() }
   }
   // Tab A starts a draft on a real lesson page; tab B restores the same stored draft.
@@ -1083,7 +1168,7 @@ test.describe('one draft open in two tabs', () => {
       expect((reports[0] as unknown as { comment: string }).comment).toBe('Shared draft wording')
 
       const stored = await draftDatabase(a)
-      expect(stored.version).toBe(2)
+      expect(stored.version).toBe(3)
       expect(stored.drafts).toHaveLength(1)
       const [kept] = stored.drafts
       expect(kept.id).not.toBe(id)
@@ -1437,6 +1522,429 @@ test.describe('one draft open in two tabs', () => {
       await context.close()
     }
   })
+
+  // ---- Competing Saves of one draft ----
+  const reportComments = async (page: Page) =>
+    ((await databaseReports(page)) as unknown as Array<{ comment: string }>)
+      .map((report) => report.comment)
+      .sort()
+  const draftComments = async (page: Page) =>
+    (await draftDatabase(page)).drafts.map((draft) => draft.comment).sort()
+  // A page of the same profile that never opens the draft database on its own; the tests read
+  // storage through it so the tabs under test are not disturbed.
+  async function observerPage(context: Awaited<ReturnType<typeof profile>>['context']) {
+    const observer = await context.newPage()
+    await observer.goto('/en/admin/module-feedback')
+    await expect(observer.getByRole('button', { name: 'Clear saved feedback' })).toBeVisible()
+    return observer
+  }
+  // A holds the draft as it first stored it; B has stored a different, newer version over it.
+  // Both dialogs are open and nothing is unsaved in either.
+  async function diverged(
+    context: Awaited<ReturnType<typeof profile>>['context'],
+    withImage = false,
+  ) {
+    const a = context.pages()[0]
+    const b = await context.newPage()
+    const id = await shareDraft(a, b, withImage)
+    await open(b)
+    await commentBox(b).fill('Tab B wording')
+    if (withImage) {
+      await b.getByRole('button', { name: 'Draw', exact: true }).click()
+      await drag(b, [80, 150], [210, 150])
+      await b.getByRole('button', { name: 'Text', exact: true }).click()
+      await b.getByLabel('Text note', { exact: true }).fill('From tab B')
+      await b.getByRole('button', { name: 'Add note at top' }).click()
+      await expect(b.getByText('4 annotations · Included with your feedback')).toBeVisible()
+    }
+    await b.getByRole('button', { name: 'Continue testing' }).click()
+    await expect
+      .poll(async () => (await databaseDrafts(b)).drafts[0]?.comment)
+      .toBe('Tab B wording')
+    const observer = await observerPage(context)
+    expect(await stillOpenSinceStart(a)).toBe(true)
+    await open(a)
+    await expect(commentBox(a)).toHaveValue('Shared draft wording')
+    await open(b)
+    return { a, b, id, observer }
+  }
+  const save = (page: Page) => page.getByRole('button', { name: 'Save feedback locally' }).click()
+  // Each tab's Save has written its own attempt record and is waiting to write the report.
+  async function bothAttempt(pages: Page[], observer: Page) {
+    for (const page of pages) await gate(page, 'hold', reportsDatabase)
+    for (const page of pages) await save(page)
+    await expect
+      .poll(async () => (await draftDatabase(observer)).attempts.length)
+      .toBe(pages.length)
+  }
+  const lostNotice =
+    'Another tab saved this feedback. Your different unsent changes were kept as a separate draft.'
+  const savedNotice = (page: Page, id: string) =>
+    page.getByText(`Feedback saved locally. Reference ${id.slice(0, 8)}`)
+
+  test('S1: both tabs begin Save, A’s report wins and the browser stops: B’s stored work survives once', async ({}, testInfo) => {
+    const { launch, context: first } = await profile(testInfo)
+    let context = first
+    try {
+      const { a, b, id, observer } = await diverged(context)
+      await bothAttempt([a, b], observer)
+      const attempts = (await draftDatabase(observer)).attempts
+      expect(attempts.map((attempt) => attempt.draft_id)).toEqual([id, id])
+      expect(new Set(attempts.map((attempt) => attempt.revision)).size).toBe(2)
+      // A's report commits; nothing after it runs in either tab.
+      await gate(a, 'fail', draftsDatabase)
+      await gate(a, 'release', reportsDatabase)
+      await expect.poll(() => reportComments(observer)).toEqual(['Shared draft wording'])
+      expect((await draftDatabase(observer)).finalizations).toEqual([])
+      await context.close()
+
+      context = await launch()
+      const page = context.pages()[0]
+      await page.goto(testingPage)
+      for (let load = 0; load < 3; load++) {
+        if (load) await page.reload()
+        await expect(feedbackButton(page)).toHaveText('Continue feedback')
+        const stored = await draftDatabase(page)
+        expect(stored.drafts.map((draft) => draft.comment)).toEqual(['Tab B wording'])
+        expect(stored.drafts[0].id).not.toBe(id)
+        expect(stored.drafts[0]).toMatchObject({ forked_from: id, page_path: piPath })
+        expect(stored.finalizations.map((entry) => [entry.id, entry.outcome])).toEqual([
+          [id, 'saved'],
+        ])
+        expect(stored.attempts).toEqual([])
+        expect(await reportComments(page)).toEqual(['Shared draft wording'])
+      }
+      await open(page)
+      await expect(commentBox(page)).toHaveValue('Tab B wording')
+    } finally {
+      await context.close()
+    }
+  })
+
+  test('S2: the losing Save finishes before the winner does: B is kept exactly once', async ({}, testInfo) => {
+    const { launch, context: first } = await profile(testInfo)
+    let context = first
+    try {
+      const { a, b, id, observer } = await diverged(context)
+      await bothAttempt([a, b], observer)
+      // A's report commits, but A does not get to close the draft yet.
+      await gate(a, 'hold', draftsDatabase)
+      await gate(a, 'release', reportsDatabase)
+      await expect.poll(() => reportComments(observer)).toEqual(['Shared draft wording'])
+      // B finds the report taken and finishes first.
+      await gate(b, 'release', reportsDatabase)
+      await expect(b.getByRole('dialog').getByText(lostNotice, { exact: false })).toBeVisible()
+      await expect(commentBox(b)).toHaveValue('Tab B wording')
+      await expect.poll(() => draftComments(observer)).toEqual(['Tab B wording'])
+      const kept = (await draftDatabase(observer)).drafts[0].id
+      expect(kept).not.toBe(id)
+      // Now A finishes.
+      await gate(a, 'release', draftsDatabase)
+      await expect(savedNotice(a, id)).toBeVisible()
+      await expect(feedbackButton(a)).toHaveText('Continue feedback')
+      const settled = async (page: Page) => {
+        const stored = await draftDatabase(page)
+        expect(stored.drafts.map((draft) => [draft.id, draft.comment])).toEqual([
+          [kept, 'Tab B wording'],
+        ])
+        expect(stored.attempts).toEqual([])
+        expect(await reportComments(page)).toEqual(['Shared draft wording'])
+      }
+      await settled(observer)
+      // B goes on in the kept draft; nothing is copied again.
+      await commentBox(b).fill('Tab B wording, continued')
+      await b.getByRole('button', { name: 'Continue testing' }).click()
+      await expect
+        .poll(async () => (await draftDatabase(observer)).drafts.map((d) => [d.id, d.comment]))
+        .toEqual([[kept, 'Tab B wording, continued']])
+      await a.reload()
+      await b.reload()
+      await expect(feedbackButton(b)).toHaveText('Continue feedback')
+      expect((await draftDatabase(observer)).drafts.map((draft) => draft.id)).toEqual([kept])
+      await context.close()
+      context = await launch()
+      const page = context.pages()[0]
+      await page.goto(testingPage)
+      await expect(feedbackButton(page)).toHaveText('Continue feedback')
+      expect((await draftDatabase(page)).drafts.map((d) => [d.id, d.comment])).toEqual([
+        [kept, 'Tab B wording, continued'],
+      ])
+      expect(await reportComments(page)).toEqual(['Shared draft wording'])
+    } finally {
+      await context.close()
+    }
+  })
+
+  test('S3: near-simultaneous Saves, A wins: one report, B kept once and saved only when the owner chooses', async ({}, testInfo) => {
+    const { context } = await profile(testInfo)
+    try {
+      const { a, b, id, observer } = await diverged(context)
+      await bothAttempt([a, b], observer)
+      await gate(a, 'release', reportsDatabase)
+      await expect(savedNotice(a, id)).toBeVisible()
+      await gate(b, 'release', reportsDatabase)
+      await expect(b.getByRole('dialog').getByText(lostNotice, { exact: false })).toBeVisible()
+      await expect(b.getByText(/Feedback saved/)).toHaveCount(0)
+      expect(await reportComments(observer)).toEqual(['Shared draft wording'])
+      await expect.poll(() => draftComments(observer)).toEqual(['Tab B wording'])
+      const stored = await draftDatabase(observer)
+      const kept = stored.drafts[0].id
+      expect(kept).not.toBe(id)
+      expect(stored.attempts).toEqual([])
+      // The kept draft is not a report and is not in the review workspace.
+      await observer.reload()
+      await expect(observer.getByText('Shared draft wording', { exact: true })).toBeVisible()
+      await expect(observer.getByText('Tab B wording', { exact: true })).toHaveCount(0)
+      // Saving it is a separate, explicit act and adds exactly one more report.
+      await save(b)
+      await expect(savedNotice(b, kept)).toBeVisible()
+      await expect.poll(() => draftComments(observer)).toEqual([])
+      expect(await reportComments(observer)).toEqual(['Shared draft wording', 'Tab B wording'])
+      await observer.reload()
+      await expect(observer.getByText('Tab B wording', { exact: true })).toHaveCount(1)
+    } finally {
+      await context.close()
+    }
+  })
+
+  test('S4: near-simultaneous Saves, B wins: one report, A kept once', async ({}, testInfo) => {
+    const { context } = await profile(testInfo)
+    try {
+      const { a, b, id, observer } = await diverged(context)
+      await bothAttempt([a, b], observer)
+      await gate(b, 'release', reportsDatabase)
+      await expect(savedNotice(b, id)).toBeVisible()
+      await gate(a, 'release', reportsDatabase)
+      await expect(a.getByRole('dialog').getByText(lostNotice, { exact: false })).toBeVisible()
+      await expect(commentBox(a)).toHaveValue('Shared draft wording')
+      expect(await reportComments(observer)).toEqual(['Tab B wording'])
+      await expect.poll(() => draftComments(observer)).toEqual(['Shared draft wording'])
+      const stored = await draftDatabase(observer)
+      expect(stored.drafts[0].id).not.toBe(id)
+      expect(stored.drafts[0]).toMatchObject({ forked_from: id, page_path: piPath })
+      expect(stored.attempts).toEqual([])
+      await a.reload()
+      await b.reload()
+      await expect(feedbackButton(a)).toHaveText('Continue feedback')
+      expect(await draftComments(observer)).toEqual(['Shared draft wording'])
+      expect(await reportComments(observer)).toEqual(['Tab B wording'])
+    } finally {
+      await context.close()
+    }
+  })
+
+  test('S5: identical content saved from two tabs at once: one report, no draft', async ({}, testInfo) => {
+    const { context } = await profile(testInfo)
+    try {
+      const a = context.pages()[0]
+      const b = await context.newPage()
+      const id = await shareDraft(a, b)
+      const observer = await observerPage(context)
+      expect(await stillOpenSinceStart(a)).toBe(true)
+      await open(a)
+      await open(b)
+      await bothAttempt([a, b], observer)
+      await gate(a, 'release', reportsDatabase)
+      await expect(savedNotice(a, id)).toBeVisible()
+      await gate(b, 'release', reportsDatabase)
+      await expect(savedNotice(b, id)).toBeVisible()
+      await expect(b.getByRole('dialog')).toHaveCount(0)
+      expect(await reportComments(observer)).toEqual(['Shared draft wording'])
+      const stored = await draftDatabase(observer)
+      expect([stored.drafts, stored.images, stored.attempts]).toEqual([[], [], []])
+      for (const page of [a, b]) {
+        await page.reload()
+        await expect(page.getByRole('button', { name: 'Give feedback' })).toBeEnabled()
+      }
+      expect((await draftDatabase(observer)).drafts).toEqual([])
+    } finally {
+      await context.close()
+    }
+  })
+
+  test('S6: three tabs with three versions save at once: one report, the other two kept once each', async ({}, testInfo) => {
+    const { launch, context: first } = await profile(testInfo)
+    let context = first
+    try {
+      const { a, b, id, observer } = await diverged(context)
+      await b.getByRole('button', { name: 'Continue testing' }).click()
+      // C loads B's stored version and stores a third one over it.
+      const c = await context.newPage()
+      await c.goto(testingPage)
+      await expect(feedbackButton(c)).toHaveText('Continue feedback')
+      await open(c)
+      await expect(commentBox(c)).toHaveValue('Tab B wording')
+      await commentBox(c).fill('Tab C wording')
+      await c.getByRole('button', { name: 'Continue testing' }).click()
+      await expect
+        .poll(async () => (await draftDatabase(observer)).drafts.map((draft) => draft.comment))
+        .toEqual(['Tab C wording'])
+      await open(b)
+      await expect(commentBox(b)).toHaveValue('Tab B wording')
+      await open(c)
+      await bothAttempt([a, b, c], observer)
+      expect(
+        new Set((await draftDatabase(observer)).attempts.map((attempt) => attempt.revision)).size,
+      ).toBe(3)
+      await gate(b, 'release', reportsDatabase)
+      await expect(savedNotice(b, id)).toBeVisible()
+      await gate(c, 'release', reportsDatabase)
+      await gate(a, 'release', reportsDatabase)
+      for (const page of [a, c])
+        await expect(page.getByRole('dialog').getByText(lostNotice, { exact: false })).toBeVisible()
+      expect(await reportComments(observer)).toEqual(['Tab B wording'])
+      await expect
+        .poll(() => draftComments(observer))
+        .toEqual(['Shared draft wording', 'Tab C wording'])
+      const kept = (await draftDatabase(observer)).drafts.map((draft) => draft.id).sort()
+      expect(kept).not.toContain(id)
+      await context.close()
+      context = await launch()
+      const page = context.pages()[0]
+      await page.goto(testingPage)
+      for (let load = 0; load < 2; load++) {
+        if (load) await page.reload()
+        await expect(feedbackButton(page)).toHaveText('Continue feedback')
+        const stored = await draftDatabase(page)
+        expect(stored.drafts.map((draft) => draft.id).sort()).toEqual(kept)
+        expect(stored.drafts.map((draft) => draft.comment).sort()).toEqual([
+          'Shared draft wording',
+          'Tab C wording',
+        ])
+        expect(stored.attempts).toEqual([])
+        expect(await reportComments(page)).toEqual(['Tab B wording'])
+      }
+    } finally {
+      await context.close()
+    }
+  })
+
+  for (const phase of [
+    'after both Save attempts are stored, before any report',
+    'after the report commits, before the draft is closed',
+    'after the winner closed the draft, before the other tab learned it lost',
+    'after the losing tab’s work was moved to a new draft, before that tab was told',
+  ] as const) {
+    test(`a browser stop ${phase} loses nothing and duplicates nothing`, async ({}, testInfo) => {
+      const { launch, context: first } = await profile(testInfo, `stop-${phase.length}`)
+      let context = first
+      try {
+        const { a, b, id, observer } = await diverged(context)
+        await bothAttempt([a, b], observer)
+        const reportExpected = phase.startsWith('after both') ? [] : ['Shared draft wording']
+        if (phase.startsWith('after the report')) {
+          await gate(a, 'fail', draftsDatabase)
+          await gate(a, 'release', reportsDatabase)
+          await expect.poll(() => reportComments(observer)).toEqual(reportExpected)
+        } else if (phase.startsWith('after the winner')) {
+          await gate(a, 'release', reportsDatabase)
+          await expect(savedNotice(a, id)).toBeVisible()
+          await expect
+            .poll(async () => (await draftDatabase(observer)).finalizations.length)
+            .toBe(1)
+        } else if (phase.startsWith('after the losing')) {
+          await gate(a, 'hold', draftsDatabase)
+          await gate(a, 'release', reportsDatabase)
+          await expect.poll(() => reportComments(observer)).toEqual(reportExpected)
+          await gate(b, 'release', reportsDatabase)
+          // Stop the moment storage shows B's work under a new ID.
+          await expect
+            .poll(async () => (await draftDatabase(observer)).drafts[0]?.id !== id)
+            .toBe(true)
+        }
+        await context.close()
+
+        context = await launch()
+        const page = context.pages()[0]
+        await page.goto(testingPage)
+        for (let load = 0; load < 2; load++) {
+          if (load) await page.reload()
+          await expect(feedbackButton(page)).toHaveText('Continue feedback')
+          const stored = await draftDatabase(page)
+          // B's stored version is the durable unsent work in every phase. A's own version was
+          // already replaced in storage by B before either Save began.
+          expect(stored.drafts.map((draft) => draft.comment)).toEqual(['Tab B wording'])
+          expect(stored.images).toEqual([])
+          expect(await reportComments(page)).toEqual(reportExpected)
+          if (reportExpected.length) {
+            expect(stored.drafts[0].id).not.toBe(id)
+            expect(stored.finalizations.map((entry) => [entry.id, entry.outcome])).toEqual([
+              [id, 'saved'],
+            ])
+            expect(stored.attempts).toEqual([])
+          } else {
+            // No report won: the draft is still the ordinary draft it was.
+            expect(stored.drafts[0].id).toBe(id)
+            expect(stored.finalizations).toEqual([])
+          }
+        }
+        await open(page)
+        await expect(commentBox(page)).toHaveValue('Tab B wording')
+        // What survived is still savable, as its own report.
+        await save(page)
+        await expect(page.getByText(/Feedback saved locally\. Reference/)).toBeVisible()
+        await expect.poll(() => draftComments(page)).toEqual([])
+        expect(await reportComments(page)).toEqual([...reportExpected, 'Tab B wording'].sort())
+      } finally {
+        await context.close()
+      }
+    })
+  }
+
+  test('competing Saves with screenshots: the report is the winner’s image, the loser keeps its own image and marks', async ({}, testInfo) => {
+    const { context } = await profile(testInfo)
+    try {
+      const { a, b, id, observer } = await diverged(context, true)
+      const before = await draftDatabase(observer)
+      expect(before.images).toHaveLength(1)
+      await expect(a.getByText('2 annotations · Included with your feedback')).toBeVisible()
+      await expect(b.getByText('4 annotations · Included with your feedback')).toBeVisible()
+      const winner = await previewData(a)
+      const loser = await previewData(b)
+      expect(loser).not.toBe(winner)
+      await bothAttempt([a, b], observer)
+      await gate(a, 'release', reportsDatabase)
+      await expect(savedNotice(a, id)).toBeVisible()
+      await gate(b, 'release', reportsDatabase)
+      await expect(b.getByRole('dialog').getByText(lostNotice, { exact: false })).toBeVisible()
+      // The report is exactly what A showed.
+      expect(await reportPng(observer, id)).toEqual({
+        page_path: piPath,
+        comment: 'Shared draft wording',
+        png: winner,
+      })
+      // B's work is one draft with its own four marks over the same source image.
+      await expect.poll(() => draftComments(observer)).toEqual(['Tab B wording'])
+      const stored = await draftDatabase(observer)
+      const [kept] = stored.drafts
+      expect(kept.id).not.toBe(id)
+      expect(kept.annotations.map((mark) => mark.tool)).toEqual(['box', 'arrow', 'draw', 'text'])
+      expect(stored.images).toEqual([{ id: kept.id, token: before.images[0].token }])
+      expect(kept.image?.token).toBe(before.images[0].token)
+      expect(orphanImages(stored)).toEqual([])
+      expect(await previewData(b)).toBe(loser)
+      // Still editable where it stands, and after a reload.
+      await b.getByRole('button', { name: 'Undo', exact: true }).click()
+      await expect(b.getByText('3 annotations · Included with your feedback')).toBeVisible()
+      await b.getByRole('button', { name: 'Continue testing' }).click()
+      await expect
+        .poll(async () => (await draftDatabase(observer)).drafts[0]?.annotations.length)
+        .toBe(3)
+      await b.reload()
+      await expect(feedbackButton(b)).toHaveText('Continue feedback')
+      await open(b)
+      await expect(b.getByText('3 annotations · Included with your feedback')).toBeVisible()
+      await b.getByRole('button', { name: 'Undo', exact: true }).click()
+      await expect(b.getByText('2 annotations · Included with your feedback')).toBeVisible()
+      expect(await previewData(b)).toBe(winner)
+      const end = await draftDatabase(observer)
+      expect(end.drafts.map((draft) => draft.id)).toEqual([kept.id])
+      expect(end.images).toEqual([{ id: kept.id, token: before.images[0].token }])
+      expect((await reportPng(observer, id)).png).toBe(winner)
+    } finally {
+      await context.close()
+    }
+  })
 })
 
 test('a version 1 draft database is upgraded in place with its draft and image intact', async ({
@@ -1501,7 +2009,8 @@ test('a version 1 draft database is upgraded in place with its draft and image i
   await page.goto('/en/development-beta/peripheral-imaging')
   await expect(feedbackButton(page)).toHaveText('Continue feedback')
   const upgraded = await draftDatabase(page)
-  expect(upgraded.version).toBe(2)
+  expect(upgraded.version).toBe(3)
+  expect(upgraded.attempts).toEqual([])
   // The record itself was not rewritten by the upgrade.
   expect(upgraded.drafts).toEqual([seeded.record])
   expect(upgraded.images).toEqual([{ id: seeded.record.id, token: seeded.record.image.token }])
@@ -1534,4 +2043,115 @@ test('a version 1 draft database is upgraded in place with its draft and image i
       .filter((db) => db.name === 'module-owner-feedback')
       .every((db) => db.version === 1),
   ).toBe(true)
+})
+
+test('a version 2 draft database is upgraded in place; its replaceable saving mark is not trusted', async ({
+  page,
+}) => {
+  await page.goto('/en/admin/module-feedback')
+  await expect(page.getByRole('button', { name: 'Clear saved feedback' })).toBeVisible()
+  const seeded = await page.evaluate(async (pagePath) => {
+    const id = crypto.randomUUID()
+    const closedId = crypto.randomUUID()
+    const draft = {
+      id,
+      host_module_id: 'peripheral-imaging',
+      module_id: 'peripheral-imaging',
+      page_path: pagePath,
+      comment: 'Newer unsent wording from version 2',
+      selected_text: '',
+      annotations: [],
+      image: null,
+      created_at: '2026-10-02T10:00:00.000Z',
+      updated_at: '2026-10-02T10:05:00.000Z',
+      storage_mode: 'owner-local',
+      record_kind: 'draft',
+      revision: 'r2',
+      forked_from: null,
+      schema_version: 2,
+    }
+    const finalizations = [
+      { id, outcome: 'saving', revision: 'r2', at: '2026-10-02T10:06:00.000Z', fork: null },
+      {
+        id: closedId,
+        outcome: 'discarded',
+        revision: 'r0',
+        at: '2026-10-02T09:00:00.000Z',
+        fork: null,
+      },
+    ]
+    const put = (
+      name: string,
+      version: number,
+      stores: string[],
+      rows: Record<string, unknown[]>,
+    ) =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open(name, version)
+        open.onupgradeneeded = () => {
+          for (const store of stores) open.result.createObjectStore(store, { keyPath: 'id' })
+        }
+        open.onerror = () => reject(open.error)
+        open.onsuccess = () => {
+          const tx = open.result.transaction(stores, 'readwrite')
+          for (const [store, values] of Object.entries(rows))
+            for (const value of values) tx.objectStore(store).put(value)
+          tx.oncomplete = () => {
+            open.result.close()
+            resolve()
+          }
+          tx.onerror = () => reject(tx.error)
+        }
+      })
+    await put('module-owner-feedback-drafts', 2, ['drafts', 'images', 'finalizations'], {
+      drafts: [draft],
+      finalizations,
+    })
+    // An older version of the same draft was saved as the report. Version 2's mark says the
+    // newer revision is what was saved.
+    await put('module-owner-feedback', 1, ['reports'], {
+      reports: [
+        {
+          id,
+          module_id: 'peripheral-imaging',
+          page_path: pagePath,
+          comment: 'Older saved wording',
+          selected_text: '',
+          created_at: '2026-10-02T10:06:00.000Z',
+          updated_at: '2026-10-02T10:06:00.000Z',
+          status: 'new',
+          reviewer_notes: '',
+          storage_mode: 'owner-local',
+          schema_version: 1,
+          screenshot: null,
+        },
+      ],
+    })
+    return { id, closedId, finalizations }
+  }, piPath)
+
+  await page.goto('/en/development-beta/peripheral-imaging')
+  await expect(feedbackButton(page)).toHaveText('Continue feedback')
+  const upgraded = await draftDatabase(page)
+  expect(upgraded.version).toBe(3)
+  expect(upgraded.attempts).toEqual([])
+  // The newer wording is kept, as a draft under a new ID; the saved ID is closed.
+  expect(upgraded.drafts.map((draft) => [draft.comment, draft.forked_from])).toEqual([
+    ['Newer unsent wording from version 2', seeded.id],
+  ])
+  expect(upgraded.drafts[0].id).not.toBe(seeded.id)
+  expect(upgraded.finalizations.map((entry) => [entry.id, entry.outcome]).sort()).toEqual(
+    [
+      [seeded.id, 'saved'],
+      [seeded.closedId, 'discarded'],
+    ].sort(),
+  )
+  await page.getByRole('button', { name: 'Continue feedback' }).click()
+  await expect(page.getByLabel('What should we know?')).toHaveValue(
+    'Newer unsent wording from version 2',
+  )
+  const reports = (await databaseReports(page)) as unknown as Array<{ id: string; comment: string }>
+  expect(reports.map((report) => [report.id, report.comment])).toEqual([
+    [seeded.id, 'Older saved wording'],
+  ])
 })

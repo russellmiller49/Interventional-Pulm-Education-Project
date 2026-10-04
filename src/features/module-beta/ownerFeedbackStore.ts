@@ -218,7 +218,7 @@ export function ownerFeedbackContent(id: string) {
     page_path: unknown
     comment: unknown
     selected_text: unknown
-    hasScreenshot: boolean
+    screenshot: Blob | null
   } | null>('readonly', (store, finish) => {
     const request = store.get(id)
     request.onsuccess = () => {
@@ -230,7 +230,10 @@ export function ownerFeedbackContent(id: string) {
               page_path: record.page_path,
               comment: record.comment,
               selected_text: record.selected_text,
-              hasScreenshot: Boolean(record.screenshot),
+              screenshot:
+                (record.screenshot as { blob?: unknown } | null)?.blob instanceof Blob
+                  ? (record.screenshot as { blob: Blob }).blob
+                  : null,
             }
           : null,
       )

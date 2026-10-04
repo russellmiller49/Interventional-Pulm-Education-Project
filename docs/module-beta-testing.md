@@ -124,7 +124,11 @@ and opened the real review workspace. Browser-role table reads, tester review ac
 screenshot access were denied. The test reports, screenshot, session, temporary entitlement, and
 account were removed afterward. The existing owner account retains active, unexpired `site_admin`.
 
-Owner-local validation and commands are documented in [Owner review feedback](module-beta-owner-review.md).
+Owner-local validation and commands are documented in [Owner review feedback](module-beta-owner-review.md). That document also
+states what happens when the same owner-local draft is open, saved or discarded in more than one
+tab: one report per draft ID, and different unsent work kept as a separate draft rather than
+merged or lost. It is conflict handling, not shared editing. Server-mode drafts are unaffected:
+they stay in memory in one tab.
 
 - Targeted Jest coverage: catalog/access boundaries, signed-in and admin authorization,
   submission validation, account identity, retries, image rejection, cleanup after failed saves,

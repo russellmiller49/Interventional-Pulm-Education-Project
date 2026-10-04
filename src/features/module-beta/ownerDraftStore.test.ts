@@ -8,6 +8,7 @@ import {
   discardOwnerDraft,
   finalizedOwnerDraftIds,
   finishOwnerDraftSave,
+  releaseOwnerDraftSave,
   maxDraftAnnotations,
   ownerDraftDatabase,
   ownerDraftDatabaseVersion,
@@ -29,6 +30,7 @@ import {
 } from './ownerFeedbackStore'
 import { exportOwnerFeedback } from './ownerFeedbackExport'
 import { hasReferencedText, isMeaningfulDraft } from './draftContent'
+import { submissionFingerprint } from './submissionFingerprint'
 import { maxScreenshotBytes } from './schema'
 
 const draft = {
@@ -72,7 +74,10 @@ function raw(name: string, version: number) {
     request.onerror = () => reject(request.error)
   })
 }
-async function rawPut(store: 'drafts' | 'images' | 'finalizations', value: unknown) {
+async function rawPut(
+  store: 'drafts' | 'images' | 'finalizations' | 'save_attempts',
+  value: unknown,
+) {
   const db = await raw(ownerDraftDatabase, ownerDraftDatabaseVersion)
   const tx = db.transaction(store, 'readwrite')
   tx.objectStore(store).put(value)
@@ -84,22 +89,24 @@ async function rawPut(store: 'drafts' | 'images' | 'finalizations', value: unkno
 // Everything in the draft database, as stored.
 async function stored() {
   const db = await raw(ownerDraftDatabase, ownerDraftDatabaseVersion)
-  const tx = db.transaction(['drafts', 'images', 'finalizations'])
-  const rows = (['drafts', 'images', 'finalizations'] as const).map((name) =>
+  const tx = db.transaction(['drafts', 'images', 'finalizations', 'save_attempts'])
+  const rows = (['drafts', 'images', 'finalizations', 'save_attempts'] as const).map((name) =>
     tx.objectStore(name).getAll(),
   )
   await new Promise<void>((resolve) => {
     tx.oncomplete = () => resolve()
   })
   db.close()
-  const [drafts, images, finalizations] = rows.map((request) => request.result)
-  return { drafts, images, finalizations } as {
+  const [drafts, images, finalizations, attempts] = rows.map((request) => request.result)
+  return { drafts, images, finalizations, attempts } as {
+    attempts: Array<{ attempt_id: string; draft_id: string; revision: string | null }>
     drafts: Array<{ id: string; comment: string; revision: string; forked_from: string | null }>
     images: Array<{ id: string; token: string; blob: Blob }>
     finalizations: Array<{
       id: string
       outcome: string
       revision: string | null
+      fingerprint?: string | null
       fork: { id: string; revision: string } | null
     }>
   }
@@ -399,7 +406,12 @@ describe('database upgrade', () => {
     })
     expect(Buffer.from(await drafts[0].screenshot!.blob.arrayBuffer())).toEqual(png)
     const db = await raw(ownerDraftDatabase, ownerDraftDatabaseVersion)
-    expect(Array.from(db.objectStoreNames)).toEqual(['drafts', 'finalizations', 'images'])
+    expect(Array.from(db.objectStoreNames)).toEqual([
+      'drafts',
+      'finalizations',
+      'images',
+      'save_attempts',
+    ])
     db.close()
     // Reading upgraded the database, not the record.
     expect((await stored()).drafts).toEqual([legacy])
@@ -407,7 +419,11 @@ describe('database upgrade', () => {
     const next = await saveOwnerDraft({ ...draft, comment: 'Edited' }, image(), drafts[0].revision)
     expect(next).toMatchObject({
       superseded: null,
-      draft: { id: draft.id, created_at: legacy.created_at, schema_version: 2 },
+      draft: {
+        id: draft.id,
+        created_at: legacy.created_at,
+        schema_version: ownerDraftSchemaVersion,
+      },
     })
     expect((await stored()).images.map((entry) => entry.id)).toEqual([draft.id])
   })
@@ -422,7 +438,25 @@ describe('one draft open in two tabs', () => {
     )
     return first.revision
   }
-  const report = () => saveOwnerFeedback({ ...draft, comment: 'Tab A wording' })
+  const report = (comment = 'Tab A wording') => createOwnerFeedback({ ...draft, comment })
+  // The fingerprint of a text-only submission of this draft with the given comment.
+  const print = (comment = 'Tab A wording') =>
+    submissionFingerprint({
+      moduleId: draft.moduleId,
+      pagePath: draft.pagePath,
+      comment,
+      selectedText: draft.selectedText,
+    })
+  let attempts = 0
+  // One tab's Save of the shared draft, up to the point where the report would be written.
+  const begin = async (base: string, comment = 'Tab A wording') =>
+    beginOwnerDraftSave({
+      attemptId: `00000000-0000-4000-8000-${String(++attempts).padStart(12, '0')}`,
+      id: draft.id,
+      base,
+      fingerprint: await print(comment),
+    })
+  const open = { closed: null, fingerprint: null }
   const orphans = async () => {
     const { drafts, images } = await stored()
     return images.filter((entry) => !drafts.some((row) => row.id === entry.id))
@@ -435,12 +469,11 @@ describe('one draft open in two tabs', () => {
       image(),
       base,
     )
-    expect(await beginOwnerDraftSave(draft.id, base)).toEqual({ closed: null })
+    expect(await begin(base)).toEqual(open)
     await report()
-    expect(await finishOwnerDraftSave(draft.id, base, true)).toEqual({
-      closed: null,
-      preserved: true,
-    })
+    expect(await finishOwnerDraftSave(draft.id, await print(), base)).toEqual({ preserved: true })
+    // Finishing again, from any tab, changes nothing.
+    expect(await finishOwnerDraftSave(draft.id, await print())).toEqual({ preserved: false })
     const after = await stored()
     expect(after.drafts).toHaveLength(1)
     const [fork] = after.drafts
@@ -451,6 +484,7 @@ describe('one draft open in two tabs', () => {
         id: draft.id,
         outcome: 'saved',
         revision: base,
+        fingerprint: await print(),
         fork: { id: fork.id, revision: newer.revision },
       }),
     ])
@@ -484,13 +518,10 @@ describe('one draft open in two tabs', () => {
 
   it('an edit in B after A saved never recreates the saved ID', async () => {
     const base = await shared()
-    await beginOwnerDraftSave(draft.id, base)
+    await begin(base)
     await report()
-    expect(await finishOwnerDraftSave(draft.id, base, true)).toEqual({
-      closed: null,
-      preserved: false,
-    })
-    expect((await stored()).drafts).toEqual([])
+    expect(await finishOwnerDraftSave(draft.id, await print(), base)).toEqual({ preserved: false })
+    expect(await stored()).toMatchObject({ drafts: [], attempts: [] })
     const late = await saveOwnerDraft(
       { ...draft, comment: 'Tab B later', createdAt: '2026-10-01T09:00:00.000Z' },
       null,
@@ -507,7 +538,11 @@ describe('one draft open in two tabs', () => {
     await settleOwnerDrafts(ownerFeedbackContent)
     expect((await readOwnerDrafts()).drafts.map((row) => row.id)).toEqual([late.draft.id])
     // A tab still holding the closed ID cannot save over the report either.
-    expect(await beginOwnerDraftSave(draft.id, base)).toEqual({ closed: 'saved' })
+    expect(await begin(base, 'Tab B later')).toEqual({
+      closed: 'saved',
+      fingerprint: await print(),
+    })
+    expect((await stored()).attempts).toEqual([])
   })
 
   it('discarding in A keeps newer content B had already stored and closes the ID', async () => {
@@ -547,9 +582,9 @@ describe('one draft open in two tabs', () => {
   it('leaves no phantom draft when the other tab changed nothing', async () => {
     for (const finalize of [
       async (base: string) => {
-        await beginOwnerDraftSave(draft.id, base)
+        await begin(base)
         await report()
-        await finishOwnerDraftSave(draft.id, base, true)
+        await finishOwnerDraftSave(draft.id, await print(), base)
       },
       (base: string) => discardOwnerDraft(draft.id, base),
     ]) {
@@ -602,9 +637,10 @@ describe('one draft open in two tabs', () => {
 
   it('finishes a save that was interrupted after its report committed', async () => {
     const base = await shared(true)
-    await beginOwnerDraftSave(draft.id, base)
-    // Not committed yet: the draft is still an ordinary unsent draft.
+    await begin(base)
+    // Not committed yet: the draft is still an ordinary unsent draft, whatever was attempted.
     await settleOwnerDrafts(ownerFeedbackContent)
+    expect(await finalizedOwnerDraftIds(ownerFeedbackContent)).toEqual(new Set())
     expect((await readOwnerDrafts()).drafts.map((row) => row.id)).toEqual([draft.id])
     await report()
     expect(await finalizedOwnerDraftIds(ownerFeedbackContent)).toEqual(new Set([draft.id]))
@@ -612,21 +648,229 @@ describe('one draft open in two tabs', () => {
     expect(await stored()).toMatchObject({
       drafts: [],
       images: [],
+      attempts: [],
       finalizations: [{ id: draft.id, outcome: 'saved', revision: base }],
     })
   })
 
-  it('keeps this tab’s work when another tab’s report already holds the ID', async () => {
+  it('a failed save withdraws only its own attempt and leaves the draft as it was', async () => {
     const base = await shared()
-    await beginOwnerDraftSave(draft.id, base)
-    await report()
-    expect((await createOwnerFeedback({ ...draft, comment: 'Tab B wording' })).created).toBe(false)
-    expect(await finishOwnerDraftSave(draft.id, base, false)).toEqual({
-      closed: 'saved',
-      preserved: false,
+    await begin(base)
+    await begin(base, 'Another tab')
+    const [first, second] = (await stored()).attempts.map((entry) => entry.attempt_id).sort()
+    await releaseOwnerDraftSave(first)
+    expect((await stored()).attempts.map((entry) => entry.attempt_id)).toEqual([second])
+    expect((await readOwnerDrafts()).drafts.map((row) => row.id)).toEqual([draft.id])
+  })
+})
+
+describe('two tabs saving the same draft', () => {
+  const comments = async () => ({
+    reports: (await listOwnerFeedback()).map((entry) => entry.comment),
+    drafts: (await stored()).drafts.map((row) => row.comment).sort(),
+  })
+  const fingerprint = (comment: string) =>
+    submissionFingerprint({
+      moduleId: draft.moduleId,
+      pagePath: draft.pagePath,
+      comment,
+      selectedText: draft.selectedText,
     })
-    const kept = await saveOwnerDraft({ ...draft, comment: 'Tab B wording' }, null, base)
-    expect(kept.superseded).toBe('saved')
-    expect((await listOwnerFeedback()).map((entry) => entry.comment)).toEqual(['Tab A wording'])
+  let attempts = 0
+  const begin = async (base: string, comment: string) =>
+    beginOwnerDraftSave({
+      attemptId: `10000000-0000-4000-8000-${String(++attempts).padStart(12, '0')}`,
+      id: draft.id,
+      base,
+      fingerprint: await fingerprint(comment),
+    })
+  // A stored the draft as R1; B then stored its own, different R2 over it.
+  async function diverged() {
+    const { draft: a } = await saveOwnerDraft({ ...draft, comment: 'A wording' }, image())
+    const { draft: b } = await saveOwnerDraft(
+      { ...draft, comment: 'B wording', annotations: marks },
+      image(),
+      a.revision,
+    )
+    return { r1: a.revision, r2: b.revision }
+  }
+  const save = (comment: string) => createOwnerFeedback({ ...draft, comment })
+
+  it('S1: both begin, A’s report wins, the browser stops: recovery keeps B once', async () => {
+    const { r1, r2 } = await diverged()
+    await begin(r1, 'A wording')
+    // B's attempt is a second record. It does not replace A's.
+    await begin(r2, 'B wording')
+    expect((await stored()).attempts.map((entry) => entry.revision).sort()).toEqual([r1, r2].sort())
+    expect((await save('A wording')).created).toBe(true)
+    // Nothing else ran. Every later load must reach the same state.
+    expect(await finalizedOwnerDraftIds(ownerFeedbackContent)).toEqual(new Set())
+    for (let load = 0; load < 3; load++) {
+      await settleOwnerDrafts(ownerFeedbackContent)
+      expect(await comments()).toEqual({ reports: ['A wording'], drafts: ['B wording'] })
+    }
+    const after = await stored()
+    expect(after.drafts[0]).toMatchObject({ forked_from: draft.id, revision: r2 })
+    expect(after.drafts[0].id).not.toBe(draft.id)
+    expect(after.images.map((entry) => entry.id)).toEqual([after.drafts[0].id])
+    expect(after.attempts).toEqual([])
+    expect(after.finalizations).toEqual([
+      expect.objectContaining({
+        id: draft.id,
+        outcome: 'saved',
+        fingerprint: await fingerprint('A wording'),
+      }),
+    ])
+    const [read] = (await readOwnerDrafts()).drafts
+    expect(read.annotations).toEqual(marks)
+  })
+
+  it('S1 mirrored: the same records with B’s report winning remove B and keep nothing extra', async () => {
+    const { r1, r2 } = await diverged()
+    await begin(r1, 'A wording')
+    await begin(r2, 'B wording')
+    expect((await save('B wording')).created).toBe(true)
+    expect(await finalizedOwnerDraftIds(ownerFeedbackContent)).toEqual(new Set([draft.id]))
+    await settleOwnerDrafts(ownerFeedbackContent)
+    expect(await comments()).toEqual({ reports: ['B wording'], drafts: [] })
+    expect((await stored()).images).toEqual([])
+  })
+
+  it('S2: the losing save finishes first, the winner later: B is kept exactly once', async () => {
+    const { r1, r2 } = await diverged()
+    await begin(r1, 'A wording')
+    await begin(r2, 'B wording')
+    expect((await save('A wording')).created).toBe(true)
+    const lost = await save('B wording')
+    expect(lost.created).toBe(false)
+    // B finishes with what the report actually holds.
+    const held = await fingerprint(lost.entry.comment)
+    expect(await finishOwnerDraftSave(draft.id, held)).toEqual({ preserved: true })
+    // B's own follow-up finds its stored version already kept and continues it.
+    const status = await ownerDraftStatus(draft.id, r2)
+    expect(status).toMatchObject({ closed: 'saved' })
+    expect(status.keptAs).not.toBeNull()
+    // A finishes afterwards, then everything is settled again on two more loads.
+    expect(await finishOwnerDraftSave(draft.id, held, r1)).toEqual({ preserved: false })
+    for (let load = 0; load < 2; load++) await settleOwnerDrafts(ownerFeedbackContent)
+    expect(await comments()).toEqual({ reports: ['A wording'], drafts: ['B wording'] })
+    const after = await stored()
+    expect(after.drafts.map((row) => row.id)).toEqual([status.keptAs])
+    expect(after.images.map((entry) => entry.id)).toEqual([status.keptAs])
+    // B writing again from its stale state still lands on that one draft.
+    const again = await saveOwnerDraft({ ...draft, comment: 'B wording 2' }, image(), r2)
+    expect(again.draft.id).toBe(status.keptAs)
+    expect((await stored()).drafts).toHaveLength(1)
+  })
+
+  it('S5: identical submissions from two tabs give one report and no draft', async () => {
+    const { draft: only } = await saveOwnerDraft({ ...draft, comment: 'Same wording' })
+    await begin(only.revision, 'Same wording')
+    await begin(only.revision, 'Same wording')
+    expect((await save('Same wording')).created).toBe(true)
+    expect((await save('Same wording')).created).toBe(false)
+    const held = await fingerprint('Same wording')
+    expect(await finishOwnerDraftSave(draft.id, held)).toEqual({ preserved: false })
+    expect(await finishOwnerDraftSave(draft.id, held, only.revision)).toEqual({ preserved: false })
+    expect(await comments()).toEqual({ reports: ['Same wording'], drafts: [] })
+  })
+
+  it('never names a winner from the last attempt written or from record order', async () => {
+    for (const order of [
+      ['A wording', 'B wording'],
+      ['B wording', 'A wording'],
+    ]) {
+      global.indexedDB = new IDBFactory()
+      const { r1, r2 } = await diverged()
+      for (const comment of order) await begin(comment === 'A wording' ? r1 : r2, comment)
+      await save('A wording')
+      await settleOwnerDrafts(ownerFeedbackContent)
+      expect(await comments()).toEqual({ reports: ['A wording'], drafts: ['B wording'] })
+    }
+  })
+
+  it('keeps the stored draft when no attempt sent what the report holds', async () => {
+    const { r2 } = await diverged()
+    // Only B's attempt is on record, yet the report holds A's wording.
+    await begin(r2, 'B wording')
+    await save('A wording')
+    await settleOwnerDrafts(ownerFeedbackContent)
+    expect(await comments()).toEqual({ reports: ['A wording'], drafts: ['B wording'] })
+  })
+})
+
+describe('upgrade from database version 2', () => {
+  it('keeps drafts, images and finalizations, and no longer trusts a `saving` mark', async () => {
+    const good = {
+      id: draft.id,
+      host_module_id: 'peripheral-imaging',
+      module_id: 'peripheral-imaging',
+      page_path: draft.pagePath,
+      comment: 'Newer unsent wording',
+      selected_text: '',
+      annotations: marks,
+      image: { token, type: 'image/png', size: png.length, width: 1, height: 1 },
+      created_at: '2026-10-02T10:00:00.000Z',
+      updated_at: '2026-10-02T10:05:00.000Z',
+      storage_mode: 'owner-local',
+      record_kind: 'draft',
+      revision: 'r2',
+      forked_from: null,
+      schema_version: 2,
+    }
+    const closed = {
+      id: otherId,
+      outcome: 'discarded',
+      revision: 'r0',
+      at: '2026-10-02T09:00:00.000Z',
+      fork: null,
+    }
+    // Version 2's replaceable mark, left naming this very revision.
+    const saving = {
+      id: draft.id,
+      outcome: 'saving',
+      revision: 'r2',
+      at: '2026-10-02T10:06:00.000Z',
+      fork: null,
+    }
+    await new Promise<void>((resolve, reject) => {
+      const open = indexedDB.open(ownerDraftDatabase, 2)
+      open.onupgradeneeded = () => {
+        for (const name of ['drafts', 'images', 'finalizations'])
+          open.result.createObjectStore(name, { keyPath: 'id' })
+      }
+      open.onerror = () => reject(open.error)
+      open.onsuccess = () => {
+        const tx = open.result.transaction(['drafts', 'images', 'finalizations'], 'readwrite')
+        tx.objectStore('drafts').put(good)
+        tx.objectStore('images').put({ id: draft.id, ...image() })
+        tx.objectStore('finalizations').put(closed)
+        tx.objectStore('finalizations').put(saving)
+        tx.oncomplete = () => {
+          open.result.close()
+          resolve()
+        }
+      }
+    })
+    const { drafts, unreadable } = await readOwnerDrafts()
+    expect(unreadable).toEqual([])
+    expect(drafts).toHaveLength(1)
+    expect(drafts[0]).toMatchObject(good)
+    expect(Buffer.from(await drafts[0].screenshot!.blob.arrayBuffer())).toEqual(png)
+    const after = await stored()
+    expect(after.drafts).toEqual([good])
+    expect(after.finalizations).toEqual(expect.arrayContaining([closed, saving]))
+    expect(after.attempts).toEqual([])
+    // The closed ID is still closed.
+    const late = await saveOwnerDraft({ ...draft, id: otherId, comment: 'Stale tab' }, null, 'r0')
+    expect(late.superseded).toBe('discarded')
+    // A report with different content exists under the draft's ID. The old mark said "r2 was
+    // saved"; that is not evidence, so the draft is kept.
+    await saveOwnerFeedback({ ...draft, comment: 'Older saved wording' })
+    expect(await finalizedOwnerDraftIds(ownerFeedbackContent)).toEqual(new Set())
+    await settleOwnerDrafts(ownerFeedbackContent)
+    const kept = (await readOwnerDrafts()).drafts.filter((row) => row.forked_from === draft.id)
+    expect(kept.map((row) => row.comment)).toEqual(['Newer unsent wording'])
+    expect(Buffer.from(await kept[0].screenshot!.blob.arrayBuffer())).toEqual(png)
   })
 })

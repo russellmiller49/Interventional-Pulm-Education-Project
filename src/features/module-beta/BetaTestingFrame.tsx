@@ -21,12 +21,14 @@ import {
   discardOwnerDraft,
   finishOwnerDraftSave,
   ownerDraftStatus,
+  releaseOwnerDraftSave,
   readOwnerDrafts,
   saveOwnerDraft,
   settleOwnerDrafts,
   type OwnerDraftSupersededBy,
 } from './ownerDraftStore'
 import { isMeaningfulDraft } from './draftContent'
+import { submissionFingerprint } from './submissionFingerprint'
 import { betaModuleById, betaModuleForPath, feedbackPagePath, type BetaModule } from './catalog'
 import {
   ScreenshotEditor,
@@ -47,6 +49,7 @@ const keptApart: Record<OwnerDraftSupersededBy, string> = {
   edited:
     'This draft was also changed in another tab. The version here was kept as a separate unsent draft.',
 }
+const saveAgain = 'Save again to add it as a new report.'
 
 export function BetaTestingFrame({
   moduleEntry,
@@ -314,24 +317,30 @@ export function BetaTestingFrame({
   // Another tab saved or discarded the draft open here. Unsent work that differs from what was
   // finalized continues under a new ID; a draft with nothing of its own is put away. Returns
   // whether this tab still holds a draft.
-  async function leaveClosedDraft(id: string, outcome: 'saved' | 'discarded') {
+  async function leaveClosedDraft(id: string, outcome: 'saved' | 'discarded', keep = false) {
     if (id !== activeDraftId.current) return false
-    const unsaved = dirty.current
-    if (unsaved) await persistDraft()
-    if (activeDraftId.current !== id) return true
-    // The write failed, so the work exists only in this tab. It still must not go back under
-    // the closed ID.
-    if (unsaved && dirty.current) {
-      kept.current = null
-      follow(id, crypto.randomUUID(), outcome)
-      return true
+    if (!dirty.current) {
+      // Closing the ID may already have kept this tab's stored version under a new one.
+      const status = await enqueue(() => ownerDraftStatus(id, baseOf(id))).catch(() => null)
+      if (activeDraftId.current !== id) return true
+      if (status?.keptAs) {
+        if (kept.current?.draft === id) kept.current.id = status.keptAs
+        follow(id, status.keptAs, outcome)
+        return true
+      }
     }
-    const status = await enqueue(() => ownerDraftStatus(id, baseOf(id))).catch(() => null)
-    if (activeDraftId.current !== id) return true
-    if (status?.keptAs) {
-      if (kept.current?.draft === id) kept.current.id = status.keptAs
-      follow(id, status.keptAs, outcome)
-      return true
+    // `keep`: this tab tried to save what it shows and the report holds something else.
+    if (dirty.current || keep) {
+      dirty.current = true
+      await persistDraft()
+      if (activeDraftId.current !== id) return true
+      // The write failed, so the work exists only in this tab. It still must not go back under
+      // the closed ID.
+      if (dirty.current) {
+        kept.current = null
+        follow(id, crypto.randomUUID(), outcome)
+        return true
+      }
     }
     setOpen(false)
     setError('')
@@ -344,6 +353,28 @@ export function BetaTestingFrame({
     )
     void restoreDraft()
     return false
+  }
+  // This tab's Save did not produce the report for its draft: another tab's did, or the draft
+  // was closed first. Nothing here is reported as saved unless the report holds exactly it.
+  async function settleLostSave(id: string, outcome: 'saved' | 'discarded', identical: boolean) {
+    saving.current = false
+    if (identical) {
+      // The report already holds exactly this submission; a stored copy of it is not unsent work.
+      setOpen(false)
+      setDraftProblem('')
+      setDraftNotice('')
+      resetDraft()
+      setSuccess(`This feedback was already saved from another tab. Reference ${id.slice(0, 8)}.`)
+      await forgetStoredDraft(id).catch(() => undefined)
+      void restoreDraft()
+      return
+    }
+    if (await leaveClosedDraft(id, outcome, true))
+      setDraftNotice(
+        outcome === 'saved'
+          ? `Another tab saved this feedback. Your different unsent changes were kept as a separate draft. ${saveAgain}`
+          : `${keptApart.discarded} ${saveAgain}`,
+      )
   }
   function beginFeedback() {
     setError('')
@@ -418,26 +449,42 @@ export function BetaTestingFrame({
   }
   async function submit(event: React.FormEvent) {
     event.preventDefault()
-    const id = reportId
     setSending(true)
     setError('')
-    saving.current = true
     try {
-      // Draft storage never decides whether a report can be saved; if it cannot be read here,
-      // the save goes ahead and the next load settles the stored draft.
-      const begun = local
-        ? await enqueue(() => beginOwnerDraftSave(id, baseOf(id))).catch(() => null)
-        : null
-      if (begun?.closed) {
-        saving.current = false
-        if (await leaveClosedDraft(id, begun.closed))
-          setDraftNotice(`${keptApart[begun.closed]} Save again to add it as a new report.`)
+      // Store what is about to be sent first, so the save covers a revision holding exactly
+      // this content wherever this tab is still allowed to write. If that moved the work to a
+      // new draft because of another tab, say so and let the owner decide to save it.
+      if (local) await persistDraft()
+      const id = (local && activeDraftId.current) || reportId
+      if (id !== reportId) {
+        setDraftNotice((notice) => `${notice} ${saveAgain}`.trim())
         return
       }
+      saving.current = true
       const image = await editor.current?.exportImage()
       let savedId: string
       let preserved = false
       if (local) {
+        // This Save's own record: the stored revision it replaces and the fingerprint of exactly
+        // what it sends. Draft storage never decides whether a report can be saved; if the
+        // record cannot be written, the save goes ahead and the next load settles the draft.
+        const fingerprint = await submissionFingerprint(
+          { moduleId: reportModule.id, pagePath, comment, selectedText },
+          image,
+        )
+        const attemptId = crypto.randomUUID()
+        const begun = await enqueue(() =>
+          beginOwnerDraftSave({ attemptId, id, base: baseOf(id), fingerprint }),
+        ).catch(() => null)
+        if (begun?.closed) {
+          await settleLostSave(
+            id,
+            begun.closed,
+            begun.closed === 'saved' && begun.fingerprint === fingerprint,
+          )
+          return
+        }
         const saved = await createOwnerFeedback(
           {
             id,
@@ -447,20 +494,29 @@ export function BetaTestingFrame({
             selectedText,
           },
           image,
-        )
-        // The report transaction has committed (or found this ID already saved). Only now is
-        // the draft's ID closed. If that step fails, the started save is on record and the next
-        // load finishes it.
+        ).catch((err) => {
+          void enqueue(() => releaseOwnerDraftSave(attemptId)).catch(() => undefined)
+          throw err
+        })
+        // A report with this ID is now committed: by this save, or already by another tab's.
+        // What it holds, not who finished first, decides which stored revision it accounts
+        // for. If closing the ID fails here, the attempt is on record and the next load does it.
+        const reportFingerprint = saved.created
+          ? fingerprint
+          : await submissionFingerprint(
+              {
+                moduleId: saved.entry.module_id,
+                pagePath: saved.entry.page_path,
+                comment: saved.entry.comment,
+                selectedText: saved.entry.selected_text,
+              },
+              saved.entry.screenshot?.blob,
+            )
         const finished = await enqueue(() =>
-          finishOwnerDraftSave(id, baseOf(id), saved.created),
+          finishOwnerDraftSave(id, reportFingerprint, (saved.created && baseOf(id)) || undefined),
         ).catch(() => null)
-        if (!saved.created) {
-          // Another tab's save holds this ID; what is open here is not in that report.
-          saving.current = false
-          dirty.current = true
-          const outcome = finished?.closed ?? 'saved'
-          if (await leaveClosedDraft(id, outcome))
-            setDraftNotice(`${keptApart[outcome]} Save again to add it as a new report.`)
+        if (reportFingerprint !== fingerprint) {
+          await settleLostSave(id, 'saved', false)
           return
         }
         savedId = saved.entry.id

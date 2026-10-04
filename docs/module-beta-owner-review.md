@@ -94,6 +94,14 @@ ID.
   a newer version, that version is kept as a new unsent draft and the saving tab says so. If the
   other tab edits afterwards, its changes are kept as a new unsent draft and its dialog says that
   another tab already saved an earlier version; saving there adds a second, separate report.
+- **Save in both tabs.** Exactly one report is created under the draft's ID: the first save to
+  reach the reports database. The other tab is never told its work was saved unless the report
+  holds exactly the same content. If its content differs, it stays an unsent draft under a new
+  ID, once, and the dialog says "Another tab saved this feedback. Your different unsent changes
+  were kept as a separate draft." Saving that draft is a separate choice and adds its own
+  report. If both tabs held identical content, there is one report and no extra draft. A tab
+  with unstored edits whose draft was meanwhile changed by another tab has those edits kept as a
+  separate draft first and is asked to save again.
 - **Discard in one tab.** The same, without a report: a newer version the other tab had stored,
   or an edit it makes afterwards, is kept as a new unsent draft. The discarded draft itself does
   not reappear.
@@ -110,10 +118,12 @@ automatically.
 
 **What clears it.** **Discard draft** removes that draft only. **Save feedback locally** removes it
 only after the report's IndexedDB transaction has committed; the report keeps the draft's ID, so a
-retry cannot create a second report. Before the report is written, the save records which stored
-version of the draft it covers. If the browser stops between the report's commit and the removal,
-the next load uses that record to finish: the covered version is removed, and a different stored
-version is kept as a new draft. A report with the same ID is never, by itself, a reason to remove
+retry cannot create a second report. Before the report is written, each save stores its own
+record of the stored version it covers and a fingerprint of exactly what it is sending; one
+save's record never replaces another's. If the browser stops between the report's commit and the
+removal, the next load fingerprints the report, finds the save record that sent exactly that, and
+finishes from it: the version that save covered is removed, and any other stored version is kept
+as a new draft. If no report was written, nothing is removed. A report with the same ID is never, by itself, a reason to remove
 a draft. A failed save leaves the dialog open and the stored draft in place. Export, **Clear saved
 feedback**, sign-out and switching modules do not remove a draft, and discarding a draft never
 removes a saved report or learner progress.
@@ -134,22 +144,26 @@ notes, `storage_mode`, `schema_version`, and an optional PNG Blob with MIME, byt
 Retries with the same ID return the existing report without replacing its image or review notes.
 Unknown record/database versions produce an explicit error without resetting or deleting data.
 
-Unsent drafts: a separate database, `module-owner-feedback-drafts`, version 2, with object stores
+Unsent drafts: a separate database, `module-owner-feedback-drafts`, version 3, with object stores
 `drafts` (one record per draft, keyed by report UUID, record schema version 2), `images` (the
-draft's source PNG Blob, keyed by the same UUID and written only when the image changes) and
-`finalizations` (one small record per draft ID that has been saved or discarded, or whose save
-has started). Each draft record carries a `revision` that changes on every write and, for a draft
+draft's source PNG Blob, keyed by the same UUID and written only when the image changes),
+`finalizations` (one small record per draft ID that has been saved or discarded) and
+`save_attempts` (one record per Save that has started and whose draft is not yet closed: the
+draft ID, the stored revision the save covers, and a SHA-256 fingerprint of the submission; no
+feedback text or image). Each draft record carries a `revision` that changes on every write and, for a draft
 kept apart from another, the ID it came from. A tab writes a draft under its ID only while that
 ID has not been saved or discarded and the stored revision is the one the tab last saw; otherwise
 its content is written under a new ID. Draft, image and finalization records are changed together
 in one IndexedDB transaction. Finalization records are kept so that a tab left open cannot write
-under a closed ID later; they hold IDs and times, no feedback text or image. Version 1 of this
-database (no revisions, no `finalizations` store) is upgraded in place: the store is added and
-existing drafts and images are left as they are and stay readable. Adding
+under a closed ID later; they hold IDs and times, no feedback text or image. Versions 1
+(no revisions, no `finalizations`) and 2 (no `save_attempts`) of this database are upgraded in
+place: the missing stores are added and existing drafts, images and finalization records are left
+as they are and stay readable. Version 2 marked a save in progress with one replaceable record
+per draft; that mark is no longer written and is not treated as evidence of what was saved. Adding
 drafts did not change the reports database: it is still version 1 with its single `reports` store
 and unchanged record schema, so existing reports were not migrated, rewritten or made unreadable
 to an older build. A newer drafts database than this version understands produces an explicit
-error and is not reset. A build that only knows drafts database version 1 gets that same explicit
+error and is not reset. A build that only knows an earlier drafts database version gets that same explicit
 error for drafts once this version has opened the database; saved reports are unaffected. Draft records are validated on every read and write with the same page
 allowlist, text limits, PNG signature/IHDR check, 3 MB and 4,096-pixel limits as saved reports,
 plus bounds of 500 annotations and 20,000 points per drawn stroke.
@@ -273,8 +287,12 @@ draft's absence from the workspace and the ZIP. With two tabs of one persistent 
 stored draft it checks: Save in one tab with newer content already stored by the other, and with
 an edit made afterwards; the same two cases for Discard; a tab that changed nothing; a screenshot
 with annotations carried through the conflict; both tabs editing before either finalizes; survival
-across reload and a browser restart; and that no stored image is left without its draft. A
-version 1 drafts database is opened and upgraded with its draft and image intact. It also compares the PI and EBUS direct routes
+across reload and a browser restart; and that no stored image is left without its draft. For
+competing Saves it holds and releases each tab's storage steps to force exact orders: both tabs
+begin and one report wins before the browser stops; the losing Save finishing before the winner;
+either tab winning; identical content; three tabs with three versions; a stop after each Save
+phase; and screenshots whose annotations differ between the tabs. Version 1 and version 2 drafts
+databases are opened and upgraded with their drafts and images intact. It also compares the PI and EBUS direct routes
 with their review shells at 1280, 1024, 390 and 320 pixels wide and opens every module in the
 current catalog in the shell.
 The server suite retains API fixtures for successful authenticated persistence, and checks that

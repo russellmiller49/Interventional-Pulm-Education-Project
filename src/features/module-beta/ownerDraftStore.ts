@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { submissionFingerprint } from './submissionFingerprint'
 import { betaModuleById } from './catalog'
 import {
   feedbackPagePathSchema,
@@ -14,15 +15,25 @@ import {
 // write, and every draft ID that has been saved or discarded keeps a durable `finalizations`
 // record. A tab writes under an ID only while that ID is open and still at the revision the tab
 // last saw; otherwise its content is kept under a fresh ID instead of overwriting, reviving, or
-// being dropped. Version 1 of this database had no revisions and no finalizations store.
+// being dropped.
+//
+// Several tabs can also Save the same draft at once. Each Save writes its own `save_attempts`
+// record, never anyone else's, naming the stored revision it covers and the fingerprint of the
+// exact submission it sends. The reports database lets one of them create the report. Which one
+// is read back from the report: its fingerprint selects the attempt, and only the revision that
+// attempt covered is removed. Every other stored revision is kept under a fresh ID, once.
+//
+// Version 1 of this database had no revisions and no finalizations; version 2 had no save
+// attempts and marked a save in progress with a single replaceable `saving` finalization.
 export const ownerDraftDatabase = 'module-owner-feedback-drafts'
-export const ownerDraftDatabaseVersion = 2
+export const ownerDraftDatabaseVersion = 3
 export const ownerDraftSchemaVersion = 2
 export const maxDraftAnnotations = 500
 export const maxDraftStrokePoints = 20000
 const draftStore = 'drafts'
 const imageStore = 'images'
 const finalizationStore = 'finalizations'
+const attemptStore = 'save_attempts'
 // The revision every tab sees for a record written before revisions existed.
 const legacyRevision = 'v1'
 
@@ -96,10 +107,13 @@ const storedImageSchema = z
 const finalizationSchema = z
   .object({
     id: z.string(),
-    // `saving` is a save that has been started; `saved` and `discarded` close the ID for good.
+    // `saved` and `discarded` close the ID for good. `saving` was version 2's mark for a save in
+    // progress; it is read as "not closed" and is no longer written or trusted.
     outcome: z.enum(['saving', 'saved', 'discarded']),
     // The stored revision that the save or discard covered; null when none is known.
     revision: z.string().nullable(),
+    // For `saved`: the fingerprint of the submission the report holds, when known.
+    fingerprint: z.string().nullable().optional(),
     at: z.string(),
     // Where a different stored revision was moved when this ID was closed.
     fork: z.object({ id: z.string().uuid(), revision: z.string() }).nullable(),
@@ -107,6 +121,19 @@ const finalizationSchema = z
   .strict()
 type Finalization = z.infer<typeof finalizationSchema>
 type Closed = Finalization & { outcome: 'saved' | 'discarded' }
+// One Save of one draft by one tab. Written once and never changed; removed when its draft ID
+// closes or when its own report write fails.
+const attemptSchema = z
+  .object({
+    attempt_id: z.string().uuid(),
+    draft_id: z.string().uuid(),
+    // The stored revision this submission replaces; null when the tab had stored nothing.
+    revision: z.string().nullable(),
+    // Fingerprint of exactly what this Save sends to the report.
+    fingerprint: z.string().min(1),
+    at: z.string(),
+  })
+  .strict()
 
 // `screenshot` is the unannotated source image; `annotations` stay editable marks over it.
 export type OwnerFeedbackDraft = StoredDraft & { screenshot: { blob: Blob; token: string } | null }
@@ -129,7 +156,7 @@ export type OwnerReportLookup = (id: string) => Promise<{
   page_path: unknown
   comment: unknown
   selected_text: unknown
-  hasScreenshot: boolean
+  screenshot: Blob | null
 } | null>
 
 function parseDraft(value: unknown): StoredDraft | null {
@@ -179,6 +206,8 @@ function openDatabase(): Promise<IDBDatabase> {
       }
       if (event.oldVersion < 2)
         request.result.createObjectStore(finalizationStore, { keyPath: 'id' })
+      if (event.oldVersion < 3)
+        request.result.createObjectStore(attemptStore, { keyPath: 'attempt_id' })
     }
     request.onblocked = () => {
       blocked = true
@@ -203,7 +232,12 @@ function openDatabase(): Promise<IDBDatabase> {
   })
 }
 
-type Stores = { drafts: IDBObjectStore; images: IDBObjectStore; finalizations: IDBObjectStore }
+type Stores = {
+  drafts: IDBObjectStore
+  images: IDBObjectStore
+  finalizations: IDBObjectStore
+  attempts: IDBObjectStore
+}
 // Awaiting only these keeps the transaction active between steps.
 const result = <T>(request: IDBRequest<T>) =>
   new Promise<T>((resolve, reject) => {
@@ -211,7 +245,7 @@ const result = <T>(request: IDBRequest<T>) =>
     request.onerror = () => reject(request.error)
   })
 
-// One transaction over drafts, their images and the finalization records. Resolves only after
+// One transaction over drafts, their images, the finalization records and the save attempts. Resolves only after
 // commit, including quota/abort failures that occur after a request succeeds.
 async function transaction<T>(
   mode: IDBTransactionMode,
@@ -222,7 +256,7 @@ async function transaction<T>(
     let tx: IDBTransaction
     let value: T
     try {
-      tx = db.transaction([draftStore, imageStore, finalizationStore], mode)
+      tx = db.transaction([draftStore, imageStore, finalizationStore, attemptStore], mode)
     } catch (error) {
       db.close()
       reject(error)
@@ -251,6 +285,7 @@ async function transaction<T>(
         drafts: tx.objectStore(draftStore),
         images: tx.objectStore(imageStore),
         finalizations: tx.objectStore(finalizationStore),
+        attempts: tx.objectStore(attemptStore),
       }).then((done) => {
         value = done
       }, fail)
@@ -276,20 +311,41 @@ async function moveDraft(stores: Stores, id: string, raw: unknown) {
   return { id: fork, revision: revisionOf(raw) }
 }
 
-// Closes an ID for good. A stored draft at `revision` is what was saved or discarded and is
-// removed; any other stored revision is newer unsent work from another tab and is moved.
+// The save attempts recorded for one draft ID, as stored.
+async function attemptsFor(stores: Stores, id: string) {
+  const all: unknown[] = await result(stores.attempts.getAll())
+  return all.flatMap((raw) => {
+    const parsed = attemptSchema.safeParse(raw)
+    return parsed.success && parsed.data.draft_id === id ? [parsed.data] : []
+  })
+}
+// The stored revisions a report accounts for: those covered by the attempts that sent exactly
+// the submission the report holds. Attempts that sent anything else account for nothing.
+const coveredBy = (attempts: Array<z.infer<typeof attemptSchema>>, fingerprint: string | null) =>
+  attempts.flatMap((attempt) =>
+    fingerprint !== null && attempt.fingerprint === fingerprint && attempt.revision !== null
+      ? [attempt.revision]
+      : [],
+  )
+
+// Closes an ID for good, once. A stored draft at one of the `covered` revisions is what was saved
+// or discarded and is removed; any other stored revision is unsent work from another tab and is
+// moved to a fresh ID. Closing again changes nothing: the ID has no stored draft left to move.
 async function closeDraftId(
   stores: Stores,
   id: string,
   outcome: Closed['outcome'],
-  revision: string | null,
+  covered: string[],
+  fingerprint: string | null = null,
 ) {
   const prior = readFinalization(await result(stores.finalizations.get(id)))
   const raw = await result(stores.drafts.get(id))
   let fork = prior?.fork ?? null
   let moved = false
+  let revision = covered[0] ?? null
   if (raw !== undefined) {
-    if (revision !== null && revisionOf(raw) === revision) {
+    if (covered.includes(revisionOf(raw))) {
+      revision = revisionOf(raw)
       stores.drafts.delete(id)
       stores.images.delete(id)
     } else {
@@ -297,7 +353,23 @@ async function closeDraftId(
       moved = true
     }
   }
-  stores.finalizations.put({ id, outcome, revision, at: new Date().toISOString(), fork })
+  for (const attempt of await attemptsFor(stores, id)) stores.attempts.delete(attempt.attempt_id)
+  if (isClosed(prior))
+    stores.finalizations.put({
+      ...prior,
+      revision: prior.revision ?? revision,
+      fingerprint: prior.fingerprint ?? fingerprint,
+      fork,
+    })
+  else
+    stores.finalizations.put({
+      id,
+      outcome,
+      revision,
+      fingerprint,
+      at: new Date().toISOString(),
+      fork,
+    })
   return { moved }
 }
 
@@ -474,60 +546,69 @@ export function discardOwnerDraft(id: string, base: string) {
     const found = await locate(stores, id, base)
     // Already closed elsewhere: only this tab's own kept copy, if any, is left to discard.
     if (found.closed) {
-      if (found.id) await closeDraftId(stores, found.id, 'discarded', base)
+      if (found.id) await closeDraftId(stores, found.id, 'discarded', [base])
       return { preserved: false }
     }
-    return { preserved: (await closeDraftId(stores, id, 'discarded', base || null)).moved }
+    return { preserved: (await closeDraftId(stores, id, 'discarded', base ? [base] : [])).moved }
   })
 }
 
 /**
- * First step of Save, before the report is written. Records which stored revision the save
- * covers, so a save interrupted after the report commits can still be finished correctly.
- * Reports an ID that another tab already closed instead of saving over it.
+ * First step of Save, before the report is written: this Save's own attempt record, naming the
+ * stored revision it replaces and the fingerprint of exactly what it sends. No other attempt is
+ * read, changed or replaced. Reports an ID that is already closed instead, with the fingerprint
+ * of what was saved, so the tab can tell "already saved" from "different work to keep".
  */
-export function beginOwnerDraftSave(id: string, base: string) {
-  return transaction<{ closed: Closed['outcome'] | null }>('readwrite', async (stores) => {
-    const entry = readFinalization(await result(stores.finalizations.get(id)))
-    if (isClosed(entry)) return { closed: entry.outcome }
-    stores.finalizations.put({
-      id,
-      outcome: 'saving',
-      revision: base || null,
-      at: new Date().toISOString(),
-      fork: null,
-    })
-    return { closed: null }
-  })
-}
-
-/**
- * Last step of Save, after the report transaction. `created` is whether this tab's save wrote
- * the report. If it did, the ID is closed as saved: the covered revision is removed and a newer
- * one from another tab is kept under a fresh ID (`preserved`). If the report already existed,
- * this tab's content is not in it; the ID is closed and `closed` tells the tab to keep its work.
- */
-export function finishOwnerDraftSave(id: string, base: string, created: boolean) {
-  return transaction<{ closed: Closed['outcome'] | null; preserved: boolean }>(
+export function beginOwnerDraftSave(attempt: {
+  attemptId: string
+  id: string
+  base: string
+  fingerprint: string
+}) {
+  return transaction<{ closed: Closed['outcome'] | null; fingerprint: string | null }>(
     'readwrite',
     async (stores) => {
-      if (created)
-        return {
-          closed: null,
-          preserved: (await closeDraftId(stores, id, 'saved', base || null)).moved,
-        }
-      const entry = readFinalization(await result(stores.finalizations.get(id)))
-      if (isClosed(entry)) return { closed: entry.outcome, preserved: false }
-      stores.finalizations.put({
-        id,
-        outcome: 'saved',
-        revision: null,
+      const entry = readFinalization(await result(stores.finalizations.get(attempt.id)))
+      if (isClosed(entry)) return { closed: entry.outcome, fingerprint: entry.fingerprint ?? null }
+      stores.attempts.add({
+        attempt_id: attempt.attemptId,
+        draft_id: attempt.id,
+        revision: attempt.base || null,
+        fingerprint: attempt.fingerprint,
         at: new Date().toISOString(),
-        fork: null,
       })
-      return { closed: 'saved', preserved: false }
+      return { closed: null, fingerprint: null }
     },
   )
+}
+
+// A Save whose report write failed withdraws its own attempt; nothing else is touched.
+export function releaseOwnerDraftSave(attemptId: string) {
+  return transaction<void>('readwrite', async (stores) => {
+    stores.attempts.delete(attemptId)
+  })
+}
+
+/**
+ * Last step of Save, once a report with this ID is known to be committed, by this tab or by
+ * another. `reportFingerprint` is the fingerprint of what that report holds. The ID is closed as
+ * saved: the revision covered by the attempt that sent exactly that submission is removed, and
+ * any other stored revision is kept under a fresh ID (`preserved`). `ownRevision` is given only
+ * by the tab whose own write created the report, in case its attempt record could not be
+ * stored. Safe to repeat, from any tab, in any order.
+ */
+export function finishOwnerDraftSave(id: string, reportFingerprint: string, ownRevision?: string) {
+  return transaction<{ preserved: boolean }>('readwrite', async (stores) => {
+    const entry = readFinalization(await result(stores.finalizations.get(id)))
+    if (isClosed(entry) && (await result(stores.drafts.get(id))) === undefined)
+      return { preserved: false }
+    const covered = coveredBy(await attemptsFor(stores, id), reportFingerprint)
+    if (ownRevision) covered.push(ownRevision)
+    if (isClosed(entry) && entry.revision !== null) covered.push(entry.revision)
+    return {
+      preserved: (await closeDraftId(stores, id, 'saved', covered, reportFingerprint)).moved,
+    }
+  })
 }
 
 /**
@@ -549,7 +630,9 @@ type Settlement = {
   seen: string
   marker: string
   outcome: Closed['outcome']
-  revision: string | null
+  // Revisions the save or discard accounts for, beyond what the stored attempts show.
+  covered: string[]
+  fingerprint: string | null
 }
 const text = (value: unknown) => (typeof value === 'string' ? value : '')
 
@@ -557,10 +640,18 @@ const text = (value: unknown) => (typeof value === 'string' ? value : '')
 async function unsettledOwnerDrafts(report: OwnerReportLookup) {
   const rows = await transaction('readonly', async (stores) => {
     const drafts = stores.drafts.getAll()
-    const entries = await result(stores.finalizations.getAll())
-    return { drafts: drafts.result as unknown[], entries: entries as unknown[] }
+    const entries = stores.finalizations.getAll()
+    const attempts = await result(stores.attempts.getAll())
+    return {
+      drafts: drafts.result as unknown[],
+      entries: entries.result as unknown[],
+      attempts: (attempts as unknown[]).flatMap((raw) => {
+        const parsed = attemptSchema.safeParse(raw)
+        return parsed.success ? [parsed.data] : []
+      }),
+    }
   })
-  const settlements: Settlement[] = []
+  const settlements: Array<Settlement & { removes: boolean }> = []
   for (const raw of rows.drafts) {
     const id = field(raw, 'id')
     if (typeof id !== 'string') continue
@@ -569,26 +660,54 @@ async function unsettledOwnerDrafts(report: OwnerReportLookup) {
     const seen = revisionOf(raw)
     const marker = JSON.stringify(stored ?? null)
     if (isClosed(entry)) {
-      settlements.push({ id, seen, marker, outcome: entry.outcome, revision: entry.revision })
+      const covered = entry.revision === null ? [] : [entry.revision]
+      settlements.push({
+        id,
+        seen,
+        marker,
+        outcome: entry.outcome,
+        covered,
+        fingerprint: null,
+        removes: covered.includes(seen),
+      })
       continue
     }
     const saved = await report(id).catch(() => null)
     if (!saved) continue
-    // A started save names the revision it covered. A draft from before those records existed
-    // is only known to be the saved content when it is text-only and matches the report.
+    // The report says which submission it holds; the attempt that sent exactly that names the
+    // revision it replaced. Without such an attempt (a draft from before attempts existed), the
+    // draft is only known to be the saved content when both are text-only and identical.
+    const fingerprint = await submissionFingerprint(
+      {
+        moduleId: saved.module_id,
+        pagePath: saved.page_path,
+        comment: saved.comment,
+        selectedText: saved.selected_text,
+      },
+      saved.screenshot,
+    ).catch(() => null)
     const same =
-      !saved.hasScreenshot &&
+      !saved.screenshot &&
       field(raw, 'image') === null &&
       saved.module_id === field(raw, 'module_id') &&
       saved.page_path === field(raw, 'page_path') &&
       saved.comment === field(raw, 'comment') &&
       text(saved.selected_text) === text(field(raw, 'selected_text'))
+    const covered = same ? [seen] : []
     settlements.push({
       id,
       seen,
       marker,
       outcome: 'saved',
-      revision: entry ? entry.revision : same ? seen : null,
+      covered,
+      fingerprint,
+      removes: [
+        ...covered,
+        ...coveredBy(
+          rows.attempts.filter((attempt) => attempt.draft_id === id),
+          fingerprint,
+        ),
+      ].includes(seen),
     })
   }
   return settlements
@@ -596,8 +715,9 @@ async function unsettledOwnerDrafts(report: OwnerReportLookup) {
 
 /**
  * Brings stored drafts in line with what was saved or discarded, before any is offered again.
- * The finalized revision is removed; a different one is kept under a fresh ID. Nothing is
- * decided from the mere existence of a report.
+ * The revision a save or discard covered is removed; a different one is kept under a fresh ID.
+ * Nothing is decided from the mere existence of a report, from which attempt was written last,
+ * or from the order records come back in.
  */
 export async function settleOwnerDrafts(report: OwnerReportLookup) {
   const settlements = await unsettledOwnerDrafts(report)
@@ -613,7 +733,16 @@ export async function settleOwnerDrafts(report: OwnerReportLookup) {
         JSON.stringify(stored ?? null) !== settlement.marker
       )
         continue
-      await closeDraftId(stores, settlement.id, settlement.outcome, settlement.revision)
+      await closeDraftId(
+        stores,
+        settlement.id,
+        settlement.outcome,
+        [
+          ...settlement.covered,
+          ...coveredBy(await attemptsFor(stores, settlement.id), settlement.fingerprint),
+        ],
+        settlement.fingerprint,
+      )
     }
   })
 }
@@ -622,7 +751,7 @@ export async function settleOwnerDrafts(report: OwnerReportLookup) {
 export async function finalizedOwnerDraftIds(report: OwnerReportLookup) {
   return new Set(
     (await unsettledOwnerDrafts(report))
-      .filter((settlement) => settlement.revision === settlement.seen)
+      .filter((settlement) => settlement.removes)
       .map((settlement) => settlement.id),
   )
 }
