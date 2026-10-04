@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
 import { FluoroViewAppDynamic } from '@/components/fluoroview/FluoroViewAppDynamic'
+import { SIMULATOR_ABOUT_ID, simulatorPage } from '@/components/layout/simulator-page'
 import { Badge } from '@/components/ui/badge'
 import { HandoffContent } from '@/i18n/handoff'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
@@ -35,22 +36,33 @@ export default async function FluoroViewPage({ params }: FluoroViewPageProps) {
   return (
     <HandoffContent>
       {
-        <div className="space-y-16 py-16">
-          <section className="container space-y-6">
-            <div className="space-y-2">
-              <Badge
-                variant="info"
-                className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
-              >
-                Simulation · FluoroView
-              </Badge>
-              <h1 className="text-4xl font-bold tracking-tight md:text-5xl">FluoroView</h1>
-              <p className="max-w-3xl text-muted-foreground text-base md:text-lg">
-                Compare derived CT slices with simulated fluoroscopy, rehearse C-arm orientation,
-                and use a transparent 3D airway overlay to teach anatomy and projection behavior.
-                This is an educational simulator only, not a clinical imaging or guidance tool.
-              </p>
+        <div className={simulatorPage.root}>
+          <section className={simulatorPage.stage}>
+            <div className={simulatorPage.header}>
+              <div className={simulatorPage.identity}>
+                <Badge
+                  variant="info"
+                  className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+                >
+                  Simulation · FluoroView
+                </Badge>
+                <h1 className={simulatorPage.title}>FluoroView</h1>
+              </div>
+              <div className={simulatorPage.actions}>
+                <a href={`#${SIMULATOR_ABOUT_ID}`} className={simulatorPage.aboutLink}>
+                  Learning objectives
+                </a>
+              </div>
             </div>
+            <FluoroViewAppDynamic />
+          </section>
+
+          <section id={SIMULATOR_ABOUT_ID} className={simulatorPage.about}>
+            <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
+              Compare derived CT slices with simulated fluoroscopy, rehearse C-arm orientation, and
+              use a transparent 3D airway overlay to teach anatomy and projection behavior. This is
+              an educational simulator only, not a clinical imaging or guidance tool.
+            </p>
             <div className="rounded-lg border border-border/70 bg-card/70 p-6">
               <h2 className="text-lg font-semibold text-foreground">Learning objectives</h2>
               <ul className="mt-4 grid gap-3 text-sm text-muted-foreground md:grid-cols-2">
@@ -62,10 +74,6 @@ export default async function FluoroViewPage({ params }: FluoroViewPageProps) {
                 ))}
               </ul>
             </div>
-          </section>
-
-          <section className="container space-y-8">
-            <FluoroViewAppDynamic />
           </section>
         </div>
       }
