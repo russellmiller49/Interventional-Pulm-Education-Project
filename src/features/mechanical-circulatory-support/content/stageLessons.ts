@@ -136,6 +136,12 @@ const WALK_LOCATION: StageStepLocation = {
   alsoLandmark: 'the Circulation map, where each stop lights',
 }
 
+export const MCS_EXPLAIN_READING_INSTRUCTION =
+  'Read why the readings moved, in the explanation below. The question under it is an optional reflection, with a worked response you can open at once.'
+
+export const MCS_EXPLAIN_SORT_INSTRUCTION =
+  'Sort each item into what you can set, what the console reports, and what the patient’s loading decides. The question under the sort is a separate, optional reflection.'
+
 const PHASE_LABEL: Readonly<Record<StagePhase, string>> = {
   recognize: 'Recognize',
   predict: 'Predict',
@@ -341,11 +347,28 @@ export function buildMcsStageLesson(sectionId: string): McsStageLesson {
     unmodeledNote: contract.unmodeledNote,
   })
 
-  push('explain', 'explain', spec.stepTitles.explain, contract.reassessmentPrompt, 'Continue', {
-    kind: 'explain',
-    prompt: contract.reassessmentPrompt,
-    ...(spec.walksTheLoop ? { sort: MCS_CONTROL_PANEL_SORT } : {}),
-  })
+  /*
+   * The step's instruction says what the step asks for (F11, F15).
+   *
+   * It used to be the section's reflection question, which the step gave no way to answer; on the
+   * section that carries the control-panel sort it sat over a task about something else, so the
+   * heading named the sort, the instruction asked about native and device flow, and the work was the
+   * sort. The instruction now names the work — the sort where there is one, the reading where
+   * there is not — and the question travels in `prompt`, where the host renders it as an optional
+   * reflection with a worked response.
+   */
+  push(
+    'explain',
+    'explain',
+    spec.stepTitles.explain,
+    spec.walksTheLoop ? MCS_EXPLAIN_SORT_INSTRUCTION : MCS_EXPLAIN_READING_INSTRUCTION,
+    'Continue',
+    {
+      kind: 'explain',
+      prompt: contract.reassessmentPrompt,
+      ...(spec.walksTheLoop ? { sort: MCS_CONTROL_PANEL_SORT } : {}),
+    },
+  )
 
   push(
     'transfer',

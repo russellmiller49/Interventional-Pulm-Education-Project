@@ -890,11 +890,11 @@
         },
         {
           "file": "src/features/mechanical-circulatory-support/components/McsSourcesPanel.tsx",
-          "locator": "Evidence and model card, profile check line (reworded)",
-          "excerpt": "Labeling sources last checked"
+          "locator": "Evidence and model card, profile registry-date line (source-display correction in Prompt-04 sanity review)",
+          "excerpt": "Historical registry date"
         }
       ],
-      "learnerWording": "Controls: “Pump speed 4600–6200 rpm”; authorization “Explicit simulated authorized-personnel order required.”; labeling anchor “P160054/S008 IFU teaching anchor; current PMA supplement/local-IFU reconciliation remains pending”; source list shows the S008 document (October 2018) with year 2026; two 2025 power-system notices.",
+      "learnerWording": "Controls: “Pump speed 4600–6200 rpm”; authorization “Explicit simulated authorized-personnel order required.”; labeling anchor “Registered P160054/S008 IFU anchor, not opened for this module; current PMA supplement/local-IFU reconciliation remains pending”; source list shows the S008 document (October 2018) with year 2026; two 2025 power-system notices.",
       "intendedTeachingPoint": "Durable pump speed is prescribed and changed only by authorized personnel; stopping the pump is dangerous.",
       "sourceRecordIds": [
         "fda-heartmate3-ifu",
@@ -957,7 +957,7 @@
         {
           "file": "src/features/mechanical-circulatory-support/content/sources.ts",
           "locator": "Source list, bedside reference citation (rewritten)",
-          "excerpt": "It names no author, publisher, date or reference list and describes itself as a synthesis of four supplied chapters"
+          "excerpt": "It lists four source chapters and manufacturer/ELSO resources without complete bibliographic provenance"
         },
         {
           "file": "src/features/mechanical-circulatory-support/content/sources.ts",

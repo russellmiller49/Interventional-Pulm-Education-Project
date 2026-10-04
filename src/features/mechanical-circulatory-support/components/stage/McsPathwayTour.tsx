@@ -18,7 +18,11 @@ export function McsPathwayTour() {
         patient.
       </p>
       <nav aria-label="Study one support pathway at a time">
-        {['IABP', 'LV-to-aorta microaxial pump', 'Existing durable LVAD'].map((label, i) => (
+        {[
+          'IABP (counterpulsation)',
+          'Impella (LV-to-aorta microaxial pump)',
+          'Durable LVAD (continuous-flow pump)',
+        ].map((label, i) => (
           <button type="button" key={label} aria-pressed={index === i} onClick={() => setIndex(i)}>
             {label}
           </button>
