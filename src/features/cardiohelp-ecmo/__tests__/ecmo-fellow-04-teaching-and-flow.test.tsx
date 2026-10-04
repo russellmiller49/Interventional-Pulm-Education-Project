@@ -209,10 +209,7 @@ describe('a prediction step promises no gate, because there is none', () => {
     expect(latestState().scenario.prediction.committed).toBe(false)
   })
 
-  it.each([
-    ['vv-integration-capstone', 'vv'],
-    ['va-integration-capstone', 'va'],
-  ] as const)(
+  it.each(['vv-integration-capstone', 'va-integration-capstone'] as const)(
     '%s: the capstone prediction no longer says "before looking further"',
     (sectionId) => {
       const predict = ecmoFoundationLessonRuntime(sectionId).phases.predict
@@ -365,7 +362,7 @@ describe('S1-3, S1-4, S1-6: the first section says only what is on its own page'
       const view = render(
         <>
           <WhyExtracorporealSupportPanel state={state} />
-          <OxygenDeliveryExplorer state={state} />
+          <OxygenDeliveryExplorer state={state} sourceIds={[]} />
         </>,
       )
       expect(view.container.textContent ?? '').not.toMatch(/beside you/i)
