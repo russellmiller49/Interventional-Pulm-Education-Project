@@ -1045,9 +1045,9 @@ const learnerActionDescriptionById: Readonly<Record<string, string>> = Object.fr
   'crrt07-action-alternative-candidate':
     'Stop and ask for an independent check of the entries before going on.',
   'crrt08-action-alternative-candidate':
-    'Stop and ask for an independent check of the entries before going on.',
+    'Record a plan to stop progression for an independent check before connection. The running demonstration continues unchanged.',
   'crrt09-action-alternative-candidate':
-    'Stop and ask for an independent check of the entries before going on.',
+    'Record a plan to stop progression for an independent check before enabling an anticoagulation workflow. The running demonstration continues unchanged.',
   'crrt10-increase-pfr-without-reassessment':
     'Raise machine PFR (patient fluid removal) before hemodynamic tolerance has been assessed.',
   'crrt13-pause-treatment': 'Pause blood and fluid delivery while the access path is corrected.',
@@ -1105,6 +1105,13 @@ const learnerActionResponseById: Readonly<Record<string, string>> = Object.freez
 
 function applyLearnerActionCopy(definition: MutableRuntimeCrrtCase): MutableRuntimeCrrtCase {
   for (const intervention of definition.interventions) {
+    // These inherited communication cards record a plan; neither pauses the running fixture.
+    if (
+      intervention.id === 'crrt08-action-alternative-candidate' ||
+      intervention.id === 'crrt09-action-alternative-candidate'
+    ) {
+      intervention.label = 'Plan to stop progression and request independent input verification'
+    }
     const description = learnerActionDescriptionById[intervention.id]
     if (description) intervention.description = description
     const response = learnerActionResponseById[intervention.id]
@@ -1686,9 +1693,9 @@ const authoredNarratives: readonly CaseNarrative[] = [
     mechanism:
       'A mismatch in set, bag, solution, line, or entered data can propagate into later device behavior and displayed calculations.',
     safeAction:
-      'Stop the sequence, identify the mismatched domain, and complete an independent check',
+      'Plan to stop the sequence, identify the mismatched domain, and complete an independent check',
     acceptedAlternative: 'Escalate the unresolved local-configuration item before any connection',
-    unsafeAction: 'Connect first and plan to correct the mismatch later',
+    unsafeAction: 'Plan to connect first and correct the mismatch later',
     expectedResponse:
       'Your verification plan is recorded in the case timeline. Nothing is stopped or paused: the running demonstration continues unchanged, because this exercise has no setup state to hold. In practice the mismatch would be resolved or escalated before connection.',
     responseOptionLabel: 'Expect the plan to be recorded, not a change to the machine',
@@ -1896,7 +1903,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
     trendReview:
       'This case cannot show a calcium trend, a total-to-ionized ratio, or a citrate measurement: it carries one systemic ionized calcium value, at case start. An escalation would state that single value, the samples still to obtain, and the reassessment the responsible team would need.',
     reassessment:
-      'Reassess linked trend direction, sampling validity, delivery context, and escalation response',
+      'Review the supplied observation, sampling validity, and delivery context, and identify the missing trends and escalation follow-up',
     openingFinding:
       'One systemic ionized calcium value and the acid-base values are supplied at case start; the post-filter sample, the serial trend and the actual infusions are not available here.',
     causalChain: [
@@ -1905,7 +1912,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'An escalation would give the responsible team a structured summary of the linked observations and the reassessment still needed.',
     ],
     transferQuestion:
-      'How would you communicate the linked trend, missing context, and escalation boundary to the responsible team?',
+      'How would you communicate the single supplied calcium observation, missing trend and context, and escalation boundary to the responsible team?',
     clinicalSourceIds: ['REVIEW-CKRT-CORE-2025', 'GUID-RRT-ICU-2026'],
   },
   {

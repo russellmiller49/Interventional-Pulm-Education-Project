@@ -164,7 +164,8 @@ for (const journey of [
   {
     id: 'CRRT-08',
     intro: 'The machine shown alongside is an already-running demonstration',
-    action: 'Stop the sequence, identify the mismatched domain, and complete an independent check',
+    action:
+      'Plan to stop the sequence, identify the mismatched domain, and complete an independent check',
     response: 'Nothing is stopped or paused: the running demonstration continues unchanged',
     teaching: 'This exercise does not model that hold',
   },
