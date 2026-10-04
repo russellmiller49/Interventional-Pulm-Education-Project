@@ -867,6 +867,15 @@ Runs that did not pass during this repair:
    - The attempt-failure test hung in a test helper that opened the reports database before any
      report existed (helper error; it now returns an empty list when the database is absent).
 
+**Current main.** `origin/main` moved to `fd680511` during the repair. It now changes three files
+this PR also touches (`src/features/module-beta/catalog.ts`, `e2e/module-beta.spec.ts`,
+`docs/module-beta-testing.md`: the EUS-B module joining the beta hub). A trial merge of this
+branch with that commit, in a throwaway worktree, merged without conflict; on the merged tree
+the type-check passed, the expanded Jest set passed (14 suites, 188 tests), the server browser
+suite passed 8 of 8, and a seven-test owner subset passed (every module in the merged catalog in
+the review shell, the 1280-pixel shell test, the three new Save tests, S1 and S2). The branch
+itself was not merged or rebased.
+
 ### Limits after the third repair
 
 1. Owner-local Save now needs working draft storage. Where the drafts database cannot be
