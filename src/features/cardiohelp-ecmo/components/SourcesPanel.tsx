@@ -133,7 +133,7 @@ export function SourcesPanel({
 
       {/*
         OV-2 (ECMO-FELLOW-04). The registry printed "Clinical and device review of how this module
-        uses it: none recorded yet" once per source, sixteen times down the hub. The fact itself is
+        uses it: none recorded yet" once per source, fifteen times down the hub. The fact itself is
         not folded: it stays in the badge and the profile above, and the summary of this disclosure
         line above this disclosure says it again for the whole registry. Only the per-source
         repetition and the provenance detail sit behind the disclosure, where every row still
