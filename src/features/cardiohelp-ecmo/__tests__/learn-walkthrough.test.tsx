@@ -1,4 +1,7 @@
-import { cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
+import {
+  cardiohelpLearnLessonByScenarioId,
+  ECMO_PREDICTION_STEP_TITLE,
+} from '../content/learnLessons'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
@@ -141,7 +144,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     await openConsoleScreenAndAdvance('Timers')
 
     expect(
-      screen.getByRole('heading', { name: /Use alarm history as context/i }),
+      screen.getByRole('heading', { name: /Use the alarm list as context/i }),
     ).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
 
@@ -152,12 +155,14 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     })
     fireEvent.click(menuButton)
 
+    // The console's own menu entry, by its exact name: the step is now called by the same words
+    // ("Open the Alarm list"), so a loose match would no longer single out the device control.
     await waitFor(() => {
-      const alarmList = screen.getByRole('button', { name: /Alarm list/i })
+      const alarmList = screen.getByRole('button', { name: /^Alarm list$/i })
       expect(alarmList).toHaveAttribute('data-guided-help', 'true')
       expect(alarmList).toHaveFocus()
     })
-    fireEvent.click(screen.getByRole('button', { name: /Alarm list/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Alarm list$/i }))
 
     await waitFor(() => expect(nowStatus()).toMatch(/^Done\./))
     expect(latestState().device.screen).toBe('alarm-history')
@@ -473,9 +478,7 @@ describe('CARDIOHELP ECMO Learn prediction', () => {
     }
 
     // Committing did not move the learner on.
-    expect(
-      screen.getByRole('heading', { name: /Commit to a prediction before you act/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: ECMO_PREDICTION_STEP_TITLE })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: nextTitle })).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))

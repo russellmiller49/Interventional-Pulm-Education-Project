@@ -371,7 +371,8 @@ describe('the five citing surfaces', () => {
     expect(container.querySelector('article')).toBeNull()
 
     expect(container.querySelector('dl')).not.toBeNull()
-    const checklist = container.querySelector('details')
+    // ECMO-FELLOW-04 (OV-2): the registry now sits in its own disclosure, ahead of the checklist.
+    const checklist = container.querySelector('details:not([data-source-registry])')
     expect(checklist?.querySelector('summary')?.textContent).toMatch(/Publication checklist/)
     expect(checklist?.querySelectorAll('li').length).toBeGreaterThan(0)
 

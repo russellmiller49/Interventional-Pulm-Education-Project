@@ -14,7 +14,7 @@ import { UNAVAILABLE_INDICATION } from '../components/channelReadout'
 /**
  * A1 — pressure-readout truthfulness.
  *
- * The engine has always known when pVen, pInt, pArt and ΔP are not numerically supported. These
+ * The engine has always known when pVen, pInt, pArt and Δp are not numerically supported. These
  * tests pin the other half of that claim: that no learner-facing surface prints the model's
  * zero-flow intercepts as though the console had measured them, that the reason is available to a
  * screen reader, and that the console and the circuit map never disagree about a channel.

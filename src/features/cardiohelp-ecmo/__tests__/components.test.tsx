@@ -555,9 +555,11 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(screen.getByRole('heading', { name: scenario.title })).toBeInTheDocument()
     expect(screen.queryByLabelText('Case')).not.toBeInTheDocument()
     expect(screen.getByText(/Advance 10 more simulated second/i)).toBeInTheDocument()
-    expect(screen.getByText('Required review domains').closest('[role="note"]')).toHaveTextContent(
-      /right-arm oxygenation/i,
-    )
+    // ECMO-FELLOW-04 (IA-2): a teaching checklist, no longer headed as a requirement.
+    expect(screen.queryByText('Required review domains')).toBeNull()
+    expect(
+      screen.getByText('Review checklist for this case').closest('[role="note"]'),
+    ).toHaveTextContent(/right-arm oxygenation/i)
     expect(screen.getByRole('button', { name: /Commit reassessment/i })).toBeDisabled()
     expect(screen.queryByRole('button', { name: 'Standard practice' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Give me a clue/i })).not.toBeInTheDocument()

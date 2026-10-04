@@ -550,7 +550,7 @@ describe('vv-integration-capstone panel', () => {
         'Displayed circuit flow',
         'pVen (drainage)',
         'pInt and pArt',
-        'ΔP across the membrane, over time',
+        'Δp across the membrane, over time',
         'Venous-line SvO₂ (device-displayed)',
         'Systemic venous saturation (model estimate)',
         'Post-oxygenator saturation',
