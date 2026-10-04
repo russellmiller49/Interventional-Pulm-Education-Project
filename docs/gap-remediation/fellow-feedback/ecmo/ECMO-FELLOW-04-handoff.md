@@ -18,10 +18,10 @@ promise true, and no gate, tally, stored answer or required step was added.
 
 Of the 52 source IDs audited (the 51 ledger rows with a lane-04 component, plus S14-1):
 
-- **23 are repaired** here;
-- **8 are partly repaired**, with the remainder and its owner named;
+- **22 are repaired** here (after independent review);
+- **10 are partly repaired**, with the remainder and its owner named;
 - **3 are contained**: the limit is stated on the learner's surface and the clinical design is held;
-- **14 were already repaired** by Prompt 01, 02, 03 or PR #315, verified and left alone;
+- **13 were already repaired** by Prompt 01, 02, 03 or PR #315, verified and left alone;
 - **2 needed no change**;
 - **2 are clinical/content holds** with no change here.
 
@@ -36,6 +36,11 @@ AI-assisted browser walkthrough written in a first-year-fellow persona. It is no
 and not a clinical or device review. Every row was checked against current `origin/main` before any
 edit: against the rendered text of a production build where the row is about words on a page, and
 against the code where it is not.
+
+## Implementation-stage record (historical)
+
+The following Git, scope and validation details record the October 3 submission. The independent
+review addendum and linked sanity report supersede its final-state claims, totals and limitations.
 
 ## Git
 
@@ -136,7 +141,7 @@ hidden; no question was added to justify a verb; no clean-view toggle was built 
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | The three controls                              | Section 4's "Three adjustments, two control locations" and the recurring control-panel strip.                                                                                                     | Already taught at first use; unchanged.                                                                                                                                                                                |
 | Sweep-gas oxygen fraction vs ventilator FiO₂    | The teaching says "sweep-gas oxygen fraction"; the gas panel is labelled "Sweep-gas FiO₂". Section 1 names the sweep gas before either.                                                           | Section 1 introduces the sweep gas (S1-3). Section 4, the gas panel and the console-tour step say that the panel's "Sweep-gas FiO₂" is that fraction and not the ventilator FiO₂ (S4-4). The panel label is unchanged. |
-| **FdO₂**                                        | The module never uses it. The registered textbook calls the setting "the FiO2 of the gas delivered" by the blender. FdO₂ appears in a supplied textbook that is not a registered evidence record. | **Not introduced.** Adopting it needs a registered source (clinical/content queue).                                                                                                                                    |
+| **FdO₂**                                        | The module never uses it. The registered textbook calls the setting "the FiO2 of the gas delivered" by the blender. FdO₂ appears in a supplied textbook that is not a registered evidence record. | **Not introduced.** Independent review verified FDO₂ in the already registered ELSO VV 2021 guideline, Table 7. Standardizing the UI term remains a content decision; source registration is not missing.              |
 | Drainage-line saturation and the console's SvO₂ | IFU rev. 2.3: "SVO2 — Venous oxygen saturation", from the venous probe. The lessons use four other names for the same reading.                                                                    | Stated once in Section 2 (S2-7). The console label is kept. The names are not normalised module-wide.                                                                                                                  |
 | Displayed flow vs effective flow; recirculation | "Flow left after re-drainage" (Section 4) and "Recirculation-adjusted circuit flow" (Section 5) appeared before Section 6 teaches recirculation.                                                  | One gloss at each first use (S4-4).                                                                                                                                                                                    |
 | Native output; pulse pressure                   | Both carry value guides and model-boundary notes from earlier batches.                                                                                                                            | Unchanged.                                                                                                                                                                                                             |
@@ -234,7 +239,7 @@ acknowledgment, review quota or correctness gate was added. `scoring-honesty.tes
 ### #315's battery exception, and the VA item
 
 The venovenous transport item, its text ("a battery reserve reading of 24 percent"), its exception
-and `transport-battery-unit.test.ts` are unchanged and pass.
+is unchanged. The independent review narrowly updates `transport-battery-unit.test.ts` to state the two-item exception contract; persistence assertions remain unchanged.
 
 VA16-1 is the same finding on the VA item, which #315 did not touch. It now reads "24 percent" and
 carries **its own** item-local exception, with a different recorded reason. **This is a second
@@ -306,9 +311,7 @@ All NOT REVIEWED. These are proposals for a reviewer, not approved content.
 
 - **Oxygen-content arithmetic (S1-7).** The 1.34 mL/g constant and the delivery product are cited to
   the bounded educational model only. A physiology source should be registered.
-- **FdO₂ (S4-4).** Register a source that uses the term before adopting it. The registered textbook
-  says "FiO2 of the gas delivered"; the ELSO VV guideline is registered but was not available
-  locally to check.
+- **FdO₂ (S4-4).** The registered ELSO VV 2021 guideline uses FDO₂ in Table 7, independently checked online October 4. The textbook/UI terminology is retained. Module-wide naming remains content work; no new source registration is required for the term.
 - **One lesson name for the venous-line saturation (S2-7).** The device label is verified. Choosing
   one of the four lesson names module-wide is an editorial decision.
 - **Section 4's unshown key point** "Rapid CO₂ correction has its own hazards" (ECMO-OWNER-09). It is
@@ -476,3 +479,24 @@ Outside Git, in
 
 To reproduce the journeys: `npm run build`, serve `.next/standalone` with `PORT=3165`, then
 `node probe/journeys-04.mjs http://127.0.0.1:3165 final <outdir>`.
+
+## Independent adversarial review — October 4, 2026
+
+This addendum and [ECMO-FELLOW-04-sanity-review.md](ECMO-FELLOW-04-sanity-review.md) supersede
+implementation-stage claims above where they differ. The 52-row ledger is corrected to
+22 repaired / 10 partial / 3 contained / 13 prior repairs / 2 no-change / 2 held.
+S7-5's saturation context and VAC6-1's recovery timing remain partial. S1-1's existing local
+heading was corrected under the review's explicit authorization; no shared component or second
+feedback system was introduced. The earlier assertion that a coordinated shared fix alone would
+repair this local list is not relied on.
+
+Bounded repairs cover the entire checklist comparison path (including transport checklists),
+residual capstone withholding promises, direct-measurement wording for drainage saturation,
+separate gas delivery sites, arterial temperature on Blood parameters, acknowledgement not
+correcting a cause, and the misleading one-exception test name/assertion. All simulator actions,
+answer keys, device limits, source-review statuses, storage and engine behavior are preserved.
+
+The original regression and browser tables above are historical implementation evidence. Current
+main moved during review and included new ECMO layout CSS; see the independent report for the
+combined-tree checks, fresh production results and exact baseline comparisons. Clinical/device
+review and all owner decisions remain open. Release readiness is not established.
