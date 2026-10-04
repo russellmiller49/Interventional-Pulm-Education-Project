@@ -2,7 +2,7 @@
   "queue": "MCS-PRE-REVIEW-05",
   "title": "Mechanical Circulatory Support: consolidated owner decisions OD-01 to OD-08",
   "status": "NOT REVIEWED",
-  "note": "Index only. It consolidates pending owner decisions for review and records none. The prose, evidence and locators are in the packet. MCS-03-claim-review-queue.json is not replaced or edited; its ids are referenced here. Replace NOT REVIEWED only with a named human reviewer's own decision, role, actual date and the exact commit and source versions reviewed.",
+  "note": "Index only. It consolidates pending owner decisions for review and records none. The prose, evidence and locators are in the packet. MCS-03-claim-review-queue.json is not replaced or edited; its ids are referenced here. Replace NOT REVIEWED only with a named human reviewer's own decision, role, actual date and the exact commit and source versions reviewed. decisionRequested is the packet reviewer question; decisionScope indexes every requested subdecision or checklist without recording an outcome.",
   "preparedOn": "2026-10-04",
   "preparedBy": "AI authoring assistant (Claude). Not a reviewer; made no clinical, device, source, media or model decision.",
   "module": "mechanical-circulatory-support",
@@ -20,7 +20,8 @@
         "IABP-01",
         "IABP-02",
         "IABP-03",
-        "CAP-IABP-01"
+        "CAP-IABP-01",
+        "Mechanism Studio rhythm set"
       ],
       "historicalQueueIds": ["MCS-03-05"],
       "reviewerRoleSuggested": [
@@ -28,14 +29,20 @@
         "perfusionist",
         "Cardiosave educator or device specialist"
       ],
-      "decisionRequested": "For which exact Cardiosave console, software revision and mode should this module teach, and in sustained atrial fibrillation what trigger behaviour and what inflation/deflation timing relationship should a first-year fellow learn from it?",
+      "decisionRequested": "Should the module remain console-neutral or include named-console teaching? If named-console teaching is wanted, which console, software revision, market and mode should govern it? What atrial-fibrillation trigger behaviour and inflation/deflation relationship should a first-year fellow learn within that chosen scope?",
       "reviewer": null,
       "reviewerRole": null,
       "reviewedAt": null,
       "commitReviewed": null,
       "sourceVersionsReviewed": [],
       "decision": null,
-      "requiredChanges": null
+      "requiredChanges": null,
+      "decisionScope": [
+        "Whether to remain console-neutral or include named-console teaching; identify console, software revision, market and mode only if named-console teaching is wanted.",
+        "Choose A or B for the AF hold and behaviour.",
+        "Accept, change or withdraw the authored timing reference and its ideally qualifier.",
+        "Whether CAP-IABP-01 should open on internal triggering."
+      ]
     },
     {
       "id": "OD-02",
@@ -48,7 +55,11 @@
         "LVAD-01",
         "LVAD-02",
         "LVAD-03",
-        "CAP-LVAD-01"
+        "CAP-LVAD-01",
+        "mcs-foundations-mechanisms",
+        "impella-unloading-placement",
+        "pathway cards",
+        "naming crosswalk"
       ],
       "historicalQueueIds": [
         "MCS-03-01",
@@ -64,14 +75,21 @@
         "Abiomed / J&J MedTech device specialist (Impella identity)",
         "LVAD device specialist"
       ],
-      "decisionRequested": "What exact product identities and measurands should the learner be taught for the durable pump, the left-sided Impella and the right-sided Impella, and which current official source and version governs each?",
+      "decisionRequested": "What exact product identities and measurands should the learner be taught — for the durable pump, the left-sided Impella and the right-sided Impella — and which current official source and version governs each?",
       "reviewer": null,
       "reviewerRole": null,
       "reviewedAt": null,
       "commitReviewed": null,
       "sourceVersionsReviewed": [],
       "decision": null,
-      "requiredChanges": null
+      "requiredChanges": null,
+      "decisionScope": [
+        "Generic continuous-flow model or HeartMate 3 teaching, and the labeling boundary.",
+        "Which HeartMate 3 labeling revision should anchor the named-device comparison or teaching, or supply it.",
+        "What the high-power example may claim.",
+        "Keep or change the high-afterload predicate.",
+        "Confirm CP versus 5.5, RP versus RP Flex, and the CP flow measurand."
+      ]
     },
     {
       "id": "OD-03",
@@ -103,7 +121,14 @@
       "commitReviewed": null,
       "sourceVersionsReviewed": [],
       "decision": null,
-      "requiredChanges": null
+      "requiredChanges": null,
+      "decisionScope": [
+        "Which quantities may be displayed as volume, filling pressure or a qualitative surrogate.",
+        "Keep explicit containment or commission a reviewed coupled-model specification (A or B).",
+        "Whether the measured RV-failure/volume contrast is wanted as a third story.",
+        "Whether Section 9 should teach the ratio explicitly.",
+        "The full PAPi, RAP and flow reading for LVAD-02."
+      ]
     },
     {
       "id": "OD-04",
@@ -122,18 +147,25 @@
         "LVAD-03",
         "CAP-IABP-01",
         "CAP-IMP-01",
-        "CAP-LVAD-01"
+        "CAP-LVAD-01",
+        "impella-suction-purge-rv",
+        "lvad-parameters-assessment",
+        "lvad-alarms-emergencies",
+        "mcs-device-selection-integration"
       ],
       "historicalQueueIds": [],
       "reviewerRoleSuggested": ["owner", "MCS clinician with guideline expertise"],
-      "decisionRequested": "Which numerical conditions may remain visible as simulation criteria, and which, if any, should be promoted into sourced clinical teaching?",
+      "decisionRequested": "Which numerical conditions may remain visible as simulation criteria, and which — if any — should be promoted into sourced clinical teaching?",
       "reviewer": null,
       "reviewerRole": null,
       "reviewedAt": null,
       "commitReviewed": null,
       "sourceVersionsReviewed": [],
       "decision": null,
-      "requiredChanges": null
+      "requiredChanges": null,
+      "decisionScope": [
+        "For each consequential-values row in the packet: remain model-only, become source-linked after scoped review, or be withheld as misleading."
+      ]
     },
     {
       "id": "OD-05",
@@ -149,7 +181,11 @@
         "IMP-01",
         "IMP-02",
         "IMP-03",
-        "LVAD-01"
+        "LVAD-01",
+        "all prediction, transfer and story items",
+        "pathway cards",
+        "device profiles",
+        "support spine and grammar"
       ],
       "historicalQueueIds": ["MCS-03-10"],
       "reviewerRoleSuggested": [
@@ -157,14 +193,20 @@
         "appropriate device specialist",
         "guideline or source reviewer"
       ],
-      "decisionRequested": "Which of the ten mapped claims (MCS-04-C01 to C10) are acceptable as written, which textbook-only claims require primary evidence, and which unmapped synthesis-backed claims need priority next?",
+      "decisionRequested": "Which of the ten mapped claims are acceptable as written, which textbook-only claims require primary evidence, and which unmapped synthesis-backed claims need priority next?",
       "reviewer": null,
       "reviewerRole": null,
       "reviewedAt": null,
       "commitReviewed": null,
       "sourceVersionsReviewed": [],
       "decision": null,
-      "requiredChanges": null
+      "requiredChanges": null,
+      "decisionScope": [
+        "Accept, change or withdraw each of MCS-04-C01 through C10.",
+        "Whether textbook evidence alone is enough for C02, C03 and C10.",
+        "Confirm access to the unopened guidelines, HeartMate 3 IFU and FDA records.",
+        "Name the next unmapped synthesis-backed claims; MCS-03-10 remains held."
+      ]
     },
     {
       "id": "OD-06",
@@ -175,7 +217,9 @@
         "circulation map",
         "iabp-timing-triggering",
         "impella-unloading-placement",
-        "lvad-alarms-emergencies"
+        "lvad-alarms-emergencies",
+        "mcs-foundations-mechanisms",
+        "lvad-parameters-assessment"
       ],
       "historicalQueueIds": [],
       "reviewerRoleSuggested": [
@@ -190,7 +234,12 @@
       "commitReviewed": null,
       "sourceVersionsReviewed": [],
       "decision": null,
-      "requiredChanges": null
+      "requiredChanges": null,
+      "decisionScope": [
+        "Approve, change or decline the two proposed storyboards SB-1 and SB-2.",
+        "Keep or release the arch, left-subclavian and renal landmark hold, with a source and reviewer if released.",
+        "State the rights position."
+      ]
     },
     {
       "id": "OD-07",
@@ -218,7 +267,8 @@
         "all nine Learn sections (Explain reflections)",
         "all twelve case predictions",
         "Mechanism Studio",
-        "CAP-LVAD-01 stem"
+        "CAP-LVAD-01 stem",
+        "naming crosswalk"
       ],
       "historicalQueueIds": [],
       "reviewerRoleSuggested": ["owner", "curriculum lead", "MCS clinician"],
@@ -229,7 +279,13 @@
       "commitReviewed": null,
       "sourceVersionsReviewed": [],
       "decision": null,
-      "requiredChanges": null
+      "requiredChanges": null,
+      "decisionScope": [
+        "Accept, accept with changes or withdraw the audience statement, five objectives, nine optional reflections, 36 case-option rationales, case/Studio framings and product-identity statements.",
+        "CAP-LVAD-01 stem: distinguish unchanged speed from lower modeled derived power (A), or clarify an intended external setting/state meaning of power (B); neither is chosen.",
+        "Review the nine carried-forward question drafts and the separate stable case-option display-order decision; none of the drafts is implemented.",
+        "Confirm each page-45 interest disposition in the packet; these are future interests, not runtime requirements."
+      ]
     },
     {
       "id": "OD-08",
@@ -251,7 +307,14 @@
       "commitReviewed": null,
       "sourceVersionsReviewed": [],
       "decision": null,
-      "requiredChanges": null
+      "requiredChanges": null,
+      "decisionScope": [
+        "Complete the owner walkthrough personally.",
+        "Observe intended first-year fellows and an MCS/VAD educator.",
+        "Measure primary-path and optional-reference timing separately.",
+        "Complete native browser zoom, Safari, Firefox, physical phone/touch and screen-reader/assistive-technology checks.",
+        "Record clinical, device, source, media/rights, model, technical and release-authorization decisions separately; no completion is recorded."
+      ]
     }
   ]
 }

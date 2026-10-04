@@ -15,16 +15,16 @@ unedited; the ten historical ids are mapped into the groups below.
 
 ## Identity
 
-| Item                    | Value                                                                                                                                                                                                                                                                                                                                                                                            |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Authorized baseline     | `9086f2af0a538a0afabf964273cf15a219e165d6` — merge commit of PR #325 (MCS-PRE-REVIEW-04). "Current committed file" below means this revision                                                                                                                                                                                                                                                     |
-| Last MCS code commit    | `d36f3706e13c81c32e55abb037d8adb9dbecd686` (last commit touching `src/features/mechanical-circulatory-support/` at the baseline)                                                                                                                                                                                                                                                                 |
-| Branch                  | `claude/mcs-pre-review-05-10-03`, new exclusive worktree; no earlier MCS worktree reused                                                                                                                                                                                                                                                                                                         |
-| Files in this slice     | this packet and the queue JSON; nothing else                                                                                                                                                                                                                                                                                                                                                     |
-| Walkthrough             | `MCS_ICU_Lab_Fellow_Walkthrough_Findings.docx`, Local-Data `module_update_9_19/claude_reviews/`, SHA-256 `0f6e31dcfce9723792630e65d4d8b3ee91228fdf6d6396d649ed630d3f365350` — re-hashed 2026-10-04. Rendered to 45 pages; every finding id was found on the page the pack ledger gives. The Mechanical Ventilation walkthrough in the pack was not used                                          |
-| Record read             | Pack `00_START_HERE`, `COMMON_CONTRACT`, `05_…DECISIONS`, `OWNER_DECISIONS`, `FEEDBACK_LEDGER`, `SOURCE_AND_CODE_NOTES`, `CROSS_MODULE_COORDINATION`; the Prompt 01–04 handoffs, sanity reviews, scope audits, the Prompt-02 owner packet, the Prompt-04 owner copy and source audit; `MCS-03-handoff.md` and its queue                                                                          |
-| Main after the baseline | `origin/main` was `fd6805119d9de8bb454d8dcf7f879f4e8165f420` when this packet was finalized. Since the baseline, one MCS path changed there: `components/stage/mcs-flow.module.css` (PR #331, a layout-only stylesheet change). No MCS model, content, test or source file changed, and no newer MCS owner-decision packet exists on main or in an open PR. This branch was not merged with main |
-| What Prompt 05 re-did   | Re-hashed every local source file below; re-opened the four Cardiosave trigger passages (OD-01). Everything else is **consolidated from the cited record, not re-measured**: no model replay, no browser run and no new source hunt was performed in this slice                                                                                                                                  |
+| Item                    | Value                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Authorized baseline     | `9086f2af0a538a0afabf964273cf15a219e165d6` — merge commit of PR #325 (MCS-PRE-REVIEW-04). "Current committed file" below means this revision                                                                                                                                                                                                                                                                                                 |
+| Last MCS code commit    | `d36f3706e13c81c32e55abb037d8adb9dbecd686` (last commit touching `src/features/mechanical-circulatory-support/` at the baseline)                                                                                                                                                                                                                                                                                                             |
+| Branch                  | `claude/mcs-pre-review-05-10-03`, new exclusive worktree; no earlier MCS worktree reused                                                                                                                                                                                                                                                                                                                                                     |
+| Files in this slice     | this packet and the queue JSON; nothing else                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Walkthrough             | `MCS_ICU_Lab_Fellow_Walkthrough_Findings.docx`, Local-Data `module_update_9_19/claude_reviews/`, SHA-256 `0f6e31dcfce9723792630e65d4d8b3ee91228fdf6d6396d649ed630d3f365350` — re-hashed 2026-10-04. Rendered to 45 pages; every finding id was found on the page the pack ledger gives. The Mechanical Ventilation walkthrough in the pack was not used                                                                                      |
+| Record read             | Pack `00_START_HERE`, `COMMON_CONTRACT`, `05_…DECISIONS`, `OWNER_DECISIONS`, `FEEDBACK_LEDGER`, `SOURCE_AND_CODE_NOTES`, `CROSS_MODULE_COORDINATION`; the Prompt 01–04 handoffs, sanity reviews, scope audits, the Prompt-02 owner packet, the Prompt-04 owner copy and source audit; `MCS-03-handoff.md` and its queue                                                                                                                      |
+| Main after the baseline | `origin/main` was `fd6805119d9de8bb454d8dcf7f879f4e8165f420` when this packet was finalized. Since the baseline, one MCS path changed there: `src/features/mechanical-circulatory-support/components/stage/mcs-flow.module.css` (PR #331, a layout-only stylesheet change). No MCS model, content, test or source file changed, and no newer MCS owner-decision packet exists on main or in an open PR. This branch was not merged with main |
+| What Prompt 05 re-did   | Re-hashed every local source file below; re-opened the four Cardiosave trigger passages (OD-01). Everything else is **consolidated from the cited record, not re-measured**: no model replay, no browser run and no new source hunt was performed in this slice                                                                                                                                                                              |
 
 ## Four things this packet keeps apart
 
@@ -57,12 +57,16 @@ to it. Raw documents and extracts stay outside Git.
 | S10 | Birgersdotter-Green U, Adler E, eds. _Case-Based Device Therapy for Heart Failure_, Springer 2021; Walters and Reeves chapter; private copy                             | Secondary                          | `c014ff47a8c0cf48d7549457a971ca96ccc7c36a104889c1a78e8065ad1387a2` | Re-hashed; not re-opened                                                    |
 | S11 | Two supplied Word syntheses ("Bedside MCS reference", "Master hemodynamics reference"); file creator OpenAI; incomplete bibliographic provenance                        | Authoring provenance, not evidence | `d3c1cbd9…439d`, `98c2dfa9…85bf`                                   | Re-hashed in place (OneDrive); not re-opened                                |
 
-**Registered but never opened in any MCS slice — no current-status claim is made for any of them:**
+**Registered but not opened for the Prompt 01–04 source checks — no current-status claim is made for any of them:**
 the ISHLT/HFSA 2023 acute MCS guideline; the 2023 ISHLT durable MCS guideline; the HeartMate 3
 instructions for use; every FDA labeling, PMA and recall record; the Johnson & Johnson MedTech
 product pages (including the RP Flex page); the current Getinge IABP page. The ACC congestion
 description behind the module's 15 mm Hg classification is cited by the module; no first-hand read
-of it was found in the Prompt 01–04 record.
+of it was found in the Prompt 01–04 record. Historical MCS-02 separately records retrieval of the
+J&J CP product page on 2026-09-15 and resolution of the acute ISHLT guideline landing page; the
+linked CP IFU fetch failed. Those landing-page checks did not open the guideline document, resolve
+the CP model/measurand disagreement, or establish current local-device labeling. Prompt 05 did not
+re-open those pages.
 
 ### Erratum — Impella 5.5 hash in the Prompt-04 source audit
 
@@ -82,8 +86,9 @@ erratum changes document-identity metadata only. It does not change which passag
 **Priority group.** Two questions are kept separate inside it: **(a) AF triggering** and **(b) the
 timing-reference diagrams**.
 
-1. **Decision title.** Which console and mode context the IABP teaching stands on; what AF trigger
-   behaviour the module should teach; and what the canonical timing references should show.
+1. **Decision title.** Whether the IABP teaching remains generic or includes named-console
+   behaviour; what AF trigger behaviour the module should teach; and what the canonical timing
+   references should show.
 2. **Affected findings.** F17, F18, F19; historical `MCS-03-05`.
 3. **Activities.** Learn Section 3 `iabp-timing-triggering` (five demonstrations, recognition,
    AF transfer at step 11); cases `IABP-01`, `IABP-02`, `IABP-03`, `CAP-IABP-01`; a rhythm set in
@@ -155,16 +160,18 @@ timing-reference diagrams**.
 17. **Technical recommendation.** A is the only option implementable from material in hand; B
     needs a specification that does not exist. This is an engineering statement, not the clinical
     choice.
-18. **Decision requested.** (i) Name the console, software revision and market, and say whether the
-    module teaches a generic mechanism, a named console, or both in separate panels. (ii) Choose A
-    or B for AF. (iii) Separately, accept, change or withdraw the authored timing reference and its
-    "ideally" qualifier. (iv) Say whether `CAP-IABP-01` should open on internal triggering.
+18. **Decision requested.** (i) Say whether the module remains console-neutral or includes
+    named-console teaching in a separate panel; only if named-console teaching is wanted, identify
+    the console, software revision, market and mode. (ii) Choose A or B for AF. (iii) Separately,
+    accept, change or withdraw the authored timing reference and its "ideally" qualifier. (iv) Say
+    whether `CAP-IABP-01` should open on internal triggering.
 19. **Recommended reviewer.** IABP-experienced physician; perfusionist; Cardiosave educator or
-    device specialist — the passages are console-operation statements, and the question is which
-    console.
-20. **Question.** _For which exact Cardiosave console, software revision and mode should this
-    module teach, and in sustained atrial fibrillation what trigger behaviour and what
-    inflation/deflation timing relationship do you want a first-year fellow to learn from it?_
+    device specialist — to review the console-operation passages and the boundary between generic
+    and named-console teaching, without assigning the simulator a console identity.
+20. **Question.** _Should the module remain console-neutral or include named-console teaching? If
+    named-console teaching is wanted, which console, software revision, market and mode should
+    govern it? What atrial-fibrillation trigger behaviour and inflation/deflation relationship
+    should a first-year fellow learn within that chosen scope?_
 21. **Status.** NOT REVIEWED. A: S1/S2 opened and consistent. B: model contradicts them, contained
     not corrected. C: open.
 22. **Reviewer.**
@@ -531,7 +538,8 @@ timing-reference diagrams**.
     | Boundary               | Conceptual, not to scale; coordinate-only magnitudes; no mm Hg decrement                                                                                              | Conceptual; no equation, no estimator bias, no failure-mode prediction                                                                                     |
     | Needs human approval   | Content, the qualifier, rights position                                                                                                                               | Device scope (OD-02), wording, rights position                                                                                                             |
 
-    SB-1 prefers an existing authorized asset. SB-2 was chosen over a suction comparison because the
+    SB-1 uses the existing module-drawn reference; its content and rights review remain open.
+    SB-2 was drafted instead of a suction comparison because the
     suction mechanism has no reviewed specification (OD-03), whereas S8 states the estimator's inputs.
 
 16. **Effect on the learning objective.** SB-1 adds nothing new unless the owner wants the early and
@@ -558,7 +566,7 @@ timing-reference diagrams**.
 1. **Decision title.** Which draft teaching changes are approved, revised or withdrawn.
 2. **Affected findings.** F02, F06, F07, F11, F13, F15, F16, F30, F31, F32, F36, F39, F40, F42, F43.
 3. **Activities.** Hub; all nine Explain steps; all twelve case predictions; Mechanism Studio;
-   naming crosswalk.
+   naming crosswalk; `CAP-LVAD-01` stem.
 4. **At issue.** Draft learner-facing prose written in Prompt 04 and labelled draft on screen.
 5. **Current committed file.** Wording in full:
    [MCS-PRE-REVIEW-04-owner-copy.md](MCS-PRE-REVIEW-04-owner-copy.md) — not reproduced here.
@@ -733,7 +741,7 @@ Built from the reviewed records. **Nothing is labelled release-ready.**
 | Section 3 steps 1–5, live IABP contour-dependent teaching                                           | Contained by an authored reference; model held                           | OD-01   |
 | Sections 7–8; `LVAD-01`, `LVAD-02`, `LVAD-03`, `CAP-LVAD-01`                                        | Technically repaired but clinically NOT REVIEWED; owner-decision pending | OD-02   |
 | Impella flow figures, RP identity (pathway cards, variants, crosswalk)                              | Source held                                                              | OD-02   |
-| Sections 4, 6, 9; both suction stories; `IMP-01`, `IMP-02`                                          | Model held; technically repaired but clinically NOT REVIEWED             | OD-03   |
+| Section 2 transfer; Sections 4, 5, 6, 9; both suction stories; `IMP-01`, `IMP-02`, `LVAD-02`        | Model held; technically repaired but clinically NOT REVIEWED             | OD-03   |
 | All twelve cases' numerical conditions                                                              | Owner-decision pending (authored, labelled)                              | OD-04   |
 | Ten mapped claims C01–C10                                                                           | Technically repaired but clinically NOT REVIEWED                         | OD-05   |
 | Every other synthesis-backed claim (`MCS-03-10`)                                                    | Source held                                                              | OD-05   |
