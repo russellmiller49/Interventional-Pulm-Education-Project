@@ -1,6 +1,39 @@
 .simulator-page {
   display: grid;
   gap: 14px;
+  /* The imaging workspace is dark in both themes, like a console. Its panels are dark whatever
+     the page theme, so it keeps the dark theme's text and line colors for everything inside. */
+  color-scheme: dark;
+  --panel: #0d1a2a;
+  --panel-soft: #122235;
+  --panel-strong: #15263d;
+  --line: #1c324d;
+  --line-strong: #274564;
+  --text: #ebf1f5;
+  --text-soft: #9ab0c4;
+  --text-muted: #6e87a0;
+  --accent-cyan: #7fbdf2;
+  --accent-green: #8fe0c0;
+  --accent-gold: #e6bd79;
+  --accent-rose: #e1a1a8;
+  color: var(--text);
+}
+
+/* On a light page the workspace sits on one dark surface instead of dark cards on a light one. */
+html[data-theme='light'] .simulator-page {
+  padding: 12px;
+  border-radius: 14px;
+  background: #0b1114;
+}
+
+/* The simulator is a three-pane workspace, not a reading page. It takes the width of its window
+   instead of the reading column, and inside the course shell a thinner margin. */
+.app-shell:has(.simulator-page) {
+  max-width: 2400px;
+}
+
+.app-shell:not(.app-shell--site-module) > .app-shell__frame > .app-shell__content:has(> .simulator-page) {
+  padding: 14px;
 }
 
 .simulator-intro,

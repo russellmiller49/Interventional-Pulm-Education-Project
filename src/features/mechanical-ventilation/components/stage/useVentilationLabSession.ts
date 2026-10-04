@@ -56,8 +56,16 @@ export function useVentilationLabSession({
     const timer = window.setInterval(() => {
       if (document.visibilityState === 'visible') engine({ type: 'TICK', seconds: 0.1 })
     }, 100)
+    /*
+     * The page going to the background stops the model clock, and says so on the action. It is the
+     * browser's or the system's doing, not the learner's Pause, so the lab gives it no credit: no
+     * inspection is recorded and no goal is met by it, then or after the page is visible again.
+     * This is the only place that looks at page visibility; the lab reads the origin, not the
+     * document.
+     */
     const hide = () => {
-      if (document.visibilityState !== 'visible') engine({ type: 'SET_PAUSED', paused: true })
+      if (document.visibilityState !== 'visible')
+        engine({ type: 'SET_PAUSED', paused: true, origin: 'background' })
     }
     document.addEventListener('visibilitychange', hide)
     return () => {

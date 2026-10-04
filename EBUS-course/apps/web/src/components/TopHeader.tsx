@@ -8,14 +8,7 @@ import { clearCourseAdminPasscode, clearCourseVendorPasscode, isPretestComplete 
 import { useLearnerProgress } from '@/lib/progress';
 import { useTheme } from '@/lib/theme';
 
-interface TopHeaderProps {
-  publicMode?: {
-    subtitle: string;
-    title: string;
-  };
-}
-
-export function TopHeader({ publicMode }: TopHeaderProps) {
+export function TopHeader() {
   const location = useLocation();
   const courseInfo = useLocalizedCourseInfo();
   const localizePath = useLocalizedPath();
@@ -43,81 +36,67 @@ export function TopHeader({ publicMode }: TopHeaderProps) {
           📡
         </div>
         <div>
-          <div className="eyebrow">{publicMode ? t('Open access module') : 'SoCal EBUS 2026'}</div>
-          <h1 className="top-header__title">{publicMode?.title ?? t('Fellow Prep')}</h1>
-          <p className="top-header__subtitle">{publicMode?.subtitle ?? courseInfo.hostLine}</p>
+          <div className="eyebrow">SoCal EBUS 2026</div>
+          <h1 className="top-header__title">{t('Fellow Prep')}</h1>
+          <p className="top-header__subtitle">{courseInfo.hostLine}</p>
         </div>
       </div>
       <div className="top-header__meta">
-        {publicMode ? (
+        <span>{courseInfo.dateLabel}</span>
+        <span>{courseInfo.venueName}</span>
+        <span>{t(sessionLabel)}</span>
+        {isSupabaseEnabled || adminSessionActive || vendorSessionActive ? (
           <>
-            <span>{t('Public learning asset')}</span>
-            <span>{t('No lecture, pretest, or login lockout')}</span>
+            <span>{vendorSessionActive ? t('Sponsor preview') : profile?.fullName || user?.email || profile?.email || t('Signed out')}</span>
             <div className="top-header__actions">
               <button className="button button--ghost top-header__action" onClick={toggleTheme} type="button">
                 {effectiveTheme === 'dark' ? t('Light mode') : t('Dark mode')}
               </button>
+              {isSupabaseEnabled && !user ? (
+                <Link className="button button--ghost top-header__action" to={localizePath(learnerSignInPath)}>
+                  {t('Sign in')}
+                </Link>
+              ) : null}
+              <Link className="button button--ghost top-header__action" to={localizePath('/auth?mode=support')}>
+                {t('Help / Feedback')}
+              </Link>
+              {!adminSessionActive ? (
+                vendorSessionActive ? (
+                  <button className="button button--ghost top-header__action" onClick={() => clearCourseVendorPasscode()} type="button">
+                    {t('End preview')}
+                  </button>
+                ) : (
+                  <Link className="button button--ghost top-header__action" to={localizePath('/auth?mode=vendor')}>
+                    {t('Vendor Login')}
+                  </Link>
+                )
+              ) : null}
+              <Link className="button button--ghost top-header__action" to={localizePath('/admin')}>
+                {adminSessionActive ? t('Dashboard') : t('Admin')}
+              </Link>
+              {adminSessionActive ? (
+                <button className="button button--ghost top-header__action" onClick={() => clearCourseAdminPasscode()} type="button">
+                  {t('Log out admin')}
+                </button>
+              ) : null}
+              {user ? (
+                <button className="button button--ghost top-header__action" onClick={() => void signOut()} type="button">
+                  {t('Sign out')}
+                </button>
+              ) : null}
             </div>
           </>
         ) : (
           <>
-            <span>{courseInfo.dateLabel}</span>
-            <span>{courseInfo.venueName}</span>
-            <span>{t(sessionLabel)}</span>
-            {isSupabaseEnabled || adminSessionActive || vendorSessionActive ? (
-              <>
-                <span>{vendorSessionActive ? t('Sponsor preview') : profile?.fullName || user?.email || profile?.email || t('Signed out')}</span>
-                <div className="top-header__actions">
-                  <button className="button button--ghost top-header__action" onClick={toggleTheme} type="button">
-                    {effectiveTheme === 'dark' ? t('Light mode') : t('Dark mode')}
-                  </button>
-                  {isSupabaseEnabled && !user ? (
-                    <Link className="button button--ghost top-header__action" to={localizePath(learnerSignInPath)}>
-                      {t('Sign in')}
-                    </Link>
-                  ) : null}
-                  <Link className="button button--ghost top-header__action" to={localizePath('/auth?mode=support')}>
-                    {t('Help / Feedback')}
-                  </Link>
-                  {!adminSessionActive ? (
-                    vendorSessionActive ? (
-                      <button className="button button--ghost top-header__action" onClick={() => clearCourseVendorPasscode()} type="button">
-                        {t('End preview')}
-                      </button>
-                    ) : (
-                      <Link className="button button--ghost top-header__action" to={localizePath('/auth?mode=vendor')}>
-                        {t('Vendor Login')}
-                      </Link>
-                    )
-                  ) : null}
-                  <Link className="button button--ghost top-header__action" to={localizePath('/admin')}>
-                    {adminSessionActive ? t('Dashboard') : t('Admin')}
-                  </Link>
-                  {adminSessionActive ? (
-                    <button className="button button--ghost top-header__action" onClick={() => clearCourseAdminPasscode()} type="button">
-                      {t('Log out admin')}
-                    </button>
-                  ) : null}
-                  {user ? (
-                    <button className="button button--ghost top-header__action" onClick={() => void signOut()} type="button">
-                      {t('Sign out')}
-                    </button>
-                  ) : null}
-                </div>
-              </>
-            ) : (
-              <>
-                <span>{t('Local mode')}</span>
-                <div className="top-header__actions">
-                  <button className="button button--ghost top-header__action" onClick={toggleTheme} type="button">
-                    {effectiveTheme === 'dark' ? t('Light mode') : t('Dark mode')}
-                  </button>
-                  <Link className="button button--ghost top-header__action" to={localizePath('/auth?mode=support')}>
-                    {t('Help / Feedback')}
-                  </Link>
-                </div>
-              </>
-            )}
+            <span>{t('Local mode')}</span>
+            <div className="top-header__actions">
+              <button className="button button--ghost top-header__action" onClick={toggleTheme} type="button">
+                {effectiveTheme === 'dark' ? t('Light mode') : t('Dark mode')}
+              </button>
+              <Link className="button button--ghost top-header__action" to={localizePath('/auth?mode=support')}>
+                {t('Help / Feedback')}
+              </Link>
+            </div>
           </>
         )}
       </div>

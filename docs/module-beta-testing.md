@@ -3,7 +3,7 @@
 ## Live user feedback — current
 
 The deployed beta hub uses server storage. Verified main-site users can submit feedback and
-optional screenshots from any of the 12 beta modules. Reports are available to the site owner
+optional screenshots from any of the 13 beta modules. Reports are available to the site owner
 at `/en/admin/module-feedback` using the existing `site_admin` account. Open **Admin → Modules
 in development → Review module feedback**, or visit that address directly. The workspace
 supports module/status filters, screenshots, review status, and private notes. Choose **Refresh**
@@ -32,9 +32,9 @@ It uses the existing main-site sign-in, email verification, and profile completi
 verified site account can test; no shared password or separate tester account is introduced.
 The hub is absent from public navigation and the sitemap, with `noindex, nofollow, noarchive`.
 
-The hub offers 12 modules: EBUS Guided, the two airway simulators, the existing live anatomy lesson,
-Device Atlas, Peripheral Bronchoscopy Imaging, Bronchoscopy Foundations, and the five critical
-care modules. The live lesson at `/en/intro-bronchoscopy/airway-anatomy` is now titled **Live
+The hub offers 13 modules: EBUS Guided, the EUS-B Simulator, the two airway simulators, the
+existing live anatomy lesson, Device Atlas, Peripheral Bronchoscopy Imaging, Bronchoscopy
+Foundations, and the five critical care modules. The live lesson at `/en/intro-bronchoscopy/airway-anatomy` is now titled **Live
 Bronchoscopy Anatomy**; the synchronized simulator is a separate entry at
 `/en/learn/anatomy/airway`.
 
@@ -87,8 +87,12 @@ The **main-site Supabase project**, `tqnhxlwvkkswuckszlee` (Endoreels), needs th
    and private `module-beta-feedback` screenshot bucket.
 2. `supabase/migrations/20260925055243_expand_module_beta_feedback_catalog.sql`: permits EBUS
    Guided submissions. Historical Therapeutic Bronchoscopy records remain valid and reviewable, including local notes and exports.
+3. `supabase/migrations/20261004072344_add_eus_b_simulator_to_module_beta_feedback.sql`: permits
+   EUS-B Simulator submissions. **Not yet applied when this was written (2026-10-04).** Until it
+   is, the hub lists the EUS-B Simulator and opens it for testing, but saving feedback for it
+   fails the table's module check and the tester sees the storage error with the draft kept.
 
-Both were applied to the main-site project on 2026-09-25 UTC. Do not apply them to the dedicated
+The first two were applied to the main-site project on 2026-09-25 UTC. Do not apply them to the dedicated
 literature project. Follow the primary-checkout requirements in `AGENTS.md` for database operations.
 
 In server mode, the API uses the site's existing server-only `SUPABASE_SERVICE_ROLE_KEY` and Supabase URL

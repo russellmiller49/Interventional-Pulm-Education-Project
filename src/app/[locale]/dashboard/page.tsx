@@ -1,3 +1,4 @@
+import courseAvailability from '../../../../config/course-availability.json'
 import type { Route } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
@@ -20,6 +21,7 @@ interface DashboardPageProps {
     locale: string
   }>
   searchParams?: Promise<{
+    courses?: string
     required?: string
   }>
 }
@@ -79,6 +81,13 @@ export default async function DashboardPage({ params, searchParams }: DashboardP
                   })
                 : t('sessionNotDetected')}
             </p>
+            {query?.courses === 'closed' ? (
+              <div role="status" className="rounded-lg border bg-muted px-4 py-3 text-sm">
+                The Southern California EBUS and PCCM Intro courses are currently closed. Your
+                account can still access the main site. Course materials and progress are being
+                retained for future courses.
+              </div>
+            ) : null}
             {requiredAccess ? (
               <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-500/50 dark:bg-amber-500/10 dark:text-amber-100">
                 {t('permissionRequired', { access: requiredAccess })}
@@ -142,7 +151,7 @@ export default async function DashboardPage({ params, searchParams }: DashboardP
               </div>
             </section>
           ) : null}
-          {pccmEnrollment ? (
+          {courseAvailability.pccmIntroCourseOpen && pccmEnrollment ? (
             <section className="max-w-2xl rounded-lg border bg-card p-4">
               <div className="space-y-3">
                 <div className="space-y-1">
@@ -161,7 +170,9 @@ export default async function DashboardPage({ params, searchParams }: DashboardP
               </div>
             </section>
           ) : null}
-          {user && !hasPersistentPccmCourseAccess ? <PccmCodeRedeemForm /> : null}
+          {courseAvailability.pccmIntroCourseOpen && user && !hasPersistentPccmCourseAccess ? (
+            <PccmCodeRedeemForm />
+          ) : null}
         </div>
       }
     </HandoffContent>

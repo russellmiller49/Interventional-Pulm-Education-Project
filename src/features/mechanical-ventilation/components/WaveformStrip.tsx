@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, type CSSProperties } from 'react'
+import { Fragment, useMemo, type CSSProperties, type ReactNode } from 'react'
 
 import type { WaveformSample } from '../engine'
 import styles from './mechanical-ventilation.module.css'
@@ -18,6 +18,13 @@ export interface WaveformReadout {
   readonly unreliable?: boolean
   /** Why, in a few words. Shown beside the value and included in the text alternative. */
   readonly caveat?: string
+  /**
+   * A one- or two-word status printed under the value — "estimate", "measured", "not valid" —
+   * with `statusDetail` as its tooltip. It replaced a bare "?" after the number, which had no legend
+   * and at small sizes read as a digit ("14?" as "147"; walkthrough V4).
+   */
+  readonly status?: string
+  readonly statusDetail?: string
 }
 
 /** A labelled pressure level drawn on the trace while the simulation is paused. */
@@ -117,6 +124,26 @@ interface WaveformStripProps {
   color?: string
 }
 
+/**
+ * A readout label with a slash in it ("PEEP/CPAP") may wrap after the slash. It is one unbreakable
+ * word otherwise, and in a phone-width label column at 200 % text it ran under its own value. The
+ * text is unchanged; only a line-break opportunity is added.
+ */
+function breakAfterSlash(label: string): ReactNode {
+  const parts = label.split('/')
+  if (parts.length === 1) return label
+  return parts.map((part, index) => (
+    <Fragment key={index}>
+      {part}
+      {index < parts.length - 1 ? (
+        <>
+          /<wbr />
+        </>
+      ) : null}
+    </Fragment>
+  ))
+}
+
 function linePoints(
   samples: readonly WaveformSample[],
   field: WaveformField | 'pmusCmH2O',
@@ -188,12 +215,18 @@ export function WaveformStrip({
         {readouts && readouts.length > 0 ? (
           <dl className={styles.waveformReadouts}>
             {readouts.map((readout) => (
-              <div key={readout.label} data-unreliable={readout.unreliable ? 'true' : undefined}>
-                <dt>{readout.label}</dt>
-                <dd>
-                  {readout.value.toFixed(readout.precision ?? 0)}
-                  {readout.unreliable ? <em aria-hidden="true">?</em> : null}
-                </dd>
+              <div
+                key={readout.label}
+                data-unreliable={readout.unreliable ? 'true' : undefined}
+                data-readout-status={readout.status}
+              >
+                <dt>{breakAfterSlash(readout.label)}</dt>
+                <dd>{readout.value.toFixed(readout.precision ?? 0)}</dd>
+                {readout.status ? (
+                  <dd className={styles.readoutStatus} title={readout.statusDetail}>
+                    {readout.status}
+                  </dd>
+                ) : null}
               </div>
             ))}
           </dl>

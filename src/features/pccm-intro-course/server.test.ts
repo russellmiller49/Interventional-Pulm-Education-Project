@@ -125,3 +125,13 @@ describe('PCCM intro course server helpers', () => {
     ).toBe(true)
   })
 })
+
+it('rejects course API access while the course is closed, before querying or changing data', async () => {
+  const { requirePccmApiUser } = jest.requireActual('@/features/pccm-intro-course/server')
+  const { supabaseServer } = jest.requireMock('@/lib/supabase/server')
+  const result = await requirePccmApiUser()
+  expect(result.ok).toBe(false)
+  expect(result.response.init.status).toBe(403)
+  expect(result.response.body.error).toContain('currently closed')
+  expect(supabaseServer).not.toHaveBeenCalled()
+})

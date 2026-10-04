@@ -52,6 +52,13 @@ export function observationFor(session: LabSession) {
       }[metric]
   const units = metric === 'ti' ? 's' : metric === 'volume' ? 'mL' : 'cmH₂O'
   const digits = metric === 'ti' ? 2 : metric === 'volume' ? 0 : 1
+  /*
+   * What the round records as inspiratory time is the ventilator's reading, which in volume control
+   * is the flow time the settings calculate and is not timed on the trace (S2-1). The feedback names
+   * it as that, so 0.63 s is not read as a duration measured on the drawn breath. The stem, the
+   * choices and the keyed answer are untouched.
+   */
+  const recorded = metric === 'ti' ? `${label} (the reading calculated from the settings)` : label
   // Compare exactly the precision displayed, not an invented clinical-significance threshold.
   const delta = Number(a.toFixed(digits)) - Number(b.toFixed(digits))
   const limited =
@@ -72,6 +79,6 @@ export function observationFor(session: LabSession) {
       },
     ],
     correct,
-    feedback: `Recorded ${label}: ${b.toFixed(digits)} → ${a.toFixed(digits)} ${units}. ${limited ? 'This run cannot isolate the requested mechanism. Review the measurement status and additional changes; repeat from the baseline.' : delta === 0 ? 'An unchanged result is informative; the displayed precision does not distinguish a change.' : `The recorded value ${delta > 0 ? 'rose' : 'fell'}. This is the result of this run, separate from the intended prediction.`}${session.unitId === 'mechanics-load-and-pressure' ? ' The baseline plateau is a modeled reference; the result plateau comes from your current passive hold.' : ''}`,
+    feedback: `Recorded ${recorded}: ${b.toFixed(digits)} → ${a.toFixed(digits)} ${units}. ${limited ? 'This run cannot isolate the requested mechanism. Review the measurement status and additional changes; repeat from the baseline.' : delta === 0 ? 'An unchanged result is informative; the displayed precision does not distinguish a change.' : `The recorded value ${delta > 0 ? 'rose' : 'fell'}. This is the result of this run, separate from the intended prediction.`}${session.unitId === 'mechanics-load-and-pressure' ? ' The baseline plateau is a modeled reference; the result plateau comes from your current passive hold.' : ''}`,
   }
 }

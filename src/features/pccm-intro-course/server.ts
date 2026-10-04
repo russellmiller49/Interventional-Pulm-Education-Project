@@ -1,3 +1,4 @@
+import courseAvailability from '../../../config/course-availability.json'
 import { createHash } from 'node:crypto'
 
 import { NextResponse } from 'next/server'
@@ -88,6 +89,16 @@ export async function loadPccmIntroCourseAdminScope(
 }
 
 export async function requirePccmApiUser(): Promise<PccmApiAuthResult> {
+  if (!courseAvailability.pccmIntroCourseOpen) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: 'The PCCM Intro Course is currently closed.' },
+        { status: 403, headers: { 'Cache-Control': 'no-store' } },
+      ),
+    }
+  }
+
   try {
     const supabase = await supabaseServer()
     const {
