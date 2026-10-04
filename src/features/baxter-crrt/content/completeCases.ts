@@ -36,10 +36,12 @@ interface CaseNarrative {
    */
   readonly responseOptionLabel?: string
   /**
-   * The debrief's trend paragraph. Defaults to `expectedResponse`, which is an action response and
-   * so reads as something the learner did even when the run never performed that action.
+   * The debrief's trend paragraph: worked teaching shown after every run, including one that did
+   * nothing. It is authored on its own and never defaults to `expectedResponse`, which is an
+   * action response and reads as something the learner did (CRRT-FELLOW-06 F06-01, F06-R02).
+   * Write it as what a review would look at, not as a result this run produced.
    */
-  readonly trendReview?: string
+  readonly trendReview: string
   readonly reassessment: string
   readonly openingFinding: string
   readonly causalChain: readonly string[]
@@ -641,20 +643,50 @@ function rewriteLearnerFacingString(value: string): string {
       ],
       [
         'Review delivered dose, downtime, and delayed simulated laboratory direction',
-        'Review delivered dose, downtime, and delayed laboratory trends',
+        'Review delivered dose and downtime, and name the laboratory measurements to obtain',
       ],
       [
         'Delayed simulated response cannot be assessed without elapsed case time.',
-        'A delayed patient response cannot be assessed without allowing case time to pass.',
+        'Delivered dose and downtime cannot be compared without allowing case time to pass.',
       ],
       ['Advance six simulated hours', 'Observe six hours of treatment'],
+      // CRRT-FELLOW-06 F06-R01: CRRT-04 runs a real delivery record and supplies laboratory values
+      // once. These five strings promised a laboratory response over time, which no case models.
+      [
+        'Predict the immediate prescribed-dose display and the delayed direction of laboratory response.',
+        'Predict the immediate prescribed-dose display, and name the laboratory measurements that would need reassessment over time; this case does not model them.',
+      ],
+      [
+        'CVVHD changes the device clearance signal immediately, while simulated solute response is delayed and actual delivery falls during interruption.',
+        'A CVVHD prescription changes the prescribed-dose display immediately, while actual delivery falls during the interruption. The laboratory response is not modeled here and would need serial clinical measurements.',
+      ],
+      [
+        'The learner reassesses both machine delivery and delayed simulated laboratory direction.',
+        'Reassessment covers the delivery record this run provides; solute and acid-base values would have to be measured and reviewed separately.',
+      ],
+      [
+        'Immediate device-dose change, delayed laboratory direction',
+        'Immediate device-dose change; delivered dose falls with downtime',
+      ],
+      [
+        'Compare the committed prediction with the immediate dose display, delayed laboratory direction, and interruption effect.',
+        'Compare the committed prediction with the immediate dose display and the effect of the interruption on delivered therapy.',
+      ],
+      [
+        'The machine display reacts at prescription commit while the transparent solute model changes with elapsed delivered therapy.',
+        'The machine display reacts when the prescription is committed, while delivered dose accumulates only with elapsed delivered therapy. Laboratory values are not modeled over time.',
+      ],
+      [
+        'Compare the prescription with actual delivery and delayed response.',
+        'Compare the prescription with actual delivery, and identify which clinical measurements would need reassessment.',
+      ],
       [
         'Observe the delayed model response across the bounded interruption.',
-        'Observe how the interruption changes actual treatment delivery and later laboratory trends.',
+        'Observe how the interruption changes actual treatment delivery. Laboratory values are not modeled over time.',
       ],
       [
         'Reassess dose, downtime, and simulated laboratory direction',
-        'Reassess dose, downtime, and laboratory trends',
+        'Reassess delivered dose and downtime, and name the laboratory values to recheck',
       ],
       [
         'Start the synthetic treatment only after the interface gates are complete.',
@@ -666,11 +698,11 @@ function rewriteLearnerFacingString(value: string): string {
       ],
       [
         'Delivered clearance drives delayed simulated solute direction.',
-        'Delivered clearance drives the later solute and acid-base trends.',
+        'The solute and acid-base response would depend on the therapy actually delivered, not on the prescription alone; that response is not modeled here and needs serial clinical measurements.',
       ],
       [
         'Review prescribed dose, delivered dose, downtime, actual effluent, and the accessible delayed simulated laboratory summary.',
-        'Review prescribed dose, delivered dose, downtime, actual effluent, and the later laboratory trends.',
+        'Review prescribed dose, delivered dose, downtime, and actual effluent. This case supplies laboratory values once, at case start; serial solute and acid-base measurements would have to be obtained and reviewed separately.',
       ],
       [
         'Explain that both authored synthetic dialysate paths can satisfy the case; neither is a universal clinical prescription.',
@@ -833,7 +865,9 @@ function rewriteLearnerFacingString(value: string): string {
     )
     .replace(
       /Reassessment of (.+) determined whether the candidate endpoint was reached\./g,
-      'Reassessing $1 showed whether the intended response occurred.',
+      // CRRT-FELLOW-06 F06-R02: prospective. This line is worked teaching shown after every run,
+      // including one that reassessed nothing, so it cannot report a reassessment result.
+      'Reassessing $1 would show whether the intended response occurred.',
     )
     .replace(/Start by stating the candidate (.+)\./g, 'Start by stating the clinical goal: $1.')
     .replace(
@@ -842,7 +876,7 @@ function rewriteLearnerFacingString(value: string): string {
     )
     .replace(
       /Authored context framed the candidate (.+)\./g,
-      'The clinical context framed the goal: $1.',
+      'The clinical context frames the goal: $1.',
     )
     .replace(/\bDefine the candidate /g, 'Define the ')
     .replace(/\bCandidate: /g, 'Unsafe action: ')
@@ -1273,7 +1307,7 @@ function buildAdaptedCase(narrative: CaseNarrative): MutableRuntimeCrrtCase {
   cloned.debrief.actionTimelineReview =
     'Compare prediction, assessment, selected action, timed response, communication, and reassessment in order.'
   cloned.debrief.causalChain = [...narrative.causalChain]
-  cloned.debrief.trendReview = narrative.trendReview ?? narrative.expectedResponse
+  cloned.debrief.trendReview = narrative.trendReview
   cloned.debrief.requiredActionsReview = narrative.safeAction
   cloned.debrief.criticalErrorsReview = narrative.unsafeAction
   cloned.debrief.acceptedAlternativesReview = narrative.acceptedAlternative
@@ -1593,79 +1627,95 @@ function customizeReturnPressureCase(definition: MutableRuntimeCrrtCase): Mutabl
 
 const authoredNarratives: readonly CaseNarrative[] = [
   {
+    // CRRT-FELLOW-06 F06-R01: this case supplies laboratory values once, at case start, and a live
+    // delivery record. It carries no serial solute measurements, and every action has no effect.
+    // The trajectory it teaches is planned from delivery evidence plus measurements to obtain.
     id: 'CRRT-03',
     templateId: 'CRRT-02',
     title: 'Controlled solute trajectory in acute brain or liver failure',
     stationId: 'define-goal',
     difficulty: 'advanced',
     patientDescription:
-      'An adult ICU patient with AKI also has a neurologic vulnerability, making the pace of solute change an explicit coordination concern.',
+      'An adult ICU patient with AKI also has a neurologic vulnerability, making the pace of solute change an explicit coordination concern. This case supplies one set of case-start laboratory values and the live treatment-delivery record; it carries no serial solute measurements. Plan the trajectory from the delivery evidence, and name the measurements you would obtain to follow it.',
     learningObjectives: [
       'Define a controlled trajectory rather than reacting to one isolated result.',
       'Coordinate kidney-support goals with the broader neurocritical or liver-failure plan.',
-      'Reassess the patient and serial trends after any change in delivery.',
+      'Name the serial clinical measurements a controlled trajectory needs, and recognize that this case does not supply them.',
     ],
     goal: 'Coordinate a controlled solute trajectory with the whole critical-care plan',
     mechanism:
-      'Therapy delivery, interruptions, and changing patient production jointly shape the observed trajectory.',
+      'Therapy delivery, interruptions, and changing patient production jointly shape the solute trajectory. This exercise shows the delivery side; the trajectory itself would have to be measured.',
     safeAction: 'Pause and coordinate the intended trajectory before changing the prescription',
     acceptedAlternative: 'Maintain the bounded setting while escalating multidisciplinary review',
     unsafeAction: 'Chase one value with an abrupt unverified change',
     expectedResponse:
-      'The serial synthetic trend changes gradually and remains subject to delivery checks.',
-    reassessment: 'Reassess neurologic context, serial solute trends, delivery, and interruptions',
-    openingFinding: 'A serial solute trend and a neurologic vulnerability are visible together.',
+      'Your coordination plan is recorded in the case timeline, and no setting changes. No solute series appears, because this case carries none; the pace of solute change would have to be followed with serial clinical measurements obtained separately.',
+    responseOptionLabel: 'Expect the plan to be recorded, not new clinical data',
+    trendReview:
+      'This case cannot show a solute trajectory: its laboratory values are supplied once, at case start. What a run does record is the treatment actually delivered (dose, elapsed time, and any downtime). A controlled trajectory would be judged by reviewing that delivery record alongside serial clinical measurements obtained separately.',
+    reassessment:
+      'Reassess neurologic context, treatment delivery, and interruptions, and obtain serial solute measurements separately',
+    openingFinding:
+      'A neurologic vulnerability makes the pace of solute change a concern. Case-start laboratory values and the live treatment-delivery record are available; serial solute measurements are not.',
     causalChain: [
       'The whole clinical context defines the intended trajectory.',
       'The selected modality and actual delivery influence the rate of change.',
-      'Serial reassessment determines whether coordination remains appropriate.',
+      'Serial clinical measurements, which this case does not supply, would determine whether coordination remains appropriate.',
     ],
     transferQuestion:
       'How would an unexpected delivery interruption change the controlled trajectory and your reassessment plan?',
     clinicalSourceIds: ['GUID-NICE-NG148-2024', 'GUID-RRT-ICU-2026'],
   },
   {
+    // CRRT-FELLOW-06 F06-R03: the fixture starts connected and delivering, and no action here stops
+    // or pauses it. The case is a verification-planning exercise beside that running demonstration;
+    // it does not model a preconnection or held-setup state.
     id: 'CRRT-08',
     templateId: 'CRRT-07',
     title: 'Verify the set, bags, solutions, lines, prime, and prescription',
     stationId: 'setup-start',
     difficulty: 'intermediate',
     patientDescription:
-      'Before connection, one item in the set, bag, solution, line, prime, and prescription verification sequence does not match the treatment plan.',
+      'This exercise rehearses the verification a team completes before connection: one item in the set, bag, solution, line, prime, and prescription sequence does not match the treatment plan. The machine shown alongside is an already-running demonstration, connected and delivering; the verification actions record your plan and do not stop, pause, or change it.',
     learningObjectives: [
       'Use a deliberate pre-connection verification sequence.',
       'Separate manual-reference workflow from local stock and policy.',
       'Stop and escalate when an exact local expression is unavailable.',
     ],
-    goal: 'Verify the complete setup before simulated connection',
+    goal: 'Plan the complete setup verification that belongs before connection',
     mechanism:
       'A mismatch in set, bag, solution, line, or entered data can propagate into later device behavior and displayed calculations.',
     safeAction:
       'Stop the sequence, identify the mismatched domain, and complete an independent check',
-    acceptedAlternative:
-      'Keep the setup paused and escalate the unresolved local-configuration item',
+    acceptedAlternative: 'Escalate the unresolved local-configuration item before any connection',
     unsafeAction: 'Connect first and plan to correct the mismatch later',
     expectedResponse:
-      'The setup remains paused until the mismatch is explicitly resolved or escalated.',
-    reassessment: 'Repeat the setup review and verify readiness before simulated connection',
-    openingFinding: 'One verification item does not match the authored setup plan.',
+      'Your verification plan is recorded in the case timeline. Nothing is stopped or paused: the running demonstration continues unchanged, because this exercise has no setup state to hold. In practice the mismatch would be resolved or escalated before connection.',
+    responseOptionLabel: 'Expect the plan to be recorded, not a change to the machine',
+    trendReview:
+      'In practice, connection would wait until the mismatch is resolved or escalated. This exercise does not model that hold: its machine is an already-running demonstration, so a run here records continuous delivery, not a paused setup.',
+    reassessment: 'Repeat the setup review and verify readiness before any connection',
+    openingFinding:
+      'One verification item does not match the authored setup plan. The machine shown is already running; this is a verification-planning exercise, not a live preconnection state.',
     causalChain: [
       'Manual-reference steps define the verification domains.',
       'The unresolved mismatch prevents a safe readiness conclusion.',
-      'Independent verification precedes simulated connection.',
+      'Independent verification belongs before connection; this exercise does not simulate the connection step.',
     ],
     transferQuestion:
       'Which setup-verification domains must be repeated after any mismatch is corrected?',
     clinicalSourceIds: ['DEV-PM-005', 'DEV-PM-013'],
   },
   {
+    // CRRT-FELLOW-06 F06-R03: as CRRT-08, the fixture is connected and delivering throughout. No
+    // medication behavior or setup state exists; verification here is a record only.
     id: 'CRRT-09',
     templateId: 'CRRT-07',
     title: 'Anticoagulation protocol selection and verification',
     stationId: 'setup-start',
     difficulty: 'advanced',
     patientDescription:
-      'Before treatment starts, an anticoagulation option is visible but no authorized, versioned local protocol has been verified. Medication quantities and adjustment rules are intentionally not shown.',
+      'An anticoagulation option is visible, but no authorized, versioned local protocol has been verified. Protocol verification belongs before an anticoagulation workflow is enabled; this exercise rehearses that check beside an already-running demonstration treatment and changes nothing on it. Medication quantities and adjustment rules are intentionally not shown.',
     learningObjectives: [
       'Verify protocol identity, version, contraindication review, and responsible team before use.',
       'Recognize when no applicable protocol is available and stop for escalation.',
@@ -1680,10 +1730,14 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'Leave anticoagulation unselected and escalate when verification is incomplete',
     unsafeAction: 'Infer a medication plan from a generic device option',
     expectedResponse:
-      'The workflow records verification or remains unavailable; it never invents medication instructions.',
+      'Your verification is recorded in the case timeline. No anticoagulation setting, medication instruction, or treatment state changes; the demonstration treatment keeps running as it was.',
+    responseOptionLabel: 'Expect the verification to be recorded, not a change to the machine',
+    trendReview:
+      'Protocol verification is a record in this exercise, not a device state: no anticoagulation workflow, medication effect, or pre-start hold is modeled, and the demonstration treatment runs throughout. A run here records delivery only.',
     reassessment:
       'Reassess protocol applicability, team communication, and the documented verification state',
-    openingFinding: 'A generic device option is visible, but no verified protocol is attached.',
+    openingFinding:
+      'A generic device option is visible, but no verified protocol is attached. The treatment shown is already running; verifying the protocol here records your check and changes nothing on the machine.',
     causalChain: [
       'Clinical and local policy determine whether a protocol applies.',
       'Version and responsibility checks precede any device workflow.',
@@ -1762,6 +1816,8 @@ const authoredNarratives: readonly CaseNarrative[] = [
     unsafeAction: 'Increase BFR before resolving the return-path problem',
     expectedResponse:
       'Correction of the authored fault restores the directional pattern before reassessment.',
+    trendReview:
+      'Correction of the authored fault restores the directional pattern before reassessment.',
     reassessment: 'Reassess patient, return path, pressure trend, delivery, and recurrence',
     openingFinding: 'A return-pressure change appears with an incomplete view of the return path.',
     causalChain: [
@@ -1795,6 +1851,9 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'Preserve the circuit state and escalate before making an unsupported attribution',
     unsafeAction: 'Assume one medication-related cause and bypass mechanical review',
     expectedResponse:
+      'The debrief separates verified contributors from unresolved policy-dependent questions.',
+    // Replaced by the CRRT-16 worked-case revision.
+    trendReview:
       'The debrief separates verified contributors from unresolved policy-dependent questions.',
     reassessment: 'Reassess access, filter trends, effective delivery, downtime, and recurrence',
     openingFinding:
@@ -1831,6 +1890,11 @@ const authoredNarratives: readonly CaseNarrative[] = [
     unsafeAction: 'Change therapy from one isolated calcium observation',
     expectedResponse:
       'The escalation and reassessment plan is recorded. No calcium trend, ratio, or citrate measurement appears, because this case carries none.',
+    // CRRT-FELLOW-06 F06-R02: the action response above is true only once the action is performed.
+    // The debrief paragraph and the last chain step are shown after every run, so they describe
+    // what an escalation would carry rather than report one.
+    trendReview:
+      'This case cannot show a calcium trend, a total-to-ionized ratio, or a citrate measurement: it carries one systemic ionized calcium value, at case start. An escalation would state that single value, the samples still to obtain, and the reassessment the responsible team would need.',
     reassessment:
       'Reassess linked trend direction, sampling validity, delivery context, and escalation response',
     openingFinding:
@@ -1838,7 +1902,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
     causalChain: [
       'Sampling site decides which question a calcium result can answer: the circuit sample describes anticoagulant effect, the systemic sample describes the patient.',
       'One value from one compartment at one time prompts verification rather than a conclusion.',
-      'The responsible team receives a structured escalation and reassessment summary.',
+      'An escalation would give the responsible team a structured summary of the linked observations and the reassessment still needed.',
     ],
     transferQuestion:
       'How would you communicate the linked trend, missing context, and escalation boundary to the responsible team?',
@@ -1866,6 +1930,8 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'Continue bounded support while obtaining missing recovery or transition information',
     unsafeAction: 'End treatment from one favorable observation without a transition plan',
     expectedResponse:
+      'The simulation separates the clinical decision, device workflow, disposition, and follow-up reassessment. No recovery trend appears, because this case carries none.',
+    trendReview:
       'The simulation separates the clinical decision, device workflow, disposition, and follow-up reassessment. No recovery trend appears, because this case carries none.',
     reassessment:
       'Reassess which recovery evidence is still needed, patient status, transition monitoring, and escalation ownership',
