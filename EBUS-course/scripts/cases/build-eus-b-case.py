@@ -3,7 +3,7 @@
 Inputs are read in place from Interventional-Pulm-Local-Data (docs/local-authoring-assets.md):
 
     raw-assets/eus-b-case-001/ct.nii.gz
-    raw-assets/eus-b-case-001/EUS_segmentation.nrrd
+    raw-assets/eus-b-case-001/EUS_segmentation_final.seg.nrrd
 
 Outputs are the runtime files the EUS-B simulator loads, written under
 EBUS-course/apps/web/public/simulator/eus-b-case-001/:
@@ -14,6 +14,7 @@ EBUS-course/apps/web/public/simulator/eus-b-case-001/:
     geometry/scope_path.json    esophagus-to-stomach scope path, frames and wall table
     geometry/ct.u8.gz           windowed CT crop for the CT correlate pane
     models/eus_b_anatomy.glb    one surface per structure, web frame (x=L, y=S, z=-P), mm
+    models/eus_b_lumen.glb      open esophagus-and-stomach lumen for the endoscopic view
 
 Run with 3D Slicer's bundled Python, which carries numpy, scipy, SimpleITK and VTK:
 
@@ -26,8 +27,16 @@ Modeling decisions that the learner-facing copy must stay consistent with:
 - The transducer is placed on the wall it faces (wall table), a stand-in for balloon or tip
   contact. Esophageal lumen air in the CT is ignored for that reason.
 - Tissue outside the segmentation is classed from CT attenuation into air, fat, soft tissue and
-  bone. Unsegmented organs and vessels (spleen, celiac trunk, hepatic veins) are therefore
-  generic soft tissue, and the metadata says so.
+  bone. Unsegmented vessels (hepatic veins, renal veins) are therefore generic soft tissue, and
+  the metadata says so.
+- Stomach, duodenum, small bowel and colon are a wall plus contents, with gas where the CT shows
+  gas. The renal sinus is estimated from the hilar concavity of each kidney contour.
+- Stations 8 and 9 hold no visible node on the patient's CT. Their contours were drawn where the
+  stations lie, and at the physician author's request the CT correlate is painted with node-like
+  attenuation inside them. The manifest names the painted structures and carries a note for the
+  learner-facing copy, which must keep saying the nodes were added for teaching.
+- The endoscopic lumen is the esophagus and stomach contours set in by a wall thickness and held
+  open. It is not an insufflated or measured lumen.
 """
 from __future__ import annotations
 
@@ -45,6 +54,7 @@ import SimpleITK as sitk
 import vtk
 from scipy import interpolate, ndimage as ndi, sparse
 from scipy.sparse.csgraph import dijkstra
+from scipy.spatial import cKDTree
 from vtk.util.numpy_support import numpy_to_vtk, vtk_to_numpy
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -52,7 +62,8 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 from local_data import require_local_data_path  # noqa: E402
 
 CASE_ID = "eus-b-case-001"
-ASSET_VERSION = "eus-b-v1"
+ASSET_VERSION = "eus-b-v3"
+SEGMENTATION_FILE = "EUS_segmentation_final.seg.nrrd"
 OUT_DIR = REPO_ROOT / "EBUS-course/apps/web/public/simulator" / CASE_ID
 
 ACOUSTIC_SPACING_MM = 1.0
@@ -62,78 +73,124 @@ STOMACH_REACH_MM = 110.0
 WALL_STEP_DEG = 5
 WALL_INSET_MM = 2.5
 STOMACH_WALL_MM = 3.0
+BOWEL_WALL_MM = 2.0
+# Contrast-enhanced bowel wall between packed loops, which a surface shell alone would miss.
+BOWEL_WALL_HU = 60.0
+GAS_HU = -300.0
+RENAL_SINUS_CLOSING_MM = 10.0
 SECTOR_ANGLE_DEG = 60.0
 DEFAULT_DEPTH_MM = 50.0
 MIN_COMPONENT_VOXELS = 30
-CT_SPACING_MM = (1.5, 1.5, 2.0)
+CT_SPACING_MM = (1.0, 1.0, 2.0)
 CT_WINDOW_HU = (-160.0, 240.0)
+# Endoscopic lumen: the mucosal surface lies this far inside the drawn contour, and a channel of
+# this radius is kept open along the scope path so the view is never pinched shut.
+LUMEN_INSET_MM = 3.0
+LUMEN_TRACK_MM = 4.5
+# Stations whose node is painted into the CT correlate, and the stations that set its attenuation.
+PAINTED_STATIONS = ("station_8", "station_9")
+PAINT_REFERENCE_STATIONS = ("station_7", "station_4l", "station_4r")
 # Estimate only: the segmented esophagus begins a short distance below the cricopharyngeus.
 INCISOR_OFFSET_MM = 175.0
 
 # (source segment name, key, label, group, medium, color, max triangles)
+# Painted in this order: where masks overlap, the later row wins. Bowel and solid organs come
+# first, then the heart and the vessels that run through them, then nodes, and the airway last.
 SEGMENTS = [
-    ("liver", "liver", "Liver", "organ", "liver", "#9a5b3f", 14000),
-    ("Kidney_left", "left_kidney", "Left kidney", "organ", "kidney", "#b06a4a", 5000),
-    ("Kidney_right", "right_kidney", "Right kidney", "organ", "kidney", "#b06a4a", 4000),
-    ("pancreas", "pancreas", "Pancreas", "organ", "pancreas", "#e3b071", 5000),
-    ("gallbladder", "gallbladder", "Gallbladder", "organ", "fluid", "#4f9d69", 2000),
-    ("adrenal_gland_right", "right_adrenal", "Right adrenal gland", "organ", "adrenal", "#f0c24b", 1200),
-    ("adrenal_gland_left", "left_adrenal", "Left adrenal gland", "organ", "adrenal", "#f0c24b", 1500),
-    ("duodenum", "duodenum", "Duodenum", "gi", "gi_wall", "#cf9f86", 4000),
-    ("stomach", "stomach", "Stomach", "gi", "gi_wall", "#d58f8a", 9000),
-    ("Left Ventricle", "left_ventricle", "Left ventricle", "heart", "blood", "#c8484a", 6000),
-    ("Right Ventricle", "right_ventricle", "Right ventricle", "heart", "blood", "#3d7fc4", 5000),
-    ("Right Atrium", "right_atrium", "Right atrium", "heart", "blood", "#3d7fc4", 5000),
-    ("Left Atrium", "left_atrium", "Left atrium", "heart", "blood", "#c8484a", 6000),
-    ("atrial_appendage_left", "left_atrial_appendage", "Left atrial appendage", "heart", "blood", "#e07a76", 2500),
-    ("pulmonary venous system", "pulmonary_veins", "Pulmonary veins", "vessel", "blood", "#e07a76", 5000),
-    ("pulmonary artery", "pulmonary_artery", "Pulmonary artery", "vessel", "blood", "#1f5fae", 9000),
-    ("aorta", "aorta", "Aorta", "vessel", "blood", "#cf3d3d", 12000),
-    ("inferior vena cava", "inferior_vena_cava", "Inferior vena cava", "vessel", "blood", "#2d78c8", 4000),
-    ("superior_vena_cava", "superior_vena_cava", "Superior vena cava", "vessel", "blood", "#2d78c8", 3000),
-    ("azygous", "azygos_vein", "Azygos vein", "vessel", "blood", "#2d78c8", 2500),
-    ("portal_vein_and_splenic_vein", "portal_splenic_vein", "Portal and splenic veins", "vessel", "blood", "#5a6fd0", 3500),
-    ("brachiocephalic trunk", "brachiocephalic_trunk", "Brachiocephalic trunk", "vessel", "blood", "#cf3d3d", 1500),
-    ("right subclavian artery", "right_subclavian_artery", "Right subclavian artery", "vessel", "blood", "#cf3d3d", 2000),
-    ("left subclavian artery", "left_subclavian_artery", "Left subclavian artery", "vessel", "blood", "#cf3d3d", 2000),
-    ("right common carotid artery", "right_common_carotid_artery", "Right common carotid artery", "vessel", "blood", "#cf3d3d", 1500),
-    ("left common carotid artery", "left_common_carotid_artery", "Left common carotid artery", "vessel", "blood", "#cf3d3d", 1500),
-    ("left brachiocephalic vein", "left_brachiocephalic_vein", "Left brachiocephalic vein", "vessel", "blood", "#2d78c8", 2500),
-    ("right brachiocephalic vein", "right_brachiocephalic_vein", "Right brachiocephalic vein", "vessel", "blood", "#2d78c8", 2000),
-    ("esophagus", "esophagus", "Esophagus", "gi", "gi_wall", "#c9a36c", 6000),
-    ("Station 1R", "station_1r", "Station 1R", "node", "node", "#8fca6b", 400),
-    ("Station 1L", "station_1l", "Station 1L", "node", "node", "#8fca6b", 400),
-    ("Station 2R", "station_2r", "Station 2R", "node", "node", "#8fca6b", 500),
-    ("Station 2L", "station_2l", "Station 2L", "node", "node", "#8fca6b", 400),
-    ("Station 3A", "station_3a", "Station 3A", "node", "node", "#8fca6b", 900),
-    ("Station 4R", "station_4r", "Station 4R", "node", "node", "#8fca6b", 1200),
-    ("Station 4L", "station_4l", "Station 4L", "node", "node", "#8fca6b", 1200),
-    ("Station 5", "station_5", "Station 5", "node", "node", "#8fca6b", 600),
-    ("Staion 6", "station_6", "Station 6", "node", "node", "#8fca6b", 600),
-    ("Station 7", "station_7", "Station 7", "node", "node", "#8fca6b", 1400),
-    ("Station 8", "station_8", "Station 8", "node", "node", "#8fca6b", 500),
-    ("Station 9", "station_9", "Station 9", "node", "node", "#8fca6b", 400),
-    ("Station 10R", "station_10r", "Station 10R", "node", "node", "#8fca6b", 700),
-    ("Station 10L", "station_10l", "Station 10L", "node", "node", "#8fca6b", 300),
-    ("Station 11Rs", "station_11rs", "Station 11Rs", "node", "node", "#8fca6b", 500),
-    ("Station 11Ri", "station_11ri", "Station 11Ri", "node", "node", "#8fca6b", 300),
-    ("Station 11L", "station_11l", "Station 11L", "node", "node", "#8fca6b", 300),
+    ("small bowel", "small_bowel", "Small bowel", "bowel", "gi_wall", "#dcae96", 16000),
+    ("colon", "colon", "Colon", "bowel", "gi_wall", "#b98a6c", 12000),
+    ("liver", "liver", "Liver", "organ", "liver", "#a4553c", 14000),
+    ("spleen", "spleen", "Spleen", "organ", "spleen", "#8d4f76", 6000),
+    ("left kidney", "left_kidney", "Left kidney", "organ", "kidney", "#bd6f4a", 5000),
+    ("right kidney", "right_kidney", "Right kidney", "organ", "kidney", "#bd6f4a", 5000),
+    ("pancreas", "pancreas", "Pancreas", "organ", "pancreas", "#e6b566", 5000),
+    ("gallbladder", "gallbladder", "Gallbladder", "organ", "fluid", "#58a86a", 2000),
+    ("right adrenal gland", "right_adrenal", "Right adrenal gland", "organ", "adrenal", "#f2c94c", 1200),
+    ("left adrenal gland", "left_adrenal", "Left adrenal gland", "organ", "adrenal", "#f2c94c", 1500),
+    ("duodenum", "duodenum", "Duodenum", "gi", "gi_wall", "#d9a98f", 4000),
+    ("stomach", "stomach", "Stomach", "gi", "gi_wall", "#e0938c", 9000),
+    ("Left Ventricle", "left_ventricle", "Left ventricle", "heart", "blood", "#c9484b", 6000),
+    ("Right Ventricle", "right_ventricle", "Right ventricle", "heart", "blood", "#4a7fc0", 5000),
+    ("Right Atrium", "right_atrium", "Right atrium", "heart", "blood", "#5a8fd0", 5000),
+    ("Left Atrium", "left_atrium", "Left atrium", "heart", "blood", "#d9605c", 6000),
+    ("atrial_appendage_left", "left_atrial_appendage", "Left atrial appendage", "heart", "blood", "#e58580", 2500),
+    ("pulmonary venous system", "pulmonary_veins", "Pulmonary veins", "vessel", "blood", "#e58580", 5000),
+    ("pulmonary artery", "pulmonary_artery", "Pulmonary artery", "vessel", "blood", "#2f6fbe", 9000),
+    ("aorta", "aorta", "Aorta", "vessel", "blood", "#d43d3d", 12000),
+    ("celiac_trunk", "celiac_trunk", "Celiac trunk", "vessel", "blood", "#d43d3d", 1200),
+    ("superior_mesenteric_artery", "superior_mesenteric_artery", "Superior mesenteric artery", "vessel", "blood", "#d43d3d", 1500),
+    ("renal_arteries", "renal_arteries", "Renal arteries", "vessel", "blood", "#d43d3d", 1200),
+    ("left common iliac artery", "left_common_iliac_artery", "Left common iliac artery", "vessel", "blood", "#d43d3d", 2000),
+    ("right common iliac artery", "right_common_iliac_artery", "Right common iliac artery", "vessel", "blood", "#d43d3d", 2000),
+    ("inferior vena cava", "inferior_vena_cava", "Inferior vena cava", "vessel", "blood", "#3a82d0", 4000),
+    ("left common iliac vein", "left_common_iliac_vein", "Left common iliac vein", "vessel", "blood", "#3a82d0", 2500),
+    ("right common iliac vein", "right_common_iliac_vein", "Right common iliac vein", "vessel", "blood", "#3a82d0", 2500),
+    ("superior_vena_cava", "superior_vena_cava", "Superior vena cava", "vessel", "blood", "#3a82d0", 3000),
+    ("azygous", "azygos_vein", "Azygos vein", "vessel", "blood", "#3a82d0", 2500),
+    ("portal vein", "portal_vein", "Portal vein", "vessel", "blood", "#7a6fd6", 3000),
+    ("splenic vein", "splenic_vein", "Splenic vein", "vessel", "blood", "#7a6fd6", 2500),
+    ("Superior Mesenteric Vein", "superior_mesenteric_vein", "Superior mesenteric vein", "vessel", "blood", "#7a6fd6", 2000),
+    ("brachiocephalic trunk", "brachiocephalic_trunk", "Brachiocephalic trunk", "vessel", "blood", "#d43d3d", 1500),
+    ("right subclavian artery", "right_subclavian_artery", "Right subclavian artery", "vessel", "blood", "#d43d3d", 2000),
+    ("left subclavian artery", "left_subclavian_artery", "Left subclavian artery", "vessel", "blood", "#d43d3d", 2000),
+    ("right common carotid artery", "right_common_carotid_artery", "Right common carotid artery", "vessel", "blood", "#d43d3d", 1500),
+    ("left common carotid artery", "left_common_carotid_artery", "Left common carotid artery", "vessel", "blood", "#d43d3d", 1500),
+    ("left brachiocephalic vein", "left_brachiocephalic_vein", "Left brachiocephalic vein", "vessel", "blood", "#3a82d0", 2500),
+    ("right brachiocephalic vein", "right_brachiocephalic_vein", "Right brachiocephalic vein", "vessel", "blood", "#3a82d0", 2000),
+    ("esophagus", "esophagus", "Esophagus", "gi", "gi_wall", "#d9a679", 6000),
+    ("Station 1R", "station_1r", "Station 1R", "node", "node", "#8fd16a", 400),
+    ("Station 1L", "station_1l", "Station 1L", "node", "node", "#8fd16a", 400),
+    ("Station 2R", "station_2r", "Station 2R", "node", "node", "#8fd16a", 500),
+    ("Station 2L", "station_2l", "Station 2L", "node", "node", "#8fd16a", 400),
+    ("Station 3A", "station_3a", "Station 3A", "node", "node", "#8fd16a", 900),
+    ("Station 4R", "station_4r", "Station 4R", "node", "node", "#8fd16a", 1200),
+    ("Station 4L", "station_4l", "Station 4L", "node", "node", "#8fd16a", 1200),
+    ("Station 5", "station_5", "Station 5", "node", "node", "#8fd16a", 600),
+    ("Staion 6", "station_6", "Station 6", "node", "node", "#8fd16a", 600),
+    ("Station 7", "station_7", "Station 7", "node", "node", "#8fd16a", 1400),
+    ("Station 8", "station_8", "Station 8", "node", "node", "#8fd16a", 500),
+    ("Station 9", "station_9", "Station 9", "node", "node", "#8fd16a", 400),
+    ("Station 10R", "station_10r", "Station 10R", "node", "node", "#8fd16a", 700),
+    ("Station 10L", "station_10l", "Station 10L", "node", "node", "#8fd16a", 300),
+    ("Station 11Rs", "station_11rs", "Station 11Rs", "node", "node", "#8fd16a", 500),
+    ("Station 11Ri", "station_11ri", "Station 11Ri", "node", "node", "#8fd16a", 300),
+    ("Station 11L", "station_11l", "Station 11L", "node", "node", "#8fd16a", 300),
     # Painted last so no overlapping mask can fill the airway lumen.
-    ("airway", "airway", "Airway", "airway", "air", "#27c4c6", 9000),
+    ("airway", "airway", "Airway", "airway", "air", "#3cc8c8", 9000),
 ]
+
+# Contours that mark a location rather than a structure seen on the patient's CT.
+PLACED_STATION_NOTE = (
+    "Added for teaching. This patient's CT showed no node here: the node was drawn where the "
+    "station lies and painted into the CT view."
+)
+STRUCTURE_NOTES = {key: PLACED_STATION_NOTE for key in PAINTED_STATIONS}
+
+# Hollow viscera: (wall thickness in mm, CT attenuation above which the inside is wall, contents).
+HOLLOW = {
+    "stomach": (STOMACH_WALL_MM, None, "gastric"),
+    "duodenum": (BOWEL_WALL_MM, BOWEL_WALL_HU, "bowel"),
+    "small_bowel": (BOWEL_WALL_MM, BOWEL_WALL_HU, "bowel"),
+    "colon": (BOWEL_WALL_MM, BOWEL_WALL_HU, "bowel"),
+}
+CONTENT_LABELS = {
+    "gastric": (("gastric_contents", "Gastric contents", "fluid", "gi"), ("gastric_gas", "Gastric gas", "air", "gi")),
+    "bowel": (("bowel_contents", "Bowel contents", "bowel_contents", "bowel"), ("bowel_gas", "Bowel gas", "air", "bowel")),
+}
 
 # Structures a landmark view is calibrated for. Each is searched over the whole path.
 LANDMARK_TARGETS = [
     "station_2l", "station_4l", "station_5", "station_6", "station_7", "station_8", "station_9",
     "aorta", "pulmonary_artery", "left_atrium", "azygos_vein",
-    "left_adrenal", "left_kidney", "liver", "pancreas", "portal_splenic_vein",
+    "liver", "celiac_trunk", "superior_mesenteric_artery", "left_adrenal", "left_kidney", "spleen",
+    "pancreas", "splenic_vein",
 ]
 
 # Shared-renderer kind for each medium, so generic acoustic-volume tooling still reads the file.
 MEDIUM_KIND = {
     "air": "air", "soft": "soft", "fat": "soft", "bone": "wall", "blood": "blood", "fluid": "blood",
     "node": "node", "gi_wall": "wall", "liver": "soft", "kidney": "soft", "adrenal": "node",
-    "pancreas": "soft",
+    "pancreas": "soft", "spleen": "soft", "renal_sinus": "soft", "bowel_contents": "soft",
 }
 BLOCKING_MEDIA = {"air", "bone"}
 # Targets whose teaching view belongs to one part of the path: (start, end) in mm past the
@@ -285,6 +342,50 @@ def bone_mask(ct_array: np.ndarray, segmented: np.ndarray) -> np.ndarray:
         if bone[z].any():
             bone[z] = ndi.binary_fill_holes(bone[z])
     return bone & ~segmented
+
+
+def renal_sinus(kidney: np.ndarray, source: Grid) -> np.ndarray:
+    """The hilar concavity of a kidney contour: sinus fat, collecting system and hilar vessels."""
+    crop = bbox(kidney, 16)
+    sub = kidney[crop]
+    reach = np.ceil(RENAL_SINUS_CLOSING_MM / source.spacing[::-1]).astype(int)
+    zz, yy, xx = np.mgrid[-reach[0]:reach[0] + 1, -reach[1]:reach[1] + 1, -reach[2]:reach[2] + 1]
+    spacing = source.spacing[::-1]
+    ball = (zz * spacing[0]) ** 2 + (yy * spacing[1]) ** 2 + (xx * spacing[2]) ** 2 <= RENAL_SINUS_CLOSING_MM ** 2
+    out = np.zeros_like(kidney)
+    out[crop] = ndi.binary_closing(sub, structure=ball) & ~sub
+    return out
+
+
+def paint_placed_nodes(ct_array: np.ndarray, masks) -> np.ndarray:
+    """CT for the correlate pane, with node-like attenuation inside the placed station contours.
+
+    The patient's scan shows fat there. The painted value is the median of this patient's own
+    contoured nodes, with scanner-like noise and a soft edge, so the result reads as a node.
+    """
+    reference = float(np.median(np.concatenate([ct_array[masks[key]] for key in PAINT_REFERENCE_STATIONS])))
+    noise_sd = float(np.std(ct_array[ndi.binary_erosion(masks[PAINT_REFERENCE_STATIONS[0]])]))
+    painted = ct_array.astype(np.float32).copy()
+    rng = np.random.default_rng(89)
+    for key in PAINTED_STATIONS:
+        crop = bbox(masks[key], 6)
+        soft = np.clip(ndi.gaussian_filter(masks[key][crop].astype(np.float32), (0.4, 1.0, 1.0)) * 1.25, 0, 1)
+        noise = ndi.gaussian_filter(rng.normal(size=soft.shape).astype(np.float32), (0.4, 0.8, 0.8))
+        noise *= noise_sd / max(float(noise.std()), 1e-6)
+        painted[crop] = painted[crop] * (1 - soft) + (reference + noise) * soft
+    print(f"  painted {', '.join(PAINTED_STATIONS)} into the CT at {reference:.0f} HU (noise {noise_sd:.0f} HU)")
+    return painted
+
+
+def paint_hollow(region, sub, ct_sub, wall_id, contents_id, gas_id, wall_mm, wall_hu):
+    """Wall shell plus contents: gas where the CT shows gas, otherwise fluid or bowel contents."""
+    inner = ndi.distance_transform_edt(np.pad(sub, 1))[1:-1, 1:-1, 1:-1] > wall_mm
+    wall = sub & ~inner
+    if wall_hu is not None:
+        wall |= sub & (ct_sub > wall_hu)
+    region[sub] = contents_id
+    region[wall] = wall_id
+    region[inner & (ct_sub < GAS_HU)] = gas_id
 
 
 # --------------------------------------------------------------------------------------------
@@ -465,13 +566,13 @@ def contact_mm(table, s_index, roll_deg):
 # Landmark calibration
 # --------------------------------------------------------------------------------------------
 
-def fan_scores(volume, grid, blocking, label_count, origin, depth, lateral):
+def fan_scores(volume, grid, blocking, label_count, origin, depth, lateral, reach_mm=70.0):
     """Acoustically reachable sample weight per label for a batch of fans.
 
     origin / depth / lateral: (B, 3). Returns (B, label_count).
     """
     beams = np.deg2rad(np.linspace(-SECTOR_ANGLE_DEG / 2, SECTOR_ANGLE_DEG / 2, 41))
-    radii = np.arange(1.0, 71.0, 1.0)
+    radii = np.arange(1.0, reach_mm + 1.0, 1.0)
     direction = depth[:, None, :] * np.cos(beams)[None, :, None] + lateral[:, None, :] * np.sin(beams)[None, :, None]
     points = origin[:, None, None, :] + direction[:, :, None, :] * radii[None, None, :, None]
     labels = sample_labels(volume, grid, points)
@@ -526,7 +627,9 @@ def calibrate_landmarks(volume, grid, labels, points, tangents, ref, table, gej_
         s_mm, roll_deg = float(fs[pick]), float(((fr[pick] + 180) % 360) - 180)
         origin, depth, lateral = pose_axes(points, tangents, ref, table, np.array([s_mm]), np.array([roll_deg]))
         view = fine[pick]
-        seen = [labels[i]["key"] for i in np.argsort(-view) if view[i] >= 8 and labels[i]["reportable"]]
+        # The list shown to the learner covers the image as it opens, at the default depth.
+        shown = fan_scores(volume, grid, blocking, len(labels), origin, depth, lateral, reach_mm=DEFAULT_DEPTH_MM)[0]
+        seen = [labels[i]["key"] for i in np.argsort(-shown) if shown[i] >= 8 and labels[i]["reportable"]]
         landmarks.append({
             "key": key,
             "sMm": round(s_mm, 1),
@@ -551,11 +654,13 @@ def calibrate_landmarks(volume, grid, labels, points, tangents, ref, table, gej_
 def surface(mask: np.ndarray, source: Grid, max_triangles: int):
     """Smoothed, decimated surface in LPS mm for one structure."""
     crop = bbox(mask, 3)
-    sub = np.ascontiguousarray(mask[crop].astype(np.float32))
+    # One empty voxel all round, so a structure that reaches the edge of the CT still closes.
+    # The simulator fills cut faces by counting surface crossings, which needs closed surfaces.
+    sub = np.ascontiguousarray(np.pad(mask[crop], 1).astype(np.float32))
     image = vtk.vtkImageData()
     image.SetDimensions(sub.shape[2], sub.shape[1], sub.shape[0])
     image.SetSpacing(*source.spacing)
-    image.SetOrigin(*(source.origin + np.array([crop[2].start, crop[1].start, crop[0].start]) * source.spacing))
+    image.SetOrigin(*(source.origin + (np.array([crop[2].start, crop[1].start, crop[0].start]) - 1) * source.spacing))
     image.GetPointData().SetScalars(numpy_to_vtk(sub.ravel(), deep=True))
     # Large organs get a wider kernel: 2 mm slices leave terraces on their near-horizontal
     # surfaces that the small kernel suited to lymph nodes cannot remove.
@@ -595,6 +700,39 @@ def surface(mask: np.ndarray, source: Grid, max_triangles: int):
     return positions, faces
 
 
+def endoscopic_lumen(lumen, esophagus, stomach, points, grid: Grid):
+    """Open lumen surface for the endoscopic view.
+
+    Returns (positions LPS, faces, uv). uv[:, 0] runs from 0 on esophageal mucosa to 1 on gastric
+    mucosa across the junction; uv[:, 1] is the nearest scope-path distance as a fraction of the
+    path length.
+    """
+    sampling = grid.spacing[::-1]
+    off_track = np.ones(lumen.shape, dtype=bool)
+    index = np.rint((points - grid.origin) / grid.spacing).astype(int)
+    off_track[index[:, 2], index[:, 1], index[:, 0]] = False
+    cavity = (ndi.distance_transform_edt(lumen, sampling=sampling) > LUMEN_INSET_MM) | \
+             (ndi.distance_transform_edt(off_track, sampling=sampling) <= LUMEN_TRACK_MM)
+    # Where the open channel passes within a voxel or two of the gastric cavity, the wall left
+    # between them is thinner than the mesh can hold and comes out as a perforated film. Closing
+    # the cavity removes walls that thin.
+    reach = np.mgrid[-2:3, -2:3, -2:3]
+    cavity = ndi.binary_closing(cavity, structure=(reach ** 2).sum(axis=0) <= 5)
+    labels, _ = ndi.label(cavity)
+    cavity = labels == labels[index[0, 2], index[0, 1], index[0, 0]]
+    built = surface(cavity, grid, 36000)
+    if built is None:
+        raise ValueError("The endoscopic lumen is empty")
+    positions, faces = built
+    coords = ((positions - grid.origin) / grid.spacing)[:, ::-1].T
+    to_esophagus = ndi.map_coordinates(ndi.distance_transform_edt(~esophagus, sampling=sampling), coords, order=1, mode="nearest")
+    to_stomach = ndi.map_coordinates(ndi.distance_transform_edt(~stomach, sampling=sampling), coords, order=1, mode="nearest")
+    region = np.clip(0.5 + (to_esophagus - to_stomach) / 8.0, 0.0, 1.0)
+    _, nearest = cKDTree(points).query(positions)
+    along = nearest / max(len(points) - 1, 1)
+    return positions, faces, np.stack([region, along], axis=1)
+
+
 def lps_to_web(points: np.ndarray) -> np.ndarray:
     """web [x, y, z] = patient [L, S, -P]; a proper rotation, so winding is preserved."""
     return np.stack([points[:, 0], points[:, 2], -points[:, 1]], axis=1)
@@ -627,11 +765,17 @@ def write_glb(path: Path, meshes) -> bytes:
         index_view = push(index_data.tobytes(), 34963)
         accessors.append({"bufferView": index_view, "componentType": 5123 if small else 5125,
                           "count": int(faces.size), "type": "SCALAR"})
+        attributes = {"POSITION": len(accessors) - 2}
+        if "uv" in mesh:
+            uv_view = push(mesh["uv"].astype("<f4").tobytes(), 34962)
+            accessors.append({"bufferView": uv_view, "componentType": 5126, "count": len(positions), "type": "VEC2"})
+            attributes["TEXCOORD_0"] = len(accessors) - 1
+        indices = len(accessors) - (2 if "uv" in mesh else 1)
         materials.append({"name": mesh["key"], "doubleSided": True,
                           "pbrMetallicRoughness": {"baseColorFactor": hex_rgb(mesh["color"]) + [1.0],
                                                    "metallicFactor": 0.0, "roughnessFactor": 0.75}})
         gltf_meshes.append({"name": mesh["key"], "primitives": [{
-            "attributes": {"POSITION": len(accessors) - 2}, "indices": len(accessors) - 1,
+            "attributes": attributes, "indices": indices,
             "material": len(materials) - 1, "mode": 4}]})
         nodes.append({"name": mesh["key"], "mesh": len(gltf_meshes) - 1})
     while len(binary) % 4:
@@ -660,7 +804,7 @@ def main():
     parser.add_argument("--out-dir", type=Path, default=OUT_DIR)
     args = parser.parse_args()
     ct_path = args.ct or require_local_data_path("raw-assets", CASE_ID, "ct.nii.gz")
-    seg_path = args.segmentation or require_local_data_path("raw-assets", CASE_ID, "EUS_segmentation.nrrd")
+    seg_path = args.segmentation or require_local_data_path("raw-assets", CASE_ID, SEGMENTATION_FILE)
     out_dir = args.out_dir.resolve()
     (out_dir / "geometry").mkdir(parents=True, exist_ok=True)
     (out_dir / "models").mkdir(parents=True, exist_ok=True)
@@ -737,6 +881,12 @@ def main():
     if bone is not None:
         volume[bone[0]][bone[1]] = 4
 
+    def add_label(key, label, medium, group, reportable):
+        labels.append({"id": len(labels), "key": key, "label": label, "kind": MEDIUM_KIND[medium], "medium": medium,
+                       "group": group, "reportable": reportable})
+        return len(labels) - 1
+
+    content_ids = {}
     structures = []
     review = []
     for name, key, label, group, medium, color, max_triangles in SEGMENTS:
@@ -744,34 +894,31 @@ def main():
         volume_ml = float(masks[key].sum() * np.prod(source.spacing) / 1000)
         entry = {"key": key, "label": label, "group": group, "medium": medium, "color": color,
                  "volumeMl": round(volume_ml, 1), "sourceSegment": name}
-        if key == "airway":
-            label_id = 2
-        else:
-            label_id = len(labels)
-            labels.append({"id": label_id, "key": key, "label": label, "kind": MEDIUM_KIND[medium], "medium": medium,
-                           "group": group, "reportable": True})
+        if key in STRUCTURE_NOTES:
+            entry["note"] = STRUCTURE_NOTES[key]
+        label_id = 2 if key == "airway" else add_label(key, label, medium, group, True)
         entry["labelId"] = label_id
         occupied = 0
         if resampled is not None:
             slices, sub = resampled
-            if key == "stomach":
-                # Wall shell plus contents: gas where the CT shows gas, otherwise fluid.
-                inner = ndi.distance_transform_edt(np.pad(sub, 1))[1:-1, 1:-1, 1:-1] > STOMACH_WALL_MM
-                gas = inner & (ct_iso[slices] < -300)
-                contents_id, gas_id = len(labels), len(labels) + 1
-                labels.append({"id": contents_id, "key": "gastric_contents", "label": "Gastric contents", "kind": "blood",
-                               "medium": "fluid", "group": "gi", "reportable": False})
-                labels.append({"id": gas_id, "key": "gastric_gas", "label": "Gastric gas", "kind": "air",
-                               "medium": "air", "group": "gi", "reportable": False})
-                region = volume[slices]
-                region[sub] = label_id
-                region[inner] = contents_id
-                region[gas] = gas_id
+            if key in HOLLOW:
+                wall_mm, wall_hu, contents = HOLLOW[key]
+                if contents not in content_ids:
+                    content_ids[contents] = [add_label(k, text, m, g, False) for k, text, m, g in CONTENT_LABELS[contents]]
+                paint_hollow(volume[slices], sub, ct_iso[slices], label_id, *content_ids[contents], wall_mm, wall_hu)
             else:
                 volume[slices][sub] = label_id
             occupied = int(sub.sum())
         review.append({"key": key, "sourceVoxels": int(masks[key].sum()), "occupiedVoxels": occupied})
         structures.append((entry, max_triangles))
+        if medium == "kidney":
+            # Painted straight after its kidney, so the vessels and adrenal that follow still win.
+            if "renal_sinus" not in content_ids:
+                content_ids["renal_sinus"] = add_label("renal_sinus", "Renal sinus (estimated from the kidney contour)",
+                                                       "renal_sinus", "organ", False)
+            sinus = resample_mask(clean_mask(renal_sinus(masks[key], source) & ~any_segment), source, grid)
+            if sinus is not None:
+                volume[sinus[0]][sinus[1]] = content_ids["renal_sinus"]
     if len(labels) > 255:
         raise ValueError("Too many labels for a uint8 volume")
 
@@ -786,9 +933,12 @@ def main():
         "labels": labels, "review": review,
         "assumptions": [
             "Tissue outside the segmentation is classed from CT attenuation into air, fat, soft tissue and bone.",
-            "Unsegmented organs and vessels are generic soft tissue.",
+            "Unsegmented vessels (hepatic veins, renal veins) are generic soft tissue.",
             "The esophagus is solid wall tissue: lumen air in the CT is ignored because the scope occupies the lumen.",
             "The stomach is a wall shell with CT-classed gas or fluid contents.",
+            "Duodenum, small bowel and colon are wall (a surface shell plus CT-enhancing wall) with CT-classed gas or contents.",
+            "The renal sinus is the hilar concavity of each kidney contour, not a drawn segment.",
+            "Stations 8 and 9 were drawn where the stations lie; the patient's CT showed no node there.",
             "Where masks overlap, the later structure in the build order wins and the airway lumen wins last.",
         ],
     }
@@ -814,7 +964,9 @@ def main():
     print("Writing CT correlate…")
     ct_spacing = np.array(CT_SPACING_MM)
     ct_grid = Grid(roi_lo, ct_spacing, np.floor((roi_hi - roi_lo) / ct_spacing).astype(int) + 1)
-    ct_crop = resample_ct(ct_image, ct_grid, 0.7)
+    painted_ct = sitk.GetImageFromArray(paint_placed_nodes(ct_array, masks))
+    painted_ct.CopyInformation(ct_image)
+    ct_crop = resample_ct(painted_ct, ct_grid, 0.6)
     low, high = CT_WINDOW_HU
     # 64 gray levels: indistinguishable in a soft-tissue window and far more compressible.
     ct_u8 = (np.clip((ct_crop - low) / (high - low) * 255, 0, 255).astype(np.uint8) // 4) * 4
@@ -851,6 +1003,11 @@ def main():
     glb = write_glb(out_dir / "models/eus_b_anatomy.glb", meshes)
     total_triangles = sum(len(m["faces"]) for m in meshes)
     print(f"  {len(meshes)} surfaces, {total_triangles} triangles, {len(glb) / 1e6:.2f} MB")
+    lumen_positions, lumen_faces, lumen_uv = endoscopic_lumen(lumen, esophagus, stomach, points, path_grid)
+    lumen_glb = write_glb(out_dir / "models/eus_b_lumen.glb", [{
+        "key": "gi_lumen", "color": "#d98b84", "positions": lps_to_web(lumen_positions),
+        "faces": lumen_faces, "uv": lumen_uv}])
+    print(f"  endoscopic lumen {len(lumen_faces)} triangles, {len(lumen_glb) / 1e6:.2f} MB")
 
     all_points = np.concatenate([m["positions"] for m in meshes])
     manifest = {
@@ -869,8 +1026,10 @@ def main():
             "path": "geometry/scope_path.json",
             "ct": {"data": "geometry/ct.u8.gz", "sizeXyz": [int(v) for v in ct_grid.size],
                    "spacingXyzMm": [float(v) for v in ct_spacing], "originLps": [float(v) for v in ct_grid.origin],
-                   "windowHu": list(CT_WINDOW_HU), "dataSha256": sha256(ct_packed)},
+                   "windowHu": list(CT_WINDOW_HU), "dataSha256": sha256(ct_packed),
+                   "paintedStructures": list(PAINTED_STATIONS)},
             "model": {"asset": "models/eus_b_anatomy.glb", "frame": "web_mm", "sha256": sha256(glb)},
+            "lumen": {"asset": "models/eus_b_lumen.glb", "frame": "web_mm", "sha256": sha256(lumen_glb)},
         },
         "bounds": {"min": [round(float(v), 1) for v in all_points.min(axis=0)],
                    "max": [round(float(v), 1) for v in all_points.max(axis=0)]},
@@ -881,6 +1040,9 @@ def main():
             "path": "Authored centered route through the segmented esophagus and proximal stomach.",
             "contact": "The transducer is placed on the wall it faces; coupling is not simulated.",
             "background": "Unsegmented tissue is classed from CT attenuation (air, fat, soft tissue, bone).",
+            "placedStations": "Stations 8 and 9 were added for teaching. The patient's CT showed no node there; "
+                              "the contours were drawn where the stations lie and painted into the CT correlate.",
+            "lumen": "The endoscopic lumen is the esophagus and stomach contours set in by a wall thickness and held open.",
         },
     }
     (out_dir / "case_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

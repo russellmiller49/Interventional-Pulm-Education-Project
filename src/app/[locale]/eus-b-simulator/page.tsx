@@ -36,9 +36,9 @@ export default async function EusBSimulatorPage({
               <h1 className="text-4xl font-bold tracking-tight md:text-5xl">EUS-B Simulator</h1>
               <p className="max-w-3xl text-base leading-7 text-muted-foreground md:text-lg">
                 Drive the EBUS endoscope down the esophagus and into the proximal stomach. A
-                simulated ultrasound image, the 3D anatomy and the CT follow the scope, with
-                calibrated views of the lymph node stations and landmarks reached from the
-                esophagus.
+                simulated ultrasound image, the 3D anatomy and an endoscopic or CT view follow the
+                scope, with calibrated views of the lymph node stations and landmarks reached from
+                the esophagus and stomach.
               </p>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
                 The images are simulated from one CT and its segmentation for anatomy teaching. They
@@ -58,7 +58,8 @@ export default async function EusBSimulatorPage({
             </div>
           </section>
 
-          <section className="container">
+          {/* The simulator is a three-pane workspace, so its frame spans the window. */}
+          <section className="mx-auto w-full max-w-[2400px] px-3 sm:px-4">
             <div className="overflow-hidden rounded-3xl border border-border/70 bg-card/70 shadow-sm">
               <iframe
                 title="EUS-B Simulator"

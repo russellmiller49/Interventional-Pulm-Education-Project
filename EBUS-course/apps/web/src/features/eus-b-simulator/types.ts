@@ -14,7 +14,10 @@ export type EusMedium =
   | 'liver'
   | 'kidney'
   | 'adrenal'
-  | 'pancreas';
+  | 'pancreas'
+  | 'spleen'
+  | 'renal_sinus'
+  | 'bowel_contents';
 
 export type EusStructureGroup =
   | 'node'
@@ -22,6 +25,7 @@ export type EusStructureGroup =
   | 'heart'
   | 'airway'
   | 'gi'
+  | 'bowel'
   | 'organ'
   | 'bone'
   | 'background';
@@ -53,6 +57,8 @@ export interface EusStructure {
   volumeMl?: number;
   triangles?: number;
   centroidLps?: Point3;
+  /** Learner-facing caveat written by the case build, e.g. a contour that marks a location. */
+  note?: string;
 }
 
 export interface EusLandmarkPose {
@@ -84,6 +90,11 @@ export interface EusCtAsset {
   originLps: Point3;
   windowHu: [number, number];
   dataSha256: string;
+  /**
+   * Structures whose appearance was painted into this CT by the case build. The patient's scan
+   * does not show them, so every view of the CT that includes one must say so.
+   */
+  paintedStructures?: string[];
 }
 
 export interface EusCaseManifest {
@@ -111,6 +122,8 @@ export interface EusCaseManifest {
     path: string;
     ct: EusCtAsset;
     model: { asset: string; frame: 'web_mm'; sha256: string };
+    /** Open esophagus-and-stomach lumen for the endoscopic view. */
+    lumen: { asset: string; frame: 'web_mm'; sha256: string };
   };
   bounds: { min: Point3; max: Point3 };
   structures: EusStructure[];
@@ -153,6 +166,7 @@ export interface EusLayerState {
   heart: boolean;
   airway: boolean;
   gi: boolean;
+  bowel: boolean;
   organ: boolean;
   bone: boolean;
 }

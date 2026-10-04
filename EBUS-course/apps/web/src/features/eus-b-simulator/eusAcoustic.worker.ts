@@ -1,6 +1,5 @@
 /// <reference lib="webworker" />
 import type { AcousticControls, AcousticPose } from '@bronchoscopy-core/acoustic';
-import { RENDERING_QUALITY } from '@bronchoscopy-core/quality';
 
 import { renderEusFrame } from './eusAcoustic';
 import type { EusAcousticVolume } from './types';
@@ -22,6 +21,13 @@ let volume: EusAcousticVolume | null = null,
 let averageMs = 16,
   samples = 0;
 
+/** Beam grid per quality step. The grid shrinks when frames take too long on this device. */
+const QUALITY = {
+  high: { beams: 208, samples: 320 },
+  balanced: { beams: 160, samples: 256 },
+  low: { beams: 112, samples: 192 },
+};
+
 // Only the newest request is rendered; poses that arrive during a render are skipped.
 self.onmessage = (event: MessageEvent<Request>) => {
   if (event.data.type === 'init') {
@@ -37,11 +43,11 @@ self.onmessage = (event: MessageEvent<Request>) => {
     const request = queued;
     queued = null;
     const quality =
-      samples > 20 && averageMs > 26
-        ? RENDERING_QUALITY.low
-        : samples > 20 && averageMs > 20
-          ? RENDERING_QUALITY.balanced
-          : RENDERING_QUALITY.high;
+      samples > 20 && averageMs > 30
+        ? QUALITY.low
+        : samples > 20 && averageMs > 22
+          ? QUALITY.balanced
+          : QUALITY.high;
     const start = performance.now(),
       frame = renderEusFrame(
         volume,
@@ -49,8 +55,8 @@ self.onmessage = (event: MessageEvent<Request>) => {
         request.controls,
         request.width,
         request.height,
-        quality.acousticBeams,
-        quality.acousticSamples,
+        quality.beams,
+        quality.samples,
       );
     averageMs = averageMs * 0.9 + (performance.now() - start) * 0.1;
     samples++;

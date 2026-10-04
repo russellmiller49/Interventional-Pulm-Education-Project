@@ -10,6 +10,8 @@
  *   node artifacts/eus-b-review/review.mjs
  *
  * Output goes to artifacts/eus-b-review (ignored by Git) unless EUS_B_REVIEW_OUTPUT is set.
+ * Rerun it after rebuilding the case or tuning eusAcoustic.ts, and read the learner-facing
+ * landmark notes in content.ts against the sheets: each note describes one of these frames.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -35,7 +37,7 @@ const volume: EusAcousticVolume = {
   metadata: json(manifest.assets.acoustic.metadata),
   data: new Uint8Array(gunzipSync(fs.readFileSync(path.join(root, manifest.assets.acoustic.data)))),
 }
-const size = 384
+const size = 512
 const tiles: Array<{ input: Buffer; left: number; top: number }> = []
 const labeledTiles: typeof tiles = []
 const colors = new Map(

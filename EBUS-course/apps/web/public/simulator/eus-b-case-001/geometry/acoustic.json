@@ -1,16 +1,16 @@
 {
   "schema": "acoustic-volume/v1",
-  "assetVersion": "eus-b-v1",
+  "assetVersion": "eus-b-v3",
   "coordinateSystem": "LPS",
   "units": "mm",
-  "sourceGeometrySha256": "8d9189a3002dc56e384fca59f2a89089ca486613291204c2863a4fb1321ea39a",
-  "dataSha256": "c89094526a2886efc9ddb949678a2642bd6c4d603dd2758427383da2c1217286",
-  "decodedSha256": "fbdf38dc9f7e56f5b9b463d40611bc6edb52f15d499fba7b71ea42897cef7f12",
+  "sourceGeometrySha256": "e6ef5b011711e8c9f3b8e701a308b3765eed7cd87758b06f3c25ed2dcfb1823a",
+  "dataSha256": "72caac80875026dcf3b9e72332955b29366d45aea0e88c62c75db1eb5011b13f",
+  "decodedSha256": "0ac32e89136bf0b937ef2aedf1fc3efc35cb9e89275ed586def5960c2440cac5",
   "format": "uint8-labels-gzip",
   "sizeXyz": [
-    230,
-    249,
-    423
+    229,
+    247,
+    427
   ],
   "spacingXyzMm": [
     1.0,
@@ -19,8 +19,8 @@
   ],
   "originLps": [
     -98.0,
-    -301.0,
-    918.0
+    -299.0,
+    914.0
   ],
   "labels": [
     {
@@ -70,6 +70,42 @@
     },
     {
       "id": 5,
+      "key": "small_bowel",
+      "label": "Small bowel",
+      "kind": "wall",
+      "medium": "gi_wall",
+      "group": "bowel",
+      "reportable": true
+    },
+    {
+      "id": 6,
+      "key": "bowel_contents",
+      "label": "Bowel contents",
+      "kind": "soft",
+      "medium": "bowel_contents",
+      "group": "bowel",
+      "reportable": false
+    },
+    {
+      "id": 7,
+      "key": "bowel_gas",
+      "label": "Bowel gas",
+      "kind": "air",
+      "medium": "air",
+      "group": "bowel",
+      "reportable": false
+    },
+    {
+      "id": 8,
+      "key": "colon",
+      "label": "Colon",
+      "kind": "wall",
+      "medium": "gi_wall",
+      "group": "bowel",
+      "reportable": true
+    },
+    {
+      "id": 9,
       "key": "liver",
       "label": "Liver",
       "kind": "soft",
@@ -78,7 +114,16 @@
       "reportable": true
     },
     {
-      "id": 6,
+      "id": 10,
+      "key": "spleen",
+      "label": "Spleen",
+      "kind": "soft",
+      "medium": "spleen",
+      "group": "organ",
+      "reportable": true
+    },
+    {
+      "id": 11,
       "key": "left_kidney",
       "label": "Left kidney",
       "kind": "soft",
@@ -87,7 +132,16 @@
       "reportable": true
     },
     {
-      "id": 7,
+      "id": 12,
+      "key": "renal_sinus",
+      "label": "Renal sinus (estimated from the kidney contour)",
+      "kind": "soft",
+      "medium": "renal_sinus",
+      "group": "organ",
+      "reportable": false
+    },
+    {
+      "id": 13,
       "key": "right_kidney",
       "label": "Right kidney",
       "kind": "soft",
@@ -96,7 +150,7 @@
       "reportable": true
     },
     {
-      "id": 8,
+      "id": 14,
       "key": "pancreas",
       "label": "Pancreas",
       "kind": "soft",
@@ -105,7 +159,7 @@
       "reportable": true
     },
     {
-      "id": 9,
+      "id": 15,
       "key": "gallbladder",
       "label": "Gallbladder",
       "kind": "blood",
@@ -114,7 +168,7 @@
       "reportable": true
     },
     {
-      "id": 10,
+      "id": 16,
       "key": "right_adrenal",
       "label": "Right adrenal gland",
       "kind": "node",
@@ -123,7 +177,7 @@
       "reportable": true
     },
     {
-      "id": 11,
+      "id": 17,
       "key": "left_adrenal",
       "label": "Left adrenal gland",
       "kind": "node",
@@ -132,7 +186,7 @@
       "reportable": true
     },
     {
-      "id": 12,
+      "id": 18,
       "key": "duodenum",
       "label": "Duodenum",
       "kind": "wall",
@@ -141,7 +195,7 @@
       "reportable": true
     },
     {
-      "id": 13,
+      "id": 19,
       "key": "stomach",
       "label": "Stomach",
       "kind": "wall",
@@ -150,7 +204,7 @@
       "reportable": true
     },
     {
-      "id": 14,
+      "id": 20,
       "key": "gastric_contents",
       "label": "Gastric contents",
       "kind": "blood",
@@ -159,7 +213,7 @@
       "reportable": false
     },
     {
-      "id": 15,
+      "id": 21,
       "key": "gastric_gas",
       "label": "Gastric gas",
       "kind": "air",
@@ -168,7 +222,7 @@
       "reportable": false
     },
     {
-      "id": 16,
+      "id": 22,
       "key": "left_ventricle",
       "label": "Left ventricle",
       "kind": "blood",
@@ -177,7 +231,7 @@
       "reportable": true
     },
     {
-      "id": 17,
+      "id": 23,
       "key": "right_ventricle",
       "label": "Right ventricle",
       "kind": "blood",
@@ -186,7 +240,7 @@
       "reportable": true
     },
     {
-      "id": 18,
+      "id": 24,
       "key": "right_atrium",
       "label": "Right atrium",
       "kind": "blood",
@@ -195,7 +249,7 @@
       "reportable": true
     },
     {
-      "id": 19,
+      "id": 25,
       "key": "left_atrium",
       "label": "Left atrium",
       "kind": "blood",
@@ -204,7 +258,7 @@
       "reportable": true
     },
     {
-      "id": 20,
+      "id": 26,
       "key": "left_atrial_appendage",
       "label": "Left atrial appendage",
       "kind": "blood",
@@ -213,7 +267,7 @@
       "reportable": true
     },
     {
-      "id": 21,
+      "id": 27,
       "key": "pulmonary_veins",
       "label": "Pulmonary veins",
       "kind": "blood",
@@ -222,7 +276,7 @@
       "reportable": true
     },
     {
-      "id": 22,
+      "id": 28,
       "key": "pulmonary_artery",
       "label": "Pulmonary artery",
       "kind": "blood",
@@ -231,7 +285,7 @@
       "reportable": true
     },
     {
-      "id": 23,
+      "id": 29,
       "key": "aorta",
       "label": "Aorta",
       "kind": "blood",
@@ -240,7 +294,52 @@
       "reportable": true
     },
     {
-      "id": 24,
+      "id": 30,
+      "key": "celiac_trunk",
+      "label": "Celiac trunk",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 31,
+      "key": "superior_mesenteric_artery",
+      "label": "Superior mesenteric artery",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 32,
+      "key": "renal_arteries",
+      "label": "Renal arteries",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 33,
+      "key": "left_common_iliac_artery",
+      "label": "Left common iliac artery",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 34,
+      "key": "right_common_iliac_artery",
+      "label": "Right common iliac artery",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 35,
       "key": "inferior_vena_cava",
       "label": "Inferior vena cava",
       "kind": "blood",
@@ -249,7 +348,25 @@
       "reportable": true
     },
     {
-      "id": 25,
+      "id": 36,
+      "key": "left_common_iliac_vein",
+      "label": "Left common iliac vein",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 37,
+      "key": "right_common_iliac_vein",
+      "label": "Right common iliac vein",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 38,
       "key": "superior_vena_cava",
       "label": "Superior vena cava",
       "kind": "blood",
@@ -258,7 +375,7 @@
       "reportable": true
     },
     {
-      "id": 26,
+      "id": 39,
       "key": "azygos_vein",
       "label": "Azygos vein",
       "kind": "blood",
@@ -267,16 +384,34 @@
       "reportable": true
     },
     {
-      "id": 27,
-      "key": "portal_splenic_vein",
-      "label": "Portal and splenic veins",
+      "id": 40,
+      "key": "portal_vein",
+      "label": "Portal vein",
       "kind": "blood",
       "medium": "blood",
       "group": "vessel",
       "reportable": true
     },
     {
-      "id": 28,
+      "id": 41,
+      "key": "splenic_vein",
+      "label": "Splenic vein",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 42,
+      "key": "superior_mesenteric_vein",
+      "label": "Superior mesenteric vein",
+      "kind": "blood",
+      "medium": "blood",
+      "group": "vessel",
+      "reportable": true
+    },
+    {
+      "id": 43,
       "key": "brachiocephalic_trunk",
       "label": "Brachiocephalic trunk",
       "kind": "blood",
@@ -285,7 +420,7 @@
       "reportable": true
     },
     {
-      "id": 29,
+      "id": 44,
       "key": "right_subclavian_artery",
       "label": "Right subclavian artery",
       "kind": "blood",
@@ -294,7 +429,7 @@
       "reportable": true
     },
     {
-      "id": 30,
+      "id": 45,
       "key": "left_subclavian_artery",
       "label": "Left subclavian artery",
       "kind": "blood",
@@ -303,7 +438,7 @@
       "reportable": true
     },
     {
-      "id": 31,
+      "id": 46,
       "key": "right_common_carotid_artery",
       "label": "Right common carotid artery",
       "kind": "blood",
@@ -312,7 +447,7 @@
       "reportable": true
     },
     {
-      "id": 32,
+      "id": 47,
       "key": "left_common_carotid_artery",
       "label": "Left common carotid artery",
       "kind": "blood",
@@ -321,7 +456,7 @@
       "reportable": true
     },
     {
-      "id": 33,
+      "id": 48,
       "key": "left_brachiocephalic_vein",
       "label": "Left brachiocephalic vein",
       "kind": "blood",
@@ -330,7 +465,7 @@
       "reportable": true
     },
     {
-      "id": 34,
+      "id": 49,
       "key": "right_brachiocephalic_vein",
       "label": "Right brachiocephalic vein",
       "kind": "blood",
@@ -339,7 +474,7 @@
       "reportable": true
     },
     {
-      "id": 35,
+      "id": 50,
       "key": "esophagus",
       "label": "Esophagus",
       "kind": "wall",
@@ -348,7 +483,7 @@
       "reportable": true
     },
     {
-      "id": 36,
+      "id": 51,
       "key": "station_1r",
       "label": "Station 1R",
       "kind": "node",
@@ -357,7 +492,7 @@
       "reportable": true
     },
     {
-      "id": 37,
+      "id": 52,
       "key": "station_1l",
       "label": "Station 1L",
       "kind": "node",
@@ -366,7 +501,7 @@
       "reportable": true
     },
     {
-      "id": 38,
+      "id": 53,
       "key": "station_2r",
       "label": "Station 2R",
       "kind": "node",
@@ -375,7 +510,7 @@
       "reportable": true
     },
     {
-      "id": 39,
+      "id": 54,
       "key": "station_2l",
       "label": "Station 2L",
       "kind": "node",
@@ -384,7 +519,7 @@
       "reportable": true
     },
     {
-      "id": 40,
+      "id": 55,
       "key": "station_3a",
       "label": "Station 3A",
       "kind": "node",
@@ -393,7 +528,7 @@
       "reportable": true
     },
     {
-      "id": 41,
+      "id": 56,
       "key": "station_4r",
       "label": "Station 4R",
       "kind": "node",
@@ -402,7 +537,7 @@
       "reportable": true
     },
     {
-      "id": 42,
+      "id": 57,
       "key": "station_4l",
       "label": "Station 4L",
       "kind": "node",
@@ -411,7 +546,7 @@
       "reportable": true
     },
     {
-      "id": 43,
+      "id": 58,
       "key": "station_5",
       "label": "Station 5",
       "kind": "node",
@@ -420,7 +555,7 @@
       "reportable": true
     },
     {
-      "id": 44,
+      "id": 59,
       "key": "station_6",
       "label": "Station 6",
       "kind": "node",
@@ -429,7 +564,7 @@
       "reportable": true
     },
     {
-      "id": 45,
+      "id": 60,
       "key": "station_7",
       "label": "Station 7",
       "kind": "node",
@@ -438,7 +573,7 @@
       "reportable": true
     },
     {
-      "id": 46,
+      "id": 61,
       "key": "station_8",
       "label": "Station 8",
       "kind": "node",
@@ -447,7 +582,7 @@
       "reportable": true
     },
     {
-      "id": 47,
+      "id": 62,
       "key": "station_9",
       "label": "Station 9",
       "kind": "node",
@@ -456,7 +591,7 @@
       "reportable": true
     },
     {
-      "id": 48,
+      "id": 63,
       "key": "station_10r",
       "label": "Station 10R",
       "kind": "node",
@@ -465,7 +600,7 @@
       "reportable": true
     },
     {
-      "id": 49,
+      "id": 64,
       "key": "station_10l",
       "label": "Station 10L",
       "kind": "node",
@@ -474,7 +609,7 @@
       "reportable": true
     },
     {
-      "id": 50,
+      "id": 65,
       "key": "station_11rs",
       "label": "Station 11Rs",
       "kind": "node",
@@ -483,7 +618,7 @@
       "reportable": true
     },
     {
-      "id": 51,
+      "id": 66,
       "key": "station_11ri",
       "label": "Station 11Ri",
       "kind": "node",
@@ -492,7 +627,7 @@
       "reportable": true
     },
     {
-      "id": 52,
+      "id": 67,
       "key": "station_11l",
       "label": "Station 11L",
       "kind": "node",
@@ -503,49 +638,64 @@
   ],
   "review": [
     {
+      "key": "small_bowel",
+      "sourceVoxels": 668476,
+      "occupiedVoxels": 267207
+    },
+    {
+      "key": "colon",
+      "sourceVoxels": 384941,
+      "occupiedVoxels": 251299
+    },
+    {
       "key": "liver",
-      "sourceVoxels": 1029757,
-      "occupiedVoxels": 911365
+      "sourceVoxels": 1024299,
+      "occupiedVoxels": 903622
+    },
+    {
+      "key": "spleen",
+      "sourceVoxels": 139332,
+      "occupiedVoxels": 180071
     },
     {
       "key": "left_kidney",
-      "sourceVoxels": 87216,
-      "occupiedVoxels": 113000
+      "sourceVoxels": 87155,
+      "occupiedVoxels": 112867
     },
     {
       "key": "right_kidney",
-      "sourceVoxels": 102662,
-      "occupiedVoxels": 120689
+      "sourceVoxels": 101781,
+      "occupiedVoxels": 120334
     },
     {
       "key": "pancreas",
-      "sourceVoxels": 44270,
-      "occupiedVoxels": 56619
+      "sourceVoxels": 39744,
+      "occupiedVoxels": 50873
     },
     {
       "key": "gallbladder",
-      "sourceVoxels": 22451,
-      "occupiedVoxels": 28785
+      "sourceVoxels": 24510,
+      "occupiedVoxels": 31558
     },
     {
       "key": "right_adrenal",
-      "sourceVoxels": 1601,
-      "occupiedVoxels": 1935
+      "sourceVoxels": 1626,
+      "occupiedVoxels": 1976
     },
     {
       "key": "left_adrenal",
-      "sourceVoxels": 1745,
-      "occupiedVoxels": 2098
+      "sourceVoxels": 1748,
+      "occupiedVoxels": 2139
     },
     {
       "key": "duodenum",
-      "sourceVoxels": 28634,
-      "occupiedVoxels": 36772
+      "sourceVoxels": 31867,
+      "occupiedVoxels": 40949
     },
     {
       "key": "stomach",
-      "sourceVoxels": 133290,
-      "occupiedVoxels": 171626
+      "sourceVoxels": 132066,
+      "occupiedVoxels": 170389
     },
     {
       "key": "left_ventricle",
@@ -588,9 +738,44 @@
       "occupiedVoxels": 243999
     },
     {
+      "key": "celiac_trunk",
+      "sourceVoxels": 993,
+      "occupiedVoxels": 1177
+    },
+    {
+      "key": "superior_mesenteric_artery",
+      "sourceVoxels": 1440,
+      "occupiedVoxels": 1712
+    },
+    {
+      "key": "renal_arteries",
+      "sourceVoxels": 993,
+      "occupiedVoxels": 1049
+    },
+    {
+      "key": "left_common_iliac_artery",
+      "sourceVoxels": 9023,
+      "occupiedVoxels": 4741
+    },
+    {
+      "key": "right_common_iliac_artery",
+      "sourceVoxels": 9862,
+      "occupiedVoxels": 4502
+    },
+    {
       "key": "inferior_vena_cava",
-      "sourceVoxels": 61669,
-      "occupiedVoxels": 79688
+      "sourceVoxels": 62458,
+      "occupiedVoxels": 80315
+    },
+    {
+      "key": "left_common_iliac_vein",
+      "sourceVoxels": 29715,
+      "occupiedVoxels": 10866
+    },
+    {
+      "key": "right_common_iliac_vein",
+      "sourceVoxels": 20061,
+      "occupiedVoxels": 6652
     },
     {
       "key": "superior_vena_cava",
@@ -603,9 +788,19 @@
       "occupiedVoxels": 8037
     },
     {
-      "key": "portal_splenic_vein",
-      "sourceVoxels": 15591,
-      "occupiedVoxels": 19448
+      "key": "portal_vein",
+      "sourceVoxels": 10916,
+      "occupiedVoxels": 13727
+    },
+    {
+      "key": "splenic_vein",
+      "sourceVoxels": 6966,
+      "occupiedVoxels": 8425
+    },
+    {
+      "key": "superior_mesenteric_vein",
+      "sourceVoxels": 2883,
+      "occupiedVoxels": 3540
     },
     {
       "key": "brachiocephalic_trunk",
@@ -644,8 +839,8 @@
     },
     {
       "key": "esophagus",
-      "sourceVoxels": 37034,
-      "occupiedVoxels": 47662
+      "sourceVoxels": 37918,
+      "occupiedVoxels": 48410
     },
     {
       "key": "station_1r",
@@ -740,9 +935,12 @@
   ],
   "assumptions": [
     "Tissue outside the segmentation is classed from CT attenuation into air, fat, soft tissue and bone.",
-    "Unsegmented organs and vessels are generic soft tissue.",
+    "Unsegmented vessels (hepatic veins, renal veins) are generic soft tissue.",
     "The esophagus is solid wall tissue: lumen air in the CT is ignored because the scope occupies the lumen.",
     "The stomach is a wall shell with CT-classed gas or fluid contents.",
+    "Duodenum, small bowel and colon are wall (a surface shell plus CT-enhancing wall) with CT-classed gas or contents.",
+    "The renal sinus is the hilar concavity of each kidney contour, not a drawn segment.",
+    "Stations 8 and 9 were drawn where the stations lie; the patient's CT showed no node there.",
     "Where masks overlap, the later structure in the build order wins and the airway lumen wins last."
   ]
 }

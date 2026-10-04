@@ -116,19 +116,33 @@ export function insertionDepthCm(sMm: number, incisorOffsetMm: number) {
   return (sMm + incisorOffsetMm) / 10;
 }
 
+/** Length of distal shaft that bends off the path to bring the transducer onto the wall. */
+const SHAFT_BEND_MM = 28;
+
+/** Path point at an insertion depth, in the middle of the lumen. */
+export function pathCenterAt(path: EusScopePath, sMm: number): Point3 {
+  const { lower, upper, t } = sampleIndex(path, sMm);
+  return mix(path.pointsLps[lower], path.pointsLps[upper], t);
+}
+
+/**
+ * Point on the scope shaft `atMm` along the path, for a scope whose transducer is at `sMm`. The
+ * shaft follows the path and bends onto the wall over its last few centimetres.
+ */
+export function scopeShaftPointAt(path: EusScopePath, pose: EusPose, sMm: number, atMm: number): Point3 {
+  const end = clamp(sMm, 0, path.totalLengthMm);
+  const blend = clamp(1 - (end - atMm) / SHAFT_BEND_MM, 0, 1);
+  return plus(
+    pathCenterAt(path, atMm),
+    times(minus(pose.originLps, pose.centerLps), blend * blend * (3 - 2 * blend)),
+  );
+}
+
 /** Scope shaft polyline from the top of the path to the transducer, bending onto the wall. */
 export function scopeShaftPolyline(path: EusScopePath, pose: EusPose, sMm: number): Point3[] {
-  const bendMm = 28;
-  const offset = minus(pose.originLps, pose.centerLps);
   const points: Point3[] = [];
   const end = clamp(sMm, 0, path.totalLengthMm);
-  const push = (at: number) => {
-    const { lower, upper, t } = sampleIndex(path, at);
-    const center = mix(path.pointsLps[lower], path.pointsLps[upper], t);
-    const blend = clamp(1 - (end - at) / bendMm, 0, 1);
-    points.push(plus(center, times(offset, blend * blend * (3 - 2 * blend))));
-  };
-  for (let at = 0; at < end; at += 4) push(at);
-  push(end);
+  for (let at = 0; at < end; at += 4) points.push(scopeShaftPointAt(path, pose, sMm, at));
+  points.push(scopeShaftPointAt(path, pose, sMm, end));
   return points;
 }

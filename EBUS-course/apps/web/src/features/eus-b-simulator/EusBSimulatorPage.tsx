@@ -12,9 +12,10 @@ import {
   EUS_ORIENTATION_NOTES,
 } from './content';
 import { EusAnatomyScene } from './EusAnatomyScene';
-import { EusCtView } from './EusCtView';
+import { EusCtView, type EusCtPlane } from './EusCtView';
+import { EusEndoscopeView } from './EusEndoscopeView';
 import { EusSectorView, type EusLabelColors } from './EusSectorView';
-import type { EusAcousticFrame } from './eusAcoustic';
+import { eusLabelAt, type EusAcousticFrame } from './eusAcoustic';
 import {
   clamp,
   computeEusPose,
@@ -25,10 +26,12 @@ import {
   normalizeRollDeg,
   ROLL_MAX_DEG,
   ROLL_MIN_DEG,
+  scopeShaftPolyline,
 } from './eusPose';
 import { FIND_HOLD_MS, FIND_START, referenceAreaMm2, targetHeld } from './findTarget';
+import type { Point3 } from '@bronchoscopy-core/frame';
 import type { EusCaseManifest, EusLandmarkPose, EusLayerState, EusScopeState } from './types';
-import { useEusCase } from './useEusCase';
+import { useEusCase, useEusCt } from './useEusCase';
 import './eus-b-simulator.css';
 
 type Mode = 'explore' | 'find';
@@ -105,12 +108,19 @@ function HoldButton({
 }
 
 export function EusBSimulatorPage() {
-  const { manifest, path, volume, ct, error } = useEusCase();
+  const { manifest, path, volume, error } = useEusCase();
+  // The third pane shows the view through the endoscope or the CT.
+  const [correlate, setCorrelate] = useState<'endoscope' | 'ct'>('endoscope');
+  const [ctPlane, setCtPlane] = useState<EusCtPlane>('scan');
+  const { ct, error: ctError } = useEusCt(manifest, correlate === 'ct');
   const [scope, setScope] = useState<EusScopeState | null>(null);
   const [depthMm, setDepthMm] = useState(50);
   const [layers, setLayers] = useState<EusLayerState>(EUS_DEFAULT_LAYERS);
   const [showColors, setShowColors] = useState(false);
   const [activeStructure, setActiveStructure] = useState<string | null>(null);
+  // The structure under the pointer in any view; every view outlines or lights it.
+  const [hoverStructure, setHoverStructure] = useState<string | null>(null);
+  const [sectorCanvas, setSectorCanvas] = useState<HTMLCanvasElement | null>(null);
   const [selectedLandmark, setSelectedLandmark] = useState<string | null>('station_7');
   const [mode, setMode] = useState<Mode>('explore');
   const [findTarget, setFindTarget] = useState('station_7');
@@ -137,6 +147,10 @@ export function EusBSimulatorPage() {
   }, [manifest, scope, landmarkPoses]);
 
   const pose = useMemo(() => (path && scope ? computeEusPose(path, scope) : null), [path, scope]);
+  const shaftLps = useMemo(
+    () => (path && pose && scope ? scopeShaftPolyline(path, pose, scope.sMm) : []),
+    [path, pose, scope],
+  );
   const acousticPose = useMemo<AcousticPose | null>(
     () =>
       pose && {
@@ -147,10 +161,31 @@ export function EusBSimulatorPage() {
     [pose],
   );
 
-  const structureLabels = useMemo(
-    () => new Map((manifest?.structures ?? []).map((structure) => [structure.key, structure.label])),
+  const structures = useMemo(
+    () => new Map((manifest?.structures ?? []).map((structure) => [structure.key, structure])),
     [manifest],
   );
+  const labelIds = useMemo(
+    () => new Map((volume?.metadata.labels ?? []).map((label) => [label.key, label.id])),
+    [volume],
+  );
+  const structureAt = useCallback(
+    (point: Point3) => {
+      if (!volume) return null;
+      const label = volume.metadata.labels[eusLabelAt(volume, ...point)];
+      return label?.reportable ? label.key : null;
+    },
+    [volume],
+  );
+  // The 3D view redraws the image on its scan plane each time the ultrasound canvas changes.
+  const frameListeners = useRef(new Set<() => void>());
+  const subscribeFrames = useCallback((listener: () => void) => {
+    frameListeners.current.add(listener);
+    return () => {
+      frameListeners.current.delete(listener);
+    };
+  }, []);
+  const notifyFrameDrawn = useCallback(() => frameListeners.current.forEach((run) => run()), []);
   const labelColors = useMemo<EusLabelColors>(() => {
     if (!manifest || !volume) return [];
     const colors = new Map(manifest.structures.map((s) => [s.key, hexToRgb(s.color)]));
@@ -321,8 +356,23 @@ export function EusBSimulatorPage() {
   const roundLandmark = round ? EUS_LANDMARK_BY_KEY.get(round.targetKey) : undefined;
   const roundPose = round ? landmarkPoses.get(round.targetKey) : undefined;
   const hideCorrelates = searching && ultrasoundOnly;
+  const shownStructure = namingEnabled ? (hoverStructure ?? activeStructure) : null;
   const cmLabel = (sMm: number) =>
     `≈ ${insertionDepthCm(sMm, manifest.path.incisorOffsetMm).toFixed(0)} cm`;
+  const correlateSwitch = (
+    <div className="eus-segmented" role="group" aria-label="Third view">
+      <button
+        type="button"
+        aria-pressed={correlate === 'endoscope'}
+        onClick={() => setCorrelate('endoscope')}
+      >
+        Endoscope
+      </button>
+      <button type="button" aria-pressed={correlate === 'ct'} onClick={() => setCorrelate('ct')}>
+        CT
+      </button>
+    </div>
+  );
 
   return (
     <main className="eus-page">
@@ -419,7 +469,7 @@ export function EusBSimulatorPage() {
               {selected.note && <p className="eus-note">{selected.note}</p>}
               <p className="eus-muted">
                 Segmented structures in this view:{' '}
-                {selectedPose.inView.map((key) => structureLabels.get(key) ?? key).join(', ')}.
+                {selectedPose.inView.map((key) => structures.get(key)?.label ?? key).join(', ')}.
               </p>
               {!atSelected && (
                 <button
@@ -557,6 +607,12 @@ export function EusBSimulatorPage() {
             layers={layers}
             onLayers={setLayers}
             activeStructure={namingEnabled ? activeStructure : null}
+            hoverStructure={namingEnabled ? hoverStructure : null}
+            onHoverStructure={setHoverStructure}
+            namingEnabled={namingEnabled}
+            structureAt={structureAt}
+            sectorCanvas={sectorCanvas}
+            subscribeFrames={subscribeFrames}
           />
         )}
         <EusSectorView
@@ -566,24 +622,46 @@ export function EusBSimulatorPage() {
           depthMm={depthMm}
           onDepthMm={setDepthMm}
           labelColors={labelColors}
+          structures={structures}
           showColors={showColors}
           onShowColors={setShowColors}
           namingEnabled={namingEnabled}
           activeStructure={activeStructure}
           onActiveStructure={setActiveStructure}
+          hoverStructure={hoverStructure}
+          onHoverStructure={setHoverStructure}
           onFrame={handleFrame}
+          onCanvas={setSectorCanvas}
+          onFrameDrawn={notifyFrameDrawn}
         />
-        {!hideCorrelates && (
-          <EusCtView
-            ct={ct}
-            volume={volume}
-            pose={pose}
-            depthMm={depthMm}
-            sectorAngleDeg={manifest.probe.sectorAngleDeg}
-            labelColors={labelColors}
-            showColors={showColors && namingEnabled}
-          />
-        )}
+        {!hideCorrelates &&
+          (correlate === 'endoscope' ? (
+            <EusEndoscopeView
+              manifest={manifest}
+              path={path}
+              pose={pose}
+              sMm={scope.sMm}
+              depthLabel={cmLabel(scope.sMm)}
+              viewSwitch={correlateSwitch}
+            />
+          ) : (
+            <EusCtView
+              ct={ct}
+              loadError={ctError}
+              volume={volume}
+              pose={pose}
+              shaftLps={shaftLps}
+              depthMm={depthMm}
+              sectorAngleDeg={manifest.probe.sectorAngleDeg}
+              labelColors={labelColors}
+              showColors={showColors && namingEnabled}
+              highlightId={shownStructure ? (labelIds.get(shownStructure) ?? null) : null}
+              highlightStrength={hoverStructure ? 0.58 : 0.3}
+              plane={ctPlane}
+              onPlane={setCtPlane}
+              viewSwitch={correlateSwitch}
+            />
+          ))}
       </div>
 
       <section className="eus-card eus-drive" aria-label="Scope controls">

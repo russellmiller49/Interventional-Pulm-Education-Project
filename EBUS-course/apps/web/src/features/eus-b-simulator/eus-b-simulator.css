@@ -18,7 +18,7 @@ body {
 .eus-page {
   display: grid;
   gap: 12px;
-  max-width: 1680px;
+  max-width: 1840px;
   margin: 0 auto;
   padding: 14px;
   overflow-wrap: anywhere;
@@ -38,7 +38,7 @@ body {
 }
 
 .eus-card {
-  padding: 16px;
+  padding: 14px 16px;
 }
 
 .eus-card h1,
@@ -49,7 +49,7 @@ body {
 }
 
 .eus-card h1 {
-  font-size: 1.6rem;
+  font-size: 1.45rem;
 }
 
 .eus-card h2,
@@ -233,6 +233,7 @@ body {
 
 .eus-sector-image,
 .eus-ct-image,
+.eus-endoscope-image,
 .eus-anatomy-canvas {
   position: relative;
   width: 100%;
@@ -248,6 +249,7 @@ body {
 
 .eus-sector-image canvas,
 .eus-ct-image canvas,
+.eus-endoscope-image canvas,
 .eus-anatomy-canvas canvas {
   position: absolute;
   inset: 0;
@@ -256,12 +258,98 @@ body {
   display: block;
 }
 
-.eus-ct-image--axial canvas {
+/* Orthogonal slices keep their own proportions inside the square image box. */
+.eus-ct-image--axial canvas,
+.eus-ct-image--coronal canvas,
+.eus-ct-image--sagittal canvas {
   object-fit: contain;
+}
+
+.eus-ct-planes {
+  justify-self: start;
+}
+
+.eus-ct-planes button,
+.eus-pane-header .eus-segmented button {
+  min-height: 32px;
+  padding: 0 10px;
+}
+
+.eus-endoscope-image {
+  background: #070303;
+}
+
+/* Marks the transducer side of the endoscopic image, which is always its top. */
+.eus-endoscope-mark {
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border: 1px solid rgba(127, 227, 255, 0.5);
+  border-radius: 999px;
+  background: rgba(9, 14, 17, 0.72);
+  color: #bfeeff;
+  font-size: 0.7rem;
+  font-weight: 650;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.eus-endoscope-image .eus-image-badge,
+.eus-endoscope-image .eus-image-readout,
+.eus-endoscope-image .eus-image-message {
+  z-index: 2;
 }
 
 .eus-sector-image canvas + canvas {
   pointer-events: none;
+}
+
+.eus-sector-image {
+  cursor: crosshair;
+}
+
+.eus-sector-image.is-pointing {
+  cursor: pointer;
+}
+
+/* The name of whatever is under the pointer, in the ultrasound image or on the 3D model. */
+.eus-hover-name {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  gap: 2px;
+  width: max-content;
+  max-width: min(260px, calc(100% - 12px));
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 7px;
+  background: rgba(9, 14, 17, 0.92);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+  color: #f2f6f5;
+  font-size: 0.86rem;
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+.eus-hover-name__title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 700;
+}
+
+.eus-hover-name__kind {
+  color: #9fb0ae;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.eus-hover-name__note {
+  color: #e9dcc3;
+  font-size: 0.76rem;
 }
 
 .eus-image-mark,
@@ -427,10 +515,34 @@ body {
   border-radius: 3px;
 }
 
+/* Camera views sit on the canvas, where they act. */
+.eus-anatomy-views {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  max-width: calc(100% - 16px);
+  background: rgba(13, 18, 21, 0.82);
+}
+
+.eus-anatomy-views button {
+  min-height: 30px;
+  padding: 0 9px;
+  font-size: 0.78rem;
+}
+
+@media (pointer: coarse) {
+  .eus-anatomy-views button {
+    min-height: 38px;
+  }
+}
+
 .eus-anatomy-tools {
   position: absolute;
   right: 8px;
   bottom: 8px;
+  /* Above the WebGL canvas, which is added to the pane after these controls. */
+  z-index: 2;
   display: grid;
   gap: 4px;
 }
@@ -444,14 +556,6 @@ body {
   color: #eef4f2;
   font-size: 1.1rem;
   cursor: pointer;
-}
-
-.eus-anatomy-footer {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px 12px;
 }
 
 /* ---- Scope controls ------------------------------------------------------------------ */
@@ -702,6 +806,55 @@ body {
   color: #9aa7a7;
   font-size: 0.74rem;
   font-weight: 700;
+}
+
+/* ---- Wide layout -----------------------------------------------------------------------
+   Landmarks move to a side column, so the three views and the scope controls share one screen. */
+
+.eus-page > .eus-card:only-child {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 1480px) {
+  .eus-page {
+    grid-template-columns: minmax(300px, 340px) minmax(0, 1fr);
+    grid-template-areas:
+      'header header'
+      'mode mode'
+      'side work'
+      'side drive';
+    align-items: start;
+  }
+
+  .eus-header {
+    grid-area: header;
+  }
+
+  .eus-modebar {
+    grid-area: mode;
+  }
+
+  .eus-landmarks,
+  .eus-find {
+    grid-area: side;
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+  }
+
+  .eus-workspace {
+    grid-area: work;
+  }
+
+  .eus-drive {
+    grid-area: drive;
+  }
+
+  .eus-landmark-rail {
+    flex-direction: column;
+    gap: 12px;
+  }
 }
 
 /* ---- Narrow layouts -------------------------------------------------------------------- */

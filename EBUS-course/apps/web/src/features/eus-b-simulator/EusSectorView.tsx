@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { AcousticPose } from '@bronchoscopy-core/acoustic';
 
+import { EUS_GROUP_NAMES } from './content';
 import {
   DEFAULT_EUS_CONTROLS,
   EUS_DEPTH_RANGE_MM,
+  paintEusOverlay,
   sectorGeometry,
   type EusAcousticFrame,
 } from './eusAcoustic';
-import type { EusAcousticVolume } from './types';
+import { EusHoverName } from './EusHoverName';
+import type { EusAcousticVolume, EusStructure } from './types';
 
-const FRAME_SIZE = 384;
+const FRAME_SIZE = 512;
+/** How long a tapped name stays up on a touch screen, where there is no hover to end it. */
+const TOUCH_NAME_MS = 2600;
 
 export type EusLabelColors = Array<[number, number, number] | null>;
 
@@ -20,13 +25,32 @@ interface EusSectorViewProps {
   depthMm: number;
   onDepthMm: (depthMm: number) => void;
   labelColors: EusLabelColors;
+  structures: Map<string, EusStructure>;
   showColors: boolean;
   onShowColors: (show: boolean) => void;
   /** False while a find-the-target round is running: no colors, tissue names or structure list. */
   namingEnabled: boolean;
   activeStructure: string | null;
   onActiveStructure: (key: string | null) => void;
+  /** Structure under the pointer in any view; it is outlined here when it is in the image. */
+  hoverStructure: string | null;
+  onHoverStructure: (key: string | null) => void;
   onFrame: (frame: EusAcousticFrame) => void;
+  /** The grayscale canvas, shared so the 3D view can show the image on the scan plane. */
+  onCanvas?: (canvas: HTMLCanvasElement | null) => void;
+  /** Called after each new frame has been drawn on that canvas. */
+  onFrameDrawn?: () => void;
+}
+
+interface PointerAt {
+  /** Position inside the image box, in CSS pixels, for placing the name. */
+  left: number;
+  top: number;
+  boxWidth: number;
+  boxHeight: number;
+  /** Position in frame pixels, for reading the label. */
+  x: number;
+  y: number;
 }
 
 export function EusSectorView({
@@ -36,23 +60,29 @@ export function EusSectorView({
   depthMm,
   onDepthMm,
   labelColors,
+  structures,
   showColors,
   onShowColors,
   namingEnabled,
   activeStructure,
   onActiveStructure,
+  hoverStructure,
+  onHoverStructure,
   onFrame,
+  onCanvas,
+  onFrameDrawn,
 }: EusSectorViewProps) {
   const canvas = useRef<HTMLCanvasElement>(null),
     overlay = useRef<HTMLCanvasElement>(null),
     worker = useRef<Worker | null>(null),
     sequence = useRef(0),
-    scheduled = useRef<ReturnType<typeof setTimeout> | null>(null);
+    scheduled = useRef<ReturnType<typeof setTimeout> | null>(null),
+    touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [gainDb, setGainDb] = useState(DEFAULT_EUS_CONTROLS.gainDb);
   const [frozen, setFrozen] = useState(false);
   const [frame, setFrame] = useState<EusAcousticFrame | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
-  const [pointerLabel, setPointerLabel] = useState<string | null>(null);
+  const [pointer, setPointer] = useState<PointerAt | null>(null);
 
   const controls = useMemo(
     () => ({ ...DEFAULT_EUS_CONTROLS, depthMm, gainDb, sectorAngleDeg }),
@@ -68,6 +98,11 @@ export function EusSectorView({
   }, [onFrame]);
 
   useEffect(() => {
+    onCanvas?.(canvas.current);
+    return () => onCanvas?.(null);
+  }, [onCanvas]);
+
+  useEffect(() => {
     const instance = new Worker(new URL('./eusAcoustic.worker.ts', import.meta.url), {
       type: 'module',
     });
@@ -78,7 +113,7 @@ export function EusSectorView({
       frameCallback.current(event.data.frame);
     };
     instance.onerror = () => setRenderError('Ultrasound rendering could not start. Reload to retry.');
-    // The worker owns its own copy; the page keeps the volume for the CT and find-mode checks.
+    // The worker owns its own copy; the page keeps the volume for the overlays and the CT.
     const data = volume.data.slice();
     instance.postMessage({ type: 'init', volume: { ...volume, data } }, [data.buffer]);
     instance.postMessage({
@@ -130,56 +165,87 @@ export function EusSectorView({
       frame.height,
       frame.controls.sectorAngleDeg,
     );
-    context.font = '11px system-ui';
+    const scale = frame.width / 384;
+    context.font = `${Math.round(11 * scale)}px system-ui`;
     context.fillStyle = '#dce3e8';
     context.strokeStyle = '#76838d';
-    context.lineWidth = 1;
+    context.lineWidth = scale;
     for (let mm = 10; mm <= frame.controls.depthMm; mm += 10) {
       const r = (radius * mm) / frame.controls.depthMm,
         x = apexX + Math.sin(halfAngle) * r,
         y = apexY + Math.cos(halfAngle) * r;
       context.beginPath();
       context.moveTo(x, y);
-      context.lineTo(x + 6, y);
+      context.lineTo(x + 6 * scale, y);
       context.stroke();
-      context.fillText(`${mm}`, x + 8, y + 4);
+      context.fillText(`${mm}`, x + 8 * scale, y + 4 * scale);
     }
-  }, [frame]);
+    onFrameDrawn?.();
+  }, [frame, onFrameDrawn]);
+
+  const labels = volume.metadata.labels;
+  const labelIds = useMemo(() => new Map(labels.map((label) => [label.key, label.id])), [labels]);
+
+  // What is under the pointer is read from the current frame, so it stays right while the scope
+  // moves beneath a still pointer.
+  const pointed = useMemo(() => {
+    if (!frame || !pointer || !namingEnabled) return null;
+    const raw = frame.labelImage[pointer.y * frame.width + pointer.x];
+    // 0 is outside the sector; 255 is air inside it.
+    return raw === 0 ? null : labels[raw === 255 ? 0 : raw];
+  }, [frame, pointer, namingEnabled, labels]);
+  const pointedKey = pointed?.reportable ? pointed.key : null;
+
+  useEffect(() => {
+    onHoverStructure(pointedKey);
+  }, [pointedKey, onHoverStructure]);
+  useEffect(
+    () => () => {
+      if (touchTimer.current) clearTimeout(touchTimer.current);
+    },
+    [],
+  );
 
   const tinted = showColors && namingEnabled;
+  // One outline at a time: the pointer wins, then a structure pointed at in another view, then
+  // the structure chosen from the list.
+  const pointedAnywhere = pointedKey ?? hoverStructure;
+  const highlightKey = namingEnabled ? (pointedAnywhere ?? activeStructure) : null;
+  const highlightId = highlightKey ? (labelIds.get(highlightKey) ?? null) : null;
+  const activeId = activeStructure ? (labelIds.get(activeStructure) ?? null) : null;
   useEffect(() => {
     const element = overlay.current;
     if (!element || !frame) return;
-    element.width = frame.width;
-    element.height = frame.height;
+    if (element.width !== frame.width || element.height !== frame.height) {
+      element.width = frame.width;
+      element.height = frame.height;
+    }
     const context = element.getContext('2d');
     if (!context) return;
-    context.clearRect(0, 0, frame.width, frame.height);
-    if (!tinted) return;
     const image = context.createImageData(frame.width, frame.height);
-    const labels = volume.metadata.labels;
-    for (let i = 0; i < frame.labelImage.length; i++) {
-      const id = frame.labelImage[i],
-        color = labelColors[id];
-      if (!color) continue;
-      const p = i * 4;
-      image.data[p] = color[0];
-      image.data[p + 1] = color[1];
-      image.data[p + 2] = color[2];
-      image.data[p + 3] = labels[id].key === activeStructure ? 150 : 78;
-    }
+    paintEusOverlay(image.data, volume, frame, {
+      colors: labelColors,
+      tint: tinted,
+      activeId,
+      highlightId,
+      // A structure being pointed at is filled; a standing selection is only outlined.
+      fillHighlight: pointedAnywhere !== null,
+    });
     context.putImageData(image, 0, 0);
-  }, [frame, tinted, labelColors, activeStructure, volume]);
+  }, [frame, tinted, labelColors, activeId, highlightId, pointedAnywhere, volume]);
 
-  const nameAt = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!frame || !namingEnabled || !canvas.current) return;
-    const rect = canvas.current.getBoundingClientRect();
-    const x = Math.floor(((event.clientX - rect.left) / rect.width) * frame.width),
-      y = Math.floor(((event.clientY - rect.top) / rect.height) * frame.height);
-    if (x < 0 || y < 0 || x >= frame.width || y >= frame.height) return setPointerLabel(null);
-    const raw = frame.labelImage[y * frame.width + x];
-    // 0 is outside the sector; 255 is air inside it.
-    setPointerLabel(raw === 0 ? null : volume.metadata.labels[raw === 255 ? 0 : raw].label);
+  const track = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!frame || !namingEnabled) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const left = event.clientX - rect.left,
+      top = event.clientY - rect.top;
+    const x = Math.floor((left / rect.width) * frame.width),
+      y = Math.floor((top / rect.height) * frame.height);
+    if (x < 0 || y < 0 || x >= frame.width || y >= frame.height) return setPointer(null);
+    setPointer({ left, top, boxWidth: rect.width, boxHeight: rect.height, x, y });
+    if (touchTimer.current) clearTimeout(touchTimer.current);
+    touchTimer.current =
+      event.pointerType === 'mouse' ? null : setTimeout(() => setPointer(null), TOUCH_NAME_MS);
   };
 
   const inView = useMemo(
@@ -187,10 +253,15 @@ export function EusSectorView({
       frame
         ? [...frame.structures]
             .sort((a, b) => b.count - a.count)
-            .map((structure) => volume.metadata.labels[structure.id])
+            .map((structure) => labels[structure.id])
         : [],
-    [frame, volume],
+    [frame, labels],
   );
+
+  const pointedColor = pointed ? labelColors[pointed.id] : null;
+  const pointedNote = pointed ? structures.get(pointed.key)?.note : undefined;
+  const pointedKind =
+    pointed && pointed.group !== 'background' ? EUS_GROUP_NAMES[pointed.group] : null;
 
   return (
     <section className="eus-pane eus-sector-pane" aria-label="Simulated EUS-B ultrasound">
@@ -209,9 +280,15 @@ export function EusSectorView({
         </button>
       </header>
       <div
-        className="eus-sector-image"
-        onPointerMove={nameAt}
-        onPointerLeave={() => setPointerLabel(null)}
+        className={`eus-sector-image${pointedKey ? ' is-pointing' : ''}`}
+        onPointerMove={track}
+        onPointerDown={track}
+        onPointerLeave={(event) => {
+          if (event.pointerType === 'mouse') setPointer(null);
+        }}
+        onClick={() => {
+          if (pointedKey) onActiveStructure(activeStructure === pointedKey ? null : pointedKey);
+        }}
       >
         <canvas ref={canvas} aria-label="Simulated grayscale ultrasound image" />
         <canvas ref={overlay} aria-hidden="true" />
@@ -229,13 +306,25 @@ export function EusSectorView({
             · {frame.controls.gainDb} dB
           </div>
         )}
+        {pointed && pointer && (
+          <EusHoverName
+            left={pointer.left}
+            top={pointer.top}
+            boxWidth={pointer.boxWidth}
+            boxHeight={pointer.boxHeight}
+            label={pointed.label}
+            color={pointedColor && `rgb(${pointedColor.join(',')})`}
+            kind={pointedKind}
+            note={pointedNote}
+          />
+        )}
       </div>
       <p className="eus-pointer-readout" aria-live="polite">
         {namingEnabled
-          ? pointerLabel
-            ? `Under the pointer: ${pointerLabel}`
-            : 'Point at the image to name the tissue.'
-          : 'Tissue names are hidden while you search.'}
+          ? pointed
+            ? `Under the pointer: ${pointed.label}${pointedNote ? `. ${pointedNote}` : ''}`
+            : 'Point at the image to name a structure. Click it to keep it outlined.'
+          : 'Structure names are hidden while you search.'}
       </p>
       <div className="eus-image-controls">
         <label>
@@ -287,6 +376,8 @@ export function EusSectorView({
                 className="eus-structure-chip"
                 aria-pressed={activeStructure === label.key}
                 onClick={() => onActiveStructure(activeStructure === label.key ? null : label.key)}
+                onPointerEnter={() => onHoverStructure(label.key)}
+                onPointerLeave={() => onHoverStructure(null)}
               >
                 <span
                   className="eus-swatch"
