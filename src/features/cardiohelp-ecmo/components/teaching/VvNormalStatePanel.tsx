@@ -280,7 +280,7 @@ function baselineRows(
     {
       id: 'deltaP',
       group: 'membrane-and-return',
-      label: 'ΔP across the membrane',
+      label: 'Δp across the membrane',
       unit: 'mmHg',
       precision: 0,
       current: circuit.readouts.deltaP.displayed,
@@ -443,6 +443,16 @@ export function VvNormalStatePanel({
             : ', which was taken at this same moment, so nothing has moved yet'}
           . Nothing here is compared with a value from any other circuit or any other patient.
         </p>
+        {/*
+          S4-4 (ECMO-FELLOW-04): the patient group prints "Recirculation-adjusted circuit flow" one
+          section before recirculation is taught. One sentence says what the row is and where it is
+          taught; the row, its value and its place in the table are unchanged.
+        */}
+        <p className="mt-2 text-sm leading-6" data-first-use="recirculation-adjusted-flow">
+          One row uses a term the next section teaches: recirculation-adjusted circuit flow is the
+          displayed circuit flow with the share removed that the circuit drains again straight after
+          returning it. On this settled reference circuit that share does not change.
+        </p>
 
         <div className="mt-3 overflow-x-auto" data-responsive-table>
           <table className="w-full text-left text-sm" data-baseline-table>
@@ -602,7 +612,7 @@ export function VvNormalStatePanel({
                   pVen
                 </th>
                 <th scope="col" className="pb-1 pr-3 font-semibold">
-                  ΔP
+                  Δp
                 </th>
                 <th scope="col" className="pb-1 pr-3 font-semibold">
                   SpO₂
@@ -624,7 +634,7 @@ export function VvNormalStatePanel({
                   <td className="py-1 pr-3" data-column-label="pVen">
                     {trendCell(sample.pVen)}
                   </td>
-                  <td className="py-1 pr-3" data-column-label="ΔP">
+                  <td className="py-1 pr-3" data-column-label="Δp">
                     {trendCell(sample.deltaP)}
                   </td>
                   <td className="py-1 pr-3" data-column-label="SpO₂">

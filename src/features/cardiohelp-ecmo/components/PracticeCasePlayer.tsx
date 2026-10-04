@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 
 import { orderChoices } from '../content/choiceOrder'
+import { ecmoIntegratedCaseScope } from '../content/integratedCaseScope'
 import { resolveScenarioReassessment } from '../content/practiceSupport'
 import {
   cardiohelpScenarioById,
@@ -611,6 +612,7 @@ export function ActionPanel({
   const enabled = true
   const correctiveFault = scenario.expectation.correctiveFault
   const corrected = state.scenario.correctedFaults.includes(correctiveFault)
+  const caseScope = ecmoIntegratedCaseScope(scenario.id)
 
   return (
     <section
@@ -629,6 +631,21 @@ export function ActionPanel({
           </p>
         </div>
       </div>
+
+      {/*
+        IV-1, IV-3, IA-1 (ECMO-FELLOW-04): what this integrated case rehearses and what it cannot
+        establish, said beside the action rather than only after it. See `integratedCaseScope`.
+      */}
+      {caseScope ? (
+        <div className={styles.presentationNote} role="note" data-integrated-case-scope>
+          <p>
+            <strong>What this exercise covers.</strong> {caseScope.rehearses}
+          </p>
+          <p>
+            <strong>What it cannot establish.</strong> {caseScope.cannotEstablish}
+          </p>
+        </div>
+      ) : null}
 
       <div className={styles.actionButtons}>
         {correctiveFault === 'startup-inspection' ? (
@@ -911,8 +928,21 @@ export function ReassessmentPanel({
         </ul>
       </div>
       {reassessmentGuidance ? (
-        <div className={styles.assessmentGuidance} role="note">
-          <strong>Required review domains</strong>
+        /*
+         * IV-2, IA-2 (ECMO-FELLOW-04): this box was headed "Required review domains". Nothing here is
+         * required: it is the teaching for the step, printed before the questions on purpose. Where a
+         * case has no authored reassessment the three selections below are built from this same
+         * guidance, so the box also says that plainly instead of presenting a recap as a hidden key.
+         */
+        <div className={styles.assessmentGuidance} role="note" data-review-checklist>
+          <strong>Review checklist for this case</strong>
+          <span>
+            The teaching for this step, shown before you answer. It is a checklist to read, not a
+            list of required answers, and nothing depends on completing it.
+            {scenario.reassessment
+              ? ''
+              : ' The three selections below restate it among alternatives: a guided comparison, not a hidden key.'}
+          </span>
           <span>
             <b>Device:</b> {reassessmentGuidance.device}
           </span>

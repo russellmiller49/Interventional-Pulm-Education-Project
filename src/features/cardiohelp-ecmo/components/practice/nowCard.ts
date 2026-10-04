@@ -20,6 +20,11 @@ export interface NowCardInput {
     readonly nextControlId: string | null
   } | null
   readonly secondsSinceLastAction?: number | null
+  /**
+   * The reassess selections are review statements built from the case's own checklist, not readings
+   * taken from the monitor. True for a case with reassessment guidance and no authored reassessment.
+   */
+  readonly reassessmentIsChecklist?: boolean
   readonly nextLabel?: string | null
   readonly actions: {
     readonly beginCase: () => void
@@ -164,6 +169,19 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
           heading: 'Your reassessment is recorded',
           body: 'Reveal the debrief to compare what you recorded with the response this case teaches, the causal chain and the sources.',
           primary: { label: 'Reveal causal debrief', onActivate: actions.reveal },
+        }
+      }
+      /*
+       * IV-2, IA-2 (ECMO-FELLOW-04): where the three selections are review statements restating the
+       * case's checklist, the card no longer tells the learner to pick "the response you actually
+       * see on the monitor". Nothing on the monitor is being transcribed there, and saying it was
+       * would describe an acquisition this step does not ask for.
+       */
+      if (input.reassessmentIsChecklist) {
+        return {
+          kicker,
+          heading: 'Review three places: device, circuit or gas, patient',
+          body: 'For each place, choose the statement that belongs in the review of this case. The checklist above the questions is the teaching for this step, and the monitor and trends stay on screen to read beside it.',
         }
       }
       return {

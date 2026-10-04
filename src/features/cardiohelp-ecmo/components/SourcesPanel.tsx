@@ -12,6 +12,7 @@ import {
   cardiohelpDeviceProfile,
   type CardiohelpEcmoPublicationStatus,
 } from '../content/deviceProfile'
+import { cardiohelpEvidence } from '../content/evidence'
 import {
   ecmoEvidenceIdsBySourceClass,
   ecmoSourceClassLabels,
@@ -130,27 +131,45 @@ export function SourcesPanel({
         </div>
       </dl>
 
-      {ecmoSourceClasses.map((sourceClass) => {
-        const Icon = sourceIcons[sourceClass]
-        const headingId = `sources-${sourceClass}`
-        return (
-          <section
-            key={sourceClass}
-            className={evidenceStyles.group}
-            aria-labelledby={headingId}
-            data-source-class={sourceClass}
-          >
-            <h3 id={headingId} className={evidenceStyles.groupHeading}>
-              <Icon aria-hidden="true" /> {ecmoSourceClassLabels[sourceClass]}
-            </h3>
-            <EcmoSourceList
-              evidenceIds={ecmoEvidenceIdsBySourceClass(sourceClass)}
-              labelledBy={headingId}
-              surface="shell"
-            />
-          </section>
-        )
-      })}
+      {/*
+        OV-2 (ECMO-FELLOW-04). The registry printed "Clinical and device review of how this module
+        uses it: none recorded yet" once per source, sixteen times down the hub. The fact itself is
+        not folded: it stays in the badge and the profile above, and the summary of this disclosure
+        line above this disclosure says it again for the whole registry. Only the per-source
+        repetition and the provenance detail sit behind the disclosure, where every row still
+        carries its own line unchanged.
+      */}
+      <p className={styles.externalBoundary} data-source-registry-status>
+        {cardiohelpEvidence.length} sources are registered. No source has a clinical or device
+        review on record; the registry below gives each source&rsquo;s own claim, limits and
+        document check.
+      </p>
+      <details className={styles.reviewChecklist} data-source-registry>
+        <summary className={evidenceStyles.checklistSummary}>
+          <h3>Source registry and provenance</h3>
+        </summary>
+        {ecmoSourceClasses.map((sourceClass) => {
+          const Icon = sourceIcons[sourceClass]
+          const headingId = `sources-${sourceClass}`
+          return (
+            <section
+              key={sourceClass}
+              className={evidenceStyles.group}
+              aria-labelledby={headingId}
+              data-source-class={sourceClass}
+            >
+              <h3 id={headingId} className={evidenceStyles.groupHeading}>
+                <Icon aria-hidden="true" /> {ecmoSourceClassLabels[sourceClass]}
+              </h3>
+              <EcmoSourceList
+                evidenceIds={ecmoEvidenceIdsBySourceClass(sourceClass)}
+                labelledBy={headingId}
+                surface="shell"
+              />
+            </section>
+          )
+        })}
+      </details>
 
       <details className={styles.reviewChecklist}>
         <summary className={evidenceStyles.checklistSummary}>

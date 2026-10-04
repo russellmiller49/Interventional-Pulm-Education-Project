@@ -130,7 +130,7 @@ export function PumpPressureZonesPanel({
               pump. A negative Change for pVen means that drainage pressure became more negative.
             </p>
             <p className="mt-2 text-sm leading-6">
-              ΔP also depends on flow through the oxygenator. A change in ΔP after changing speed is
+              Δp also depends on flow through the oxygenator. A change in Δp after changing speed is
               not, by itself, evidence of new membrane resistance.
             </p>
           </section>
@@ -211,7 +211,7 @@ export function PumpPressureZonesPanel({
           <ChannelValue label="pVen" readout={circuit.readouts.pVen} unit="mmHg" />
           <ChannelValue label="pInt" readout={circuit.readouts.pInt} unit="mmHg" />
           <ChannelValue label="pArt" readout={circuit.readouts.pArt} unit="mmHg" />
-          <ChannelValue label="ΔP" readout={circuit.readouts.deltaP} unit="mmHg" />
+          <ChannelValue label="Δp" readout={circuit.readouts.deltaP} unit="mmHg" />
         </div>
         <p className="mt-2 text-xs leading-5 text-muted-foreground">
           {deltaPShift === null

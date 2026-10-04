@@ -9,7 +9,7 @@
  * the set carries both vocabularies and the forms deliberately overlap.
  *
  * Nine of the forms place pInt directly. The tenth protects the relationship that gives the
- * placement away without naming a position at all: ΔP is pInt minus pArt, and that difference is
+ * placement away without naming a position at all: Δp is pInt minus pArt, and that difference is
  * read across the membrane — so a sentence tying both channels to a transmembrane gradient has
  * said where pInt is taken, whatever else it does or does not say. Nothing on the precommit page
  * says it today; the matcher exists so nothing can start.
@@ -52,7 +52,7 @@ export const ANSWER_LEAK_MATCHERS: readonly AnswerLeakMatcher[] = [
   /*
    * Four concepts, all four required, order-free, within the one unit being scanned: `pInt`,
    * `pArt`, a gradient or difference word, and membrane vocabulary. Written as anchored lookaheads
-   * because the relationship is what leaks, not any arrangement of it — "ΔP trend = pInt − pArt
+   * because the relationship is what leaks, not any arrangement of it — "Δp trend = pInt − pArt
    * across the membrane oxygenator", "Transmembrane gradient compares pInt with pArt" and "pInt and
    * pArt define the pressure drop across the membrane" are the same disclosure three ways, and none
    * of the nine positional matchers above catches any of them.
@@ -68,7 +68,7 @@ export const ANSWER_LEAK_MATCHERS: readonly AnswerLeakMatcher[] = [
    * merely mentions the two channels near the membrane without relating them.
    */
   {
-    name: 'ΔP relationship … pInt … pArt … membrane',
+    name: 'Δp relationship … pInt … pArt … membrane',
     pattern:
       /^(?=[\s\S]*\bpInt\b)(?=[\s\S]*\bpArt\b)(?=[\s\S]*(?:[Δ\u2206]\s*p|\bdelta[\s-]*p\b|transmembrane(?:\s+pressure)?\s+gradient|pressure\s+(?:drop|gradient)|\bdifference\b))(?=[\s\S]*(?:transmembrane|membrane|oxygenator))/i,
   },

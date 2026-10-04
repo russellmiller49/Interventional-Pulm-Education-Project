@@ -96,8 +96,10 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
             </ol>
             <p className="mt-3 text-sm leading-6">
               Sweep-gas oxygen fraction is the oxygen concentration delivered to the membrane lung.
-              It is separate from ventilator FiO₂, which describes gas delivered to the native
-              lungs.
+              The external blender sets it, and the gas panel in this module labels that control{' '}
+              <span data-first-use="sweep-gas-fio2">“Sweep-gas FiO₂”</span>. It is separate from
+              ventilator FiO₂, which describes gas delivered to the native lungs: the two share a
+              name and act on different lungs.
             </p>
             <p className="mt-2 text-sm leading-6">
               The following guided controls reset to the same starting circuit for every comparison.
@@ -131,9 +133,11 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
             ) : (
               <p className="mt-2 text-sm leading-6" data-local-model-boundary="saturation-ceiling">
                 In this model patient saturation rises with the flow left after re-drainage only
-                until it stops at 100, which the reference circuit reaches at about 4000 rpm. Above
-                that, more speed still raises flow and pulls harder on the drainage limb, with no
-                further modeled saturation change.
+                until it stops at 100, which the reference circuit reaches at about 4000 rpm.
+                Re-drainage is blood the circuit returns and then drains again before it has gone
+                round the body; it is called recirculation, and the VV section on what the flow
+                number counts teaches it. Above that, more speed still raises flow and pulls harder
+                on the drainage limb, with no further modeled saturation change.
               </p>
             )}
           </section>

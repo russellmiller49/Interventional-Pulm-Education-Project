@@ -249,7 +249,7 @@ const COMPARISON_ROWS: readonly ComparisonRow[] = [
   {
     id: 'deltaP',
     group: 'circuit-display',
-    label: 'ΔP across the membrane',
+    label: 'Δp across the membrane',
     unit: 'mmHg',
     precision: 0,
     deadband: ECMO_BASELINE_DISPLAY_DEADBANDS.deltaP,

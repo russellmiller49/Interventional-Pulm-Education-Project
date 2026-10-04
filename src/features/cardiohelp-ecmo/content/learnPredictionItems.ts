@@ -1752,7 +1752,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'You are moving a patient on peripheral venoarterial support out of the unit for imaging. Moments into the move the console alarms, the power indicator changes over to battery on its own, and the battery reserve reads 24. Circuit blood flow, both membrane pressures, the gradient across the membrane, the arterial trace and the right radial saturation are all exactly what they were before the move, and the patient looks the same. What does the team’s next action have to accomplish?',
+      stem: 'You are moving a patient on peripheral venoarterial support out of the unit for imaging. Moments into the move the console alarms, the power indicator changes over to battery on its own, and the battery reserve reads 24 percent. Circuit blood flow, both membrane pressures, the gradient across the membrane, the arterial trace and the right radial saturation are all exactly what they were before the move, and the patient looks the same. What does the team’s next action have to accomplish?',
       choices: [
         {
           id: 'verified-source-with-backup-alongside',
@@ -1798,6 +1798,13 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
         'bounded-educational-model',
       ],
       reviewStatus: 'draft',
+      // VA16-1 (ECMO-FELLOW-04): the stem read "the battery reserve reads 24", a number with no unit
+      // on which the decision turns. The unit is the scenario's own typed field
+      // (`device.batteryPercent: 24`) and the one the console's Transport screen prints. This is the
+      // VA twin of the venovenous item's accepted exception: one token, this item only, held by
+      // `ecmo-fellow-04-teaching-and-flow.test.tsx`. No run time is inferred from the charge.
+      learnerCopyOverrideReason:
+        'Percent denotes the authored device.batteryPercent value (24) of the venoarterial transport scenario and the console battery-charge unit, not a learner score or competence claim.',
     },
     commitments: {
       'verified-source-with-backup-alongside': {

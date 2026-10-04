@@ -70,7 +70,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
         ],
         correctChoiceIds: ['content-and-flow-still-unknown'],
         explanation:
-          'Oxygen delivery has three separable components. Oxygen content depends mainly on hemoglobin and its saturation; blood flow is separate; oxygen consumption sits on the other side. A reassuring value in one of them says nothing about the other two, which is why extracorporeal support is chosen by naming the component that is impaired rather than by reading one number.',
+          'The oxygen balance has three separable parts. Oxygen content depends mainly on hemoglobin and its saturation; blood flow is separate, and the two together make up oxygen delivery; oxygen consumption sits on the other side. A reassuring value in one of them says nothing about the other two, which is why extracorporeal support is chosen by naming the part that is impaired rather than by reading one number.',
         evidenceIds: [...coreSources],
         reviewStatus: 'draft',
       },
@@ -116,7 +116,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
         ],
         correctChoiceIds: ['content-via-hemoglobin'],
         explanation:
-          'This section opened with a patient whose blood flow and oxygen content were both reduced, and the answer there was that the saturation settled nothing. Here the flow is not the reduced term and the carrier is depleted, so the impaired part of the balance can be named. In both patients the saturation reads reassuring, which is the reason it cannot be read on its own.',
+          'The earlier case in this section had a patient whose blood flow and oxygen content were both reduced, and the answer there was that the saturation settled nothing. Here the flow is not the reduced term and the carrier is depleted, so the impaired part of the balance can be named. In both patients the saturation reads reassuring, which is the reason it cannot be read on its own.',
         evidenceIds: [...coreSources],
         reviewStatus: 'draft',
       },

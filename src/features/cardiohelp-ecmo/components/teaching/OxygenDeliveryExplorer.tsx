@@ -247,8 +247,9 @@ export function OxygenDeliveryExplorer({
         Move one component and watch the rest
       </h3>
       <p className="mt-2 text-sm leading-6">
-        These start at the values of the simulated patient on the circuit beside you. Change any one
-        of them and the two figures below follow.
+        Supplied teaching values, not a patient you have met: the three start where this
+        module&rsquo;s reference circuit starts its simulated patient. Change any one of them and
+        the two figures below follow.
       </p>
 
       <div className="mt-3 grid gap-3">

@@ -89,7 +89,7 @@ export function GasSourceInterruptionPanel({ state }: { readonly state: EcmoSimu
             'A blood-path pressure, between the pump and the membrane.',
           ),
           channelSignalRow(
-            'ΔP',
+            'Δp',
             'Derived across the membrane',
             readouts.deltaP,
             'mmHg',

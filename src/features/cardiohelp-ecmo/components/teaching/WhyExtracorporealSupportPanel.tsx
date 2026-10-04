@@ -145,10 +145,14 @@ export function WhyExtracorporealSupportPanel({ state }: { readonly state: EcmoS
               increased, but the amount needed has. The unchanged saturation does not settle the
               balance.
             </p>
+            {/*
+              S1-6 (ECMO-FELLOW-04): both sentences pointed at a circuit "beside you". This section
+              draws no circuit on either track, so each now names the configuration its track teaches.
+            */}
             <p className="mt-3 text-sm leading-6">
               {state.supportMode === 'vv'
-                ? 'In the VV circuit beside you, oxygenated blood returns to the venous circulation. ECMO improves gas exchange; the native heart still provides systemic blood flow. VV does not directly support circulation.'
-                : 'The circuit beside you models peripheral femoral VA ECMO, with retrograde arterial return. It provides gas exchange and circulatory support alongside native cardiac output. One arterial saturation does not describe every region.'}
+                ? 'In the VV configuration this track teaches, oxygenated blood returns to the venous circulation. ECMO improves gas exchange; the native heart still provides systemic blood flow. VV does not directly support circulation.'
+                : 'This track teaches peripheral femoral VA ECMO, with retrograde arterial return. It provides gas exchange and circulatory support alongside native cardiac output. One arterial saturation does not describe every region.'}
             </p>
             <p className="mt-3 text-sm leading-6">
               Support does not treat the underlying lung injury, cardiac lesion, bleeding, or

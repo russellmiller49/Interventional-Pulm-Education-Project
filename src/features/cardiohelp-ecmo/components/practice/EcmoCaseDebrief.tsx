@@ -9,6 +9,7 @@ import { criticalCareConceptById } from '@/features/critical-care/content/concep
 
 import { cardiohelpLearnLessonByScenarioId } from '../../content/learnLessons'
 import { pairedLessonIdsForCase } from '../../content/curriculum'
+import { ecmoIntegratedCaseScope } from '../../content/integratedCaseScope'
 import { resolveScenarioReassessment } from '../../content/practiceSupport'
 import { RECOGNITION_ONLY_FAULTS } from '../../engine/reducer'
 import { predictionControls, predictionDirections, predictionGoals } from '../../content/scenarios'
@@ -211,6 +212,7 @@ export function EcmoCaseDebrief({
         ]
   /** The authored "correction" here is recognition and escalation; the pattern is still running. */
   const recognitionOnly = RECOGNITION_ONLY_FAULTS.includes(scenario.expectation.correctiveFault)
+  const caseScope = ecmoIntegratedCaseScope(scenario.id)
   const pairedLessonId = pairedLessonIdsForCase(scenario.id)[0]
   const pairedLesson = pairedLessonId
     ? cardiohelpLearnLessonByScenarioId.get(pairedLessonId)
@@ -438,6 +440,17 @@ export function EcmoCaseDebrief({
         <p>
           <strong>{scenario.title}.</strong> {scenario.summary}
         </p>
+        {/* IV-1, IV-3, IA-1 (ECMO-FELLOW-04): the same scope the Manage stage states. */}
+        {caseScope ? (
+          <div data-integrated-case-scope>
+            <p>
+              <strong>What this exercise covers.</strong> {caseScope.rehearses}
+            </p>
+            <p>
+              <strong>What it cannot establish.</strong> {caseScope.cannotEstablish}
+            </p>
+          </div>
+        ) : null}
         {clinicalCase ? (
           <>
             <p>
@@ -467,6 +480,13 @@ export function EcmoCaseDebrief({
           ) : (
             <p>No lesson in this track teaches this mechanism yet.</p>
           )}
+          {/*
+            IV-1 (ECMO-FELLOW-04): the lesson an integrated case resolves to teaches one part of
+            it. Saying which part keeps the link from reading as "this case was taught there".
+          */}
+          {pairedLesson && caseScope?.lessonNote ? (
+            <p data-paired-lesson-note>{caseScope.lessonNote}</p>
+          ) : null}
         </div>
         {concepts.length ? (
           <ul className={styles.conceptList}>

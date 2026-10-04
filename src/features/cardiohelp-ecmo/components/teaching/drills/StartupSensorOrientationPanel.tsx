@@ -167,7 +167,7 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
             'A circuit pressure. It is not the patient arterial blood pressure and does not stand in for it.',
           ),
           channelSignalRow(
-            'ΔP',
+            'Δp',
             'Derived across the membrane',
             readouts.deltaP,
             'mmHg',

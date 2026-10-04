@@ -267,6 +267,8 @@ function FoundationStageSession({
   const isLastStep = activeIndex === lesson.steps.length - 1
   const predictionCommitted = progression.committedPredictionId !== null
   const finished = progression.committedTransferId !== null || progression.sectionReviewed
+  /** The completion card is on screen: the section is reviewed, and the map question is not mid-answer. */
+  const completionShown = finished && (!focusedMapQuestion || progression.sectionReviewed)
   const sectionSpec = ecmoSectionSpecById.get(sectionId)
   const pathway = criticalCareLearningPathway('cardiohelp-ecmo', supportMode)
   const nextSection = nextPathwaySection(pathway, sectionId)
@@ -1353,6 +1355,24 @@ function FoundationStageSession({
           Lesson narrative
         </h3>
         <p className="mt-2">{section.summary}</p>
+        {/*
+          S5-3 (ECMO-FELLOW-04): the section's key points reached the learner only at Explain, the
+          fifth task, after the optional prediction they are the teaching for. The first task now
+          carries them under the summary. They are the section's existing points, unchanged, and the
+          full narrative at Explain is where it was.
+        */}
+        {prose === 'summary' && activeStep.phase === 'recognize' && section.bullets ? (
+          <div className="mt-3" data-lesson-key-points>
+            <p className="font-semibold">Key points</p>
+            <ul className="mt-2 grid gap-2">
+              {section.bullets.map((bullet) => (
+                <li key={bullet} className="rounded-xl border px-3 py-2">
+                  {bullet}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         {prose === 'full' ? (
           <>
             <div className="mt-3 grid gap-3" data-lesson-paragraphs>
@@ -1631,6 +1651,21 @@ function FoundationStageSession({
           </p>
         </details>
       ) : null}
+      {/*
+        S1-7 (ECMO-FELLOW-04): an optional recap on the last task of a section whose tasks never
+        print its narrative. Folded, and never required; once the section is reviewed the same
+        points are shown on the completion card instead.
+      */}
+      {isLastStep && section?.recap && !completionShown ? (
+        <details className={styles.objectives} data-section-recap>
+          <summary>Key points from this section</summary>
+          <ul>
+            {section.recap.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
       <details open={!presentation} data-task-history>
         <summary>Tasks in this section</summary>
         <StepList
@@ -1656,7 +1691,7 @@ function FoundationStageSession({
           onSelect={selectStepRow}
         />
       </details>
-      {finished && (!focusedMapQuestion || progression.sectionReviewed) ? (
+      {completionShown ? (
         <section
           className={styles.completion}
           role="status"
@@ -1664,6 +1699,23 @@ function FoundationStageSession({
           data-stage-completion
         >
           <h3>Section reviewed</h3>
+          {section?.recap ? (
+            <div className={styles.objectives} data-section-recap>
+              <p>
+                <strong>Key points from this section</strong>
+              </p>
+              <ul>
+                {section.recap.map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {/* S9-3: as on the drill card — "reviewed" is a place marker, not a record of performance. */}
+          <p data-section-reviewed-meaning>
+            “Reviewed” marks where you have been in this section. It does not record that a step was
+            performed or answered.
+          </p>
           <p>Continue to the next section to keep building on this.</p>
           {nextSection ? (
             <div className={styles.completionActions}>

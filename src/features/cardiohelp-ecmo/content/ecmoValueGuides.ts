@@ -153,7 +153,7 @@ const returnPressure: CriticalCareDerivedValueGuide = {
 
 const deltaPTrend: CriticalCareDerivedValueGuide = {
   id: 'ecmo.transmembraneDeltaP',
-  label: 'ΔP across the membrane',
+  label: 'Δp across the membrane',
   unit: 'mmHg',
   formula: 'pInt − pArt',
   liveValueType: 'derived',
