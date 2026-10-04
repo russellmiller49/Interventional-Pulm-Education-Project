@@ -178,6 +178,7 @@
       "autoPort": false,
       "env": {
         "NEXT_PUBLIC_SITE_URL": "http://localhost:3138",
+        "NEXT_PUBLIC_MODULE_FEEDBACK_MODE": "owner-local",
         "NEXT_PUBLIC_SUPABASE_URL": "https://YOUR_PROJECT_REF.supabase.co",
         "NEXT_PUBLIC_SUPABASE_ANON_KEY": "public-anon-key-placeholder",
         "NEXT_PUBLIC_SUPABASE_PROJECT_REF": "YOUR_PROJECT_REF"

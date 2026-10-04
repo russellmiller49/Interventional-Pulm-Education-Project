@@ -45,7 +45,7 @@ export const nonPublicModules: NonPublicModule[] = [
     title: 'EUS-B Simulator',
     group: 'Bronchoscopy',
     summary:
-      'Free-scan simulator of the esophageal approach with the EBUS endoscope: 3D anatomy, simulated ultrasound and CT correlation from one CT and its segmentation, with calibrated landmark views and find-a-target practice. Development preview; teaching notes await physician review.',
+      'Free-scan simulator of the esophageal approach with the EBUS endoscope: 3D anatomy with a cut plane, simulated ultrasound, and an endoscopic or CT view from one CT and its segmentation, with calibrated landmark views and find-a-target practice. In the beta-testing hub; teaching notes await physician review.',
   },
   {
     path: '/preference-cards',

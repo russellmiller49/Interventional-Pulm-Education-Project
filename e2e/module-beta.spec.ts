@@ -241,6 +241,7 @@ test('real standard module pages permit same-origin beta framing and have no fee
     '/en/peripheral-imaging',
     '/en/ebus-guided',
     '/en/ebus-guided/learn?section=acoustic-contact',
+    '/en/eus-b-simulator',
     '/en/bronchoscopy-foundations',
     '/en/cardiohelp-ecmo',
     '/en/baxter-crrt',
