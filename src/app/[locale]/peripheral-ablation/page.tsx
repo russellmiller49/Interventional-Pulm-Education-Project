@@ -1,7 +1,11 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import { PeripheralAblationEmbedShell } from '@/components/peripheral-ablation/PeripheralAblationEmbedShell'
+import {
+  PeripheralAblationEmbedShell,
+  peripheralAblationModulePath,
+} from '@/components/peripheral-ablation/PeripheralAblationEmbedShell'
+import { SIMULATOR_ABOUT_ID, simulatorPage } from '@/components/layout/simulator-page'
 import { Badge } from '@/components/ui/badge'
 import { HandoffContent } from '@/i18n/handoff'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
@@ -35,30 +39,47 @@ export default async function PeripheralAblationPage({ params }: PeripheralAblat
   return (
     <HandoffContent>
       {
-        <div className="space-y-12 py-16">
-          <section className="container space-y-6">
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
+        <div className={simulatorPage.root}>
+          <section className={simulatorPage.stage}>
+            <div className={simulatorPage.header}>
+              <div className={simulatorPage.identity}>
                 <Badge
                   variant="info"
                   className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
                 >
                   Simulation · Image-Guided Tumor Ablation
                 </Badge>
+                <h1 className={simulatorPage.title}>
+                  Peripheral Lung Tumor Ablation Interactive Module
+                </h1>
               </div>
-              <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-                Peripheral Lung Tumor Ablation Interactive Module
-              </h1>
-              <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-                One flowing module on ablation of peripheral lung tumors — from the energy–tissue
-                physics of radiofrequency, microwave, cryoablation, and non-thermal pulsed electric
-                field (PEF), through an ablation-zone simulator built around the 5&nbsp;mm margin
-                and the heat-sink effect, to tool-in-lesion confirmation, modality and route
-                selection, complications, and self-assessment. Percutaneous CT-guided thermal
-                ablation is established; bronchoscopic/transbronchial routes and PEF for lung are
-                labeled investigational in-module.
-              </p>
+              <div className={simulatorPage.actions}>
+                <a href={`#${SIMULATOR_ABOUT_ID}`} className={simulatorPage.aboutLink}>
+                  What&apos;s inside
+                </a>
+                <a
+                  href={peripheralAblationModulePath}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={simulatorPage.aboutLink}
+                >
+                  Open dedicated view ↗
+                </a>
+              </div>
             </div>
+            <PeripheralAblationEmbedShell />
+          </section>
+
+          <section id={SIMULATOR_ABOUT_ID} className={simulatorPage.about}>
+            <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
+              One flowing module on ablation of peripheral lung tumors — from the energy–tissue
+              physics of radiofrequency, microwave, cryoablation, and non-thermal pulsed electric
+              field (PEF), through an ablation-zone simulator built around the 5&nbsp;mm margin and
+              the heat-sink effect, to tool-in-lesion confirmation, modality and route selection,
+              complications, and self-assessment. Percutaneous CT-guided thermal ablation is
+              established; bronchoscopic/transbronchial routes and PEF for lung are labeled
+              investigational in-module.
+            </p>
 
             <div className="rounded-3xl border border-border/70 bg-card/70 p-6">
               <h2 className="text-lg font-semibold text-foreground">What&apos;s inside</h2>
@@ -71,10 +92,6 @@ export default async function PeripheralAblationPage({ params }: PeripheralAblat
                 ))}
               </ul>
             </div>
-          </section>
-
-          <section className="container">
-            <PeripheralAblationEmbedShell />
           </section>
         </div>
       }
