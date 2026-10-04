@@ -34,6 +34,7 @@
       }
     },
     "signup": {
+      "completionNotice": "Complete your main-site registration and review and accept the user agreement below. Use your existing account; you do not need to create another one.",
       "metadataTitle": "Create account",
       "title": "Create your free account",
       "description": "Your profile helps tailor education modules and aggregate learning analytics.",

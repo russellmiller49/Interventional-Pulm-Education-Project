@@ -1,13 +1,15 @@
+import { hasCompletedSiteRegistration } from '@/lib/site-auth/user-agreement'
+import courseAvailability from '../config/course-availability.json'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { isOwnerLocalFeedbackPage } from '@/features/module-beta/config'
 
 import {
-  canUseLegacyEbusApproval,
   getRequiredEntitlement,
   isAdminEbusPreviewEmbed,
   isAuthPath,
+  isPausedCoursePath,
   isCtAlignmentSandboxPath,
   isPublicPath,
   isPublicUnlistedPath,
@@ -78,9 +80,13 @@ export async function proxy(req: NextRequest) {
     res.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
   }
 
+  const pausedCourse = isPausedCoursePath(pathname, req.nextUrl.searchParams)
+
   if (
     pathname.startsWith('/api/') ||
-    (!isAdminEbusPreviewEmbed(pathname, req.nextUrl.searchParams) && isPublicPath(pathname)) ||
+    (!pausedCourse &&
+      !isAdminEbusPreviewEmbed(pathname, req.nextUrl.searchParams) &&
+      isPublicPath(pathname)) ||
     isPublicTrainingEmbed(pathname, req.nextUrl.searchParams)
   ) {
     return res
@@ -120,6 +126,7 @@ export async function proxy(req: NextRequest) {
 
   function redirectWithCookies(url: URL) {
     const redirectResponse = NextResponse.redirect(url)
+    redirectResponse.headers.set('Cache-Control', 'private, no-store')
     const modifiedCookies = res.cookies.getAll()
     for (const cookie of modifiedCookies) {
       redirectResponse.cookies.set(cookie)
@@ -137,18 +144,42 @@ export async function proxy(req: NextRequest) {
   }
 
   const requiredEntitlement = getRequiredEntitlement(pathname, req.nextUrl.searchParams)
-  const hasLegacyEbusAccess =
-    canUseLegacyEbusApproval(pathname, req.nextUrl.searchParams) &&
-    (await hasApprovedLegacyEbusAccess(user.id))
-
-  if (!user.email_confirmed_at && !hasLegacyEbusAccess) {
+  if (!user.email_confirmed_at) {
     const redirectUrl = new URL(localizePath('/verify-email', locale ?? defaultLocale), req.url)
     return redirectWithCookies(redirectUrl)
   }
 
+  // Course entitlements must never bypass main-site registration or consent.
+  if (!isAuthPath(pathname)) {
+    const { data: profile } = await supabase
+      .from('site_profiles')
+      .select(
+        'onboarding_completed_at,agreement_accepted_at,agreement_version,performance_research_consent',
+      )
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (!hasCompletedSiteRegistration(profile)) {
+      const redirectUrl = new URL(localizePath('/signup', locale ?? defaultLocale), req.url)
+      redirectUrl.searchParams.set('mode', 'complete')
+      redirectUrl.searchParams.set(
+        'next',
+        pausedCourse
+          ? localizePath('/dashboard?courses=closed', locale ?? defaultLocale)
+          : resolveLoginRedirectPath(localizedPathname, req.nextUrl.search),
+      )
+      return redirectWithCookies(redirectUrl)
+    }
+  }
+
+  if (pausedCourse) {
+    return redirectWithCookies(
+      new URL(localizePath('/dashboard?courses=closed', locale ?? defaultLocale), req.url),
+    )
+  }
+
   if (requiredEntitlement) {
-    let hasAccess =
-      (await hasActiveSiteEntitlement(requiredEntitlement, user.id)) || hasLegacyEbusAccess
+    let hasAccess = await hasActiveSiteEntitlement(requiredEntitlement, user.id)
 
     if (!hasAccess && requiredEntitlement === 'pccm_intro_course') {
       hasAccess =
@@ -182,6 +213,7 @@ export async function proxy(req: NextRequest) {
   }
 
   if (
+    courseAvailability.pccmIntroCourseOpen &&
     isPccmIntroCourseSharedModulePath(pathname) &&
     !(await hasActiveSiteEntitlement('site_admin', user.id)) &&
     !(await hasAnyActiveSiteEntitlement(pccmIntroCourseAdminEntitlements, user.id))
@@ -197,24 +229,6 @@ export async function proxy(req: NextRequest) {
         req.url,
       )
       redirectUrl.searchParams.set('gate', 'pretests')
-      return redirectWithCookies(redirectUrl)
-    }
-  }
-
-  if (!isAuthPath(pathname)) {
-    const { data: profile } = await supabase
-      .from('site_profiles')
-      .select('onboarding_completed_at')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    if (!profile?.onboarding_completed_at) {
-      const redirectUrl = new URL(localizePath('/signup', locale ?? defaultLocale), req.url)
-      redirectUrl.searchParams.set('mode', 'complete')
-      redirectUrl.searchParams.set(
-        'next',
-        resolveLoginRedirectPath(localizedPathname, req.nextUrl.search),
-      )
       return redirectWithCookies(redirectUrl)
     }
   }
@@ -256,17 +270,6 @@ export async function proxy(req: NextRequest) {
       .maybeSingle()
 
     return Boolean(siteEntitlement)
-  }
-
-  async function hasApprovedLegacyEbusAccess(userId: string) {
-    const { data: learnerProfile } = await supabase
-      .from('learner_profiles')
-      .select('approval_status')
-      .eq('id', userId)
-      .eq('approval_status', 'approved')
-      .maybeSingle()
-
-    return Boolean(learnerProfile)
   }
 
   async function getActivePccmIntroCourseEnrollment(userId: string) {

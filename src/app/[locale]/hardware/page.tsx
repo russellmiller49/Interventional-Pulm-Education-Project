@@ -59,7 +59,7 @@ export default async function HardwarePage({ params }: HardwarePageProps) {
                 <Link href="/bronch-navigation-trainer">Bronch Navigation Trainer</Link>
               </Button>
               <Button asChild variant="secondary">
-                <Link href="/socal-ebus-course">SoCal EBUS Course</Link>
+                <Link href="/ebus-training">EBUS Training</Link>
               </Button>
             </div>
 

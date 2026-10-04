@@ -3,7 +3,6 @@ import {
   isAdminOnlyEbusTrainingAssetPath,
   isAuthenticatedAirwayStentMechanicsAssetPath,
   isAdminEbusPreviewEmbed,
-  canUseLegacyEbusApproval,
   getRequiredEntitlement,
   isCtAlignmentSandboxPath,
   isLegacyEbusGatewayPath,
@@ -368,19 +367,6 @@ describe('main site auth access helpers', () => {
     expect(isPublicPath('/socal-ebus-course/app/assets/index-abc.js')).toBe(true)
   })
 
-  it('uses legacy EBUS approval only for the restricted course area', () => {
-    expect(canUseLegacyEbusApproval('/socal-ebus-course', params())).toBe(true)
-    expect(canUseLegacyEbusApproval('/socal-ebus-course/app/index.html', params())).toBe(false)
-    expect(
-      canUseLegacyEbusApproval(
-        '/socal-ebus-course/app/index.html',
-        params('publicTraining=1&publicScope=ebus'),
-      ),
-    ).toBe(false)
-    expect(canUseLegacyEbusApproval('/ip-registry', params())).toBe(false)
-    expect(canUseLegacyEbusApproval('/ebus-training', params())).toBe(false)
-  })
-
   it('allows generated static assets without making generated html public', () => {
     expect(isPublicPath('/socal-ebus-course/app/assets/module.js')).toBe(true)
     expect(isPublicPath('/socal-ebus-course/app/other.html')).toBe(false)
@@ -454,4 +440,42 @@ describe('main site auth access helpers', () => {
     expect(resolveLoginRedirectPath('/resources', '?topic=rose')).toBe('/resources?topic=rose')
     expect(resolveLoginRedirectPath('//evil.example', '')).toBe('/')
   })
+})
+
+describe('paused seasonal courses', () => {
+  const { isPausedCoursePath } = jest.requireActual('./access') as typeof import('./access')
+  it.each([
+    '/socal-ebus-course',
+    '/es/socal-ebus-course',
+    '/socal-ebus-course/app',
+    '/socal-ebus-course/app/index.html',
+    '/pccm-intro-course',
+    '/zh-CN/pccm-intro-course/assessments/bronchoscopy_pre',
+  ])('pauses course pages and old embedded bookmarks: %s', (path) => {
+    expect(isPausedCoursePath(path, params())).toBe(true)
+  })
+  it('preserves standalone teaching assets, admin preview, and password callbacks', () => {
+    expect(
+      isPausedCoursePath(
+        '/socal-ebus-course/app/index.html',
+        params('publicTraining=1&publicScope=ebus'),
+      ),
+    ).toBe(false)
+    expect(isPausedCoursePath('/socal-ebus-course/app/index.html', params('adminPreview=1'))).toBe(
+      false,
+    )
+    expect(isPausedCoursePath('/socal-ebus-course/app', params('authCallback=1'))).toBe(false)
+    expect(isPausedCoursePath('/socal-ebus-course/app/assets/module.js', params())).toBe(false)
+    expect(isPausedCoursePath('/ebus-guided', params())).toBe(false)
+    expect(isPausedCoursePath('/ebus-training', params())).toBe(false)
+    expect(isPausedCoursePath('/admin/pccm-intro-course', params())).toBe(false)
+  })
+})
+
+it('hides paused courses from navigation and search, including for administrators', () => {
+  const { isVisibleModulePath } = jest.requireActual('@/lib/draft-modules')
+  for (const path of ['/socal-ebus-course', '/pccm-intro-course', '/es/socal-ebus-course']) {
+    expect(isVisibleModulePath(path)).toBe(false)
+    expect(isVisibleModulePath(path, { isAdmin: true })).toBe(false)
+  }
 })
