@@ -393,3 +393,47 @@
     gap: 0.15rem;
   }
 }
+
+/*
+ * The loading lab on a wide window.
+ *
+ * The lab stacked the circulation map, the control for the task and the readings it changes in one
+ * column about 1,100px tall, beside a decision column that held two sentences and was otherwise
+ * empty: moving the control meant scrolling the map away, and reading the result meant scrolling
+ * again. From 1640px the task uses the window, the decision column narrows to a reading measure,
+ * and the pane sets the control and the readings beside the map, so all three are on one screen.
+ *
+ * The threshold is where each of the two columns still holds the map at its full 340px height;
+ * narrower windows keep the stacked pane. The pane's children are placed by one dense grid, so the
+ * markup and its reading order are unchanged and nothing is hidden.
+ */
+@media (min-width: 1640px) {
+  .flow:has(.presentation[data-presentation='pump-loading-lab']) {
+    max-width: 1840px;
+  }
+  .presentation[data-presentation='pump-loading-lab'] .loading {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+  }
+  .presentation[data-presentation='pump-loading-lab'] [data-simulator-surfaces][data-map-leads] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-auto-flow: row dense;
+    align-items: start;
+    column-gap: 1.25rem;
+  }
+  .presentation[data-presentation='pump-loading-lab']
+    [data-simulator-surfaces][data-map-leads]
+    > * {
+    grid-column: 1 / -1;
+  }
+  .presentation[data-presentation='pump-loading-lab']
+    [data-simulator-surfaces][data-map-leads]
+    > [data-surface='map'] {
+    grid-column: 1;
+    grid-row: span 2;
+  }
+  .presentation[data-presentation='pump-loading-lab']
+    [data-simulator-surfaces][data-map-leads]
+    > :is([data-surface='controls'], [data-task-readings]) {
+    grid-column: 2;
+  }
+}
