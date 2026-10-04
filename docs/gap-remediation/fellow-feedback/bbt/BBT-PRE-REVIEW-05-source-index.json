@@ -1,0 +1,3765 @@
+{
+  "packet": "BBT-PRE-REVIEW-05",
+  "title": "Native-source anatomy decision packet — source index",
+  "status": "OWNER DECISION PACKET READY FOR OWNER REVIEW",
+  "generated": "2026-10-04",
+  "scope": "Documentation and evidence only. No runtime, test, anatomy or source file changed. No owner decision made.",
+  "repository": {
+    "baseSha": "ca8b767ec0eaf63491bee4884763c83c0870382a",
+    "baseNote": "origin/main as fetched for this task",
+    "postMergeSmokeSha": "6586d5168a55e55863652dcef338135505d072d0",
+    "prompt04MergeCommit": "754bed0e362a57e804d104ca99da8a8eaefbbeb5",
+    "prompt04ApprovedHead": "3c6f3f124ad1016a98de09ddfbd7f7c89edd7657",
+    "mainAdvancedSinceSmoke": {
+      "commits": 40,
+      "bbtPathsChanged": 0,
+      "note": "MCS, Bronchoscopy Foundations, EBUS, CRRT and site-access work. No path under src/features/bronchial-branch-tracing, public/branch-tracing, public/fluoroview/cases/patient-new, public/airway-anatomy, e2e/branch-tracing.spec.ts or the BBT docs differs. The shared access files changed, but not their branch-tracing entries."
+    },
+    "branch": "claude/bbt-05-anatomy-decision-packet"
+  },
+  "reviewRule": "Every reviewer, date and decision field is null and every status is NOT REVIEWED. A Git merge, a passing check, source availability or AI confidence is not review evidence.",
+  "evidenceRoot": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/renders/output/bbt-pre-review-05-2026-10-04",
+  "evidencePrivacy": "Evidence images are derived from the teaching CT and stay in Interventional-Pulm-Local-Data. None is copied into Git and none was uploaded.",
+  "evidenceFileCount": 405,
+  "evidenceSha256sums": {
+    "path": "sha256sums.txt",
+    "sha256": "d7e82dbc1f401b9f8ad3658044ad5b802f65a3943eac1411c8f51f0d03b809f8"
+  },
+  "validation": {
+    "ctSourceShaEqualsManifest": true,
+    "graphShaEqualsManifest": true,
+    "registryShaFieldsEqualManifest": true,
+    "labelsShaEqualsRegistry": true,
+    "exportedPlanes": 236,
+    "exportedPlaneHashesEqualManifest": 236,
+    "exportedPlanesPixelIdenticalToNative": 236,
+    "exportedPointsDistinct": 183,
+    "exportedPointsConsistentWithCt": 183,
+    "draftSignaturesReproduced": "21 of 21",
+    "cameraPosesEqualFixture": true,
+    "implementationPackFilesHashMatch": "12 of 12",
+    "note": "These are checks that the evidence is tied to its sources. They are not anatomy validation and no application test or build is claimed as such."
+  },
+  "separateRuntimeFollowUp": {
+    "id": "BBT-RUNTIME-MAGNIFIER",
+    "summary": "Pre-existing and unrelated to this packet: the magnification slider reaches 4× (components/NativeCtViewer.tsx, range input max 4) while the saved viewer schema allows at most 2.5 (engine/ct-draft.ts viewerSchema). A magnification above 2.5 is saved, and on reload the local lesson draft fails to parse and is not resumed. The owner's brief records it reproduced at 3×; the Prompt 04 handoff logged it in Lessons 4 and 7. It was not re-run here.",
+    "requiredBefore": "Prompt 06 combined acceptance",
+    "notChangedHere": [
+      "magnifier behaviour",
+      "draft validation",
+      "draft schema",
+      "parser",
+      "runtime state"
+    ],
+    "status": "NOT FIXED — separate runtime follow-up"
+  },
+  "sources": [
+    {
+      "id": "S-01",
+      "path": "/Users/russellmiller/Projects/navigation_module/data/target/target_clean_ct.nrrd",
+      "location": "local (outside the repository and outside Local-Data)",
+      "sha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "bytes": 232289456,
+      "role": "Original teaching CT (NRRD, int16 HU). The native source every plane is decoded from.",
+      "publication": "local only — never in Git, never uploaded",
+      "geometry": {
+        "sizeXyz": [512, 512, 636],
+        "spacingXyzMm": [0.689453125, 0.689453125, 0.5],
+        "space": "left-posterior-superior",
+        "spaceDirections": "(0.689453125,0,0) (0,0.689453125,0) (0,0,0.5)",
+        "spaceOrigin": "(-182.15527343749997,-374.15527343749989,-368.5)",
+        "sliceRule": "z(k) = -368.5 + 0.5 * k mm (LPS); a higher slice index is more cranial",
+        "huRange": [-1024, 1949]
+      }
+    },
+    {
+      "id": "S-02",
+      "path": "public/branch-tracing/native-v1/manifest.json",
+      "location": "repository",
+      "sha256": "3cd614847f3715411d95f8e90f04a24e85e79169b6436bffbd3162e2635b37b9",
+      "bytes": 73992,
+      "role": "Native export manifest: source hashes, IJK-to-LPS matrix, window, 236 asset hashes, nomenclature reference",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-03",
+      "path": "public/branch-tracing/native-v1/axial/",
+      "location": "repository",
+      "fileCount": 236,
+      "sha256": "per file in S-02 (assets[].sha256)",
+      "role": "The 236 exported axial planes (slices 240–475) the learner sees",
+      "publication": "in Git (already shipped with the module)",
+      "verified": "236 of 236 file hashes equal the manifest; 236 of 236 are pixel-identical to the S-01 plane under the manifest window"
+    },
+    {
+      "id": "S-04",
+      "path": "public/fluoroview/cases/patient-new/metadata/airway_graph.json",
+      "location": "repository",
+      "sha256": "68226a87928135f8be1435c78774f455dab8f792c085509100aa6c21304c18f4",
+      "bytes": 838080,
+      "role": "Source airway graph (498 nodes, 497 edges, LPS mm). The manifest's sourceGraphSha256",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-05",
+      "path": "public/airway-anatomy/case-001/metadata/airway_graph.json",
+      "location": "repository",
+      "sha256": "ea98834c7612e59600fd7f89edceb730a876b2f174d51f1ddb70f4e2eb009624",
+      "bytes": 837412,
+      "role": "Labelled copy of the same graph (nomenclature record's sourceLabeledGraphSha256)",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-06",
+      "path": "public/airway-anatomy/case-001/metadata/centerline_labels.json",
+      "location": "repository",
+      "sha256": "fc446faabf7654592b88ec7315321a9c874244efac29f5de2dcd501d2a9f7f8a",
+      "bytes": 796797,
+      "role": "Source edge labels (from labels_cleaned_names.xlsx). The registry's sourceLabelsSha256",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-07",
+      "path": "src/features/bronchial-branch-tracing/geometry/branch-decisions.json",
+      "location": "repository",
+      "sha256": "1a78138c5e4e991ab6b6c139e86db4ac30c2b7b7909c17781e8028c2ffdb57ae",
+      "bytes": 301848,
+      "role": "Exported route registry: 17 routes, every junction's node, parent point and daughter response points",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-08",
+      "path": "src/features/bronchial-branch-tracing/geometry/paired-routes.json",
+      "location": "repository",
+      "sha256": "ddd2a61893a0da649357abb0b30bebd6919a25e1ed72897ef64c55f969ec55aa",
+      "bytes": 70829,
+      "role": "Centreline polylines of the 70 route edges used for model locators and the parent camera",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-09",
+      "path": "public/branch-tracing/targets-v1/manifest.json",
+      "location": "repository",
+      "sha256": "39b6d787ed6df4885a05ba963f1ae2f5cfd5970b014b58ae070de0faddf8d22e",
+      "bytes": 166546,
+      "role": "Route and simulated-target manifest",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-10",
+      "path": "scripts/branch-tracing/authoring/airway-nomenclature.json",
+      "location": "repository",
+      "sha256": "c1d5c8ff205e7292369268bbaaca815d97083b2450719452bc2e07ae5ec5a106",
+      "bytes": 12294,
+      "role": "Authored airway names per source edge, with the stated basis for each",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-11",
+      "path": "scripts/branch-tracing/build-branch-decisions.mjs",
+      "location": "repository",
+      "sha256": "b68c5b587b3b3de56d8f72185a57c8c33651ea6b81c1ef15f138a5c0dec9d9bd",
+      "bytes": 10491,
+      "role": "Generator of S-07: the rule that places parent and daughter response points",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-12",
+      "path": "scripts/branch-tracing/export-native-slicer.py",
+      "location": "repository",
+      "sha256": "00920930a9b2015d5f04681f3527e59b8538d2701ed73831fd2c475e72bd50bf",
+      "bytes": 6410,
+      "role": "Generator of S-02/S-03: window, slice range, IJK-to-LPS",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-13",
+      "path": "src/features/bronchial-branch-tracing/content/local-exercises.ts",
+      "location": "repository",
+      "sha256": "f99b8319e570db9e64092e4314435d3b8e60ca64ab22705d93e797209630ece8",
+      "bytes": 9525,
+      "role": "Builds each local exercise: demonstration planes, browsable interval, answer points, review status",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-14",
+      "path": "src/features/bronchial-branch-tracing/content/lessons.ts",
+      "location": "repository",
+      "sha256": "c8d570f3fe46333a2d65b2c2fc07cd6e03cdf1ee5685d3a2be1834a094db15a1",
+      "bytes": 24748,
+      "role": "Lesson registry, lesson text and each lesson's book page pointer",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-15",
+      "path": "src/features/bronchial-branch-tracing/content/junction-feedback.ts",
+      "location": "repository",
+      "sha256": "4329d6fde60bb98611108e262bfbb0e5ecad3e9490b648f18cb841b8af48b183",
+      "bytes": 25848,
+      "role": "BBT-02 five-junction packet text (NOT REVIEWED), including the first-junction entry note",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-16",
+      "path": "src/features/bronchial-branch-tracing/content/course-guide.ts",
+      "location": "repository",
+      "sha256": "e0b86585b1eb431f373ecbc543ae0ba5a570827a6d36e1cf30d79849558a2892",
+      "bytes": 11810,
+      "role": "Four-pattern reference, terms, More routes overlap computation",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-17",
+      "path": "src/features/bronchial-branch-tracing/content/practice.ts",
+      "location": "repository",
+      "sha256": "5e9dcd4df831ca2a01f8cd4d70a7db6c18071ca53a23b5ba0eece89ff361c06d",
+      "bytes": 700,
+      "role": "Practice, mixed-set and More routes route lists",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-18",
+      "path": "src/features/bronchial-branch-tracing/geometry/paired-scope.ts",
+      "location": "repository",
+      "sha256": "59e1d26a688244d998356eaf11460b4c35deb65253b0833e68303318b63cc4d3",
+      "bytes": 5686,
+      "role": "Parent camera: position, forward vector and reference up per regional preset",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-19",
+      "path": "src/features/bronchial-branch-tracing/geometry/parent-map.ts",
+      "location": "repository",
+      "sha256": "595777b4c0aba906221fd01351e307975219bea5f6ca29e6805264f5bc709d65",
+      "bytes": 3442,
+      "role": "Direction schematic: A/B letters by source index, opening numbers by screen position",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-20",
+      "path": "src/features/bronchial-branch-tracing/geometry/reference-frames.ts",
+      "location": "repository",
+      "sha256": "a2c2712247e2ffb66eac44a571846672152f58198e4a510ab2c4fbf4266851ef",
+      "bytes": 7451,
+      "role": "The three reference frames, projections and captions",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-21",
+      "path": "src/features/bronchial-branch-tracing/geometry/orientation.ts",
+      "location": "repository",
+      "sha256": "ea7da120887afc7f39d6a2ca1651c72e1d320210b691e863248fec12c6402917",
+      "bytes": 3153,
+      "role": "Learner CT display transform",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-22",
+      "path": "src/features/bronchial-branch-tracing/engine/ct-draft.ts",
+      "location": "repository",
+      "sha256": "de4a3c76f4d308d6a9f6a0a2df3b5bd049707f40dd65251790b5573d5a995f3a",
+      "bytes": 5124,
+      "role": "Draft signature, viewer schema, draft read/write and recovery copy",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-23",
+      "path": "src/features/bronchial-branch-tracing/engine/junction-feedback.ts",
+      "location": "repository",
+      "sha256": "ff8dee5f5399c946b5412159b0cce52ccfa230dbb7463b63fccdc6105cae2098",
+      "bytes": 7273,
+      "role": "Mark-to-model-locator comparison in millimetres",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-24",
+      "path": "src/features/bronchial-branch-tracing/content/ct-types.ts",
+      "location": "repository",
+      "sha256": "e9e93c0acef5128c01a5b27db9e3de68a0fe3ab346d7fcec396577cf3fa50869",
+      "bytes": 5973,
+      "role": "Types, including the faculty-reviewed annotation record and optional contour",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-25",
+      "path": "src/features/bronchial-branch-tracing/__tests__/fixtures/parent-camera-baseline.json",
+      "location": "repository",
+      "sha256": "692837dc0698a3811f57c3718a91d1a1f8b28e4c7f1730159183ba175f676d7e",
+      "bytes": 118137,
+      "role": "Pinned camera pose and schematic projection for all 128 authored decisions",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-26",
+      "path": "src/features/bronchial-branch-tracing/__tests__/fixtures/draft-signatures-baseline.json",
+      "location": "repository",
+      "sha256": "366998721d4ed51c2558bbc34717f8fa40b5d4fa97318a1b7632d8b7372feb9b",
+      "bytes": 1727,
+      "role": "Pinned 21 draft signatures",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-27",
+      "path": "docs/bronchial-branch-tracing/clinical-review.md",
+      "location": "repository",
+      "sha256": "48e1ba6658ad6ead71895c1ba90f49d44d96f3195543057c28368089636d064f",
+      "bytes": 5814,
+      "role": "Clinical review boundary record (engineering review, not faculty sign-off)",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-28",
+      "path": "docs/bronchial-branch-tracing/nomenclature-review.md",
+      "location": "repository",
+      "sha256": "e3412a2f7a0d604818aea276e97ba2544f4b66a7c6e1f201882b93326688a55d",
+      "bytes": 5164,
+      "role": "Nomenclature assignments by an AI session using the textbook; not faculty sign-off",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-29",
+      "path": "docs/gap-remediation/bbt/BBT-02-junction-packet.md",
+      "location": "repository",
+      "sha256": "9531bc460282cb66b6ae0ffe137303ac5deec728bb8c9f33ae7d15472b06ffc0",
+      "bytes": 42009,
+      "role": "BBT-02 five-junction faculty packet, NOT REVIEWED",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-30",
+      "path": "docs/gap-remediation/fellow-feedback/bbt/BBT-PRE-REVIEW-01-first-junction.md",
+      "location": "repository",
+      "sha256": "51309dbd1b656b36660e94f157541f58b3337a97f9498cee1e058b142a4d7ed4",
+      "bytes": 12056,
+      "role": "Prompt 01 first-junction reconciliation (containment, not resolution)",
+      "publication": "in Git (already shipped with the module)"
+    },
+    {
+      "id": "S-31",
+      "path": "/Users/russellmiller/Projects/textbooks/Interventional Pulmonology/bronchial branch tracing.pdf",
+      "location": "local (owner's textbook folder; outside the repository and outside Local-Data)",
+      "sha256": "18a027c7374532c5771111c01b50b8710531a6f2ae17b83ee50ab214a7d5f9ef",
+      "bytes": 35582292,
+      "role": "Kurimoto & Morita, Bronchial Branch Tracing (2020). Text layer read for locators only; figures not inspected",
+      "publication": "copyrighted — local only; no page or passage copied into Git"
+    },
+    {
+      "id": "S-32",
+      "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/module_update_9_19/BBT_Claude_Implementation_Pack/Branch_Tracing_Fellow_Walkthrough.docx",
+      "location": "Local-Data",
+      "sha256": "80ab48e08642409f832f3c69bc4a6e3306283badf63662ae7c01b482fe189d19",
+      "bytes": 3853067,
+      "role": "The AI first-year-fellow walkthrough (19 September 2026). A report of findings, not a human usability session or a clinical review",
+      "publication": "local only — not in Git, not uploaded"
+    },
+    {
+      "id": "S-33",
+      "path": "/Users/russellmiller/Projects/Interventional-Pulm-Local-Data/module_update_9_19/BBT_Claude_Implementation_Pack/MANIFEST.json",
+      "location": "Local-Data",
+      "sha256": "59dde84348e5df4e75532da4ac7424e1a3419bf6a6fc992a189f43f0b037611f",
+      "bytes": 2597,
+      "role": "Implementation pack manifest; all 12 listed files hash-match",
+      "publication": "local only — not in Git, not uploaded"
+    },
+    {
+      "id": "S-34",
+      "path": ".next/standalone (BUILD_ID 1j_42VcNarufE2tLdGqUb)",
+      "location": "this worktree, untracked build output",
+      "sha256": null,
+      "bytes": null,
+      "role": "Existing production build used only to screenshot the module's own pages. Built at the smoke SHA 6586d516; no BBT path differs between that SHA and the base SHA",
+      "publication": "not in Git"
+    }
+  ],
+  "decisions": [
+    {
+      "decisionId": "OD-01",
+      "title": "The introductory / first bifurcation",
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "openStatus": "OPEN",
+      "sourceIds": [
+        "S-01",
+        "S-02",
+        "S-03",
+        "S-04",
+        "S-07",
+        "S-06",
+        "S-08",
+        "S-11",
+        "S-13",
+        "S-15",
+        "S-30"
+      ],
+      "currentTaskAndConsumer": "Lesson 3 example 1 (central-right.junction-1.bifurcation): “Follow Trachea through this division. Mark each daughter on its answer slice, or record uncertainty.” Both daughter response points are on native slice 387; the worked demonstration plays slices 408 → 387 (22 planes); the learner can browse 384–411. Since Prompt 01, an entry note says before the task that the two main bronchi share one air column throughout that interval.",
+      "reportedConcern": "BBTF-01 (walkthrough p. 9, Fig. 7; first of its top ten): the first bifurcation exercise never shows a bifurcation. The answer slice sits in one shared air column, the browsable interval ends at 384, and the same junction opens Lesson 9, Practice and More routes. The report's proposal (extend to about 372, move the answer slices below the carinal spur) is a candidate, not an approved plane.",
+      "mechanicallyVerifiable": [
+        "Source identity: the CT hash equals the manifest; the graph hash equals the manifest; 236 of 236 exported planes are pixel-identical to the native plane under the manifest window; 183 of 183 exported points agree with the CT in slice, pixel and HU.",
+        "Native frame: 512 × 512 × 636, spacing 0.689453125 × 0.689453125 × 0.5 mm, space left-posterior-superior, direction matrix diagonal, origin (−182.155, −374.155, −368.5) mm; z(k) = −368.5 + 0.5·k, so a higher slice index is more cranial.",
+        "Graph node 1 (the graph's own field carinaNodeId; node kind “carina”) is at LPS (−11.958, −155.962, −172.421) mm = slice index 392.16. Parent edge 0 (source label TR) runs k 626.56 → 392.16; daughter edge 1 (RMSB) k 392.16 → 365.48; daughter edge 2 (LMSB) k 392.16 → 339.18.",
+        "The response points are generated by a rule, not chosen per junction: parent point = min(8 mm, 0.65 × edge length) proximal to the node; daughter point = min(5 mm, 0.55 × edge length) distal, with an HU fallback. Across the export 110 of 115 distinct daughter points sit at that nominal rule (80 at 5 mm, 30 at 0.55 × length), 2 at a fallback, 3 limited by a route's distal sample; all 57 parent points sit at the rule. Here: parent exactly 8.0 mm proximal (slice 408); both daughters exactly 5.0 mm distal (slice 387), pixels (240.63, 315.70) and (253.01, 316.66), 8.6 mm apart.",
+        "The browsable interval 384–411 is derived (demonstration and answer levels ± 3 planes); nothing in it was chosen by inspection.",
+        "Threshold arithmetic on the native planes (4-connected air regions; −950, −900 and −850 HU give the same result): the edge-1 and edge-2 centreline crossings lie in ONE air region on every plane from 392 to 376, and in SEPARATE regions from 375 caudally. On the straight line between the two crossings the maximum is −940 HU at 387, −885 at 384, −552 at 376, −218 at 375 (14 of 200 samples above −400 HU), +81 at 374 and +114 at 372.",
+        "Offsets: plane 375 is 12 planes (6.0 mm) caudal to the response plane, 9 planes (4.5 mm) caudal to the interval's caudal end, and 8.6 mm caudal to the node. Along the centrelines it is 16.2 mm (edge 1) and 15.4 mm (edge 2) from the node; plane 372 is 19.2 and 17.6 mm.",
+        "Consumers: junction-1 is the first checkpoint of all 17 routes (17 exist). Draft signatures: the harness reproduces all 21 pinned signatures; moving both daughter response points (in memory only) changes 14 of 21, and 16 of 21 when the export's derived crop fields are regenerated as the generator would."
+      ],
+      "interpretation": [
+        "“The carina”, “the visible split” and “two lumens with a ridge between them” are image readings. No plane, wall or landmark has been annotated by a person. The arithmetic above is a proxy at stated thresholds.",
+        "AI observation of the contact sheet (this session, unreviewed): one round lumen on 411–396; widening and transverse elongation on 395–388; one elongated air column on 387–376; a waist at 375; a thin partition on 374–372; two separate oval lumens by 371–366.",
+        "The shipped entry note and BBT-02 packet say the separate lumens appear “at about slice 378 to 375” (an authoring reading of 2026-09-14). The arithmetic puts the first separation at 375, with one air region still present on 378–376. That text is NOT REVIEWED; whether it should change is part of this decision.",
+        "Why the node sits about 8.6 mm cranial to the first separation: a centreline graph branches where the medial axis divides, inside the widening parent, proximal to the wall between the daughters. Offered as engineering context; it is not an anatomical finding.",
+        "What a learner should mark on any of these planes, and what counts as an acceptable mark, is a teaching judgement."
+      ],
+      "existingReviewedEvidence": "None. Every local exercise carries review.status “provisional”; the BBT-02 five-junction packet is NOT REVIEWED; clinical-review.md states that engineering review is not faculty sign-off; asset-inventory.json records no checkpoint-level physician approval. No reviewed contour, landmark or plane exists for this division.",
+      "candidateChanges": [
+        "Option A — keep slice 387 and describe it plainly as a proximal model reference; add reviewed visible-split teaching separately (planes chosen by the owner from the 376–370 band), outside the signed exercise data.",
+        "Option B — choose reviewed new demonstration and/or response planes for this junction (a per-junction exception to the generator rule, or a changed rule).",
+        "Option C — replace the introductory example with another existing fork; junction-1 stays as it is on the routes."
+      ],
+      "exactQuestionForReviewer": "What should the first visible bifurcation teaching example actually show, and which native planes/points should be used for parent and daughters?",
+      "subQuestions": [
+        "Is slice 387 acceptable as a proximal model-reference location, described as such, rather than a visible two-lumen bifurcation?",
+        "Which native planes best show continuity through the split, and what should a learner mark on them?",
+        "Should Lesson 3 change only its demonstration, also its response planes, or use a different fork?",
+        "Which of Lesson 9, Practice and More routes should adopt the same reviewed change?"
+      ],
+      "affectedConsumers": [
+        "Lesson 1 interval 1 (central-right.junction-1.same-lumen; Trachea 416 → 412): parent lumen only; not asked for two daughters.",
+        "Lesson 2 (central-right.junction-1.viewpoint; Trachea 416 → 412): parent lumen only.",
+        "Lesson 3 example 1 (central-right.junction-1.bifurcation): the two-daughter task on slice 387.",
+        "Lesson 9: worked route RS8 (right-lower-basal), the learner's route LS9 (left-lower-basal) and the transfer route LS5 (left-lingula) all open with junction-1.",
+        "Practice: all 10 single-target routes and the mixed set of 4.",
+        "More routes (/assess): all 4 routes.",
+        "content/junction-feedback.ts packet junction-1 (entry note, divergence, continuity, revisit intervals 392→387 and 387→384) and docs/gap-remediation/bbt/BBT-02-junction-packet.md."
+      ],
+      "draftSignatureCompatibility": [
+        "Stable ids to keep under any option: checkpoint id junction-1, node 1, edges 0/1/2, trace ids, lesson ids, exercise id central-right.junction-1.bifurcation.",
+        "Response planes changed in the export (Option B on the routes): 14 of 21 signatures move at minimum — learn.continuity, learn.variants-limits, both route sets and all 10 single-target Practice sets — and 16 of 21 (adding learn.follow-one-airway and learn.orientation) once the generator recomputes this junction's crop fields. The five unaffected are Lessons 4–8.",
+        "A new source version would be needed: the registry is hash-pinned by tests and by the Prompt 01–04 protected lists.",
+        "A draft whose signature no longer matches is not resumed; it is kept under a recovery key on the next successful save (engine/ct-draft.ts). Old marks are not re-read against new planes. Adding a signature alias would make them be, which the brief rules out for changed anatomy.",
+        "Option A implemented outside the signed objects (as the Prompt 01 entry note was) moves no signature. If it widens the exercise's browsable range, learn.continuity moves.",
+        "Option C changes learn.continuity only (shown in memory: 71168219 → 7fe48a82 when example 1 is swapped for junction-10)."
+      ],
+      "missingEvidence": [
+        "No attributable human annotation of the carinal plane, the wall, or an acceptable mark region.",
+        "No reviewed contour exists in the module (the type and drawing path exist; no exercise uses them).",
+        "Coronal or sagittal reformats were not prepared. The native volume supports them; the module is axial only.",
+        "The textbook figures were not inspected (text layer only).",
+        "No human learner observation of this exercise."
+      ],
+      "implementationStatus": "NOT IMPLEMENTED"
+    },
+    {
+      "decisionId": "OD-02",
+      "title": "Left main bronchus interval 352 → 348: the neighbouring lucency",
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "openStatus": "OPEN",
+      "sourceIds": ["S-01", "S-02", "S-03", "S-04", "S-07", "S-06", "S-10", "S-13", "S-14"],
+      "currentTaskAndConsumer": "Lesson 1 interval 2 (central-left.junction-3.same-lumen): “Follow LMSB to the nearby answer slice and mark the same lumen, or record uncertainty.” Start slice 352, response slice 348, browsable 345–355, standard axial. Captions are generic (“Inspect the air column and its bounding walls on this neighboring plane”). The lesson's teaching says: “A nearby lucency that is not continuous with it, such as another bronchus, is a different airway.”",
+      "reportedConcern": "BBTF-24 (walkthrough p. 6, Fig. 4): at 352 a separate round lucency sits next to the left main bronchus; by 350 a neck joins them; by 348 they are one elongated lumen. The lesson's rule says a non-continuous lucency is a different airway, and here it becomes continuous, with no caption.",
+      "mechanicallyVerifiable": [
+        "The interval is rule-generated: the exported parent point of junction-3 is 8.0 mm proximal to graph node 3 on edge 2 (slice 344); the same-lumen exercise starts 8 planes above it (352) and responds 4 planes above it (348).",
+        "Graph: edge 2 (source label LMSB) ends at node 3 at k 339.18. Edge 496 (source label LUL) runs from node 3 cranially to node 21 at k 347.78. From node 21, edge 21 (source label LUL; authored name “LUL division · Left upper division bronchus”) continues cranially to k 370.76 and edge 20 (LB4+5) runs caudally.",
+        "On planes 360–351 the air region that contains the edge-2 crossing contains no other source-edge crossing, and a separate air region about 31 mm to the patient-left and 14 mm anterior (centreline to centreline at 352) contains the crossing of edge 21. The two are one 4-connected air region from slice 350 caudally at −900 HU and from slice 349 at −950 HU. From 347 caudally the same region also contains the crossings of edges 496 and 20.",
+        "So the lesson's five planes (352, 351, 350, 349, 348) span exactly the planes on which the two air regions join. The join is about 10 planes (5 mm) cranial to graph node 3.",
+        "At the response pixel on slice 348 the nearest voxel is −868 HU."
+      ],
+      "interpretation": [
+        "What the neighbouring lucency IS. The source graph places edge 21 in it, and the authored nomenclature calls that edge the left upper division bronchus. Both are unreviewed model labels (the raw source label for edges 496 and 21 is simply LUL). Naming the lucency from that is an inference.",
+        "AI observation of the contact sheet (unreviewed): an elongated lumen with a separate small round lucency to its patient-left and anterior on 360–353; a tail toward it at 352; a neck at 351–350; one elongated lumen on 349–345.",
+        "Whether a learner who marks the joined region at 348 has “stayed in the left main bronchus”, and how that should be explained, is a teaching judgement."
+      ],
+      "existingReviewedEvidence": "None. BBT-01 holds the whole introductory interval and its copy for faculty review (BBT-01 handoff, holds table). No caption or annotation for this lucency exists.",
+      "candidateChanges": [
+        "Add one reviewed caption to this interval naming the structure and saying why the traced lumen is still the left main bronchus.",
+        "Or move the interval to planes where no second lumen joins (for example cranial of 353), which changes the exercise geometry.",
+        "Or keep the interval and use the join as the teaching point, with reviewed wording."
+      ],
+      "exactQuestionForReviewer": "What is the neighbouring/merging lucency, and what is the accurate explanatory caption?",
+      "affectedConsumers": [
+        "Lesson 1 interval 2 only. junction-3 is also the second checkpoint of six left-sided routes, but there it is the LMSB → LLL / LUL division (parent 344, responses 332 and 341), not this interval."
+      ],
+      "draftSignatureCompatibility": [
+        "A caption or teaching sentence held outside the signed exercise data (lesson text, or a lookup keyed by checkpoint id) moves no signature.",
+        "Moving the interval changes the exercise's trace and answer point, so learn.follow-one-airway moves and its drafts are kept for recovery, not resumed."
+      ],
+      "missingEvidence": [
+        "No attributable identification of the lucency.",
+        "No reviewed caption.",
+        "The exact textbook page for single-lumen following is still unconfirmed (Lesson 1 pointer: “Chapter 1 · exact page not yet confirmed”)."
+      ],
+      "implementationStatus": "NOT IMPLEMENTED"
+    },
+    {
+      "decisionId": "OD-03",
+      "title": "Duplicate and provisional branch names",
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "openStatus": "HELD for the owner",
+      "sourceIds": ["S-04", "S-06", "S-07", "S-10", "S-28", "S-31"],
+      "currentTaskAndConsumer": "Since Prompt 03 every division is shown as Parent / Daughter A / Daughter B with the source code appended, and the source direction label appended when a code repeats (for example “Daughter A · RB3a · more cranial”). Stored labels and source codes are unchanged. Subsegment letters are shown with a pending-review note and never asked.",
+      "reportedConcern": "BBTF-06 and BBTF-34 (walkthrough pp. 12, 14, 16–17): RB3a → RB3a / RB3a, LB6 → LB6 / LB6, RB4 → RB4 / RB4a and LB9 → LB9 / LB9 cannot be told apart by name; the RB1 a/b assignment was asked before it was given.",
+      "mechanicallyVerifiable": [
+        "Identity table (node, parent edge, daughter edges, raw source label, authored name, module code, source direction, response slice, consumers): generated from S-04, S-06, S-07 and S-10 and printed below this record.",
+        "The raw source labels (centerline_labels.json) name territories, not subsegments: every edge in the RB1, RB3, RB4, LB6 and LB9 territories carries the same label; the RB5 daughters (edges 40, 41) carry no raw label.",
+        "The authored names (airway-nomenclature.json, nomenclature-v1, 36 edges) add RB1a, RB1b, RB3a, RB4a, RB5a and RB5b, each with a written basis. Where no name was authored, a daughter inherits its parent's code: edge 14 stays RB3 beside RB3a; edge 38 stays RB4 beside RB4a; all LB6 and LB9 descendants stay LB6 and LB9.",
+        "Daughter A and B are the source option order (index 0 and 1), never a screen position. Direction labels come from the axis with the largest spread between the daughters' response points.",
+        "Textbook text layer (AI reading, not a review): p. 27 gives B1a dorsal and B1b ventral; pp. 46–47 give B5a horizontal and B5b caudal, and B4a / B4b as the two daughters of B4; p. 27 places B3b ventral and B3a lateral. These match the directions the authored basis states."
+      ],
+      "interpretation": [
+        "Whether the authored a/b assignments are right for THIS patient's anatomy.",
+        "Whether the unnamed siblings should be called RB3b and RB4b, as the textbook's general scheme would suggest. No name was added.",
+        "Whether LB6 and LB9 descendants should carry finer names at all."
+      ],
+      "existingReviewedEvidence": "None. nomenclature-review.md: “Anatomical assignments by Codex using the owner-supplied textbook and existing case assets; this is not faculty sign-off.” The junction packet marks every a/b assignment “pending faculty review”.",
+      "candidateChanges": [
+        "Keep all current source labels with neutral A/B display (no change).",
+        "Approve, revise or remove individual a/b assignments (RB1a/b, RB5a/b, RB3a, RB4a).",
+        "Name currently unnamed siblings (for example edge 14, edge 38) from a reviewed source."
+      ],
+      "exactQuestionForReviewer": "Which duplicate/source labels may remain as source labels, and which require reviewed nomenclature or revised a/b assignment?",
+      "identityTable": [
+        {
+          "example": "RB1 a/b (provisional)",
+          "checkpointId": "junction-14",
+          "nodeId": 14,
+          "exampleRoute": "right-upper-apical",
+          "parent": {
+            "edgeId": 13,
+            "rawSourceLabel": "RB1",
+            "authoredName": "RB1",
+            "authoredBasis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+            "moduleCode": "RB1",
+            "codeOrigin": "authored (nomenclature-v1)",
+            "neutralIdentity": "Parent",
+            "slice": 401
+          },
+          "daughters": [
+            {
+              "edgeId": 28,
+              "rawSourceLabel": "RB1",
+              "authoredName": "RB1b",
+              "authoredBasis": "Existing RB1 territory; anterior (negative LPS y) daughter of edge 13, sibling 29 posterior. Textbook p. 27, Figs. 2.9–2.10.",
+              "moduleCode": "RB1b",
+              "codeOrigin": "authored (nomenclature-v1)",
+              "neutralIdentity": "Daughter A",
+              "sourceDirectionLabel": "More anterior",
+              "responseSlice": 422,
+              "storedLabel": "RB1b · Right apical bronchus, anterior subsegment"
+            },
+            {
+              "edgeId": 29,
+              "rawSourceLabel": "RB1",
+              "authoredName": "RB1a",
+              "authoredBasis": "Existing RB1 territory; posterior (positive LPS y) daughter of edge 13, sibling 28 anterior. Textbook p. 27, Figs. 2.9–2.10. Edge 61 remains RB1a distal, without claiming a finer suffix.",
+              "moduleCode": "RB1a",
+              "codeOrigin": "authored (nomenclature-v1)",
+              "neutralIdentity": "Daughter B",
+              "sourceDirectionLabel": "More posterior",
+              "responseSlice": 424,
+              "storedLabel": "RB1a · Right apical bronchus, posterior subsegment"
+            }
+          ],
+          "reviewStatus": "NOT REVIEWED",
+          "consumers": "Lesson 4 example 1; routes right-upper-apical (RS1: Practice single target and mixed set), right-upper-entry, right-upper-distal"
+        },
+        {
+          "example": "RB5 a/b (provisional)",
+          "checkpointId": "junction-20",
+          "nodeId": 20,
+          "exampleRoute": "middle-lobe-caudal",
+          "parent": {
+            "edgeId": 19,
+            "rawSourceLabel": "RB5",
+            "authoredName": "RB5",
+            "authoredBasis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+            "moduleCode": "RB5",
+            "codeOrigin": "authored (nomenclature-v1)",
+            "neutralIdentity": "Parent",
+            "slice": 307
+          },
+          "daughters": [
+            {
+              "edgeId": 40,
+              "rawSourceLabel": null,
+              "authoredName": "RB5a",
+              "authoredBasis": "Daughter of labeled RB5 (19), anterior and approximately horizontal versus caudal sibling 41. Textbook pp. 45–47, Figs. 2.47–2.49. Local +z excursion is not a different segment identity.",
+              "moduleCode": "RB5a",
+              "codeOrigin": "authored (nomenclature-v1)",
+              "neutralIdentity": "Daughter A",
+              "sourceDirectionLabel": "More cranial",
+              "responseSlice": 309,
+              "storedLabel": "RB5a · Right medial bronchus, subsegment a"
+            },
+            {
+              "edgeId": 41,
+              "rawSourceLabel": null,
+              "authoredName": "RB5b",
+              "authoredBasis": "Daughter of labeled RB5 (19), anterior and caudal versus near-horizontal sibling 40. Textbook pp. 45–47, Figs. 2.47–2.49.",
+              "moduleCode": "RB5b",
+              "codeOrigin": "authored (nomenclature-v1)",
+              "neutralIdentity": "Daughter B",
+              "sourceDirectionLabel": "More caudal",
+              "responseSlice": 301,
+              "storedLabel": "RB5b · Right medial bronchus, subsegment b"
+            }
+          ],
+          "reviewStatus": "NOT REVIEWED",
+          "consumers": "Lesson 6 examples 1 and 2; routes middle-lobe-caudal (RS5: Practice), middle-lobe-entry (mixed set), middle-lobe-cranial; overview naming line RS5 → RB5 → RB5b"
+        },
+        {
+          "example": "RB3 → RB3 / RB3a",
+          "checkpointId": "junction-8",
+          "nodeId": 8,
+          "exampleRoute": "upper-oblique-lateral",
+          "parent": {
+            "edgeId": 7,
+            "rawSourceLabel": "RB3",
+            "authoredName": null,
+            "authoredBasis": null,
+            "moduleCode": "RB3",
+            "codeOrigin": "inherited from the parent or the raw label; no authored entry",
+            "neutralIdentity": "Parent",
+            "slice": 384
+          },
+          "daughters": [
+            {
+              "edgeId": 14,
+              "rawSourceLabel": "RB3",
+              "authoredName": null,
+              "authoredBasis": null,
+              "moduleCode": "RB3",
+              "codeOrigin": "inherited from the parent or the raw label; no authored entry",
+              "neutralIdentity": "Daughter A",
+              "sourceDirectionLabel": "More anterior",
+              "responseSlice": 386,
+              "storedLabel": "RB3 · more anterior daughter"
+            },
+            {
+              "edgeId": 15,
+              "rawSourceLabel": "RB3",
+              "authoredName": "RB3a",
+              "authoredBasis": "Existing RB3 territory. Edge 15 is the lateral daughter versus ventral sibling 14; textbook p. 27, Fig. 2.9. Descendants 32/33 retain the subsegment label without assigning i/ii.",
+              "moduleCode": "RB3a",
+              "codeOrigin": "authored (nomenclature-v1)",
+              "neutralIdentity": "Daughter B",
+              "sourceDirectionLabel": "More posterior",
+              "responseSlice": 386,
+              "storedLabel": "RB3a · Right anterior bronchus, lateral subsegment"
+            }
+          ],
+          "reviewStatus": "NOT REVIEWED",
+          "consumers": "Routes upper-oblique-lateral (RS3: Practice, More routes) and upper-oblique-medial"
+        },
+        {
+          "example": "RB3a → RB3a / RB3a",
+          "checkpointId": "junction-16",
+          "nodeId": 16,
+          "exampleRoute": "upper-oblique-lateral",
+          "parent": {
+            "edgeId": 15,
+            "rawSourceLabel": "RB3",
+            "authoredName": "RB3a",
+            "authoredBasis": "Existing RB3 territory. Edge 15 is the lateral daughter versus ventral sibling 14; textbook p. 27, Fig. 2.9. Descendants 32/33 retain the subsegment label without assigning i/ii.",
+            "moduleCode": "RB3a",
+            "codeOrigin": "authored (nomenclature-v1)",
+            "neutralIdentity": "Parent",
+            "slice": 386
+          },
+          "daughters": [
+            {
+              "edgeId": 32,
+              "rawSourceLabel": "RB3",
+              "authoredName": "RB3a",
+              "authoredBasis": "Existing RB3 territory. Edge 15 is the lateral daughter versus ventral sibling 14; textbook p. 27, Fig. 2.9. Descendants 32/33 retain the subsegment label without assigning i/ii.",
+              "moduleCode": "RB3a",
+              "codeOrigin": "authored (nomenclature-v1)",
+              "neutralIdentity": "Daughter A",
+              "sourceDirectionLabel": "More cranial",
+              "responseSlice": 396,
+              "storedLabel": "RB3a · more cranial daughter"
+            },
+            {
+              "edgeId": 33,
+              "rawSourceLabel": "RB3",
+              "authoredName": "RB3a",
+              "authoredBasis": "Existing RB3 territory. Edge 15 is the lateral daughter versus ventral sibling 14; textbook p. 27, Fig. 2.9. Descendants 32/33 retain the subsegment label without assigning i/ii.",
+              "moduleCode": "RB3a",
+              "codeOrigin": "authored (nomenclature-v1)",
+              "neutralIdentity": "Daughter B",
+              "sourceDirectionLabel": "More caudal",
+              "responseSlice": 384,
+              "storedLabel": "RB3a · more caudal daughter"
+            }
+          ],
+          "reviewStatus": "NOT REVIEWED",
+          "consumers": "Lesson 7 example 1; routes upper-oblique-lateral (RS3: Practice, More routes) and upper-oblique-medial"
+        },
+        {
+          "example": "RB4 → RB4 / RB4a",
+          "checkpointId": "junction-19",
+          "nodeId": 19,
+          "exampleRoute": "middle-lobe-lateral",
+          "parent": {
+            "edgeId": 18,
+            "rawSourceLabel": "RB4",
+            "authoredName": "RB4",
+            "authoredBasis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+            "moduleCode": "RB4",
+            "codeOrigin": "authored (nomenclature-v1)",
+            "neutralIdentity": "Parent",
+            "slice": 307
+          },
+          "daughters": [
+            {
+              "edgeId": 38,
+              "rawSourceLabel": "RB4",
+              "authoredName": null,
+              "authoredBasis": null,
+              "moduleCode": "RB4",
+              "codeOrigin": "inherited from the parent or the raw label; no authored entry",
+              "neutralIdentity": "Daughter A",
+              "sourceDirectionLabel": "More anterior",
+              "responseSlice": 307,
+              "storedLabel": "RB4 · more anterior daughter"
+            },
+            {
+              "edgeId": 39,
+              "rawSourceLabel": "RB4",
+              "authoredName": "RB4a",
+              "authoredBasis": "Existing RB4 territory; posterolateral daughter of edge 18, opposite anterolateral sibling 38. Textbook pp. 45–47, Figs. 2.47–2.49.",
+              "moduleCode": "RB4a",
+              "codeOrigin": "authored (nomenclature-v1)",
+              "neutralIdentity": "Daughter B",
+              "sourceDirectionLabel": "More posterior",
+              "responseSlice": 307,
+              "storedLabel": "RB4a · Right lateral bronchus, subsegment a"
+            }
+          ],
+          "reviewStatus": "NOT REVIEWED",
+          "consumers": "Lesson 5 example 2; route middle-lobe-lateral (RS4: Practice)"
+        },
+        {
+          "example": "LB6 → LB6 / LB6 (first)",
+          "checkpointId": "junction-11",
+          "nodeId": 11,
+          "exampleRoute": "left-lower-returning",
+          "parent": {
+            "edgeId": 10,
+            "rawSourceLabel": "LB6",
+            "authoredName": "LB6",
+            "authoredBasis": "Existing LB6 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+            "moduleCode": "LB6",
+            "codeOrigin": "authored (nomenclature-v1)",
+            "neutralIdentity": "Parent",
+            "slice": 325
+          },
+          "daughters": [
+            {
+              "edgeId": 22,
+              "rawSourceLabel": "LB6",
+              "authoredName": null,
+              "authoredBasis": null,
+              "moduleCode": "LB6",
+              "codeOrigin": "inherited from the parent or the raw label; no authored entry",
+              "neutralIdentity": "Daughter A",
+              "sourceDirectionLabel": "More caudal",
+              "responseSlice": 324,
+              "storedLabel": "LB6 · more caudal daughter"
+            },
+            {
+              "edgeId": 23,
+              "rawSourceLabel": "LB6",
+              "authoredName": "LB6",
+              "authoredBasis": "Existing LB6 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+              "moduleCode": "LB6",
+              "codeOrigin": "authored (nomenclature-v1)",
+              "neutralIdentity": "Daughter B",
+              "sourceDirectionLabel": "More cranial",
+              "responseSlice": 334,
+              "storedLabel": "LB6 · more cranial daughter"
+            }
+          ],
+          "reviewStatus": "NOT REVIEWED",
+          "consumers": "Lesson 8 example 1; route left-lower-returning (LS6: Practice single target and mixed set)"
+        },
+        {
+          "example": "LB6 → LB6 / LB6 (second)",
+          "checkpointId": "junction-25",
+          "nodeId": 25,
+          "exampleRoute": "left-lower-returning",
+          "parent": {
+            "edgeId": 23,
+            "rawSourceLabel": "LB6",
+            "authoredName": "LB6",
+            "authoredBasis": "Existing LB6 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+            "moduleCode": "LB6",
+            "codeOrigin": "authored (nomenclature-v1)",
+            "neutralIdentity": "Parent",
+            "slice": 332
+          },
+          "daughters": [
+            {
+              "edgeId": 49,
+              "rawSourceLabel": "LB6",
+              "authoredName": null,
+              "authoredBasis": null,
+              "moduleCode": "LB6",
+              "codeOrigin": "inherited from the parent or the raw label; no authored entry",
+              "neutralIdentity": "Daughter A",
+              "sourceDirectionLabel": "More left",
+              "responseSlice": 337,
+              "storedLabel": "LB6 · more left daughter"
+            },
+            {
+              "edgeId": 50,
+              "rawSourceLabel": "LB6",
+              "authoredName": "LB6",
+              "authoredBasis": "Existing LB6 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+              "moduleCode": "LB6",
+              "codeOrigin": "authored (nomenclature-v1)",
+              "neutralIdentity": "Daughter B",
+              "sourceDirectionLabel": "More right",
+              "responseSlice": 345,
+              "storedLabel": "LB6 · more right daughter"
+            }
+          ],
+          "reviewStatus": "NOT REVIEWED",
+          "consumers": "Lesson 8 example 2; same route"
+        },
+        {
+          "example": "LB6 → LB6 / LB6 (third)",
+          "checkpointId": "junction-52",
+          "nodeId": 52,
+          "exampleRoute": "left-lower-returning",
+          "parent": {
+            "edgeId": 50,
+            "rawSourceLabel": "LB6",
+            "authoredName": "LB6",
+            "authoredBasis": "Existing LB6 label retained for descendants; no unverified a/b/c or finer suffix assigned.",
+            "moduleCode": "LB6",
+            "codeOrigin": "authored (nomenclature-v1)",
+            "neutralIdentity": "Parent",
+            "slice": 343
+          },
+          "daughters": [
+            {
+              "edgeId": 101,
+              "rawSourceLabel": "LB6",
+              "authoredName": null,
+              "authoredBasis": null,
+              "moduleCode": "LB6",
+              "codeOrigin": "inherited from the parent or the raw label; no authored entry",
+              "neutralIdentity": "Daughter A",
+              "sourceDirectionLabel": "More left",
+              "responseSlice": 358,
+              "storedLabel": "LB6 · more left daughter"
+            },
+            {
+              "edgeId": 102,
+              "rawSourceLabel": "LB6",
+              "authoredName": null,
+              "authoredBasis": null,
+              "moduleCode": "LB6",
+              "codeOrigin": "inherited from the parent or the raw label; no authored entry",
+              "neutralIdentity": "Daughter B",
+              "sourceDirectionLabel": "More right",
+              "responseSlice": 354,
+              "storedLabel": "LB6 · more right daughter"
+            }
+          ],
+          "reviewStatus": "NOT REVIEWED",
+          "consumers": "Lesson 8 example 3; same route"
+        },
+        {
+          "example": "LB9 → LB9 / LB9",
+          "checkpointId": "junction-53",
+          "nodeId": 53,
+          "exampleRoute": "left-lower-basal",
+          "parent": {
+            "edgeId": 51,
+            "rawSourceLabel": "LB9",
+            "authoredName": "LB9",
+            "authoredBasis": "Existing case label, normalized to bronchial rather than pulmonary-segment terminology; textbook Chapter 1, Figs. 1.1–1.2.",
+            "moduleCode": "LB9",
+            "codeOrigin": "authored (nomenclature-v1)",
+            "neutralIdentity": "Parent",
+            "slice": 272
+          },
+          "daughters": [
+            {
+              "edgeId": 103,
+              "rawSourceLabel": "LB9",
+              "authoredName": null,
+              "authoredBasis": null,
+              "moduleCode": "LB9",
+              "codeOrigin": "inherited from the parent or the raw label; no authored entry",
+              "neutralIdentity": "Daughter A",
+              "sourceDirectionLabel": "More cranial",
+              "responseSlice": 262,
+              "storedLabel": "LB9 · more cranial daughter"
+            },
+            {
+              "edgeId": 104,
+              "rawSourceLabel": "LB9",
+              "authoredName": null,
+              "authoredBasis": null,
+              "moduleCode": "LB9",
+              "codeOrigin": "inherited from the parent or the raw label; no authored entry",
+              "neutralIdentity": "Daughter B",
+              "sourceDirectionLabel": "More caudal",
+              "responseSlice": 252,
+              "storedLabel": "LB9 · more caudal daughter"
+            }
+          ],
+          "reviewStatus": "NOT REVIEWED",
+          "consumers": "Route left-lower-basal (LS9: Lesson 9 learner's route, Practice)"
+        }
+      ],
+      "affectedConsumers": [
+        "RB1 a/b: Lesson 4 example 1; routes right-upper-apical (RS1: Practice single and mixed set), right-upper-entry, right-upper-distal.",
+        "RB5 a/b: Lesson 6 (both examples); routes middle-lobe-caudal (RS5), middle-lobe-entry (mixed set), middle-lobe-cranial; the overview's RS5 → RB5 → RB5b naming line.",
+        "RB3a: Lesson 7 example 1; routes upper-oblique-lateral (RS3: Practice, More routes), upper-oblique-medial.",
+        "RB4 / RB4a: Lesson 5 example 2; route middle-lobe-lateral (RS4).",
+        "LB6: Lesson 3 example 2, Lesson 8 (three examples); route left-lower-returning (LS6: Practice single and mixed set).",
+        "LB9: route left-lower-basal (LS9: Lesson 9 learner's route, Practice)."
+      ],
+      "draftSignatureCompatibility": [
+        "Display-only naming (as Prompt 03 did) moves no signature and no stored label.",
+        "Changing an airway code in the export changes airway.code and option.label inside the signed route data, so every signature that includes that route moves; stored answer labels (for example “A · RB1b”) in old drafts would then name the old code."
+      ],
+      "missingEvidence": [
+        "No attributable nomenclature review.",
+        "Textbook figures 2.9–2.10 and 2.47–2.49 were not inspected as images.",
+        "The full source label workbook (labels_cleaned_names.xlsx) was not opened; its derived JSON was used."
+      ],
+      "implementationStatus": "NOT IMPLEMENTED"
+    },
+    {
+      "decisionId": "OD-04",
+      "title": "Four patterns and direction reversal",
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "openStatus": "OWNER-HELD",
+      "sourceIds": ["S-14", "S-16", "S-27", "S-31"],
+      "currentTaskAndConsumer": "The course reference names four patterns and maps them to Lessons 4–7; each definition is two sentences taken verbatim from that lesson. “A change in tracing direction” is listed as related, not a fifth pattern, and taught in Lesson 8. Since Prompt 04 a short primer before marking notes where a daughter turns back and points to Lesson 8.",
+      "reportedConcern": "BBTF-19, BBTF-07, BBTF-45 (walkthrough pp. 5, 9–10, 14, 16): the objectives promise four patterns the lesson titles never name; direction reversal is met in Lesson 3 (LB6) and Lesson 6 (RB5a) before Lesson 8 teaches it; a left-upper-division note sat in the LB6 lesson.",
+      "mechanicallyVerifiable": [
+        "The textbook IS available locally (S-31), outside Local-Data. Prompt 04 recorded it as unavailable in that session; this session read its text layer. Figures were not inspected.",
+        "Text layer, printed p. 7: section 1.3 step IV introduces four patterns by name — Vertical, Horizontal–horizontal, Horizontal–vertical, Horizontal–oblique — as one vertical pattern plus three for a route nearly parallel to the axial images. The module's four names and their order (Lessons 4, 5, 6, 7) match.",
+        "Locators: vertical p. 7, Figs. 1.12–1.13; horizontal–horizontal pp. 7–10, Figs. 1.14–1.16 (and 1.21–1.22); horizontal–vertical p. 10, Fig. 1.17 (and 1.23); horizontal–oblique pp. 11–12, Figs. 1.18–1.20; one-line reminders for all four on p. 15.",
+        "Text layer, printed pp. 15–17, Figs. 1.24–1.26: a separate section on bronchi that run caudally and then turn cranially (middle lobe, lingula, lower lobes), with right B6a as the representative case. It comes AFTER the four patterns.",
+        "Lesson page pointers checked against the text layer: Lessons 2–6, 8 and 9 are consistent. Lesson 7's pointer lists Figs. 1.18–1.23, but Figs. 1.21–1.22 are captioned horizontal–horizontal and Fig. 1.23 horizontal–vertical. Lesson 1's pointer is still “exact page not yet confirmed”.",
+        "Current sequence: 1 Follow one airway · 2 Relate CT to the parent airway view · 3 Follow the airway through a bifurcation · 4 vertical · 5 horizontal–horizontal · 6 horizontal–vertical · 7 horizontal–oblique · 8 Build a short route map (change in tracing direction) · 9 Build and check a complete CT trace.",
+        "A daughter first turns back against the direction of travel in Lesson 3 example 2 (junction-6: parent followed caudally 332 → node 321.1, LB6 response on 326). The same condition holds at Lesson 4 example 2 (junction-9) and Lesson 7 example 1 (junction-16), and in Lesson 6 one daughter (RB5a) rises from an in-plane parent — all before Lesson 8."
+      ],
+      "interpretation": [
+        "Whether each lesson's CT example is a valid instance of the pattern it is labelled with (for example Lesson 4 example 2, RLL → basal / RB6, under “vertical”; Lesson 6, RB5 → RB5a / RB5b, under “horizontal–vertical”). The textbook's own examples differ from the module's.",
+        "AI reading: the textbook's caudal-then-cranial section also states that the relative position of the two B6a daughters is opposite between the axial-CT branch diagram and the bronchoscopic view at the B6 orifice. Lesson 8's text teaches continuity through the turn and mentions the coronal MPR; it does not carry that statement.",
+        "The module reads the textbook's “left superior segment” as the left upper division. The text layer supports the context (traced toward the apex; listed beside the lingular bronchus) but never says “upper division”.",
+        "“Spur angle”: the textbook uses “the angle of the spur” (pp. 4, 15) and “the spur direction” (p. 16) without a separate definition."
+      ],
+      "existingReviewedEvidence": "None. clinical-review.md records that the four-pattern concepts were “read from the supplied PDF” by an AI session and leaves “case-specific exemplars and explanation wording” for review.",
+      "candidateChanges": [
+        "Storyboard 1 (no reorder): keep the sequence; make the existing turn-back primer at Lesson 3 example 2 a short captioned demonstration of that same division, with reviewed wording, and keep Lesson 8 as the full treatment.",
+        "Storyboard 2 (no reorder): add the textbook's diagram-inversion point to Lesson 8's teaching, with reviewed wording and the pp. 15–17 locator, so Lesson 8 covers both halves of the textbook's section."
+      ],
+      "exactQuestionForReviewer": "How should the four patterns and direction reversal be introduced?",
+      "subQuestions": [
+        "Taxonomy: are the four names, as used, the textbook's, and is “a change in tracing direction” correctly kept outside them?",
+        "Regional applicability: is each lesson's example a fair instance of its pattern on this CT?",
+        "Should a reversal be taught earlier than Lesson 8, and if so where?",
+        "Should any lesson be reordered or replaced?"
+      ],
+      "affectedConsumers": [
+        "Overview and course reference; Lessons 3–8; the turn-back primer; Lesson 8's optional regional note."
+      ],
+      "draftSignatureCompatibility": [
+        "Lesson text in content/lessons.ts for Lessons 1–8 is outside the local signatures (they hash exercises only), so wording changes move nothing.",
+        "Reordering lessons changes no signature by itself (signatures are per lesson id) but changes lesson numbers shown to learners and the saved “last lesson” pointer's meaning.",
+        "Replacing an example changes that lesson's signature (its exercise list)."
+      ],
+      "missingEvidence": [
+        "Textbook figures not inspected; no figure was drawn.",
+        "No source review of the four definitions' wording against the book by a person.",
+        "The textbook PDF is not in Local-Data and not in the local-authoring map."
+      ],
+      "implementationStatus": "NOT IMPLEMENTED"
+    },
+    {
+      "decisionId": "OD-05",
+      "title": "CT-to-parent-view correspondence and opening labels",
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "openStatus": "HELD for the owner",
+      "sourceIds": ["S-01", "S-07", "S-08", "S-18", "S-19", "S-20", "S-21", "S-25", "S-34"],
+      "currentTaskAndConsumer": "Every local lesson offers a paired model parent view beside the CT. At a division the camera sits on the parent centreline 8 mm proximal to the node, looks at the node, and holds a per-region reference direction at the top. Letters A / B are drawn at each daughter's model response point when it is in line of sight. A direction schematic numbers the openings by screen position and letters them by CT order.",
+      "reportedConcern": "BBTF-04, BBTF-13 (walkthrough pp. 10, 12, Figs. 9, 12): the bronchoscopic view was hidden and unlabelled; diagrams were tiny and numbered 1/2 against the CT's A/B. Prompt 03 repaired discoverability and labelling; whether the labels correspond to the real openings was left to the owner.",
+      "mechanicallyVerifiable": [
+        "Central fork, junction-1 (Lesson 3 example 1). Frame 1: node 1; parent edge 0, point on slice 408; Daughter A = edge 1 (source code RMSB, “more right”), Daughter B = edge 2 (LMSB, “more left”), both on slice 387. Frame 2: lesson default standard axial (A up, R screen-left); regional preset left–right reflection (A up, L screen-left). Frame 3: camera at LPS [-11.5543, -155.3175, -164.4569], forward [-0.050505, -0.080611, -0.995465] (caudal), reference up [0, −1, 0] (anterior), 8.0 mm from the node, 80° field of view, roll 0. Screen right = patient right. Daughter A projects to screen right (+0.83, −0.06), Daughter B to screen left (−0.87, +0.07).",
+        "Subsegmental fork, junction-14 (Lesson 4 example 1). Frame 1: node 14; parent edge 13 (RB1), point on slice 401; Daughter A = edge 28 (source code RB1b, “more anterior”) on slice 422; Daughter B = edge 29 (RB1a, “more posterior”) on slice 424. Frame 2: lesson default standard axial; regional preset 90° counterclockwise (L up, A screen-left). Frame 3: camera at LPS [-48.155, -160.7597, -168.1703], forward [-0.316663, -0.083487, 0.944857] (cranial, tilted about 19° toward patient right), reference up [1, 0, 0] (patient left), 7.983 mm from the node. Screen right = posterior. Daughter A projects to screen left (−0.64, +0.01), Daughter B to screen right (+0.53, −0.03).",
+        "The module's own pages report the same poses (data-scope-pose equals the harness to four decimals) and both equal the pinned fixture.",
+        "In both examples the regional preset display and the camera share the same in-plane patient directions (central: A up, patient right on screen right; RB1: patient left up, anterior on screen left). In the lesson's default standard axial display they differ by a reflection (central) or a quarter turn (RB1).",
+        "Letters follow the source option order and are drawn at the 5 mm (or 0.55 × length) model response point, projected with the rendered camera and tested for line of sight against the model surface.",
+        "The reference up is a per-preset rule (anterior for reflected regions; patient left for the right upper lobe; patient right for the left upper division; superior when the preferred axis lies along the view). It does not depend on the learner's CT display.",
+        "Candidate roll arithmetic (od-05/camera.json): the daughters' screen positions under each other reference direction, for comparison only."
+      ],
+      "interpretation": [
+        "Whether a letter drawn at a model response point sits on the actual opening of that daughter. A label on a modelled opening is a model annotation.",
+        "Whether the per-region roll matches how the scope is actually held at each fork, and whether it is the convention worth teaching.",
+        "AI observation of the captures (unreviewed): at the tracheal division both letters fall near the mouths of two openings; at RB1 both letters fall close together near the centre of a small lumen."
+      ],
+      "existingReviewedEvidence": "None. clinical-review.md leaves “actual browser pose, FOV, roll, visible ostia/spurs” for approval. The parent-view openings are named in each exercise's provisional review reason.",
+      "candidateChanges": [
+        "Accept the current correspondence and labels as a teaching aid, with their model-annotation wording.",
+        "Accept for central forks only, and withhold opening letters at subsegmental forks until reviewed.",
+        "Change the roll rule or the label anchor for named regions, from a reviewed convention."
+      ],
+      "exactQuestionForReviewer": "Are the current CT-to-parent-view correspondence and opening labels anatomically useful and appropriate for teaching?",
+      "affectedConsumers": [
+        "Every local lesson's paired view and parent-view step (Lessons 2–8); the direction schematic; route lessons and Practice once a junction is recorded or revealed."
+      ],
+      "draftSignatureCompatibility": [
+        "The camera and the letters are computed at display time and are not part of any draft signature. Changing the roll rule or label anchors moves no signature.",
+        "It would change the pinned camera fixture (128 decisions) and the saved parent-view choice's meaning for the independent matching try (stored as an opening number)."
+      ],
+      "missingEvidence": [
+        "No reviewed ostium positions and no recorded bronchoscopy of this patient to compare with.",
+        "Line-of-sight results were taken from the module's render, not recomputed here.",
+        "Only two examples were prepared (plus numbers for junction-20 and junction-16 in camera.json)."
+      ],
+      "implementationStatus": "NOT IMPLEMENTED"
+    },
+    {
+      "decisionId": "OD-06",
+      "title": "Qualitative lumen comparison policy",
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "openStatus": "OPEN (proposal only)",
+      "sourceIds": ["S-13", "S-15", "S-23", "S-24"],
+      "currentTaskAndConsumer": "After Check, each mark is compared with model locators on that plane: distance in millimetres to the intended locator and to the nearest other named model airway, with the statuses nearest-intended, nearest-other and unresolved. The text says the comparison cannot establish which lumen contains a mark.",
+      "reportedConcern": "BBTF-05 (walkthrough pp. 7, 10, 13): distances without a verdict; the report asked for a result band (in intended lumen / near the fork / likely another airway).",
+      "mechanicallyVerifiable": [
+        "The comparison is distance to centreline points only (engine/junction-feedback.ts). No inside/outside-lumen test, no accuracy band, no radius threshold.",
+        "Model locators are centreline samples; the copy says “not reviewed wall contours or an answer key”.",
+        "The annotation type supports a faculty-reviewed record (reviewer, date, geometry version) and an optional contour, and the viewer draws a contour only for that status. No exercise carries one: every review status is provisional."
+      ],
+      "interpretation": [
+        "Whether any distance or threshold would be a fair stand-in for “inside the intended lumen” on this CT."
+      ],
+      "existingReviewedEvidence": "None. No reviewed contour, wall annotation or accepted-alternative mark exists.",
+      "candidateChanges": [
+        "None proposed. A qualitative result would first need reviewed contours or accepted mark regions for the junctions concerned."
+      ],
+      "exactQuestionForReviewer": "Is there sufficient reviewed anatomical evidence to support any future qualitative lumen comparison policy?",
+      "currentAnswerFromEvidence": "The evidence is currently insufficient: zero reviewed contours or wall annotations exist.",
+      "affectedConsumers": [
+        "The comparison after Check in Lessons 3–8, Lesson 9, Practice and More routes."
+      ],
+      "draftSignatureCompatibility": [
+        "Adding review records or contours to exercise data changes the signed review field, so the affected lesson signatures move."
+      ],
+      "missingEvidence": ["Reviewed contours or mark regions for any junction."],
+      "implementationStatus": "NOT IMPLEMENTED"
+    },
+    {
+      "decisionId": "OD-07",
+      "title": "Instructional role of More routes",
+      "reviewStatus": "NOT REVIEWED",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewDate": null,
+      "decision": null,
+      "openStatus": "OWNER-HELD (proposal only)",
+      "sourceIds": ["S-14", "S-16", "S-17"],
+      "currentTaskAndConsumer": "More routes is the fourth tab, at /assess: four routes on the same CT, presented since Prompt 04 as “Optional: 4 revisit routes, same CT”, with the same reference and help as Practice.",
+      "reportedConcern": "BBTF-49 (walkthrough p. 19): two of the four routes were the worked example and transfer route of Lesson 9, all four can be picked in Practice, and the address says /assess although nothing is assessed.",
+      "mechanicallyVerifiable": [
+        "Routes and targets: left-lingula (LS5), upper-oblique-lateral (RS3), right-lower-basal (RS8), left-upper-anterior (LS3).",
+        "Overlap computed from the registries: all 4 are Practice targets; 2 are also in Lesson 9 (RS8 worked example, LS5 transfer route).",
+        "It shares the Practice host; no score, no withheld reference, no completion requirement. Its draft key and signature are separate from Practice (assess.… = c6-local-teaching-r1.75f10d17).",
+        "The /assess address is kept for compatibility with existing links and drafts."
+      ],
+      "interpretation": ["Whether a separate revisit set adds teaching value beyond Practice."],
+      "existingReviewedEvidence": "None needed for the facts above; the role is an instructional-design choice.",
+      "candidateChanges": [
+        "Keep as a distinct optional revisit set (current).",
+        "Merge into Practice.",
+        "Re-scope later (for example non-overlapping targets)."
+      ],
+      "exactQuestionForReviewer": "Should More routes retain a distinct revisit role, be merged into Practice, or be re-scoped later?",
+      "affectedConsumers": [
+        "The More routes tab and /assess; overview course map; course outline."
+      ],
+      "draftSignatureCompatibility": [
+        "Merging or changing the route list changes the set's draft key and signature; existing More routes drafts would be kept for recovery, not resumed. The /assess address should keep resolving."
+      ],
+      "missingEvidence": ["No learner evidence on whether the set is used or useful."],
+      "implementationStatus": "NOT IMPLEMENTED"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-00-01",
+      "decision": "all",
+      "kind": "local HTML page",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": null,
+      "graph": null,
+      "camera": null,
+      "localPath": "review-surface.html",
+      "sha256": "2f8ff628d4185fa3e8b24a2fce6c540347625578d0c1368839790efb30cf88a4",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "One local review page: steps through the OD-01 and OD-02 planes with a model-point toggle; shows the OD-05 examples"
+    },
+    {
+      "id": "E-00-02",
+      "decision": "all",
+      "kind": "hash list",
+      "sourceIds": [],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": null,
+      "camera": null,
+      "localPath": "sha256sums.txt",
+      "sha256": "d7e82dbc1f401b9f8ad3658044ad5b802f65a3943eac1411c8f51f0d03b809f8",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "SHA-256 of every evidence file"
+    },
+    {
+      "id": "E-00-03",
+      "decision": "all",
+      "kind": "JSON",
+      "sourceIds": ["S-01", "S-02", "S-04", "S-06", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": null,
+      "graph": null,
+      "camera": null,
+      "localPath": "source/source-identity.json",
+      "sha256": "79f197a6464baec9ede8111dff66539cb4a82609116201552511d675d86c79f0",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Source hashes, NRRD header, and the export consistency checks"
+    },
+    {
+      "id": "E-00-04",
+      "decision": "all",
+      "kind": "text",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": null,
+      "graph": null,
+      "camera": null,
+      "localPath": "source/nrrd-header.txt",
+      "sha256": "cdb9be4324cddc1d7c0fad0e4b1d93555274d6cd3f308798dacc1dab6e72f968",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "The CT's own header: size, spacing, origin, direction, space"
+    },
+    {
+      "id": "E-00-05",
+      "decision": "OD-01",
+      "kind": "JSON",
+      "sourceIds": ["S-04", "S-07", "S-11"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": null,
+      "camera": null,
+      "localPath": "source/exporter-rule-check.json",
+      "sha256": "bbadefa4db9f9b4afe9d87723d227ab97f0f77e3c3df20ffc433be03968a5cba",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Every exported parent and daughter point checked against the generator rule"
+    },
+    {
+      "id": "E-00-06",
+      "decision": "OD-01",
+      "kind": "JSON",
+      "sourceIds": ["S-07", "S-22", "S-26"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": null,
+      "camera": null,
+      "localPath": "source/draft-signature-dependence.json",
+      "sha256": "ddd9d6d28ebfcf15e94b86883a7d9ce09b45bbcbe02e6a0eec3875baf728c6f2",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "The 21 draft signatures reproduced, consumers of junction-1, and which signatures move under in-memory experiments"
+    },
+    {
+      "id": "E-00-07",
+      "decision": "OD-04",
+      "kind": "JSON",
+      "sourceIds": ["S-31", "S-14"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": null,
+      "camera": null,
+      "localPath": "source/book-locators.json",
+      "sha256": "f4391622a36220c808b5a7a9655c1e4159c60c2e7f5416dacca085651cb2dc8e",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Textbook locators read from the PDF text layer, and each lesson's page pointer checked against them"
+    },
+    {
+      "id": "E-01-01",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [411, 366],
+        "zLpsMm": [-163.0, -185.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/contact-sheet-native.png",
+      "sha256": "c62e936e1b3f1a2e8932cc131135fbe44508709d7ef52d5c374906f3d8ff2527",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "All 46 planes 411 → 366 in the lesson's crop, no annotation"
+    },
+    {
+      "id": "E-01-02",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [411, 366],
+        "zLpsMm": [-163.0, -185.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/contact-sheet-overlay.png",
+      "sha256": "83c595198e759590fe51cf5081a3b7a037511fa442f41be4e0b9661ed1ff2576",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "The same planes with existing model points"
+    },
+    {
+      "id": "E-01-03",
+      "decision": "OD-01",
+      "kind": "image set (one file per native slice)",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "sliceRange": [411, 366],
+        "zLpsMmRange": [-163.0, -185.5],
+        "fileName": "slice-<k>.png"
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-native/",
+      "fileCount": 46,
+      "sha256OfListing": "118cd5771672f6b27fbf8438bcf8d12458463c3cc1c326da84b9d2fe77a221ba",
+      "sha256Note": "SHA-256 of the sorted '<sha256>  <path>' lines for this folder; per-file hashes are in sha256sums.txt",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Lesson crop ×8, no annotation, one file per plane"
+    },
+    {
+      "id": "E-01-04",
+      "decision": "OD-01",
+      "kind": "image set (one file per native slice)",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "sliceRange": [411, 366],
+        "zLpsMmRange": [-163.0, -185.5],
+        "fileName": "slice-<k>.png"
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-overlay/",
+      "fileCount": 46,
+      "sha256OfListing": "0a022e871d641e8d34f727d466f1aeaf2aaa7671e55c237dbad50a5812f00385",
+      "sha256Note": "SHA-256 of the sorted '<sha256>  <path>' lines for this folder; per-file hashes are in sha256sums.txt",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Lesson crop ×8 with existing model points"
+    },
+    {
+      "id": "E-01-05",
+      "decision": "OD-01",
+      "kind": "image set (one file per native slice)",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "sliceRange": [411, 366],
+        "zLpsMmRange": [-163.0, -185.5],
+        "fileName": "slice-<k>.png"
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/full-x1-native/",
+      "fileCount": 46,
+      "sha256OfListing": "2fffe201850e220bdcdbb68a97e1f20e87276160c5f58f2bfc2c2f54c2bc96ae",
+      "sha256Note": "SHA-256 of the sorted '<sha256>  <path>' lines for this folder; per-file hashes are in sha256sums.txt",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Full field ×1, no annotation (orientation context for every plane)"
+    },
+    {
+      "id": "E-01-06",
+      "decision": "OD-01",
+      "kind": "image set (one file per native slice)",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "sliceRange": [411, 366],
+        "zLpsMmRange": [-163.0, -185.5],
+        "fileName": "slice-<k>.png"
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/full-x1-overlay/",
+      "fileCount": 46,
+      "sha256OfListing": "613c97a4776af7fcd670eaf4fccf0f624fa62e0213eaca9b868984248793bb96",
+      "sha256Note": "SHA-256 of the sorted '<sha256>  <path>' lines for this folder; per-file hashes are in sha256sums.txt",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Full field ×1 with model points and the lesson's crop rectangle"
+    },
+    {
+      "id": "E-01-07",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [408],
+        "zLpsMm": [-164.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-native/slice-408.png",
+      "sha256": "0306411e502aad96b94717e94dcc4c5db68c6458f214bec86951d5091f07bf4e",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 408, no annotation — exported parent point (current demonstration start)"
+    },
+    {
+      "id": "E-01-16",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [408],
+        "zLpsMm": [-164.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-overlay/slice-408.png",
+      "sha256": "b28b9d9072dd018de04cfdb00a647889a58a309f1e3d186e5d25c847e96a6d3c",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 408, existing model points — exported parent point (current demonstration start)"
+    },
+    {
+      "id": "E-01-08",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [392],
+        "zLpsMm": [-172.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-native/slice-392.png",
+      "sha256": "7ee818d5a3d68db785053f18657aadf6fe96715d26d081d4b7bdc9c9b3f3f9c7",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 392, no annotation — plane nearest graph node 1"
+    },
+    {
+      "id": "E-01-17",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [392],
+        "zLpsMm": [-172.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-overlay/slice-392.png",
+      "sha256": "0435402b0911bc1f2f1e7811f9ad6d53996d78e5bb15955e562e966872f7ae26",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 392, existing model points — plane nearest graph node 1"
+    },
+    {
+      "id": "E-01-09",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [387],
+        "zLpsMm": [-175.0]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-native/slice-387.png",
+      "sha256": "3d76527ce3ed7dc86962b6337e91abeab3827c787b69fe9f47f1e8935ee82aaf",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 387, no annotation — current daughter response plane"
+    },
+    {
+      "id": "E-01-18",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [387],
+        "zLpsMm": [-175.0]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-overlay/slice-387.png",
+      "sha256": "8781fc476d8400b79028b982115f641f426ca250eb0781f5e66c645156b93471",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 387, existing model points — current daughter response plane"
+    },
+    {
+      "id": "E-01-10",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [384],
+        "zLpsMm": [-176.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-native/slice-384.png",
+      "sha256": "3d08f0ba3f08afb1f099d377d06dc92c9a1afe9e554286578c311b9f56259fd2",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 384, no annotation — caudal end of the lesson's browsable interval"
+    },
+    {
+      "id": "E-01-19",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [384],
+        "zLpsMm": [-176.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-overlay/slice-384.png",
+      "sha256": "7d3c3d40d96f29d688d7ac6927f7de2798d9022d48f01442c4df1d0bda70c42c",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 384, existing model points — caudal end of the lesson's browsable interval"
+    },
+    {
+      "id": "E-01-11",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [376],
+        "zLpsMm": [-180.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-native/slice-376.png",
+      "sha256": "0b6bfbde618b79f1a7c7b2129ae6bdc1f822ffd297e04f5575b080c2c71bd1ee",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 376, no annotation — last plane with both crossings in one air region"
+    },
+    {
+      "id": "E-01-20",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [376],
+        "zLpsMm": [-180.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-overlay/slice-376.png",
+      "sha256": "1fcdb6e4885c5fea9237567ebc188bee3baafbd43c40fb702cdc57223cb70158",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 376, existing model points — last plane with both crossings in one air region"
+    },
+    {
+      "id": "E-01-12",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [375],
+        "zLpsMm": [-181.0]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-native/slice-375.png",
+      "sha256": "d12de93e04d46c08621bfbd38629c8ffb577f1c4b2d32d4a4f40eb9f3dce11bd",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 375, no annotation — first plane with the crossings in separate air regions"
+    },
+    {
+      "id": "E-01-21",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [375],
+        "zLpsMm": [-181.0]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-overlay/slice-375.png",
+      "sha256": "dd79b8069ae8bf487462e58f98a721af350b5627e99c7bdaee131677f0a1ff98",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 375, existing model points — first plane with the crossings in separate air regions"
+    },
+    {
+      "id": "E-01-13",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [374],
+        "zLpsMm": [-181.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-native/slice-374.png",
+      "sha256": "4fda08deec1c8f43fc9960553daafdd7e815fc4bd21db678f46b3c215ed0fc47",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 374, no annotation — candidate band"
+    },
+    {
+      "id": "E-01-22",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [374],
+        "zLpsMm": [-181.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-overlay/slice-374.png",
+      "sha256": "0977d476fd1e7095173548ccfec659ca1a9402ce12ea66844cebc5ec7fcd78a4",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 374, existing model points — candidate band"
+    },
+    {
+      "id": "E-01-14",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [372],
+        "zLpsMm": [-182.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-native/slice-372.png",
+      "sha256": "7d6d9da1c985d69887f60715f8a5cd855126c507fac9a5777946bb3d94b2dc5f",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 372, no annotation — candidate band; the walkthrough's proposed limit"
+    },
+    {
+      "id": "E-01-23",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [372],
+        "zLpsMm": [-182.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-overlay/slice-372.png",
+      "sha256": "acd6e7f3d1a360c522ae92b10c4f98f271f8c7ee1a6a84c70511ca2082bf992e",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 372, existing model points — candidate band; the walkthrough's proposed limit"
+    },
+    {
+      "id": "E-01-15",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [370],
+        "zLpsMm": [-183.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-native/slice-370.png",
+      "sha256": "d440a477f78b6e1224cfe315d51e13389271d447fb086907d072bfa50cd127e7",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 370, no annotation — candidate band"
+    },
+    {
+      "id": "E-01-24",
+      "decision": "OD-01",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [370],
+        "zLpsMm": [-183.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/detail-overlay/slice-370.png",
+      "sha256": "65f9653602b378b9bb51db2719cf4733f7cc8e6758feaff931cfd54b2135434b",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 370, existing model points — candidate band"
+    },
+    {
+      "id": "E-01-25",
+      "decision": "OD-01",
+      "kind": "image set (one file per native slice)",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "sliceRange": [408, 366],
+        "zLpsMmRange": [-164.5, -185.5],
+        "fileName": "slice-<k>.png"
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/full-native/",
+      "fileCount": 13,
+      "sha256OfListing": "5d99dc142b412cc8d92a7e726ad528d45dfd1582ab22277774bc61ff5d78e542",
+      "sha256Note": "SHA-256 of the sorted '<sha256>  <path>' lines for this folder; per-file hashes are in sha256sums.txt",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Full field ×2, no annotation, for 13 key planes"
+    },
+    {
+      "id": "E-01-26",
+      "decision": "OD-01",
+      "kind": "image set (one file per native slice)",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "sliceRange": [408, 366],
+        "zLpsMmRange": [-164.5, -185.5],
+        "fileName": "slice-<k>.png"
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/full-overlay/",
+      "fileCount": 13,
+      "sha256OfListing": "3ed480b30e807772f637689f9af15a7f8bc808f886da8280f7adea08f2a23495",
+      "sha256Note": "SHA-256 of the sorted '<sha256>  <path>' lines for this folder; per-file hashes are in sha256sums.txt",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Full field ×2 with model points, for 13 key planes"
+    },
+    {
+      "id": "E-01-27",
+      "decision": "OD-01",
+      "kind": "JSON",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [411, 366],
+        "zLpsMm": [-163.0, -185.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/measurements.json",
+      "sha256": "190e918832124f931e4114e25a788359c946fec6611e50eddf4b858fab4bb27c",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Per-plane arithmetic: crossings, HU on the line between them, connected air regions at three thresholds"
+    },
+    {
+      "id": "E-01-28",
+      "decision": "OD-01",
+      "kind": "CSV",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [411, 366],
+        "zLpsMm": [-163.0, -185.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-01/measurements.csv",
+      "sha256": "46ca1b6872ddab2ba512e777a749b659901a724e1225216cdcd6d43cf9ea6226",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "The same as a table"
+    },
+    {
+      "id": "E-01-29",
+      "decision": "OD-01",
+      "kind": "module screenshot (isolated browser)",
+      "sourceIds": ["S-34", "S-13", "S-15"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": {
+        "slices": [408],
+        "zLpsMm": [-164.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-05/central-junction-1/app-01-worked-example-page.png",
+      "sha256": "e45abb1f474ebc92dade8bddb79f2ef052d92a6b704b42b2d5675be688fd841c",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Current learner task: Lesson 3 worked example at slice 408 with the entry note and the branch identities"
+    },
+    {
+      "id": "E-01-30",
+      "decision": "OD-01",
+      "kind": "module screenshot (isolated browser)",
+      "sourceIds": ["S-34", "S-18"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": {
+        "slices": [387],
+        "zLpsMm": [-175.0]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": {
+        "preset": "mirror",
+        "positionLps": [-11.5543, -155.3175, -164.4569],
+        "forwardLps": [-0.050505, -0.080611, -0.995465],
+        "referenceUpLps": [0, -1, 0],
+        "fovDeg": 80,
+        "rollDeg": 0
+      },
+      "localPath": "od-05/central-junction-1/app-02-parent-view-step-paired-view.png",
+      "sha256": "74fbc84d45cf48147c875bd92f7261f6d18f129978703d941a07435e40f8bfc4",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "The module's paired parent view at this division (model camera)"
+    },
+    {
+      "id": "E-02-01",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [360, 338],
+        "zLpsMm": [-188.5, -199.5]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/contact-sheet-native.png",
+      "sha256": "c2d210f793072e129f45ad13f6b4543414910f481928fe8eb7e28b8a2a2c961c",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "All 23 planes 360 → 338 in the lesson's crop, no annotation"
+    },
+    {
+      "id": "E-02-02",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-06"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [360, 338],
+        "zLpsMm": [-188.5, -199.5]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/contact-sheet-overlay.png",
+      "sha256": "e36ecb651707256d836bc1606ae925a22406aa68d1745b9cc420b6b0279ae257",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "The same planes with every source edge that crosses the crop"
+    },
+    {
+      "id": "E-02-03",
+      "decision": "OD-02",
+      "kind": "image set (one file per native slice)",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "sliceRange": [360, 338],
+        "zLpsMmRange": [-188.5, -199.5],
+        "fileName": "slice-<k>.png"
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-native/",
+      "fileCount": 23,
+      "sha256OfListing": "d502f447428fd15b7b3e3cb44cd04d08cb1b0c5f42799fe86cc5a8beeb93a633",
+      "sha256Note": "SHA-256 of the sorted '<sha256>  <path>' lines for this folder; per-file hashes are in sha256sums.txt",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Lesson crop ×8, no annotation"
+    },
+    {
+      "id": "E-02-04",
+      "decision": "OD-02",
+      "kind": "image set (one file per native slice)",
+      "sourceIds": ["S-01", "S-04", "S-06"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "sliceRange": [360, 338],
+        "zLpsMmRange": [-188.5, -199.5],
+        "fileName": "slice-<k>.png"
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-overlay/",
+      "fileCount": 23,
+      "sha256OfListing": "84f5664e4aa80665179cecd35d85b5070d4df65b758dd9e75e7e3936c7dd5de7",
+      "sha256Note": "SHA-256 of the sorted '<sha256>  <path>' lines for this folder; per-file hashes are in sha256sums.txt",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Lesson crop ×8 with existing model points"
+    },
+    {
+      "id": "E-02-05",
+      "decision": "OD-02",
+      "kind": "image set (one file per native slice)",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "sliceRange": [360, 338],
+        "zLpsMmRange": [-188.5, -199.5],
+        "fileName": "slice-<k>.png"
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/full-x1-native/",
+      "fileCount": 23,
+      "sha256OfListing": "a669ffe57e0031f630b289663e31d798c006fdeb0656da324bfc9d8656e7f263",
+      "sha256Note": "SHA-256 of the sorted '<sha256>  <path>' lines for this folder; per-file hashes are in sha256sums.txt",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Full field ×1, no annotation"
+    },
+    {
+      "id": "E-02-06",
+      "decision": "OD-02",
+      "kind": "image set (one file per native slice)",
+      "sourceIds": ["S-01", "S-04", "S-06"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "sliceRange": [360, 338],
+        "zLpsMmRange": [-188.5, -199.5],
+        "fileName": "slice-<k>.png"
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/full-x1-overlay/",
+      "fileCount": 23,
+      "sha256OfListing": "dbccfb3033def1ad15affb3bec053fdceb921de661fe92ca2c127b7bbcdcfd4a",
+      "sha256Note": "SHA-256 of the sorted '<sha256>  <path>' lines for this folder; per-file hashes are in sha256sums.txt",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Full field ×1 with model points and the crop rectangle"
+    },
+    {
+      "id": "E-02-07",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [356],
+        "zLpsMm": [-190.5]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-native/slice-356.png",
+      "sha256": "66621959258a8a98920dbbac7a8b47a95c51214c9b22ccb94c6b0b1820bdb95a",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 356, no annotation — above the lesson interval"
+    },
+    {
+      "id": "E-02-15",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-06"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [356],
+        "zLpsMm": [-190.5]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-overlay/slice-356.png",
+      "sha256": "17b07ca5bb22dda5a02b4413716d546f26fc4af754151030e60cf8da53266d41",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 356, existing model points — above the lesson interval"
+    },
+    {
+      "id": "E-02-08",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [352],
+        "zLpsMm": [-192.5]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-native/slice-352.png",
+      "sha256": "b2bfc2751f6a437594719dafeb9271f6e94445e0d691d49f176c8e608fbae99a",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 352, no annotation — Lesson 1 interval start"
+    },
+    {
+      "id": "E-02-16",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-06"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [352],
+        "zLpsMm": [-192.5]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-overlay/slice-352.png",
+      "sha256": "dc715fde5cb47d2c04a669f39a6e9762f68cd2aa1a635d0182d5f2851d03e08f",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 352, existing model points — Lesson 1 interval start"
+    },
+    {
+      "id": "E-02-09",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [351],
+        "zLpsMm": [-193.0]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-native/slice-351.png",
+      "sha256": "69b8470d56dae8ae24fdc66adfc64ea3a324f6a6b2dea50802e2d72e9599cbc1",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 351, no annotation — inside the interval"
+    },
+    {
+      "id": "E-02-17",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-06"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [351],
+        "zLpsMm": [-193.0]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-overlay/slice-351.png",
+      "sha256": "772278b469b6ab358ace5f69e7b026ef31a6f281a4cd731f3f8e48134460069a",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 351, existing model points — inside the interval"
+    },
+    {
+      "id": "E-02-10",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [350],
+        "zLpsMm": [-193.5]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-native/slice-350.png",
+      "sha256": "1993f5c3c022ec313b9f86af3be330164fe11dd58ec2fe9b7a6bb9e3c7b4651c",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 350, no annotation — first plane with one air region at −900 HU"
+    },
+    {
+      "id": "E-02-18",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-06"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [350],
+        "zLpsMm": [-193.5]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-overlay/slice-350.png",
+      "sha256": "9037eb743a4e276698e48a10b67fc22c6e1ce41226a71a98c4e711420a109570",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 350, existing model points — first plane with one air region at −900 HU"
+    },
+    {
+      "id": "E-02-11",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [349],
+        "zLpsMm": [-194.0]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-native/slice-349.png",
+      "sha256": "a481d588f58a7acf1a4af84041b854e2927b0bf9bf0e9a85d03c7f56d73ae17f",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 349, no annotation — first plane with one air region at −950 HU"
+    },
+    {
+      "id": "E-02-19",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-06"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [349],
+        "zLpsMm": [-194.0]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-overlay/slice-349.png",
+      "sha256": "91676eef3ce161cc6801d20d2f5429cff5cc8c8941c3f2a354978f6fc663af6d",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 349, existing model points — first plane with one air region at −950 HU"
+    },
+    {
+      "id": "E-02-12",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [348],
+        "zLpsMm": [-194.5]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-native/slice-348.png",
+      "sha256": "75057e281b6de3365cf190cd29f55e98105b7fbf34495b1ab44ce430af068152",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 348, no annotation — Lesson 1 response plane"
+    },
+    {
+      "id": "E-02-20",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-06"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [348],
+        "zLpsMm": [-194.5]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-overlay/slice-348.png",
+      "sha256": "3bcadcdcdb33da05cac57d107c8766836b60562a03338686bc0deeb8be73d510",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 348, existing model points — Lesson 1 response plane"
+    },
+    {
+      "id": "E-02-13",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [344],
+        "zLpsMm": [-196.5]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-native/slice-344.png",
+      "sha256": "4e519ec649a4efda5b68c8a3a82bde57bfb757b8fc7e74081a702f81c1761d7c",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 344, no annotation — exported parent point of junction-3"
+    },
+    {
+      "id": "E-02-21",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-06"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [344],
+        "zLpsMm": [-196.5]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-overlay/slice-344.png",
+      "sha256": "64eee4d3a5d6f404deaf8874e1399420dcdceb0cff95c4283897045a0718c4c4",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 344, existing model points — exported parent point of junction-3"
+    },
+    {
+      "id": "E-02-14",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [339],
+        "zLpsMm": [-199.0]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-native/slice-339.png",
+      "sha256": "756aeb9a8017b2241450379a8d42d300026c8e604679db39bcc8aad604b58709",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 339, no annotation — plane nearest graph node 3"
+    },
+    {
+      "id": "E-02-22",
+      "decision": "OD-02",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-06"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [339],
+        "zLpsMm": [-199.0]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/detail-overlay/slice-339.png",
+      "sha256": "57e8014aa74ffe5fd65bdd1fac2a177fa7ca5bb2ccc876961039ce691251a8e6",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Slice 339, existing model points — plane nearest graph node 3"
+    },
+    {
+      "id": "E-02-23",
+      "decision": "OD-02",
+      "kind": "image set (one file per native slice)",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "sliceRange": [356, 340],
+        "zLpsMmRange": [-190.5, -198.5],
+        "fileName": "slice-<k>.png"
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/full-native/",
+      "fileCount": 6,
+      "sha256OfListing": "6bcdad41b03e2db72dcf940aac468d83b18c7ae3cb1621fbf7d027a7ff2e2c37",
+      "sha256Note": "SHA-256 of the sorted '<sha256>  <path>' lines for this folder; per-file hashes are in sha256sums.txt",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Full field ×2, no annotation, six key planes"
+    },
+    {
+      "id": "E-02-24",
+      "decision": "OD-02",
+      "kind": "image set (one file per native slice)",
+      "sourceIds": ["S-01", "S-04", "S-06"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "sliceRange": [356, 340],
+        "zLpsMmRange": [-190.5, -198.5],
+        "fileName": "slice-<k>.png"
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/full-overlay/",
+      "fileCount": 6,
+      "sha256OfListing": "191c23db1d8d08e5b0f0419ba475f5dc05ea5d7254b4cc1958250b8e4cda1c66",
+      "sha256Note": "SHA-256 of the sorted '<sha256>  <path>' lines for this folder; per-file hashes are in sha256sums.txt",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Full field ×2 with model points, six key planes"
+    },
+    {
+      "id": "E-02-25",
+      "decision": "OD-02",
+      "kind": "JSON",
+      "sourceIds": ["S-01", "S-04", "S-06"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [360, 338],
+        "zLpsMm": [-188.5, -199.5]
+      },
+      "graph": {
+        "nodeId": 3,
+        "parentEdgeId": 2,
+        "daughterEdgeIds": [5, 496],
+        "otherEdgeIds": [20, 21],
+        "checkpointId": "junction-3"
+      },
+      "camera": null,
+      "localPath": "od-02/measurements.json",
+      "sha256": "38e3992cc3683d02fdcba561d09420a9835797b401a2cb9ac15c4bd3fdd26379",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Per-plane arithmetic: source edges crossing the crop, connected air regions, slice-to-slice tracking of the neighbouring region"
+    },
+    {
+      "id": "E-05-01",
+      "decision": "OD-05",
+      "kind": "JSON",
+      "sourceIds": ["S-07", "S-18", "S-19", "S-20", "S-25"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": null,
+      "camera": null,
+      "localPath": "od-05/camera.json",
+      "sha256": "e3cd1b2c4320d8278d6792ffe3605242854d1f2044d5630e14d2faa70b3bfddd",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Both examples: three frames, camera position/forward/up/basis, schematic and perspective projections, patient axes, candidate roll arithmetic"
+    },
+    {
+      "id": "E-05-02",
+      "decision": "OD-05",
+      "kind": "JSON",
+      "sourceIds": ["S-07"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": null,
+      "camera": null,
+      "localPath": "od-05/native-planes.json",
+      "sha256": "2dbc4dbcfe97af721979e1e66eb5399afc0eb68ee107b70af3c7775816fd873f",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Decision records and crop boxes for the two examples"
+    },
+    {
+      "id": "E-05-03",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [408],
+        "zLpsMm": [-164.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-05/central-junction-1/native-slice-408.png",
+      "sha256": "7fee2e60d5257cc337287e30ff7c2705692e48606bf7a50d151639d0a120f185",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Central fork, slice 408, no annotation (frame 1)"
+    },
+    {
+      "id": "E-05-06",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [408],
+        "zLpsMm": [-164.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-05/central-junction-1/overlay-slice-408.png",
+      "sha256": "bde73f6e064f16b66398a3943c86a6f9da0883674cd5f3d83564c4c1183110e7",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Central fork, slice 408, existing model points (frame 1)"
+    },
+    {
+      "id": "E-05-04",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [392],
+        "zLpsMm": [-172.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-05/central-junction-1/native-slice-392.png",
+      "sha256": "a1410c2342661e9de835ce22cda05481fb9b5aab36175633efc0c325473e4b8d",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Central fork, slice 392, no annotation (frame 1)"
+    },
+    {
+      "id": "E-05-07",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [392],
+        "zLpsMm": [-172.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-05/central-junction-1/overlay-slice-392.png",
+      "sha256": "30b9db1317c64d3607c171c3d009e7198659faf8f3bbf9cf7d86f4bb0d2ccf63",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Central fork, slice 392, existing model points (frame 1)"
+    },
+    {
+      "id": "E-05-05",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [387],
+        "zLpsMm": [-175.0]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-05/central-junction-1/native-slice-387.png",
+      "sha256": "86abc2fda6e7aed0c77d24a9db8ecfecaeea92b0ac58c53e8b93b452bce275c8",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Central fork, slice 387, no annotation (frame 1)"
+    },
+    {
+      "id": "E-05-08",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [387],
+        "zLpsMm": [-175.0]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-05/central-junction-1/overlay-slice-387.png",
+      "sha256": "bda8dd54f7c109238b2774ba5e3febf0c76bbff799676335c132a57cf66dbda8",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Central fork, slice 387, existing model points (frame 1)"
+    },
+    {
+      "id": "E-05-09",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-07", "S-21"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [387],
+        "zLpsMm": [-175.0]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-05/central-junction-1/display-standard-overlay-slice-387.png",
+      "sha256": "5e9d57a0b68d566c8f6be4493fa33c0a986762dd0534e95554c2f1e29bd3a676",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Central fork, frame 2 = lesson default (standard axial)"
+    },
+    {
+      "id": "E-05-10",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-07", "S-21"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [387],
+        "zLpsMm": [-175.0]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-05/central-junction-1/display-mirror-overlay-slice-387.png",
+      "sha256": "0e5c8d6a0eb875acd4e4e141a703fe282418cd8bbd6607204c50e6c845f7c1b2",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Central fork, frame 2 = regional preset (left–right reflection)"
+    },
+    {
+      "id": "E-05-11",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-21"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [387],
+        "zLpsMm": [-175.0]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-05/central-junction-1/display-standard-native-slice-387.png",
+      "sha256": "98d3e6eef3ffda31b99e896ba4df4ec5f6126c92f1089a87109f66d3519b7ffb",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "As E-05-09 without model points"
+    },
+    {
+      "id": "E-05-12",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-21"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [387],
+        "zLpsMm": [-175.0]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-05/central-junction-1/display-mirror-native-slice-387.png",
+      "sha256": "018c6cd534b8f4fdd99da6d0807c72e0df1bc0181bf5a1e5c14e4f33a2878009",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "As E-05-10 without model points"
+    },
+    {
+      "id": "E-05-13",
+      "decision": "OD-05",
+      "kind": "module screenshot (isolated browser)",
+      "sourceIds": ["S-34", "S-18"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": {
+        "slices": [387],
+        "zLpsMm": [-175.0]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": {
+        "preset": "mirror",
+        "positionLps": [-11.5543, -155.3175, -164.4569],
+        "forwardLps": [-0.050505, -0.080611, -0.995465],
+        "referenceUpLps": [0, -1, 0],
+        "fovDeg": 80,
+        "rollDeg": 0
+      },
+      "localPath": "od-05/central-junction-1/app-02-parent-view-step-paired-view.png",
+      "sha256": "74fbc84d45cf48147c875bd92f7261f6d18f129978703d941a07435e40f8bfc4",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Central fork, frame 3: the module's paired view with its A/B letters"
+    },
+    {
+      "id": "E-05-14",
+      "decision": "OD-05",
+      "kind": "module screenshot (isolated browser)",
+      "sourceIds": ["S-34", "S-19"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": {
+        "preset": "mirror",
+        "positionLps": [-11.5543, -155.3175, -164.4569],
+        "forwardLps": [-0.050505, -0.080611, -0.995465],
+        "referenceUpLps": [0, -1, 0],
+        "fovDeg": 80,
+        "rollDeg": 0
+      },
+      "localPath": "od-05/central-junction-1/app-02-parent-view-step-parent-map.png",
+      "sha256": "48715239087d9fe3cdb9db907d167e045b6b80dc82928ed234985015a74f97e6",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Central fork: the module's direction schematic"
+    },
+    {
+      "id": "E-05-15",
+      "decision": "OD-05",
+      "kind": "module screenshot (isolated browser)",
+      "sourceIds": ["S-34"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": {
+        "slices": [387],
+        "zLpsMm": [-175.0]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": {
+        "preset": "mirror",
+        "positionLps": [-11.5543, -155.3175, -164.4569],
+        "forwardLps": [-0.050505, -0.080611, -0.995465],
+        "referenceUpLps": [0, -1, 0],
+        "fovDeg": 80,
+        "rollDeg": 0
+      },
+      "localPath": "od-05/central-junction-1/app-02-parent-view-step-page.png",
+      "sha256": "b72ac82ecad049bcce46afcab18cc25c225392cdf8ba425aedab1529ecfa5a1b",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Central fork: whole page at the parent-view step"
+    },
+    {
+      "id": "E-05-16",
+      "decision": "OD-05",
+      "kind": "JSON",
+      "sourceIds": ["S-34"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": {
+        "preset": "mirror",
+        "positionLps": [-11.5543, -155.3175, -164.4569],
+        "forwardLps": [-0.050505, -0.080611, -0.995465],
+        "referenceUpLps": [0, -1, 0],
+        "fovDeg": 80,
+        "rollDeg": 0
+      },
+      "localPath": "od-05/central-junction-1/app-02-parent-view-step-facts.json",
+      "sha256": "267ca3095b87bfc77dc996c733bb1c1a950053d933623c8864cd4eeb2b012069",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Central fork: pose attribute, captions and letters read from the page"
+    },
+    {
+      "id": "E-05-17",
+      "decision": "OD-05",
+      "kind": "module screenshot (isolated browser)",
+      "sourceIds": ["S-34", "S-18"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": {
+        "slices": [408],
+        "zLpsMm": [-164.5]
+      },
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-05/central-junction-1/app-01-worked-example-paired-view.png",
+      "sha256": "de7bc0886e4a9f714dd8eea41577ecaa24d55109240b52972006616dd6b9c265",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Central fork: paired view during the worked example at slice 408 (before any response)"
+    },
+    {
+      "id": "E-05-18",
+      "decision": "OD-05",
+      "kind": "JSON",
+      "sourceIds": ["S-34"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": {
+        "nodeId": 1,
+        "parentEdgeId": 0,
+        "daughterEdgeIds": [1, 2],
+        "checkpointId": "junction-1"
+      },
+      "camera": null,
+      "localPath": "od-05/central-junction-1/app-01-worked-example-facts.json",
+      "sha256": "519a0ebe24b972aff3c42d9cb9f49d43730cde9923d17ca12ab29068eb1b7d47",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Central fork: page facts during the worked example"
+    },
+    {
+      "id": "E-05-20",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [428, 400],
+        "zLpsMm": [-154.5, -168.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/contact-sheet-native.png",
+      "sha256": "374ab659c19947b0a09fa24d151d0b43011a6583c6e37b0c2cf29bd9820ee714",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "RB1 region, planes 428 → 400, no annotation"
+    },
+    {
+      "id": "E-05-21",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [428, 400],
+        "zLpsMm": [-154.5, -168.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/contact-sheet-overlay.png",
+      "sha256": "5598aefd1eb5fdefd0934b22fe3e24c36373594e3d87d736ebade2580804bb4b",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "RB1 region with existing model points"
+    },
+    {
+      "id": "E-05-22",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [401],
+        "zLpsMm": [-168.0]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/native-slice-401.png",
+      "sha256": "faef45b1ac8e6dd7437ed3468b173dab93884eb811c2f1a196158772a56dee41",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 401, no annotation (frame 1)"
+    },
+    {
+      "id": "E-05-26",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [401],
+        "zLpsMm": [-168.0]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/overlay-slice-401.png",
+      "sha256": "0fa99329e0c756a64c1e2e0c059aed747256a7f0a7a0daad8bd8a0e359f0ff07",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 401, existing model points (frame 1)"
+    },
+    {
+      "id": "E-05-23",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [416],
+        "zLpsMm": [-160.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/native-slice-416.png",
+      "sha256": "106a9836b31873925bbc3031e0592413a8c15d8d616e984b3db2311d16413e9f",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 416, no annotation (frame 1)"
+    },
+    {
+      "id": "E-05-27",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [416],
+        "zLpsMm": [-160.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/overlay-slice-416.png",
+      "sha256": "97174be056a1d5074770ae7206645ef3789a2da537ced48d87f927f013cc8c21",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 416, existing model points (frame 1)"
+    },
+    {
+      "id": "E-05-24",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [422],
+        "zLpsMm": [-157.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/native-slice-422.png",
+      "sha256": "4c64060a3332eeea48bb9a3b20d9d1254bfbc69a25b174aeb7a1604c3d3a1cfd",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 422, no annotation (frame 1)"
+    },
+    {
+      "id": "E-05-28",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [422],
+        "zLpsMm": [-157.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/overlay-slice-422.png",
+      "sha256": "393e6dd633b25c6968c05c84903c05e7386b132871f8a62a0ad574658e43512f",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 422, existing model points (frame 1)"
+    },
+    {
+      "id": "E-05-25",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [424],
+        "zLpsMm": [-156.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/native-slice-424.png",
+      "sha256": "abb88286b41e2084c02db24b0a856659c0f8f146150667fd9ca05d5bf6db597f",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 424, no annotation (frame 1)"
+    },
+    {
+      "id": "E-05-29",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-04", "S-07"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [424],
+        "zLpsMm": [-156.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/overlay-slice-424.png",
+      "sha256": "c18b9228011ae4b6e09fd155475b9e78649e90907a08c42d5c71cd7c765c46ca",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 424, existing model points (frame 1)"
+    },
+    {
+      "id": "E-05-30",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-07", "S-21"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [422],
+        "zLpsMm": [-157.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/display-standard-overlay-slice-422.png",
+      "sha256": "1d9d2da7e79bdd58120f31dd078d291af74bb1c0de0908e8da810da3f7c8a983",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 422, frame 2 = lesson default (standard axial)"
+    },
+    {
+      "id": "E-05-31",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-21"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [422],
+        "zLpsMm": [-157.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/display-standard-native-slice-422.png",
+      "sha256": "bb7e1ac5fd8bb98a0675a0aebbe4c0472dc6fad5c8c2a9dfdba524275824ffc6",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 422, frame 2 = lesson default (standard axial), no model points"
+    },
+    {
+      "id": "E-05-32",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-07", "S-21"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [424],
+        "zLpsMm": [-156.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/display-standard-overlay-slice-424.png",
+      "sha256": "61a02f1e84751ab4aaa13f3fdcfe699fd22836d76e58f8c6470f8700b7e08673",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 424, frame 2 = lesson default (standard axial)"
+    },
+    {
+      "id": "E-05-33",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-21"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [424],
+        "zLpsMm": [-156.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/display-standard-native-slice-424.png",
+      "sha256": "fccfd7d167268b49bcc8cf851abe5cab6e20fcd03b7c025ec45377b71bbebc02",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 424, frame 2 = lesson default (standard axial), no model points"
+    },
+    {
+      "id": "E-05-34",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-07", "S-21"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [422],
+        "zLpsMm": [-157.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/display-rul-overlay-slice-422.png",
+      "sha256": "7f2ed40ad9972091391987a8e878bf97a5f791388904c45fe1e29b68563ebb39",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 422, frame 2 = regional preset (90° counterclockwise)"
+    },
+    {
+      "id": "E-05-35",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-21"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [422],
+        "zLpsMm": [-157.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/display-rul-native-slice-422.png",
+      "sha256": "1d35385b36b20c992238357e47378a8a55b6190246aad0624777b1dda4600022",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 422, frame 2 = regional preset (90° counterclockwise), no model points"
+    },
+    {
+      "id": "E-05-36",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-07", "S-21"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [424],
+        "zLpsMm": [-156.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/display-rul-overlay-slice-424.png",
+      "sha256": "f8ed3398c782b85589df7206d1c7ae539586f1ffca3ddb87a9ea37126ffd314e",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 424, frame 2 = regional preset (90° counterclockwise)"
+    },
+    {
+      "id": "E-05-37",
+      "decision": "OD-05",
+      "kind": "image",
+      "sourceIds": ["S-01", "S-21"],
+      "sourceDataset": "native-v1 teaching CT (S-01)",
+      "sourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+      "nativeLocator": {
+        "slices": [424],
+        "zLpsMm": [-156.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/display-rul-native-slice-424.png",
+      "sha256": "ef7963fbf983249bb3fc990e82d6b773e37d2ae87a38375e9aa49467a037becf",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, slice 424, frame 2 = regional preset (90° counterclockwise), no model points"
+    },
+    {
+      "id": "E-05-38",
+      "decision": "OD-05",
+      "kind": "module screenshot (isolated browser)",
+      "sourceIds": ["S-34", "S-18"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": {
+        "slices": [422],
+        "zLpsMm": [-157.5]
+      },
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": {
+        "preset": "rul",
+        "positionLps": [-48.155, -160.7597, -168.1703],
+        "forwardLps": [-0.316663, -0.083487, 0.944857],
+        "referenceUpLps": [1, 0, 0],
+        "fovDeg": 80,
+        "rollDeg": 0
+      },
+      "localPath": "od-05/subsegmental-junction-14/app-02-parent-view-step-paired-view.png",
+      "sha256": "f416e9c58b0e3be32356a38f4920809565e8420731ef3ca8bae8220111f2dc31",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork, frame 3: the module's paired view with its A/B letters"
+    },
+    {
+      "id": "E-05-39",
+      "decision": "OD-05",
+      "kind": "module screenshot (isolated browser)",
+      "sourceIds": ["S-34", "S-19"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": {
+        "preset": "rul",
+        "positionLps": [-48.155, -160.7597, -168.1703],
+        "forwardLps": [-0.316663, -0.083487, 0.944857],
+        "referenceUpLps": [1, 0, 0],
+        "fovDeg": 80,
+        "rollDeg": 0
+      },
+      "localPath": "od-05/subsegmental-junction-14/app-02-parent-view-step-parent-map.png",
+      "sha256": "610ded650f993fe5d7d36b958acffabb8e4de0992cee981830dfbd0e6f47fdb7",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork: the module's direction schematic"
+    },
+    {
+      "id": "E-05-40",
+      "decision": "OD-05",
+      "kind": "module screenshot (isolated browser)",
+      "sourceIds": ["S-34"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": {
+        "preset": "rul",
+        "positionLps": [-48.155, -160.7597, -168.1703],
+        "forwardLps": [-0.316663, -0.083487, 0.944857],
+        "referenceUpLps": [1, 0, 0],
+        "fovDeg": 80,
+        "rollDeg": 0
+      },
+      "localPath": "od-05/subsegmental-junction-14/app-02-parent-view-step-page.png",
+      "sha256": "408a6d0996069c5098196edebcac6482fdd2740e6a40159ab5c2a10a710a54e9",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork: whole page at the parent-view step"
+    },
+    {
+      "id": "E-05-41",
+      "decision": "OD-05",
+      "kind": "JSON",
+      "sourceIds": ["S-34"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": {
+        "preset": "rul",
+        "positionLps": [-48.155, -160.7597, -168.1703],
+        "forwardLps": [-0.316663, -0.083487, 0.944857],
+        "referenceUpLps": [1, 0, 0],
+        "fovDeg": 80,
+        "rollDeg": 0
+      },
+      "localPath": "od-05/subsegmental-junction-14/app-02-parent-view-step-facts.json",
+      "sha256": "1e2546c091bb809508b01419c6822d569396bb1e2009f0d8cb704ab7b882795f",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork: pose attribute, captions and letters read from the page"
+    },
+    {
+      "id": "E-05-42",
+      "decision": "OD-05",
+      "kind": "module screenshot (isolated browser)",
+      "sourceIds": ["S-34"],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": {
+        "nodeId": 14,
+        "parentEdgeId": 13,
+        "daughterEdgeIds": [28, 29],
+        "checkpointId": "junction-14"
+      },
+      "camera": null,
+      "localPath": "od-05/subsegmental-junction-14/app-01-worked-example-page.png",
+      "sha256": "6d72a6b98f1229862bb5683411faf158ceefadcc0750a14be296fafbeb83bd6b",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Subsegmental fork: Lesson 4 worked example page (identities stated before marking)"
+    },
+    {
+      "id": "E-99-01",
+      "decision": "all",
+      "kind": "script",
+      "sourceIds": [],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": null,
+      "camera": null,
+      "localPath": "scripts/build_native_evidence.py",
+      "sha256": "9415c0b61895a250b119eeb751f153548108eeff41d1c9dc9b6380e02aa9089a",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Script that produced the evidence (read-only on every source)"
+    },
+    {
+      "id": "E-99-02",
+      "decision": "all",
+      "kind": "script",
+      "sourceIds": [],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": null,
+      "camera": null,
+      "localPath": "scripts/check_exporter_rule.py",
+      "sha256": "a3de86d644ebb236aaaf88d52ce60380cda6547d9590504e27144812548e1af7",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Script that produced the evidence (read-only on every source)"
+    },
+    {
+      "id": "E-99-03",
+      "decision": "all",
+      "kind": "script",
+      "sourceIds": [],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": null,
+      "camera": null,
+      "localPath": "scripts/module-harness.ts",
+      "sha256": "812f4babb5e8c7daa7f53f3ca946dd120fda1a84c2731cebf0b32b5543f7f0ab",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Script that produced the evidence (read-only on every source)"
+    },
+    {
+      "id": "E-99-04",
+      "decision": "all",
+      "kind": "script",
+      "sourceIds": [],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": null,
+      "camera": null,
+      "localPath": "scripts/capture-parent-view.spec.ts",
+      "sha256": "b0ccccdbbb113fc0245da0e3f99878d5ec7fa3663313cf4f780ff15c094bfb6e",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Script that produced the evidence (read-only on every source)"
+    },
+    {
+      "id": "E-99-05",
+      "decision": "all",
+      "kind": "script",
+      "sourceIds": [],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": null,
+      "camera": null,
+      "localPath": "scripts/build_source_index.py",
+      "sha256": "e44a4ddae17f5c2e094b07065e7403cdbdec1fe374d521d0f576a826f75cbda5",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Script that produced the evidence (read-only on every source)"
+    },
+    {
+      "id": "E-99-06",
+      "decision": "all",
+      "kind": "script",
+      "sourceIds": [],
+      "sourceDataset": null,
+      "sourceSha256": null,
+      "nativeLocator": null,
+      "graph": null,
+      "camera": null,
+      "localPath": "scripts/validate_packet.py",
+      "sha256": "d80dff589fd4dd432a97127d148af91881d2172cc7e69c561ef05b31432faa5c",
+      "privacy": "local only — not in Git, not uploaded",
+      "missingEvidence": false,
+      "purpose": "Script that produced the evidence (read-only on every source)"
+    }
+  ],
+  "missingEvidence": [
+    {
+      "id": "M-01",
+      "decisions": ["OD-01", "OD-02", "OD-03", "OD-05", "OD-06"],
+      "missing": "Any attributable human annotation or review: no reviewed plane, contour, landmark, opening position, caption or name exists for this CT.",
+      "expectedAt": "exercise.review (faculty-reviewed record: reviewer, date, geometryVersion) and the BBT-02 packet's decision table",
+      "cannotConcludeWithoutIt": "Which plane shows the carina; what the LMSB lucency is; whether a/b names are right for this patient; whether opening letters sit on the real openings; any lumen verdict."
+    },
+    {
+      "id": "M-02",
+      "decisions": ["OD-04", "OD-03"],
+      "missing": "The textbook's figures were not inspected; only the text layer was read. The PDF is outside Local-Data and outside the local-authoring map.",
+      "expectedAt": "/Users/russellmiller/Projects/textbooks/Interventional Pulmonology/bronchial branch tracing.pdf",
+      "cannotConcludeWithoutIt": "Whether the module's examples match the book's figures; a four-pattern figure for the course reference."
+    },
+    {
+      "id": "M-03",
+      "decisions": ["OD-01", "OD-02"],
+      "missing": "Coronal and sagittal reformats of the two regions were not prepared.",
+      "expectedAt": "would be derived from S-01",
+      "cannotConcludeWithoutIt": "Nothing essential; offered only if the owner wants them to choose planes."
+    },
+    {
+      "id": "M-04",
+      "decisions": ["OD-03"],
+      "missing": "The source label workbook labels_cleaned_names.xlsx was not opened; its derived centerline_labels.json was used.",
+      "expectedAt": "Interventional-Pulm-Local-Data/raw-assets/anatomy/new_anatomy_module/",
+      "cannotConcludeWithoutIt": "Whether the workbook holds finer names than the derived file."
+    },
+    {
+      "id": "M-05",
+      "decisions": ["OD-05"],
+      "missing": "No recorded bronchoscopy of this patient and no reviewed ostium map.",
+      "expectedAt": "does not exist",
+      "cannotConcludeWithoutIt": "Whether the modelled view matches what a scope would show at each fork."
+    },
+    {
+      "id": "M-06",
+      "decisions": ["all"],
+      "missing": "No human learner or faculty observation. The walkthrough was an AI persona.",
+      "expectedAt": "owner's personal review (the next phase)",
+      "cannotConcludeWithoutIt": "Any claim about how real first-year fellows read these planes."
+    }
+  ]
+}
