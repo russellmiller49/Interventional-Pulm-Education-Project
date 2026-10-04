@@ -9,6 +9,7 @@ import { labMetricLabels, labSnapshot, type LabSession } from '../../engine/lear
 import { holdStatus } from '../../engine/learningMeasurements'
 import { plateauAcquisition } from '../../content/plateauAcquisition'
 import { PATIENT_REPORT_METRICS, patientReportAvailability } from '../../content/patientReport'
+import { deliveredVolumeStepNote, inspiratoryTimeStepNote } from '../../content/deliveredVolume'
 import type { VentilationAction, VentilatorDeviceId, WaveformSample } from '../../engine/types'
 import { BedsidePanel } from '../BedsidePanel'
 import { MechanicalVentilatorConsole } from '../MechanicalVentilatorConsole'
@@ -32,6 +33,7 @@ export function VentilationTaskWorkbench({
   lockedReason,
   readOnly = false,
   transportOnly = false,
+  transport = true,
 }: {
   session: LabSession
   presentation: VentilationTaskPresentation
@@ -45,6 +47,11 @@ export function VentilationTaskWorkbench({
   lockedReason?: string
   readOnly?: boolean
   transportOnly?: boolean
+  /**
+   * False when the step's own experiment panel carries Run, Pause, one breath and speed. Two Run
+   * buttons for one patient read as two clocks.
+   */
+  transport?: boolean
 }) {
   const state = session.simulation
   const profile = getVentilatorDeviceProfile(session.device)
@@ -68,6 +75,8 @@ export function VentilationTaskWorkbench({
   const acquisition = plateauAcquisition(state, { requireAcquisition: integration })
   const withholdUnacquiredPlateau = integration && !acquisition.supportsMechanicsClaim
   const report = patientReportAvailability(state)
+  const volumeStepNote = deliveredVolumeStepNote(state)
+  const inspiratoryTimeNote = inspiratoryTimeStepNote(state)
   const showPatient = presentation.patient === 'bedside'
   const bedsideActionIds = [
     ...new Set([
@@ -117,40 +126,43 @@ export function VentilationTaskWorkbench({
 
   return (
     <div className={styles.workbench} data-task-workbench data-session-time={state.simulationTime}>
-      <div className={styles.tools} data-ventilation-transport>
-        <strong>Playback / inspection</strong>
-        <button
-          className={controls.toolButton}
-          type="button"
-          disabled={readOnly}
-          aria-pressed={!state.paused}
-          data-paused={state.paused}
-          onClick={() => engine({ type: 'SET_PAUSED', paused: !state.paused })}
-        >
-          {state.paused ? 'Run' : 'Pause'}
-        </button>
-        <button
-          className={controls.toolButton}
-          type="button"
-          disabled={readOnly}
-          onClick={() => engine({ type: 'STEP_BREATH' })}
-        >
-          Advance one breath
-        </button>
-        <select
-          className={controls.select}
-          aria-label="Simulation speed"
-          value={state.speed}
-          disabled={readOnly}
-          onChange={(e) => engine({ type: 'SET_SPEED', speed: Number(e.target.value) as 1 | 5 })}
-        >
-          <option value={1}>1× time</option>
-          <option value={5}>5× time</option>
-        </select>
-        <span className={styles.note} aria-live="off">
-          {state.simulationTime.toFixed(1)} s simulated · {state.paused ? 'Paused' : 'Live patient'}
-        </span>
-      </div>
+      {transport ? (
+        <div className={styles.tools} data-ventilation-transport>
+          <strong>Playback / inspection</strong>
+          <button
+            className={controls.toolButton}
+            type="button"
+            disabled={readOnly}
+            aria-pressed={!state.paused}
+            data-paused={state.paused}
+            onClick={() => engine({ type: 'SET_PAUSED', paused: !state.paused, origin: 'learner' })}
+          >
+            {state.paused ? 'Run' : 'Pause'}
+          </button>
+          <button
+            className={controls.toolButton}
+            type="button"
+            disabled={readOnly}
+            onClick={() => engine({ type: 'STEP_BREATH' })}
+          >
+            Advance one breath
+          </button>
+          <select
+            className={controls.select}
+            aria-label="Simulation speed"
+            value={state.speed}
+            disabled={readOnly}
+            onChange={(e) => engine({ type: 'SET_SPEED', speed: Number(e.target.value) as 1 | 5 })}
+          >
+            <option value={1}>1× time</option>
+            <option value={5}>5× time</option>
+          </select>
+          <span className={styles.note} aria-live="off">
+            {state.simulationTime.toFixed(1)} s simulated ·{' '}
+            {state.paused ? 'Paused' : 'Live patient'}
+          </span>
+        </div>
+      ) : null}
       {transportOnly ? (
         <p className={styles.note}>
           Run and Step advance the live patient. Reading a captured reference does not change its
@@ -163,31 +175,117 @@ export function VentilationTaskWorkbench({
               {lockedReason}
             </p>
           ) : null}
-          {presentation.patient === 'protection' ? (
-            <section className={styles.block} data-pbw-context>
-              <h3>Patient context · authored PBW {definition.predictedBodyWeightKg} kg</h3>
-              {state.measurements.exhaledVtSource === 'trace' ? (
-                <p>
-                  Delivered VT {state.measurements.exhaledVtMl.toFixed(0)} mL /{' '}
-                  {definition.predictedBodyWeightKg} kg ={' '}
-                  {(state.measurements.exhaledVtMl / definition.predictedBodyWeightKg).toFixed(1)}{' '}
-                  mL/kg PBW.
-                </p>
-              ) : (
-                <p>Delivered VT: awaiting a completed breath on the trace.</p>
-              )}
-              <p className={styles.note}>
-                The case supplies PBW; a height input is not supplied. Verify height and the
-                applicable PBW reference at the bedside. Assess effort, gas exchange, and an
-                acquired interpretable pressure together.
-              </p>
-            </section>
-          ) : null}
-          {showPatient ? (
-            <BedsidePanel state={state} definition={definition} compact requireAssessment />
-          ) : null}
           <div className={styles.experiment} data-native-view={nativeView || undefined}>
             <div className={styles.signals}>
+              <section className={styles.block} data-live-readings>
+                <h3>Readings to watch</h3>
+                <p className={styles.note} data-controlled-inputs>
+                  Selected {profile.controlLabels.peepCmH2O ?? 'PEEP'}{' '}
+                  {state.ventilator.settings.peepCmH2O} cmH₂O ·{' '}
+                  {profile.controlLabels.oxygenPercent ?? 'Oxygen'}{' '}
+                  {state.ventilator.settings.oxygenPercent}%
+                  {state.ventilator.settings.mode === 'volume-ac'
+                    ? ` · ${profile.controlLabels.vtMl ?? 'VT'} ${state.ventilator.settings.vtMl} mL · ${profile.controlLabels.peakFlowLMin ?? 'Flow'} ${state.ventilator.settings.peakFlowLMin} L/min`
+                    : state.ventilator.settings.mode === 'pressure-ac'
+                      ? ` · Pressure above PEEP ${state.ventilator.settings.deltaPControlCmH2O} cmH₂O · Inspiratory time ${state.ventilator.settings.inspiratoryTimeSeconds} s`
+                      : ` · Pressure support above PEEP ${state.ventilator.settings.pressureSupportCmH2O} cmH₂O`}
+                </p>
+                <dl className={styles.readings} data-reading-group="ventilator">
+                  {ventilatorMetrics.map((metric) => (
+                    <div key={metric} data-metric={metric}>
+                      <dt>
+                        {labMetricLabels[metric].label}
+                        {metric === 'plateau'
+                          ? ` · ${acquisition.label}`
+                          : metric === 'intrinsicPeep'
+                            ? ' · model estimate'
+                            : metric === 'ti' && inspiratoryTimeNote
+                              ? ' · calculated'
+                              : ''}
+                      </dt>
+                      <dd>
+                        {/*
+                         * The plateau row prints the projection's own value, so the number and
+                         * the "· acquired hold" / "· estimate from the trace" label beside it
+                         * always describe the same thing. `labSnapshot` keeps its own
+                         * lab-side hold list for the evidence table; letting the two reach this
+                         * row independently is how a label and a value came apart here.
+                         */}
+                        {metric === 'plateau' && withholdUnacquiredPlateau
+                          ? 'Acquire a current inspiratory hold'
+                          : metric === 'plateau'
+                            ? `${(acquisition.valueCmH2O ?? acquisition.estimateCmH2O).toFixed(labMetricLabels.plateau.digits)} ${labMetricLabels.plateau.unit}`
+                            : `${snapshot.values[metric].toFixed(labMetricLabels[metric].digits)} ${labMetricLabels[metric].unit}`}
+                        {before &&
+                        !(
+                          integration &&
+                          metric === 'plateau' &&
+                          before.plateauSource !== 'captured'
+                        ) ? (
+                          <small>
+                            Baseline {before.values[metric].toFixed(labMetricLabels[metric].digits)}{' '}
+                            {labMetricLabels[metric].unit}
+                          </small>
+                        ) : null}
+                        {metric === 'volume' && volumeStepNote ? (
+                          <small data-volume-step-note>{volumeStepNote}</small>
+                        ) : null}
+                        {metric === 'ti' && inspiratoryTimeNote ? (
+                          <small data-inspiratory-time-step-note>{inspiratoryTimeNote}</small>
+                        ) : null}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                {reportMetrics.length > 0 ? (
+                  <section data-reading-group="patient-report" data-report={report.availability}>
+                    <h4>{report.heading}</h4>
+                    <p className={styles.note}>{report.note}</p>
+                    <dl className={styles.readings}>
+                      {reportMetrics.map((metric) => (
+                        <div key={metric} data-metric={metric}>
+                          <dt>{labMetricLabels[metric].label}</dt>
+                          <dd>
+                            {snapshot.values[metric].toFixed(labMetricLabels[metric].digits)}{' '}
+                            {labMetricLabels[metric].unit}
+                            <small>{report.suffix}</small>
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </section>
+                ) : null}
+                {watch.includes('plateau') ? (
+                  <p className={styles.note} data-plateau-acquisition={acquisition.status}>
+                    {acquisition.detail}
+                  </p>
+                ) : null}
+              </section>
+              {presentation.patient === 'protection' ? (
+                <section className={styles.block} data-pbw-context>
+                  <h3>Patient context · authored PBW {definition.predictedBodyWeightKg} kg</h3>
+                  {state.measurements.exhaledVtSource === 'trace' ? (
+                    <p>
+                      Delivered VT {state.measurements.exhaledVtMl.toFixed(0)} mL /{' '}
+                      {definition.predictedBodyWeightKg} kg ={' '}
+                      {(state.measurements.exhaledVtMl / definition.predictedBodyWeightKg).toFixed(
+                        1,
+                      )}{' '}
+                      mL/kg PBW.
+                    </p>
+                  ) : (
+                    <p>Delivered VT: awaiting a completed breath on the trace.</p>
+                  )}
+                  <p className={styles.note}>
+                    The case supplies PBW; a height input is not supplied. Verify height and the
+                    applicable PBW reference at the bedside. Assess effort, gas exchange, and an
+                    acquired interpretable pressure together.
+                  </p>
+                </section>
+              ) : null}
+              {showPatient ? (
+                <BedsidePanel state={state} definition={definition} compact requireAssessment />
+              ) : null}
               {!nativeView &&
               !reference &&
               !comparison &&
@@ -222,82 +320,6 @@ export function VentilationTaskWorkbench({
                   />
                 </>
               ) : null}
-              <section className={styles.block} data-live-readings>
-                <h3>Readings to watch</h3>
-                <p className={styles.note} data-controlled-inputs>
-                  Selected {profile.controlLabels.peepCmH2O ?? 'PEEP'}{' '}
-                  {state.ventilator.settings.peepCmH2O} cmH₂O ·{' '}
-                  {profile.controlLabels.oxygenPercent ?? 'Oxygen'}{' '}
-                  {state.ventilator.settings.oxygenPercent}%
-                  {state.ventilator.settings.mode === 'volume-ac'
-                    ? ` · ${profile.controlLabels.vtMl ?? 'VT'} ${state.ventilator.settings.vtMl} mL · ${profile.controlLabels.peakFlowLMin ?? 'Flow'} ${state.ventilator.settings.peakFlowLMin} L/min`
-                    : state.ventilator.settings.mode === 'pressure-ac'
-                      ? ` · Pressure above PEEP ${state.ventilator.settings.deltaPControlCmH2O} cmH₂O · Inspiratory time ${state.ventilator.settings.inspiratoryTimeSeconds} s`
-                      : ` · Pressure support above PEEP ${state.ventilator.settings.pressureSupportCmH2O} cmH₂O`}
-                </p>
-                <dl className={styles.readings} data-reading-group="ventilator">
-                  {ventilatorMetrics.map((metric) => (
-                    <div key={metric} data-metric={metric}>
-                      <dt>
-                        {labMetricLabels[metric].label}
-                        {metric === 'plateau'
-                          ? ` · ${acquisition.label}`
-                          : metric === 'intrinsicPeep'
-                            ? ' · model estimate'
-                            : ''}
-                      </dt>
-                      <dd>
-                        {/*
-                         * The plateau row prints the projection's own value, so the number and
-                         * the "· acquired hold" / "· estimate from the trace" label beside it
-                         * always describe the same thing. `labSnapshot` keeps its own
-                         * lab-side hold list for the evidence table; letting the two reach this
-                         * row independently is how a label and a value came apart here.
-                         */}
-                        {metric === 'plateau' && withholdUnacquiredPlateau
-                          ? 'Acquire a current inspiratory hold'
-                          : metric === 'plateau'
-                            ? `${(acquisition.valueCmH2O ?? acquisition.estimateCmH2O).toFixed(labMetricLabels.plateau.digits)} ${labMetricLabels.plateau.unit}`
-                            : `${snapshot.values[metric].toFixed(labMetricLabels[metric].digits)} ${labMetricLabels[metric].unit}`}
-                        {before &&
-                        !(
-                          integration &&
-                          metric === 'plateau' &&
-                          before.plateauSource !== 'captured'
-                        ) ? (
-                          <small>
-                            Baseline {before.values[metric].toFixed(labMetricLabels[metric].digits)}{' '}
-                            {labMetricLabels[metric].unit}
-                          </small>
-                        ) : null}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-                {reportMetrics.length > 0 ? (
-                  <section data-reading-group="patient-report" data-report={report.availability}>
-                    <h4>{report.heading}</h4>
-                    <p className={styles.note}>{report.note}</p>
-                    <dl className={styles.readings}>
-                      {reportMetrics.map((metric) => (
-                        <div key={metric} data-metric={metric}>
-                          <dt>{labMetricLabels[metric].label}</dt>
-                          <dd>
-                            {snapshot.values[metric].toFixed(labMetricLabels[metric].digits)}{' '}
-                            {labMetricLabels[metric].unit}
-                            <small>{report.suffix}</small>
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </section>
-                ) : null}
-                {watch.includes('plateau') ? (
-                  <p className={styles.note} data-plateau-acquisition={acquisition.status}>
-                    {acquisition.detail}
-                  </p>
-                ) : null}
-              </section>
               {presentation.kind === 'response-lab' ? (
                 <VentilationResponseTimeline session={session} />
               ) : null}

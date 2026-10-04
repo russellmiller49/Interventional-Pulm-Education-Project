@@ -8,7 +8,7 @@ import { VentilationProtectionReference } from '../VentilationLearningVisuals'
 import { CapturedBreath } from './CapturedBreath'
 import styles from './task-flow.module.css'
 
-function NormalTimingReference() {
+export function NormalTimingReference() {
   const figure = useRef<HTMLElement>(null)
   const [width, setWidth] = useState(360)
   useEffect(() => {
@@ -74,8 +74,12 @@ function NormalTimingReference() {
   )
 }
 
-/** General prerequisites and a distinct worked example, never the current patient's keyed solution. */
-export function VentilationPrerequisite({
+/**
+ * The reference a mechanism section's reading step points at: the normal timing illustration, a
+ * separate normal passive breath, or the guideline reference. Separate from the patient on purpose,
+ * and never that patient's keyed solution. Null when the section has none.
+ */
+export function MechanismReadingEvidence({
   lesson,
   device,
 }: {
@@ -84,15 +88,14 @@ export function VentilationPrerequisite({
 }) {
   const { unit } = lesson
   const normal = useMemo(() => createLabSimulation('breathing-with-support', 0, device), [device])
-  const neutralIntegration = unit.id === 'high-peak-pressure-integration'
   const systematic = unit.id === 'waveform-reading-sequence'
   const normalTiming = ['triggering-and-cycling', 'dyssynchrony-mechanisms'].includes(unit.id)
+  const normalBreath = unit.id === 'expiration-and-air-trapping' || systematic
+  if (!normalTiming && !normalBreath && unit.id !== 'lung-protection') return null
   return (
-    <section className={styles.block} data-prerequisite-teaching>
-      <h3>{neutralIntegration ? 'Clinical brief' : 'Learn the relationship'}</h3>
-      <p>{unit.explanation}</p>
+    <div data-prerequisite-teaching data-lesson-part="evidence">
       {normalTiming ? <NormalTimingReference /> : null}
-      {unit.id === 'expiration-and-air-trapping' || systematic ? (
+      {normalBreath ? (
         <CapturedBreath
           label="Separate normal reference · complete passive breath"
           samples={normal.waveforms}
@@ -101,56 +104,47 @@ export function VentilationPrerequisite({
         />
       ) : null}
       {unit.id === 'lung-protection' ? <VentilationProtectionReference /> : null}
+    </div>
+  )
+}
+
+/** The section's separate worked example; null for the integration section, which withholds one. */
+export function MechanismWorkedExample({ lesson }: { lesson: VentilationStageLesson }) {
+  const { unit } = lesson
+  if (unit.id === 'high-peak-pressure-integration') return null
+  if (unit.id === 'waveform-reading-sequence')
+    return (
+      <div data-worked-example>
+        <p>
+          In the passive reference above, a regular machine breath starts without patient effort.
+          Pressure and inward flow accompany rising volume, then flow turns outward as volume falls.
+        </p>
+        <p>
+          Read this normal breath in order before inspecting the new patient. An unusual rate alone
+          will not establish a mechanism.
+        </p>
+      </div>
+    )
+  if (unit.id === 'triggering-and-cycling')
+    return (
+      <div data-worked-example>
+        <p>
+          Use the normal timing illustration above: effort begins, the machine follows, and
+          inspiration ends in agreement. The starting relationship concerns triggering; the ending
+          relationship concerns cycling.
+        </p>
+        <p>Next, apply these two separate checks to a different patient’s unlabelled tracing.</p>
+      </div>
+    )
+  return (
+    <div data-worked-example>
+      <p>{unit.example.situation}</p>
       <ol>
-        {unit.checklist.map((line) => (
+        {unit.example.reasoning.map((line) => (
           <li key={line}>{line}</li>
         ))}
       </ol>
-      {!neutralIntegration ? (
-        <div data-worked-example>
-          <h3>Separate worked example</h3>
-          {systematic ? (
-            <>
-              <p>
-                In the passive reference above, a regular machine breath starts without patient
-                effort. Pressure and inward flow accompany rising volume, then flow turns outward as
-                volume falls.
-              </p>
-              <p>
-                Read this normal breath in order before inspecting the new patient. An unusual rate
-                alone will not establish a mechanism.
-              </p>
-            </>
-          ) : unit.id === 'triggering-and-cycling' ? (
-            <>
-              <p>
-                Use the normal timing illustration above: effort begins, the machine follows, and
-                inspiration ends in agreement. The starting relationship concerns triggering; the
-                ending relationship concerns cycling.
-              </p>
-              <p>
-                Next, apply these two separate checks to a different patient’s unlabelled tracing.
-              </p>
-            </>
-          ) : (
-            <>
-              <p>{unit.example.situation}</p>
-              <ol>
-                {unit.example.reasoning.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ol>
-              <p>{unit.example.conclusion}</p>
-            </>
-          )}
-        </div>
-      ) : (
-        <p>
-          Assess the current observations and uncertainty before measuring. The setup and prior
-          patient’s explanation stay undisclosed while you form an interpretation.
-        </p>
-      )}
-      <p className={styles.note}>{unit.boundary}</p>
-    </section>
+      <p>{unit.example.conclusion}</p>
+    </div>
   )
 }

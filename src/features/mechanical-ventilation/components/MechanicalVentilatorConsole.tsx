@@ -30,7 +30,11 @@ import {
   resolveBreathPhase,
 } from '../content'
 import { plateauReadingValidity, plateauWithheldNote } from '../content/plateauValidity'
-import { plateauAcquisition, plateauAcquisitionNote } from '../content/plateauAcquisition'
+import {
+  plateauAcquisition,
+  plateauAcquisitionNote,
+  type PlateauAcquisitionStatus,
+} from '../content/plateauAcquisition'
 import {
   isAdaptivePressureMode,
   isAdaptiveSupportMode,
@@ -47,7 +51,7 @@ import type {
   VentilatorControlKey,
   VentilatorWaveformChannel,
 } from '../engine'
-import { WaveformLoops, WaveformStrip } from './WaveformStrip'
+import { WaveformLoops, WaveformStrip, type WaveformReadout } from './WaveformStrip'
 import styles from './mechanical-ventilation.module.css'
 import taskStyles from './stage/task-flow.module.css'
 
@@ -274,6 +278,20 @@ function DynamicLungPanel({
       </dl>
     </section>
   )
+}
+
+/**
+ * The word printed under the plateau value on every facsimile, one per acquisition state. Read from
+ * the single projection in `plateauAcquisition.ts`; "not acquired" never reaches a readout, because
+ * a surface that withholds the value drops the row.
+ */
+const PLATEAU_STATUS_WORD: Record<PlateauAcquisitionStatus, string> = {
+  'reference-estimate': 'estimate',
+  'not-acquired': 'not acquired',
+  pending: 'hold running',
+  'acquired-invalid': 'not valid',
+  stale: 'outdated',
+  'acquired-valid': 'measured',
 }
 
 export function MechanicalVentilatorConsole({
@@ -798,9 +816,8 @@ export function MechanicalVentilatorConsole({
   const pressureNames = display.pressureLabels
   /*
    * A plateau read while the patient is pulling is not the elastic pressure of the respiratory
-   * system, so the console prints it with a question mark rather than pretending otherwise. The
-   * device would show the number either way; the learner is the one who has to know it is not
-   * usable.
+   * system, so the console marks it rather than pretending otherwise. The device would show the
+   * number either way; the learner is the one who has to know it is not usable.
    */
   const plateauValidity = plateauReadingValidity(state)
   /*
@@ -823,7 +840,7 @@ export function MechanicalVentilatorConsole({
    * of roughly 24.5 and called the 26 "measured during the hold".
    */
   const plateauShown = plateauAcquired.valueCmH2O ?? plateauAcquired.estimateCmH2O
-  const pressureReadouts = [
+  const pressureReadouts: WaveformReadout[] = [
     { label: pressureNames.peak, value: state.measurements.peakPressureCmH2O },
     {
       label: pressureNames.plateau,
@@ -839,6 +856,8 @@ export function MechanicalVentilatorConsole({
           ? plateauAcquired.label
           : `${plateauAcquired.label}; ${plateauWithheldNote(plateauValidity)}`
         : undefined,
+      status: PLATEAU_STATUS_WORD[plateauAcquired.status],
+      statusDetail: plateauAcquired.detail,
     },
     { label: pressureNames.mean, value: state.measurements.meanAirwayPressureCmH2O },
     { label: pressureNames.peep, value: settings.peepCmH2O },
@@ -1685,10 +1704,11 @@ export function MechanicalVentilatorConsole({
             ? `; measured ${pressureNames.plateau} ${plateauShown.toFixed(0)} ${display.pressureUnit}, ${plateauAcquisitionNote(plateauAcquired)}`
             : `; ${pressureNames.plateau} ${plateauShown.toFixed(0)} ${display.pressureUnit} — ${plateauAcquired.label}`}
         {/*
-         * The readout beside the trace marks an uninterpretable plateau with a bare "?" that is
-         * hidden from assistive technology, and the trace's own caption — screen-reader only —
-         * carries the clause. The visible text equivalent carries it too, so a sighted learner is
-         * told what the "?" means.
+         * The readout beside the trace prints the acquisition state as a word under the plateau
+         * value ("estimate", "measured", "not valid", "outdated", "hold running"); it used to be a
+         * bare "?" with no legend. The trace's own caption — screen-reader only — carries the full
+         * clause, and so does this visible text equivalent, including the effort reason a
+         * one-word status has no room for.
          */}
         {!withholdUnacquiredPlateau && !plateauValidity.interpretable
           ? ` — ${plateauWithheldNote(plateauValidity)}`

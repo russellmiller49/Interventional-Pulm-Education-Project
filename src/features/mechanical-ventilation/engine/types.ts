@@ -914,6 +914,16 @@ export type VentilatorControlKey =
   | 'autoFlowEnabled'
   | 'intelliSyncEnabled'
 
+/**
+ * Who asked for the model clock to stop.
+ *
+ * The physiology reducer ignores it: a pause is a pause. The Learn lab reads it, because only a
+ * pause the learner asked for can count as the learner's own reading of the breath. `'background'`
+ * is the page being hidden or suspended by the browser or the system. Left out, the pause came from
+ * the program itself (a reset, a restart, a device change, a replay) and earns nothing either.
+ */
+export type PauseOrigin = 'learner' | 'background'
+
 export type VentilationAction =
   | {
       type: 'LOAD_CASE'
@@ -924,7 +934,7 @@ export type VentilationAction =
     }
   | { type: 'CHANGE_DEVICE'; deviceId: VentilatorDeviceId; attempt?: number }
   | { type: 'TICK'; seconds?: number }
-  | { type: 'SET_PAUSED'; paused: boolean }
+  | { type: 'SET_PAUSED'; paused: boolean; origin?: PauseOrigin }
   | { type: 'SET_SPEED'; speed: SimulationSpeed }
   | { type: 'SET_CHALLENGE_MODE'; challengeMode: ChallengeMode }
   | { type: 'STEP_BREATH' }

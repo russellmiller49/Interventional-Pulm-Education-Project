@@ -118,7 +118,7 @@ it('reveals the explanation without an answer, run or hold; keeps wrong-choice f
       name: 'Continue',
     }),
   )
-  expect(screen.getByRole('button', { name: 'Capture observed response' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Capture result' })).toBeDisabled()
   expect(
     within(screen.getByRole('navigation', { name: 'Step navigation' })).getByRole('button', {
       name: 'Continue',

@@ -77,16 +77,16 @@ describe('self-paced task presentation and preserved device/measurement behavior
     const unitId = 'mechanics-load-and-pressure'
     mount(unitId)
     openAction(unitId)
-    expect(screen.getByRole('button', { name: 'Capture observed response' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Capture result' })).toBeDisabled()
     fireEvent.change(screen.getByRole('slider', { name: /Patient resistance/ }), {
       target: { value: '2' },
     })
-    expect(screen.getByRole('button', { name: 'Capture observed response' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Capture result' })).toBeDisabled()
     fireEvent.click(screen.getByRole('button', { name: /Perform inspiratory hold/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Run' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Run experiment' }))
     act(() => jest.advanceTimersByTime(30000))
-    expect(screen.getByRole('button', { name: 'Capture observed response' })).toBeEnabled()
-    fireEvent.click(screen.getByRole('button', { name: 'Capture observed response' }))
+    expect(screen.getByRole('button', { name: 'Capture result' })).toBeEnabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Capture result' }))
     fireEvent.click(screen.getAllByRole('button', { name: 'Show explanation' })[0])
     expect(screen.getByText('Captured baseline and observed response')).toBeInTheDocument()
     expect(document.querySelector('[data-no-observation]')).toBeNull()
@@ -103,7 +103,7 @@ describe('self-paced task presentation and preserved device/measurement behavior
     expect(document.querySelector('[data-metric="plateau"] dd')).toHaveTextContent(
       'Acquire a current inspiratory hold',
     )
-    expect(screen.getByRole('button', { name: 'Capture observed response' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Capture result' })).toBeDisabled()
     expect(
       screen
         .getAllByRole('button', { name: 'Continue' })
