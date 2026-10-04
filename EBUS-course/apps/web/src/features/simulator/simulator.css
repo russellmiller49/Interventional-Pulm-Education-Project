@@ -1554,3 +1554,87 @@ html[data-theme='light'] .simulator-page {
 .simulator-ultrasound-structures button { background:#16232d; border:1px solid #3c5966; border-radius:5px; color:#b4e7e1; padding:4px 6px; font-size:11px; }
 .simulator-sector-pane--compact .simulator-ultrasound-controls { display:none; }
 @media(max-width:700px) { .simulator-ultrasound-controls { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+/*
+ * Shown on the main site the simulator has a frame to itself: the site's page carries the title and
+ * there is no course header above it. The header rows used to take about 390px of that frame, so
+ * the panes were cut off at the bottom and the drive pad that moves the scope was a scroll away
+ * from the images it changes. Here the introduction and the station bar share one row, the station,
+ * hardware and layer controls share the next, and the console takes exactly the height they leave:
+ * the three panes, their setup controls and the drive pad are on screen together.
+ */
+@media (min-width: 1081px) {
+  .app-shell--site-module .simulator-page {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 10px 12px;
+    /*
+     * The frame's height, less this document's own margin around the page. The floor is the header
+     * rows plus a console of about 500px; a shorter frame scrolls rather than squeezing the panes.
+     */
+    height: calc(100dvh - 24px);
+    min-height: 43rem;
+  }
+
+  .app-shell--site-module .simulator-page > * {
+    grid-column: 1 / -1;
+  }
+
+  .app-shell--site-module .simulator-page > .simulator-intro {
+    grid-column: 1;
+  }
+
+  .app-shell--site-module .simulator-page > .simulator-topbar {
+    grid-column: 2;
+  }
+
+  .app-shell--site-module .simulator-intro {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.45fr);
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+  }
+
+  .app-shell--site-module .simulator-intro h1 {
+    font-size: 1.1rem;
+    line-height: 1.25;
+  }
+
+  .app-shell--site-module .simulator-intro p {
+    margin-top: 2px;
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+
+  .app-shell--site-module .simulator-intro aside {
+    min-height: 0;
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  .app-shell--site-module .simulator-topbar {
+    min-height: 0;
+    padding: 8px 12px;
+  }
+
+  .app-shell--site-module .simulator-topbar h2 {
+    font-size: 1.1rem;
+    line-height: 1.25;
+  }
+
+  .app-shell--site-module .simulator-control-rail {
+    grid-template-columns: minmax(220px, 320px) auto minmax(0, 1fr);
+    padding: 8px 12px;
+  }
+
+  .app-shell--site-module .simulator-layer-toggles {
+    grid-column: auto;
+  }
+
+  .app-shell--site-module .simulator-imaging-console {
+    height: auto;
+    min-height: 0;
+  }
+}
