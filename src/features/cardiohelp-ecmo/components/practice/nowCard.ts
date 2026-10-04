@@ -118,8 +118,12 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
       if (facts.manageComplete && facts.observation.responseObserved) {
         return {
           kicker,
-          heading: 'Response observed — record it',
-          body: 'The circuit and the patient have had time to respond. Record what you see on the device, in the circuit and in the patient.',
+          heading: input.reassessmentIsChecklist
+            ? 'Read the model and review the checklist'
+            : 'Response observed — record it',
+          body: input.reassessmentIsChecklist
+            ? 'The model has advanced through the observation interval. Read the current values, then compare the review statements with the checklist.'
+            : 'The circuit and the patient have had time to respond. Record what you see on the device, in the circuit and in the patient.',
           primary: { label: 'Go to reassess', onActivate: () => actions.openStage('reassess') },
         }
       }
@@ -156,7 +160,9 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
            * (IA-3). What the card actually knows is that an action was taken and the clock has not
            * caught up with it yet, so that is what it says.
            */
-          body: 'Your last action is in. Advance the clock so the circuit and patient can respond before you record what you see.',
+          body: input.reassessmentIsChecklist
+            ? 'Your last action is in. Advance the clock to read the subsequent simulated values. The checklist selections remain a comparison of review statements, not recorded measurements.'
+            : 'Your last action is in. Advance the clock so the circuit and patient can respond before you record what you see.',
           primary: {
             label: `Advance ${seconds} second${seconds === 1 ? '' : 's'} now`,
             onActivate: () => actions.advanceSeconds(seconds),
@@ -166,8 +172,12 @@ export function resolveNowCard(input: NowCardInput): NowCardModel {
       if (facts.reassessmentSubmitted && !facts.debriefRevealed) {
         return {
           kicker,
-          heading: 'Your reassessment is recorded',
-          body: 'Reveal the debrief to compare what you recorded with the response this case teaches, the causal chain and the sources.',
+          heading: input.reassessmentIsChecklist
+            ? 'Your checklist comparison is recorded'
+            : 'Your reassessment is recorded',
+          body: input.reassessmentIsChecklist
+            ? 'Reveal the debrief to compare your selections with the case checklist, causal chain and sources. No measured findings were recorded by these selections.'
+            : 'Reveal the debrief to compare what you recorded with the response this case teaches, the causal chain and the sources.',
           primary: { label: 'Reveal causal debrief', onActivate: actions.reveal },
         }
       }

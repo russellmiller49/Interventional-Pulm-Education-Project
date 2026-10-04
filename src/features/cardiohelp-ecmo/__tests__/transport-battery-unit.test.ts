@@ -43,7 +43,7 @@ describe('transport battery-unit editorial exception', () => {
     expect(reading?.[2]).toBe('percent')
   })
 
-  it('does not extend the exception to another prediction', () => {
+  it('keeps the VV reason item-local and limits all overrides to the two transport items', () => {
     expect(item.learnerCopyOverrideReason).toBeTruthy()
     expect(
       Object.entries(ecmoLearnPredictions)
@@ -53,6 +53,12 @@ describe('transport battery-unit editorial exception', () => {
         )
         .map(([id]) => id),
     ).toEqual([scenarioId])
+    expect(
+      Object.entries(ecmoLearnPredictions)
+        .filter(([, prediction]) => prediction.item.learnerCopyOverrideReason !== undefined)
+        .map(([id]) => id)
+        .sort(),
+    ).toEqual(['transport-power-loss', 'va-transport-power-loss'])
   })
 
   it.each(['stem', 'explanation', 'choice label', 'choice rationale'] as const)(

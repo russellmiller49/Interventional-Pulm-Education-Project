@@ -98,8 +98,8 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
               Sweep-gas oxygen fraction is the oxygen concentration delivered to the membrane lung.
               The external blender sets it, and the gas panel in this module labels that control{' '}
               <span data-first-use="sweep-gas-fio2">“Sweep-gas FiO₂”</span>. It is separate from
-              ventilator FiO₂, which describes gas delivered to the native lungs: the two share a
-              name and act on different lungs.
+              ventilator FiO₂, which describes gas delivered to the native lungs. The two settings
+              describe gas delivered to different sites: the membrane lung and the native lungs.
             </p>
             <p className="mt-2 text-sm leading-6">
               The following guided controls reset to the same starting circuit for every comparison.

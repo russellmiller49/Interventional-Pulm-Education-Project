@@ -762,6 +762,7 @@ export function ActionPanel({
 function ReassessmentQuestionField({
   domain,
   question,
+  checklistComparison = false,
   orderKey,
   value,
   disabled,
@@ -770,6 +771,7 @@ function ReassessmentQuestionField({
 }: {
   domain: 'device' | 'circuit' | 'patient'
   question: ReassessmentQuestion
+  checklistComparison?: boolean
   /** Rotates the authored option order deterministically, so the best answer is not always first. */
   orderKey: string
   value: string
@@ -781,10 +783,16 @@ function ReassessmentQuestionField({
   const correctOption = question.options.find((item) => item.id === question.correctOptionId)
   const legend =
     domain === 'device'
-      ? 'Device / console response'
+      ? checklistComparison
+        ? 'Device / console review'
+        : 'Device / console response'
       : domain === 'circuit'
-        ? 'Circuit / gas response'
-        : 'Patient response'
+        ? checklistComparison
+          ? 'Circuit / gas review'
+          : 'Circuit / gas response'
+        : checklistComparison
+          ? 'Patient review'
+          : 'Patient response'
 
   return (
     <fieldset className={styles.reassessmentQuestion} data-domain={domain}>
@@ -816,7 +824,8 @@ function ReassessmentQuestionField({
       </div>
       {revealed && !selectedIsCorrect ? (
         <small className={styles.expectedReassessmentAnswer}>
-          Expected response: {correctOption?.label}
+          {checklistComparison ? 'Checklist statement: ' : 'Expected response: '}
+          {correctOption?.label}
         </small>
       ) : null}
     </fieldset>
@@ -850,6 +859,7 @@ export function ReassessmentPanel({
   const revealed = state.scenario.phase === 'complete'
   const minimumObservationSeconds = scenario.assessmentPolicy?.minimumObservationSeconds ?? 1
   const reassessmentGuidance = scenario.assessmentPolicy?.reassessmentGuidance
+  const checklistComparison = !scenario.reassessment && Boolean(reassessmentGuidance)
   const correctedAt = state.scenario.causeCorrectedAt
   const acknowledgedAt = state.alarms.reduce<number | null>(
     (latest, alarm) =>
@@ -867,10 +877,16 @@ export function ReassessmentPanel({
     deviceObservationComplete && circuitObservationComplete && patientObservationComplete
   const commitReady = domainsComplete && !submitted
   const commitLabel = submitted
-    ? 'Reassessment submitted'
+    ? checklistComparison
+      ? 'Checklist comparison submitted'
+      : 'Reassessment submitted'
     : !domainsComplete
-      ? 'Commit reassessment · select all three responses'
-      : 'Commit reassessment'
+      ? checklistComparison
+        ? 'Submit comparison · select all three statements'
+        : 'Commit reassessment · select all three responses'
+      : checklistComparison
+        ? 'Submit checklist comparison'
+        : 'Commit reassessment'
 
   useEffect(() => {
     if (submitted && !revealed) revealButtonRef.current?.focus()
@@ -886,10 +902,13 @@ export function ReassessmentPanel({
       <div className={styles.workflowHeading}>
         <span>{stageNumber}</span>
         <div>
-          <h3 id="reassessment-heading">Reassess before reveal</h3>
+          <h3 id="reassessment-heading">
+            {checklistComparison ? 'Review the case checklist' : 'Reassess before reveal'}
+          </h3>
           <p>
-            Choose the observed device, circuit/gas, and patient responses. The debrief compares all
-            three with scenario-specific evidence.
+            {checklistComparison
+              ? 'Choose a review statement for the device, circuit/gas, and patient. The debrief compares your selections with the checklist; these selections do not record measured findings.'
+              : 'Choose the observed device, circuit/gas, and patient responses. The debrief compares all three with scenario-specific evidence.'}
           </p>
         </div>
       </div>
@@ -910,20 +929,27 @@ export function ReassessmentPanel({
           </li>
           <li data-complete={observation.responseObserved}>
             <span aria-hidden="true">{observation.responseObserved ? '✓' : '○'}</span>
-            Response observed for {Math.min(observation.elapsedSeconds, minimumObservationSeconds)}/
+            {checklistComparison ? 'Model observation interval: ' : 'Response observed for '}
+            {Math.min(observation.elapsedSeconds, minimumObservationSeconds)}/
             {minimumObservationSeconds} seconds
           </li>
           <li data-complete={deviceObservationComplete}>
             <span aria-hidden="true">{deviceObservationComplete ? '✓' : '○'}</span>
-            Device/console response selected
+            {checklistComparison
+              ? 'Device/console review statement selected'
+              : 'Device/console response selected'}
           </li>
           <li data-complete={circuitObservationComplete}>
             <span aria-hidden="true">{circuitObservationComplete ? '✓' : '○'}</span>
-            Circuit/gas response selected
+            {checklistComparison
+              ? 'Circuit/gas review statement selected'
+              : 'Circuit/gas response selected'}
           </li>
           <li data-complete={patientObservationComplete}>
             <span aria-hidden="true">{patientObservationComplete ? '✓' : '○'}</span>
-            Patient response selected
+            {checklistComparison
+              ? 'Patient review statement selected'
+              : 'Patient response selected'}
           </li>
         </ul>
       </div>
@@ -963,6 +989,7 @@ export function ReassessmentPanel({
       <div className={styles.reassessmentGrid}>
         <ReassessmentQuestionField
           domain="device"
+          checklistComparison={checklistComparison}
           question={reassessment.device}
           orderKey={scenario.id}
           value={answers.deviceOptionId}
@@ -972,6 +999,7 @@ export function ReassessmentPanel({
         />
         <ReassessmentQuestionField
           domain="circuit"
+          checklistComparison={checklistComparison}
           question={reassessment.circuit}
           orderKey={scenario.id}
           value={answers.circuitOptionId}
@@ -981,6 +1009,7 @@ export function ReassessmentPanel({
         />
         <ReassessmentQuestionField
           domain="patient"
+          checklistComparison={checklistComparison}
           question={reassessment.patient}
           orderKey={scenario.id}
           value={answers.patientOptionId}
@@ -1041,7 +1070,9 @@ export function ReassessmentPanel({
 
       {submitted && !revealed ? (
         <p className={styles.acceptedCue} role="status">
-          Reassessment submitted. Select “Reveal causal debrief” to continue.
+          {checklistComparison
+            ? 'Checklist comparison submitted. Select “Reveal causal debrief” to continue.'
+            : 'Reassessment submitted. Select “Reveal causal debrief” to continue.'}
         </p>
       ) : null}
     </section>

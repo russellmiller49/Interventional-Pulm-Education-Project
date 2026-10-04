@@ -607,7 +607,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
         phase: 'predict',
         itemType: 'mechanism-interpretation',
         contextRequirement: 'context-independent',
-        stem: 'A patient on stable venovenous support is deteriorating: systemic oxygenation is falling and the arterial carbon dioxide value has climbed quickly over minutes with the pH following it down. The displayed circuit flow is exactly where it was. Which explanation do you commit to before you look further, and what would you expect to find if you are right?',
+        stem: 'A patient on stable venovenous support is deteriorating: systemic oxygenation is falling and the arterial carbon dioxide value has climbed quickly over minutes with the pH following it down. The displayed circuit flow is exactly where it was. Which explanation fits best, and what finding would support it?',
         choices: [
           {
             id: 'gas-side-interrupted',
@@ -644,7 +644,7 @@ const authored: Readonly<Record<EcmoInteractiveFoundationSectionId, EcmoFoundati
         ],
         correctChoiceIds: ['gas-side-interrupted'],
         explanation:
-          'All four explanations survive an unchanged flow display, which is why the display is a poor place to reason from. What separates them is what each one predicts elsewhere, and here the speed of the carbon dioxide change is the discriminating feature: the gas path can be lost in a moment, and the blood path shows nothing when it is. Committing to a named finding before looking is what allows the next observation to contradict you.',
+          'All four explanations survive an unchanged flow display, which is why the display is a poor place to reason from. What separates them is what each one predicts elsewhere, and here the speed of the carbon dioxide change is the discriminating feature: the gas path can be lost in a moment, and the blood path shows nothing when it is. An optional prediction lets you compare a named finding with the observations.',
         evidenceIds: [
           ...coreSources,
           'elso-adult-vv-2021',

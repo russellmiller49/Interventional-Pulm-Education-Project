@@ -209,7 +209,7 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
       'Separate the four explanations by what each predicts elsewhere in the circuit.',
       'Check the gas side explicitly; it fails silently with respect to flow.',
       'A patient-side cause is a real member of the differential, not a diagnosis of exclusion.',
-      'Commit to the expected finding before measuring, so the measurement can contradict you.',
+      'An optional prediction names an expected finding so it can be compared with the measurements.',
     ],
     sourceIds: [...coreSources, 'elso-adult-vv-2021', 'ecmo-book-ch16', 'ecmo-book-ch17'],
   },

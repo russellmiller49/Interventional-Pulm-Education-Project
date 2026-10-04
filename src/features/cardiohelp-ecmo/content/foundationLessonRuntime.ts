@@ -606,7 +606,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       transfer: {
         objective: 'Apply the concept to a different cause of impaired oxygen delivery.',
         requiredAction:
-          'Answer the new case, then open why the other answers do not fit and read it against the earlier case in this section.',
+          'Answer the new case, then open How the other answers compare and read it against the earlier case in this section.',
         teachingPoint:
           'The same reasoning identifies an oxygen-content problem as readily as a blood-flow problem.',
         lookIn: {
@@ -1225,7 +1225,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         requiredAction:
           'If you want to check your reasoning, choose one of the four explanations and name the finding that would support it. The comparison of what each explanation predicts stays open on this page before and after you choose, and the simulator does not advance when you commit.',
         teachingPoint:
-          'Committing first is what lets the next measurement contradict you instead of confirming you.',
+          'An optional prediction names an expected finding so it can be compared with the measurements.',
         lookIn: {
           pane: 'steps',
           landmark: 'the answer choices below',
@@ -1629,7 +1629,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         requiredAction:
           'If you want to check your reasoning, choose one of the explanations and name the finding that would support it. The comparison of what each explanation predicts stays open on this page before and after you choose, and the simulator does not advance when you commit.',
         teachingPoint:
-          'Committing first is what lets the next measurement contradict you instead of confirming you.',
+          'An optional prediction names an expected finding so it can be compared with the measurements.',
         lookIn: {
           pane: 'steps',
           landmark: 'the answer choices below',

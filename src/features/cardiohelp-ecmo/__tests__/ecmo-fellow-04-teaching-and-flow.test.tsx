@@ -43,12 +43,14 @@ import { PumpPressureZonesPanel } from '../components/teaching/PumpPressureZones
 import { VvNormalStatePanel } from '../components/teaching/VvNormalStatePanel'
 import { WhyExtracorporealSupportPanel } from '../components/teaching/WhyExtracorporealSupportPanel'
 import { ecmoSensorSite } from '../content/circuitSegments'
-import { pairedCaseForLesson } from '../content/curriculum'
+import { pairedCaseForLesson, caseMechanismByCaseId, lessonMechanism } from '../content/curriculum'
+import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
+import { nextPathwaySection } from '@/features/learning-module/curriculum/types'
 import { ecmoDeliveryAttribution } from '../content/deliveryAttribution'
 import { cardiohelpEvidence } from '../content/evidence'
 import { ecmoFoundationLearningItemsFor } from '../content/foundationLearningItems'
 import { ecmoFoundationLessonRuntime } from '../content/foundationLessonRuntime'
-import { ecmoFoundationSections } from '../content/foundationLessons'
+import { isEcmoFoundationSectionId, ecmoFoundationSections } from '../content/foundationLessons'
 import { ecmoFoundationTeachingTasks } from '../content/foundationTeachingTasks'
 import { ECMO_INTEGRATED_CASE_SCOPE } from '../content/integratedCaseScope'
 import {
@@ -58,6 +60,8 @@ import {
 } from '../content/learnLessons'
 import { ecmoLearnPredictions } from '../content/learnPredictionItems'
 import { cardiohelpScenarioById } from '../content/scenarios'
+import { resolveScenarioReassessment as reassessmentForReview } from '../content/practiceSupport'
+import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import { ECMO_MODULE_REVIEW_LINE } from '../content/sourceReviewMetadata'
 import {
   createInitialSimulationState,
@@ -74,6 +78,8 @@ import {
   resetStageHarness,
 } from '../test-support/learnStageHarness'
 
+const mockReviewPush = jest.fn()
+
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
     href,
@@ -87,7 +93,7 @@ jest.mock('@/i18n/navigation', () => ({
       {children}
     </a>
   ),
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), refresh: jest.fn() }),
+  useRouter: () => ({ push: mockReviewPush, replace: jest.fn(), refresh: jest.fn() }),
   usePathname: () => '/cardiohelp-ecmo/learn',
 }))
 // The one permitted mock: the 3D canvas needs WebGL. Every other surface renders for real.
@@ -133,6 +139,7 @@ function openStep(stepId: string) {
 
 beforeEach(() => {
   resetStageHarness()
+  mockReviewPush.mockClear()
   Object.defineProperty(global, 'fetch', {
     configurable: true,
     writable: true,
@@ -390,7 +397,9 @@ describe('S2-7: one reading, named once', () => {
     expect(note).toHaveTextContent('pre-oxygenator')
     expect(note).toHaveTextContent('venous-line')
     expect(note).toHaveTextContent('drainage-line')
-    expect(note).toHaveTextContent(/not the patient.s own mixed-venous saturation/)
+    expect(note).toHaveTextContent(
+      /not a direct measurement of the patient.s mixed-venous saturation/,
+    )
     // Visible teaching, not something folded away.
     expect(note?.closest('details')).toBeNull()
   })
@@ -439,7 +448,9 @@ describe('S4-4: the blender setting, and re-drainage, are explained where they a
   it('the control-panel section separates the blender FiO₂ from the ventilator FiO₂ by name', () => {
     const controls = controlPanelBlock('controls')
     expect(controls).toMatch(/the gas panel in this module labels that control “Sweep-gas FiO₂”/)
-    expect(controls).toMatch(/the two share a name and act on different lungs/)
+    expect(controls).toMatch(
+      /describe gas delivered to different sites: the membrane lung and the native lungs/,
+    )
     expect(controlPanelBlock('control-pump')).toMatch(
       /Re-drainage is blood the circuit returns and then drains again/,
     )
@@ -497,6 +508,7 @@ describe('S12-2: a blood gas is read where the simulator shows one', () => {
     const view = render(<CardiohelpConsole state={state} dispatch={jest.fn()} controlsEnabled />)
     const tiles = view.container.textContent ?? ''
     expect(tiles).toMatch(/SvO₂/)
+    expect(tiles).toMatch(/TArt/)
     expect(tiles).not.toMatch(/PaCO₂/)
     expect(tiles).not.toMatch(/HCO₃/)
     expect(screen.queryByText('pH')).toBeNull()
@@ -510,7 +522,7 @@ describe('S12-2: a blood gas is read where the simulator shows one', () => {
     expect(step?.instruction).toMatch(
       /read PaCO₂, pH and bicarbonate on the independent bedside monitor and blood gas panel/,
     )
-    expect(step?.expectedResponse?.join(' ')).toMatch(/venous-line values only, no blood gas/)
+    expect(step?.expectedResponse?.join(' ')).toMatch(/console blood parameters, no blood gas/)
     // Same step, same simulator action: only where the instruction points changed.
     expect(step?.actionLabel).toBe('Open Blood parameters for the new patient')
   })
@@ -727,6 +739,20 @@ describe('IV-2, IA-2: the review checklist is teaching, not a requirement', () =
       // The teaching itself is still there, before anything is selected.
       expect(checklist).toHaveTextContent(scenario.assessmentPolicy!.reassessmentGuidance!.patient)
       expect(state.scenario.reassessment).toBeNull()
+      expect(view.container.textContent).not.toMatch(
+        /Choose the observed|response selected|Reassessment submitted/,
+      )
+      expect(view.container.textContent).toMatch(/review statement/)
+      expect(reassessmentForReview(scenario).instruction).toMatch(/checklist/)
+      for (const domain of ['device', 'circuit', 'patient'] as const) {
+        const question = reassessmentForReview(scenario)[domain]
+        expect(question.prompt).toMatch(/review statement/)
+        const keyed = question.options.find(
+          (candidate) => candidate.id === question.correctOptionId,
+        )!
+        expect(keyed.rationale).toMatch(/checklist/)
+        expect(keyed.rationale).not.toMatch(/matches the .* response this case expects/)
+      }
     },
   )
 
@@ -900,5 +926,229 @@ describe('S3-4: the speed comparison is run from the control the page actually s
         (action) => action.id === task?.actionId,
       )?.label,
     ).toBe('Increase pump speed by 300 rpm')
+  })
+})
+
+// Independent PR #327 review: exercise the state and rendered contracts behind the copy.
+describe('adversarial review: local feedback preserves every rationale truthfully', () => {
+  it.each(['incorrect-mechanism', 'reasonable-but-incomplete', 'unsafe', 'best'] as const)(
+    '%s: the comparison can contain the key without calling it wrong; retry stays open',
+    (plausibility) => {
+      render(
+        <EcmoFoundationLessonActivity sectionId="why-extracorporeal-support" supportMode="vv" />,
+      )
+      reachFoundationStep('why-extracorporeal-support', 'predict')
+      const item = ecmoFoundationLearningItemsFor('why-extracorporeal-support').prediction
+      const chosen = item.choices.find((choice) => choice.plausibility === plausibility)!
+      expect(chosen).toBeDefined()
+      fireEvent.click(
+        document.querySelector<HTMLInputElement>(
+          `fieldset[data-prediction-choices] input[value="${chosen.id}"]`,
+        )!,
+      )
+      fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }))
+      const comparison = document.querySelector('[data-other-answers-panel]')!
+      expect(comparison).toHaveTextContent('How the other answers compare')
+      expect(comparison).not.toHaveTextContent('Why the other answers do not fit')
+      for (const choice of item.choices.filter((candidate) => candidate.id !== chosen.id)) {
+        expect(comparison.querySelector(`[data-other-answer="${choice.id}"]`)).toHaveTextContent(
+          choice.rationale,
+        )
+      }
+      expect(comparison.querySelector(`[data-other-answer="${chosen.id}"]`)).toBeNull()
+      expect(document.querySelector('[data-ecmo-shell]')).toHaveAttribute(
+        'data-stage',
+        'why-extracorporeal-support-predict',
+      )
+      fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
+      expect(document.querySelector('[data-other-answers-panel]')).toBeNull()
+      expect(document.querySelector('fieldset[data-prediction-choices]')).not.toBeDisabled()
+    },
+  )
+})
+
+describe('adversarial review: all six narrative sections teach before an optional self-check', () => {
+  it.each([
+    ['vv-normal-state', 'vv'],
+    ['vv-series-physiology', 'vv'],
+    ['vv-integration-capstone', 'vv'],
+    ['va-normal-state', 'va'],
+    ['va-parallel-physiology', 'va'],
+    ['va-integration-capstone', 'va'],
+  ] as const)(
+    '%s keeps its key points and an explanation path without an answer',
+    (sectionId, mode) => {
+      render(<EcmoFoundationLessonActivity sectionId={sectionId} supportMode={mode} />)
+      const section = ecmoFoundationSections.find((candidate) => candidate.id === sectionId)!
+      const points = document.querySelector('[data-lesson-key-points]')
+      for (const bullet of section.bullets ?? []) expect(points).toHaveTextContent(bullet)
+      reachFoundationStep(sectionId, 'predict')
+      expect(pageText()).not.toMatch(
+        /before (?:you )?look(?:ing)? further|held back until|commit before|before measuring/i,
+      )
+      expect(
+        screen.getByRole('button', { name: 'Show explanation without answering' }),
+      ).toBeEnabled()
+      fireEvent.click(screen.getByRole('button', { name: 'Show explanation without answering' }))
+      expect(document.querySelector('[data-optional-explanation]')).not.toBeNull()
+      expect(
+        document.querySelectorAll('fieldset[data-prediction-choices] input:checked'),
+      ).toHaveLength(0)
+    },
+  )
+})
+
+describe('adversarial review: every changed end-card pairing uses the pathway resolver', () => {
+  const changed = cardiohelpLearnLessons.filter(
+    (lesson) => pairedCaseForLesson(lesson.scenarioId).kind === 'next-in-unit',
+  )
+  it('enumerates the six affected pairings', () => {
+    expect(changed.map((lesson) => lesson.scenarioId).sort()).toEqual([
+      'acute-hypercapnia',
+      'afterload-return-obstruction',
+      'compensated-hypercapnia',
+      'transport-power-loss',
+      'va-afterload-arterial-return-obstruction',
+      'va-transport-power-loss',
+    ])
+  })
+  it.each(changed.map((lesson) => [lesson.scenarioId, lesson.supportMode] as const))(
+    '%s offers both real destinations after skipping the last step',
+    async (id, mode) => {
+      const { lesson } = await mountDrill(id)
+      const stage = buildDrillStageLesson(lesson, mode)
+      openStep(stage.steps.at(-1)!.id)
+      fireEvent.click(screen.getByRole('button', { name: 'Continue without doing this step' }))
+      const pairing = pairedCaseForLesson(id)
+      if (pairing.kind !== 'next-in-unit') throw new Error('expected different mechanism')
+      const next = nextPathwaySection(criticalCareLearningPathway('cardiohelp-ecmo', mode), id)
+      expect(next).toBeDefined()
+      expect(clinicalPracticeScenarioById.has(pairing.caseId)).toBe(true)
+      expect(caseMechanismByCaseId.get(pairing.caseId)).not.toBe(lessonMechanism(id))
+      const card = document.querySelector('[data-stage-completion]')!
+      const choices = card.querySelectorAll('button')
+      expect(choices[0]).toHaveTextContent(next!.title)
+      expect(choices[0]).toBeEnabled()
+      expect(choices[1]).toHaveTextContent(clinicalPracticeScenarioById.get(pairing.caseId)!.title)
+      expect(choices[1]).toBeEnabled()
+      expect(latestState().scenario.prediction.committed).toBe(false)
+      expect(card).toHaveTextContent('in either order')
+      fireEvent.click(choices[1])
+      expect(mockReviewPush).toHaveBeenLastCalledWith({
+        pathname: '/cardiohelp-ecmo/practice',
+        query: { case: pairing.caseId, track: mode },
+      })
+      fireEvent.click(choices[0])
+      if (isEcmoFoundationSectionId(next!.id)) {
+        expect(mockReviewPush).toHaveBeenLastCalledWith({
+          pathname: '/cardiohelp-ecmo/learn',
+          query: { lesson: next!.id, track: mode },
+        })
+      } else {
+        expect(latestState().scenario.scenarioId).toBe(next!.id)
+      }
+    },
+  )
+})
+
+describe('adversarial review: integrated scope matches raw simulation state', () => {
+  it('VA recognition leaves the fault active and does not improve the patient relative to no action', () => {
+    let untreated = createInitialSimulationState('va-mixed-circulation-capstone', 'guided')
+    let recognised = ecmoSimulationReducer(untreated, {
+      type: 'CORRECT_FAULT',
+      fault: 'differential-hypoxemia',
+    })
+    expect(recognised.patient).toEqual(untreated.patient)
+    expect(recognised.supportMode).toBe('va')
+    expect(recognised.scenario.activeFaults).toContain('differential-hypoxemia')
+    for (let second = 0; second < 60; second++) {
+      untreated = ecmoSimulationReducer(untreated, { type: 'STEP' })
+      recognised = ecmoSimulationReducer(recognised, { type: 'STEP' })
+      expect(recognised.patient).toEqual(untreated.patient)
+      expect(recognised.patient.rightRadialSpo2).toBeLessThan(90)
+      expect(recognised.scenario.activeFaults).toContain('differential-hypoxemia')
+    }
+  })
+  it('VV turns only sweep off and keeps blood flow and the restore-sweep control available', () => {
+    const initial = createInitialSimulationState('vv-off-sweep-capstone', 'guided')
+    const changed = ecmoSimulationReducer(initial, { type: 'SET_SWEEP', sweep: 0 })
+    expect(initial.circuit.bloodFlow).toBeGreaterThan(0)
+    expect(changed.gas.sweepLpm).toBe(0)
+    expect(changed.device.rpmSetpoint).toBe(initial.device.rpmSetpoint)
+    expect(changed.circuit.bloodFlow).toBe(initial.circuit.bloodFlow)
+    expect(changed.patient).toEqual(initial.patient)
+    const restored = ecmoSimulationReducer(changed, { type: 'SET_SWEEP', sweep: 3 })
+    expect(restored.gas.sweepLpm).toBe(3)
+  })
+})
+
+describe('adversarial review: checklist submission is not a measured reassessment', () => {
+  it.each(['vv-off-sweep-capstone', 'va-mixed-circulation-capstone'] as const)(
+    '%s labels submitted selections in both surfaces',
+    (id) => {
+      const scenario = cardiohelpScenarioById.get(id)!
+      const questions = reassessmentForReview(scenario)
+      let state = createInitialSimulationState(id, 'guided')
+      state = ecmoSimulationReducer(state, {
+        type: 'COMMIT_REASSESSMENT',
+        answers: {
+          deviceOptionId: questions.device.correctOptionId,
+          circuitOptionId: questions.circuit.options.find(
+            (option) => option.id !== questions.circuit.correctOptionId,
+          )!.id,
+          patientOptionId: questions.patient.correctOptionId,
+        },
+      })
+      const panel = render(
+        <ReassessmentPanel
+          state={state}
+          scenario={scenario}
+          dispatch={jest.fn()}
+          onReveal={jest.fn()}
+          onShowStage={jest.fn()}
+          stageNumber={3}
+        />,
+      )
+      expect(panel.container).toHaveTextContent('Checklist comparison submitted')
+      expect(panel.container.textContent).not.toMatch(/Reassessment submitted|Choose the observed/)
+      panel.unmount()
+      state = ecmoSimulationReducer(state, { type: 'REVEAL_DEBRIEF' })
+      const debrief = render(
+        <EcmoCaseDebrief
+          state={state}
+          scenario={scenario}
+          outcome={selectScenarioOutcome(state)}
+          supportMode={scenario.supportMode}
+          onReplay={jest.fn()}
+        />,
+      )
+      const comparison = Array.from(debrief.container.querySelectorAll('[data-domain]'))
+        .map((node) => node.textContent)
+        .join(' ')
+      expect(comparison).toMatch(/You selected:/)
+      expect(comparison).toMatch(/matches the review checklist/)
+      expect(comparison).toMatch(/The review checklist states:/)
+      expect(comparison).not.toMatch(/You recorded:|response this case expects/)
+    },
+  )
+  it('preserves observed-response language for an authored reassessment', () => {
+    const scenario = clinicalPracticeScenarioById.get('clinical-vv-gas-disconnection')!
+    expect(scenario.reassessment).toBeDefined()
+    const state = createInitialSimulationState(scenario.id, 'guided')
+    const view = render(
+      <ReassessmentPanel
+        state={state}
+        scenario={scenario}
+        dispatch={jest.fn()}
+        onReveal={jest.fn()}
+        onShowStage={jest.fn()}
+        stageNumber={3}
+      />,
+    )
+    expect(view.container).toHaveTextContent(
+      'Choose the observed device, circuit/gas, and patient responses.',
+    )
+    expect(view.container).not.toHaveTextContent('checklist selections')
+    expect(reassessmentForReview(scenario)).toBe(scenario.reassessment)
   })
 })

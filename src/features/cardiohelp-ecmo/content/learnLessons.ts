@@ -404,7 +404,7 @@ const orientationLesson: GuidedLessonDefinition = {
       // resolver and the IFU (rev. 2.3, section 9.2, p. 158) all say "Alarm list".
       title: 'Use the alarm list as context',
       instruction:
-        'Open the Alarm list, which keeps the last six alarms. Acknowledgement pauses sound; the underlying cause remains until corrected.',
+        'Open the Alarm list, which keeps the last six alarms. Acknowledgement pauses sound; it does not correct the underlying cause.',
       rationale:
         'The alarm list helps reconstruct sequence and recurrence, but acknowledgement is not treatment.',
       actionLabel: 'Open the Alarm list',
@@ -441,7 +441,7 @@ const orientationLesson: GuidedLessonDefinition = {
       title: 'Separate sweep and sweep-gas FiO₂ from the console',
       instruction:
         'Locate sweep flow, sweep-gas FiO₂, and source status on the separate gas panel. These are not CARDIOHELP-i touchscreen controls.',
-      // S4-4 (ECMO-FELLOW-04): the blender's FiO₂ and the ventilator's share a name and nothing else.
+      // S4-4 (ECMO-FELLOW-04): the blender and ventilator settings describe different gas-delivery sites.
       rationale:
         'Sweep primarily changes membrane CO₂ clearance in this model; sweep-gas FiO₂ is the oxygen fraction of the gas sent to the membrane lung and changes oxygenator inlet gas concentration. It is not the ventilator FiO₂, which describes gas delivered to the native lungs.',
       actionLabel: 'I can distinguish the two gas controls',
@@ -682,13 +682,13 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     target: 'console',
     instruction:
       // S12-2 (ECMO-FELLOW-04): the console's Blood parameters screen reports the venous-line
-      // values (SvO₂, hemoglobin, hematocrit, temperatures) and no blood gas. The acid–base picture is
+      // values (SvO₂, hemoglobin, hematocrit) and venous/arterial temperatures, but no blood gas. The acid–base picture is
       // on the independent bedside monitor and blood gas panel, so the step says where to read it.
       'The new patient’s CO₂ is high, the pH is near normal and the breathing is comfortable. Open Blood parameters for what the console itself reports, then read PaCO₂, pH and bicarbonate on the independent bedside monitor and blood gas panel, where they are shown, before deciding whether any setting should move.',
     actionLabel: 'Open Blood parameters for the new patient',
     action: { type: 'SET_SCREEN', screen: 'blood' },
     expectedResponse: [
-      'Blood parameters open: venous-line values only, no blood gas',
+      'Blood parameters open: console blood parameters, no blood gas',
       'PaCO₂ read beside pH, bicarbonate and work of breathing on the independent bedside monitor',
       'No setting changed yet',
     ],
@@ -801,7 +801,7 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     actionLabel: 'Open Blood parameters for the new patient',
     action: { type: 'SET_SCREEN', screen: 'blood' },
     expectedResponse: [
-      'Blood parameters open: venous-line values only',
+      'Blood parameters open: console blood parameters',
       'Right-arm and femoral samples read on the independent patient monitor',
       'The arterial trace read beside them',
     ],
