@@ -126,6 +126,30 @@ export function SignupForm() {
           return
         }
 
+        const { data: savedProfile, error: profileError } = await supabase
+          .from('site_profiles')
+          .select(
+            'first_name,last_name,professional_role,resident_specialty,role_other,institution_type,institution,country,training_level,years_in_practice,interests,learning_goals',
+          )
+          .eq('id', user.id)
+          .maybeSingle()
+        if (!isActive) return
+        if (profileError) throw profileError
+        if (savedProfile) {
+          setFirstName(savedProfile.first_name ?? '')
+          setLastName(savedProfile.last_name ?? '')
+          setProfessionalRole(savedProfile.professional_role ?? 'medical_student')
+          setResidentSpecialty(savedProfile.resident_specialty ?? '')
+          setRoleOther(savedProfile.role_other ?? '')
+          setInstitutionType(savedProfile.institution_type ?? 'hospital')
+          setInstitution(savedProfile.institution ?? '')
+          setCountry(savedProfile.country ?? '')
+          setTrainingLevel(savedProfile.training_level ?? '')
+          setYearsInPractice(savedProfile.years_in_practice ?? 'in_training')
+          setInterests(savedProfile.interests ?? [])
+          setLearningGoals(savedProfile.learning_goals ?? [])
+        }
+        // Consent is deliberately left unchecked; never infer acceptance from a course account.
         setCurrentUserId(user.id)
         setEmail(user.email ?? '')
         setStatus('idle')
@@ -321,6 +345,11 @@ export function SignupForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {completionMode ? (
+        <p className="rounded-lg border bg-muted p-4 text-sm" role="status">
+          {t('completionNotice')}
+        </p>
+      ) : null}
       {!completionMode ? (
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block text-sm font-medium">

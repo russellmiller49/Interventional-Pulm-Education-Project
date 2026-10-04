@@ -1,3 +1,4 @@
+import courseAvailability from '../../../../../config/course-availability.json';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
@@ -439,6 +440,26 @@ export function App() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [isSupabaseEnabled, recordModuleEngagement, user]);
+
+  // Query-string public mode must not expose course routes through hash navigation.
+  // Only the server-protected site-admin preview and existing password resets remain.
+  if (!courseAvailability.socalEbusCourseOpen && !adminPreviewMode && !publicTrainingMode &&
+      !(isAuthPath && new URLSearchParams(window.location.search).get('authCallback') === '1' &&
+        new URLSearchParams(location.search).get('mode') === 'reset-password')) {
+    return (
+      <main className="page-stack">
+        <section className="section-card">
+          <h1>The Southern California EBUS Course is currently closed</h1>
+          <p>Course materials and progress are being retained for future courses.</p>
+          <p>Sign in to the main site with your existing email and password, then complete
+            your registration and consent if prompted.</p>
+          <a className="button" href="/login?next=%2Fdashboard%3Fcourses%3Dclosed" target="_top">
+            Continue to main-site sign in
+          </a>
+        </section>
+      </main>
+    );
+  }
 
   if (
     !hydrated ||

@@ -1,4 +1,5 @@
 import { unlocalizedPathname } from '@/i18n/path'
+import courseAvailability from '../../../config/course-availability.json'
 
 export type SiteEntitlement =
   | 'ip_registry'
@@ -123,6 +124,26 @@ export function isLegacyEbusGatewayPath(pathname: string) {
     normalizedPathname === '/socal-ebus-course/app/' ||
     normalizedPathname === '/socal-ebus-course/app/index.html'
   )
+}
+
+/** Course shells are paused; assets remain shared with standalone EBUS/TNM training. */
+export function isPausedCoursePath(pathname: string, searchParams: URLSearchParams) {
+  const path = unlocalizedPathname(pathname)
+  if (
+    !courseAvailability.pccmIntroCourseOpen &&
+    (path === '/pccm-intro-course' || path.startsWith('/pccm-intro-course/'))
+  )
+    return true
+  if (
+    courseAvailability.socalEbusCourseOpen ||
+    !(path === '/socal-ebus-course' || path.startsWith('/socal-ebus-course/'))
+  )
+    return false
+  if (isAdminEbusPreviewEmbed(path, searchParams)) return false
+  if (isPublicTrainingEmbed(path, searchParams)) return false
+  // Existing emailed password-reset links still need the embedded auth handler.
+  if (isLegacyEbusGatewayPath(path) && searchParams.get('authCallback') === '1') return false
+  return !isStaticAssetPath(path)
 }
 
 export function isCtAlignmentSandboxPath(pathname: string) {
@@ -343,10 +364,6 @@ export function getRequiredEntitlement(
   }
 
   return null
-}
-
-export function canUseLegacyEbusApproval(pathname: string, searchParams: URLSearchParams) {
-  return getRequiredEntitlement(pathname, searchParams) === 'socal_ebus_course'
 }
 
 export function resolveLoginRedirectPath(pathname: string, search: string) {

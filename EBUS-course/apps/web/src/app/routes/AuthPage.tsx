@@ -1,3 +1,4 @@
+import courseAvailability from '../../../../../../config/course-availability.json';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 
@@ -87,6 +88,10 @@ export function AuthPage() {
   }, [routeMode]);
 
   function switchMode(nextMode: AuthMode) {
+    if (!courseAvailability.socalEbusCourseOpen) {
+      window.location.assign(nextMode === 'recover' ? '/forgot-password' : '/login');
+      return;
+    }
     setMode(nextMode);
     setMessage(null);
     setError(null);
@@ -203,6 +208,10 @@ export function AuthPage() {
       } else {
         await updatePassword(newPassword);
         setMessage('Password updated. You can continue to your prep workspace.');
+      }
+      if (!courseAvailability.socalEbusCourseOpen) {
+        window.location.assign('/login?next=%2Fdashboard%3Fcourses%3Dclosed');
+        return;
       }
       setNewPassword('');
       setConfirmPassword('');
@@ -400,7 +409,7 @@ export function AuthPage() {
         </h2>
         <p>
           {isPasswordForm
-            ? 'Use a new password for your learner account, then continue into the course workspace.'
+            ? 'Use a new password for your account, then continue to the main site.'
             : mode === 'sign-up'
               ? 'Choose the email you will use to log in, then add the institutional email tied to your training program.'
               : mode === 'recover'
