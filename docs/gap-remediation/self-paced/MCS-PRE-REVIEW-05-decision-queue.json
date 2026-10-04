@@ -1,0 +1,257 @@
+{
+  "queue": "MCS-PRE-REVIEW-05",
+  "title": "Mechanical Circulatory Support: consolidated owner decisions OD-01 to OD-08",
+  "status": "NOT REVIEWED",
+  "note": "Index only. It consolidates pending owner decisions for review and records none. The prose, evidence and locators are in the packet. MCS-03-claim-review-queue.json is not replaced or edited; its ids are referenced here. Replace NOT REVIEWED only with a named human reviewer's own decision, role, actual date and the exact commit and source versions reviewed.",
+  "preparedOn": "2026-10-04",
+  "preparedBy": "AI authoring assistant (Claude). Not a reviewer; made no clinical, device, source, media or model decision.",
+  "module": "mechanical-circulatory-support",
+  "authorizedBaseline": "9086f2af0a538a0afabf964273cf15a219e165d6",
+  "packet": "docs/gap-remediation/self-paced/MCS-PRE-REVIEW-05-decision-packet.md",
+  "historicalQueue": "docs/gap-remediation/self-paced/MCS-03-claim-review-queue.json",
+  "items": [
+    {
+      "id": "OD-01",
+      "title": "IABP device scope, the atrial-fibrillation trigger conflict, and the timing references",
+      "status": "NOT REVIEWED",
+      "affectedFindings": ["F17", "F18", "F19"],
+      "affectedActivities": [
+        "iabp-timing-triggering",
+        "IABP-01",
+        "IABP-02",
+        "IABP-03",
+        "CAP-IABP-01"
+      ],
+      "historicalQueueIds": ["MCS-03-05"],
+      "reviewerRoleSuggested": [
+        "IABP-experienced physician",
+        "perfusionist",
+        "Cardiosave educator or device specialist"
+      ],
+      "decisionRequested": "For which exact Cardiosave console, software revision and mode should this module teach, and in sustained atrial fibrillation what trigger behaviour and what inflation/deflation timing relationship should a first-year fellow learn from it?",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewedAt": null,
+      "commitReviewed": null,
+      "sourceVersionsReviewed": [],
+      "decision": null,
+      "requiredChanges": null
+    },
+    {
+      "id": "OD-02",
+      "title": "Product identity and the durable-LVAD estimator",
+      "status": "NOT REVIEWED",
+      "affectedFindings": ["F12", "F16", "F27", "F28"],
+      "affectedActivities": [
+        "lvad-parameters-assessment",
+        "lvad-alarms-emergencies",
+        "LVAD-01",
+        "LVAD-02",
+        "LVAD-03",
+        "CAP-LVAD-01"
+      ],
+      "historicalQueueIds": [
+        "MCS-03-01",
+        "MCS-03-02",
+        "MCS-03-03",
+        "MCS-03-04",
+        "MCS-03-08",
+        "MCS-03-09"
+      ],
+      "reviewerRoleSuggested": [
+        "VAD physician",
+        "VAD coordinator",
+        "Abiomed / J&J MedTech device specialist (Impella identity)",
+        "LVAD device specialist"
+      ],
+      "decisionRequested": "What exact product identities and measurands should the learner be taught for the durable pump, the left-sided Impella and the right-sided Impella, and which current official source and version governs each?",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewedAt": null,
+      "commitReviewed": null,
+      "sourceVersionsReviewed": [],
+      "decision": null,
+      "requiredChanges": null
+    },
+    {
+      "id": "OD-03",
+      "title": "Right-sided delivery, filling, suction, volume and congestion",
+      "status": "NOT REVIEWED",
+      "affectedFindings": ["F14", "F21", "F24", "F25", "F26", "F29", "F35"],
+      "affectedActivities": [
+        "mcs-foundations-mechanisms",
+        "iabp-efficacy-limits",
+        "impella-unloading-placement",
+        "impella-suction-purge-rv",
+        "mcs-device-selection-integration",
+        "story-level-for-suction",
+        "story-volume-for-suction",
+        "IMP-01",
+        "IMP-02",
+        "LVAD-02"
+      ],
+      "historicalQueueIds": ["MCS-03-06", "MCS-03-07"],
+      "reviewerRoleSuggested": [
+        "MCS cardiologist or intensivist",
+        "VAD/MCS specialist",
+        "model owner"
+      ],
+      "decisionRequested": "Which current variables may be presented as clinically meaningful filling or congestion signals, and should the model be recalibrated before these learning objectives are released?",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewedAt": null,
+      "commitReviewed": null,
+      "sourceVersionsReviewed": [],
+      "decision": null,
+      "requiredChanges": null
+    },
+    {
+      "id": "OD-04",
+      "title": "Authored numerical conditions versus clinical targets",
+      "status": "NOT REVIEWED",
+      "affectedFindings": ["F04", "F27", "F33", "F35"],
+      "affectedActivities": [
+        "IABP-01",
+        "IABP-02",
+        "IABP-03",
+        "IMP-01",
+        "IMP-02",
+        "IMP-03",
+        "LVAD-01",
+        "LVAD-02",
+        "LVAD-03",
+        "CAP-IABP-01",
+        "CAP-IMP-01",
+        "CAP-LVAD-01"
+      ],
+      "historicalQueueIds": [],
+      "reviewerRoleSuggested": ["owner", "MCS clinician with guideline expertise"],
+      "decisionRequested": "Which numerical conditions may remain visible as simulation criteria, and which, if any, should be promoted into sourced clinical teaching?",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewedAt": null,
+      "commitReviewed": null,
+      "sourceVersionsReviewed": [],
+      "decision": null,
+      "requiredChanges": null
+    },
+    {
+      "id": "OD-05",
+      "title": "Clinical source replacement and review provenance",
+      "status": "NOT REVIEWED",
+      "affectedFindings": ["F10"],
+      "affectedActivities": [
+        "iabp-timing-triggering",
+        "impella-unloading-placement",
+        "impella-suction-purge-rv",
+        "lvad-parameters-assessment",
+        "IABP-01",
+        "IMP-01",
+        "IMP-02",
+        "IMP-03",
+        "LVAD-01"
+      ],
+      "historicalQueueIds": ["MCS-03-10"],
+      "reviewerRoleSuggested": [
+        "owner / MCS clinician",
+        "appropriate device specialist",
+        "guideline or source reviewer"
+      ],
+      "decisionRequested": "Which of the ten mapped claims (MCS-04-C01 to C10) are acceptable as written, which textbook-only claims require primary evidence, and which unmapped synthesis-backed claims need priority next?",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewedAt": null,
+      "commitReviewed": null,
+      "sourceVersionsReviewed": [],
+      "decision": null,
+      "requiredChanges": null
+    },
+    {
+      "id": "OD-06",
+      "title": "Media identity, anatomical placement and rights",
+      "status": "NOT REVIEWED",
+      "affectedFindings": ["F05", "F12", "F17", "F22", "F23"],
+      "affectedActivities": [
+        "circulation map",
+        "iabp-timing-triggering",
+        "impella-unloading-placement",
+        "lvad-alarms-emergencies"
+      ],
+      "historicalQueueIds": [],
+      "reviewerRoleSuggested": [
+        "owner",
+        "device or anatomy subject-matter reviewer",
+        "media / rights owner"
+      ],
+      "decisionRequested": "Which two visual assets, if any, are worth adding, and what exact source, rights and review boundary is acceptable?",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewedAt": null,
+      "commitReviewed": null,
+      "sourceVersionsReviewed": [],
+      "decision": null,
+      "requiredChanges": null
+    },
+    {
+      "id": "OD-07",
+      "title": "Selected teaching choices and future interests",
+      "status": "NOT REVIEWED",
+      "affectedFindings": [
+        "F02",
+        "F06",
+        "F07",
+        "F11",
+        "F13",
+        "F15",
+        "F16",
+        "F30",
+        "F31",
+        "F32",
+        "F36",
+        "F39",
+        "F40",
+        "F42",
+        "F43"
+      ],
+      "affectedActivities": [
+        "hub",
+        "all nine Learn sections (Explain reflections)",
+        "all twelve case predictions",
+        "Mechanism Studio",
+        "CAP-LVAD-01 stem"
+      ],
+      "historicalQueueIds": [],
+      "reviewerRoleSuggested": ["owner", "curriculum lead", "MCS clinician"],
+      "decisionRequested": "Which draft teaching changes materially improve the fellow's learning enough to approve, revise or withdraw?",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewedAt": null,
+      "commitReviewed": null,
+      "sourceVersionsReviewed": [],
+      "decision": null,
+      "requiredChanges": null
+    },
+    {
+      "id": "OD-08",
+      "title": "Owner walkthrough, real learners and release",
+      "status": "NOT REVIEWED",
+      "affectedFindings": ["F39", "F40"],
+      "affectedActivities": ["whole module"],
+      "historicalQueueIds": [],
+      "reviewerRoleSuggested": [
+        "owner",
+        "intended first-year fellows",
+        "MCS/VAD bedside educator",
+        "accessibility / usability reviewer"
+      ],
+      "decisionRequested": "After direct human use, which activities are approved, which remain contained, and what specifically still blocks release?",
+      "reviewer": null,
+      "reviewerRole": null,
+      "reviewedAt": null,
+      "commitReviewed": null,
+      "sourceVersionsReviewed": [],
+      "decision": null,
+      "requiredChanges": null
+    }
+  ]
+}
