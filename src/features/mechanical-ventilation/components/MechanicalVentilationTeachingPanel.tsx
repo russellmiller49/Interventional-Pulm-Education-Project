@@ -537,6 +537,14 @@ const readingSteps: readonly ReadingStep[] = [
   },
 ]
 
+/* The reading figure's rows: the same fields and ranges the traces were always drawn on. */
+const READING_ROWS = [
+  { field: 'pawCmH2O', label: 'Pressure (cmH₂O)', min: -5, max: 45 },
+  { field: 'flowLMin', label: 'Flow (L/min)', min: -80, max: 80 },
+  { field: 'volumeMl', label: 'Volume (mL)', min: 0, max: 800 },
+  { field: 'pmusCmH2O', label: 'Patient effort · model (cmH₂O)', min: -25, max: 5 },
+] as const
+
 export function VentilationWaveformReadingSequence({
   state,
 }: {
@@ -546,10 +554,11 @@ export function VentilationWaveformReadingSequence({
   const breath = useMemo(() => latestBreath(state.waveforms), [state.waveforms])
   const activeStep = readingSteps.find((step) => step.id === activeStepId) ?? readingSteps[0]
 
-  const pressurePath = tracePath(breath, 'pawCmH2O', -5, 45)
-  const flowPath = tracePath(breath, 'flowLMin', -80, 80)
-  const volumePath = tracePath(breath, 'volumeMl', 0, 800)
-  const effortPath = tracePath(breath, 'pmusCmH2O', -25, 5)
+  const [pressureRow, flowRow, volumeRow, effortRow] = READING_ROWS
+  const pressurePath = tracePath(breath, 'pawCmH2O', pressureRow.min, pressureRow.max)
+  const flowPath = tracePath(breath, 'flowLMin', flowRow.min, flowRow.max)
+  const volumePath = tracePath(breath, 'volumeMl', volumeRow.min, volumeRow.max)
+  const effortPath = tracePath(breath, 'pmusCmH2O', effortRow.min, effortRow.max)
 
   const focusesFlow = activeStepId === 'inspiratory-flow' || activeStepId === 'expiratory-flow'
   const traceClass = (isActive: boolean) => (isActive ? styles.trace : styles.traceMuted)
@@ -572,29 +581,67 @@ export function VentilationWaveformReadingSequence({
         </p>
       </header>
 
-      <figure className={styles.figure}>
-        <svg viewBox="0 0 300 336" role="img" aria-label={summary}>
-          {[0, 84, 168, 252].map((offset) => (
-            <path key={offset} className={styles.traceGrid} d={`M0 ${offset + 78} H300`} />
-          ))}
-          <g transform="translate(0 0)">
-            <path className={traceClass(activeStepId === 'pressure')} d={pressurePath} />
-          </g>
-          <g transform="translate(0 84)">
-            {/* Zero-flow reference: the line the expiratory limb has to reach. */}
-            <path className={styles.zeroFlowLine} d="M0 39 H300" />
-            <path className={traceClass(focusesFlow)} d={flowPath} />
-          </g>
-          <g transform="translate(0 168)">
-            <path className={traceClass(activeStepId === 'volume')} d={volumePath} />
-          </g>
-          <g transform="translate(0 252)">
-            <path className={traceClass(activeStepId === 'effort')} d={effortPath} />
-          </g>
+      <figure
+        className={`${styles.figure} ${styles.wideSurfaceFigure}`}
+        data-reading-sequence-figure
+      >
+        {/*
+         * Four rows, each named with its unit and its scale — the walkthrough (V2) found four
+         * unlabeled lines. The traces and their ranges are unchanged; the drawing gains a 42-unit
+         * gutter for the scale and a title line above each row.
+         */}
+        <svg viewBox="0 0 342 372" role="img" aria-label={summary}>
+          {READING_ROWS.map((row, index) => {
+            const top = index * 93
+            const path =
+              row.field === 'pawCmH2O'
+                ? pressurePath
+                : row.field === 'flowLMin'
+                  ? flowPath
+                  : row.field === 'volumeMl'
+                    ? volumePath
+                    : effortPath
+            const active =
+              row.field === 'flowLMin'
+                ? focusesFlow
+                : activeStepId ===
+                  (row.field === 'pawCmH2O'
+                    ? 'pressure'
+                    : row.field === 'volumeMl'
+                      ? 'volume'
+                      : 'effort')
+            return (
+              <g key={row.field} data-reading-row={row.field}>
+                <text x="0" y={top + 10} className={styles.readingRowLabel}>
+                  {row.label}
+                </text>
+                <g transform={`translate(42 ${top + 14})`}>
+                  <path className={styles.traceGrid} d="M0 78 H300" />
+                  <text x="-5" y="7" textAnchor="end" className={styles.readingScale}>
+                    {row.max}
+                  </text>
+                  <text x="-5" y="78" textAnchor="end" className={styles.readingScale}>
+                    {row.min}
+                  </text>
+                  {row.field === 'flowLMin' ? (
+                    <>
+                      {/* Zero-flow reference: the line the expiratory limb has to reach. */}
+                      <path className={styles.zeroFlowLine} d="M0 39 H300" />
+                      <text x="-5" y="42" textAnchor="end" className={styles.readingScale}>
+                        0
+                      </text>
+                    </>
+                  ) : null}
+                  <path className={traceClass(active)} d={path} />
+                </g>
+              </g>
+            )
+          })}
         </svg>
         <figcaption>
-          Pressure, flow, volume, and patient effort for the most recent breath. The dashed line on
-          the flow trace is zero flow. The selected step is emphasized; the others are dimmed.
+          Pressure, flow, volume, and patient effort for the most recent breath, on one time axis.
+          The dashed line on the flow trace is zero flow. Effort is a model signal, not a routine
+          ventilator measurement. The selected step is emphasized; the others are dimmed.
         </figcaption>
       </figure>
 

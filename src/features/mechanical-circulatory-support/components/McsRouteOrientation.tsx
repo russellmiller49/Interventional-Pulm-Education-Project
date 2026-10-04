@@ -8,7 +8,7 @@ import styles from './mechanical-circulatory-support.module.css'
  *
  * The module said "LEARN → PRACTICE → CHALLENGE" without ever saying what changes between them, and
  * used "case" for three different things: a patient case with its own state, a guided section, and
- * an open studio with no patient at all. A learner could not tell where they were or what was
+ * an open studio with no assignment at all. A learner could not tell where they were or what was
  * expected of them.
  *
  * Every count here is derived from the arrays that produce the activities, so the page cannot
@@ -35,11 +35,11 @@ export function McsRouteOrientation() {
       label: 'Practice',
       countLabel: `${mcsPracticeScenarios.length} patient cases, plus an open studio`,
       whatItIs:
-        'Patient cases with a presentation, supported controls, and a worked explanation — and a Mechanism Studio, which is a free workspace rather than a case.',
+        'Patient cases with a presentation, supported controls, and a worked explanation — and a Mechanism Studio, which is an open sandbox on the reference patient rather than a case.',
       howItRuns: [
         'The case states the presentation and lets you inspect before you decide.',
         'Coaching is shorter here: you act, watch the modeled response, and read the reasoning in the debrief.',
-        'The Mechanism Studio has no patient and no debrief. It is there to change one variable and watch the whole system answer.',
+        'The Mechanism Studio starts from the module’s reference patient and has no case, no question and no debrief. It is there to change one variable and watch the whole system answer.',
       ],
       guidance: 'Lightly coached',
     },

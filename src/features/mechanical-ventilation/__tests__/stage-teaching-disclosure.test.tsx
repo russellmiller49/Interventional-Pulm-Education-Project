@@ -39,11 +39,14 @@ it.each(ventilationLearningUnits.map((unit) => unit.id))(
     for (const step of lesson.steps) expect(outline).toHaveTextContent(step.title)
     fireEvent.change(outline, { target: { value: lesson.predictionStepIndex } })
     fireEvent.click(screen.getAllByRole('button', { name: 'Show explanation' })[0])
-    const teaching = screen.getByText('Teaching and worked references').closest('details')!
-    expect(teaching.open).toBe(true)
-    expect(
-      teaching.querySelector('[data-teaching-column], [data-foundation-teaching]'),
-    ).not.toBeNull()
+    // MV-PRE-REVIEW-03 (T1): the lesson is shown, not folded inside a wrapper named like a
+    // bibliography; only the named optional parts fold.
+    expect(screen.queryByText('Teaching and worked references')).toBeNull()
+    const teaching = document.querySelector('[data-lesson]')!
+    expect(teaching).not.toBeNull()
+    expect(teaching.closest('details')).toBeNull()
+    expect(teaching.querySelector('[data-lesson-part="idea"]')).not.toBeNull()
+    expect(teaching.querySelector('[data-lesson-disclosure="more-detail"]')).not.toBeNull()
     expect(
       document.querySelectorAll('[data-source-list] [data-source-claims]').length,
     ).toBeGreaterThan(0)

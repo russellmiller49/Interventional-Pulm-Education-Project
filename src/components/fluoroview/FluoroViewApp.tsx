@@ -1164,7 +1164,9 @@ export function FluoroViewApp() {
     <HandoffContent>
       {
         <div className="space-y-6">
-          <div className="grid items-start gap-6 xl:grid-cols-[minmax(360px,0.72fr)_minmax(620px,1.28fr)]">
+          {/* On a wide window the image column is only as wide as its height-capped image needs, and
+              the controls take the rest, so all five control groups share one row beside it. */}
+          <div className="grid items-start gap-6 xl:grid-cols-[minmax(360px,0.72fr)_minmax(620px,1.28fr)] min-[1600px]:grid-cols-[minmax(360px,0.6fr)_minmax(620px,1.4fr)]">
             <section className="rounded-lg border border-border/70 bg-card/70 p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
@@ -1189,9 +1191,15 @@ export function FluoroViewApp() {
                           : 'Loading'}
                 </Badge>
               </div>
+              {/* Sized to the window's height as well as the column's width: the portrait detector
+                  image used to run about 65px past a 900px window, so the controls beside it and
+                  the bottom of the image they change were never on screen together. */}
               <div
-                className="relative overflow-hidden rounded-lg border border-white/10 bg-slate-950"
-                style={{ aspectRatio: fluoroAspectRatio }}
+                className="relative mx-auto overflow-hidden rounded-lg border border-white/10 bg-slate-950"
+                style={{
+                  aspectRatio: fluoroAspectRatio,
+                  width: `min(100%, max(18rem, calc((100dvh - 15rem) * ${fluoroAspectRatio})))`,
+                }}
               >
                 {isSlicerReferenceMode && manifest?.virtualCathLab?.frontalImageUrl ? (
                   <Image
@@ -1532,7 +1540,7 @@ export function FluoroViewApp() {
                   an answer.
                 </div>
               )}
-              <div className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-3">
+              <div className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-3 min-[1600px]:grid-cols-5">
                 <ControlPanel title="C-arm">
                   <PresetButtons
                     raoLaoLimitDeg={raoLaoLimitDeg}

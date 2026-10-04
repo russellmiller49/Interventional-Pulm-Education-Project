@@ -108,9 +108,12 @@ it('shows safety events immediately and resets the real patient and current acti
   fireEvent.change(inflation, { target: { value: '120' } })
   expect(screen.getByText('CRITICAL · Late deflation')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Show explanation' }))
-  expect(document.querySelector('[data-worked-explanation]')).toHaveTextContent(
-    'iabp:set-deflation',
-  )
+  // MCS-PRE-REVIEW-04 (F33): the learner reads the action's name; the stored id is unchanged and
+  // stays on the row as an attribute.
+  const explanation = document.querySelector('[data-worked-explanation]')!
+  expect(explanation).toHaveTextContent('Changed IABP deflation timing')
+  expect(explanation).not.toHaveTextContent('iabp:set-deflation')
+  expect(explanation.querySelector('[data-action-id="iabp:set-deflation"]')).not.toBeNull()
   fireEvent.click(screen.getByRole('button', { name: 'Try again from the case baseline' }))
   expect(screen.getByRole('slider', { name: 'Deflation vs systole' })).toHaveValue(baseline)
   expect(screen.queryByText('CRITICAL · Late deflation')).toBeNull()

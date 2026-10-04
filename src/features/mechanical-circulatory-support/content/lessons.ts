@@ -143,7 +143,12 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
         targetActionId: 'iabp:set-trigger',
       },
     ],
-    sourceIds: ['master-hemodynamics-reference', 'getinge-iabp-current'],
+    sourceIds: [
+      'getinge-cardiosave-hybrid-operating-instructions',
+      'guide-mcs-vad-clinicians-2022',
+      'master-hemodynamics-reference',
+      'getinge-iabp-current',
+    ],
   },
   {
     id: 'iabp-efficacy-limits',
@@ -232,6 +237,8 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
       },
     ],
     sourceIds: [
+      'impella-cp-ifu-rev-v-supplied',
+      'impella-55-ifu-rev-l-supplied',
       'master-hemodynamics-reference',
       'fda-impella-cp-labeling',
       'fda-impella-55-labeling',
@@ -286,6 +293,8 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
       },
     ],
     sourceIds: [
+      'impella-cp-ifu-rev-v-supplied',
+      'impella-rp-ifu-rev-n-supplied',
       'master-hemodynamics-reference',
       'ishlt-hfsa-acute-mcs-2023',
       'fda-impella-cp-labeling',
@@ -330,7 +339,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
         targetActionId: 'lvad:authorize-speed',
       },
     ],
-    sourceIds: ['ishlt-durable-mcs-2023', 'fda-heartmate3-ifu'],
+    sourceIds: ['guide-mcs-vad-clinicians-2022', 'ishlt-durable-mcs-2023', 'fda-heartmate3-ifu'],
   },
   {
     id: 'lvad-alarms-emergencies',

@@ -3,6 +3,16 @@
 import { ExternalLink } from 'lucide-react'
 
 import { mcsDeviceProfiles, mcsSources } from '../content'
+import { MCS_CLAIM_SOURCE_MAP } from '../content/claimSourceMap'
+import {
+  MCS_SOURCE_CLASS_LABELS,
+  MCS_SOURCE_CLASS_MEANING,
+  MCS_SOURCE_CLASS_ORDER,
+  mcsSourceClass,
+  mcsSourceIdsByClass,
+  mcsSourceVerificationLabel,
+} from '../content/sourceClasses'
+import { McsClaimSourceChecks } from './McsClaimSourceChecks'
 import styles from './mechanical-circulatory-support.module.css'
 
 export function McsSourcesPanel() {
@@ -14,24 +24,38 @@ export function McsSourcesPanel() {
         <span className={styles.kicker}>EVIDENCE & MODEL CARD</span>
         <h2 id="mcs-sources-heading">Source-backed, bounded, and revision-aware</h2>
         <p>
-          Clinical concepts are linked to supplied syntheses, society guidelines, FDA labeling
-          records, and manufacturer material. Whether a labeling record is the current revision for
-          a local device has not been verified here. Directional outputs are educational estimates.
+          Sources are listed by kind. Society guidelines, instructions for use and regulator records
+          are primary sources; textbook chapters and manufacturer teaching material are secondary;
+          two supplied Word syntheses are authoring provenance, kept on record as the documents this
+          module was drafted from and not as evidence for it. Whether a labeling record is the
+          current revision for a local device has not been verified here. Directional outputs are
+          educational estimates.
         </p>
+        <dl data-source-class-key>
+          {MCS_SOURCE_CLASS_ORDER.map((sourceClass) => (
+            <div key={sourceClass} data-source-class={sourceClass}>
+              <dt>{MCS_SOURCE_CLASS_LABELS[sourceClass]}</dt>
+              <dd>{MCS_SOURCE_CLASS_MEANING[sourceClass]}</dd>
+            </div>
+          ))}
+        </dl>
+        <McsClaimSourceChecks claims={MCS_CLAIM_SOURCE_MAP} context="this module" />
       </div>
-      <aside className={styles.safetyReview} aria-label="Current FDA safety-review flags">
-        <strong>Current safety-review flags</strong>
+      <aside className={styles.safetyReview} aria-label="Registered FDA notice records">
+        <strong>Registered safety-notice references</strong>
         <p>
-          This preview records {safetyNotices.length} relevant FDA device notices from a July 19,
-          2026 check; no later check is recorded. They do not replace affected-unit checks, current
-          instructions, or a new recall sweep at content freeze and immediately before publication.
+          The source registry lists {safetyNotices.length} FDA notice records. These records were
+          not opened for this module; current recall status, affected units and labeling have not
+          been verified. They do not replace current device instructions or an authoritative recall
+          check before publication.
         </p>
         <ul>
           {safetyNotices.map((source) => (
             <li key={source.id}>
               <a href={source.url} target="_blank" rel="noreferrer">
                 {source.title} <ExternalLink aria-hidden="true" />
-              </a>
+              </a>{' '}
+              <small>{mcsSourceVerificationLabel(source.id)}.</small>
             </li>
           ))}
         </ul>
@@ -52,8 +76,11 @@ export function McsSourcesPanel() {
                 <dd>{profile.labelingRevision}</dd>
               </div>
               <div>
-                <dt>Labeling sources last checked</dt>
-                <dd>{profile.reviewedAt}; no clinical review is recorded</dd>
+                <dt>Historical registry date</dt>
+                <dd>
+                  {profile.reviewedAt}; this date does not verify current labeling;{' '}
+                  {'no clinical review is recorded'}
+                </dd>
               </div>
             </dl>
             <ul>
@@ -83,28 +110,32 @@ export function McsSourcesPanel() {
       <details className={styles.sourceDetails}>
         <summary>Open citations and intended use</summary>
         <div className={styles.sourceList}>
-          {mcsSources.map((source) => (
-            <article key={source.id}>
-              <span>
-                {source.sourceType.replaceAll('-', ' ')} · {source.year ?? 'date not stated'}
-              </span>
-              <h3>{source.title}</h3>
-              <p>{source.citation}</p>
-              <p>
-                <strong>Used for:</strong> {source.intendedUse}
-              </p>
-              {source.limitation ? (
+          {mcsSourceIdsByClass(mcsSources.map((source) => source.id))
+            .map((id) => mcsSources.find((source) => source.id === id)!)
+            .map((source) => (
+              <article key={source.id} data-source-class={mcsSourceClass(source.id)}>
+                <span>
+                  {MCS_SOURCE_CLASS_LABELS[mcsSourceClass(source.id)]} ·{' '}
+                  {source.sourceType.replaceAll('-', ' ')} · {source.year ?? 'date not stated'}
+                </span>
+                <small data-source-verification>{mcsSourceVerificationLabel(source.id)}.</small>
+                <h3>{source.title}</h3>
+                <p>{source.citation}</p>
                 <p>
-                  <strong>Boundary:</strong> {source.limitation}
+                  <strong>Used for:</strong> {source.intendedUse}
                 </p>
-              ) : null}
-              {source.url ? (
-                <a href={source.url} target="_blank" rel="noreferrer">
-                  Open source <ExternalLink aria-hidden="true" />
-                </a>
-              ) : null}
-            </article>
-          ))}
+                {source.limitation ? (
+                  <p>
+                    <strong>Boundary:</strong> {source.limitation}
+                  </p>
+                ) : null}
+                {source.url ? (
+                  <a href={source.url} target="_blank" rel="noreferrer">
+                    Open source <ExternalLink aria-hidden="true" />
+                  </a>
+                ) : null}
+              </article>
+            ))}
         </div>
       </details>
     </section>

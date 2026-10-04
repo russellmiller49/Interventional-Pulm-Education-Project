@@ -872,10 +872,19 @@ export function AirwayAnatomyModule() {
               </p>
             )}
           </div>
+          {/*
+            The balanced layout on a wide window: the bronchoscope view, the 3D tree and the steering
+            controls share the first row, and the linked CT views run in one row beneath the two
+            viewports. Stacked, the tree and the CT sat a screen below the bronchoscope view, so
+            steering changed two of the three synchronized views off screen. The two column wrappers
+            become `contents` there so their four panels are placed by the one grid.
+          */}
           <div
-            className={`grid gap-3 p-3 ${enlarged ? 'xl:grid-cols-[minmax(0,1.65fr)_minmax(340px,.65fr)]' : 'xl:grid-cols-[minmax(0,1.12fr)_minmax(340px,.88fr)]'}`}
+            className={`grid gap-3 p-3 ${enlarged ? 'xl:grid-cols-[minmax(0,1.65fr)_minmax(340px,.65fr)]' : 'xl:grid-cols-[minmax(0,1.12fr)_minmax(340px,.88fr)] min-[1600px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(340px,0.72fr)]'}`}
           >
-            <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-1">
+            <div
+              className={`grid gap-3 lg:grid-cols-2 xl:grid-cols-1 ${enlarged ? '' : 'min-[1600px]:contents'}`}
+            >
               <VirtualBronchoscopyViewport
                 manifest={loadedCase.manifest}
                 pose={snapshot}
@@ -905,7 +914,9 @@ export function AirwayAnatomyModule() {
               />
             </div>
 
-            <div className="grid gap-3">
+            <div
+              className={`grid gap-3 ${enlarged ? '' : 'min-[1600px]:contents min-[1600px]:[&>*:first-child]:row-span-2 min-[1600px]:[&>*:last-child]:col-span-2'}`}
+            >
               <ControlPanel
                 pose={snapshot}
                 location={currentLocation}
@@ -938,6 +949,7 @@ export function AirwayAnatomyModule() {
                 frame={opticalFrame!}
                 low={currentWindow.low}
                 high={currentWindow.high}
+                wideRow={!enlarged}
               />
             </div>
           </div>

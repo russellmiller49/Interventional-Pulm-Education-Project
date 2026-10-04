@@ -1,3 +1,7 @@
+'use client'
+
+import { useState } from 'react'
+
 import { MCS_IABP_PRESSURE_SCALE } from '../../content/iabpWaveformReference'
 import { deriveIabpCycleState } from '../../engine/model'
 import type { McsSimulationState } from '../../engine/types'
@@ -8,11 +12,25 @@ import styles from './mcs-stage.module.css'
 /** Traces and balloon state share the existing engine clock. No diagnostic contour is invented. */
 export function McsTimingFigure({
   state,
-  annotated = true,
+  annotated: annotatedByCaller = true,
+  detailOpen = true,
 }: {
   state: McsSimulationState
   annotated?: boolean
+  /** Whether the legend and measured-limit disclosures start open on this step. */
+  detailOpen?: boolean
 }) {
+  /*
+   * An optional clean view, at the learner's own request (F18).
+   *
+   * The report asked for the landmark letters and the alarm to be hidden until an answer was
+   * committed. This module does not hide evidence to make a question harder, and it never hides
+   * an alarm. What it can offer honestly is a switch: a learner who wants to read the trace before
+   * the letters may turn the letters off, and turn them back on with the same control. The alarm,
+   * the balloon band and the text equivalent are untouched, and nothing waits on an answer.
+   */
+  const [cleanView, setCleanView] = useState(false)
+  const annotated = annotatedByCaller && !cleanView
   const timing = iabpTimingView(state)
   // One fixed pressure domain across every timing figure, so the five demonstrations in Section 3
   // are drawn against the same pressures and can be compared with one another and with the
@@ -28,13 +46,38 @@ export function McsTimingFigure({
   return (
     <>
       <figure className={styles.block} data-timing-figure={annotated ? 'reference' : 'independent'}>
-        <h3>{annotated ? 'Timing reference' : 'Timing example'}</h3>
+        <h3>
+          {annotated
+            ? 'Timing reference'
+            : cleanView
+              ? 'Timing reference · optional clean view'
+              : 'Timing example'}
+        </h3>
         <p>
           {annotated
             ? 'Annotated demonstration'
-            : 'Changed example · identify the relationship without the diagnostic annotations'}{' '}
+            : cleanView
+              ? 'Landmark letters hidden at your request'
+              : 'Changed example · identify the relationship without the diagnostic annotations'}{' '}
           · ECG, arterial pressure, then balloon inflation band.
         </p>
+        {annotatedByCaller ? (
+          <p data-timing-clean-view>
+            <label>
+              <input
+                type="checkbox"
+                checked={cleanView}
+                onChange={(event) => setCleanView(event.target.checked)}
+              />{' '}
+              Optional clean view: hide the landmark letters
+            </label>{' '}
+            <span>
+              {cleanView
+                ? 'Untick to bring the letters back at once. The model’s alarm and the balloon band stay on screen.'
+                : 'For reading the trace before the letters. Nothing is withheld: the letters return whenever you untick it.'}
+            </span>
+          </p>
+        ) : null}
         <svg
           viewBox="0 0 320 162"
           role="img"
@@ -120,9 +163,9 @@ export function McsTimingFigure({
           a fixed {MCS_IABP_PRESSURE_SCALE.minMmHg}–{MCS_IABP_PRESSURE_SCALE.maxMmHg} mm Hg scale,
           the same one every timing figure and the reference contour below use.
         </figcaption>
-        <McsIabpLiveTraceLimits />
+        <McsIabpLiveTraceLimits detailOpen={detailOpen} />
       </figure>
-      <McsIabpWaveformReference />
+      <McsIabpWaveformReference detailOpen={detailOpen} />
     </>
   )
 }

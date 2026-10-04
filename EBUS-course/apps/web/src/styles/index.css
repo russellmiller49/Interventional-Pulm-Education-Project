@@ -1,5 +1,7 @@
 :root {
   color-scheme: dark;
+  --font-body: 'Source Serif 4', Georgia, serif;
+  --font-label: 'Space Mono', monospace;
   --bg: #07111d;
   --panel: #0d1a2a;
   --panel-soft: #122235;
@@ -72,7 +74,7 @@ body {
     radial-gradient(circle at left center, rgba(46, 138, 106, 0.18), transparent 26%),
     linear-gradient(180deg, #07111d 0%, #060d17 100%);
   color: var(--text);
-  font-family: 'Source Serif 4', Georgia, serif;
+  font-family: var(--font-body);
 }
 
 html[data-theme='light'] body {
@@ -169,7 +171,7 @@ html[data-theme='light'] .top-header {
 }
 
 .eyebrow {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.72rem;
@@ -204,7 +206,7 @@ html[data-theme='light'] .top-header {
   justify-content: center;
   gap: 6px;
   text-align: right;
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.8rem;
   color: var(--text-muted);
 }
@@ -233,7 +235,7 @@ html[data-theme='light'] .top-header {
   padding: 0 16px;
   border-radius: 999px;
   border: 1px solid transparent;
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.82rem;
   color: var(--text-muted);
   transition: 160ms ease;
@@ -414,7 +416,7 @@ html[data-theme='light'] .flashcard {
 .mini-card strong,
 .quiz-card__score {
   display: block;
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 1.05rem;
   color: var(--text);
 }
@@ -446,7 +448,7 @@ html[data-theme='light'] .flashcard {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.04);
   font-size: 1.4rem;
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
 }
 
 .module-card__body h3,
@@ -497,7 +499,7 @@ html[data-theme='light'] .flashcard {
   border-radius: 999px;
   border: 1px solid rgba(127, 189, 242, 0.24);
   background: rgba(255, 255, 255, 0.04);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
 }
 
 .learning-path__marker--done {
@@ -531,7 +533,7 @@ html[data-theme='light'] .flashcard {
 }
 
 .progress-row__label {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   color: var(--text-soft);
 }
 
@@ -572,7 +574,7 @@ html[data-theme='light'] .flashcard {
   display: inline-flex;
   margin-top: 8px;
   color: var(--accent-gold);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.74rem;
   letter-spacing: 0.03em;
 }
@@ -594,7 +596,7 @@ html[data-theme='light'] .flashcard {
 }
 
 .schedule-item > span {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   color: var(--accent-cyan);
 }
 
@@ -667,7 +669,7 @@ html[data-theme='light'] .flashcard {
 .station-map__zone {
   position: absolute;
   left: 12px;
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.64rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -703,7 +705,7 @@ html[data-theme='light'] .flashcard {
   border: 2px solid color-mix(in srgb, var(--station-border) 70%, white 8%);
   background: rgba(7, 17, 29, 0.18);
   color: transparent;
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.85rem;
   z-index: 5;
   backdrop-filter: blur(3px);
@@ -764,7 +766,7 @@ html[data-theme='light'] .flashcard {
   border: 1px solid rgba(123, 163, 200, 0.14);
   background: rgba(255, 255, 255, 0.04);
   color: var(--text-soft);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.74rem;
 }
 
@@ -829,7 +831,7 @@ html[data-theme='light'] .flashcard {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.72rem;
   color: var(--text-muted);
 }
@@ -899,7 +901,7 @@ html[data-theme='light'] .flashcard {
 }
 
 .media-slot__annotation-label {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 22px;
   paint-order: stroke;
   stroke-width: 6;
@@ -923,7 +925,7 @@ html[data-theme='light'] .flashcard {
   background: rgba(8, 17, 29, 0.78);
   border: 1px solid rgba(127, 189, 242, 0.2);
   color: var(--text-soft);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.66rem;
   opacity: 0.86;
   transition:
@@ -1109,7 +1111,7 @@ html[data-theme='light'] .flashcard {
 }
 
 .knobology-keyboard-feedback__values {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.74rem;
   color: var(--text-muted);
 }
@@ -1221,7 +1223,7 @@ html[data-theme='light'] .flashcard {
   place-items: center;
   padding: 18px;
   color: rgba(235, 241, 245, 0.72);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.78rem;
   text-align: center;
   background:
@@ -1279,7 +1281,7 @@ html[data-theme='light'] .flashcard {
   border-radius: 14px;
   background: rgba(7, 17, 29, 0.54);
   color: #d7f6ff;
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.7rem;
   backdrop-filter: blur(8px);
 }
@@ -1338,7 +1340,7 @@ html[data-theme='light'] .flashcard {
   position: absolute;
   transform: translate(10px, -18px);
   color: #59f3ff;
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.76rem;
   font-weight: 700;
   text-shadow: 0 0 10px rgba(50, 240, 255, 0.28);
@@ -1390,7 +1392,7 @@ html[data-theme='light'] .flashcard {
   position: absolute;
   inset: 10px 8px auto;
   color: rgba(235, 241, 245, 0.84);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.58rem;
   line-height: 1.35;
 }
@@ -1409,7 +1411,7 @@ html[data-theme='light'] .flashcard {
   padding: 3px 6px;
   border-radius: 999px;
   background: rgba(7, 17, 29, 0.8);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.64rem;
 }
 
@@ -1424,7 +1426,7 @@ html[data-theme='light'] .flashcard {
   border-radius: 999px;
   background: rgba(247, 235, 173, 0.92);
   color: #2f240e;
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.62rem;
   box-shadow: 0 8px 18px rgba(13, 18, 24, 0.18);
 }
@@ -1441,7 +1443,7 @@ html[data-theme='light'] .flashcard {
   background: rgba(7, 17, 29, 0.82);
   border: 1px solid rgba(127, 189, 242, 0.22);
   backdrop-filter: blur(12px);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.72rem;
 }
 
@@ -1455,7 +1457,7 @@ html[data-theme='light'] .flashcard {
   border-radius: 14px;
   background: rgba(7, 17, 29, 0.74);
   border: 1px solid rgba(127, 189, 242, 0.18);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.68rem;
 }
 
@@ -1499,7 +1501,7 @@ html[data-theme='light'] .flashcard {
   background: rgba(7, 17, 29, 0.72);
   border: 1px solid rgba(127, 189, 242, 0.18);
   color: rgba(235, 241, 245, 0.84);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.68rem;
   backdrop-filter: blur(10px);
 }
@@ -1512,7 +1514,7 @@ html[data-theme='light'] .flashcard {
 
 .knobology-frame__status-line {
   margin: 10px 0 0;
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.82rem;
   color: var(--text-soft);
 }
@@ -1660,7 +1662,7 @@ html[data-theme='light'] .flashcard {
   border-radius: 8px;
   background: rgba(7, 17, 29, 0.86);
   color: #eff8ff;
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.58rem;
   line-height: 1.3;
   white-space: nowrap;
@@ -1709,7 +1711,7 @@ html[data-theme='light'] .flashcard {
 
 .slider-field span,
 .slider-field strong {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
 }
 
 .slider-field input {
@@ -1738,7 +1740,7 @@ html[data-theme='light'] .flashcard {
   border: 1px solid rgba(127, 189, 242, 0.32);
   background: rgba(45, 108, 163, 0.2);
   color: var(--text);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
 }
 
 .button:disabled {
@@ -1796,7 +1798,7 @@ html[data-theme='light'] .flashcard {
   left: 14px;
   bottom: 14px;
   right: 14px;
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.72rem;
   color: rgba(235, 241, 245, 0.82);
   padding: 10px 12px;
@@ -1809,7 +1811,7 @@ html[data-theme='light'] .flashcard {
   position: absolute;
   top: 14px;
   left: 14px;
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -1861,7 +1863,7 @@ html[data-theme='light'] .flashcard {
   place-items: center;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 1rem;
   grid-row: span 2;
 }
@@ -1908,7 +1910,7 @@ html[data-theme='light'] .flashcard {
 
 .pretest-figure figcaption {
   color: var(--text-muted);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.72rem;
   letter-spacing: 0.04em;
 }
@@ -1970,14 +1972,14 @@ html[data-theme='light'] .flashcard {
   display: grid;
   place-items: center;
   color: var(--accent-cyan);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 1.2rem;
 }
 
 .lecture-card__number {
   margin-bottom: 4px;
   color: var(--accent-cyan);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.94rem;
   font-weight: 700;
 }
@@ -1994,7 +1996,7 @@ html[data-theme='light'] .flashcard {
   border: 1px solid rgba(123, 163, 200, 0.18);
   background: rgba(255, 255, 255, 0.04);
   color: var(--text);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 1rem;
 }
 
@@ -2016,7 +2018,7 @@ html[data-theme='light'] .flashcard {
   display: inline-flex;
   margin-top: 14px;
   color: var(--accent-gold);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.74rem;
   letter-spacing: 0.03em;
 }
@@ -2137,7 +2139,7 @@ html[data-theme='light'] .choice-card--incorrect {
   border-radius: 999px;
   border: 1px solid rgba(127, 189, 242, 0.22);
   color: var(--text-soft);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.72rem;
 }
 
@@ -2154,7 +2156,7 @@ html[data-theme='light'] .choice-card--incorrect {
 
 .aabip-video-library__video-copy span {
   color: var(--text-muted);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.72rem;
 }
 
@@ -2194,7 +2196,7 @@ html[data-theme='light'] .choice-card--incorrect {
 }
 
 .flashcard__station {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 3rem;
   color: var(--accent-cyan);
 }
@@ -2225,7 +2227,7 @@ html[data-theme='light'] .choice-card--incorrect {
 }
 
 .field span {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.78rem;
   color: var(--text-soft);
 }
@@ -2338,7 +2340,7 @@ html[data-theme='light'] .choice-card--incorrect {
   border: 1px solid rgba(127, 189, 242, 0.3);
   background: rgba(45, 108, 163, 0.22);
   color: var(--accent-cyan);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.86rem;
   font-weight: 700;
 }
@@ -2373,7 +2375,7 @@ html[data-theme='light'] .choice-card--incorrect {
   padding: 6px 10px;
   background: rgba(20, 63, 48, 0.22);
   color: var(--text-soft);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.72rem;
 }
 
@@ -2388,7 +2390,7 @@ html[data-theme='light'] .choice-card--incorrect {
   margin: 0;
   padding: 14px 16px;
   border-radius: var(--radius-sm);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
 }
 
 .auth-card__helper {
@@ -2464,13 +2466,13 @@ html[data-theme='light'] .choice-card--incorrect {
 .admin-progress-summary span,
 .admin-module-progress__row span,
 .admin-info-grid dt {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.74rem;
   color: var(--text-muted);
 }
 
 .admin-summary-card strong {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 1.4rem;
   color: var(--text);
 }
@@ -2499,7 +2501,7 @@ html[data-theme='light'] .choice-card--incorrect {
   border: 1px solid rgba(123, 163, 200, 0.16);
   background: rgba(255, 255, 255, 0.03);
   color: var(--text-soft);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
 }
 
 .admin-filter-button--active {
@@ -2564,7 +2566,7 @@ html[data-theme='light'] .choice-card--incorrect {
   padding: 0 12px;
   border-radius: 999px;
   border: 1px solid rgba(123, 163, 200, 0.14);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.74rem;
   text-transform: uppercase;
 }
@@ -2619,7 +2621,7 @@ html[data-theme='light'] .choice-card--incorrect {
 }
 
 .admin-progress-summary strong {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   color: var(--text);
 }
 
@@ -2665,7 +2667,7 @@ html[data-theme='light'] .choice-card--incorrect {
 .admin-answer-panel summary span,
 .admin-answer-row dt,
 .admin-answer-row__index {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.72rem;
   color: var(--text-muted);
 }
@@ -2731,7 +2733,7 @@ html[data-theme='light'] .choice-card--incorrect {
 }
 
 .admin-module-progress__row strong {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   color: var(--text-soft);
   text-align: right;
 }
@@ -2756,7 +2758,7 @@ html[data-theme='light'] .choice-card--incorrect {
   border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.03);
   color: var(--text);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.88rem;
   text-align: left;
   cursor: pointer;
@@ -3394,7 +3396,7 @@ html[data-theme='light'] .course-endorsement {
 .course-hero__media-secondary figcaption,
 .course-address,
 .course-topic {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
 }
 
 .course-meta-card span,
@@ -3655,7 +3657,7 @@ html[data-theme='light'] .course-endorsement {
 
 .course-agenda__item > span {
   color: var(--accent-cyan);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
 }
 
 .course-agenda__item strong,
@@ -3768,7 +3770,7 @@ html[data-theme='light'] .course-endorsement {
 }
 
 .course-guidance__item span {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.74rem;
 }
 
@@ -3791,7 +3793,7 @@ html[data-theme='light'] .course-endorsement {
 .progress-module-card__heading span,
 .progress-module-card__meter span {
   color: var(--text-soft);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.74rem;
 }
 
@@ -3864,7 +3866,7 @@ html[data-theme='light'] .course-endorsement {
   border: 1px solid rgba(127, 189, 242, 0.22);
   background: rgba(255, 255, 255, 0.04);
   color: var(--accent-cyan);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
 }
 
 .progress-module-card__meter {
@@ -4176,7 +4178,7 @@ html[data-theme='light'] .course-endorsement {
   border-radius: 999px;
   border: 1px solid rgba(127, 189, 242, 0.24);
   background: rgba(255, 255, 255, 0.04);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
 }
 
 .course-step__marker--done {
@@ -4582,4 +4584,62 @@ html[data-theme='light'] .course-endorsement {
   .course-step {
     grid-template-columns: 1fr;
   }
+}
+
+/* ---- Open modules shown on the main site ---------------------------------------------------
+   The site page supplies the header, navigation and theme, so the course shell is not drawn
+   (AppShell, siteModule) and the module takes the site's typeface, surface colors and corner
+   radius. The values mirror the site's theme tokens in src/styles/globals.css; keep them in step
+   if those change. main.tsx sets data-embed before the first paint. */
+
+html[data-embed='site'] {
+  --font-body:
+    Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-label: var(--font-body);
+  --bg: hsl(222 47% 9%);
+  --panel: hsl(222 49% 12%);
+  --panel-soft: hsl(215 27% 16%);
+  --panel-strong: hsl(217 24% 21%);
+  --line: hsl(217 19% 27%);
+  --line-strong: hsl(217 19% 38%);
+  --text: hsl(210 40% 98%);
+  --text-soft: hsl(217 15% 76%);
+  --text-muted: hsl(217 15% 65%);
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+html[data-embed='site'][data-theme='light'] {
+  --bg: hsl(210 40% 98%);
+  --panel: hsl(0 0% 100%);
+  --panel-soft: hsl(210 40% 96%);
+  --panel-strong: hsl(214 32% 91%);
+  --line: hsl(214 32% 91%);
+  --line-strong: hsl(215 20% 72%);
+  --text: hsl(224 71% 4%);
+  --text-soft: hsl(215 25% 27%);
+  --text-muted: hsl(215 16% 47%);
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+html[data-embed='site'] body,
+html[data-embed='site'][data-theme='light'] body {
+  background: var(--bg);
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-embed='site'] #root {
+  padding: 12px;
+}
+
+/* Reading modules keep a comfortable measure in a wide window; workspaces take all of it. */
+.app-shell--site-module {
+  max-width: 1440px;
+}
+
+.app-shell--site-module .app-shell__content {
+  padding: 0;
 }

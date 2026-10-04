@@ -9,6 +9,11 @@ export interface EmbeddedTrainingModule {
   appHashPath: string
   publicScope: 'ebus' | 'tnm'
   href: string
+  /**
+   * 'wide' lets the embedded app span the browser window instead of the page's reading column.
+   * For multi-pane workspaces, where the reading column leaves the panes small.
+   */
+  frame?: 'wide'
   highlights: string[]
   keywords: string[]
 }
@@ -58,6 +63,7 @@ export const publicEbusTrainingModules: EmbeddedTrainingModule[] = [
     appHashPath: '/simulator',
     publicScope: 'ebus',
     href: '/ebus-training/simulator',
+    frame: 'wide',
     highlights: [
       'Drive the scope through a synchronized external airway and first-person endoluminal view.',
       'Correlate scope position with station-specific EBUS sector imaging and anatomy targets.',

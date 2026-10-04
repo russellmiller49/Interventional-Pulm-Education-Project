@@ -1,7 +1,11 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import { ThermalAblationEmbedShell } from '@/components/thermal-ablation/ThermalAblationEmbedShell'
+import {
+  ThermalAblationEmbedShell,
+  thermalAblationModulePath,
+} from '@/components/thermal-ablation/ThermalAblationEmbedShell'
+import { SIMULATOR_ABOUT_ID, simulatorPage } from '@/components/layout/simulator-page'
 import { Badge } from '@/components/ui/badge'
 import { HandoffContent } from '@/i18n/handoff'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
@@ -35,27 +39,42 @@ export default async function ThermalAblationPage({ params }: ThermalAblationPag
   return (
     <HandoffContent>
       {
-        <div className="space-y-12 py-16">
-          <section className="container space-y-6">
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
+        <div className={simulatorPage.root}>
+          <section className={simulatorPage.stage}>
+            <div className={simulatorPage.header}>
+              <div className={simulatorPage.identity}>
                 <Badge
                   variant="info"
                   className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
                 >
                   Simulation · Therapeutic Bronchoscopy
                 </Badge>
+                <h1 className={simulatorPage.title}>Thermal Ablation Interactive Module</h1>
               </div>
-              <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-                Thermal Ablation Interactive Module
-              </h1>
-              <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-                One flowing module on hot endobronchial ablation — from laser physics and a
-                power-density tissue lab, through a simulated ERBE VIO 3 console with electrosurgery
-                modes and argon plasma coagulation, to modality comparison, airway-fire safety, and
-                case-based self-assessment.
-              </p>
+              <div className={simulatorPage.actions}>
+                <a href={`#${SIMULATOR_ABOUT_ID}`} className={simulatorPage.aboutLink}>
+                  What&apos;s inside
+                </a>
+                <a
+                  href={thermalAblationModulePath}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={simulatorPage.aboutLink}
+                >
+                  Open dedicated view ↗
+                </a>
+              </div>
             </div>
+            <ThermalAblationEmbedShell />
+          </section>
+
+          <section id={SIMULATOR_ABOUT_ID} className={simulatorPage.about}>
+            <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
+              One flowing module on hot endobronchial ablation — from laser physics and a
+              power-density tissue lab, through a simulated ERBE VIO 3 console with electrosurgery
+              modes and argon plasma coagulation, to modality comparison, airway-fire safety, and
+              case-based self-assessment.
+            </p>
 
             <div className="rounded-3xl border border-border/70 bg-card/70 p-6">
               <h2 className="text-lg font-semibold text-foreground">What&apos;s inside</h2>
@@ -68,10 +87,6 @@ export default async function ThermalAblationPage({ params }: ThermalAblationPag
                 ))}
               </ul>
             </div>
-          </section>
-
-          <section className="container">
-            <ThermalAblationEmbedShell />
           </section>
         </div>
       }

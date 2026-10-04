@@ -227,7 +227,8 @@ describe('Mechanical Circulatory Support learner interface', () => {
       screen.getByRole('radio', { name: /Late deflation raises effective LV afterload/i }),
     )
     fireEvent.click(compare)
-    expect(screen.getByText('Prediction explanation')).toBeInTheDocument()
+    // MCS-PRE-REVIEW-04 (F32): the comparison shows reasoning for every option, not one hint.
+    expect(document.querySelector('[data-prediction-reasoning-list]')).not.toBeNull()
     expect(screen.getByRole('slider', { name: 'Preload' })).toBeEnabled()
     fireEvent.click(screen.getByRole('button', { name: 'Try prediction again' }))
     expect(document.querySelectorAll('input[type="radio"]:checked')).toHaveLength(0)

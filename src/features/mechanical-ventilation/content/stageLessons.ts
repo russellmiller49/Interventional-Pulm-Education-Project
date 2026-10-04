@@ -182,6 +182,29 @@ function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
+/**
+ * One goal in the learner's words, lower-case: "set the inspiratory flow to 60 L/min", "perform an
+ * inspiratory hold". The step titles and the experiment checklist read the same phrasing.
+ */
+export function labGoalPhrase(goal: LabGoal): string {
+  if (goal.type === 'control') {
+    const control = controlNames[goal.key]
+    return control
+      ? `set ${control.name} to ${goal.value} ${control.unit}`
+      : `set ${goal.key} to ${goal.value}`
+  }
+  if (goal.type === 'mechanics') {
+    if (goal.key === 'complianceScale')
+      return goal.value < 1 ? 'make the lungs stiffer' : 'make the lungs more compliant'
+    return goal.value > 1 ? 'narrow the airways' : 'open the airways'
+  }
+  if (goal.type === 'intervention') return interventionPhrases[goal.id] ?? goal.id
+  if (goal.type === 'hold') return `perform an ${goal.hold} hold`
+  if (goal.type === 'inspect-inspiration')
+    return 'choose an inspiratory interval on the captured breath'
+  return 'pause during outward flow, or choose an expiratory interval on the captured breath'
+}
+
 /** "Narrow the airways, then perform an inspiratory hold" — the action, in the learner's words. */
 export function roundActionTitle(round: LabRound): string {
   const maneuver = roundManeuver(round)
@@ -192,22 +215,9 @@ export function roundActionTitle(round: LabRound): string {
   const phrases: string[] = []
   const holds: string[] = []
   for (const goal of round.goals) {
-    if (goal.type === 'control') {
-      const control = controlNames[goal.key]
-      phrases.push(
-        control
-          ? `set ${control.name} to ${goal.value} ${control.unit}`
-          : `set ${goal.key} to ${goal.value}`,
-      )
-    } else if (goal.type === 'mechanics') {
-      if (goal.key === 'complianceScale')
-        phrases.push(goal.value < 1 ? 'make the lungs stiffer' : 'make the lungs more compliant')
-      else phrases.push(goal.value > 1 ? 'narrow the airways' : 'open the airways')
-    } else if (goal.type === 'intervention') {
-      phrases.push(interventionPhrases[goal.id] ?? goal.id)
-    } else if (goal.type === 'hold') {
-      holds.push(`perform an ${goal.hold} hold`)
-    }
+    if (goal.type === 'hold') holds.push(labGoalPhrase(goal))
+    else if (goal.type === 'control' || goal.type === 'mechanics' || goal.type === 'intervention')
+      phrases.push(labGoalPhrase(goal))
   }
   const action = [...phrases, ...holds]
   if (action.length === 0) return 'Perform the maneuver'

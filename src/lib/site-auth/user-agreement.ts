@@ -6,3 +6,23 @@ export const siteUserAgreementPoints = [
   'Anonymous, de-identified, or aggregated usage and performance data may be used for research, quality improvement, presentations, or publications.',
   'I will not enter patient identifiers, protected health information, or other confidential patient data into this website.',
 ] as const
+
+/** Registration is complete only after the main-site agreement was explicitly accepted. */
+export function hasCompletedSiteRegistration(
+  profile:
+    | {
+        onboarding_completed_at?: string | null
+        agreement_accepted_at?: string | null
+        agreement_version?: string | null
+        performance_research_consent?: boolean | null
+      }
+    | null
+    | undefined,
+) {
+  return Boolean(
+    profile?.onboarding_completed_at &&
+    profile.agreement_accepted_at &&
+    profile.agreement_version === SITE_USER_AGREEMENT_VERSION &&
+    profile.performance_research_consent === true,
+  )
+}

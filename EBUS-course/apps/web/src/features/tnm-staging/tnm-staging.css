@@ -62,7 +62,7 @@
 }
 
 .tnm-stage-badge span {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.68rem;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -70,7 +70,7 @@
 }
 
 .tnm-stage-badge strong {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: clamp(1.35rem, 1.1rem + 0.9vw, 2rem);
 }
 
@@ -130,7 +130,7 @@
 
 .tnm-option strong,
 .tnm-case-list-item strong {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
 }
 
 .tnm-option span,
@@ -265,7 +265,7 @@
 
 .tnm-check-card small {
   color: var(--text-muted);
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
 }
 
 .station-node--sampled-negative {
@@ -288,7 +288,7 @@
 
 .tnm-status-pill,
 .tnm-status-button {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-label);
   font-size: 0.72rem;
 }
 

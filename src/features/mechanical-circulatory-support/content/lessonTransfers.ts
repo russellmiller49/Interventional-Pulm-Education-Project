@@ -379,7 +379,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       correctChoiceIds: ['pressure-gradient-dependent'],
       explanation:
         'The authored variant holds the performance setting while changing afterload, requiring interpretation of the resulting pressure-flow relationship.',
-      evidenceIds: impellaEvidence,
+      evidenceIds: ['impella-cp-ifu-rev-v-supplied', ...impellaEvidence],
       reviewStatus: 'draft',
     }),
   },

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
 import { TrainerEmbedShell } from '@/components/bronch-navigation/TrainerEmbedShell'
+import { SIMULATOR_ABOUT_ID, simulatorPage } from '@/components/layout/simulator-page'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Link } from '@/i18n/navigation'
@@ -41,40 +42,46 @@ export default async function BronchNavigationTrainerPage({
   return (
     <HandoffContent>
       {
-        <div className="space-y-12 py-16">
-          <section className="container space-y-6">
-            <div className="space-y-3">
-              <Badge
-                variant="info"
-                className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
-              >
-                Simulation · Navigation
-              </Badge>
-              <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-                Bronch Navigation Trainer
-              </h1>
-              <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-                A browser-based rehearsal space for peripheral bronchoscopy navigation. Follow a
-                target from CT planning into the airway, drive to each branch point, and choose the
-                route that keeps the scope moving toward the lesion.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <Button asChild>
-                <a href={embeddedTrainerAppPath} target="_blank" rel="noreferrer">
-                  Open Dedicated View
+        <div className={simulatorPage.root}>
+          <section className={simulatorPage.stage}>
+            <div className={simulatorPage.header}>
+              <div className={simulatorPage.identity}>
+                <Badge
+                  variant="info"
+                  className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+                >
+                  Simulation · Navigation
+                </Badge>
+                <h1 className={simulatorPage.title}>Bronch Navigation Trainer</h1>
+              </div>
+              <div className={simulatorPage.actions}>
+                <a href={`#${SIMULATOR_ABOUT_ID}`} className={simulatorPage.aboutLink}>
+                  What&apos;s inside
                 </a>
-              </Button>
-              <Button asChild variant="secondary">
-                <Link href="/board-prep/advanced-peripheral-bronchoscopy-radial-probe-electromagnetic-navigation-and-robotic-bronchoscopy">
-                  Pair With Board Review
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link href="/hardware">Hardware Scope Setup</Link>
-              </Button>
+                <Button asChild size="sm">
+                  <a href={embeddedTrainerAppPath} target="_blank" rel="noreferrer">
+                    Open Dedicated View
+                  </a>
+                </Button>
+                <Button asChild size="sm" variant="secondary">
+                  <Link href="/board-prep/advanced-peripheral-bronchoscopy-radial-probe-electromagnetic-navigation-and-robotic-bronchoscopy">
+                    Pair With Board Review
+                  </Link>
+                </Button>
+                <Button asChild size="sm" variant="outline">
+                  <Link href="/hardware">Hardware Scope Setup</Link>
+                </Button>
+              </div>
             </div>
+            <TrainerEmbedShell locale={locale} />
+          </section>
+
+          <section id={SIMULATOR_ABOUT_ID} className={simulatorPage.about}>
+            <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
+              A browser-based rehearsal space for peripheral bronchoscopy navigation. Follow a
+              target from CT planning into the airway, drive to each branch point, and choose the
+              route that keeps the scope moving toward the lesion.
+            </p>
 
             <div className="rounded-3xl border border-border/70 bg-card/70 p-6">
               <h2 className="text-lg font-semibold text-foreground">What&apos;s inside</h2>
@@ -87,10 +94,6 @@ export default async function BronchNavigationTrainerPage({
                 ))}
               </ul>
             </div>
-          </section>
-
-          <section className="container">
-            <TrainerEmbedShell locale={locale} />
           </section>
         </div>
       }

@@ -831,6 +831,39 @@
     grid-column: 1 / -1;
   }
 }
+/*
+ * A wide pane — the walk on a window of about 1600px or more, where the activity uses the window's
+ * width. The projections and the slider move up beside the 3D view instead of sitting under it, so
+ * the scene a component is highlighted in and the image that component produces are on one screen,
+ * and the view is as tall as the window can afford under the pinned course header.
+ */
+@container suite (min-width: 60rem) {
+  .pane[data-walk-layout] .displays,
+  .pane[data-walk-layout] .displays[data-monitor-layout] {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    --suite-display-height: clamp(270px, calc(100dvh - 35rem), 440px);
+  }
+  .pane[data-walk-layout] .displays .scenePanel {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+  }
+  /* The slider and readouts sit under the view they move, beside the image they change. */
+  .pane[data-walk-layout] .displays .nearImageControls {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+  }
+  .pane[data-walk-layout] .displays .monitorPanel {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: start;
+  }
+  /* The projections keep the size the stacked walk gave them; the view beside them is what grew. */
+  .pane[data-walk-layout] .displays .monitor {
+    --suite-display-height: auto;
+  }
+}
 
 /* Report 6.4: a thin plane beside the slab through it, per plane. Three pairs across where there is
    room; one pair per row on a phone, still side by side, and stacked only below that. */

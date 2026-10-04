@@ -1,14 +1,25 @@
+/*
+ * The mechanism panels ("On this ventilator, right now") in the module's own dark palette.
+ *
+ * They were drawn on a near-white card inside the dark Learn flow — the Section 11 reading-sequence
+ * card is the one the walkthrough named (V2): a jump in brightness that tired the eye over a long
+ * sitting. Every colour below keeps its role from the light version (surface, text, accent, the
+ * three verdict tints, the benefit/cost and trend colours, the effort and zero-flow red), mapped
+ * onto the values the task-flow and module-shell tokens use. Selection and verdicts still carry
+ * their words and borders, never colour alone.
+ */
 .panel {
+  color-scheme: dark;
   display: grid;
   gap: 0.7rem;
   align-content: start;
   padding: 0.8rem;
-  color: #15323a;
-  background: #f6f8f5;
+  color: #eaf4f4;
+  background: #0f2429;
 }
 
 .panelHeader > span {
-  color: #147d7b;
+  color: #71e1e5;
   font-size: 0.62rem;
   font-weight: 850;
   letter-spacing: 0.13em;
@@ -24,7 +35,7 @@
 
 .panelHeader p {
   margin-top: 0.3rem;
-  color: #4d6469;
+  color: #aec5c8;
   font-size: 0.76rem;
   line-height: 1.5;
 }
@@ -34,9 +45,9 @@
   gap: 0.4rem;
   padding: 0.6rem;
   margin: 0;
-  border: 1px solid #d3e0dd;
+  border: 1px solid #345158;
   border-radius: 0.7rem;
-  background: #fff;
+  background: #16333a;
 }
 
 .figure svg {
@@ -46,7 +57,7 @@
 }
 
 .figure figcaption {
-  color: #5b7176;
+  color: #aec5c8;
   font-size: 0.66rem;
   line-height: 1.45;
 }
@@ -66,26 +77,26 @@
 /* Pressure decomposition */
 .axis {
   fill: none;
-  stroke: #9db3b0;
+  stroke: #6f8f93;
   stroke-width: 1.2;
 }
 
 .gridLine {
   fill: none;
-  stroke: #e3ebe9;
+  stroke: #23424a;
   stroke-width: 1;
 }
 
 .segmentBaseline {
-  fill: #cfe0e4;
+  fill: #2c4a52;
 }
 
 .segmentElastic {
-  fill: #7fc4b6;
+  fill: #3e9c8b;
 }
 
 .segmentResistive {
-  fill: #e8b869;
+  fill: #b98a3a;
 }
 
 .segmentMuted {
@@ -98,63 +109,75 @@
  * own effort has just invalidated. Deliberately not the elastic or resistive colour.
  */
 .segmentUnattributed {
-  fill: #b9c6c9;
+  fill: #5d7378;
 }
 
 .segmentLabel {
-  fill: #24454b;
+  fill: #d5e8ea;
   font-size: 9px;
   font-weight: 700;
 }
 
 .segmentValue {
-  fill: #15323a;
+  fill: #eaf4f4;
   font-size: 10px;
   font-weight: 800;
 }
 
 .segmentBandValue {
-  fill: #3b585e;
+  fill: #c2d8da;
   font-size: 9px;
   font-weight: 700;
 }
 
 .boundaryTick {
   fill: none;
-  stroke: #7f9c97;
+  stroke: #8fb1b5;
   stroke-width: 1;
+}
+
+.readingRowLabel {
+  fill: currentColor;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.readingScale {
+  fill: #aec5c8;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
 }
 
 .traceGrid {
   fill: none;
-  stroke: #e6edeb;
+  stroke: #23424a;
   stroke-width: 1;
 }
 
 .trace {
   fill: none;
-  stroke: #147d7b;
+  stroke: #71e1e5;
   stroke-width: 1.8;
   stroke-linejoin: round;
 }
 
 .traceMuted {
   fill: none;
-  stroke: #b7c8c6;
+  stroke: #58787e;
   stroke-width: 1.2;
   stroke-linejoin: round;
 }
 
 .traceEffort {
   fill: none;
-  stroke: #b64152;
+  stroke: #ff8a98;
   stroke-dasharray: 3 3;
   stroke-width: 1.4;
 }
 
 .zeroFlowLine {
   fill: none;
-  stroke: #b64152;
+  stroke: #ff8a98;
   stroke-dasharray: 4 3;
   stroke-width: 1;
 }
@@ -168,10 +191,10 @@
 .componentToggles button {
   min-height: 2.5rem;
   padding: 0.4rem 0.5rem;
-  border: 1px solid #a8c2be;
+  border: 1px solid #648a91;
   border-radius: 0.6rem;
-  color: #2c5257;
-  background: #fff;
+  color: #cfe3e5;
+  background: #16333a;
   cursor: pointer;
   font-size: 0.68rem;
   font-weight: 800;
@@ -179,17 +202,17 @@
 }
 
 .componentToggles button[aria-pressed='true'] {
-  border-color: #147d7b;
-  color: #f2fffd;
-  background: #147d7b;
+  border-color: #71e1e5;
+  color: #062026;
+  background: #71e1e5;
 }
 
 .equation {
   padding: 0.55rem 0.65rem;
-  border: 1px solid #d3e0dd;
-  border-left: 3px solid #147d7b;
+  border: 1px solid #345158;
+  border-left: 3px solid #71e1e5;
   border-radius: 0.5rem;
-  background: #fff;
+  background: #16333a;
   font-size: 0.72rem;
   line-height: 1.6;
 }
@@ -211,13 +234,13 @@
 
 .readouts > div {
   padding: 0.4rem 0.5rem;
-  border: 1px solid #dde7e5;
+  border: 1px solid #345158;
   border-radius: 0.55rem;
-  background: #fff;
+  background: #16333a;
 }
 
 .readouts dt {
-  color: #5b7176;
+  color: #aec5c8;
   font-size: 0.6rem;
   font-weight: 750;
   letter-spacing: 0.05em;
@@ -237,7 +260,7 @@
 }
 
 .readouts > div[data-state='unavailable'] dd {
-  color: #536b71;
+  color: #a9c0c3;
 }
 
 .readouts > div[data-state='unavailable'] small {
@@ -262,18 +285,18 @@
   align-items: start;
   min-height: 2.6rem;
   padding: 0.45rem 0.55rem;
-  border: 1px solid #cfdedb;
+  border: 1px solid #345158;
   border-radius: 0.6rem;
-  color: #2c5257;
-  background: #fff;
+  color: #cfe3e5;
+  background: #16333a;
   cursor: pointer;
   text-align: left;
 }
 
 .steps li button[aria-current='step'] {
-  border-color: #147d7b;
-  background: #e6f4f1;
-  box-shadow: inset 0 0 0 1px #147d7b;
+  border-color: #71e1e5;
+  background: #1d4a52;
+  box-shadow: inset 0 0 0 1px #71e1e5;
 }
 
 .steps li button > span:first-child {
@@ -281,7 +304,7 @@
   place-items: center;
   height: 1.4rem;
   border-radius: 999px;
-  background: #dbeae7;
+  background: #1f4249;
   font-size: 0.64rem;
   font-weight: 850;
 }
@@ -294,7 +317,7 @@
 .steps li button small {
   display: block;
   margin-top: 0.1rem;
-  color: #5b7176;
+  color: #aec5c8;
   font-size: 0.66rem;
   line-height: 1.4;
 }
@@ -303,9 +326,9 @@
   display: grid;
   gap: 0.35rem;
   padding: 0.6rem;
-  border: 1px solid #d3e0dd;
+  border: 1px solid #345158;
   border-radius: 0.65rem;
-  background: #fff;
+  background: #16333a;
   font-size: 0.73rem;
   line-height: 1.55;
 }
@@ -315,7 +338,7 @@
 }
 
 .stepDetail span {
-  color: #147d7b;
+  color: #71e1e5;
   font-size: 0.62rem;
   font-weight: 850;
   letter-spacing: 0.08em;
@@ -331,10 +354,10 @@
 .candidates button {
   min-height: 2.6rem;
   padding: 0.5rem 0.6rem;
-  border: 1px solid #cfdedb;
+  border: 1px solid #345158;
   border-radius: 0.6rem;
-  color: #2c5257;
-  background: #fff;
+  color: #cfe3e5;
+  background: #16333a;
   cursor: pointer;
   font-size: 0.73rem;
   font-weight: 750;
@@ -342,9 +365,9 @@
 }
 
 .candidates button[aria-pressed='true'] {
-  border-color: #147d7b;
-  background: #e6f4f1;
-  box-shadow: inset 0 0 0 1px #147d7b;
+  border-color: #71e1e5;
+  background: #1d4a52;
+  box-shadow: inset 0 0 0 1px #71e1e5;
 }
 
 .evidenceTable {
@@ -358,16 +381,16 @@
   gap: 0.5rem;
   align-items: center;
   padding: 0.4rem 0.55rem;
-  border: 1px solid #dde7e5;
+  border: 1px solid #345158;
   border-radius: 0.55rem;
-  background: #fff;
+  background: #16333a;
   font-size: 0.71rem;
   line-height: 1.4;
 }
 
 .evidenceRow small {
   display: block;
-  color: #5b7176;
+  color: #aec5c8;
   font-size: 0.64rem;
 }
 
@@ -380,41 +403,41 @@
 }
 
 .verdict[data-verdict='consistent'] {
-  color: #14564a;
-  background: #cdeade;
+  color: #a6e8c4;
+  background: #143a2c;
 }
 
 .verdict[data-verdict='against'] {
-  color: #7d2233;
-  background: #f7d7dc;
+  color: #ffb3bf;
+  background: #3a1c24;
 }
 
 .verdict[data-verdict='unmeasured'],
 .verdict[data-verdict='invalidates'] {
-  color: #6b5220;
-  background: #fdeec9;
+  color: #ffdca6;
+  background: #3a2e10;
 }
 
 .verdict[data-verdict='neutral'] {
-  color: #47606a;
-  background: #e2eaef;
+  color: #b5ccd3;
+  background: #1d3440;
 }
 
 .textEquivalent {
   padding: 0.5rem 0.6rem;
-  border: 1px dashed #b8cbc8;
+  border: 1px dashed #4b7a82;
   border-radius: 0.55rem;
-  color: #40585d;
+  color: #bcd2d4;
   font-size: 0.68rem;
   line-height: 1.5;
 }
 
 .boundary {
   padding: 0.5rem 0.6rem;
-  border: 1px solid rgba(185, 120, 29, 0.35);
+  border: 1px solid rgba(255, 191, 98, 0.35);
   border-radius: 0.55rem;
-  background: #fff6e6;
-  color: #6b5220;
+  background: #2b2412;
+  color: #ffdca6;
   font-size: 0.67rem;
   line-height: 1.5;
 }
@@ -423,15 +446,15 @@
   display: grid;
   gap: 0.45rem;
   padding: 0.6rem;
-  border: 1px solid #cfdedb;
+  border: 1px solid #345158;
   border-radius: 0.65rem;
-  color: #234a4f;
-  background: #fff;
+  color: #d5e8ea;
+  background: #16333a;
 }
 
 .runControl > div:first-child > span {
   display: block;
-  color: #147d7b;
+  color: #71e1e5;
   font-size: 0.6rem;
   font-weight: 850;
   letter-spacing: 0.1em;
@@ -451,25 +474,25 @@
 .runButtons button {
   min-height: 2.6rem;
   padding: 0.45rem 0.6rem;
-  border: 1px solid #a8c2be;
+  border: 1px solid #648a91;
   border-radius: 0.6rem;
-  color: #2c5257;
-  background: #fff;
+  color: #cfe3e5;
+  background: #16333a;
   cursor: pointer;
   font-size: 0.72rem;
   font-weight: 800;
 }
 
 .runButtons button[aria-pressed='true'] {
-  border-color: #147d7b;
-  color: #f2fffd;
-  background: #147d7b;
+  border-color: #71e1e5;
+  color: #062026;
+  background: #71e1e5;
 }
 
 /* Names the pause that stepping causes, so the console does not read as stopping on its own. */
 .runHint {
   margin: 0;
-  color: #4f6d70;
+  color: #aec5c8;
   font-size: 0.64rem;
   line-height: 1.4;
 }
@@ -521,9 +544,9 @@
   gap: 0.45rem;
   align-items: start;
   padding: 0.45rem 0.55rem;
-  border: 1px solid #cfdedb;
+  border: 1px solid #345158;
   border-radius: 0.6rem;
-  background: #fff;
+  background: #16333a;
 }
 
 .overviewStep > span:first-child {
@@ -531,7 +554,7 @@
   place-items: center;
   height: 1.4rem;
   border-radius: 999px;
-  background: #dbeae7;
+  background: #1f4249;
   font-size: 0.64rem;
   font-weight: 850;
 }
@@ -545,7 +568,7 @@
 .overviewStep small {
   display: block;
   margin-top: 0.1rem;
-  color: #5b7176;
+  color: #aec5c8;
   font-size: 0.66rem;
   line-height: 1.4;
 }
@@ -586,11 +609,11 @@
 }
 
 .variableMarker path {
-  stroke: #147d7b;
+  stroke: #71e1e5;
 }
 
 .variableMarkerMuted path {
-  stroke: #cddad8;
+  stroke: #4b6a70;
 }
 
 .variableMarker text,
@@ -600,15 +623,15 @@
 }
 
 .variableMarker text {
-  fill: #14564a;
+  fill: #a6e8c4;
 }
 
 .variableMarkerMuted text {
-  fill: #a9bcb9;
+  fill: #7f989b;
 }
 
 .laneLabel {
-  fill: #5b7176;
+  fill: #aec5c8;
   font-size: 9px;
   font-weight: 850;
   letter-spacing: 0.06em;
@@ -616,15 +639,15 @@
 }
 
 .laneTrack {
-  fill: #eef3f2;
+  fill: #1a353b;
 }
 
 .laneMachine {
-  fill: #a8d8d2;
+  fill: #2f7b76;
 }
 
 .lanePatient {
-  fill: #f0c3ca;
+  fill: #8a4552;
 }
 
 /* ------------------------------------------------------------------------------------------------
@@ -642,22 +665,22 @@
   align-content: start;
   gap: 0.3rem;
   padding: 0.5rem;
-  border: 1px solid #dbe6e4;
-  border-top: 3px solid #cfdedb;
+  border: 1px solid #345158;
+  border-top: 3px solid #345158;
   border-radius: 0.55rem;
 }
 
 .tradeoffColumn[data-side='benefit'] {
-  border-top-color: #2f9e5f;
+  border-top-color: #76d69b;
 }
 
 .tradeoffColumn[data-side='cost'] {
-  border-top-color: #b86708;
+  border-top-color: #ffbf62;
 }
 
 .tradeoffColumn h3 {
   margin: 0 0 0.15rem;
-  color: #2c5257;
+  color: #cfe3e5;
   font-size: 0.63rem;
   font-weight: 850;
   letter-spacing: 0.08em;
@@ -674,11 +697,11 @@
 }
 
 .tradeoffRow > span {
-  color: #5b7176;
+  color: #aec5c8;
 }
 
 .tradeoffRow > strong {
-  color: #1d3d42;
+  color: #e3f0f0;
   white-space: nowrap;
 }
 
@@ -688,15 +711,15 @@
 }
 
 .tradeoffRow em[data-trend='up'] {
-  color: #b86708;
+  color: #ffbf62;
 }
 
 .tradeoffRow em[data-trend='down'] {
-  color: #2f6f9e;
+  color: #7cc0f0;
 }
 
 .tradeoffRow em[data-trend='flat'] {
-  color: #9db3b0;
+  color: #6f8f93;
 }
 
 /* ------------------------------------------------------------------------------------------------
@@ -712,14 +735,14 @@
   display: grid;
   gap: 0.35rem;
   padding: 0.55rem;
-  border: 1px solid #dbe6e4;
-  border-left: 3px solid #cfdedb;
+  border: 1px solid #345158;
+  border-left: 3px solid #345158;
   border-radius: 0.55rem;
 }
 
 .tier[data-active='true'] {
-  border-left-color: #147d7b;
-  background: #f6fbfa;
+  border-left-color: #71e1e5;
+  background: #133038;
 }
 
 .tier h3 {
@@ -728,7 +751,7 @@
   gap: 0.4rem;
   align-items: baseline;
   margin: 0;
-  color: #2c5257;
+  color: #cfe3e5;
   font-size: 0.63rem;
   font-weight: 850;
   letter-spacing: 0.08em;
@@ -736,7 +759,7 @@
 }
 
 .tier h3 small {
-  color: #7d9296;
+  color: #93adb1;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: none;
@@ -753,7 +776,7 @@
 }
 
 .tierArrow span {
-  color: #7d9296;
+  color: #93adb1;
   font-size: 0.6rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -772,7 +795,7 @@
 
 .tierNote {
   margin: 0;
-  color: #5b7176;
+  color: #aec5c8;
   font-size: 0.66rem;
   line-height: 1.45;
 }
@@ -792,36 +815,36 @@
   align-content: start;
   gap: 0.25rem;
   padding: 0.5rem 0.55rem;
-  border: 1px solid #dbe6e4;
+  border: 1px solid #345158;
   border-radius: 0.55rem;
 }
 
 .locusCard[data-populated='true'] {
-  border-color: #e7c68d;
-  background: #fffaf0;
+  border-color: #8a6a2a;
+  background: #2b2412;
 }
 
 .locusCard[data-active='true'] {
-  outline: 2px solid #147d7b;
+  outline: 2px solid #71e1e5;
   outline-offset: -2px;
 }
 
 .locusRank {
-  color: #7d9296;
+  color: #93adb1;
   font-size: 0.6rem;
   font-weight: 850;
 }
 
 .locusCard h3 {
   margin: 0;
-  color: #1d3d42;
+  color: #e3f0f0;
   font-size: 0.7rem;
   font-weight: 850;
 }
 
 .locusEmpty {
   margin: 0;
-  color: #8ea3a6;
+  color: #879fa3;
   font-size: 0.66rem;
 }
 
@@ -835,7 +858,7 @@
 }
 
 .plainList li[data-priority='high'] {
-  color: #7d2233;
+  color: #ffb3bf;
   font-weight: 700;
 }
 
@@ -854,24 +877,24 @@
   display: grid;
   gap: 0.3rem;
   padding: 0.6rem 0.7rem;
-  border: 1px solid #e0c58c;
-  border-left: 3px solid #b86708;
+  border: 1px solid #8a6a2a;
+  border-left: 3px solid #ffbf62;
   border-radius: 0.6rem;
-  background: #fff8ec;
-  color: #5c4715;
+  background: #2b2412;
+  color: #ffdca6;
   font-size: 0.71rem;
   line-height: 1.55;
 }
 
 .validity[data-valid='true'] {
-  border-color: #b4d8c4;
-  border-left-color: #2f9e5f;
-  background: #f2fbf6;
-  color: #204a35;
+  border-color: #3f7a58;
+  border-left-color: #76d69b;
+  background: #13301f;
+  color: #b7f0c9;
 }
 
 .validity > span {
-  color: #8a5b12;
+  color: #f2c26b;
   font-size: 0.62rem;
   font-weight: 850;
   letter-spacing: 0.08em;
@@ -879,7 +902,7 @@
 }
 
 .validity[data-valid='true'] > span {
-  color: #1f6b45;
+  color: #8fe0b0;
 }
 
 .validity p {
@@ -901,27 +924,27 @@
   align-content: start;
   gap: 0.25rem;
   padding: 0.45rem 0.5rem;
-  border: 1px solid #dbe6e4;
-  border-top: 3px solid #147d7b;
+  border: 1px solid #345158;
+  border-top: 3px solid #71e1e5;
   border-radius: 0.5rem;
 }
 
 .comparisonColumn h3 {
   margin: 0;
-  color: #1d3d42;
+  color: #e3f0f0;
   font-size: 0.72rem;
   font-weight: 850;
 }
 
 .comparisonRule {
   margin: 0;
-  color: #5b7176;
+  color: #aec5c8;
   font-size: 0.63rem;
   line-height: 1.4;
 }
 
 .comparisonRule strong {
-  color: #147d7b;
+  color: #71e1e5;
 }
 
 .comparisonColumn svg {
@@ -931,7 +954,7 @@
 }
 
 .comparisonAxis {
-  fill: #7d9296;
+  fill: #93adb1;
   font-size: 7px;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -952,24 +975,24 @@
 }
 
 .complianceSlider > span:first-child {
-  color: #5b7176;
+  color: #aec5c8;
   font-size: 0.68rem;
 }
 
 .complianceSlider strong {
-  color: #147d7b;
+  color: #71e1e5;
   font-variant-numeric: tabular-nums;
 }
 
 .complianceSlider input[type='range'] {
   width: 100%;
   min-height: 1.75rem;
-  accent-color: #147d7b;
+  accent-color: #71e1e5;
 }
 
 .sliderIntro {
   margin: 0 0 0.15rem;
-  color: #5b7176;
+  color: #aec5c8;
   font-size: 0.66rem;
   line-height: 1.45;
 }
@@ -979,10 +1002,10 @@
   min-height: 1.9rem;
   margin-bottom: 0.45rem;
   padding: 0 0.6rem;
-  border: 1px solid #147d7b;
+  border: 1px solid #71e1e5;
   border-radius: 999px;
-  background: #ffffff;
-  color: #147d7b;
+  background: #16333a;
+  color: #71e1e5;
   font-size: 0.66rem;
   font-weight: 800;
   cursor: pointer;
@@ -991,7 +1014,7 @@
 .sliderScale {
   display: flex;
   justify-content: space-between;
-  color: #7d9296;
+  color: #93adb1;
   font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -1007,13 +1030,13 @@
 
 .comparisonReadout > div {
   padding: 0.35rem 0.45rem;
-  border: 1px solid #dbe6e4;
+  border: 1px solid #345158;
   border-radius: 0.5rem;
-  background: #f4faf9;
+  background: #133038;
 }
 
 .comparisonReadout dt {
-  color: #5b7176;
+  color: #aec5c8;
   font-size: 0.6rem;
   font-weight: 800;
   letter-spacing: 0.03em;
@@ -1022,7 +1045,7 @@
 
 .comparisonReadout dt + dd {
   margin: 0.15rem 0 0;
-  color: #1d3d42;
+  color: #e3f0f0;
   font-size: 0.74rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -1034,7 +1057,7 @@
 
 /* The quantity the lung decides, rather than the one the ventilator is holding. */
 .comparisonReadout dd[data-moves='true'] {
-  color: #147d7b;
+  color: #71e1e5;
 }
 
 @media (max-width: 620px) {

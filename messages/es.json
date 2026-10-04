@@ -34,6 +34,7 @@
       }
     },
     "signup": {
+      "completionNotice": "Completa tu registro en el sitio principal y revisa y acepta el acuerdo de usuario que aparece a continuación. Usa tu cuenta actual; no necesitas crear otra.",
       "metadataTitle": "Crear cuenta",
       "title": "Cree su cuenta gratuita",
       "description": "Su perfil ayuda a adaptar los módulos educativos y las analíticas agregadas de aprendizaje.",

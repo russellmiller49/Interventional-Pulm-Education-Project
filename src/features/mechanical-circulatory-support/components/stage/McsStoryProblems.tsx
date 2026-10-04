@@ -213,15 +213,19 @@ function StoryCard({
         <button type="button" onClick={onRun}>
           Show explanation and worked example
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            setHintVisible(false)
-            onRetry()
-          }}
-        >
-          Try again
-        </button>
+        {/* Offered once there is something to clear: a choice, a comparison, a run or the hint. */}
+        {selectedId || committedId || ran || hintVisible ? (
+          <button
+            type="button"
+            data-story-try-again
+            onClick={() => {
+              setHintVisible(false)
+              onRetry()
+            }}
+          >
+            Try again
+          </button>
+        ) : null}
       </div>
       {ran ? <p>{story.item.explanation}</p> : null}
       <p>Provided example on a separate model; no action is applied to your current patient.</p>

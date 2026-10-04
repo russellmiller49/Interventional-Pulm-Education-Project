@@ -29,3 +29,20 @@ describe('getEmbeddedCourseModuleSrc', () => {
     )
   })
 })
+
+describe('embedded module frames', () => {
+  it('gives the simulator the full window and keeps reading modules in the page column', () => {
+    const frames = Object.fromEntries(
+      [...publicEbusTrainingModules, tnm9TrainingModule].map((module) => [
+        module.slug,
+        module.frame,
+      ]),
+    )
+    expect(frames).toEqual({
+      knobology: undefined,
+      stations: undefined,
+      simulator: 'wide',
+      'tnm-9-staging': undefined,
+    })
+  })
+})

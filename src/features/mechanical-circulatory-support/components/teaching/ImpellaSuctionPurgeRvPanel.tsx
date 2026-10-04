@@ -223,7 +223,7 @@ export function ImpellaSuctionPurgeRvPanel({
         ) : null}
       </PanelSection>
 
-      <PanelSection title="One low flow, four separate questions" id="rv-differential">
+      <PanelSection title="One low flow, four separate questions" id="rv-differential" reference>
         <div className={styles.scroller}>
           <table className={`${styles.table} min-w-[34rem]`} data-low-flow-differential>
             <caption className="text-left text-xs leading-5 text-muted-foreground">

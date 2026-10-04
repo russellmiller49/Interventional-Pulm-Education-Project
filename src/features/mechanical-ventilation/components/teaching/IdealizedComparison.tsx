@@ -4,7 +4,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   idealBreaths,
   idealComparisonAxes,
+  idealPairAxes,
   idealSeriesPath,
+  type IdealAxes,
   type IdealInputs,
 } from '../../engine/idealComparison'
 import styles from '../stage/ventilation-stage.module.css'
@@ -40,8 +42,15 @@ export function IdealizedComparison() {
     resistance: IDEAL_REFERENCE.resistance * resistanceScale,
   }
   const comparison = idealBreaths(input)
-  const axes = useMemo(() => idealComparisonAxes(IDEAL_REFERENCE), [])
+  const [scale, setScale] = useState<'pair' | 'all-settings'>('pair')
+  const allSettings = useMemo(() => idealComparisonAxes(IDEAL_REFERENCE), [])
+  const axes: IdealAxes = scale === 'pair' ? idealPairAxes(comparison) : allSettings
   const units = { pressure: 'cmH₂O', flow: 'L/min', volume: 'mL' }
+  const rowNames = { pressure: 'Pressure', flow: 'Flow', volume: 'Volume' }
+  const ROW = 112
+  const PLOT = 70
+  const yOf = (variable: keyof IdealAxes, value: number) =>
+    PLOT - ((value - axes[variable][0]) / (axes[variable][1] - axes[variable][0])) * PLOT
   return (
     <section className={styles.idealReference} data-idealized-comparison>
       <h3>Idealized passive comparison</h3>
@@ -56,34 +65,40 @@ export function IdealizedComparison() {
           <strong>VC: solid cyan · PC: dashed amber</strong>
         </figcaption>
         <svg
-          viewBox={`0 0 ${width} 318`}
+          viewBox={`0 0 ${width} ${3 * ROW + 20}`}
           role="img"
-          aria-label={`Idealized VC and PC on common axes. VC end-inspiratory volume ${comparison.volumeTargeted.deliveredVolume.toFixed(1)} mL; PC ${comparison.pressureTargeted.deliveredVolume.toFixed(1)} mL. Same 4.00 s clock.`}
+          aria-label={`Idealized VC and PC on the same axes for both modes. Pressure 0 to ${axes.pressure[1]} cmH₂O; flow ${axes.flow[0]} to ${axes.flow[1]} L/min; volume 0 to ${axes.volume[1]} mL. VC peak flow ${Math.max(...comparison.volumeTargeted.flow).toFixed(0)} L/min, square; PC peak flow ${Math.max(...comparison.pressureTargeted.flow).toFixed(0)} L/min, decelerating. VC end-inspiratory volume ${comparison.volumeTargeted.deliveredVolume.toFixed(1)} mL; PC ${comparison.pressureTargeted.deliveredVolume.toFixed(1)} mL. Same 4.00 s clock.`}
+          data-ideal-scale={scale}
         >
           {(['pressure', 'flow', 'volume'] as const).map((variable, i) => (
-            <g key={variable} transform={`translate(0 ${i * 100})`}>
-              <text x="0" y="12">
-                {variable} ({units[variable]})
+            <g key={variable} transform={`translate(0 ${i * ROW})`} data-ideal-row={variable}>
+              <text x="0" y="12" fontWeight="700">
+                {rowNames[variable]} ({units[variable]})
               </text>
-              <text x="0" y="35">
-                {axes[variable][1]}
-              </text>
-              <text x="0" y="92">
-                {axes[variable][0]}
-              </text>
-              <g transform="translate(55 24)">
+              <g transform="translate(55 26)">
+                <text x="-6" y="4" textAnchor="end" data-ideal-axis-max={variable}>
+                  {axes[variable][1]}
+                </text>
+                <text x="-6" y={PLOT + 4} textAnchor="end" data-ideal-axis-min={variable}>
+                  {axes[variable][0]}
+                </text>
+                {axes[variable][0] < 0 ? (
+                  <text x="-6" y={yOf(variable, 0) + 4} textAnchor="end">
+                    0
+                  </text>
+                ) : null}
                 <line
                   x1="0"
                   x2={plotWidth}
-                  y1={variable === 'flow' ? 35 : 70}
-                  y2={variable === 'flow' ? 35 : 70}
+                  y1={yOf(variable, 0)}
+                  y2={yOf(variable, 0)}
                   className={styles.zeroLine}
                 />
                 <line
                   x1={plotWidth / 4}
                   x2={plotWidth / 4}
                   y1="0"
-                  y2="70"
+                  y2={PLOT}
                   className={styles.zeroLine}
                 />
                 {(['volumeTargeted', 'pressureTargeted'] as const).map((key) => (
@@ -100,13 +115,13 @@ export function IdealizedComparison() {
               </g>
             </g>
           ))}
-          <text x="55" y="316">
+          <text x="55" y={3 * ROW + 16}>
             0
           </text>
-          <text x={55 + plotWidth / 4} y="316" textAnchor="middle">
+          <text x={55 + plotWidth / 4} y={3 * ROW + 16} textAnchor="middle">
             1 s
           </text>
-          <text x={width - 15} y="316" textAnchor="end">
+          <text x={width - 15} y={3 * ROW + 16} textAnchor="end">
             4 s
           </text>
         </svg>
@@ -162,10 +177,30 @@ export function IdealizedComparison() {
         {input.resistance.toFixed(1)} cmH₂O/(L/s), including the tube. Reference targets stay fixed
         when live mode or mechanics change.
       </p>
-      <p>
-        Each variable uses one common scale across columns and all offered changes. The scales
-        include the full exploration range; smaller volumes stay visibly smaller. The dashed
-        vertical marker is end-inspiration at 1 s.
+      <div className={styles.quickButtons} role="group" aria-label="Scale" data-ideal-scale-choice>
+        <span>Scale</span>
+        <button
+          type="button"
+          className={styles.toolButton}
+          aria-pressed={scale === 'pair'}
+          onClick={() => setScale('pair')}
+        >
+          Fitted to this pair
+        </button>
+        <button
+          type="button"
+          className={styles.toolButton}
+          aria-pressed={scale === 'all-settings'}
+          onClick={() => setScale('all-settings')}
+        >
+          Fixed across every offered setting
+        </button>
+      </div>
+      <p data-ideal-scale-note>
+        {scale === 'pair'
+          ? `VC and PC share every scale, so their sizes compare directly: flow ${axes.flow[0]} to ${axes.flow[1]} L/min, pressure to ${axes.pressure[1]} cmH₂O, volume to ${axes.volume[1]} mL. The scale is fitted again when you change the illustration mechanics; choose the fixed scale to compare sizes across those changes.`
+          : `One scale for both modes and every offered change: flow ${axes.flow[0]} to ${axes.flow[1]} L/min, set by the fastest offered case. Smaller volumes stay visibly smaller, but at the reference mechanics the flow shapes are compressed.`}{' '}
+        The dashed vertical marker is end-inspiration at 1 s.
       </p>
       <p>
         PC volume is the volume reached within the selected inspiratory time, not its equilibrium
