@@ -39,6 +39,7 @@ import { StageTeachingScope } from '../components/stage/StageTeachingScope'
 import { BloodFlowVsSweepPanel } from '../components/teaching/BloodFlowVsSweepPanel'
 import { CircuitFlowPathPanel } from '../components/teaching/CircuitFlowPathPanel'
 import { OxygenDeliveryExplorer } from '../components/teaching/OxygenDeliveryExplorer'
+import { PumpPressureZonesPanel } from '../components/teaching/PumpPressureZonesPanel'
 import { VvNormalStatePanel } from '../components/teaching/VvNormalStatePanel'
 import { WhyExtracorporealSupportPanel } from '../components/teaching/WhyExtracorporealSupportPanel'
 import { ecmoSensorSite } from '../content/circuitSegments'
@@ -865,5 +866,39 @@ describe('OV-2: the hub folds per-source provenance without folding the review s
     expect(line).toHaveTextContent('No source has a clinical or device review on record')
     expect(line?.closest('details')).toBeNull()
     expect(view.container.textContent ?? '').not.toMatch(/clinically reviewed|device reviewed/i)
+  })
+})
+
+/* ------------------------------------------------------------------------------------------ *
+ * 7. S3-4: an instruction names the control by the words on it
+ * ------------------------------------------------------------------------------------------ */
+
+describe('S3-4: the speed comparison is run from the control the page actually shows', () => {
+  it('names the control by its own label, not as a "Run control"', () => {
+    const view = render(
+      <StageTeachingScope
+        value={{
+          phase: 'act',
+          predictionCommitted: false,
+          stepId: 'pump-and-pressure-zones-act',
+          foundationBlock: 'pump-speed',
+        }}
+      >
+        <PumpPressureZonesPanel state={createReferenceSimulationState('vv-reference')} />
+      </StageTeachingScope>,
+    )
+    const text = view.container.textContent ?? ''
+    expect(text).not.toMatch(/teaching Run control/)
+    expect(text).toMatch(/Use the “Increase pump speed by 300 rpm” control for this task/)
+    // The task's own instruction and its guided action carry the same words.
+    const task = ecmoFoundationTeachingTasks['pump-and-pressure-zones'].find(
+      (candidate) => candidate.id === 'act',
+    )
+    expect(task?.instruction).toMatch(/^Use Increase pump speed by 300 rpm below\./)
+    expect(
+      ecmoFoundationLessonRuntime('pump-and-pressure-zones').guidedActions.find(
+        (action) => action.id === task?.actionId,
+      )?.label,
+    ).toBe('Increase pump speed by 300 rpm')
   })
 })

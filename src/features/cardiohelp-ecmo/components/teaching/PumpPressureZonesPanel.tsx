@@ -110,8 +110,10 @@ export function PumpPressureZonesPanel({
               drainage pressure by about one mmHg for three hundred more rpm. The direction is the
               point here; a drainage limit, on another circuit, is where it grows large.
             </p>
+            {/* S3-4 (ECMO-FELLOW-04): named for the control on screen, which is not labelled "Run". */}
             <p className="mt-2 text-sm leading-6">
-              Use the teaching Run control for this task. The saved readings come from the model.
+              Use the “Increase pump speed by 300 rpm” control for this task. The saved readings
+              come from the model.
             </p>
             <p className="mt-2 text-sm leading-6">
               This reference does not model drainage collapse or chatter at the offered speeds. A
