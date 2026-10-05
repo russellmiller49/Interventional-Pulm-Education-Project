@@ -331,7 +331,10 @@ export const lungStatesSchema = z
       .strict(),
     collapse: z
       .object({
-        gapAtPortMm: z.number().positive(),
+        /** The share of the drawn pleural space the collapsed lung fills: measured on other patients (OD-17). */
+        endLungShareOfSpace: z.number().gt(0).lt(1),
+        spaceVolumeMl: z.number().positive(),
+        endVolumeMl: z.number().positive(),
         steps: z.number().int().positive(),
         hilumSearchMm: z.number().positive(),
         targetDepthMm: z.number().positive(),
@@ -613,6 +616,8 @@ export const tourStopsSchema = z
               .strict()
               .nullable(),
             seenFromThere: z.number().int().nonnegative(),
+            /** Samples in the field from there, facing the telescope and in range, seen or hidden. */
+            inFieldFromThere: z.number().int().nonnegative(),
             samples: z.number().int().positive(),
           })
           .strict(),

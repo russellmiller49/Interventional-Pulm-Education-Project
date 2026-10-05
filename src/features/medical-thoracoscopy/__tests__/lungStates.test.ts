@@ -31,7 +31,7 @@ const RECORDS = 'src/features/medical-thoracoscopy/content/data/anatomy'
 describe('the lung states', () => {
   const { states, between, collapse } = lungStates
 
-  it('run from the expanded lung to the authored gap at the port in equal steps, each smaller', () => {
+  it('run from the expanded lung to the measured share of the pleural space in equal steps, each smaller', () => {
     expect(states.map((state) => state.step)).toEqual(
       Array.from({ length: collapse.steps + 1 }, (_, k) => k),
     )
@@ -44,7 +44,15 @@ describe('the lung states', () => {
       expect(states[k].gapAtPortMm).toBeGreaterThan(states[k - 1].gapAtPortMm)
     }
     expect(states[0].gapAtPortMm).toBeLessThan(2)
-    expect(states[states.length - 1].gapAtPortMm).toBeGreaterThanOrEqual(collapse.gapAtPortMm)
+    // Where the collapse ends is a volume, the share of the drawn space measured beside large
+    // effusions (owner decisions, OD-17): the flow stops at the first step at or under it.
+    expect(collapse.endLungShareOfSpace).toBe(0.246)
+    expect(
+      Math.abs(collapse.endVolumeMl - collapse.endLungShareOfSpace * collapse.spaceVolumeMl),
+    ).toBeLessThan(0.01)
+    const last = states[states.length - 1].volumeMl
+    expect(last).toBeLessThanOrEqual(collapse.endVolumeMl)
+    expect(last).toBeGreaterThan(0.98 * collapse.endVolumeMl)
   })
 
   it('are labelled authored, rest on the two claims awaiting clinical review, and measure from the port', () => {
@@ -233,7 +241,12 @@ describe('the packaged anatomy', () => {
     for (const row of rows) {
       expect(row.inRepository).toBe(false)
       expect(row.uploaded).toBe(false)
-      expect(row.rights).toEqual(['R-ANATOMY-CT', 'R-ANATOMY-SEGMENTATION'])
+      // the lung's states also rest on the scans their end volume was measured from (OD-17)
+      expect(row.rights).toEqual(
+        /states authored/.test(String(row.label))
+          ? ['R-ANATOMY-CT', 'R-ANATOMY-SEGMENTATION', 'R-COLLAPSE-VOLUME-CTS']
+          : ['R-ANATOMY-CT', 'R-ANATOMY-SEGMENTATION'],
+      )
       const file = files.find((entry) => entry.id === row.id)
       if (!file) continue
       expect([row.sha256, row.bytes, row.triangles]).toEqual([

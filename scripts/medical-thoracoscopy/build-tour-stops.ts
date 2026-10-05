@@ -64,7 +64,10 @@ async function main(): Promise<void> {
   const across = acrossRibsLimitDeg(space.port, space.device)
   const along = space.device.alongRibsLimitDeg
   const [least, most] = space.depthLimits
-  const best = new Map<PleuralZoneId, { pose: ScopePose; seen: number }>()
+  const best = new Map<PleuralZoneId, { pose: ScopePose; seen: number; inField: number }>()
+  // For a region no position shows any of: the position that brings the most of it into the field,
+  // facing the telescope and within range, with something in the way.
+  const facing = new Map<PleuralZoneId, { pose: ScopePose; inField: number }>()
   const zoneOf = space.samples.zones
   const started = Date.now()
   for (const a of span(-across, across, REACH_GRID.tiltStepDeg)) {
@@ -74,17 +77,26 @@ async function main(): Promise<void> {
         const pose: ScopePose = { tiltAcrossRibsDeg: a, tiltAlongRibsDeg: b, depthMm, rollDeg: 0 }
         if (resolver.clearance(pose, LUNG_STEP) < CLEARANCE_SKIN_MM) break
         const counts = new Map<PleuralZoneId, number>()
+        const inField = new Map<PleuralZoneId, number>()
         resolver.view(pose, LUNG_STEP).forEach((value, s) => {
+          if (value === VIEW.out) return
+          inField.set(zoneOf[s], (inField.get(zoneOf[s]) ?? 0) + 1)
           if (value === VIEW.inView) counts.set(zoneOf[s], (counts.get(zoneOf[s]) ?? 0) + 1)
         })
         for (const [zone, seen] of counts) {
-          if (seen > (best.get(zone)?.seen ?? 0)) best.set(zone, { pose, seen })
+          if (seen > (best.get(zone)?.seen ?? 0))
+            best.set(zone, { pose, seen, inField: inField.get(zone) ?? seen })
+        }
+        for (const [zone, count] of inField) {
+          if (count > (facing.get(zone)?.inField ?? 0)) facing.set(zone, { pose, inField: count })
         }
       }
     }
   }
   const stops = PLEURAL_ZONE_IDS.map((zone) => {
-    const found = best.get(zone)
+    const shown = best.get(zone)
+    const faced = facing.get(zone)
+    const found = shown ?? (faced ? { ...faced, seen: 0 } : undefined)
     const samples = zoneOf.filter((z) => z === zone).length
     return found
       ? {
@@ -96,16 +108,17 @@ async function main(): Promise<void> {
             rollDeg: 0,
           },
           seenFromThere: found.seen,
+          inFieldFromThere: found.inField,
           samples,
         }
-      : { zone, pose: null, seenFromThere: 0, samples }
+      : { zone, pose: null, seenFromThere: 0, inFieldFromThere: 0, samples }
   })
   const record = {
     record: 'medical-thoracoscopy-tour-stops',
     version: 1,
     script: 'scripts/medical-thoracoscopy/build-tour-stops.ts',
     statement:
-      'Numbers only: for each survey region, the position of the telescope that shows the most of it with nothing in the way, with the lung fallen away, and how many of its samples that is. Computed by the space engine from the collision proxies, which are not in the repository.',
+      'Numbers only: for each survey region, the position of the telescope that shows the most of it with nothing in the way, with the lung fallen away, how many of its samples that is, and how many lie in the field from there, seen or hidden. Where no position shows any of a region, the stop is the position that brings the most of it into the field with something in the way, and seenFromThere is 0. Computed by the space engine from the collision proxies, which are not in the repository.',
     label: 'Authored construct',
     computedFor: reachIdentity(LUNG_STEP),
     lungStep: LUNG_STEP,
@@ -119,7 +132,7 @@ async function main(): Promise<void> {
   console.log(`${Math.round((Date.now() - started) / 1000)} s`)
   for (const stop of stops)
     console.log(
-      `  ${stop.zone}: ${stop.seenFromThere} of ${stop.samples}`,
+      `  ${stop.zone}: ${stop.seenFromThere} seen, ${stop.inFieldFromThere} in the field, of ${stop.samples}`,
       JSON.stringify(stop.pose),
     )
 }

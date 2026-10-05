@@ -2,6 +2,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
+import { SPACE_PROTOTYPE_START } from '../components/prototype/SpacePrototype'
 import {
   ledgerProblems,
   type PIVOT_HAND_DIRECTIONS,
@@ -805,6 +806,15 @@ describe('the tour’s stops', () => {
   it('are recorded for the snapshot the engine would compute them for now, one for every region', () => {
     const stops = currentTourStops()
     expect(stops?.map((stop) => stop.zone)).toEqual([...PLEURAL_ZONE_IDS])
+    // A region no position shows any of keeps its stop, facing it, and says how much it shows:
+    // none (owner decisions, OD-16 and OD-17). The lesson tells that stop; it does not ask.
+    expect(stops?.map((stop) => stop.seen)).toEqual(
+      tourStops.stops.map((stop) => stop.seenFromThere),
+    )
+    for (const stop of tourStops.stops) {
+      expect(stop.inFieldFromThere).toBeGreaterThanOrEqual(stop.seenFromThere)
+      expect(stop.inFieldFromThere).toBeGreaterThan(0)
+    }
     expect(
       currentTourStops({
         ...tourStops,
@@ -964,16 +974,31 @@ describe('the real proxies, where the owner’s local data holds them', () => {
   let loaded: LoadedSpace | null = null
   const space = () => (loaded ??= loadSpace(bytes('proxy-pleural-space'), bytes('proxy-lung')))
 
-  maybe('stops the tour where the telescope is clear and its region is in view', () => {
-    const s = space()
-    const resolver = createResolver(s)
-    for (const stop of currentTourStops() ?? []) {
-      expect(resolver.startProblem(stop.pose, stop.lungStep)).toBeNull()
-      const view = resolver.view(stop.pose, stop.lungStep)
-      expect(
-        s.samples.zones.some((zone, sample) => zone === stop.zone && view[sample] === VIEW.inView),
-      ).toBe(true)
-    }
+  maybe(
+    'stops the tour where the telescope is clear and its region is in view, or faced and hidden where none of it can be seen',
+    () => {
+      const s = space()
+      const resolver = createResolver(s)
+      for (const stop of currentTourStops() ?? []) {
+        expect(resolver.startProblem(stop.pose, stop.lungStep)).toBeNull()
+        const view = resolver.view(stop.pose, stop.lungStep)
+        const some = (wanted: number) =>
+          s.samples.zones.some((zone, sample) => zone === stop.zone && view[sample] === wanted)
+        // A stop that shows none of its region faces it, with something in the way (OD-16, OD-17).
+        expect({ zone: stop.zone, inView: some(VIEW.inView), hidden: some(VIEW.hidden) }).toEqual(
+          stop.seen > 0
+            ? { zone: stop.zone, inView: true, hidden: expect.any(Boolean) }
+            : { zone: stop.zone, inView: false, hidden: true },
+        )
+      }
+    },
+  )
+
+  maybe('starts the space prototype at the first lung step that leaves the telescope clear', () => {
+    const resolver = createResolver(space())
+    const { pose, lungStep } = SPACE_PROTOTYPE_START
+    expect(resolver.startProblem(pose, lungStep)).toBeNull()
+    expect(resolver.startProblem(pose, lungStep - 1)).not.toBeNull()
   })
 
   maybe('gives the pane a state that keeps the contract, with the record’s reach', () => {

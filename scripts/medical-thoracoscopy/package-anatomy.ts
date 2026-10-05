@@ -67,6 +67,8 @@ const LEDGER = path.join(ROOT, 'docs/medical-thoracoscopy/registers/asset-ledger
 const DRACO = { compressionLevel: 10, quantizePositionBits: 16, quantizeNormalBits: 12 }
 const ANATOMY_BUDGET_BYTES = 3 * 1024 * 1024
 const RIGHTS = ['R-ANATOMY-CT', 'R-ANATOMY-SEGMENTATION']
+/** The lung's states end at a volume measured on other patients' scans (owner decisions, OD-17). */
+const COLLAPSE_VOLUME_RIGHT = 'R-COLLAPSE-VOLUME-CTS'
 
 /** The files, in the order the manifest lists them. */
 const FILES = [
@@ -338,7 +340,7 @@ async function main(): Promise<void> {
       label: file.statesLabel
         ? `${file.label}; states ${file.statesLabel.toLowerCase()}`
         : file.label,
-      rights: RIGHTS,
+      rights: file.statesLabel ? [...RIGHTS, COLLAPSE_VOLUME_RIGHT] : RIGHTS,
       claims: file.claims,
       definitionSha256: null,
       builtBy: file.builtBy,

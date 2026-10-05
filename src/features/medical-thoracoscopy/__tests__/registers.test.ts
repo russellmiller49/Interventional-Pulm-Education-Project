@@ -622,7 +622,12 @@ describe('rights register', () => {
         .filter((item) => item.blocksUpload)
         .map((item) => item.id)
         .sort(),
-    ).toEqual(['R-ANATOMY-CT', 'R-ANATOMY-SEGMENTATION', 'R-DEVICE-MODELS'])
+    ).toEqual([
+      'R-ANATOMY-CT',
+      'R-ANATOMY-SEGMENTATION',
+      'R-COLLAPSE-VOLUME-CTS',
+      'R-DEVICE-MODELS',
+    ])
   })
 
   it('keeps manufacturer images and documents out of the repository', () => {
@@ -671,7 +676,12 @@ describe('asset ledger', () => {
         expect(asset.path).toMatch(/^public\/models\/medical-thoracoscopy\/v1\/anatomy\//)
         expect(asset.label).toMatch(/^Derived from CT segmentation/)
         expect(asset.inRepository).toBe(false)
-        expect(asset.rights).toEqual(['R-ANATOMY-CT', 'R-ANATOMY-SEGMENTATION'])
+        // the lung's states also rest on the scans their end volume was measured from (OD-17)
+        expect(asset.rights).toEqual(
+          /states authored/.test(asset.label)
+            ? ['R-ANATOMY-CT', 'R-ANATOMY-SEGMENTATION', 'R-COLLAPSE-VOLUME-CTS']
+            : ['R-ANATOMY-CT', 'R-ANATOMY-SEGMENTATION'],
+        )
       }
     }
     // One scene so far, the pleural space: its cold download is the sum of its files, and what the

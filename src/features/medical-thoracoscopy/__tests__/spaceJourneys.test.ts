@@ -53,14 +53,14 @@ function journeyTarget(space: LoadedSpace): JourneyTarget {
 }
 
 /**
- * The lung proxy's Euler characteristic at each step, as measured on 2026-09-29 (R7): 2 for a
- * surface like a sphere, 0 for one with a single tunnel through it. Steps 2 and 4 have one tunnel
- * each. The winding number and the clearance are sound for any closed, outward surface, and the
- * journeys find nothing wrong at step 4, but whether a tunnel could admit an instrument has not been
- * established. Pinned so that a rebuild that changes the lung's shape is noticed; it is a finding for
- * the owner's lung decision (R9), not a defect this repair rebuilds geometry to hide.
+ * The lung proxy's Euler characteristic at each step: 2 for a surface like a sphere, 0 for one with
+ * a single tunnel through it. Measured on 2026-10-05, after the lung was rebuilt to end at the
+ * measured share of the pleural space (owner decisions, OD-17): every step is like a sphere. The
+ * proxies measured on 2026-09-29 (R7) had one tunnel each at steps 2 and 4; the rebuild was not
+ * made to remove them, and whether a tunnel could admit an instrument was never established.
+ * Pinned so that a rebuild that changes the lung's shape is noticed.
  */
-const MEASURED_LUNG_EULER = [2, 2, 0, 2, 0, 2, 2, 2, 2] as const
+const MEASURED_LUNG_EULER = [2, 2, 2, 2, 2, 2, 2, 2, 2] as const
 
 type PreservedSeed = {
   readonly scene: string
