@@ -2,7 +2,7 @@
   "record": "medical-thoracoscopy-tour-stops",
   "version": 1,
   "script": "scripts/medical-thoracoscopy/build-tour-stops.ts",
-  "statement": "Numbers only: for each survey region, the position of the telescope that shows the most of it with nothing in the way, with the lung fallen away, and how many of its samples that is. Computed by the space engine from the collision proxies, which are not in the repository.",
+  "statement": "Numbers only: for each survey region, the position of the telescope that shows the most of it with nothing in the way, with the lung fallen away, how many of its samples that is, and how many lie in the field from there, seen or hidden. Where no position shows any of a region, the stop is the position that brings the most of it into the field with something in the way, and seenFromThere is 0. Computed by the space engine from the collision proxies, which are not in the repository.",
   "label": "Authored construct",
   "computedFor": {
     "anatomy": "1fa8ff210d66",
@@ -10,7 +10,7 @@
     "optics": "sleeveBeyondPleuraMm=5;viewRangeMm=200;alongRibsLimitDeg=40",
     "port": "b93d6e7d31ff+1945bf88138f",
     "lungAndFluid": "lung step 8",
-    "geometry": "6c4048f8e9ee+9d7a1a5818da",
+    "geometry": "6c4048f8e9ee+206b2fd0e70f",
     "rules": "step tilt 2 depth 2 roll 5;skin 0.25 piece 0.9 numeric 0.001;port patch 10;lung room 0.5;occlusion 0.001"
   },
   "lungStep": 8,
@@ -23,7 +23,8 @@
         "depthMm": 7.54,
         "rollDeg": 0
       },
-      "seenFromThere": 22,
+      "seenFromThere": 16,
+      "inFieldFromThere": 113,
       "samples": 234
     },
     {
@@ -34,18 +35,20 @@
         "depthMm": 7.54,
         "rollDeg": 0
       },
-      "seenFromThere": 18,
+      "seenFromThere": 17,
+      "inFieldFromThere": 19,
       "samples": 113
     },
     {
       "zone": "posterior-chest-wall",
       "pose": {
-        "tiltAcrossRibsDeg": -13.8,
-        "tiltAlongRibsDeg": -36.45,
+        "tiltAcrossRibsDeg": -5.91,
+        "tiltAlongRibsDeg": -39.37,
         "depthMm": 7.54,
         "rollDeg": 0
       },
-      "seenFromThere": 136,
+      "seenFromThere": 120,
+      "inFieldFromThere": 216,
       "samples": 390
     },
     {
@@ -56,7 +59,8 @@
         "depthMm": 7.54,
         "rollDeg": 0
       },
-      "seenFromThere": 18,
+      "seenFromThere": 12,
+      "inFieldFromThere": 73,
       "samples": 146
     },
     {
@@ -67,18 +71,20 @@
         "depthMm": 7.54,
         "rollDeg": 0
       },
-      "seenFromThere": 77,
+      "seenFromThere": 69,
+      "inFieldFromThere": 154,
       "samples": 266
     },
     {
       "zone": "mediastinum",
       "pose": {
-        "tiltAcrossRibsDeg": -25.63,
-        "tiltAlongRibsDeg": 23.79,
+        "tiltAcrossRibsDeg": 17.74,
+        "tiltAlongRibsDeg": -3.99,
         "depthMm": 7.54,
         "rollDeg": 0
       },
-      "seenFromThere": 1,
+      "seenFromThere": 0,
+      "inFieldFromThere": 283,
       "samples": 342
     },
     {
@@ -90,6 +96,7 @@
         "rollDeg": 0
       },
       "seenFromThere": 2,
+      "inFieldFromThere": 2,
       "samples": 145
     }
   ]

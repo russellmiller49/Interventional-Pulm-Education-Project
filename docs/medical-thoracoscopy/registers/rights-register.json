@@ -56,6 +56,35 @@
       }
     },
     {
+      "id": "R-COLLAPSE-VOLUME-CTS",
+      "what": "Chest CTs of other patients, measured to set the collapsed lung's volume",
+      "holder": "The CT-RATE authors",
+      "terms": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International",
+      "termsSource": "The licence field of the dataset's record on Hugging Face (ibrahimhamamci/CT-RATE, cc-by-nc-sa-4.0, access on request), read on 2026-10-05. The dataset's page and any separate terms of access were not read for this entry.",
+      "permits": "Sharing and adapting for non-commercial purposes, with credit, a link to the licence, a note of changes, and the same licence on what is adapted.",
+      "requires": [
+        "Credit to the dataset and the paper that describes it",
+        "A link to the licence",
+        "A statement that the material was modified",
+        "Non-commercial use only",
+        "The same licence on adapted material"
+      ],
+      "use": "Twenty-two scans were measured in the owner's local data. One number from eleven of them sets where the lung's collapse ends: the median share of the pleural space the lung fills beside a large effusion, 0.246. No scan, mask, report text or per-scan measurement is distributed.",
+      "heldAt": "Interventional-Pulm-Local-Data/medical_thoracoscopy/ct-rate-pleural-space/ and raw-assets/medical-thoracoscopy/collapse-study-2026-09-30/ct-rate-fit-2026-10-03/",
+      "inRepository": false,
+      "status": "unresolved input",
+      "openQuestion": "Whether one summary number measured from scans licensed for non-commercial use may set a value in a sponsored module, whether the licence's share-alike term reaches a model shaped by that number, and what credit it needs. This is a legal question the build did not answer.",
+      "blocksUpload": true,
+      "exposure": "The number 0.246 and its interquartile range are committed to the public repository on every pushed branch that carries this change: in the lung-states record, the builder script, the claim register and the owner decisions. The lung states built to it are in the owner's local data and are not uploaded. No scan, mask, report text or per-scan measurement is in the repository. Whether that is acceptable is the owner's decision; it is recorded here, not approved.",
+      "decision": {
+        "decision": "NOT REVIEWED",
+        "reviewer": null,
+        "role": null,
+        "date": null,
+        "reviewedRevision": null
+      }
+    },
+    {
       "id": "R-MANUFACTURER-IMAGES",
       "what": "Frames of the manufacturer's product animation",
       "holder": "Richard Wolf",

@@ -282,7 +282,8 @@ export const section: ThoracoscopySectionSpec = {
       name: 'How far the lung has fallen',
       provenance: 'authored',
       label: 'Authored, illustrative',
-      detail: 'Chosen by the author so that there is room to look. Not measured.',
+      detail:
+        'Set so that the lung fills about a quarter of the space: the middle value measured beside large effusions on CT in other patients, not in this one. Where the lung rests is chosen by the author.',
       claimIds: ['MT-C-0002'],
     },
   ],

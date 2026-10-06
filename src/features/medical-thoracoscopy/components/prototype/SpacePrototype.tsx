@@ -13,14 +13,16 @@ import { useReducedMotion } from '../space/useSpaceSupport'
  * An engineering prototype of the pleural space (slice 11): the engine, the 3D scene and the cut,
  * with no lesson around them. It is outside the curriculum and the progress record, and records
  * nothing. The lung starts part-way fallen, since the telescope has no room at the port before air is
- * in. Until the lung-change claim (MT-C-0002) is clinically reviewed, the lung's fallen-away state is
+ * in: at the first step that leaves this start clear, which is step 5 with the lung as rebuilt to
+ * end at the measured share of the pleural space (owner decisions, OD-17; step 4 before that). A
+ * test holds the step to the real proxies. Until the lung-change claim (MT-C-0002) is clinically reviewed, the lung's fallen-away state is
  * an explicitly labelled, authored teaching state the page plays, never a physiological consequence
  * of anything the learner does (owner decision OD-11, which supersedes T2's default). The amount of
  * collapse is the model's, unchanged. It never comes back: re-expansion is not modelled.
  */
-const START: SpaceEngineStart = {
+export const SPACE_PROTOTYPE_START: SpaceEngineStart = {
   scenario: 'space-prototype',
-  lungStep: 4,
+  lungStep: 5,
   pose: { tiltAcrossRibsDeg: 0, tiltAlongRibsDeg: 0, depthMm: 12, rollDeg: 0 },
 }
 const LAST_LUNG_STEP = 8
@@ -81,7 +83,7 @@ function SpaceRun({
   readonly reducedMotion: boolean
   readonly drawIn3d: boolean
 }) {
-  const session = useSpaceEngine(START, { reducedMotion })
+  const session = useSpaceEngine(SPACE_PROTOTYPE_START, { reducedMotion })
   const { paneState } = session
   const ready = paneState.readiness.kind === 'ready'
   const fallen = paneState.lungStep === LAST_LUNG_STEP

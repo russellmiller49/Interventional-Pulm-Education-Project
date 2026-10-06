@@ -43,6 +43,9 @@ export const ACTIVITY_WORDS = {
   tourAsk: 'What tells you where you are? Name the region, or ask.',
   tourShow: 'Show me',
   tourIs: 'This is',
+  tourFaces: 'The telescope faces',
+  tourHidden:
+    'None of it comes into view from here. In this model that is so from every position the port allows.',
   tourYouNamed: 'You named',
   tourWaiting: 'The tour waits until the anatomy is ready.',
   tourUnavailable:
@@ -102,8 +105,11 @@ export function TourView({
     if (!stop) return
     space.restart({ scenario: `tour:${stop.zone}`, lungStep: stop.lungStep, pose: stop.pose })
     dispatch({ type: 'tour-stop', stop: index })
+    // Where none of the region comes into view there is nothing to name: the stop is told, not asked.
+    if (stop.seen === 0) dispatch({ type: 'tour-ask', stop: index })
   }
   const here = at >= 0 ? activity.stops[at] : null
+  const hidden = here ? stops.find((entry) => entry.zone === here.zone)?.seen === 0 : false
   const named = at >= 0 ? session.tour.named[at] : undefined
   return (
     <div className={styles.activityWork} data-tour-stop={at}>
@@ -160,11 +166,13 @@ export function TourView({
               </div>
             </fieldset>
           ) : (
-            <div role="status" className={styles.feedback}>
+            <div role="status" className={styles.feedback} data-tour-hidden={hidden || undefined}>
               <p>
                 <strong>
-                  {ACTIVITY_WORDS.tourIs} the {pleuralZone(here.zone).name.toLowerCase()}.
+                  {hidden ? ACTIVITY_WORDS.tourFaces : ACTIVITY_WORDS.tourIs} the{' '}
+                  {pleuralZone(here.zone).name.toLowerCase()}.
                 </strong>{' '}
+                {hidden ? `${ACTIVITY_WORDS.tourHidden} ` : ''}
                 {named !== 'asked' && named !== here.zone
                   ? `${ACTIVITY_WORDS.tourYouNamed} the ${pleuralZone(named).name.toLowerCase()}. `
                   : ''}

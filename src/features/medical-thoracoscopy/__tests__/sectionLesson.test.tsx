@@ -9,6 +9,7 @@ import { SectionLesson } from '../components/lesson/SectionLesson'
 import { LESSON_WORDS } from '../components/lesson/lessonWords'
 import { VIEW_WORDS } from '../components/space/spaceWords'
 import type { SpaceLoader } from '../components/space/useSpaceEngine'
+import { tourStops } from '../content/anatomy'
 import { lessonParts } from '../content/lessonParts'
 import { writtenSection } from '../content/sections'
 import { teachingExample } from '../content/teachingExamples'
@@ -224,6 +225,33 @@ describe('the lesson host', () => {
     expect(within(activity).queryByText(/This is the diaphragm/)).toBeNull()
     fireEvent.click(within(activity).getByRole('button', { name: 'Show me' }))
     expect(within(activity).getByText(/This is the diaphragm/)).toBeInTheDocument()
+  })
+
+  it('tells, and does not ask, a stop where none of the region comes into view', async () => {
+    // With the lung the model has now, no position the port allows shows any of the mediastinum
+    // (the tour-stops record; owner decisions, OD-16 and OD-17).
+    const hidden = tourStops.stops.findIndex((stop) => stop.seenFromThere === 0)
+    expect(tourStops.stops[hidden]?.zone).toBe('mediastinum')
+    await open('normal-pleural-space')
+    const activity = await reachPart('activity')
+    await spaceReady()
+    fireEvent.click(within(activity).getByRole('button', { name: /first stop/ }))
+    for (let stop = 1; stop <= hidden; stop += 1) {
+      await waitFor(() =>
+        expect(within(activity).getByRole('button', { name: /next stop/ })).toBeEnabled(),
+      )
+      fireEvent.click(within(activity).getByRole('button', { name: /next stop/ }))
+    }
+    await waitFor(() =>
+      expect(activity.querySelector('[data-tour-stop]')).toHaveAttribute(
+        'data-tour-stop',
+        String(hidden),
+      ),
+    )
+    expect(within(activity).queryByRole('button', { name: 'Show me' })).toBeNull()
+    expect(activity.querySelector('[data-tour-hidden]')).not.toBeNull()
+    expect(within(activity).getByText(/The telescope faces the mediastinum/)).toBeInTheDocument()
+    expect(activity).toHaveTextContent(/None of it comes into view from here/)
   })
 
   it('reaches a pivot target only when the engine shows the region, after the learner moved', async () => {

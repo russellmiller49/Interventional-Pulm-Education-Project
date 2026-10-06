@@ -8,11 +8,17 @@ import { reachIdentity } from './zoneReach'
  * nothing in the way, computed offline by `scripts/medical-thoracoscopy/build-tour-stops.ts` and
  * recorded with its snapshot. As with reach, the record is used only while that snapshot is the one
  * the engine would compute it for now; otherwise there is no tour to take.
+ *
+ * Where no position shows any of a region, its stop is the position that faces the most of it, with
+ * something in the way, and `seen` is 0: the tour still goes there, and says that the region does
+ * not come into view (owner decisions, OD-16 and OD-17).
  */
 export interface TourStop {
   readonly zone: PleuralZoneId
   readonly pose: ScopePose
   readonly lungStep: number
+  /** How many of the region's samples the stop shows with nothing in the way. */
+  readonly seen: number
 }
 
 export function currentTourStops(record: TourStops = tourStops): readonly TourStop[] | null {
@@ -20,7 +26,16 @@ export function currentTourStops(record: TourStops = tourStops): readonly TourSt
   const parts = Object.keys(now) as (keyof typeof now)[]
   if (!parts.every((part) => now[part] === record.computedFor[part])) return null
   const stops = record.stops.flatMap((stop) =>
-    stop.pose ? [{ zone: stop.zone, pose: stop.pose, lungStep: record.lungStep }] : [],
+    stop.pose
+      ? [
+          {
+            zone: stop.zone,
+            pose: stop.pose,
+            lungStep: record.lungStep,
+            seen: stop.seenFromThere,
+          },
+        ]
+      : [],
   )
   return stops.length === record.stops.length ? stops : null
 }

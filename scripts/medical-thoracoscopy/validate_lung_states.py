@@ -175,6 +175,13 @@ def main() -> int:
         for fraction in LUNG["checks"]["blendsCheckedAt"]:
             lung_checks(f"between steps {k} and {k + 1} at {fraction}", (1 - fraction) * states[k] + fraction * states[k + 1])
     report["lung"] = rows
+    end = LUNG["collapse"]
+    space_ml = signed_volume(space_vertices, space_faces) / 1000.0
+    check(abs(space_ml - end["spaceVolumeMl"]) < 0.5, "lung: the drawn pleural space has the volume the record divides by")
+    check(abs(end["endVolumeMl"] - end["endLungShareOfSpace"] * end["spaceVolumeMl"]) < 0.5,
+          "lung: the end volume is the recorded share of the drawn pleural space")
+    check(0.98 * end["endVolumeMl"] < rows[-1]["volumeMl"] <= end["endVolumeMl"] + 0.5,
+          f"lung: the last state is the end volume, at most 2 per cent under it ({rows[-1]['volumeMl']:.1f} of {end['endVolumeMl']:.1f} mL)")
 
     # ── the pleural-space proxy and the zone samples ──
     document, binary, root = load("proxy-pleural-space")

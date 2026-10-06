@@ -8,7 +8,7 @@
   "claims": [
     {
       "id": "MT-C-0001",
-      "revision": 2,
+      "revision": 3,
       "category": "authored simulation assumption",
       "lane": "clinical",
       "assertion": "With the port open and the fluid drained, air enters the pleural space and the lung falls away from the chest wall.",
@@ -33,7 +33,7 @@
           "supports": "Slow removal of pleural fluid is advised so that air can replace the fluid."
         }
       ],
-      "sourceNote": "The sources describe air replacing the fluid and the lung coming away from the chest wall. How far the lung falls, and how quickly, is the author’s choice (MT-C-0002).",
+      "sourceNote": "The sources describe air replacing the fluid and the lung coming away from the chest wall. How far the lung falls is set from measurement on other patients, and how quickly is the author’s choice (MT-C-0002).",
       "surfaces": [
         {
           "kind": "section",
@@ -80,13 +80,13 @@
     },
     {
       "id": "MT-C-0002",
-      "revision": 1,
+      "revision": 2,
       "category": "authored simulation assumption",
       "lane": "clinical",
-      "assertion": "In the collapsed state the lung surface sits at an authored distance from the port, chosen so that the survey has room to work.",
+      "assertion": "In the collapsed state the lung fills about a quarter of the pleural space. That share is the middle value measured beside large pleural effusions on CT in other patients. Where the collapsed lung rests is chosen by the author.",
       "context": "The same patient and position as MT-C-0001.",
       "sources": [],
-      "sourceNote": "The distance is chosen by the author. It is not measured and not taken from a source.",
+      "sourceNote": "The share, 0.246, is the median of eleven chest CTs with a large pleural effusion (interquartile range 0.163 to 0.372), measured in the owner’s local data from the CT-RATE dataset. The scans were chosen from their reports, segmented automatically and accepted by the owner on review. They were taken with the patient lying on the back, with fluid in the pleural space and not air. It is not a published figure and has no source in the source register; the scans’ terms are in the rights register (R-COLLAPSE-VOLUME-CTS). The direction of the collapse and where the lung rests are chosen by the author.",
       "surfaces": [
         {
           "kind": "section",
@@ -112,12 +112,12 @@
       "dependentRules": [
         "What the survey can reach and see depends on where the collapsed lung sits."
       ],
-      "limitations": "Illustrative. A real lung collapses by an amount that varies with the patient and the disease.",
+      "limitations": "Illustrative. A real lung collapses by an amount that varies with the patient and the disease. The measured share comes from other patients, lying on the back with the fluid in place; this model shows a patient lying on the side after the fluid has been drained.",
       "status": "review pending",
       "shownBeforeReview": {
         "allowed": true,
         "learnerLabel": "Authored, illustrative",
-        "basis": "Owner decisions, open item I5."
+        "basis": "Owner decisions, OD-17, which settles open item I5."
       },
       "blocksPublication": true,
       "decision": {

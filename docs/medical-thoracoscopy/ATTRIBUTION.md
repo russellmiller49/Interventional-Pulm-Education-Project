@@ -32,6 +32,24 @@ page and in the caption of each scene that shows it.
 Until both are settled, no anatomy file is uploaded or published. See the
 [rights register](registers/rights-register.json).
 
+## Measurements that set the collapsed lung's volume
+
+Where the lung's collapse ends is one number, 0.246: the share of the pleural space the lung fills
+beside a large effusion, the median of eleven chest CTs of other patients measured in the owner's
+local data. Those scans are from the CT-RATE dataset.
+
+|         |                                                                                                                                                                     |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dataset | CT-RATE. Hugging Face, `ibrahimhamamci/CT-RATE`, access on request. Described in arXiv:2403.17834. The full citation has not yet been taken from the paper.         |
+| Licence | Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International. <https://creativecommons.org/licenses/by-nc-sa/4.0/>                                       |
+| Changes | Nothing from the dataset is reproduced. Scans were segmented and measured; one summary number is used. No scan, mask, report text or per-scan measurement is shown. |
+
+The dataset's authors did not take part in this module and do not endorse it.
+
+**Not settled:** whether a number measured from scans licensed for non-commercial use may set a
+value in a sponsored module. See the [rights register](registers/rights-register.json),
+R-COLLAPSE-VOLUME-CTS, and owner decision OD-17.
+
 ## Instruments
 
 The instrument models are original work, built for this module from published dimensions and from

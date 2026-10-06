@@ -18,7 +18,10 @@ terms are not settled: rights register, R-ANATOMY-SEGMENTATION):
 - `proxy-lung.glb`: the lung's collision proxy, about 4,000 triangles, around the drawn lung at
   every state; the states as morph targets at full precision.
 
-The states are authored, not measured (MT-C-0001, MT-C-0002, both awaiting clinical review). The
+The states are authored, not measured on this patient (MT-C-0001, MT-C-0002, both awaiting clinical
+review). One number is taken from measurement: the flow stops when the lung fills a set share of the
+drawn pleural space, the median share measured beside a large effusion in other patients' scans
+(owner decisions, OD-17; rights register, R-COLLAPSE-VOLUME-CTS). The
 surface is carried by the flow of a smooth velocity field: toward a point inside the lung near the
 hilum, with a drift along gravity in the presented position; near the pleura, no outward motion
 and sliding held back by friction, and a barrier that keeps the lung off the drawn surface. The
@@ -85,10 +88,15 @@ CLAIMS = ["MT-C-0001", "MT-C-0002"]
 # sits inside the drawn pleural surface; meshed as the pleural space is.
 LUNG = {"closingMm": 2.0, "erosionMm": 1.0, "gridMm": 1.0, "smoothingMm": 1.0, "edgeMm": 3.0, "marchingStep": 2}
 
-# The collapse. Authored (MT-C-0002): the gap at the port and every value below are the author's
-# choices, made so that the states stay clear of the pleura without folding; none is measured.
+# The collapse (MT-C-0002). Where it ends is measured, on other patients: `endLungShareOfSpace` is the
+# median share of the pleural space the lung fills beside a large effusion, in eleven supine chest CTs
+# measured in the owner's local data (owner decisions, OD-17; rights register, R-COLLAPSE-VOLUME-CTS;
+# interquartile range 0.163 to 0.372). The flow stops at the first step where the lung is no larger
+# than that share of the drawn pleural space. Every other value is the author's choice, made so that
+# the states stay clear of the pleura without folding; none of those is measured, and the drift
+# along gravity, which sets where the collapsed lung rests, is unchanged by OD-17.
 COLLAPSE = {
-    "gapAtPortMm": 30.0,
+    "endLungShareOfSpace": 0.246,
     "steps": 8,
     "hilumSearchMm": 12.0,
     "targetDepthMm": 12.0,
@@ -265,9 +273,9 @@ class CollapseField:
                          for axis in range(3)], -1)
 
 
-def collapse(vertices: np.ndarray, faces: np.ndarray, field: CollapseField, port_point: np.ndarray | None,
+def collapse(vertices: np.ndarray, faces: np.ndarray, field: CollapseField, end_volume_ml: float | None,
              end_time: float | None = None):
-    """Integrate the flow until the gap at the port reaches the authored value, or to `end_time`;
+    """Integrate the flow until the lung is no larger than `end_volume_ml`, or to `end_time`;
     return the states at equal flow time, the flow time, and what the limiter did."""
     c = COLLAPSE
     matrix, degree, rings = adjacency(len(vertices), faces)
@@ -310,11 +318,10 @@ def collapse(vertices: np.ndarray, faces: np.ndarray, field: CollapseField, port
             if t >= end_time - 0.5 * c["timeStep"]:
                 break
             continue
-        gap = distance_to_surface(port_point[None], p, faces)[0][0]
-        if gap >= c["gapAtPortMm"]:
+        if signed_volume(p, faces) / 1000.0 <= end_volume_ml:
             break
         if t > 3.0:
-            raise SystemExit(f"The flow did not open a gap of {c['gapAtPortMm']} mm at the port")
+            raise SystemExit(f"The flow did not bring the lung down to {end_volume_ml:.1f} mL")
     times = np.array([entry[0] for entry in path])
     states = [path[int(np.argmin(np.abs(times - t * k / c["steps"])))][1] for k in range(c["steps"] + 1)]
     drift_length = np.linalg.norm(drift, axis=1)
@@ -758,8 +765,11 @@ def main() -> int:
     field = CollapseField(space, sdf, target)
     port = json.loads((RECORDS / "port-record.json").read_text())
     port_point = np.array(port["pleuraPointLps"], dtype=float)
-    states, flow_time, limiter = collapse(base, faces, field, port_point)
-    log(f"collapse: flow time {flow_time:.3f}; limiter smoothed {limiter['smoothings']} times")
+    space_volume_ml = signed_volume(space_vertices, space_faces) / 1000.0
+    end_volume_ml = COLLAPSE["endLungShareOfSpace"] * space_volume_ml
+    states, flow_time, limiter = collapse(base, faces, field, end_volume_ml)
+    log(f"collapse: to {end_volume_ml:.1f} mL, {COLLAPSE['endLungShareOfSpace']} of the drawn space's "
+        f"{space_volume_ml:.1f} mL; flow time {flow_time:.3f}; limiter smoothed {limiter['smoothings']} times")
 
     table, failures = [], []
     for k, state in enumerate(states):
@@ -888,7 +898,8 @@ def main() -> int:
             "watertight": edges_shared_twice(faces),
             "smallestAngleDeg": float(min_angles(base, faces).min()),
         },
-        "collapse": {**COLLAPSE, "hilarCentroidLps": hilar.tolist(), "targetLps": target.tolist(), "flowTime": flow_time,
+        "collapse": {**COLLAPSE, "spaceVolumeMl": space_volume_ml, "endVolumeMl": end_volume_ml,
+                     "hilarCentroidLps": hilar.tolist(), "targetLps": target.tolist(), "flowTime": flow_time,
                      "portPleuraPointLps": port_point.tolist(), **limiter},
         "checks": {"clearanceFloorMm": CLEARANCE_FLOOR_MM, "blendsCheckedAt": list(BLEND_CHECKS),
                    "foldedMeans": ("the angle between a face and a neighbour has grown by more than 90 degrees since the "

@@ -10,7 +10,7 @@
     "optics": "sleeveBeyondPleuraMm=5;viewRangeMm=200;alongRibsLimitDeg=40",
     "port": "b93d6e7d31ff+1945bf88138f",
     "lungAndFluid": "lung step 8",
-    "geometry": "6c4048f8e9ee+9d7a1a5818da",
+    "geometry": "6c4048f8e9ee+206b2fd0e70f",
     "rules": "step tilt 2 depth 2 roll 5;skin 0.25 piece 0.9 numeric 0.001;port patch 10;lung room 0.5;occlusion 0.001",
     "tool": "touch 0.3 skin 0.15;step 2 reach 40;open jaws 5.37;table 30ee2fb5dd63"
   },
@@ -18,27 +18,32 @@
   "nodule": {
     "on": "lung-surface",
     "zone": null,
-    "centre": [-104.225, -189.451, -353.693],
+    "centre": [-107.953, -189.413, -358.985],
     "radiusMm": 5,
-    "onSurface": [-105.204, -189.266, -353.605],
-    "towardTelescope": [-0.9788, 0.1849, 0.0879]
+    "onSurface": [-108.947, -189.31, -358.948],
+    "towardTelescope": [-0.994, 0.103, 0.037]
   },
   "costalPleura": {
-    "linesTried": 6623,
-    "linesMeetingTheLungFirst": 6623,
-    "nearestLungFromTheTipMm": 22.4
+    "linesTried": 5508,
+    "linesMeetingTheLungFirst": 5508,
+    "nearestLungFromTheTipMm": 18.8
   },
   "places": [
     {
       "id": "facing-the-nodule",
-      "pose": { "tiltAcrossRibsDeg": 6.88, "tiltAlongRibsDeg": 3, "depthMm": 9.98, "rollDeg": 0 }
+      "pose": {
+        "tiltAcrossRibsDeg": -2.95,
+        "tiltAlongRibsDeg": 9.95,
+        "depthMm": 7.56,
+        "rollDeg": 0
+      }
     },
     {
       "id": "beside-the-lung",
       "pose": {
-        "tiltAcrossRibsDeg": 31.54,
-        "tiltAlongRibsDeg": 9.65,
-        "depthMm": 25.5,
+        "tiltAcrossRibsDeg": 21.69,
+        "tiltAlongRibsDeg": 28.53,
+        "depthMm": 22.51,
         "rollDeg": 0
       }
     }
@@ -46,7 +51,7 @@
   "towardTheLung": "head",
   "found": {
     "telescopeStopsAfterSteps": 7,
-    "forcepsTouchAtMm": 7.05,
+    "forcepsTouchAtMm": 7.07,
     "besideTheLungStoppedBy": "working-element",
     "besideTheLungPivotSteps": 1,
     "withoutTheForcepsPivotSteps": 5
