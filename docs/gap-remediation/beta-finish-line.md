@@ -119,7 +119,7 @@ Verified 2026-10-06 against the live site and `main`.
 2. Merge #334 and close #333 as superseded. Merge #324, #329 and #332; they are documents only and
    merging them records the packets without deciding anything. Merge #308.
 3. Pull `main` in the primary checkout, then apply the EUS-B feedback migration.
-4. Close #134 once the progress-read repair merges. Close #321 once #326 merges.
+4. Close #134 once the progress-read repair (#338) merges. Close #321 once #326 merges.
 5. Make the decisions in section 9, each before its module's acceptance or opening.
 6. Before the first invitation: decide whether to pull any module from the hub.
 
@@ -131,17 +131,22 @@ folder. Start order under the three-lane cap is the order below; preconditions a
 
 ### Hub lane
 
-- **Anatomy routes (H-1).** Remove the unconditional guard from the Synchronized Bronchoscopy
-  layout; move the intro-course guard into a `(course)` route group so the Live Bronchoscopy
-  Anatomy page sits outside it with its address unchanged; correct the two contradicted
-  expectations in the Branch Tracing contract test; add a test that every hub module's route is free
-  of an unconditional draft guard, is framed in `next.config.mjs` and is named in a feedback
-  migration; add a request-only smoke for hub routes and assets that can run against production.
-- **Progress read (H-3).** Normalise the two stored timestamps at the read boundary, with a
-  regression test that uses the database's real output form.
-- **Readiness on the hub (H-7).** A `ready` or `preview` state and a tester note per module, shown
-  as "Ready for review" and "Still in development". Presentation only: every module stays listed
-  and opens as it does today.
+Opened 2026-10-06; none merged.
+
+- **Anatomy routes (H-1), PR #337.** This is the one hub PR that changes who can open something;
+  leaving it unmerged keeps the two modules admin-only. Remove the unconditional guard from the
+  Synchronized Bronchoscopy layout; move the intro-course guard into a `(course)` route group so
+  the Live Bronchoscopy Anatomy page sits outside it with its address unchanged; correct the two
+  contradicted expectations in the Branch Tracing contract test; add a test that every hub module's
+  route is free of an unconditional draft guard, is framed in `next.config.mjs` and is named in a
+  feedback migration; add a request-only smoke for hub routes and assets that can run against
+  production (`npx tsx scripts/module-beta/verify-hub-routes.ts --base-url=…`).
+- **Progress read (H-3), PR #338.** Normalise the two stored timestamps at the read boundary, with
+  a regression test that uses the database's real output form.
+- **Readiness on the hub (H-7), PR #340.** A `ready` or `preview` state and a tester note per
+  module, shown as "Ready for review" and "Still in development". Presentation only: every module
+  stays listed and opens as it does today. Its documentation and one browser-test line follow the
+  merge of #320, which edits the same two files.
 
 ### Re-review of #320 (read-only)
 
