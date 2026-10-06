@@ -31,6 +31,19 @@ function isUniqueConflict(error: { readonly code?: string } | null): boolean {
   return error?.code === '23505'
 }
 
+/*
+ * `timestamptz` comes back from the database with a numeric offset (`…+00:00`), never `Z`, while
+ * the coarse schema and every client comparison of these values use the `Z` form the app writes.
+ * Passing the stored string through failed the parse, so a read answered 500 for any signed-in
+ * learner with saved progress. Normalise where the database form enters; a value that is not a
+ * date is passed on unchanged so the schema still refuses it.
+ */
+function toIsoInstant(value: unknown): unknown {
+  if (typeof value !== 'string') return value
+  const time = Date.parse(value)
+  return Number.isNaN(time) ? value : new Date(time).toISOString()
+}
+
 function mergeStoredProgress(
   current: StoredCoarseProgress | null,
   incoming: CriticalCareCoarseModuleProgress,
@@ -195,8 +208,8 @@ export async function GET() {
           ),
         ),
       ],
-      completedAt: row.completed_at as string | null,
-      lastVisitedAt: row.last_visited_at as string,
+      completedAt: toIsoInstant(row.completed_at),
+      lastVisitedAt: toIsoInstant(row.last_visited_at),
     })),
   })
   if (!response.success) {

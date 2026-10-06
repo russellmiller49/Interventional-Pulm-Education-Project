@@ -198,6 +198,77 @@ describe('critical-care coarse progress API', () => {
       ],
     })
   })
+
+  it('reads rows whose timestamps carry the numeric offset the database returns', async () => {
+    /*
+     * `timestamptz` is serialized as `…+00:00`, never `Z`. Every earlier fixture in this file wrote
+     * `Z`, which is why a read that rejected the offset passed here and answered 500 for any
+     * signed-in learner with saved progress.
+     */
+    const database = progressDatabase({
+      getRows: [
+        {
+          module_id: 'cardiohelp-ecmo',
+          completed_at: '2026-09-01T08:15:30.123456+00:00',
+          completed_sections: ['learn', 'practice'],
+          last_visited_at: '2026-09-07T22:41:05.98765+00:00',
+          percent_complete: 100,
+        },
+        {
+          module_id: 'baxter-crrt',
+          completed_at: null,
+          completed_sections: ['learn'],
+          last_visited_at: '2026-09-07T15:41:05-07:00',
+          percent_complete: 40,
+        },
+      ],
+    })
+    supabaseServerMock.mockResolvedValue(database.client)
+
+    const response = await GET()
+
+    expect(response.status).toBe(200)
+    // Returned in the form the app writes and compares, whatever offset the row carried.
+    await expect(response.json()).resolves.toEqual({
+      schemaVersion: 1,
+      accountId: 'user-1',
+      modules: [
+        {
+          moduleId: 'cardiohelp-ecmo',
+          percentComplete: 100,
+          completedSections: ['learn', 'practice'],
+          completedAt: '2026-09-01T08:15:30.123Z',
+          lastVisitedAt: '2026-09-07T22:41:05.987Z',
+        },
+        {
+          moduleId: 'baxter-crrt',
+          percentComplete: 40,
+          completedSections: ['learn'],
+          completedAt: null,
+          lastVisitedAt: '2026-09-07T22:41:05.000Z',
+        },
+      ],
+    })
+  })
+
+  it('still refuses a row whose stored timestamp is not a date', async () => {
+    const database = progressDatabase({
+      getRows: [
+        {
+          module_id: 'icu-hemodynamics',
+          completed_at: null,
+          completed_sections: [],
+          last_visited_at: 'not-a-date',
+          percent_complete: 10,
+        },
+      ],
+    })
+    supabaseServerMock.mockResolvedValue(database.client)
+
+    const response = await GET()
+
+    expect(response.status).toBe(500)
+  })
 })
 
 function validBatch() {
