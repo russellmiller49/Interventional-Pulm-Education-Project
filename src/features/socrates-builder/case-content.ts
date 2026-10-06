@@ -26,6 +26,18 @@ export const caseContentSchema = z
     diagnosticCategory: z.string().max(160),
     subcategory: z.string().max(160),
     sortOrder: z.number().int().nonnegative(),
+    coreTeachingSequence: z
+      .object({
+        position: z.number().int().min(1).max(25),
+        section: z.enum([
+          'normal-benign',
+          'non-diagnostic',
+          'diagnostic-non-cancer',
+          'diagnostic-cancer',
+        ]),
+      })
+      .strict()
+      .optional(),
     trainingEligible: z.boolean(),
     testingEligible: z.boolean(),
     vignette: text,

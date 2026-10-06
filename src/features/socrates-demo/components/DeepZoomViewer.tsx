@@ -14,7 +14,7 @@ import type {
   ImageRect,
   ViewportSnapshot,
 } from '../types'
-import { polygonBounds, rectangleToPolygon } from '../engine/geometry'
+import { findDeepestAnnotationAtPoint, polygonBounds, rectangleToPolygon } from '../engine/geometry'
 import styles from './socrates-demo.module.css'
 
 export interface DeepZoomViewerProps {
@@ -26,8 +26,9 @@ export interface DeepZoomViewerProps {
   onImageSelect: (point: ImagePoint) => void
   onViewportChange: (snapshot: ViewportSnapshot) => void
   onStatusChange?: (status: DeepZoomViewerStatus) => void
-  interactionMode?: 'navigate' | 'draw-rectangle'
+  interactionMode?: 'navigate' | 'draw-rectangle' | 'move-rectangle'
   onDrawRectangle?: (rect: ImageRect) => void
+  onMoveAnnotation?: (id: string, delta: ImagePoint) => void
   ariaLabel?: string
 }
 
@@ -66,6 +67,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
       onStatusChange,
       interactionMode = 'navigate',
       onDrawRectangle,
+      onMoveAnnotation,
       ariaLabel = 'Interactive pathology slide. Drag to pan, scroll or pinch to zoom.',
     },
     ref,
@@ -83,9 +85,17 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
       onViewportChange,
       onStatusChange,
       onDrawRectangle,
+      onMoveAnnotation,
     })
     const interactionModeRef = useRef(interactionMode)
     const drawStartRef = useRef<ImagePoint | null>(null)
+    const moveStartRef = useRef<{
+      id: string
+      point: ImagePoint
+      bounds: ImageRect
+      pointerId: number
+    } | null>(null)
+    const annotationsRef = useRef(annotations)
     const activeAnnotationRef = useRef<DemoAnnotation | null>(null)
     const [attempt, setAttempt] = useState(0)
     const [overlayElement, setOverlayElement] = useState<HTMLDivElement | null>(null)
@@ -106,12 +116,26 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
         onViewportChange,
         onStatusChange,
         onDrawRectangle,
+        onMoveAnnotation,
       }
-    }, [onDrawRectangle, onImageHover, onImageSelect, onStatusChange, onViewportChange])
+      annotationsRef.current = annotations
+    }, [
+      annotations,
+      onDrawRectangle,
+      onMoveAnnotation,
+      onImageHover,
+      onImageSelect,
+      onStatusChange,
+      onViewportChange,
+    ])
 
     useEffect(() => {
       interactionModeRef.current = interactionMode
       drawStartRef.current = null
+      const pointerId = moveStartRef.current?.pointerId
+      if (pointerId !== undefined && viewerRef.current?.canvas.hasPointerCapture?.(pointerId))
+        viewerRef.current.canvas.releasePointerCapture(pointerId)
+      moveStartRef.current = null
       setDraftRectangle(null)
       viewerRef.current?.setMouseNavEnabled(interactionMode === 'navigate')
     }, [interactionMode])
@@ -425,6 +449,21 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
             const point = imagePointFromPointer(event)
             if (!point) return
 
+            const moveStart = moveStartRef.current
+            if (
+              interactionModeRef.current === 'move-rectangle' &&
+              moveStart &&
+              event.pointerId === moveStart.pointerId
+            ) {
+              event.preventDefault()
+              setDraftRectangle({
+                ...moveStart.bounds,
+                x: moveStart.bounds.x + point.x - moveStart.point.x,
+                y: moveStart.bounds.y + point.y - moveStart.point.y,
+              })
+              return
+            }
+
             const drawStart = drawStartRef.current
             if (interactionModeRef.current === 'draw-rectangle' && drawStart) {
               event.preventDefault()
@@ -440,9 +479,32 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
             callbacksRef.current.onImageHover({ x: point.x, y: point.y })
           }
           pointerLeaveHandler = () => {
-            if (!drawStartRef.current) callbacksRef.current.onImageHover(null)
+            if (!drawStartRef.current && !moveStartRef.current)
+              callbacksRef.current.onImageHover(null)
           }
           pointerDownHandler = (event: PointerEvent) => {
+            if (event.button !== 0 || moveStartRef.current || drawStartRef.current) return
+            if (interactionModeRef.current === 'move-rectangle') {
+              const point = imagePointFromPointer(event)
+              if (!point) return
+              const region = findDeepestAnnotationAtPoint(
+                annotationsRef.current,
+                new Set(annotationsRef.current.map((a) => a.id)),
+                point,
+              )
+              callbacksRef.current.onImageSelect(point)
+              if (!region) return
+              event.preventDefault()
+              callbacksRef.current.onImageHover(null)
+              moveStartRef.current = {
+                id: region.id,
+                point,
+                bounds: polygonBounds(region.polygon),
+                pointerId: event.pointerId,
+              }
+              viewer?.canvas.setPointerCapture?.(event.pointerId)
+              return
+            }
             if (interactionModeRef.current !== 'draw-rectangle') return
             const point = imagePointFromPointer(event)
             if (!point) return
@@ -453,6 +515,24 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
             viewer?.canvas.setPointerCapture?.(event.pointerId)
           }
           pointerUpHandler = (event: PointerEvent) => {
+            const moveStart = moveStartRef.current
+            if (
+              interactionModeRef.current === 'move-rectangle' &&
+              moveStart &&
+              event.pointerId === moveStart.pointerId
+            ) {
+              const point = imagePointFromPointer(event)
+              event.preventDefault()
+              moveStartRef.current = null
+              setDraftRectangle(null)
+              viewer?.canvas.releasePointerCapture?.(event.pointerId)
+              if (point && (point.x !== moveStart.point.x || point.y !== moveStart.point.y))
+                callbacksRef.current.onMoveAnnotation?.(moveStart.id, {
+                  x: point.x - moveStart.point.x,
+                  y: point.y - moveStart.point.y,
+                })
+              return
+            }
             const drawStart = drawStartRef.current
             if (interactionModeRef.current !== 'draw-rectangle' || !drawStart) return
             const point = imagePointFromPointer(event)
@@ -476,8 +556,10 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
             }
           }
           pointerCancelHandler = (event: PointerEvent) => {
-            if (!drawStartRef.current) return
+            if (!drawStartRef.current && !moveStartRef.current) return
+            if (moveStartRef.current && event.pointerId !== moveStartRef.current.pointerId) return
             drawStartRef.current = null
+            moveStartRef.current = null
             setDraftRectangle(null)
             viewer?.canvas.releasePointerCapture?.(event.pointerId)
           }
@@ -521,6 +603,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
         }
         callbacksRef.current.onImageHover(null)
         drawStartRef.current = null
+        moveStartRef.current = null
         tiledImageRef.current = null
         viewerRef.current = null
         viewer?.destroy()
@@ -546,7 +629,11 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
         <div
           ref={viewerElementRef}
           className={`${styles.viewerCanvas} ${
-            interactionMode === 'draw-rectangle' ? styles.viewerCanvasDrawing : ''
+            interactionMode === 'draw-rectangle'
+              ? styles.viewerCanvasDrawing
+              : interactionMode === 'move-rectangle'
+                ? styles.viewerCanvasMoving
+                : ''
           }`}
           aria-label={ariaLabel}
         />

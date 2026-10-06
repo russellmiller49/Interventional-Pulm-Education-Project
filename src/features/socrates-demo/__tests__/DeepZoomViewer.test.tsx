@@ -6,6 +6,7 @@ import { socratesDemoAnnotations, socratesDemoSlide } from '../content/demo-slid
 import type {
   DeepZoomViewerHandle,
   DeepZoomViewerStatus,
+  ImageRect,
   ImagePoint,
   ViewportSnapshot,
 } from '../types'
@@ -97,7 +98,8 @@ function configureMockViewer() {
 function renderViewer(overrides?: {
   slide?: typeof socratesDemoSlide
   onStatusChange?: (status: DeepZoomViewerStatus) => void
-  interactionMode?: 'navigate' | 'draw-rectangle'
+  interactionMode?: 'navigate' | 'draw-rectangle' | 'move-rectangle'
+  onMoveAnnotation?: (id: string, delta: ImagePoint) => void
   onDrawRectangle?: (rect: { x: number; y: number; width: number; height: number }) => void
 }) {
   const ref = createRef<DeepZoomViewerHandle>()
@@ -118,6 +120,7 @@ function renderViewer(overrides?: {
       onStatusChange={onStatusChange}
       interactionMode={overrides?.interactionMode}
       onDrawRectangle={overrides?.onDrawRectangle}
+      onMoveAnnotation={overrides?.onMoveAnnotation}
     />,
   )
 
@@ -241,5 +244,41 @@ describe('DeepZoomViewer lifecycle and recovery', () => {
       width: 240,
       height: 260,
     })
+  })
+
+  it('moves the deepest hit in source pixels once on release, cancels safely, and ignores empty space', async () => {
+    const onMoveAnnotation = jest.fn()
+    const { onImageSelect } = renderViewer({ interactionMode: 'move-rectangle', onMoveAnnotation })
+    await waitFor(() => expect(mockOpenSeadragon).toHaveBeenCalledTimes(1))
+    act(() => mockHandlers.open({}))
+    const canvas = screen.getByLabelText(
+      'Interactive pathology slide. Drag to pan, scroll or pinch to zoom.',
+    ).firstElementChild as HTMLElement
+    const a = socratesDemoAnnotations[0]
+    const { polygonBounds } = await import('../engine/geometry')
+    const bounds: ImageRect = polygonBounds(a.polygon)
+    const start = { clientX: bounds.x + 5, clientY: bounds.y + 5, pointerId: 1, button: 0 }
+    fireEvent.pointerDown(canvas, start)
+    fireEvent.pointerMove(canvas, {
+      ...start,
+      clientX: start.clientX + 30,
+      clientY: start.clientY + 40,
+    })
+    expect(onMoveAnnotation).not.toHaveBeenCalled()
+    fireEvent.pointerUp(canvas, {
+      ...start,
+      clientX: start.clientX + 30,
+      clientY: start.clientY + 40,
+    })
+    expect(onMoveAnnotation).toHaveBeenCalledTimes(1)
+    expect(onMoveAnnotation).toHaveBeenCalledWith(a.id, { x: 30, y: 40 })
+    expect(onImageSelect).toHaveBeenCalledWith({ x: start.clientX, y: start.clientY })
+    fireEvent.pointerDown(canvas, start)
+    fireEvent.pointerCancel(canvas, start)
+    fireEvent.pointerUp(canvas, { ...start, clientX: start.clientX + 100 })
+    fireEvent.pointerDown(canvas, { clientX: 0, clientY: 0, button: 0 })
+    fireEvent.pointerUp(canvas, { clientX: 50, clientY: 50 })
+    expect(onMoveAnnotation).toHaveBeenCalledTimes(1)
+    expect(mockSetMouseNavEnabled).toHaveBeenLastCalledWith(false)
   })
 })
