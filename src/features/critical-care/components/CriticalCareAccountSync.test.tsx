@@ -112,6 +112,119 @@ describe('CriticalCareAccountSync', () => {
 
   afterEach(() => jest.useRealTimers())
 
+  it.each(['getter', 'method', 'getUser rejection'])(
+    'stops delayed sync on a storage SecurityError (%s), without claiming or posting progress',
+    async (failure) => {
+      jest.mocked(hasSupabaseBrowserConfig).mockReturnValue(true)
+      const refused = new DOMException('Site storage is refused.', 'SecurityError')
+      const storage = {
+        get sessionStorage(): Storage {
+          if (failure === 'getter') throw refused
+          return {
+            getItem: () => {
+              throw refused
+            },
+          } as unknown as Storage
+        },
+      }
+      const getUser = jest.fn().mockRejectedValue(refused)
+      jest.mocked(supabaseCookieBrowser).mockImplementation(() => {
+        if (failure !== 'getUser rejection') storage.sessionStorage.getItem('probe')
+        return {
+          auth: {
+            getUser,
+            onAuthStateChange: () => ({ data: { subscription: { unsubscribe: jest.fn() } } }),
+          },
+        } as unknown as ReturnType<typeof supabaseCookieBrowser>
+      })
+      const { unmount } = render(<CriticalCareAccountSync activities={activities} />)
+
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(400)
+      })
+      expect(claimPublicCriticalCareAccountSyncOwnership).not.toHaveBeenCalled()
+      expect(getPublicCriticalCareCoarseProgress).not.toHaveBeenCalled()
+      expect(mockWriteCriticalCareProgress).not.toHaveBeenCalled()
+      expect(projectPublicCriticalCareCoarseProgress).not.toHaveBeenCalled()
+      expect(postPublicCriticalCareCoarseProgress).not.toHaveBeenCalled()
+      unmount()
+    },
+  )
+
+  it('retries a later progress event after storage access recovers', async () => {
+    jest.mocked(hasSupabaseBrowserConfig).mockReturnValue(true)
+    let refused = true
+    const getUser = jest.fn().mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
+    jest.mocked(supabaseCookieBrowser).mockImplementation(() => {
+      if (refused) throw new DOMException('Site storage is refused.', 'SecurityError')
+      return {
+        auth: {
+          getUser,
+          onAuthStateChange: () => ({ data: { subscription: { unsubscribe: jest.fn() } } }),
+        },
+      } as unknown as ReturnType<typeof supabaseCookieBrowser>
+    })
+    mockReadMergedCriticalCareProgress.mockReturnValue({
+      envelope: { version: 1, activities: [], updatedAt: '2026-07-22T00:00:00.000Z' },
+    })
+    jest.mocked(claimPublicCriticalCareAccountSyncOwnership).mockReturnValue('owned')
+    jest.mocked(getPublicCriticalCareCoarseProgress).mockResolvedValue(null)
+    jest.mocked(projectPublicCriticalCareCoarseProgress).mockReturnValue(batch)
+    jest.mocked(postPublicCriticalCareCoarseProgress).mockResolvedValue(true)
+    render(<CriticalCareAccountSync activities={activities} />)
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(400)
+    })
+    expect(postPublicCriticalCareCoarseProgress).not.toHaveBeenCalled()
+
+    refused = false
+    await act(async () => {
+      window.dispatchEvent(new Event(CRITICAL_CARE_PROGRESS_CHANGED_EVENT))
+      await jest.advanceTimersByTimeAsync(400)
+    })
+    expect(getUser).toHaveBeenCalledTimes(3)
+    expect(postPublicCriticalCareCoarseProgress).toHaveBeenCalledWith(batch, 'user-1', activities)
+  })
+
+  it.each([2, 3])('does not upload if storage fails at authenticated recheck %i', async (check) => {
+    jest.mocked(hasSupabaseBrowserConfig).mockReturnValue(true)
+    let calls = 0
+    const getUser = jest.fn().mockImplementation(async () => {
+      calls += 1
+      if (calls === check) throw new DOMException('Site storage is refused.', 'SecurityError')
+      return { data: { user: { id: 'user-1' } }, error: null }
+    })
+    jest.mocked(supabaseCookieBrowser).mockReturnValue({
+      auth: {
+        getUser,
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: jest.fn() } } }),
+      },
+    } as unknown as ReturnType<typeof supabaseCookieBrowser>)
+    mockReadMergedCriticalCareProgress.mockReturnValue({
+      envelope: { version: 1, activities: [], updatedAt: '2026-07-22T00:00:00.000Z' },
+    })
+    jest.mocked(claimPublicCriticalCareAccountSyncOwnership).mockReturnValue('owned')
+    jest.mocked(getPublicCriticalCareCoarseProgress).mockResolvedValue(null)
+    jest.mocked(projectPublicCriticalCareCoarseProgress).mockReturnValue(batch)
+    jest.mocked(postPublicCriticalCareCoarseProgress).mockResolvedValue(true)
+    render(<CriticalCareAccountSync activities={activities} />)
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(400)
+    })
+    expect(getUser).toHaveBeenCalledTimes(check)
+    expect(mockWriteCriticalCareProgress).not.toHaveBeenCalled()
+    expect(postPublicCriticalCareCoarseProgress).not.toHaveBeenCalled()
+
+    // The aborted attempt never enters lastSyncedPayload; a later validated
+    // attempt can upload the exact same batch.
+    await act(async () => {
+      window.dispatchEvent(new Event(CRITICAL_CARE_PROGRESS_CHANGED_EVENT))
+      await jest.advanceTimersByTimeAsync(400)
+    })
+    expect(postPublicCriticalCareCoarseProgress).toHaveBeenCalledTimes(1)
+    expect(postPublicCriticalCareCoarseProgress).toHaveBeenCalledWith(batch, 'user-1', activities)
+  })
+
   it('does not attempt account access or network sync without configured account infrastructure', () => {
     jest.mocked(hasSupabaseBrowserConfig).mockReturnValue(false)
     render(<CriticalCareAccountSync activities={activities} />)

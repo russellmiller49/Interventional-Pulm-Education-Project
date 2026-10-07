@@ -5,6 +5,7 @@ import { ArrowUpRight, Camera, Pencil, Square, Type, Undo2, Upload } from 'lucid
 import { Button } from '@/components/ui/button'
 import { maxScreenshotBytes } from './schema'
 import { captureSiteTab, SiteTabCaptureError, supportsSiteTabCapture } from './captureSiteTab'
+import { canvasPng } from './screenshotDraftImage'
 import {
   drawAnnotation,
   type Point,
@@ -12,7 +13,9 @@ import {
   type ScreenshotTool,
 } from './screenshotAnnotations'
 
-export type ScreenshotEditorHandle = { exportImage: () => Promise<Blob | null> }
+// Synchronous on purpose: Save takes the final image in the same turn as the rest of its
+// snapshot, so nothing can change between the two.
+export type ScreenshotEditorHandle = { exportImage: () => Blob | null }
 export type ScreenshotDraft = {
   source: HTMLCanvasElement | null
   annotations: ScreenshotAnnotation[]
@@ -27,8 +30,15 @@ const tools = [
 
 export const ScreenshotEditor = forwardRef<
   ScreenshotEditorHandle,
-  { draft: React.RefObject<ScreenshotDraft>; onCaptureVisibilityChange: (hidden: boolean) => void }
->(function ScreenshotEditor({ draft, onCaptureVisibilityChange }, ref) {
+  {
+    draft: React.RefObject<ScreenshotDraft>
+    onCaptureVisibilityChange: (hidden: boolean) => void
+    // Called after the image or its committed annotations change, never for a pointer preview.
+    onDraftChange?: () => void
+    // A save is in progress: the image and its marks cannot be changed until it settles.
+    locked?: boolean
+  }
+>(function ScreenshotEditor({ draft, onCaptureVisibilityChange, onDraftChange, locked }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const gesture = useRef<{ pointerId: number; annotation: ScreenshotAnnotation } | null>(null)
@@ -81,9 +91,10 @@ export const ScreenshotEditor = forwardRef<
     setHasImage(true)
     setTool('box')
     draw()
+    onDraftChange?.()
   }
   async function loadFile(file?: File) {
-    if (!file || operation.current) return
+    if (!file || operation.current || locked) return
     setError('')
     if (
       !['image/png', 'image/jpeg', 'image/webp'].includes(file.type) ||
@@ -111,7 +122,7 @@ export const ScreenshotEditor = forwardRef<
     }
   }
   async function capture() {
-    if (operation.current) return
+    if (operation.current || locked) return
     const controller = new AbortController()
     operation.current = controller
     onCaptureVisibilityChange(true)
@@ -136,14 +147,12 @@ export const ScreenshotEditor = forwardRef<
     }
   }
   useImperativeHandle(ref, () => ({
-    exportImage: async () => {
+    exportImage: () => {
       if (operation.current) throw new Error('Wait for the screenshot to finish loading.')
       if (!hasImage || !canvasRef.current) return null
       // Export only committed annotations, never a half-drawn pointer preview.
       draw()
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvasRef.current!.toBlob(resolve, 'image/png'),
-      )
+      const blob = canvasPng(canvasRef.current)
       if (!blob) throw new Error('The screenshot could not be prepared.')
       if (blob.size > maxScreenshotBytes)
         throw new Error(
@@ -170,6 +179,7 @@ export const ScreenshotEditor = forwardRef<
     draft.current.annotations.push(annotation)
     setMarks(draft.current.annotations.length)
     draw()
+    onDraftChange?.()
   }
   function addNote(position: Point) {
     if (!note.trim()) {
@@ -188,7 +198,7 @@ export const ScreenshotEditor = forwardRef<
       className="space-y-3 rounded-xl border p-4"
       aria-label="Screenshot attachment"
       onPaste={(event) => {
-        if (busy) return
+        if (busy || locked) return
         const item = Array.from(event.clipboardData.items).find((entry) =>
           entry.type.startsWith('image/'),
         )
@@ -280,6 +290,7 @@ export const ScreenshotEditor = forwardRef<
                 draft.current.annotations.pop()
                 setMarks(draft.current.annotations.length)
                 draw()
+                onDraftChange?.()
               }}
             >
               <Undo2 className="mr-1.5 h-4 w-4" aria-hidden />
@@ -295,6 +306,7 @@ export const ScreenshotEditor = forwardRef<
                 draft.current.annotations = []
                 setMarks(0)
                 draw()
+                onDraftChange?.()
               }}
             >
               Clear marks
@@ -350,7 +362,7 @@ export const ScreenshotEditor = forwardRef<
             : 'hidden'
         }
         onPointerDown={(event) => {
-          if (busy || event.button !== 0 || gesture.current) return
+          if (busy || locked || event.button !== 0 || gesture.current) return
           const start = point(event)
           if (tool === 'text') {
             addNote(start)
@@ -415,6 +427,7 @@ export const ScreenshotEditor = forwardRef<
               draft.current.annotations = []
               setHasImage(false)
               setMarks(0)
+              onDraftChange?.()
             }}
           >
             Remove image

@@ -24,7 +24,13 @@ export function CriticalCareAccountSync({
       if (timer !== null) window.clearTimeout(timer)
       timer = window.setTimeout(() => {
         timer = null
-        void syncCurrentProgress()
+        void syncCurrentProgress().catch((error: unknown) => {
+          // Supabase's browser client can throw when sessionStorage is refused,
+          // even before getUser runs. Stop this optional sync attempt; do not
+          // claim ownership, bypass auth, or mark the payload as synchronized.
+          if (error instanceof DOMException && error.name === 'SecurityError') return
+          throw error
+        })
       }, SYNC_DEBOUNCE_MS)
     }
 

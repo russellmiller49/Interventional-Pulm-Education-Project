@@ -349,6 +349,11 @@
   background: #071b22;
 }
 
+.canvasShell:focus-visible {
+  outline: 3px solid var(--builder-accent);
+  outline-offset: 2px;
+}
+
 .canvasShell > div:first-child {
   height: clamp(36rem, 62vh, 52rem);
   min-height: 36rem;

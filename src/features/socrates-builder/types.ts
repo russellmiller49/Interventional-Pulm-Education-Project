@@ -39,7 +39,7 @@ export type SocratesSandboxDeleteResult =
 
 export type SocratesBuilderMode = 'protected' | 'sandbox' | 'local' | 'shared'
 
-export type SocratesDrawMode = 'navigate' | 'parent' | 'detail'
+export type SocratesDrawMode = 'navigate' | 'move' | 'parent' | 'detail'
 
 export type SocratesCaseDocument = SocratesSlideDocument & {
   schemaVersion: 2

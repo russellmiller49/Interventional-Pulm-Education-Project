@@ -6,6 +6,7 @@ import { BetaHubSections } from '@/features/module-beta/BetaHubSections'
 import { betaRollout } from '@/features/module-beta/rollout'
 import { feedbackMode } from '@/features/module-beta/config'
 import { betaModules } from '@/features/module-beta/catalog'
+import { OwnerDraftNotice } from '@/features/module-beta/OwnerDraftNotice'
 
 export default async function BetaHub({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
@@ -44,6 +45,7 @@ export default async function BetaHub({ params }: { params: Promise<{ locale: st
             Review and export owner feedback
           </Link>
         )}
+        {local && <OwnerDraftNotice locale={locale} />}
       </header>
       <BetaHubSections locale={locale} modules={betaModules} rollout={betaRollout} />
     </div>

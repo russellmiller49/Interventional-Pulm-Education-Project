@@ -178,6 +178,14 @@ export const CRRT_TIME_ACCOUNTING_CAPTION =
 export const CRRT_INTERRUPTION_CAPTION =
   'Pausing and resuming is recorded separately from elapsed time and from downtime. Downtime accrues only while the clock moves and delivery is not running, so a pause and resume at the same timestamp add none.' as const
 
+/**
+ * CRRT-FELLOW-06 F06-R02. The authored teaching at the end of the debrief is rendered after every
+ * run, including one that performed no action and recorded no reassessment. This sentence is the
+ * local boundary between it and the actual-run sections above it.
+ */
+export const CRRT_WORKED_TEACHING_BOUNDARY =
+  'The points below are the authored teaching for this case: what a review would look at and why. They are the same after every run and do not report an action, a reassessment, or a result from this one. What this run recorded is under “What you did in this run” above.' as const
+
 export const CRRT_MODEL_INDEX_CAPTION =
   'These are bounded model indices, not measurements. They are the signals this exercise actually advances, so they are what separates one path from another at the same elapsed time.' as const
 

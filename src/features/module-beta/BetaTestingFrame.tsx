@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import type { Route } from 'next'
-import { useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowLeft, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,14 +13,72 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { feedbackMode } from './config'
-import { saveOwnerFeedback } from './ownerFeedbackStore'
-import { betaModuleForPath, feedbackPagePath, type BetaModule } from './catalog'
+import { createOwnerFeedback, ownerFeedbackContent } from './ownerFeedbackStore'
+import {
+  beginOwnerDraftSave,
+  deleteOwnerDraft,
+  deleteUnreadableOwnerDrafts,
+  discardOwnerDraft,
+  finishOwnerDraftSave,
+  ownerDraftStatus,
+  releaseOwnerDraftSave,
+  readOwnerDrafts,
+  saveOwnerDraft,
+  settleOwnerDrafts,
+  type OwnerDraftSupersededBy,
+} from './ownerDraftStore'
+import { isMeaningfulDraft } from './draftContent'
+import { submissionFingerprint } from './submissionFingerprint'
+import { betaModuleById, betaModuleForPath, feedbackPagePath, type BetaModule } from './catalog'
 import {
   ScreenshotEditor,
   createScreenshotDraft,
   type ScreenshotDraft,
   type ScreenshotEditorHandle,
 } from './ScreenshotEditor'
+import {
+  decodeScreenshotSource,
+  encodeScreenshotSource,
+  type DraftImage,
+} from './screenshotDraftImage'
+
+const message = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback
+// Said when this tab's unsent work had to move to a new draft because of another tab.
+const keptApart: Record<OwnerDraftSupersededBy, string> = {
+  saved:
+    'Another tab already saved an earlier version of this draft. Your changes here were kept as a new unsent draft.',
+  discarded:
+    'Another tab discarded an earlier version of this draft. Your changes here were kept as a new unsent draft.',
+  edited:
+    'This draft was also changed in another tab. The version here was kept as a separate unsent draft.',
+}
+const saveAgain = 'Save again to add it as a new report.'
+const notStored =
+  'Not saved: this feedback could not first be stored on this browser, so nothing was submitted. Your draft is still open here. Try saving again.'
+// What one stored revision of a draft holds, for telling whether a later state is the same.
+type DraftContent = {
+  id: string
+  moduleId: string
+  pagePath: string
+  comment: string
+  selectedText: string
+  image: DraftImage | null
+  annotations: ScreenshotDraft['annotations']
+}
+const signatureOf = (content: DraftContent) =>
+  JSON.stringify([
+    content.moduleId,
+    content.pagePath,
+    content.comment,
+    content.selectedText,
+    content.image?.token ?? null,
+    content.image ? content.annotations : [],
+  ])
+// Everything one Save sends, taken in a single synchronous step when Save is pressed. The stored
+// draft revision, the attempt's fingerprint and the report are all made from this and from
+// nothing read later.
+type SaveSnapshot = DraftContent & { png: Blob | null }
 
 export function BetaTestingFrame({
   moduleEntry,
@@ -30,6 +88,7 @@ export function BetaTestingFrame({
   locale: string
 }) {
   const local = feedbackMode() === 'owner-local'
+  const shell = useRef<HTMLDivElement>(null)
   const frame = useRef<HTMLIFrameElement>(null)
   const screenshotDraft = useRef<ScreenshotDraft>(createScreenshotDraft())
   const editor = useRef<ScreenshotEditorHandle>(null)
@@ -37,19 +96,367 @@ export function BetaTestingFrame({
   const [comment, setComment] = useState('')
   const [selectedText, setSelectedText] = useState('')
   const [pagePath, setPagePath] = useState(`/${locale}${moduleEntry.path}`)
-  const [reportModule, setReportModule] = useState(moduleEntry)
+  const [reportModule, setReportModule] = useState<BetaModule>(moduleEntry)
   const [reportId, setReportId] = useState('')
+  const [hasImage, setHasImage] = useState(false)
+  const [screenshotRevision, setScreenshotRevision] = useState(0)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [sending, setSending] = useState(false)
   const [capturing, setCapturing] = useState(false)
+  // Owner-local only: unsent drafts are also kept in this browser. Server drafts stay in memory.
+  const [draftReady, setDraftReady] = useState(!local)
+  const [draftProblem, setDraftProblem] = useState('')
+  // What another tab did to this draft, and where this tab's unsent work went.
+  const [draftNotice, setDraftNotice] = useState('')
+  // The editor is rebuilt for a different draft, not when the same draft moves to a new ID.
+  const [editorKey, setEditorKey] = useState(0)
+  const [unreadableDrafts, setUnreadableDrafts] = useState<IDBValidKey[]>([])
+  const latest = useRef({ reportId, comment, selectedText, pagePath, moduleId: reportModule.id })
+  // Set synchronously with the draft's ID, so queued storage work never acts on a stale draft.
+  const activeDraftId = useRef('')
+  const dirty = useRef(false)
+  // The stored record this tab last read or wrote: the open draft it belongs to, the ID it is
+  // stored under, and its revision ('' once this tab has removed it). Another tab may have
+  // changed or closed that record since; every write names the revision so storage can tell.
+  // `signature` is the content that revision holds.
+  const kept = useRef<{
+    draft: string
+    id: string
+    revision: string
+    createdAt: string
+    signature: string
+  } | null>(null)
+  // A save is in flight: nothing else may store this draft until it has settled.
+  const saving = useRef(false)
+  const queue = useRef<Promise<unknown>>(Promise.resolve())
+  // "Continue feedback" is a claim that unsent work exists; a reserved report ID is not that.
+  const pendingDraft = isMeaningfulDraft({ comment, selectedText, hasImage })
 
+  useEffect(() => {
+    latest.current = { reportId, comment, selectedText, pagePath, moduleId: reportModule.id }
+  })
+
+  // One storage operation at a time, so a late draft write can never follow its own removal.
+  const enqueue = useCallback(<T,>(task: () => Promise<T>) => {
+    const run = queue.current.then(task)
+    queue.current = run.catch(() => undefined)
+    return run
+  }, [])
+
+  // The stored revision of an open draft, as this tab last saw it.
+  const baseOf = (id: string) => (kept.current?.draft === id ? kept.current.revision : '')
+
+  // This tab's work now lives under another ID: the one it had was closed or rewritten elsewhere.
+  const follow = useCallback((from: string, to: string, why: OwnerDraftSupersededBy) => {
+    // A draft this tab has since put away keeps its old name, so its discard still finds it.
+    if (activeDraftId.current !== from) return
+    if (kept.current?.draft === from) kept.current.draft = to
+    activeDraftId.current = to
+    latest.current = { ...latest.current, reportId: to }
+    setReportId(to)
+    setDraftNotice(keptApart[why])
+  }, [])
+
+  // Writes exactly this content as the draft's next stored revision and records what this tab
+  // now holds. Runs inside the queue. If another tab changed or closed the draft, storage keeps
+  // the content under a new ID and this tab follows it there.
+  const storeDraft = useCallback(
+    async (content: DraftContent) => {
+      // Taken before anything is awaited: the caller's content may be live editor state.
+      const signature = signatureOf(content)
+      const annotations: unknown[] = content.image
+        ? JSON.parse(JSON.stringify(content.annotations))
+        : []
+      const record = kept.current?.draft === content.id ? kept.current : null
+      const stored = await saveOwnerDraft(
+        {
+          id: content.id,
+          hostModuleId: moduleEntry.id,
+          moduleId: content.moduleId,
+          pagePath: content.pagePath,
+          comment: content.comment,
+          selectedText: content.selectedText,
+          annotations,
+          createdAt: record?.createdAt,
+        },
+        content.image,
+        record?.revision ?? '',
+      )
+      kept.current = {
+        draft: content.id,
+        id: stored.draft.id,
+        revision: stored.draft.revision,
+        createdAt: stored.draft.created_at,
+        signature,
+      }
+      if (stored.superseded) follow(content.id, stored.draft.id, stored.superseded)
+      return { id: stored.draft.id, revision: stored.draft.revision }
+    },
+    [follow, moduleEntry.id],
+  )
+
+  const persistDraft = useCallback(
+    () =>
+      enqueue(async () => {
+        const draft = latest.current
+        if (!local || !draft.reportId || !dirty.current || saving.current) return
+        if (draft.reportId !== activeDraftId.current) return
+        dirty.current = false
+        const source = screenshotDraft.current.source
+        try {
+          let image = null
+          let imageProblem = ''
+          if (source)
+            try {
+              image = encodeScreenshotSource(source)
+            } catch (err) {
+              imageProblem = `${message(err, 'The screenshot could not be kept in the draft.')} The rest of this draft is kept.`
+            }
+          // Store only what can be offered back: never an empty record standing in for an image.
+          if (
+            !isMeaningfulDraft({
+              comment: draft.comment,
+              selectedText: draft.selectedText,
+              hasImage: Boolean(image),
+            })
+          ) {
+            const record = kept.current
+            if (record?.draft === draft.reportId && record.revision) {
+              await deleteOwnerDraft(draft.reportId, record.revision)
+              record.revision = ''
+              record.signature = ''
+            }
+            setDraftProblem(imageProblem)
+            return
+          }
+          await storeDraft({
+            id: draft.reportId,
+            moduleId: draft.moduleId,
+            pagePath: draft.pagePath,
+            comment: draft.comment,
+            selectedText: draft.selectedText,
+            image,
+            annotations: screenshotDraft.current.annotations,
+          })
+          setDraftProblem(imageProblem)
+        } catch (err) {
+          // A draft that was saved or discarded while this write ran has nothing left to report.
+          if (draft.reportId !== activeDraftId.current) return
+          dirty.current = true
+          setDraftProblem(message(err, 'This draft could not be kept on this browser.'))
+        }
+      }),
+    [enqueue, local, storeDraft],
+  )
+
+  // Discard: closes the stored draft's ID for every tab. Queued behind any write still in flight
+  // for this draft, so that write cannot outlive it.
+  const forgetStoredDraft = useCallback(
+    (id: string) => {
+      dirty.current = false
+      if (!local || !id) return Promise.resolve({ preserved: false })
+      return enqueue(async () => {
+        const record = kept.current
+        if (record?.draft !== id) return { preserved: false }
+        const outcome = await discardOwnerDraft(record.id, record.revision)
+        kept.current = null
+        return outcome
+      })
+    },
+    [enqueue, local],
+  )
+
+  // Offer the newest unsent draft started on this testing page. It is restored, never submitted.
+  const restoreDraft = useCallback(
+    () =>
+      enqueue(async () => {
+        if (!local) return
+        try {
+          // Finish what a save or discard in another tab, or an interrupted save, left behind.
+          // Work that differs from what was finalized is kept under a new ID, never removed.
+          await settleOwnerDrafts(ownerFeedbackContent)
+          const stored = await readOwnerDrafts()
+          const unreadable = [...stored.unreadable]
+          for (const draft of stored.drafts) {
+            if (draft.host_module_id !== moduleEntry.id) continue
+            // Never replace a draft the owner has open or has begun since this read started.
+            if (activeDraftId.current) break
+            let source = null
+            if (draft.screenshot)
+              try {
+                source = await decodeScreenshotSource(draft.screenshot)
+              } catch {
+                unreadable.push(draft.id)
+                continue
+              }
+            if (activeDraftId.current) break
+            screenshotDraft.current = { source, annotations: draft.annotations }
+            activeDraftId.current = draft.id
+            kept.current = {
+              draft: draft.id,
+              id: draft.id,
+              revision: draft.revision,
+              createdAt: draft.created_at,
+              signature: signatureOf({
+                id: draft.id,
+                moduleId: draft.module_id,
+                pagePath: draft.page_path,
+                comment: draft.comment,
+                selectedText: draft.selected_text,
+                image: draft.screenshot,
+                annotations: draft.annotations,
+              }),
+            }
+            dirty.current = false
+            setReportId(draft.id)
+            setEditorKey((key) => key + 1)
+            setReportModule(betaModuleById(draft.module_id)!)
+            setPagePath(draft.page_path)
+            setComment(draft.comment)
+            setSelectedText(draft.selected_text)
+            setHasImage(Boolean(source))
+            break
+          }
+          setUnreadableDrafts(unreadable)
+        } catch (err) {
+          setDraftProblem(message(err, 'Unsent drafts on this browser could not be read.'))
+        } finally {
+          setDraftReady(true)
+        }
+      }),
+    [enqueue, local, moduleEntry.id],
+  )
+
+  useEffect(() => {
+    void restoreDraft()
+  }, [restoreDraft])
+
+  useEffect(() => {
+    if (!local || !draftReady || !reportId) return
+    const timer = window.setTimeout(() => void persistDraft(), 400)
+    return () => window.clearTimeout(timer)
+  }, [local, draftReady, reportId, comment, selectedText, screenshotRevision, persistDraft])
+
+  useEffect(() => {
+    if (!local) return
+    const keep = () => void persistDraft()
+    const hidden = () => {
+      if (document.visibilityState === 'hidden') keep()
+    }
+    window.addEventListener('pagehide', keep)
+    document.addEventListener('visibilitychange', hidden)
+    return () => {
+      window.removeEventListener('pagehide', keep)
+      document.removeEventListener('visibilitychange', hidden)
+      // Leaving through a site link unmounts without a page unload.
+      keep()
+    }
+  }, [local, persistDraft])
+
+  // The site header and footer still sit under this fixed shell. Left alone, the hidden page
+  // keeps its own scroll range behind the module frame whenever they outgrow the viewport, and
+  // its covered navigation stays in the tab order and the accessibility tree beside the
+  // module's own copy. Both are undone when the shell unmounts.
+  useEffect(() => {
+    const root = document.documentElement
+    const previous = root.style.overflow
+    root.style.overflow = 'hidden'
+    const page = shell.current?.closest('main')
+    const covered = Array.from(page?.parentElement?.children ?? []).filter(
+      (element) => element !== page && !element.hasAttribute('inert'),
+    )
+    for (const element of covered) element.setAttribute('inert', '')
+    return () => {
+      root.style.overflow = previous
+      for (const element of covered) element.removeAttribute('inert')
+    }
+  }, [])
+
+  function resetDraft() {
+    dirty.current = false
+    activeDraftId.current = ''
+    screenshotDraft.current = createScreenshotDraft()
+    setReportId('')
+    setEditorKey((key) => key + 1)
+    setComment('')
+    setSelectedText('')
+    setHasImage(false)
+  }
+  // Another tab saved or discarded the draft open here. Unsent work that differs from what was
+  // finalized continues under a new ID; a draft with nothing of its own is put away. Returns
+  // whether this tab still holds a draft.
+  async function leaveClosedDraft(id: string, outcome: 'saved' | 'discarded', keep = false) {
+    if (id !== activeDraftId.current) return false
+    if (!dirty.current) {
+      // Closing the ID may already have kept this tab's stored version under a new one.
+      const status = await enqueue(() => ownerDraftStatus(id, baseOf(id))).catch(() => null)
+      if (activeDraftId.current !== id) return true
+      if (status?.keptAs) {
+        if (kept.current?.draft === id) kept.current.id = status.keptAs
+        follow(id, status.keptAs, outcome)
+        return true
+      }
+    }
+    // `keep`: this tab tried to save what it shows and the report holds something else.
+    if (dirty.current || keep) {
+      dirty.current = true
+      await persistDraft()
+      if (activeDraftId.current !== id) return true
+      // The write failed, so the work exists only in this tab. It still must not go back under
+      // the closed ID.
+      if (dirty.current) {
+        kept.current = null
+        follow(id, crypto.randomUUID(), outcome)
+        return true
+      }
+    }
+    setOpen(false)
+    setError('')
+    kept.current = null
+    resetDraft()
+    setDraftNotice(
+      outcome === 'saved'
+        ? 'This draft was already saved in another tab.'
+        : 'This draft was already discarded in another tab.',
+    )
+    void restoreDraft()
+    return false
+  }
+  // This tab's Save did not produce the report for its draft: another tab's did, or the draft
+  // was closed first. Nothing here is reported as saved unless the report holds exactly it.
+  async function settleLostSave(id: string, outcome: 'saved' | 'discarded', identical: boolean) {
+    saving.current = false
+    if (identical) {
+      // The report already holds exactly this submission; a stored copy of it is not unsent work.
+      setOpen(false)
+      setDraftProblem('')
+      setDraftNotice('')
+      resetDraft()
+      setSuccess(`This feedback was already saved from another tab. Reference ${id.slice(0, 8)}.`)
+      await forgetStoredDraft(id).catch(() => undefined)
+      void restoreDraft()
+      return
+    }
+    if (await leaveClosedDraft(id, outcome, true))
+      setDraftNotice(
+        outcome === 'saved'
+          ? `Another tab saved this feedback. Your different unsent changes were kept as a separate draft. ${saveAgain}`
+          : `${keptApart.discarded} ${saveAgain}`,
+      )
+  }
   function beginFeedback() {
     setError('')
     setSuccess('')
-    // A closed, unsent draft keeps its original location and screenshot.
-    if (reportId) {
+    // An unsent draft keeps its original location and screenshot, wherever the module is now.
+    if (reportId && pendingDraft) {
       setOpen(true)
+      if (local) {
+        const id = reportId
+        void enqueue(() => ownerDraftStatus(id, baseOf(id)))
+          .then((status) => (status.closed ? leaveClosedDraft(id, status.closed) : undefined))
+          .catch(() => undefined)
+      }
       return
     }
     try {
@@ -61,86 +468,251 @@ export function BetaTestingFrame({
         setError('Return to a development module before sending feedback.')
         return
       }
+      const selection = (window.getSelection()?.toString() ?? '').slice(0, 3000)
+      const id = crypto.randomUUID()
+      screenshotDraft.current = createScreenshotDraft()
+      activeDraftId.current = id
+      dirty.current = true
+      setDraftNotice('')
       setPagePath(feedbackPagePath(url))
       setReportModule(currentModule)
-      setSelectedText((window.getSelection()?.toString() ?? '').slice(0, 3000))
-      setReportId(crypto.randomUUID())
+      setSelectedText(selection)
+      setComment('')
+      setHasImage(false)
+      setReportId(id)
+      setEditorKey((key) => key + 1)
       setOpen(true)
     } catch {
       setError('Return to a module on this site before sending feedback.')
     }
   }
+  function closeDialog() {
+    setOpen(false)
+    if (pendingDraft) {
+      void persistDraft()
+      return
+    }
+    // Nothing unsent: the next report starts from wherever the tester is then.
+    void forgetStoredDraft(reportId).catch((err) =>
+      setDraftProblem(message(err, 'The empty draft could not be removed from this browser.')),
+    )
+    resetDraft()
+  }
+  async function discardDraft() {
+    const id = reportId
+    setOpen(false)
+    setError('')
+    setDraftProblem('')
+    setDraftNotice('')
+    resetDraft()
+    try {
+      const { preserved } = await forgetStoredDraft(id)
+      if (preserved)
+        setDraftNotice(
+          'Draft discarded. A newer version stored by another tab was kept as an unsent draft.',
+        )
+    } catch (err) {
+      setDraftProblem(message(err, 'The draft could not be removed from this browser.'))
+    }
+    void restoreDraft()
+  }
+  // Step 0 of Save. Synchronous: the text, the source image with a copy of its marks, and the
+  // final annotated PNG are all taken in one turn, before anything can be awaited.
+  function captureSaveSnapshot(): SaveSnapshot {
+    const source = screenshotDraft.current.source
+    return {
+      id: (local && activeDraftId.current) || reportId,
+      moduleId: reportModule.id,
+      pagePath,
+      comment,
+      selectedText,
+      image: local && source ? encodeScreenshotSource(source) : null,
+      annotations: JSON.parse(JSON.stringify(screenshotDraft.current.annotations)),
+      png: editor.current?.exportImage() ?? null,
+    }
+  }
+  // Step 1 of an owner-local Save, run in the queue behind any earlier draft write. Returns the
+  // draft ID and the stored revision that holds exactly this snapshot: the revision this tab
+  // already stored if its content is the snapshot's, otherwise a new one written from it.
+  function persistSaveSnapshot(snapshot: SaveSnapshot) {
+    return enqueue(async () => {
+      const record = kept.current
+      if (
+        record?.draft === snapshot.id &&
+        record.revision &&
+        record.signature === signatureOf(snapshot)
+      )
+        return { id: record.id, revision: record.revision }
+      return storeDraft(snapshot)
+    })
+  }
   async function submit(event: React.FormEvent) {
     event.preventDefault()
-    setSending(true)
+    // One Save at a time; set before anything is awaited, so no draft write can start under it.
+    if (saving.current) return
     setError('')
+    let snapshot: SaveSnapshot
     try {
-      const image = await editor.current?.exportImage()
+      snapshot = captureSaveSnapshot()
+    } catch (err) {
+      setError(message(err, 'Feedback could not be saved. Please retry.'))
+      return
+    }
+    saving.current = true
+    setSending(true)
+    const {
+      id,
+      moduleId,
+      pagePath: page,
+      comment: wording,
+      selectedText: referenced,
+      png,
+    } = snapshot
+    try {
       let savedId: string
+      let preserved = false
       if (local) {
-        const saved = await saveOwnerFeedback(
-          {
-            id: reportId,
-            moduleId: reportModule.id,
-            pagePath,
-            comment,
-            selectedText,
-          },
-          image,
+        // Step 1: the snapshot is a stored revision. If that fails, nothing is submitted. If it
+        // could only be kept under a new ID because of another tab, say so and stop: saving
+        // that draft is the owner's next choice.
+        let persisted: { id: string; revision: string }
+        try {
+          persisted = await persistSaveSnapshot(snapshot)
+        } catch {
+          dirty.current = true
+          setError(notStored)
+          return
+        }
+        if (persisted.id !== id) {
+          setDraftNotice((notice) => `${notice} ${saveAgain}`.trim())
+          return
+        }
+        // Step 2: the fingerprint of exactly what the report will hold.
+        const fingerprint = await submissionFingerprint(
+          { moduleId, pagePath: page, comment: wording, selectedText: referenced },
+          png,
         )
-        savedId = saved.id
+        // Step 3: this Save's own immutable record, naming that revision and that fingerprint.
+        // It must be committed before any report is written: no record, no report.
+        const attemptId = crypto.randomUUID()
+        let begun: Awaited<ReturnType<typeof beginOwnerDraftSave>>
+        try {
+          begun = await enqueue(() =>
+            beginOwnerDraftSave({ attemptId, id, base: persisted.revision, fingerprint }),
+          )
+        } catch {
+          setError(notStored)
+          return
+        }
+        if (begun.closed) {
+          await settleLostSave(
+            id,
+            begun.closed,
+            begun.closed === 'saved' && begun.fingerprint === fingerprint,
+          )
+          return
+        }
+        // Step 4: the report, from the same snapshot.
+        const saved = await createOwnerFeedback(
+          { id, moduleId, pagePath: page, comment: wording, selectedText: referenced },
+          png,
+        ).catch((err) => {
+          void enqueue(() => releaseOwnerDraftSave(attemptId)).catch(() => undefined)
+          throw err
+        })
+        // Step 5. A report with this ID is now committed: by this save, or already by another
+        // tab's. What it holds, not who finished first, decides which stored revision it
+        // accounts for. If closing the ID fails here, the attempt is on record and the next
+        // load does it.
+        const reportFingerprint = saved.created
+          ? fingerprint
+          : await submissionFingerprint(
+              {
+                moduleId: saved.entry.module_id,
+                pagePath: saved.entry.page_path,
+                comment: saved.entry.comment,
+                selectedText: saved.entry.selected_text,
+              },
+              saved.entry.screenshot?.blob,
+            )
+        const finished = await enqueue(() => finishOwnerDraftSave(id, reportFingerprint)).catch(
+          () => null,
+        )
+        if (reportFingerprint !== fingerprint) {
+          await settleLostSave(id, 'saved', false)
+          return
+        }
+        savedId = saved.entry.id
+        preserved = Boolean(finished?.preserved)
       } else {
         const body = new FormData()
-        body.set('id', reportId)
-        body.set('moduleId', reportModule.id)
-        body.set('pagePath', pagePath)
-        body.set('comment', comment)
-        body.set('selectedText', selectedText)
-        if (image) body.set('screenshot', image, 'feedback.png')
+        body.set('id', id)
+        body.set('moduleId', moduleId)
+        body.set('pagePath', page)
+        body.set('comment', wording)
+        body.set('selectedText', referenced)
+        if (png) body.set('screenshot', png, 'feedback.png')
         const response = await fetch('/api/module-feedback', { method: 'POST', body })
         const result = await response.json()
         if (!response.ok) throw new Error(result.error || 'Feedback could not be saved.')
         savedId = result.id
       }
       setOpen(false)
-      setComment('')
-      setSelectedText('')
-      setReportId('')
-      screenshotDraft.current = createScreenshotDraft()
+      setDraftProblem('')
+      setDraftNotice(
+        preserved ? 'A newer version stored by another tab was kept as an unsent draft.' : '',
+      )
+      kept.current = null
+      resetDraft()
       setSuccess(`Feedback saved${local ? ' locally' : ''}. Reference ${savedId.slice(0, 8)}.`)
+      void restoreDraft()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Feedback could not be saved. Please retry.')
     } finally {
       setSending(false)
+      if (saving.current) {
+        saving.current = false
+        // Draft writes were held during the save; keep whatever is still open.
+        void persistDraft()
+      }
+    }
+  }
+  async function removeUnreadableDrafts() {
+    try {
+      await enqueue(() => deleteUnreadableOwnerDrafts(unreadableDrafts))
+      setUnreadableDrafts([])
+    } catch (err) {
+      setDraftProblem(message(err, 'The unreadable draft could not be removed.'))
     }
   }
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-background">
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
-        <div className="flex min-w-0 items-center gap-4">
-          <Link
-            aria-label="All beta modules"
-            href={`/${locale}/development-beta` as Route}
-            className="inline-flex items-center gap-1 text-sm underline underline-offset-4"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden /> All modules
-          </Link>
-          <div>
-            <p className="text-xs font-semibold text-primary">
-              {local ? 'Owner review · saved locally on this browser' : 'Beta testing'}
-            </p>
-            <h1 className="text-sm font-semibold md:text-base">{moduleEntry.title}</h1>
-          </div>
+    <div ref={shell} className="fixed inset-0 z-40 flex flex-col bg-background">
+      <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-3 py-1.5 sm:px-4">
+        <Link
+          aria-label="All beta modules"
+          href={`/${locale}/development-beta` as Route}
+          className="inline-flex min-h-9 min-w-9 shrink-0 items-center justify-center gap-1 text-sm underline underline-offset-4 sm:justify-start"
+        >
+          <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+          <span className="hidden whitespace-nowrap sm:inline">All modules</span>
+        </Link>
+        <div className="min-w-0 flex-1 basis-48">
+          <p className="text-xs font-semibold text-primary">
+            {local ? 'Owner review · saved locally on this browser' : 'Beta testing'}
+          </p>
+          <h1 className="line-clamp-2 text-sm font-semibold [overflow-wrap:anywhere] md:text-base">
+            {moduleEntry.title}
+          </h1>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
           {local && (
             <Link href={`/${locale}/admin/module-feedback` as Route} className="text-sm underline">
               Review feedback
             </Link>
           )}
-          <Button size="sm" onClick={beginFeedback}>
-            <MessageSquare className="mr-2 h-4 w-4" aria-hidden />
-            {reportId ? 'Continue feedback' : 'Give feedback'}
+          <Button size="sm" onClick={beginFeedback} disabled={!draftReady}>
+            <MessageSquare className="mr-2 h-4 w-4 shrink-0" aria-hidden />
+            {pendingDraft ? 'Continue feedback' : 'Give feedback'}
           </Button>
         </div>
       </header>
@@ -154,6 +726,25 @@ export function BetaTestingFrame({
           {error}
         </p>
       )}
+      {draftProblem && !open && (
+        <p role="alert" className="border-b px-4 py-2 text-sm text-destructive">
+          {draftProblem}
+        </p>
+      )}
+      {draftNotice && !open && (
+        <p role="status" className="border-b bg-muted px-4 py-2 text-sm">
+          {draftNotice}
+        </p>
+      )}
+      {unreadableDrafts.length > 0 && (
+        <p role="alert" className="border-b px-4 py-2 text-sm text-destructive">
+          An unsent draft on this browser cannot be opened by this version (unsupported or damaged).
+          It has not been removed.{' '}
+          <button type="button" className="underline" onClick={removeUnreadableDrafts}>
+            Remove unreadable draft
+          </button>
+        </p>
+      )}
       <iframe
         ref={frame}
         title={moduleEntry.title}
@@ -164,7 +755,9 @@ export function BetaTestingFrame({
       <Dialog
         open={open}
         onOpenChange={(value) => {
-          if (!sending && !capturing) setOpen(value)
+          if (sending || capturing) return
+          if (value) setOpen(true)
+          else closeDialog()
         }}
       >
         <DialogContent
@@ -183,60 +776,82 @@ export function BetaTestingFrame({
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
             <p className="break-all text-xs text-muted-foreground">Page: {pagePath}</p>
-            <label className="block space-y-2 text-sm font-medium">
-              What should we know?
-              <textarea
-                required
-                maxLength={10000}
-                value={comment}
-                onChange={(event) => setComment(event.target.value)}
-                className="min-h-32 w-full rounded-lg border bg-background p-3"
-                placeholder="What happened, what you expected, or what would make this clearer…"
+            {/* While a save is in progress nothing it is sending can be edited. What is sent is
+                the snapshot taken when Save was pressed, whatever happens here. */}
+            <fieldset disabled={sending} className="m-0 min-w-0 space-y-4 border-0 p-0">
+              <label className="block space-y-2 text-sm font-medium">
+                What should we know?
+                <textarea
+                  required
+                  maxLength={10000}
+                  value={comment}
+                  onChange={(event) => {
+                    dirty.current = true
+                    setComment(event.target.value)
+                  }}
+                  className="min-h-32 w-full rounded-lg border bg-background p-3"
+                  placeholder="What happened, what you expected, or what would make this clearer…"
+                />
+              </label>
+              <label className="block space-y-2 text-sm font-medium">
+                Text or section you’re referring to (optional)
+                <textarea
+                  maxLength={3000}
+                  value={selectedText}
+                  onChange={(event) => {
+                    dirty.current = true
+                    setSelectedText(event.target.value)
+                  }}
+                  className="min-h-16 w-full rounded-lg border bg-background p-3"
+                  placeholder="Select text in the module before opening feedback, or paste it here."
+                />
+              </label>
+              <ScreenshotEditor
+                key={editorKey}
+                ref={editor}
+                draft={screenshotDraft}
+                onCaptureVisibilityChange={setCapturing}
+                locked={sending}
+                onDraftChange={() => {
+                  const source = screenshotDraft.current.source
+                  dirty.current = true
+                  // Encode a new image once, now, while the editor is still showing it as loading;
+                  // later draft writes reuse those bytes. A failure is reported when it is written.
+                  if (local && source)
+                    try {
+                      encodeScreenshotSource(source)
+                    } catch {}
+                  setHasImage(Boolean(source))
+                  setScreenshotRevision((revision) => revision + 1)
+                }}
               />
-            </label>
-            <label className="block space-y-2 text-sm font-medium">
-              Text or section you’re referring to (optional)
-              <textarea
-                maxLength={3000}
-                value={selectedText}
-                onChange={(event) => setSelectedText(event.target.value)}
-                className="min-h-16 w-full rounded-lg border bg-background p-3"
-                placeholder="Select text in the module before opening feedback, or paste it here."
-              />
-            </label>
-            <ScreenshotEditor
-              key={reportId}
-              ref={editor}
-              draft={screenshotDraft}
-              onCaptureVisibilityChange={setCapturing}
-            />
+            </fieldset>
+            {local && (
+              <p className="text-xs leading-5 text-muted-foreground">
+                Not saved yet. What you add here is kept on this browser until you save or discard
+                it, and is offered again after a reload.
+              </p>
+            )}
+            {draftNotice && (
+              <p role="status" className="text-sm">
+                {draftNotice}
+              </p>
+            )}
+            {draftProblem && (
+              <p role="alert" className="text-sm text-destructive">
+                {draftProblem}
+              </p>
+            )}
             {error && (
               <p role="alert" className="text-sm text-destructive">
                 {error}
               </p>
             )}
             <div className="flex flex-wrap justify-end gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={sending}
-                onClick={() => {
-                  setOpen(false)
-                  setReportId('')
-                  screenshotDraft.current = createScreenshotDraft()
-                  setComment('')
-                  setSelectedText('')
-                  setError('')
-                }}
-              >
+              <Button type="button" variant="ghost" disabled={sending} onClick={discardDraft}>
                 Discard draft
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={sending}
-                onClick={() => setOpen(false)}
-              >
+              <Button type="button" variant="outline" disabled={sending} onClick={closeDialog}>
                 Continue testing
               </Button>
               <Button type="submit" disabled={sending || !comment.trim()}>
