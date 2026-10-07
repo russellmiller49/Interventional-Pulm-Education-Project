@@ -37,7 +37,8 @@ export const viewerSchema = z.object({
   slice: z.number().int().min(239).max(478),
   focus: z.enum(['start', 'target', 'junction']),
   full: z.boolean(),
-  magnification: z.number().min(1).max(2.5),
+  // Match the viewer's 1–4× range. A damaged display preference must not discard learner work.
+  magnification: z.number().min(1).max(4).catch(1),
   showNodule: z.boolean(),
   showScope: z.boolean(),
 })
