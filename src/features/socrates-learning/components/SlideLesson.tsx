@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, Check, LockKeyhole, BookOpen } from 'lucide-react'
 import { StudyViewer } from '@/features/socrates-study/components/StudyViewer'
+import { AnnotationKey } from '@/features/socrates-study/components/shared'
 import type { SocratesCaseDocument } from '@/features/socrates-builder/types'
 import {
   answerSchema,
@@ -12,6 +13,7 @@ import {
   type LearningMode,
 } from '../model'
 import styles from './learning.module.css'
+import { coreTeachingSequence, teachingSectionTitle } from '../core-teaching'
 
 export function SlideLesson({
   document,
@@ -35,6 +37,7 @@ export function SlideLesson({
   previewOnly?: boolean
 }) {
   const testing = mode === 'testing'
+  const core = testing ? null : coreTeachingSequence(document)
   const sections = teachingSections(document)
   const step = Math.min(progress.teachingStep, Math.max(0, sections.length - 1))
   const section = sections[step]
@@ -69,7 +72,13 @@ export function SlideLesson({
       </div>
       <div className={styles.lessonHeading}>
         <div>
-          <span className={styles.eyebrow}>{testing ? 'Testing module' : 'Teaching module'}</span>
+          <span className={styles.eyebrow}>
+            {testing
+              ? 'Testing module'
+              : core
+                ? `Core case ${core.position} · ${teachingSectionTitle(core)}`
+                : 'Teaching module'}
+          </span>
           <h1>
             {testing ? `Slide ${String(position).padStart(2, '0')}` : teachingTitle(document)}
           </h1>
@@ -98,6 +107,7 @@ export function SlideLesson({
                   : 'Teaching regions will be added later'}
             </span>
           </div>
+          {!testing && <AnnotationKey legend={document.caseContent.annotationLegend} />}
         </div>
         {testing ? (
           <section className={styles.lessonPanel} aria-label="Testing response">

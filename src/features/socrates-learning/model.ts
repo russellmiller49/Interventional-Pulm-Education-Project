@@ -2,6 +2,11 @@ import { z } from 'zod'
 import { socratesSlideDocumentSchema } from '@/features/socrates-builder/schema'
 import { narrativeSections } from '@/features/socrates-builder/learner-narrative'
 import type { SocratesCaseDocument, SocratesSlideDocument } from '@/features/socrates-builder/types'
+import {
+  compareTeachingDocuments,
+  coreTeachingSequence,
+  teachingSectionTitle,
+} from './core-teaching'
 
 export type LearningMode = 'teaching' | 'testing'
 export const COLLECTION_KEY = 'socrates-curriculum-preview:v1'
@@ -38,13 +43,20 @@ export const collectionSchema = z
     }
   })
 export type LearningCollection = z.infer<typeof collectionSchema>
-export function learningDocuments(documents: SocratesSlideDocument[]): SocratesCaseDocument[] {
+export function learningDocuments(
+  documents: SocratesSlideDocument[],
+  mode: LearningMode = 'teaching',
+): SocratesCaseDocument[] {
   return documents
     .filter(
       (d): d is SocratesCaseDocument =>
         d.schemaVersion === 2 && Boolean(d.caseContent && d.authorContent),
     )
-    .sort((a, b) => order(a) - order(b) || a.slug.localeCompare(b.slug))
+    .sort(
+      mode === 'teaching'
+        ? compareTeachingDocuments
+        : (a, b) => order(a) - order(b) || a.slug.localeCompare(b.slug),
+    )
 }
 export function order(document: SocratesCaseDocument) {
   return (
@@ -56,15 +68,14 @@ export function caseKey(document: SocratesCaseDocument) {
   return document.recordId ?? document.slug
 }
 export function signature(document: SocratesCaseDocument) {
+  const content = { ...document.caseContent }
+  delete content.coreTeachingSequence
   // Exact content comparison invalidates local progress when a draft changes.
-  return JSON.stringify([
-    document.revision,
-    document.caseContent,
-    document.slide,
-    document.annotations,
-  ])
+  return JSON.stringify([document.revision, content, document.slide, document.annotations])
 }
 export function moduleName(document: SocratesCaseDocument) {
+  const core = coreTeachingSequence(document)
+  if (core) return teachingSectionTitle(core)
   return document.authorContent.curriculumSource?.sourceValues.Module ?? 'Slide collection'
 }
 export function teachingTitle(document: SocratesCaseDocument) {
