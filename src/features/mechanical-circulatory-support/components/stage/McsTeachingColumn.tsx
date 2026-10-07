@@ -124,7 +124,7 @@ export function McsTeachingColumn({
                 <p>
                   <strong>Oxygen delivery and patient response:</strong> oxygen content and
                   consumption matter. Mentation, urine output, skin findings and lactate trend
-                  require clinical assessment; these responses are not simulated.
+                  require clinical evaluation; these responses are not simulated.
                 </p>
               </div>
             </details>

@@ -858,7 +858,7 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
     title: 'Advanced durable-LVAD constrained-filling challenge',
     shortTitle: 'LVAD capstone',
     presentation:
-      'A continuous-flow LVAD patient develops low flow with rising and converging filling pressures after a bedside procedure; speed and power are unchanged.',
+      'A continuous-flow LVAD patient develops low flow with rising and converging filling pressures after a bedside procedure; pump speed is unchanged and the power path remains connected.',
     learningObjectives: [
       'Differentiate constrained filling from hypertension, hypovolemia, and pump thrombosis.',
       'Avoid unauthorized speed changes and escalate definitive evaluation.',

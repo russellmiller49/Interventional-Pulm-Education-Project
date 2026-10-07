@@ -124,7 +124,7 @@ describe('F03 · what a step asks, where its control is, and where its evidence 
     expect(identity).toMatch(/simulated seconds/)
     expect(identity).not.toMatch(/seed \d+/i)
     const seedHolder = [...document.querySelectorAll('details')].find((details) =>
-      /Seed \d+/.test(details.textContent ?? ''),
+      /Example number \d+/.test(details.textContent ?? ''),
     )
     expect(seedHolder).toBeDefined()
     expect(seedHolder?.open).toBe(false)

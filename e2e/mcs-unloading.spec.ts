@@ -134,7 +134,7 @@ for (const [width, height] of [
     }
     for (const card of await page.locator('[data-unloading-condition]').all()) {
       await card.getByText('Starting state and model assumptions', { exact: true }).click()
-      await expect(card.getByText(/Seed 417/)).toBeVisible()
+      await expect(card.getByText(/Example number 417/)).toBeVisible()
     }
     await page.getByRole('button', { name: 'P8', exact: true }).focus()
     await page.keyboard.press('Tab')

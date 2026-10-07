@@ -22,7 +22,7 @@ export function McsLearnLanding() {
         <p>
           Every section is read on the same simulated circulation: first the pressure apart from the
           flow, then the loop every device is drawn on, then each device one at a time, then the
-          assessment of the supported patient. Temporary support and assessment of an existing
+          evaluation of the supported patient. Temporary support and evaluation of an existing
           durable LVAD are distinct clinical contexts; this is not a treatment ladder. Move in
           order, or open any section from the map below.
         </p>
