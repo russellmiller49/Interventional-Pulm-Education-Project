@@ -38,6 +38,16 @@ Foundations, and the five critical care modules. The live lesson at `/en/intro-b
 Bronchoscopy Anatomy**; the synchronized simulator is a separate entry at
 `/en/learn/anatomy/airway`.
 
+The hub separates **Ready for review** from **Still in development**. Ready cards appear first
+with a tester note: a summary, estimated minutes, what to look for, and known limits or content
+still under faculty review. The ready section is omitted when empty. All 13 modules currently
+remain `preview` under **Still in development**, grouped by Bronchoscopy, Devices, and Critical
+care; empty groups are omitted. Readiness changes presentation only: every card keeps its
+**Test with feedback** wrapper link and **Standard module** link, with the same access and
+feedback behavior. A ready label does not authorize clinical use or public release. Modules
+move to `ready` with a real tester note only after the gate in
+[Beta finish line](gap-remediation/beta-finish-line.md#2-the-gate) is satisfied.
+
 Each **Test with feedback** link opens `/en/development-beta/<module-id>`. The actual module
 runs in a same-origin frame with a compact feedback toolbar outside it, so lesson navigation
 and simulator state stay intact. Inside the frame the module is the standard route unchanged,
@@ -100,9 +110,13 @@ The **main-site Supabase project**, `tqnhxlwvkkswuckszlee` (Endoreels), needs th
 2. `supabase/migrations/20260925055243_expand_module_beta_feedback_catalog.sql`: permits EBUS
    Guided submissions. Historical Therapeutic Bronchoscopy records remain valid and reviewable, including local notes and exports.
 3. `supabase/migrations/20261004072344_add_eus_b_simulator_to_module_beta_feedback.sql`: permits
-   EUS-B Simulator submissions. **Not yet applied when this was written (2026-10-04).** Until it
-   is, the hub lists the EUS-B Simulator and opens it for testing, but saving feedback for it
-   fails the table's module check and the tester sees the storage error with the draft kept.
+   EUS-B Simulator submissions. Applied to Endoreels on 2026-10-07: source version
+   `20261004072344` is recorded in production migration history as
+   `20261007011957_add_eus_b_simulator_to_module_beta_feedback`. Verification at
+   **2026-10-07 01:19:58 UTC** confirmed that the prior 13 allowed module IDs were preserved,
+   EUS-B was added, and the PostgREST schema reload completed. **Live EUS-B feedback has not
+   yet been verified**; this migration record is not a successful tester submission or admin
+   review. No migration or database write was run for this documentation update.
 
 The first two were applied to the main-site project on 2026-09-25 UTC. Do not apply them to the dedicated
 literature project. Follow the primary-checkout requirements in `AGENTS.md` for database operations.

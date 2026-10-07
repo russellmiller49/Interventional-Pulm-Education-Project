@@ -2,7 +2,7 @@ import { test, expect, chromium } from '@playwright/test'
 import { betaModules } from '../src/features/module-beta/catalog'
 
 const id = 'b8b3da51-5068-4c58-9ebd-3f846a27b337'
-test('beta hub requires sign-in, is noindex, and feedback APIs reject preview cookies', async ({
+test('all preview modules remain under Still in development with sign-in, noindex and feedback API gates', async ({
   page,
   context,
   request,
@@ -24,6 +24,27 @@ test('beta hub requires sign-in, is noindex, and feedback APIs reject preview co
   await expect(page.getByRole('link', { name: 'Test with feedback' })).toHaveCount(
     betaModules.length,
   )
+  await expect(page.getByRole('heading', { name: 'Ready for review', exact: true })).toHaveCount(0)
+  const preview = page.getByRole('region', { name: 'Still in development', exact: true })
+  await expect(preview).toBeVisible()
+  await expect(preview.getByRole('article')).toHaveCount(13)
+  await expect(preview.getByRole('link', { name: 'Standard module', exact: true })).toHaveCount(13)
+  for (const group of ['Bronchoscopy', 'Devices', 'Critical care']) {
+    await expect(preview.getByRole('heading', { name: group, exact: true })).toBeVisible()
+  }
+  for (const entry of betaModules) {
+    const card = preview.getByRole('article').filter({
+      has: page.getByRole('heading', { name: entry.title, exact: true }),
+    })
+    await expect(card).toHaveCount(1)
+    await expect(
+      card.getByRole('link', { name: 'Test with feedback', exact: true }),
+    ).toHaveAttribute('href', `/en/development-beta/${entry.id}`)
+    await expect(card.getByRole('link', { name: 'Standard module', exact: true })).toHaveAttribute(
+      'href',
+      `/en${entry.path}`,
+    )
+  }
   await expect(page.getByRole('heading', { name: /Therapeutic Bronchoscopy/ })).toHaveCount(0)
   await page.screenshot({
     path: 'artifacts/module-beta-hub.png',
