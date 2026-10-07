@@ -86,16 +86,25 @@ describe('CRRT practice keeps one current case identity', () => {
   })
 
   it('puts the selected case in the shareable URL, including the additional cases', async () => {
-    render(<BaxterCrrtPractice locale="en" initialCaseId="CRRT-01" />)
+    const view = render(<BaxterCrrtPractice locale="en" initialCaseId="CRRT-01" />)
     await settle()
 
     fireEvent.change(casePicker(), { target: { value: 'CRRT-05' } })
     await settle()
-    expect(casePicker().value).toBe('CRRT-05')
+    // A push request is not a committed URL. Until it commits the previous
+    // case stays visible and the requested case is not recorded as visited.
+    expect(casePicker().value).toBe('CRRT-01')
+    expect(readCrrtSelfPacedProgress().visitedCaseIds).toEqual(['CRRT-01'])
+    expect(screen.getByRole('heading', { level: 2, name: /Set CRRT priorities/ })).toBeVisible()
     expect(push).toHaveBeenCalledWith({
       pathname: '/baxter-crrt/practice',
       query: { case: 'CRRT-05' },
     })
+
+    view.rerender(<BaxterCrrtPractice locale="en" initialCaseId="CRRT-05" />)
+    await settle()
+    expect(casePicker().value).toBe('CRRT-05')
+    expect(readCrrtSelfPacedProgress().visitedCaseIds).toEqual(['CRRT-01', 'CRRT-05'])
 
     push.mockClear()
     // The additional cases live in the same visible Cases control (CRRT-FELLOW-03).
@@ -108,6 +117,9 @@ describe('CRRT practice keeps one current case identity', () => {
     expect(push).toHaveBeenCalledTimes(1)
     const pushedCaseId = push.mock.calls[0][0].query.case as string
     expect(pushedCaseId).toBe(additional)
+    expect(casePicker().value).toBe('CRRT-05')
+    view.rerender(<BaxterCrrtPractice locale="en" initialCaseId={pushedCaseId} />)
+    await settle()
     // The picker keeps the optional case selected, so the URL and the rendered
     // case agree even for an additional case.
     expect(casePicker().value).toBe(pushedCaseId)

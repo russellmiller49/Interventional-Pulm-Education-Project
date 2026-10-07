@@ -216,7 +216,7 @@ describe('CRRT Cases control (F-09)', () => {
   })
 
   it('steps to the previous and next core case through the canonical URL', async () => {
-    render(<BaxterCrrtPractice locale="en" initialCaseId="CRRT-02" />)
+    const view = render(<BaxterCrrtPractice locale="en" initialCaseId="CRRT-02" />)
     await settle()
     const nav = screen.getByRole('navigation', { name: 'Practice cases' })
     fireEvent.click(within(nav).getByRole('button', { name: /^Next case: / }))
@@ -224,6 +224,8 @@ describe('CRRT Cases control (F-09)', () => {
       pathname: '/baxter-crrt/practice',
       query: { case: baxterCrrtCoreCaseIds[2] },
     })
+    expect(within(nav).getByRole('combobox', { name: 'Cases' })).toHaveValue('CRRT-02')
+    view.rerender(<BaxterCrrtPractice locale="en" initialCaseId={baxterCrrtCoreCaseIds[2]} />)
     await settle()
     fireEvent.click(
       within(screen.getByRole('navigation', { name: 'Practice cases' })).getByRole('button', {

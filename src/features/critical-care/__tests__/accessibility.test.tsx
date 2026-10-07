@@ -235,9 +235,18 @@ describe('critical-care accessibility surfaces', () => {
     const crrt = render(<CrrtPressureLocalizationLab />)
     expect(
       screen.getByRole('img', {
-        name: /patient access, access catheter, access line, filter, return line, then patient return/i,
+        name: /^Universal CRRT circuit topology Pressure profile\./i,
       }),
     ).toBeInTheDocument()
+    const crrtCircuit = screen.getByRole('img', {
+      name: /^Universal CRRT circuit topology Pressure profile\./i,
+    })
+    expect(crrtCircuit).toHaveAccessibleName(
+      /Blood leaves the patient through the access lumen.*Blood travels along the access line.*Blood leaves the blood pump.*Blood passes down the blood side of the filter.*Blood leaves the filter.*Blood travels along the return line.*Blood re-enters the patient through the return lumen/i,
+    )
+    expect(crrtCircuit).toHaveAccessibleName(
+      /Directly modeled pressure sites: Access pressure, Filter pressure, Return pressure, Effluent pressure.*Calculated relationships with no location of their own: TMP, Filter pressure drop/i,
+    )
     expect(screen.getByRole('radio', { name: 'Access catheter' })).toBeChecked()
     expect(await axe(crrt.container)).toHaveNoViolations()
     crrt.unmount()
