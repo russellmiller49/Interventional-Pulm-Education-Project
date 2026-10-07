@@ -234,7 +234,7 @@ export function FeedbackWorkspace({ locale }: { locale: string }) {
   async function clearFeedback() {
     if (
       !window.confirm(
-        'Permanently remove ALL local reports and screenshots from this browser? Export feedback first if you need a copy. This cannot be undone.',
+        'Permanently remove ALL saved local reports and screenshots from this browser? Unsent drafts are kept. Export feedback first if you need a copy. This cannot be undone.',
       )
     )
       return
@@ -244,7 +244,9 @@ export function FeedbackWorkspace({ locale }: { locale: string }) {
       await clearOwnerFeedback()
       setPage(0)
       await refresh()
-      setManagementMessage('All local reports and screenshots were removed from this browser.')
+      setManagementMessage(
+        'All saved local reports and screenshots were removed from this browser. Unsent drafts were kept.',
+      )
     } catch (err) {
       setManagementMessage(
         err instanceof Error ? err.message : 'Local feedback could not be cleared.',
@@ -294,9 +296,12 @@ export function FeedbackWorkspace({ locale }: { locale: string }) {
               Export filtered feedback
             </Button>
             <Button variant="outline" disabled={managing} onClick={clearFeedback}>
-              Clear local feedback
+              Clear saved feedback
             </Button>
           </div>
+          <p className="text-xs leading-5 text-muted-foreground">
+            Unsent drafts are kept separately and are not removed by this action.
+          </p>
           {managementMessage && (
             <p role="status" className="text-sm">
               {managementMessage}
