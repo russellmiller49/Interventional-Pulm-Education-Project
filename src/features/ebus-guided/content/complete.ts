@@ -189,7 +189,7 @@ export const completeLessons: Lesson[] = [
     concept: 'A result has a sampling context',
     paragraphs: [
       '“No malignant cells identified” must be interpreted with specimen representativeness, examined and sampled stations, pretest probability, and the remaining clinical question. Blood-only or otherwise nonrepresentative material is not equivalent to a representative negative node. An unexamined station has no tissue result.',
-      'After a negative systematic endosonographic staging examination, the 2026 ERS/ESGE/ESTS guideline no longer recommends routine add-on mediastinoscopy. This statement does not turn inadequate or incomplete sampling into a reliable negative examination. Discuss discordant findings, unassessed targets, and further diagnostic needs with the multidisciplinary team.',
+      'After a negative systematic endosonographic staging examination, the 2026 ERS/ESGE/ESTS guideline recommends against routine add-on confirmatory mediastinoscopy; it may still be considered when the risk of a false-negative result is high. This statement does not turn inadequate or incomplete sampling into a reliable negative examination. Discuss discordant findings, unassessed targets, and further diagnostic needs with the multidisciplinary team.',
       'Report the indication, relevant imaging, airway and ultrasound findings, stations examined and sampled, specimen handling and adequacy information, complications, and the follow-up plan. Identify who will reconcile final pathology and pending studies with the patient and referring team.',
     ],
     checklist: [
@@ -273,7 +273,7 @@ export const completeLessons: Lesson[] = [
       'Negative, nonrepresentative, and unassessed are different.',
       'A complete report assigns the next action and its owner.',
     ],
-    sources: ['ers2026', 'ics2023'],
+    sources: ['ers2026', 'ics2023', 'aabip2025'],
     boundary:
       'The case statements are authored examples. An individual next step requires the full clinical and pathological context.',
   },

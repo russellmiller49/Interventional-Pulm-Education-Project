@@ -1,11 +1,9 @@
 /**
  * Course glossary (EBUS-PRE-REVIEW-04, NAV-3 / L1-4 / L15-4).
  *
- * Every definition below is made of sentences the course already teaches, quoted or trimmed from
- * the place named in `sources`; nothing is written from general knowledge. A term the course
- * uses without defining it (for example "central hilar structure", or abbreviations such as TNM,
- * IASLC, NSCLC and IFU) is deliberately absent and listed for source review instead, because a
- * definition added here would read as authoritative teaching.
+ * Original entries quote the course teaching. OD-12 (Russell Miller, 2026-10-04) authorizes
+ * the expanded terms below from the recorded Prompt-05 evidence, without upgrading source
+ * verification. Source-dependent definitions carry their limits beside the definition.
  *
  * `firstUse` names the lessons that use a term without teaching it there — lesson 1 uses "N
  * category" sixteen lessons before lesson 17 teaches it — and show it beside their teaching. The
@@ -16,14 +14,96 @@ export interface GlossaryEntry {
   id: string
   term: string
   definition: string
-  /** Where each sentence of the definition comes from, in the course's own words. */
+  /** Course excerpts or recorded source/physician-author provenance for the definition. */
   sources: string[]
+  /** Distinguishes approved external expansions from the original course excerpts. */
+  sourceContext?: string
   /** The lesson that teaches the term in full, linked from the entry. */
   lessonId?: string
   firstUse: string[]
 }
 
 export const GLOSSARY: GlossaryEntry[] = [
+  {
+    id: 'tnm',
+    term: 'TNM',
+    definition: 'Tumor, node, metastasis classification.',
+    sources: ['Physician-author-approved expansion; IASLC ninth-edition staging terminology'],
+    sourceContext: 'Source and limits',
+    firstUse: ['clinical-question', 'systematic-staging'],
+  },
+  {
+    id: 'iaslc',
+    term: 'IASLC',
+    definition: 'International Association for the Study of Lung Cancer.',
+    sources: ['Physician-author-approved official organization expansion'],
+    sourceContext: 'Source and limits',
+    firstUse: ['clinical-question', 'ct-map'],
+  },
+  {
+    id: 'nsclc',
+    term: 'NSCLC',
+    definition: 'Non-small cell lung cancer.',
+    sources: ['Physician-author-approved expansion'],
+    sourceContext: 'Source and limits',
+    firstUse: ['systematic-staging'],
+  },
+  {
+    id: 'pet',
+    term: 'PET',
+    definition: 'Positron emission tomography.',
+    sources: ['Physician-author-approved expansion'],
+    sourceContext: 'Source and limits',
+    firstUse: ['clinical-question'],
+  },
+  {
+    id: 'fna',
+    term: 'FNA',
+    definition: 'Fine-needle aspiration.',
+    sources: ['Physician-author-approved expansion'],
+    sourceContext: 'Source and limits',
+    firstUse: ['eus-b'],
+  },
+  {
+    id: 'ers-esge-ests',
+    term: 'ERS / ESGE / ESTS',
+    definition:
+      'European Respiratory Society / European Society of Gastrointestinal Endoscopy / European Society of Thoracic Surgeons.',
+    sources: ['Physician-author-approved official organization expansions'],
+    sourceContext: 'Source and limits',
+    firstUse: ['systematic-staging', 'eus-b', 'results-reporting'],
+  },
+  {
+    id: 'chest',
+    term: 'CHEST',
+    definition: 'The American College of Chest Physicians and its guideline series.',
+    sources: ['Physician-author-approved contextual definition'],
+    sourceContext: 'Source and limits',
+    firstUse: ['adequacy-rose'],
+  },
+  {
+    id: 'ifu',
+    term: 'IFU',
+    definition:
+      'Instructions for use. Manufacturer-specific interpretation requires the current, verified documentation for the selected device and revision.',
+    sources: [
+      'Physician-author-approved expansion; manufacturer-specific interpretation remains source-dependent',
+    ],
+    sourceContext: 'Source and limits',
+    firstUse: ['needle-assembly-model', 'needle-safety'],
+  },
+  {
+    id: 'chs',
+    term: 'Central hilar structure (CHS)',
+    definition:
+      'A linear, flat, hyperechoic central area, as described in ICS/IAB 2023 Table 5. This descriptive wording does not supply a Fujiwara-specific definition; Fujiwara 2010 full text remains unverified.',
+    sources: [
+      'ICS/IAB 2023 Table 5, full text read in the recorded source review on 2026-09-23; physician-author-approved descriptive scope; Fujiwara full-text hold retained',
+    ],
+    sourceContext: 'Source and limits',
+    firstUse: ['node-characterization'],
+  },
+
   {
     id: 'ebus-tbna',
     term: 'EBUS-TBNA',

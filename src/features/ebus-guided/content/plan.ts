@@ -180,7 +180,7 @@ export const planLessons: Lesson[] = [
       'Survey and specimen order serve different purposes.',
       'N2a versus N2b counts involved stations.',
     ],
-    sources: ['ers2026', 'iaslc9', 'ics2023'],
+    sources: ['ers2026', 'iaslc9', 'ics2023', 'aabip2025'],
     boundary:
       'The vignettes assume the stated primary side and complete station information. Full TNM grouping, resectability, and treatment require additional clinical data and multidisciplinary review.',
   },
