@@ -17,6 +17,7 @@ import {
 } from '../model'
 import type { SlideAssignment } from '@/features/socrates-builder/web-overlay-storage'
 import { SlideLesson } from './SlideLesson'
+import { coreTeachingCases, coreTeachingSections, coreTeachingSequence } from '../core-teaching'
 import styles from './learning.module.css'
 
 export function SocratesLearningWorkspace({
@@ -68,13 +69,23 @@ export function SocratesLearningWorkspace({
 
   const allCases = learningDocuments(documents)
   const assignedCases = (target: LearningMode) =>
-    assignments ? allCases.filter((doc) => assignments[caseKey(doc)] === target) : allCases
+    learningDocuments(
+      assignments ? allCases.filter((doc) => assignments[caseKey(doc)] === target) : allCases,
+      target,
+    )
   const cases = preview
     ? allCases.filter((doc) => caseKey(doc) === preview.id)
     : mode
       ? assignedCases(mode)
       : allCases
-  const modules = [...new Set(cases.map(moduleName))]
+  const modules = [...new Set(cases.map(moduleName))].sort((a, b) => {
+    const rank = (title: string) => {
+      const index = coreTeachingSections.findIndex((section) => section.title === title)
+      return index < 0 ? coreTeachingSections.length : index
+    }
+    return rank(a) - rank(b)
+  })
+  const hasCore = cases.some((doc) => coreTeachingSequence(doc))
   const selected = cases.find((doc) => caseKey(doc) === active)
   const completed = (doc: SocratesCaseDocument, target: LearningMode) => {
     const saved = currentProgress(doc, progress)
@@ -310,20 +321,31 @@ export function SocratesLearningWorkspace({
                 )}
               </div>
               {mode === 'teaching' && (
-                <div className={styles.filters} role="group" aria-label="Curriculum sections">
-                  <button aria-pressed={module === 'all'} onClick={() => setModule('all')}>
-                    All slides
-                  </button>
-                  {modules.map((name, i) => (
-                    <button
-                      key={name}
-                      aria-pressed={module === name}
-                      onClick={() => setModule(name)}
-                    >
-                      {i + 1}. {name.replace(/^MODULE \d+ — /, '').toLowerCase()}
+                <>
+                  {hasCore && (
+                    <p>
+                      Core training: {cases.filter((doc) => coreTeachingSequence(doc)).length} of{' '}
+                      {coreTeachingCases.length} cases available. Start with normal and benign
+                      tissue, then review non-diagnostic specimens, granulomas, and cancer patterns.
+                    </p>
+                  )}
+                  <div className={styles.filters} role="group" aria-label="Curriculum sections">
+                    <button aria-pressed={module === 'all'} onClick={() => setModule('all')}>
+                      All slides
                     </button>
-                  ))}
-                </div>
+                    {modules.map((name, i) => (
+                      <button
+                        key={name}
+                        aria-pressed={module === name}
+                        onClick={() => setModule(name)}
+                      >
+                        {i + 1}. {name.replace(/^MODULE \d+ — /, '')}
+                        {coreTeachingSections.some((section) => section.title === name) &&
+                          ` (${cases.filter((doc) => moduleName(doc) === name).length}/${coreTeachingSections.find((section) => section.title === name)!.cases.length})`}
+                      </button>
+                    ))}
+                  </div>
+                </>
               )}
               <div className={styles.caseGrid}>
                 {visible.map((doc) => {

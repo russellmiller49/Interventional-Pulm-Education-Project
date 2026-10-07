@@ -9,6 +9,11 @@ import type {
 } from '@/features/socrates-builder/web-overlay-storage'
 import { documentKey, exportAuthorLibrary, importAuthorLibrary } from '../author-library'
 import styles from './library.module.css'
+import {
+  compareTeachingDocuments,
+  coreTeachingSequence,
+  teachingSectionTitle,
+} from '../core-teaching'
 
 export function AssignmentSelect({
   document,
@@ -60,7 +65,7 @@ export function SlideLibrary({
   const imported = new Set(workspace.curriculum?.importedIds)
   const assignment = (doc: SocratesSlideDocument) =>
     workspace.curriculum?.assignments[documentKey(doc)] ?? 'unassigned'
-  const documents = workspace.documents.filter((doc) => {
+  const documents = [...workspace.documents].sort(compareTeachingDocuments).filter((doc) => {
     const sourceValues = doc.authorContent?.curriculumSource?.sourceValues
     return (
       (source === 'all' ||
@@ -209,7 +214,11 @@ export function SlideLibrary({
                 <BookOpen size={24} />
               </div>
               <div className={styles.description}>
-                <span className={styles.eyebrow}>{values?.Module ?? 'Author draft'}</span>
+                <span className={styles.eyebrow}>
+                  {coreTeachingSequence(doc)
+                    ? `Core case ${coreTeachingSequence(doc)!.position} · ${teachingSectionTitle(coreTeachingSequence(doc)!)}`
+                    : (values?.Module ?? 'Author draft')}
+                </span>
                 <h2>{doc.title}</h2>
                 <p>{values?.['Full Case Name'] ?? doc.slug}</p>
                 <small>

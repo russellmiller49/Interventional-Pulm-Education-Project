@@ -20,13 +20,19 @@ export function StudyShell({ locale, children }: { locale: string; children: Rea
     </div>
   )
 }
-export function AnnotationKey({ legend }: { legend: AnnotationLegend }) {
+export function AnnotationKey({
+  legend,
+  authorPreview = false,
+}: {
+  legend: AnnotationLegend
+  authorPreview?: boolean
+}) {
+  const pending = !legend.reviewed || annotationLegendIssues(legend).length > 0
   return (
     <section aria-label="Annotation color key">
       <h3>Annotation / color key</h3>
-      {!legend.reviewed || annotationLegendIssues(legend).length > 0 ? (
-        <p>Annotation key pending review</p>
-      ) : (
+      {pending && <p>Annotation key pending review</p>}
+      {(!pending || authorPreview) && (
         <div className={styles.legend}>
           {legend.entries.map((e, i) => (
             <div key={i} className={styles.legendEntry}>
