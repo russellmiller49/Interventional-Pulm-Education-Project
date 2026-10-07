@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import type { Route } from 'next'
 import { setRequestLocale } from 'next-intl/server'
-import { ArrowUpRight, MessageSquare, FlaskConical } from 'lucide-react'
+import { MessageSquare, FlaskConical } from 'lucide-react'
+import { BetaHubSections } from '@/features/module-beta/BetaHubSections'
+import { betaRollout } from '@/features/module-beta/rollout'
 import { feedbackMode } from '@/features/module-beta/config'
 import { betaModules } from '@/features/module-beta/catalog'
 import { OwnerDraftNotice } from '@/features/module-beta/OwnerDraftNotice'
@@ -30,8 +32,9 @@ export default async function BetaHub({ params }: { params: Promise<{ locale: st
           <MessageSquare className="mt-1 h-5 w-5 shrink-0" aria-hidden />
           <p>
             Choose <strong>Test with feedback</strong> to open a module with a feedback button. Add
-            a comment, quote selected text, or attach and highlight an image. These development
-            modules may change.
+            a comment, quote selected text, or attach and highlight an image. These are development
+            previews: content may be unfinished or still under faculty review, and nothing here is
+            for clinical decisions.
           </p>
         </div>
         {local && (
@@ -44,37 +47,7 @@ export default async function BetaHub({ params }: { params: Promise<{ locale: st
         )}
         {local && <OwnerDraftNotice locale={locale} />}
       </header>
-      {['Bronchoscopy', 'Devices', 'Critical care'].map((group) => (
-        <section key={group} className="space-y-4">
-          <h2 className="text-2xl font-semibold">{group}</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            {betaModules
-              .filter((entry) => entry.group === group)
-              .map((entry) => (
-                <article
-                  key={entry.id}
-                  className="flex flex-col justify-between gap-6 rounded-2xl border bg-card p-6 shadow-sm"
-                >
-                  <h3 className="text-lg font-semibold">{entry.title}</h3>
-                  <div className="flex flex-wrap items-center gap-4">
-                    <Link
-                      className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-                      href={`/${locale}/development-beta/${entry.id}` as Route}
-                    >
-                      Test with feedback <ArrowUpRight className="h-4 w-4" aria-hidden />
-                    </Link>
-                    <Link
-                      className="text-sm underline underline-offset-4"
-                      href={`/${locale}${entry.path}` as Route}
-                    >
-                      Standard module
-                    </Link>
-                  </div>
-                </article>
-              ))}
-          </div>
-        </section>
-      ))}
+      <BetaHubSections locale={locale} modules={betaModules} rollout={betaRollout} />
     </div>
   )
 }
