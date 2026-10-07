@@ -809,10 +809,13 @@ function makeupDeliveredMlInWindow(state: CrrtSimulationState): number {
     .reduce((total, bag) => total + bag.cumulativePumpVolumeMl, 0)
 }
 
-function cumulativeFluidView(state: CrrtSimulationState | null): CrrtDeviceCumulativeFluidView {
+export function selectCrrtCumulativeFluidView(
+  state: CrrtSimulationState | null,
+): CrrtDeviceCumulativeFluidView {
   // An unconfigured prescription is the same situation as no state at all: the
   // engine's structural zeros are not a total of anything.
-  if (state && state.prescription.status !== 'configured') return cumulativeFluidView(null)
+  if (state && state.prescription.status !== 'configured')
+    return selectCrrtCumulativeFluidView(null)
   if (!state) {
     return Object.freeze({
       resolution: 'no-case-attached' as const,
@@ -896,7 +899,7 @@ export function selectPrismaxPilotOperationsDisplay(
     deliveredDoseMlKgHour: null,
     cumulativeMachinePatientFluidRemovalMl: null,
     cumulativeWholePatientBalanceMl: null,
-    cumulativeFluid: cumulativeFluidView(null),
+    cumulativeFluid: selectCrrtCumulativeFluidView(null),
     activeAlarmCodes: Object.freeze([]),
     pressures: nullPressures,
     pressureSignals: pressureSignalViews(null, [], bloodFlow),
@@ -938,7 +941,7 @@ export function selectPrismaxPilotCaseOperationsDisplay(
   // rather than "nothing has been set".
   const configured = prescription.status === 'configured'
   const setting = (value: number) => (configured ? value : null)
-  const cumulativeFluid = cumulativeFluidView(simulation)
+  const cumulativeFluid = selectCrrtCumulativeFluidView(simulation)
   const bloodFlow = selectCrrtBloodFlowState(simulation)
   return Object.freeze({
     treatmentState: interfaceState.treatmentState,

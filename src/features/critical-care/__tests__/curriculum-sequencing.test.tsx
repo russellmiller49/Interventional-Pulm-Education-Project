@@ -208,7 +208,19 @@ describe('activity library ordering (WP10 §4 bug A)', () => {
       .getAllByRole('heading', { level: 2 })
       .map((heading) => heading.textContent ?? '')
 
-    expect(rendered).toEqual(authoredOrder)
+    const troubleshooting = criticalCareActivities.find(
+      (activity) =>
+        activity.moduleId === 'baxter-crrt' &&
+        activity.id === 'crrt:assess:MASTERY-PRISMAX-01' &&
+        activity.kind === 'practice-case',
+    )
+    expect(troubleshooting).toBeDefined()
+    expect(troubleshooting?.curriculumStage).toBe('integration')
+    expect(troubleshooting?.title).toBe('PrisMax troubleshooting challenge')
+    expect(troubleshooting?.stageOrder).toBe(2)
+    expect(troubleshooting?.prerequisiteActivityIds).toEqual([])
+    expect(troubleshooting?.creditPolicy).toBe('non-credit')
+    expect(rendered).toEqual([...authoredOrder, troubleshooting!.title])
     expect(rendered).not.toEqual([...rendered].sort((left, right) => left.localeCompare(right)))
   })
 
