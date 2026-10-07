@@ -251,6 +251,89 @@ describe('critical-care coarse progress API', () => {
     })
   })
 
+  it.each([
+    ['2026-09-07T00:15:30.123456+05:30', '2026-09-06T18:45:30.123Z'],
+    ['2026-12-31T23:30:00-07:00', '2027-01-01T06:30:00.000Z'],
+    ['2024-02-29T00:30:00+01:00', '2024-02-28T23:30:00.000Z'],
+    ['2000-02-29T23:59:59+00:00', '2000-02-29T23:59:59.000Z'],
+    ['2026-09-07T22:41:05.987Z', '2026-09-07T22:41:05.987Z'],
+  ])('normalizes valid stored datetime %s to %s in both fields', async (stored, expected) => {
+    const database = progressDatabase({
+      getRows: [
+        {
+          module_id: 'icu-hemodynamics',
+          completed_at: stored,
+          completed_sections: ['learn'],
+          last_visited_at: stored,
+          percent_complete: 100,
+        },
+      ],
+    })
+    supabaseServerMock.mockResolvedValue(database.client)
+
+    const response = await GET()
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual({
+      schemaVersion: 1,
+      accountId: 'user-1',
+      modules: [
+        {
+          moduleId: 'icu-hemodynamics',
+          percentComplete: 100,
+          completedSections: ['learn'],
+          completedAt: expected,
+          lastVisitedAt: expected,
+        },
+      ],
+    })
+  })
+
+  describe.each(['completed_at', 'last_visited_at'])('stored %s validation', (field) => {
+    it.each([
+      '2026-02-30T12:00:00+00:00',
+      '2026-02-30T12:00:00Z',
+      '2026-09-07',
+      '2026-02-29T12:00:00+00:00',
+      '1900-02-29T12:00:00Z',
+      '2026-04-31T12:00:00-07:00',
+      '2026-13-01T12:00:00+00:00',
+      '2026-00-01T12:00:00Z',
+      '2026-09-00T12:00:00Z',
+      '2026-09-07T24:00:00+00:00',
+      '2026-09-07T12:60:00Z',
+      '2026-09-07T12:00:60+00:00',
+      '2026-09-07T12:00:00+24:00',
+      '2026-09-07T12:00:00+00:60',
+      '2026-09-07T12:00:00',
+      '2026-09-07 12:00:00+00:00',
+      'September 7, 2026',
+      '',
+    ])('refuses malformed stored datetime %s', async (stored) => {
+      // Handler fixtures exercise corrupt input; they do not imply PostgreSQL emits it.
+      const database = progressDatabase({
+        getRows: [
+          {
+            module_id: 'icu-hemodynamics',
+            completed_at: null,
+            completed_sections: [],
+            last_visited_at: '2026-09-07T12:00:00Z',
+            percent_complete: 10,
+            [field]: stored,
+          },
+        ],
+      })
+      supabaseServerMock.mockResolvedValue(database.client)
+
+      const response = await GET()
+
+      expect(response.status).toBe(500)
+      await expect(response.json()).resolves.toEqual({ error: 'Unable to read coarse progress.' })
+      expect(database.update).not.toHaveBeenCalled()
+      expect(database.upsert).not.toHaveBeenCalled()
+    })
+  })
+
   it('still refuses a row whose stored timestamp is not a date', async () => {
     const database = progressDatabase({
       getRows: [
