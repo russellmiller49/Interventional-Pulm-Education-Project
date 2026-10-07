@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { IntroBronchoscopyProgressToggle } from '@/features/intro-bronchoscopy/components/IntroBronchoscopyProgressToggle'
 import { HandoffContent } from '@/i18n/handoff'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
+import { canCurrentUserViewDraftModules } from '@/lib/draft-module-guard'
 
 const handoffMetadata: Metadata = {
   title: 'Live Bronchoscopy Anatomy',
@@ -28,19 +29,25 @@ const learningObjectives = [
   'Correlate a labeled 3D airway model with the flat branching diagram and the bronchoscopic view.',
 ]
 
-export default function AirwayAnatomyIntroPage() {
+export default async function AirwayAnatomyIntroPage() {
+  // This lesson opens by direct link; the course it came from stays behind its enrollment gate,
+  // so the way back is offered only to a viewer who can open the course.
+  const canOpenCourse = await canCurrentUserViewDraftModules({ allowPccmIntroCourse: true })
+
   return (
     <HandoffContent>
       {
         <div className="space-y-10 py-16">
           <section className="container space-y-6">
-            <Link
-              href={'/intro-bronchoscopy' as Route}
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" aria-hidden />
-              Intro to bronchoscopy modules
-            </Link>
+            {canOpenCourse ? (
+              <Link
+                href={'/intro-bronchoscopy' as Route}
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden />
+                Intro to bronchoscopy modules
+              </Link>
+            ) : null}
 
             <div className="space-y-3">
               <Badge
