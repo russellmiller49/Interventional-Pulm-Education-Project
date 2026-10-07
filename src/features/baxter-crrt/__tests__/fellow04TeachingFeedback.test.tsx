@@ -296,7 +296,7 @@ describe('case action cards describe the action, not its verdict (F-07)', () => 
 
   it('keeps each unsafe card’s own label, which names what is unsafe about it', () => {
     const labels = getBaxterCrrtCase('CRRT-08').interventions.map((i) => i.label)
-    expect(labels).toContain('Connect first and plan to correct the mismatch later')
+    expect(labels).toContain('Plan to connect first and correct the mismatch later')
     expect(getBaxterCrrtCase('CRRT-13').interventions.map((i) => i.label)).toContain(
       'Increase BFR through unresolved access resistance',
     )
@@ -326,7 +326,7 @@ describe('case action cards describe the action, not its verdict (F-07)', () => 
     click('Explain this case')
     const worked = screen.getByRole('region', { name: 'Worked example' })
     expect(within(worked).getByText('Actions this case treats as unsafe')).toBeInTheDocument()
-    expect(worked).toHaveTextContent('Connect first and plan to correct the mismatch later')
+    expect(worked).toHaveTextContent('Plan to connect first and correct the mismatch later')
     expect(worked).toHaveTextContent('It stays in the list so its consequences can be explored')
   })
 
