@@ -118,7 +118,7 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
           <h2 id="mcs-hub-pathway-heading">{composition.total} sections, in one order</h2>
           <p>
             The common model first, then each device as the model plus a counted number of new
-            ideas, then integration with patient assessment. Every section opens from its own link;
+            ideas, then integration with patient evaluation. Every section opens from its own link;
             the order is a recommendation, not a lock.
           </p>
           <ul className={styles.incrementList} data-track-increments>

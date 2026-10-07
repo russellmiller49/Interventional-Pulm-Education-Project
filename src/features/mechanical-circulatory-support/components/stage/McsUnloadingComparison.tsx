@@ -168,10 +168,10 @@ export function McsUnloadingComparison() {
               <details>
                 <summary>Starting state and model assumptions</summary>
                 <p>
-                  Seed {baseline.seed}. P5 starting state at {baseline.timeSeconds.toFixed(2)} s;
-                  both branches then receive the same setting-update step and eight simulated
-                  seconds of observation. The interval is authored, not a clinical stabilization
-                  time.
+                  Example number {baseline.seed}. P5 starting state at{' '}
+                  {baseline.timeSeconds.toFixed(2)} s; both branches then receive the same
+                  setting-update step and eight simulated seconds of observation. The interval is
+                  authored, not a clinical stabilization time.
                 </p>
                 <p>
                   Starting LV volume {baseline.metrics.lvedvMl} mL; wedge pressure{' '}
