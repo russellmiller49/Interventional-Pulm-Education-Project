@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type Dispatch } from 'react'
+import { useId, useMemo, useState, type Dispatch } from 'react'
 
 import {
   dynamicResponseChallenges,
@@ -25,6 +25,7 @@ import {
   type HemodynamicAction,
   type HemodynamicSimulationState,
 } from '../engine'
+import { useScreenSpacePlot } from './useScreenSpacePlot'
 import styles from './icu-hemodynamics.module.css'
 
 interface PressureSystemTeachingVisualProps {
@@ -42,29 +43,34 @@ export function FastFlushTrace({
   lineType,
   revealLabel,
   compact = false,
+  view = 'full',
 }: {
   readonly response: DynamicResponseKind
   readonly lineType: FastFlushLineType
   readonly revealLabel: boolean
   readonly compact?: boolean
+  readonly view?: 'full' | 'release'
 }) {
   const definition = getDynamicResponseDefinition(response)
   const waveform = useMemo(
     () => generateFastFlushWaveform(lineType, response),
     [lineType, response],
   )
-  const width = 720
+  const clipId = useId()
+  const { ref: plotRef, width } = useScreenSpacePlot(720)
   const height = 248
   const plot = { left: 48, right: 14, top: 28, bottom: 34 } as const
+  const start = view === 'release' ? FAST_FLUSH_RELEASE_SECONDS - 0.2 : 0
+  const end = view === 'release' ? FAST_FLUSH_RELEASE_SECONDS + 0.8 : waveform.durationSeconds
+  const timeLabelIndexes = width < 360 ? [] : width < 560 ? [0, 2, 5] : [0, 1, 2, 3, 4, 5]
+  const baseline = waveform.samples.filter((sample) => sample.segment === 'baseline')
+  const sampledHigh = Math.max(...baseline.map((sample) => sample.pressureMmHg))
+  const sampledLow = Math.min(...baseline.map((sample) => sample.pressureMmHg))
   const xForTime = (timeSeconds: number) =>
-    plot.left + (timeSeconds / waveform.durationSeconds) * (width - plot.left - plot.right)
+    plot.left + ((timeSeconds - start) / (end - start)) * (width - plot.left - plot.right)
   const yForPressure = (pressureMmHg: number) => {
-    const bounded = Math.max(
-      waveform.line.scaleMinimumMmHg,
-      Math.min(waveform.line.scaleMaximumMmHg, pressureMmHg),
-    )
     const fraction =
-      (bounded - waveform.line.scaleMinimumMmHg) /
+      (pressureMmHg - waveform.line.scaleMinimumMmHg) /
       (waveform.line.scaleMaximumMmHg - waveform.line.scaleMinimumMmHg)
     return plot.top + (1 - fraction) * (height - plot.top - plot.bottom)
   }
@@ -85,6 +91,7 @@ export function FastFlushTrace({
       className={styles.fastFlushTrace}
       data-compact={compact || undefined}
       data-line-type={lineType}
+      data-flush-view={view}
     >
       <figcaption>
         <strong>
@@ -92,16 +99,27 @@ export function FastFlushTrace({
         </strong>
         <span>
           {revealLabel
-            ? `${waveform.line.systolicMmHg}/${waveform.line.diastolicMmHg} mmHg baseline · ${definition.observation}`
+            ? `${waveform.line.systolicMmHg}/${waveform.line.diastolicMmHg} mmHg reference input · sampled pre-flush ${sampledHigh.toFixed(1)}/${sampledLow.toFixed(1)}`
             : 'Classification withheld'}
         </span>
       </figcaption>
       <svg
+        ref={plotRef}
         viewBox={`0 0 ${width} ${height}`}
         role="img"
         aria-label={accessibleSummary}
         preserveAspectRatio="xMidYMid meet"
       >
+        <defs>
+          <clipPath id={clipId}>
+            <rect
+              x={plot.left}
+              y={plot.top}
+              width={width - plot.left - plot.right}
+              height={height - plot.top - plot.bottom}
+            />
+          </clipPath>
+        </defs>
         <rect
           className={styles.fastFlushPlotBackground}
           x={plot.left}
@@ -120,25 +138,26 @@ export function FastFlushTrace({
             </g>
           )
         })}
-        <text
-          className={styles.fastFlushAxisTitle}
-          transform={`translate(13 ${height / 2}) rotate(-90)`}
-          textAnchor="middle"
-        >
-          pressure (mmHg)
-        </text>
-        {Array.from({ length: 6 }, (_, second) => {
+
+        {Array.from({ length: 6 }, (_, index) => {
+          const second = view === 'release' ? start + index * 0.2 : index
           const x = xForTime(second)
           return (
             <g className={styles.fastFlushTimeMarker} key={second}>
               <line x1={x} x2={x} y1={plot.top} y2={height - plot.bottom} />
-              <text x={x} y={height - 10} textAnchor="middle">
-                {second} s
-              </text>
+              {timeLabelIndexes.includes(index) ? (
+                <text
+                  x={x}
+                  y={height - 10}
+                  textAnchor={index === 0 ? 'start' : index === 5 ? 'end' : 'middle'}
+                >
+                  {view === 'release' ? second.toFixed(2) : second} s
+                </text>
+              ) : null}
             </g>
           )
         })}
-        <path className={styles.flushTrace} d={path} />
+        <path className={styles.flushTrace} d={path} clipPath={`url(#${clipId})`} />
         <line
           className={styles.flushMarker}
           x1={xForTime(FAST_FLUSH_START_SECONDS)}
@@ -153,26 +172,27 @@ export function FastFlushTrace({
           y1={plot.top}
           y2={height - plot.bottom}
         />
-        <text x={xForTime(FAST_FLUSH_START_SECONDS) + 5} y={height - plot.bottom + 14}>
-          flush
-        </text>
-        <text x={xForTime(FAST_FLUSH_RELEASE_SECONDS) + 5} y={height - plot.bottom + 14}>
-          release
-        </text>
-        <text
-          className={styles.flushOffScaleLabel}
-          x={(xForTime(FAST_FLUSH_START_SECONDS) + xForTime(FAST_FLUSH_RELEASE_SECONDS)) / 2}
-          y={plot.top + 12}
-          textAnchor="middle"
-        >
-          flush pressure off scale ≈300 mmHg
-        </text>
       </svg>
+      <p className={styles.plotContext}>
+        {view === 'release'
+          ? `Release detail ${start.toFixed(2)}–${end.toFixed(2)} s · same retained samples. `
+          : `Full trace 0–${waveform.durationSeconds} s. `}
+        Pressure in mmHg · common {waveform.line.scaleMinimumMmHg}–{waveform.line.scaleMaximumMmHg}{' '}
+        axis · flush starts {FAST_FLUSH_START_SECONDS} s; release {FAST_FLUSH_RELEASE_SECONDS} s.
+        Flush plateau ≈300 mmHg is off scale and geometrically clipped. The stated baseline is the
+        generator’s input, not a claim that every rendered extremum equals it.
+      </p>
     </figure>
   )
 }
 
-export function LevelingVisual({ state }: { readonly state: HemodynamicSimulationState }) {
+export function LevelingVisual({
+  state,
+  channel = 'arterial',
+}: {
+  readonly state: HemodynamicSimulationState
+  readonly channel?: 'arterial' | 'pac'
+}) {
   const levelCm = state.measurementSystem.transducerLevelCm
   const offsetMmHg = hydrostaticPressureOffsetMmHg(levelCm)
   const referenceMeasurements = useMemo(
@@ -221,9 +241,7 @@ export function LevelingVisual({ state }: { readonly state: HemodynamicSimulatio
           <circle className={styles.levelingPatient} cx="68" cy="126" r="31" />
           <line className={styles.levelingAxis} x1="28" x2="550" y1="110" y2="110" />
           <circle className={styles.levelingAxisPoint} cx="185" cy="110" r="7" />
-          <text className={styles.levelingAxisLabel} x="195" y="100">
-            Phlebostatic axis
-          </text>
+
           <line className={styles.levelingMeasure} x1="465" x2="465" y1="110" y2={transducerY} />
           <line className={styles.levelingMeasureCap} x1="450" x2="480" y1="110" y2="110" />
           <line
@@ -236,14 +254,7 @@ export function LevelingVisual({ state }: { readonly state: HemodynamicSimulatio
           <g transform={`translate(480 ${transducerY - 18})`}>
             <rect className={styles.transducerBody} width="72" height="36" rx="8" />
             <circle className={styles.transducerPort} cx="12" cy="18" r="5" />
-            <text className={styles.transducerLabel} x="22" y="22">
-              transducer
-            </text>
           </g>
-          <text className={styles.levelingDeltaLabel} x="455" y={transducerY > 110 ? 148 : 72}>
-            {levelCm > 0 ? '+' : ''}
-            {levelCm.toFixed(0)} cm
-          </text>
         </svg>
 
         <div className={styles.levelingPressureComparison}>
@@ -267,11 +278,23 @@ export function LevelingVisual({ state }: { readonly state: HemodynamicSimulatio
           <dl>
             <div>
               <dt>Same system at reference level</dt>
-              <dd>{referenceMeasurements.mapMmHg.toFixed(0)} mmHg MAP</dd>
+              <dd>
+                {(channel === 'pac'
+                  ? referenceMeasurements.meanPapMmHg
+                  : referenceMeasurements.mapMmHg
+                ).toFixed(0)}{' '}
+                mmHg · model {channel === 'pac' ? 'mPAP' : 'MAP'} estimate
+              </dd>
             </div>
             <div>
-              <dt>Current displayed MAP</dt>
-              <dd>{state.measurements.mapMmHg.toFixed(0)} mmHg</dd>
+              <dt>Current model {channel === 'pac' ? 'mPAP' : 'MAP'} estimate</dt>
+              <dd>
+                {(channel === 'pac'
+                  ? state.measurements.meanPapMmHg
+                  : state.measurements.mapMmHg
+                ).toFixed(0)}{' '}
+                mmHg
+              </dd>
             </div>
             <div>
               <dt>Direction</dt>
@@ -281,6 +304,12 @@ export function LevelingVisual({ state }: { readonly state: HemodynamicSimulatio
         </div>
       </div>
 
+      <p className={styles.plotContext}>
+        Supine schematic · green dashed reference with dot: phlebostatic reference level; box at
+        right: pressure transducer, {levelPosition}. The symbol is a leveling reference, not an
+        anatomical placement guide. Diagram proportions do not establish a universal reference
+        depth.
+      </p>
       {!state.measurementSystem.zeroed ? (
         <p className={styles.levelingBoundary} role="note">
           Zero is still required. This comparison isolates the modeled leveling contribution only.

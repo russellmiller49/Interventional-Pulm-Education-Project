@@ -17,9 +17,9 @@ export function IcuHemodynamicsPracticeLandingV2() {
   const { record } = useHemodynamicsSelfPacedRecord()
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Practice</p>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight">Eight preserved management cases</h1>
+      <h1 className="mt-2 text-3xl font-bold tracking-tight">Eight practice cases</h1>
       <p className="mt-3 max-w-3xl leading-7 text-muted-foreground">
         Each case opens one focused simulation workspace. Act in any order, watch the modeled
         consequence of each action, ask for help at any point, and open the teaching debrief
@@ -59,6 +59,6 @@ export function IcuHemodynamicsPracticeLandingV2() {
           )
         })}
       </ol>
-    </main>
+    </div>
   )
 }

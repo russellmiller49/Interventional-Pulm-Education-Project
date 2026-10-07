@@ -3,8 +3,10 @@
 import { useId } from 'react'
 
 import { CARDIAC_PHASE, ecgShapeMv } from '../engine/waveformMorphology'
+import { RIGHT_ATRIAL_C_WAVE_BASE_PHASE } from '../engine/monitorDisplay'
 import { applyPressureArtifact } from '../engine/waveformArtifacts'
 import { waveformValueAt, type WaveformAtlasEntry } from '../content/waveformAtlas'
+import { useScreenSpacePlot } from './useScreenSpacePlot'
 import styles from './icu-hemodynamics.module.css'
 
 const VIEW_WIDTH = 660
@@ -131,7 +133,7 @@ const ECG_LANDMARKS: readonly {
 export function WaveformAtlasFigure({
   entry,
   beats = 3,
-  showEcg = true,
+  showEcg = entry.id !== 'ra-cannon-a-wave' && entry.id !== 'ra-atrial-fibrillation',
   annotated = true,
   compact = false,
   readable = false,
@@ -145,10 +147,10 @@ export function WaveformAtlasFigure({
 }: WaveformAtlasFigureProps) {
   const gradientId = useId()
   const clipId = useId()
-  const viewWidth = readable ? 360 : VIEW_WIDTH
+  const { ref: plotRef, width: viewWidth } = useScreenSpacePlot(readable ? 360 : VIEW_WIDTH)
   const plotRight = viewWidth - (VIEW_WIDTH - PLOT_RIGHT)
   const scaleMax = fault?.scaleMaxMmHg ?? scaleMaxMmHg ?? entry.scaleMaxMmHg
-  const viewHeight = respiration ? VIEW_HEIGHT_WITH_RESPIRATION : VIEW_HEIGHT
+  const viewHeight = (respiration ? VIEW_HEIGHT_WITH_RESPIRATION : VIEW_HEIGHT) + 32
   const envelope = traceEnvelope(entry)
 
   /**
@@ -250,24 +252,18 @@ export function WaveformAtlasFigure({
           x,
           y: pressureToY(sampleAt(progress, annotation.phase), scaleMax),
           labelY: 0,
+          number: 0,
         }
       })
       // Do not pin an off-axis landmark to the boundary and imply it is a measured peak there.
       .filter(({ y }) => y >= TRACE_TOP && y <= TRACE_BOTTOM)
       .sort((left, right) => left.x - right.x)
 
-    // Long labels on neighbouring landmarks would otherwise overlap, so each label that lands
-    // too close to the previous one on the same side is pushed a row further out.
-    const lastRowByPlacement = new Map<string, { x: number; row: number }>()
-    for (const item of placed) {
-      const { placement } = item.annotation
-      const previous = lastRowByPlacement.get(placement)
-      const crowded = previous !== undefined && item.x - previous.x < 150
-      const row = crowded ? previous.row + 1 : 0
-      lastRowByPlacement.set(placement, { x: item.x, row })
-      const base = placement === 'above' ? -16 : 22
-      const step = placement === 'above' ? -15 : 15
-      item.labelY = Math.max(14, Math.min(VIEW_HEIGHT - 8, item.y + base + row * step))
+    // Words live in reflowing HTML tracks beneath the plot. Numbered leader endpoints
+    // occupy a separate gutter, so no font measurement or label can cover a pressure feature.
+    for (const [index, item] of placed.entries()) {
+      item.labelY = viewHeight - 8
+      Object.assign(item, { number: index + 1 })
     }
     return placed
   })()
@@ -282,6 +278,14 @@ export function WaveformAtlasFigure({
       ? 'end expiration'
       : 'reading point')
 
+  const cBaseFraction = (annotationBeat + RIGHT_ATRIAL_C_WAVE_BASE_PHASE) / beats
+  const cBaseY = pressureToY(sampleAt(cBaseFraction, RIGHT_ATRIAL_C_WAVE_BASE_PHASE), scaleMax)
+  const showCBase =
+    entry.id === 'ra-normal' &&
+    Boolean(respiration) &&
+    cBaseY >= TRACE_TOP &&
+    cBaseY <= TRACE_BOTTOM
+
   const rangeNotice = trace.exceedsScale
     ? `Trace exceeds the displayed 0–${scaleMax} mmHg axis; out-of-range portions are clipped and their landmarks are not shown. Sampled pressures are unchanged.`
     : ''
@@ -294,7 +298,8 @@ export function WaveformAtlasFigure({
     } ${entry.annotations
       .map((annotation) => `${annotation.label}: ${annotation.description}`)
       .join(' ')}`
-  const description = rangeNotice ? `${baseDescription} ${rangeNotice}` : baseDescription
+  const description = baseDescription
+  const noticeId = `${clipId}-notice`
 
   return (
     <figure
@@ -311,9 +316,11 @@ export function WaveformAtlasFigure({
       </figcaption>
 
       <svg
-        viewBox={`0 0 ${viewWidth} ${viewHeight}`}
+        ref={plotRef}
+        viewBox={`0 ${showEcg ? -20 : 50} ${viewWidth} ${viewHeight + (showEcg ? 20 : -50)}`}
         role="img"
         aria-label={description}
+        aria-describedby={rangeNotice ? noticeId : undefined}
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
@@ -342,23 +349,18 @@ export function WaveformAtlasFigure({
             </g>
           )
         })}
-        <text className={styles.atlasAxisUnit} x={PLOT_LEFT - 10} y={TRACE_TOP - 14}>
-          mmHg
-        </text>
 
         {showEcg ? (
           <>
             <path className={styles.atlasEcgTrace} d={ecgPath} />
-            <text className={styles.atlasLaneLabel} x={PLOT_LEFT - 10} y={ECG_BOTTOM - 8}>
-              ECG
-            </text>
+
             {ecgLandmarks
               ? ECG_LANDMARKS.map((landmark) => {
                   const x = phaseToX(landmark.phase, annotationBeat, beats, plotRight)
                   return (
                     <g key={landmark.id} className={styles.atlasEcgLandmark}>
                       <line x1={x} x2={x} y1={ECG_TOP - 2} y2={TRACE_BOTTOM} />
-                      <text x={x} y={ECG_TOP - 4} textAnchor="middle">
+                      <text x={x} y={ECG_TOP + 3} textAnchor="middle">
                         {landmark.label}
                       </text>
                     </g>
@@ -376,38 +378,75 @@ export function WaveformAtlasFigure({
         />
         <path className={styles.atlasTrace} d={tracePath} clipPath={`url(#${clipId})`} />
 
-        {placedAnnotations.map(({ annotation, x, y, labelY }) => (
-          <g key={annotation.id} className={styles.atlasAnnotation}>
-            <line x1={x} x2={x} y1={y} y2={labelY + (annotation.placement === 'above' ? 6 : -12)} />
+        {placedAnnotations.map(({ annotation, x, y, labelY, number }, index) => (
+          <g
+            key={annotation.id}
+            className={styles.atlasAnnotation}
+            data-annotation-label={annotation.label}
+          >
+            <path
+              data-annotation-leader
+              d={`M ${x} ${y} L ${x} ${TRACE_BOTTOM + 8} L ${PLOT_LEFT + ((index + 0.5) / placedAnnotations.length) * (plotRight - PLOT_LEFT)} ${labelY - 12}`}
+            />
             <circle cx={x} cy={y} r="3.4" />
-            <text x={x} y={labelY} textAnchor="middle">
-              {annotation.label}
+            <text
+              x={PLOT_LEFT + ((index + 0.5) / placedAnnotations.length) * (plotRight - PLOT_LEFT)}
+              y={labelY}
+              textAnchor="middle"
+            >
+              {number}
             </text>
           </g>
         ))}
 
+        {showCBase ? (
+          <circle
+            data-ra-c-base-marker
+            cx={stripFractionToX(cBaseFraction, plotRight)}
+            cy={cBaseY}
+            r="5"
+            fill="white"
+            stroke="#75420c"
+            strokeWidth="2"
+          />
+        ) : null}
+
         {respiration && readingX !== null ? (
           <>
             <path className={styles.atlasRespirationTrace} d={respirationPath} />
-            <text
-              className={styles.atlasLaneLabel}
-              x={PLOT_LEFT - 10}
-              y={(RESPIRATION_TOP + RESPIRATION_BOTTOM) / 2 + 4}
-            >
-              RESP
-            </text>
+
             <g className={styles.atlasReadMarker}>
               <line x1={readingX} x2={readingX} y1={TRACE_TOP - 4} y2={RESPIRATION_BOTTOM} />
-              <text x={readingX} y={RESPIRATION_BOTTOM + 12} textAnchor="middle">
-                {readingLabel}
-              </text>
             </g>
           </>
         ) : null}
       </svg>
 
+      <p className={styles.plotContext}>
+        {showEcg ? 'ECG timing above · ' : ''}Pressure axis 0–{scaleMax} mmHg
+        {respiration ? ' · RESP below: modeled respiratory phase' : ''}.
+      </p>
+      {placedAnnotations.length ? (
+        <ol className={styles.annotationTracks} aria-label="Waveform callouts">
+          {placedAnnotations.map(({ annotation, number }) => (
+            <li key={annotation.id}>
+              <strong>
+                {number}. {annotation.label}
+              </strong>
+            </li>
+          ))}
+        </ol>
+      ) : null}
+      {respiration ? (
+        <p className={styles.readingCaption}>
+          {readingLabel} · vertical dashed marker on the respiratory lane.
+          {showCBase
+            ? ' Open circle: c-wave base, the cardiac timing guide. Read CVP at this cardiac phase within an end-expiratory window; the two guides alone do not establish a valid acquisition.'
+            : ''}
+        </p>
+      ) : null}
       {rangeNotice ? (
-        <p className={styles.paneCaveat} data-waveform-range-note>
+        <p id={noticeId} className={styles.paneCaveat} data-waveform-range-note>
           {rangeNotice}
         </p>
       ) : null}

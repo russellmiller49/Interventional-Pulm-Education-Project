@@ -502,7 +502,7 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
     insertionDepth: null,
     scaleMaxMmHg: 30,
     summary:
-      'A tall systolic c-v wave that obliterates the x descent, giving the right atrial tracing a ventricularized appearance.',
+      'Clinical mechanism: systolic regurgitation may blunt or reverse the x descent. This authored schematic retains a residual systolic dip and separate peaks; it does not demonstrate complete c-v fusion or complete loss of the x descent.',
     trace: {
       kind: 'atrial',
       meanMmHg: 14,
@@ -518,24 +518,24 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
     annotations: [
       {
         id: 'cv',
-        label: 'c-v',
+        label: 'systolic wave upslope',
         phase: CARDIAC_PHASE.atrialVWave - 0.06,
         placement: 'above',
         description:
-          'Regurgitant flow into the lower-pressure atrium during systole fuses the c and v waves into one broad, tall systolic wave.',
+          'The marker points to the upslope of the large systolic wave in this schematic. Complete fusion of the c and v waves is not modeled here.',
       },
       {
         id: 'x',
-        label: 'x lost',
+        label: 'residual systolic dip',
         phase: CARDIAC_PHASE.atrialXDescent,
         placement: 'below',
         description:
-          'The systolic regurgitant wave obliterates the x descent. Its absence is the diagnostic clue.',
+          'A residual dip is visible at this coordinate in the current schematic. It must not be read as a demonstration that the x descent is absent.',
       },
     ],
     recognitionCues: [
       'Broad, tall systolic wave that makes the atrial tracing look ventricular.',
-      'The x descent is gone.',
+      'The clinical mechanism can blunt or reverse the x descent; the residual dip in this schematic is a model limitation.',
       'Mean right atrial pressure is raised by the regurgitant wave, so it overestimates true right ventricular filling pressure.',
     ],
     pitfall:
@@ -552,7 +552,7 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
     insertionDepth: null,
     scaleMaxMmHg: 30,
     summary:
-      'Atrial contraction against a closed tricuspid valve, producing intermittent tall, narrow a waves.',
+      'Clinical mechanism: atrial contraction against a closed tricuspid valve produces tall, narrow a waves. This repeated pressure schematic does not model their intermittency, AV dissociation or a rhythm-specific ECG.',
     trace: {
       kind: 'atrial',
       meanMmHg: 8,
@@ -578,7 +578,7 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
     recognitionCues: [
       'Tall, narrow atrial waves that dwarf the rest of the tracing.',
       'Seen whenever atrioventricular dissociation is present — junctional rhythm, complete heart block, ventricular pacing.',
-      'They appear at irregular intervals relative to the QRS, because they occur only when a dissociated atrial contraction happens to land against a closed valve.',
+      'Clinically, they appear when a dissociated atrial contraction occurs against a closed valve. Their variable relationship to the QRS is not represented by this repeated pressure schematic.',
       'Cannon waves are larger when the atrium is poorly compliant.',
     ],
     pitfall:
@@ -595,7 +595,7 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
     insertionDepth: null,
     scaleMaxMmHg: 20,
     summary:
-      'Loss of the a wave with a prominent c wave. The x descent persists even though organized atrial contraction has been lost.',
+      'Loss of the a wave with a prominent c wave. The x descent persists even though organized atrial contraction has been lost. This pressure schematic does not model irregular RR intervals or a rhythm-specific ECG.',
     trace: {
       kind: 'atrial',
       meanMmHg: 6,
@@ -635,9 +635,9 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
       },
     ],
     recognitionCues: [
-      'No a wave, and no P wave on the accompanying ECG.',
+      'No a wave. Confirm the absence of organized P waves on a separate ECG; this schematic has no rhythm-specific ECG.',
       'Prominent c wave.',
-      'Irregular R-R intervals vary ventricular filling beat to beat, so systolic peaks vary too — a pattern that is easily misread as pulsus paradoxus.',
+      'Clinically, irregular RR intervals vary ventricular filling and systolic peaks beat to beat. This repeated pressure schematic does not model that variability.',
       'Because gradients vary with every beat, valve-area calculations in atrial fibrillation require averaging at least 10 consecutive beats.',
     ],
     pitfall:

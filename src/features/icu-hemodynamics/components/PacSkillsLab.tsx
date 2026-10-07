@@ -344,8 +344,8 @@ export function PacSkillsLab({
             <div className={styles.trialStack} aria-label="Thermodilution trials">
               {state.thermodilutionTrials.length === 0 ? (
                 <p className={styles.thermoTrialWithheld}>
-                  No acquisition yet. Say what an acceptable curve should look like for this patient
-                  before you generate one.
+                  No acquisition yet. Review the expected curve and technique before generating a
+                  trial.
                 </p>
               ) : (
                 groups.flatMap((group) => [

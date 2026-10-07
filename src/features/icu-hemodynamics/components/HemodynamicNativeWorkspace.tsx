@@ -41,44 +41,47 @@ export function HemodynamicNativeWorkspace({
           dispatch={dispatch}
           chamberLabel={revealModel ? 'shown' : 'withheld'}
           showControls={false}
+          inspectionEnabled={interactive}
         />
         {task}
       </div>
-      {interactive || state.catheter.balloonInflated || state.catheter.floatBalloonInflated ? (
-        <div className={flowStyles.toolGroups} aria-label="Measurement tools">
-          {showPressureSystem ? (
-            <details>
-              <summary>Pressure measurement · level, zero and response</summary>
-              <PacSkillsLab
-                state={state}
-                dispatch={dispatch}
-                focus="pressure-system"
-                pressureChallengeMode={pressureChallengeMode}
-              />
-            </details>
-          ) : null}
-          <details
-            open={
-              state.catheter.balloonInflated || state.catheter.floatBalloonInflated || undefined
-            }
-          >
-            <summary>Catheter actions and acquisition</summary>
-            <PacActionDock state={state} dispatch={dispatch} maskPosition={!revealModel} />
+      <div
+        className={flowStyles.toolGroups}
+        aria-label="Measurement tools"
+        hidden={
+          !interactive && !state.catheter.balloonInflated && !state.catheter.floatBalloonInflated
+        }
+      >
+        {showPressureSystem ? (
+          <details>
+            <summary>Pressure measurement · level, zero and response</summary>
+            <PacSkillsLab
+              state={state}
+              dispatch={dispatch}
+              focus="pressure-system"
+              pressureChallengeMode={pressureChallengeMode}
+            />
           </details>
-          {showThermodilution ? (
-            <details id="hemodynamic-native-thermodilution">
-              <summary>Cardiac-output trials</summary>
-              <PacSkillsLab state={state} dispatch={dispatch} focus="thermodilution" />
-            </details>
-          ) : null}
-          {showDerived ? (
-            <details>
-              <summary>Calculated results and source validity</summary>
-              <FormulaDrawer state={state} dispatch={dispatch} observedInputsOnly />
-            </details>
-          ) : null}
-        </div>
-      ) : null}
+        ) : null}
+        <details
+          open={state.catheter.balloonInflated || state.catheter.floatBalloonInflated || undefined}
+        >
+          <summary>Catheter actions and acquisition</summary>
+          <PacActionDock state={state} dispatch={dispatch} maskPosition={!revealModel} />
+        </details>
+        {showThermodilution ? (
+          <details id="hemodynamic-native-thermodilution">
+            <summary>Cardiac-output trials</summary>
+            <PacSkillsLab state={state} dispatch={dispatch} focus="thermodilution" />
+          </details>
+        ) : null}
+        {showDerived ? (
+          <details>
+            <summary>Calculated results and source validity</summary>
+            <FormulaDrawer state={state} dispatch={dispatch} observedInputsOnly />
+          </details>
+        ) : null}
+      </div>
       {revealModel ? (
         <details>
           <summary>Model reference: internal physiology and anatomy</summary>

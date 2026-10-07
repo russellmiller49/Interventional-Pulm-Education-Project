@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, type Dispatch } from 'react'
+import { useMemo, useState, type Dispatch } from 'react'
 
 import type {
   HemodynamicAction,
@@ -14,6 +14,7 @@ import {
   storedWedgeProvenance,
   thermodilutionSeriesView,
 } from '../engine/measurementProvenance'
+import { displayNumber } from './displayNumber'
 import { CARDIAC_PHASE } from '../engine/waveformMorphology'
 import { WaveformStrip, type WaveformLandmark, type WaveformPhaseCursor } from './WaveformStrip'
 import styles from './icu-hemodynamics.module.css'
@@ -33,6 +34,12 @@ interface BedsideMonitorProps {
   showControls?: boolean
   /** A focused channel uses the same samples and readout calculation as the full monitor. */
   focus?: 'all' | 'pac' | 'arterial'
+  /** View-only inspection controls; the enclosing task still owns the engine. */
+  inspectionEnabled?: boolean
+  /** Fixed compatible axis for an isolated leveling demonstration. */
+  pacScaleMaximum?: number
+  /** Erase earlier sweep data after a display setting changes; never join the two settings. */
+  displaySettingKey?: string
 }
 
 interface PacTraceConfiguration {
@@ -97,7 +104,7 @@ const ARTERIAL_LANDMARKS: readonly WaveformLandmark[] = [
 ]
 
 function value(value: number | null, digits = 0): string {
-  return value === null || !Number.isFinite(value) ? '—' : value.toFixed(digits)
+  return displayNumber(value, digits)
 }
 
 /** How the stored wedge was read, and whether it still describes this patient. */
@@ -124,7 +131,57 @@ export function BedsideMonitor({
   chamberLabel = 'shown',
   showControls = true,
   focus = 'all',
+  inspectionEnabled = false,
+  pacScaleMaximum,
+  displaySettingKey,
 }: BedsideMonitorProps) {
+  const [zoomBeat, setZoomBeat] = useState(false)
+  const [displayEpoch, setDisplayEpoch] = useState({ key: displaySettingKey, time: -Infinity })
+  if (displayEpoch.key !== displaySettingKey) {
+    setDisplayEpoch({ key: displaySettingKey, time: state.timeSeconds })
+  }
+  const viewSamples = displaySettingKey
+    ? state.waveforms.filter((sample) => sample.time > displayEpoch.time)
+    : state.waveforms
+  const viewSweep =
+    state.frozen && zoomBeat ? 60 / state.measurements.heartRateBpm : state.sweepSeconds
+  const inspection = (
+    <div className={styles.traceInspection} data-trace-inspection>
+      <p role="status">
+        {state.frozen ? 'Frozen trace' : 'Live trace'} · latest retained sample{' '}
+        {(state.waveforms.at(-1)?.time ?? 0).toFixed(2)} s · model time{' '}
+        {state.timeSeconds.toFixed(2)} s.
+        {state.frozen
+          ? ' The model continues; trace readouts refer to retained data. Model-only references can change.'
+          : ''}
+        {displaySettingKey && Number.isFinite(displayEpoch.time)
+          ? ` Display setting changed at ${displayEpoch.time.toFixed(2)} s; earlier sweep erased. Patient physiology is unchanged.`
+          : ''}
+      </p>
+      {inspectionEnabled ? (
+        <>
+          <button type="button" onClick={() => dispatch({ type: 'TOGGLE_FREEZE' })}>
+            {state.frozen ? 'Resume trace' : 'Freeze trace'}
+          </button>
+          <button
+            type="button"
+            disabled={!state.frozen}
+            aria-pressed={zoomBeat}
+            onClick={() => setZoomBeat(!zoomBeat)}
+          >
+            View {zoomBeat ? 'full sweep' : 'one retained beat'}
+          </button>
+          <span>
+            {state.frozen && zoomBeat
+              ? 'One-beat view of retained samples'
+              : `${state.sweepSeconds} s sweep`}{' '}
+            · view only; readouts still use the full retained sweep. Samples and stored measurements
+            unchanged.
+          </span>
+        </>
+      ) : null}
+    </div>
+  )
   const measurements = state.measurements
   const withheld = chamberLabel === 'withheld'
   /*
@@ -170,7 +227,10 @@ export function BedsideMonitor({
         state.catheter.position === 'pa' ||
         state.catheter.position === 'wedge'),
   )
-  const cvpScaleMaximum = lowPressureScaleMaximum(measurements.rapMmHg + 10)
+  const cvpScaleMaximum = Math.max(
+    lowPressureScaleMaximum(measurements.rapMmHg + 10),
+    Math.ceil(Math.max(...state.waveforms.map((sample) => sample.cvpMmHg), 0) / 20) * 20,
+  )
   const falseWedge = state.measurementSystem.artifact === 'false-wedge'
   // What the simulation itself is restricting, named as a simulation notice rather than smuggled
   // into the device alarm bar (report L9-02).
@@ -385,26 +445,27 @@ export function BedsideMonitor({
             breaths/min · PEEP {state.parameters.peepCmH2O} cm H₂O
           </small>
         </header>
+        {inspection}
         <WaveformStrip
-          samples={state.waveforms}
+          samples={viewSamples}
           field="ecgMv"
           label="ECG II"
           unit="mV"
           minimum={-0.3}
           maximum={1.4}
           color="#61e294"
-          sweepSeconds={state.sweepSeconds}
+          sweepSeconds={viewSweep}
           readable
         />
         <WaveformStrip
-          samples={state.waveforms}
+          samples={viewSamples}
           field={arterial ? 'artMmHg' : pacTrace.field}
           label={arterial ? 'ART' : pacTrace.label}
           unit="mmHg"
           minimum={arterial ? 0 : pacTrace.minimum}
-          maximum={arterial ? state.pressureScaleMmHg : pacTrace.maximum}
+          maximum={arterial ? state.pressureScaleMmHg : (pacScaleMaximum ?? pacTrace.maximum)}
           color={arterial ? '#ff647c' : pacTrace.color}
-          sweepSeconds={state.sweepSeconds}
+          sweepSeconds={viewSweep}
           showScale
           readable
           heartRateBpm={measurements.heartRateBpm}
@@ -469,28 +530,29 @@ export function BedsideMonitor({
         )}
       </div>
 
+      {inspection}
       <div className={styles.monitorBody}>
         <div className={styles.waveformStack}>
           <WaveformStrip
-            samples={state.waveforms}
+            samples={viewSamples}
             field="ecgMv"
             label="ECG II"
             unit="mV"
             minimum={-0.3}
             maximum={1.4}
             color="#61e294"
-            sweepSeconds={state.sweepSeconds}
+            sweepSeconds={viewSweep}
             readable
           />
           <WaveformStrip
-            samples={state.waveforms}
+            samples={viewSamples}
             field="artMmHg"
             label="ART"
             unit="mmHg"
             minimum={0}
             maximum={state.pressureScaleMmHg}
             color="#ff647c"
-            sweepSeconds={state.sweepSeconds}
+            sweepSeconds={viewSweep}
             readable
             showScale
             heartRateBpm={measurements.heartRateBpm}
@@ -500,14 +562,14 @@ export function BedsideMonitor({
             phaseCursor={endExpirationMarker}
           />
           <WaveformStrip
-            samples={state.waveforms}
+            samples={viewSamples}
             field="cvpMmHg"
             label="CVP"
             unit="mmHg"
             minimum={-5}
             maximum={cvpScaleMaximum}
             color="#55c6ff"
-            sweepSeconds={state.sweepSeconds}
+            sweepSeconds={viewSweep}
             readable
             showScale
             heartRateBpm={measurements.heartRateBpm}
@@ -515,14 +577,14 @@ export function BedsideMonitor({
             phaseCursor={cvpMeasurementCursor}
           />
           <WaveformStrip
-            samples={state.waveforms}
+            samples={viewSamples}
             field={pacTrace.field}
             label={pacTrace.label}
             unit="mmHg"
             minimum={pacTrace.minimum}
-            maximum={pacTrace.maximum}
+            maximum={pacScaleMaximum ?? pacTrace.maximum}
             color={pacTrace.color}
-            sweepSeconds={state.sweepSeconds}
+            sweepSeconds={viewSweep}
             readable
             showScale
             heartRateBpm={measurements.heartRateBpm}
@@ -540,14 +602,14 @@ export function BedsideMonitor({
             }
           />
           <WaveformStrip
-            samples={state.waveforms}
+            samples={viewSamples}
             field="pleth"
             label="PLETH"
             unit="relative"
             minimum={0}
             maximum={1.2}
             color="#6ee7e0"
-            sweepSeconds={state.sweepSeconds}
+            sweepSeconds={viewSweep}
             readable
           />
         </div>
@@ -612,7 +674,11 @@ export function BedsideMonitor({
             <small>
               {mixedVenousAvailable
                 ? '% · distal PA sample · usual reference 65–75%'
-                : 'not available before PA'}
+                : state.catheter.targetPosition !== null
+                  ? 'unavailable while the tip is moving'
+                  : state.catheter.position === 'wedge' || state.catheter.balloonInflated
+                    ? 'unavailable during occlusion; restore an unoccluded PA position'
+                    : 'unavailable: an unoccluded distal PA position is required'}
             </small>
           </div>
         </aside>

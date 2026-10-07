@@ -355,3 +355,16 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+.readableKey {
+  margin: 0.7rem 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--stage-ink, #234c48);
+  overflow-wrap: anywhere;
+}
+
+.answer {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

@@ -236,7 +236,7 @@ export const cardiacOutputAcquisitionParameters: readonly CardiacOutputAcquisiti
       whyThisClassification:
         'These are the bounds at which this module’s own model raises a technique alert. No registered record’s claim states an injection-duration requirement.',
       learnerFacingQualifier:
-        'The window this simulation flags outside of. The teaching claim is that a prolonged or interrupted bolus broadens the curve, not that a particular number of seconds is required.',
+        'Values outside this model window trigger a technical-quality flag. The teaching claim is that a prolonged or interrupted bolus broadens the curve, not that a particular number of seconds is required.',
       claimTopic: 'thermodilution-technical-validation',
       evidenceIds: ['icu-hemodynamics-model-v1'],
     },
