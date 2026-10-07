@@ -137,6 +137,7 @@ export const prepareLessons: Lesson[] = [
     concept: 'Prepare the patient, team, and equipment',
     paragraphs: [
       'Review cardiopulmonary status, airway access, allergies, bleeding history, antithrombotic therapy, relevant imaging, fasting status, and consent. Antithrombotic interruption and laboratory testing depend on the drug, indication, patient, and local guidance; avoid a universal hold interval.',
+      'Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval.',
       'Coordinate sedation or anesthesia, oxygenation and ventilation, monitoring, rescue capability, and recovery. The EBUS scope occupies more airway space than a small diagnostic bronchoscope. An airway conduit must accommodate the intended scope without compromising the ventilation plan.',
       'Confirm scope and processor function, the compatible needle and balloon if used, specimen supplies, and the receiving laboratory. Agree on the indication, intended stations, safety concerns, and stop conditions during the team pause.',
     ],
@@ -229,6 +230,10 @@ export const prepareLessons: Lesson[] = [
     paragraphs: [
       'The bronchoscopic view locates the tip within the airway. The ultrasound sector displays tissue beyond the wall along the transducer’s plane. These are related views with different perspectives; neither alone supplies a complete anatomical map.',
       'Scope rotation changes the direction of the sector. Tip flexion and advancement also change the relationship to the wall. In this activity, change rotation alone and compare the ultrasound with the Anatomy and Bronchoscopy views.',
+      'The ultrasound sector lies in a plane that contains the scope’s long axis. In this model, image right is toward the patient’s head; check the orientation convention of the processor you use.',
+      'In this model, 0° is the preset’s authored depth axis; it is not a universal anatomical direction.',
+      'In this model the target stays visible over a wide rotation range because the modeled node is large and close to the airway. Do not read the range as the rotation a real node tolerates.',
+      'Measurements in this simulator are shown in millimeters for teaching and relative comparison. They reflect the model geometry and should not be interpreted as validated measurements of a real patient or exact lymph-node dimensions.',
       'The calibrated station start assists positioning. Finding a structure from that start is a scan-plane exercise, not a demonstration of independent airway navigation.',
     ],
     checklist: [
@@ -313,6 +318,6 @@ export const prepareLessons: Lesson[] = [
     ],
     sources: ['ics2023', 'simulation'],
     boundary:
-      'One calibrated anatomy model is used. Scope assists, limited degrees of freedom, and synthetic echoes do not reproduce hands-on navigation.',
+      'One calibrated anatomy model is used. Scope assists, limited degrees of freedom, and synthetic echoes do not reproduce hands-on navigation. Measurements in this simulator are shown in millimeters for teaching and relative comparison. They reflect the model geometry and should not be interpreted as validated measurements of a real patient or exact lymph-node dimensions.',
   },
 ]
