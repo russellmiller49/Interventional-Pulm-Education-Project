@@ -31,6 +31,8 @@ select {
   border: 1px solid #36515a;
   border-radius: 10px;
   scroll-margin-top: 64px;
+  /* A stage darker than the panel around it, so the model stands off its background. */
+  background: radial-gradient(circle at 50% 42%, #14313b 0%, #071920 62%, #040f14 100%);
 }
 .linked-model-tooltip {
   position: absolute;
@@ -138,31 +140,36 @@ select {
 /* Model-frame compass: a screen-space overlay, never clipped, never under a marker. */
 .linked-compass {
   position: absolute;
-  left: 6px;
-  bottom: 6px;
-  width: 80px;
-  height: 96px;
+  left: 8px;
+  bottom: 8px;
+  width: 88px;
+  height: 88px;
   z-index: 2;
   pointer-events: none;
-  color: #edf6f5;
-  font: 700 11px/1 system-ui, sans-serif;
+  border-radius: 50%;
+  background: rgba(4, 16, 21, 0.55);
 }
-.linked-compass span {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  text-shadow:
-    0 0 3px #081c22,
-    0 0 3px #081c22;
+.linked-compass svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
-.linked-compass small {
-  position: absolute;
-  left: 40px;
-  bottom: 0;
-  transform: translateX(-50%);
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  opacity: 0.85;
+.linked-compass line {
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.linked-compass line[data-axis='x'] {
+  stroke: #f08a7e;
+}
+.linked-compass line[data-axis='y'] {
+  stroke: #8fdc8a;
+}
+.linked-compass line[data-axis='z'] {
+  stroke: #7fb4f5;
+}
+.linked-compass text {
+  fill: #f2f8f8;
+  font: 700 12px/1 system-ui, sans-serif;
 }
 .linked-landmark-controls {
   display: flex;

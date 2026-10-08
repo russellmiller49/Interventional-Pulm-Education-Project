@@ -37,6 +37,7 @@ import {
 import { compassDirections, fitSphereDistance } from './observerCamera'
 import { attachObserverControls, OBSERVER_CAPTION } from './observerControls'
 import { describeLinkedSweep, SWEEP_TOLERANCE_NOTE } from './sweepStatus'
+import { applyStageLighting, installShell, setShell, STAGE_PALETTE } from './stageLook'
 
 type Mode = 'scope' | 'anatomy' | 'section'
 type Controller = {
@@ -98,8 +99,8 @@ const SHORT_NAMES: Record<string, string> = {
  * is teal; the arrow keeps gold and the fan keeps cyan. Shape carries the state too: a selected
  * marker is filled and pressed, a hovered one is ringed.
  */
-const SELECT_EMISSIVE = '#5a2d86'
-const HOVER_EMISSIVE = '#1e6360'
+const SELECT_EMISSIVE = STAGE_PALETTE.selection
+const HOVER_EMISSIVE = STAGE_PALETTE.hover
 const SELECT_MARKER = '#d9a5ff'
 
 export function LinkedModelView(props: Props) {
@@ -124,9 +125,9 @@ export function LinkedModelView(props: Props) {
   const [landmarkFeedback, setLandmarkFeedback] = useState('')
   const [selectedPoint, setSelectedPoint] = useState<THREE.Vector3 | null>(null)
   const regions = false
-  const [isolate, setIsolate] = useState(
-    !!config.demonstration && config.linkedLesson !== 'acoustic-contact',
-  )
+  // A demonstration opens with the scope, the scan plane and the target in frame. It used to open
+  // isolated on one structure, with no scope or fan, so nothing moved when the example rotated.
+  const [isolate, setIsolate] = useState(false)
   // Presentation state only: which marker is hovered or focused, whether the legend shows names,
   // whether the anatomy camera frames the whole model or the landmark region, and whether the
   // canvas currently owns the wheel. None of it reaches the evidence.
@@ -245,18 +246,17 @@ export function LinkedModelView(props: Props) {
     if (!host.current || !models) return
     const element = host.current
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color('#0b242e')
     const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 6000)
     let renderer: THREE.WebGLRenderer
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     } catch {
       setError('WebGL could not open the linked model view. Retry the workbench.')
       callback.current({ assetsReady: false })
       return
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.7))
-    renderer.outputColorSpace = THREE.SRGBColorSpace
+    renderer.setClearColor(0x000000, 0)
+    const disposeLighting = applyStageLighting(renderer, scene, camera)
     const contextLost = (event: Event) => {
       event.preventDefault()
       stopHover()
@@ -287,6 +287,11 @@ export function LinkedModelView(props: Props) {
         const cloned = (Array.isArray(object.material) ? object.material : [object.material]).map(
           (material) => {
             const copy = material.clone()
+            if (root === anatomy && copy instanceof THREE.MeshStandardMaterial) {
+              copy.roughness = 0.58
+              copy.metalness = 0
+              installShell(copy)
+            }
             materials.push(copy)
             return copy
           },
@@ -296,22 +301,30 @@ export function LinkedModelView(props: Props) {
       })
       scene.add(root)
     })
-    scene.add(new THREE.HemisphereLight('#effaff', '#38505c', 2.5))
-    const light = new THREE.DirectionalLight('#fff0d6', 3)
-    light.position.set(-100, 1400, 500)
-    scene.add(light)
     const fanGeometry = new THREE.BufferGeometry()
     const fanMaterial = new THREE.MeshBasicMaterial({
-      color: '#65d8dd',
+      color: STAGE_PALETTE.scanPlane,
       transparent: true,
-      opacity: 0.23,
+      opacity: 0.3,
       side: THREE.DoubleSide,
       depthWrite: false,
+      toneMapped: false,
     })
     const fan = new THREE.Mesh(fanGeometry, fanMaterial)
     // Drawn after the example nodes so the plane is not hidden behind them (L3-11).
     fan.renderOrder = 5
     scene.add(fan)
+    // The plane's edge, drawn over everything: the same cyan frames the ultrasound pane.
+    const fanEdgeGeometry = new THREE.BufferGeometry()
+    const fanEdgeMaterial = new THREE.LineBasicMaterial({
+      color: STAGE_PALETTE.scanPlane,
+      depthTest: false,
+      transparent: true,
+      toneMapped: false,
+    })
+    const fanEdge = new THREE.LineLoop(fanEdgeGeometry, fanEdgeMaterial)
+    fanEdge.renderOrder = 6
+    scene.add(fanEdge)
     const optical = new THREE.ArrowHelper(
       new THREE.Vector3(0, 1, 0),
       new THREE.Vector3(),
@@ -339,28 +352,41 @@ export function LinkedModelView(props: Props) {
     compass.setAttribute('role', 'img')
     compass.setAttribute(
       'aria-label',
-      'Model frame compass: R right, L left, S superior, I inferior, A anterior, P posterior, in the model coordinate frame',
+      'Orientation of the model: R right, L left, S superior, I inferior, A anterior, P posterior',
     )
-    compass.title = 'Model coordinate frame — not a clinical image convention'
-    const compassLabels = new Map<string, HTMLSpanElement>()
+    const SVG_NS = 'http://www.w3.org/2000/svg'
+    const compassSvg = document.createElementNS(SVG_NS, 'svg')
+    compassSvg.setAttribute('viewBox', '0 0 88 88')
+    compassSvg.setAttribute('aria-hidden', 'true')
+    const compassParts = new Map<string, { line: SVGLineElement; text: SVGTextElement }>()
     for (const key of ['R', 'L', 'S', 'I', 'A', 'P']) {
-      const span = document.createElement('span')
-      span.textContent = key
-      compass.appendChild(span)
-      compassLabels.set(key, span)
+      const line = document.createElementNS(SVG_NS, 'line')
+      const text = document.createElementNS(SVG_NS, 'text')
+      line.setAttribute('x1', '44')
+      line.setAttribute('y1', '44')
+      line.dataset.axis = key === 'R' || key === 'L' ? 'x' : key === 'S' || key === 'I' ? 'y' : 'z'
+      text.textContent = key
+      text.setAttribute('text-anchor', 'middle')
+      text.setAttribute('dominant-baseline', 'central')
+      compassSvg.append(line, text)
+      compassParts.set(key, { line, text })
     }
-    const compassCaption = document.createElement('small')
-    compassCaption.textContent = 'model frame'
-    compass.appendChild(compassCaption)
+    compass.appendChild(compassSvg)
     element.appendChild(compass)
     const renderCompass = () => {
-      const radius = 27
+      const reach = 26
       for (const axis of compassDirections(camera)) {
-        const span = compassLabels.get(axis.key)!
-        span.style.left = `${40 + axis.dx * radius}px`
-        span.style.top = `${40 + axis.dy * radius}px`
-        span.style.opacity = String(0.45 + 0.55 * (0.5 + 0.5 * -axis.toward))
-        span.style.zIndex = axis.toward < 0 ? '2' : '1'
+        const part = compassParts.get(axis.key)!
+        const x = 44 + axis.dx * reach,
+          y = 44 + axis.dy * reach
+        part.line.setAttribute('x2', x.toFixed(1))
+        part.line.setAttribute('y2', y.toFixed(1))
+        part.text.setAttribute('x', (44 + axis.dx * (reach + 9)).toFixed(1))
+        part.text.setAttribute('y', (44 + axis.dy * (reach + 9)).toFixed(1))
+        // The arm pointing toward you is bright; the one pointing away is dimmed.
+        const near = String(0.35 + 0.65 * (0.5 + 0.5 * -axis.toward))
+        part.line.style.opacity = near
+        part.text.style.opacity = near
       }
     }
     // Discovery labels are local to the observer view and never supply activity evidence.
@@ -548,6 +574,23 @@ export function LinkedModelView(props: Props) {
       if (isolatedDemo) {
         const isolated = anatomy.getObjectByName(state.selection)
         if (isolated) box.expandByObject(isolated)
+      } else if (state.config.demonstration) {
+        // What a demonstration is about: the scope tip, the scan plane it casts, the target the
+        // plane is swept through, and the landmark the lesson starts from.
+        const cephalic = cephalicImageAxis(state.pose)
+        box.expandByPoint(state.pose.position)
+        for (const lateral of [-22, 0, 22])
+          box.expandByPoint(
+            state.pose.position
+              .clone()
+              .addScaledVector(state.pose.depthAxis, 36)
+              .addScaledVector(cephalic, lateral),
+          )
+        nodes.traverse((object) => {
+          if (object instanceof THREE.Mesh && object.visible) box.expandByObject(object)
+        })
+        const landmark = state.selection ? anatomy.getObjectByName(state.selection) : null
+        if (landmark instanceof THREE.Mesh) box.expandByPoint(surfaceAnchor(landmark, WHOLE_TARGET))
       } else {
         for (const candidate of state.unnamedCandidates) {
           const mesh = anatomy.getObjectByName(candidate.name)
@@ -565,7 +608,7 @@ export function LinkedModelView(props: Props) {
         orbit.update()
         return
       }
-      box.expandByScalar(isolatedDemo ? 6 : 10)
+      box.expandByScalar(isolatedDemo ? 6 : state.config.demonstration ? 16 : 10)
       frameBox(box, direction, up, isolatedDemo ? 1.1 : 0.9, 40)
     }
     let callouts: StructureCalloutHandle | undefined
@@ -592,6 +635,7 @@ export function LinkedModelView(props: Props) {
       aids.visible = !deviceView && state.regions && state.config.reveal
       scope.visible = deviceView || !state.isolate || state.config.locked
       fan.visible = deviceView || !state.isolate || state.config.locked
+      fanEdge.visible = fan.visible
       scope.matrixAutoUpdate = false
       scope.matrix
         .copy(teachingScopeMatrix(state.pose, deviceView))
@@ -616,7 +660,7 @@ export function LinkedModelView(props: Props) {
                 'left_subclavian_artery',
               ].includes(object.name)
         meshes.push(object)
-        object.renderOrder = selected ? 3 : 0
+        object.renderOrder = selected ? 3 : role === 'airway' ? 0 : 1
         const mats = (
           Array.isArray(object.material) ? object.material : [object.material]
         ) as THREE.MeshStandardMaterial[]
@@ -624,17 +668,22 @@ export function LinkedModelView(props: Props) {
           const vein = /vena|vein|azyg/.test(object.name)
           material.color.set(
             role === 'airway'
-              ? '#d5a49d'
+              ? STAGE_PALETTE.airway
               : role === 'esophagus'
-                ? '#be936f'
+                ? STAGE_PALETTE.esophagus
                 : vein
-                  ? '#719bdf'
-                  : '#d67672',
+                  ? STAGE_PALETTE.vein
+                  : STAGE_PALETTE.artery,
           )
-          material.transparent = true
-          material.opacity = selected ? 1 : hot ? 0.82 : role === 'airway' ? 0.48 : 0.38
-          material.depthWrite = selected
-          material.needsUpdate = true
+          /*
+           * Focus and context. The airway is the landmark every lesson reads from, so it is a
+           * solid surface, as is whatever is selected. Everything else is a shell: thin where it
+           * faces you, firm at its outline, so a vessel in front of the carina reads as a shape
+           * you can see through instead of a coloured haze.
+           */
+          if (selected || role === 'airway') setShell(material, 1)
+          else if (hot) setShell(material, 0.55, 0.95)
+          else setShell(material, 0.05, 0.7)
           material.emissive?.set(selected ? SELECT_EMISSIVE : hot ? HOVER_EMISSIVE : '#000000')
         })
       })
@@ -649,7 +698,7 @@ export function LinkedModelView(props: Props) {
             ? object.material
             : [object.material]) as THREE.MeshStandardMaterial[]
         ).forEach((material) => {
-          material.color.set('#c8bd79')
+          material.color.set(STAGE_PALETTE.node)
           material.transparent = false
           material.opacity = 1
           material.depthTest = false
@@ -732,6 +781,19 @@ export function LinkedModelView(props: Props) {
       }
       fanGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
       fanGeometry.computeBoundingSphere()
+      const edge: number[] = [...origin.toArray()]
+      for (let step = 0; step <= 30; step++) {
+        const theta = -half + (2 * half * step) / 30
+        edge.push(
+          ...origin
+            .clone()
+            .addScaledVector(state.pose.depthAxis, 40 * Math.cos(theta))
+            .addScaledVector(cephalic, 40 * Math.sin(theta))
+            .toArray(),
+        )
+      }
+      fanEdgeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(edge, 3))
+      fanEdgeGeometry.computeBoundingSphere()
       const ray = opticalRay(
         state.pose,
         resolveEndoscopeCameraCalibration(state.caseData.endoscope_camera),
@@ -856,6 +918,9 @@ export function LinkedModelView(props: Props) {
       materials.forEach((m) => m.dispose())
       fanGeometry.dispose()
       fanMaterial.dispose()
+      fanEdgeGeometry.dispose()
+      fanEdgeMaterial.dispose()
+      disposeLighting()
       marker.geometry.dispose()
       ;(marker.material as THREE.Material).dispose()
       optical.dispose()
@@ -958,8 +1023,8 @@ export function LinkedModelView(props: Props) {
         </div>
         <p className="guided-label">
           {mode === 'scope'
-            ? 'Cyan fan: ultrasound plane. Gold arrow: optical direction. Violet: your selected structure; teal: the structure under the pointer. Added mechanical parts are illustrative.'
-            : 'Anatomy and ultrasound share one scope pose; the scope tip and cyan fan are drawn where that pose places them. Example nodes remain visible through surrounding structures for orientation. Violet: your selected structure; teal: the structure under the pointer. The compass names the model frame.'}
+            ? 'Cyan fan: the ultrasound plane. Gold arrow: where the camera looks.'
+            : 'The cyan fan is the plane the ultrasound image shows. The airway is solid; vessels are outlined so you can see past them.'}
         </p>
         {config.linkedLesson === 'station-seven' && config.linkedVariant !== 'changed-window' && (
           <div className="guided-tabs" role="group" aria-label="Bronchial approach">
@@ -975,12 +1040,6 @@ export function LinkedModelView(props: Props) {
               </button>
             ))}
           </div>
-        )}
-        {config.demonstration && isolate && (
-          <p>
-            Start with the {LANDMARK_NAMES[selection] ?? 'selected structure'}.{' '}
-            <button onClick={() => setIsolate(false)}>Show neighboring anatomy</button>
-          </p>
         )}
         {error && (
           <div role="alert" className="guided-error">
@@ -1180,12 +1239,6 @@ export function LinkedModelView(props: Props) {
           </div>
           <p className="guided-label">Demonstration actions do not complete the activity.</p>
         </div>
-      )}
-      {!concealed && (
-        <p className="guided-label">
-          Model revision {models?.manifest.version ?? '…'} · New semantic divisions and device
-          additions await anatomical review.
-        </p>
       )}
     </section>
   )

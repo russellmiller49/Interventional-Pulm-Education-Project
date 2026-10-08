@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
+import { applyStageLighting, installShell, setShell, STAGE_PALETTE } from '../stageLook'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { simulatorCaseAssetUrl } from '../../features/simulator/paths'
@@ -108,9 +109,8 @@ export function ModelViewport({
     const el = host.current
     if (!el) return
     let disposed = false
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
-    renderer.setClearColor('#101e2c')
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    renderer.setClearColor(0x000000, 0)
     renderer.domElement.setAttribute(
       'aria-label',
       'Interactive 3D teaching model; drag to orbit the observer camera',
@@ -122,11 +122,8 @@ export function ModelViewport({
       dynamic = new THREE.Group()
     root.scale.setScalar(1000)
     scene.add(root, dynamic)
-    scene.add(new THREE.HemisphereLight(0xdcefff, 0x344154, 2.3))
-    const light = new THREE.DirectionalLight(0xffffff, 2.6)
-    light.position.set(60, 80, 120)
-    scene.add(light)
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 5000)
+    const disposeLighting = applyStageLighting(renderer, scene, camera)
     if (state.package !== 'routes') camera.up.set(0, -1, 0)
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = false
@@ -300,26 +297,31 @@ export function ModelViewport({
               routeSupported(s)
           if (id.startsWith('node_station_')) o.visible = id === routeDefinition(s)?.nodeId
           const mats = Array.isArray(o.material) ? o.material : [o.material]
+          // Focus and context, as in the linked view: the two lumens a route is read from are
+          // solid, the great vessels are outlines, and everything else is a faint shell.
+          const lumen = ['trachea', 'carina', 'left_main_bronchus', 'right_main_bronchus'].includes(
+            id,
+          )
+          const vessel = ['aorta', 'pulmonary_artery', 'azygous'].includes(id)
           for (const m of mats) {
-            if (!m.transparent) {
-              m.transparent = true
-              m.needsUpdate = true
-            }
-            m.opacity = id.startsWith('node_')
-              ? 0.95
-              : [
-                    'trachea',
-                    'carina',
-                    'left_main_bronchus',
-                    'right_main_bronchus',
-                    'esophagus',
-                    'aorta',
-                    'pulmonary_artery',
-                    'azygous',
-                  ].includes(id)
-                ? 0.32
-                : 0.07
-            m.depthWrite = false
+            if (!(m instanceof THREE.MeshStandardMaterial)) continue
+            installShell(m)
+            if (id.startsWith('node_')) {
+              // Drawn over the anatomy, as in the linked view: the target is never hidden.
+              m.color.set(STAGE_PALETTE.node)
+              m.depthTest = false
+              o.renderOrder = 4
+              setShell(m, 1)
+            } else if (lumen) {
+              m.color.set(STAGE_PALETTE.airway)
+              setShell(m, 1)
+            } else if (id === 'esophagus') {
+              m.color.set(STAGE_PALETTE.esophagus)
+              setShell(m, 1)
+            } else if (vessel) {
+              m.color.set(id === 'azygous' ? STAGE_PALETTE.vein : STAGE_PALETTE.artery)
+              setShell(m, 0.06, 0.7)
+            } else setShell(m, 0, 0.14)
           }
         })
         const route = routeDefinition(s)
@@ -364,7 +366,8 @@ export function ModelViewport({
              * vector; the locator, target and arrow are the contract's, unchanged.
              */
             controls.target.copy(b)
-            camera.position.copy(routeObserverPosition(a, b))
+            // Far enough back that the trachea, both main bronchi and the esophagus are in frame.
+            camera.position.copy(routeObserverPosition(a, b, 230))
             controls.update()
             lastRoute = routeKey
           }
@@ -555,6 +558,7 @@ export function ModelViewport({
       controls.dispose()
       groups.forEach(dispose)
       clearDynamic()
+      disposeLighting()
       renderer.dispose()
       renderer.domElement.remove()
     }

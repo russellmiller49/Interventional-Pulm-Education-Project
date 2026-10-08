@@ -757,13 +757,13 @@ describe('source-bound figures (L22-6, L24-2)', () => {
 
 describe('display names and route notices change words only (L3-10, L19-2)', () => {
   it('shows the course spelling while every id stays as it was', () => {
-    expect(structureDisplayName('azygous', 'azygous')).toBe('azygos vein')
-    expect(structureDisplayName('left_atrium', 'Left Atrium')).toBe('left atrium')
+    expect(structureDisplayName('azygous', 'azygous')).toBe('Azygos vein')
+    expect(structureDisplayName('left_atrium', 'Left Atrium')).toBe('Left atrium')
     expect(structureDisplayName('atrial_appendage_left', 'atrial appendage left')).toBe(
-      'left atrial appendage',
+      'Left atrial appendage',
     )
     expect(structureDisplayName('node_station_11ri', 'Example node 11RI')).toBe('Example node 11Ri')
-    expect(structureDisplayName('aorta', 'aorta')).toBe('aorta')
+    expect(structureDisplayName('aorta', 'aorta')).toBe('Aorta')
     expect(LINKED_LANDMARKS['right-paratracheal']).toContain('azygous')
   })
 
