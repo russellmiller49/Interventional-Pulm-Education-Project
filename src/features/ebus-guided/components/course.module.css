@@ -1291,3 +1291,40 @@
     );
   }
 }
+
+/* The hub's picture of the lab, and the marker for where to go next. */
+.heroFigure {
+  align-self: center;
+  min-width: 0;
+  margin: 0;
+}
+.heroFigure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.heroFigure figcaption {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.upNext {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: var(--cyan-bright);
+  color: #082129;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+/* The console image is wide and short, so it runs the full width under the introduction. */
+.hero:has(.heroFigure) {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+}
+.hero:has(.heroFigure) > div:first-child {
+  max-width: 62rem;
+}

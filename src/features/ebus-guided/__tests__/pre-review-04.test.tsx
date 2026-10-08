@@ -162,16 +162,23 @@ describe('the chapter registry is the one course map (OV-1, OV-2, L1-2, L2-8, L2
     expect(LESSONS).toHaveLength(26)
   })
 
-  it('summarizes the chapter registry on the Overview instead of a five-phase schematic', () => {
+  it('lists the chapters once on the Overview, under a picture of the lab', () => {
     const { container } = render(<CoursePage />)
     expect(container.querySelector('[data-teaching-diagram]')).toBeNull()
     expect(screen.queryByText('Authored schematic', { exact: false })).toBeNull()
     expect(screen.queryByText('Nodal survey')).toBeNull()
-    const map = screen.getByRole('navigation', { name: 'The course in 7 chapters' })
-    const links = within(map).getAllByRole('link')
-    expect(links.map((link) => link.textContent)).toEqual(CHAPTERS.map((chapter) => chapter.title))
-    for (const chapter of CHAPTERS)
-      expect(container.querySelector('#chapter-' + chapter.id)).not.toBeNull()
+    // The chapter cards are the one map; the summary list that repeated them is gone, and so is
+    // the glossary that took a third of the page (visual review of 2026-10-07, item 8).
+    expect(screen.queryByRole('navigation', { name: 'The course in 7 chapters' })).toBeNull()
+    for (const chapter of CHAPTERS) {
+      expect(container.querySelectorAll('#chapter-' + chapter.id)).toHaveLength(1)
+      expect(
+        screen.getAllByText(new RegExp(chapter.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))),
+      ).toHaveLength(1)
+    }
+    expect(screen.getByRole('img', { name: /The lab console/ })).toBeInTheDocument()
+    expect(container.querySelectorAll('[data-up-next]')).toHaveLength(1)
+    expect(screen.queryByRole('heading', { name: 'Course glossary' })).toBeNull()
   })
 
   it('gives the four lessons that showed the schematic no figure at all', () => {
