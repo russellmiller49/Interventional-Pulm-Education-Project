@@ -17,6 +17,8 @@ export type TeachingNumberClass =
   | 'consensus'
   /** A property or limit of a device, from its instructions for use or operator's manual. */
   | 'device'
+  /** A value an authoritative textbook chapter or review recommends as one sound approach. */
+  | 'expert-reference'
   /** A normal value or a physiological relationship from a standard reference. */
   | 'physiology'
   /** A round figure chosen for teaching, with no external authority. Says so in `note`. */

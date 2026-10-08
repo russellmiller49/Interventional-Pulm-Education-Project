@@ -48,7 +48,7 @@ a decision depends on, teach the number. An agent may add one without waiting fo
 it records, in the module's numbers register (`src/features/learning-module/numbers`):
 
 - the value and what it applies to;
-- its class: guideline, consensus, device, physiology or teaching-convention;
+- its class: guideline, consensus, expert-reference, device, physiology or teaching-convention;
 - the source, its year, and the source's own grade where it prints one;
 - where in the source it was found, and the date it was checked.
 
