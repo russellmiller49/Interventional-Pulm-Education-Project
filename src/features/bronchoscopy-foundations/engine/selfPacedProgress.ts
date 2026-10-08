@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import type { InspectionLedger } from '../components/scope/types'
 import { isBronchSectionId } from '../content/sectionIds'
+import { forwardSectionId, forwardSectionIds } from '../content/sectionMigration'
 import { inspectionSnapshotSchema, type BronchInspectionSnapshot } from './learnProgress'
 
 /**
@@ -59,13 +60,15 @@ export function parseBronchSelfPacedRecord(
     const result = recordSchema.safeParse(JSON.parse(serialized))
     if (!result.success) return null
     const { data } = result
+    // A retired section leads to the one that absorbed it: the saved place, the sections opened
+    // and the review-later marks carry forward. "Reviewed" does not: the learner has not been
+    // through the section that replaced it.
     return {
       ...data,
-      lastSectionId:
-        data.lastSectionId && isBronchSectionId(data.lastSectionId) ? data.lastSectionId : null,
-      visitedSectionIds: knownSections(data.visitedSectionIds),
+      lastSectionId: data.lastSectionId ? forwardSectionId(data.lastSectionId) : null,
+      visitedSectionIds: forwardSectionIds(data.visitedSectionIds),
       reviewedSectionIds: knownSections(data.reviewedSectionIds),
-      reviewLaterSectionIds: knownSections(data.reviewLaterSectionIds),
+      reviewLaterSectionIds: forwardSectionIds(data.reviewLaterSectionIds),
     }
   } catch {
     return null

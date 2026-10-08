@@ -17,6 +17,7 @@ supervisor" answers.
 | ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
 | #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
+| #353 | `claude/bf-rewrite-structure`      | Draft, stacked on #352. The plan's order, five phases, and the forward map for retired sections.                  |
 | #352 | `claude/bf-rewrite-register`       | Draft, stacked on #350. Register rows 15, 19, 20 and 21 extracted; two sources added (U17, U18). No learner copy. |
 | #351 | `claude/bf-3d-retry`               | Draft, from `main`. The 3D-retry fix lifted out of #348, with its three end-to-end cases.                         |
 | #348 | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix is now #351; close #348 once #351 merges.                        |
@@ -74,11 +75,18 @@ sections no longer wait for sessions with the pilot.
    - Row 22 holds current Olympus scopes from the device catalog (FDA device records, product
      pages, the manufacturer flyer). The instructions for use themselves were not read.
    - The ASRA checklist is under review, with an update expected in early 2027.
-   - Rows 1–17 still have no recommendation number or page, and rows 1–17, 15, 20 and 22 are
-     unsigned.
-4. **Restructure to 15 sections** (`content/sectionIds.ts`, `pathway.ts`, `BRONCH_SECTION_STAGE`,
-   phases, `lessonVersions.ts`), with the progress migration map from the plan and a test for it.
-   Retire `what-completion-means`.
+   - Rows 1–17 still have no recommendation number or page. Rows 1–17, 20 and 22 are unsigned.
+4. **Restructure to 15 sections: started.** The course is in the plan's order and five phases
+   (`content/sectionIds.ts`), and `content/sectionMigration.ts` holds the 15-section end state and
+   the forward map for the ten retired ids, with a test. The map is applied when saved progress is
+   read and when a link names a section. It carries the saved place, the sections opened and the
+   review-later marks forward; it does not carry "reviewed".
+   The ten absorbed sections are still in the course, each beside the section that absorbs it.
+   **Retire each one in the change that rewrites its absorber**: delete its file, remove its id
+   from `BRONCH_SECTION_IDS`, the phase, `BRONCH_SECTION_STAGE` and `sections/index.ts`, and move
+   its tests to the absorber. `honest-report` sits late for now because its prerequisites do;
+   it goes when `describe-findings` is rewritten. `what-completion-means` goes with the hub and
+   closing screen (item 6).
 5. **Rewrite the other 13 sections** from their briefs, in the plan's three batches. Two are new:
    `biopsy-and-specimens` and `ventilated-patient`. Apply the content fixes the briefs name
    (foreign-body aspiration is an indication; site choice from the CT; raising pressure limits is

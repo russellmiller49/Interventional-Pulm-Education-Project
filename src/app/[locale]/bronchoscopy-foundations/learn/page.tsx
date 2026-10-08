@@ -5,6 +5,7 @@ import { BronchoscopyFoundationsLearnLanding } from '@/features/bronchoscopy-fou
 import { BronchoscopyFoundationsModuleFrame } from '@/features/bronchoscopy-foundations/components/BronchoscopyFoundationsModuleFrame'
 import { BronchStageHost } from '@/features/bronchoscopy-foundations/components/stage/BronchStageHost'
 import { isBronchSectionId } from '@/features/bronchoscopy-foundations/content/pathway'
+import { forwardSectionId } from '@/features/bronchoscopy-foundations/content/sectionMigration'
 import { BRONCHOSCOPY_FOUNDATIONS_LEARN_HREF } from '@/features/bronchoscopy-foundations/content/routes'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
@@ -31,7 +32,9 @@ export default async function BronchoscopyFoundationsLearnPage({
 }: PageProps) {
   const { locale } = await params
   const requested = (await searchParams)?.section
-  const section = Array.isArray(requested) ? requested[0] : requested
+  const named = Array.isArray(requested) ? requested[0] : requested
+  // A link to a section the rewrite retired opens the section that absorbed it.
+  const section = named ? (forwardSectionId(named) ?? named) : named
   setRequestLocale(locale)
 
   // The stage host carries its own module frame in activity mode.
