@@ -17,7 +17,7 @@ export type BronchSourceId =
   | 'S1'
   | 'S2'
   | 'S3'
-  | `U${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16}`
+  | `U${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18}`
   | `T${'01' | '02' | '03' | '04' | '05' | '06' | '07' | '08' | '09' | '10' | '11' | '12' | '13' | '14' | '15' | '16'}`
 
 /**
@@ -173,6 +173,8 @@ const LIMITATIONS: Readonly<Record<string, string>> = {
   U14: 'A 2013 national guideline for diagnostic bronchoscopy; most of its recommendations are grade C or D.',
   U15: 'A consensus scale for reporting bleeding severity; it grades the response that was needed and does not direct treatment.',
   U16: 'A 2011 consensus statement on topical anesthesia and sedation; later guidelines revise some of its figures.',
+  U17: 'Expert-panel recommendations for inherited and acquired methemoglobinemia; its methylene blue dose differs from the product label.',
+  U18: 'The prescribing information for one methylene blue product; its dose and repeat interval differ from the expert-panel recommendations.',
 }
 
 /**
@@ -219,6 +221,34 @@ export const SUPPLEMENTAL_SOURCES: readonly ManifestSource[] = [
     doi: '10.1378/chest.10-3361',
     url: 'https://pubmed.ncbi.nlm.nih.gov/22045879/',
     reviewedScope: 'Topical anesthesia and sedation, as background to the 2013 and 2019 guidelines',
+    accessedDate: '2026-10-08',
+    transcript: null,
+  },
+  {
+    id: 'U17',
+    kind: 'expert consensus recommendations',
+    title: 'Recommendations for diagnosis and treatment of methemoglobinemia',
+    authors: 'Iolascon A, Bianchi P, Andolfo I, et al.',
+    organization: null,
+    year: 2021,
+    doi: '10.1002/ajh.26340',
+    url: 'https://onlinelibrary.wiley.com/doi/10.1002/ajh.26340',
+    reviewedScope:
+      'Pulse oximetry and co-oximetry in methemoglobinemia, the level at which to treat, methylene blue dose, repeat and cautions',
+    accessedDate: '2026-10-08',
+    transcript: null,
+  },
+  {
+    id: 'U18',
+    kind: 'manufacturer prescribing information',
+    title: 'PROVAYBLUE (methylene blue) injection: prescribing information, revised February 2024',
+    authors: null,
+    organization: 'American Regent',
+    year: 2024,
+    doi: null,
+    url: 'https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=4f6848e5-35ed-4046-b13c-3032b5ba3232',
+    reviewedScope:
+      'Dose and repeat dose for acquired methemoglobinemia, G6PD contraindication, serotonergic boxed warning',
     accessedDate: '2026-10-08',
     transcript: null,
   },

@@ -79,6 +79,34 @@ const NASHVILLE_CHECK = {
   signedBy: 'Russell Miller, 2026-10-08',
   isDefinition: true,
 } as const
+/** A row taken from its source by an agent and spot-checked; it still waits for the signature. */
+const EXTRACTED = (copy: string) => ({
+  checkedOn: '2026-10-08',
+  checkedBy: `Claude, against ${copy}`,
+  signedBy: null,
+})
+const VAP = (grade: string, locator: string): NumberCitation => ({ sourceId: 'U7', grade, locator })
+const VAP_NOTE =
+  'The guideline suggests withholding antibiotics when an invasive quantitative culture grows less than this. It prefers noninvasive sampling with semiquantitative culture to diagnose VAP (Section I; weak recommendation, low-quality evidence).'
+const ASA = (locator: string): NumberCitation => ({ sourceId: 'U1', grade: null, locator })
+const ASA_COPY = 'a hosted copy of the journal PDF (Anesthesiology 2018;128:437–479)'
+const LAST_GLYPH_NOTE =
+  'The checklist prints this with a combined comparison sign (≥ or ≤) that a text extract flattens; check it against the printed card when signing.'
+const LAST_ROW = {
+  class: 'guideline',
+  status: 'verified',
+  sources: [{ sourceId: 'U4', grade: null, locator: 'Checklist, © 2020, v1.1' }],
+  ...EXTRACTED('the ASRA checklist PDF, v1.1'),
+} as const
+const METHB = (grade: string | null, locator: string): NumberCitation => ({
+  sourceId: 'U17',
+  grade,
+  locator,
+})
+const METHB_COPY = 'the publisher’s version of the article (Am J Hematol 2021;96:1666–1678)'
+const LABEL_COPY = 'the DailyMed label text, revised February 2024'
+const METHB_CONFLICT =
+  'The expert panel and the product label give different first doses, infusion times and repeat intervals. Faculty chooses which the course teaches.'
 const TO_EXTRACT = { value: null, status: 'to-extract', checkedOn: null, checkedBy: null } as const
 
 const ROWS = {
@@ -360,13 +388,25 @@ const ROWS = {
     ...PLAN,
   },
   // 15 · Quantitative cultures for VAP
-  'vap-culture-thresholds': {
+  'vap-bal-threshold': {
     row: 15,
-    label: 'Quantitative culture thresholds for VAP (BAL and protected brush)',
+    label: 'Quantitative BAL culture: the threshold for suspected VAP',
+    value: '10⁴ CFU/mL',
     class: 'guideline',
-    sources: [{ sourceId: 'U7', grade: null, locator: null }],
-    signedBy: null,
-    ...TO_EXTRACT,
+    status: 'verified',
+    sources: [VAP('weak recommendation, very low-quality evidence', 'Section II recommendation')],
+    ...EXTRACTED('the PMC article text (PMC4981759), sections I and II'),
+    note: VAP_NOTE,
+  },
+  'vap-brush-threshold': {
+    row: 15,
+    label: 'Quantitative protected-brush culture: the threshold for suspected VAP',
+    value: '10³ CFU/mL',
+    class: 'guideline',
+    status: 'verified',
+    sources: [VAP('weak recommendation, very low-quality evidence', 'Section II recommendation')],
+    ...EXTRACTED('the PMC article text (PMC4981759), sections I and II'),
+    note: VAP_NOTE,
   },
   // 16 · Tube and scope
   'tube-scope-margin': {
@@ -456,40 +496,181 @@ const ROWS = {
     ...NASHVILLE_CHECK,
   },
   // 19 · Reversal and monitoring
+  'sedation-check-interval': {
+    row: 19,
+    label: 'Moderate sedation: how often to check the response to voice and the blood pressure',
+    value: 'every 5 minutes',
+    class: 'guideline',
+    status: 'verified',
+    sources: [ASA('Recommendations for patient monitoring, p. 443')],
+    ...EXTRACTED(ASA_COPY),
+    note: 'Printed as an example ("e.g., at 5-min intervals"). The same page asks for continuous pulse oximetry with alarms, capnography unless the procedure precludes it, and a designated person other than the operator to watch the patient.',
+  },
+  'reversal-discharge-wait': {
+    row: 19,
+    label: 'After the last dose of a reversal agent, wait before discharge',
+    value: 'up to 2 hours',
+    class: 'guideline',
+    status: 'verified',
+    sources: [ASA('Table 5, recovery and discharge criteria')],
+    ...EXTRACTED(ASA_COPY),
+    note: 'The recommendation itself (p. 448) says "a sufficient time"; the figure is printed only in Table 5.',
+  },
   'reversal-agents': {
     row: 19,
-    label: 'Reversal agents and their dosing',
-    class: 'guideline',
-    sources: [{ sourceId: 'U1', grade: null, locator: null }],
-    signedBy: null,
-    ...TO_EXTRACT,
-  },
-  'sedation-monitoring-standard': {
-    row: 19,
-    label: 'Monitoring standard for moderate sedation',
-    class: 'guideline',
-    sources: [{ sourceId: 'U1', grade: null, locator: null }],
-    signedBy: null,
-    ...TO_EXTRACT,
-  },
-  // 20 · Local anesthetic toxicity
-  'last-treatment': {
-    row: 20,
-    label: 'Local anesthetic systemic toxicity: the treatment steps',
-    class: 'guideline',
-    sources: [{ sourceId: 'U4', grade: null, locator: null }],
-    signedBy: null,
-    ...TO_EXTRACT,
-  },
-  // 21 · Methemoglobinemia
-  'methemoglobinemia-treatment': {
-    row: 21,
-    label: 'Methemoglobinemia: co-oximetry and the treatment',
+    label: 'Naloxone and flumazenil: the doses',
     class: 'guideline',
     sources: [],
     signedBy: null,
-    note: 'Source to add.',
+    note: 'ASA 2018 names naloxone for opioids and flumazenil for benzodiazepines (p. 448, Table 4) and prints no dose for either. The doses need a second source and plan decision 4.',
     ...TO_EXTRACT,
+  },
+  // 20 · Local anesthetic toxicity
+  'last-lipid-concentration': {
+    row: 20,
+    label: 'Lipid emulsion for local anesthetic toxicity: the concentration',
+    value: '20%',
+    ...LAST_ROW,
+  },
+  'last-weight-cutoff': {
+    row: 20,
+    label: 'Lipid emulsion: the weight that separates the fixed dose from the weight-based dose',
+    value: '70 kg',
+    ...LAST_ROW,
+  },
+  'last-lipid-bolus-over-70': {
+    row: 20,
+    label: 'Lipid emulsion bolus, patient over the weight cut-off',
+    value: 'about 100 mL over 2–3 minutes',
+    ...LAST_ROW,
+  },
+  'last-lipid-infusion-over-70': {
+    row: 20,
+    label: 'Lipid emulsion infusion, patient over the weight cut-off',
+    value: 'about 250 mL over 15–20 minutes',
+    ...LAST_ROW,
+  },
+  'last-lipid-bolus-under-70': {
+    row: 20,
+    label: 'Lipid emulsion bolus, patient under the weight cut-off',
+    value: 'about 1.5 mL/kg over 2–3 minutes',
+    ...LAST_ROW,
+  },
+  'last-lipid-infusion-under-70': {
+    row: 20,
+    label: 'Lipid emulsion infusion, patient under the weight cut-off',
+    value: 'about 0.25 mL/kg/min',
+    ...LAST_ROW,
+    note: 'If the patient stays unstable at either weight: repeat the bolus and double the infusion. The checklist adds "consider using a pump if <40 kg".',
+  },
+  'last-lipid-continue': {
+    row: 20,
+    label: 'Continue lipid emulsion once the patient is hemodynamically stable',
+    value: 'at least 15 minutes',
+    ...LAST_ROW,
+    note: LAST_GLYPH_NOTE,
+  },
+  'last-lipid-maximum': {
+    row: 20,
+    label: 'Lipid emulsion: the maximum dose',
+    value: '12 mL/kg',
+    ...LAST_ROW,
+  },
+  'last-epinephrine-start': {
+    row: 20,
+    label: 'Epinephrine in local anesthetic toxicity: the starting dose',
+    value: '1 mcg/kg or less',
+    ...LAST_ROW,
+    note: `${LAST_GLYPH_NOTE} The checklist also says to avoid local anesthetics, beta-blockers, calcium channel blockers and vasopressin.`,
+  },
+  'last-propofol-increment': {
+    row: 20,
+    label: 'Seizure in local anesthetic toxicity when only propofol is available: the increment',
+    value: '20 mg',
+    ...LAST_ROW,
+    note: 'A benzodiazepine is preferred; propofol is the low-dose alternative.',
+  },
+  'last-observe-seizure': {
+    row: 20,
+    label: 'Observe after a seizure from local anesthetic toxicity',
+    value: '2 hours',
+    ...LAST_ROW,
+  },
+  'last-observe-cardiovascular': {
+    row: 20,
+    label: 'Observe after cardiovascular instability from local anesthetic toxicity',
+    value: '4–6 hours',
+    ...LAST_ROW,
+  },
+  // 21 · Methemoglobinemia
+  'methb-oximeter-plateau': {
+    row: 21,
+    label: 'Methemoglobinemia: where the pulse oximeter reading settles',
+    value: 'about 85%',
+    class: 'guideline',
+    status: 'verified',
+    sources: [METHB(null, 'Question 2, pulse oximetry')],
+    ...EXTRACTED(METHB_COPY),
+    note: 'Confirm with co-oximetry (Question 3). The source does not use the term "saturation gap".',
+  },
+  'methb-treat-symptomatic': {
+    row: 21,
+    label: 'Methemoglobin level at which to treat a patient with symptoms',
+    value: '20%',
+    class: 'guideline',
+    status: 'verified',
+    sources: [METHB(null, 'Question 4')],
+    ...EXTRACTED(METHB_COPY),
+  },
+  'methb-treat-asymptomatic': {
+    row: 21,
+    label: 'Methemoglobin level at which to treat a patient without symptoms',
+    value: '30%',
+    class: 'guideline',
+    status: 'verified',
+    sources: [METHB(null, 'Question 4')],
+    ...EXTRACTED(METHB_COPY),
+  },
+  'methylene-blue-dose': {
+    row: 21,
+    label: 'Methylene blue, first dose (expert-panel recommendations)',
+    value: '1–2 mg/kg intravenously over 3–5 minutes',
+    class: 'guideline',
+    status: 'verified',
+    sources: [METHB(null, 'Methylene blue, p. 1673; Question 5')],
+    ...EXTRACTED(METHB_COPY),
+    note: METHB_CONFLICT,
+  },
+  'methylene-blue-repeat': {
+    row: 21,
+    label: 'Methylene blue, repeat dose (expert-panel recommendations)',
+    value: '1 mg/kg if the level has not fallen within 30–60 minutes',
+    class: 'guideline',
+    status: 'verified',
+    sources: [METHB(null, 'Methylene blue, p. 1673')],
+    ...EXTRACTED(METHB_COPY),
+    note: `${METHB_CONFLICT} Question 5 caps the total at 5.5 mg/kg; the text puts toxicity above 7 mg/kg.`,
+  },
+  'methylene-blue-dose-label': {
+    row: 21,
+    label: 'Methylene blue, first dose (product label)',
+    value: '1 mg/kg intravenously over 5–30 minutes',
+    class: 'guideline',
+    status: 'verified',
+    sources: [{ sourceId: 'U18', grade: null, locator: 'Section 2.1' }],
+    ...EXTRACTED(LABEL_COPY),
+    note: METHB_CONFLICT,
+  },
+  'methylene-blue-repeat-label': {
+    row: 21,
+    label: 'Methylene blue, repeat dose (product label)',
+    value:
+      '1 mg/kg one hour after the first dose, if the level stays above 30% or symptoms persist',
+    class: 'guideline',
+    status: 'verified',
+    sources: [{ sourceId: 'U18', grade: null, locator: 'Section 2.1' }],
+    ...EXTRACTED(LABEL_COPY),
+    note: `${METHB_CONFLICT} Contraindicated in G6PD deficiency (section 4); boxed warning for serotonin syndrome with serotonergic drugs and opioids.`,
   },
   // 22 · Scope diameters
   'scope-diameters': {
@@ -622,6 +803,8 @@ const SOURCE_SHORT_NAMES: Partial<Readonly<Record<BronchSourceId, string>>> = {
   U14: 'BTS 2013',
   U15: 'Nashville scale, Chest 2020',
   U16: 'ACCP 2011',
+  U17: 'Iolascon, Am J Hematol 2021',
+  U18: 'methylene blue label, 2024',
 }
 
 export function numberSourceName(sourceId: BronchSourceId): string {
