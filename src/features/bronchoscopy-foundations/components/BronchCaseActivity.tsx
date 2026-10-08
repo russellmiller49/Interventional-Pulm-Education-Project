@@ -9,7 +9,7 @@ import stageStyles from '@/features/learning-module/stage/lesson-stage.module.cs
 import shellStyles from '@/features/learning-module/stage/lesson-shell.module.css'
 import { Link } from '@/i18n/navigation'
 
-import { LOCAL_POLICIES, LOCAL_POLICY_NOT_CONFIGURED } from '../content/localPolicies'
+import { configuredLocalPolicies } from '../content/localPolicies'
 import { bronchMicroCaseById, bronchMicroCasesInPathwayOrder } from '../content/microCases'
 import { bronchSection } from '../content/pathway'
 import { bronchSectionLinkTarget } from '../content/pathwayResolver'
@@ -46,9 +46,7 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
   const previous = position > 0 ? order[position - 1] : null
   const next = position >= 0 && position < order.length - 1 ? order[position + 1] : null
   const section = bronchSection(microCase.sectionId)
-  const policies = LOCAL_POLICIES.filter((policy) =>
-    microCase.stage.localPolicyIds.includes(policy.id),
-  )
+  const policies = configuredLocalPolicies(microCase.stage.localPolicyIds)
 
   return (
     <article className="grid gap-5" data-practice-case={microCase.id}>
@@ -158,15 +156,14 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
 
       {(committed || explanationOpen) && policies.length > 0 ? (
         <section className={styles.teachingCard} data-case-policies>
-          <p className={styles.kicker}>Depends on local policy</p>
+          <p className={styles.kicker}>Your institution</p>
           <ul>
             {policies.map((policy) => (
               <li key={policy.id} data-local-policy={policy.id}>
-                {policy.title}
+                <strong>{policy.title}:</strong> {policy.value}
               </li>
             ))}
           </ul>
-          <p>{LOCAL_POLICY_NOT_CONFIGURED}</p>
         </section>
       ) : null}
 

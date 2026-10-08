@@ -157,6 +157,29 @@ async function walkByLeavingEveryStep(lesson: BronchStageLesson) {
  * verdict, the set placed and checked, the review with the recap, the transfer, and the learner's
  * own reviewed mark — with no answer saved anywhere.
  */
+describe('the opening screen', () => {
+  it.each(['shared-airway', 'right-side', 'bleeding-priorities'] as const)(
+    'opens %s with its clinical question and its memory hook',
+    async (sectionId) => {
+      const { lesson } = await mountSection(sectionId)
+      const { section } = lesson
+      const hook = document.querySelector('[data-teaching-block="hook"]')
+      expect(hook?.querySelector('[data-clinical-question]')?.textContent).toBe(
+        section.clinicalQuestion,
+      )
+      expect(hook?.querySelector('[data-hook-analogy]')?.textContent).toBe(section.anchor.analogy)
+      expect(hook?.querySelector('[data-hook-sentence]')?.textContent).toBe(section.anchor.precise)
+      expect(
+        [...(hook?.querySelectorAll('[data-hook-checklist] li') ?? [])].map((li) => li.textContent),
+      ).toEqual([...section.anchor.checklist])
+      // The hook belongs to the first screen only; later screens do not repeat it.
+      clickPrimary()
+      await settle()
+      expect(document.querySelector('[data-teaching-block="hook"]')).toBeNull()
+    },
+  )
+})
+
 describe('a sort section on the stage', () => {
   it('walks the first section from the read to the reviewed mark, saving no answer', async () => {
     const { lesson } = await mountSection('shared-airway')

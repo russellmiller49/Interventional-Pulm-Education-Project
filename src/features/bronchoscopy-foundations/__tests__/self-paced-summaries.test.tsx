@@ -119,14 +119,14 @@ function learnerStrings(sectionId: BronchSectionId): string[] {
     section.anchor.analogy,
     section.anchor.precise,
     ...section.anchor.checklist,
-    section.controlStrip.sentence,
+    section.controlStrip?.sentence,
     section.modelBoundary,
     section.physicalSkillNote ?? '',
     ...section.blocks.flatMap((block) => [block.heading, block.body, ...(block.points ?? [])]),
     ...actStrings,
     ...itemStrings(section.prediction),
     ...itemStrings(section.transfer),
-  ]
+  ].filter((text): text is string => text !== undefined)
 }
 
 /** Only the matched phrase is reported on failure, never the surrounding teaching text. */

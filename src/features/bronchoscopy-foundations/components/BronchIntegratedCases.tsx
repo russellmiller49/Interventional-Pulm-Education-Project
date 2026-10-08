@@ -10,7 +10,7 @@ import shellStyles from '@/features/learning-module/stage/lesson-shell.module.cs
 import { Link } from '@/i18n/navigation'
 
 import { CAPSTONE_CASES } from '../content/capstone'
-import { LOCAL_POLICIES, LOCAL_POLICY_NOT_CONFIGURED } from '../content/localPolicies'
+import { configuredLocalPolicies } from '../content/localPolicies'
 import { bronchSection } from '../content/pathway'
 import { bronchSectionLinkTarget } from '../content/pathwayResolver'
 import { capstoneStageItem } from '../content/stageItems'
@@ -58,7 +58,7 @@ function IntegratedCase({
   const [checked, setChecked] = useState<string | null>(null)
   const [explanationOpen, setExplanationOpen] = useState(false)
   const section = bronchSection(entry.pairedSectionId)
-  const policies = LOCAL_POLICIES.filter((policy) => stage.localPolicyIds.includes(policy.id))
+  const policies = configuredLocalPolicies(stage.localPolicyIds)
   return (
     <li
       id={`case-${entry.id}`}
@@ -148,15 +148,14 @@ function IntegratedCase({
       )}
       {(checked || explanationOpen) && policies.length > 0 ? (
         <div className="text-sm" data-case-policies>
-          <p className="font-semibold">Depends on local policy</p>
+          <p className="font-semibold">Your institution</p>
           <ul className="mt-1 list-disc pl-5">
             {policies.map((policy) => (
               <li key={policy.id} data-local-policy={policy.id}>
-                {policy.title}
+                <strong>{policy.title}:</strong> {policy.value}
               </li>
             ))}
           </ul>
-          <p>{LOCAL_POLICY_NOT_CONFIGURED}</p>
         </div>
       ) : null}
       <p className="text-sm" data-case-pairing>

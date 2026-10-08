@@ -16,7 +16,13 @@ import { InstrumentOrientation } from './InstrumentOrientation'
 import { MediaFigure } from './MediaFigure'
 import styles from './course-flow.module.css'
 
-/** Source blocks are intentionally visible during teaching, independent of any future answer. */
+/**
+ * The teaching for one screen of a section.
+ *
+ * The first screen opens with the section's clinical question and its memory hook: the analogy, the
+ * one precise sentence and the checklist. The closing screen repeats the checklist; it does not
+ * introduce it. Cards are visible during teaching, independent of any later answer.
+ */
 export function BronchCourseTeaching({
   lesson,
   step,
@@ -39,8 +45,11 @@ export function BronchCourseTeaching({
   const blocks = chunk.blocks.map(
     (blockId) => section.blocks.find((block) => block.id === blockId)!,
   )
+  const opening = lesson.steps[0]?.id === step.id
+  const rewritten = section.authoringContract === 2
   return (
     <div className={styles.teaching} data-course-teaching>
+      {opening ? <SectionHook section={section} /> : null}
       {step.learn ? (
         <BronchPilotTeaching unit={step.learn} section={section} hintShown={hintShown} />
       ) : null}
@@ -118,13 +127,17 @@ export function BronchCourseTeaching({
           <p>{section.act.sequence.rationale}</p>
         </section>
       ) : null}
-      {chunk.anchor ? (
+      {chunk.anchor && chunk.kind === 'debrief' ? (
         <section className={styles.worked} data-teaching-block="anchor">
           <h3>{section.anchor.checklistLabel}</h3>
-          <p data-new-concept>{section.newConcept}</p>
-          <p>{section.anchor.precise}</p>
-          <p>{section.anchor.analogy}</p>
-          <ul>
+          {rewritten ? null : (
+            <>
+              {section.newConcept ? <p data-new-concept>{section.newConcept}</p> : null}
+              <p>{section.anchor.precise}</p>
+              <p>{section.anchor.analogy}</p>
+            </>
+          )}
+          <ul data-hook-checklist>
             {section.anchor.checklist.map((line) => (
               <li key={line}>{line}</li>
             ))}
@@ -132,7 +145,7 @@ export function BronchCourseTeaching({
           <p>
             <strong>Watch for this error.</strong> {section.harmfulReflex}
           </p>
-          <p>{section.controlStrip.sentence}</p>
+          {section.controlStrip ? <p>{section.controlStrip.sentence}</p> : null}
         </section>
       ) : null}
       {chunk.grammar && section.grammarRowIds.length > 0 ? (
@@ -145,7 +158,7 @@ export function BronchCourseTeaching({
           <p data-grammar-trend-rule>{GRAMMAR_TREND_RULE}</p>
         </section>
       ) : null}
-      {chunk.kind === 'debrief' ? (
+      {chunk.kind === 'debrief' && section.modelBoundary ? (
         <section className={styles.limit} data-teaching-block="boundary">
           <h3>What this activity can show</h3>
           <p>{section.modelBoundary}</p>
@@ -153,6 +166,28 @@ export function BronchCourseTeaching({
         </section>
       ) : null}
     </div>
+  )
+}
+
+/** The section's clinical question and its memory hook, on the opening screen. */
+function SectionHook({ section }: { readonly section: BronchStageLesson['section'] }) {
+  const { anchor } = section
+  return (
+    <section className={styles.hook} data-teaching-block="hook">
+      <p className={styles.hookQuestion} data-clinical-question>
+        {section.clinicalQuestion}
+      </p>
+      <p data-hook-analogy>{anchor.analogy}</p>
+      <p data-hook-sentence>
+        <strong>{anchor.precise}</strong>
+      </p>
+      <h3>{anchor.checklistLabel}</h3>
+      <ol data-hook-checklist>
+        {anchor.checklist.map((line) => (
+          <li key={line}>{line}</li>
+        ))}
+      </ol>
+    </section>
   )
 }
 

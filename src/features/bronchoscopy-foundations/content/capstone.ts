@@ -8,10 +8,10 @@ import type { AuthoredCapstoneCase } from './types'
  * same act as one, is `unsafe`, so the stage stops on it mid-sitting.
  *
  * Each situation carries the signals in the room and nothing of the case's four-box answer; each
- * title names the situation, never the decision. No colony count, organism, susceptibility value,
- * antibiotic, drug dose, lavage volume target, alarm setting or device dimension is authored here.
- * C16's two volumes are the lecture's own collection facts (§15.4), and its answer is that the
- * laboratory data are missing (R25, R26). C06 changes the team member and C07 the phase of the
+ * title names the situation, never the decision. A clinical number in a case comes from the numbers
+ * register (`num()` in `numbers.ts`), never typed by hand; these eight were written before the
+ * register and carry none yet. C16's two volumes are the lecture's own collection facts (§15.4),
+ * and its answer is that the laboratory data are missing (R25, R26). C06 changes the team member and C07 the phase of the
  * procedure, so neither repeats its paired section's prediction. The keyed choice sits at a
  * different authored position from case to case; the host still rotates display order.
  */

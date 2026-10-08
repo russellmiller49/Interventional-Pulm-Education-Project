@@ -15,6 +15,14 @@ import { MANIFEST_MODULES } from '../data/generated/modules.generated'
 import { MANIFEST_OBJECTIVES } from '../data/generated/objectives.generated'
 import { MANIFEST_QUESTION_SEEDS } from '../data/generated/questionSeeds.generated'
 import { sourceRefErrors, type ClaimClass, type SourceRef } from '../data/sources'
+import {
+  imageItemCounts,
+  readable,
+  REWRITE_CAPS,
+  rewriteRuleErrors,
+  testWiseScore,
+} from './authoringRules'
+import { COURSE_FLOWS } from './courseFlow'
 import { GRAMMAR_ROW_IDS } from './grammar'
 import { SIMULATOR_LANDMARKS, STEPS_LANDMARKS, TEACHING_LANDMARKS } from './landmarks'
 import {
@@ -24,6 +32,7 @@ import {
 } from './learnerCopy'
 import { LOCAL_POLICY_BY_ID } from './localPolicies'
 import { mediaRefErrors, type MediaRef } from './media'
+import { numberTokenErrors } from './numbers'
 import { REVIEW_ITEM_IDS } from './reviewRegister'
 import { BRONCH_SECTION_IDS, BRONCH_SECTION_STAGE } from './sectionIds'
 import { isSpineStopId } from './spine'
@@ -36,15 +45,22 @@ import type {
   BronchSectionDefinition,
   BronchTeachingBlock,
   BronchWorkspace,
+  MonitorChannel,
+  MonitorReading,
 } from './types'
 
 /**
  * Everything that is wrong with one section definition, in words an author can act on.
  *
  * Run at import by the section index (a problem is a build failure, not a learner surprise), by
- * `scripts/bronchoscopy-foundations/check-section.mts <id>` while a section is being written, and by
+ * `scripts/bronchoscopy-foundations/check-section.ts <id>` while a section is being written, and by
  * the section-definition test. Set-level rules (unique item ids across the module, every core
  * objective homed exactly once, the key-is-longest fraction) live in `validateAllSections`.
+ *
+ * Two contracts. A section marked `authoringContract: 2` has been re-authored under the rewrite
+ * rules (`authoringRules.ts`), which are strict for it; the first contract's scaffolding (the
+ * recognize and explain step texts, the increment sentence, the control strip, the model boundary,
+ * the fixed block structure) is not asked of it. Every other section keeps the first contract.
  */
 const CHOICE_ID = /^[a-d]$/
 const MODULE_IDS = new Set(MANIFEST_MODULES.map((module) => module.id))
@@ -67,9 +83,18 @@ class Collector {
     }
   }
 
+  /** Checked as the learner reads it: a register token is checked as its value. */
   copy(where: string, value: string | undefined, options: BronchCopyOptions = {}): void {
     if (value === undefined) return
-    this.add(bronchLearnerCopyErrors(where, value, options))
+    this.add(numberTokenErrors(where, value))
+    this.add(bronchLearnerCopyErrors(where, readable(value), options))
+  }
+
+  /** A field the first contract requires and a rewritten section leaves out. */
+  required<T>(where: string, value: T | undefined, rewritten: boolean): value is T {
+    if (value !== undefined) return true
+    if (!rewritten) this.add(`${where} is missing.`)
+    return false
   }
 
   title(where: string, value: string): void {
@@ -228,6 +253,10 @@ function blockErrors(
   c.copy(`${where} body`, block.body, options)
   c.copy(`${where} points label`, block.pointsLabel, options)
   block.points?.forEach((point, index) => c.copy(`${where} point ${index + 1}`, point, options))
+  block.steps?.forEach((step, index) => c.copy(`${where} step ${index + 1}`, step, options))
+  c.copy(`${where} call for help`, block.callForHelp, options)
+  if ((block.steps || block.callForHelp) && block.role !== 'first-moves')
+    c.add(`${where} lists moves or a call for help and is not a first-move card.`)
   if (block.points && block.points.length > 6)
     c.add(`${where} lists ${block.points.length} points; at most six.`)
   if (block.points?.length && !block.pointsLabel)
@@ -358,10 +387,34 @@ function workspaceErrors(
       return
     case 'monitor':
       c.copy(`${where} caption`, workspace.caption)
-      workspace.readings.forEach((reading) => c.copy(`${where} ${reading.channel}`, reading.words))
+      workspace.readings.forEach((reading) => {
+        c.copy(`${where} ${reading.channel}`, reading.words)
+        c.add(readingErrors(`${where} ${reading.channel}`, reading))
+      })
       return
   }
 }
+
+/** A reading's number is all or nothing: the value, its unit, and that it was written for the case. */
+function readingErrors(where: string, reading: MonitorReading): readonly string[] {
+  const given = [reading.value, reading.unit, reading.provenance].filter(
+    (part) => part !== undefined,
+  ).length
+  if (given === 0) return []
+  if (given < 3) return [`${where} gives part of a number; a value needs its unit and provenance.`]
+  return /^\d+(\.\d+)?(\/\d+)?$/.test(reading.value ?? '')
+    ? []
+    : [`${where} value "${reading.value}" is not a number as a monitor shows it.`]
+}
+
+/** Channels a monitor shows as a number. A rewritten case gives the number, labelled as a case. */
+const NUMERIC_CHANNELS: ReadonlySet<MonitorChannel> = new Set([
+  'oximetry',
+  'heart-rate',
+  'blood-pressure',
+  'peak-pressure',
+  'exhaled-volume',
+])
 
 function actErrors(c: Collector, act: BronchAct, section: BronchSectionDefinition): void {
   const where = `${section.id} act`
@@ -373,7 +426,7 @@ function actErrors(c: Collector, act: BronchAct, section: BronchSectionDefinitio
         if (act.observe.view) viewErrors(c, `${where} observe view`, act.observe.view, section)
         goalErrors(c, `${where} observe`, act.observe.goals)
       }
-      if (Boolean(act.observe) !== Boolean(section.steps.observe)) {
+      if (section.steps && Boolean(act.observe) !== Boolean(section.steps.observe)) {
         c.add(
           `${where}: an Observe step needs both an observe block on the act and observe step text.`,
         )
@@ -503,7 +556,16 @@ function actErrors(c: Collector, act: BronchAct, section: BronchSectionDefinitio
         const at = `${where} frame ${frame.id}`
         c.copy(`${at} situation`, frame.situation)
         c.copy(`${at} prompt`, frame.prompt)
-        frame.readings.forEach((reading) => c.copy(`${at} ${reading.channel}`, reading.words))
+        frame.readings.forEach((reading) => {
+          c.copy(`${at} ${reading.channel}`, reading.words)
+          c.add(readingErrors(`${at} ${reading.channel}`, reading))
+          if (
+            section.authoringContract === 2 &&
+            NUMERIC_CHANNELS.has(reading.channel) &&
+            !reading.value
+          )
+            c.add(`${at} ${reading.channel} has no number; a case shows the vital sign itself.`)
+        })
         c.add(mediaErrors(`${at} media`, frame.media))
         if (frame.readings.length === 0 && !frame.media)
           c.add(`${at} shows nothing in the Simulator panel.`)
@@ -539,9 +601,11 @@ export function bronchSectionErrors(section: BronchSectionDefinition): readonly 
   const id = section.id
   if (!SECTION_INDEX.has(id)) return [`Unknown section id ${id}.`]
 
+  const rewritten = section.authoringContract === 2
   c.title(`${id} title`, section.title)
   c.title(`${id} short title`, section.shortTitle)
-  c.title(`${id} recognize title`, section.recognizeTitle)
+  if (c.required(`${id} recognize title`, section.recognizeTitle, rewritten))
+    c.title(`${id} recognize title`, section.recognizeTitle)
   if (section.minutes < 4 || section.minutes > 12)
     c.add(`${id} claims ${section.minutes} minutes; four to twelve.`)
 
@@ -558,7 +622,7 @@ export function bronchSectionErrors(section: BronchSectionDefinition): readonly 
   const needsHands = section.objectives.some(
     (entry) => entry.evidence === 'observed-physical-skill-required',
   )
-  if (needsHands && !section.physicalSkillNote)
+  if (needsHands && !section.physicalSkillNote && !rewritten)
     c.add(
       `${id} has an objective that needs observed physical skill and no note saying what the app cannot see.`,
     )
@@ -571,21 +635,30 @@ export function bronchSectionErrors(section: BronchSectionDefinition): readonly 
       c.add(`${id} lists ${prerequisite}, which does not come before it, as a prerequisite.`)
   }
 
-  const precommit: readonly [string, string][] = [
+  c.required(`${id} why`, section.why, rewritten)
+  c.required(`${id} step texts`, section.steps, rewritten)
+  const precommit: readonly [string, string | undefined][] = [
     ['clinical question', section.clinicalQuestion],
     ['objective', section.objective],
     ['why', section.why],
-    ['recognize instruction', section.steps.recognize.instruction],
+    ['recognize instruction', section.steps?.recognize.instruction],
     ['title', section.title],
     ['short title', section.shortTitle],
-    ['recognize title', section.recognizeTitle],
   ]
   for (const [label, text] of precommit) {
     c.copy(`${id} ${label}`, text, { allowDigits: !label.includes('title') })
-    // Persistent headings remain visible during checks; teaching is audited separately.
-    if (label === 'title' || label === 'short title')
+    // Persistent headings remain visible during checks; teaching is audited separately. A rewritten
+    // section asks its prediction straight after the hook, so the hook may not hand over the answer.
+    if (
+      label === 'title' ||
+      label === 'short title' ||
+      (rewritten && label === 'clinical question')
+    )
       c.add(denyErrors(`${id} ${label}`, text, section.precommitDenyPatterns))
   }
+  c.required(`${id} new concept`, section.newConcept, rewritten)
+  c.required(`${id} increment sentence`, section.incrementSentence, rewritten)
+  c.required(`${id} model boundary`, section.modelBoundary, rewritten)
   for (const [label, text] of [
     ['new concept', section.newConcept],
     ['increment sentence', section.incrementSentence],
@@ -596,11 +669,17 @@ export function bronchSectionErrors(section: BronchSectionDefinition): readonly 
     ['anchor checklist label', section.anchor.checklistLabel],
   ] as const) {
     c.copy(`${id} ${label}`, text)
+    if (rewritten && label.startsWith('anchor'))
+      c.add(denyErrors(`${id} ${label}`, text, section.precommitDenyPatterns))
   }
   if (section.anchor.checklist.length < 1 || section.anchor.checklist.length > 4)
     c.add(`${id} anchor checklist has ${section.anchor.checklist.length} items; one to four.`)
-  section.anchor.checklist.forEach((item, i) => c.copy(`${id} anchor checklist ${i + 1}`, item))
-  if (!/^This section adds one idea/.test(section.incrementSentence))
+  section.anchor.checklist.forEach((item, i) => {
+    c.copy(`${id} anchor checklist ${i + 1}`, item)
+    if (rewritten)
+      c.add(denyErrors(`${id} anchor checklist ${i + 1}`, item, section.precommitDenyPatterns))
+  })
+  if (section.incrementSentence && !/^This section adds one idea/.test(section.incrementSentence))
     c.add(
       `${id} increment sentence does not count its idea out loud ("This section adds one idea …").`,
     )
@@ -610,22 +689,26 @@ export function bronchSectionErrors(section: BronchSectionDefinition): readonly 
   for (const row of section.grammarRowIds)
     if (!GRAMMAR.has(row)) c.add(`${id} highlights an unknown grammar row ${row}.`)
   const strip = section.controlStrip
-  const states = SCOPE_CONTROL_IDS.map((control) => strip.states[control])
-  if (states.some((state) => state === undefined))
-    c.add(`${id} control strip leaves a control out.`)
-  const thisOne = states.filter((state) => state === 'this-one').length
-  if (strip.verdict === 'this-control' && thisOne === 0)
-    c.add(`${id} control strip says a control is the answer and marks none.`)
-  if (strip.verdict !== 'this-control' && thisOne > 0)
-    c.add(`${id} control strip says no control fixes it and marks one.`)
-  c.copy(`${id} control strip sentence`, strip.sentence)
+  if (c.required(`${id} control strip`, strip, rewritten)) {
+    const states = SCOPE_CONTROL_IDS.map((control) => strip.states[control])
+    if (states.some((state) => state === undefined))
+      c.add(`${id} control strip leaves a control out.`)
+    const thisOne = states.filter((state) => state === 'this-one').length
+    if (strip.verdict === 'this-control' && thisOne === 0)
+      c.add(`${id} control strip says a control is the answer and marks none.`)
+    if (strip.verdict !== 'this-control' && thisOne > 0)
+      c.add(`${id} control strip says no control fixes it and marks one.`)
+    c.copy(`${id} control strip sentence`, strip.sentence)
+  }
 
   if (section.precommitDenyPatterns.length === 0)
     c.add(`${id} lists no phrase that would give its answer away.`)
   const keyed = section.prediction.choices.find((choice) => choice.plausibility === 'best')
-  const postcommit = [keyed?.label ?? '', section.prediction.explanation, section.newConcept].join(
-    ' ',
-  )
+  const postcommit = [
+    keyed?.label ?? '',
+    section.prediction.explanation,
+    section.newConcept ?? '',
+  ].join(' ')
   for (const pattern of section.precommitDenyPatterns) {
     if (pattern.flags.includes('g'))
       c.add(
@@ -642,14 +725,20 @@ export function bronchSectionErrors(section: BronchSectionDefinition): readonly 
   c.add(reviewIdErrors(id, section.reviewItemIds))
 
   const blocks = section.blocks
-  if (blocks.length < 3) c.add(`${id} has fewer than three teaching blocks.`)
-  if (blocks[0]?.kind !== 'question') c.add(`${id} does not open with a question block.`)
-  if (!blocks.some((block) => block.role === 'normal-reference' || block.role === 'worked-example'))
-    c.add(`${id} has no normal reference or worked example.`)
-  if (!blocks.some((block) => block.role === 'common-errors'))
-    c.add(`${id} has no block on common errors and their correction.`)
-  if (!blocks.some((block) => block.kind === 'after-commitment'))
-    c.add(`${id} has no block that waits for the commitment.`)
+  if (rewritten) {
+    if (blocks.length < 2) c.add(`${id} has fewer than two teaching cards.`)
+  } else {
+    if (blocks.length < 3) c.add(`${id} has fewer than three teaching blocks.`)
+    if (blocks[0]?.kind !== 'question') c.add(`${id} does not open with a question block.`)
+    if (
+      !blocks.some((block) => block.role === 'normal-reference' || block.role === 'worked-example')
+    )
+      c.add(`${id} has no normal reference or worked example.`)
+    if (!blocks.some((block) => block.role === 'common-errors'))
+      c.add(`${id} has no block on common errors and their correction.`)
+    if (!blocks.some((block) => block.kind === 'after-commitment'))
+      c.add(`${id} has no block that waits for the commitment.`)
+  }
   const blockIds = blocks.map((block) => block.id)
   if (new Set(blockIds).size !== blockIds.length) c.add(`${id} repeats a block id.`)
   const headings = blocks.map((block) => block.heading)
@@ -660,17 +749,19 @@ export function bronchSectionErrors(section: BronchSectionDefinition): readonly 
   actErrors(c, section.act, section)
 
   const steps = section.steps
-  c.add(landmarkErrors(`${id} Recognize`, steps.recognize.lookIn, section))
-  c.title(`${id} Act title`, steps.act.title)
-  c.copy(`${id} Act instruction`, steps.act.instruction)
-  c.add(landmarkErrors(`${id} Act`, steps.act.lookIn, section))
-  if (steps.observe) {
-    c.title(`${id} Observe title`, steps.observe.title)
-    c.copy(`${id} Observe instruction`, steps.observe.instruction)
-    c.add(landmarkErrors(`${id} Observe`, steps.observe.lookIn, section))
+  if (steps) {
+    c.add(landmarkErrors(`${id} Recognize`, steps.recognize.lookIn, section))
+    c.title(`${id} Act title`, steps.act.title)
+    c.copy(`${id} Act instruction`, steps.act.instruction)
+    c.add(landmarkErrors(`${id} Act`, steps.act.lookIn, section))
+    if (steps.observe) {
+      c.title(`${id} Observe title`, steps.observe.title)
+      c.copy(`${id} Observe instruction`, steps.observe.instruction)
+      c.add(landmarkErrors(`${id} Observe`, steps.observe.lookIn, section))
+    }
+    c.title(`${id} Explain title`, steps.explain.title)
+    c.copy(`${id} Explain instruction`, steps.explain.instruction)
   }
-  c.title(`${id} Explain title`, steps.explain.title)
-  c.copy(`${id} Explain instruction`, steps.explain.instruction)
 
   itemErrors(c, `${id} prediction`, section.prediction, section, true)
   itemErrors(c, `${id} transfer`, section.transfer, section, false)
@@ -691,6 +782,8 @@ export function bronchSectionErrors(section: BronchSectionDefinition): readonly 
     c.add(`${id} is a ${stage} section with no practice case paired to it.`)
   }
   for (const entry of section.practice) microCaseErrors(c, entry, section)
+
+  if (rewritten) c.add(rewriteRuleErrors(section, COURSE_FLOWS[id] ?? []))
 
   return c.errors
 }
@@ -742,6 +835,33 @@ export function validateAllSections(
       `The keyed choice is the longest in ${keyLongest} of ${items.length} items; choosing the longest option must not beat chance.`,
     )
   }
+  errors.push(...rewrittenSetErrors(sections))
+  return errors
+}
+
+/** Rules the rewritten sections hold as a set: questions on images, and no reward for test-wiseness. */
+export function rewrittenSetErrors(
+  sections: readonly BronchSectionDefinition[],
+): readonly string[] {
+  const rewritten = sections.filter((section) => section.authoringContract === 2)
+  if (rewritten.length < 2) return []
+  const errors: string[] = []
+  const counts = rewritten.map(imageItemCounts)
+  const image = counts.reduce((total, count) => total + count.image, 0)
+  const total = counts.reduce((sum, count) => sum + count.total, 0)
+  if (total > 0 && image / total < REWRITE_CAPS.imageItemShare)
+    errors.push(
+      `${image} of the rewritten sections' ${total} questions show an image; at least a third.`,
+    )
+  const bank = rewritten.flatMap((section) => [
+    ...sectionItems(section),
+    ...(section.act.kind === 'scenario' ? section.act.scenario.frames : []),
+  ])
+  const score = testWiseScore(bank)
+  if (bank.length >= 8 && score > REWRITE_CAPS.testWiseScore)
+    errors.push(
+      `A test-wise reader gets ${(score * 100).toFixed(0)} in 100 of the rewritten questions right without the medicine; at most ${REWRITE_CAPS.testWiseScore * 100}.`,
+    )
   return errors
 }
 

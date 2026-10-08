@@ -14,6 +14,7 @@ import type { GrammarRowId } from './grammar'
 import type { CopyExemption } from './learnerCopy'
 import type { LocalPolicyId } from './localPolicies'
 import type { MediaRef } from './media'
+import type { NumberId } from './numbers'
 import type { RegisterExemption } from './reviewRegister'
 import type { BronchSectionId } from './sectionIds'
 import type { SpineStopId } from './spine'
@@ -101,6 +102,10 @@ export interface AuthoredItem {
   readonly copyExemptions?: readonly CopyExemption[]
   /** When the answer is an airway, the map pin each choice corresponds to (answer on the map). */
   readonly choiceAirways?: Readonly<Record<string, AirwayLabel | null>>
+  /** Rewritten sections: the section outcomes this item assesses. */
+  readonly outcomeIds?: readonly string[]
+  /** Register rows the item's copy uses. Filled in by the section registry; never authored. */
+  readonly numberIds?: readonly NumberId[]
 }
 
 export interface AuthoredTransferItem extends AuthoredItem {
@@ -123,6 +128,8 @@ export type BlockRole =
   | 'worked-example'
   | 'mechanism'
   | 'common-errors'
+  /** A first-move card: what you do first, in order, and when to call for help. */
+  | 'first-moves'
   | 'policy'
   | 'boundary'
 
@@ -151,9 +158,18 @@ export interface BronchTeachingBlock {
   /** A `common-errors` block may name a refuted register phrase, with the R-item. */
   readonly registerExemptions?: readonly RegisterExemption[]
   readonly copyExemptions?: readonly CopyExemption[]
+  /** A first-move card's moves, in the order they are made. Rendered as a numbered list. */
+  readonly steps?: readonly string[]
+  /** A first-move card's last line: when to call for help, and for whom. */
+  readonly callForHelp?: string
+  /** Register rows the block's copy uses. Filled in by the section registry; never authored. */
+  readonly numberIds?: readonly NumberId[]
 }
 
-/** Analogy → precise statement → checklist of at most four (P2). Shown at Explain. */
+/**
+ * The memory hook: an analogy, one precise sentence and a checklist of at most four. It opens the
+ * section, with the clinical question, and the closing screen repeats the checklist.
+ */
 export interface ConceptAnchor {
   readonly analogy: string
   readonly precise: string
@@ -177,11 +193,18 @@ export type MonitorChannel =
 
 export type MonitorTrend = 'steady' | 'rising' | 'falling' | 'lost' | 'new'
 
-/** Scripted and in words: a trend against this patient's own earlier state, never a threshold. */
+/**
+ * One line of the monitor in a teaching case. A reading may carry its number: the value as the
+ * monitor would show it ("91", "118/72"), its unit, and `provenance: 'authored'`, which marks it as
+ * written for the case rather than taken from a guideline or computed by a model.
+ */
 export interface MonitorReading {
   readonly channel: MonitorChannel
   readonly words: string
   readonly trend: MonitorTrend
+  readonly value?: string
+  readonly unit?: string
+  readonly provenance?: 'authored'
 }
 
 /** What the Simulator panel shows while the section is being recognized, predicted and explained. */
@@ -420,8 +443,22 @@ export interface AuthoredMicroCase {
   readonly item: AuthoredItem
 }
 
+/** What a rewritten section sets out to teach. One or two, each assessed at least three times. */
+export interface SectionOutcome {
+  readonly id: string
+  /** Starts with a verb the learner can be seen doing: name, grade, choose, enter. */
+  readonly text: string
+}
+
 export interface BronchSectionDefinition {
   readonly id: BronchSectionId
+  /**
+   * `2` marks a section re-authored under the rewrite rules (`authoringRules.ts`): the caps on
+   * length, numbers from the register, one hook, first moves instead of deferral. Those rules are
+   * strict for it. A section without the mark is reported against them and held to the first
+   * contract until it is rewritten.
+   */
+  readonly authoringContract?: 2
   /** Names the topic, never the answer. No digits. */
   readonly title: string
   readonly shortTitle: string
@@ -434,30 +471,41 @@ export interface BronchSectionDefinition {
 
   /** The decision this section lets the learner make. Pre-commit. */
   readonly clinicalQuestion: string
-  /** The Recognize step's title, in presentation terms. Pre-commit. No digits. */
-  readonly recognizeTitle: string
+  /** First contract only. The Recognize step's title, in presentation terms. No digits. */
+  readonly recognizeTitle?: string
   /** The discrimination the section enables. Pre-commit; never opens with the answer. */
   readonly objective: string
-  /** Why it matters at the bedside, in one or two sentences. Pre-commit. */
-  readonly why: string
-  /** Exactly one idea. Shown at Explain. */
-  readonly newConcept: string
-  /** "This section adds one idea to the last: …" Shown at Explain. */
-  readonly incrementSentence: string
+  /** First contract only. Why it matters at the bedside, in one or two sentences. */
+  readonly why?: string
+  /** First contract only. Exactly one idea. */
+  readonly newConcept?: string
+  /** First contract only. "This section adds one idea to the last: …" */
+  readonly incrementSentence?: string
   /** The tempting wrong move. The Act and the items must not reward it. */
   readonly harmfulReflex: string
+  /**
+   * Rewritten sections: phrases that name the harmful reflex. A choice is flagged `unsafe` only
+   * when its label matches one, so the flag marks the section's own trap and nothing else.
+   */
+  readonly harmfulReflexPatterns?: readonly RegExp[]
   readonly anchor: ConceptAnchor
+  /** Rewritten sections: one or two outcomes, each assessed at least three times. */
+  readonly outcomes?: readonly SectionOutcome[]
+  /** Rewritten sections: the measured time the activities take, in minutes, apart from reading. */
+  readonly activityMinutes?: number
 
   readonly spineStops: readonly SpineStopId[]
   readonly grammarRowIds: readonly GrammarRowId[]
-  readonly controlStrip: ControlStrip
+  /** First contract only. */
+  readonly controlStrip?: ControlStrip
   /** Phrases naming the keyed answer; no pre-commit surface may carry one. Each must match the key. */
   readonly precommitDenyPatterns: readonly RegExp[]
   /**
-   * What the model and the section do not represent. Shown at Explain, under "What this model leaves
-   * out". The Simulator panel prints the current view's own `boundary` under the scene.
+   * First contract only: what the model and the section do not represent. A rewritten section has
+   * none; the course says once, on the hub, what an online course cannot establish, and each
+   * simulator view prints its own one line (`boundary`) under the scene.
    */
-  readonly modelBoundary: string
+  readonly modelBoundary?: string
   /**
    * Required when an objective needs observed physical skill: what the app cannot see. Shown at
    * Explain and on the completion card, never before the prediction.
@@ -468,7 +516,8 @@ export interface BronchSectionDefinition {
 
   readonly blocks: readonly BronchTeachingBlock[]
   readonly workspace: BronchWorkspace
-  readonly steps: BronchStepTexts
+  /** First contract only. Validated there; the course flow has not rendered these since the redesign. */
+  readonly steps?: BronchStepTexts
   readonly act: BronchAct
   readonly prediction: AuthoredItem
   readonly transfer: AuthoredTransferItem
