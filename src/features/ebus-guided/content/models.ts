@@ -254,7 +254,7 @@ export const measurementModel: Lesson = {
   ],
   sources: ['atlas', 'simulation'],
   boundary:
-    'Analytic geometric phantoms with authored dimensions. The fictional station label teaches documentation and does not make these objects anatomical station boundaries. Measurements in this simulator are shown in millimeters for teaching and relative comparison. They reflect the model geometry and should not be interpreted as validated measurements of a real patient or exact lymph-node dimensions.',
+    'These are geometric phantoms. The station label on them teaches documentation; it does not make them an anatomical station.',
 }
 export const routeModel: Lesson = {
   id: 'eus-b-route-model',

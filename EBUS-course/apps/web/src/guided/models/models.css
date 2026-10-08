@@ -62,6 +62,7 @@
   position: relative;
   overflow: hidden;
   border-radius: 6px;
+  background: radial-gradient(circle at 50% 42%, #16303f 0%, #0a1a26 62%, #060f17 100%);
 }
 .model-viewport canvas {
   display: block;

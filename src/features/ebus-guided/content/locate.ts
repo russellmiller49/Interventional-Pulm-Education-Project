@@ -1,7 +1,5 @@
 import type { Lesson } from './types'
 import { question as q, matching } from './authoring'
-const boundary =
-  'Station names follow anatomical boundaries, not the apparent shape of a single node. The teaching library contains representative views; the 3D model assists position and does not establish independent station-identification competence.'
 export const locateLessons: Lesson[] = [
   {
     id: 'ct-map',
@@ -98,9 +96,6 @@ export const locateLessons: Lesson[] = [
       'Keep anatomical source and specimen identity linked.',
     ],
     sources: ['atlas', 'iaslc9'],
-    boundary:
-      boundary +
-      ' Measurements in this simulator are shown in millimeters for teaching and relative comparison. They reflect the model geometry and should not be interpreted as validated measurements of a real patient or exact lymph-node dimensions.',
   },
   {
     id: 'station-seven',
@@ -209,7 +204,6 @@ export const locateLessons: Lesson[] = [
       'Below the carina does not automatically mean subcarinal.',
     ],
     sources: ['atlas', 'iaslc9', 'simulation'],
-    boundary,
   },
   {
     id: 'right-paratracheal',
@@ -320,7 +314,6 @@ export const locateLessons: Lesson[] = [
       'The paratracheal side boundary is the left lateral tracheal wall.',
     ],
     sources: ['atlas', 'simulation'],
-    boundary,
   },
   {
     id: 'left-paratracheal',
@@ -408,7 +401,6 @@ export const locateLessons: Lesson[] = [
       'Distinguish 4L from the lateral subaortic compartment.',
     ],
     sources: ['atlas', 'ics2023', 'simulation'],
-    boundary,
   },
   {
     id: 'hilar-interlobar',
@@ -486,6 +478,5 @@ export const locateLessons: Lesson[] = [
       'An accessible node is not necessarily a mediastinal node.',
     ],
     sources: ['atlas', 'iaslc9'],
-    boundary,
   },
 ]

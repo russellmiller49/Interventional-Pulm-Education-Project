@@ -212,7 +212,9 @@ export const STRUCTURE_DISPLAY_NAMES: Record<string, string> = {
 }
 /** The name to show for a structure: the course's spelling where it differs, else the model's. */
 export function structureDisplayName(id: string, label?: string) {
-  return STRUCTURE_DISPLAY_NAMES[id] ?? String(label ?? id).replace(/_/g, ' ')
+  const name = STRUCTURE_DISPLAY_NAMES[id] ?? String(label ?? id).replace(/_/g, ' ')
+  // One case style for every label on a model: "Aorta" beside "Example node 4L", not "aorta".
+  return name.charAt(0).toUpperCase() + name.slice(1)
 }
 export const LANDMARK_HINTS: Record<string, string> = {
   transducer_face:

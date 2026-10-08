@@ -92,6 +92,7 @@ export function SequenceActivity({
         {!checked && !shown && selected.length === sequence.steps.length && (
           <button
             type="button"
+            className={styles.button}
             onClick={() => {
               setChecked(true)
               if (correct) onComplete()

@@ -31,6 +31,8 @@ select {
   border: 1px solid #36515a;
   border-radius: 10px;
   scroll-margin-top: 64px;
+  /* A stage darker than the panel around it, so the model stands off its background. */
+  background: radial-gradient(circle at 50% 42%, #14313b 0%, #071920 62%, #040f14 100%);
 }
 .linked-model-tooltip {
   position: absolute;
@@ -138,31 +140,36 @@ select {
 /* Model-frame compass: a screen-space overlay, never clipped, never under a marker. */
 .linked-compass {
   position: absolute;
-  left: 6px;
-  bottom: 6px;
-  width: 80px;
-  height: 96px;
+  left: 8px;
+  bottom: 8px;
+  width: 88px;
+  height: 88px;
   z-index: 2;
   pointer-events: none;
-  color: #edf6f5;
-  font: 700 11px/1 system-ui, sans-serif;
+  border-radius: 50%;
+  background: rgba(4, 16, 21, 0.55);
 }
-.linked-compass span {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  text-shadow:
-    0 0 3px #081c22,
-    0 0 3px #081c22;
+.linked-compass svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
-.linked-compass small {
-  position: absolute;
-  left: 40px;
-  bottom: 0;
-  transform: translateX(-50%);
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  opacity: 0.85;
+.linked-compass line {
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.linked-compass line[data-axis='x'] {
+  stroke: #f08a7e;
+}
+.linked-compass line[data-axis='y'] {
+  stroke: #8fdc8a;
+}
+.linked-compass line[data-axis='z'] {
+  stroke: #7fb4f5;
+}
+.linked-compass text {
+  fill: #f2f8f8;
+  font: 700 12px/1 system-ui, sans-serif;
 }
 .linked-landmark-controls {
   display: flex;
@@ -682,4 +689,311 @@ body,
   height: auto;
   aspect-ratio: 1;
   max-height: 460px;
+}
+
+/*
+ * Lab console: bronchoscopy, ultrasound and 3D anatomy in one row, one control bar beneath.
+ * Below 1000 px the ultrasound takes a full row, so the 3D pane keeps room for its labels.
+ */
+.linked-trio {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr) minmax(0, 0.9fr);
+  align-items: stretch;
+}
+.linked-pane,
+.linked-pane--scan {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid #2c4650;
+  border-radius: 12px;
+  background: #0a1c23;
+  overflow: hidden;
+}
+.linked-pane--scan {
+  border-color: #5fe0e6;
+  box-shadow: 0 0 0 1px rgba(95, 224, 230, 0.35);
+}
+.linked-pane-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 8px 10px 6px;
+  font: 700 11px/1.2 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9fd3da;
+}
+.linked-pane-title small {
+  color: #e2b565;
+  font-size: 10px;
+}
+.linked-trio .linked-canvas,
+.linked-trio .guided-anatomy {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 300px;
+  border: 0;
+  border-radius: 0;
+}
+.linked-trio .guided-anatomy > * {
+  height: 100%;
+}
+.linked-control-bar {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid #2c4650;
+  border-radius: 12px;
+  background: #0d2129;
+}
+.linked-control-bar fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  align-items: end;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.linked-control-bar legend {
+  float: left;
+  width: auto;
+  margin-right: 6px;
+  padding: 0;
+  font: 700 11px/1.2 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9fd3da;
+}
+.linked-control-bar label {
+  flex: 1 1 220px;
+  margin: 0;
+}
+@media (max-width: 1000px) {
+  .linked-trio {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .linked-trio .linked-pane--scan {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+}
+@media (max-width: 480px) {
+  .linked-trio {
+    grid-template-columns: 1fr;
+  }
+}
+
+/*
+ * Console mode: the linked workbench fills its frame and nothing in it scrolls at laptop sizes.
+ * The host gives the frame a fixed height (the viewport less the lesson chrome), so the three
+ * panes take whatever the task line, control bar and status line leave.
+ */
+.guided-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.guided-workbench--console {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100vh;
+  box-sizing: border-box;
+  padding: 8px;
+  overflow-y: auto;
+}
+.guided-workbench--console .linked-console {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 8px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.linked-console .linked-trio,
+.linked-console .linked-pair {
+  flex: 1 1 auto;
+  min-height: 270px;
+}
+.linked-console .linked-trio .linked-canvas,
+.linked-console .linked-trio .guided-anatomy,
+.linked-console .linked-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
+.linked-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.linked-console .linked-pane--scan .simulator-sector-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.linked-console .linked-pane--scan .simulator-continuous-ultrasound {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+.linked-console .linked-pane--scan .simulator-pane-header {
+  min-height: 0;
+  padding: 6px 10px;
+}
+.linked-task-line {
+  margin: 0;
+}
+.linked-console .linked-landmark-task,
+.linked-console .linked-demo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid #2c4650;
+  border-radius: 12px;
+  background: #0d2129;
+}
+.linked-console .linked-landmark-task h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.linked-console .linked-landmark-task p,
+.linked-console .linked-demo span {
+  margin: 0;
+  font-size: 13px;
+  color: #c4d6da;
+}
+.linked-console .linked-landmark-controls {
+  flex: 1 1 320px;
+  margin: 0;
+  align-items: center;
+}
+.linked-console .linked-landmark-controls label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.linked-console .linked-demo .guided-tabs {
+  margin: 0 0 0 auto;
+}
+/* Scope / Anatomy / Section as one segmented control in the 3D pane's header. */
+.linked-mode-switch {
+  display: inline-flex;
+  border: 1px solid #36515a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.linked-mode-switch button {
+  padding: 3px 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #abc3ca;
+  font: 600 11px/1.4 system-ui, sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.linked-mode-switch button + button {
+  border-left: 1px solid #36515a;
+}
+.linked-mode-switch button[aria-pressed='true'] {
+  background: #1f4a55;
+  color: #f2f8f8;
+}
+/* View chips sit on the stage itself, as in the EUS-B simulator. */
+.linked-view-chips {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  max-width: calc(100% - 16px);
+}
+.linked-view-chips button {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(8, 28, 34, 0.82);
+  font-size: 11px;
+}
+.linked-console .linked-control-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  align-items: center;
+  margin: 0;
+  padding: 8px 12px;
+}
+.linked-console .linked-control-bar fieldset {
+  flex: 1 1 360px;
+}
+.linked-console .linked-approach {
+  margin: 0;
+}
+.linked-console .linked-sweep {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  align-items: baseline;
+  margin: 0;
+  padding: 6px 12px;
+  border: 1px solid #2c4650;
+  border-radius: 12px;
+  font-size: 13px;
+}
+.linked-console .linked-sweep p,
+.linked-console .linked-sweep div {
+  margin: 0;
+}
+.linked-console .linked-sweep div[role='status'] {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.linked-more {
+  font-size: 13px;
+}
+.linked-more summary {
+  cursor: pointer;
+  color: #9fd3da;
+}
+.guided-scan-workspace--console {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0;
+}
+.guided-scan-workspace--console .guided-scan-image:empty,
+.guided-scan-workspace--console p:empty {
+  display: none;
+}
+@media (max-width: 1000px) {
+  .guided-workbench--console {
+    height: auto;
+    overflow: visible;
+  }
+  .linked-console .linked-trio .linked-canvas,
+  .linked-console .linked-trio .guided-anatomy,
+  .linked-console .linked-pane--scan .simulator-continuous-ultrasound {
+    min-height: 260px;
+  }
+}
+
+.linked-view-chips button[aria-pressed='true'] {
+  background: #1f4a55;
+  border-color: #5fe0e6;
 }

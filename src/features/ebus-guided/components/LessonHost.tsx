@@ -104,7 +104,6 @@ function LessonSession({
   const heading = useRef<HTMLHeadingElement>(null)
   const lessonFlow = useRef<HTMLDivElement>(null)
   const lessonChrome = useRef<HTMLDivElement>(null)
-  useLessonChromeClearance(lessonFlow, lessonChrome)
   const [sessionId] = useState(() => lesson.id + '-' + Math.random().toString(36).slice(2))
   const position = activities.findIndex((activity) => activity.id === activeId)
   const current = activities.find((activity) => activity.id === (reviewId ?? activeId))!
@@ -266,22 +265,29 @@ function LessonSession({
               : finishOrNext
   const primaryDisabled = holdRequested || (acquireStep && !labDone)
   /*
-   * How much weight the advance control carries (EBUS-PRE-REVIEW-01, L1-7). It is always in the
-   * same place and always says the same thing; only its prominence follows what it is offering.
-   *
-   *  - While a matching, sequence or record task is open it offers to leave that task
-   *    uncompleted. That stays one click away and plainly labelled, but the brightest control on
-   *    a screen whose point is the task should not be the one that skips it.
-   *  - While the primary is disabled on an acquisition step there would otherwise be no prominent
-   *    way forward at all, so "Continue without an image" carries the weight until a real
-   *    acquisition enables "Hold this acquisition" and takes it back. Nothing about what either
-   *    control does, or about the acquisition gate itself, changes here.
+   * The filled button is always the task: hold the acquisition, move on once a task is done.
+   * When the same control would instead leave a task or a check unanswered, it is a text link,
+   * and so is "Continue without an image". The brightest control on a screen used to be the one
+   * that skipped its point (visual review of 2026-10-07, item 7).
    */
-  const advanceIsProminent = !(taskOpen && !reviewId) && !primaryDisabled
-  const skipLeadsWhileDisabled = acquireStep && primaryDisabled && !holdRequested
+  /*
+   * A linked acquisition is worked in a console that fits one screen: task, checklist and the
+   * Hold button in a strip, the three views under it, nothing to scroll (visual review of
+   * 2026-10-07, item 1). Recorded-clip and model labs keep the reading layout for now.
+   */
+  const consoleStage =
+    !finished &&
+    !reviewId &&
+    current.interaction === 'acquire' &&
+    runtimeLab?.kind === 'simulator' &&
+    !!runtimeLab.linkedLesson
+  useLessonChromeClearance(lessonFlow, lessonChrome, consoleStage)
+  const advanceIsSkip =
+    !reviewId && !holdRequested && !acquireStep && (taskOpen || (!!question && !committed))
+  const advanceIsProminent = !advanceIsSkip
   const disabledReason = holdRequested
     ? 'Waiting for the workbench to acknowledge the paused frame.'
-    : 'Complete the acquisition to hold an image, or continue without one.'
+    : 'Finish the acquisition steps above to hold an image.'
   useEffect(() => {
     if (
       !holdRequested ||
@@ -491,7 +497,7 @@ function LessonSession({
               {item.title}
             </Link>
           ))}
-          <span>Unlisted preview · For education and supervised training</span>
+          <span>For education and supervised training</span>
         </nav>
         {/*
          * Lesson identity, the lesson controls and the task counter, kept together and kept in
@@ -571,7 +577,12 @@ function LessonSession({
             nothing new is being saved. Everything stays open.
           </p>
         )}
-        <section className={styles.taskSurface} data-now-card aria-labelledby="ebus-task-title">
+        <section
+          className={styles.taskSurface}
+          data-now-card
+          data-console={consoleStage || undefined}
+          aria-labelledby="ebus-task-title"
+        >
           <div className={styles.taskHeading}>
             <p className={styles.eyebrow} data-activity-kind={current.kind}>
               {reviewId ? 'Review · Current activity paused' : KIND_LABELS[current.kind]}
@@ -616,7 +627,7 @@ function LessonSession({
                   : !showDemo && !(current.image === 'reference' || !!figure))
               }
             >
-              {evidenceKind && (
+              {evidenceKind && evidenceKind !== 'held-missing' && (
                 <p
                   className={styles.evidenceIdentity}
                   data-evidence-identity={evidenceKind}
@@ -625,7 +636,17 @@ function LessonSession({
                   {evidenceLabel[evidenceKind]}
                 </p>
               )}
-              {runtimeActivity && runtimeLab ? (
+              {evidenceKind === 'held-missing' && runtimeActivity ? (
+                // After a skip there is nothing to show. The pane used to draw a frame titled
+                // "Retained ultrasound" beside a sentence saying no image was held.
+                <div className={styles.emptyEvidence} data-evidence-identity="held-missing">
+                  <strong>No acquisition held</strong>
+                  <p>You continued without an image, so there is nothing of yours to read here.</p>
+                  <button type="button" className={styles.button} onClick={returnToAcquisition}>
+                    Go back and acquire one
+                  </button>
+                </div>
+              ) : runtimeActivity && runtimeLab ? (
                 <Workbench
                   key={runtimeActivity.task ?? 'guided'}
                   lab={runtimeLab}
@@ -635,6 +656,7 @@ function LessonSession({
                   reveal={reveal && !reviewId}
                   sessionId={sessionId + '-' + (runtimeActivity.task ?? 'guided')}
                   onObservation={onObservation}
+                  console={consoleStage}
                 />
               ) : showDemo && lesson.lab ? (
                 <Workbench
@@ -788,7 +810,7 @@ function LessonSession({
                 lesson.matching && (
                   <section
                     className={styles.sequence}
-                    aria-label="Authored matches"
+                    aria-label="The matches"
                     data-task-reference="matching"
                   >
                     <h3>Authored matches</h3>
@@ -810,7 +832,7 @@ function LessonSession({
                 lesson.sequence && (
                   <section
                     className={styles.sequence}
-                    aria-label="Authored sequence"
+                    aria-label="The sequence"
                     data-task-reference="sequence"
                   >
                     <h3>Authored sequence</h3>
@@ -916,7 +938,7 @@ function LessonSession({
                     <p>The acquisition is ready. Hold this image to interpret it.</p>
                   ) : (
                     <>
-                      <p>
+                      <p data-acquisition-waiting>
                         Waiting for your acquisition.{' '}
                         {runtimeLab?.kind === 'knobology'
                           ? 'Selecting a recording is not yet an acquisition.'
@@ -950,9 +972,11 @@ function LessonSession({
                   </ul>
                 </section>
               )}
-              {!finished && (current.interaction === 'acquire' || current.image === 'held') && (
-                <p className={styles.muted}>{lesson.boundary}</p>
-              )}
+              {!finished &&
+                lesson.boundary &&
+                (current.interaction === 'acquire' || current.image === 'held') && (
+                  <p className={styles.muted}>{lesson.boundary}</p>
+                )}
               {current.companion && (
                 <Link className={styles.secondary} href={lessonHref(current.companion)}>
                   Related concept: {LESSONS.find((entry) => entry.id === current.companion)?.title}
@@ -982,11 +1006,8 @@ function LessonSession({
             {acquireStep && !holdRequested && !finished && (
               <button
                 type="button"
-                className={
-                  (skipLeadsWhileDisabled ? styles.button : styles.secondary) + ' ' + styles.skip
-                }
+                className={styles.skipLink + ' ' + styles.skip}
                 data-skip-acquisition
-                data-prominent={skipLeadsWhileDisabled || undefined}
                 onClick={skipAcquisition}
               >
                 Continue without an image
@@ -1005,7 +1026,7 @@ function LessonSession({
                 data-now-primary
                 data-prominent={advanceIsProminent || undefined}
                 className={
-                  (advanceIsProminent ? styles.button : styles.secondary) + ' ' + styles.advance
+                  (advanceIsProminent ? styles.button : styles.skipLink) + ' ' + styles.advance
                 }
                 disabled={primaryDisabled}
                 onClick={advance}
@@ -1106,11 +1127,11 @@ function LessonSession({
                 try again, or continue without answering. Restart begins a new acquisition. Exit
                 keeps your place; the unfinished lesson starts over when reopened.
               </p>
-              <p>{lesson.boundary}</p>
+              {lesson.boundary && <p>{lesson.boundary}</p>}
               <GlossaryTerms
                 entries={GLOSSARY}
                 heading="Course glossary"
-                intro="Course definitions and owner-approved terminology expansions, with sources and limits."
+                intro="The terms this course uses, with where each comes from."
                 currentLessonId={lesson.id}
               />
             </>

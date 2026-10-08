@@ -550,28 +550,12 @@ describe('S16-1 / VA16-1: the battery reading carries its typed unit, on both tr
     expect(itemCopy(va)).toMatch(/rather than a duration/)
   })
 
-  it('VA: the exception is one token, in one item, and the shared guard is untouched', () => {
-    const copy = itemCopy(va)
-    expect(flaggedLearnerCopyTerms(copy)).toEqual(['percent'])
-    expect(copy.match(/\bpercent\b/gi)).toHaveLength(1)
-    expect(copy).not.toContain('%')
+  it('VA: the reading needs no vocabulary exception, and the key is unchanged', () => {
+    expect(flaggedLearnerCopyTerms(itemCopy(va))).toEqual([])
     expect(clinicalLearningItemSchema.safeParse(va).success).toBe(true)
-    expect(
-      clinicalLearningItemSchema.safeParse({ ...va, learnerCopyOverrideReason: undefined }).success,
-    ).toBe(false)
     expect(va.correctChoiceIds).toEqual(['verified-source-with-backup-alongside'])
-  })
-
-  it('only the two transport items carry an exception, each its own', () => {
-    const overridden = Object.entries(ecmoLearnPredictions)
-      .filter(([, prediction]) => prediction.item.learnerCopyOverrideReason !== undefined)
-      .map(([id]) => id)
-      .sort()
-    expect(overridden).toEqual(['transport-power-loss', 'va-transport-power-loss'])
-    expect(va.learnerCopyOverrideReason).not.toBe(vv.learnerCopyOverrideReason)
-    for (const item of [vv, va]) {
-      expect(flaggedLearnerCopyTerms(itemCopy(item))).toEqual(['percent'])
-    }
+    expect(vv.learnerCopyOverrideReason).toBeUndefined()
+    expect(va.learnerCopyOverrideReason).toBeUndefined()
   })
 
   it('preserved (#315): the venovenous item still reads "24 percent"', () => {

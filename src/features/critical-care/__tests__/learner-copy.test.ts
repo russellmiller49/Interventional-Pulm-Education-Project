@@ -39,7 +39,6 @@ const forbiddenStaticUiTerms = [
   'mastered',
   'exam',
   'quiz',
-  'assessment',
   'competency',
   'competent',
   'certification',
@@ -55,18 +54,6 @@ interface StaticUiCopy {
 // ECMO-02: these exact passages concern clinical care or deny a competence claim.
 // Keep other modules' findings visible; neither a whole file nor a term is exempted.
 const contextualEcmoCopy = [
-  {
-    file: 'src/features/cardiohelp-ecmo/components/teaching/PumpPressureZonesPanel.tsx',
-    copy: 'This reference does not model drainage collapse or chatter at the offered speeds. A poor flow response with increasingly negative drainage pressure on another circuit would require assessment of drainage, not an automatic further speed increase.',
-    term: 'assessment',
-    reason: 'Assessment refers to the drainage problem, not an examination of the learner.',
-  },
-  {
-    file: 'src/features/cardiohelp-ecmo/components/teaching/WhyExtracorporealSupportPanel.tsx',
-    copy: 'Support does not treat the underlying lung injury, cardiac lesion, bleeding, or sepsis. The cause still needs assessment and treatment.',
-    term: 'assessment',
-    reason: 'Assessment and treatment refer to the underlying clinical cause.',
-  },
   {
     file: 'src/features/cardiohelp-ecmo/components/practice/EcmoCaseDebrief.tsx',
     // ECMO-FELLOW-01 (IV-3): the sentence now says what the empty log is a statement about, and
@@ -217,7 +204,7 @@ describe('critical-care learner-copy framing', () => {
 
   it('still detects learner examinations and developer jargon, including accessible labels', () => {
     for (const copy of [
-      'Pass the assessment to continue',
+      'Pass the exam to continue',
       'You earned safety certification',
       'Engine score',
       'Mastery quiz',
@@ -233,7 +220,7 @@ describe('critical-care learner-copy framing', () => {
       'accessible-fixture.tsx',
       `
       <section>
-        <button aria-label="Pass the assessment to continue">Open</button>
+        <button aria-label="Pass the exam to continue">Open</button>
         <img alt="Mastery badge" />
         <input placeholder="Exam answer" title="Engine score" />
       </section>

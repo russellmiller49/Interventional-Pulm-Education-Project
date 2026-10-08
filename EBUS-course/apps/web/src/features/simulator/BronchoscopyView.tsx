@@ -933,6 +933,8 @@ export function BronchoscopyView({
       geometry.dispose();
       material.dispose();
       renderer.dispose();
+      // Release the GPU context now; a browser keeps only a limited number alive per page.
+      renderer.forceContextLoss();
     };
   }, [assets, cameraRecord, structures, caseData]);
 

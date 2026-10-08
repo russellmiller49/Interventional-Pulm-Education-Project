@@ -348,7 +348,7 @@ describe('the advance row', () => {
   it('keeps the explanation slot present whether or not it has anything to say', () => {
     openAcquisition('gain-contrast')
     const note = document.querySelector('[data-advance-note]')!
-    expect(note.textContent).toMatch(/Complete the acquisition/)
+    expect(note.textContent).toMatch(/Finish the acquisition steps/)
 
     fireEvent.click(document.querySelector('[data-skip-acquisition]') as HTMLButtonElement)
     expect(document.querySelector('[data-advance-note]')).not.toBeNull()

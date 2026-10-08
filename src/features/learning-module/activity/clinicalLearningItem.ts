@@ -26,8 +26,12 @@ const softwareInternalTerms = [
  *
  * This is the half of the review list that protects a publication position rather than a teaching
  * preference: none of this content is credit-eligible, and copy that talks about a score, a
- * percentage, a pass or a mastery claim asserts something the module is not in a position to assert.
- * It stays banned in authored items and in the verdict cards alike.
+ * pass or a mastery claim asserts something the module is not in a position to assert. It stays
+ * banned in authored items and in the verdict cards alike.
+ *
+ * `%`, "percent", "test" and "assessment" left this list on 2026-10-08 (owner direction,
+ * `docs/teaching-first-rules.md`). They are clinical words far more often than scoring words here:
+ * an FiO₂ of 40%, a leak test, an assessment of the airway. Copy was being rewritten around them.
  */
 const gradingTerms = [
   'score',
@@ -35,8 +39,6 @@ const gradingTerms = [
   'points',
   'grade',
   'graded',
-  'percent',
-  '%',
   'pass',
   'passed',
   'fail',
@@ -44,9 +46,7 @@ const gradingTerms = [
   'mastery',
   'mastered',
   'exam',
-  'test',
   'quiz',
-  'assessment',
   'attempt N of',
   'X out of Y',
   'certification',
@@ -87,7 +87,6 @@ function escapeRegularExpression(value: string): string {
 }
 
 function learnerCopyPattern(term: string): RegExp {
-  if (term === '%') return /%/
   if (term === 'attempt N of') return /\battempt\s+\d+\s+of\b/i
   if (term === 'X out of Y') return /\b\d+\s+out\s+of\s+\d+\b/i
   const escaped = escapeRegularExpression(term)

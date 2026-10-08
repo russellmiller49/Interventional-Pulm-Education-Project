@@ -102,12 +102,13 @@ describe('Step 13: approved wording with bounded source and behavior scope', () 
     expect(lesson('capture').lab!.instruction).toContain(
       'This practices controls; border placement is not scored as a clinical measurement.',
     )
-    expect(lesson('preparation').paragraphs).toContain(
-      'Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval.',
+    // The approved sentence stands; the teaching-first rules of 2026-10-08 add the interval after it.
+    expect(lesson('preparation').paragraphs.join(' ')).toContain(
+      'Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval. A common standard is no food for 4 hours and clear fluids until 2 hours before (BTS 2013).',
     )
   })
 
-  it('OD-11 lists the approved core reference without a source-verification upgrade', () => {
+  it('OD-11 lists the approved core reference', () => {
     const results = lesson('results-reporting')
     expect(results.paragraphs.join(' ')).toContain(
       'recommends against routine add-on confirmatory mediastinoscopy; it may still be considered when the risk of a false-negative result is high.',
@@ -117,17 +118,16 @@ describe('Step 13: approved wording with bounded source and behavior scope', () 
       '2024 online; Chest 2025',
     )
     render(<SourceList ids={results.sources} />)
-    fireEvent.click(screen.getByText('Sources and model limits'))
+    fireEvent.click(screen.getByText('Sources'))
     expect(screen.getByRole('link', { name: /Miller RJ, Chrissian AA/ })).toHaveAttribute(
       'href',
       'https://doi.org/10.1097/LBR.0000000000001034',
     )
-    expect(
-      screen.getByText(/owner-approved scope; full text not independently verified/),
-    ).toBeVisible()
+    // Review status is project metadata and is no longer shown to learners (2026-10-08).
+    expect(screen.queryByText(/full text not independently verified/)).toBeNull()
   })
 
-  it('OD-12 exposes all approved expansions and keeps CHS/IFU limits beside definitions', () => {
+  it('OD-12 exposes all approved expansions', () => {
     render(<GlossaryTerms entries={GLOSSARY} heading="Glossary" />)
     const expanded = GLOSSARY.filter((entry) => entry.sourceContext)
     expect(expanded.map((entry) => entry.id)).toEqual([
@@ -145,9 +145,9 @@ describe('Step 13: approved wording with bounded source and behavior scope', () 
       const details = document.querySelector(`[data-glossary-term="${entry.id}"]`) as HTMLElement
       fireEvent.click(within(details).getByText(entry.term))
       expect(within(details).getByText(entry.definition)).toBeVisible()
-      expect(details).toHaveTextContent('Source and limits:')
     }
-    expect(screen.getByText(/Fujiwara 2010 full text remains unverified/)).toBeVisible()
-    expect(screen.getByText(/Manufacturer-specific interpretation requires/)).toBeVisible()
+    // Source holds are tracked in the packet, not printed beside the definition (2026-10-08).
+    expect(screen.queryByText(/remains unverified/)).toBeNull()
+    expect(screen.getByText(/ICS\/IAB 2023, Table 5/)).toBeVisible()
   })
 })

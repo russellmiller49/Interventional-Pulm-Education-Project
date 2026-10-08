@@ -908,8 +908,6 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
         'bounded-educational-model',
       ],
       reviewStatus: 'draft',
-      learnerCopyOverrideReason:
-        'Percent denotes the authored device.batteryPercent value (24) and the console battery-charge unit, not a learner score or competence claim.',
     },
     commitments: {
       'secure-verified-supply-now': {
@@ -1798,13 +1796,6 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
         'bounded-educational-model',
       ],
       reviewStatus: 'draft',
-      // VA16-1 (ECMO-FELLOW-04): the stem read "the battery reserve reads 24", a number with no unit
-      // on which the decision turns. The unit is the scenario's own typed field
-      // (`device.batteryPercent: 24`) and the one the console's Transport screen prints. This is the
-      // VA twin of the venovenous item's accepted exception: one token, this item only, held by
-      // `ecmo-fellow-04-teaching-and-flow.test.tsx`. No run time is inferred from the charge.
-      learnerCopyOverrideReason:
-        'Percent denotes the authored device.batteryPercent value (24) of the venoarterial transport scenario and the console battery-charge unit, not a learner score or competence claim.',
     },
     commitments: {
       'verified-source-with-backup-alongside': {
