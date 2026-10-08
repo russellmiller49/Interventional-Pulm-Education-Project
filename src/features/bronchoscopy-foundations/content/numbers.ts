@@ -137,7 +137,6 @@ const SCOPE_ROW = (model: string) =>
     checkedBy: 'Claude, against the device catalog record',
     signedBy: null,
   }) as const
-const TO_EXTRACT = { value: null, status: 'to-extract', checkedOn: null, checkedBy: null } as const
 
 const ROWS = {
   // 1 · Fasting
@@ -567,14 +566,23 @@ const ROWS = {
     ...FLUMAZENIL_ROW,
     note: 'Given at 0.2 mg a minute. It can provoke seizures or withdrawal in a patient dependent on benzodiazepines.',
   },
-  'reversal-agents': {
+  'naloxone-dose': {
     row: 19,
     label: 'Naloxone to reverse an opioid: the dose',
+    value: '0.1–0.2 mg intravenously every 2–3 minutes until the patient responds',
     class: 'guideline',
-    sources: [],
-    signedBy: null,
-    note: 'Held for one question. Faculty gave 0.2–0.4 mg (0.5–1.0 µg/kg) every 2–3 minutes; the two figures do not agree for an adult, and the product label gives 0.1–0.2 mg at 2–3 minute intervals for postoperative opioid depression. ASA 2018 prints no dose.',
-    ...TO_EXTRACT,
+    status: 'signed',
+    sources: [
+      {
+        sourceId: 'U21',
+        grade: null,
+        locator: 'Dosage and administration: usage in adults, postoperative opioid depression',
+      },
+    ],
+    checkedOn: '2026-10-08',
+    checkedBy: 'Claude, against the DailyMed label text',
+    signedBy: 'Russell Miller, 2026-10-08',
+    note: 'Titrate to adequate ventilation and alertness; a larger dose than needed reverses analgesia and raises blood pressure. ASA 2018 names the agent and prints no dose.',
   },
   // 20 · Local anesthetic toxicity
   'last-lipid-concentration': {
@@ -875,6 +883,7 @@ const SOURCE_SHORT_NAMES: Partial<Readonly<Record<BronchSourceId, string>>> = {
   U18: 'methylene blue label, 2024',
   U19: 'Olympus specifications',
   U20: 'flumazenil label',
+  U21: 'naloxone label',
 }
 
 export function numberSourceName(sourceId: BronchSourceId): string {

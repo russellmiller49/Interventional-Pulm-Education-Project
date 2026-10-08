@@ -75,12 +75,16 @@ describe('the numbers register', () => {
     expect(handTypedDigitErrors('copy', copy)).toEqual([])
   })
 
-  it('refuses a token that is not in the register, and one with no value yet', () => {
+  it('refuses a token that is not in the register', () => {
     expect(numberTokenErrors('copy', 'Give {{num:made-up}} now.')[0]).toMatch(/not in the register/)
-    expect(numberTokenErrors('copy', `Use ${num('reversal-agents')}.`)[0]).toMatch(
-      /still to extract/,
-    )
-    expect(() => resolveNumbers(`Use ${num('reversal-agents')}.`)).toThrow(/no value/)
+    expect(() => resolveNumbers('Give {{num:made-up}} now.')).toThrow(/no value/)
+  })
+
+  it('has no row left to extract: every row can be rendered', () => {
+    for (const id of NUMBER_IDS) {
+      expect(NUMBER_REGISTER[id].status).not.toBe('to-extract')
+      expect(numberTokenErrors('copy', num(id))).toEqual([])
+    }
   })
 
   it('refuses a clinical number typed by hand and allows the digits that are names', () => {

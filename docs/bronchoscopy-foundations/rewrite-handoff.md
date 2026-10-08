@@ -68,11 +68,9 @@ sections no longer wait for sessions with the pilot.
    - Confirm the basal mnemonic M-A-L-P.
    - Sign the remaining register rows as sections come to use them. None of rows 1–17 is signed.
 3. **Register rows still open.** Rows 15, 19, 20, 21 and 22 were extracted on 2026-10-08 (#352).
-   Russell signed the methylene blue rows (the expert panel's regimen, U17) and the flumazenil
-   rows (the product label, U20) the same day. Still open:
-   - Naloxone: `reversal-agents` stays `to-extract`. The dose Russell gave, 0.2–0.4 mg
-     (0.5–1.0 µg/kg) every 2–3 minutes, does not agree with itself for an adult, and the label
-     gives 0.1–0.2 mg. He has been asked which to teach.
+   Russell signed the methylene blue rows (the expert panel's regimen, U17), the flumazenil rows
+   (the product label, U20) and the naloxone row (the product label, U21) the same day. No row
+   is left to extract. Still open:
    - Row 22 holds current Olympus scopes from the device catalog (FDA device records, product
      pages, the manufacturer flyer). The instructions for use themselves were not read.
    - The ASRA checklist is under review, with an update expected in early 2027.

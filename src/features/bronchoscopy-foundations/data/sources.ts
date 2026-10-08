@@ -17,7 +17,7 @@ export type BronchSourceId =
   | 'S1'
   | 'S2'
   | 'S3'
-  | `U${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20}`
+  | `U${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21}`
   | `T${'01' | '02' | '03' | '04' | '05' | '06' | '07' | '08' | '09' | '10' | '11' | '12' | '13' | '14' | '15' | '16'}`
 
 /**
@@ -177,6 +177,7 @@ const LIMITATIONS: Readonly<Record<string, string>> = {
   U18: 'The prescribing information for one methylene blue product; its dose and repeat interval differ from the expert-panel recommendations.',
   U19: 'Dimensions of one manufacturer’s current bronchoscopes, taken from device records and product specifications; other scopes differ.',
   U20: 'The prescribing information for flumazenil injection; its effect can wear off before the benzodiazepine does.',
+  U21: 'The prescribing information for naloxone injection; the dose used is the one for partial reversal after procedural opioids, not for overdose.',
 }
 
 /**
@@ -279,6 +280,19 @@ export const SUPPLEMENTAL_SOURCES: readonly ManifestSource[] = [
     doi: null,
     url: 'https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=56452ba8-521d-1f84-e063-6294a90af6fc',
     reviewedScope: 'Reversal of conscious sedation in adults: dose, repeat dose and resedation',
+    accessedDate: '2026-10-08',
+    transcript: null,
+  },
+  {
+    id: 'U21',
+    kind: 'manufacturer prescribing information',
+    title: 'Naloxone hydrochloride injection, USP: prescribing information',
+    authors: null,
+    organization: 'Hospira',
+    year: 2026,
+    doi: null,
+    url: 'https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=8535cc84-ad4a-4d67-8480-fb5a2e3406f8',
+    reviewedScope: 'Usage in adults, postoperative opioid depression: dose and interval',
     accessedDate: '2026-10-08',
     transcript: null,
   },
