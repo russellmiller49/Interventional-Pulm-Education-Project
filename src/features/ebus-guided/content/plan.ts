@@ -181,8 +181,6 @@ export const planLessons: Lesson[] = [
       'N2a versus N2b counts involved stations.',
     ],
     sources: ['ers2026', 'iaslc9', 'ics2023', 'aabip2025'],
-    boundary:
-      'The vignettes assume the stated primary side and complete station information. Full TNM grouping, resectability, and treatment require additional clinical data and multidisciplinary review.',
   },
   {
     id: 'eus-b',
@@ -278,7 +276,5 @@ export const planLessons: Lesson[] = [
       'A difficult window requires a plan, not a presumed negative result.',
     ],
     sources: ['ers2026', 'ics2023'],
-    boundary:
-      'This is an introduction to route selection. The course does not simulate esophageal insertion, adrenal assessment, or EUS-B needle technique.',
   },
 ]

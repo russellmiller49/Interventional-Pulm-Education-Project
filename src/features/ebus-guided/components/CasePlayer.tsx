@@ -96,7 +96,7 @@ export function CasePlayer({
   return (
     <div data-ebus-case={item.id}>
       <p className={styles.eyebrow}>
-        {kind === 'integrated' ? 'Integrated case' : 'Practice case'} · Authored clinical case
+        {kind === 'integrated' ? 'Integrated case' : 'Practice case'}
       </p>
       <h1 className={styles.caseTitle}>{item.title}</h1>
       {!debrief ? (

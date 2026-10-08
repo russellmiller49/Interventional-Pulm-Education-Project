@@ -176,7 +176,7 @@ it('opens every integrated case to a learner who has opened no lesson, from the 
   expect(screen.getAllByRole('button', { name: 'Open case' })).toHaveLength(FINAL_CASES.length)
   fireEvent.click(screen.getAllByRole('button', { name: 'Open case' })[2])
   expect(screen.getByRole('heading', { name: FINAL_CASES[2].title })).toBeVisible()
-  expect(screen.getByText('Integrated case · Authored clinical case')).toBeVisible()
+  expect(screen.getByText('Integrated case')).toBeVisible()
   expect(readProgress().progress.openedIntegratedCaseIds).toEqual([FINAL_CASES[2].id])
   cleanup()
   render(<IntegratedCasesPage caseId={FINAL_CASES[5].id} />)

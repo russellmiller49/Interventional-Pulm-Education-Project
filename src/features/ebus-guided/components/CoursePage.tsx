@@ -216,15 +216,14 @@ export function CoursePage({
             <GlossaryTerms
               entries={GLOSSARY}
               heading="Course glossary"
-              intro="Course definitions and owner-approved terminology expansions, with sources and limits. The same glossary is under Help in every lesson."
+              intro="The terms this course uses, with where each comes from. The same glossary is under Help in every lesson."
               level={2}
             />
           </section>
         )}
         <p className={styles.notice}>
-          Reviewed and opened marks record where you have been in the course, not procedural
-          competence. Continue with supervised simulation and workplace teaching. This development
-          course remains separate from the existing EBUS tools.
+          Reviewed and opened marks record where you have been in the course. Carry it into
+          supervised simulation and cases.
         </p>
       </div>
     </EbusModuleFrame>

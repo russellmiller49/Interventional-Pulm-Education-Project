@@ -486,7 +486,7 @@ function LessonSession({
               {item.title}
             </Link>
           ))}
-          <span>Unlisted preview · For education and supervised training</span>
+          <span>For education and supervised training</span>
         </nav>
         {/*
          * Lesson identity, the lesson controls and the task counter, kept together and kept in
@@ -793,7 +793,7 @@ function LessonSession({
                 lesson.matching && (
                   <section
                     className={styles.sequence}
-                    aria-label="Authored matches"
+                    aria-label="The matches"
                     data-task-reference="matching"
                   >
                     <h3>Authored matches</h3>
@@ -815,7 +815,7 @@ function LessonSession({
                 lesson.sequence && (
                   <section
                     className={styles.sequence}
-                    aria-label="Authored sequence"
+                    aria-label="The sequence"
                     data-task-reference="sequence"
                   >
                     <h3>Authored sequence</h3>
@@ -955,9 +955,11 @@ function LessonSession({
                   </ul>
                 </section>
               )}
-              {!finished && (current.interaction === 'acquire' || current.image === 'held') && (
-                <p className={styles.muted}>{lesson.boundary}</p>
-              )}
+              {!finished &&
+                lesson.boundary &&
+                (current.interaction === 'acquire' || current.image === 'held') && (
+                  <p className={styles.muted}>{lesson.boundary}</p>
+                )}
               {current.companion && (
                 <Link className={styles.secondary} href={lessonHref(current.companion)}>
                   Related concept: {LESSONS.find((entry) => entry.id === current.companion)?.title}
@@ -1108,11 +1110,11 @@ function LessonSession({
                 try again, or continue without answering. Restart begins a new acquisition. Exit
                 keeps your place; the unfinished lesson starts over when reopened.
               </p>
-              <p>{lesson.boundary}</p>
+              {lesson.boundary && <p>{lesson.boundary}</p>}
               <GlossaryTerms
                 entries={GLOSSARY}
                 heading="Course glossary"
-                intro="Course definitions and owner-approved terminology expansions, with sources and limits."
+                intro="The terms this course uses, with where each comes from."
                 currentLessonId={lesson.id}
               />
             </>

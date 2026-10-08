@@ -40,9 +40,11 @@ export function GlossaryTerms({
               <details data-glossary-term={entry.id}>
                 <summary>{entry.term}</summary>
                 <p>{entry.definition}</p>
-                <p className={styles.muted}>
-                  {entry.sourceContext ?? 'From the course'}: {entry.sources.join('; ')}.
-                </p>
+                {entry.sources.length > 0 && (
+                  <p className={styles.muted}>
+                    {entry.sourceContext ?? 'From the course'}: {entry.sources.join('; ')}.
+                  </p>
+                )}
                 {lesson && (
                   <p>
                     <Link href={lessonHref(lesson.id)}>

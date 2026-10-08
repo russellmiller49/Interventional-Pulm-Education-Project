@@ -67,10 +67,8 @@ export function EbusModuleFrame({
         navItems={COURSE_NAV.map(({ title, href, description }) => ({ title, href, description }))}
         safetyNotice={
           <>
-            <strong>For education and supervised training.</strong> This self-paced course teaches
-            clinical reasoning and simulated acquisition. It does not establish procedural
-            competence. Follow current device instructions, local protocols, and supervising
-            judgment. Clinical content is in development.
+            <strong>A teaching course with a simulator, not a clinical device.</strong> It teaches
+            the reasoning and the scan planes; hands-on skill comes from supervised practice.
           </>
         }
       >
