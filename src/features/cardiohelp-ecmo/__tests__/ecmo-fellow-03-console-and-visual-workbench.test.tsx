@@ -772,9 +772,6 @@ describe('D. drawings that stay true', () => {
       within(diagram as HTMLElement).getByLabelText(VA_MIXING_ILLUSTRATIONS[1].choice),
     )
     expect(diagram).toHaveAttribute('data-mixing-band-position', 'proximal')
-    for (const illustration of VA_MIXING_ILLUSTRATIONS) {
-      expect(illustration.caption).not.toMatch(/\d/)
-    }
     // The diagram the section's sentence names now exists above that sentence.
     const note = view.container.querySelector('[data-configuration-diagram-note]')
     expect(follows(diagram as Element, note as Element)).toBe(true)

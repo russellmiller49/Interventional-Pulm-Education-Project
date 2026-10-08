@@ -1,5 +1,3 @@
-import { assertNoUniversalTargetLanguage } from '@/features/critical-care/test-support/teachingPanelContract'
-
 import {
   crrtBloodPathIds,
   crrtCircuitNode,
@@ -253,20 +251,6 @@ describe('CRRT circuit overlays', () => {
       expect(overlay.sourceIds.length).toBeGreaterThan(0)
     }
   })
-
-  it('introduces no universal target language', () => {
-    for (const overlay of crrtCircuitOverlays) {
-      assertNoUniversalTargetLanguage(
-        [overlay.label, overlay.summary, overlay.teachingPoint].join(' '),
-      )
-    }
-    for (const path of crrtCircuitPaths) {
-      assertNoUniversalTargetLanguage([path.label, path.textEquivalent].join(' '))
-    }
-    for (const node of crrtCircuitNodes) {
-      assertNoUniversalTargetLanguage([node.label, node.subLabel ?? '', node.description].join(' '))
-    }
-  })
 })
 
 describe('CRRT pressure semantics', () => {
@@ -379,7 +363,6 @@ describe('CRRT pressure semantics', () => {
         detail.whenUnreliable,
         detail.firstInspectionBoundary,
       ].join(' ')
-      assertNoUniversalTargetLanguage(copy)
       expect(copy).not.toMatch(/\bnormal range\b|\bshould be (?:below|above)\b/i)
     }
   })

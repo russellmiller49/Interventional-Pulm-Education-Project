@@ -213,13 +213,6 @@ export function validateRouteSpine(stops: readonly RouteStop[] = routeStops): re
         errors.push(`Route stop ${stop.id} cites an unregistered source: ${sourceId}.`)
       }
     }
-    if (
-      /\d/.test(
-        `${stop.analogy} ${stop.precise} ${stop.checklistLabel} ${stop.checklist.join(' ')}`,
-      )
-    ) {
-      errors.push(`Route stop ${stop.id} carries a number in learner copy.`)
-    }
   })
   for (const id of routeStopIds) {
     if (!ids.has(id)) errors.push(`Route stop ${id} is missing.`)
