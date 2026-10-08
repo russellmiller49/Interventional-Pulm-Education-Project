@@ -1,494 +1,498 @@
-import type { SourceRef } from '../../data/sources'
-import { SIMULATOR_LANDMARKS, STEPS_LANDMARKS, TEACHING_LANDMARKS } from '../landmarks'
-import type { BronchSectionDefinition } from '../types'
+import { num } from '../numbers'
+import type {
+  AuthoredChoice,
+  BronchSectionDefinition,
+  MonitorReading,
+  MonitorTrend,
+} from '../types'
 
 /**
- * M15, second half — Bleeding priorities. When blood appears after sampling, the first move depends
- * on what the scope is doing and where the blood is: a wedge holding back a fresh peripheral bleed
- * is kept while help comes, and once blood reaches the central airway, patency and the usable lung
- * may take priority over the source, so the scope’s role is decided again as the bleed changes.
- * Knowledge spec §16.3, §16.7 and §16.8 (S1 PDF 138–143; S2 PDF 27–30; S1 PDF 138–140, 143 and
- * S3 PDF 56 for suction; T05, T16, T09, T06), case C21, drill D13, seed Q27.
- * Register R33 (no topical agent or dose), R34 (no context-free suction, withdrawal or survey rule),
- * R37 (blockers only under device instructions and a trained team) and R42 (no indiscriminate clot
- * removal). The transfer retrieves the diagnostic grammar from `view-loss` (spec §5.3).
+ * Bleeding (rewrite pilot, brief 14). The fellow learns the first moves for bleeding after a
+ * biopsy as an ordered card, the escalation beyond it, and the Nashville scale for grading it.
+ * One patient then bleeds through four frames: the vital signs change with time, a wrong move
+ * plays out on the monitor, and the learner recovers from there.
+ *
+ * Sources: the course textbook's complications chapter (S1), the training manual (S2), the
+ * Nashville consensus statement (U15) for the grades, the blocker manufacturer's note (U12) and
+ * the inhaled tranexamic acid trial (U13). The topical vasoconstrictor is a local-policy slot.
  */
+const COMPLICATIONS = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 138, to: 143 } },
+  { sourceId: 'S2', location: { kind: 'pdf-pages', from: 27, to: 30 } },
+] as const
+const NASHVILLE = [
+  {
+    sourceId: 'U15',
+    location: { kind: 'section', label: 'Nashville Bleeding Scale, grades 1 to 4' },
+  },
+] as const
 
-/** §16.3 — a streak versus ongoing bleeding; announce, stop sampling, the supervisor's plan. */
-const S1_BLEEDING: SourceRef = {
-  sourceId: 'S1',
-  location: { kind: 'pdf-pages', from: 138, to: 143 },
+/** The monitor at one moment of the case. Values are written for this case. */
+function vitals(
+  view: string,
+  spo2: readonly [string, MonitorTrend, string],
+  heartRate: readonly [string, MonitorTrend],
+  bloodPressure?: string,
+): readonly MonitorReading[] {
+  return [
+    { channel: 'airway-view', words: view, trend: 'new' },
+    {
+      channel: 'oximetry',
+      words: spo2[2],
+      trend: spo2[1],
+      value: spo2[0],
+      unit: '%',
+      provenance: 'authored',
+    },
+    {
+      channel: 'heart-rate',
+      words: heartRate[1] === 'steady' ? 'Unchanged' : 'Rising',
+      trend: heartRate[1],
+      value: heartRate[0],
+      unit: '/min',
+      provenance: 'authored',
+    },
+    ...(bloodPressure
+      ? [
+          {
+            channel: 'blood-pressure' as const,
+            words: 'Adequate',
+            trend: 'steady' as const,
+            value: bloodPressure,
+            unit: 'mmHg',
+            provenance: 'authored' as const,
+          },
+        ]
+      : []),
+  ]
 }
-const S2_BLEEDING: SourceRef = { sourceId: 'S2', location: { kind: 'pdf-pages', from: 27, to: 30 } }
-/** §16.3 — suction requires context. */
-const S1_SUCTION: SourceRef = {
-  sourceId: 'S1',
-  location: { kind: 'pdf-pages', from: 138, to: 140 },
-}
-const S1_SUCTION_143: SourceRef = { sourceId: 'S1', location: { kind: 'pdf-pages', from: 143 } }
-const S3_SUCTION: SourceRef = { sourceId: 'S3', location: { kind: 'pdf-pages', from: 56 } }
-/** §16.7 — blood threatens ventilation first; help is called while stabilization proceeds. */
-const T05_IMPACT: SourceRef = {
-  sourceId: 'T05',
-  location: { kind: 'time-span', start: '00:00:00', end: '00:01:19' },
-}
-const T05_PRIORITIES: SourceRef = {
-  sourceId: 'T05',
-  location: { kind: 'time-span', start: '00:07:24', end: '00:11:36' },
-}
-const T16_PRIORITIES: SourceRef = {
-  sourceId: 'T16',
-  location: { kind: 'time-span', start: '00:06:15', end: '00:12:12' },
-}
-/** §16.7 — the scope's role: a contained peripheral bleed versus an airway already holding blood. */
-const T09_SCOPE_ROLE: SourceRef = {
-  sourceId: 'T09',
-  location: { kind: 'time-span', start: '00:25:10', end: '00:33:41' },
-}
-const T06_SCOPE_ROLE: SourceRef = {
-  sourceId: 'T06',
-  location: { kind: 'time-span', start: '00:11:25', end: '00:12:57' },
-}
-/** C21 — two bleeding situations, two immediate priorities. */
-const T09_C21: SourceRef = {
-  sourceId: 'T09',
-  location: { kind: 'time-span', start: '00:26:02', end: '00:32:24' },
-}
-/** §16.8 — topical agents need a local protocol; medication shortcuts must not delay rescue. */
-const T05_AGENTS: SourceRef = {
-  sourceId: 'T05',
-  location: { kind: 'time-span', start: '00:15:03', end: '00:17:07' },
-}
-const T09_AGENTS: SourceRef = {
-  sourceId: 'T09',
-  location: { kind: 'time-span', start: '00:17:34', end: '00:19:49' },
-}
-/** §5.3 — wall contact, retrieved by the transfer. */
-const S1_VIEW_LOSS: SourceRef = {
-  sourceId: 'S1',
-  location: { kind: 'pdf-pages', from: 89, to: 99 },
-}
-const S2_VIEW_LOSS: SourceRef = {
-  sourceId: 'S2',
-  location: { kind: 'pdf-pages', from: 44, to: 47 },
-}
+
+const GRADE_CHOICES = (
+  best: 'a' | 'b' | 'c' | 'd',
+  why: Record<string, string>,
+): AuthoredChoice[] =>
+  (['a', 'b', 'c', 'd'] as const).map((id, index) => ({
+    id,
+    label: `Grade ${index + 1}`,
+    rationale: why[id],
+    plausibility: id === best ? 'best' : 'incorrect-mechanism',
+  }))
 
 export const section: BronchSectionDefinition = {
   id: 'bleeding-priorities',
-  title: 'Bleeding during bronchoscopy',
+  authoringContract: 2,
+  title: 'Bleeding',
   shortTitle: 'Bleeding',
-  minutes: 8,
+  minutes: 9,
+  activityMinutes: 3,
   moduleIds: ['M15'],
   objectives: [
     {
       objectiveId: 'M15-O2',
       subtask:
-        'Turns down an indiscriminate withdrawal or suction rule in the committed items — the recovery routine run on a wedged bleed, repeated suction to clear the view, waiting on a volume, and holding still for a red field from wall contact after a sample elsewhere — and, in practice, judges a bleed by the view and the patient rather than the suction trap.',
-      evidence: 'committed-explanation',
+        'Makes the first moves for bleeding after a biopsy, in order, through one evolving case.',
+      evidence: 'case-decision',
     },
     {
       objectiveId: 'M15-O5',
       subtask:
-        'Commits the first move for a fresh biopsy bleed with the tip still wedged, then chooses, frame by frame, the priorities as the bleed changes — a wedge holding while a look at the other side is urged, blood reaching the carina and the right main bronchus, and a quieter field that is not source control — with help called from the start.',
-      evidence: 'committed-explanation',
+        'Changes priority when the wedge is lost and blood reaches the carina, and escalates when the first moves fail.',
+      evidence: 'case-decision',
     },
   ],
   drillIds: ['D13'],
   prerequisites: ['view-loss', 'protected-accessories', 'deterioration'],
 
-  clinicalQuestion: 'When blood appears during a bronchoscopy, what decides the first move?',
-  recognizeTitle: 'A red field after a left upper lobe biopsy',
-  objective:
-    'Choose the immediate priorities when blood appears during a bronchoscopy, and choose them again as the bleed changes.',
-  why: 'Bleeding is a complication a trainee can meet at an early biopsy, and blood in the airway is a problem for breathing as well as for the circulation.',
-  newConcept:
-    'The scope’s role in a bleed is decided again as the bleed changes: while a wedge contains a fresh peripheral bleed it is part of the treatment and is not withdrawn by reflex, and once containment is lost and blood reaches the central airway, restoring patency to the usable lung may take priority over staying at the source.',
-  incrementSentence:
-    'This section adds one idea to the recovery routine for a lost view and the response to deterioration: the scope’s role in a bleed changes as the bleed changes, so the first move is decided again when containment is lost or blood reaches the central airway.',
+  clinicalQuestion: 'Blood fills the view after a biopsy. What do you do in the next ten seconds?',
+  objective: 'Make the first moves for airway bleeding in order, and grade the bleed afterwards.',
   harmfulReflex:
-    'Running the recovery routine for a lost view on a bleed: withdrawing from a wedge that is holding back a fresh biopsy bleed, to regain a wide view or to look at the other side.',
+    'Pulling the scope back when the view turns red. The wedge is your control: stay in.',
+  harmfulReflexPatterns: [
+    /\b(pull|withdraw)\w*\b.*\b(scope|back|a little)\b/i,
+    /\bremove the scope\b/i,
+  ],
   anchor: {
     analogy:
-      'A wedged scope can work like a finger pressed on a cut: lifting it to take a look lets the blood out. But once blood is running into the main airway, keeping that airway open can matter more than the finger.',
+      'A wedged scope is a finger on a cut. Lift it to look and the blood runs free. Keep the pressure on and a clot forms under it.',
     precise:
-      'With an effective wedge isolating a new peripheral bleed, unnecessary withdrawal can release blood into airways that are still clear. With blood in the central airway and ventilation falling, restoring patency and ventilating the usable lung may take priority over staying at the source. In both, sampling stops, the site is announced and help comes early.',
-    checklistLabel: 'When blood appears after sampling',
+      'Keep the scope wedged in the bleeding segment, suction what escapes, and turn the bleeding side down.',
+    checklistLabel: 'When blood fills the view',
     checklist: [
-      'Announce the bleeding and its site, and stop sampling',
-      'Name what the scope is doing before changing it',
-      'Judge the breathing and where the blood is going, not a volume',
-      'Suction, isolation and escalation follow the supervisor’s plan',
+      'Stay in and wedge',
+      'Suction, then cold saline',
+      'Bleeding side down',
+      'Oxygen on, call for help early',
     ],
   },
+  outcomes: [
+    {
+      id: 'first-moves',
+      text: 'Make the first moves for bleeding after a biopsy in order, and escalate when they fail.',
+    },
+    { id: 'grade-bleeding', text: 'Grade airway bleeding on the Nashville scale.' },
+  ],
 
   spineStops: ['segmental', 'main-bronchi'],
   grammarRowIds: ['red-field-wedged-bleeding', 'red-out'],
-  controlStrip: {
-    verdict: 'no-control-stop-and-communicate',
-    states: {
-      insertion: 'harmful-reflex',
-      rotation: 'not-this-one',
-      deflection: 'not-this-one',
-      suction: 'not-this-one',
-      accessory: 'not-this-one',
-    },
-    sentence:
-      'No control movement treats a bleed, though a wedge left in place may help limit its spread. Withdrawal is the tempting reflex, and from a useful wedge it can release blood into clear airways; suction clears airways that are still working when the supervisor directs it. The first moves are to hold position, stop sampling, announce the site and get help.',
-  },
-  precommitDenyPatterns: [
-    /\b(hold|keep)(s|ing)? the (tip )?wedge/i,
-    /\bstop(s|ping)? (further )?sampling\b/i,
-    /\bhold(s|ing)? back\b/i,
-    /\brelease\w* blood\b/i,
-    /\bannounc\w*/i,
-    /\bcontain(s|ing|ed)? the bleed/i,
-  ],
-  modelBoundary:
-    'The monitor and the airway view in this section are scripted in words for teaching. They are not a physiological or bleeding model, no amount or reading on these steps is a threshold for your patient, and the patients are constructed. A real bleed is managed by the supervising team under your institution’s bleeding response.',
+  precommitDenyPatterns: [/\bleft lung\b/i, /\bother lung\b/i],
   localPolicyIds: ['bleeding_rescue', 'blocker_ifu_and_rescue'],
   reviewItemIds: ['R33', 'R34', 'R37', 'R42'],
 
   blocks: [
     {
-      id: 'blood-after-a-sample',
-      kind: 'question',
+      id: 'the-threat',
+      kind: 'pattern',
       role: 'framing',
-      heading: 'Blood after a sample',
-      body: 'A forceps biopsy has just been taken from a peripheral segment, and blood appears. The view beyond the tip turns red, and the image that guided the procedure is gone.\n\nThis section is about the first minutes of a bleed: what to read, and what decides the first move.',
-      claimClass: 'synthesis',
-      sourceRefs: [S1_BLEEDING, T09_SCOPE_ROLE],
+      heading: 'Why a small bleed matters',
+      body: 'Airway bleeding kills by flooding the lungs, long before it empties the circulation. A volume that would not matter anywhere else can block the central airways.\n\nSo every first move does one of two jobs. It keeps the blood where it started, or it keeps it out of the other lung.',
+      claimClass: 'source',
+      sourceRefs: COMPLICATIONS,
     },
     {
-      id: 'what-to-read',
-      kind: 'signals',
-      role: 'signals',
-      heading: 'What to read when blood appears',
-      body: 'Blood changes the view, and the view is not the only thing to read. Each of these can be read at the scope or in the room.',
-      pointsLabel: 'What can be read when blood appears',
+      id: 'first-moves',
+      kind: 'pattern',
+      role: 'first-moves',
+      heading: 'First moves: blood after a biopsy',
+      body: 'Say it out loud, with the site: “Bleeding, right lower lobe.” Then work down the card. Stop at the step where the bleeding stops.',
+      steps: [
+        'Keep the scope in. Wedge the tip in the bleeding segment and hold it there.',
+        'Suction. Keep the airways you still need clear, and leave a forming clot alone.',
+        'Instil cold saline in small aliquots through the wedged scope.',
+        `Instil a topical vasoconstrictor: ${num('topical-vasoconstrictor')}.`,
+        'Turn the patient bleeding side down.',
+        'Give oxygen, stop sampling, and call for help.',
+      ],
+      callForHelp:
+        'early: when one wedge and suction have not stopped it, or the oxygen saturation is falling.',
+      claimClass: 'source',
+      sourceRefs: COMPLICATIONS,
+      localPolicyIds: ['bleeding_rescue'],
+      reviewItemIds: ['R33', 'R34'],
+    },
+    {
+      id: 'escalation',
+      kind: 'pattern',
+      role: 'mechanism',
+      heading: 'When the wedge does not hold',
+      body: 'Blood at the carina means the wedge has failed. Clear the central airway before you go back to the source.\n\nIf the card has not stopped it, escalate in this order, with help in the room.',
+      pointsLabel: 'Escalation',
       points: [
-        'Where the blood is: the sampled segment, its lobe, the trachea or the other side',
-        'Whether it is slowing, continuing or spreading, and whether it hides the view',
-        'Where the tip is',
-        'Breathing, airflow, capnography and oximetry, against this patient’s own start',
+        'A bronchial blocker or balloon in the bleeding bronchus',
+        'Selective intubation of the non-bleeding lung',
+        'Rigid bronchoscopy',
+        'Bronchial artery embolization',
+        'Tranexamic acid, inhaled, reduced bleeding in one small trial of non-massive hemoptysis. It does not replace airway control.',
       ],
       claimClass: 'synthesis',
-      sourceRefs: [S1_BLEEDING, T09_SCOPE_ROLE],
+      sourceRefs: [
+        ...COMPLICATIONS,
+        { sourceId: 'U12', location: { kind: 'section', label: 'Wire-guided blocker placement' } },
+        { sourceId: 'U13', location: { kind: 'section', label: 'Trial result and exclusions' } },
+      ],
+      localPolicyIds: ['blocker_ifu_and_rescue'],
+      reviewItemIds: ['R37'],
     },
     {
-      id: 'expected-after-biopsy',
+      id: 'nashville',
       kind: 'pattern',
       role: 'normal-reference',
-      heading: 'What a biopsy site can do',
-      body: 'After a forceps biopsy, a small streak of blood can run from the sampled site and stop on its own. The view of the airway returns, and breathing, airflow and oximetry stay at this patient’s own starting values.\n\nThat is the reference. What differs from it is ongoing bleeding: bleeding that hides the view, threatens ventilation or reaches other airways.',
-      claimClass: 'source',
-      sourceRefs: [S1_BLEEDING, S2_BLEEDING],
-    },
-    {
-      id: 'what-the-scope-is-doing',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'What the scope is doing',
-      body: 'The first move depends on what the scope is doing. With the tip wedged in a segment just sampled, the wedge may be isolating a new peripheral bleed, and unnecessary withdrawal can release blood into airways that are still clear. With an unprotected airway that already holds blood or clot, restoring patency and ventilating the usable lung may take priority over lingering at the source.\n\nSo the scope’s present role is named before it is changed, and named again when the bleed changes: a wedge that was containing a bleed is no longer doing that job once blood is in the central airway. The recovery routine is for a view or orientation lost during routine travel, such as a lens against the wall; it is not run on a scope holding back a bleed because the image is red.',
-      claimClass: 'transcript-source',
-      sourceRefs: [T09_SCOPE_ROLE, T06_SCOPE_ROLE, S1_VIEW_LOSS],
-      localPolicyIds: ['bleeding_rescue'],
-      reviewItemIds: ['R34'],
-    },
-    {
-      id: 'breathing-before-circulation',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'Blood threatens breathing first',
-      body: 'The hemoptysis lectures put clinical impact first: blood can threaten ventilation and oxygenation before blood loss produces circulatory collapse. The first priority is preventing airway obstruction and protecting the lung that still works.\n\nA fixed expectorated volume cannot define safety for every patient. Bleeding of large volume is a multidisciplinary emergency, and specialist and airway support are called while stabilization proceeds, not after a long attempt to complete the diagnosis.',
-      claimClass: 'transcript-source',
-      sourceRefs: [T05_IMPACT, T05_PRIORITIES, T16_PRIORITIES],
-    },
-    {
-      id: 'first-moves-worked',
-      kind: 'after-commitment',
-      role: 'worked-example',
-      heading: 'The first moves, worked',
-      body: 'Worked through the biopsy bleed in this section, with the tip still wedged in the anterior segment of the left upper lobe:',
-      pointsLabel: 'The bleed, step by step',
+      heading: 'Grade it afterwards',
+      body: 'The Nashville scale grades a bleed by what it took to stop it. Put the grade in the report.',
+      pointsLabel: 'Nashville grades',
       points: [
-        'The bleeding and its site are said aloud — the sampled segment of the left upper lobe — and no further sample is taken.',
-        'The supervisor’s bleeding plan starts, and help is called early.',
-        'Oxygenation and ventilation are watched from the start and supported with the team.',
-        'The scope’s role is named: the wedge may be holding the bleed back, so it stays unless the supervisor decides otherwise.',
-        'The patient and where the blood is going are judged, not the trap: suctioned volume can be mixed with instilled fluid, and a relatively small volume can obstruct a vulnerable airway.',
-        'Suction, isolation, positioning and escalation follow the supervisor’s direction.',
+        `Grade 1: ${num('nashville-grade-1')}.`,
+        `Grade 2: ${num('nashville-grade-2')}.`,
+        `Grade 3: ${num('nashville-grade-3')}.`,
+        `Grade 4: ${num('nashville-grade-4')}.`,
       ],
-      claimClass: 'synthesis',
-      sourceRefs: [S1_BLEEDING, S2_BLEEDING, T09_SCOPE_ROLE],
-      localPolicyIds: ['bleeding_rescue'],
-    },
-    {
-      id: 'suction-has-a-purpose',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'Suction has a purpose',
-      body: 'Suction can clear blood and keep the view. Aggressive, repeated suction at a bleeding site can also disrupt an evolving clot or undo a deliberate tamponade, and failing to clear airways that are threatened but still working can impair ventilation.\n\nThe sources describe different wedge and observation approaches and establish no single suction rule. The course teaches the objective — keep the usable airways open without undoing containment — and the technique comes from the supervisor.',
-      claimClass: 'source',
-      sourceRefs: [S1_SUCTION, S1_SUCTION_143, S3_SUCTION],
-      localPolicyIds: ['bleeding_rescue'],
-    },
-    {
-      id: 'temporary-control',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'Temporary control is not treatment',
-      body: 'Bronchoscopy can clear obstructing blood, localize the bleeding and support isolation. CT angiography, embolization, further bronchoscopic treatment or surgery may then be needed, according to the patient’s stability and the cause.\n\nA quieter field, or bleeding that has paused, is not proof that the source is controlled. Reassessment and definitive treatment are planned with the team.',
-      claimClass: 'transcript-source',
-      sourceRefs: [T09_C21, T05_PRIORITIES],
-    },
-    {
-      id: 'your-bleeding-response',
-      kind: 'after-commitment',
-      role: 'policy',
-      heading: 'Your institution’s bleeding response',
-      body: 'Larger-bore airway access, a bronchial blocker, rigid bronchoscopy, interventional radiology, surgery or other definitive support may be needed, depending on the situation. These are escalation options chosen by the team, not tasks for a trainee alone; a blocker is used under its device instructions by a trained team.\n\nThe textbook’s historical epinephrine examples are not a drug prompt. Topical saline, vasoconstrictors and other hemostatic agents need a current local protocol that accounts for concentration, cumulative exposure, hemodynamics and the airway problem at hand, and the team watches for adverse effects. This course gives no agent recipe, dose or escalation sequence.',
-      claimClass: 'local-policy',
-      sourceRefs: [S1_BLEEDING, T05_AGENTS, T09_AGENTS],
-      localPolicyIds: ['bleeding_rescue', 'blocker_ifu_and_rescue'],
-      reviewItemIds: ['R33', 'R37'],
+      claimClass: 'update',
+      sourceRefs: NASHVILLE,
     },
     {
       id: 'common-errors',
       kind: 'after-commitment',
       role: 'common-errors',
-      heading: 'Common errors and their correction',
-      body: 'Each of these errors applies one rule to every bleed, or reads a quieter picture as a solved problem.',
-      pointsLabel: 'The error, then the correction',
+      heading: 'Four errors to expect',
+      body: 'Each one gives up control of the airway for a better look.',
+      pointsLabel: 'The error, then the fix',
       points: [
-        'Running the recovery routine on a red field after sampling: first name what the scope is doing; a wedge may be holding the bleed back.',
-        '“Always withdraw” to see where the blood is going: withdrawing from a useful wedge can release blood into airways that are still clear.',
-        '“Always suction,” or no suction at all: aggressive suction at the site can disrupt an evolving clot, and leaving threatened airways uncleared can impair ventilation.',
-        '“Always inspect the opposite side first”: a look at the other side is no reason to abandon a useful wedge; blood burden and ventilation decide the next move.',
-        'Waiting for a volume before calling for help: no fixed volume defines safety, and help is called early.',
-        'Stripping an adherent clot to complete the inspection, or reading a quiet field as a treated source: the clot may be what is holding; plan reassessment and definitive care.',
+        'Pulling back to see. You release the blood into clear airways. Stay wedged.',
+        'Suctioning the clot away to check. A quiet field with a clot is control. Leave it.',
+        'Reading the suction trap. Saline is in it too. Judge the airway and the saturation.',
+        'Turning the bleeding side up. Gravity now drains blood into the lung you need.',
       ],
-      claimClass: 'synthesis',
-      sourceRefs: [S1_BLEEDING, S1_SUCTION, T09_SCOPE_ROLE, T06_SCOPE_ROLE],
+      claimClass: 'source',
+      sourceRefs: COMPLICATIONS,
       reviewItemIds: ['R34', 'R42'],
-      registerExemptions: [
-        {
-          reviewItemId: 'R34',
-          reason:
-            'Quotes the context-free bleeding rules the register refuses, each followed by its correction.',
-        },
-      ],
     },
   ],
 
   workspace: {
     kind: 'monitor',
-    caption:
-      'The patient just after a peripheral forceps biopsy under moderate sedation — scripted for teaching',
-    readings: [
-      {
-        channel: 'airway-view',
-        words:
-          'The tip wedged in the sampled segment; blood fills the segment beyond it and no lumen is in view',
-        trend: 'new',
-      },
-      { channel: 'respiratory-effort', words: 'Unchanged from before the biopsy', trend: 'steady' },
-      { channel: 'capnography', words: 'The trace keeps its shape', trend: 'steady' },
-      { channel: 'oximetry', words: 'At the patient’s own starting value', trend: 'steady' },
-    ],
-  },
-
-  steps: {
-    recognize: {
-      instruction:
-        'Read the monitor in the Simulator panel: what the airway view shows beyond the tip, and what each of the patient’s signals is doing.',
-      lookIn: { pane: 'simulator', landmark: SIMULATOR_LANDMARKS.monitor },
-    },
-    act: {
-      title: 'One bleed, frame by frame',
-      instruction:
-        'For each frame, read the monitor in the Simulator panel, then choose the next move in the decision on this card. A move that would harm the patient is refused, and the frame stays.',
-      lookIn: {
-        pane: 'steps',
-        landmark: STEPS_LANDMARKS.decision,
-        alsoPane: 'simulator',
-        alsoLandmark: SIMULATOR_LANDMARKS.monitor,
-      },
-    },
-    explain: {
-      title: 'Reading a bleed',
-      instruction: `Read ${TEACHING_LANDMARKS.adds} and ${TEACHING_LANDMARKS.grammar} in the Teaching panel, then why the other answers do not fit, on this card.`,
-    },
+    caption: 'Before the biopsy',
+    readings: vitals('Clear', ['96', 'steady', 'On nasal oxygen'], ['88', 'steady'], '132/76'),
   },
 
   act: {
     kind: 'scenario',
+    outcomeId: 'first-moves',
     scenario: {
-      id: 'left-upper-lobe-bleed',
-      title: 'Bleeding after a left upper lobe biopsy',
-      boundary:
-        'The monitor and the airway view are scripted in words for teaching, not a physiological or bleeding model. Each frame teaches a decision; the team’s actions between frames are narrated, not simulated, and nothing here measures blood loss.',
+      id: 'right-lower-lobe-bleed',
+      title: 'Bleeding after a transbronchial biopsy',
       frames: [
         {
-          id: 'wedge-holding',
+          id: 'blood-fills-the-view',
+          time: 'Seconds after the fourth biopsy',
           situation:
-            'The bleeding and its site have been announced, sampling has stopped, and the supervisor has started the bleeding plan; more help is on the way. The tip is still wedged in LB3, with blood filling the segment beyond it. Breathing, capnography and oximetry are unchanged. The survey checklist on the procedure screen still shows the right side as not yet inspected.',
-          readings: [
-            {
-              channel: 'airway-view',
-              words: 'The tip wedged in LB3; blood fills the segment beyond it',
-              trend: 'steady',
-            },
-            {
-              channel: 'respiratory-effort',
-              words: 'Unchanged from before the biopsy',
-              trend: 'steady',
-            },
-            { channel: 'capnography', words: 'The trace keeps its shape', trend: 'steady' },
-            { channel: 'oximetry', words: 'At the patient’s own starting value', trend: 'steady' },
-          ],
-          prompt: 'What is the next move?',
+            'A 58-year-old woman is having transbronchial biopsies of the right lower lobe under moderate sedation. As the forceps come out, blood wells up around the tip and the view turns red.',
+          readings: vitals(
+            'Red. The tip is still in the segment',
+            ['95', 'steady', 'On 2 L/min nasal oxygen'],
+            ['92', 'steady'],
+            '134/78',
+          ),
+          prompt: 'What do you do first?',
           choices: [
             {
               id: 'a',
-              label:
-                'Keep the tip wedged and watch the patient, leaving the next step to the supervisor',
+              label: 'Advance the tip and wedge it in the segment',
               rationale:
-                'The blood is in the segment the tip is wedged in, and breathing and oximetry are unchanged: the wedge is doing useful work. Keeping it while watching the patient protects the airways that are still clear; suction, positioning and escalation follow the supervisor’s plan.',
+                'The wedge keeps the blood in the segment it came from, so a clot can form behind the tip.',
               plausibility: 'best',
             },
             {
               id: 'b',
-              label:
-                'Withdraw to the main carina to complete the right side of the checklist while help arrives',
-              rationale:
-                'Withdrawing from a useful wedge to look elsewhere is the critical error in this situation: it can release blood from the segment into the airways that are still clear, including the right side the look is meant to check. The checklist waits; blood burden and ventilation decide.',
+              label: 'Pull the scope back to the carina for a clear view',
+              rationale: 'Pulling back releases the blood into airways that were clear.',
               plausibility: 'unsafe',
+              consequence: {
+                situation:
+                  'Blood follows the scope up the right main bronchus and reaches the carina. She coughs.',
+                readings: vitals(
+                  'Blood at the carina',
+                  ['90', 'falling', 'Falling'],
+                  ['108', 'rising'],
+                ),
+              },
             },
             {
               id: 'c',
-              label:
-                'Ask the supervisor to turn the patient sampled side up, so blood can drain from the segment',
+              label: 'Pause sampling and wait for the bleeding to slow',
               rationale:
-                'Turning the sampled side up drains the bleeding segment toward the airways that still work, including the other lung: the spill the wedge is limiting. Where positioning is feasible, the bleeding side goes down to help protect the other lung, and asking the supervisor for the opposite turn does not change where the blood runs.',
-              plausibility: 'unsafe',
+                'Stopping sampling is right. Waiting without a wedge lets the blood track up the lower lobe.',
+              plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation: 'Blood fills the lower lobe bronchus and spills toward the middle lobe.',
+                readings: vitals(
+                  'Red. Blood is moving up the lower lobe',
+                  ['92', 'falling', 'Falling'],
+                  ['98', 'rising'],
+                ),
+              },
             },
             {
               id: 'd',
-              label:
-                'Keep the wedge for now, then withdraw if the view is still red once help arrives',
-              rationale:
-                'The view is red because the wedge is holding blood in the segment, and it stays red while the wedge works. Whether the wedge stays depends on containment and the patient’s breathing, decided with the supervisor, not on the image.',
+              label: 'Suction hard at the biopsy site until you can see',
+              rationale: 'Hard suction at the site strips the clot and keeps the bleeding going.',
               plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation: 'The view clears for a second, then fills again, faster than before.',
+                readings: vitals('Red again', ['93', 'falling', 'Falling'], ['100', 'rising']),
+              },
             },
           ],
         },
         {
-          id: 'blood-at-the-carina',
+          id: 'wedged-and-red',
+          time: '1 minute after the biopsy',
           situation:
-            'Before more help arrives, the patient coughs forcefully and the tip is dislodged from the segment. With the scope brought back to the main carina, the view shows blood pooling in the lower trachea and running into the right main bronchus. The patient is coughing blood, breathing is labored and oximetry is falling from the patient’s own start.',
-          readings: [
-            {
-              channel: 'airway-view',
-              words: 'Blood pooling at the main carina and running into the right main bronchus',
-              trend: 'new',
-            },
-            { channel: 'respiratory-effort', words: 'Labored, with coughing', trend: 'rising' },
-            {
-              channel: 'oximetry',
-              words: 'Falling from the patient’s own starting value',
-              trend: 'falling',
-            },
-          ],
-          prompt: 'What is the next move?',
+            'The tip is wedged in the segment and nothing is escaping past it. The view is still red. Suction returns blood mixed with saline.',
+          readings: vitals(
+            'Red. Nothing escaping past the tip',
+            ['94', 'steady', 'Holding'],
+            ['96', 'steady'],
+            '138/80',
+          ),
+          prompt: 'The view is still red. What now?',
           choices: [
             {
               id: 'a',
-              label:
-                'Say the blood has spread, and with the supervisor clear the airway to the right lung',
+              label: 'Hold the wedge and instil cold saline',
               rationale:
-                'The wedge is lost, blood is in the central airway and entering the right main bronchus, and oxygenation is falling: the lung that still works is threatened. Restoring patency to the right lung may take priority over staying at the source, while the team supports oxygenation and ventilation and airway support is called; isolation, positioning the bleeding side down where feasible, and escalation follow the supervisor’s plan.',
+                'A red view behind a working wedge is expected. Cold saline is the next step, and the wedge stays.',
               plausibility: 'best',
             },
             {
               id: 'b',
-              label:
-                'Ask the supervisor to re-wedge the bleeding segment before anything else, since that held it',
+              label: 'Withdraw a little to check whether it has stopped',
               rationale:
-                'The wedge was useful while it kept the blood in the segment. Now blood is already in the central airway and oxygenation is falling, so going back to the source before clearing the airway to the right lung leaves the lung that still works unprotected, whoever makes the move.',
-              plausibility: 'incorrect-mechanism',
+                'The wedge is the control. Checking by withdrawing releases whatever has not clotted.',
+              plausibility: 'unsafe',
+              consequence: {
+                situation: 'Blood runs past the tip into the lower lobe bronchus.',
+                readings: vitals(
+                  'Blood escaping past the tip',
+                  ['91', 'falling', 'Falling'],
+                  ['104', 'rising'],
+                ),
+              },
             },
             {
               id: 'c',
-              label:
-                'Hold off suction so a clot can form at the source, and keep watching the oximetry',
+              label: 'Call it controlled and take the last two biopsies',
               rationale:
-                'Sparing the clot made sense while the wedge kept the blood in the segment. Now blood is entering the right main bronchus and oximetry is falling: leaving threatened airways uncleared can impair ventilation of the lung that still works, and a clot at the source does not clear them.',
-              plausibility: 'unsafe',
+                'Sampling ends when a bleed needs a wedge. The forceps will dislodge the clot.',
+              plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation: 'The forceps knock the clot loose and the bleeding restarts.',
+                readings: vitals('Red, brisker', ['92', 'falling', 'Falling'], ['102', 'rising']),
+              },
             },
             {
               id: 'd',
-              label:
-                'Instill a topical agent through the channel and wait at the bleeding segment for it to work',
+              label: 'Turn her onto her left side',
               rationale:
-                'Waiting at the source for a medication while blood fills the central airway and oxygenation falls delays what the patient needs now: an open airway to the right lung. A medication shortcut must not delay rescue, and any topical agent, its dose and when to use it need current local approval and the supervisor’s decision.',
-              plausibility: 'unsafe',
+                'Left side down puts the bleeding lung on top. Blood then drains across the carina.',
+              plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation: 'Blood crosses the carina and enters the left main bronchus.',
+                readings: vitals(
+                  'Blood in the left main bronchus',
+                  ['88', 'falling', 'Falling'],
+                  ['112', 'rising'],
+                ),
+              },
             },
           ],
         },
         {
-          id: 'quiet-field',
+          id: 'wedge-lost',
+          time: '3 minutes after the biopsy',
           situation:
-            'With the supervisor directing, blood has been cleared from the trachea and the right main bronchus, the patient has been turned with the bleeding side down, and the team has arrived. The field is now quiet: a clot fills the opening of the sampled segment and no fresh blood is seen. Oximetry is rising back toward the patient’s own start.',
-          readings: [
-            {
-              channel: 'airway-view',
-              words: 'A clot at the opening of the sampled segment; no fresh blood',
-              trend: 'steady',
-            },
-            {
-              channel: 'oximetry',
-              words: 'Rising back toward the patient’s own starting value',
-              trend: 'rising',
-            },
-          ],
-          prompt: 'What is the next move?',
+            'She coughs hard and the tip is pushed out of the segment. Blood is in the right main bronchus and at the carina.',
+          readings: vitals(
+            'Blood at the carina',
+            ['88', 'falling', 'Falling'],
+            ['114', 'rising'],
+            '150/88',
+          ),
+          prompt: 'The wedge is lost. What do you do?',
           choices: [
             {
               id: 'a',
-              label:
-                'Leave the clot alone, and plan reassessment and any definitive treatment with the team',
+              label: 'Clear the carina and left main, right side down, call for help',
               rationale:
-                'The clot may be what is holding the bleeding, and a quiet field is not proof that the source is controlled. Leaving it undisturbed, reassessing with the team and deciding whether definitive treatment is needed — CT angiography, embolization, further bronchoscopic treatment or surgery, by stability and cause — is the next step.',
+                'The left lung is now keeping her alive. Clear it, let gravity hold the blood on the right, and get help coming.',
               plausibility: 'best',
             },
             {
               id: 'b',
-              label:
-                'Clear the clot from the opening of the segment to confirm that the bleeding has stopped',
+              label: 'Go straight back and re-wedge the right lower lobe segment',
               rationale:
-                'Removing an adherent clot to complete the inspection can undo what is holding the bleeding. A quiet field is reassessed with the team, not proven by stripping the clot.',
-              plausibility: 'unsafe',
+                'The source can wait a few seconds. Blood in the left main bronchus cannot.',
+              plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation:
+                  'You find the segment again, but the left main bronchus fills while you work.',
+                readings: vitals(
+                  'Wedged. The left side is unseen',
+                  ['84', 'falling', 'Falling'],
+                  ['120', 'rising'],
+                ),
+              },
             },
             {
               id: 'c',
-              label:
-                'Resume the planned biopsies from the segment now that the field has gone quiet',
+              label: 'Remove the scope so she can cough it clear',
               rationale:
-                'Sampling stopped when the bleeding started, and a field that has gone quiet is not a controlled source. Whether anything more is done in this procedure is the supervising team’s decision after reassessment.',
+                'Without the scope you cannot suction or see. A sedated patient will not clear this alone.',
               plausibility: 'unsafe',
+              consequence: {
+                situation: 'She coughs weakly. Blood pools in both main bronchi.',
+                readings: vitals('No view', ['82', 'falling', 'Falling'], ['124', 'rising']),
+              },
             },
             {
               id: 'd',
-              label:
-                'Agree with the team to record the bleeding as resolved, since no fresh blood is seen',
+              label: 'Instil the vasoconstrictor at the carina and wait',
               rationale:
-                'Neither a transiently clear view nor a pause in the bleeding shows that the source is controlled, so “resolved” claims more than was seen, whoever agrees to it. The event, its site and what was done are recorded as they happened, and reassessment with the team follows.',
+                'A drug at the carina does not reach the source, and waiting leaves the airway full.',
               plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation: 'The carina stays covered. Nothing has changed at the source.',
+                readings: vitals(
+                  'Blood at the carina',
+                  ['85', 'falling', 'Falling'],
+                  ['118', 'rising'],
+                ),
+              },
+            },
+          ],
+        },
+        {
+          id: 'still-bleeding',
+          time: '6 minutes after the biopsy',
+          situation:
+            'She is right side down on high-flow oxygen and help has arrived. The left side is clear. Blood keeps welling from the right lower lobe despite a second wedge and cold saline.',
+          readings: vitals(
+            'Fresh blood from the right lower lobe',
+            ['91', 'steady', 'Holding on high-flow oxygen'],
+            ['110', 'steady'],
+            '146/86',
+          ),
+          prompt: 'It has not stopped. What is the next step?',
+          choices: [
+            {
+              id: 'a',
+              label: 'Place a bronchial blocker in the right lower lobe bronchus',
+              rationale:
+                'Wedge, saline and position have failed. A blocker isolates the bleeding lobe and frees the scope.',
+              plausibility: 'best',
+            },
+            {
+              id: 'b',
+              label: 'Keep wedging and repeat cold saline for ten more minutes',
+              rationale:
+                'Repeating a step that has failed costs time while she bleeds. Move up the list.',
+              plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation: 'Ten minutes on, the bleeding continues and she is tiring.',
+                readings: vitals('Fresh blood', ['89', 'falling', 'Falling'], ['116', 'rising']),
+              },
+            },
+            {
+              id: 'c',
+              label: 'Send her for bronchial artery embolization now',
+              rationale:
+                'She may need it, but she cannot travel with an unprotected airway. Isolate the lobe first.',
+              plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation: 'In the lift the wedge slips and no one can reach the airway.',
+                readings: vitals('No view', ['83', 'falling', 'Falling'], ['126', 'rising']),
+              },
+            },
+            {
+              id: 'd',
+              label: 'Pause, and intubate with a standard tube in the trachea',
+              rationale:
+                'A tube in the trachea ventilates both lungs and protects neither. Isolation needs a blocker or a tube in the left main.',
+              plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation: 'The tube is in. Blood still reaches the left lung through it.',
+                readings: vitals(
+                  'Blood in the tube',
+                  ['87', 'falling', 'Falling'],
+                  ['118', 'rising'],
+                ),
+              },
             },
           ],
         },
       ],
-      sourceRefs: [T09_C21, T05_PRIORITIES, T05_AGENTS, S1_BLEEDING, S1_SUCTION, S3_SUCTION],
+      sourceRefs: [
+        ...COMPLICATIONS,
+        { sourceId: 'U12', location: { kind: 'section', label: 'Wire-guided blocker placement' } },
+      ],
     },
   },
 
@@ -497,149 +501,157 @@ export const section: BronchSectionDefinition = {
     seedId: 'Q27',
     itemType: 'management-decision',
     situation:
-      'Under moderate sedation, a supervised trainee has taken a forceps biopsy from the anterior segment of the left upper lobe (LB3), with the tip wedged in the segmental opening. As the forceps come back through the channel, blood fills the segment beyond the tip and the view turns red; no lumen can be seen, and how far the blood has spread cannot be seen from the tip. Breathing, capnography and oximetry are unchanged from the start, and the supervisor is at the bedside.',
-    stem: 'What is the next move?',
+      'A 64-year-old woman has a transbronchial biopsy of the right lower lobe. As the forceps come out, blood fills the view. Her SpO₂ is 95% on 2 L/min.',
+    stem: 'What matters most in the next minute?',
     choices: [
       {
         id: 'a',
-        label: 'Stop sampling, announce the site, and keep the tip wedged in the sampled segment',
+        label: 'Keeping blood out of her left lung',
         rationale:
-          'Blood is filling the segment the tip is wedged in, and breathing and oximetry are unchanged, so the wedge is likely containing the bleed. Keeping it there may limit spill into the airways that are still clear while the supervisor’s bleeding plan starts and help comes.',
+          'Airway bleeding kills by flooding the lungs. Her left lung is the one that must keep working, so every move protects it.',
         plausibility: 'best',
       },
       {
         id: 'b',
-        label:
-          'Stop sampling, announce the site, and withdraw to the left upper lobe bronchus to see where the blood goes',
+        label: 'Starting a second large-bore line for fluid',
         rationale:
-          'The view is lost because blood fills the segment, not because the lens is on the wall. Withdrawing to see where the blood goes can abandon the useful containment the wedge provides and release blood into airways that are still clear.',
-        plausibility: 'unsafe',
+          'She is not short of volume. A small bleed threatens gas exchange long before it threatens the circulation.',
+        plausibility: 'incorrect-mechanism',
       },
       {
         id: 'c',
-        label:
-          'Stop sampling, announce the site, and suction repeatedly until the view beyond the tip clears',
+        label: 'Pulling the scope back to see how much is bleeding',
         rationale:
-          'Suction aimed at clearing the picture treats the red image as the problem. Aggressive, repeated suction at a bleeding site can disrupt an evolving clot or undo the containment the wedge provides; whether suction is used through a wedge, and how, is the supervisor’s technique, chosen for the patient rather than the view.',
+          'Pulling back frees the blood to run into clear airways, and you learn nothing that changes the first move.',
         plausibility: 'unsafe',
       },
       {
         id: 'd',
-        label:
-          'Stop sampling, announce the site, and let the trap volume decide whether help is needed',
+        label: 'Pausing to let the bleeding settle before you act',
         rationale:
-          'A volume in the trap cannot define how serious this is: suctioned blood can be mixed with instilled fluid, and a relatively small volume can obstruct a vulnerable airway. Help is called early, while the team stabilizes the patient.',
+          'Most bleeds do settle. An unwedged scope leaves the blood free to spread while you wait.',
         plausibility: 'incorrect-mechanism',
       },
     ],
     explanation:
-      'A red view after sampling, with the tip wedged in the sampled segment, is not a lens against the wall: the wedge may be holding back the bleed. With an effective wedge containing the bleed, unnecessary withdrawal can release blood into airways that are still clear, so the tip stays wedged while sampling stops, the site is announced and help comes early. Suction and every further step follow the supervisor’s bleeding plan, with oxygenation and ventilation watched throughout.',
+      'The airways hold very little. Blood that reaches the other lung stops gas exchange there too. Wedge to keep it in the segment, and position her to keep it on the right.',
     objectiveIds: ['M15-O5', 'M15-O2'],
-    claimClass: 'transcript-source',
-    sourceRefs: [T09_SCOPE_ROLE, T16_PRIORITIES, S1_BLEEDING],
+    outcomeIds: ['first-moves'],
+    claimClass: 'source',
+    sourceRefs: COMPLICATIONS,
     reviewItemIds: ['R34'],
   },
 
   transfer: {
     id: 'bleeding-priorities-transfer',
-    itemType: 'management-decision',
+    itemType: 'mechanism-interpretation',
     situation:
-      'During a supervised bronchoscopy under moderate sedation, brushings were taken from the apicoposterior segment of the left upper lobe (LB1+2) a few minutes ago; a streak of blood followed, was said aloud and stopped, and that segment’s opening is now clear. The brush has been removed from the channel. The operator then steers down the left lower lobe bronchus toward the basal segments for the planned washing, and just after an advance the view fills with a close, poorly defined pink-red field with no lumen in view. Breathing, capnography and oximetry are unchanged from the start.',
-    stem: 'What should happen next?',
-    choices: [
-      {
-        id: 'a',
-        label:
-          'Stop advancing, reduce the bend and withdraw slightly until the lower lobe lumen shows',
-        rationale:
-          'The red appeared as the tip advanced in the lower lobe, away from the sampled segment, with nothing in the channel: often the lens is against the wall. Withdrawing slightly with the bend reduced restores the lumen without force; red color alone does not prove hemorrhage.',
-        plausibility: 'best',
-      },
-      {
-        id: 'b',
-        label:
-          'Hold the tip still and start the bleeding plan, since a sample was taken only minutes ago',
-        rationale:
-          'A sample was taken, but in the upper lobe, and its streak has stopped with the opening clear. This tip is travelling, not wedged in a sampled segment; holding still leaves the lens on the wall, and the bleeding plan answers a bleed the scene does not show.',
-        plausibility: 'incorrect-mechanism',
-      },
-      {
-        id: 'c',
-        label:
-          'Keep advancing toward the basal segments, since their openings lie just beyond the red',
-        rationale:
-          'With no lumen in view, advancing is movement without vision and presses the lens further into the wall; the tip advances only along an airway in view.',
-        plausibility: 'unsafe',
-      },
-      {
-        id: 'd',
-        label:
-          'Suction at the tip to clear blood from the lens before moving the scope any further',
-        rationale:
-          'The red appeared the moment the tip moved forward, not in a position already seen clearly, so nothing suggests blood on the lens. Suction against mucosa draws the wall onto the tip and deepens the problem.',
-        plausibility: 'unsafe',
-      },
-    ],
-    explanation:
-      'A red image has more than one cause, and what the scope is doing separates two of them, not whether a sample has been taken. A red field that appears as the tip advances in an airway other than the one sampled, with nothing in the channel, often means the lens is against the wall, and the recovery routine applies: stop advancing, reduce the bend, withdraw slightly. A red field after sampling, with the tip wedged in the sampled segment and blood filling the segment beyond it, may be a bleed the scope is holding back, and that scope is not withdrawn reflexively.',
-    objectiveIds: ['M15-O2', 'M06-O3'],
-    claimClass: 'synthesis',
-    sourceRefs: [S1_VIEW_LOSS, S2_VIEW_LOSS, T09_SCOPE_ROLE],
-    reviewItemIds: ['R34'],
+      'A 71-year-old man bleeds after a transbronchial biopsy of the left upper lobe. You wedge, suction for 2 minutes and instil cold saline twice. It stops. He goes back to the ward.',
+    stem: 'Which Nashville grade is this?',
+    choices: GRADE_CHOICES('b', {
+      a: 'Grade 1 stops with under a minute of suction, or one wedge. This needed longer, and cold saline.',
+      b: 'Suction for more than a minute and cold saline each make it grade 2. Nothing more was needed.',
+      c: 'Grade 3 needs a blocker or selective intubation, or a procedure stopped early. None of those happened.',
+      d: 'Grade 4 means prolonged isolation, intensive care, transfusion, embolization or resuscitation. He went back to the ward.',
+    }),
+    explanation: `Grade by what it took. Grade 2 is ${num('nashville-grade-2')}. He needed nothing further up the list.`,
+    objectiveIds: ['M15-O2'],
+    outcomeIds: ['grade-bleeding'],
+    claimClass: 'update',
+    sourceRefs: NASHVILLE,
     transferVariant:
-      'After a sample rather than before one, with the tip travelling in another lobe rather than wedged in the sampled segment: the same red image, where what the scope is doing suggests wall contact and the recovery routine fits.',
-    retrievesFrom: 'view-loss',
+      'A different patient and lobe, and a different question: the grade, not the first move.',
   },
 
   practice: [
     {
       id: 'mc-red-trap',
-      presentationTitle: 'A red suction trap after a right middle lobe brushing',
+      presentationTitle: 'A red view with nothing sampled',
       situation:
-        'Under moderate sedation, the operator brushes the lateral segment of the right middle lobe (RB4) for cytology, then instills saline to wash the segment and recovers it into the suction trap. The trap now holds red fluid, and a colleague says that much blood means a major bleed. In the bronchoscope view, a thin streak of blood runs from the brushed segment and is slowing, and the right middle lobe bronchus and the bronchus intermedius are clear. Breathing, capnography and oximetry are unchanged from the start.',
+        'You are advancing into the left lower lobe during a survey. Nothing has been sampled and the channel is empty. The view turns uniformly red.',
       item: {
         id: 'mc-red-trap',
         itemType: 'management-decision',
-        stem: 'What is the next move?',
+        stem: 'What do you do?',
         choices: [
           {
             id: 'a',
-            label:
-              'Say it aloud and keep watching the segment, the airways beyond it and the patient',
+            label: 'Relax the bend and ease back to the lumen',
             rationale:
-              'The streak is slowing, the right middle lobe bronchus and the bronchus intermedius are clear and breathing is unchanged: a small streak, not ongoing bleeding. It is still said aloud, and the view and the patient, not the trap, decide whether that changes.',
+              'Red on the way in, with nothing sampled, is the lens against the wall. Easing back shows the lumen again.',
             plausibility: 'best',
           },
           {
             id: 'b',
-            label:
-              'Say it aloud and let the volume of red fluid in the trap set how serious the bleed is',
+            label: 'Hold still and call for the bleeding kit',
             rationale:
-              'The trap holds the washing saline as well as blood, so its color and volume cannot say how much blood was lost, and no fixed volume defines safety: a relatively small volume can obstruct a vulnerable airway. What the blood is doing in the airway sets how serious the bleed is.',
+              'Nothing has been sampled, so nothing is bleeding. Holding the tip against the wall keeps the view red.',
             plausibility: 'incorrect-mechanism',
           },
           {
             id: 'c',
-            label:
-              'Say it aloud and hold suction on at the brushed segment until the return runs clear',
+            label: 'Wedge the tip where it is and suction',
             rationale:
-              'Aggressive, repeated suction at a bleeding site can disrupt an evolving clot, and a clear return afterwards does not prove the bleeding has stopped. Suction has a purpose, and the supervisor directs it.',
-            plausibility: 'unsafe',
+              'A wedge is for a segment you have sampled. Here suction pulls mucosa onto the lens.',
+            plausibility: 'incorrect-mechanism',
           },
           {
             id: 'd',
-            label:
-              'Say it aloud and wedge the tip in the lateral segment until the red in the trap fades',
-            rationale:
-              'Wedging is a way to limit spill from a bleed into other airways, and this streak is slowing with the airways beyond it clear. The red in the trap is washing saline mixed with blood, and it is not what a wedge treats.',
+            label: 'Keep going forward to find the lumen beyond',
+            rationale: 'With no lumen in view, forward movement drives the tip into the wall.',
             plausibility: 'incorrect-mechanism',
           },
         ],
         explanation:
-          'The trap mixes the washing saline with blood, so its color and volume cannot say how much blood was lost, and no fixed volume would define safety anyway: a relatively small volume can obstruct a vulnerable airway. What separates a small self-limited streak from ongoing bleeding is what the blood does: whether it hides the view, threatens ventilation or reaches other airways. Here it does none of those, so the streak is said aloud and the segment and the patient are watched.',
+          'Context separates the two red views. After a biopsy, red with the tip in the segment is blood, and you stay. On the way in, with nothing sampled, it is wall contact, and you ease back.',
         objectiveIds: ['M15-O2'],
+        outcomeIds: ['first-moves'],
         claimClass: 'source',
-        sourceRefs: [S1_BLEEDING, S2_BLEEDING],
+        sourceRefs: COMPLICATIONS,
+      },
+    },
+    {
+      id: 'mc-blocker-then-stop',
+      presentationTitle: 'A blocker, then the procedure ends',
+      situation:
+        'A 66-year-old woman bleeds briskly after a transbronchial biopsy. A wedge and cold saline fail. A bronchial blocker is inflated for 12 minutes, the bleeding stops, and you end the procedure. She goes home that evening.',
+      item: {
+        id: 'mc-blocker-then-stop',
+        itemType: 'mechanism-interpretation',
+        stem: 'Which Nashville grade is this?',
+        choices: GRADE_CHOICES('c', {
+          a: 'Grade 1 stops with brief suction or one wedge. This bleed needed far more than that.',
+          b: 'Grade 2 stops with longer suction, a repeat wedge or cold saline. Here those failed.',
+          c: 'A blocker held for a short time, and a procedure stopped early, each make it grade 3.',
+          d: 'Grade 4 needs prolonged isolation, intensive care, transfusion, embolization or resuscitation. She went home.',
+        }),
+        explanation: `Grade 3 is ${num('nashville-grade-3')}. Either one is enough, and she had both.`,
+        objectiveIds: ['M15-O2'],
+        outcomeIds: ['grade-bleeding'],
+        claimClass: 'update',
+        sourceRefs: NASHVILLE,
+      },
+    },
+    {
+      id: 'mc-intensive-care-after-bleed',
+      presentationTitle: 'Intubated and admitted after a bleed',
+      situation:
+        'A 59-year-old man bleeds heavily after a transbronchial biopsy. The left main bronchus is intubated selectively for 45 minutes. He is admitted to intensive care and receives 2 units of red cells.',
+      item: {
+        id: 'mc-intensive-care-after-bleed',
+        itemType: 'mechanism-interpretation',
+        stem: 'Which Nashville grade is this?',
+        choices: GRADE_CHOICES('d', {
+          a: 'Grade 1 stops by itself with brief suction or one wedge. This did not.',
+          b: 'Grade 2 stops with suction, a repeat wedge or cold saline. He needed airway isolation.',
+          c: 'Grade 3 is isolation for a short time. His lasted longer, and he needed intensive care and blood.',
+          d: 'Prolonged selective intubation, a new intensive care admission and transfusion each make it grade 4.',
+        }),
+        explanation: `Grade 4 is ${num('nashville-grade-4')}. Any one of these is enough.`,
+        objectiveIds: ['M15-O5'],
+        outcomeIds: ['grade-bleeding'],
+        claimClass: 'update',
+        sourceRefs: NASHVILLE,
       },
     },
   ],

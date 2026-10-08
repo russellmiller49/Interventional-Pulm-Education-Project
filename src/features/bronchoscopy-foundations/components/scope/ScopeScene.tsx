@@ -184,7 +184,9 @@ export default function ScopeScene(props: SceneProps) {
   const ticks = props.treeAnswer ? [] : patientDirectionTicks(state)
   return (
     <div>
-      <p className={styles.reviewStatus}>Teaching model · clinical review pending</p>
+      {props.plain ? null : (
+        <p className={styles.reviewStatus}>Teaching model · clinical review pending</p>
+      )}
       <div
         className={styles.views}
         ref={root}

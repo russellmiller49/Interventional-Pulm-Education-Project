@@ -421,7 +421,8 @@ export function ScopePaneFrame(
           </p>
         ) : null}
         <p className={styles.goalsLimit} data-scope-goals-limit>
-          {scopeNowLine(state)} {GOAL_MODEL_LIMIT}
+          {scopeNowLine(state)}
+          {props.plain ? null : ` ${GOAL_MODEL_LIMIT}`}
         </p>
         {props.allGoalsHref ? (
           <a className={styles.allGoals} href={props.allGoalsHref} data-all-goals-link>
@@ -466,7 +467,9 @@ export function ScopePaneFrame(
           >
             {props.referenceLabels.on ? 'Hide the opening names' : 'Show the opening names'}
           </button>
-          <span>For reference only: it sends nothing to the scope and records nothing.</span>
+          {props.plain ? null : (
+            <span>For reference only: it sends nothing to the scope and records nothing.</span>
+          )}
         </div>
       ) : null}
       {goalCardFirst ? goalCard : null}
@@ -691,7 +694,8 @@ export function ScopePaneFrame(
       </p>
 
       <p className={styles.boundary} {...{ [SCOPE_DOM.boundary]: '' }}>
-        <strong>Model boundary.</strong> {view.boundary}
+        {props.plain ? null : <strong>Model boundary. </strong>}
+        {view.boundary}
       </p>
       {props.children}
     </div>

@@ -8,6 +8,7 @@ import {
 import { performFiveControlsLearn } from '../test-support/fiveControlsLearnHarness'
 import { SCOPE_RECIPES } from '../test-support/scopeRecipes'
 import {
+  answerFindRows,
   answerLedger,
   clickPrimary,
   commitById,
@@ -102,6 +103,10 @@ it.each(BRONCH_SECTION_IDS)('walks the content-led %s lesson through real handle
         case 'identify':
           nameIdentifyRows(step)
           clickPrimary()
+          break
+        case 'find':
+          answerFindRows(step)
+          expect(document.querySelector('[data-find-verdict="held"]')).not.toBeNull()
           break
         case 'sequence':
           orderSequence(step)

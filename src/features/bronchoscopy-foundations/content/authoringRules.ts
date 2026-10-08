@@ -140,8 +140,7 @@ function blockSurfaces(sectionId: string, block: BronchTeachingBlock): CopySurfa
   ]
 }
 
-function actSurfaces(sectionId: string, act: BronchAct): CopySurface[] {
-  const where = `${sectionId} act`
+function actSurfaces(where: string, act: BronchAct): CopySurface[] {
   const teaching = (label: string, text: string | undefined): CopySurface[] =>
     text ? [{ where: `${where} ${label}`, kind: 'teaching', text }] : []
   switch (act.kind) {
@@ -179,6 +178,15 @@ function actSurfaces(sectionId: string, act: BronchAct): CopySurface[] {
             }),
           ),
           { where: `${where} view ${row.id} rationale`, kind: 'rationale', text: row.rationale },
+        ]),
+      ]
+    case 'find':
+      return [
+        ...teaching('prompt', act.find.prompt),
+        ...act.find.rows.flatMap((row): CopySurface[] => [
+          { where: `${where} image ${row.id} context`, kind: 'case', text: row.context },
+          { where: `${where} image ${row.id} prompt`, kind: 'stem', text: row.prompt },
+          { where: `${where} image ${row.id} rationale`, kind: 'rationale', text: row.rationale },
         ]),
       ]
     case 'sequence':
@@ -236,9 +244,30 @@ function actSurfaces(sectionId: string, act: BronchAct): CopySurface[] {
             }),
           ),
           ...choiceSurfaces(`${where} frame ${frame.id}`, frame.choices),
+          ...frame.choices.flatMap((choice): CopySurface[] =>
+            choice.consequence
+              ? [
+                  {
+                    where: `${where} frame ${frame.id} choice ${choice.id} consequence`,
+                    kind: 'case',
+                    text: choice.consequence.situation,
+                  },
+                ]
+              : [],
+          ),
         ]),
       ]
   }
+}
+
+/** A section's activities: its own, then any further ones, each with the key a screen names. */
+export function sectionActs(
+  section: BronchSectionDefinition,
+): readonly { readonly key: string; readonly act: BronchAct }[] {
+  return [
+    { key: 'act', act: section.act },
+    ...Object.entries(section.moreActs ?? {}).map(([key, act]) => ({ key: `act "${key}"`, act })),
+  ]
 }
 
 function hookSurfaces(section: BronchSectionDefinition): CopySurface[] {
@@ -261,7 +290,14 @@ export function sectionCopySurfaces(section: BronchSectionDefinition): readonly 
   return [
     ...hookSurfaces(section),
     ...section.blocks.flatMap((block) => blockSurfaces(section.id, block)),
-    ...actSurfaces(section.id, section.act),
+    ...(section.tour ?? []).map(
+      (stop): CopySurface => ({
+        where: `${section.id} tour ${stop.airway}`,
+        kind: 'teaching',
+        text: stop.note,
+      }),
+    ),
+    ...sectionActs(section).flatMap(({ key, act }) => actSurfaces(`${section.id} ${key}`, act)),
     ...itemSurfaces(`${section.id} prediction`, section.prediction),
     ...itemSurfaces(`${section.id} check`, section.transfer),
   ]
@@ -444,17 +480,37 @@ function choiceSets(
       choices: entry.item.choices,
     })),
   ]
-  if (section.act.kind === 'scenario')
-    sets.push(
-      ...section.act.scenario.frames.map((frame) => ({
-        where: `${section.id} act frame ${frame.id}`,
-        choices: frame.choices,
-      })),
-    )
-  if (section.act.kind === 'ledger')
-    sets.push({ where: `${section.id} act total`, choices: section.act.ledger.totalChoices })
+  for (const { key, act } of sectionActs(section)) {
+    if (act.kind === 'scenario')
+      sets.push(
+        ...act.scenario.frames.map((frame) => ({
+          where: `${section.id} ${key} frame ${frame.id}`,
+          choices: frame.choices,
+        })),
+      )
+    if (act.kind === 'ledger')
+      sets.push({ where: `${section.id} ${key} total`, choices: act.ledger.totalChoices })
+  }
   return sets
 }
+
+/** How many times an activity asks the learner to show the outcome it assesses. */
+function actAssessments(act: BronchAct): number {
+  switch (act.kind) {
+    case 'scenario':
+      return act.scenario.frames.length
+    case 'identify':
+      return act.identify.rows.length
+    case 'find':
+      return act.find.rows.length
+    case 'scope-lab':
+      return act.goals.length + (act.observe?.goals.length ?? 0)
+    default:
+      return 1
+  }
+}
+
+const PICTURED_ACTS: ReadonlySet<BronchAct['kind']> = new Set(['scope-lab', 'identify', 'find'])
 
 function hookErrors(section: BronchSectionDefinition): string[] {
   const errors: string[] = []
@@ -492,7 +548,13 @@ function flowErrors(section: BronchSectionDefinition, flow: readonly CourseChunk
   const last = flow[flow.length - 1]
   if (!last || last.kind !== 'debrief' || !last.anchor)
     errors.push(`${id} must close by repeating the hook's checklist.`)
-  const pictured = ['scope-lab', 'identify'].includes(section.act.kind)
+  for (const chunk of flow)
+    if (chunk.act && !section.moreActs?.[chunk.act])
+      errors.push(`${id} screen "${chunk.id}" names an activity "${chunk.act}" the section lacks.`)
+  for (const key of Object.keys(section.moreActs ?? {}))
+    if (!flow.some((chunk) => chunk.act === key))
+      errors.push(`${id} has an activity "${key}" that no screen runs.`)
+  const pictured = sectionActs(section).some(({ act }) => PICTURED_ACTS.has(act.kind))
   if (pictured)
     for (const { chunk } of teaches) {
       const hasPicture =
@@ -510,30 +572,43 @@ function outcomeErrors(section: BronchSectionDefinition): string[] {
   if (outcomes.length < 1 || outcomes.length > 2)
     errors.push(`${section.id} states ${outcomes.length} outcomes; one or two.`)
   const items = [section.prediction, section.transfer, ...section.practice.map((e) => e.item)]
-  const actCount =
-    section.act.kind === 'scenario'
-      ? section.act.scenario.frames.length
-      : section.act.kind === 'identify'
-        ? section.act.identify.rows.length
-        : section.act.kind === 'scope-lab'
-          ? section.act.goals.length + (section.act.observe?.goals.length ?? 0)
-          : 1
   const known = new Set(outcomes.map((outcome) => outcome.id))
+  const acts = sectionActs(section)
+  for (const { key, act } of acts)
+    if (act.outcomeId && !known.has(act.outcomeId))
+      errors.push(`${section.id} ${key} names an unknown outcome ${act.outcomeId}.`)
   for (const item of items)
     for (const outcomeId of item.outcomeIds ?? [])
       if (!known.has(outcomeId))
         errors.push(`${section.id} item ${item.id} names an unknown outcome ${outcomeId}.`)
   outcomes.forEach((outcome, index) => {
-    // The activity assesses the first outcome; items say which outcomes they assess.
-    const assessed =
-      items.filter((item) => item.outcomeIds?.includes(outcome.id)).length +
-      (index === 0 ? actCount : 0)
+    // An activity assesses the outcome it names, or the first; items say which they assess.
+    const byActs = acts
+      .filter(({ act }) => (act.outcomeId ? act.outcomeId === outcome.id : index === 0))
+      .reduce((total, { act }) => total + actAssessments(act), 0)
+    const assessed = items.filter((item) => item.outcomeIds?.includes(outcome.id)).length + byActs
     if (assessed < 3)
       errors.push(
         `${section.id} outcome ${outcome.id} is assessed ${assessed} times; at least three.`,
       )
   })
   return errors
+}
+
+/** In a rewritten case every wrong move plays out, with the monitor, before the learner recovers. */
+function consequenceErrors(section: BronchSectionDefinition): string[] {
+  return sectionActs(section).flatMap(({ key, act }) =>
+    act.kind !== 'scenario'
+      ? []
+      : act.scenario.frames.flatMap((frame) =>
+          frame.choices
+            .filter((choice) => choice.plausibility !== 'best' && !choice.consequence)
+            .map(
+              (choice) =>
+                `${section.id} ${key} frame ${frame.id} choice ${choice.id} is a wrong move with no consequence; show what happens next.`,
+            ),
+        ),
+  )
 }
 
 function firstMoveErrors(section: BronchSectionDefinition): string[] {
@@ -632,6 +707,7 @@ export function rewriteRuleErrors(
     ...flowErrors(section, flow),
     ...outcomeErrors(section),
     ...firstMoveErrors(section),
+    ...consequenceErrors(section),
   )
   return errors
 }
@@ -672,6 +748,12 @@ export function imageItemCounts(section: BronchSectionDefinition): {
   readonly total: number
 } {
   const items = [section.prediction, section.transfer, ...section.practice.map((e) => e.item)]
-  const rows = section.act.kind === 'identify' ? section.act.identify.rows.length : 0
+  const rows = sectionActs(section).reduce(
+    (total, { act }) =>
+      total +
+      (act.kind === 'identify' ? act.identify.rows.length : 0) +
+      (act.kind === 'find' ? act.find.rows.length : 0),
+    0,
+  )
   return { image: items.filter(showsImage).length + rows, total: items.length + rows }
 }

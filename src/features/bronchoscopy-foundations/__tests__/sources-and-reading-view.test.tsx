@@ -302,18 +302,20 @@ describe('focus scrolling reserves the continuation bar as measured (A9)', () =>
   })
 })
 
-/** The sections the walkthrough found printing Reading the view as loose lines. */
+/**
+ * The sections the walkthrough found printing Reading the view as loose lines. A rewritten section
+ * (the right lung, bleeding) closes on its checklist and no longer prints the table in the lesson;
+ * the Reference keeps the whole table.
+ */
 const GRAMMAR_SECTIONS: readonly BronchSectionId[] = [
   'branch-entry',
   'view-loss',
   'larynx-and-entry',
-  'right-side',
   'left-side',
   'systematic-survey',
   'poor-return',
   'protected-accessories',
   'deterioration',
-  'bleeding-priorities',
   'scope-in-a-tube',
 ]
 

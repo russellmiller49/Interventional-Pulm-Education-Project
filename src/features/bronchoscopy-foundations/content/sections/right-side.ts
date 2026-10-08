@@ -1,198 +1,162 @@
-import { SIMULATOR_LANDMARKS, STEPS_LANDMARKS, TEACHING_LANDMARKS } from '../landmarks'
 import type { BronchSectionDefinition } from '../types'
 
 /**
- * M08 — Right-sided bronchial anatomy and navigation. The learner names the right-sided airways by
- * the parent each arises from, recovers an upper lobe origin left behind by withdrawing to its
- * parent (drill D05), moves between two parents in the B4–B5–B6 sequence (D06), and meets the
- * early medial basal origin and the grouping that is not a division (D08). Knowledge spec §6.2–6.8
- * and §11.3–11.5 (S1 PDF 61–70; S2 PDF 44–47, 103, 106, 159–160; T11; T12), case C11.
+ * The right lung (rewrite pilot, brief 6). The fellow learns the right-sided airways from the
+ * survey stills, names six unlabelled views by clicking the opening asked for, one of them
+ * rotated, and then drives from the bronchus intermedius into RB4, RB5 and RB6 with the labels
+ * off. Sources: the course textbook's bronchial anatomy chapter (S1) and the training manual's
+ * navigation and nomenclature pages (S2).
  */
-const BOUNDARY =
-  'One declared teaching profile of normal right-sided anatomy, with in-view labels off and the camera roll set to a reference view at the upper and middle lobes. Guided travel follows the centerline and will not advance until the tip is aimed at a branch; contact and red-out are feedback signals, not measurements of force or injury.'
+const ANATOMY = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 61, to: 70 } },
+  { sourceId: 'S2', location: { kind: 'pdf-pages', from: 103 } },
+] as const
+const NAVIGATION = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 65, to: 67 } },
+  { sourceId: 'S2', location: { kind: 'pdf-pages', from: 44, to: 47 } },
+] as const
+
+const VIEW_LINE = 'Guided travel: the scope follows the lumen. Opening names are off.'
 
 export const section: BronchSectionDefinition = {
   id: 'right-side',
-  title: 'The right bronchial tree',
-  shortTitle: 'Right side',
-  minutes: 10,
+  authoringContract: 2,
+  title: 'The right lung',
+  shortTitle: 'Right lung',
+  minutes: 9,
+  activityMinutes: 5,
   moduleIds: ['M08'],
   objectives: [
     {
       objectiveId: 'M08-O1',
-      subtask:
-        'Commits which structure the scope is in after a steady advance from the right main bronchus, when an anterior opening lies ahead with the lumen continuing beyond it.',
+      subtask: 'Says where the tip is after an advance from the carina that passed a side opening.',
       evidence: 'committed-explanation',
     },
     {
       objectiveId: 'M08-O2',
-      subtask:
-        'Commits the name and parent of a posteriorly directed opening at the middle lobe level in a practice case, after the normal reference names RB1 to RB10 by parent; the scope tasks bring RB1 to RB3 into view and enter RB4 to RB6 with the parentage readout as an assist, not as identification.',
-      evidence: 'case-decision',
+      subtask: 'Clicks the named right-sided opening on six survey frames, one of them rotated.',
+      evidence: 'committed-explanation',
     },
     {
       objectiveId: 'M08-O3',
       subtask:
-        'Enters RB4 and RB5 from the middle lobe, returns through the bronchus intermedius and enters RB6 from the right lower lobe; the hand skill itself needs faculty observation.',
-      evidence: 'observed-physical-skill-required',
+        'Enters RB4 and RB5 from the middle lobe, returns to the bronchus intermedius and enters RB6.',
+      evidence: 'simulated-navigation',
     },
     {
       objectiveId: 'M08-O4',
-      subtask:
-        'Commits the next move when three large basal openings are in view and the medial basal origin has not been seen, and explains why the basal group is a grouping rather than one division.',
+      subtask: 'Decides where to look when three basal openings are in view.',
       evidence: 'committed-explanation',
     },
     {
       objectiveId: 'M08-O5',
-      subtask:
-        'Decides, in a practice case, what to do when a teaching model shows two right upper lobe openings and a separate opening in the proximal trachea.',
+      subtask: 'Decides what to do when the upper lobe shows two openings.',
       evidence: 'case-decision',
     },
   ],
   drillIds: ['D05', 'D06', 'D08'],
   prerequisites: ['branch-entry', 'reference-frames', 'view-loss', 'larynx-and-entry'],
 
-  clinicalQuestion:
-    'In the right lung, how do you know which airway the scope is in, and what is the next move when an opening you expected is not in view?',
-  recognizeTitle: 'Advancing down the right main bronchus',
-  objective:
-    'Distinguish the airways of the right lung by where each arises, and decide the next move when an expected opening is not in view.',
-  why: 'Every description, photograph and sample is filed under an airway’s name. A misnamed right-sided airway files them under another airway in the record.',
-  newConcept:
-    'On the right, the order in which origins arise from the main carina in the declared profile — the upper lobe early, then the bronchus intermedius to the middle and lower lobes, the superior segment near the middle lobe level, and a medial basal origin that may arise early — tells you which origins the tip has already gone beyond; an expected origin not yet seen may be behind the tip, and it is found again from its parent.',
-  incrementSentence:
-    'This section adds one idea to naming by parentage: on the right, the order of origins from the main carina tells you whether an opening you have not seen is already behind the tip.',
+  clinicalQuestion: 'You are in the right lung. Which airway is this, and how do you know?',
+  objective: 'Name each airway of the right lung from its parent and the wall it leaves.',
   harmfulReflex:
-    'Bending harder toward the right upper lobe from inside the bronchus intermedius, or advancing further in search of it, instead of withdrawing to the right main bronchus where its origin can be seen.',
+    'Pushing on when the opening you expect is not in view. Withdraw to its parent instead.',
+  harmfulReflexPatterns: [/\badvanc/i, /\bprob(e|ing)\b/i, /\bpush/i],
   anchor: {
     analogy:
-      'A corridor with a side door just inside its entrance: once you have walked beyond the door, the hallway you are in is named by the door behind you, not by the rooms ahead, and the way to the door is to step back until it is in front of you, not to lean around the corner.',
+      'A side street is named at the junction where it leaves the main road. Miss the junction and the houses ahead will not tell you where you are.',
     precise:
-      'The right main bronchus is short before the right upper lobe origin; distal to that origin the airway is the bronchus intermedius, leading to the middle and lower lobes. An origin behind the tip is exposed by withdrawing to its parent, rotated into the bending plane, and entered from there.',
+      'Name every right-sided airway by the parent it leaves and the wall it leaves from, never by where it sits on the screen.',
     checklistLabel: 'Naming a right-sided airway',
     checklist: [
-      'Name the last airway you are certain of',
-      'Name the origin expected next, and whether the tip is already beyond it',
-      'Withdraw to its parent when that origin is not in view',
-      'Advance only along the lumen you can see',
+      'Say which parent you are in',
+      'Find anterior from a landmark',
+      'Name each opening by the wall it leaves',
+      'If the count is short, withdraw and look again',
     ],
   },
+  outcomes: [
+    {
+      id: 'name-right-airways',
+      text: 'Name each right-sided airway from its parent and its direction, on a rolled view.',
+    },
+    {
+      id: 'reach-rb4-rb6',
+      text: 'Drive from the bronchus intermedius into RB4, RB5 and RB6.',
+    },
+  ],
 
   spineStops: ['main-bronchi', 'lobar', 'segmental'],
   grammarRowIds: ['missing-expected-branch', 'clear-but-lost'],
-  controlStrip: {
-    verdict: 'no-control-retrace',
-    states: {
-      insertion: 'harmful-reflex',
-      rotation: 'not-this-one',
-      deflection: 'harmful-reflex',
-      suction: 'not-this-one',
-      accessory: 'not-this-one',
-    },
-    sentence:
-      'No single control recovers an origin the tip has gone beyond; the fix is a retrace: name the last airway you are certain of, withdraw to it until the origin is in view, rotate the origin into the bending plane, deflect until its lumen is in view, and enter. Advancing further, or bending harder from the airway beyond, is the reflex to resist.',
-  },
-  precommitDenyPatterns: [
-    /\bintermedius\b/i,
-    /\bwithdraw\w*\s+(back\s+)?(in)?to\s+(its|the)\s+(parent|right main bronchus)\b/i,
-  ],
-  modelBoundary:
-    'This section drives one declared teaching profile of normal right-sided anatomy. A variant such as a tracheal bronchus appears only in a practice case, in words; the scope shows no variant. Guided, centerline-locked travel and a camera roll set to a reference view at the upper and middle lobes are assists, and contact and red-out are feedback signals, not measurements of force, mucosal injury or hand skill.',
-  physicalSkillNote:
-    'The scope tasks here use guided, centerline-locked travel from a keyboard, pointer or touch. The app cannot see how rotation and the thumb lever are coordinated at the handle, how torque reaches the tip, or the force at the airway wall; navigating RB4, RB5 and RB6 with the hands is shown only under faculty observation.',
+  precommitDenyPatterns: [/\bintermedius\b/i],
   localPolicyIds: [],
   reviewItemIds: ['R01', 'R04', 'R06', 'R07'],
 
+  tour: [
+    {
+      airway: 'RMSB',
+      note: 'Short. The upper lobe opens on its lateral wall, close to the carina.',
+    },
+    { airway: 'RUL', note: 'Leaves the lateral wall of the right main bronchus.' },
+    { airway: 'RB1', note: 'Apical. It runs up toward the apex.' },
+    { airway: 'RB2', note: 'Posterior.' },
+    { airway: 'RB3', note: 'Anterior.' },
+    {
+      airway: 'BI',
+      note: 'The airway past the upper lobe origin. A bronchus, not a lobe.',
+    },
+    { airway: 'RML', note: 'Leaves the anterior wall where the bronchus intermedius ends.' },
+    { airway: 'RB4', note: 'Lateral segment of the middle lobe.' },
+    { airway: 'RB5', note: 'Medial segment of the middle lobe.' },
+    { airway: 'RLL', note: 'Runs straight on, past the middle lobe opening.' },
+    {
+      airway: 'RB6',
+      note: 'Superior segment. Leaves the posterior wall, opposite the middle lobe.',
+    },
+    { airway: 'RB7', note: 'Medial basal. Often the first basal opening, set apart.' },
+    { airway: 'RB8', note: 'Anterior basal.' },
+    { airway: 'RB9', note: 'Lateral basal.' },
+    { airway: 'RB10', note: 'Posterior basal.' },
+  ],
+
   blocks: [
     {
-      id: 'short-right-main',
-      kind: 'question',
+      id: 'standard-view',
+      kind: 'pattern',
       role: 'framing',
-      heading: 'Into the right lung',
-      body: 'From the main carina, the scope enters the right main bronchus on its way to the lobar and segmental airways of the right lung.\n\nThis section is about how those airways are named, and what to do when an opening you expected is not in front of the lens.',
+      heading: 'Set the view first',
+      body: 'Stand at the head of the bed. Hold the scope so the membranous wall sits at 6 o’clock. Anterior is then at 12 o’clock, and the patient’s right is on your right.\n\nA real view is often rolled. Find anterior from a landmark before you name anything.',
       claimClass: 'source',
-      sourceRefs: [{ sourceId: 'S1', location: { kind: 'pdf-pages', from: 65, to: 70 } }],
+      sourceRefs: ANATOMY,
     },
     {
-      id: 'what-names-an-airway',
-      kind: 'signals',
-      role: 'signals',
-      heading: 'What tells you where you are',
-      body: 'Each of these helps name a right-sided airway. Before naming one, say which of them the name rests on.',
-      pointsLabel: 'Information available at a right-sided branch',
-      points: [
-        'The last airway you are certain of, and the branches travelled since',
-        'How many openings are in view, against the pattern you expected',
-        'Which way each opening is directed in the patient, not where it sits on the screen',
-        'The CT and the declared teaching profile, where they are supplied',
-      ],
-      claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 61, to: 70 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 66, to: 67 } },
-      ],
-    },
-    {
-      id: 'right-side-in-order',
-      kind: 'after-commitment',
+      id: 'upper-lobe',
+      kind: 'pattern',
       role: 'normal-reference',
-      heading: 'The right side, airway by airway',
-      body: 'The declared teaching profile, walked from the main carina. Names follow the parent first, then the segment number. The upper lobe trifurcation is a useful first pattern, not a promise that every patient branches the same way.',
-      pointsLabel: 'From the main carina, in order',
-      points: [
-        'Right main bronchus: short; its first branch, the right upper lobe, comes early and is easy to go beyond.',
-        'Right upper lobe: RB1 apical, RB2 posterior, RB3 anterior.',
-        'Bronchus intermedius: the continuation distal to the upper lobe origin, leading to the middle and lower lobes. A bronchus, not a lobe.',
-        'Right middle lobe: arises anteriorly or anterolaterally; RB4 lateral, RB5 medial.',
-        'Right lower lobe: RB6, the superior segment, is posteriorly directed near the middle lobe level and belongs to the lower lobe.',
-        'Basal airways: RB7 medial basal, RB8 anterior basal, RB9 lateral basal, RB10 posterior basal.',
-      ],
+      heading: 'The upper lobe comes early',
+      body: 'The right main bronchus is short. The upper lobe leaves its lateral wall just past the carina: 3 o’clock in the standard view.\n\nLook in and count three openings: RB1 apical, RB2 posterior, RB3 anterior. If you count two, withdraw: an upper lobe airway can leave the trachea instead.',
       claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 63 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 65, to: 67 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 103 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 106 } },
-      ],
-      reviewItemIds: ['R01'],
+      sourceRefs: ANATOMY,
+      reviewItemIds: ['R01', 'R07'],
     },
     {
-      id: 'beyond-and-back',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'Going beyond the upper lobe origin, and coming back',
-      body: 'Because the right main bronchus is short before the upper lobe origin, a scope advanced steadily from the main carina can reach the bronchus intermedius before that origin has been seen. From there the origin is behind the tip. The correction is the entry sequence’s recovery from an overshoot: withdraw until the branch point is visible, rotate the origin into the bending plane, deflect until its lumen is in view, and advance along it without dragging the tip across the carina between the upper lobe and the bronchus intermedius. Bending harder from too far downstream does not solve the geometry.\n\nThe same correction applies inside the upper lobe. Wedged deep in one segment, the other two cannot be named from that view; withdraw until their common origin is visible.',
-      claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 65 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 44, to: 47 } },
-      ],
-      reviewItemIds: ['R04'],
+      id: 'two-lobes',
+      kind: 'pattern',
+      role: 'normal-reference',
+      heading: 'Where the bronchus intermedius ends',
+      body: 'Past the upper lobe origin you are in the bronchus intermedius. It ends at two lobes. The middle lobe is anterior and divides into RB4, lateral, and RB5, medial.\n\nRB6 leaves the posterior wall at the same level, opposite the middle lobe. It is the first segment of the lower lobe.',
+      claimClass: 'source',
+      sourceRefs: ANATOMY,
     },
     {
-      id: 'two-parents',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'Two parents at one level',
-      body: 'Beyond the upper lobe, the bronchus intermedius leads to the middle lobe origin and to the lower lobe. The middle lobe arises anteriorly or anterolaterally and divides into RB4, lateral, and RB5, medial. RB6, the superior segment of the lower lobe, is posteriorly directed near the same level. Where each opening sits on the screen depends on shaft rotation; its parent and its direction in the patient do not.\n\nRB6 is not a third middle-lobe segment. The second scope task in this section moves between two parents on purpose: into the middle lobe branches, back to a parent view, then into the superior segment from the lower lobe.',
+      id: 'basal-segments',
+      kind: 'pattern',
+      role: 'normal-reference',
+      heading: 'The four basal segments',
+      body: 'Past RB6 the lower lobe divides into RB7 medial, RB8 anterior, RB9 lateral and RB10 posterior: M-A-L-P.\n\nRB7 often leaves early, apart from the other three. If you count three basal openings, withdraw and look medially.',
       claimClass: 'source',
       sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 66, to: 67 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46, to: 47 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 103 } },
-      ],
-    },
-    {
-      id: 'grouping-not-division',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'A grouping is not a division',
-      body: 'The teaching profile lists RB7 to RB10 together as the right basal group. That is an educational grouping: it does not claim that the four basal segments arise from one simultaneous four-way division. RB7, the medial basal, may arise separately and early, and is easily left out when three large openings ahead look like the whole group.\n\nIdentify each actual origin, and return to a recognizable parent view between branches when needed. The depth that matters is the depth the inspection needs, limited by caliber, view and safety; the far end of the model is not a target.',
-      claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 63 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 67 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 47 } },
+        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 63, to: 67 } },
         { sourceId: 'S2', location: { kind: 'pdf-pages', from: 159, to: 160 } },
       ],
       reviewItemIds: ['R06'],
@@ -201,39 +165,17 @@ export const section: BronchSectionDefinition = {
       id: 'common-errors',
       kind: 'after-commitment',
       role: 'common-errors',
-      heading: 'Common errors and their correction',
-      body: 'Most of these take an airway’s name from the view in front of the lens rather than from its parent.',
-      pointsLabel: 'The error, then the correction',
+      heading: 'Three errors to expect',
+      body: 'Each one names an airway from the screen and not from its parent.',
+      pointsLabel: 'The error, then the fix',
       points: [
-        'Calling the bronchus intermedius the right upper lobe: ask which branch is already behind the tip, then withdraw to show the upper lobe origin.',
-        'Bending hard toward the upper lobe from inside the bronchus intermedius: withdraw to the right main bronchus, rotate the origin into the bending plane, then deflect and enter.',
-        'Placing RB6 in the middle lobe because its opening sits near it: name its parent, the lower lobe.',
-        'Swapping RB4 and RB5: RB4 is lateral and RB5 medial, whatever the screen shows.',
-        'Recording the basal airways from three large openings: identify the medial basal origin, which may arise separately and earlier than the other three.',
-        'Reading RB4 as lymph-node station 4R: B names a bronchus; a station is a lymph-node location.',
+        'Calling the bronchus intermedius the upper lobe. Withdraw until you see the lateral opening you passed.',
+        'Filing RB6 under the middle lobe. It leaves the posterior wall and belongs to the lower lobe.',
+        'Swapping RB4 and RB5 on a rolled view. RB4 is lateral and RB5 is medial, wherever they sit.',
       ],
       claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 65, to: 67 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 63 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 146, to: 147 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 47 } },
-      ],
-    },
-    {
-      id: 'missing-branch',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'When an expected branch is missing',
-      body: 'The row for a missing expected branch, under Reading the view, gives what fewer openings than expected can mean and the retrace that follows.\n\nIn one narrated inspection, the right upper lobe lacked its expected apical branch because the apical supply arose from a tracheal bronchus, whose origin can be partly concealed by secretions. In that example the retrace reaches the trachea: acknowledge that the familiar pattern is absent, look there and on any CT for another origin of the missing supply, and ask for help while identity is uncertain. No arbitrary opening is labeled RB1 to complete a list, and no second RB1 is recorded in the usual place unless a reviewed case truly has a supernumerary branch. Not every tracheal bronchus supplies the same territory, so the region it supplies is settled on review, not assumed.',
-      claimClass: 'transcript-source',
-      sourceRefs: [
-        { sourceId: 'T11', location: { kind: 'time-span', start: '00:36:14', end: '00:37:48' } },
-        { sourceId: 'T11', location: { kind: 'time-span', start: '00:42:21' } },
-        { sourceId: 'T12', location: { kind: 'time-span', start: '00:09:15', end: '00:10:08' } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 61, to: 70 } },
-      ],
-      reviewItemIds: ['R07', 'R06'],
+      sourceRefs: NAVIGATION,
+      reviewItemIds: ['R04'],
     },
   ],
 
@@ -253,51 +195,18 @@ export const section: BronchSectionDefinition = {
       },
       defaults: { branchLabels: false },
       litAirways: [],
-      boundary: BOUNDARY,
-    },
-  },
-
-  steps: {
-    recognize: {
-      instruction:
-        'In the bronchoscope view in the Simulator panel, the tip sits just inside the right main bronchus. Count the openings ahead of it and note which way each is directed in the patient.',
-      lookIn: { pane: 'simulator', landmark: SIMULATOR_LANDMARKS.scopeView },
-    },
-    act: {
-      title: 'Find the right upper lobe',
-      instruction:
-        'The tip starts in the bronchus intermedius, beyond the right upper lobe origin, with the in-view labels off. Use the scope controls under the view to meet the goals on this card.',
-      lookIn: {
-        pane: 'simulator',
-        landmark: SIMULATOR_LANDMARKS.controls,
-        alsoPane: 'steps',
-        alsoLandmark: STEPS_LANDMARKS.goals,
-      },
-    },
-    observe: {
-      title: 'From the middle lobe to the lower lobe',
-      instruction:
-        'Starting just proximal to the middle and lower lobe origins, enter each airway the goals on this card name, and watch the parentage in the readouts under the controls as you go.',
-      lookIn: {
-        pane: 'simulator',
-        landmark: SIMULATOR_LANDMARKS.readouts,
-        alsoPane: 'steps',
-        alsoLandmark: STEPS_LANDMARKS.goals,
-      },
-    },
-    explain: {
-      title: 'Named by the parent',
-      instruction: `Read ${TEACHING_LANDMARKS.adds} and ${TEACHING_LANDMARKS.grammar} in the Teaching panel, then why the other answers do not fit, on this card.`,
+      boundary: VIEW_LINE,
     },
   },
 
   act: {
     kind: 'scope-lab',
+    outcomeId: 'reach-rb4-rb6',
     view: {
       sectionId: 'right-side',
       mode: 'guided-walk',
       profile: 'adult-teaching-combined-left-basal-v1',
-      start: { kind: 'airway', label: 'BI', at: 'mid' },
+      start: { kind: 'airway', label: 'BI', at: 'distal' },
       controls: ['advance', 'withdraw', 'rotate', 'deflect', 'recenter', 'reset'],
       assists: {
         'centerline-lock': true,
@@ -309,86 +218,102 @@ export const section: BronchSectionDefinition = {
       },
       defaults: { branchLabels: false },
       readouts: ['currentAirway', 'parentage'],
-      litAirways: ['RMSB', 'RUL', 'BI'],
-      boundary: BOUNDARY,
+      litAirways: ['BI', 'RML', 'RB4', 'RB5', 'RLL', 'RB6'],
+      boundary: VIEW_LINE,
     },
     goals: [
       {
-        id: 'expose-upper-lobe-origin',
-        label: 'Bring the right upper lobe origin into view',
-        test: { type: 'event-sequence', events: ['withdrew-to:RMSB', 'ostium-visualized:RUL'] },
+        id: 'enter-lateral',
+        label: 'Enter RB4, the lateral segment of the middle lobe',
+        test: { type: 'event', event: 'entered:RB4' },
       },
       {
-        id: 'enter-from-parent',
-        label:
-          'Enter the right upper lobe without wall contact and without entering the middle or lower lobe',
-        test: {
-          type: 'all',
-          tests: [
-            { type: 'event-sequence', events: ['withdrew-to:RMSB', 'entered:RUL'] },
-            { type: 'without', event: 'wall-contact' },
-            { type: 'without', event: 'advanced-in-red-out' },
-            { type: 'without', event: 'entered:RML' },
-            { type: 'without', event: 'entered:RLL' },
-          ],
-        },
+        id: 'enter-medial',
+        label: 'Enter RB5, the medial segment of the middle lobe',
+        test: { type: 'event', event: 'entered:RB5' },
       },
       {
-        id: 'upper-lobe-segments',
-        label: 'Enter the right upper lobe and bring RB1, RB2 and RB3 into view',
+        id: 'superior-from-lower-lobe',
+        label: 'Withdraw to the bronchus intermedius, then enter RB6 from the lower lobe',
         test: {
-          type: 'all',
-          tests: [
-            { type: 'event', event: 'entered:RUL' },
-            { type: 'event', event: 'ostium-visualized:RB1' },
-            { type: 'event', event: 'ostium-visualized:RB2' },
-            { type: 'event', event: 'ostium-visualized:RB3' },
-          ],
+          type: 'event-sequence',
+          events: ['entered:RML', 'withdrew-to:BI', 'entered:RLL', 'entered:RB6'],
         },
       },
     ],
-    observe: {
-      view: {
-        sectionId: 'right-side',
-        mode: 'guided-walk',
-        profile: 'adult-teaching-combined-left-basal-v1',
-        start: { kind: 'airway', label: 'BI', at: 'distal' },
-        controls: ['advance', 'withdraw', 'rotate', 'deflect', 'recenter', 'reset'],
-        assists: {
-          'centerline-lock': true,
-          'aim-guard': true,
-          'branch-labels': false,
-          'align-to-branch': false,
-          recenter: true,
-          'reference-orientation': true,
-        },
-        defaults: { branchLabels: false },
-        readouts: ['currentAirway', 'parentage'],
-        litAirways: ['BI', 'RML', 'RB4', 'RB5', 'RLL', 'RB6'],
-        boundary: BOUNDARY,
-      },
-      goals: [
-        {
-          id: 'enter-lateral',
-          label: 'Enter RB4, the lateral segment of the right middle lobe',
-          test: { type: 'event', event: 'entered:RB4' },
-        },
-        {
-          id: 'enter-medial',
-          label: 'Enter RB5, the medial segment of the right middle lobe',
-          test: { type: 'event', event: 'entered:RB5' },
-        },
-        {
-          id: 'superior-from-lower-lobe',
-          label:
-            'After the middle lobe, return to the bronchus intermedius and enter RB6 from the right lower lobe',
-          test: {
-            type: 'event-sequence',
-            events: ['entered:RML', 'withdrew-to:BI', 'entered:RLL', 'entered:RB6'],
+  },
+
+  moreActs: {
+    images: {
+      kind: 'find',
+      outcomeId: 'name-right-airways',
+      find: {
+        id: 'right-lung-views',
+        prompt:
+          'Six views of the right lung, as the scope saw them. Click the opening each one asks for.',
+        rows: [
+          {
+            id: 'carina',
+            frameId: 'carina',
+            context:
+              'You are above the carina. The view is rolled: the membranous wall is at 7 o’clock.',
+            prompt: 'Click the right main bronchus.',
+            targetId: 'rmb',
+            rationale:
+              'Put the membranous wall back at 6 o’clock in your head. The patient’s right is then on your right, and that opening is the right main bronchus.',
           },
-        },
-      ],
-      readouts: ['currentAirway', 'parentage'],
+          {
+            id: 'right-main',
+            frameId: 'right-main',
+            context: 'You have just entered the right main bronchus.',
+            prompt: 'Click the right upper lobe.',
+            targetId: 'rul',
+            rationale:
+              'The upper lobe is the side opening on the lateral wall. The lumen that runs straight on is the bronchus intermedius.',
+          },
+          {
+            id: 'upper-lobe',
+            frameId: 'right-upper-lobe',
+            context:
+              'You are looking into the right upper lobe. Anterior is to the left of this view.',
+            prompt: 'Click RB2, the posterior segment.',
+            targetId: 'rb2',
+            rationale:
+              'RB3 is anterior, so it is the opening on the left. RB2 is posterior and sits opposite it. RB1, the apical segment, is the third.',
+          },
+          {
+            id: 'intermedius-end',
+            frameId: 'intermedius-end',
+            context: 'You arrived from the bronchus intermedius and stopped where it ends.',
+            prompt: 'Click RB6, the superior segment.',
+            targetId: 'rb6',
+            rationale:
+              'The middle lobe is the separate opening on the anterior wall. RB6 leaves the posterior wall opposite it, at the mouth of the lower lobe.',
+          },
+          {
+            id: 'middle-lobe',
+            frameId: 'right-middle-lobe',
+            context:
+              'You are inside the middle lobe bronchus. The patient’s midline is to the left of this view.',
+            prompt: 'Click RB4.',
+            targetId: 'rb4',
+            rationale:
+              'RB5 is medial, so it is the opening toward the midline. RB4 is lateral and sits on the other side.',
+          },
+          {
+            id: 'basal',
+            frameId: 'right-basal',
+            rotation: 90,
+            context:
+              'You are in the right lower lobe, past RB6. The scope has been rotated a quarter turn.',
+            prompt: 'Click RB7, the medial basal segment.',
+            targetId: 'rb7',
+            rationale:
+              'RB7 leaves early and stands apart from the other three. Rotation moved it on the screen. It did not change which opening stands apart.',
+          },
+        ],
+        sourceRefs: ANATOMY,
+      },
     },
   },
 
@@ -397,41 +322,42 @@ export const section: BronchSectionDefinition = {
     seedId: 'Q01',
     itemType: 'signal-recognition',
     situation:
-      'During a supervised airway inspection, the trainee entered the right main bronchus from the main carina and advanced steadily without naming a branch on the way. The view now shows an opening in the anterior wall ahead, with the lumen continuing beyond it.',
-    stem: 'Which structure is the scope in now?',
+      'You enter the right main bronchus and advance without stopping. You have not seen a side opening. Ahead, one opening sits on the anterior wall and the lumen continues past it.',
+    stem: 'Where is the tip of the scope?',
     choices: [
       {
         id: 'a',
-        label: 'The right upper lobe bronchus',
+        label: 'In the right upper lobe bronchus',
         rationale:
-          'The right upper lobe arises early from the right main bronchus, and a steady advance can go beyond its origin without entering it. Inside the upper lobe the view would show its segmental openings, not a lobar opening with the lumen continuing past it. Calling this airway the upper lobe is a documented novice error; ask which branch is already behind you.',
+          'Inside the upper lobe you would face three segmental openings. Here one opening sits on a wall and the lumen runs on.',
         plausibility: 'incorrect-mechanism',
       },
       {
         id: 'b',
-        label: 'The bronchus intermedius',
+        label: 'In the bronchus intermedius',
         rationale:
-          'Distal to the right upper lobe origin, the right-sided airway continues as the bronchus intermedius. From its distal end the middle lobe arises anteriorly and the lower lobe continues beyond it. It is a bronchus, not a lobe.',
+          'You passed the upper lobe origin without seeing it. The airway beyond it is the bronchus intermedius, and the anterior opening ahead is the middle lobe.',
         plausibility: 'best',
       },
       {
         id: 'c',
-        label: 'The superior segment of the right lower lobe',
+        label: 'In the right lower lobe, at RB6',
         rationale:
-          'RB6 is a single segmental branch of the lower lobe, posteriorly directed near the level of the middle lobe origin. The anterior opening ahead is the middle lobe origin, which arises from the bronchus intermedius, not from a lower lobe segment.',
+          'RB6 leaves the posterior wall. The opening ahead is anterior, so it is the middle lobe, and you are still above it.',
         plausibility: 'incorrect-mechanism',
       },
       {
         id: 'd',
-        label: 'A separate intermediate lobe of the right lung',
+        label: 'Still in the right main bronchus',
         rationale:
-          'The right lung has three lobes: upper, middle and lower. The airway between the upper lobe origin and the middle and lower lobes is a bronchus; no lobe of its own lies there.',
+          'The right main bronchus ends at the upper lobe origin, a short way past the carina. A steady advance carries you beyond it.',
         plausibility: 'incorrect-mechanism',
       },
     ],
     explanation:
-      'The right main bronchus is short before the right upper lobe origin, so a steady advance can go beyond it unseen. Distal to that origin the airway is the bronchus intermedius, a bronchus rather than a lobe; from its distal end the middle lobe arises anteriorly and the lower lobe continues beyond it. From here the upper lobe origin is behind the tip, and it is found again by withdrawing to the right main bronchus.',
+      'The right main bronchus is short. Advance without looking and you pass the upper lobe origin on the lateral wall. Past it you are in the bronchus intermedius, which ends at the middle lobe, anterior, and the lower lobe.',
     objectiveIds: ['M08-O1'],
+    outcomeIds: ['name-right-airways'],
     claimClass: 'source',
     sourceRefs: [
       { sourceId: 'S1', location: { kind: 'pdf-pages', from: 65, to: 70 } },
@@ -443,55 +369,50 @@ export const section: BronchSectionDefinition = {
     id: 'N05',
     itemType: 'management-decision',
     situation:
-      'Later in the same right-sided inspection, RB6 has been entered and left. Advancing down the right lower lobe, the trainee now sees three large openings ahead and names them the anterior, lateral and posterior basal segments. The trainee proposes to record the basal airways and move to the left side.',
-    stem: 'What is the next move?',
+      'You have entered and left RB6. Further down the lower lobe, three large openings fill the view. You name them anterior, lateral and posterior basal.',
+    stem: 'What do you do before you move on?',
     choices: [
       {
         id: 'a',
-        label:
-          'Withdraw to a proximal view of the lower lobe and look for a separate medial basal origin',
+        label: 'Withdraw to a wider view of the lower lobe and look medially',
         rationale:
-          'RB7 may arise separately and earlier than the other basal branches, so it is seen from a more proximal view of the lower lobe, not from where three openings fill the screen. Withdrawing to that parent view is the same correction as for an upper lobe origin left behind.',
+          'RB7 often leaves early, above the other three. You see its opening from further back, on the medial wall.',
         plausibility: 'best',
       },
       {
         id: 'b',
-        label:
-          'Record the basal airways as complete, because the three openings ahead make up the basal group',
+        label: 'Call the basal segments complete and go to the left lung',
         rationale:
-          'The basal group is a teaching grouping, not one division that shows all four basal segments together. Three large openings account for three segments and leave the medial basal unaccounted for.',
+          'Three openings are three segments. The medial basal segment is not among them, so the lower lobe is not finished.',
         plausibility: 'incorrect-mechanism',
       },
       {
         id: 'c',
-        label:
-          'Advance into the largest of the three openings to look for the medial basal segment beyond it',
+        label: 'Advance into the largest opening to find the fourth',
         rationale:
-          'When the medial basal arises separately, its origin lies proximal to the three openings, so advancing into one of them takes the tip away from it. Advancing in search of an origin the view does not show is the reflex this section warns against; deeper in one basal bronchus, the medial basal stays unseen.',
+          'RB7 opens above these three. Going deeper into one of them takes the tip further from it.',
         plausibility: 'unsafe',
       },
       {
         id: 'd',
-        label:
-          'Withdraw to the bronchus intermedius and look for the medial basal origin beside the middle lobe',
+        label: 'Withdraw to the middle lobe and look for it beside RB5',
         rationale:
-          'The medial basal is a lower lobe segment: when it arises separately, its origin lies within the lower lobe, proximal to the three openings. The medial airway near the middle lobe is RB5, a branch of the middle lobe itself; looking there mistakes one medial airway for another with a different parent.',
+          'RB5 is the medial segment of the middle lobe. RB7 is a lower lobe airway and opens inside the lower lobe.',
         plausibility: 'incorrect-mechanism',
       },
     ],
     explanation:
-      'The right basal group is an educational grouping, not a claim that four basal segments arise from one simultaneous division. RB7, the medial basal, may arise separately and early, and is easily left out when three large openings ahead look like the whole group. As with an upper lobe origin left behind, withdraw to a proximal view of the lower lobe, its parent, where the origin can be seen; nothing goes in the record that was not seen.',
+      'The four basal segments do not always open together. RB7 often leaves early, on the medial wall. When the count is short, withdraw to the parent and look again from there.',
     objectiveIds: ['M08-O4'],
+    outcomeIds: ['name-right-airways'],
     claimClass: 'source',
     sourceRefs: [
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 63 } },
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 67 } },
-      { sourceId: 'S2', location: { kind: 'pdf-pages', from: 47 } },
+      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 63, to: 67 } },
       { sourceId: 'S2', location: { kind: 'pdf-pages', from: 159, to: 160 } },
     ],
     reviewItemIds: ['R06'],
     transferVariant:
-      'A different airway and a later point in the survey: in the lower lobe’s basal airways, a medial basal origin already behind the tip, where the prediction asked about the airway beyond the upper lobe origin.',
+      'The lower lobe, not the upper: a basal opening left behind where the prediction left the upper lobe origin behind.',
   },
 
   practice: [
@@ -500,53 +421,47 @@ export const section: BronchSectionDefinition = {
       manifestCaseId: 'C11',
       presentationTitle: 'Two openings where three were expected',
       situation:
-        'A stable adult teaching model is being inspected under supervision. Inside what the trainee takes to be the right upper lobe, two segmental openings are visible rather than the expected three, and no apical opening is identified. The model also has a separate airway opening in the proximal trachea, and the instructor has supplied the model’s CT.',
+        'You are in the right upper lobe of a stable patient. You see two segmental openings, not three. The CT shows a small airway leaving the trachea above the carina.',
       item: {
         id: 'C11',
         itemType: 'management-decision',
-        stem: 'What is the next move?',
+        stem: 'What do you do next?',
         choices: [
           {
             id: 'a',
-            label:
-              'Return to the parent airway and review the supplied CT to find which region the tracheal opening supplies',
+            label: 'Withdraw to the trachea and find the opening the CT shows',
             rationale:
-              'The trifurcation is a reference, not proof that a third opening is hidden. Confirming the location from the parent and reviewing the CT for the region the tracheal opening supplies is how a missing branch is reconciled with an actual variant.',
+              'A tracheal bronchus is a known variant. It usually supplies the apical segment, which is why the upper lobe shows two openings.',
             plausibility: 'best',
           },
           {
             id: 'b',
-            label:
-              'Probe with the tip where the third opening should be, to find a hidden apical branch',
+            label: 'Probe the wall where the third opening should be',
             rationale:
-              'No lumen is visible there, so probing drives the tip into mucosa: the critical error in this case. It risks the wall and cannot find an opening that is not there.',
+              'There is no lumen there. Pushing the tip into mucosa cannot find an opening that this patient does not have.',
             plausibility: 'unsafe',
           },
           {
             id: 'c',
-            label:
-              'Label the larger of the two openings RB1, so that all three right upper lobe segments appear in the record',
+            label: 'Call the larger opening RB1 so the report lists three',
             rationale:
-              'Naming an opening to complete a list invents an identity. The larger opening belongs to whichever segment it actually supplies, and the apical supply may arise somewhere else entirely.',
+              'That gives an opening a name it has not earned. The apical airway is somewhere else in this patient.',
             plausibility: 'incorrect-mechanism',
           },
           {
             id: 'd',
-            label:
-              'Record RB1 twice: at the tracheal opening and at its usual place in the right upper lobe',
+            label: 'Pause and re-count the two openings more slowly',
             rationale:
-              'One supplied airway gets one identity. A second RB1 in the usual place invents an opening the model does not have; the record follows the verified topology.',
+              'The count is right. Two openings is the finding. The missing segment is explained by the CT, not by a second look.',
             plausibility: 'incorrect-mechanism',
           },
         ],
         explanation:
-          'The expected trifurcation is a reference, not proof that a third opening must be hidden. Confirm from the parent airway that the scope is in the right upper lobe, then review the CT with the instructor to find which region the tracheal opening supplies: in this model, the apical region. Not every tracheal bronchus supplies the same territory. Inspect that branch when it is accessible, give it one identity, and document the variant and any limits — no second RB1, and no label on an arbitrary opening.',
+          'Three openings is the usual pattern, not a rule. When one is missing, withdraw to the parent and check the CT. Here the apical airway leaves the trachea. Inspect it there and report the variant.',
         objectiveIds: ['M08-O5'],
-        claimClass: 'transcript-source',
-        sourceRefs: [
-          { sourceId: 'T11', location: { kind: 'time-span', start: '00:35:21', end: '00:37:00' } },
-          { sourceId: 'T12', location: { kind: 'time-span', start: '00:09:15', end: '00:10:08' } },
-        ],
+        outcomeIds: ['name-right-airways'],
+        claimClass: 'source',
+        sourceRefs: [{ sourceId: 'S1', location: { kind: 'pdf-pages', from: 61, to: 70 } }],
         reviewItemIds: ['R07'],
       },
     },
@@ -554,44 +469,45 @@ export const section: BronchSectionDefinition = {
       id: 'mc-rb6-parentage',
       presentationTitle: 'A posterior opening at the middle lobe level',
       situation:
-        'During a supervised right-sided inspection, the scope has come down the bronchus intermedius to the level of the middle lobe origin. A posteriorly directed opening is visible at about the same level. The trainee enters it and now has to name it in the record.',
+        'You come down the bronchus intermedius. At the level of the middle lobe opening you see a second opening on the posterior wall, and you enter it.',
       item: {
         id: 'mc-rb6-parentage',
         itemType: 'mechanism-interpretation',
-        stem: 'How should the record name this airway?',
+        stem: 'What do you call this airway in the report?',
         choices: [
           {
             id: 'a',
-            label: 'RB6, recorded under the right lower lobe',
+            label: 'RB6, right lower lobe',
             rationale:
-              'A posteriorly directed branch near the middle lobe level is RB6, the superior segment. It belongs to the lower lobe, however close its opening sits to the middle lobe origin.',
+              'A posterior opening at this level is the superior segment. It belongs to the lower lobe, however close it sits to the middle lobe.',
             plausibility: 'best',
           },
           {
             id: 'b',
-            label: 'RB6, recorded under the right middle lobe with RB4 and RB5',
+            label: 'RB6, right middle lobe',
             rationale:
-              'The middle lobe divides into RB4, lateral, and RB5, medial. RB6 is not a third middle-lobe segment; entering the three in one sequence does not make them siblings.',
+              'The middle lobe has two segments, RB4 and RB5. Entering RB6 next does not make it their sibling.',
             plausibility: 'incorrect-mechanism',
           },
           {
             id: 'c',
-            label: 'RB4, the superior segment of the right middle lobe',
+            label: 'RB4, right middle lobe',
             rationale:
-              'RB4 is the lateral segment of the middle lobe, not a superior one. On the right, the superior segment is RB6, in the lower lobe.',
+              'RB4 is the lateral segment and lies inside the middle lobe. You reach it through the anterior opening, not the posterior one.',
             plausibility: 'incorrect-mechanism',
           },
           {
             id: 'd',
-            label: 'RB5, the medial segment of the right middle lobe',
+            label: 'RB7, right lower lobe',
             rationale:
-              'RB5 is a branch inside the middle lobe, reached after entering it. Nearness on the screen does not give an opening’s parent; its origin and its direction in the patient do.',
+              'RB7 is medial and opens further down, among the basal segments. This opening is posterior and comes first.',
             plausibility: 'incorrect-mechanism',
           },
         ],
         explanation:
-          'The middle lobe arises anteriorly or anterolaterally and divides into RB4, lateral, and RB5, medial. RB6, the superior segment, is posteriorly directed near the middle lobe level but arises from the lower lobe; where it sits on the screen depends on shaft rotation. The record names an airway by its parent.',
-        objectiveIds: ['M08-O3', 'M08-O2'],
+          'The middle lobe is anterior. RB6 leaves the posterior wall at the same level and is the first segment of the lower lobe. Name it by its parent.',
+        objectiveIds: ['M08-O2', 'M08-O3'],
+        outcomeIds: ['name-right-airways'],
         claimClass: 'source',
         sourceRefs: [
           { sourceId: 'S1', location: { kind: 'pdf-pages', from: 66, to: 67 } },

@@ -34,6 +34,8 @@ function actSourceRefs(act: BronchAct): readonly SourceRef[] {
       return act.sort.sourceRefs
     case 'identify':
       return act.identify.sourceRefs
+    case 'find':
+      return act.find.sourceRefs
     case 'sequence':
       return act.sequence.sourceRefs
     case 'ledger':
@@ -71,6 +73,7 @@ export function bronchStageSources(sectionId: BronchSectionId): BronchStageSourc
   for (const block of section.blocks) add(block.sourceRefs)
   add(section.prediction.sourceRefs)
   add(actSourceRefs(section.act))
+  for (const act of Object.values(section.moreActs ?? {})) add(actSourceRefs(act))
   add(section.transfer.sourceRefs)
   for (const stopId of section.spineStops) add(spineStop(stopId).sourceRefs)
   for (const row of BRONCH_GRAMMAR) if (section.grammarRowIds.includes(row.id)) add(row.sourceRefs)

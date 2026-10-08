@@ -798,8 +798,9 @@ for (const id of ['pre-use-check', 'deterioration', 'honest-report'] as const) {
 test('missing teaching media is explicitly identified', async ({ page }) => {
   await page.route('**/airway-quiz/quiz-frames.json', (route) => route.abort())
   await page.route('**/*quiz*frames*.json', (route) => route.abort())
-  await openSection(page, 'right-side')
-  await expect(page.locator('[data-media-state="failed"]')).toBeVisible()
+  // The left lung still opens on its tour; the rewritten right lung opens on its hook.
+  await openSection(page, 'left-side')
+  await expect(page.locator('[data-media-state="failed"]').first()).toBeVisible()
   expect((await record(page)).reviewedSectionIds).toEqual([])
 })
 
@@ -1302,17 +1303,17 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
           ).toBe(true)
       })
 
+  // The rewritten sections (the right lung, bleeding) close on their checklist and do not print
+  // the table in the lesson; the Reference keeps all of it.
   const GRAMMAR_SECTIONS = [
     'branch-entry',
     'view-loss',
     'larynx-and-entry',
-    'right-side',
     'left-side',
     'systematic-survey',
     'poor-return',
     'protected-accessories',
     'deterioration',
-    'bleeding-priorities',
     'scope-in-a-tube',
   ] as const
 
@@ -1358,8 +1359,9 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
         await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[index + 1].id)
       }
     }
-    // Eleven sections, thirteen places: view-loss and poor-return show the rows twice.
-    expect(occurrences).toBe(13)
+    // Nine sections, eleven places: view-loss and poor-return show the rows twice. The two
+    // rewritten sections no longer print the table in the lesson.
+    expect(occurrences).toBe(11)
     await page.goto(base + '/reference')
     const reference = page.locator('#reading-the-view table[data-grammar]')
     await expect(reference.locator('thead th')).toHaveText([
@@ -1495,9 +1497,20 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       const unsafe = first.choices.find((choice) => choice.plausibility === 'unsafe')!
       await page.locator(`[data-scenario-frame="${first.id}"] input[value="${unsafe.id}"]`).check()
       await decide.click()
-      await expect(page.locator('[data-scenario-outcome="refused"]')).toContainText(
-        'Not correct, and unsafe.',
-      )
+      // In a case that evolves the unsafe move plays out on the monitor; otherwise it is refused.
+      if (unsafe.consequence) {
+        await expect(page.locator('[data-scenario-outcome="played-out"]')).toContainText(
+          'Not correct, and unsafe.',
+        )
+        await expect(page.locator('[data-scenario-consequence]')).toContainText(
+          unsafe.consequence.situation,
+        )
+        const worse = unsafe.consequence.readings.find((reading) => reading.value)!
+        await expect(page.locator('[data-monitor-value]').first()).toContainText(worse.value!)
+      } else
+        await expect(page.locator('[data-scenario-outcome="refused"]')).toContainText(
+          'Not correct, and unsafe.',
+        )
       await expect(page.locator('[data-scenario-frame]')).toHaveAttribute(
         'data-scenario-frame',
         first.id,
@@ -1735,18 +1748,23 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
     await page.keyboard.press('Escape')
     await expect(larynx.getByRole('button', { name: 'Enlarge this image' })).toBeFocused()
 
-    await openSection(page, 'right-side')
+    // The rewritten right lung walks its stills on two screens, each stop with one line of teaching.
+    await goToStep(page, 'right-side', 'right-side-flow-v1-middle-and-lower')
     const tour = page.locator('[data-normal-airway-tour]')
-    await expect(tour.locator('[data-tour-group]')).toHaveCount(4)
-    for (const label of ['RB1', 'RB6', 'RB10']) {
+    await expect(tour.locator('[data-tour-group]')).toHaveCount(3)
+    for (const label of ['RB4', 'RB6', 'RB10']) {
       await tour.locator(`button[data-tour-airway="${label}"]`).click()
       const figure = tour.locator(`figure[data-media-id="${label.toLowerCase()}"]`)
       await expect(figure.locator('img')).toBeVisible()
       await expect.poll(async () => (await registration(figure))?.error ?? 99).toBeLessThan(1.5)
+      await expect(tour.locator('[data-tour-note]')).not.toBeEmpty()
     }
+    await tour.locator('button[data-tour-airway="RB6"]').click()
+    await expect(tour.locator('[data-tour-note]')).toContainText('posterior wall')
     await tour.locator('button[data-tour-compare-toggle]').click()
     await expect(tour.locator('[data-tour-compare-grid] figure')).toHaveCount(5)
-    await expect(tour.locator('[data-tour-frame]')).toContainText('no orientation or camera-roll')
+    await expect(tour.locator('[data-tour-frame]')).toHaveCount(0)
+    await expect(tour).not.toContainText(/review pending|teaching profile|not recorded/i)
     await tour.screenshot({ path: info.outputPath('s10-tour-compare.png') })
   })
 
@@ -1920,6 +1938,78 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
     await expect(right).toHaveAttribute('data-met', 'true')
   })
 
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 844 },
+  ])
+    test(`rewrite pilot: the right lung's six views are answered by clicking the opening, at ${viewport.width}px`, async ({
+      page,
+    }, info) => {
+      await page.setViewportSize(viewport)
+      const { step } = await goToStep(page, 'right-side', 'right-side-flow-v1-name-the-views')
+      if (step.interaction.kind !== 'find') throw new Error('not a click-on-image set')
+      const { rows } = step.interaction.find
+      await expect(primary(page)).toBeDisabled()
+      for (const [index, row] of rows.entries()) {
+        const card = page.locator(`[data-find-row="${row.id}"]`)
+        await expect(card).toBeVisible()
+        await expect(page.locator('[data-find-position]')).toHaveText(
+          `Image ${index + 1} of ${rows.length}`,
+        )
+        // Before the answer: outlines without names, each a button named by its position.
+        await expect(card.locator('[data-find-label]')).toHaveCount(0)
+        await expect(card.locator('[data-find-marker]').first()).toHaveAttribute('role', 'button')
+        await expect
+          .poll(() =>
+            card.locator('img').evaluate((image) => (image as HTMLImageElement).naturalWidth),
+          )
+          .toBeGreaterThan(0)
+        // The first image is answered with another opening, to see the correction.
+        const frameMarkers = await card
+          .locator('[data-find-marker]')
+          .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-find-marker')!))
+        const pick = index === 0 ? frameMarkers.find((id) => id !== row.targetId)! : row.targetId
+        const outline = card.locator(`[data-find-marker="${pick}"]`)
+        await outline.scrollIntoViewIfNeeded()
+        await outline.click()
+        const verdict = card.locator('[data-find-verdict]')
+        await expect(verdict).toHaveAttribute('data-find-verdict', index === 0 ? 'other' : 'held')
+        await expect(verdict).toBeFocused()
+        await expect(card.locator(`[data-find-marker="${row.targetId}"]`)).toHaveAttribute(
+          'data-state',
+          'target',
+        )
+        await expect(card.locator('[data-find-label]')).toHaveCount(frameMarkers.length)
+        if (row.rotation) {
+          await expect(card).toHaveAttribute('data-find-rotation', String(row.rotation))
+          await card.screenshot({ path: info.outputPath(`rotated-view-${viewport.width}.png`) })
+        }
+        expect(
+          await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+        ).toBe(true)
+        if (index < rows.length - 1) await page.locator('[data-find-next]').click()
+      }
+      await expect(primary(page)).toBeEnabled()
+      await expect(page.locator('[data-stage]')).not.toContainText(
+        /model boundary|teaching profile|clinical review pending|does not establish/i,
+      )
+    })
+
+  test('rewrite pilot: the right lung\u2019s scope practice carries one line under the scene and no notes about the model', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1204, height: 987 })
+    await goToStep(page, 'right-side', 'right-side-flow-v1-application')
+    await ready(page)
+    await expect(page.locator('[data-step-goals] li')).toHaveCount(3)
+    await expect(page.locator('[data-stage]')).not.toContainText(
+      /model boundary|clinical review pending|does not judge the bronchoscope|sends nothing to the scope/i,
+    )
+    await expect(page.locator('[data-stage]')).toContainText(
+      'Guided travel: the scope follows the lumen. Opening names are off.',
+    )
+  })
+
   test('S10: in the less-assisted lesson, help and opening names are advice that records nothing', async ({
     page,
   }, info) => {
@@ -1938,11 +2028,8 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
       record: await record(page),
     }
     await page.locator('[data-now-card]').getByRole('button', { name: 'Show me where' }).click()
-    await expect(page.locator('[data-spotlight="true"]')).toHaveAttribute(
-      'data-control',
-      'withdraw',
-    )
-    await expect(page.locator('[data-goal-help]')).toContainText(/^Withdraw/)
+    await expect(page.locator('[data-spotlight="true"]')).toHaveAttribute('data-control', 'rotate')
+    await expect(page.locator('[data-goal-help]')).toContainText(/^Rotate/)
     const names = page.getByRole('button', { name: 'Show the opening names' })
     await names.click()
     await expect(page.getByRole('button', { name: 'Hide the opening names' })).toHaveAttribute(

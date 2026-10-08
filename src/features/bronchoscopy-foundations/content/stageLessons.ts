@@ -20,6 +20,8 @@ import {
 } from './pathway'
 import { bronchSectionItems, type BronchStageItem } from './stageItems'
 import type {
+  BronchAct,
+  BronchFind,
   BronchIdentify,
   BronchLedger,
   BronchReport,
@@ -48,6 +50,7 @@ export type BronchStageInteraction =
     }
   | { readonly kind: 'sort'; readonly sort: BronchSort }
   | { readonly kind: 'identify'; readonly identify: BronchIdentify }
+  | { readonly kind: 'find'; readonly find: BronchFind }
   | { readonly kind: 'sequence'; readonly sequence: BronchSequence }
   | { readonly kind: 'ledger'; readonly ledger: BronchLedger }
   | { readonly kind: 'report'; readonly report: BronchReport }
@@ -77,6 +80,7 @@ const COMMIT = 'Check this answer'
 export const ACT_ACTION_LABELS = {
   sort: 'Check the set',
   identify: 'Check the names',
+  find: CONTINUE,
   sequence: 'Check the order',
   ledger: CONTINUE,
   report: CONTINUE,
@@ -99,8 +103,15 @@ export interface StepInput {
   readonly activity?: CourseActivity
 }
 
-function actInteraction(section: BronchSectionDefinition): BronchStageInteraction {
-  const act = section.act
+/** The activity a practice screen runs: the section's own, or the further one the screen names. */
+function actOfChunk(section: BronchSectionDefinition, chunk: CourseChunk): BronchAct {
+  if (!chunk.act) return section.act
+  const act = section.moreActs?.[chunk.act]
+  if (!act) throw new Error(`Section ${section.id} has no activity "${chunk.act}".`)
+  return act
+}
+
+function actInteraction(act: BronchAct): BronchStageInteraction {
   switch (act.kind) {
     case 'scope-lab':
       return { kind: 'scope-task', view: act.view, goals: act.goals }
@@ -108,6 +119,8 @@ function actInteraction(section: BronchSectionDefinition): BronchStageInteractio
       return { kind: 'sort', sort: act.sort }
     case 'identify':
       return { kind: 'identify', identify: act.identify }
+    case 'find':
+      return { kind: 'find', find: act.find }
     case 'sequence':
       return { kind: 'sequence', sequence: act.sequence }
     case 'ledger':
@@ -119,14 +132,13 @@ function actInteraction(section: BronchSectionDefinition): BronchStageInteractio
   }
 }
 
-function actWorkspace(section: BronchSectionDefinition): BronchWorkspace {
-  const act = section.act
+function actWorkspace(section: BronchSectionDefinition, act: BronchAct): BronchWorkspace {
   if (act.kind === 'scope-lab') return { kind: 'scope', view: act.view }
   if (act.kind === 'scenario') {
     return {
       kind: 'monitor',
       readings: act.scenario.frames[0]?.readings ?? [],
-      caption: act.scenario.boundary,
+      caption: act.scenario.boundary ?? act.scenario.frames[0]?.time ?? act.scenario.title,
     }
   }
   return section.workspace
@@ -141,6 +153,7 @@ function buildInputs(section: BronchSectionDefinition): readonly StepInput[] {
     const isCheck = chunk.kind === 'check' || chunk.kind === 'transfer'
     const stage = chunk.kind === 'transfer' ? items.transfer : items.prediction
     const act = section.act
+    const chunkAct = actOfChunk(section, chunk)
     const observe = act.kind === 'scope-lab' ? act.observe : undefined
     const view = observe?.view ?? (act.kind === 'scope-lab' ? act.view : null)
     const interaction: BronchStageInteraction = isCheck
@@ -148,7 +161,7 @@ function buildInputs(section: BronchSectionDefinition): readonly StepInput[] {
       : chunk.learnerRecord
         ? { kind: 'report', report: inspectionReport({ inspectionSnapshot: null }) }
         : chunk.kind === 'practice'
-          ? actInteraction(section)
+          ? actInteraction(chunkAct)
           : chunk.kind === 'observe' && view && observe
             ? {
                 kind: 'observe',
@@ -159,7 +172,7 @@ function buildInputs(section: BronchSectionDefinition): readonly StepInput[] {
             : { kind: chunk.kind === 'debrief' ? 'explain' : 'read' }
     const workspace: BronchWorkspace =
       chunk.kind === 'practice'
-        ? actWorkspace(section)
+        ? actWorkspace(section, chunkAct)
         : chunk.kind === 'observe' && view
           ? { kind: 'scope', view }
           : isCheck && stage.choiceAirways
@@ -189,7 +202,7 @@ function buildInputs(section: BronchSectionDefinition): readonly StepInput[] {
       actionLabel: isCheck
         ? COMMIT
         : chunk.kind === 'practice'
-          ? ACT_ACTION_LABELS[section.act.kind]
+          ? ACT_ACTION_LABELS[chunkAct.kind]
           : CONTINUE,
       interaction,
       workspace,

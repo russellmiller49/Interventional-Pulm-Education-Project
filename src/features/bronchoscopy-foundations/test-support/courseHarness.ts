@@ -5,6 +5,7 @@ import type { BronchStageLesson, BronchStageStep } from '../content/stageLessons
 import { SCOPE_RECIPES } from './scopeRecipes'
 import { performPilotStep } from './fiveControlsLearnHarness'
 import {
+  answerFindRows,
   answerLedger,
   clickPrimary,
   commitById,
@@ -50,6 +51,9 @@ export async function completeCourseStep(lesson: BronchStageLesson, authored: Br
     case 'identify':
       nameIdentifyRows(step)
       clickPrimary()
+      break
+    case 'find':
+      answerFindRows(step)
       break
     case 'sequence':
       orderSequence(step)

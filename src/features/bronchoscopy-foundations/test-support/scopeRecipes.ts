@@ -64,12 +64,6 @@ export const SCOPE_RECIPES: Partial<Record<BronchSectionId, ScopeRecipe>> = {
   },
   'right-side': {
     act: (p) => {
-      p.withdrawTo('RMSB')
-      p.lookAt('RUL')
-      p.goInto('RUL')
-      for (const label of ['RB3', 'RB2', 'RB1'] as const) p.lookAt(label)
-    },
-    observe: (p) => {
       p.goInto('RB4')
       p.withdrawTo('RML')
       p.goInto('RB5')

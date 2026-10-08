@@ -1,3 +1,4 @@
+import type { AirwayLabel } from '../components/scope/types'
 import type { BronchLearnUnit } from './learnUnit'
 import type { BronchSectionId } from './sectionIds'
 
@@ -32,6 +33,10 @@ export interface CourseChunk {
   readonly grammar?: boolean
   readonly demonstration?: BronchLearnUnit['demonstration']
   readonly learnerRecord?: boolean
+  /** A practice screen that runs one of the section's further activities (`moreActs`), by key. */
+  readonly act?: string
+  /** The stops of the section's labelled tour this screen walks, in the section's order. */
+  readonly tour?: readonly AirwayLabel[]
 }
 
 const teach = (
@@ -70,6 +75,49 @@ const debrief = (blocks: readonly string[]): CourseChunk => ({
   visual: 'none',
   anchor: true,
   grammar: true,
+})
+
+// ── Rewritten sections ───────────────────────────────────────────────────────────────────────────
+// Hook, prediction, teaching screens with a picture, activities, a check with new details, and a
+// close that repeats the hook's checklist (`authoringRules.ts` holds a rewritten section to this).
+
+/** The opening screen: the clinical question and the memory hook, with no cards. */
+const hook = (title: string): CourseChunk => ({
+  id: 'hook',
+  title,
+  kind: 'teach',
+  presentation: 'illustrated',
+  blocks: [],
+  visual: 'none',
+  anchor: true,
+  instruction: 'Start with the question. The checklist comes back at the end.',
+})
+const screen = (
+  id: string,
+  title: string,
+  instruction: string,
+  blocks: readonly string[],
+  extra: Partial<CourseChunk> = {},
+): CourseChunk => ({
+  id,
+  title,
+  kind: 'teach',
+  presentation: 'illustrated',
+  blocks,
+  visual: 'none',
+  instruction,
+  ...extra,
+})
+/** The closing screen: the common errors, then the checklist again. */
+const close = (blocks: readonly string[]): CourseChunk => ({
+  id: 'review',
+  title: 'Before you move on',
+  kind: 'debrief',
+  presentation: 'illustrated',
+  blocks,
+  visual: 'none',
+  anchor: true,
+  instruction: 'Read the errors to expect, then run the checklist once more.',
 })
 
 /** This maps presentations only. The canonical section registry still owns course order. */
@@ -148,36 +196,41 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     check('transfer', 'Consider a changed readiness case'),
   ],
   'right-side': [
-    teach(
-      'normal-tour',
-      'Follow the right-sided airways',
-      ['short-right-main', 'what-names-an-airway', 'right-side-in-order'],
-      'tour',
+    hook('Which airway is this?'),
+    check('check', 'Where is the scope?'),
+    screen(
+      'upper-lobe',
+      'The right main bronchus and the upper lobe',
+      'Walk the stills. Each outline marks the opening the button names.',
+      ['standard-view', 'upper-lobe'],
+      { visual: 'tour', tour: ['RMSB', 'RUL', 'RB1', 'RB2', 'RB3'] },
     ),
-    teach(
-      'parentage',
-      'Return to the parent airway',
-      ['beyond-and-back', 'two-parents', 'grouping-not-division'],
-      'tour',
-    ),
-    practice(
-      'Now navigate the right side',
-      'inspection',
-      'Use the scope controls to follow the named airways. Keep the endoscopic view in sight; use the map to check parentage when needed.',
+    screen(
+      'middle-and-lower',
+      'The middle and lower lobes',
+      'Walk the stills from the bronchus intermedius to the basal segments.',
+      ['two-lobes', 'basal-segments'],
+      {
+        visual: 'tour',
+        tour: ['BI', 'RML', 'RB4', 'RB5', 'RLL', 'RB6', 'RB7', 'RB8', 'RB9', 'RB10'],
+      },
     ),
     {
-      id: 'changed-view',
-      title: 'Inspect with less assistance',
-      kind: 'observe',
-      presentation: 'inspection',
-      blocks: [],
-      visual: 'none',
-      instruction:
-        'The scope starts at the authored changed view. Use the visible landmarks and complete the goals below.',
+      ...practice(
+        'Name six views',
+        'illustrated',
+        'No names this time. Click the opening each view asks for. One view is rotated.',
+      ),
+      id: 'name-the-views',
+      act: 'images',
     },
-    check('check', 'Identify an airway from its parent'),
-    debrief(['common-errors', 'missing-branch']),
-    check('transfer', 'Interpret another right-sided view'),
+    practice(
+      'Drive into the middle lobe and the superior segment',
+      'inspection',
+      'The scope starts where the bronchus intermedius ends, with opening names off. Meet the three goals.',
+    ),
+    check('transfer', 'Count the basal openings'),
+    close(['common-errors']),
   ],
   'sedation-and-monitoring': [
     teach(
@@ -533,26 +586,30 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     check('transfer', 'Apply the priorities in another situation'),
   ],
   'bleeding-priorities': [
-    teach(
-      'baseline',
-      'Read the context when blood appears',
-      ['blood-after-a-sample', 'what-to-read', 'expected-after-biopsy'],
-      'baseline',
+    hook('Blood fills the view'),
+    check('check', 'What matters most?'),
+    screen('threat', 'Why a small bleed matters', 'Read why the first moves are what they are.', [
+      'the-threat',
+    ]),
+    screen(
+      'first-moves',
+      'The first moves, in order',
+      'Learn the card. You will use it on the patient who follows.',
+      ['first-moves'],
     ),
-    teach('position-and-priorities', 'Compare a contained bleed with central airway flooding', [
-      'what-the-scope-is-doing',
-      'breathing-before-circulation',
-      'first-moves-worked',
-      'suction-has-a-purpose',
+    screen('escalation', 'When the first moves fail', 'Read what comes after the card.', [
+      'escalation',
     ]),
     practice(
-      'Now choose the priority in each bleeding state',
+      'One patient, four decisions',
       'case',
-      'Read the current bleeding state and what the scope position is doing. Choose an action for that context; routine view-loss recovery is not a universal bleeding response.',
+      'Read the monitor, then decide. A move that makes things worse plays out, then you decide again.',
     ),
-    check('check', 'Interpret the purpose of the current position'),
-    debrief(['temporary-control', 'your-bleeding-response', 'common-errors']),
-    check('transfer', 'Distinguish red views in different contexts'),
+    screen('grade', 'Grade the bleed', 'Four grades, by what it took to stop the bleeding.', [
+      'nashville',
+    ]),
+    check('transfer', 'Grade a different bleed'),
+    close(['common-errors']),
   ],
   'scope-in-a-tube': [
     teach(

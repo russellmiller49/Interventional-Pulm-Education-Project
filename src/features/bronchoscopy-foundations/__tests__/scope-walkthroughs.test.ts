@@ -128,22 +128,16 @@ describe('authored scope-lab steps can be completed with the learner’s control
     expect(breathPhaseAt(8.9)).toBe('cough')
   })
 
-  it('right-side: expose and enter the upper lobe from its parent, then the middle and lower lobes', () => {
+  it('right-side: the middle lobe segments, then back to the bronchus intermedius and into RB6', () => {
     const act = actOf(rightSide)
+    expect(act.observe).toBeUndefined()
     const p = pilot(act.view)
-    p.withdrawTo('RMSB')
-    p.lookAt('RUL')
-    p.goInto('RUL')
-    for (const label of ['RB3', 'RB2', 'RB1'] as const) p.lookAt(label)
+    p.goInto('RB4')
+    p.withdrawTo('RML')
+    p.goInto('RB5')
+    p.withdrawTo('BI')
+    p.goInto('RB6')
     expect(p.goals(act.goals)).toEqual(allMet(act.goals))
-    const observe = act.observe!
-    const o = pilot(observe.view ?? act.view)
-    o.goInto('RB4')
-    o.withdrawTo('RML')
-    o.goInto('RB5')
-    o.withdrawTo('BI')
-    o.goInto('RB6')
-    expect(o.goals(observe.goals)).toEqual(allMet(observe.goals))
   })
 
   it('left-side: the lingular division and its segments, then the superior segment', () => {

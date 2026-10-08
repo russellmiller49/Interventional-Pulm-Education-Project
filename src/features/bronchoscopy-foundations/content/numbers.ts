@@ -639,9 +639,15 @@ export function numberSourceNames(ids: readonly NumberId[]): readonly string[] {
   ]
 }
 
-/** Whether a card using these rows should send the learner to the local protocol. */
+/**
+ * Whether a card using these rows should send the learner to the local protocol: it teaches a
+ * guideline or device value. A definition is the same everywhere, and a local slot already says so.
+ */
 export function numbersNeedLocalCheck(ids: readonly NumberId[]): boolean {
-  return ids.some((id) => !NUMBER_REGISTER[id].isDefinition)
+  return ids.some((id) => {
+    const row = NUMBER_REGISTER[id]
+    return !row.isDefinition && row.class !== 'local-slot'
+  })
 }
 
 /** The rows faculty has not signed yet. A published course may use none of them. */

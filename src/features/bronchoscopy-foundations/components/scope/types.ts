@@ -606,6 +606,12 @@ export interface ScopePaneProps {
    */
   /** Where the step's full goal list is, for the pane's current-goal card to link to (A37). */
   readonly allGoalsHref?: string
+  /**
+   * A rewritten section's pane: the scene, its controls and readouts, and the view's one line
+   * under it. The notes about what the model does and does not judge are left out; the course
+   * says that once, on its hub.
+   */
+  readonly plain?: boolean
   readonly referenceLabels?: {
     readonly on: boolean
     readonly used: boolean

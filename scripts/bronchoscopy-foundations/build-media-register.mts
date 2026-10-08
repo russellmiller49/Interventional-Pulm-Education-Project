@@ -1,5 +1,5 @@
 /** Inventory existing media for faculty review without copying source metadata or changing assets. */
-import { readFile, writeFile } from 'node:fs/promises'
+import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -52,6 +52,19 @@ for (const id of CT_STRUCTURE_IDS)
       usedInCurrentStage: true,
       origin:
         'Existing case-001 CT correlation render; orientation and de-identification confirmation pending',
+    })
+// The click-on-image frames: cut from the survey video by build-find-frames.mjs, outlines unchanged.
+const findFramesDir = 'bronchoscopy-foundations/find-frames'
+for (const file of (await readdir(path.join(root, 'public', findFramesDir))).sort())
+  if (file.endsWith('.jpg'))
+    pending.push({
+      id: 'find-frame-' + file.replace(/\.jpg$/, ''),
+      kind: 'endoscopic-still',
+      url: '/' + findFramesDir + '/' + file,
+      sourceManifest: '/airway-lesson/airway-survey-overlays.json',
+      usedInCurrentStage: true,
+      origin:
+        'Frame cut from the existing annotated normal airway survey video, with that survey\u2019s own outlines; rights and de-identification follow the video\u2019s',
     })
 pending.push({
   id: 'annotated-normal-survey',

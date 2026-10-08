@@ -2,13 +2,8 @@ import { cleanup, fireEvent } from '@testing-library/react'
 
 import { BRONCH_SELF_PACED_STORAGE_KEY } from '../engine/selfPacedProgress'
 import { latestScopePaneProps } from '../test-support/ScopeTestDouble'
-import {
-  clickPrimary,
-  currentStepId,
-  installDom,
-  mountSection,
-  settle,
-} from '../test-support/stageHarness'
+import { currentStepId, installDom, mountSection, settle } from '../test-support/stageHarness'
+import { reachCourseStep } from '../test-support/courseHarness'
 
 jest.mock(
   '../components/scope/ScopePane',
@@ -63,12 +58,11 @@ afterEach(() => {
   jest.useRealTimers()
 })
 
+/** The section's scope practice, reached by doing each earlier step as a learner would. */
 async function reachPractice(section: 'branch-entry' | 'right-side') {
   const { lesson } = await mountSection(section)
-  while (lesson.steps.find((step) => step.id === currentStepId())?.course?.kind !== 'practice') {
-    clickPrimary()
-    await settle()
-  }
+  const practice = lesson.steps.find((step) => step.interaction.kind === 'scope-task')!
+  await reachCourseStep(lesson, practice)
   return lesson
 }
 
@@ -93,11 +87,12 @@ describe('A30 — help is advice, not a move', () => {
     const saved = record()
     fireEvent.click(nowButton('Show me where'))
     await settle()
-    // The step starts in the bronchus intermedius; the first goal needs the tip back in its parent.
+    // The step starts where the bronchus intermedius ends; the first goal needs the tip turned
+    // toward the middle lobe before it can enter it.
     expect(document.querySelector('[data-spotlight="true"]')?.getAttribute('data-control')).toBe(
-      'withdraw',
+      'rotate',
     )
-    expect(document.querySelector('[data-goal-help]')?.textContent).toMatch(/^Withdraw/)
+    expect(document.querySelector('[data-goal-help]')?.textContent).toMatch(/^Rotate/)
     expect(paneState()).toBe(state)
     expect(goalRows()).toEqual(goals)
     expect(record()).toBe(saved)
