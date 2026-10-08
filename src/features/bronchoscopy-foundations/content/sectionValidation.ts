@@ -894,7 +894,11 @@ export function rewrittenSetErrors(
   const counts = rewritten.map(imageItemCounts)
   const image = counts.reduce((total, count) => total + count.image, 0)
   const total = counts.reduce((sum, count) => sum + count.total, 0)
-  if (total > 0 && image / total < REWRITE_CAPS.imageItemShare)
+  // The image share is a target for the whole course: the planning and sedation sections carry
+  // few pictures and the anatomy and findings sections carry many. It fails the build once every
+  // section is rewritten; until then `check-section.ts --all --report` prints where it stands.
+  const courseRewritten = rewritten.length === sections.length
+  if (courseRewritten && total > 0 && image / total < REWRITE_CAPS.imageItemShare)
     errors.push(
       `${image} of the rewritten sections' ${total} questions show an image; at least a third.`,
     )
