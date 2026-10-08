@@ -7,7 +7,8 @@
   "package": "Interventional-Pulm-Local-Data/module_update_9_19/HD_Claude_Implementation_Pack",
   "baseSha": "047d30b3aa124f75bff5299597fe583fff53a824",
   "implementationHeadSha": "0b4a16a5b4c85e28644c4f999ddd5e960ebe3008",
-  "prHead": "the docs-only commit after implementationHeadSha, adding this file and the handoff",
+  "firstPassPrHeadSha": "cf34ce14ef29e786c0068ed8b6781c0c1b5ce369",
+  "prHead": "the docs-only commit after repair.implementationHeadSha",
   "branch": "claude/hd-pre-review-03-10-3",
   "handoff": "docs/gap-remediation/pre-review/HD-PRE-REVIEW-03-handoff.md",
   "earlierSliceHandoffs": [
@@ -15,7 +16,7 @@
     "docs/gap-remediation/pre-review/HD-PRE-REVIEW-03-atlas-readability-handoff.md"
   ],
   "rawEvidence": "Interventional-Pulm-Local-Data/renders/output/hd-pre-review-03-2026-10-03/",
-  "state": "implemented; pull request open; not merged, not deployed; not independently reviewed",
+  "state": "implemented; independently reviewed at cf34ce14 (NOT READY TO MERGE, four P2 defects); repaired 2026-10-07; awaiting re-review; pull request open; not merged, not deployed",
   "claims": {
     "clinicalApproval": false,
     "sourceReview": false,
@@ -31,17 +32,41 @@
     "note": "No shared learning-module, critical-care, catalog, progress, analytics, auth, global-chrome or deployment file was changed. The Sources placement is an override scoped to the hemodynamics stage stylesheet."
   },
   "findings": [
-    { "id": "X-01", "disposition": "fixed", "reviewGroups": [] },
-    { "id": "L1-01", "disposition": "fixed; device distances held", "reviewGroups": ["R6"] },
-    { "id": "L1-05", "disposition": "fixed, module-locally", "reviewGroups": [] },
-    { "id": "L2-01", "disposition": "fixed", "reviewGroups": [] },
-    { "id": "L2-04", "disposition": "fixed", "reviewGroups": [] },
+    {
+      "id": "X-01",
+      "disposition": "fixed",
+      "reviewGroups": []
+    },
+    {
+      "id": "L1-01",
+      "disposition": "fixed; device distances held",
+      "reviewGroups": ["R6"]
+    },
+    {
+      "id": "L1-05",
+      "disposition": "fixed, module-locally",
+      "reviewGroups": []
+    },
+    {
+      "id": "L2-01",
+      "disposition": "fixed",
+      "reviewGroups": []
+    },
+    {
+      "id": "L2-04",
+      "disposition": "fixed",
+      "reviewGroups": []
+    },
     {
       "id": "L2-05",
       "disposition": "fixed as an illustration-versus-source error; position-specific conventions held",
       "reviewGroups": ["R2", "R6", "R8"]
     },
-    { "id": "L2-06", "disposition": "fixed", "reviewGroups": [] },
+    {
+      "id": "L2-06",
+      "disposition": "fixed; repaired 2026-10-07 (boundary sample assigned to the earlier trace; axis-change notice no longer says what the pressure did)",
+      "reviewGroups": []
+    },
     {
       "id": "L2-08",
       "disposition": "fixed by reusing the troubleshooting atlas' transforms; drawn values are model values",
@@ -52,19 +77,51 @@
       "disposition": "fixed; 'square-wave test' not added (no registered source)",
       "reviewGroups": []
     },
-    { "id": "L2-11", "disposition": "fixed", "reviewGroups": [] },
-    { "id": "L2-13", "disposition": "fixed", "reviewGroups": [] },
-    { "id": "L3-01", "disposition": "fixed", "reviewGroups": [] },
+    {
+      "id": "L2-11",
+      "disposition": "fixed",
+      "reviewGroups": []
+    },
+    {
+      "id": "L2-13",
+      "disposition": "fixed",
+      "reviewGroups": []
+    },
+    {
+      "id": "L3-01",
+      "disposition": "fixed",
+      "reviewGroups": []
+    },
     {
       "id": "L3-02",
       "disposition": "resolved by PR #314 in the reference figure; extended here to three other renderers",
       "reviewGroups": []
     },
-    { "id": "L3-03", "disposition": "held; limitation stated", "reviewGroups": ["R3"] },
-    { "id": "L3-05", "disposition": "fixed", "reviewGroups": [] },
-    { "id": "L3-06", "disposition": "fixed", "reviewGroups": [] },
-    { "id": "L3-07", "disposition": "held; limitation stated", "reviewGroups": ["R3"] },
-    { "id": "L4-02", "disposition": "partly fixed; rhythm modeling held", "reviewGroups": ["R3"] },
+    {
+      "id": "L3-03",
+      "disposition": "held; limitation stated",
+      "reviewGroups": ["R3"]
+    },
+    {
+      "id": "L3-05",
+      "disposition": "fixed",
+      "reviewGroups": []
+    },
+    {
+      "id": "L3-06",
+      "disposition": "fixed",
+      "reviewGroups": []
+    },
+    {
+      "id": "L3-07",
+      "disposition": "held; limitation stated",
+      "reviewGroups": ["R3"]
+    },
+    {
+      "id": "L4-02",
+      "disposition": "partly fixed; rhythm modeling held",
+      "reviewGroups": ["R3"]
+    },
     {
       "id": "L4-04",
       "disposition": "fixed, source-backed, for the authored example only",
@@ -80,16 +137,36 @@
       "disposition": "partly fixed; one structure in the shared cardiac model held",
       "reviewGroups": ["R6"]
     },
-    { "id": "L5-05", "disposition": "fixed", "reviewGroups": [] },
+    {
+      "id": "L5-05",
+      "disposition": "fixed; repaired 2026-10-07 (the held copy keeps the live strip's seams)",
+      "reviewGroups": []
+    },
     {
       "id": "L7-02",
       "disposition": "limitation stated; morphology held",
       "reviewGroups": ["R3", "R4"]
     },
-    { "id": "L9-04", "disposition": "fixed", "reviewGroups": [] },
-    { "id": "P-03", "disposition": "fixed", "reviewGroups": [] },
-    { "id": "P-06", "disposition": "fixed", "reviewGroups": [] },
-    { "id": "P-07", "disposition": "fixed", "reviewGroups": [] }
+    {
+      "id": "L9-04",
+      "disposition": "fixed",
+      "reviewGroups": []
+    },
+    {
+      "id": "P-03",
+      "disposition": "fixed; repaired 2026-10-07 (the populated Practice case fits 390 px at 200% root text; tools kept across earlier checkpoints, ported from PR #321)",
+      "reviewGroups": []
+    },
+    {
+      "id": "P-06",
+      "disposition": "fixed",
+      "reviewGroups": []
+    },
+    {
+      "id": "P-07",
+      "disposition": "fixed",
+      "reviewGroups": []
+    }
   ],
   "tests": {
     "baseRegressionsOnBase": "11 failed of 11 (assertions)",
@@ -120,16 +197,146 @@
       "L7-02 automatic quality line shown before review",
       "light reference cards in the dark theme",
       "Practice return wording",
-      "walk position versus map stop"
+      "walk position versus map stop",
+      "a draft in Practice's tools is lost on a visit to the debrief (kept across Read, Interpret and Observe)",
+      "Practice's measurement tools beside the monitor on a wide window"
     ],
     "combinedAcceptanceOrSurfaceOwner": [
       "global header overflow at 200% root text (76 px at 1204, 125 px at 1024; identical on base)",
       "sixteen red flow and targeted end-to-end journeys",
       "keyboard route for the figure's inner scroller at 390 px with 200% text",
-      "native zoom and screen-reader pass"
+      "native zoom and screen-reader pass",
+      "at 320 px with 200% root text, residual page overflow of 3 to 32 px on three of twelve sampled Learn tasks",
+      "three opened Practice tools scroll inside their own frames at 390 px with 200% root text",
+      "stacked tables' roles checked in Chromium only"
     ],
     "notTaken": [
       "manual wedge cursor in Practice (optional Task 02 carry-forward; measurement behaviour)"
+    ],
+    "prompt05": [
+      "thermodilution question stem: \"consistent ... timing\" beside \"a prolonged injection\" and \"an irregular double peak\" the model does not draw (with L7-02)"
+    ]
+  },
+  "repair": {
+    "date": "2026-10-07",
+    "review": {
+      "reviewedHeadSha": "cf34ce14ef29e786c0068ed8b6781c0c1b5ce369",
+      "verdict": "NOT READY TO MERGE",
+      "counts": {
+        "closed": 16,
+        "acceptablePartial": 6,
+        "correctlyHeld": 2,
+        "blocking": 3
+      },
+      "preservedAt": "Interventional-Pulm-Local-Data/renders/output/hd326-sanity-review-2026-10-04/"
+    },
+    "mainIntegrated": {
+      "mainSha": "b85da4a0",
+      "mergeCommitSha": "cab05fc6",
+      "method": "merge commit; not rebased",
+      "filesChangedOnBothSides": 0
+    },
+    "implementationHeadSha": "af17d15ce590171d896975f8d0f5ada5978d679a",
+    "rawEvidence": "Interventional-Pulm-Local-Data/renders/output/hd326-repair-2026-10-07/",
+    "defects": [
+      {
+        "finding": "L2-06",
+        "file": "src/features/icu-hemodynamics/components/WaveformStrip.tsx",
+        "defect": "the sample acquired before an action was drawn as the first point of the post-action trace",
+        "state": "repaired"
+      },
+      {
+        "finding": "L5-05",
+        "file": "src/features/icu-hemodynamics/components/BedsideMonitor.tsx",
+        "defect": "the held copy omitted display seams",
+        "state": "repaired"
+      },
+      {
+        "finding": "L2-06",
+        "file": "src/features/icu-hemodynamics/components/BedsideMonitor.tsx",
+        "defect": "the axis-change notice said the pressure had not changed",
+        "state": "repaired"
+      },
+      {
+        "finding": "P-03",
+        "file": "src/features/icu-hemodynamics/components/HemodynamicCaseActivity.tsx",
+        "defect": "page overflow of 161 px (101 px on the base) at 390 px with 200% root text; Return button ending at 458 px",
+        "state": "repaired; page overflow 0 at 390 px and 320 px with 200% root text"
+      }
+    ],
+    "pr321": {
+      "headSha": "176e61d605650fb37449cd3abf3827b3439b6c49",
+      "state": "open; read and served for comparison only; not modified, merged or closed",
+      "onlyFiles": [
+        {
+          "path": "src/features/icu-hemodynamics/components/HemodynamicNativeWorkspace.tsx",
+          "disposition": "ported: tools hidden, not unmounted, where they are not offered"
+        },
+        {
+          "path": "e2e/icu-hemodynamics-workbench.spec.ts",
+          "disposition": "not portable as written; one behaviour was missing and is ported in substance (Learn at phone width with 200% root text); the rest already true here"
+        },
+        {
+          "path": "src/features/icu-hemodynamics/__tests__/hd-pre-review-03-state-return.test.tsx",
+          "disposition": "already true here; restated against this branch in hd-pre-review-03-pr321-port.test.tsx"
+        },
+        {
+          "path": "src/features/icu-hemodynamics/__tests__/hd-pre-review-03-visual-contracts.test.tsx",
+          "disposition": "not ported; asserts #321's markup; two behaviours restated here"
+        },
+        {
+          "path": "src/features/icu-hemodynamics/__tests__/bedside-monitor-display.test.tsx",
+          "disposition": "not ported; follows #321's wording"
+        },
+        {
+          "path": "src/features/icu-hemodynamics/components/displayNumber.ts",
+          "disposition": "not ported; equivalent to engine/numberFormat.ts"
+        },
+        {
+          "path": "src/features/icu-hemodynamics/components/useScreenSpacePlot.ts",
+          "disposition": "not ported; superseded by useRenderedMetrics and HTML labels"
+        },
+        {
+          "path": "src/features/icu-hemodynamics/content/pacLearningItems.ts",
+          "disposition": "not ported; one stem caveat would be false here (L4-04 corrected the example), the other teaches the point L7-02 holds; the stem inconsistency is recorded as a hold"
+        }
+      ]
+    },
+    "workbenchAt1707x900And1440x900": {
+      "learnControlsWithTheirTracing": "all together (15 tasks; largest span 796 of 819 px)",
+      "practiceActionCardsAndObserveControls": "all together",
+      "practiceMeasurementTools": "NOT together (1 of 12 and 0 of 6 controls); unchanged from main; not one of the four defects; held for the owner"
+    },
+    "tests": {
+      "productionBuild": "passed (npm run build, exit 0)",
+      "browserTarget": "the production build, served with node server.js on port 3125; Chromium",
+      "sanityRepairJestOnPreRepairTree": "11 failed of 14",
+      "sanityRepairJest": "14 passed",
+      "pr321PortJestBeforePort": "2 failed of 5",
+      "pr321PortJest": "5 passed",
+      "moduleJest": "58 suites, 750 tests passed",
+      "task01Focused": "4 suites, 72 tests passed",
+      "task02Focused": "6 suites, 87 tests passed",
+      "task03Jest": "7 suites, 108 tests passed",
+      "consumerJest": "50 of 53 suites, 603 of 606 tests; the same 3 failures as on the pre-repair tree, none in this module",
+      "repairPlaywrightOnPreRepairTree": "7 failed of 15 (dev server)",
+      "repairPlaywright": "15 passed",
+      "task03Playwright": "64 passed",
+      "pr314Playwright": "display-range 4 passed; atlas-readability 6 passed",
+      "pacLayoutPlaywright": "2 passed",
+      "flowAndTargetedPlaywright": "8 passed, 16 failed; the same 16 as on the pre-repair tree by name, first error and failing line",
+      "geometryAt100PercentText": "Practice: 7,841 elements over 14 conditions, no structural difference; Learn: 17,385 elements over 72 conditions, no difference from 390 px up, three surfaces 2 to 5.5 px narrower at 320 px",
+      "typecheck": "clean",
+      "lint": "clean",
+      "format": "clean"
+    },
+    "notMet": [
+      "Practice's measurement tools are not in one window with the tracing at 1707x900 or 1440x900",
+      "at 320 px with 200% root text three of twelve sampled Learn tasks still scroll the page (3, 6 and 32 px)"
+    ],
+    "implementationCommits": [
+      "6faf15f16abdb9bc2f193d6579df204733198cc4",
+      "af17d15ce590171d896975f8d0f5ada5978d679a"
     ]
   }
 }
