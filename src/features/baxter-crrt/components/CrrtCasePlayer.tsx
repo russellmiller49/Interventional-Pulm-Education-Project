@@ -24,7 +24,10 @@ import { getCrrtWorkedCaseExample } from '../content/workedCaseExamples'
 import { selectCrrtConsoleControls } from '../engine/consoleControls'
 import { selectSecondsUntilNextScheduledEvent } from '../engine/selectors'
 import { selectCrrtPrescriptionRecord } from '../engine/setupWorkflow'
-import { selectPrismaxPilotCaseOperationsDisplay } from '../engine/deviceAdapters/prismax'
+import {
+  selectCrrtCumulativeFluidView,
+  selectPrismaxPilotCaseOperationsDisplay,
+} from '../engine/deviceAdapters/prismax'
 import type {
   CrrtLearningSessionAction,
   CrrtLearningSessionState,
@@ -245,6 +248,8 @@ function CrrtCasePlayerContent({
   const prescriptionRecord = selectCrrtPrescriptionRecord(session)
   const caseEvidence = selectCrrtCaseEvidence(definition)
   const labEvidence = selectCrrtLabEvidence(session)
+  const cumulativeFluid = selectCrrtCumulativeFluidView(session.simulation)
+  const balanceWithheld = cumulativeFluid.resolution !== 'available'
   const firstTrend = session.simulation.trends[0]
   const latestTrend = session.simulation.trends.at(-1)
   const trendEvidenceRows =
@@ -262,8 +267,12 @@ function CrrtCasePlayerContent({
           },
           {
             label: 'Whole-patient balance',
-            first: formatTrendValue(firstTrend.cumulativeWholePatientBalanceMl, 'mL'),
-            latest: formatTrendValue(latestTrend.cumulativeWholePatientBalanceMl, 'mL'),
+            first: balanceWithheld
+              ? 'Withheld'
+              : formatTrendValue(firstTrend.cumulativeWholePatientBalanceMl, 'mL'),
+            latest: balanceWithheld
+              ? 'Withheld'
+              : formatTrendValue(latestTrend.cumulativeWholePatientBalanceMl, 'mL'),
           },
           {
             label: 'Access pressure',
@@ -820,6 +829,7 @@ function CrrtCasePlayerContent({
         data-mobile-active={mobileSurface === 'patient'}
       >
         <h4>Patient and delivered-therapy state</h4>
+        {balanceWithheld ? <p>{cumulativeFluid.withheldReason}</p> : null}
         <dl>
           <div>
             <dt>Delivered dose</dt>
@@ -827,7 +837,11 @@ function CrrtCasePlayerContent({
           </div>
           <div>
             <dt>Whole-patient balance</dt>
-            <dd>{formatTrendValue(latestTrend?.cumulativeWholePatientBalanceMl, 'mL')}</dd>
+            <dd>
+              {balanceWithheld
+                ? 'Withheld'
+                : formatTrendValue(latestTrend?.cumulativeWholePatientBalanceMl, 'mL')}
+            </dd>
           </div>
           <div>
             <dt>Downtime</dt>
@@ -977,6 +991,7 @@ function CrrtCasePlayerContent({
               </p>
 
               <h6>What this run recorded</h6>
+              {balanceWithheld ? <p>{cumulativeFluid.withheldReason}</p> : null}
               <dl className={styles.attemptEvidenceGrid}>
                 {runReview.observations.map((observation) => (
                   <div key={observation.label}>
