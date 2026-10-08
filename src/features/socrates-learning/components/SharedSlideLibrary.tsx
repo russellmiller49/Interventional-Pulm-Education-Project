@@ -9,6 +9,11 @@ import {
 } from '@/features/socrates-builder/web-overlay-storage'
 import { authorLibrarySchema } from '../author-library'
 import { collectionSchema } from '../model'
+import {
+  compareTeachingDocuments,
+  coreTeachingSequence,
+  teachingSectionTitle,
+} from '../core-teaching'
 import { sharedDraft, sharedKey, type SharedSlide } from '../shared-library'
 import { useSharedLibrary } from '../use-shared-library'
 import { AssignmentSelect } from './SlideLibrary'
@@ -291,6 +296,7 @@ export function SharedSlideLibrary({
           )}
           <div className={styles.grid}>
             {Object.values(library.entries)
+              .sort((a, b) => compareTeachingDocuments(a.draft.document, b.draft.document))
               .filter((e) =>
                 `${e.draft.document.title} ${e.draft.document.caseContent?.diagnosticCategory}`
                   .toLowerCase()
@@ -300,6 +306,12 @@ export function SharedSlideLibrary({
                 <article className={styles.card} key={e.draft.id}>
                   <span className={styles.eyebrow}>{e.draft.assignment}</span>
                   <h2>{e.draft.document.title}</h2>
+                  {coreTeachingSequence(e.draft.document) && (
+                    <p>
+                      Core case {coreTeachingSequence(e.draft.document)!.position} ·{' '}
+                      {teachingSectionTitle(coreTeachingSequence(e.draft.document)!)}
+                    </p>
+                  )}
                   <p>
                     {e.draft.document.caseContent?.diagnosticCategory || 'Category pending'} ·{' '}
                     {e.draft.document.caseContent?.subcategory}

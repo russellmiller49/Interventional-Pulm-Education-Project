@@ -581,3 +581,63 @@ test('CRRT-12 names its missing clinical data and records the review as a reques
   await assertUngraded(page)
   expect(errors).toEqual([])
 })
+
+for (const when of ['before', 'after'] as const) {
+  test(`CRRT-12 End ${when} its checkpoint stays ended until Reset case`, async ({
+    page,
+  }, info) => {
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
+    await page.goto('/en/baxter-crrt/practice?case=CRRT-12')
+    if (when === 'after') await page.getByRole('button', { name: '+5 min', exact: true }).click()
+    await page.getByRole('tab', { name: 'Machine + circuit', exact: true }).click()
+    await page.getByRole('button', { name: 'Stop', exact: true }).click()
+    await page.getByRole('button', { name: 'End interface run', exact: true }).click()
+    await expect(page.getByText('Interface run ended', { exact: true })).toBeVisible()
+
+    await page.getByRole('tab', { name: 'Case', exact: true }).click()
+    await page.getByRole('button', { name: '+5 min', exact: true }).click()
+    await page.getByRole('tab', { name: 'Machine + circuit', exact: true }).click()
+    await expect(page.getByText('Interface run ended', { exact: true })).toBeVisible()
+    await expect(page.getByText('Pumps stopped', { exact: true })).toBeVisible()
+    const flow = page
+      .locator('[aria-label="Pilot flow displays"]')
+      .locator('div')
+      .filter({
+        has: page.getByText('BFR through circuit', { exact: true }),
+      })
+    await expect(flow.locator('strong')).toHaveText('0 mL/min')
+    await expect(page.getByRole('button', { name: 'Stop', exact: true })).toHaveCount(0)
+    await page.screenshot({ path: info.outputPath(`crrt12-end-${when}-checkpoint.png`) })
+
+    // Reset is the supported new-run transition; End itself has no automatic resume.
+    await page.getByRole('tab', { name: 'Case', exact: true }).click()
+    await page.getByRole('button', { name: 'Reset case', exact: true }).click()
+    await expect(
+      page.locator('[aria-label="Advance simulated time"]').getByText('0 min', { exact: true }),
+    ).toBeVisible()
+    await page.getByRole('button', { name: '+5 min', exact: true }).click()
+    await page.getByRole('tab', { name: 'Machine + circuit', exact: true }).click()
+    await expect(page.getByText('Interface run active', { exact: true })).toBeVisible()
+    await expect(page.getByText('Pumps active', { exact: true })).toBeVisible()
+    await expect(flow.locator('strong')).not.toHaveText('0 mL/min')
+    await assertUngraded(page)
+    expect(errors).toEqual([])
+  })
+}
+
+test('CRRT-12 never-ended delivery stays active through its checkpoint', async ({ page }) => {
+  await page.goto('/en/baxter-crrt/practice?case=CRRT-12')
+  await page.getByRole('button', { name: '+5 min', exact: true }).click()
+  await page.getByRole('tab', { name: 'Machine + circuit', exact: true }).click()
+  await expect(page.getByText('Interface run active', { exact: true })).toBeVisible()
+  await expect(page.getByText('Pumps active', { exact: true })).toBeVisible()
+  const flow = page
+    .locator('[aria-label="Pilot flow displays"]')
+    .locator('div')
+    .filter({
+      has: page.getByText('BFR through circuit', { exact: true }),
+    })
+  await expect(flow.locator('strong')).not.toHaveText('0 mL/min')
+  await assertUngraded(page)
+})

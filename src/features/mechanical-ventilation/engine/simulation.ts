@@ -1332,10 +1332,18 @@ function withCriticalErrors(state: VentilationSimulationState): VentilationSimul
   return { ...state, criticalErrors: [...errors] }
 }
 
+/**
+ * `produced`, when a caller supplies it, is given every sample this call adds to the trace, in
+ * order: the same objects the buffer receives, before the buffer is trimmed to its display window.
+ * It is a tap on the trace, not an input — the state returned is the same with or without it — for a
+ * caller that prepares more history than one window keeps and has to retain what the window drops
+ * (the Learn lab's warm-up: `openLabRound`).
+ */
 export function advanceSimulation(
   state: VentilationSimulationState,
   seconds: number,
   suppliedDefinition?: VentilationCaseDefinition,
+  produced?: WaveformSample[],
 ): VentilationSimulationState {
   const definition = suppliedDefinition ?? resolveVentilationSimulationCase(state.caseId)
   const steps = Math.max(1, Math.ceil(seconds / WAVEFORM_STEP_SECONDS))
@@ -1451,6 +1459,7 @@ export function advanceSimulation(
     volumeL = frame.volumeL
     if (!state.ventilator.frozen) {
       waveforms.push(frame.sample)
+      produced?.push(frame.sample)
       if (waveforms.length > MAX_WAVEFORM_SAMPLES)
         waveforms = waveforms.slice(-MAX_WAVEFORM_SAMPLES)
     }

@@ -3,7 +3,7 @@
 ## Live user feedback — current
 
 The deployed beta hub uses server storage. Verified main-site users can submit feedback and
-optional screenshots from any of the 12 beta modules. Reports are available to the site owner
+optional screenshots from any of the 13 beta modules. Reports are available to the site owner
 at `/en/admin/module-feedback` using the existing `site_admin` account. Open **Admin → Modules
 in development → Review module feedback**, or visit that address directly. The workspace
 supports module/status filters, screenshots, review status, and private notes. Choose **Refresh**
@@ -32,16 +32,34 @@ It uses the existing main-site sign-in, email verification, and profile completi
 verified site account can test; no shared password or separate tester account is introduced.
 The hub is absent from public navigation and the sitemap, with `noindex, nofollow, noarchive`.
 
-The hub offers 12 modules: EBUS Guided, the two airway simulators, the existing live anatomy lesson,
-Device Atlas, Peripheral Bronchoscopy Imaging, Bronchoscopy Foundations, and the five critical
-care modules. The live lesson at `/en/intro-bronchoscopy/airway-anatomy` is now titled **Live
+The hub offers 13 modules: EBUS Guided, the EUS-B Simulator, the two airway simulators, the
+existing live anatomy lesson, Device Atlas, Peripheral Bronchoscopy Imaging, Bronchoscopy
+Foundations, and the five critical care modules. The live lesson at `/en/intro-bronchoscopy/airway-anatomy` is now titled **Live
 Bronchoscopy Anatomy**; the synchronized simulator is a separate entry at
 `/en/learn/anatomy/airway`.
 
+The hub separates **Ready for review** from **Still in development**. Ready cards appear first
+with a tester note: a summary, estimated minutes, what to look for, and known limits or content
+still under faculty review. The ready section is omitted when empty. All 13 modules currently
+remain `preview` under **Still in development**, grouped by Bronchoscopy, Devices, and Critical
+care; empty groups are omitted. Readiness changes presentation only: every card keeps its
+**Test with feedback** wrapper link and **Standard module** link, with the same access and
+feedback behavior. A ready label does not authorize clinical use or public release. Modules
+move to `ready` with a real tester note only after the gate in
+[Beta finish line](gap-remediation/beta-finish-line.md#2-the-gate) is satisfied.
+
 Each **Test with feedback** link opens `/en/development-beta/<module-id>`. The actual module
 runs in a same-origin frame with a compact feedback toolbar outside it, so lesson navigation
-and simulator state stay intact. The usual module URLs have no feedback UI and open without
-an account. Therapeutic Bronchoscopy is not in the beta hub. It remains in **Modules in development**,
+and simulator state stay intact. Inside the frame the module is the standard route unchanged,
+including the site header, so what a tester sees and captures matches what a learner gets. The
+site page that sits underneath the review shell is covered by it; while the shell is open that
+page cannot be scrolled by wheel, touch or keyboard, scrolling past the end of the module does not
+chain into it, and its navigation is inert, so the module frame is the only scrolling document and
+the keyboard goes from the skip link straight to the toolbar. Activating the skip link may move
+that covered page to the link's target (about one site-header height); the fixed shell still
+covers the whole viewport, so nothing underneath becomes visible. The site header inside the
+frame is kept by owner decision. The usual module URLs
+have no feedback UI and open without an account. Therapeutic Bronchoscopy is not in the beta hub. It remains in **Modules in development**,
 and its `/admin/therapeutic-bronchoscopy` page requires `site_admin` access.
 
 ## Tester feedback
@@ -60,9 +78,13 @@ The visible annotation toolbar offers **Box**, **Arrow**, **Draw**, and **Text**
 undo the last annotation, clear all marks, remove the image, or retake the tab. Text notes can be
 placed by clicking the screenshot or using the keyboard-accessible **Add note at top** button.
 The enlarged feedback dialog gives the screenshot more room. The final annotated image is submitted
-with the report, limited to 3 MB. Screenshots are optional; a comment is required. Drafts remain
-in the current testing page when the feedback dialog closes or a save fails; reloading or
-leaving that testing page discards the draft. A save confirmation is shown only after the
+with the report, limited to 3 MB. Screenshots are optional; a comment is required. On the
+deployed beta, drafts are held in memory in the current testing page when the feedback dialog
+closes or a save fails; reloading or leaving that testing page discards the draft, and nothing
+about it is written to browser storage. The toolbar button reads **Continue feedback** only
+while the draft holds a comment, referenced text or an image; an empty dialog that is opened and
+closed leaves **Give feedback**. Local owner review keeps unsent drafts in that browser instead;
+see [Unsent drafts](module-beta-owner-review.md#unsent-drafts). A save confirmation is shown only after the
 server persists the report. Report IDs make retries idempotent, and submissions are limited to
 30 per account per hour.
 
@@ -87,8 +109,16 @@ The **main-site Supabase project**, `tqnhxlwvkkswuckszlee` (Endoreels), needs th
    and private `module-beta-feedback` screenshot bucket.
 2. `supabase/migrations/20260925055243_expand_module_beta_feedback_catalog.sql`: permits EBUS
    Guided submissions. Historical Therapeutic Bronchoscopy records remain valid and reviewable, including local notes and exports.
+3. `supabase/migrations/20261004072344_add_eus_b_simulator_to_module_beta_feedback.sql`: permits
+   EUS-B Simulator submissions. Applied to Endoreels on 2026-10-07: source version
+   `20261004072344` is recorded in production migration history as
+   `20261007011957_add_eus_b_simulator_to_module_beta_feedback`. Verification at
+   **2026-10-07 01:19:58 UTC** confirmed that the prior 13 allowed module IDs were preserved,
+   EUS-B was added, and the PostgREST schema reload completed. **Live EUS-B feedback has not
+   yet been verified**; this migration record is not a successful tester submission or admin
+   review. No migration or database write was run for this documentation update.
 
-Both were applied to the main-site project on 2026-09-25 UTC. Do not apply them to the dedicated
+The first two were applied to the main-site project on 2026-09-25 UTC. Do not apply them to the dedicated
 literature project. Follow the primary-checkout requirements in `AGENTS.md` for database operations.
 
 In server mode, the API uses the site's existing server-only `SUPABASE_SERVICE_ROLE_KEY` and Supabase URL
@@ -112,7 +142,11 @@ and opened the real review workspace. Browser-role table reads, tester review ac
 screenshot access were denied. The test reports, screenshot, session, temporary entitlement, and
 account were removed afterward. The existing owner account retains active, unexpired `site_admin`.
 
-Owner-local validation and commands are documented in [Owner review feedback](module-beta-owner-review.md).
+Owner-local validation and commands are documented in [Owner review feedback](module-beta-owner-review.md). That document also
+states what happens when the same owner-local draft is open, saved or discarded in more than one
+tab: one report per draft ID, and different unsent work kept as a separate draft rather than
+merged or lost. It is conflict handling, not shared editing. Server-mode drafts are unaffected:
+they stay in memory in one tab.
 
 - Targeted Jest coverage: catalog/access boundaries, signed-in and admin authorization,
   submission validation, account identity, retries, image rejection, cleanup after failed saves,
@@ -120,7 +154,9 @@ Owner-local validation and commands are documented in [Owner review feedback](mo
 - `npx playwright test --config playwright.module-beta.config.ts`: unlisted sign-in gate,
   real standard-route HTTP checks, normal pages without feedback controls, image upload and
   all four annotation tools, exact annotated PNG submission, selected-text/page context,
-  draft preservation, failed-save retry, review edits, and mobile upload fallback. Native Chromium
+  draft preservation, failed-save retry, review edits, and mobile upload fallback; an empty dialog
+  leaving no draft, and a server-mode draft leaving no IndexedDB database or storage key behind and
+  not surviving a reload. Native Chromium
   capture verifies the module is visible without the feedback overlay and the media track stops.
   Other tabs/windows/screens and cancelled retakes preserve the previous annotated screenshot.
   Persistence responses use fixtures; real API calls confirm that preview

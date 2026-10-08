@@ -52,18 +52,51 @@ export const styles = {
  * Section shell
  * ------------------------------------------------------------------ */
 
-/** A titled block inside a panel, with the heading wired to the region that owns it. */
+/**
+ * A titled block inside a panel, with the heading wired to the region that owns it.
+ *
+ * `reference` folds the block behind its own heading. Section 9's first step ran to roughly 4,400
+ * words because the seven-question scaffold, both threshold sources, the complete-profile boundary,
+ * the two interpreted values and the bridge/exit note were all open at once, on three steps in a
+ * row (F30). The scaffold a step is worked from stays open; the blocks that are there to be looked
+ * up fold to a labelled disclosure, one click away, for everyone — nothing is removed and nothing
+ * is hidden from assistive technology. A block that carries a consequential limit at its point of
+ * use is never marked `reference`.
+ */
 export function PanelSection({
   title,
   id,
+  reference = false,
   children,
 }: {
   readonly title: string
   /** Stable id, so the accessible name does not change between renders. */
   readonly id: string
+  /** Lookup material: folded behind its heading, open on request. */
+  readonly reference?: boolean
   readonly children: ReactNode
 }) {
   const headingId = `mcs-panel-${id}`
+  if (reference) {
+    return (
+      <details
+        className={styles.section}
+        aria-labelledby={headingId}
+        data-panel-section={id}
+        data-panel-reference
+      >
+        <summary className="cursor-pointer">
+          <h4 id={headingId} className={`${styles.heading} inline`}>
+            {title}
+          </h4>
+          <span className="ml-2 text-xs text-muted-foreground" data-panel-reference-label>
+            Reference · open to read
+          </span>
+        </summary>
+        {children}
+      </details>
+    )
+  }
   return (
     <section className={styles.section} aria-labelledby={headingId} data-panel-section={id}>
       <h4 id={headingId} className={styles.heading}>
@@ -78,13 +111,23 @@ export function PanelSection({
  * Text equivalent, model boundary, figure scope
  * ------------------------------------------------------------------ */
 
-/** The same relationships and the same numbers as the figure, in prose. Never decorative. */
+/**
+ * The same relationships and the same numbers as the figure, in prose. Never decorative.
+ *
+ * Folded behind "In words", for everyone. Printed open, each of these repeated the figure above it
+ * and together they were about six thousand words of a walk through the module (F06, F39); the
+ * suggestion to make them screen-reader-only would have taken a useful alternative away from
+ * sighted readers who prefer a sentence to a table. A native disclosure keeps it one keystroke away
+ * for any reader, and it is still in the document for assistive technology and for find-in-page.
+ */
 export function TextEquivalent({ children }: { readonly children: ReactNode }) {
   return (
-    <p className="mt-2 text-xs leading-5 text-muted-foreground" data-text-equivalent>
-      <span className="font-semibold">In words: </span>
-      {children}
-    </p>
+    <details className="mt-2 text-xs leading-5 text-muted-foreground" data-text-equivalent>
+      <summary className="cursor-pointer font-semibold" data-text-equivalent-summary>
+        In words
+      </summary>
+      <p className="mt-1">{children}</p>
+    </details>
   )
 }
 

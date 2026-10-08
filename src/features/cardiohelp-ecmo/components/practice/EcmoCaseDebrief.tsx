@@ -9,6 +9,7 @@ import { criticalCareConceptById } from '@/features/critical-care/content/concep
 
 import { cardiohelpLearnLessonByScenarioId } from '../../content/learnLessons'
 import { pairedLessonIdsForCase } from '../../content/curriculum'
+import { ecmoIntegratedCaseScope } from '../../content/integratedCaseScope'
 import { resolveScenarioReassessment } from '../../content/practiceSupport'
 import { RECOGNITION_ONLY_FAULTS } from '../../engine/reducer'
 import { predictionControls, predictionDirections, predictionGoals } from '../../content/scenarios'
@@ -104,11 +105,13 @@ function DomainComparison({
   question,
   selectedId,
   modelBoundary,
+  checklistComparison = false,
 }: {
   domain: ReassessmentDomain
   question: ReassessmentQuestion
   selectedId: string
   modelBoundary?: string
+  checklistComparison?: boolean
 }) {
   const selected = question.options.find((option) => option.id === selectedId)
   const expected = question.options.find((option) => option.id === question.correctOptionId)
@@ -128,13 +131,23 @@ function DomainComparison({
        * had shown it. Where the case names a finding this model does not produce, it says so here.
        */}
       <span>
-        You recorded: {selected?.label ?? 'nothing recorded'}
-        {matched ? ' · this is the response this case expects.' : ''}
+        {checklistComparison ? 'You selected: ' : 'You recorded: '}
+        {selected?.label ?? 'nothing recorded'}
+        {matched
+          ? checklistComparison
+            ? ' · this matches the review checklist.'
+            : ' · this is the response this case expects.'
+          : ''}
       </span>
       {selected?.rationale ? <small>{selected.rationale}</small> : null}
       {!matched && expected ? (
         <>
-          <span>The response this case expects: {expected.label}</span>
+          <span>
+            {checklistComparison
+              ? 'The review checklist states: '
+              : 'The response this case expects: '}
+            {expected.label}
+          </span>
           {expected.rationale ? <small>{expected.rationale}</small> : null}
         </>
       ) : null}
@@ -211,6 +224,7 @@ export function EcmoCaseDebrief({
         ]
   /** The authored "correction" here is recognition and escalation; the pattern is still running. */
   const recognitionOnly = RECOGNITION_ONLY_FAULTS.includes(scenario.expectation.correctiveFault)
+  const caseScope = ecmoIntegratedCaseScope(scenario.id)
   const pairedLessonId = pairedLessonIdsForCase(scenario.id)[0]
   const pairedLesson = pairedLessonId
     ? cardiohelpLearnLessonByScenarioId.get(pairedLessonId)
@@ -396,16 +410,25 @@ export function EcmoCaseDebrief({
           <ul className={styles.domainComparison}>
             <DomainComparison
               domain="device"
+              checklistComparison={
+                !scenario.reassessment && Boolean(scenario.assessmentPolicy?.reassessmentGuidance)
+              }
               question={reassessment.device}
               selectedId={submitted.deviceOptionId}
             />
             <DomainComparison
               domain="circuit"
+              checklistComparison={
+                !scenario.reassessment && Boolean(scenario.assessmentPolicy?.reassessmentGuidance)
+              }
               question={reassessment.circuit}
               selectedId={submitted.circuitOptionId}
             />
             <DomainComparison
               domain="patient"
+              checklistComparison={
+                !scenario.reassessment && Boolean(scenario.assessmentPolicy?.reassessmentGuidance)
+              }
               question={reassessment.patient}
               selectedId={submitted.patientOptionId}
               modelBoundary={reassessment.modelBoundary}
@@ -438,6 +461,17 @@ export function EcmoCaseDebrief({
         <p>
           <strong>{scenario.title}.</strong> {scenario.summary}
         </p>
+        {/* IV-1, IV-3, IA-1 (ECMO-FELLOW-04): the same scope the Manage stage states. */}
+        {caseScope ? (
+          <div data-integrated-case-scope>
+            <p>
+              <strong>What this exercise covers.</strong> {caseScope.rehearses}
+            </p>
+            <p>
+              <strong>What it cannot establish.</strong> {caseScope.cannotEstablish}
+            </p>
+          </div>
+        ) : null}
         {clinicalCase ? (
           <>
             <p>
@@ -467,6 +501,13 @@ export function EcmoCaseDebrief({
           ) : (
             <p>No lesson in this track teaches this mechanism yet.</p>
           )}
+          {/*
+            IV-1 (ECMO-FELLOW-04): the lesson an integrated case resolves to teaches one part of
+            it. Saying which part keeps the link from reading as "this case was taught there".
+          */}
+          {pairedLesson && caseScope?.lessonNote ? (
+            <p data-paired-lesson-note>{caseScope.lessonNote}</p>
+          ) : null}
         </div>
         {concepts.length ? (
           <ul className={styles.conceptList}>

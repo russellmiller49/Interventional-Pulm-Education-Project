@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
 
@@ -192,6 +192,32 @@ describe('SOCRATES companion builder', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('inside its parent')
     expect(screen.queryByRole('heading', { name: 'Detail 6' })).not.toBeInTheDocument()
+  })
+
+  it('moves and deletes the selected region from the canvas, with a single undo and redo per move', async () => {
+    const user = userEvent.setup()
+    render(<SocratesBuilder access={localAccess} initialDocuments={[]} />)
+    const x = Number((screen.getByLabelText('X') as HTMLInputElement).value)
+    const canvas = screen.getByRole('group', { name: /^Annotation canvas/ })
+    await user.click(screen.getByRole('button', { name: 'Move/select regions' }))
+    expect(screen.getByTestId('builder-interaction-mode')).toHaveTextContent('move-rectangle')
+    canvas.focus()
+    fireEvent.keyDown(canvas, { key: 'ArrowRight' })
+    expect(screen.getByLabelText('X')).toHaveValue(x + 10)
+    await user.click(screen.getByRole('button', { name: 'Undo annotation change' }))
+    expect(screen.getByLabelText('X')).toHaveValue(x)
+    await user.click(screen.getByRole('button', { name: 'Redo annotation change' }))
+    expect(screen.getByLabelText('X')).toHaveValue(x + 10)
+    const label = (screen.getByLabelText('Label') as HTMLInputElement).value
+    fireEvent.keyDown(screen.getByLabelText('Label'), { key: 'Delete' })
+    expect(screen.getByRole('heading', { name: label })).toBeInTheDocument()
+    fireEvent.keyDown(canvas, { key: 'Delete' })
+    expect(screen.queryByRole('heading', { name: label })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Undo annotation change' }))
+    expect(screen.getByTestId('builder-overlay-labels')).toHaveTextContent(label)
+    await user.click(screen.getByRole('button', { name: `${label} parent` }))
+    await user.click(screen.getByRole('button', { name: 'Delete selected region' }))
+    expect(screen.queryByRole('heading', { name: label })).not.toBeInTheDocument()
   })
 
   it('uses the current viewer zoom to author when a detail explanation appears', async () => {

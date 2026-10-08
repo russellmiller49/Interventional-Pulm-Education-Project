@@ -1317,15 +1317,20 @@ export function resolveScenarioReassessment(
     guidance?.[domain] ?? `The ${domain} response shows the change this case expects.`
 
   return {
-    instruction:
-      'Select the finding you expect after the action this case asks for, for the device, the circuit and the patient.',
+    instruction: guidance
+      ? 'Compare the review statements with the case checklist for the device, circuit and patient. These are checklist selections, not measurements you acquired.'
+      : 'Select the finding you expect after the action this case asks for, for the device, the circuit and the patient.',
     device: {
-      prompt: 'Which device/console finding best fits the expected response?',
+      prompt: guidance
+        ? 'Which device/console review statement belongs in the checklist?'
+        : 'Which device/console finding best fits the expected response?',
       options: [
         option(
           `${scenario.id}-device-expected`,
           fallbackLabel('device'),
-          fallbackRationale.deviceExpected,
+          guidance
+            ? 'This statement restates the device/console review in this case’s checklist. It does not record a finding measured by the learner.'
+            : fallbackRationale.deviceExpected,
         ),
         option(
           `${scenario.id}-device-unchanged`,
@@ -1341,12 +1346,16 @@ export function resolveScenarioReassessment(
       correctOptionId: `${scenario.id}-device-expected`,
     },
     circuit: {
-      prompt: 'Which circuit or gas finding best fits the expected response?',
+      prompt: guidance
+        ? 'Which circuit or gas review statement belongs in the checklist?'
+        : 'Which circuit or gas finding best fits the expected response?',
       options: [
         option(
           `${scenario.id}-circuit-expected`,
           fallbackLabel('circuit'),
-          fallbackRationale.circuitExpected,
+          guidance
+            ? 'This statement restates the circuit or gas review in this case’s checklist. It does not record a finding measured by the learner.'
+            : fallbackRationale.circuitExpected,
         ),
         option(
           `${scenario.id}-circuit-number`,
@@ -1356,18 +1365,24 @@ export function resolveScenarioReassessment(
         option(
           `${scenario.id}-circuit-none`,
           'No circuit or gas reassessment is needed.',
-          fallbackRationale.circuitNone,
+          guidance
+            ? 'The checklist includes a circuit or gas review; a selection here does not establish that a cause resolved.'
+            : fallbackRationale.circuitNone,
         ),
       ],
       correctOptionId: `${scenario.id}-circuit-expected`,
     },
     patient: {
-      prompt: 'Which patient finding best fits the expected response?',
+      prompt: guidance
+        ? 'Which patient review statement belongs in the checklist?'
+        : 'Which patient finding best fits the expected response?',
       options: [
         option(
           `${scenario.id}-patient-expected`,
           fallbackLabel('patient'),
-          fallbackRationale.patientExpected,
+          guidance
+            ? 'This statement restates the patient review in this case’s checklist. It does not record a finding measured by the learner.'
+            : fallbackRationale.patientExpected,
         ),
         option(
           `${scenario.id}-patient-console`,
@@ -1377,7 +1392,9 @@ export function resolveScenarioReassessment(
         option(
           `${scenario.id}-patient-none`,
           'No patient reassessment is needed after the action.',
-          fallbackRationale.patientNone,
+          guidance
+            ? 'The checklist includes a review of the patient. Selecting that guidance does not perform a bedside check or treat the patient.'
+            : fallbackRationale.patientNone,
         ),
       ],
       correctOptionId: `${scenario.id}-patient-expected`,

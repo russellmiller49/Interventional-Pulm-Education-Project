@@ -2,7 +2,7 @@ import { test, expect, chromium } from '@playwright/test'
 import { betaModules } from '../src/features/module-beta/catalog'
 
 const id = 'b8b3da51-5068-4c58-9ebd-3f846a27b337'
-test('beta hub requires sign-in, is noindex, and feedback APIs reject preview cookies', async ({
+test('all preview modules remain under Still in development with sign-in, noindex and feedback API gates', async ({
   page,
   context,
   request,
@@ -24,6 +24,27 @@ test('beta hub requires sign-in, is noindex, and feedback APIs reject preview co
   await expect(page.getByRole('link', { name: 'Test with feedback' })).toHaveCount(
     betaModules.length,
   )
+  await expect(page.getByRole('heading', { name: 'Ready for review', exact: true })).toHaveCount(0)
+  const preview = page.getByRole('region', { name: 'Still in development', exact: true })
+  await expect(preview).toBeVisible()
+  await expect(preview.getByRole('article')).toHaveCount(13)
+  await expect(preview.getByRole('link', { name: 'Standard module', exact: true })).toHaveCount(13)
+  for (const group of ['Bronchoscopy', 'Devices', 'Critical care']) {
+    await expect(preview.getByRole('heading', { name: group, exact: true })).toBeVisible()
+  }
+  for (const entry of betaModules) {
+    const card = preview.getByRole('article').filter({
+      has: page.getByRole('heading', { name: entry.title, exact: true }),
+    })
+    await expect(card).toHaveCount(1)
+    await expect(
+      card.getByRole('link', { name: 'Test with feedback', exact: true }),
+    ).toHaveAttribute('href', `/en/development-beta/${entry.id}`)
+    await expect(card.getByRole('link', { name: 'Standard module', exact: true })).toHaveAttribute(
+      'href',
+      `/en${entry.path}`,
+    )
+  }
   await expect(page.getByRole('heading', { name: /Therapeutic Bronchoscopy/ })).toHaveCount(0)
   await page.screenshot({
     path: 'artifacts/module-beta-hub.png',
@@ -154,8 +175,8 @@ test('feedback preserves the page, selection and all annotation tools across con
   )
   await expect(page.getByLabel('What should we know?')).toHaveValue('Increase contrast here.')
   expect(
-    (await page.evaluate(() => indexedDB.databases())).some(
-      (db) => db.name === 'module-owner-feedback',
+    (await page.evaluate(() => indexedDB.databases())).some((db) =>
+      db.name?.startsWith('module-owner-feedback'),
     ),
   ).toBe(false)
   await page.getByRole('button', { name: 'Send feedback' }).click()
@@ -168,6 +189,82 @@ test('feedback preserves the page, selection and all annotation tools across con
   expect(Buffer.from(await attachment.arrayBuffer())).toEqual(Buffer.from(annotated, 'base64'))
   await page.goto('/en/devices')
   await expect(page.getByRole('button', { name: /feedback/i })).toHaveCount(0)
+})
+
+test('server-mode drafts stay in memory: an empty dialog is no draft and nothing is kept in the browser', async ({
+  page,
+  context,
+}) => {
+  await context.addCookies([
+    {
+      name: 'ip_local_dev_auth',
+      value: process.env.MODULE_BETA_TEST_TOKEN!,
+      domain: '127.0.0.1',
+      path: '/',
+    },
+  ])
+  await page.route('**/en/devices', (route) =>
+    route.fulfill({ contentType: 'text/html', body: '<h1>Device Atlas</h1><p>Row label</p>' }),
+  )
+  let posts = 0
+  await page.route('**/api/module-feedback', (route) => {
+    posts++
+    return route.fulfill({ status: 201, json: { id } })
+  })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/en/development-beta/devices')
+  await expect(
+    page.frameLocator('iframe').getByRole('heading', { name: 'Device Atlas' }),
+  ).toBeVisible()
+  await expect(page.getByText('Beta testing', { exact: true })).toBeVisible()
+  await expect(page.getByText('Owner review', { exact: false })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Review feedback' })).toHaveCount(0)
+  const button = page.getByRole('button', { name: /^(Give|Continue) feedback$/ })
+  // Opening and closing an empty dialog leaves no draft.
+  await button.click()
+  await expect(page.getByText('kept on this browser', { exact: false })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Continue testing' }).click()
+  await expect(button).toHaveText('Give feedback')
+  await button.click()
+  await page.keyboard.press('Escape')
+  await expect(button).toHaveText('Give feedback')
+  // Real content is a draft for this page only, held in memory.
+  await button.click()
+  await page.getByLabel('What should we know?').fill('Server-mode draft')
+  await page.getByRole('button', { name: 'Continue testing' }).click()
+  await expect(button).toHaveText('Continue feedback')
+  await page.waitForTimeout(900)
+  const kept = () =>
+    page.evaluate(async () => ({
+      databases: (await indexedDB.databases())
+        .map((db) => db.name ?? '')
+        .filter((name) => name.startsWith('module-owner-feedback')),
+      storage: [...Object.keys(localStorage), ...Object.keys(sessionStorage)].filter((key) =>
+        /feedback|draft/i.test(key),
+      ),
+    }))
+  expect(await kept()).toEqual({ databases: [], storage: [] })
+  // The compact review shell applies here too: one row of controls, no hidden page scroll.
+  expect(
+    await page.evaluate(() => {
+      const bar = document.querySelector('iframe')!.parentElement!.querySelector(':scope > header')!
+      return Math.round(bar.getBoundingClientRect().height)
+    }),
+  ).toBeLessThanOrEqual(96)
+  await page.mouse.move(195, 20)
+  await page.mouse.wheel(0, 600)
+  await page.waitForTimeout(200)
+  expect(await page.evaluate(() => window.scrollY)).toBe(0)
+  await page.reload()
+  await expect(
+    page.frameLocator('iframe').getByRole('heading', { name: 'Device Atlas' }),
+  ).toBeVisible()
+  await expect(button).toHaveText('Give feedback')
+  await button.click()
+  await expect(page.getByLabel('What should we know?')).toHaveValue('')
+  await page.getByRole('button', { name: 'Discard draft' }).click()
+  expect(await kept()).toEqual({ databases: [], storage: [] })
+  expect(posts).toBe(0)
 })
 
 test('admin workspace filters reports, displays screenshots and saves a review', async ({
@@ -241,6 +338,7 @@ test('real standard module pages permit same-origin beta framing and have no fee
     '/en/peripheral-imaging',
     '/en/ebus-guided',
     '/en/ebus-guided/learn?section=acoustic-contact',
+    '/en/eus-b-simulator',
     '/en/bronchoscopy-foundations',
     '/en/cardiohelp-ecmo',
     '/en/baxter-crrt',

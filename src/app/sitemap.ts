@@ -1,3 +1,4 @@
+import courseAvailability from '../../config/course-availability.json'
 import type { MetadataRoute } from 'next'
 
 import { publicEbusTrainingModules } from '@/data/ebus-training'
@@ -22,6 +23,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.9,
     },
+    ...(courseAvailability.socalEbusCourseOpen
+      ? [{ url: `${baseUrl}/socal-ebus-course`, changeFrequency: 'weekly' as const, priority: 0.5 }]
+      : []),
     ...publicEbusTrainingModules.map((module) => ({
       url: `${baseUrl}${module.href}`,
       lastModified: new Date(),
@@ -33,12 +37,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/socal-ebus-course`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.5,
     },
     {
       url: `${baseUrl}/bronch-navigation-trainer`,

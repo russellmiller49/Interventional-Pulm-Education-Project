@@ -78,7 +78,7 @@ export function CircuitFlowPathPanel({
           </h3>
           <p className="mt-2 text-sm leading-6">
             Three pressures are measured at three blood-path locations. Select one to read its
-            location; ΔP is calculated from two of them.
+            location; Δp is calculated from two of them.
           </p>
           <div className="my-3 flex flex-wrap gap-2" role="group" aria-label="Pressure locations">
             {FOUNDATION_PRESSURE_SITES.map((id) => (
@@ -113,7 +113,7 @@ export function CircuitFlowPathPanel({
             />
             {selected === 'deltaP' ? (
               <p className="mt-2 text-sm leading-6">
-                ΔP ={' '}
+                Δp ={' '}
                 {site.derivedFromSiteIds.map((id) => ecmoSensorSite(id).deviceLabel).join(' − ')}.
                 It is the pressure difference across the oxygenator, not a fourth physical sampling
                 site. If either input is unavailable, the difference is unavailable too.
@@ -128,7 +128,7 @@ export function CircuitFlowPathPanel({
               {FOUNDATION_PRESSURE_SITES.map(
                 (id) => `${ecmoSensorSite(id).deviceLabel}: ${ecmoSensorSite(id).measuredAt}.`,
               ).join(' ')}{' '}
-              ΔP is derived across the oxygenator; it is not a fourth sampling site.
+              Δp is derived across the oxygenator; it is not a fourth sampling site.
             </TextEquivalent>
           </details>
         </section>
@@ -192,6 +192,20 @@ export function CircuitFlowPathPanel({
           ) : null}
         </section>
       </FoundationTeachingBlock>
+      {/*
+        S2-7 (ECMO-FELLOW-04): one reading carried four names across the module — the console's
+        SvO₂, and "pre-oxygenator", "venous-line" and "drainage-line" saturation in the copy — and
+        nothing said they were the same number. Said once here, where the reading is first met. The
+        console label is the device's own (IFU rev. 2.3: SvO₂, venous oxygen saturation, measured by
+        the venous probe) and is kept.
+      */}
+      <p className={`${styles.section} text-sm leading-6`} data-first-use="venous-line-saturation">
+        <strong>One reading, several names.</strong>
+        {/* A string with its own leading space: the production build drops one the layout implies. */}
+        {
+          ' The console labels its venous oxygen saturation SvO₂. The venous probe measures it on the drainage side, before the oxygenator, so these lessons also call it the pre-oxygenator, venous-line or drainage-line saturation. This is a drainage-line measurement, not a direct measurement of the patient’s mixed-venous saturation.'
+        }
+      </p>
       <details className={styles.section}>
         <summary className="cursor-pointer font-semibold">
           More about flow and saturation measurements

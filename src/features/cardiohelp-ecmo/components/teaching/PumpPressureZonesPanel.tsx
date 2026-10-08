@@ -110,8 +110,10 @@ export function PumpPressureZonesPanel({
               drainage pressure by about one mmHg for three hundred more rpm. The direction is the
               point here; a drainage limit, on another circuit, is where it grows large.
             </p>
+            {/* S3-4 (ECMO-FELLOW-04): named for the control on screen, which is not labelled "Run". */}
             <p className="mt-2 text-sm leading-6">
-              Use the teaching Run control for this task. The saved readings come from the model.
+              Use the “Increase pump speed by 300 rpm” control for this task. The saved readings
+              come from the model.
             </p>
             <p className="mt-2 text-sm leading-6">
               This reference does not model drainage collapse or chatter at the offered speeds. A
@@ -130,7 +132,7 @@ export function PumpPressureZonesPanel({
               pump. A negative Change for pVen means that drainage pressure became more negative.
             </p>
             <p className="mt-2 text-sm leading-6">
-              ΔP also depends on flow through the oxygenator. A change in ΔP after changing speed is
+              Δp also depends on flow through the oxygenator. A change in Δp after changing speed is
               not, by itself, evidence of new membrane resistance.
             </p>
           </section>
@@ -211,7 +213,7 @@ export function PumpPressureZonesPanel({
           <ChannelValue label="pVen" readout={circuit.readouts.pVen} unit="mmHg" />
           <ChannelValue label="pInt" readout={circuit.readouts.pInt} unit="mmHg" />
           <ChannelValue label="pArt" readout={circuit.readouts.pArt} unit="mmHg" />
-          <ChannelValue label="ΔP" readout={circuit.readouts.deltaP} unit="mmHg" />
+          <ChannelValue label="Δp" readout={circuit.readouts.deltaP} unit="mmHg" />
         </div>
         <p className="mt-2 text-xs leading-5 text-muted-foreground">
           {deltaPShift === null

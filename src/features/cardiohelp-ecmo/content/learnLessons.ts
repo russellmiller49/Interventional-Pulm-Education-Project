@@ -114,14 +114,22 @@ function eventActions(scenario: ScenarioDefinition): SimulationAction[] {
   return Array.from({ length: eventSecond }, () => ({ type: 'STEP' as const }))
 }
 
+/** The one title every optional prediction step carries. It promises no gate, because there is none. */
+export const ECMO_PREDICTION_STEP_TITLE = 'Optional prediction: what would you do next?'
+
 /**
  * The one step in a lesson the learner answers rather than performs.
  *
- * Everything the step says has to survive being read by someone who has not answered yet, so the
- * copy here is deliberately the same for every lesson: the clinical question, its options and its
- * reasoning all live in the authored item, which the player does not show until the learner has
- * committed. The step carries no action — the selected choice supplies the payload — and no
- * expected response, because previewing the response would be the answer.
+ * The copy here is deliberately the same for every lesson: the clinical question, its options and
+ * each option's rationale live in the authored item. The step carries no action — the selected
+ * choice supplies the payload — and no expected response.
+ *
+ * ECMO-FELLOW-04 (S8-1, S9-1, S10-1, S11-1, S12-1, VA12-1): the title and instruction used to
+ * promise "commit … before you act" and reasoning "held back until you have chosen", while the
+ * pattern's own teaching — what explains it, the response that fits, the control panel — is on the
+ * same page by design (ECMO-01 self-paced). The step now says what is true: the prediction is
+ * optional, the teaching stays available, and an option's rationale appears when one is chosen or
+ * when the explanation is opened without answering. Nothing was hidden to make the promise true.
  *
  * `requireEcmoLearnPrediction` is called for its failure: a lesson that declares a prediction step
  * without an authored item to answer refuses to construct rather than rendering an empty question.
@@ -137,9 +145,9 @@ function predictionStep(
     phase: 'interpret',
     target,
     preferredCircuitView,
-    title: 'Commit to a prediction before you act',
+    title: ECMO_PREDICTION_STEP_TITLE,
     instruction:
-      'Read the pattern in front of you and commit to one course of action, together with what you expect it to do. The options are alternatives a reasoning clinician would weigh, and the reasoning behind each of them is held back until you have chosen.',
+      'Read the pattern in front of you and, if you want to check your reasoning, choose one course of action together with what you expect it to do. The options are alternatives a reasoning clinician would weigh. The teaching for this pattern stays on this page, so read it before or after choosing, as you prefer; the reasoning for each option appears once you choose one, or when you open the explanation without answering.',
     rationale:
       'Committing before acting is what makes the next few minutes diagnostic rather than merely eventful. A read that is only stated after the response has been seen cannot be shown to have been mistaken, so the model it came from is never examined — and it is the model, not the single action, that carries forward to the next patient.',
     actionLabel: 'Commit this prediction',
@@ -377,7 +385,7 @@ const orientationLesson: GuidedLessonDefinition = {
       target: 'console',
       title: 'Review timers and menu surfaces',
       instruction:
-        'Open Timers. Note start/stop/reset behavior, then remember that settings and alarm history are accessible teaching surfaces while service/password surfaces are excluded.',
+        'Open Timers. Note start/stop/reset behavior, then remember that settings and the alarm list are accessible teaching surfaces while service/password surfaces are excluded.',
       rationale:
         'Timers support workflow documentation; they do not diagnose or correct a physiologic or circuit problem.',
       actionLabel: 'Open Timers',
@@ -392,12 +400,14 @@ const orientationLesson: GuidedLessonDefinition = {
       id: 'startup-screen-alarm-history',
       phase: 'orient',
       target: 'console',
-      title: 'Use alarm history as context',
+      // S7-5 (ECMO-FELLOW-04): the step said "Alarm history" while the console's menu, the control
+      // resolver and the IFU (rev. 2.3, section 9.2, p. 158) all say "Alarm list".
+      title: 'Use the alarm list as context',
       instruction:
-        'Open the six-item Alarm history. Acknowledgement pauses sound; the underlying cause remains until corrected.',
+        'Open the Alarm list, which keeps the last six alarms. Acknowledgement pauses sound; it does not correct the underlying cause.',
       rationale:
-        'Alarm history helps reconstruct sequence and recurrence, but acknowledgement is not treatment.',
-      actionLabel: 'Open Alarm history',
+        'The alarm list helps reconstruct sequence and recurrence, but acknowledgement is not treatment.',
+      actionLabel: 'Open the Alarm list',
       actions: [{ type: 'SET_SCREEN', screen: 'alarm-history' }],
       expectedResponse: [
         'Priority and text remain visible',
@@ -431,8 +441,9 @@ const orientationLesson: GuidedLessonDefinition = {
       title: 'Separate sweep and sweep-gas FiO₂ from the console',
       instruction:
         'Locate sweep flow, sweep-gas FiO₂, and source status on the separate gas panel. These are not CARDIOHELP-i touchscreen controls.',
+      // S4-4 (ECMO-FELLOW-04): the blender and ventilator settings describe different gas-delivery sites.
       rationale:
-        'Sweep primarily changes membrane CO₂ clearance in this model; sweep-gas FiO₂ changes oxygenator inlet gas concentration.',
+        'Sweep primarily changes membrane CO₂ clearance in this model; sweep-gas FiO₂ is the oxygen fraction of the gas sent to the membrane lung and changes oxygenator inlet gas concentration. It is not the ventilator FiO₂, which describes gas delivered to the native lungs.',
       actionLabel: 'I can distinguish the two gas controls',
       expectedResponse: [
         'Sweep flow in L/min',
@@ -545,7 +556,10 @@ const vaOrientationLesson: GuidedLessonDefinition = {
     id: `va-${item.id}`,
     instruction:
       item.id === 'startup-orient-domains'
-        ? 'Trace femoral venous drainage → pump → oxygenator → femoral arterial return. Identify the separate venous and arterial cannulas, then locate the console, gas blender, and independent patient monitor.'
+        ? // VA7-1 (ECMO-FELLOW-04): the VA-specific tracing leads, and the step now says that the
+          // screen-by-screen tour that follows is the VV track's own, repeated on this circuit, so a
+          // learner who has taken it can move ahead from the task list. No step, id or order changed.
+          'Trace femoral venous drainage → pump → oxygenator → femoral arterial return. Identify the separate venous and arterial cannulas, then locate the console, gas blender, and independent patient monitor. The console is the unit the VV track tours: the screen-by-screen tasks that follow repeat that tour on this circuit, so work through them again or use the task list to move ahead to the prediction, where the VA-specific questions begin.'
         : item.instruction,
     rationale:
       item.id === 'startup-transfer' ? vaOrientationScenario.debrief.diagnosis : item.rationale,
@@ -667,12 +681,15 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     scenarioId: 'compensated-hypercapnia',
     target: 'console',
     instruction:
-      'The new patient’s CO₂ is high, the pH is near normal and the breathing is comfortable. Open Blood parameters and read the whole acid–base picture before deciding whether any setting should move.',
+      // S12-2 (ECMO-FELLOW-04): the console's Blood parameters screen reports the venous-line
+      // values (SvO₂, hemoglobin, hematocrit) and venous/arterial temperatures, but no blood gas. The acid–base picture is
+      // on the independent bedside monitor and blood gas panel, so the step says where to read it.
+      'The new patient’s CO₂ is high, the pH is near normal and the breathing is comfortable. Open Blood parameters for what the console itself reports, then read PaCO₂, pH and bicarbonate on the independent bedside monitor and blood gas panel, where they are shown, before deciding whether any setting should move.',
     actionLabel: 'Open Blood parameters for the new patient',
     action: { type: 'SET_SCREEN', screen: 'blood' },
     expectedResponse: [
-      'Blood parameters open',
-      'PaCO₂ read beside pH, bicarbonate and work of breathing',
+      'Blood parameters open: console blood parameters, no blood gas',
+      'PaCO₂ read beside pH, bicarbonate and work of breathing on the independent bedside monitor',
       'No setting changed yet',
     ],
   },
@@ -778,13 +795,15 @@ const guidedTransferVariantByLessonScenarioId: Readonly<Record<string, GuidedTra
     scenarioId: 'va-differential-hypoxemia',
     target: 'console',
     instruction:
-      'The circuit is returning well-saturated blood while the right-arm saturation is low. Open Blood parameters and compare the circuit’s readings with the upper- and lower-body samples.',
+      // S12-2's VA counterpart (ECMO-FELLOW-04): the right-arm and femoral samples are independent
+      // patient-monitor values, not console channels, so the step no longer implies the console holds them.
+      'The circuit is returning well-saturated blood while the right-arm saturation is low. Open Blood parameters for what the console itself reports, then compare it with the upper- and lower-body samples on the independent patient monitor, where those are shown.',
     actionLabel: 'Open Blood parameters for the new patient',
     action: { type: 'SET_SCREEN', screen: 'blood' },
     expectedResponse: [
-      'Blood parameters open',
-      'Post-membrane saturation read beside the right-arm and femoral samples',
-      'The arterial trace read beside all three',
+      'Blood parameters open: console blood parameters',
+      'Right-arm and femoral samples read on the independent patient monitor',
+      'The arterial trace read beside them',
     ],
   },
   'va-differential-hypoxemia': {

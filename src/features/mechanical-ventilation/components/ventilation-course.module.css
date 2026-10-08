@@ -121,9 +121,9 @@
   background: #055b5d;
 }
 .secondary {
-  background: #fff;
+  background: var(--button-surface, #fff);
   color: var(--ink);
-  border: 1px solid #b7cbc8;
+  border: 1px solid var(--button-line, #b7cbc8);
 }
 .secondary:hover {
   background: var(--pale);
@@ -259,17 +259,17 @@
   margin-top: 16px;
 }
 .notice {
-  border-left: 3px solid #87afa5;
+  border-left: 3px solid var(--notice-line, #87afa5);
   padding: 12px 16px;
   color: var(--muted);
   font-size: 0.79rem;
-  background: #eef4ef;
+  background: var(--notice-surface, #eef4ef);
   margin: 20px 0;
 }
 .warning {
-  border-left-color: #ab6a1d;
-  background: #fcf3e1;
-  color: #704614;
+  border-left-color: var(--warning-line, #ab6a1d);
+  background: var(--warning-surface, #fcf3e1);
+  color: var(--warning-ink, #704614);
 }
 .bottomGrid {
   display: grid;
@@ -443,7 +443,7 @@
   display: flex;
   gap: 12px;
   align-items: start;
-  border: 1px solid #c5d4d0;
+  border: 1px solid var(--choice-line, #c5d4d0);
   border-radius: 10px;
   padding: 14px 16px;
   margin-bottom: 10px;
@@ -457,7 +457,7 @@
  * authority on what is checked; this only makes the row agree with it.
  */
 .choice:has(input:checked) {
-  background: #eaf5f1;
+  background: var(--choice-checked-surface, #eaf5f1);
   border-color: var(--accent);
   box-shadow: inset 0 0 0 1px var(--accent);
 }
@@ -470,7 +470,7 @@
 }
 /* Focus stays visible on the control itself even where this module's `.course` root is absent. */
 .choice input:focus-visible {
-  outline: 3px solid #b56e21;
+  outline: 3px solid var(--focus-ring, #b56e21);
   outline-offset: 3px;
 }
 /* Windows high contrast drops backgrounds and author colors; keep the thickness cue. */
@@ -502,15 +502,15 @@
   border-color: var(--accent);
 }
 .feedback {
-  background: #eef6f1;
-  border: 1px solid #bfd6c9;
+  background: var(--feedback-surface, #eef6f1);
+  border: 1px solid var(--feedback-line, #bfd6c9);
   border-radius: 12px;
   padding: 22px;
   margin: 18px 0;
 }
 .feedback[data-correct='false'] {
-  background: #fff8eb;
-  border-color: #e3cca4;
+  background: var(--feedback-warm-surface, #fff8eb);
+  border-color: var(--feedback-warm-line, #e3cca4);
 }
 .feedback h3 {
   font-size: 1.1rem;

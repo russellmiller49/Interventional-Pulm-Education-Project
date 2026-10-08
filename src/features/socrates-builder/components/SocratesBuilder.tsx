@@ -21,6 +21,7 @@ import {
   Hand,
   LoaderCircle,
   Minus,
+  Move,
   Plus,
   Redo2,
   RotateCcw,
@@ -67,6 +68,8 @@ import { createInvenioDemoDocument } from '../content/invenio-demo-document'
 import { loadInvenioDziDescriptor, resolveSocratesSlideSource } from '../descriptor'
 import { databaseCompatibilityError } from '../database-compatibility'
 import { emptyCaseContent, emptyAuthorContent } from '../case-content'
+import { annotationFamily, moveAnnotation } from '../annotation-editing'
+import { AnnotationKey } from '@/features/socrates-study/components/shared'
 import { getInvenioPair } from '../invenio-source'
 import type { WebOverlayWorkspace } from '../web-overlay-storage'
 import { DraftLearnerPreview } from './DraftLearnerPreview'
@@ -402,6 +405,20 @@ export function SocratesBuilder({
   const updateSelectedBounds = useCallback(
     (field: keyof ImageRect, value: number) => {
       if (!selectedAnnotation || !selectedBounds || !Number.isFinite(value)) return
+      if (field === 'x' || field === 'y') {
+        commitAnnotations(
+          moveAnnotation(
+            document.annotations,
+            selectedAnnotation.id,
+            {
+              x: field === 'x' ? value - selectedBounds.x : 0,
+              y: field === 'y' ? value - selectedBounds.y : 0,
+            },
+            { x: 0, y: 0, ...document.slide.expectedDimensions },
+          ),
+        )
+        return
+      }
       const nextBounds = clampRectangleToSlide(
         { ...selectedBounds, [field]: value },
         document.slide.expectedDimensions.width,
@@ -417,6 +434,21 @@ export function SocratesBuilder({
         !rectContainsRect(polygonBounds(selectedParent.polygon), nextBounds)
       ) {
         setNotice({ tone: 'error', message: 'Detail regions must remain inside their parent.' })
+        return
+      }
+      const family = annotationFamily(selectedAnnotation.id, document.annotations)
+      if (
+        document.annotations.some(
+          (a) =>
+            a.id !== selectedAnnotation.id &&
+            family.has(a.id) &&
+            !rectContainsRect(nextBounds, polygonBounds(a.polygon)),
+        )
+      ) {
+        setNotice({
+          tone: 'error',
+          message: 'Keep the parent region around all of its detail regions.',
+        })
         return
       }
       commitAnnotations(
@@ -438,25 +470,30 @@ export function SocratesBuilder({
 
   const deleteSelectedAnnotation = useCallback(() => {
     if (!selectedAnnotation) return
-    const removeIds = new Set([selectedAnnotation.id])
-    let foundChild = true
-    while (foundChild) {
-      foundChild = false
-      for (const annotation of document.annotations) {
-        if (
-          annotation.parentId &&
-          removeIds.has(annotation.parentId) &&
-          !removeIds.has(annotation.id)
-        ) {
-          removeIds.add(annotation.id)
-          foundChild = true
-        }
-      }
-    }
+    const removeIds = annotationFamily(selectedAnnotation.id, document.annotations)
     const next = document.annotations.filter((annotation) => !removeIds.has(annotation.id))
     commitAnnotations(next)
     setSelectedId(next[0]?.id ?? '')
+    setPreviewedId(null)
+    setNotice({
+      tone: 'info',
+      message: `Deleted ${selectedAnnotation.label}${removeIds.size > 1 ? ` and ${removeIds.size - 1} detail regions` : ''}. Use Undo to restore.`,
+    })
   }, [commitAnnotations, document.annotations, selectedAnnotation])
+
+  const handleAnnotationMoved = useCallback(
+    (id: string, delta: ImagePoint) => {
+      const next = moveAnnotation(document.annotations, id, delta, {
+        x: 0,
+        y: 0,
+        ...document.slide.expectedDimensions,
+      })
+      if (next.every((a, index) => a === document.annotations[index])) return
+      commitAnnotations(next)
+      setSelectedId(id)
+    },
+    [commitAnnotations, document.annotations, document.slide.expectedDimensions],
+  )
 
   const handleRectangleDrawn = useCallback(
     (rawRectangle: ImageRect) => {
@@ -1160,6 +1197,13 @@ export function SocratesBuilder({
                 <Hand aria-hidden="true" />
               </ToolButton>
               <ToolButton
+                active={drawMode === 'move'}
+                onClick={() => setDrawMode('move')}
+                label="Move/select regions"
+              >
+                <Move aria-hidden="true" /> Move
+              </ToolButton>
+              <ToolButton
                 active={drawMode === 'parent'}
                 onClick={() => setDrawMode('parent')}
                 label="Draw parent region"
@@ -1194,6 +1238,13 @@ export function SocratesBuilder({
                 <RotateCcw aria-hidden="true" />
               </ToolButton>
               <ToolButton
+                onClick={deleteSelectedAnnotation}
+                label="Delete selected region"
+                disabled={!selectedAnnotation}
+              >
+                <Trash2 aria-hidden="true" /> Delete
+              </ToolButton>
+              <ToolButton
                 onClick={undoAnnotations}
                 label="Undo annotation change"
                 disabled={!annotationHistory.length}
@@ -1212,7 +1263,36 @@ export function SocratesBuilder({
             </div>
           </div>
 
-          <div className={styles.canvasShell} data-mode={drawMode}>
+          <div
+            className={styles.canvasShell}
+            data-mode={drawMode}
+            tabIndex={0}
+            role="group"
+            aria-label="Annotation canvas. Select a region, use arrow keys to move it, or Delete to remove it."
+            onPointerDown={(event) => {
+              if ((event.target as HTMLElement).closest('[data-testid="deep-zoom-viewer"]'))
+                event.currentTarget.focus({ preventScroll: true })
+            }}
+            onKeyDown={(event) => {
+              if (event.target !== event.currentTarget || !selectedAnnotation) return
+              if (event.key === 'Delete' || event.key === 'Backspace') {
+                event.preventDefault()
+                deleteSelectedAnnotation()
+              } else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+                event.preventDefault()
+                const distance = event.shiftKey ? 1 : 10
+                handleAnnotationMoved(selectedId, {
+                  x:
+                    event.key === 'ArrowLeft'
+                      ? -distance
+                      : event.key === 'ArrowRight'
+                        ? distance
+                        : 0,
+                  y: event.key === 'ArrowUp' ? -distance : event.key === 'ArrowDown' ? distance : 0,
+                })
+              }
+            }}
+          >
             <ComparisonSlideViewer
               ref={viewerRef}
               slide={document.slide}
@@ -1223,11 +1303,24 @@ export function SocratesBuilder({
               onImageSelect={handleImageSelect}
               onViewportChange={setViewport}
               onStatusChange={onEditorViewerStatus}
-              interactionMode={drawMode === 'navigate' ? 'navigate' : 'draw-rectangle'}
+              interactionMode={
+                drawMode === 'navigate'
+                  ? 'navigate'
+                  : drawMode === 'move'
+                    ? 'move-rectangle'
+                    : 'draw-rectangle'
+              }
               onDrawRectangle={handleRectangleDrawn}
+              onMoveAnnotation={handleAnnotationMoved}
             />
             <div className={styles.canvasStatus} data-comparison={isPairedSlide}>
-              <span>{drawMode === 'navigate' ? 'Pan/select' : `Draw ${drawMode}`}</span>
+              <span>
+                {drawMode === 'navigate'
+                  ? 'Pan/select'
+                  : drawMode === 'move'
+                    ? 'Move/select'
+                    : `Draw ${drawMode}`}
+              </span>
               <span>{viewport.zoomRatio.toFixed(2)}×</span>
               <span>
                 {document.slide.expectedDimensions.width} ×{' '}
@@ -1247,15 +1340,20 @@ export function SocratesBuilder({
               <Check aria-hidden="true" /> Use current view as starting crop
             </Button>
             <span>
-              {drawMode === 'navigate'
-                ? isPairedSlide
-                  ? 'Pan either image; click a teaching region to edit it.'
-                  : 'Drag to pan; click a region to edit it.'
-                : isPairedSlide
-                  ? 'Draw on either image. The same region appears on both.'
-                  : 'Drag directly on the slide to create a rectangular annotation.'}
+              {drawMode === 'move'
+                ? 'Drag a region to move it. Parent regions move with their details. Select a region and use Delete, or focus the canvas and use arrow keys (Shift for 1 px).'
+                : drawMode === 'navigate'
+                  ? isPairedSlide
+                    ? 'Pan either image; click a teaching region to edit it.'
+                    : 'Drag to pan; click a region to edit it.'
+                  : isPairedSlide
+                    ? 'Draw on either image. The same region appears on both.'
+                    : 'Drag directly on the slide to create a rectangular annotation.'}
             </span>
           </div>
+          {document.caseContent && (
+            <AnnotationKey legend={document.caseContent.annotationLegend} authorPreview />
+          )}
         </section>
 
         <aside className={styles.inspector} aria-label="Slide and region properties">

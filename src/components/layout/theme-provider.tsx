@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -48,12 +49,33 @@ function getSystemTheme(): ResolvedTheme {
   return window.matchMedia(THEME_QUERY).matches ? 'dark' : 'light'
 }
 
+/**
+ * Storage can be refused: a browser that blocks site data may throw from the `localStorage` getter
+ * itself or from `getItem`/`setItem`. The theme then falls back to the default and changes last for
+ * the visit; nothing claims it was saved.
+ */
+function readStoredTheme(storageKey: string): string | null {
+  try {
+    return window.localStorage.getItem(storageKey)
+  } catch {
+    return null
+  }
+}
+
+function writeStoredTheme(storageKey: string, theme: Theme) {
+  try {
+    window.localStorage.setItem(storageKey, theme)
+  } catch {
+    // refused: the theme applies for this visit only
+  }
+}
+
 function getStoredTheme(storageKey: string, defaultTheme: Theme) {
   if (typeof window === 'undefined') {
     return defaultTheme
   }
 
-  const storedTheme = window.localStorage.getItem(storageKey)
+  const storedTheme = readStoredTheme(storageKey)
 
   return isTheme(storedTheme) ? storedTheme : defaultTheme
 }
@@ -148,19 +170,21 @@ export function ThemeProvider({
     return () => window.removeEventListener('storage', handleStorage)
   }, [defaultTheme, storageKey])
 
-  const setTheme = useCallback(
-    (nextTheme: Theme | ((currentTheme: Theme) => Theme)) => {
-      setThemeState((currentTheme) => {
-        const resolvedNextTheme =
-          typeof nextTheme === 'function' ? nextTheme(currentTheme) : nextTheme
+  // A change the visitor asks for is saved once it has applied, outside the state updater, which
+  // must stay pure; a change that came from another tab's storage is not written back.
+  const saveRequested = useRef(false)
+  const setTheme = useCallback((nextTheme: Theme | ((currentTheme: Theme) => Theme)) => {
+    saveRequested.current = true
+    setThemeState((currentTheme) =>
+      typeof nextTheme === 'function' ? nextTheme(currentTheme) : nextTheme,
+    )
+  }, [])
 
-        window.localStorage.setItem(storageKey, resolvedNextTheme)
-
-        return resolvedNextTheme
-      })
-    },
-    [storageKey],
-  )
+  useEffect(() => {
+    if (!saveRequested.current) return
+    saveRequested.current = false
+    writeStoredTheme(storageKey, theme)
+  }, [storageKey, theme])
 
   const value = useMemo<ThemeContextValue>(
     () => ({

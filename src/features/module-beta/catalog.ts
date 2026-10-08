@@ -3,6 +3,12 @@ import { unlocalizedPathname } from '@/i18n/path'
 export const betaModules = [
   { id: 'ebus-guided', title: 'EBUS: Guided Course', path: '/ebus-guided', group: 'Bronchoscopy' },
   {
+    id: 'eus-b-simulator',
+    title: 'EUS-B Simulator',
+    path: '/eus-b-simulator',
+    group: 'Bronchoscopy',
+  },
+  {
     id: 'synchronized-anatomy',
     title: 'Airway Anatomy — Synchronized Bronchoscopy',
     path: '/learn/anatomy/airway',

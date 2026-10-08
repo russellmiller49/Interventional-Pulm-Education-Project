@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { LessonHost } from '../components/LessonHost'
 import { acquired } from '../testing/linked-fixture'
 import { LESSONS } from '../content/curriculum'
@@ -343,6 +343,50 @@ it('jumps ahead from the outline; a record task without a current acquisition re
   expect(readProgress().progress.reviewedLessonIds).toEqual([])
   expectNoGradedWrite()
 })
+it.each([
+  ['clinical-question', 'matching', 'Show the matches'],
+  ['preparation', 'sequence', 'Show the sequence'],
+] as const)(
+  'keeps the authored %s reference visible after reveal and revisit, then clears it on restart',
+  (lessonId, interaction, revealLabel) => {
+    const lesson = LESSONS.find((entry) => entry.id === lessonId)!
+    render(<LessonHost lesson={lesson} />)
+    next()
+    fireEvent.click(screen.getByRole('button', { name: revealLabel }))
+    const reference = () =>
+      document.querySelector(`[data-task-reference="${interaction}"]`) as HTMLElement
+    const assertAuthoredReference = () => {
+      expect(reference()).toBeVisible()
+      if (interaction === 'matching') {
+        for (const pair of lesson.matching!.pairs) {
+          expect(within(reference()).getByText(pair.cue, { exact: true })).toBeVisible()
+          expect(within(reference()).getByText(pair.response, { exact: true })).toBeVisible()
+        }
+      } else {
+        expect(
+          within(reference())
+            .getAllByRole('listitem')
+            .map((item) => item.textContent),
+        ).toEqual(lesson.sequence!.steps.map((step) => step.text))
+      }
+      expect(within(reference()).queryByRole('button')).toBeNull()
+      expect(within(reference()).queryByRole('combobox')).toBeNull()
+    }
+    assertAuthoredReference()
+    expect(primary()).toBeEnabled()
+    // Both optional questions on this task may be passed over before the next task.
+    next()
+    next()
+    fireEvent.click(screen.getByRole('button', { name: /^Back$/ }))
+    assertAuthoredReference()
+    fireEvent.click(screen.getByRole('button', { name: /^Restart lesson$/ }))
+    next()
+    expect(reference()).toBeNull()
+    expect(screen.getByRole('button', { name: revealLabel })).toBeEnabled()
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
+  },
+)
+
 it('completes, shows or skips a matching task without a write, and shows its explanation either way', () => {
   const lesson = LESSONS.find((l) => l.id === 'clinical-question')!
   render(<LessonHost lesson={lesson} />)

@@ -6,7 +6,10 @@ import {
   ASSESS_TRACES,
   SEGMENT_PRACTICE_TRACES,
 } from '../src/features/bronchial-branch-tracing/content/practice'
-import { traceById } from '../src/features/bronchial-branch-tracing/geometry/native-ct'
+import {
+  targetForTrace,
+  traceById,
+} from '../src/features/bronchial-branch-tracing/geometry/native-ct'
 import { displayAnswerLabel } from '../src/features/bronchial-branch-tracing/engine/branch-identity'
 
 const base = '/en/learn/anatomy/branch-tracing'
@@ -306,6 +309,13 @@ test('short route: declared approach reversal, all connected divisions, map grow
   await page.goto(`${base}/learn?lesson=${lesson.id}`)
   await ctReady(page)
   await button(page, 'Replay from parent').click()
+  // Harness fix (PR #273 final repair): Replay moves the CT from the anchor (slice 325) to the
+  // first demonstration plane (332). The ready flag and the approach caption were already true
+  // before the click, so Start could be pressed during that plane's reload, while it is disabled,
+  // and the click was dropped under load. Wait for the replayed plane before continuing.
+  await expect(page.getByLabel('CT slice', { exact: true })).toHaveValue(
+    String(localExercise(lesson.exercises![0]).frames[0].slice),
+  )
   await ctReady(page)
   // BBT-PRE-REVIEW-02 moved the live caption to the transport beside the CT; the
   // full transcript stays in the instructions pane.
@@ -337,14 +347,21 @@ test('complete Learn route covers every fork, target inspection, review and seco
   const lesson = LESSONS.find((l) => l.id === 'variants-limits')!
   await page.goto(`${base}/learn?lesson=${lesson.id}`)
   await ctReady(page)
-  await button(page, 'Trace this airway').click()
+  // BBT-PRE-REVIEW-04: the worked example's skip action names the learner's own target.
+  await button(
+    page,
+    `Skip to your own trace: ${targetForTrace(traceById(lesson.prediction)).segment.code}`,
+  ).click()
   await markRoute(page, lesson.prediction)
   await button(page, 'Record trace').click()
   await describe(page)
   await button(page, 'Reveal CT comparison').click()
   await capture(page, 'complete-route-comparison')
   await button(page, 'Review the relationship').click()
-  await button(page, 'Trace another airway').click()
+  await button(
+    page,
+    `Continue to another trace: ${targetForTrace(traceById(lesson.transfer)).segment.code}`,
+  ).click()
   await markRoute(page, lesson.transfer)
   await describe(page)
   await button(page, 'Compare new trace').click()
@@ -1498,4 +1515,614 @@ test('200 percent root text keeps the Lesson 2 comparison and its parent airway 
   await expect(page.locator('[data-comparison-scope]')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
   await capture(page, 'bbt03-L2-200-percent')
+})
+
+// BBT-PRE-REVIEW-04 — teaching before the try, entry language and a coherent optional route flow.
+const noHorizontalOverflow = (page: Page) =>
+  page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)
+async function inViewportAfterScroll(page: Page, locator: ReturnType<Page['locator']>) {
+  // Bring the element's top into view (a section can be taller than the viewport), then require
+  // that its top edge is on screen and that it is not cut off at either side.
+  await locator.evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }))
+  const box = await locator.boundingBox()
+  const viewport = page.viewportSize()!
+  return Boolean(
+    box &&
+    box.height > 0 &&
+    box.x >= 0 &&
+    box.x + box.width <= viewport.width + 1 &&
+    box.y < viewport.height &&
+    box.y + Math.min(box.height, viewport.height) > 0,
+  )
+}
+/** Horizontal overflow inside the branch-tracing module itself (the shared site header excluded). */
+const moduleOverflow = (page: Page) =>
+  page.evaluate(() => {
+    const root = document.querySelector('[data-learning-scroll-owner]')!
+    return Array.from(root.querySelectorAll('*'))
+      .filter((el) => !el.closest('svg'))
+      .map((el) => el.getBoundingClientRect())
+      .filter((b) => b.width > 0 && b.right > innerWidth + 1).length
+  })
+
+test('all nine lesson entries open by direct link, and the route set addresses keep working', async ({
+  page,
+}) => {
+  for (const lesson of LESSONS) {
+    await page.goto(`${base}/learn?lesson=${lesson.id}`)
+    await expect(page.getByRole('heading', { name: lesson.title, level: 1 })).toBeVisible()
+    await ctReady(page)
+  }
+  await page.goto(`${base}/assess`)
+  await expect(page.locator('[data-route-set-role="more-routes"]')).toContainText(
+    'nothing is assessed',
+  )
+  await page.goto(`${base}/practice`)
+  await expect(page.locator('[data-route-set-role="practice"]')).toContainText(
+    'Suggested after the 9 Learn lessons',
+  )
+})
+
+test('the overview maps Learn, Practice and More routes, keeps estimates after review and links each set', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  await page.goto(base)
+  const map = page.locator('[data-course-map]')
+  await expect(map).toContainText('not a measured learner time')
+  await expect(page.locator('[data-naming-key]').first()).toContainText(
+    'B denotes a bronchus and S its pulmonary segment',
+  )
+  await capture(page, 'bbt04-overview-1427')
+  await page.evaluate(() =>
+    localStorage.setItem(
+      'branch-tracing.self-paced-v1',
+      JSON.stringify({
+        version: 1,
+        lastLessonId: 'follow-one-airway',
+        visitedLessonIds: ['follow-one-airway'],
+        reviewedLessonIds: ['follow-one-airway'],
+        reviewLaterLessonIds: ['vertical'],
+        displayExplanationsShown: [],
+        updatedAt: '2026-09-23T00:00:00.000Z',
+      }),
+    ),
+  )
+  await page.reload()
+  await expect(
+    page.getByRole('link', { name: LESSONS[0].title }).locator('xpath=ancestor::li[1]'),
+  ).toContainText(`Reviewed · about ${LESSONS[0].minutes} min`)
+  await expect(page.getByRole('heading', { name: 'Saved for later' })).toBeVisible()
+  await map.getByRole('link', { name: 'More routes' }).click()
+  await expect(page).toHaveURL(/\/assess$/)
+  await page.goBack()
+  await map.getByRole('link', { name: 'Practice' }).click()
+  await expect(page).toHaveURL(/\/practice$/)
+})
+
+test('Lesson 9 keeps the worked route, your route and the transfer route apart and ends with Practice', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  const lesson = LESSONS.find((l) => l.id === 'variants-limits')!
+  const [example, own, transfer] = [lesson.example, lesson.prediction, lesson.transfer].map(
+    (id) => targetForTrace(traceById(id)).segment.code,
+  )
+  await page.goto(`${base}/learn?lesson=${lesson.id}`)
+  await ctReady(page)
+  await expect(
+    page.getByRole('heading', { name: `Worked example: the route to ${example}` }),
+  ).toBeVisible()
+  await expect(page.locator('[data-map-owner]')).toHaveAttribute('data-map-owner', 'worked-example')
+  await capture(page, 'bbt04-L9-worked-1427')
+  const junctions = traceById(lesson.example).checkpoints.length
+  for (let i = 1; i < junctions; i++) {
+    await button(page, `Next worked junction (${example} route)`).click()
+    await ctReady(page)
+    await expect(page.locator('[data-map-division]')).toHaveCount(i + 1)
+  }
+  const worked = (await draft(page, lesson.id)).session
+  expect(worked.marks.every((m: unknown) => m === null)).toBe(true)
+  expect(worked.junctionHistory).toEqual({})
+  await button(page, `Start your own trace: ${own}`).click()
+  await ctReady(page)
+  await expect(page.locator('[data-route-role="own"]').first()).toContainText(
+    `Your trace · target ${own}`,
+  )
+  await expect(page.locator('[data-map-owner]')).toHaveAttribute('data-map-owner', 'learner')
+  await orient(page)
+  for (let i = 0; i < traceById(lesson.prediction).checkpoints.length - 1; i++) {
+    await button(page, 'Continue without recording').click()
+    await ctReady(page)
+  }
+  await button(page, 'Continue without recording this trace').click()
+  await button(page, 'Show the comparison without recording').click()
+  await ctReady(page)
+  await button(page, 'Review the relationship').click()
+  await expect(
+    page.getByRole('heading', { name: 'Optional reflection: relate the two views' }),
+  ).toBeVisible()
+  await expect(page.locator('[data-reflection-reference]')).toContainText('Source levels:')
+  await expect(page.locator('textarea')).toHaveCount(0)
+  await capture(page, 'bbt04-L9-reflection-1427')
+  await button(page, `Continue to another trace: ${transfer}`).click()
+  await ctReady(page)
+  await expect(page.locator('[data-route-role="transfer"]').first()).toContainText(
+    `Another trace · target ${transfer}`,
+  )
+  await button(page, 'Finish without recording').click()
+  await expect(page.getByRole('link', { name: 'Return to overview' })).toBeVisible()
+  await page.getByRole('link', { name: 'Continue to Practice' }).click()
+  await expect(page).toHaveURL(/\/practice$/)
+  await page.goBack()
+  await expect(page.getByRole('heading', { name: 'Lesson finished' })).toBeVisible()
+})
+
+test('a later example offers an optional worked walkthrough and start-from-parent that record nothing', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  await startLocal(page, 'continuity')
+  await button(page, 'Continue without marking').click()
+  await finishPendingIntroduction(page)
+  await button(page, 'Next example: LLL').click()
+  await ctReady(page)
+  await expect(page.locator('[data-mode="try"]')).toContainText('opens without a demonstration')
+  const ex = localExercise(LESSONS.find((l) => l.id === 'continuity')!.exercises![1])
+  await button(page, 'Watch a worked walkthrough').click()
+  await ctReady(page)
+  await expect(page.locator('[data-teaching-overlay]').first()).toBeVisible()
+  await button(page, `Start from the parent · slice ${ex.trace.anchor.slice}`).click()
+  await expect(page.locator('[data-preset]')).toHaveAttribute(
+    'data-slice',
+    String(ex.trace.anchor.slice),
+  )
+  const stored = await draft(page, 'continuity')
+  expect(stored.marks).toEqual([null, null])
+  expect(stored.history).toEqual({})
+  await capture(page, 'bbt04-L3-ex2-try-1427')
+})
+
+test('Lesson 8 names its registry target and keeps the upper-division note in the optional reference', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  await page.goto(`${base}/learn?lesson=orientation-changes`)
+  await ctReady(page)
+  const note = page.locator('[data-regional-note="left-upper-division"]')
+  await expect(note).toBeHidden()
+  await page.getByText('Earlier teaching and regional worked example').click()
+  await expect(note).toBeVisible()
+  await button(page, 'Start marking branches').click()
+  await ctReady(page)
+  await expect(page.getByText(/Which daughter would you follow toward/)).toHaveText(
+    'Which daughter would you follow toward the simulated nodule in LS6 (left lower lobe superior segment)?',
+  )
+  await expect(page.getByText(/toward LLL/)).toHaveCount(0)
+  await capture(page, 'bbt04-L8-target-1427')
+})
+
+test('the try note and its optional controls are keyboard reachable with visible focus', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  await startLocal(page, 'vertical')
+  await page.getByRole('button', { name: 'Check my tracing' }).focus()
+  let reached = false
+  for (let i = 0; i < 40 && !reached; i++) {
+    await page.keyboard.press('Tab')
+    reached = await page.evaluate(
+      () => document.activeElement?.textContent?.trim() === 'Replay the worked walkthrough',
+    )
+  }
+  expect(reached).toBe(true)
+  const focusStyle = await page.evaluate(() => {
+    const style = getComputedStyle(document.activeElement!)
+    return { outline: style.outlineStyle, shadow: style.boxShadow }
+  })
+  expect(focusStyle.outline !== 'none' || focusStyle.shadow !== 'none').toBe(true)
+  await page.keyboard.press('Enter')
+  await ctReady(page)
+  await expect(page.locator('[data-teaching-overlay]').first()).toBeVisible()
+  expect((await draft(page, 'vertical')).marks).toEqual([null, null])
+})
+
+for (const [width, height] of [
+  [1427, 1226],
+  [1440, 900],
+  [1024, 768],
+  [390, 844],
+  [320, 740],
+])
+  test(`Prompt 04 surfaces reflow without clipping or horizontal overflow at ${width}×${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height })
+    await page.goto(base)
+    expect(await noHorizontalOverflow(page)).toBe(true)
+    expect(await inViewportAfterScroll(page, page.locator('[data-course-map]'))).toBe(true)
+    await capture(page, `bbt04-overview-${width}x${height}`)
+    await startLocal(page, 'vertical')
+    const tryNote = page.locator('[data-mode="try"]')
+    expect(await inViewportAfterScroll(page, tryNote)).toBe(true)
+    expect(await inViewportAfterScroll(page, button(page, 'Replay the worked walkthrough'))).toBe(
+      true,
+    )
+    expect(await noHorizontalOverflow(page)).toBe(true)
+    await capture(page, `bbt04-L4-try-${width}x${height}`)
+    const lesson = LESSONS.find((l) => l.id === 'variants-limits')!
+    const own = targetForTrace(traceById(lesson.prediction)).segment.code
+    await page.goto(`${base}/learn?lesson=${lesson.id}`)
+    await ctReady(page)
+    for (const name of [
+      `Next worked junction (${targetForTrace(traceById(lesson.example)).segment.code} route)`,
+      `Skip to your own trace: ${own}`,
+    ]) {
+      const action = button(page, name)
+      expect(await inViewportAfterScroll(page, action)).toBe(true)
+      // The whole label is readable: no ellipsis or clipping inside the button.
+      expect(
+        await action.evaluate((el) => el.scrollWidth <= el.clientWidth + 1 && el.clientHeight > 0),
+      ).toBe(true)
+    }
+    expect(await noHorizontalOverflow(page)).toBe(true)
+    await capture(page, `bbt04-L9-worked-${width}x${height}`)
+  })
+
+test('200 percent root text keeps the course map, the try note and the worked-route actions usable', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 720 })
+  await page.goto(base)
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '200%'
+  })
+  // The shared site header's own links can overflow at 200% root text; that header is outside
+  // this module and unchanged here, so the overview is held to the module's own content.
+  expect(await moduleOverflow(page)).toBe(0)
+  expect(await inViewportAfterScroll(page, page.locator('[data-course-map]'))).toBe(true)
+  await page.goto(`${base}/learn?lesson=vertical`)
+  await ctReady(page)
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '200%'
+  })
+  await expect(page.locator('[data-enlarged-text="true"]')).toBeVisible()
+  await button(page, 'Start marking branches').click()
+  await ctReady(page)
+  expect(await inViewportAfterScroll(page, page.locator('[data-mode="try"]'))).toBe(true)
+  expect(await noHorizontalOverflow(page)).toBe(true)
+  await capture(page, 'bbt04-L4-try-200-percent')
+})
+
+// PR #273 independent review — sanity repair. Each of these failed on the reviewed head 6004cd7f.
+const storedRaw = (page: Page, key: string) =>
+  page.evaluate((k) => localStorage.getItem(`branch-tracing.draft.${k}`), key)
+const nowHeading = (page: Page) => page.locator('[data-now-card] h2')
+
+test('review finding 1 · Lesson 5 states the response slice one slice cranial of a node nearest slice 306', async ({
+  page,
+}) => {
+  await startLocal(page, 'horizontal-horizontal')
+  await button(page, 'Continue without marking').click()
+  await finishPendingIntroduction(page)
+  await button(page, /^Next example: RB4/).click()
+  await ctReady(page)
+  await page.getByText('Before you mark: levels and what decides identity').click()
+  const primer = page.locator('[data-division-primer="junction-19"]')
+  await expect(primer).toContainText('The model node lies nearest native slice 306.')
+  await expect(primer).toContainText(
+    'Daughter B · RB4a’s response slice, 307, lies 1 slice cranial of the model node',
+  )
+  await expect(primer).not.toContainText('on the node’s level')
+})
+
+test('review findings 2 and 3 · the worked RS8 route reopens over real LS9 work and writes nothing', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1427, height: 1226 })
+  const lesson = LESSONS.find((l) => l.id === 'variants-limits')!
+  const [RS8, LS9] = [lesson.example, lesson.prediction].map(
+    (id) => targetForTrace(traceById(id)).segment.code,
+  )
+  await page.goto(`${base}/learn?lesson=${lesson.id}`)
+  await ctReady(page)
+  const fresh = await storedRaw(page, `learn.${lesson.id}`)
+  await button(page, `Next worked junction (${RS8} route)`).click()
+  await ctReady(page)
+  await button(page, `Next worked junction (${RS8} route)`).click()
+  await ctReady(page)
+  expect(await storedRaw(page, `learn.${lesson.id}`)).toBe(fresh)
+  await button(page, `Skip to your own trace: ${LS9}`).click()
+  await orient(page)
+  const point = traceById(lesson.prediction).checkpoints[0]
+  await page.locator(`input[type="radio"][value="${point.sourceEdgeId}"]`).check()
+  await button(page, 'Go to response slice').click()
+  await ctReady(page)
+  await page.getByRole('group', { name: /^CT image\./ }).press('Enter')
+  await button(page, 'Check this junction').click()
+  const snapshot = await storedRaw(page, `learn.${lesson.id}`)
+  expect(JSON.parse(snapshot!).value.session.marks[0].pixel).not.toBeNull()
+  await button(page, `View the worked ${RS8} route (reference)`).click()
+  await ctReady(page)
+  await expect(
+    page.getByRole('heading', { name: `Worked example: the route to ${RS8}` }),
+  ).toBeVisible()
+  await button(page, `Next worked junction (${RS8} route)`).click()
+  await ctReady(page)
+  await button(page, `Next worked junction (${RS8} route)`).click()
+  await ctReady(page)
+  await page.getByRole('button', { name: /^Previous junction/ }).click()
+  await ctReady(page)
+  await button(page, '⇆ Flip left–right').click()
+  expect(await storedRaw(page, `learn.${lesson.id}`)).toBe(snapshot)
+  await button(page, `Return to your trace: ${LS9}`).click()
+  await ctReady(page)
+  await expect(nowHeading(page)).toHaveText(
+    `Junction 1 of ${traceById(lesson.prediction).checkpoints.length - 1}`,
+  )
+  await expect(page.getByLabel('Your mark 1', { exact: true })).toBeVisible()
+  expect(await storedRaw(page, `learn.${lesson.id}`)).toBe(snapshot)
+  await page.reload()
+  await ctReady(page)
+  expect(JSON.parse((await storedRaw(page, `learn.${lesson.id}`))!)).toEqual(JSON.parse(snapshot!))
+  await button(page, 'Continue to the next division').click()
+  await expect(nowHeading(page)).toHaveText(
+    `Junction 2 of ${traceById(lesson.prediction).checkpoints.length - 1}`,
+  )
+})
+
+test('review finding 3 · a local worked walkthrough and Show reference leave the draft untouched', async ({
+  page,
+}) => {
+  await startLocal(page, 'vertical')
+  const ex = localExercise(LESSONS.find((l) => l.id === 'vertical')!.exercises![0])
+  const label = displayAnswerLabel(ex.trace.checkpoints[0], 0, ex.answerPoints[0].label)
+  await button(page, new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} · slice`)).click()
+  await ctReady(page)
+  await button(page, 'Lumen unresolved here').click()
+  const before = await storedRaw(page, 'learn.vertical')
+  await button(page, 'Show reference').click()
+  await ctReady(page)
+  await button(page, 'Next demonstration slice').click()
+  await ctReady(page)
+  await button(page, 'Previous demonstration slice').click()
+  await ctReady(page)
+  await button(page, 'Show reference').click()
+  await button(page, 'Replay the worked walkthrough').click()
+  await ctReady(page)
+  await button(page, 'Show reference').click()
+  expect(await storedRaw(page, 'learn.vertical')).toBe(before)
+  await page.reload()
+  await ctReady(page)
+  expect(JSON.parse((await storedRaw(page, 'learn.vertical'))!)).toEqual(JSON.parse(before!))
+})
+
+test('review finding 4 · Continue works after a skip, and a partial route ends truthfully, in Lesson 9 and Practice', async ({
+  page,
+}) => {
+  const lesson = LESSONS.find((l) => l.id === 'variants-limits')!
+  const own = traceById(lesson.prediction)
+  await page.goto(`${base}/learn?lesson=${lesson.id}`)
+  await ctReady(page)
+  await button(page, `Skip to your own trace: ${targetForTrace(own).segment.code}`).click()
+  await orient(page)
+  await button(page, 'Continue without recording').click()
+  await ctReady(page)
+  await page.locator('input[type="radio"][value="unresolved"]').check()
+  await button(page, 'Go to response slice').click()
+  await ctReady(page)
+  await button(page, 'Lumen unresolved here').click()
+  await button(page, 'Check this junction').click()
+  await button(page, 'Continue to the next division').click()
+  await expect(nowHeading(page)).toHaveText(`Junction 3 of ${own.checkpoints.length - 1}`)
+  const junctions = own.checkpoints.length - 1
+  for (let i = 2; i < junctions; i++) {
+    await button(page, 'Continue without recording').click()
+    await ctReady(page)
+  }
+  await button(page, 'Go to response slice').click()
+  await ctReady(page)
+  await button(page, 'Lumen unresolved here').click()
+  await button(page, 'Record nodule approach').click()
+  await button(page, 'Continue with this partial route').click()
+  await expect(nowHeading(page)).toHaveText('Describe its course')
+  const session = JSON.parse((await storedRaw(page, `learn.${lesson.id}`))!).value.session
+  expect(session.recorded[0]).toBe(false)
+  expect(session.marks[0]).toBeNull()
+
+  const trace = traceById(SEGMENT_PRACTICE_TRACES[2])
+  await page.goto(`${base}/practice`)
+  await button(page, 'Start CT practice').click()
+  await orient(page)
+  await button(page, 'Continue without recording').click()
+  await ctReady(page)
+  await page.locator('input[type="radio"][value="unresolved"]').check()
+  await button(page, 'Go to response slice').click()
+  await ctReady(page)
+  await button(page, 'Lumen unresolved here').click()
+  await button(page, 'Check this junction').click()
+  await button(page, 'Continue to the next division').click()
+  await expect(nowHeading(page)).toHaveText(`Junction 3 of ${trace.checkpoints.length - 1}`)
+})
+
+// PR #273 final sanity repair. A local worked or reference walkthrough owns its own display: plane,
+// crop, Full CT field, magnification, paired parent view, flip and rotation. Each journey below
+// failed on the reviewed head 00c11cde.
+async function shownDisplay(page: Page) {
+  const viewer = page.getByRole('region', { name: 'CT tracing viewer' })
+  return {
+    orientation: await viewer.locator('h2 + span').textContent(),
+    full: await button(page, /^(Full CT field|Airway detail)$/).getAttribute('aria-pressed'),
+    magnification: await page.getByLabel('CT magnification').inputValue(),
+    paired: await button(page, /^(Show|Hide) parent airway view$/).getAttribute('aria-pressed'),
+    slice: await page.getByLabel('CT slice', { exact: true }).inputValue(),
+  }
+}
+async function orientationControl(page: Page, name: RegExp) {
+  const details = page.locator('details', { hasText: 'More orientation controls' })
+  if (!(await details.evaluate((d) => (d as HTMLDetailsElement).open)))
+    await page.getByText('More orientation controls').click()
+  await button(page, name).click()
+}
+/** Genuine partial learner work, as in the independent reproduction: Lumen unresolved here. */
+async function localPartialWork(page: Page, id: string) {
+  await startLocal(page, id)
+  await button(page, 'Go to response slice').click()
+  await ctReady(page)
+  await button(page, 'Lumen unresolved here').click()
+  const value = JSON.parse((await storedRaw(page, `learn.${id}`))!).value
+  expect(value.phase).toBe('attempt')
+  expect(value.marks[0]).toMatchObject({ pixel: null })
+}
+/** Closes the reference and reads the display in the first animation frame after the close. */
+async function closeReferenceFirstFrame(page: Page) {
+  return page.evaluate(async () => {
+    const byText = (pattern: RegExp) =>
+      [...document.querySelectorAll('button')].find((b) => pattern.test(b.textContent!.trim()))!
+    byText(/^Show reference$/).click()
+    await new Promise((resolve) => requestAnimationFrame(resolve))
+    return {
+      orientation: document.querySelector('[aria-label="CT tracing viewer"] h2 + span')!
+        .textContent,
+      full: byText(/^(Full CT field|Airway detail)$/).getAttribute('aria-pressed'),
+      magnification: (document.querySelector('[aria-label="CT magnification"]') as HTMLInputElement)
+        .value,
+    }
+  })
+}
+/** Every write of this draft from now on, including ones a later write overwrites. */
+async function logDraftWrites(page: Page, id: string) {
+  await page.evaluate((k) => {
+    const log: string[] = []
+    ;(window as unknown as { __draftWrites: string[] }).__draftWrites = log
+    const original = Storage.prototype.setItem
+    Storage.prototype.setItem = function (name: string, value: string) {
+      if (name === `branch-tracing.draft.${k}`) log.push(value)
+      return original.call(this, name, value)
+    }
+  }, `learn.${id}`)
+  return () => page.evaluate(() => (window as unknown as { __draftWrites: string[] }).__draftWrites)
+}
+
+test('final repair · Lesson 4 reproduction: a reference flip, Full CT field, magnification and paired view never reach the draft', async ({
+  page,
+}) => {
+  await localPartialWork(page, 'vertical')
+  const before = await storedRaw(page, 'learn.vertical')
+  const learner = await shownDisplay(page)
+  const writes = await logDraftWrites(page, 'vertical')
+  await button(page, 'Show reference').click()
+  await ctReady(page)
+  await button(page, 'Next demonstration slice').click()
+  await ctReady(page)
+  await orientationControl(page, /Flip left–right/)
+  await expect(
+    page.getByRole('region', { name: 'CT tracing viewer' }).locator('h2 + span'),
+  ).toHaveText('Left–right reflection')
+  await orientationControl(page, /Rotate 90° right/)
+  await button(page, 'Full CT field').click()
+  await button(page, 'Airway detail').click()
+  await page.getByLabel('CT magnification').fill('2.2')
+  await button(page, /^(Show|Hide) parent airway view$/).click()
+  expect(await storedRaw(page, 'learn.vertical')).toBe(before)
+  await button(page, 'Show reference').click()
+  await ctReady(page)
+  expect(await shownDisplay(page)).toEqual(learner)
+  expect(await storedRaw(page, 'learn.vertical')).toBe(before)
+  for (const value of await writes()) expect(value).toBe(before)
+  await capture(page, 'bbt04-final-L4-reference-closed')
+  await page.reload()
+  await ctReady(page)
+  expect(JSON.parse((await storedRaw(page, 'learn.vertical'))!)).toEqual(JSON.parse(before!))
+  expect(JSON.parse((await storedRaw(page, 'learn.vertical'))!).value.orientation).toEqual({
+    turns: 0,
+    reflected: false,
+  })
+  expect(await shownDisplay(page)).toEqual(learner)
+})
+
+test('final repair · Lesson 7: two reference cycles and a same-task rapid close write nothing, and the learner resumes from their own display', async ({
+  page,
+}) => {
+  await localPartialWork(page, 'horizontal-oblique')
+  const key = 'learn.horizontal-oblique'
+  const before = await storedRaw(page, key)
+  const learner = await shownDisplay(page)
+  const writes = await logDraftWrites(page, 'horizontal-oblique')
+  await button(page, 'Show reference').click()
+  await ctReady(page)
+  await orientationControl(page, /Flip left–right/)
+  await button(page, 'Full CT field').click()
+  await page.getByLabel('CT magnification').fill('2')
+  await button(page, 'Next demonstration slice').click()
+  await ctReady(page)
+  // The first frame painted after the close already shows the learner's own display.
+  expect(await closeReferenceFirstFrame(page)).toEqual({
+    orientation: learner.orientation,
+    full: learner.full,
+    magnification: learner.magnification,
+  })
+  await ctReady(page)
+  expect(await shownDisplay(page)).toEqual(learner)
+  await button(page, 'Show reference').click()
+  await ctReady(page)
+  await orientationControl(page, /Rotate 90° left/)
+  await button(page, /^(Show|Hide) parent airway view$/).click()
+  // A display change and the close dispatched in one task: React handles both in one batch.
+  await page.evaluate(() => {
+    const byText = (text: string) =>
+      [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === text)!
+    byText('Full CT field').click()
+    byText('Show reference').click()
+  })
+  await ctReady(page)
+  expect(await shownDisplay(page)).toEqual(learner)
+  expect(await storedRaw(page, key)).toBe(before)
+  for (const value of await writes()) expect(value).toBe(before)
+  // The learner's next genuine navigation is saved, from the learner's display.
+  await button(page, 'More cranial CT slice').click()
+  const was = JSON.parse(before!).value
+  const exercise = Object.keys(was.views)[0]
+  await expect
+    .poll(async () => JSON.parse((await storedRaw(page, key))!).value.views[exercise])
+    .toEqual({ ...was.views[exercise], slice: was.views[exercise].slice + 1 })
+  const after = JSON.parse((await storedRaw(page, key))!).value
+  expect(after.orientation).toEqual(was.orientation)
+  expect(after.marks).toEqual(was.marks)
+  await page.reload()
+  await ctReady(page)
+  expect(JSON.parse((await storedRaw(page, key))!).value).toEqual(after)
+})
+
+test('final repair · genuine learner display choices outside reference viewing still persist after reload', async ({
+  page,
+}) => {
+  await localPartialWork(page, 'vertical')
+  const was = JSON.parse((await storedRaw(page, 'learn.vertical'))!).value
+  const exercise = Object.keys(was.views)[0]
+  await orientationControl(page, /Flip left–right/)
+  await orientationControl(page, /Rotate 90° right/)
+  await button(page, 'Full CT field').click()
+  const saved = async () => JSON.parse((await storedRaw(page, 'learn.vertical'))!).value
+  await expect.poll(async () => (await saved()).orientation).toEqual({ turns: 1, reflected: true })
+  await expect.poll(async () => (await saved()).views[exercise].full).toBe(true)
+  await button(page, 'Airway detail').click()
+  await page.getByLabel('CT magnification').fill('2.3')
+  await button(page, 'Show parent airway view').click()
+  await button(page, 'More cranial CT slice').click()
+  await expect
+    .poll(async () => (await saved()).views[exercise])
+    .toMatchObject({
+      full: false,
+      magnification: 2.3,
+      showScope: true,
+      slice: was.views[exercise].slice + 1,
+    })
+  const final = await saved()
+  const learner = await shownDisplay(page)
+  await page.reload()
+  await ctReady(page)
+  expect(await saved()).toEqual(final)
+  expect(await shownDisplay(page)).toEqual(learner)
+  await capture(page, 'bbt04-final-L4-learner-display-reloaded')
 })

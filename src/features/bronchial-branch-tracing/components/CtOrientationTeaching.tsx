@@ -205,7 +205,7 @@ export function CtOrientationTeaching({
       <p>{ORIENTATION_NOTES[trace.preset]}</p>
       <p>
         <strong>Try it in the paired viewer:</strong> use the rotate or flip buttons. “Show book
-        convention” demonstrates the result; “Reset to standard” lets you repeat it.
+        convention” demonstrates the result; “Return to standard axial” lets you repeat it.
       </p>
       <p>
         A reflection swaps left and right while keeping anterior at the top. A rotation turns all

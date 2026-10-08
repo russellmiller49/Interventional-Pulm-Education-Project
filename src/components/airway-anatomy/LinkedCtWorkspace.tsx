@@ -137,11 +137,14 @@ export function LinkedCtWorkspace({
   frame,
   low,
   high,
+  wideRow = false,
 }: {
   controller: LinkedCtController
   frame: OpticalFrame
   low: number
   high: number
+  /** On a wide window the host sets this panel across two columns: the four planes run in one row. */
+  wideRow?: boolean
 }) {
   const c = controller
   const [level, width] = c.windowLevel ?? [(low + high) / 2, high - low]
@@ -165,7 +168,7 @@ export function LinkedCtWorkspace({
         </label>
         <span>{c.result?.nativeRegions ? 'Source resolution near scope' : 'CT preview'}</span>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      <div className={`mt-3 grid grid-cols-2 gap-2 ${wideRow ? 'min-[1600px]:grid-cols-4' : ''}`}>
         {AXES.map((axis) => {
           const image = c.result?.images.find((i) => i.plane.axis === axis)
           return (

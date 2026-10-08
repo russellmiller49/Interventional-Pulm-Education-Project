@@ -1,3 +1,4 @@
+import courseAvailability from '../../config/course-availability.json'
 import { unlocalizedPathname } from '@/i18n/path'
 import { stentExplorerPublicationStatus } from '@/features/airway-stent-mechanics/explorer/release'
 import { baxterCrrtReleaseStage } from '@/features/baxter-crrt/content'
@@ -69,7 +70,10 @@ const draftModulePathPrefixes = [
 ] as const
 
 const unlistedModulePathPrefixes = [
+  ...(!courseAvailability.socalEbusCourseOpen ? ['/socal-ebus-course'] : []),
+  ...(!courseAvailability.pccmIntroCourseOpen ? ['/pccm-intro-course'] : []),
   '/ebus-guided',
+  '/eus-b-simulator',
   '/medical-thoracoscopy/wolf-preview',
   '/development-beta',
   '/admin/module-feedback',

@@ -41,6 +41,13 @@ export const nonPublicModules: NonPublicModule[] = [
       'A guided linear EBUS course with required acquisition labs, station correlation, sampling and specimen decisions, and formative case assessment.',
   },
   {
+    path: '/eus-b-simulator',
+    title: 'EUS-B Simulator',
+    group: 'Bronchoscopy',
+    summary:
+      'Free-scan simulator of the esophageal approach with the EBUS endoscope: 3D anatomy with a cut plane, simulated ultrasound, and an endoscopic or CT view from one CT and its segmentation, with calibrated landmark views and find-a-target practice. In the beta-testing hub; teaching notes await physician review.',
+  },
+  {
     path: '/preference-cards',
     title: 'IP Preference Card Builder',
     group: 'IP tooling',

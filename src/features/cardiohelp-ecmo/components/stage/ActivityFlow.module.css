@@ -71,6 +71,29 @@
   }
 }
 
+/*
+ * Wide windows. The task stops centring a 1440px column and uses the window, and the extra width
+ * goes to the visual: the teaching column keeps a reading measure and the circuit or console beside
+ * it takes the rest, which is what lets the circuit panel set its readings and clamps beside the map
+ * rather than under it. The reading-only presentations above keep their 980px measure.
+ */
+@media (min-width: 1500px) {
+  .flow:not([data-presentation='concept'], [data-presentation='comparison-lab']) {
+    max-width: 1840px;
+  }
+  .content[data-activity-content='circuit-walk'],
+  .content[data-activity-content='guided-device'] {
+    grid-template-columns: minmax(22rem, 26rem) minmax(0, 1fr);
+  }
+  .content[data-visual-first='true'] {
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, 26rem);
+  }
+  .content[data-stacked='true'],
+  .content:has([data-circuit-enlarged='true']) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .flow [data-pane='teaching'] {
   overflow: visible;
   grid-template-columns: minmax(0, 1fr);

@@ -864,7 +864,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: "During an interfacility transport on venovenous support, the vehicle's supply to the console drops out. The power-source indicator changes over to internal battery on its own, the transport screen shows a battery reserve reading of 24 and falling steadily, and the console is showing a low-priority power message rather than an insistent alarm. Circuit blood flow, the circuit pressures and the patient's oxygenation are all unchanged from the readings taken before the supply dropped out, and the receiving unit is still some distance away. What does this moment call for?",
+      stem: "During an interfacility transport on venovenous support, the vehicle's supply to the console drops out. The power-source indicator changes over to internal battery on its own, the transport screen shows a battery reserve reading of 24 percent and falling steadily, and the console is showing a low-priority power message rather than an insistent alarm. Circuit blood flow, the circuit pressures and the patient's oxygenation are all unchanged from the readings taken before the supply dropped out, and the receiving unit is still some distance away. What does this moment call for?",
       choices: [
         {
           id: 'secure-verified-supply-now',
@@ -908,6 +908,8 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
         'bounded-educational-model',
       ],
       reviewStatus: 'draft',
+      learnerCopyOverrideReason:
+        'Percent denotes the authored device.batteryPercent value (24) and the console battery-charge unit, not a learner score or competence claim.',
     },
     commitments: {
       'secure-verified-supply-now': {
@@ -1750,7 +1752,7 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'You are moving a patient on peripheral venoarterial support out of the unit for imaging. Moments into the move the console alarms, the power indicator changes over to battery on its own, and the battery reserve reads 24. Circuit blood flow, both membrane pressures, the gradient across the membrane, the arterial trace and the right radial saturation are all exactly what they were before the move, and the patient looks the same. What does the team’s next action have to accomplish?',
+      stem: 'You are moving a patient on peripheral venoarterial support out of the unit for imaging. Moments into the move the console alarms, the power indicator changes over to battery on its own, and the battery reserve reads 24 percent. Circuit blood flow, both membrane pressures, the gradient across the membrane, the arterial trace and the right radial saturation are all exactly what they were before the move, and the patient looks the same. What does the team’s next action have to accomplish?',
       choices: [
         {
           id: 'verified-source-with-backup-alongside',
@@ -1796,6 +1798,13 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
         'bounded-educational-model',
       ],
       reviewStatus: 'draft',
+      // VA16-1 (ECMO-FELLOW-04): the stem read "the battery reserve reads 24", a number with no unit
+      // on which the decision turns. The unit is the scenario's own typed field
+      // (`device.batteryPercent: 24`) and the one the console's Transport screen prints. This is the
+      // VA twin of the venovenous item's accepted exception: one token, this item only, held by
+      // `ecmo-fellow-04-teaching-and-flow.test.tsx`. No run time is inferred from the charge.
+      learnerCopyOverrideReason:
+        'Percent denotes the authored device.batteryPercent value (24) of the venoarterial transport scenario and the console battery-charge unit, not a learner score or competence claim.',
     },
     commitments: {
       'verified-source-with-backup-alongside': {

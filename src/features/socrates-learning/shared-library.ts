@@ -7,6 +7,7 @@ import type { SocratesSlideDocument } from '@/features/socrates-builder/types'
 import { emptyAuthorContent, emptyCaseContent } from '@/features/socrates-builder/case-content'
 import { getInvenioPair } from '@/features/socrates-builder/invenio-source'
 import { revealProjection } from '@/features/socrates-study/projections'
+import { coreTeachingSequence } from './core-teaching'
 
 export const sharedSlideSchema = z.object({
   id: z.string().uuid(),
@@ -64,6 +65,7 @@ export function publishedLibraryDocument(
   const testing = assignment === 'testing'
   const path = `/api/socrates/images/library/${id}/${doc.revision}`
   const teaching = testing ? null : revealProjection(doc)
+  const core = testing ? null : coreTeachingSequence(doc)
   return {
     schemaVersion: 2 as const,
     recordId: id,
@@ -94,6 +96,7 @@ export function publishedLibraryDocument(
           sortOrder: doc.caseContent.sortOrder,
           vignette: doc.caseContent.vignette,
           annotationLegend: teaching!.legend,
+          ...(core ? { coreTeachingSequence: core } : {}),
         },
     authorContent: emptyAuthorContent(),
   }

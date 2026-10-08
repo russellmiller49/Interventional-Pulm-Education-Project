@@ -187,7 +187,18 @@ export interface MonitorReading {
 /** What the Simulator panel shows while the section is being recognized, predicted and explained. */
 export type BronchWorkspace =
   | { readonly kind: 'scope'; readonly view: ScopeViewSpec }
-  | { readonly kind: 'media'; readonly media: readonly MediaRef[]; readonly caption: string }
+  | {
+      readonly kind: 'media'
+      readonly media: readonly MediaRef[]
+      readonly caption: string
+      /**
+       * What each image is and which way it faces, one per image, printed under it (fellow
+       * walkthrough A25). Only what the file and its manifest establish; no orientation is inferred.
+       */
+      readonly mediaNotes?: readonly string[]
+      /** How the images relate, and what the panel does not show, printed once under them (A25). */
+      readonly comparisonNote?: string
+    }
   | { readonly kind: 'map'; readonly lit: readonly AirwayLabel[]; readonly caption: string }
   | {
       readonly kind: 'monitor'
@@ -240,6 +251,15 @@ export interface BronchIdentifyRow {
   readonly answerId: string
   /** Why, in landmarks and parentage — never "because it is". */
   readonly rationale: string
+  /**
+   * The view's text alternative: what the image shows and where the outline sits, without the name
+   * the row asks for (fellow walkthrough A20). A learner who cannot see the photograph gets the
+   * same task a sighted learner has; the validator refuses a description that contains the keyed
+   * name.
+   */
+  readonly mediaDescription?: string
+  /** One line on where the keyed part is and what it does, for the set's text reference (A20). */
+  readonly partNote?: string
 }
 
 export interface BronchIdentify {

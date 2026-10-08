@@ -19,11 +19,11 @@ import stageStyles from '@/features/learning-module/stage/lesson-stage.module.cs
 import { Link, useRouter } from '@/i18n/navigation'
 
 import { ScopePane } from '../scope/ScopePane'
+import { goalHelp } from '../../engine/scope/goalHelp'
 import {
   scopeControlId,
   type ScopeControlKey,
   type ScopeGoal,
-  type ScopeGoalTest,
   type ScopeViewSpec,
   type TreeAnswer,
 } from '../scope/types'
@@ -173,60 +173,6 @@ function skipLabel(kind: BronchStageStep['interaction']['kind'], last: boolean):
 
 const EXPLANATION_NOTE = 'Opened without an answer. Nothing is recorded; you can still answer.'
 
-/** The control to spotlight for a goal not yet met. */
-function goalControlKey(test: ScopeGoalTest): ScopeControlKey | null {
-  switch (test.type) {
-    case 'all':
-      for (const inner of test.tests) {
-        const key = goalControlKey(inner)
-        if (key) return key
-      }
-      return null
-    case 'without':
-      return null
-    case 'event-sequence':
-      return test.events.length ? eventControlKey(test.events[0]) : null
-    case 'event':
-      return eventControlKey(test.event)
-    case 'location':
-    case 'ledger-complete':
-      return 'advance'
-    case 'ledger':
-      return 'declare'
-    case 'metric':
-      return test.metric === 'rotationDeg'
-        ? 'rotate'
-        : test.metric === 'deflectionDeg'
-          ? 'deflect'
-          : 'advance'
-    default:
-      return null
-  }
-}
-
-function eventControlKey(event: string): ScopeControlKey | null {
-  if (event.startsWith('control-used:')) {
-    const control = event.slice('control-used:'.length)
-    return control === 'insertion'
-      ? 'advance'
-      : control === 'rotation'
-        ? 'rotate'
-        : control === 'deflection'
-          ? 'deflect'
-          : control === 'suction'
-            ? 'suction'
-            : 'accessory'
-  }
-  if (event.startsWith('declared:')) return 'declare'
-  if (event.startsWith('accessory'))
-    return event === 'accessory-state-verified' ? 'verifyAccessory' : 'accessory'
-  if (event === 'captured') return 'capture'
-  if (event === 'acknowledged') return 'acknowledge'
-  if (event === 'lens-cleared') return 'clearLens'
-  if (event === 'hold-completed') return 'step'
-  return 'advance'
-}
-
 function firstScopeStart(view: ScopeViewSpec): boolean {
   return view.start.kind === 'bench'
 }
@@ -278,9 +224,20 @@ function BronchStageSessionView({
   } | null>(null)
   const [viewIndex, setViewIndex] = useState<number | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
-  const [spotlight, setSpotlight] = useState<{ stepId: string; key: string; count: number } | null>(
-    null,
-  )
+  // "Show me where" is on for this step. Only that, and the control to put the focus on once, is
+  // kept: what the help says and highlights is read from the current goals and scope state on
+  // every render, so it cannot stay attached to a requirement the learner has since met.
+  const [spotlight, setSpotlight] = useState<{
+    readonly stepId: string
+    readonly count: number
+    readonly focusKey: ScopeControlKey
+  } | null>(null)
+  // Opening names on request (A30): the pane draws them; nothing is sent to the scope or recorded.
+  const [referenceNames, setReferenceNames] = useState<{
+    readonly stepId: string
+    readonly on: boolean
+    readonly used: boolean
+  } | null>(null)
   const [scopeCase, setScopeCase] = useState<ScopeCase | null>(null)
   const [caseFailed, setCaseFailed] = useState(false)
   const [caseLoadGeneration, setCaseLoadGeneration] = useState(0)
@@ -298,6 +255,7 @@ function BronchStageSessionView({
     [],
   )
   const goalHeadingId = useId()
+  const stepGoalsId = useId()
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const nowFocusRef = useRef<HTMLDivElement>(null)
   const completionRecorded = useRef(false)
@@ -481,6 +439,7 @@ function BronchStageSessionView({
     const target = activeIndex - 1
     if (target < 0 || target > commitments.confirmed) return
     setViewIndex(target)
+    setSpotlight(null)
   }
 
   function returnToLive() {
@@ -502,6 +461,7 @@ function BronchStageSessionView({
     demonstration.stop()
     dispatch({ type: 'SCOPE_RESET', stepId: activeStep.id, view: paneView, scopeCase })
     setPilotAttempts((current) => ({ ...current, [activeStep.id]: true }))
+    setSpotlight(null)
   }
 
   /** The nearest earlier teaching the learner has already been through, for "Review the teaching". */
@@ -556,33 +516,55 @@ function BronchStageSessionView({
   /** Where the tip is now, so a met goal is never read as a statement about the present view. */
   const liveLocationLine =
     goals.length > 0 && activeScopeState ? scopeNowLine(activeScopeState) : null
-  const firstUnmetKey = (() => {
+  // "Show me where" for the goal the learner is on: its first requirement not yet met, read against
+  // where the tip is now (A30). Advice only; nothing here is dispatched.
+  const firstUnmetHelp = (() => {
     const index = goalsMetNow.findIndex((met) => !met)
-    if (index < 0 || !goalInteraction || activeStep.learn) return null
-    const key = goalControlKey(goals[index].test)
-    return key && goalInteraction.view.controls.includes(key) ? key : null
+    if (index < 0 || !goalInteraction || activeStep.learn || !activeScopeState) return null
+    const help = goalHelp(goals[index].test, activeScopeState, goalInteraction.view, scopeCase)
+    return help?.control && goalInteraction.view.controls.includes(help.control) ? help : null
   })()
+  const firstUnmetKey = firstUnmetHelp?.control ?? null
+  // What the pane shows while help is on: the help for the requirement the learner is on now. A
+  // goal met since the request, a move that changes the useful control, or the last goal being
+  // met all change this without another request; with nothing left to help with it is null.
+  const helpNow = spotlight?.stepId === activeStep.id ? firstUnmetHelp : null
 
+  // The focus moves once, when the learner asks. It never follows a later change of advice: that
+  // would take the keyboard from the control in use and hand its next key to a different one.
   useEffect(() => {
-    if (!spotlight || spotlight.stepId !== activeStep.id) return
+    if (!spotlight) return
     const timer = window.setTimeout(() => {
-      const control = document.getElementById(scopeControlId(spotlight.key))
+      const control = document.getElementById(scopeControlId(spotlight.focusKey))
       if (!control) return
       const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
       control.focus({ preventScroll: true })
       control.scrollIntoView?.({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' })
     }, 0)
     return () => window.clearTimeout(timer)
-  }, [activeStep.id, spotlight])
+  }, [spotlight])
 
   function showWhere() {
-    if (!firstUnmetKey) return
+    const focusKey = firstUnmetHelp?.control
+    if (!focusKey) return
     setSpotlight((current) => ({
       stepId: activeStep.id,
-      key: firstUnmetKey,
       count: current?.stepId === activeStep.id ? current.count + 1 : 1,
+      focusKey,
     }))
   }
+  // Offered only where the step has no in-view labels of its own, and never while the engine is
+  // withholding labels until the learner identifies the view (the unfamiliar-clear script).
+  const referenceNamesOffered =
+    goalInteraction !== null &&
+    goals.length > 0 &&
+    !treeItem &&
+    goalInteraction.view.mode === 'guided-walk' &&
+    !goalInteraction.view.controls.includes('branchLabels') &&
+    activeScopeState?.inputs.branchLabels !== true &&
+    activeScopeState?.script?.phase !== 'unidentified'
+  const referenceNamesNow =
+    referenceNames?.stepId === activeStep.id ? referenceNames : { on: false, used: false }
 
   /* ---------------------------------------------------------------- *
    * The Now card
@@ -868,6 +850,8 @@ function BronchStageSessionView({
         </p>
       ) : null}
       <ul
+        id={stepGoalsId}
+        tabIndex={-1}
         className={stageStyles.taskList}
         data-step-goals
         aria-labelledby={goals.length > 0 ? goalHeadingId : undefined}
@@ -1254,7 +1238,14 @@ function BronchStageSessionView({
       case 'monitor':
         return <MonitorPanel readings={workspace.readings} caption={workspace.caption} />
       case 'media':
-        return <MediaWorkspace media={workspace.media} caption={workspace.caption} />
+        return (
+          <MediaWorkspace
+            media={workspace.media}
+            caption={workspace.caption}
+            mediaNotes={workspace.mediaNotes}
+            comparisonNote={workspace.comparisonNote}
+          />
+        )
       case 'map':
         return (
           <MapWorkspace
@@ -1317,18 +1308,39 @@ function BronchStageSessionView({
                   scopeCase,
                 })
               }}
-              onReset={() =>
+              onReset={() => {
                 dispatch({ type: 'SCOPE_RESET', stepId: paneStep.id, view: liveView, scopeCase })
-              }
+                // A new attempt starts without the last one's help; it is there to ask for again.
+                setSpotlight(null)
+                // A new attempt starts: the names count as used in it only if they are still on.
+                setReferenceNames((current) =>
+                  current?.stepId === paneStep.id ? { ...current, used: current.on } : current,
+                )
+              }}
               controlsEnabled={controlsEnabled}
               lockedReason={lockedReason}
               pausedReason={pausedReason}
               goals={!demonstration.state && activeStep.id === paneStep.id ? goalStatuses : []}
               caption={locationCaption}
               treeAnswer={treeAnswer}
-              spotlightKey={
-                spotlight?.stepId === activeStep.id ? (spotlight.key as ScopeControlKey) : undefined
+              spotlightKey={helpNow?.control ?? undefined}
+              helpTarget={helpNow?.target ?? null}
+              helpSentence={helpNow?.sentence}
+              referenceLabels={
+                referenceNamesOffered
+                  ? {
+                      on: referenceNamesNow.on,
+                      used: referenceNamesNow.used,
+                      onToggle: () =>
+                        setReferenceNames({
+                          stepId: activeStep.id,
+                          on: !referenceNamesNow.on,
+                          used: referenceNamesNow.used || !referenceNamesNow.on,
+                        }),
+                    }
+                  : undefined
               }
+              allGoalsHref={goals.length > 0 ? `#${stepGoalsId}` : undefined}
             />
           </>
         )

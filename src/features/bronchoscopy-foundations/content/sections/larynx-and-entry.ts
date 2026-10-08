@@ -255,7 +255,7 @@ export const section: BronchSectionDefinition = {
     kind: 'media',
     media: [{ kind: 'endoscopic-still', structureId: 'larynx', outline: false }],
     caption:
-      'The larynx from above: one still from the course’s annotated normal survey, authored teaching media pending review',
+      'The larynx from above: one still from the course’s normal survey, with no structures marked on it; authored teaching media pending review',
   },
 
   steps: {

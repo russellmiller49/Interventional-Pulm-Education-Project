@@ -93,6 +93,39 @@ export function annularArea(
   return { fraction: 1 - (od / id) ** 2, mm2: (Math.PI / 4) * (id * id - od * od) }
 }
 
+/**
+ * Everything the tube scene says about space, from one calculation (fellow walkthrough A33): the two
+ * authored diameters, their radii, and the annulus from `annularArea`. The readouts and the
+ * cross-section drawing both read this, so the numbers and the circles cannot disagree. `fits` is
+ * false for a scope no narrower than the tube (or a missing size): there is then no open area,
+ * and the drawing says so instead of drawing one.
+ */
+export interface TubeGeometry {
+  readonly tubeIdMm: number
+  readonly scopeOdMm: number
+  readonly tubeRadiusMm: number
+  readonly scopeRadiusMm: number
+  readonly fraction: number
+  readonly mm2: number
+  readonly fits: boolean
+}
+
+export function tubeGeometry(inputs: Pick<ScopeInputs, 'tube' | 'scopeOdMm'>): TubeGeometry | null {
+  const area = annularArea(inputs)
+  if (!area || !inputs.tube) return null
+  const tubeIdMm = inputs.tube.idMm
+  const scopeOdMm = inputs.scopeOdMm
+  return {
+    tubeIdMm,
+    scopeOdMm,
+    tubeRadiusMm: tubeIdMm / 2,
+    scopeRadiusMm: scopeOdMm / 2,
+    fraction: area.fraction,
+    mm2: area.mm2,
+    fits: tubeIdMm > 0 && scopeOdMm > 0 && scopeOdMm < tubeIdMm,
+  }
+}
+
 /** A fraction in words, never a percentage (the course's copy rule). */
 export function fractionInWords(fraction: number): string {
   if (fraction <= 0) return 'none'
@@ -176,14 +209,14 @@ export function formatScopeMetric(metric: ScopeMetricId, state: ScopeState): str
     case 'lossOfViewCount':
       return `${state.signals.lossOfViewCount} (a feedback signal)`
     case 'annularAreaFraction': {
-      const area = annularArea(state.inputs)
-      if (!area) return 'No tube in place'
-      return `${area.fraction.toFixed(2)} of the tube’s lumen — ${fractionInWords(area.fraction)}`
+      const geometry = tubeGeometry(state.inputs)
+      if (!geometry) return 'No tube in place'
+      return `${geometry.fraction.toFixed(2)} of the tube’s lumen — ${fractionInWords(geometry.fraction)}`
     }
     case 'annularAreaMm2': {
-      const area = annularArea(state.inputs)
-      if (!area) return 'No tube in place'
-      return `${Math.round(area.mm2)} mm² between scope and tube`
+      const geometry = tubeGeometry(state.inputs)
+      if (!geometry) return 'No tube in place'
+      return `${Math.round(geometry.mm2)} mm² between scope and tube`
     }
     case 'cordsState':
       return CORDS_STATE_WORDS[state.inputs.cords]

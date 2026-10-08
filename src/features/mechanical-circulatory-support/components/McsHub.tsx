@@ -8,14 +8,23 @@ import { mechanicalCirculatorySupportNavBase } from '@/features/learning-module/
 
 import { mcsDeviceProfiles, mcsReleaseGates } from '../content'
 import { MCS_DEVICE_INCREMENTS } from '../content/deviceIncrements'
+import {
+  MCS_HUB_AUDIENCE,
+  MCS_HUB_OBJECTIVES,
+  MCS_HUB_REFRESHER,
+  MCS_HUB_TIME_NOTE,
+} from '../content/hubObjectives'
+import { mcsLearnSectionHref, mcsPathway } from '../content/pathwayResolver'
 import { mcsPathwayComposition } from '../content/pathwayResolver'
 import { ImpellaVariantPreview } from './ImpellaVariantPreview'
 import { McsCommonModel } from './McsCommonModel'
 import { McsContinueCta } from './McsContinueCta'
+import { McsGlossary } from './McsGlossary'
 import { McsModuleFrame } from './McsModuleFrame'
 import { McsStoredPathwayAccordion } from './McsPathwayAccordion'
 import { McsRouteOrientation } from './McsRouteOrientation'
 import { McsSourcesPanel } from './McsSourcesPanel'
+import { McsSourceReviewNotice } from './McsClaimSourceChecks'
 import { McsSupportPathwayCards } from './McsSupportPathwayCards'
 import styles from './mechanical-circulatory-support.module.css'
 
@@ -36,6 +45,7 @@ const EcmoCannulationPreview = lazy(() =>
  */
 export function McsHub({ locale = 'en' }: { locale?: string }) {
   const composition = mcsPathwayComposition()
+  const sections = mcsPathway().sections
 
   return (
     <McsModuleFrame locale={locale} activeHref={mechanicalCirculatorySupportNavBase}>
@@ -43,19 +53,53 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
         <div>
           <span className={styles.kicker}>SELF-PACED LEARNING</span>
           <h1>Mechanical Circulatory Support ICU Lab</h1>
-          <p>
-            One circulation, one monitor, one map. Read the pressure and the flow apart, walk the
-            loop every device is drawn on, then meet the balloon, the transvalvular pump and the
-            durable pump one at a time. Start with an explained reference and guided example, then
-            apply the concept to a fresh task and interpret the captured model response.
+          {/*
+           * Who it is for, what a learner will be able to do, and one way in (F02). The hero opened
+           * on "One circulation, one monitor, one map… walk the loop every device is drawn on" —
+           * true, and meaningless to someone who has not yet met "the loop" or "the common model".
+           * Each objective is linked to the sections that teach it, so none is a promise the
+           * module does not keep.
+           */}
+          <p data-hub-audience>
+            {MCS_HUB_AUDIENCE.who} {MCS_HUB_AUDIENCE.assumes}
           </p>
-          <p className={styles.hubComposition} data-pathway-composition>
-            {composition.sentence}
-          </p>
+          <McsSourceReviewNotice />
+          <div className={styles.hubObjectives} data-hub-objectives>
+            <h2 id="mcs-hub-objectives-heading">After this module you will be able to</h2>
+            <ol aria-labelledby="mcs-hub-objectives-heading">
+              {MCS_HUB_OBJECTIVES.map((objective) => (
+                <li key={objective.id} data-hub-objective={objective.id}>
+                  {objective.statement}{' '}
+                  <span className={styles.hubObjectiveSections}>
+                    {objective.sectionIds.map((sectionId, index) => {
+                      const position = sections.findIndex((section) => section.id === sectionId)
+                      return (
+                        <span key={sectionId}>
+                          {index > 0 ? ' · ' : ''}
+                          <Link href={mcsLearnSectionHref(sectionId)}>Section {position + 1}</Link>
+                        </span>
+                      )
+                    })}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
           <div className={styles.heroActions}>
             <McsContinueCta />
             <a href="#mcs-hub-pathway">Browse all {composition.total} sections</a>
           </div>
+          <p className={styles.hubComposition} data-pathway-composition>
+            {composition.sentence}
+          </p>
+          <p className={styles.hubTimeNote} data-hub-time-note>
+            {MCS_HUB_TIME_NOTE}
+          </p>
+          {/* The refresher is an offer, not a gate: nothing waits on it and nothing checks it. */}
+          <p className={styles.hubRefresher} data-hub-refresher>
+            <strong>{MCS_HUB_REFRESHER.label}.</strong> {MCS_HUB_REFRESHER.sentence}{' '}
+            <Link href={MCS_HUB_REFRESHER.href}>{MCS_HUB_REFRESHER.linkLabel}</Link>.
+          </p>
         </div>
         <aside className={styles.progressCard} aria-label="Saved module progress">
           <span>PERSONAL HISTORY</span>
@@ -90,31 +134,6 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
 
       <McsRouteOrientation />
 
-      <section className={styles.releaseReview} data-review-governance>
-        <strong>Preview · pending clinical review</strong>
-        <p>
-          Device responses here are bounded teaching approximations. Nothing in this module is a
-          source for a device specification, and device selection, timing, and escalation remain
-          team decisions under current manufacturer instructions and local protocol.
-        </p>
-        <details data-reviewer-layer>
-          <summary>Reviewer detail: what is still open before publication</summary>
-          <p>
-            Publication awaits review by an advanced-heart-failure/MCS physician and an ICU nurse,
-            APP, perfusionist, or clinical engineer, covering the clinical content, device revision,
-            model behavior, accessibility, 3D provenance, and safety boundaries.
-          </p>
-          <ul>
-            {mcsReleaseGates.map((gate) => (
-              <li key={gate.id} data-complete={gate.complete}>
-                {gate.complete ? 'Complete' : 'Pending'} · {gate.label}
-                {gate.evidence ? <small>{gate.evidence}</small> : null}
-              </li>
-            ))}
-          </ul>
-        </details>
-      </section>
-
       <section className={styles.referenceSection} aria-labelledby="mcs-reference-heading">
         <div className={styles.sectionHeading}>
           <span className={styles.kicker}>REFERENCE</span>
@@ -124,6 +143,10 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
             order. Each block is folded; open the one you need.
           </p>
         </div>
+        <details className={styles.referenceBlock} data-reference="glossary">
+          <summary>Glossary, abbreviations and device names</summary>
+          <McsGlossary />
+        </details>
         <details className={styles.referenceBlock} data-reference="common-model">
           <summary>The common model: seven questions, four levels, three flow lines</summary>
           <McsCommonModel variant="front-door" />
@@ -186,10 +209,36 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
           <summary>Sources, device revisions, and the model card</summary>
           <McsSourcesPanel />
         </details>
-        <p className={styles.crossLinkLine}>
-          Need a pressure-and-flow refresher first?{' '}
-          <Link href="/icu-hemodynamics">Open the ICU Hemodynamics Lab</Link>.
-        </p>
+        {/*
+         * Review status and what is still open, kept and placed with the reference (F02). The
+         * status line stays in the open — the module is a preview pending clinical review, and a
+         * learner should know it — while the reviewer's checklist is one click further in, where
+         * it no longer competes with the way into the module.
+         */}
+        <div className={styles.releaseReview} data-review-governance>
+          <strong>Preview · pending clinical review</strong>
+          <p>
+            Device responses here are bounded teaching approximations. Nothing in this module is a
+            source for a device specification, and device selection, timing, and escalation remain
+            team decisions under current manufacturer instructions and local protocol.
+          </p>
+          <details data-reviewer-layer>
+            <summary>For reviewers: what is still open before publication</summary>
+            <p>
+              Publication awaits review by an advanced-heart-failure/MCS physician and an ICU nurse,
+              APP, perfusionist, or clinical engineer, covering the clinical content, device
+              revision, model behavior, accessibility, 3D provenance, and safety boundaries.
+            </p>
+            <ul>
+              {mcsReleaseGates.map((gate) => (
+                <li key={gate.id} data-complete={gate.complete}>
+                  {gate.complete ? 'Complete' : 'Pending'} · {gate.label}
+                  {gate.evidence ? <small>{gate.evidence}</small> : null}
+                </li>
+              ))}
+            </ul>
+          </details>
+        </div>
       </section>
     </McsModuleFrame>
   )

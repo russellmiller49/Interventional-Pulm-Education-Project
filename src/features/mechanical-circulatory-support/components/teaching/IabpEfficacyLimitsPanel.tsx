@@ -191,7 +191,7 @@ export function IabpEfficacyLimitsPanel({
         />
       </PanelSection>
 
-      <PanelSection title="The flow account, unchanged by timing" id="efficacy-flow">
+      <PanelSection title="The flow account, unchanged by timing" id="efficacy-flow" reference>
         <FlowAccount account={account} disclosed={disclosed} />
         <TextEquivalent>{flowAccountSentence(account, disclosed)}</TextEquivalent>
         {disclosed ? (
@@ -204,7 +204,7 @@ export function IabpEfficacyLimitsPanel({
         ) : null}
       </PanelSection>
 
-      <PanelSection title="Cardiac power, and what it is not" id="efficacy-cpo">
+      <PanelSection title="Cardiac power, and what it is not" id="efficacy-cpo" reference>
         <GuidedValue
           guide={mcsDerivedValueGuides.cardiacPowerOutputW}
           value={metrics.cardiacPowerOutputW}

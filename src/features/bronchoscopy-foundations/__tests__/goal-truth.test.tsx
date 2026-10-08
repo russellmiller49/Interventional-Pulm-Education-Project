@@ -124,23 +124,31 @@ describe('a finished scope card after the tip has moved on', () => {
     expect(document.querySelector('[data-goal-now]')).not.toBe(heading())
   })
 
-  it('frames the pane’s own green list the same way', async () => {
+  it('frames the pane’s own goal card the same way', async () => {
     await reachPractice('branch-entry')
     const pilot = scopePilot()
     SCOPE_RECIPES['branch-entry']!.act(pilot)
     await settle()
     expect(goalStates()).toEqual(['true', 'true', 'true', 'true', 'true'])
-    // The duplicated list under the controls carries the same classification and the same limit.
-    expect(paneRows()).toEqual(Array(5).fill({ met: 'true', claim: 'history' }))
+    // BF-PRE-REVIEW-03 (A37) replaced the duplicated list under the controls with one card beside
+    // them. Once every goal is met, its one row is the card's own record lead, with the same
+    // classification, the same heading and the same limit the duplicated list carried.
+    expect(paneRows()).toEqual([{ met: 'true', claim: 'history' }])
+    expect(document.querySelector('[data-scope-goals] li')?.textContent).toBe(
+      'Recorded: every step this card asks for.',
+    )
     expect(document.querySelector('[data-scope-goals-group]')?.textContent).toBe(
       'On the record for this attempt',
     )
-    expect(document.querySelector('[data-scope-goals]')?.getAttribute('aria-label')).toBe(
+    const labelledBy = document.querySelector('[data-scope-goals]')?.getAttribute('aria-labelledby')
+    expect(document.getElementById(labelledBy ?? '')?.textContent).toBe(
       'On the record for this attempt',
     )
     expect(document.querySelector('[data-scope-goals-limit]')?.textContent).toContain(
       'does not judge the bronchoscope image',
     )
+    for (const pattern of APPROVING)
+      expect(document.querySelector('[data-scope-goal-now]')?.textContent).not.toMatch(pattern)
   })
 
   it('says only what the model records about the view and the wall', async () => {

@@ -372,6 +372,95 @@ label.mapPin {
   font-size: 0.8rem;
 }
 
+/*
+ * The goal the step is on, kept between the scope and its controls (A37): one row, what the model
+ * can and cannot say, and a link to the full list on the card. Normal flow; nothing is pinned.
+ */
+.goalNow {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #31485a;
+  border-left: 3px solid var(--cyan-bright, #67e8f9);
+  border-radius: 0.6rem;
+  background: #0b1a26;
+}
+.goalNow .goalsHeading {
+  margin: 0;
+}
+.goalNow .goals {
+  padding-left: 0;
+  list-style: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink, #e2e8f0);
+}
+.goalNow .goalsLimit {
+  margin: 0;
+  font-size: 0.74rem;
+}
+.goalTag {
+  display: inline-block;
+  margin-right: 0.35rem;
+  padding: 0 0.3rem;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+}
+.goalHelp {
+  margin: 0;
+  padding: 0.35rem 0.5rem;
+  border-left: 3px solid #eac074;
+  color: #f3e3c3;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+.allGoals {
+  justify-self: start;
+  color: var(--cyan-bright, #67e8f9);
+  font-size: 0.82rem;
+}
+.allGoals:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+.referenceLabels {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+  color: #b1c3d2;
+}
+.referenceLabels button {
+  min-height: 36px;
+  padding: 0.3rem 0.7rem;
+  border: 1px dashed #8eeee0;
+  border-radius: 0.4rem;
+  color: #d9f7f2;
+  background: #0d1f2a;
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.referenceLabels button[aria-pressed='true'] {
+  background: #183c42;
+}
+.referenceLabels button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+.ostiumReference {
+  border-style: dashed;
+}
+.ostiumTarget {
+  color: #1d1400;
+  background: #ffce57;
+  border-color: #fff0b0;
+}
+
 .goalsHeading {
   margin: 0.55rem 0 0.3rem;
   font-size: 0.75rem;
@@ -439,4 +528,193 @@ label.mapPin {
   bottom: 12%;
   right: 12%;
   background: #a55351;
+}
+
+/*
+ * The tip end-on on the five-controls bench (A21, A22): a small derived drawing beside its words.
+ * It sits in normal flow under the views, so it never covers the scope image.
+ */
+.compass {
+  display: grid;
+  grid-template-columns: minmax(7rem, 9rem) minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #31485a;
+  border-radius: 0.75rem;
+  background: #0b1a26;
+  /* Contains the off-card note below, which is taken out of the flow. */
+  position: relative;
+}
+/*
+ * The off-card note in words for assistive technology. The scope view prints the same sentence
+ * over the picture for the eye, hidden from assistive technology, so it is said once to each.
+ */
+.compassOffCard {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.compass svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.compass figcaption {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #d6e4ee;
+  overflow-wrap: anywhere;
+}
+.compass figcaption span:last-child {
+  color: #a9bccb;
+  font-size: 0.76rem;
+}
+.compassRing {
+  fill: none;
+  stroke: #3d5668;
+  stroke-width: 0.02;
+}
+.compassRingLabel,
+.compassFrameLabel {
+  fill: #93a8b8;
+  font-size: 0.16px;
+}
+.compassPlane {
+  stroke: #eac074;
+  stroke-width: 0.035;
+  stroke-dasharray: 0.08 0.05;
+}
+.compassBend {
+  fill: #eac074;
+  font-size: 0.24px;
+  font-weight: 700;
+}
+.compassCard {
+  fill: #c7d6d5;
+  stroke: #65cecc;
+  stroke-width: 0.02;
+}
+.compassTipLine {
+  stroke: #8ee4dd;
+  stroke-width: 0.04;
+}
+.compassTip {
+  fill: #8ee4dd;
+  stroke: #062523;
+  stroke-width: 0.02;
+}
+@container (max-width: 26rem) {
+  .compass {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  .compass svg {
+    max-width: 9rem;
+  }
+}
+
+/* The map says which way it faces (A24). */
+.mapFrame {
+  margin: 0.35rem 0 0;
+  color: #b1c3d2;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.patientTick {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 0 0.25rem;
+  border: 1px solid #eac074;
+  border-radius: 0.25rem;
+  color: #f7e4bd;
+  background: #07111ce6;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+.frameLegend {
+  margin: 0.35rem 0 0;
+  color: #b1c3d2;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+/* The scope in the tube, in cross-section and to scale (A33). */
+.crossSection {
+  display: grid;
+  grid-template-columns: minmax(9rem, 15rem) minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #31485a;
+  border-radius: 0.75rem;
+  background: #0b1a26;
+}
+.crossSection svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.crossSection figcaption {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #d6e4ee;
+  overflow-wrap: anywhere;
+}
+.crossSection figcaption span:last-child {
+  color: #a9bccb;
+  font-size: 0.78rem;
+}
+.crossSectionOpen {
+  fill: #2f8f9a;
+}
+.crossSectionScope {
+  fill: #232a30;
+  stroke: #9aa7ae;
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+.crossSectionTube {
+  stroke: #e7e9df;
+  stroke-width: 2.5px;
+  vector-effect: non-scaling-stroke;
+}
+.crossSectionDimension,
+.crossSectionTick {
+  stroke: #eac074;
+  stroke-width: 1.25px;
+  vector-effect: non-scaling-stroke;
+}
+.crossSectionTick {
+  stroke-dasharray: 3 3;
+}
+.crossSectionText {
+  fill: #f1e2c2;
+}
+.crossSectionScopeText {
+  fill: #eef3f6;
+}
+@container (max-width: 26rem) {
+  .crossSection {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  .crossSection svg {
+    max-width: 15rem;
+  }
 }

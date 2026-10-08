@@ -26,6 +26,7 @@ import {
 import { ventilationSimulationReducer } from './reducer'
 import {
   ventilatorDeviceIds,
+  type PauseOrigin,
   type VentilationAction,
   type VentilationSimulationState,
   type VentilatorControlKey,
@@ -96,10 +97,18 @@ export function labSnapshot(
     plateauSource: currentHold ? 'captured' : lastHold ? 'historical' : 'modeled',
     hold: lastHold,
     inputs: measurementInputs(state),
-    // Saved reference only. The actual console continues to use all 50 Hz samples.
-    waveforms: state.waveforms.filter(
-      (_, index) => index % 4 === 0 || index === state.waveforms.length - 1,
-    ),
+    /*
+     * Every sample the engine produced, at its own 20 ms spacing.
+     *
+     * This used to keep one sample in four so the record would fit a saved checkpoint. Nothing
+     * saves a lab checkpoint any more — the self-paced Learn host keeps runs in memory only — and
+     * the thinning is what turned the captured baseline into an 80 ms trace beside the 20 ms
+     * reference: the end-inspiratory drop became a ramp, and a breath's onset-to-onset duration
+     * could read 3.68 s at a set rate of 16/min because both onsets had to land on every fourth
+     * sample. The record is the acquisition; a figure that needs fewer points thins at drawing
+     * time, not here.
+     */
+    waveforms: state.waveforms,
     at: state.simulationTime,
   }
 }
@@ -176,17 +185,73 @@ export interface LabCheckpoint {
 }
 export interface LabSession extends LabCheckpoint {
   readonly simulation: VentilationSimulationState
+  /**
+   * Who asked for the pause that is in force, for as long as it is: `'learner'` for the learner's
+   * own Pause, `'background'` when the page was hidden or suspended while the model was running.
+   * Null while the model runs, and for a pause the program applied itself. Transient: it is never
+   * part of a checkpoint and never decides whether a goal is met — the inspection record does.
+   */
+  readonly pauseOrigin?: PauseOrigin | null
 }
 export interface LabProgress {
   readonly version: 1
   readonly units: Readonly<Record<string, LabCheckpoint>>
 }
 export const emptyLabProgress = (): LabProgress => ({ version: 1, units: {} })
-export function createLabSimulation(
+/*
+ * A captured record keeps the engine's 12-second window at 50 Hz (600 samples) rather than every
+ * fourth sample, and a baseline may keep up to this many when the window alone cannot verify a
+ * breath (`baselineRecord`). Older records, written with at most 160, parse exactly as they did;
+ * the bound only grew, so nothing that was accepted is refused.
+ */
+const LAB_RECORD_MAX_SAMPLES = 800
+/** A breath a figure will draw: one inspiratory onset to the next, as `completedBreath` finds it. */
+const holdsCompleteBreath = (samples: readonly WaveformSample[]) =>
+  completedBreath(samples).length >= 4
+/**
+ * The record a round's baseline is drawn from.
+ *
+ * It is the opening 12-second window whenever that window verifies one complete breath — on every
+ * authored round but one, so those records are exactly what they were. The exception is why this
+ * exists. The warm-up below is a whole number of breaths, so a round opens with its next onset due
+ * at time zero and its window ending on the last expiratory sample; at 10/min (Section 8, first
+ * application) the 600-sample window is then exactly two 6-second cycles, from the first
+ * inspiratory sample of one breath (−11.98 s) to the last expiratory sample of the next (0.00 s).
+ * An onset is verified by the expiratory sample before it. The window holds that pair once, at
+ * −6.00/−5.98 s; the earlier pair lost its expiratory half (−12.00 s) to the 600-sample cap by one
+ * sample, and the later one's inspiratory half (+0.02 s) has not been produced, because a baseline
+ * is taken before anything runs. Both breaths happened; neither could be shown to have.
+ *
+ * The samples the cap dropped are the same warm-up's — the same patient on the same settings,
+ * a few seconds earlier — so the record keeps them, as many as a saved record may hold, when and
+ * only when the window needs them to verify a breath. They are the engine's own samples at their
+ * own times: nothing is synthesised, interpolated, moved or re-spaced, and the patient the round
+ * opens on is untouched (`openLabRound` builds the simulation `createLabSimulation` always built).
+ * A record that still cannot verify a breath is returned as the window, and the figure says it
+ * holds none.
+ */
+function baselineRecord(
+  window: readonly WaveformSample[],
+  earlier: readonly WaveformSample[],
+): readonly WaveformSample[] {
+  if (holdsCompleteBreath(window)) return window
+  const room = LAB_RECORD_MAX_SAMPLES - window.length
+  if (room <= 0 || earlier.length === 0) return window
+  const extended = [...earlier.slice(-room), ...window]
+  return holdsCompleteBreath(extended) ? extended : window
+}
+/** A round's patient as it opens, and the record its baseline is taken from. */
+export interface LabOpening {
+  /** Model time zero: the warm-up has run, nothing else has, and nothing has been changed. */
+  readonly simulation: VentilationSimulationState
+  /** `simulation.waveforms`, preceded by earlier warm-up samples only when it needs them. */
+  readonly baselineRecord: readonly WaveformSample[]
+}
+export function openLabRound(
   unitId: string,
   roundIndex: 0 | 1,
   device: VentilatorDeviceId,
-): VentilationSimulationState {
+): LabOpening {
   const round = ventilationExperimentByUnit.get(unitId)!.rounds[roundIndex]
   const attempt =
     round.caseId === 'MV-08'
@@ -207,7 +272,11 @@ export function createLabSimulation(
     simulation = ventilationSimulationReducer(simulation, command)
   // Fill a full window with this baseline, including any authored setup changes.
   const warmup = (4 * 60) / simulation.measurements.totalRatePerMin
-  simulation = advanceSimulation({ ...simulation, paused: false }, warmup)
+  // Every sample of the warm-up, including those the 12-second buffer drops (see `baselineRecord`).
+  const produced: WaveformSample[] = []
+  simulation = advanceSimulation({ ...simulation, paused: false }, warmup, undefined, produced)
+  const rebase = (sample: WaveformSample) => ({ ...sample, time: sample.time - warmup })
+  const dropped = produced.slice(0, Math.max(0, produced.length - simulation.waveforms.length))
   /*
    * The clock is set back by `warmup` — a whole number of breaths, so the breath schedule is
    * continuous across zero — and the alarm epoch with it: alarms raised during the warm-up used to
@@ -215,7 +284,7 @@ export function createLabSimulation(
    * next onset as a time, so it moves by the same amount; left alone it would wait `warmup` seconds
    * for an onset that had already been re-based to zero.
    */
-  return reopenAlarmEpoch({
+  const opened = reopenAlarmEpoch({
     ...simulation,
     simulationTime: 0,
     ventilator: {
@@ -223,7 +292,7 @@ export function createLabSimulation(
       breathClock: shiftBreathClock(simulation.ventilator.breathClock, -warmup),
     },
     prediction: { ...simulation.prediction, committed: false },
-    waveforms: simulation.waveforms.map((sample) => ({ ...sample, time: sample.time - warmup })),
+    waveforms: simulation.waveforms.map(rebase),
     trends: [],
     risk: {
       highPlateau: 0,
@@ -236,6 +305,33 @@ export function createLabSimulation(
     criticalErrors: [],
     paused: false,
   })
+  return {
+    simulation: opened,
+    baselineRecord: baselineRecord(opened.waveforms, dropped.map(rebase)),
+  }
+}
+export function createLabSimulation(
+  unitId: string,
+  roundIndex: 0 | 1,
+  device: VentilatorDeviceId,
+): VentilationSimulationState {
+  return openLabRound(unitId, roundIndex, device).simulation
+}
+/**
+ * An experiment's baseline: the readings of a patient nothing has been done to, with the record
+ * that verifies one of its breaths.
+ *
+ * It is built from an opening and from nothing else. A baseline used to be `labSnapshot` of
+ * whatever patient the session held when the prediction was committed, and on the prediction step
+ * that patient has live controls and a Run button: the requested change could be made and run first,
+ * and the snapshot of the changed patient was then retained and labelled the baseline.
+ */
+function labBaselineSnapshot(opening: LabOpening): LabSnapshot {
+  return { ...labSnapshot(opening.simulation), waveforms: opening.baselineRecord }
+}
+/** Nothing has been run and nothing has been changed since this session's patient was opened. */
+function labPatientUntouched(session: LabSession): boolean {
+  return session.simulation.simulationTime === 0 && session.events.length === 0
 }
 export function createLabSession(
   unitId: string,
@@ -277,7 +373,8 @@ export function createLabSession(
   return { ...saved, simulation: { ...simulation, paused: true, speed: 1 } }
 }
 export function labCheckpoint(session: LabSession): LabCheckpoint {
-  const { simulation, ...record } = session
+  const { simulation, pauseOrigin, ...record } = session
+  void pauseOrigin // transient: who paused is never part of a checkpoint
   return { ...record, time: simulation.simulationTime }
 }
 export function labGoalMet(goal: LabGoal, session: LabSession): boolean {
@@ -295,37 +392,76 @@ export function labGoalMet(goal: LabGoal, session: LabSession): boolean {
   }
   if (goal.type === 'inspect-inspiration')
     return session.evidence[session.round].inspection?.sample.phase === 'inspiration'
-  if (
-    goal.type === 'pause-expiration' &&
-    session.evidence[session.round].inspection?.sample.phase === 'expiration'
-  )
-    return true
-  if (goal.type === 'intervention')
-    return (
-      session.events.some(
-        (event) =>
-          event.action.type === 'PERFORM_INTERVENTION' && event.action.interventionId === goal.id,
-      ) &&
-      session.simulation.interventions.some(
-        (item) =>
-          item.interventionId === goal.id && item.effectiveAt <= session.simulation.simulationTime,
-      )
-    )
-  const last = session.simulation.waveforms.at(-1)
+  /*
+   * Met by the inspection record and by nothing else.
+   *
+   * This used to fall through to "the model is paused, four seconds have passed and the last sample
+   * is expiratory", which read the learner's intent off `paused === true`. The model is also
+   * paused when the page goes to the background, when one breath is stepped, at the model-time
+   * limit and after a capture, and none of those is the learner reading the breath: a hidden tab
+   * was recorded as an inspection and, with automatic capture on, captured (PR #290 review, R1).
+   * The record is written in exactly two places below — the learner's own Pause, and Use this
+   * captured interval — so the goal is theirs or it is not met.
+   */
+  if (goal.type === 'pause-expiration')
+    return session.evidence[session.round].inspection?.sample.phase === 'expiration'
   return (
-    session.simulation.paused &&
-    session.simulation.simulationTime >= 4 &&
-    last?.phase === 'expiration' &&
-    last.flowLMin < -0.1
+    session.events.some(
+      (event) =>
+        event.action.type === 'PERFORM_INTERVENTION' && event.action.interventionId === goal.id,
+    ) &&
+    session.simulation.interventions.some(
+      (item) =>
+        item.interventionId === goal.id && item.effectiveAt <= session.simulation.simulationTime,
+    )
   )
 }
+/**
+ * Whether the live record holds a breath the comparison can draw: one inspiratory onset to the next.
+ *
+ * The record is the engine's 12-second window, so this is not a given. After Section 11's first
+ * application clears the condensate the patient breathes at 8/min — 7.5 s a breath — and the window
+ * holds two onsets only part of the time: sampled every 0.1 s for 20 s after the interval had
+ * elapsed, 39 % of instants had no complete breath on any of the four consoles, and a result
+ * captured at one of them would have had nothing to draw.
+ */
+export function labRecordHoldsCompleteBreath(session: LabSession): boolean {
+  return holdsCompleteBreath(session.simulation.waveforms)
+}
+/**
+ * Whether the round's result may be captured: the one gate the Capture button, the status panel
+ * and automatic capture all read.
+ *
+ * The last condition is the evidence a captured result is drawn from. The review of PR #290 asked
+ * whether a complete breath was already guaranteed by the rest of the gate; it was not (see
+ * `labRecordHoldsCompleteBreath`), so it is required here, once, rather than inferred.
+ *
+ * What the gate still gives transitively, and `__tests__/mv-pre-review-03-repairs.test.tsx` holds
+ * against every authored round on every console:
+ *
+ *   - That breath is one delivered under the requested conditions. A round that changes something,
+ *     performs a hold or takes a bedside action counts its interval from `readySince`, the moment
+ *     everything requested was in place, and each such interval is longer than two breath periods
+ *     at the rate that follows the change; `completedBreath` is the last onset-to-onset breath in
+ *     the record, so whenever this is true it began after `readySince`.
+ *   - Section 1's two rounds have no interval; their evidence is the inspection record, taken from
+ *     a complete captured breath (Use this captured interval) or from the learner's own Pause at
+ *     least four model seconds — more than one breath period — into the run.
+ *
+ * The baseline is captured when the experiment starts, before anything runs, so this gate cannot
+ * speak for it and does not need to: a baseline is taken only from a round's opening
+ * (`labBaselineSnapshot`), whose record keeps the warm-up samples that verify one of its breaths
+ * (`baselineRecord`). `__tests__/mv-pre-review-03-baseline-evidence.test.tsx` holds a complete,
+ * drawable baseline breath for every authored round on every console.
+ */
 export function labReadyToCompare(session: LabSession): boolean {
   const round = ventilationExperimentByUnit.get(session.unitId)!.rounds[session.round]
   return (
     session.phase === 'experiment' &&
     session.readySince !== null &&
     round.goals.every((goal) => labGoalMet(goal, session)) &&
-    session.simulation.simulationTime - session.readySince >= round.seconds
+    session.simulation.simulationTime - session.readySince >= round.seconds &&
+    labRecordHoldsCompleteBreath(session)
   )
 }
 const transientActions = new Set([
@@ -382,7 +518,38 @@ export function labUnitComplete(record?: LabCheckpoint): boolean {
         record.evidence.every((e) => e.observation))),
   )
 }
+/**
+ * The origin of the pause in force after an action, decided in one place for every return path.
+ *
+ * A pause that stops a running model takes the origin its action carries. It is kept only while
+ * the same patient stays paused where it was: Run, one breath, a reset, a new round or a capture
+ * all end it. It is presentation state (the panel says why the clock stopped); credit is decided
+ * where the inspection record is written.
+ */
+function pauseOriginAfter(
+  before: LabSession,
+  action: LabAction,
+  after: LabSession,
+): PauseOrigin | null {
+  if (!after.simulation.paused) return null
+  if (action.type === 'ENGINE' && action.action.type === 'SET_PAUSED')
+    return action.action.paused && !before.simulation.paused
+      ? (action.action.origin ?? null)
+      : (before.pauseOrigin ?? null)
+  const samePatientWhereItWas =
+    before.simulation.paused &&
+    after.round === before.round &&
+    after.device === before.device &&
+    after.simulation.simulationTime === before.simulation.simulationTime &&
+    (action.type === 'ENGINE' || after.simulation === before.simulation)
+  return samePatientWhereItWas ? (before.pauseOrigin ?? null) : null
+}
 export function learningLabReducer(session: LabSession, action: LabAction): LabSession {
+  const next = reduceLearningLab(session, action)
+  const pauseOrigin = pauseOriginAfter(session, action, next)
+  return (next.pauseOrigin ?? null) === pauseOrigin ? next : { ...next, pauseOrigin }
+}
+function reduceLearningLab(session: LabSession, action: LabAction): LabSession {
   const round = ventilationExperimentByUnit.get(session.unitId)!.rounds[session.round]
   const evidence = session.evidence[session.round]
   if (action.type === 'OPEN_ROUND') {
@@ -399,10 +566,8 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
   }
   if (action.type === 'START_EXPERIMENT') {
     if (session.phase === 'experiment' || session.phase === 'compare') return session
-    const simulation = {
-      ...createLabSimulation(session.unitId, session.round, session.device),
-      paused: true,
-    }
+    const opening = openLabRound(session.unitId, session.round, session.device)
+    const simulation = { ...opening.simulation, paused: true }
     return {
       ...session,
       phase: 'experiment',
@@ -420,7 +585,7 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
         prediction: evidence.prediction,
         confidence: evidence.confidence,
         location: evidence.location,
-        baseline: labSnapshot(simulation),
+        baseline: labBaselineSnapshot(opening),
       }),
     }
   }
@@ -497,7 +662,8 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
     }
   }
   if (action.type === 'RESET') {
-    const simulation = createLabSimulation(session.unitId, session.round, session.device)
+    const opening = openLabRound(session.unitId, session.round, session.device)
+    const simulation = opening.simulation
     return {
       ...session,
       phase: evidence.prediction === undefined ? 'explore' : 'experiment',
@@ -517,19 +683,21 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
         confidence: evidence.confidence,
         location: evidence.location,
         sort: evidence.sort,
-        ...(evidence.prediction === undefined ? {} : { baseline: labSnapshot(simulation) }),
+        ...(evidence.prediction === undefined ? {} : { baseline: labBaselineSnapshot(opening) }),
       }),
     }
   }
   if (action.type === 'PREDICT' && session.phase === 'explore') {
     // A fresh baseline makes the prediction about an unperformed experiment, even after free exploration.
-    const simulation = createLabSimulation(session.unitId, session.round, session.device)
+    const opening = openLabRound(session.unitId, session.round, session.device)
     return {
       ...session,
-      simulation,
+      simulation: opening.simulation,
       phase: 'predict',
       ...(isFoundationUnit(session.unitId)
-        ? { evidence: setEvidence(session, { ...evidence, baseline: labSnapshot(simulation) }) }
+        ? {
+            evidence: setEvidence(session, { ...evidence, baseline: labBaselineSnapshot(opening) }),
+          }
         : {}),
       holds: [],
       acquisition: undefined,
@@ -546,15 +714,25 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
     ['explore', 'predict', 'experiment'].includes(session.phase) &&
     [0, 1, 2].includes(action.choice)
   ) {
+    const committed = { ...evidence, prediction: action.choice, confidence: action.confidence }
+    /*
+     * The prediction opens the experiment only when its baseline is, or can still truthfully be,
+     * this patient's opening: one already retained, or a patient nothing has been run on or changed
+     * since it opened (then the opening is recomputed, which is the same patient). A patient that
+     * has been explored has no baseline to give — the requested change may already be in it — so
+     * the prediction is recorded and the experiment waits for Start the experiment, which opens a
+     * fresh patient. Nothing a learner has changed is ever retained under the name baseline.
+     */
+    const baseline =
+      evidence.baseline ??
+      (labPatientUntouched(session)
+        ? labBaselineSnapshot(openLabRound(session.unitId, session.round, session.device))
+        : undefined)
+    if (!baseline) return { ...session, evidence: setEvidence(session, committed) }
     return {
       ...session,
       phase: 'experiment',
-      evidence: setEvidence(session, {
-        ...evidence,
-        prediction: action.choice,
-        confidence: action.confidence,
-        baseline: evidence.baseline ?? labSnapshot(session.simulation),
-      }),
+      evidence: setEvidence(session, { ...committed, baseline }),
     }
   }
   if (action.type === 'COMPARE' && labReadyToCompare(session))
@@ -670,9 +848,28 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
         ? ['interventions']
         : [],
   )
+  /*
+   * The trigger is one measurement input with two controls: its type and its threshold. A round
+   * that asks for the threshold (Section 8's first application: flow trigger to 1.5 L/min) changes
+   * the input `trigger`, which is not the control's own name, so the requested change itself was
+   * reported as "Additional input changed: trigger" — on the captured result, and as the reason
+   * automatic capture was held on a run that did only what was asked. The part of the trigger
+   * that changed has to be the part that was requested; a change of type under a threshold request
+   * is still an additional input.
+   */
+  const triggerChangeRequested = round.goals.some(
+    (g) =>
+      g.type === 'control' &&
+      g.key ===
+        (before.ventilator.settings.trigger.type === simulation.ventilator.settings.trigger.type
+          ? 'triggerThreshold'
+          : 'triggerType'),
+  )
+  const requestedInput = (key: string) =>
+    key === 'trigger' ? triggerChangeRequested : allowedKeys.includes(key)
   const issues =
     session.phase === 'experiment'
-      ? changed.filter((k) => !allowedKeys.includes(k)).map((k) => `Additional input changed: ${k}`)
+      ? changed.filter((k) => !requestedInput(k)).map((k) => `Additional input changed: ${k}`)
       : []
   if (
     session.phase === 'experiment' &&
@@ -686,10 +883,17 @@ export function learningLabReducer(session: LabSession, action: LabAction): LabS
   const confounds = [...new Set([...(session.confounds ?? []), ...issues])]
   const last = simulation.waveforms.at(-1),
     previous = simulation.waveforms.at(-2)
+  /*
+   * A pause is the learner's reading of the breath only when the learner asked for it and it is
+   * what stopped a running model. The origin travels on the action; `paused` alone says nothing
+   * about who paused, and a background suspension carries `'background'`.
+   */
   const manualInspection =
     session.phase === 'experiment' &&
     action.action.type === 'SET_PAUSED' &&
     action.action.paused &&
+    action.action.origin === 'learner' &&
+    !before.paused &&
     simulation.simulationTime >= 4 &&
     round.goals.some((g) => g.type === 'pause-expiration') &&
     last?.phase === 'expiration' &&
@@ -739,7 +943,7 @@ const holdSchema = z.object({
   value: finite,
   interpretable: z.boolean(),
   reason: z.string().nullable(),
-  waveforms: z.array(sampleSchema).max(160),
+  waveforms: z.array(sampleSchema).max(LAB_RECORD_MAX_SAMPLES),
 })
 const capturedHoldSchema = holdSchema.extend({ capturedAt: finite })
 const snapshotSchema = z.object({
@@ -754,7 +958,7 @@ const snapshotSchema = z.object({
   inputs: z.record(z.union([finite, z.string()])).optional(),
   hold: capturedHoldSchema.optional(),
   issues: z.array(z.string()).max(100).optional(),
-  waveforms: z.array(sampleSchema).max(160),
+  waveforms: z.array(sampleSchema).max(LAB_RECORD_MAX_SAMPLES),
   at: finite.min(0).max(1000),
 })
 const evidenceSchema = z.object({
@@ -769,7 +973,7 @@ const evidenceSchema = z.object({
     .object({
       sample: sampleSchema,
       previous: sampleSchema,
-      waveforms: z.array(sampleSchema).max(160).optional(),
+      waveforms: z.array(sampleSchema).max(LAB_RECORD_MAX_SAMPLES).optional(),
     })
     .optional(),
   reflection: z.string().max(1200).optional(),

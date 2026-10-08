@@ -563,6 +563,25 @@
   background: rgba(5, 24, 28, 0.58);
 }
 
+/* CRRT-FELLOW-06 F06-R02: the authored teaching is set apart from the actual-run sections above
+   it, in the amber used for worked material rather than the teal used for run evidence. */
+.workedTeaching {
+  margin-top: 0.8rem;
+  padding: 0.7rem;
+  border: 1px dashed rgba(245, 192, 113, 0.42);
+  border-radius: 0.75rem;
+}
+
+.workedTeaching h5 {
+  margin: 0;
+  color: #f5c071;
+  font-size: 0.82rem;
+}
+
+.workedTeaching > p {
+  margin: 0.45rem 0 0;
+}
+
 .attemptEvidence h5,
 .attemptEvidence h6 {
   margin: 0;

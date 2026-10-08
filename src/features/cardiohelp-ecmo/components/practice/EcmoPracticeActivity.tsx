@@ -387,6 +387,8 @@ export function EcmoPracticeCaseView({
         : null,
     initiation,
     secondsSinceLastAction,
+    reassessmentIsChecklist:
+      !scenario.reassessment && Boolean(scenario.assessmentPolicy?.reassessmentGuidance),
     nextLabel: nextLink?.label ?? null,
     actions: {
       beginCase,
@@ -470,7 +472,7 @@ export function EcmoPracticeCaseView({
       ).text,
     },
     {
-      label: 'Oxygenator ΔP',
+      label: 'Oxygenator Δp',
       value: formatChannelGroup([state.circuit.readouts.deltaP], 'mm Hg').text,
     },
     {

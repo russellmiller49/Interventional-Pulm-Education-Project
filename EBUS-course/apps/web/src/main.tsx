@@ -6,8 +6,10 @@ import { App } from '@/app/App';
 import { LocaleProvider } from '@/i18n/locale';
 import { AuthProvider } from '@/lib/auth';
 import { LearnerProgressProvider } from '@/lib/progress';
-import { ThemeProvider } from '@/lib/theme';
+import { prepareDocumentForSiteModule, ThemeProvider } from '@/lib/theme';
 import '@/styles/index.css';
+
+prepareDocumentForSiteModule();
 
 const Router = import.meta.env.BASE_URL !== '/' ? HashRouter : BrowserRouter;
 

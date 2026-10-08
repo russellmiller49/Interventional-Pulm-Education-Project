@@ -80,7 +80,11 @@ export function MechanicalVentilationLearnLanding({
             <h2 id="mv-learn-pathway">All {composition.total} sections</h2>
             <span>Grouped by stage · one order</span>
           </div>
-          <VentilationPathwayAccordion progress={progress} visitedCaseIds={visitedCases} />
+          <VentilationPathwayAccordion
+            progress={progress}
+            visitedCaseIds={visitedCases}
+            ready={ready}
+          />
         </section>
       </div>
     </MechanicalVentilationModuleFrame>

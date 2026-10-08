@@ -44,9 +44,9 @@ it('switches only the conceptual mechanism drawing without changing the patient 
   mountSection('mcs-foundations-mechanisms')
   const before = document.querySelector('[data-session-identity]')?.textContent
   const storedBefore = window.localStorage.getItem('interventionalpulm:mcs-progress:v1')
-  fireEvent.click(screen.getByRole('button', { name: 'Existing durable LVAD' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Durable LVAD (continuous-flow pump)' }))
   expect(document.querySelector('[data-pathway="durable-continuous-flow-lvad"]')).not.toBeNull()
-  fireEvent.click(screen.getByRole('button', { name: 'LV-to-aorta microaxial pump' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Impella (LV-to-aorta microaxial pump)' }))
   expect(document.querySelector('[data-session-identity]')?.textContent).toBe(before)
   expect(window.localStorage.getItem('interventionalpulm:mcs-progress:v1')).toBe(storedBefore)
 })
@@ -58,14 +58,10 @@ it('repeats one captured mechanism without erasing the other two', () => {
   continueStep()
   commitPrediction(id)
   continueFromVerdict()
-  for (const name of [
-    /Select the durable/,
-    /Select the transvalvular/,
-    /Select the counterpulsation/,
-  ])
+  for (const name of [/Select durable LVAD/, /Select Impella CP/, /Select IABP/])
     fireEvent.click(within(nowCard()).getByRole('button', { name }))
   const before = document.querySelector('[data-retained-comparison]')?.textContent
-  fireEvent.click(within(nowCard()).getByRole('button', { name: /Select the transvalvular/ }))
+  fireEvent.click(within(nowCard()).getByRole('button', { name: /Select Impella CP/ }))
   expect(document.querySelector('[data-retained-comparison]')?.textContent).toBe(before)
   expect(document.querySelectorAll('[data-comparison-device]')).toHaveLength(3)
 })

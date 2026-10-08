@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Route } from 'next'
 
+import { SIMULATOR_ABOUT_ID, simulatorPage } from '@/components/layout/simulator-page'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { EmbeddedTrainingModule } from '@/data/ebus-training'
@@ -25,33 +26,52 @@ export function EmbeddedTrainingModuleFrame({
   return (
     <HandoffContent>
       {
-        <div className="space-y-12 py-16">
-          <section className="container space-y-6">
-            <div className="max-w-4xl space-y-3">
-              <Badge
-                variant="info"
-                className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
-              >
-                {module.kicker}
-              </Badge>
-              <h1 className="text-4xl font-bold tracking-tight md:text-5xl">{module.title}</h1>
-              <p className="max-w-3xl text-base leading-7 text-muted-foreground md:text-lg">
-                {module.description}
-              </p>
+        <div className={simulatorPage.root}>
+          {/* A multi-pane workspace spans the window; a reading module keeps the page's column. */}
+          <section
+            className={module.frame === 'wide' ? simulatorPage.stage : 'container space-y-2'}
+          >
+            <div className={simulatorPage.header}>
+              <div className={simulatorPage.identity}>
+                <Badge
+                  variant="info"
+                  className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+                >
+                  {module.kicker}
+                </Badge>
+                <h1 className={simulatorPage.title}>{module.title}</h1>
+              </div>
+              <div className={simulatorPage.actions}>
+                <a href={`#${SIMULATOR_ABOUT_ID}`} className={simulatorPage.aboutLink}>
+                  What&apos;s inside
+                </a>
+                <Button asChild size="sm">
+                  <a href={embedSrc} target="_blank" rel="noreferrer">
+                    Open Dedicated View
+                  </a>
+                </Button>
+                {backHref && backLabel ? (
+                  <Button asChild size="sm" variant="secondary">
+                    <Link href={backHref as Route}>{backLabel}</Link>
+                  </Button>
+                ) : null}
+              </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <Button asChild>
-                <a href={embedSrc} target="_blank" rel="noreferrer">
-                  Open Dedicated View
-                </a>
-              </Button>
-              {backHref && backLabel ? (
-                <Button asChild variant="secondary">
-                  <Link href={backHref as Route}>{backLabel}</Link>
-                </Button>
-              ) : null}
+            <div className={simulatorPage.frame}>
+              <iframe
+                title={module.title}
+                src={embedSrc}
+                suppressHydrationWarning
+                className={`${simulatorPage.iframe} bg-background`}
+              />
             </div>
+          </section>
+
+          <section id={SIMULATOR_ABOUT_ID} className={simulatorPage.about}>
+            <p className="max-w-3xl text-base leading-7 text-muted-foreground md:text-lg">
+              {module.description}
+            </p>
 
             <div className="rounded-lg border border-border/70 bg-card/70 p-6">
               <h2 className="text-lg font-semibold text-foreground">What&apos;s inside</h2>
@@ -63,17 +83,6 @@ export function EmbeddedTrainingModuleFrame({
                   </li>
                 ))}
               </ul>
-            </div>
-          </section>
-
-          <section className="container">
-            <div className="overflow-hidden rounded-3xl border border-border/70 bg-card/70 shadow-sm">
-              <iframe
-                title={module.title}
-                src={embedSrc}
-                suppressHydrationWarning
-                className="h-[calc(100vh-10rem)] min-h-[820px] w-full bg-slate-950"
-              />
             </div>
           </section>
         </div>

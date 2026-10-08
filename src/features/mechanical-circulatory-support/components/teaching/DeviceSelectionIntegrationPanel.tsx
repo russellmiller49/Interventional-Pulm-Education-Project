@@ -279,7 +279,11 @@ export function DeviceSelectionIntegrationPanel({
         />
       </PanelSection>
 
-      <PanelSection title="Where these thresholds come from" id="integration-congestion-evidence">
+      <PanelSection
+        title="Where these thresholds come from"
+        id="integration-congestion-evidence"
+        reference
+      >
         <p className="mt-2 text-xs leading-5 text-muted-foreground">
           Two different sources put cut points on the same two pressures. They are shown side by
           side and never merged: one is broad expert consensus, the other is one cohort&rsquo;s own
@@ -499,7 +503,7 @@ export function DeviceSelectionIntegrationPanel({
         </ModelBoundary>
       </PanelSection>
 
-      <PanelSection title="The flow account behind those answers" id="integration-flow">
+      <PanelSection title="The flow account behind those answers" id="integration-flow" reference>
         <FlowAccount account={account} disclosed={disclosed} />
         <TextEquivalent>
           {pathways.map((pathway) => pathwaySentence(pathway)).join(' ')}{' '}
@@ -509,7 +513,11 @@ export function DeviceSelectionIntegrationPanel({
         <TextEquivalent>{alarmSentence(alarms)}.</TextEquivalent>
       </PanelSection>
 
-      <PanelSection title="The two interpreted values, with their sourcing" id="integration-guides">
+      <PanelSection
+        title="The two interpreted values, with their sourcing"
+        id="integration-guides"
+        reference
+      >
         <GuidedValue
           guide={mcsDerivedValueGuides.cardiacPowerOutputW}
           value={metrics.cardiacPowerOutputW}
@@ -560,7 +568,11 @@ export function DeviceSelectionIntegrationPanel({
         </TextEquivalent>
       </PanelSection>
 
-      <PanelSection title="Bridge, exit, and the decision this is not" id="integration-strategy">
+      <PanelSection
+        title="Bridge, exit, and the decision this is not"
+        id="integration-strategy"
+        reference
+      >
         <ul className="mt-3 grid gap-2 text-xs leading-5" data-strategy-boundaries>
           <li data-strategy="temporary-versus-durable">
             <span className="font-semibold">

@@ -1337,7 +1337,8 @@ export function GasBlenderPanel({
         </div>
       </div>
       <p className={styles.externalBoundary}>
-        Sweep and sweep-gas FiO₂ are not CARDIOHELP-i touchscreen controls.
+        Sweep and sweep-gas FiO₂ are not CARDIOHELP-i touchscreen controls. Sweep-gas FiO₂ is the
+        oxygen fraction of the gas sent to the membrane lung, not the ventilator FiO₂.
       </p>
 
       <label className={styles.rangeControl} data-initiation-target={Boolean(initiationTargets)}>

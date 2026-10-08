@@ -3,31 +3,34 @@ import { betaModuleForPath, feedbackReviewModuleForPath, feedbackPagePath } from
 
 export const feedbackStatuses = ['new', 'in-review', 'resolved'] as const
 export const maxScreenshotBytes = 3 * 1024 * 1024
+export const feedbackPagePathSchema = z
+  .string()
+  .max(2000)
+  .startsWith('/')
+  .refine((path) => !path.startsWith('//') && !path.includes('\\'))
+// A report or unsent draft may only name an allowlisted page of the module it belongs to.
+export function isFeedbackPageContext(moduleId: string, pagePath: string, includeRetired = false) {
+  const url = URL.canParse(pagePath, 'https://module.invalid')
+    ? new URL(pagePath, 'https://module.invalid')
+    : null
+  return Boolean(
+    url &&
+    (includeRetired ? feedbackReviewModuleForPath(url.pathname) : betaModuleForPath(url.pathname))
+      ?.id === moduleId &&
+    feedbackPagePath(url) === pagePath,
+  )
+}
 function reportSchema(includeRetired: boolean) {
   return z
     .object({
       id: z.string().uuid(),
       moduleId: z.string(),
-      pagePath: z
-        .string()
-        .max(2000)
-        .startsWith('/')
-        .refine((path) => !path.startsWith('//') && !path.includes('\\')),
+      pagePath: feedbackPagePathSchema,
       comment: z.string().trim().min(1, 'Add a comment before sending.').max(10000),
       selectedText: z.string().max(3000).default(''),
     })
     .superRefine((value, context) => {
-      const url = URL.canParse(value.pagePath, 'https://module.invalid')
-        ? new URL(value.pagePath, 'https://module.invalid')
-        : null
-      if (
-        !url ||
-        (includeRetired
-          ? feedbackReviewModuleForPath(url.pathname)
-          : betaModuleForPath(url.pathname)
-        )?.id !== value.moduleId ||
-        feedbackPagePath(url) !== value.pagePath
-      ) {
+      if (!isFeedbackPageContext(value.moduleId, value.pagePath, includeRetired)) {
         context.addIssue({
           code: 'custom',
           path: ['pagePath'],

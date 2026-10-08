@@ -38,6 +38,7 @@ import {
   CRRT_INTERRUPTION_CAPTION,
   CRRT_MODEL_INDEX_CAPTION,
   CRRT_TIME_ACCOUNTING_CAPTION,
+  CRRT_WORKED_TEACHING_BOUNDARY,
   formatCrrtRunClock,
   selectCrrtActualRunReview,
   selectCrrtUnsafeActionTeaching,
@@ -1147,17 +1148,29 @@ function CrrtCasePlayerContent({
               </section>
             ) : null}
 
-            <p>{debrief.trendReview}</p>
-            <p>{debrief.machineNavigationPoint}</p>
-            <ol className={styles.causalChain}>
-              {debrief.causalChain.map((step) => (
-                <li key={step}>{step}</li>
-              ))}
-            </ol>
+            {/* CRRT-FELLOW-06 F06-R02: authored teaching, shown after every run. It sits below the
+                actual-run sections, so it carries its own boundary rather than relying on the
+                note at the top of the debrief. */}
+            <section
+              className={styles.workedTeaching}
+              aria-labelledby={scopedId('crrt-worked-teaching')}
+            >
+              <h5 id={scopedId('crrt-worked-teaching')}>
+                Worked teaching for this case · not a record of this run
+              </h5>
+              <p>{CRRT_WORKED_TEACHING_BOUNDARY}</p>
+              <p>{debrief.trendReview}</p>
+              <p>{debrief.machineNavigationPoint}</p>
+              <ol className={styles.causalChain}>
+                {debrief.causalChain.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
 
-            <blockquote id={scopedId('crrt-transfer-question')}>
-              {debrief.transferQuestion}
-            </blockquote>
+              <blockquote id={scopedId('crrt-transfer-question')}>
+                {debrief.transferQuestion}
+              </blockquote>
+            </section>
           </div>
         ) : null}
       </section>

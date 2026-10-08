@@ -152,7 +152,7 @@ const rows: readonly MatrixRow[] = [
   },
   {
     id: 'deltaP-trend',
-    label: 'ΔP across the membrane, over time',
+    label: 'Δp across the membrane, over time',
     read: (state) => channelText(state.circuit.readouts.deltaP, 'mmHg'),
     cells: {
       recirculation: {

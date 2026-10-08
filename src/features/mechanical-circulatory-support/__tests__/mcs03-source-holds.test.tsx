@@ -299,7 +299,7 @@ describe('MCS-03-10 — supplied syntheses carry the identity their files show',
     (id) => {
       const source = mcsSourceById.get(id)!
       expect(source.year).toBeNull()
-      expect(source.citation).toMatch(/names no author, publisher, date or reference list/)
+      expect(source.citation).toMatch(/names no human author, publisher or publication date/)
       expect(source.citation).toMatch(/OpenAI/)
       expect(source.citation).not.toMatch(/reviewed/i)
       expect(source.limitation).toMatch(/no clinical statement should rest on it alone/)

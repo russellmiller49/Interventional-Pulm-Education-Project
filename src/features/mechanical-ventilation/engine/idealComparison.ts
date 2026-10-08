@@ -79,6 +79,31 @@ export function idealComparisonAxes(reference: IdealInputs): IdealAxes {
   return { pressure: [0, pressure], flow: [-flow, flow], volume: [0, volume] }
 }
 
+function niceCeiling(value: number, step: number): number {
+  return Math.max(step, Math.ceil((value * 1.05) / step) * step)
+}
+
+/**
+ * One scale per physical variable, fitted to the pair on screen and shared by both modes.
+ *
+ * The walkthrough (V1) read the reference pair on the all-settings scale above: a ±400 L/min flow
+ * axis, set by the extreme offered change (twice the compliance at a quarter of the resistance), on
+ * which the 24 L/min square VC flow and the 55 L/min decelerating PC flow were both near-flat
+ * lines — the shape difference the section is about. This scale is taken from the two breaths being
+ * compared, so VC and PC still share it and their amplitudes stay comparable; neither mode is
+ * scaled on its own. Flow stays symmetric about zero so inspiration and expiration read alike.
+ */
+export function idealPairAxes(pair: {
+  volumeTargeted: IdealBreath
+  pressureTargeted: IdealBreath
+}): IdealAxes {
+  const breaths = [pair.volumeTargeted, pair.pressureTargeted]
+  const pressure = niceCeiling(Math.max(...breaths.flatMap((b) => b.pressure)), 5)
+  const flow = niceCeiling(Math.max(...breaths.flatMap((b) => b.flow.map(Math.abs))), 20)
+  const volume = niceCeiling(Math.max(...breaths.flatMap((b) => b.volume)), 100)
+  return { pressure: [0, pressure], flow: [-flow, flow], volume: [0, volume] }
+}
+
 export function idealSeriesPath(
   breath: IdealBreath,
   variable: keyof IdealAxes,

@@ -195,6 +195,11 @@
   touch-action: none;
 }
 
+.viewerCanvasMoving {
+  cursor: move;
+  touch-action: none;
+}
+
 .viewerCanvas:focus-visible {
   box-shadow: inset 0 0 0 3px #70e6d4;
 }

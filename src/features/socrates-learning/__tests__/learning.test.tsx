@@ -42,6 +42,7 @@ test('testing is a separate tissue-only module with no teaching or answer reveal
     'PRIVATE_HIGHLIGHT',
     'PRIVATE_PROVENANCE',
     'REGION_EXPLANATION',
+    doc.caseContent.annotationLegend.entries[0].label,
   ]
   for (const text of hidden) expect(screen.queryByText(text)).not.toBeInTheDocument()
   await user.click(screen.getByRole('radio', { name: 'Adequate' }))
@@ -54,6 +55,7 @@ test('testing is a separate tissue-only module with no teaching or answer reveal
   expect(screen.queryByRole('radio')).not.toBeInTheDocument()
   for (const text of hidden) expect(screen.queryByText(text)).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /reveal|teach|answer/i })).not.toBeInTheDocument()
+  expect(screen.queryByRole('region', { name: 'Annotation color key' })).not.toBeInTheDocument()
   expect(mockViewer.mock.lastCall[0]).toMatchObject({ tissueOnly: true, annotations: [] })
   view.unmount()
   render(<SocratesLearningWorkspace documents={[doc]} />)
@@ -71,6 +73,9 @@ test('teaching works without bounding boxes, resumes its step, and never submits
   await user.click(screen.getByRole('button', { name: 'Open teaching module' }))
   await user.click(screen.getByRole('button', { name: 'Start teaching' }))
   expect(screen.getByText('Synthetic case context')).toBeVisible()
+  expect(screen.getByRole('region', { name: 'Annotation color key' })).toHaveTextContent(
+    doc.caseContent.annotationLegend.entries[0].label,
+  )
   await user.click(screen.getByRole('button', { name: 'Continue' }))
   expect(screen.getByText('LOW_OBSERVATION')).toBeVisible()
   expect(screen.queryByText('HIGH_OBSERVATION')).not.toBeInTheDocument()
@@ -91,6 +96,21 @@ test('teaching works without bounding boxes, resumes its step, and never submits
     teachingViewed: true,
   })
   expect(currentProgress(doc, progress).submission).toBeUndefined()
+})
+
+test('unreviewed annotation keys remain pending in teaching rather than displaying unapproved labels', async () => {
+  const user = userEvent.setup()
+  const doc = previewFixture()
+  doc.caseContent.annotationLegend.reviewed = false
+  render(<SocratesLearningWorkspace documents={[doc]} />)
+  await user.click(screen.getByRole('button', { name: 'Open teaching module' }))
+  await user.click(screen.getByRole('button', { name: 'Start teaching' }))
+  expect(screen.getByRole('region', { name: 'Annotation color key' })).toHaveTextContent(
+    'Annotation key pending review',
+  )
+  expect(
+    screen.queryByText(doc.caseContent.annotationLegend.entries[0].label),
+  ).not.toBeInTheDocument()
 })
 
 test('rejects incomplete answers and keeps saved answers tied to the actual case content', async () => {

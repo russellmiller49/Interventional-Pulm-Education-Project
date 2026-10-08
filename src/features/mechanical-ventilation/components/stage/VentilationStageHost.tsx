@@ -1,6 +1,15 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type MouseEvent,
+} from 'react'
 import { Link, useRouter } from '@/i18n/navigation'
 import { LessonShell } from '@/features/learning-module/stage/LessonShell'
 import { ventilationLearningUnits } from '../../content/learningCurriculum'
@@ -14,18 +23,25 @@ import { ventilationReferenceMarker } from '../../content/referenceEvidence'
 import { ventilationExperimentByUnit } from '../../content/learningExperiments'
 import { ventilationStageSources } from '../../content/stageSources'
 import { isFoundationUnit } from '../../content/foundations'
-import { labGoalMet, labReadyToCompare, labMetricLabels } from '../../engine/learningLab'
 import { observationFor } from '../../engine/learningObservation'
 import type { VentilatorDeviceId } from '../../engine/types'
 import { MechanicalVentilationModuleFrame } from '../MechanicalVentilationModuleFrame'
 import { VentilationReinforcement } from '../VentilationReinforcement'
 import { useVentilationSelfPacedProgress } from '../useVentilationSelfPacedProgress'
 import { VentilationTaskWorkbench } from './VentilationTaskWorkbench'
-import { VentilationTeachingColumn } from './VentilationTeachingColumn'
-import { VentilationPrerequisite } from './VentilationPrerequisite'
+import { VENTILATION_SOURCES_ID, VentilationTeachingColumn } from './VentilationTeachingColumn'
 import { VentilationSourceList } from './VentilationSourceList'
 import { CapturedBreath } from './CapturedBreath'
-import { RecordedBreathComparison } from './RecordedBreathComparison'
+import { CapturedResult } from './RecordedBreathComparison'
+import { VentilationExperimentPanel } from './VentilationExperimentPanel'
+import { inspectionFigureState, markedIntervalLook } from '../../content/experimentStatus'
+import {
+  activatesThisTab,
+  cancelTaskHeadingReveal,
+  consumeTaskHeadingReveal,
+  requestTaskHeadingReveal,
+  revealTaskHeading,
+} from './revealTaskHeading'
 import { VentilationPeepComparison } from './VentilationPeepComparison'
 import { breathStop, type BreathStopId } from '../../content/breathSpine'
 import {
@@ -90,14 +106,63 @@ function VentilationStageSession({
   const evidence = session.evidence[session.round]
   const sources = ventilationStageSources(unitId, session.device)
   const nextUnit = ventilationLearningUnits[lesson.index + 1]
-  const ready = labReadyToCompare(session)
   const [explanationOpen, setExplanationOpen] = useState(false)
   const [restartCount, setRestartCount] = useState(0)
+  const [resetCount, setResetCount] = useState(0)
   const peepLesson = unitId === 'oxygenation-response'
   const [walkStop, setWalkStop] = useState<BreathStopId>('trigger')
+  const stepCountId = useId()
+  const headingRef = useRef<HTMLHeadingElement>(null)
+  /*
+   * Set only by the explicit navigation handlers below — Continue, Back, the step chooser and
+   * Restart — and consumed by the next committed step. A tick, Run/Pause, a capture, a control
+   * change or a disclosure never sets it, so none of them moves focus or the page (N4).
+   */
+  const revealRequested = useRef(false)
   useEffect(() => {
     visit({ section: 'learn', id: unitId, step: index })
   }, [index, unitId, visit])
+  useLayoutEffect(() => {
+    if (!revealRequested.current) return
+    revealRequested.current = false
+    if (headingRef.current) revealTaskHeading(headingRef.current)
+  }, [index, restartCount])
+  // A section chosen from the section chooser or the last step's link lands on its first heading
+  // — this section, and only when the request names it.
+  useLayoutEffect(() => {
+    if (consumeTaskHeadingReveal(unitId) && headingRef.current)
+      revealTaskHeading(headingRef.current, 'if-needed')
+  }, [unitId])
+  /*
+   * Explicit same-tab navigation to another section. The request names its destination, and the
+   * navigation runs as a transition so this component can tell when it settles: arriving unmounts
+   * this section, so if the transition ends and this section is still here, the navigation did not
+   * happen and its request is withdrawn rather than left for a later arrival.
+   */
+  const [sectionPending, startSectionNavigation] = useTransition()
+  const requestedSection = useRef<string | null>(null)
+  function navigateToSection(sectionId: string) {
+    requestedSection.current = sectionId
+    requestTaskHeadingReveal(sectionId)
+    startSectionNavigation(() => {
+      router.push({ pathname: '/mechanical-ventilation/learn', query: { activity: sectionId } })
+    })
+  }
+  useEffect(() => {
+    if (sectionPending || requestedSection.current === null) return
+    cancelTaskHeadingReveal(requestedSection.current)
+    requestedSection.current = null
+  }, [sectionPending])
+  /*
+   * The last step's link. A plain click navigates this tab through the same path as the chooser.
+   * A modified click, another button or a new-context activation is left to the browser, which
+   * opens the destination elsewhere: this tab makes no request and its focus does not move.
+   */
+  function continueToSection(event: MouseEvent<HTMLAnchorElement>, sectionId: string) {
+    if (event.defaultPrevented || !activatesThisTab(event)) return
+    event.preventDefault()
+    navigateToSection(sectionId)
+  }
 
   function goToStep(next: number) {
     const target = Math.max(0, Math.min(next, lesson.steps.length - 1))
@@ -107,7 +172,15 @@ function VentilationStageSession({
     setIndex(target)
     setExplanationOpen(false)
   }
+  /** Explicit step navigation: change the step, then bring its heading into view and focus it. */
+  function navigateToStep(next: number) {
+    const target = Math.max(0, Math.min(next, lesson.steps.length - 1))
+    if (target === index) return
+    revealRequested.current = true
+    goToStep(target)
+  }
   function restart() {
+    revealRequested.current = true
     setRestartCount((count) => count + 1)
     lab({ type: 'RESTART' })
     engine({ type: 'SET_PAUSED', paused: true })
@@ -119,6 +192,8 @@ function VentilationStageSession({
   const showExplanation = explanationOpen || interaction.kind === 'explain'
   const observation = evidence.response ? observationFor(session) : null
   const simulationStep = ['simulator-task', 'observe', 'interpret'].includes(interaction.kind)
+  /* The steps whose work is the experiment: the lesson follows the task, control and evidence. */
+  const workingStep = interaction.kind === 'simulator-task' || interaction.kind === 'observe'
   /*
    * The authored marker for this application, and the reference breath it is pinned on.
    *
@@ -135,6 +210,17 @@ function VentilationStageSession({
     () => (markerStep ? createLabSimulation(unitId, session.round, session.device) : null),
     [markerStep, unitId, session.round, session.device],
   )
+  /*
+   * What to look at, for this step. On a step that performs a round with a marked interval, the
+   * sentence follows the figure that is actually on screen — the experiment panel's captured
+   * breath with the marker on it, nothing yet, or the retained comparison — instead of repeating
+   * the line written beside the question's worked reference.
+   */
+  const inspectionFigure = simulationStep ? inspectionFigureState(session) : null
+  const lookLine =
+    marker && inspectionFigure
+      ? markedIntervalLook(marker.markerId, inspectionFigure)
+      : (step.guide?.look ?? round.look)
   /*
    * The lead-in over an optional question, per item kind. "Predict the observable response to one
    * change, then compare it with a real run" sat over "Which phase is shown at cursor A?", which
@@ -179,12 +265,7 @@ function VentilationStageSession({
                   <select
                     aria-label="Choose section"
                     value={unitId}
-                    onChange={(event) =>
-                      router.push({
-                        pathname: '/mechanical-ventilation/learn',
-                        query: { activity: event.target.value },
-                      })
-                    }
+                    onChange={(event) => navigateToSection(event.target.value)}
                   >
                     {ventilationLearningUnits.map((unit) => (
                       <option key={unit.id} value={unit.id}>
@@ -198,7 +279,7 @@ function VentilationStageSession({
                   <select
                     aria-label="Choose step"
                     value={index}
-                    onChange={(event) => goToStep(Number(event.target.value))}
+                    onChange={(event) => navigateToStep(Number(event.target.value))}
                   >
                     {lesson.steps.map((item, i) => (
                       <option key={item.id} value={i}>
@@ -224,17 +305,30 @@ function VentilationStageSession({
             </header>
           }
           footer={
-            <section className={styles.block}>
+            <section
+              className={styles.block}
+              id={VENTILATION_SOURCES_ID}
+              aria-labelledby={`${VENTILATION_SOURCES_ID}-heading`}
+            >
+              <h2 id={`${VENTILATION_SOURCES_ID}-heading`}>Sources</h2>
               <VentilationSourceList records={sources.records} claimsVisible />
             </section>
           }
         >
           <div className={styles.content}>
             <section className={styles.block} data-current-step={step.id}>
-              <p>
+              <p id={stepCountId}>
                 Step {index + 1} of {lesson.steps.length} · Application {session.round + 1}
               </p>
-              <h2>{step.title}</h2>
+              <h2
+                ref={headingRef}
+                tabIndex={-1}
+                className={styles.stepHeading}
+                aria-describedby={stepCountId}
+                data-step-heading
+              >
+                {step.title}
+              </h2>
               <p>
                 {simulationStep
                   ? round.task
@@ -244,7 +338,7 @@ function VentilationStageSession({
                       ? step.instruction
                       : round.introduction}
               </p>
-              <p>{step.guide?.look ?? round.look}</p>
+              <p data-step-look>{lookLine}</p>
               {marker && markerReference ? (
                 <CapturedBreath
                   key={`marker:${session.round}:${session.device}:${restartCount}`}
@@ -254,12 +348,24 @@ function VentilationStageSession({
                   marker={marker}
                 />
               ) : null}
+              {simulationStep ? (
+                <VentilationExperimentPanel
+                  key={`${unitId}:${session.round}:${session.device}:${restartCount}:${resetCount}`}
+                  session={session}
+                  lab={lab}
+                  engine={engine}
+                />
+              ) : null}
               <nav className={styles.tools} aria-label="Step navigation">
-                <button type="button" disabled={index === 0} onClick={() => goToStep(index - 1)}>
+                <button
+                  type="button"
+                  disabled={index === 0}
+                  onClick={() => navigateToStep(index - 1)}
+                >
                   Back
                 </button>
                 {index < lesson.steps.length - 1 ? (
-                  <button type="button" onClick={() => goToStep(index + 1)}>
+                  <button type="button" onClick={() => navigateToStep(index + 1)}>
                     Continue
                   </button>
                 ) : nextUnit ? (
@@ -268,6 +374,7 @@ function VentilationStageSession({
                       pathname: '/mechanical-ventilation/learn',
                       query: { activity: nextUnit.id },
                     }}
+                    onClick={(event) => continueToSection(event, nextUnit.id)}
                   >
                     Continue to {nextUnit.title}
                   </Link>
@@ -279,46 +386,43 @@ function VentilationStageSession({
                 </button>
               </nav>
             </section>
-            {peepLesson ? (
-              <VentilationPeepComparison key={restartCount} explanationOpen={showExplanation} />
-            ) : null}
-            {interaction.kind === 'read' || interaction.kind === 'walk' ? (
-              <VentilationPrerequisite lesson={lesson} device={session.device} />
-            ) : null}
-            {interaction.kind === 'walk' ? (
-              <section className={styles.block}>
-                <nav className={styles.tools} aria-label="Breath landmarks">
-                  {interaction.stops.map((stop) => (
-                    <button
-                      key={stop}
-                      type="button"
-                      aria-pressed={walkStop === stop}
-                      onClick={() => setWalkStop(stop)}
-                    >
-                      {breathStop(stop).title}
-                    </button>
-                  ))}
-                </nav>
-                <VentilationTeachingColumn
-                  lesson={lesson}
-                  step={step}
-                  state={session.simulation}
-                  stops={[walkStop]}
-                  roundIndex={session.round}
+            {workingStep && evidence.baseline && evidence.response && !showExplanation ? (
+              <section className={styles.block} data-captured-result-near-task>
+                <CapturedResult
+                  round={round}
+                  evidence={evidence}
+                  effort={step.presentation.effort}
                 />
               </section>
             ) : null}
-            <details className={styles.block} open={showExplanation || undefined}>
-              <summary>Teaching and worked references</summary>
+            {peepLesson && !workingStep ? (
+              <VentilationPeepComparison key={restartCount} explanationOpen={showExplanation} />
+            ) : null}
+            {interaction.kind === 'walk' ? (
+              <nav className={styles.tools} aria-label="Breath landmarks">
+                {interaction.stops.map((stop) => (
+                  <button
+                    key={stop}
+                    type="button"
+                    aria-pressed={walkStop === stop}
+                    onClick={() => setWalkStop(stop)}
+                  >
+                    {breathStop(stop).title}
+                  </button>
+                ))}
+              </nav>
+            ) : null}
+            {workingStep ? null : (
               <VentilationTeachingColumn
                 lesson={lesson}
                 step={step}
                 state={session.simulation}
-                stops={step.stops}
+                stops={interaction.kind === 'walk' ? [walkStop] : step.stops}
                 roundIndex={session.round}
                 showCapturedReference={!markerStep}
+                landmarkChooser={interaction.kind === 'walk'}
               />
-            </details>
+            )}
             {question ? (
               <VentilationReinforcement
                 key={step.id}
@@ -359,7 +463,7 @@ function VentilationStageSession({
                 </table>
               </section>
             ) : null}
-            {peepLesson ? (
+            {peepLesson && !workingStep ? (
               <section className={styles.block}>
                 <h2>Your separate simulated patient</h2>
                 <p>
@@ -377,6 +481,7 @@ function VentilationStageSession({
               watch={round.watch}
               controlsEnabled
               deviceLocked={false}
+              transport={!simulationStep}
               onSelectDevice={(selected) => {
                 saveDevicePreference(selected)
                 lab({ type: 'DEVICE', device: selected })
@@ -384,52 +489,25 @@ function VentilationStageSession({
                 setIndex(0)
               }}
               onResetPatient={() => {
+                setResetCount((count) => count + 1)
                 lab({ type: 'RESET' })
                 lab({ type: 'START_EXPERIMENT' })
                 engine({ type: 'SET_PAUSED', paused: true })
               }}
             />
-            {simulationStep ? (
-              <section className={styles.block} data-experiment-status>
-                <h3>Actual experiment</h3>
-                <p>
-                  {round.task} Observe for {round.seconds} simulated seconds after the requested
-                  action.
-                </p>
-                {session.phase !== 'experiment' && session.phase !== 'compare' ? (
-                  <button type="button" onClick={() => lab({ type: 'START_EXPERIMENT' })}>
-                    Start experiment from baseline
-                  </button>
-                ) : null}
-                <p>
-                  {round.goals.every((goal) => labGoalMet(goal, session))
-                    ? 'The requested action is present. Check the measurement status and response interval.'
-                    : 'The requested action has not yet been recorded.'}
-                </p>
-                <button type="button" disabled={!ready} onClick={() => lab({ type: 'COMPARE' })}>
-                  {evidence.response ? 'Observed response captured' : 'Capture observed response'}
-                </button>
-                {!ready && !evidence.response ? (
-                  <p>
-                    The capture needs the actual action and observation interval. You can continue
-                    reading at any time.
-                  </p>
-                ) : null}
-                {evidence.response ? (
-                  <p>
-                    The response is captured below. Reset the patient to repeat this experiment.
-                  </p>
-                ) : null}
-                {round.goals.some(
-                  (goal) => goal.type === 'pause-expiration' || goal.type === 'inspect-inspiration',
-                ) && evidence.baseline ? (
-                  <CapturedBreath
-                    label="Baseline reference · select an interval to inspect"
-                    samples={evidence.baseline.waveforms}
-                    onInspect={(sample) => lab({ type: 'INSPECT', sampleTime: sample.time })}
-                  />
-                ) : null}
-              </section>
+            {workingStep && peepLesson ? (
+              <VentilationPeepComparison key={restartCount} explanationOpen={showExplanation} />
+            ) : null}
+            {workingStep ? (
+              <VentilationTeachingColumn
+                lesson={lesson}
+                step={step}
+                state={session.simulation}
+                stops={step.stops}
+                roundIndex={session.round}
+                showCapturedReference={!markerStep}
+                guideLook={lookLine}
+              />
             ) : null}
             {showExplanation || interaction.kind === 'interpret' ? (
               <section className={styles.block} data-experiment-explanation>
@@ -437,43 +515,11 @@ function VentilationStageSession({
                 <p>{round.explanation}</p>
                 {evidence.baseline && evidence.response ? (
                   <>
-                    <RecordedBreathComparison evidence={evidence} />
-                    <table>
-                      <caption>Captured baseline and observed response</caption>
-                      <thead>
-                        <tr>
-                          <th>Reading</th>
-                          <th>Before</th>
-                          <th>After</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {round.watch.map((metric) => (
-                          <tr key={metric}>
-                            <th>
-                              {labMetricLabels[metric].label} ({labMetricLabels[metric].unit})
-                            </th>
-                            <td>
-                              {evidence.baseline!.values[metric].toFixed(
-                                labMetricLabels[metric].digits,
-                              )}
-                            </td>
-                            <td>
-                              {evidence.response!.values[metric].toFixed(
-                                labMetricLabels[metric].digits,
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <p>
-                      Plateau: {evidence.response.plateauSource};{' '}
-                      {evidence.response.plateauValid
-                        ? 'interpretable within this model'
-                        : 'not interpretable'}
-                      . {evidence.response.issues?.join(' ')}
-                    </p>
+                    <CapturedResult
+                      round={round}
+                      evidence={evidence}
+                      effort={step.presentation.effort}
+                    />
                     {observation && isFoundationUnit(unitId) ? (
                       <VentilationReinforcement
                         key={step.id + '-observation'}
@@ -496,7 +542,7 @@ function VentilationStageSession({
             ) : null}
             <nav className={styles.tools} aria-label="Continue reading">
               {index < lesson.steps.length - 1 ? (
-                <button type="button" onClick={() => goToStep(index + 1)}>
+                <button type="button" onClick={() => navigateToStep(index + 1)}>
                   Continue
                 </button>
               ) : (

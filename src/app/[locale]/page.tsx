@@ -73,6 +73,8 @@ export default async function HomePage({ params }: HomePageProps) {
   setRequestLocale(locale)
   const t = await getTranslations('home')
   const canViewDrafts = await canCurrentUserViewDraftModules()
+  const showEbusCourse = isVisibleModulePath('/socal-ebus-course')
+  const showPccmCourse = isVisibleModulePath('/pccm-intro-course')
   const visibleFeatureHighlights = featureHighlightDefinitions
     .filter((link) => isVisibleModulePath(link.href, { isAdmin: canViewDrafts }))
     .map((item) => ({
@@ -110,22 +112,28 @@ export default async function HomePage({ params }: HomePageProps) {
                   {t('coreModulesBody')}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2 md:max-w-xl md:justify-end">
-                <Button
-                  asChild
-                  variant="secondary"
-                  className="w-fit whitespace-nowrap rounded-full px-6"
-                >
-                  <Link href={'/pccm-intro-course' as Route}>{t('pccmIntroParticipants')}</Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="secondary"
-                  className="w-fit whitespace-nowrap rounded-full px-6"
-                >
-                  <Link href={'/socal-ebus-course' as Route}>{t('socalParticipants')}</Link>
-                </Button>
-              </div>
+              {showPccmCourse || showEbusCourse ? (
+                <div className="flex flex-wrap gap-2 md:max-w-xl md:justify-end">
+                  {showPccmCourse ? (
+                    <Button
+                      asChild
+                      variant="secondary"
+                      className="w-fit whitespace-nowrap rounded-full px-6"
+                    >
+                      <Link href={'/pccm-intro-course' as Route}>{t('pccmIntroParticipants')}</Link>
+                    </Button>
+                  ) : null}
+                  {showEbusCourse ? (
+                    <Button
+                      asChild
+                      variant="secondary"
+                      className="w-fit whitespace-nowrap rounded-full px-6"
+                    >
+                      <Link href={'/socal-ebus-course' as Route}>{t('socalParticipants')}</Link>
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -153,35 +161,37 @@ export default async function HomePage({ params }: HomePageProps) {
             </div>
           </section>
 
-          <section aria-labelledby="course-participants" className="container">
-            <div className="grid gap-8 rounded-3xl border border-border/70 bg-muted/30 p-8 md:grid-cols-[1fr_0.9fr] md:p-10">
-              <div className="space-y-4">
-                <Badge
-                  variant="outline"
-                  className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
-                >
-                  {t('participantCourse')}
-                </Badge>
-                <h2
-                  id="course-participants"
-                  className="text-2xl font-semibold tracking-tight md:text-3xl"
-                >
-                  {t('participantTitle')}
-                </h2>
-                <p className="text-sm leading-6 text-muted-foreground md:text-base">
-                  {t('participantBody')}
-                </p>
+          {showEbusCourse ? (
+            <section aria-labelledby="course-participants" className="container">
+              <div className="grid gap-8 rounded-3xl border border-border/70 bg-muted/30 p-8 md:grid-cols-[1fr_0.9fr] md:p-10">
+                <div className="space-y-4">
+                  <Badge
+                    variant="outline"
+                    className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+                  >
+                    {t('participantCourse')}
+                  </Badge>
+                  <h2
+                    id="course-participants"
+                    className="text-2xl font-semibold tracking-tight md:text-3xl"
+                  >
+                    {t('participantTitle')}
+                  </h2>
+                  <p className="text-sm leading-6 text-muted-foreground md:text-base">
+                    {t('participantBody')}
+                  </p>
+                </div>
+                <div className="flex flex-col justify-center gap-3 sm:flex-row md:flex-col">
+                  <Button asChild className="rounded-full px-6">
+                    <Link href={'/socal-ebus-course' as Route}>{t('openCoursePortal')}</Link>
+                  </Button>
+                  <Button asChild variant="outline" className="rounded-full px-6">
+                    <Link href={'/ebus-training' as Route}>{t('openEbus')}</Link>
+                  </Button>
+                </div>
               </div>
-              <div className="flex flex-col justify-center gap-3 sm:flex-row md:flex-col">
-                <Button asChild className="rounded-full px-6">
-                  <Link href={'/socal-ebus-course' as Route}>{t('openCoursePortal')}</Link>
-                </Button>
-                <Button asChild variant="outline" className="rounded-full px-6">
-                  <Link href={'/ebus-training' as Route}>{t('openEbus')}</Link>
-                </Button>
-              </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           <section aria-labelledby="upcoming" className="container">
             <div className="grid gap-8 rounded-3xl border border-border/70 bg-primary/10 p-8 md:grid-cols-[1.2fr_0.8fr] md:p-10">

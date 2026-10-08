@@ -562,7 +562,8 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       },
       predict: {
         objective: 'Decide whether a reassuring saturation settles the question.',
-        requiredAction: 'Commit a prediction, then read why the other answers do not fit.',
+        requiredAction:
+          'Optional: choose an answer, then read the reasoning for it and for the other answers. The explanation can also be opened without answering.',
         teachingPoint:
           'A patient can arrive at impaired oxygen delivery through blood flow, through oxygen content, or through demand, and those are not interchangeable.',
         lookIn: {
@@ -605,7 +606,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       transfer: {
         objective: 'Apply the concept to a different cause of impaired oxygen delivery.',
         requiredAction:
-          'Answer the new case, then open why the other answers do not fit and read it against the patient this section opened with.',
+          'Answer the new case, then open How the other answers compare and read it against the earlier case in this section.',
         teachingPoint:
           'The same reasoning identifies an oxygen-content problem as readily as a blood-flow problem.',
         lookIn: {
@@ -654,7 +655,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
          * where it is taken, so the instruction describes what is actually on the screen.
          */
         requiredAction:
-          'Find pVen, pInt, pArt, and ΔP on the circuit map, and confirm where each one is taken.',
+          'Find pVen, pInt, pArt, and Δp on the circuit map, and confirm where each one is taken.',
         teachingPoint:
           'Reading a pressure without its location is how a drainage problem gets treated as a membrane problem.',
         lookIn: {
@@ -997,7 +998,8 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       },
       predict: {
         objective: 'Decide what a higher displayed flow with a worsening patient means.',
-        requiredAction: 'Commit a prediction, then read why the other answers do not fit.',
+        requiredAction:
+          'Optional: choose an answer, then read the reasoning for it and for the other answers. The explanation can also be opened without answering.',
         teachingPoint:
           'A rising venous-line saturation alongside worsening systemic oxygenation points at where the returned blood is going.',
         lookIn: {
@@ -1080,7 +1082,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
     primaryVariantId: REFERENCE_VARIANT_ID,
     phases: {
       recognize: {
-        objective: 'Decide which signals belong in a baseline review.',
+        objective: 'Read which signals belong in a baseline review.',
         requiredAction:
           'Read the drainage and load group, the membrane and return group, the gas side, and the patient, and note what each one reports.',
         teachingPoint:
@@ -1092,7 +1094,8 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       },
       predict: {
         objective: 'Decide what a single unfamiliar absolute value establishes.',
-        requiredAction: 'Commit a prediction, then read why the other answers do not fit.',
+        requiredAction:
+          'Optional: choose an answer, then read the reasoning for it and for the other answers. The explanation can also be opened without answering.',
         teachingPoint:
           'Cannula size and position, patient size, temperature, hemoglobin, and the device configuration all move these numbers without anything having gone wrong.',
         lookIn: {
@@ -1215,11 +1218,14 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         },
       },
       predict: {
-        objective: 'Commit to one of the four explanations before looking further.',
+        // S17-3 (ECMO-FELLOW-04): this said "before looking further" and "then read the comparison"
+        // over a comparison that is open on the page from the first task. The prediction is optional
+        // and the comparison stays where it is; only the wording changed.
+        objective: 'Optional prediction: which of the four explanations fits best?',
         requiredAction:
-          'Commit a prediction and name the finding that would support it, then read the comparison. The state does not advance when you commit.',
+          'If you want to check your reasoning, choose one of the four explanations and name the finding that would support it. The comparison of what each explanation predicts stays open on this page before and after you choose, and the simulator does not advance when you commit.',
         teachingPoint:
-          'Committing first is what lets the next measurement contradict you instead of confirming you.',
+          'An optional prediction names an expected finding so it can be compared with the measurements.',
         lookIn: {
           pane: 'steps',
           landmark: 'the answer choices below',
@@ -1377,7 +1383,8 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       predict: {
         objective:
           'Decide what an unchanged circuit display with a falling upper-body saturation means.',
-        requiredAction: 'Commit a prediction, then read why the other answers do not fit.',
+        requiredAction:
+          'Optional: choose an answer, then read the reasoning for it and for the other answers. The explanation can also be opened without answering.',
         teachingPoint:
           'Recovering native function and worsening native lungs can produce the same upper-body reading, and neither of them disturbs the circuit.',
         lookIn: {
@@ -1479,7 +1486,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
     primaryVariantId: REFERENCE_VARIANT_ID,
     phases: {
       recognize: {
-        objective: 'Decide which signals belong in a VA baseline review.',
+        objective: 'Read which signals belong in a VA baseline review.',
         requiredAction:
           'Read the drainage and load group, the membrane and return group, the gas side, and then the group that exists only because the circulations are in parallel.',
         teachingPoint:
@@ -1491,7 +1498,8 @@ export const ecmoFoundationLessonRuntimes: Readonly<
       },
       predict: {
         objective: 'Decide what an unremarkable circuit display establishes about a VA run.',
-        requiredAction: 'Commit a prediction, then read why the other answers do not fit.',
+        requiredAction:
+          'Optional: choose an answer, then read the reasoning for it and for the other answers. The explanation can also be opened without answering.',
         teachingPoint:
           'Pulsatility, valve opening, the difference between two sampling sites, and the cannulated limb are all outside the circuit display.',
         lookIn: {
@@ -1615,11 +1623,13 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         },
       },
       predict: {
-        objective: 'Commit to one of the explanations before looking further.',
+        // VA17-2 (ECMO-FELLOW-04): as the VV capstone. The right-arm and femoral values are
+        // observations the reasoning needs, so they stay on the page; the promise to withhold went.
+        objective: 'Optional prediction: which of the explanations fits best?',
         requiredAction:
-          'Commit a prediction and name the finding that would support it, then read the comparison. The state does not advance when you commit.',
+          'If you want to check your reasoning, choose one of the explanations and name the finding that would support it. The comparison of what each explanation predicts stays open on this page before and after you choose, and the simulator does not advance when you commit.',
         teachingPoint:
-          'Committing first is what lets the next measurement contradict you instead of confirming you.',
+          'An optional prediction names an expected finding so it can be compared with the measurements.',
         lookIn: {
           pane: 'steps',
           landmark: 'the answer choices below',

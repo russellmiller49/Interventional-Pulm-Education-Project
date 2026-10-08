@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
 
 import {
   criticalCareAccountSyncModuleIds,
@@ -14,6 +15,7 @@ export const dynamic = 'force-dynamic'
 
 const MAX_MERGE_ATTEMPTS = 4
 const SYNC_ACCOUNT_HEADER = 'x-critical-care-sync-account'
+const storedDatetimeSchema = z.string().datetime({ offset: true })
 
 interface StoredCoarseProgress {
   readonly module_id: string
@@ -29,6 +31,19 @@ type ProgressClient = Awaited<ReturnType<typeof supabaseServer>>
 
 function isUniqueConflict(error: { readonly code?: string } | null): boolean {
   return error?.code === '23505'
+}
+
+/*
+ * Accept the database's numeric offsets, then return the ISO-Z form the coarse schema and
+ * client comparisons use. Validate the calendar date and time before Date.parse can coerce
+ * malformed input (for example February 30 or a date without a time) into a valid instant.
+ * Invalid values pass through unchanged so the response schema still refuses the row.
+ */
+function toIsoInstant(value: unknown): unknown {
+  const datetime = storedDatetimeSchema.safeParse(value)
+  if (!datetime.success) return value
+  const time = Date.parse(datetime.data)
+  return Number.isNaN(time) ? value : new Date(time).toISOString()
 }
 
 function mergeStoredProgress(
@@ -195,8 +210,8 @@ export async function GET() {
           ),
         ),
       ],
-      completedAt: row.completed_at as string | null,
-      lastVisitedAt: row.last_visited_at as string,
+      completedAt: toIsoInstant(row.completed_at),
+      lastVisitedAt: toIsoInstant(row.last_visited_at),
     })),
   })
   if (!response.success) {
