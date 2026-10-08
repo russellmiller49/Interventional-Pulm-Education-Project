@@ -1,462 +1,498 @@
-import { SIMULATOR_LANDMARKS, STEPS_LANDMARKS, TEACHING_LANDMARKS } from '../landmarks'
-import type { BronchSectionDefinition } from '../types'
+import { num } from '../numbers'
+import type {
+  AuthoredChoice,
+  BronchSectionDefinition,
+  MonitorReading,
+  MonitorTrend,
+} from '../types'
 
 /**
- * M02 — Patient assessment and a patient-centered plan. The foundation section of the Prepare
- * phase: before anything is prepared, the learner decides what a requested bronchoscopy is for,
- * weighs it against the reasonable alternatives at this patient's known risk, and builds a plan
- * that holds only what is known — then carries it into consent (teach-back) and the time-out.
- * Knowledge spec §7–§8 (S1 PDF 35–50, 75–79, 111–120, 129–130, 134–144, 154–158; S2 PDF 50–59,
- * 155–156; S3 PDF 47–50; T07; T09; T15; U2; U7) and case C03 (spec lines 1772–1782).
+ * The procedure and the plan (rewrite, brief 1). The fellow decides whether a requested
+ * bronchoscopy goes ahead today, is held or is modified, and sets the platelet and antithrombotic
+ * plan for the sampling. One screen walks a whole case, which is the course's map. Three referrals
+ * then arrive: a wrong plan plays out before the learner decides again.
+ *
+ * Sources: the course textbook (S1) and training manual (S2) for indications, risk, consent and the
+ * time-out; the 2019 joint guideline (U2) for platelets and antithrombotic drugs, through the
+ * numbers register (rows 7 to 9).
  */
+const INDICATIONS = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 111, to: 120 } },
+  { sourceId: 'S2', location: { kind: 'pdf-pages', from: 55, to: 56 } },
+] as const
+const RISK = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 134, to: 144 } },
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 119, to: 120 } },
+] as const
+const ANTITHROMBOTIC = [
+  {
+    sourceId: 'U2',
+    location: {
+      kind: 'section',
+      label: 'executive recommendations on laboratory testing and antithrombotic drugs',
+    },
+  },
+] as const
+const CONSENT = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 116, to: 117 } },
+  { sourceId: 'S2', location: { kind: 'pdf-pages', from: 50, to: 59 } },
+  { sourceId: 'S2', location: { kind: 'pdf-pages', from: 155, to: 156 } },
+] as const
+
+/** The vital signs at one moment of a referral. Values are written for the case. */
+function vitals(
+  spo2: readonly [string, MonitorTrend, string],
+  heartRate: readonly [string, MonitorTrend],
+  bloodPressure: readonly [string, MonitorTrend, string],
+  view?: string,
+): readonly MonitorReading[] {
+  return [
+    ...(view ? [{ channel: 'airway-view' as const, words: view, trend: 'new' as const }] : []),
+    {
+      channel: 'oximetry',
+      words: spo2[2],
+      trend: spo2[1],
+      value: spo2[0],
+      unit: '%',
+      provenance: 'authored',
+    },
+    {
+      channel: 'heart-rate',
+      words: heartRate[1] === 'steady' ? 'Unchanged' : 'Rising',
+      trend: heartRate[1],
+      value: heartRate[0],
+      unit: '/min',
+      provenance: 'authored',
+    },
+    {
+      channel: 'blood-pressure',
+      words: bloodPressure[2],
+      trend: bloodPressure[1],
+      value: bloodPressure[0],
+      unit: 'mmHg',
+      provenance: 'authored',
+    },
+  ]
+}
+
+const MEDICINE_CHOICES = (
+  labels: readonly [string, string, string, string],
+  rationales: readonly [string, string, string, string],
+): AuthoredChoice[] =>
+  (['a', 'b', 'c', 'd'] as const).map((id, index) => ({
+    id,
+    label: labels[index],
+    rationale: rationales[index],
+    plausibility: index === 0 ? 'best' : 'incorrect-mechanism',
+  }))
+
 export const section: BronchSectionDefinition = {
   id: 'clinical-question',
-  title: 'The request and the plan',
-  shortTitle: 'Request and plan',
-  minutes: 6,
+  authoringContract: 2,
+  title: 'The procedure and the plan',
+  shortTitle: 'Procedure and plan',
+  minutes: 9,
+  activityMinutes: 3,
   moduleIds: ['M02'],
   objectives: [
     {
       objectiveId: 'M02-O1',
-      subtask:
-        'Commits, in the transfer, to establishing a missing current oxygen requirement before the plan is fixed, rather than assuming none, assuming the worst or cancelling; places two incomplete requests under “Not provided — must clarify” in the sort. The four-box plan itself is shown worked in “The lavage request, worked into a plan”; constructing one is observed in supervised practice.',
-      evidence: 'committed-explanation',
+      subtask: 'Decides whether a requested bronchoscopy goes ahead, is held or is modified.',
+      evidence: 'case-decision',
     },
     {
       objectiveId: 'M02-O2',
-      subtask:
-        'Decides, in a practice case, the next move for a biopsy request in a patient on dual antiplatelet therapy after a recent coronary stent, where patient, procedure and prescribing-team factors change the plan.',
+      subtask: 'Sets the platelet threshold and the antithrombotic plan for the sampling planned.',
       evidence: 'case-decision',
     },
     {
       objectiveId: 'M02-O3',
       subtask:
-        'Reads how consent is explained and checked with teach-back, in the block on the consent conversation; the conversation itself is observed with a patient in supervised practice.',
+        'Reads what consent covers and how to check it by asking the patient to say it back.',
       evidence: 'not-app-assessable',
     },
     {
       objectiveId: 'M02-O4',
-      subtask:
-        'Decides, in a practice case, what happens when the signed consent names a different side from the request and the CT at the time-out.',
+      subtask: 'Stops at the time-out when the consent and the request name different sides.',
       evidence: 'case-decision',
     },
     {
       objectiveId: 'M02-O5',
-      subtask:
-        'Commits a justification for a requested diagnostic bronchoscopy, then sorts eight requests between noninvasive, bronchoscopic and not-yet-decidable pathways.',
+      subtask: 'Names the reason a bronchoscopy is indicated, beyond the request for it.',
       evidence: 'committed-explanation',
     },
   ],
   drillIds: [],
   prerequisites: ['shared-airway'],
 
-  clinicalQuestion:
-    'A bronchoscopy has been requested for your patient. What decides whether it should go ahead, and what must the plan hold before it does?',
-  recognizeTitle: 'A lavage request for an opacity that has come back',
+  clinicalQuestion: 'Should this patient have a bronchoscopy today, and what has to be true first?',
   objective:
-    'Decide whether a requested diagnostic bronchoscopy is justified for a particular patient, and what its plan must contain before the procedure goes ahead.',
-  why: 'Every bronchoscopy puts a scope into the airway the patient breathes through, and a request often arrives before anyone has written a plan. What the plan rests on then decides what the patient consents to and what the team checks at the time-out.',
-  newConcept:
-    'A request names a procedure; what justifies it is the clinical question — what its likely result would change for this patient, beyond the reasonable alternatives, at a risk that is known and acceptable.',
-  incrementSentence:
-    'This section adds one idea to the shared airway: the airway is entered only for a reason, and the reason is a question whose answer would change this patient’s care — not the instrument that is free or the procedure a referral names.',
+    'Decide whether a requested bronchoscopy goes ahead, is held or is modified, and set the bleeding plan for it.',
   harmfulReflex:
-    'Doing the procedure the request names because a bronchoscope is free, and filling any missing fact with an assumption so that it can go ahead.',
+    'Going ahead as booked. A request and a free slot are not an indication, and they do not check the plan.',
+  harmfulReflexPatterns: [/\bgo ahead as (booked|requested)\b/i],
   anchor: {
     analogy:
-      'A request that names only a procedure is like a drug order with no indication: before acting on it, find out what it is for and whether another option would serve as well.',
+      'A bronchoscopy request is a drug order. You do not give a drug because it was ordered. You check why, who it is for, and what else they take.',
     precise:
-      'A diagnostic bronchoscopy is justified when the information or efficiency it adds would change this patient’s management beyond what the reasonable alternatives can, at a risk the supervisor and the patient accept. Each fact that decision depends on is either known or recorded as not provided — never assumed.',
-    checklistLabel: 'Say what the procedure is for, in four parts',
+      'Go ahead when the result would change management, the patient can tolerate it, and the bleeding risk fits the sampling planned.',
+    checklistLabel: 'Before every bronchoscopy',
     checklist: [
-      'The question is …',
-      'The target is …',
-      'The proposed sample or intervention is …',
-      'The expected result would change …',
+      'A question the scope can answer',
+      'A patient who can tolerate it',
+      'Bleeding risk matched to the sampling',
+      'Consent, then the time-out',
     ],
   },
+  outcomes: [
+    {
+      id: 'go-hold-modify',
+      text: 'Decide whether a requested bronchoscopy goes ahead today, is held or is modified.',
+    },
+    {
+      id: 'bleeding-plan',
+      text: 'Set the platelet threshold and the antithrombotic plan for the sampling planned.',
+    },
+  ],
 
   spineStops: [],
   grammarRowIds: [],
-  controlStrip: {
-    verdict: 'no-control-change-the-plan',
-    states: {
-      insertion: 'monitoring',
-      rotation: 'monitoring',
-      deflection: 'monitoring',
-      suction: 'monitoring',
-      accessory: 'monitoring',
-    },
-    sentence:
-      'No control here. This decision is made before anyone picks up the scope: the question, the plan and the consent come first, and none of the five controls changes them.',
-  },
-  precommitDenyPatterns: [
-    /would change/i,
-    /less invasive/i,
-    /\balternatives?\b/i,
-    /acceptable risk/i,
-    /airway cause/i,
-  ],
-  modelBoundary:
-    'The requests, patients and records in this section are constructed for teaching. Nothing here calculates for a patient: antithrombotic interruption, sedation and staffing follow your institution’s approved policies. The consent conversation and the time-out are team skills shown with a real patient and team, not on this page.',
-  localPolicyIds: ['antithrombotic_policy', 'sedation_policy', 'critical_airway_pathway'],
-  reviewItemIds: ['R09', 'R10'],
+  precommitDenyPatterns: [/\bsuggests a problem\b/i, /\bthe reason to go\b/i],
+  localPolicyIds: ['antithrombotic_policy'],
+  reviewItemIds: [],
 
   blocks: [
     {
-      id: 'a-request-arrives',
-      kind: 'question',
+      id: 'whole-case',
+      kind: 'pattern',
       role: 'framing',
-      heading: 'A request arrives',
-      body: 'A bronchoscopy often begins as a request from another team: a named procedure, a patient and a reason, sometimes in a single line. Before anything is prepared, the bronchoscopist and the supervisor decide whether to do it and what exactly it should include.\n\nThis section is about what that decision rests on, and how it carries into the consent conversation and the time-out.',
-      claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 111, to: 120 } },
-        { sourceId: 'S3', location: { kind: 'pdf-pages', from: 47, to: 50 } },
+      heading: 'One bronchoscopy, start to finish',
+      body: 'A man has a mass in his right upper lobe. Follow him through the steps every bronchoscopy takes.',
+      pointsLabel: 'From plan to recovery',
+      points: [
+        'Plan. The CT shows a lesion in the airway, so a biopsy will answer the question.',
+        'Prepare. His clopidogrel is held, he has fasted, and the scope is checked.',
+        'Anesthetize. Lidocaine to the nose, throat and cords, with titrated sedation.',
+        'Enter and survey. Through the cords, then every airway, the normal side first.',
+        'Sample. Biopsies of the lesion, then brushings and washings.',
+        'Recover. Monitored until awake, then sent home with written instructions.',
       ],
+      claimClass: 'synthesis',
+      sourceRefs: INDICATIONS,
     },
     {
-      id: 'in-front-of-you',
-      kind: 'signals',
+      id: 'indications',
+      kind: 'pattern',
       role: 'signals',
-      heading: 'What is in front of you',
-      body: 'Each of these can bear on a request. Before committing, decide which of them your decision rests on.',
-      pointsLabel: 'Information and circumstances around a request',
+      heading: 'When the scope answers the question',
+      body: 'Bronchoscopy is indicated when looking or sampling would change what you do next. A request is not an indication. Nor is a shadow, a cough or a free slot.',
+      pointsLabel: 'Reasons to look',
       points: [
-        'The referral’s wording and the procedure it names',
-        'The imaging and its report',
-        'Respiratory reserve, current support, airway and bleeding history',
-        'The medication list, including antithrombotic drugs',
-        'The bronchoscope, room and staff free today',
-        'A trainee’s need for supervised procedures',
+        'A suspected lesion in the airway, or a lobe that has collapsed without explanation',
+        'Hemoptysis with no source found',
+        'Infection or infiltrates that need directed sampling, when simpler tests have not answered',
+        'Suspected foreign-body aspiration. An opacity that persists after choking is a reason to look.',
+        'Treatment: clearing secretions and mucus plugs, or removing a foreign body',
       ],
-      claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 75, to: 79 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 115, to: 116 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 35, to: 50 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 55, to: 56 } },
-      ],
-    },
-    {
-      id: 'question-before-instrument',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'What counts as an indication',
-      body: 'Relevant indications include selected airway abnormalities, suspected endobronchial lesions, localized or unexplained collapse, selected infectious or parenchymal processes that need directed sampling, and targeted secretion management when appropriate. An imaging abnormality or a cough alone is not an automatic indication.\n\nBronchoscopy is not a routine substitute for noninvasive evaluation or ordinary airway clearance.',
       claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 111, to: 120 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 154, to: 158 } },
-        { sourceId: 'S3', location: { kind: 'pdf-pages', from: 47, to: 50 } },
-      ],
+      sourceRefs: INDICATIONS,
     },
     {
-      id: 'two-questions',
-      kind: 'after-commitment',
+      id: 'risk',
+      kind: 'pattern',
       role: 'mechanism',
-      heading: 'Two questions before a diagnostic bronchoscopy',
-      body: 'Two questions come first. Will bronchoscopy improve diagnostic yield or efficiency over the alternatives available? Is there an important alternative diagnosis the referral label may have missed? Recurrent “pneumonia” may be obstruction, aspiration, a retained foreign body or a noninfectious process, and a routine, uncomplicated infection is not made an indication because a bronchoscope is available.\n\nThe pathways in the sort are reasoning prompts, not automatic indications. In suspected tuberculosis, a dry cough does not by itself mean that sputum induction or another noninvasive approach should be skipped.',
-      claimClass: 'transcript-source',
-      sourceRefs: [
-        { sourceId: 'T09', location: { kind: 'time-span', start: '00:05:45', end: '00:11:55' } },
-        { sourceId: 'T09', location: { kind: 'time-span', start: '00:07:58', end: '00:09:34' } },
+      heading: 'What makes it unsafe today',
+      body: 'Few patients can never have a bronchoscopy. Most problems are fixed first, or the plan changes around them.\n\nRisk follows the sampling. Inspection and lavage bleed little. Biopsy adds bleeding, and transbronchial biopsy adds pneumothorax.',
+      pointsLabel: 'Fix first, or change the plan',
+      points: [
+        'Oxygenation you cannot support through the procedure',
+        'Active bronchospasm, or an unstable circulation',
+        'A critically narrowed central airway. Plan the airway before the scope.',
+        'Sleep apnea or a previous difficult airway. Plan the sedation.',
+        'No consent, or no staff, equipment or rescue plan in the room',
       ],
-      reviewItemIds: ['R09'],
+      claimClass: 'source',
+      sourceRefs: RISK,
     },
     {
-      id: 'noninvasive-first',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'When a noninvasive sample answers the question',
-      body: 'In suspected ventilator-associated pneumonia, the added information from lavage may justify it in selected cases, but routine bronchoscopy should not be inferred from fever in an intubated patient. The 2016 ATS/IDSA guideline recommends noninvasive endotracheal sampling with semiquantitative cultures rather than routine invasive quantitative sampling — a weak recommendation from low-quality evidence.\n\nThat does not remove a separate reason for bronchoscopy: airway inspection, secretion clearance or the evaluation of another diagnosis.',
+      id: 'bleeding-plan',
+      kind: 'pattern',
+      role: 'normal-reference',
+      heading: 'Platelets and blood thinners',
+      body: 'Match the bleeding plan to the sampling. The drug holds below apply before endobronchial or transbronchial biopsy.',
+      pointsLabel: 'Before you sample',
+      points: [
+        `Platelets: at least ${num('platelets-bal')} for lavage, and at least ${num('platelets-biopsy')} for biopsy.`,
+        `Clopidogrel, prasugrel or ticagrelor: stop ${num('p2y12-hold')} before.`,
+        'Low-dose aspirin: continue.',
+        `Warfarin: stop ${num('warfarin-hold')} before, with an INR ${num('inr-before-biopsy')} on the day.`,
+        `A direct oral anticoagulant: stop ${num('noac-hold')} before. The INR does not measure it.`,
+        'A recent coronary stent, or a high risk of clotting: agree the plan with the prescriber before you stop anything.',
+      ],
       claimClass: 'update',
-      sourceRefs: [
-        {
-          sourceId: 'U7',
-          location: { kind: 'section', label: 'targeted noninvasive sampling preference' },
-        },
-        { sourceId: 'T15', location: { kind: 'time-span', start: '00:24:36', end: '00:31:59' } },
-      ],
-    },
-    {
-      id: 'four-box-worked',
-      kind: 'after-commitment',
-      role: 'worked-example',
-      heading: 'The lavage request, worked into a plan',
-      body: 'The man in the prediction has an opacity back in the right lower lobe after treatment, and a request for lavage “for cultures”. Its purpose, in four parts: the question is whether a focal airway process explains the recurrence; the target is the right lower lobe; the proposed sample is a directed specimen if the airway and his physiology permit; the result would change his management if an obstruction or retained material is found.',
-      pointsLabel: 'The four-box plan, with a gap left as a gap',
-      points: [
-        'Initial evaluation: his reserve and current support, medications including antithrombotic drugs, and his preferences. Earlier images, to confirm the opacity is in the same place: not provided — must clarify.',
-        'Procedural strategy: inspection with a directed specimen; the alternatives, the important risks, who has the expertise, and consent with teach-back.',
-        'Technique and results: sedation and monitoring under the approved pathway, the expected airway path, the main hazard, and the response if the first plan does not work.',
-        'Subsequent management: who follows the result, what a nondiagnostic result would mean, referral and team review.',
-      ],
-      claimClass: 'design',
-      sourceRefs: [
-        { sourceId: 'S3', location: { kind: 'pdf-pages', from: 47, to: 50 } },
-        { sourceId: 'T07', location: { kind: 'time-span', start: '00:01:17', end: '00:04:43' } },
-        { sourceId: 'T09', location: { kind: 'time-span', start: '00:34:13', end: '00:43:58' } },
-      ],
-      localPolicyIds: ['sedation_policy'],
-    },
-    {
-      id: 'what-changes-the-plan',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'What changes the plan',
-      body: 'Risk depends on the procedure. Inspection and lavage are not interchangeable with endobronchial or transbronchial biopsy in their bleeding and pneumothorax risks, so a patient may be suitable for one and not the other; equally, one unsafe component does not make every bronchoscopic option unsafe. The supervisor chooses the procedure, setting, personnel and rescue plan against the whole balance of risk and benefit.',
-      pointsLabel: 'Patient, procedure and system',
-      points: [
-        'Patient: respiratory reserve and support, active bronchospasm, obstructive sleep apnea or a previous difficult airway, hemodynamic instability, bleeding history.',
-        'Procedure: a biopsy is not a lavage, and a critically narrowed central airway needs a planned difficult-airway strategy before anyone instruments it.',
-        'System: missing staff, consent, equipment, specimen support or rescue capability is a reason not to proceed as planned.',
-      ],
-      claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 115, to: 116 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 119, to: 120 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 129, to: 130 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 134, to: 144 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 111 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 154, to: 158 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 75, to: 79 } },
-      ],
-      localPolicyIds: ['critical_airway_pathway'],
-    },
-    {
-      id: 'risk-and-sedation',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'Patient risk is not an anesthetic prescription',
-      body: 'A higher-risk patient does not by that alone call for general anesthesia or deeper sedation. The patient’s risk, the conditions the procedure needs and the rescue available are weighed separately: disease severity informs risk and staffing, and the sedation and airway strategy is its own judgment under the institution’s sedation pathway.',
-      claimClass: 'review-flag',
-      sourceRefs: [
-        { sourceId: 'T07', location: { kind: 'time-span', start: '00:01:17', end: '00:04:43' } },
-      ],
-      localPolicyIds: ['sedation_policy'],
-      reviewItemIds: ['R10'],
-    },
-    {
-      id: 'antithrombotic-decision',
-      kind: 'after-commitment',
-      role: 'policy',
-      heading: 'Antithrombotic drugs: a decision, not a rule',
-      body: 'The 2019 joint diagnostic bronchoscopy guideline distinguishes platelet thresholds by procedure, supports selective rather than universal coagulation studies, separates low-dose aspirin from P2Y12 inhibitors for biopsy, and emphasizes consultation when thrombotic risk is high. These distinctions support a decision process, not an automatic hold rule.\n\nInterrupting and resuming a drug needs the exact drug, its indication, renal function where relevant, the procedure’s bleeding risk, recent thrombotic history and the prescribing team’s plan. Do not tell every patient to stop “blood thinners” for a fixed interval, read a normal INR as safety in a patient taking a direct oral anticoagulant, or start bridging automatically. Recent coronary stenting and dual antiplatelet therapy are explicit reasons to escalate. Your institution’s policy applies, and this course calculates nothing for a patient.',
-      claimClass: 'local-policy',
-      sourceRefs: [
-        {
-          sourceId: 'U2',
-          location: {
-            kind: 'section',
-            label: 'executive recommendations on laboratory testing and antithrombotic drugs',
-          },
-        },
-      ],
+      sourceRefs: ANTITHROMBOTIC,
       localPolicyIds: ['antithrombotic_policy'],
     },
     {
-      id: 'consent-conversation',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'Consent is a conversation with a decision',
-      body: 'Explain the clinical question, what the procedure involves, the planned approach and sampling, the expected benefits, the important risks, the alternatives, and what may happen if the patient declines. Discuss uncertainty, including a nondiagnostic result. Use a qualified interpreter when needed, establish capacity for this decision, and obtain consent before sedation when circumstances allow.\n\nLanguage difference, disability, anxiety, a psychiatric diagnosis or unfamiliarity with the procedure does not by itself establish incapacity; emergency consent and surrogate rules are institution- and jurisdiction-specific.',
-      pointsLabel: 'What the explanation covers, then teach-back',
+      id: 'consent-and-time-out',
+      kind: 'pattern',
+      role: 'signals',
+      heading: 'Consent, then the time-out',
+      body: 'Take consent before any sedative. Say what you will do and why, the risks, the alternatives, and that the result may not give an answer. Then ask the patient to say it back.\n\nRun the time-out aloud, with everyone listening.',
+      pointsLabel: 'The time-out',
       points: [
-        'What will happen, why, and what else could be done',
-        'The important risks and the chance of no diagnosis',
-        'Teach-back: the patient says what will happen and why, and anything missed is explained again',
-        'A simple signal for discomfort, and that the team can pause',
+        'Patient, procedure, site and side',
+        'Consent, allergies and blood thinners',
+        'Imaging on screen, equipment and specimen pots ready',
+        'A mismatch stops everything until it is resolved',
       ],
       claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 116, to: 117 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 50, to: 59 } },
-        { sourceId: 'S3', location: { kind: 'pdf-pages', from: 47, to: 50 } },
-      ],
-    },
-    {
-      id: 'time-out',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'The time-out is spoken by the team',
-      body: 'The active pause confirms identity, the intended procedure, site and side, consent, allergies, relevant medication and bleeding concerns, imaging, required equipment, planned specimens and anticipated safety issues. Every participating team member acknowledges the plan, and a discrepancy is resolved before anyone proceeds. A checklist clicked through silently by the operator is not the same process.\n\nThe pause is also where roles are named: who watches physiology, who handles accessories, and who can stop the procedure. A time-out that finds a discrepancy has done its work: the discrepancy is resolved, not read past on the way to the end of the list.',
-      claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 55, to: 59 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 155, to: 156 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 77, to: 79 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 157, to: 158 } },
-      ],
+      sourceRefs: CONSENT,
     },
     {
       id: 'common-errors',
       kind: 'after-commitment',
       role: 'common-errors',
-      heading: 'Common errors and their correction',
-      body: 'Each of these lets something other than the clinical question make the decision.',
-      pointsLabel: 'The error, then the correction',
+      heading: 'Five errors to expect',
+      body: 'Each one skips a check that takes a minute.',
+      pointsLabel: 'The error, then the fix',
       points: [
-        'Treating the referral’s label as the indication: restate the question, the target and what the result would change.',
-        'Choosing the device before the pathway: a node beyond the airway wall or a peripheral target needs its own sampling pathway.',
-        'Filling a missing fact with an assumption: write “not provided — must clarify” and ask.',
-        'Planning from a CT report or a single screenshot: review the full study for side, lobe, airway and what lies beyond the wall.',
-        'Promising too much at consent: no certain diagnosis, no promise of no discomfort or of complete amnesia, no immediate final result.',
-        'Hurrying the time-out when an item disagrees: stop and resolve it before anyone proceeds.',
+        'Treating the request as the indication. Ask what the result would change.',
+        'Stopping every blood thinner. Aspirin continues, and a recent stent needs the prescriber.',
+        'Trusting a normal INR in a patient on a direct oral anticoagulant. Count the days since the last dose.',
+        'Filling a blank with a guess. Find out the oxygen requirement and the platelet count.',
+        'Changing the consent form at the time-out. Stop, and resolve it with the patient.',
       ],
-      claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 111, to: 120 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 35, to: 50 } },
-        { sourceId: 'S3', location: { kind: 'pdf-pages', from: 47, to: 50 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 55, to: 59 } },
-      ],
+      claimClass: 'source',
+      sourceRefs: [...RISK, ...CONSENT],
     },
   ],
 
   workspace: {
-    kind: 'map',
-    lit: ['RLL'],
-    caption: 'The lobe the request concerns: the right lower lobe, where the opacity has come back',
-  },
-
-  steps: {
-    recognize: {
-      instruction:
-        'In the Teaching panel, read “What is in front of you”; in the Simulator panel, the airway map lights the lobe this request concerns.',
-      lookIn: {
-        pane: 'teaching',
-        landmark: 'What is in front of you',
-        alsoPane: 'simulator',
-        alsoLandmark: SIMULATOR_LANDMARKS.map,
-      },
-    },
-    act: {
-      title: 'From request to pathway',
-      instruction:
-        'Place each request under the pathway it calls for, on this card, then check the set. Each pathway is the answer to at least one request.',
-      lookIn: { pane: 'steps', landmark: STEPS_LANDMARKS.sortRows },
-    },
-    explain: {
-      title: 'The question and the plan',
-      instruction: `Read ${TEACHING_LANDMARKS.adds} in the Teaching panel, then why the other answers do not fit, on this card.`,
-    },
+    kind: 'monitor',
+    caption: 'The first referral, on the ward',
+    readings: vitals(
+      ['95', 'steady', 'On room air'],
+      ['82', 'steady'],
+      ['128/74', 'steady', 'Adequate'],
+    ),
   },
 
   act: {
-    kind: 'sort',
-    sort: {
-      id: 'question-to-pathway',
-      prompt: 'Eight requests. For each, choose the pathway the plan should start from.',
-      origins: [
+    kind: 'scenario',
+    outcomeId: 'go-hold-modify',
+    scenario: {
+      id: 'three-referrals',
+      title: 'Three referrals',
+      frames: [
         {
-          id: 'noninvasive',
-          label: 'Noninvasive sampling and treatment first',
-          definition:
-            'Check whether sputum, an endotracheal sample or another noninvasive approach, with treatment, already answers the question.',
+          id: 'opacity-after-choking',
+          time: 'The first referral',
+          situation:
+            'A 74-year-old man choked on a meal 3 weeks ago. His right lower lobe opacity has not cleared with antibiotics. He takes aspirin 81 mg. Platelets are 210,000/µL. The team asks for a lavage.',
+          readings: vitals(
+            ['95', 'steady', 'On room air'],
+            ['82', 'steady'],
+            ['128/74', 'steady', 'Adequate'],
+          ),
+          prompt: 'What is your plan?',
+          choices: [
+            {
+              id: 'a',
+              label: 'Go ahead: inspect the airways for a foreign body, with forceps ready',
+              rationale:
+                'An opacity that persists after choking is an airway problem until you have looked. Aspirin continues.',
+              plausibility: 'best',
+            },
+            {
+              id: 'b',
+              label: 'Hold: stop his aspirin, then book him for next week',
+              rationale:
+                'Low-dose aspirin continues for any bronchoscopy. The delay buys nothing and the lobe stays blocked.',
+              plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation: 'A week later he returns with a fever. More of the lobe has collapsed.',
+                readings: vitals(
+                  ['91', 'falling', 'Falling on room air'],
+                  ['106', 'rising'],
+                  ['118/70', 'steady', 'Adequate'],
+                ),
+              },
+            },
+            {
+              id: 'c',
+              label: 'Pause, and repeat the chest CT in six weeks',
+              rationale:
+                'Another scan shows the same shadow. Only looking finds what is in the bronchus.',
+              plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation:
+                  'Six weeks on, the CT shows the same opacity with new collapse. He has lost weight.',
+                readings: vitals(
+                  ['92', 'falling', 'Lower than before'],
+                  ['98', 'rising'],
+                  ['122/72', 'steady', 'Adequate'],
+                ),
+              },
+            },
+            {
+              id: 'd',
+              label: 'Send sputum cultures and extend the antibiotics instead',
+              rationale:
+                'Antibiotics have already failed. Infection behind a blocked bronchus clears when the bronchus is opened.',
+              plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation: 'Sputum grows mouth flora. Ten days later the opacity is unchanged.',
+                readings: vitals(
+                  ['93', 'steady', 'On room air'],
+                  ['94', 'rising'],
+                  ['124/76', 'steady', 'Adequate'],
+                ),
+              },
+            },
+          ],
         },
         {
-          id: 'airway-cause',
-          label: 'Look for an airway cause',
-          definition:
-            'Revisit the imaging and consider an obstructing lesion or retained foreign material, rather than assume another course of treatment will settle it.',
+          id: 'biopsy-after-a-stent',
+          time: 'The second referral',
+          situation:
+            'A 67-year-old woman has a mass in the left main bronchus on CT. Endobronchial biopsy is booked for tomorrow. She had a coronary stent 6 weeks ago and takes aspirin and clopidogrel. Platelets are 240,000/µL.',
+          readings: vitals(
+            ['96', 'steady', 'On room air'],
+            ['76', 'steady'],
+            ['136/80', 'steady', 'Adequate'],
+          ),
+          prompt: 'What is your plan?',
+          choices: [
+            {
+              id: 'a',
+              label: 'Hold the biopsy and agree a clopidogrel plan with her cardiologist',
+              rationale:
+                'Clopidogrel stops before a biopsy, but a new stent can clot without it. The prescriber decides when stopping is safe.',
+              plausibility: 'best',
+            },
+            {
+              id: 'b',
+              label: 'Go ahead as booked and biopsy on both drugs',
+              rationale: 'A biopsy on clopidogrel bleeds, and this lesion sits in a main bronchus.',
+              plausibility: 'unsafe',
+              consequence: {
+                situation:
+                  'The first biopsy bleeds briskly and blood fills the left main bronchus.',
+                readings: vitals(
+                  ['89', 'falling', 'Falling'],
+                  ['112', 'rising'],
+                  ['148/88', 'rising', 'Rising'],
+                  'Blood in the left main bronchus',
+                ),
+              },
+            },
+            {
+              id: 'c',
+              label: 'Stop both drugs today and biopsy next week',
+              rationale:
+                'Aspirin continues. Stopping both drugs this soon after a stent invites stent thrombosis.',
+              plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation:
+                  'Four days later she has crushing chest pain. Her ECG shows ST elevation.',
+                readings: vitals(
+                  ['94', 'steady', 'On oxygen'],
+                  ['118', 'rising'],
+                  ['92/58', 'falling', 'Low'],
+                ),
+              },
+            },
+            {
+              id: 'd',
+              label: 'Inspect only tomorrow, and decide about biopsy once you see it',
+              rationale:
+                'Inspection gives no tissue. A biopsy decided at the scope is the same biopsy on the same drugs.',
+              plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation:
+                  'The lesion looks like tumor. You have no tissue, and she needs a second procedure.',
+                readings: vitals(
+                  ['95', 'steady', 'On nasal oxygen'],
+                  ['84', 'steady'],
+                  ['134/78', 'steady', 'Adequate'],
+                  'A mass in the left main bronchus',
+                ),
+              },
+            },
+          ],
         },
         {
-          id: 'lavage',
-          label: 'Lavage, if it adds information and is tolerable',
-          definition:
-            'Decide whether an appropriately collected lavage adds information, and whether this patient can tolerate it.',
-        },
-        {
-          id: 'mucosal',
-          label: 'Mucosal sampling after a risk review',
-          definition:
-            'Consider sampling a visible lesion once its vascularity and the procedure’s risk have been reviewed.',
-        },
-        {
-          id: 'beyond-view',
-          label: 'A pathway beyond what the scope can see',
-          definition:
-            'The target lies outside the airway wall or beyond the visible airways, so it needs added imaging, localization or an extraluminal method such as endobronchial ultrasound-guided transbronchial needle aspiration (EBUS-TBNA).',
-        },
-        {
-          id: 'clarify',
-          label: 'Not provided — must clarify',
-          definition:
-            'The request lacks what choosing a pathway depends on — a clinical question, a target or the images themselves: record the gap and ask for it rather than assume it.',
+          id: 'infiltrates-and-low-platelets',
+          time: 'The third referral',
+          situation:
+            'A 45-year-old man with leukemia has a fever and new diffuse infiltrates. The team asks for lavage and transbronchial biopsy. Platelets are 32,000/µL. He is on 4 L/min oxygen.',
+          readings: vitals(
+            ['93', 'steady', 'On 4 L/min oxygen'],
+            ['108', 'steady'],
+            ['112/66', 'steady', 'Adequate'],
+          ),
+          prompt: 'What is your plan?',
+          choices: [
+            {
+              id: 'a',
+              label: 'Modify: lavage today, and no biopsy at this platelet count',
+              rationale:
+                'His platelets are enough for lavage and too low for biopsy. Lavage answers the infection question today.',
+              plausibility: 'best',
+            },
+            {
+              id: 'b',
+              label: 'Go ahead as requested, with lavage and transbronchial biopsy',
+              rationale:
+                'His platelets are below the level for biopsy. Bleeding in the lung periphery is hard to control.',
+              plausibility: 'unsafe',
+              consequence: {
+                situation:
+                  'The second biopsy bleeds. Blood wells from the lower lobe and he coughs.',
+                readings: vitals(
+                  ['84', 'falling', 'Falling on oxygen'],
+                  ['128', 'rising'],
+                  ['104/60', 'falling', 'Falling'],
+                  'Blood from the right lower lobe',
+                ),
+              },
+            },
+            {
+              id: 'c',
+              label: 'Hold everything until his platelets recover',
+              rationale:
+                'Lavage is safe at this count, and he needs an organism now. Waiting delays his treatment.',
+              plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation:
+                  'Two days later he needs high-flow oxygen. No organism has been identified.',
+                readings: vitals(
+                  ['88', 'falling', 'Falling on high-flow oxygen'],
+                  ['122', 'rising'],
+                  ['106/62', 'steady', 'Adequate'],
+                ),
+              },
+            },
+            {
+              id: 'd',
+              label: 'Modify: biopsy only, and skip the lavage to save time',
+              rationale: 'That keeps the step his platelets rule out and drops the one they allow.',
+              plausibility: 'incorrect-mechanism',
+              consequence: {
+                situation: 'The biopsy site oozes steadily, and you have sent nothing for culture.',
+                readings: vitals(
+                  ['89', 'falling', 'Falling on oxygen'],
+                  ['118', 'rising'],
+                  ['108/64', 'steady', 'Adequate'],
+                  'Blood at the biopsy site',
+                ),
+              },
+            },
+          ],
         },
       ],
-      rows: [
-        {
-          id: 'adequate-sputum',
-          statement:
-            'Lavage requested for a community-acquired lobar pneumonia; an expectorated specimen is in the laboratory and antibiotics have been started.',
-          origin: 'noninvasive',
-          rationale:
-            'Noninvasive sampling and treatment may already answer the question. A lavage would add a procedure’s risk without adding a decision: not every pneumonia requires one.',
-        },
-        {
-          id: 'after-choking',
-          statement:
-            'Lavage requested for a lower lobe opacity that has not cleared since the patient choked while eating.',
-          origin: 'airway-cause',
-          rationale:
-            'An opacity that persists after a choking episode raises retained foreign material. A lavage specimen would not answer that: the imaging is revisited for an obstructing lesion or retained material, rather than another course of treatment being assumed to settle it.',
-        },
-        {
-          id: 'diffuse-opacities',
-          statement:
-            'Bronchoscopy requested for diffuse opacities, with possible alveolar hemorrhage or an inflammatory lung process.',
-          origin: 'lavage',
-          rationale:
-            'An appropriately collected lavage may add information here, if the patient can tolerate it. A cell differential still does not establish a complete cause on its own.',
-        },
-        {
-          id: 'visible-lesion',
-          statement:
-            'Biopsy requested for a lesion reported inside the left main bronchus at an earlier inspection.',
-          origin: 'mucosal',
-          rationale:
-            'A visible lesion may be sampled from the mucosa once its vascularity and the procedure’s risk, antithrombotic drugs included, have been reviewed. Being within reach is not a reason to biopsy it at once.',
-        },
-        {
-          id: 'node-beside-bronchus',
-          statement:
-            'Bronchoscopy and biopsy requested for an enlarged lymph node beside a main bronchus on CT; the airway looked normal at an earlier inspection.',
-          origin: 'beyond-view',
-          rationale:
-            'Tissue outside the airway wall needs an extraluminal sampling pathway such as EBUS-TBNA. The scope’s own view shows the lumen and the mucosa, not what lies beyond them.',
-        },
-        {
-          id: 'peripheral-nodule',
-          statement:
-            'Bronchoscopy and biopsy requested for a small nodule near the edge of the lung.',
-          origin: 'beyond-view',
-          rationale:
-            'A peripheral target needs its own imaging, localization and sampling plan. A normal airway survey does not exclude peripheral disease.',
-        },
-        {
-          id: 'no-question',
-          statement: 'A request that reads, in full, “bronchoscopy and lavage”.',
-          origin: 'clarify',
-          rationale:
-            'With no question and no target, no pathway can be chosen. The plan records the gap and the requesting team is asked; a default lavage is not a plan.',
-        },
-        {
-          id: 'report-only',
-          statement:
-            'Lavage requested for a “left-sided opacity”; a one-line CT report is all that has been sent.',
-          origin: 'clarify',
-          rationale:
-            'Side, lobe, segment and the airway leading to the target come from the full study. A one-line report cannot supply them, so the images are obtained before the plan is fixed.',
-        },
-      ],
-      sourceRefs: [
-        { sourceId: 'T09', location: { kind: 'time-span', start: '00:05:45', end: '00:11:55' } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 111, to: 120 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 35, to: 50 } },
-        { sourceId: 'S3', location: { kind: 'pdf-pages', from: 47, to: 50 } },
-      ],
+      sourceRefs: [...INDICATIONS, ...ANTITHROMBOTIC],
     },
   },
 
@@ -465,225 +501,195 @@ export const section: BronchSectionDefinition = {
     seedId: 'Q20',
     itemType: 'management-decision',
     situation:
-      'A man on the medical ward has been treated for pneumonia in the right lower lobe before, and on his latest CT the opacity is back in the same place. The team requests bronchoscopy with lavage “for cultures”. He is stable. A bronchoscope and an assistant are free this afternoon.',
-    stem: 'What best supports a diagnostic bronchoscopy for him?',
+      'A 58-year-old woman has pneumonia in her right lower lobe for the second time in 4 months. She is stable on room air. The team asks for a lavage “for cultures”.',
+    stem: 'What is the best reason to do this bronchoscopy?',
     choices: [
       {
         id: 'a',
-        label:
-          'A bronchoscope and an assistant are free this afternoon, so he can be sampled today without waiting',
+        label: 'To inspect that lobe’s bronchus for a cause of the recurrence',
         rationale:
-          'Availability makes the procedure possible, not indicated. Going ahead for that reason exposes him to a procedure’s risks without asking what its result would change.',
-        plausibility: 'unsafe',
-      },
-      {
-        id: 'b',
-        label:
-          'It could find an airway cause that sputum and more antibiotics cannot exclude, at acceptable risk',
-        rationale:
-          'A recurrence in one lobe raises an obstruction or retained material. Finding one would change his management in a way that noninvasive sampling and another antibiotic course cannot, and the risk is weighed for him.',
+          'The same lobe twice suggests a narrowed or plugged bronchus: tumor, foreign body or stricture. Only looking excludes it.',
         plausibility: 'best',
       },
       {
-        id: 'c',
-        label:
-          'Lavage cultures could identify an organism that his earlier antibiotic course did not cover',
+        id: 'b',
+        label: 'To get cultures that her sputum may have missed',
         rationale:
-          'A culture could name an organism, but sputum or another noninvasive sample can often do that, and an organism does not explain why the opacity keeps returning to one lobe. The recurrence in one place is what needs explaining.',
+          'Cultures may help her antibiotics. They do not explain why the same lobe keeps failing.',
+        plausibility: 'incorrect-mechanism',
+      },
+      {
+        id: 'c',
+        label: 'Because the opacity has persisted on her imaging',
+        rationale: 'A persistent shadow is a finding, not a question. Ask what could cause it.',
         plausibility: 'incorrect-mechanism',
       },
       {
         id: 'd',
-        label:
-          'The opacity is back on his latest CT, and a persistent imaging abnormality is itself an indication',
+        label: 'Pause: wait for a third episode to confirm the pattern',
         rationale:
-          'An imaging abnormality alone is not an automatic indication: the same CT finding could lead to another antibiotic course, a noninvasive specimen or a procedure. The finding says where to look, not whether looking would add anything.',
+          'Two episodes in one lobe is already the pattern. Waiting delays a diagnosis that may be cancer.',
         plausibility: 'incorrect-mechanism',
       },
     ],
     explanation:
-      'A diagnostic bronchoscopy is justified by what its likely result would change for this patient, compared with less invasive alternatives, at an acceptable risk. Here the returning opacity raises an obstruction or retained material, which another antibiotic course does not exclude. Availability, the referral’s wording, a trainee’s need and an imaging finding on its own make a procedure possible or wanted, not indicated.',
-    objectiveIds: ['M02-O5'],
-    claimClass: 'transcript-source',
-    sourceRefs: [
-      { sourceId: 'T09', location: { kind: 'time-span', start: '00:05:45', end: '00:11:55' } },
-      { sourceId: 'T15', location: { kind: 'time-span', start: '00:24:36', end: '00:31:59' } },
-      {
-        sourceId: 'U7',
-        location: { kind: 'section', label: 'targeted noninvasive sampling preference' },
-      },
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 111, to: 120 } },
-    ],
+      'Start from the question, not the request. Pneumonia that returns to one lobe suggests a problem in that lobe’s bronchus. The lavage is worth doing, but the inspection is the reason to go.',
+    objectiveIds: ['M02-O5', 'M02-O1'],
+    outcomeIds: ['go-hold-modify'],
+    claimClass: 'source',
+    sourceRefs: INDICATIONS,
   },
 
   transfer: {
     id: 'clinical-question-transfer',
     itemType: 'management-decision',
     situation:
-      'A woman on the respiratory ward is booked for inspection of a left lower lobe collapse on tomorrow morning’s procedure list, and the supervisor has agreed the indication. The request gives no oxygen requirement. A ward note from this afternoon says her oxygen was increased, without saying to what.',
-    stem: 'What is the next move with this request?',
-    choices: [
-      {
-        id: 'a',
-        label: 'Establish her current oxygen support before the setting and the plan are fixed',
-        rationale:
-          'Her current support and reserve decide where the procedure is done, how she is sedated and supported, and what the rescue plan is. The request does not give it and the note says it has changed, so it is obtained from the ward team, the chart and the patient herself before anything is fixed.',
-        plausibility: 'best',
-      },
-      {
-        id: 'b',
-        label:
-          'Keep her on the list as requested, since the request describes no oxygen requirement',
-        rationale:
-          'A blank field shows that nobody wrote the requirement down, not that there is none, and the afternoon note says it has risen. Going ahead on that assumption commits her to a setting and a rescue plan chosen without knowing her reserve.',
-        plausibility: 'unsafe',
-      },
-      {
-        id: 'c',
-        label:
-          'Move her to the operating room under general anesthesia, since she may be sicker than the request says',
-        rationale:
-          'Planning for the worst case is still an assumption. The setting, the sedation approach and the rescue plan are chosen from her actual support and reserve, and higher risk does not by itself call for general anesthesia.',
-        plausibility: 'incorrect-mechanism',
-      },
-      {
-        id: 'd',
-        label:
-          'Cancel the inspection, since a rising oxygen requirement rules out bronchoscopy for now',
-        rationale:
-          'A rising requirement may change the setting, the support or the timing, and it may justify postponement, but how far it has risen is exactly what nobody yet knows. Cancelling decides on a guess, as going ahead would.',
-        plausibility: 'incorrect-mechanism',
-      },
-    ],
-    explanation:
-      'A fact the plan depends on is either known or recorded as missing and obtained; it is not filled in with a guess in either direction. Her current oxygen support decides the setting, the sedation approach and the rescue plan, and a note that it has risen means the request no longer describes her. Assuming none, assuming the worst and cancelling on an unknown each leave the gap open.',
-    objectiveIds: ['M02-O1', 'M02-O2'],
-    claimClass: 'source',
-    sourceRefs: [
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 75, to: 79 } },
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 115, to: 116 } },
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 111 } },
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 154, to: 158 } },
-      { sourceId: 'S3', location: { kind: 'pdf-pages', from: 47, to: 50 } },
-    ],
-    reviewItemIds: ['R10'],
+      'A 70-year-old man is booked for elective transbronchial biopsies in 2 weeks. He takes apixaban for atrial fibrillation and aspirin 81 mg. Platelets are 180,000/µL.',
+    stem: 'What do you tell him about his medicines?',
+    choices: MEDICINE_CHOICES(
+      [
+        'Stop apixaban before the biopsy, and keep taking aspirin',
+        'Stop both apixaban and aspirin a week before',
+        'Keep both, and biopsy if the INR is normal that morning',
+        'Replace apixaban with heparin injections until the day',
+      ],
+      [
+        'A direct oral anticoagulant is held for a short time before biopsy. Low-dose aspirin continues.',
+        'Aspirin does not need to stop, and a week without apixaban is longer than he needs.',
+        'The INR does not measure apixaban. A normal value says nothing about his bleeding risk.',
+        'Bridging is not routine. It adds bleeding risk for a drug that clears in days.',
+      ],
+    ),
+    explanation: `Stop a direct oral anticoagulant ${num('noac-hold')} before biopsy, and continue low-dose aspirin. His platelets are well above ${num('platelets-biopsy')}.`,
+    objectiveIds: ['M02-O2'],
+    outcomeIds: ['bleeding-plan'],
+    claimClass: 'update',
+    sourceRefs: ANTITHROMBOTIC,
     transferVariant:
-      'A different patient, procedure and missing fact, one step later: the indication is agreed, and what is absent is her current oxygen support, which decides the setting and the rescue plan. It applies the new concept’s last clause — a risk that is known — rather than the prediction’s choice between clinical and non-clinical reasons.',
+      'A different patient and drug, and an elective biopsy with time to plan the hold.',
   },
 
   practice: [
     {
-      id: 'C03',
-      manifestCaseId: 'C03',
-      presentationTitle: 'A biopsy request after a recent coronary stent',
-      situation:
-        'A 67-year-old man is referred for bronchoscopy and biopsy of a central lesion. He reports a recent coronary stent and ongoing aspirin plus a P2Y12 inhibitor. The referral contains no agreed medication plan.',
-      item: {
-        id: 'C03',
-        itemType: 'management-decision',
-        stem: 'What should happen next?',
-        choices: [
-          {
-            id: 'a',
-            label:
-              'Clarify each drug, its indication and the stent’s timing; escalate to the supervisor and prescribing team',
-            rationale:
-              'With no agreed plan, both the bleeding risk of a biopsy and the thrombotic risk of interrupting therapy after a recent stent are unresolved. The facts are gathered and the decision is made with the supervisor and the prescribing team, considering urgency, alternatives and a different time or procedure.',
-            plausibility: 'best',
-          },
-          {
-            id: 'b',
-            label:
-              'Tell him to stop both antiplatelet drugs before the procedure, then biopsy as requested',
-            rationale:
-              'A blanket hold after a recent coronary stent trades one risk for another without the prescribing team. Interruption is not automatic, and this combination is an explicit reason to escalate.',
-            plausibility: 'unsafe',
-          },
-          {
-            id: 'c',
-            label: 'Inspect as planned, and take the biopsy if the lesion does not look vascular',
-            rationale:
-              'A low-risk inspection is not permission for an unplanned biopsy. The unresolved question is the medication plan, and the lesion’s appearance does not answer it.',
-            plausibility: 'unsafe',
-          },
-          {
-            id: 'd',
-            label:
-              'Ask the prescribing team whether the P2Y12 inhibitor can be held, as the guideline separates it from aspirin, and book the biopsy once it has been',
-            rationale:
-              'Involving the prescribing team is right, but asking only whether the drug can be stopped decides the plan in advance, and the guideline’s distinction informs a decision rather than making one. How recent the stent is, how urgent the diagnosis is, and whether another procedure or a different time would avoid interruption are weighed together.',
-            plausibility: 'incorrect-mechanism',
-          },
-        ],
-        explanation:
-          'Two risks interact here: the bleeding risk of the proposed biopsy and the thrombotic risk of interrupting therapy after a recent coronary stent. With no agreed plan, the next move is to clarify the drugs, their indication and the stent’s timing, and to decide with the supervisor and the prescribing team, weighing urgency, alternatives and a different time or procedure — no automatic interruption or bridging, and no unplanned biopsy during an inspection.',
-        objectiveIds: ['M02-O2', 'M02-O1'],
-        claimClass: 'local-policy',
-        sourceRefs: [
-          {
-            sourceId: 'U2',
-            location: {
-              kind: 'section',
-              label: 'executive recommendations on laboratory testing and antithrombotic drugs',
-            },
-          },
-          { sourceId: 'S1', location: { kind: 'pdf-pages', from: 115, to: 116 } },
-          { sourceId: 'S3', location: { kind: 'pdf-pages', from: 47, to: 50 } },
-        ],
-      },
-    },
-    {
       id: 'mc-time-out-side-discrepancy',
-      presentationTitle: 'The time-out before an airway biopsy',
+      presentationTitle: 'The consent names the other side',
       situation:
-        'At the time-out before inspection and biopsy of a lesion, the request names the left upper lobe and the CT on the screen shows the lesion at the left upper lobe bronchus. The signed consent form reads “right”. The patient is awake and has not yet received sedation, and the team is ready to start.',
+        'At the time-out, the request and the CT say left upper lobe. The signed consent says right. The patient is awake and has had no sedative.',
       item: {
         id: 'mc-time-out-side-discrepancy',
         itemType: 'management-decision',
-        stem: 'What is the next move?',
+        stem: 'What do you do?',
         choices: [
           {
             id: 'a',
-            label:
-              'Stop and resolve the side with the patient, the images and the supervisor before sedation',
+            label: 'Stop, and resolve it with the patient and the images before any sedative',
             rationale:
-              'Two records name the left and the consent names the right. The discrepancy is resolved before anyone proceeds: the target is confirmed from the images, the procedure is rediscussed with the awake patient, and consent is documented for the side that will actually be sampled.',
+              'A mismatch stops the time-out. The patient is awake and can still tell you what they agreed to.',
             plausibility: 'best',
           },
           {
             id: 'b',
-            label:
-              'Go ahead on the left, because the request and the CT agree and outnumber the consent form',
+            label: 'Go ahead as booked on the left, since two records agree',
             rationale:
-              'Two records agreeing does not make the third irrelevant: the patient consented to a procedure on the other side. Proceeding with a known, unresolved discrepancy is the error the time-out exists to catch.',
+              'Counting records does not settle it. The consent is the one the patient signed.',
             plausibility: 'unsafe',
           },
           {
             id: 'c',
-            label:
-              'Amend the consent form to read “left”, then carry on with the rest of the checklist',
+            label: 'Change the form to say left, and carry on',
             rationale:
-              'A consent form records a conversation with the patient; changing the word on it without the patient does not change what was agreed, and carrying on then samples a side the signed consent does not name. The side is rediscussed with the awake patient first, then documented.',
-            plausibility: 'unsafe',
+              'Changing the form records your view, not the patient’s consent. Ask the patient.',
+            plausibility: 'incorrect-mechanism',
           },
           {
             id: 'd',
-            label:
-              'Finish reading the remaining checklist items first, then sort out the side with the team',
+            label: 'Finish the checklist first, then settle the side afterwards',
             rationale:
-              'Finishing the list resolves nothing, and settling the side “with the team” leaves out the awake patient whose consent is in question. The side is resolved with the patient, the images and the supervisor before anyone proceeds.',
+              'The rest of the checklist depends on the side. Settle it before anything else moves.',
             plausibility: 'incorrect-mechanism',
           },
         ],
         explanation:
-          'When a time-out finds a discrepancy, the work is resolving it, not reaching the end of the list. Site, side, consent and imaging must agree before anyone proceeds; because the patient is awake and unsedated, the consent conversation can be had again now.',
+          'The time-out exists to catch this. Stop while the patient can still speak for themselves, check the images together, and fix the record before sedation.',
         objectiveIds: ['M02-O4'],
+        outcomeIds: ['go-hold-modify'],
         claimClass: 'source',
-        sourceRefs: [
-          { sourceId: 'S2', location: { kind: 'pdf-pages', from: 55, to: 59 } },
-          { sourceId: 'S2', location: { kind: 'pdf-pages', from: 155, to: 156 } },
-          { sourceId: 'S1', location: { kind: 'pdf-pages', from: 116, to: 117 } },
+        sourceRefs: CONSENT,
+      },
+    },
+    {
+      id: 'mc-warfarin-on-the-day',
+      presentationTitle: 'Warfarin stopped, INR still raised',
+      situation:
+        'A 66-year-old woman is booked for endobronchial biopsy this morning. She stopped warfarin 5 days ago, as instructed. Her INR today is 1.8. Platelets are 230,000/µL.',
+      item: {
+        id: 'mc-warfarin-on-the-day',
+        itemType: 'management-decision',
+        stem: 'What do you do?',
+        choices: [
+          {
+            id: 'a',
+            label: 'Do not biopsy today. Recheck the INR and rebook',
+            rationale:
+              'Two conditions must hold: the days off warfarin, and the INR on the day. Hers is still too high.',
+            plausibility: 'best',
+          },
+          {
+            id: 'b',
+            label: 'Go ahead as booked, since she held warfarin for long enough',
+            rationale: 'The hold is a means. The INR shows whether it has worked, and it has not.',
+            plausibility: 'unsafe',
+          },
+          {
+            id: 'c',
+            label: 'Biopsy, but take fewer samples to limit the bleeding',
+            rationale:
+              'One biopsy can bleed as much as five. Fewer samples also lowers the chance of a diagnosis.',
+            plausibility: 'incorrect-mechanism',
+          },
+          {
+            id: 'd',
+            label: 'Biopsy with cold saline drawn up and ready',
+            rationale:
+              'Being ready to treat bleeding does not make it acceptable to cause it in an elective case.',
+            plausibility: 'incorrect-mechanism',
+          },
         ],
+        explanation: `Warfarin stops ${num('warfarin-hold')} before a biopsy, and the INR must be ${num('inr-before-biopsy')} on the day. Time off the drug is not enough by itself.`,
+        objectiveIds: ['M02-O2'],
+        outcomeIds: ['bleeding-plan'],
+        claimClass: 'update',
+        sourceRefs: ANTITHROMBOTIC,
+      },
+    },
+    {
+      id: 'mc-ticagrelor-elective',
+      presentationTitle: 'Ticagrelor and aspirin before a biopsy',
+      situation:
+        'A 61-year-old man is booked for transbronchial biopsy in 10 days. He takes ticagrelor and aspirin 81 mg after a heart attack 3 years ago. His cardiologist agrees that ticagrelor can be interrupted.',
+      item: {
+        id: 'mc-ticagrelor-elective',
+        itemType: 'management-decision',
+        stem: 'What do you tell him?',
+        choices: MEDICINE_CHOICES(
+          [
+            'Stop ticagrelor ahead of the biopsy, and keep taking aspirin',
+            'Stop aspirin ahead of the biopsy, and keep taking ticagrelor',
+            'Take both as usual, and skip them only on the morning',
+            'Take both as usual. A normal platelet count is enough',
+          ],
+          [
+            'Ticagrelor is held before a biopsy, like clopidogrel and prasugrel. Low-dose aspirin continues.',
+            'This is the plan reversed. Ticagrelor is the drug that makes a biopsy bleed.',
+            'One missed dose does not restore platelet function. The drug needs days to wear off.',
+            'The count shows how many platelets he has, not how well they work on ticagrelor.',
+          ],
+        ),
+        explanation: `Stop clopidogrel, prasugrel or ticagrelor ${num('p2y12-hold')} before a biopsy, once the prescriber agrees. Low-dose aspirin continues.`,
+        objectiveIds: ['M02-O2'],
+        outcomeIds: ['bleeding-plan'],
+        claimClass: 'update',
+        sourceRefs: ANTITHROMBOTIC,
       },
     },
   ],

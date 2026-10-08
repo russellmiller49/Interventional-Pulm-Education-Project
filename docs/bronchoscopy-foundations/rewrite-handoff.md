@@ -17,6 +17,7 @@ supervisor" answers.
 | ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
 | #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
+| #356 | `claude/bf-rewrite-s01`            | Draft, stacked on #355. Section 1, the procedure and the plan, rewritten.                                         |
 | #355 | `claude/bf-rewrite-structure`      | Draft, stacked on #352. The plan's order, five phases, and the forward map for retired sections.                  |
 | #352 | `claude/bf-rewrite-register`       | Draft, stacked on #350. Register rows 15, 19, 20 and 21 extracted; two sources added (U17, U18). No learner copy. |
 | #351 | `claude/bf-3d-retry`               | Draft, from `main`. The 3D-retry fix lifted out of #348, with its three end-to-end cases.                         |
@@ -87,10 +88,24 @@ sections no longer wait for sessions with the pilot.
    its tests to the absorber. `honest-report` sits late for now because its prerequisites do;
    it goes when `describe-findings` is rewritten. `what-completion-means` goes with the hub and
    closing screen (item 6).
-5. **Rewrite the other 13 sections** from their briefs, in the plan's three batches. Two are new:
-   `biopsy-and-specimens` and `ventilated-patient`. Apply the content fixes the briefs name
-   (foreign-body aspiration is an indication; site choice from the CT; raising pressure limits is
-   recommended, not unsafe).
+5. **Sections rewritten so far:** the right lung, bleeding, and section 1 (`clinical-question`,
+   2026-10-08). Twelve remain; section 2 (`pre-use-check`) is next. Notes from section 1:
+   - `shared-airway` is NOT retired yet. Its monitoring teaching belongs to section 3
+     (`sedation-and-monitoring`); retire it in that change. Many tests use it as their fixture
+     section (hub, stage-host, actions-and-feedback, sources-and-reading-view, the e2e spec), so
+     budget for moving them.
+   - The image-share rule (a third of questions on an image) now fails the build only once every
+     section is rewritten. Until then the `--all --report` run prints where it stands.
+   - Section 1 needs register rows 7, 8 and 9 signed before it can be published.
+   - For Russell to confirm in section 1: "hemoptysis with no source found" is listed as an
+     indication though the old section did not list it; the three referral plans (go ahead for
+     suspected foreign body on aspirin; hold for clopidogrel after a recent stent; lavage without
+     biopsy at a platelet count between the two thresholds).
+   - Old practice case C03 (stent and dual antiplatelet therapy) became the second referral.
+     **Rewrite the other sections** from their briefs, in the plan's three batches. Two are new:
+     `biopsy-and-specimens` and `ventilated-patient`. Apply the content fixes the briefs name
+     (foreign-body aspiration is an indication; site choice from the CT; raising pressure limits is
+     recommended, not unsafe).
 6. **Rewrite the hub and the closing screen.** The hub still says "authored geometry". It carries
    the course's one boundary statement.
 7. **Practice and assessment:** the image bank, about 40 vignettes with numbers, four evolving

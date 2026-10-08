@@ -31,6 +31,7 @@ import { publishBlockers, withResolvedNumbers } from '../content/sectionNumbers'
 import { bronchSectionErrors } from '../content/sectionValidation'
 import { BRONCH_SECTIONS } from '../content/sections'
 import { section as bleedingPriorities } from '../content/sections/bleeding-priorities'
+import { section as clinicalQuestion } from '../content/sections/clinical-question'
 import { section as rightSide } from '../content/sections/right-side'
 import { bronchStageLessons } from '../content/stageLessons'
 import type { BronchSectionDefinition, BronchTeachingBlock } from '../content/types'
@@ -371,8 +372,8 @@ describe('the rewrite rules', () => {
       BRONCH_SECTIONS.filter((section) => section.authoringContract === 2).map(
         (section) => section.id,
       ),
-    ).toEqual(['right-side', 'bleeding-priorities'])
-    for (const section of [rightSide, bleedingPriorities]) {
+    ).toEqual(['clinical-question', 'right-side', 'bleeding-priorities'])
+    for (const section of [clinicalQuestion, rightSide, bleedingPriorities]) {
       expect(bronchSectionErrors(section)).toEqual([])
       expect(rewriteRuleErrors(section, COURSE_FLOWS[section.id] ?? [])).toEqual([])
     }
