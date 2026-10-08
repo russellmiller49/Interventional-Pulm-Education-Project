@@ -36,6 +36,7 @@ import type { CrrtFlowRates } from '../engine/types'
 import { formatCrrtMmHg } from '../pressureArithmetic'
 import { CrrtDialog } from './CrrtDialog'
 import styles from './crrt-pilot-circuit.module.css'
+import { CRRT_NUMBERS } from '../content/teachingNumbers'
 
 export interface CrrtPilotPressureSignals {
   access: number | null
@@ -952,7 +953,7 @@ export function CrrtPilotCircuit({
                         <dd>{detail.whenUnreliable}</dd>
                       </div>
                       <div>
-                        <dt>How far to go on your own</dt>
+                        <dt>First moves</dt>
                         <dd>{detail.firstInspectionBoundary}</dd>
                       </div>
                     </dl>
@@ -1139,8 +1140,9 @@ export function CrrtPilotCircuit({
                     <h3 id={`${idPrefix}-terms-heading`}>Words this view introduces</h3>
                   </div>
                   <p className={styles.panelNote}>
-                    Where citrate acts and which sample answers which question. This view carries no
-                    dose, target, or timing. Those require a reviewed local citrate protocol.
+                    Where citrate acts and which sample answers which question. Post-filter ionized
+                    calcium target {CRRT_NUMBERS.value('postfilter-ica')}; a total-to-ionized ratio{' '}
+                    {CRRT_NUMBERS.value('calcium-ratio')} signals accumulation.
                   </p>
 
                   {/*
@@ -1155,9 +1157,8 @@ export function CrrtPilotCircuit({
                   >
                     <strong>What this view does not settle</strong>
                     <p>
-                      Medication quantities, monitoring schedules and operating sequences require an
-                      approved local protocol. Clinical-publication support below is not faculty
-                      approval.
+                      Citrate and calcium infusion rates, and how often to sample, come from your
+                      unit’s citrate protocol.
                     </p>
                     <ul>
                       {crrtCitrateOverlayHeldOpenStatements().map((statement) => (
@@ -1193,7 +1194,7 @@ export function CrrtPilotCircuit({
                               {isGap
                                 ? 'Awaiting a source'
                                 : support.kind === 'clinical-publication'
-                                  ? 'Clinical-publication support · review pending'
+                                  ? 'From the literature'
                                   : 'Read off this circuit'}
                             </span>
                           </dt>

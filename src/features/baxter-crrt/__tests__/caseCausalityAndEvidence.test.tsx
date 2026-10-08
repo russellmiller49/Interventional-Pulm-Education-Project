@@ -58,7 +58,7 @@ describe('the case states its evidence scope in the task', () => {
     expect(scope).toHaveTextContent('1.05 mmol/L')
     expect(scope).toHaveTextContent('Systemic sample — patient blood, not the circuit')
     expect(scope).toHaveTextContent('At case start')
-    expect(scope).toHaveTextContent('SYNTH-CRRT-17')
+    expect(scope).toHaveTextContent('Case CRRT-17')
   })
 
   it('CRRT-17 keeps the absent citrate evidence absent, and never zero or normal', () => {

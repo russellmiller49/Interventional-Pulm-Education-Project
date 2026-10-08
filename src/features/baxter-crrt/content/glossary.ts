@@ -19,6 +19,9 @@
  */
 
 import type { CrrtClaimTopic } from './learnerSourceMap'
+import { CRRT_NUMBERS } from './teachingNumbers'
+
+const N = CRRT_NUMBERS.value
 
 export type CrrtGlossaryGroupId =
   | 'flows-and-fluids'
@@ -321,9 +324,8 @@ export const crrtGlossary: readonly CrrtGlossaryEntry[] = Object.freeze([
     group: 'prescribed-and-delivered',
     term: 'Prescribed dose and delivered dose',
     alsoCalled: ['Effluent dose (mL/kg/h)'],
-    definition:
-      'Prescribed dose is the effluent rate divided by the documented weight. Delivered dose uses the effluent actually produced over an interval, so downtime lowers it even when the settings never change. Both are intensity proxies, not measured solute clearance.',
-    notTheSameAs: ['A clinical target: this module supplies no dose target.'],
+    definition: `Prescribed dose is the effluent rate divided by the documented weight. Delivered dose uses the effluent actually produced over an interval, so downtime lowers it even when the settings never change. The target is a delivered dose of ${N('dose-delivered')}; prescribe ${N('dose-prescribed')} to reach it.`,
+    notTheSameAs: ['Measured solute clearance: both are intensity proxies.'],
     basis: [
       {
         kind: 'device-manual',

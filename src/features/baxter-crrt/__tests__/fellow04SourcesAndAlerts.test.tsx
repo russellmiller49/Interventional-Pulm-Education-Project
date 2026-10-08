@@ -10,13 +10,14 @@ import {
 } from '../content/alertLabels'
 import { getBaxterCrrtCase } from '../content/completeCases'
 import { baxterCrrtLearnerFacingSourceReferences } from '../content/learnerSourceMap'
+import { CRRT_NUMBERS } from '../content/teachingNumbers'
 import type { EngineAlarmCode } from '../engine/types'
 import { crrtLearnerCitation } from '../sourcePresentation'
 
 /**
- * CRRT-FELLOW-04 — F-19. The main path uses plain words for source and model status; the exact
- * registered record, locator and review state stay one disclosure away; nothing is upgraded; and
- * the simulation's generic alerts never read as PrisMax alarms.
+ * CRRT-FELLOW-04 — F-19, as revised by docs/teaching-first-rules.md. The main path uses plain
+ * words for a source; the registered record and locator stay one disclosure away; no pending
+ * source reads as reviewed; and each alert carries its PrisMax alarm title, never a raw code.
  */
 
 jest.mock('@/features/critical-care/analytics', () => ({ recordCriticalCareEvent: jest.fn() }))
@@ -68,7 +69,6 @@ describe('plain learner citations keep the exact record reachable (F-19)', () =>
     expect(citation.title).toBe('Simulated teaching values')
     expect(citation.locator).toBe('Staged prescription builder')
     expect(citation.line).not.toMatch(/reviewer|prototype|fixture|calibration/i)
-    expect(citation.review).toBe('No clinical review recorded')
     expect(citation.audit).toMatchObject({
       id: 'SYNTH-LAB-PRESCRIPTION-001',
       pageOrSection: 'LAB-PRESCRIPTION reviewer prototype',
@@ -78,7 +78,7 @@ describe('plain learner citations keep the exact record reachable (F-19)', () =>
     })
   })
 
-  it('explains that an "sme-review" build string is not a review, and never upgrades status', () => {
+  it('keeps an "sme-review" build string off the main path, and never upgrades status', () => {
     const synthetic = getBaxterCrrtCase('CRRT-17').sourceBasis.find(
       (source) => source.id === 'SYNTH-CRRT-17',
     )!
@@ -86,7 +86,6 @@ describe('plain learner citations keep the exact record reachable (F-19)', () =>
     const citation = crrtLearnerCitation(synthetic)
     expect(citation.line).not.toMatch(/sme-review|private learning fixture/)
     expect(citation.locator).toBe('Case CRRT-17')
-    expect(citation.audit.versionNote).toMatch(/does not mean a subject-matter expert has reviewed/)
     for (const source of baxterCrrtLearnerFacingSourceReferences) {
       const plain = crrtLearnerCitation(source)
       if (source.reviewStatus === 'pending') {
@@ -105,7 +104,7 @@ describe('plain learner citations keep the exact record reachable (F-19)', () =>
     )
   })
 
-  it('shows plain status, the conflict consequence and the exact records in a Learn lesson', () => {
+  it('shows what the simulator does not compute and the exact records in a Learn lesson', () => {
     render(
       <CrrtFoundationLesson
         lessonId="crrt-prescription-dosing"
@@ -113,20 +112,16 @@ describe('plain learner citations keep the exact record reachable (F-19)', () =>
         onRestart={() => {}}
       />,
     )
-    const panel = screen.getByText('Explanation, sources and limits').closest('details')!
-    fireEvent.click(within(panel).getByText('Explanation, sources and limits'))
+    const panel = screen.getByText('Sources', { selector: 'summary' }).closest('details')!
+    fireEvent.click(within(panel).getByText('Sources', { selector: 'summary' }))
+    // The two model limits and their consequence stay visible, with the number to work to.
+    expect(panel).toHaveTextContent('Two things this simulator does not compute.')
+    expect(panel).toHaveTextContent('does not respond to the flows')
     expect(panel).toHaveTextContent(
-      'Draft teaching: no clinician or device specialist has reviewed',
+      `keep it under ${CRRT_NUMBERS.value('filtration-fraction-ceiling')}`,
     )
-    expect(panel).not.toHaveTextContent('Clinical/device review remains pending')
-    // The limitation, its consequence, its identifiers and its page locators all stay visible.
-    expect(panel).toHaveTextContent('Not calculated here: filtration fraction.')
-    expect(panel).toHaveTextContent('CONFLICT-002, manual p220')
-    expect(panel).toHaveTextContent('CONFLICT-001, manual p218')
-    expect(panel).toHaveTextContent('it does not respond to the flows')
-    expect(panel).toHaveTextContent('Unresolved: makeup flow.')
     expect(panel).toHaveTextContent(
-      'withholds cumulative machine removal and whole-patient balance',
+      'cumulative machine removal and whole-patient balance are not shown',
     )
     // Plain words on the main path; the raw record one disclosure away.
     const record = panel.querySelector('[data-source-record="SYNTH-LAB-PRESCRIPTION-001"]')!
@@ -142,22 +137,23 @@ describe('plain learner citations keep the exact record reachable (F-19)', () =>
   })
 })
 
-describe('generic simulated alerts never impersonate PrisMax alarms (F-19)', () => {
-  it('labels every engine alert as a simulated alert with no raw code', () => {
-    for (const code of allEngineAlarmCodes) {
-      const label = crrtSimulatedAlertLabel(code)
-      expect(label).toMatch(/^Simulated [a-z-]+( gain-or-loss)? alert$/)
-      expect(label).not.toMatch(/_/)
+describe('alerts carry a PrisMax alarm title, never a raw engine code (F-19)', () => {
+  it('labels every engine alert as a named alarm with no raw code', () => {
+    const labels = allEngineAlarmCodes.map((code) => crrtSimulatedAlertLabel(code))
+    for (const label of labels) {
+      expect(label).toMatch(/\S alarm$/)
+      expect(label).not.toMatch(/_|simulated/i)
     }
-    expect(crrtSimulatedAlertLabel('ACCESS_OBSTRUCTION')).toBe('Simulated access-obstruction alert')
-    expect(crrtSimulatedAlertLabelFromCode('NOT_A_CODE')).toBe('Simulated alert')
-    expect(CRRT_SIMULATED_ALERT_BOUNDARY).toMatch(/not PrisMax alarm names/)
+    expect(new Set(labels).size).toBe(allEngineAlarmCodes.length)
+    expect(crrtSimulatedAlertLabel('ACCESS_OBSTRUCTION')).toBe('Access Extremely Negative alarm')
+    expect(crrtSimulatedAlertLabelFromCode('NOT_A_CODE')).toBe('Alarm')
+    // The one model limit a learner could mistake for device behaviour stays stated.
     expect(CRRT_SIMULATED_ALERT_BOUNDARY).toMatch(
-      /no manufacturer priority, color or automatic pump response/,
+      /priority and the automatic pump response are simplified/,
     )
   })
 
-  it('shows the simulated label, not ACCESS_OBSTRUCTION, once the CRRT-13 obstruction develops', async () => {
+  it('shows the alarm title, not ACCESS_OBSTRUCTION, once the CRRT-13 obstruction develops', async () => {
     render(<BaxterCrrtPractice locale="en" initialCaseId="CRRT-13" />)
     await settle()
     const card = (label: RegExp) =>
@@ -165,9 +161,10 @@ describe('generic simulated alerts never impersonate PrisMax alarms (F-19)', () 
     fireEvent.click(within(card(/Assess the patient and treatment/)).getByRole('button'))
     fireEvent.click(within(card(/Advance to the worsening pattern/)).getByRole('button'))
     const evidence = screen.getByRole('region', { name: 'Live patient, prescription, and circuit' })
-    expect(evidence).toHaveTextContent('Simulated access-obstruction alert')
+    const title = crrtSimulatedAlertLabel('ACCESS_OBSTRUCTION')
+    expect(evidence).toHaveTextContent(title)
     expect(document.body.textContent).not.toMatch(/ACCESS_OBSTRUCTION|Access Obstruction/)
-    expect(document.body.textContent).toContain('Simulated access-obstruction alert')
+    expect(document.body.textContent).toContain(title)
     expect(document.body.textContent).toMatch(/Priority:\s*none shown/)
   })
 })

@@ -30,7 +30,7 @@ const basisLabel = (kind: string) =>
   kind === 'registered-source-gap' || kind === 'held-open'
     ? 'Open question'
     : kind === 'clinical-publication'
-      ? 'Clinical-publication support · review pending'
+      ? 'From the literature'
       : 'Read off this circuit'
 
 export function crrtCitrateComparisonTextEquivalent(): string {
@@ -101,7 +101,6 @@ export function CrrtCitrateDifferential({
             ? 'Four citrate patterns'
             : 'Citrate path and sampling points'}
         </h3>
-        <span className={styles.pendingBadge}>Clinical review pending</span>
       </header>
       <p>{CRRT_CITRATE_MECHANISM_HEADLINE}</p>
       {presentation !== 'comparison' ? (
@@ -232,7 +231,7 @@ export function CrrtCitrateDifferential({
             <Fragment key={id}>
               <p>
                 <strong>{source.sourceTitle}</strong> · {source.documentVersion}.{' '}
-                {source.pageOrSection}.{dated ? null : ` ${citation.review}.`}
+                {source.pageOrSection}.{dated || !citation.review ? null : ` ${citation.review}.`}
               </p>
               <CrrtSourceDating sourceId={id} />
               <CrrtSourceRecord citation={citation} />

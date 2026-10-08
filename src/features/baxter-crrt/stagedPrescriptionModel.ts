@@ -61,6 +61,9 @@ import {
   type QualitativePrePostDilutionResult,
   type UnavailableWorkbenchOutput,
 } from './prescriptionWorkbenchModel'
+import { CRRT_NUMBERS } from './content/teachingNumbers'
+
+const N = CRRT_NUMBERS.value
 
 /* ------------------------------------------------------------------ *
  * Stages
@@ -886,10 +889,9 @@ function predictedPressureImplications(): readonly CrrtPredictedPressureImplicat
 }
 
 const MODEL_BOUNDARIES: readonly string[] = Object.freeze([
-  'These are predictions about a set of entries, not a recommendation for a patient. No entry combination here is marked correct, preferred, or adequate.',
-  'No target range, normal range, or alarm limit appears anywhere in this builder, and none should be inferred from the practice starting values.',
-  'The whole-patient fluid balance is not calculated: it also needs the patient’s other inputs, non-machine outputs, actual machine removal, and downtime, which are not entered here.',
-  'Nothing here is a device screen, an operating instruction, or a substitute for current manufacturer instructions and the authorised local protocol.',
+  `Guidelines recommend a delivered dose of ${N('dose-delivered')} (KDIGO 2012, grade 1A). Prescribe ${N('dose-prescribed')} to deliver it once downtime and pre-dilution are counted.`,
+  `Keep the filtration fraction under ${N('filtration-fraction-ceiling')}. Above that, the blood leaving the filter is concentrated enough to clot it.`,
+  'The whole-patient fluid balance is not calculated here: it also needs the patient’s other inputs and outputs and the downtime, which are not entered.',
 ])
 
 /**

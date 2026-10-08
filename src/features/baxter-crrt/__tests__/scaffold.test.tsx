@@ -35,7 +35,7 @@ describe('Baxter CRRT module scaffold', () => {
       screen.getByRole('heading', { name: 'High-yield CRRT reasoning on PrisMax' }),
     ).toBeInTheDocument()
     expect(screen.getByRole('note', { name: 'Educational safety notice' })).toHaveTextContent(
-      /never patient-specific advice or a local operating policy/i,
+      /A teaching simulator, not a clinical device/i,
     )
     const moduleNav = screen.getByRole('navigation', { name: 'CRRT module sections' })
     expect(within(moduleNav).getAllByRole('link')).toHaveLength(4)

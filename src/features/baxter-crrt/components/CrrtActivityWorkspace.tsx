@@ -347,10 +347,7 @@ export function CrrtActivityWorkspace({
               }}
               items={evidenceItems}
               deviceLabel={deviceProfile.displayName}
-              safetyConstraints={[
-                'Educational simulation only; use current manufacturer instructions and local policy.',
-                'Displayed values and responses are synthetic and are not patient-specific targets.',
-              ]}
+              safetyConstraints={['The patient and the numbers are invented for teaching.']}
             />
           }
         >

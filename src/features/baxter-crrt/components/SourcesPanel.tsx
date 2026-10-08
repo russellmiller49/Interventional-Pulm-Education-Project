@@ -140,7 +140,9 @@ export function SourcesPanel() {
                 <h3>{synthetic ? 'Simulated case values' : source.sourceTitle}</h3>
                 <p className={styles.sourceIdentity}>
                   {synthetic
-                    ? `${crrtLearnerCitation(source).edition} · ${crrtLearnerCitation(source).review}`
+                    ? [crrtLearnerCitation(source).edition, crrtLearnerCitation(source).review]
+                        .filter(Boolean)
+                        .join(' · ')
                     : source.documentVersion}
                 </p>
                 <p>

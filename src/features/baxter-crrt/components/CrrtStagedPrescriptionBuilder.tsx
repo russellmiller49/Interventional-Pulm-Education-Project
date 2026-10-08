@@ -38,6 +38,7 @@ import type {
 } from '../prescriptionWorkbenchModel'
 import { CrrtPilotCircuit } from './CrrtPilotCircuit'
 import styles from './crrt-staged-prescription-builder.module.css'
+import { CRRT_NUMBERS } from '../content/teachingNumbers'
 
 /* ------------------------------------------------------------------ *
  * Entry specification
@@ -635,7 +636,7 @@ export function CrrtStagedPrescriptionBuilder({
         <p>
           {guided
             ? 'Compare entered assumptions. These calculations do not apply a device prescription.'
-            : 'Build the prescription in three steps and watch what each step changes. This builder provides no clinical target, no recommended set of flows, no patient prediction, and no device-control instruction. You can move between steps in either direction and nothing is lost.'}
+            : 'Build the prescription in three steps and watch what each step changes. You can move between steps in either direction and nothing is lost.'}
         </p>
       </div>
 
@@ -972,8 +973,8 @@ export function CrrtStagedPrescriptionBuilder({
                         {formatNumber(consequences.intensity.prescribedDoseMlPerKgHour, 2)} mL/kg/h
                       </strong>
                       <small>
-                        The weight-normalized display for the prescription as written. No target
-                        range is supplied.
+                        The dose as written. Guidelines recommend delivering{' '}
+                        {CRRT_NUMBERS.value('dose-delivered')}; downtime lowers what is delivered.
                       </small>
                     </dd>
                   </div>
@@ -1204,7 +1205,7 @@ export function CrrtStagedPrescriptionBuilder({
                       </li>
                     ))}
                   </ul>
-                  <ul className={styles.boundaryList} aria-label="Model boundaries">
+                  <ul className={styles.boundaryList} aria-label="Targets and limits">
                     {consequences.modelBoundaries.map((boundary) => (
                       <li key={boundary}>{boundary}</li>
                     ))}

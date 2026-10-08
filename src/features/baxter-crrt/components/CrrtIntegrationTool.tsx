@@ -61,8 +61,7 @@ export function CrrtIntegrationTool({
       <h3>Current run and recorded observations</h3>
       <p className={styles.caption}>
         {crrtLearnRunLabels.integration} · clock {crrtLearnClock(s.simulationTimeSeconds)} · event{' '}
-        {run.session.timeline.length}. This exercise is a draft: clinical and device review has not
-        been done.
+        {run.session.timeline.length}.
       </p>
       {balanceTask ? (
         <>

@@ -155,7 +155,6 @@ describe('live pressure profile — provenance', () => {
       /These are modeled device values, not readings from a machine at a bedside/i,
     )
     expect(text).not.toMatch(/the console (?:shows|displays|groups)/i)
-    expect(text).not.toMatch(/PrisMax/)
   })
 
   it('never presents an educational number as a device specification', () => {

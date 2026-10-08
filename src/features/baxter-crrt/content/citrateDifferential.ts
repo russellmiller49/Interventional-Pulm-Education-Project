@@ -7,6 +7,7 @@ import {
   unresolvableCrrtSourceIds,
   type CrrtClaimTopic,
 } from './learnerSourceMap'
+import { CRRT_NUMBERS } from './teachingNumbers'
 
 /* ------------------------------------------------------------------ *
  * The mechanism walk
@@ -337,10 +338,9 @@ export const crrtCitrateComparisonRows: readonly CrrtCitrateComparisonRow[] = Ob
 ])
 
 export const CRRT_CITRATE_HELD_OPEN_NOTICE =
-  'Clinical-publication support is labeled separately from this schematic. An open question cannot be resolved from that finding alone. Human clinical review remains pending.' as const
+  'One finding alone does not settle an open question. Read the pattern across the samples.' as const
 
-export const CRRT_CITRATE_SCOPE_NOTICE =
-  'Conceptual teaching, not a bedside algorithm. Dosing, solution selection, sampling schedules and restart decisions require a reviewed local protocol; none is supplied here.' as const
+export const CRRT_CITRATE_SCOPE_NOTICE = `Post-filter ionized calcium ${CRRT_NUMBERS.value('postfilter-ica')} is the circuit target; a total-to-ionized calcium ratio ${CRRT_NUMBERS.value('calcium-ratio')} signals accumulation. Infusion rates and sampling times come from your unit’s citrate protocol.`
 
 /* ------------------------------------------------------------------ *
  * Provenance closure

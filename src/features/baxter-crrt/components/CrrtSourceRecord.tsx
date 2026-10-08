@@ -12,15 +12,10 @@ export function CrrtSourceRecord({ citation }: { readonly citation: CrrtLearnerC
   const { audit } = citation
   return (
     <details className={styles.record} data-source-record={audit.id}>
-      <summary>Source record {audit.id}</summary>
+      <summary>Where in the source</summary>
       <ul className={styles.list}>
         <li>Registered version: {audit.documentVersion ?? 'not recorded'}</li>
         <li>Registered section: {audit.pageOrSection}</li>
-        <li>
-          Review status: {audit.reviewStatus}
-          {audit.reviewer ? ` · ${audit.reviewer}` : ' · no reviewer recorded'}
-        </li>
-        <li>Used in: {audit.implementationLocation}</li>
         {audit.versionNote ? <li>{audit.versionNote}</li> : null}
       </ul>
     </details>

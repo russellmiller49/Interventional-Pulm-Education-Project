@@ -71,7 +71,7 @@ export function CrrtCaseEvidenceScope({
               ? ` Source: ${evidence.suppliedSources
                   .map((source) => {
                     const citation = crrtLearnerCitation(source)
-                    return `${citation.line} (record ${source.id}; ${citation.review.toLowerCase()})`
+                    return citation.line
                   })
                   .join('; ')}.`
               : evidence.suppliedSourceIds.length > 0

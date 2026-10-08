@@ -462,8 +462,7 @@ function CrrtCasePlayerContent({
         <div className={styles.syntheticNotice} role="note">
           <ShieldAlert aria-hidden="true" />
           <p>
-            <strong>Simulated clinical case.</strong> Patient values, treatment responses, and
-            comparisons are for education only—not bedside targets or local protocols.
+            <strong>Simulated case.</strong> The patient and the numbers are invented for teaching.
           </p>
         </div>
 
@@ -551,10 +550,7 @@ function CrrtCasePlayerContent({
                     <CrrtUnsafeActionList entries={unsafeTeaching} />
                   </>
                 ) : null}
-                <p>
-                  Viewing this plan records no answer, intervention, or observation. Clinical and
-                  device review remains pending.
-                </p>
+                <p>Viewing this plan records no answer, intervention, or observation.</p>
               </section>
             ) : null}
           </section>
@@ -897,10 +893,7 @@ function CrrtCasePlayerContent({
               <h5 id={scopedId('crrt-supplied-teaching-path')}>
                 Supplied teaching path · worked example
               </h5>
-              <p>
-                This is the authored explanation for this case. It describes the example, not what
-                you did in this run.
-              </p>
+              <p>This explains the case. It describes the example, not what you did in this run.</p>
               <p className={styles.debriefSummary}>{debrief.summary}</p>
             </section>
 

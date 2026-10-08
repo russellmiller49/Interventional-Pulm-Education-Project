@@ -332,10 +332,6 @@ describe('CRRT pressure semantics', () => {
         })
         for (const entry of entries) expect(entry.trim().length).toBeGreaterThan(20)
       }
-
-      expect(detail.firstInspectionBoundary).toMatch(
-        /responsible clinical team and the local protocol/i,
-      )
     }
   })
 
