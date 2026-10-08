@@ -422,3 +422,35 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* The opening hook: the clinical question, the analogy, the one sentence, the checklist. */
+.teaching > section.hook {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--panel);
+}
+.hook p {
+  margin: 0;
+}
+.hook .hookQuestion {
+  font-size: 1.2rem;
+  font-weight: 650;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.hook h3 {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--stage-muted, var(--muted));
+}
+.hook ol {
+  margin: 0;
+  padding-inline-start: 1.3rem;
+  display: grid;
+  gap: 0.3rem;
+}

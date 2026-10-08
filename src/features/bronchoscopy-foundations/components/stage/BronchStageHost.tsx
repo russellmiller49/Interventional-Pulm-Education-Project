@@ -27,7 +27,6 @@ import {
   type ScopeViewSpec,
   type TreeAnswer,
 } from '../scope/types'
-import { LOCAL_POLICY_BY_ID, LOCAL_POLICY_NOT_CONFIGURED } from '../../content/localPolicies'
 import { microCasesForSection } from '../../content/microCases'
 import { isBronchSectionId } from '../../content/sectionIds'
 import { benchTargetObservation } from '../../engine/scope/scopeBenchTarget'
@@ -98,6 +97,7 @@ import { BronchSortControl } from './BronchSortControl'
 import { BronchSourceList } from './BronchSourceList'
 import { BronchCourseLayout } from './BronchCourseLayout'
 import { BronchCourseTeaching } from './BronchCourseTeaching'
+import { ConfiguredPolicies, NumberSourceNote } from '../LocalNotes'
 import { useScopeDemonstration } from './useScopeDemonstration'
 import { MapWorkspace } from './MapWorkspace'
 import { MediaWorkspace } from './MediaWorkspace'
@@ -882,13 +882,12 @@ function BronchStageSessionView({
   )
 
   function policiesLine(stage: BronchStageItem) {
-    return stage.localPolicyIds.length > 0 ? (
-      <p className={styles.figureCaption} data-item-policies>
-        Depends on local policy:{' '}
-        {stage.localPolicyIds.map((id) => LOCAL_POLICY_BY_ID.get(id)?.title ?? id).join(', ')}.{' '}
-        {LOCAL_POLICY_NOT_CONFIGURED}
-      </p>
-    ) : null
+    return (
+      <>
+        <NumberSourceNote ids={stage.numberIds} className={styles.figureCaption} />
+        <ConfiguredPolicies ids={stage.localPolicyIds} className={styles.figureCaption} />
+      </>
+    )
   }
 
   function verdictFor(stage: BronchStageItem, choiceId: string) {
@@ -1412,8 +1411,8 @@ function BronchStageSessionView({
       {lookInLine}
       {activeStep.rationale ? <p>{activeStep.rationale}</p> : null}
       <p>
-        Every question and activity here is optional. You can open the explanation before answering,
-        try again, go back to the teaching, or continue without answering.
+        You can open the explanation before answering, try again, go back to the teaching, or
+        continue without answering.
       </p>
       {firstUnmetKey && !workDone ? (
         <button

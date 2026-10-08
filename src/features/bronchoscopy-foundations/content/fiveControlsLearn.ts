@@ -363,8 +363,7 @@ export function fiveControlsLearnInputs(): readonly StepInput[] {
     {
       phase: 'predict',
       title: 'Explain what rotation changes',
-      instruction:
-        'Use what you observed to answer this optional check, or open the explanation first. You can try again after feedback or continue without answering.',
+      instruction: 'Use what you observed to answer, or open the explanation first.',
       lookIn: { pane: 'steps', landmark: 'the answer choices on this card' },
       actionLabel: 'Check this answer',
       interaction: {

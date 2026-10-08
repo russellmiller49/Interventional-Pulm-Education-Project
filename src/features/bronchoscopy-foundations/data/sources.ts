@@ -17,7 +17,7 @@ export type BronchSourceId =
   | 'S1'
   | 'S2'
   | 'S3'
-  | `U${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13}`
+  | `U${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16}`
   | `T${'01' | '02' | '03' | '04' | '05' | '06' | '07' | '08' | '09' | '10' | '11' | '12' | '13' | '14' | '15' | '16'}`
 
 /**
@@ -170,7 +170,59 @@ const LIMITATIONS: Readonly<Record<string, string>> = {
   U11: 'Manufacturer information for one cryotherapy platform; gas and settings for other devices come from their own instructions.',
   U12: 'Manufacturer information for one blocker; not a complete hemoptysis protocol.',
   U13: 'A randomized trial of inhaled tranexamic acid that excluded massive or unstable bleeding.',
+  U14: 'A 2013 national guideline for diagnostic bronchoscopy; most of its recommendations are grade C or D.',
+  U15: 'A consensus scale for reporting bleeding severity; it grades the response that was needed and does not direct treatment.',
+  U16: 'A 2011 consensus statement on topical anesthesia and sedation; later guidelines revise some of its figures.',
 }
+
+/**
+ * Sources added by the rewrite's numbers register (`content/numbers.ts`). The manifest import is
+ * frozen, so these are registered here, in the manifest's own shape, rather than regenerated.
+ */
+export const SUPPLEMENTAL_SOURCES: readonly ManifestSource[] = [
+  {
+    id: 'U14',
+    kind: 'primary society guideline',
+    title: 'British Thoracic Society guideline for diagnostic flexible bronchoscopy in adults',
+    authors: 'Du Rand IA, Blaikley J, Booton R, et al.',
+    organization: 'British Thoracic Society',
+    year: 2013,
+    doi: '10.1136/thoraxjnl-2013-203618',
+    url: 'https://thorax.bmj.com/content/68/Suppl_1/i1',
+    reviewedScope:
+      'Fasting, oxygen supplementation, topical anesthesia, sedation, platelets and antiplatelet agents, biopsy number, imaging after biopsy',
+    accessedDate: '2026-10-08',
+    transcript: null,
+  },
+  {
+    id: 'U15',
+    kind: 'consensus statement',
+    title:
+      'Standardized Definitions of Bleeding After Transbronchial Lung Biopsy: A Delphi Consensus Statement From the Nashville Working Group',
+    authors: 'Folch EE, Mahajan AK, Oberg CL, et al.',
+    organization: null,
+    year: 2020,
+    doi: '10.1016/j.chest.2020.01.036',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC7403751/',
+    reviewedScope: 'The Nashville Bleeding Scale, grades 1 to 4',
+    accessedDate: '2026-10-08',
+    transcript: null,
+  },
+  {
+    id: 'U16',
+    kind: 'consensus statement',
+    title:
+      'American College of Chest Physicians consensus statement on the use of topical anesthesia, analgesia, and sedation during flexible bronchoscopy in adult patients',
+    authors: 'Wahidi MM, Jain P, Jantz M, et al.',
+    organization: 'American College of Chest Physicians',
+    year: 2011,
+    doi: '10.1378/chest.10-3361',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/22045879/',
+    reviewedScope: 'Topical anesthesia and sedation, as background to the 2013 and 2019 guidelines',
+    accessedDate: '2026-10-08',
+    transcript: null,
+  },
+]
 
 const SOURCE_USE_WORDING: Readonly<Record<string, string>> = {
   S2: 'Curriculum, procedural instruction, safety, learner evaluation, and supervised practice.',
@@ -194,28 +246,30 @@ function kindLabel(source: ManifestSource, sourceClass: BronchSourceClass): stri
   return 'Guideline or official guidance'
 }
 
-export const SOURCES: readonly BronchSource[] = MANIFEST_SOURCES.map((source) => {
-  const id = source.id as BronchSourceId
-  const sourceClass = bronchSourceClass(source)
-  const transcript = manifestTranscript(source)
-  return {
-    id,
-    sourceClass,
-    kindLabel: kindLabel(source, sourceClass),
-    title: source.title,
-    byline:
-      source.authors ??
-      source.organization ??
-      (transcript ? `${transcript.collection} lecture collection` : ''),
-    year: source.year,
-    url: source.doi ? `https://doi.org/${source.doi}` : source.url,
-    usedFor:
-      SOURCE_USE_WORDING[id] ??
-      (transcript ? transcript.adoptedContribution : (source.reviewedScope ?? '')),
-    limitation: transcript ? TRANSCRIPT_SENTENCE : (LIMITATIONS[source.id] ?? ''),
-    manifest: source,
-  }
-})
+export const SOURCES: readonly BronchSource[] = [...MANIFEST_SOURCES, ...SUPPLEMENTAL_SOURCES].map(
+  (source) => {
+    const id = source.id as BronchSourceId
+    const sourceClass = bronchSourceClass(source)
+    const transcript = manifestTranscript(source)
+    return {
+      id,
+      sourceClass,
+      kindLabel: kindLabel(source, sourceClass),
+      title: source.title,
+      byline:
+        source.authors ??
+        source.organization ??
+        (transcript ? `${transcript.collection} lecture collection` : ''),
+      year: source.year,
+      url: source.doi ? `https://doi.org/${source.doi}` : source.url,
+      usedFor:
+        SOURCE_USE_WORDING[id] ??
+        (transcript ? transcript.adoptedContribution : (source.reviewedScope ?? '')),
+      limitation: transcript ? TRANSCRIPT_SENTENCE : (LIMITATIONS[source.id] ?? ''),
+      manifest: source,
+    }
+  },
+)
 
 export const SOURCE_BY_ID: ReadonlyMap<string, BronchSource> = new Map(
   SOURCES.map((source) => [source.id, source] as const),

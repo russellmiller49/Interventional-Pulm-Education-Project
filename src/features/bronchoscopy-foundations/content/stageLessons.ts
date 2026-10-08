@@ -181,7 +181,7 @@ function buildInputs(section: BronchSectionDefinition): readonly StepInput[] {
       instruction:
         chunk.instruction ??
         (isCheck
-          ? 'Consider the situation and choose an answer to check, or open the explanation first. This question is optional.'
+          ? 'Choose an answer and check it, or open the explanation first.'
           : chunk.kind === 'debrief'
             ? 'Review the reasoning and the limits of this exercise before continuing.'
             : 'Read the explanation with its example, then continue when you are ready to apply it.'),
