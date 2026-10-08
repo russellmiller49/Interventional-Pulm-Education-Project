@@ -2133,8 +2133,7 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       <p className="guided-label">Simulated anatomy and grayscale ultrasound</p>
       {config.linkedLesson && <p className="guided-label">{config.linkedVariant === 'changed-window' ? 'Changed-position check: a different assisted start in the same anatomy model. Acquire new planes; the prior sweep does not count.' : 'Assisted start: airway position is supplied. Your scope movements acquire the ultrasound planes.'}</p>}
       {baselinePending && <p role="status">Loading the initial contact comparison before movement controls open.</p>}
-      {config.linkedLesson && scopeControls}
-      {config.linkedLesson && acoustic.volume && <LinkedModelView ultrasound={sector} config={config} pose={pose} volume={acoustic.volume} caseData={caseData} contactQuality={sectorContactQuality} flexion={flexionDeg} evidence={linkedEvidence} onEvidence={onLinkedEvidence} onApproach={chooseApproach}
+      {config.linkedLesson && acoustic.volume && <LinkedModelView ultrasound={sector} controls={scopeControls} bronchoscopy={assets ? <div className="guided-anatomy"><BronchoscopyView assets={assets} balloonInflated={bronchBalloonInflated} camera={caseData.endoscope_camera} caseData={caseData} focusStationKey={null} pose={pose} seeThroughWall={false} structures={[]} /></div> : undefined} config={config} pose={pose} volume={acoustic.volume} caseData={caseData} contactQuality={sectorContactQuality} flexion={flexionDeg} evidence={linkedEvidence} onEvidence={onLinkedEvidence} onApproach={chooseApproach}
         targetVisible={guidedFrame.targetVisible} frameReady={guidedFrame.ready && guidedFrame.poseKey === guidedPoseKey} sweepReport={sweepReport}
         targetName={(() => { const label = acoustic.volume.metadata.labels.find(l => l.key === selectedPreset?.station_key)?.label; return config.reveal && label ? `The example node (${label})` : 'The example node (yellow in the Anatomy model)'; })()}
         onDemo={action => {
@@ -2147,8 +2146,8 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
           again when the column is narrow (EBUS-PRE-REVIEW-02, L3-1 / L5-5 / L14-2). */}
       <div className="guided-scan-workspace">
       <div className="guided-scan-image">
-      <div hidden={config.locked && !config.reveal}><div className="guided-tabs" role="group" aria-label="Clinical view">
-        {(config.linkedLesson ? ['sector','bronch'] as const : ['sector','bronch','anatomy'] as const).map(view => <button key={view} type="button" aria-pressed={guidedView === view} onClick={() => setGuidedView(view)}>{view === 'sector' ? 'Ultrasound' : view === 'bronch' ? 'Bronchoscopy' : 'Anatomy'}</button>)}
+      <div hidden={!!config.linkedLesson || (config.locked && !config.reveal)}><div className="guided-tabs" role="group" aria-label="Clinical view">
+        {(['sector','bronch','anatomy'] as const).map(view => <button key={view} type="button" aria-pressed={guidedView === view} onClick={() => setGuidedView(view)}>{view === 'sector' ? 'Ultrasound' : view === 'bronch' ? 'Bronchoscopy' : 'Anatomy'}</button>)}
       </div>
       {guidedView === 'anatomy' && <div className="guided-anatomy"><AnatomyScene activeStructure={null} assets={assets} cameraPose={cameraPose} caseData={caseData} hiddenStructureIds={hiddenSceneStructureSet} intersectedStructureIds={new Set()} layers={layers} lockView={false} pose={pose} selectedPreset={config.reveal ? selectedPreset : null} teachingView={false} /></div>}
       {guidedView === 'bronch' && <div className="guided-anatomy"><BronchoscopyView assets={assets} balloonInflated={bronchBalloonInflated} camera={caseData.endoscope_camera} caseData={caseData} focusStationKey={null} pose={pose} seeThroughWall={false} structures={[]} /></div>}
@@ -2163,10 +2162,9 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       {!config.linkedLesson && <div hidden={guidedView !== 'sector'}>{sector}</div>}
       </div>
       <div className="guided-scan-controls">
-      <p role="status">{config.locked ? (config.linkedLesson ? 'Acquisition held for observation. This is your last unannotated ultrasound frame.' : 'Controls are paused while you read or answer. They open for the guided activity.') : (config.linkedLesson ? 'Use Scope controls above the images. Hold the acquisition in the lesson when your task is ready.' : 'Use the controls below. Hold the acquisition in the lesson when your task is ready.')}</p>
+      <p role="status">{config.locked ? (config.linkedLesson ? 'Acquisition held for observation. This is your last unannotated ultrasound frame.' : 'Controls are paused while you read or answer. They open for the guided activity.') : (config.linkedLesson ? 'Use the scope controls under the images. Hold the acquisition in the lesson when your task is ready.' : 'Use the controls below. Hold the acquisition in the lesson when your task is ready.')}</p>
       {!config.linkedLesson && scopeControls}
       {config.linkedLesson && !config.locked && !config.demonstration && <button onClick={() => { guided.onObservation(EMPTY_EBUS_OBSERVATION); window.location.reload(); }}>Reset acquisition</button>}
-      <p className="guided-label">Position assists remain active. This exercise does not reproduce needle passage, tactile feedback, or patient response.</p>
       </div>
       </div>
     </div>;

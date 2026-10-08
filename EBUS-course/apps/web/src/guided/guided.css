@@ -690,3 +690,92 @@ body,
   aspect-ratio: 1;
   max-height: 460px;
 }
+
+/* Lab console: bronchoscopy, ultrasound and 3D anatomy in one row, one control bar beneath. */
+.linked-trio {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr) minmax(0, 0.9fr);
+  align-items: stretch;
+}
+.linked-pane,
+.linked-pane--scan {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid #2c4650;
+  border-radius: 12px;
+  background: #0a1c23;
+  overflow: hidden;
+}
+.linked-pane--scan {
+  border-color: #5fe0e6;
+  box-shadow: 0 0 0 1px rgba(95, 224, 230, 0.35);
+}
+.linked-pane-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 8px 10px 6px;
+  font: 700 11px/1.2 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9fd3da;
+}
+.linked-pane-title small {
+  color: #e2b565;
+  font-size: 10px;
+}
+.linked-trio .linked-canvas,
+.linked-trio .guided-anatomy {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 300px;
+  border: 0;
+  border-radius: 0;
+}
+.linked-trio .guided-anatomy > * {
+  height: 100%;
+}
+.linked-control-bar {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid #2c4650;
+  border-radius: 12px;
+  background: #0d2129;
+}
+.linked-control-bar fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  align-items: end;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.linked-control-bar legend {
+  float: left;
+  width: auto;
+  margin-right: 6px;
+  padding: 0;
+  font: 700 11px/1.2 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9fd3da;
+}
+.linked-control-bar label {
+  flex: 1 1 220px;
+  margin: 0;
+}
+@media (max-width: 860px) {
+  .linked-trio {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .linked-trio .linked-pane--scan {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+}
+@media (max-width: 480px) {
+  .linked-trio {
+    grid-template-columns: 1fr;
+  }
+}

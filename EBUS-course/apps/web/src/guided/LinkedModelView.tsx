@@ -54,6 +54,10 @@ export interface LinkedSweepReport {
 }
 interface Props {
   ultrasound: ReactNode
+  /** The white-light view from the scope tip, shown beside the ultrasound it explains. */
+  bronchoscopy?: ReactNode
+  /** The scope controls, drawn as one bar under the three panes. */
+  controls?: ReactNode
   config: EbusWorkbenchConfig
   pose: SimulatorProbePose
   caseData: SimulatorCaseManifest
@@ -1085,8 +1089,40 @@ export function LinkedModelView(props: Props) {
           {landmarkFeedback && <p role="status">{landmarkFeedback}</p>}
         </div>
       )}
-      <div className={concealed ? 'linked-pair linked-pair--retained' : 'linked-pair'}>
-        <div className="linked-physical" hidden={concealed}>
+      {/*
+        Three views, one row, one control bar (visual review of 2026-10-07, item 1). Reading the
+        white-light view and the ultrasound together is the core EBUS skill; the bronchoscopy view
+        used to open from a toggle below the fold. The ultrasound is the largest pane and wears
+        the scan plane's cyan, the same cyan as the fan's edge in the 3D pane.
+      */}
+      <div
+        className={
+          concealed
+            ? 'linked-pair linked-pair--retained'
+            : props.bronchoscopy
+              ? 'linked-pair linked-trio'
+              : 'linked-pair'
+        }
+      >
+        {props.bronchoscopy && !concealed && (
+          <div className="linked-pane linked-pane--bronch" data-pane="bronchoscopy">
+            <div className="linked-pane-title">
+              <span>Bronchoscopy</span>
+              <small>Simulated</small>
+            </div>
+            {props.bronchoscopy}
+          </div>
+        )}
+        <div className="linked-ultrasound linked-pane--scan" data-pane="ultrasound">
+          {props.ultrasound}
+        </div>
+        <div className="linked-physical linked-pane" hidden={concealed} data-pane="anatomy">
+          <div className="linked-pane-title">
+            <span>
+              {mode === 'scope' ? 'Scope' : mode === 'section' ? 'Model section' : '3D anatomy'}
+            </span>
+            <small>Model</small>
+          </div>
           <div ref={host} className="linked-canvas" hidden={mode === 'section'} />
           {mode === 'section' && (
             <ModelSection
@@ -1098,8 +1134,8 @@ export function LinkedModelView(props: Props) {
             />
           )}
         </div>
-        <div className="linked-ultrasound">{props.ultrasound}</div>
       </div>
+      {props.controls && !concealed && <div className="linked-control-bar">{props.controls}</div>}
       {!concealed && (
         <div>
           <div className="guided-tabs" role="group" aria-label="Observer camera">
