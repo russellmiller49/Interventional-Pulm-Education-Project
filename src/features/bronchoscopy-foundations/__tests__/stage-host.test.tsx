@@ -180,6 +180,24 @@ describe('the opening screen', () => {
   )
 })
 
+describe('a question in a rewritten section', () => {
+  it('says what the answer missed in plain words, not in the shared card’s pattern vocabulary', async () => {
+    const { lesson } = await mountSection('right-side')
+    const prediction = lesson.steps[lesson.predictionStepIndex]
+    await reachCourseStep(lesson, prediction)
+    // The stem says the walls were not watched; it never implies no opening has come yet.
+    expect(document.body.textContent).toContain('watching the lumen ahead and not the walls')
+    expect(document.body.textContent).not.toMatch(/have not seen a side opening/i)
+    commitById(otherChoiceId(prediction))
+    await settle()
+    const card = document.querySelector('[data-answer-verdict]')!
+    expect(card.textContent).toContain('Not correct.')
+    expect(card.textContent).toContain('Here is what it misses')
+    expect(card.textContent).toContain('The takeaway')
+    expect(card.textContent).not.toMatch(/mechanism predicts|How to distinguish it|read holds/)
+  })
+})
+
 describe('a sort section on the stage', () => {
   it('walks the first section from the read to the reviewed mark, saving no answer', async () => {
     const { lesson } = await mountSection('shared-airway')

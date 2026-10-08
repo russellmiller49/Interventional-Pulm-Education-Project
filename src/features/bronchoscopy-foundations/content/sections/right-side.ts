@@ -322,7 +322,7 @@ export const section: BronchSectionDefinition = {
     seedId: 'Q01',
     itemType: 'signal-recognition',
     situation:
-      'You enter the right main bronchus and advance without stopping. You have not seen a side opening. Ahead, one opening sits on the anterior wall and the lumen continues past it.',
+      'You enter the right main bronchus and advance quickly, watching the lumen ahead and not the walls. When you stop, one opening sits on the anterior wall ahead, and the lumen runs on past it.',
     stem: 'Where is the tip of the scope?',
     choices: [
       {
@@ -350,7 +350,7 @@ export const section: BronchSectionDefinition = {
         id: 'd',
         label: 'Still in the right main bronchus',
         rationale:
-          'The right main bronchus ends at the upper lobe origin, a short way past the carina. A steady advance carries you beyond it.',
+          'The upper lobe opens on the lateral wall, almost at once. You passed it without looking. An anterior opening further on is the middle lobe.',
         plausibility: 'incorrect-mechanism',
       },
     ],

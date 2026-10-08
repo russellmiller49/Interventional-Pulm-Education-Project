@@ -98,6 +98,7 @@ import { BronchSortControl } from './BronchSortControl'
 import { BronchSourceList } from './BronchSourceList'
 import { BronchCourseLayout } from './BronchCourseLayout'
 import { BronchCourseTeaching } from './BronchCourseTeaching'
+import { REWRITTEN_EXPLANATION_HEADING, REWRITTEN_VERDICT_FRAMES } from './verdictWords'
 import { ConfiguredPolicies, NumberSourceNote } from '../LocalNotes'
 import { useScopeDemonstration } from './useScopeDemonstration'
 import { MapWorkspace } from './MapWorkspace'
@@ -925,7 +926,14 @@ function BronchStageSessionView({
           outcome="stated"
           timing="immediate-after-commit"
           theme="dark"
-          frames={verdictFrames(stage.item)}
+          frames={
+            lesson.section.authoringContract === 2
+              ? REWRITTEN_VERDICT_FRAMES
+              : verdictFrames(stage.item)
+          }
+          explanationHeading={
+            lesson.section.authoringContract === 2 ? REWRITTEN_EXPLANATION_HEADING : undefined
+          }
         />
         {policiesLine(stage)}
       </>
