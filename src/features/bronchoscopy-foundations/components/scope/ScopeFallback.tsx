@@ -92,6 +92,38 @@ const DECLARED_WITHOUT_VIEW = 'declared inspected without a view beyond its open
 export const LEDGER_CAVEAT =
   'Entering an airway is not inspecting it; only a declaration records an inspection.'
 
+/**
+ * Where each word in the record comes from (fellow walkthrough A41). The teaching says "ostium
+ * visualized" and the table says "Opening in view" for the same model state; the Declare menu
+ * holds four statuses of its own. The legend says which the model sets from where the tip is, and
+ * which only the learner declares. It explains the existing statuses; it adds none, and no
+ * automatic state is described as an inspection.
+ */
+export const LEDGER_LEGEND: readonly {
+  readonly term: string
+  readonly source: 'model' | 'learner' | 'limit'
+  readonly meaning: string
+}[] = [
+  {
+    term: `${INSPECTION_STATUS_WORDS['ostium-visualized']} and ${INSPECTION_STATUS_WORDS.entered}`,
+    source: 'model',
+    meaning:
+      'Set by the model from where the tip is: the opening came into the scope view, or the tip went into the airway. “Opening in view” is what the teaching calls the ostium visualized. Neither is a declaration, and neither is an inspection.',
+  },
+  {
+    term: DECLARABLE_STATUSES.map((status) => DECLARATION_WORDS[status]).join(', '),
+    source: 'learner',
+    meaning:
+      'Your declarations, made in the Declare column. A declaration is offered only when the record supports it: Identified after the opening was in view or entered; Inspected after an entry with a view beyond the opening; Not safely accessible for an opening seen and not entered; Not observed for an airway neither seen nor entered.',
+  },
+  {
+    term: 'What the record is',
+    source: 'limit',
+    meaning:
+      'Where the scope went and what you declared. It holds no finding, and nothing in it is filled in for you.',
+  },
+]
+
 const ACCESSORY_STATES = Object.keys(ACCESSORY_STATE_WORDS) as readonly AccessoryState[]
 const ACCESSORY_POSITIONS = Object.keys(ACCESSORY_POSITION_WORDS) as readonly AccessoryPosition[]
 
@@ -673,6 +705,19 @@ export function ScopePaneFrame(
             </tbody>
           </table>
           <p className={styles.caveat}>{LEDGER_CAVEAT}</p>
+          {declareOffered ? (
+            <details className={styles.ledgerLegend} data-ledger-legend>
+              <summary>Who sets each status in this record</summary>
+              <dl>
+                {LEDGER_LEGEND.map((entry) => (
+                  <div key={entry.term} data-ledger-legend-entry={entry.source}>
+                    <dt>{entry.term}</dt>
+                    <dd>{entry.meaning}</dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+          ) : null}
         </div>
       ) : null}
 

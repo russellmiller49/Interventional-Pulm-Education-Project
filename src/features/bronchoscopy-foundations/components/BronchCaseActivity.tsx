@@ -9,7 +9,8 @@ import stageStyles from '@/features/learning-module/stage/lesson-stage.module.cs
 import shellStyles from '@/features/learning-module/stage/lesson-shell.module.css'
 import { Link } from '@/i18n/navigation'
 
-import { LOCAL_POLICIES, LOCAL_POLICY_NOT_CONFIGURED } from '../content/localPolicies'
+import { LOCAL_POLICIES, LOCAL_POLICY_NOT_SUPPLIED } from '../content/localPolicies'
+import { LocalPolicyReferenceLink } from './LocalPolicyNote'
 import { bronchMicroCaseById, bronchMicroCasesInPathwayOrder } from '../content/microCases'
 import { bronchSection } from '../content/pathway'
 import { bronchSectionLinkTarget } from '../content/pathwayResolver'
@@ -158,7 +159,7 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
 
       {(committed || explanationOpen) && policies.length > 0 ? (
         <section className={styles.teachingCard} data-case-policies>
-          <p className={styles.kicker}>Depends on local policy</p>
+          <p className={styles.kicker}>Local policy applies</p>
           <ul>
             {policies.map((policy) => (
               <li key={policy.id} data-local-policy={policy.id}>
@@ -166,7 +167,9 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
               </li>
             ))}
           </ul>
-          <p>{LOCAL_POLICY_NOT_CONFIGURED}</p>
+          <p data-local-policy-note="full">
+            {LOCAL_POLICY_NOT_SUPPLIED} <LocalPolicyReferenceLink />
+          </p>
         </section>
       ) : null}
 

@@ -143,6 +143,13 @@ export interface BronchSource {
   readonly sourceClass: BronchSourceClass
   readonly kindLabel: string
   readonly title: string
+  /**
+   * What a learner is shown as the source's name (fellow walkthrough A43). A textbook, manual or
+   * guideline is shown by its title. A lecture transcript's `title` is the name of the transcript
+   * file, so it is shown as that — a file name — and the lecture's own title is said to be
+   * unverified: no lecture title or speaker is inferred from a file name.
+   */
+  readonly displayTitle: string
   readonly byline: string
   readonly year: number | null
   readonly url: string | null
@@ -194,6 +201,11 @@ function kindLabel(source: ManifestSource, sourceClass: BronchSourceClass): stri
   return 'Guideline or official guidance'
 }
 
+/** A transcript is named by its file, with its lecture title marked unverified (A43). */
+export function transcriptDisplayTitle(fileName: string): string {
+  return `Transcript file “${fileName.replace(/\s+/g, ' ').trim()}” (lecture title not verified)`
+}
+
 export const SOURCES: readonly BronchSource[] = MANIFEST_SOURCES.map((source) => {
   const id = source.id as BronchSourceId
   const sourceClass = bronchSourceClass(source)
@@ -203,6 +215,7 @@ export const SOURCES: readonly BronchSource[] = MANIFEST_SOURCES.map((source) =>
     sourceClass,
     kindLabel: kindLabel(source, sourceClass),
     title: source.title,
+    displayTitle: transcript ? transcriptDisplayTitle(source.title) : source.title,
     byline:
       source.authors ??
       source.organization ??

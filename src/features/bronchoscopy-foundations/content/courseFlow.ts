@@ -20,6 +20,15 @@ export type CourseVisual =
   | 'sort-example'
   | 'worked-decision'
   | 'tube-geometry'
+/**
+ * A line of wayfinding on a part: what kind of screen this is, said where the learner is about to
+ * act (fellow walkthrough A6, A31, A34, A35). It is orientation only — it never carries a keyed
+ * answer, records nothing and gates nothing.
+ */
+export interface CourseNote {
+  readonly kind: 'rehearsal' | 'topic-change' | 'reflection' | 'record-use'
+  readonly text: string
+}
 export interface CourseChunk {
   readonly id: string
   readonly title: string
@@ -32,7 +41,13 @@ export interface CourseChunk {
   readonly grammar?: boolean
   readonly demonstration?: BronchLearnUnit['demonstration']
   readonly learnerRecord?: boolean
+  readonly note?: CourseNote
 }
+
+const noted = (chunk: CourseChunk, kind: CourseNote['kind'], text: string): CourseChunk => ({
+  ...chunk,
+  note: { kind, text },
+})
 
 const teach = (
   id: string,
@@ -287,7 +302,7 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       blocks: [],
       visual: 'none',
       instruction:
-        'The next authored view has a different source of obscuration. Read the observations and use the available controls to recover the view.',
+        'A guided demonstration of clearing the lens on a scripted view, not a cause to work out. The tip is in the lower trachea, a position already confirmed, and the image has changed. Use Clear the lens under the view, and make no advance while the view is obscured.',
     },
     teach('exceptions', 'Account for an accessory or a protective scope position', [
       'accessory-out',
@@ -333,10 +348,14 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       ['lingula-to-lower-lobe', 'basal-convention', 'basal-relationships'],
       'tour',
     ),
-    practice(
-      'Now navigate the left side',
-      'inspection',
-      'Follow the left upper lobe, lingular and lower lobe relationships. Use full names and the declared combined basal convention to interpret each opening.',
+    noted(
+      practice(
+        'Now navigate the left side',
+        'inspection',
+        'Follow the left upper lobe, lingular and lower lobe relationships. Use full names and the declared combined basal convention to interpret each opening.',
+      ),
+      'reflection',
+      'Before each entry, say to yourself which lobe the airway belongs to and, for the superior segment, which lobe you have left. This is your own check: the course cannot hear it, records nothing about it, and no goal depends on it. The airway map and “The left-sided names, by parent” give each airway’s parent to compare against.',
     ),
     check('check', 'Identify a left-sided branch'),
     debrief(['common-errors']),
@@ -354,10 +373,14 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       'withdrawal-and-return',
       'when-the-survey-yields',
     ]),
-    practice(
-      'Inspect and maintain the examination record',
-      'inspection',
-      'Navigate the authored survey and declare what you actually inspected. Record nonvisualized or inaccessible regions explicitly. Entering an airway does not complete its inspection.',
+    noted(
+      practice(
+        'Inspect and maintain the examination record',
+        'inspection',
+        'Navigate the authored survey and declare what you actually inspected. Record nonvisualized or inaccessible regions explicitly. Entering an airway does not complete its inspection.',
+      ),
+      'record-use',
+      'This record is used again. If you meet every goal here on your own controls and then finish this section, the survey is kept on this device and offered in the report exercise of “The report and the handoff”. A survey left unfinished, a demonstration or a step you move past is not kept, and nothing is filled in for you.',
     ),
     check('check', 'Distinguish an entry from an inspection'),
     debrief(['common-errors']),
@@ -594,11 +617,15 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       'baseline',
     ),
     check('check', 'Explain the pressure-control breath'),
-    teach(
-      'procedure-purpose',
-      'Connect the compartment, tool and guidance',
-      ['compartment-and-guidance', 'own-training'],
-      'sort-example',
+    noted(
+      teach(
+        'procedure-purpose',
+        'Connect the compartment, tool and guidance',
+        ['compartment-and-guidance', 'own-training'],
+        'sort-example',
+      ),
+      'topic-change',
+      'A second topic starts here. The first two parts were about the ventilator’s breath with a scope in the airway. This part, the matching activity and most of the review are about procedures beyond inspection and how each is matched to its target. The section’s last question returns to the ventilator.',
     ),
     practice(
       'Match procedures to their targets',
@@ -606,7 +633,11 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
       'Match each procedure to the compartment and guidance described. This exercise does not teach the technique of the advanced procedures.',
     ),
     debrief(['fluoroscopy-principles', 'radiation-and-staff', 'common-errors']),
-    check('transfer', 'Interpret changed resistance during a breath'),
+    noted(
+      check('transfer', 'Interpret changed resistance during a breath'),
+      'topic-change',
+      'This question returns to the section’s first topic, the ventilator’s breath.',
+    ),
   ],
   'honest-report': [
     teach('record', 'Write from the examination record', [
@@ -626,9 +657,9 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     ),
     {
       ...practice(
-        'Use your findings to build the report',
+        'Build a report from a survey record',
         'report',
-        'Now use your own available survey record. Preserve any limitation or missing evidence; do not fill a normal template from memory.',
+        'Choose which record to write from: your own recorded survey if this device holds one, a supplied teaching record that is not yours, or no survey evidence. Preserve any limitation or missing evidence; do not fill a normal template from memory.',
       ),
       id: 'your-record',
       learnerRecord: true,

@@ -1,6 +1,7 @@
 import { Link } from '@/i18n/navigation'
 import { BRONCH_ARC_SENTENCE } from '../content/pathway'
-import { bronchCompositionLine } from '../content/pathwayResolver'
+import { REVIEW_PENDING_EXPLANATION } from '../content/learnerCopy'
+import { BRONCH_TIME_ESTIMATE_NOTE, bronchCompositionLine } from '../content/pathwayResolver'
 import {
   BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF,
   BRONCHOSCOPY_FOUNDATIONS_PRACTICE_HREF,
@@ -31,6 +32,9 @@ export function BronchoscopyFoundationsHub() {
         <p className="text-sm text-muted-foreground" data-pathway-composition>
           {bronchCompositionLine()}
         </p>
+        <p className="text-sm text-muted-foreground" data-time-estimate-note>
+          {BRONCH_TIME_ESTIMATE_NOTE}
+        </p>
         <p className="max-w-3xl leading-7">
           Each lesson teaches its concepts and examples before any question. Questions and
           activities are optional: open the explanation first, try again, or continue without
@@ -44,9 +48,13 @@ export function BronchoscopyFoundationsHub() {
           anatomy with authored geometry or scripted observations; follow current device
           instructions and local policy.
         </p>
+        <p className="text-sm leading-6 text-muted-foreground" data-review-status-explained>
+          {REVIEW_PENDING_EXPLANATION}
+        </p>
         <p className="text-sm leading-6 text-muted-foreground" data-storage-statement>
-          This device keeps where you left off and the sections you open, mark reviewed or mark to
-          review later. Answers, attempts and scope positions are not saved, and nothing is scored.
+          This device keeps where you left off, the sections you open, the sections you reach the
+          end of (marked reviewed, which you can undo) and the ones you mark to review later.
+          Answers, attempts and scope positions are not saved, and nothing is scored.
         </p>
       </section>
       <section aria-labelledby="bronch-map-heading">

@@ -312,8 +312,7 @@ export const section: BronchSectionDefinition = {
     goals: [
       {
         id: 'lingular-division',
-        label:
-          'Enter LB4+5, the lingular division, without entering the upper division. Before you enter, say which lobe it belongs to.',
+        label: 'Enter LB4+5, the lingular division, without entering the upper division.',
         test: {
           type: 'all',
           tests: [
@@ -338,8 +337,7 @@ export const section: BronchSectionDefinition = {
       },
       {
         id: 'superior-segment',
-        label:
-          'Enter LB6 without entering a basal branch. Before you enter, say which lobe LB6 belongs to and which lobe you have left.',
+        label: 'Enter LB6, the superior segment, without entering a basal branch.',
         test: {
           type: 'all',
           tests: [

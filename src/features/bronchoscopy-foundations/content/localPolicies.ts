@@ -75,5 +75,9 @@ export const LOCAL_POLICY_BY_ID: ReadonlyMap<string, LocalPolicy> = new Map(
   LOCAL_POLICIES.map((policy) => [policy.id, policy] as const),
 )
 
-export const LOCAL_POLICY_NOT_CONFIGURED =
-  'Not configured. This course explains the concept; your institution’s approved policy and the device’s instructions apply, and nothing here calculates for a patient.'
+/**
+ * Said once per screen, with the policies named where they apply (A14). It states what is missing —
+ * no local policy was supplied — and never that one was approved or defaulted.
+ */
+export const LOCAL_POLICY_NOT_SUPPLIED =
+  'No local policy has been supplied to this course, so it explains the concept only. Your institution’s approved policy and the device’s instructions apply, and nothing here calculates for a patient.'

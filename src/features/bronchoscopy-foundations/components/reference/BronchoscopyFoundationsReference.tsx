@@ -3,7 +3,7 @@ import { Link } from '@/i18n/navigation'
 import { airwayDisplayName, TEACHING_TREE } from '../../content/airwayTree'
 import { SCOPE_CONTROL_PANEL } from '../../content/controlPanel'
 import { BRONCH_GRAMMAR, GRAMMAR_TREND_RULE } from '../../content/grammar'
-import { LOCAL_POLICIES, LOCAL_POLICY_NOT_CONFIGURED } from '../../content/localPolicies'
+import { LOCAL_POLICIES, LOCAL_POLICY_NOT_SUPPLIED } from '../../content/localPolicies'
 import { bronchSection } from '../../content/pathway'
 import { bronchSectionLinkTarget } from '../../content/pathwayResolver'
 import { BRONCHOSCOPY_FOUNDATIONS_ATLAS_HREF } from '../../content/routes'
@@ -193,7 +193,7 @@ export function BronchoscopyFoundationsReference() {
           What this course leaves to your institution
         </h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground" data-policy-not-configured>
-          {LOCAL_POLICY_NOT_CONFIGURED}
+          {LOCAL_POLICY_NOT_SUPPLIED}
         </p>
         <dl className="mt-5 grid gap-3 text-sm md:grid-cols-2">
           {LOCAL_POLICIES.map((policy) => (
@@ -223,7 +223,7 @@ export function BronchoscopyFoundationsReference() {
             >
               <p>
                 <span className="mr-2 text-xs font-bold text-primary">{index + 1}</span>
-                <span className="font-semibold">{source.title}</span>
+                <span className="font-semibold">{source.displayTitle}</span>
                 {source.byline ? ` ${source.byline}` : ''}
                 {source.year ? ` ${source.year}.` : ''}{' '}
                 {source.url ? (

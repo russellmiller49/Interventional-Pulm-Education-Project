@@ -718,3 +718,60 @@ label.mapPin {
     max-width: 15rem;
   }
 }
+
+/* Who sets each record status (BF-PRE-REVIEW-04, A41). Collapsed, below the record. */
+.ledgerLegend {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.ledgerLegend summary {
+  cursor: pointer;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+}
+.ledgerLegend dl {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.25rem 0 0;
+}
+.ledgerLegend dt {
+  font-weight: 650;
+}
+.ledgerLegend dd {
+  margin: 0;
+}
+
+/* The names behind the map's labels (BF-PRE-REVIEW-04, SUP-10). Collapsed, under the map. */
+.mapKey {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+.mapKey summary {
+  cursor: pointer;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+}
+.mapKey dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.2rem 0.75rem;
+  margin: 0.25rem 0 0;
+}
+.mapKey dl > div {
+  display: flex;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.mapKey dt {
+  font-weight: 650;
+  white-space: nowrap;
+}
+.mapKey dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

@@ -25,6 +25,23 @@ export const MONITOR_TREND_WORDS: Readonly<Record<MonitorTrend, string>> = {
   new: 'new',
 }
 
+/**
+ * What each badge is compared against (fellow walkthrough A40). A badge is the channel's trend
+ * against this patient's own earlier state in the scripted scene — the reference the readings were
+ * authored to. "Steady" is no lasting change: a brief change that has settled is told in the
+ * reading's words, not in the badge. Nothing here is a number, a rate or a threshold.
+ */
+export const MONITOR_TREND_MEANING: Readonly<Record<MonitorTrend, string>> = {
+  steady:
+    'no lasting change from the earlier state; a brief change that has settled is described in the words',
+  new: 'not present in the earlier state',
+  rising: 'rising compared with the earlier state',
+  falling: 'falling compared with the earlier state',
+  lost: 'available earlier and not now',
+}
+
+const TREND_ORDER: readonly MonitorTrend[] = ['steady', 'new', 'rising', 'falling', 'lost']
+
 export const MONITOR_BOUNDARY =
   'Scripted readings in words, against this patient’s own earlier state. Not a physiological model, and never a threshold.'
 
@@ -58,6 +75,14 @@ export function MonitorPanel({
           </div>
         ))}
       </dl>
+      <p className={styles.boundaryLine} data-trend-legend>
+        <strong>Reading the badges.</strong> Each badge compares its channel with this patient’s own
+        earlier state in this scripted scene, not with a normal range:{' '}
+        {TREND_ORDER.filter((trend) => readings.some((reading) => reading.trend === trend))
+          .map((trend) => `${MONITOR_TREND_WORDS[trend]} — ${MONITOR_TREND_MEANING[trend]}`)
+          .join('; ')}
+        .
+      </p>
       <p className={styles.boundaryLine} data-model-boundary>
         <strong>Model boundary.</strong> {MONITOR_BOUNDARY}
       </p>

@@ -14,6 +14,14 @@ import { registerFindings, type RegisterExemption, type RegisterSurface } from '
  * 2. The transcript review register (`registerFindings`): phrases the adopted treatments refuse.
  * 3. Digits, where a caller refuses them: titles and short titles carry no counters or codes.
  */
+/**
+ * What "review pending" means, said once where the course starts and in each lesson's help
+ * (fellow walkthrough SUP-06). The labels on models, images and adaptations stay exactly where
+ * they are: this explains them and clears none of them.
+ */
+export const REVIEW_PENDING_EXPLANATION =
+  'This course is in development. “Review pending” on a model, an image or a teaching adaptation means that item’s clinical or media review is not yet recorded here, and the label stays until it is. Read such material as teaching content, alongside current references and supervision.'
+
 export interface CopyExemption {
   readonly term: string
   readonly reason: string

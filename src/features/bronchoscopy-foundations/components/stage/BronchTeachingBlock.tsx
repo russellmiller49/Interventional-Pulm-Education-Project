@@ -1,4 +1,4 @@
-import { LOCAL_POLICY_BY_ID, LOCAL_POLICY_NOT_CONFIGURED } from '../../content/localPolicies'
+import { LocalPolicyNote } from '../LocalPolicyNote'
 import type { BronchTeachingBlock } from '../../content/types'
 import styles from './bronch-stage.module.css'
 import { MediaFigure } from './MediaFigure'
@@ -8,10 +8,16 @@ export function BlockCard({
   block,
   listId,
   role,
+  policyNote = 'full',
+  hideMedia = false,
 }: {
   readonly block: BronchTeachingBlock
   readonly listId: string
   readonly role: 'framing' | 'mechanism'
+  /** `short` when the part says once, after its blocks, that no local policy was supplied. */
+  readonly policyNote?: 'full' | 'short'
+  /** True when the same image is already on this screen in the workspace beside the teaching. */
+  readonly hideMedia?: boolean
 }) {
   return (
     <section
@@ -39,14 +45,13 @@ export function BlockCard({
           </ul>
         </>
       ) : null}
-      {block.media ? <MediaFigure media={block.media} compact /> : null}
-      {block.localPolicyIds && block.localPolicyIds.length > 0 ? (
-        <p className={styles.figureCaption} data-block-policies>
-          Depends on local policy:{' '}
-          {block.localPolicyIds.map((id) => LOCAL_POLICY_BY_ID.get(id)?.title ?? id).join(', ')}.{' '}
-          {LOCAL_POLICY_NOT_CONFIGURED}
-        </p>
-      ) : null}
+      {block.media && !hideMedia ? <MediaFigure media={block.media} compact /> : null}
+      <LocalPolicyNote
+        ids={block.localPolicyIds ?? []}
+        variant={policyNote}
+        className={styles.figureCaption}
+        marker="block"
+      />
     </section>
   )
 }

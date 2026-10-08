@@ -279,7 +279,11 @@ export interface BronchSequenceStep {
 export interface BronchSequence {
   readonly id: string
   readonly prompt: string
-  /** Authored in the order that holds; shuffled at render. At least four. */
+  /**
+   * Authored in the order that holds, which stays the one canonical order. Shown in a fixed
+   * permutation per round (`engine/sequenceOrder.ts`), reshuffled only at the learner's request.
+   * At least four.
+   */
   readonly steps: readonly BronchSequenceStep[]
   readonly rationale: string
   /** Steps whose misplacement is a safety error, named as such in the feedback. */

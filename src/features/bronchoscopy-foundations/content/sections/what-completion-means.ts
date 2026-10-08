@@ -142,7 +142,7 @@ export const section: BronchSectionDefinition = {
       kind: 'after-commitment',
       role: 'normal-reference',
       heading: CLAIMS_HEADING,
-      body: 'A training program keeps four claims distinct, because each rests on different evidence and supports a different decision.\n\nA course record can establish at most the first: that its learning activities were completed. This self-paced course issues no such record; the sections it keeps as opened or marked reviewed on your device are your own notes. No course record establishes competence, readiness for a clinical task, or privileges. How many observations readiness needs, and to what standard, is set by the training program.',
+      body: 'A training program keeps four claims distinct, because each rests on different evidence and supports a different decision.\n\nA course record can establish at most the first: that its learning activities were completed. This self-paced course issues no such record; the sections it keeps as opened or marked reviewed on your device are marks for finding your way, set when you open a section and when you reach its end. No course record establishes competence, readiness for a clinical task, or privileges. How many observations readiness needs, and to what standard, is set by the training program.',
       pointsLabel: 'The claim, and who makes it',
       points: [
         'Learning activities completed: issued by a course that keeps a completion record. This self-paced course does not issue one.',

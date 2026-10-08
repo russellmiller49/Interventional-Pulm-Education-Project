@@ -34,6 +34,24 @@ import { annularArea, formatScopeMetric, tubeGeometry } from '../engine/scope/sc
 import { OPTICAL_ASPECT } from '../engine/scope/scopeOstia'
 import { ScopeDriver, teachingCase } from '../test-support/teachingCase'
 
+// The teaching block's local-policy note links to the Reference (BF-PRE-REVIEW-04, A14).
+jest.mock('@/i18n/navigation', () => ({
+  Link: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string | { pathname: string }
+    children: React.ReactNode
+    [key: string]: unknown
+  }) => (
+    <a href={typeof href === 'string' ? href : href.pathname} {...props}>
+      {children}
+    </a>
+  ),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+}))
+
 /**
  * BF-PRE-REVIEW-03 — readable images and coherent scope workspaces (fellow walkthrough A18, A20,
  * A21, A22, A24, A25, A28, A29, A30, A33, A37, the visual part of A2, SUP-08, SUP-09, SUP-13).

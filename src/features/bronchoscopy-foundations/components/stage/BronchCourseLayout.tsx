@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react'
 import type { NowCardAction, NowCardModel } from '@/features/learning-module/stage/NowCard'
 import { Link } from '@/i18n/navigation'
-import type { CoursePresentation } from '../../content/courseFlow'
+import type { CourseNote, CoursePresentation } from '../../content/courseFlow'
 import styles from './course-flow.module.css'
 
 /**
@@ -27,6 +27,7 @@ export function BronchCourseLayout({
   overlay,
   focusRef,
   storageFailed,
+  notes = [],
 }: {
   readonly stepId: string
   readonly presentation: CoursePresentation
@@ -42,6 +43,8 @@ export function BronchCourseLayout({
   readonly overlay: ReactNode
   readonly focusRef: RefObject<HTMLDivElement | null>
   readonly storageFailed: boolean
+  /** Wayfinding for this part: what kind of screen it is. Orientation only. */
+  readonly notes?: readonly CourseNote[]
 }) {
   const id = useId()
   const interactive = presentation === 'skill' || presentation === 'inspection'
@@ -118,6 +121,18 @@ export function BronchCourseLayout({
       ) : null}
     </div>
   )
+  // On a scope step the notes sit with the coaching, never above the view: text over the bench
+  // pushes it off a phone screen, where the scene draws only while it is visible.
+  const partNotes =
+    notes.length > 0 ? (
+      <div className={styles.partNotes} data-course-notes>
+        {notes.map((note) => (
+          <p key={note.kind + note.text} data-course-note={note.kind}>
+            {note.text}
+          </p>
+        ))}
+      </div>
+    ) : null
   return (
     <div
       className={styles.course}
@@ -144,12 +159,14 @@ export function BronchCourseLayout({
           <div className={styles.skillGrid}>
             <div className={styles.workspace}>{workspace}</div>
             <div className={styles.coaching}>
+              {partNotes}
               {teaching}
               {response}
             </div>
           </div>
         ) : (
           <div className={styles.reading}>
+            {partNotes}
             {teaching}
             {workspace ? <div className={styles.workspace}>{workspace}</div> : null}
             {response}

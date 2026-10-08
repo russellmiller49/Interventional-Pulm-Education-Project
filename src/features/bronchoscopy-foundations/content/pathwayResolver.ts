@@ -88,10 +88,22 @@ export function bronchPathwayComposition(): BronchPathwayComposition {
   }
 }
 
-/** "23 sections in 9 phases · 186 min". */
+/**
+ * How a time is said (fellow walkthrough A38). Every section's minutes are an authored estimate:
+ * none has been timed with learners, so a time is always "about", and the hub says once what the
+ * figure is. No duration here was measured, and none was revised from the walkthrough's word count.
+ */
+export function bronchMinutesEstimate(minutes: number): string {
+  return `about ${minutes} min`
+}
+
+export const BRONCH_TIME_ESTIMATE_NOTE =
+  'Times are authored estimates, not measurements: no section has been timed with learners yet. Allow longer if you work through every activity.'
+
+/** "23 sections in 9 phases · about 186 min (estimate)". */
 export function bronchCompositionLine(): string {
   const composition = bronchPathwayComposition()
-  return `${composition.total} sections in ${composition.byPhase.length} phases · ${composition.minutes} min estimated`
+  return `${composition.total} sections in ${composition.byPhase.length} phases · ${bronchMinutesEstimate(composition.minutes)} (estimate)`
 }
 
 export interface BronchPathwayGroup {

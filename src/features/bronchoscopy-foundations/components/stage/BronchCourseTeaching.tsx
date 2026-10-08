@@ -11,6 +11,11 @@ import { isStillStructureId } from '../../content/media'
 import type { BronchStageLesson, BronchStageStep } from '../../content/stageLessons'
 import { ReadingTheViewTable } from '../ReadingTheViewTable'
 import { BlockCard } from './BronchTeachingBlock'
+import { PartReference } from './BronchIdentifyControl'
+import { LocalPolicyNote } from '../LocalPolicyNote'
+import { ReferenceLink } from '../ReferenceLink'
+import { bronchSection } from '../../content/pathway'
+import type { LocalPolicyId } from '../../content/localPolicies'
 import { BronchPilotTeaching } from './BronchPilotTeaching'
 import { InstrumentOrientation } from './InstrumentOrientation'
 import { MediaFigure } from './MediaFigure'
@@ -39,6 +44,21 @@ export function BronchCourseTeaching({
   const blocks = chunk.blocks.map(
     (blockId) => section.blocks.find((block) => block.id === blockId)!,
   )
+  // One part, one statement that no local policy was supplied (A14): each block still names the
+  // policies it depends on, and the statement follows the part's blocks once.
+  const policyBlocks = blocks.filter((block) => (block.localPolicyIds?.length ?? 0) > 0)
+  const partPolicyIds: readonly LocalPolicyId[] =
+    policyBlocks.length > 1
+      ? [...new Set(policyBlocks.flatMap((block) => block.localPolicyIds ?? []))]
+      : []
+  const blockPolicyNote = partPolicyIds.length > 0 ? 'short' : 'full'
+  // The workspace beside this teaching already shows the section's image on a `section` part; a
+  // block carrying the identical image would print it twice on one screen (SUP-14).
+  const workspaceMedia =
+    chunk.visual === 'section' && section.workspace.kind === 'media' ? section.workspace.media : []
+  const duplicatesWorkspace = (block: (typeof blocks)[number]) =>
+    block.media !== undefined &&
+    workspaceMedia.some((media) => JSON.stringify(media) === JSON.stringify(block.media))
   return (
     <div className={styles.teaching} data-course-teaching>
       {step.learn ? (
@@ -57,6 +77,21 @@ export function BronchCourseTeaching({
           ) : null}
         </div>
       ) : null}
+      {chunk.visual === 'instrument' && section.act.kind === 'identify' ? (
+        <section data-part-names-first-use>
+          <h3>The parts named in this section</h3>
+          <p>
+            These are the names used for the rest of this section, each with where the part is and
+            what it does. The drawing’s “suction control” is the suction valve in this list. The
+            list stays available beside the photographs later.
+          </p>
+          <PartReference
+            identify={section.act.identify}
+            open
+            summary="Part, where it is and what it does"
+          />
+        </section>
+      ) : null}
       {section.id === 'what-completion-means' && chunk.id === 'evidence' ? (
         <LearningRecordSummary />
       ) : null}
@@ -73,7 +108,13 @@ export function BronchCourseTeaching({
         <details className={styles.worked} data-extended-technique>
           <summary>Technique reference for this concept</summary>
           {blocks.map((block, index) => (
-            <BlockCard key={block.id} block={block} listId={`${id}-${index}`} role="mechanism" />
+            <BlockCard
+              key={block.id}
+              block={block}
+              listId={`${id}-${index}`}
+              role="mechanism"
+              policyNote={blockPolicyNote}
+            />
           ))}
         </details>
       ) : (
@@ -83,9 +124,12 @@ export function BronchCourseTeaching({
             block={block}
             listId={`${id}-${index}`}
             role={block.kind === 'after-commitment' ? 'mechanism' : 'framing'}
+            policyNote={blockPolicyNote}
+            hideMedia={duplicatesWorkspace(block)}
           />
         ))
       )}
+      <LocalPolicyNote ids={partPolicyIds} className={styles.limit} marker="part" />
       {chunk.visual === 'baseline' && section.workspace.kind === 'monitor' ? (
         <section>
           <h3>Read the channels together</h3>
@@ -133,6 +177,11 @@ export function BronchCourseTeaching({
             <strong>Watch for this error.</strong> {section.harmfulReflex}
           </p>
           <p>{section.controlStrip.sentence}</p>
+          <p data-five-controls-reference>
+            <ReferenceLink anchor="five-controls">
+              The five controls, listed in the Reference
+            </ReferenceLink>
+          </p>
         </section>
       ) : null}
       {chunk.grammar && section.grammarRowIds.length > 0 ? (
@@ -198,6 +247,9 @@ function SharedAirwayFigure() {
     </figure>
   )
 }
+
+/** Sections whose tour repeats the one `branch-entry` introduced (SUP-12): labelled a refresher. */
+const TOUR_REFRESHER_SECTIONS: readonly string[] = ['reference-frames', 'view-loss']
 
 /** The tour's groups: the airways before the segments, then each lobe's segments. */
 export function tourGroups(
@@ -297,6 +349,12 @@ export function NormalAirwayTour({ sectionId }: { readonly sectionId: string }) 
       </div>
       <div>
         <h3 id={headingId}>Follow the normal airway tour</h3>
+        {TOUR_REFRESHER_SECTIONS.includes(sectionId) ? (
+          <p data-refresher-note>
+            Refresher: this tour was introduced in “{bronchSection('branch-entry').title}”. It is
+            repeated here, with this section’s airways, so the section stands on its own.
+          </p>
+        ) : null}
         <nav className={styles.tourNav} aria-labelledby={headingId} data-tour-nav>
           {groups.map((entry) => (
             <div key={entry.title} role="group" aria-label={entry.title} data-tour-group>
@@ -382,9 +440,13 @@ function LearningRecordSummary() {
         <li>
           {record.visitedSectionIds.length} of {BRONCH_SECTION_IDS.length} sections opened.
         </li>
-        <li>
-          {record.reviewedSectionIds.length} marked reviewed by you;{' '}
-          {record.reviewLaterSectionIds.length} marked to review later.
+        <li data-record-reviewed>
+          {record.reviewedSectionIds.length} marked reviewed. The course sets this mark when you
+          reach the end of a section, whether or not you answered anything; you can undo it there.
+        </li>
+        <li data-record-review-later>
+          {record.reviewLaterSectionIds.length} marked to review later. This mark is set only by
+          you.
         </li>
         <li>
           {record.surveySnapshot

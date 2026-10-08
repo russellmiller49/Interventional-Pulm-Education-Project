@@ -7,6 +7,8 @@ import type { ScopeMode, AnatomyProfileId } from './types'
 
 const base = '/bronchoscopy-foundations/anatomy'
 const models = new Map<string, Promise<GLTF>>()
+/** Requests still in flight. A loaded model is kept; a failed one is already forgotten. */
+const pending = new Set<string>()
 export function loadScopeModel(path: string): Promise<GLTF> {
   const cached = models.get(path)
   if (cached) return cached
@@ -14,13 +16,27 @@ export function loadScopeModel(path: string): Promise<GLTF> {
   const loader = new GLTFLoader().setDRACOLoader(decoder)
   const promise = loader
     .loadAsync(base + '/' + path)
-    .finally(() => decoder.dispose())
+    .finally(() => {
+      decoder.dispose()
+      pending.delete(path)
+    })
     .catch((error: unknown) => {
-      models.delete(path)
+      // Only this request's own entry: a retry may already have put a newer one in its place.
+      if (models.get(path) === promise) models.delete(path)
       throw error
     })
+  pending.add(path)
   models.set(path, promise)
   return promise
+}
+
+/**
+ * Forgets the model requests that have not settled, so a new attempt asks again instead of
+ * waiting on a request that hung (BF-01 finding 3). Loaded models stay cached.
+ */
+export function forgetPendingScopeModels(): void {
+  for (const path of pending) models.delete(path)
+  pending.clear()
 }
 
 export async function loadSceneAssets(

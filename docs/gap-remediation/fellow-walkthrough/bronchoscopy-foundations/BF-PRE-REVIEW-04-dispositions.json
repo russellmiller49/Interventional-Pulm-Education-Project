@@ -1,0 +1,653 @@
+{
+  "batch": "BF-PRE-REVIEW-04",
+  "title": "Teaching clarity, honest review state and the survey-to-report path; BF-01 finding 3 (3D retry)",
+  "lane": "04",
+  "module": "bronchoscopy-foundations",
+  "source": "Bronchoscopy_Foundations_Fellow_Walkthrough.docx (Claude in a first-year-fellow persona, 19 September 2026)",
+  "sourceSha256": "3bac73ed7dc966f3cf9482b356f75261c2803ea94892201739a96c690d6d30aa",
+  "package": "Interventional-Pulm-Local-Data/module_update_9_19/BF_Claude_Implementation_Pack",
+  "planningBaseline": "77a141ccfd574a984f91e74abc9018b5d67e8202",
+  "baseSha": "b85da4a00fc1959ff9d5818d8a2b89d98d275723",
+  "branch": "claude/bf-pre-review-04-20261007",
+  "checkout": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-bf-pre-review-04-20261007",
+  "ports": {
+    "baseline": 3146,
+    "branch": 3147,
+    "baselineBuild": "QOm9tykat3tn1JV4fGe1-",
+    "finalBuild": "C0CuwGZ5yXnIPO38Xh5A_"
+  },
+  "commits": [
+    {
+      "sha": "287581f3",
+      "what": "BF-01 finding 3: observer follows the mounted element; load state machine"
+    },
+    {
+      "sha": "5b3b23cf",
+      "what": "teaching, status and survey/report changes"
+    },
+    {
+      "sha": "05cf6ad0",
+      "what": "retry re-requests a hung model request; Batch 04 Jest and Playwright suites"
+    }
+  ],
+  "verifiedCodeHead": "05cf6ad0",
+  "state": "implemented, production-built and browser-verified; one bounded draft PR; awaiting owner review; not merged, not deployed",
+  "claims": {
+    "clinicalApproval": false,
+    "sourceReview": false,
+    "anatomicalValidation": false,
+    "mediaRightsReview": false,
+    "realLearnerValidation": false,
+    "usabilitySession": false,
+    "facultyReview": false,
+    "screenReaderReview": false,
+    "release": false,
+    "readinessChange": false
+  },
+  "fileOwnership": {
+    "sharedRuntimeFilesChanged": [],
+    "publicAssetsChanged": [],
+    "note": "Every change is under src/features/bronchoscopy-foundations/**, e2e/bronchoscopy-foundations-batch04.spec.ts, playwright.bronchoscopy-foundations.config.ts (testMatch) or this docs folder. No shared stage, AnswerVerdict, HelpDialog, global CSS, shared airway library, other module, Device Intelligence, auth, server data or asset was changed."
+  },
+  "findings": [
+    {
+      "id": "A6",
+      "reportSeverity": "P1",
+      "reportSource": "S1,2,3,4,8,12,13,14,15,17; pp. 4-10,18,25-29,31,39; Appendix B",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "A check or activity repeated the worked example before it (same scene, same answer) with nothing on the screen saying so. Three repeats are produced by the course's own worked visuals: worked-decision prints the check's situation, sort-example prints the set's first row with its match, sequence prints the steps in the worked order.",
+      "rootCause": "The course flow shows worked teaching before every check by design (self-paced: explanation first). Nothing classified a repeat as rehearsal, so it read as a check of something new.",
+      "disposition": "repaired by honest labelling; new application cases pending (batch 05)",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/content/repetition.ts",
+        "src/features/bronchoscopy-foundations/content/courseFlow.ts",
+        "src/features/bronchoscopy-foundations/components/stage/BronchCourseLayout.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/course-flow.module.css"
+      ],
+      "observedAfter": "14 repeating screens in 11 sections are inventoried in content/repetition.ts (the 10 Appendix B sections, plus S21, which shares the sort-example mechanism) and each carries a part note: \"Guided rehearsal, not a new case.\" or \"Retrieval practice, not a new case.\", naming what is shared and the part that worked it. Classes: 6 guided-rehearsal, 3 later-retrieval, 5 literal-redisplay. No repeating part title uses a novelty word (validated).",
+      "preserved": [
+        "explanation before any answer, Review the teaching, retry and skip unchanged",
+        "no item, stem, option, key or id changed (asserted)",
+        "no reveal gate, score, first-attempt record or mandatory transfer item",
+        "worked teaching not hidden"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › a question that repeats its worked example says so (A6) (5 cases)",
+        "e2e/bronchoscopy-foundations-batch04.spec.ts › a repeat is named… (4 sizes)"
+      ],
+      "humanBoundary": "New scenarios, options and keys are batch 05 proposals (at most ten), for owner and source review.",
+      "pendingNotImplemented": [
+        "Meaningfully different application cases after the 14 pairs",
+        "A concise recap in place of the literal redisplay (sort row 0, the S14 worked order, the S3 situation): labelled, not removed, because removing a row or a step changes the authored set"
+      ]
+    },
+    {
+      "id": "A7",
+      "reportSeverity": "P1",
+      "reportSource": "S14 Part 3; p. 28; figure 14.1",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "The eight steps opened as the worked order rotated by two (authored indexes 2,3,4,5,6,7,0,1): six of eight already in relative order. Try the order again returned the same arrangement.",
+      "rootCause": "initialSequenceOrder used orderChoices (a cyclic rotation by a hash of the id), which is right for answer options and wrong for an ordering task.",
+      "disposition": "repaired (partial acceptance, as planned)",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/engine/sequenceOrder.ts",
+        "src/features/bronchoscopy-foundations/components/stage/BronchSequenceControl.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx",
+        "src/features/bronchoscopy-foundations/content/types.ts"
+      ],
+      "observedAfter": "The task opens in a fixed permutation keyed by the sequence id, its step ids and a round (round 0: authored indexes 4,0,7,5,1,6,2,3), never the worked order or a rotation of it. The order changes only at the learner's request: \"Shuffle the steps again\" (optional) or \"Try the order again\". A re-render, a look back and a reload keep the arrangement. \"Show the worked order\" opens before any attempt.",
+      "preserved": [
+        "canonical steps, order, criticalStepIds and the key unchanged (asserted byte-for-byte)",
+        "Show the worked order before any attempt",
+        "no minimum attempts, no score, skip records nothing",
+        "keyboard ordering"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › S14 ordering (6 cases)",
+        "e2e/bronchoscopy-foundations-batch04.spec.ts › A7: the S14 ordering task (3 sizes)"
+      ]
+    },
+    {
+      "id": "A11",
+      "reportSeverity": "P2",
+      "reportSource": "S1-S5; pp. 11,18; figure 8.1",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "The five controls were listed only in the Reference. The bench lesson's first screen named handle, insertion tube, lever and suction control, never the five; the accessory state was unnamed.",
+      "rootCause": "The Reference list (SCOPE_CONTROL_PANEL) was not shown in Learn.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/stage/BronchPilotTeaching.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchCourseTeaching.tsx",
+        "src/features/bronchoscopy-foundations/components/ReferenceLink.tsx"
+      ],
+      "observedAfter": "S5's first screen lists the five controls from SCOPE_CONTROL_PANEL (sentence and names verbatim), says the bench practises four and that the fifth is developed in S16, and keeps the five controls apart from S1's five questions. Every section's review part links to the Reference list.",
+      "preserved": [
+        "no control added or changed",
+        "the five clinical questions of S1 unchanged and kept distinct"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › A11",
+        "e2e/bronchoscopy-foundations-batch04.spec.ts › A11, A39, A19"
+      ]
+    },
+    {
+      "id": "A14",
+      "reportSeverity": "P2",
+      "reportSource": "16 sections; pp. 7,39-40; figure 2.2",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "41 teaching blocks in 16 sections each ended with \"Depends on local policy: … Not configured. This course explains the concept; …\" in full; 10 parts carried it two or three times on one screen.",
+      "rootCause": "One constant appended to every block, item and case that named a policy.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/LocalPolicyNote.tsx",
+        "src/features/bronchoscopy-foundations/components/ReferenceLink.tsx",
+        "src/features/bronchoscopy-foundations/content/localPolicies.ts",
+        "src/features/bronchoscopy-foundations/components/stage/BronchTeachingBlock.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchCourseTeaching.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx",
+        "src/features/bronchoscopy-foundations/components/BronchCaseActivity.tsx",
+        "src/features/bronchoscopy-foundations/components/BronchIntegratedCases.tsx",
+        "src/features/bronchoscopy-foundations/components/reference/BronchoscopyFoundationsReference.tsx"
+      ],
+      "observedAfter": "Each block still names its own policies. The statement that no local policy has been supplied is said once per part (29 statements for the same 41 dependences), with a link to the Reference list. \"Not configured\" no longer appears.",
+      "preserved": [
+        "every policy value still null; none supplied, defaulted or described as approved",
+        "every local-policy block still on a screen with its own dependence named (asserted for all sections)",
+        "no number, dose or schedule in the statement (asserted)"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › a missing local policy is said once (4 cases)",
+        "e2e/bronchoscopy-foundations-batch04.spec.ts › …policy is said once… (4 sizes)"
+      ]
+    },
+    {
+      "id": "A17",
+      "reportSeverity": "P2",
+      "reportSource": "S2 Parts 1-2; p. 6; figure 2.1",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "Part 1 referred to \"the pathways in the sort\" (the sort is Part 3); Part 2 to \"the man in the prediction\" (the prediction is Part 6).",
+      "rootCause": "Authoring vocabulary of a later activity in pre-activity teaching.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/content/sections/clinical-question.ts"
+      ],
+      "observedAfter": "Part 1: \"The pathways named in this section…\". Part 2 introduces its own case (\"Take one request as the example. A man has an opacity back in the right lower lobe after treatment…\") and names the four boxes before using them.",
+      "preserved": [
+        "every clinical fact and the left gap (\"not provided — must clarify\") unchanged",
+        "block ids, claim classes and source refs unchanged"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › A17, SUP-04"
+      ]
+    },
+    {
+      "id": "A19",
+      "reportSeverity": "P2",
+      "reportSource": "S3 Part 3; p. 8",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "The eight names the photographs offer were first met as answer choices; the overview drawing labels \"Suction control\", the set says \"Suction valve\" and \"Suction valve port\".",
+      "rootCause": "The set's part notes (Batch 03) were available only inside the identification task.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/stage/BronchIdentifyControl.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchCourseTeaching.tsx"
+      ],
+      "observedAfter": "Part 1 shows \"The parts named in this section\": all eight names, each with where it is and what it does, open by default, and says the drawing's \"suction control\" is the suction valve. The list stays beside the photographs.",
+      "preserved": [
+        "rows, choices, keys and notes unchanged",
+        "the \"Rotary function\" note keeps its own hedge; no locator invented"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › A19",
+        "e2e/bronchoscopy-foundations-batch04.spec.ts › A11, A39, A19"
+      ],
+      "humanBoundary": "Part identity (A18) remains with faculty review of the set, as Batch 03 recorded."
+    },
+    {
+      "id": "A27",
+      "reportSeverity": "P2",
+      "reportSource": "S8 Part 4; p. 20; figure 8.3",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "The instruction said \"Read the observations\" where none were supplied, and the one control named the action.",
+      "rootCause": "The part's instruction was written for a differential; the step is one authored demonstration with one goal.",
+      "disposition": "repaired (adapted to guided learning)",
+      "changedFiles": ["src/features/bronchoscopy-foundations/content/courseFlow.ts"],
+      "observedAfter": "The instruction says what the step is (\"A guided demonstration of clearing the lens on a scripted view, not a cause to work out\"), gives the authored context (lower trachea, position confirmed, image changed) and the goal's own condition.",
+      "preserved": [
+        "the control keeps its clear name",
+        "goal, script, view and interlock (no advance while obscured) unchanged",
+        "skip and reset unchanged"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › A27",
+        "e2e/bronchoscopy-foundations-batch04.spec.ts › A27, A40, A42, A43, SUP-06, SUP-14"
+      ],
+      "humanBoundary": "Image-based differential cases are batch 05 drafts."
+    },
+    {
+      "id": "A31",
+      "reportSeverity": "P2",
+      "reportSource": "S11 Part 3; p. 25; figure 11.1",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "Two goals said \"Before you enter, say which lobe…\" while their tests read only entry events.",
+      "rootCause": "A reflection was written into a goal label the model cannot check.",
+      "disposition": "repaired (partial acceptance, as planned)",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/content/sections/left-side.ts",
+        "src/features/bronchoscopy-foundations/content/courseFlow.ts"
+      ],
+      "observedAfter": "The goals state only what the model records. The reflection is a part note: say it to yourself; the course cannot hear it, records nothing and no goal depends on it; the map and the named teaching block give the parent to compare against.",
+      "preserved": [
+        "goal ids and tests unchanged",
+        "no input, gate, speech recognition or record added (asserted: the note holds no control)",
+        "no goal in any section asks for something said (asserted)"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › A31",
+        "e2e/bronchoscopy-foundations-batch04.spec.ts › A31, A41, SUP-10"
+      ]
+    },
+    {
+      "id": "A34",
+      "reportSeverity": "P2",
+      "reportSource": "S21; pp. 32-33",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "Part 3 moved from the ventilator's breath to procedures beyond inspection with no transition; the last question returned to the ventilator unannounced.",
+      "rootCause": "Two topics in one section with no signpost.",
+      "disposition": "repaired for the transition; split and waveforms pending (batch 05, owner)",
+      "changedFiles": ["src/features/bronchoscopy-foundations/content/courseFlow.ts"],
+      "observedAfter": "Part 3 opens with \"A second topic starts here…\", and Part 6 says it returns to the first topic.",
+      "preserved": [
+        "parts, order, ids and routes unchanged (asserted)",
+        "no waveform, physiological value or figure added"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › A34",
+        "e2e/bronchoscopy-foundations-batch04.spec.ts › a repeat is named… (S21 note, 4 sizes)"
+      ],
+      "humanBoundary": "Whether to split S21, and any ventilator waveform figure, are owner decisions.",
+      "pendingNotImplemented": ["Structural split of S21", "Scope-out/scope-in schematic waveforms"]
+    },
+    {
+      "id": "A35",
+      "reportSeverity": "P2",
+      "reportSource": "S22 Part 4; p. 33; figure 22.1",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "S12 did not say its survey is used later. S22 Part 4 silently used a saved survey, or showed a two-field report with no explanation and no example to work from.",
+      "rootCause": "One report builder read one optional snapshot; there was no notion of whose evidence it was.",
+      "disposition": "repaired with strict provenance; owner approval of the supplied example still pending",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/engine/inspectionReport.ts",
+        "src/features/bronchoscopy-foundations/engine/stageSession.ts",
+        "src/features/bronchoscopy-foundations/components/stage/SurveyRecordChoice.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx",
+        "src/features/bronchoscopy-foundations/content/courseFlow.ts"
+      ],
+      "observedAfter": "S12 says the survey is used again and what does not count. S22 offers three records: \"Use my recorded survey\" (only the current record's finished survey; unavailable, with the reason, otherwise), \"Work through a supplied teaching record (not mine)\", \"Continue with no survey evidence\". The supplied record is the lower lobe already worked in S12 (block lower-lobe-worked), four statuses, held as constants; its report has its own id and title and says \"Supplied teaching record, not your examination\" on every airway field; calling it one's own examination is a refused option.",
+      "preserved": [
+        "availableSurveySnapshot unchanged; a visited or reviewed mark, a legacy survey and a broken record give no survey",
+        "the supplied record is never written to storage, never passed to withSurveySnapshot, never shown in S12",
+        "the learner's stored survey is byte-identical after using the supplied record; the earlier record's bytes are unchanged (sha256 compared)",
+        "no normal finding inferred in any mode; larynx stays not assessed",
+        "storage schema unchanged; no migration",
+        "the learner report's wording is what it was (asserted equal to inspectionReport)"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › the report's three kinds of evidence (A35) (15 cases)",
+        "e2e/bronchoscopy-foundations-batch04.spec.ts › A35 (7 sizes, storage variants, finish) and the genuine survey made on the real controls"
+      ],
+      "humanBoundary": "OWNER_DECISIONS \"Supplied report example\": the owner approves the example. It reuses existing S12 teaching and adds no narrative, but it has not been approved as a report example.",
+      "pendingNotImplemented": ["Owner approval of the supplied teaching record"]
+    },
+    {
+      "id": "A38",
+      "reportSeverity": "P3",
+      "reportSource": "All; pp. 3,39",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "Times were shown as \"Estimated N min\" and bare \"N min\" in three wordings, with nothing saying they were unmeasured.",
+      "rootCause": "Authored minutes presented without their status.",
+      "disposition": "repaired (honest label); timing itself is a human hold",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/content/pathwayResolver.ts",
+        "src/features/bronchoscopy-foundations/components/BronchoscopyFoundationsHub.tsx",
+        "src/features/bronchoscopy-foundations/components/hub/BronchPathwayAccordion.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx"
+      ],
+      "observedAfter": "One wording: \"about N min\". The lesson header adds \"(estimate, not timed with learners)\", and the hub says once that times are authored estimates, not measurements.",
+      "preserved": [
+        "every section's authored minutes unchanged (asserted)",
+        "no duration derived from the walkthrough's word count"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › A38",
+        "e2e/bronchoscopy-foundations-batch04.spec.ts › hub and header"
+      ],
+      "humanBoundary": "Observed durations with intended learners are a later owner activity."
+    },
+    {
+      "id": "A39",
+      "reportSeverity": "P3",
+      "reportSource": "S5; p. 11",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "Two screens of each bench part carried the same position (\"Part 2 of 7 · Depth\" twice; 12 screens, 7 parts). The repeat was not called optional. While the 3D view loaded the controls were disabled with no word.",
+      "rootCause": "The position counted parts, not screens; the pane said nothing while it waited for the first frame.",
+      "disposition": "repaired (presentation); the repeated first screen is kept and labelled",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchPilotTeaching.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/ScopeScenePane.tsx"
+      ],
+      "observedAfter": "A part with two screens counts them (\"· step 1 of 2\"). The repeat is headed \"Optional repeat: the same movement without the action cue\". While the controls wait for the first drawn frame the dock says so, and that nothing pressed is counted. The first screen says it repeats S3's overview as a refresher.",
+      "preserved": [
+        "no step, unit or skill removed",
+        "a control pressed while loading still sends nothing",
+        "walking every screen without a control performs nothing (asserted)",
+        "SYSTEMIC-UX-01 bench geometry: the note is in the dock and only while loading"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › A39",
+        "e2e/bronchoscopy-foundations-batch04.spec.ts › A11, A39, A19; hung-request case (the waiting note)"
+      ]
+    },
+    {
+      "id": "A40",
+      "reportSeverity": "P3",
+      "reportSource": "S4 Part 1; p. 10",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "Monitor badges (steady, new, rising…) had no stated reference. In S4 the heart-rate reading describes a brief rise that returns and is badged steady.",
+      "rootCause": "The contract (\"a trend against this patient's own earlier state\") lived in a type comment and a boundary line that did not mention the badges.",
+      "disposition": "repaired for the badges; density not changed",
+      "changedFiles": ["src/features/bronchoscopy-foundations/components/stage/MonitorPanel.tsx"],
+      "observedAfter": "Every monitor says what a badge is compared against and what each badge on that panel means. \"Steady\" is defined as no lasting change, a settled brief change being in the words — which is how the authored S4 reading and its badge agree. No reading or badge was changed.",
+      "preserved": [
+        "no reading, trend, value, threshold or dose changed",
+        "no number in the legend (asserted)"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › A40",
+        "e2e/bronchoscopy-foundations-batch04.spec.ts › A27, A40, …"
+      ],
+      "humanBoundary": "Whether S4's heart-rate badge should be something other than steady is an authoring decision; it was explained, not altered.",
+      "pendingNotImplemented": [
+        "Regrouping S4 Part 1 (three blocks of restricted clinical text) to reduce density"
+      ]
+    },
+    {
+      "id": "A41",
+      "reportSeverity": "P3",
+      "reportSource": "S12; p. 25",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "The teaching says \"ostium visualized\", the record says \"Opening in view\", and the Declare menu offers four statuses, with nothing saying which the model sets and which the learner declares.",
+      "rootCause": "Three vocabularies for the record with no key.",
+      "disposition": "repaired (explanation; semantics preserved)",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/scope/ScopeFallback.tsx",
+        "src/features/bronchoscopy-foundations/components/scope/scope-fallback.module.css"
+      ],
+      "observedAfter": "A collapsed legend under the record: Opening in view and Entered are set by the model (and \"Opening in view\" is the teaching's \"ostium visualized\"); the four menu statuses are the learner's declarations, with when each is offered; the record holds no finding.",
+      "preserved": [
+        "no status added, renamed or migrated",
+        "automatic visibility is not described as inspected",
+        "the record, the save and the report unchanged"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › A41",
+        "e2e/bronchoscopy-foundations-batch04.spec.ts › A31, A41, SUP-10"
+      ]
+    },
+    {
+      "id": "A42",
+      "reportSeverity": "P3",
+      "reportSource": "S23; p. 34",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "S23 reported \"{n} marked reviewed by you\" although the course sets the mark when the end of a section is reached.",
+      "rootCause": "Display copy written before the self-paced conversion set the mark on finish.",
+      "disposition": "repaired",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/components/stage/BronchCourseTeaching.tsx",
+        "src/features/bronchoscopy-foundations/components/stage/BronchStageHost.tsx",
+        "src/features/bronchoscopy-foundations/components/BronchoscopyFoundationsHub.tsx",
+        "src/features/bronchoscopy-foundations/content/sections/what-completion-means.ts",
+        "src/features/bronchoscopy-foundations/engine/selfPacedProgress.ts"
+      ],
+      "observedAfter": "S23, the end-of-section card and the hub say the course sets the mark on reaching the end, that it is a navigation mark and not a sign-off, and that it can be undone. \"Review later\" is said to be the learner's own mark.",
+      "preserved": [
+        "storage unchanged; no confirmation step, certificate or performance summary added",
+        "an all-skip journey is still valid and still claims nothing (asserted)"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › A42",
+        "e2e/bronchoscopy-foundations-batch04.spec.ts › A27, A40, A42, …"
+      ]
+    },
+    {
+      "id": "A43",
+      "reportSeverity": "P3",
+      "reportSource": "Site / Reference / sets; pp. 35-36; figure X.1",
+      "reproduced": true,
+      "reproducedAt": "b85da4a0 production build (QOm9tykat3tn1JV4fGe1-), real route, native input",
+      "observedBefore": "The 16 lecture transcripts were listed under internal file names as if they were titles (for example \"SedationBronchoscopy_KVN\", \"4-BIP-Airway inspection_anatomy\").",
+      "rootCause": "The manifest holds one title field, which for a transcript is the file name.",
+      "disposition": "repaired for the BF part; shared parts stay with PI platform 05",
+      "changedFiles": [
+        "src/features/bronchoscopy-foundations/data/sources.ts",
+        "src/features/bronchoscopy-foundations/components/stage/BronchSourceList.tsx",
+        "src/features/bronchoscopy-foundations/components/reference/BronchoscopyFoundationsReference.tsx"
+      ],
+      "observedAfter": "A transcript is shown as \"Transcript file “…” (lecture title not verified)\". The manifest title and id are unchanged; no title or speaker is inferred.",
+      "preserved": [
+        "source ids, classes, locators, limitation sentence and citations of non-transcripts unchanged",
+        "no access or publication state changed"
+      ],
+      "tests": [
+        "src/features/bronchoscopy-foundations/__tests__/teaching-and-survey-flow.test.tsx › A43",
+        "e2e/bronchoscopy-foundations-batch04.spec.ts › A27, A40, A42, A43, …"
+      ],
+      "humanBoundary": "Verified lecture titles need the recording or slides. The intro-course footer and the clipped language menu are PI platform 05's; not touched here.",
+      "pendingNotImplemented": ["Verified lecture titles"]
+    }
+  ],
+  "supplementalNotes": [
+    {
+      "id": "SUP-01",
+      "location": "S1 / p4",
+      "disposition": "no change, as planned",
+      "note": "Retry repeats the same item and option order: optional reinforcement. Only the S14 ordering task reshuffles on retry (A7). Variations are batch 05."
+    },
+    {
+      "id": "SUP-04",
+      "location": "S2 / p6",
+      "disposition": "repaired",
+      "note": "The guideline is named by source U2's registered title at first use; the four boxes are named before the plan. The origin of the four-box layout is not attributed (pending source check)."
+    },
+    {
+      "id": "SUP-06",
+      "location": "S3 / p8",
+      "disposition": "explained; no label removed",
+      "note": "What \"review pending\" means is said once on the hub and in each lesson's Help. Every pending label stays. No redundant label was removed: each sits on a different object."
+    },
+    {
+      "id": "SUP-10",
+      "location": "S6/S11 / pp13,24-25",
+      "disposition": "repaired; MALPS recorded for review",
+      "note": "The airway map has a key from the teaching tree's own names. \"MALPS\" occurs once (S11 block basal-relationships); no registered source defines it; left as written."
+    },
+    {
+      "id": "SUP-12",
+      "location": "S7 / p16 and S5 / p11",
+      "disposition": "repaired by labelling",
+      "note": "The repeated tour (S7, S8) and the repeated instrument overview (S5) are labelled refreshers and kept for direct-link learners."
+    },
+    {
+      "id": "SUP-14",
+      "location": "S13 / pp26-27",
+      "disposition": "repaired for the duplicate; wording changes pending",
+      "note": "The identical normal still was on S13 Part 1 twice (the block and the workspace); the block's copy is not printed there. Hedged option wording is unchanged (batch 05)."
+    }
+  ],
+  "bf01Finding3": {
+    "id": "BF-01 finding 3",
+    "reportSeverity": "P2",
+    "reportSource": "BF-PRE-REVIEW-01 handoff, independent review of PR #254; beta-finish-line.md \"BF-04\"",
+    "reproduced": true,
+    "reproduction": "Base production build QOm9tykat3tn1JV4fGe1- (b85da4a0): abort **/anatomy/larynx/**, reach S9 Part 3 (failed), Use the schematic view, restore the route, Try the 3D view again -> data-three-state=\"loading\" for 30 s. Also: after repeated failures and a restored route, Reload the 3D view -> loading for 30 s.",
+    "rootCause": "ScopeScenePane attaches the playback element to a different node in the 3D branch and the schematic branch. useScopePlayback bound its IntersectionObserver in an effect keyed on the ref object, so after the switch it still observed the removed node, which reports isIntersecting=false. visible stayed false, the canvas frameloop stayed \"never\", no frame was drawn and onDraw never fired. The BF-01 handoff's source-level hypothesis is confirmed at browser level.",
+    "repair": [
+      "useScopePlayback takes the mounted element (state), so the observer rebinds when the element changes.",
+      "components/scope/sceneLoad.ts: the scene's load is one reducer (loading | ready | failed; attempt, autoRecoveries, failure). The learner's retry is a new attempt; a lost graphics context is recovered at most 2 times per attempt, then fails; an attempt not drawn after 45 s on screen in a visible tab fails with the retry and the schematic view offered. A frame drawn after a failure does not make the view ready.",
+      "forgetPendingScopeModels(): a new attempt re-requests model files whose earlier request never settled; loaded models stay cached.",
+      "While the controls wait for the first frame the dock says so."
+    ],
+    "changedFiles": [
+      "src/features/bronchoscopy-foundations/components/scope/useScopePlayback.ts",
+      "src/features/bronchoscopy-foundations/components/scope/ScopeScenePane.tsx",
+      "src/features/bronchoscopy-foundations/components/scope/ScopeScene.tsx",
+      "src/features/bronchoscopy-foundations/components/scope/sceneLoad.ts",
+      "src/features/bronchoscopy-foundations/components/scope/scopeSceneAssets.ts"
+    ],
+    "observedAfter": "failure -> schematic -> Try the 3D view again -> ready; three failed retries each return to failed (never loading), then a restored route draws; a hung request fails at the deadline (data-three-failure=\"deadline\") and the next reload draws (data-three-attempt=\"1\").",
+    "preserved": [
+      "No scope reducer, clock, goal, interlock or accessory code changed",
+      "Controls open only on a drawn frame or in the schematic view, as before",
+      "A background tab and an offscreen pane still accrue no simulated time and do not count toward the deadline",
+      "PR #291: one bench presentation for the scene and the end-on drawing; its suites pass"
+    ],
+    "tests": [
+      "src/features/bronchoscopy-foundations/__tests__/scene-retry.test.tsx (11 cases)",
+      "e2e/bronchoscopy-foundations-batch04.spec.ts › BF-01 finding 3 (3 cases: failure-retry-success, repeated failure, hung request)"
+    ],
+    "limits": [
+      "The shared airway-geometry loader (src/lib/airway-anatomy/airway-render.ts) keeps its own in-flight cache; a hung request there is bounded by the deadline but not re-requested by a retry. Not changed: shared file with other consumers.",
+      "The 45 s deadline is a design value, not a measured one."
+    ]
+  },
+  "suppliedTeachingRecord": {
+    "status": "implemented from existing teaching; owner approval as a report example PENDING",
+    "derivedFrom": {
+      "sectionId": "systematic-survey",
+      "blockId": "lower-lobe-worked",
+      "role": "worked-example"
+    },
+    "rows": [
+      "LB6 inspected (declared in the supplied record)",
+      "LB7+8 inspected (declared in the supplied record)",
+      "LB9 entered, inspection not declared",
+      "LB10 opening seen, not entered, not safely accessible"
+    ],
+    "notRepresented": [
+      "the example's fifth and sixth lines (a variant and a return): not record statuses"
+    ],
+    "storage": "none: constants in engine/inspectionReport.ts; never written, never read from storage",
+    "provenanceTest": "each row's label occurs in the corresponding line of the worked example, in order; none is an airway of the learner's survey ledger"
+  },
+  "provenanceValidation": {
+    "legacyFixtureSha256": "59cd3b11a65a3639e8a2097c40472fa8ffa370666218c390ba2ad0bd750829f0",
+    "legacyFixtureBytes": 1163,
+    "syntheticSurveySha256": "2dd20ce3bbcdfa3e685a0e69cc8ed07f1f1e362cbb9b0afc5279a6968a48c5aa",
+    "result": "The earlier record's bytes hash identically before and after every report mode at 7 sizes and in the legacy-only case; the current record's surveySnapshot is JSON-identical before and after; the string \"LB6\" never appears in stored data.",
+    "modesTested": [
+      "genuine current survey made with the real controls (browser)",
+      "stored current survey, partly declared (synthetic fixture)",
+      "no survey",
+      "legacy-only record",
+      "unparseable current record",
+      "reviewed/visited marker only",
+      "switch learner -> supplied -> learner -> none",
+      "finish the section after the supplied record"
+    ]
+  },
+  "preservedContracts": [
+    "Batch 01: brush demonstration misreport and exposed-accessory refusal; environmental clock (scopeScripts, stageSession, scopeReducer untouched); goal claim classes and wording; closed-fold guard",
+    "Batch 02: source classes and PDF-page wording; Reading-the-view table; S4 primary Check; scenario Decide -> feedback -> Continue with the unsafe move refused; question kept above the shared AnswerVerdict",
+    "Batch 03 / PR #291: Enlarge dialog and detail windows; bench end-on drawing and one bench presentation; Show me where read from the reducer; compact goal card; S7 comparison; S20 cross-section",
+    "Self-paced: explanation first, retry, skip records nothing, no scores, counts or first-attempt records; stable ids; legacy bytes untouched",
+    "Every source, media, anatomy, local-policy and clinical hold, including SUP-07 dose guidance: unchanged"
+  ],
+  "validation": {
+    "jest": {
+      "base": "36 suites, 523 passed, 1 todo",
+      "final": "38 suites, 580 passed, 1 todo",
+      "newCases": 57,
+      "newFiles": [
+        "__tests__/teaching-and-survey-flow.test.tsx (46)",
+        "__tests__/scene-retry.test.tsx (11)"
+      ],
+      "changedExistingExpectations": 3,
+      "harnessOnlyEdits": 2,
+      "casesFailingOnBaseRuntime": 41,
+      "casesPassingOnBaseRuntime": {
+        "count": 16,
+        "why": "13 unit tests of helpers added as shims the base never imports (load machine 7, permutation 3, repeat inventory 3) and 3 preserved-contract guards"
+      }
+    },
+    "tsc": "exit 0",
+    "eslint": "47 changed .ts/.tsx, 0 errors, 0 warnings",
+    "prettier": "clean on every changed path",
+    "gitDiffCheck": "clean",
+    "build": {
+      "base": "exit 0, QOm9tykat3tn1JV4fGe1-",
+      "final": "exit 0, C0CuwGZ5yXnIPO38Xh5A_"
+    },
+    "playwright": {
+      "finalBuild": "91 unique tests, 91 passed in one run (20.0 min): 67 existing, 24 new",
+      "newCasesOnBaseBuild": "24 of 24 fail",
+      "systemicUxBf": "7 passed on the final build; 7 passed on the base",
+      "sizes": [
+        "1204x987",
+        "1440x900",
+        "1024x768",
+        "390x844",
+        "320x740",
+        "200% root text at 1204x987 and 390x844"
+      ],
+      "input": "native pointer and keyboard; no forced click, injected state or fabricated event; stored-survey cases use a labelled synthetic fixture; one case makes a genuine survey on the real controls"
+    },
+    "notCounted": [
+      "intermediate build p11grPTBhAJ7L5S1EuqZ9 (code 5b3b23cf): new cases 21 of 21 after three test-harness corrections; genuine-survey case once",
+      "a complete existing-suite run on that build stopped at 5 tests for the rebuild"
+    ],
+    "evidence": "Interventional-Pulm-Local-Data/renders/output/bf-pre-review-04-2026-10-07/{baseline,after,logs}/ (screenshots and measurements.json per build; capture.cjs)"
+  },
+  "ownerDecisions": [
+    "Approve, change or withdraw the supplied teaching record as the S22 example (A35).",
+    "Whether S4's heart-rate reading should keep the badge \"steady\" (A40).",
+    "Up to ten new application cases to follow the repeated pairs (A6, batch 05).",
+    "Whether to split S21 or add ventilator waveform figures (A34).",
+    "A definition for MALPS, or its removal (SUP-10).",
+    "The source of the four-box plan, if it is to be attributed (SUP-04).",
+    "Verified lecture titles for T01-T16 (A43).",
+    "Timing with intended learners (A38)."
+  ],
+  "notRun": [
+    "No human review of any kind: faculty, learner, technologist, clinical, source, media, anatomy or accessibility specialist; no usability session; no screen reader was listened to.",
+    "romium only; Safari/WebKit and Firefox not run. Native browser zoom not tested.",
+    "th themes were not compared for this batch: the new elements use the module's existing tokens and classes (one new rule each for the part notes, the record legend and the map key). The existing suite's theme pass ran and passed.",
+    "e 3D retry was exercised with reduced motion (the BF config's setting); ordinary motion was not run for it. No clock or animation code changed. A lost graphics context was exercised in the reducer only, not forced in a browser.",
+    "e deadline was exercised once in the browser with a request that never answers (45 s real time); the hidden-tab and offscreen exemptions are covered by the hook's existing unit suite, not by a new browser case.",
+    "e genuine survey was made at 1440×900 only.",
+    "e walkthrough's own figures were not re-rendered; Appendix B was read as a structural inventory by a helper, not line by line in this session.",
+    " 200% root text the site header and footer overflow the page, identically on the base (shared chrome); the course region fits."
+  ],
+  "backlog": [
+    "S13 Part 3: the instruction says the still \"stays in the Simulator panel\", but no workspace is shown on that part (noted by the inventory; not assigned to this batch).",
+    "S8 section-file step texts (\"Name what the field shows\") are validated but not rendered by the course flow; dead copy.",
+    "S21 section-file explain title names the first topic; not rendered by the course flow.",
+    "U2 has no byline in the manifest, so its source line runs title into year."
+  ]
+}
