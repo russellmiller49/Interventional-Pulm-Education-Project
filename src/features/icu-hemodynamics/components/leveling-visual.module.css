@@ -55,13 +55,17 @@
   background: #e8f1fb;
 }
 /*
- * The drawing keeps a least width and scrolls inside its own box below it.
+ * On a phone with text at 200 % the drawing keeps a least width and scrolls inside its own box.
  *
- * Its labels are text in rem over a drawing that shrinks with the card. On a phone with text at
+ * Its labels are text in rem over a drawing that shrinks with the card. At 390 px with text at
  * 200 % the card is about 7 rem of drawing: the three labels sat on one another and ran past the
  * card. That did not show while the page itself was too wide at that size and lent the card room;
- * once the page fits its window (the PR #321 port), the drawing has to hold its own. `contain`
- * keeps the least width from widening the card, as on the reference figure.
+ * once the page fits its window (the PR #321 port), the drawing has to hold its own.
+ *
+ * The least width applies under 9 rem of card only — the two phone widths at 200 % text. The
+ * narrowest card at 100 % text is the one inside Practice's tool on a 320 px phone, about 10.4 rem,
+ * and it is left exactly as it was. `contain` keeps the least width from widening the card, as on
+ * the reference figure.
  */
 .diagram {
   min-width: 0;
@@ -74,8 +78,11 @@
 }
 .diagramFrame {
   position: relative;
-  /* Just under the drawing's width on a 320 px phone at 100 % text, so nothing changes there. */
-  min-width: 14.5rem;
+}
+@container (max-width: 9rem) {
+  .diagramFrame {
+    min-width: 14.5rem;
+  }
 }
 .diagram svg {
   display: block;

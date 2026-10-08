@@ -6726,6 +6726,21 @@
 }
 
 /*
+ * On a phone with text at 200 % two readouts no longer fit side by side: a pressure such as 87/65
+ * ran out of its cell and over its neighbour's label (it had room only while the case itself was
+ * wider than the window; sanity-review repair, P-03). Under 14 rem of monitor they go one to a
+ * row. The width is the monitor's own, in rem, so a phone at 100 % text keeps two columns.
+ */
+:global([data-case-workspace]) .monitorBody {
+  container: hd-case-monitor / inline-size;
+}
+@container hd-case-monitor (max-width: 14rem) {
+  :global([data-case-workspace]) .numericRail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/*
  * The monitor's statements about its own view: frozen, held, axis changed. They describe the
  * display, never the patient, and sit outside the plot so they cover no part of a tracing.
  */

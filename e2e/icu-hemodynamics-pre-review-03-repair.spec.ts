@@ -210,6 +210,20 @@ for (const viewport of [
       page.getByRole('table').filter({ hasText: 'Accepted thermodilution CO' }),
     ).toBeVisible()
 
+    // The monitor's readouts each stay inside their own cell: none runs over its neighbour.
+    const readouts = await page
+      .locator('section[class*="monitor"] [class*="numericRail"] > div')
+      .evaluateAll((cells) =>
+        cells.map((cell) =>
+          Math.round(
+            cell.querySelector('strong')!.getBoundingClientRect().right -
+              cell.getBoundingClientRect().right,
+          ),
+        ),
+      )
+    expect(readouts).toHaveLength(8)
+    for (const spill of readouts) expect(spill).toBeLessThanOrEqual(1)
+
     // A tool whose content cannot narrow scrolls inside its own frame; nothing of it is cut off.
     const tools = await page
       .locator('[aria-label="Measurement tools"] > details[open] > :not(summary)')
@@ -270,6 +284,11 @@ for (const viewport of [
       .locator('[aria-label="Retained case observations"] td')
       .evaluateAll((nodes) => nodes.map((cell) => getComputedStyle(cell).display))
     expect(cells).toEqual(['table-cell', 'table-cell', 'table-cell', 'table-cell'])
+    // The readouts are two to a row on a phone and one column beside the tracings on a desktop.
+    const railColumns = await page
+      .locator('section[class*="monitor"] [class*="numericRail"]')
+      .evaluate((rail) => getComputedStyle(rail).gridTemplateColumns.split(' ').length)
+    expect(railColumns).toBe(viewport.width < 761 ? 2 : 1)
     // No opened tool needs its backstop: the content fits its frame.
     const inside = await page
       .locator('[aria-label="Measurement tools"] > details[open] > :not(summary)')
