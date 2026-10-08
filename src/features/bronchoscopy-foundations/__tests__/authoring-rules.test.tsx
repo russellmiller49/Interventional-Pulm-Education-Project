@@ -30,6 +30,8 @@ import { BRONCHOSCOPY_FOUNDATIONS_RELEASE_STAGE } from '../content/release'
 import { publishBlockers, withResolvedNumbers } from '../content/sectionNumbers'
 import { bronchSectionErrors } from '../content/sectionValidation'
 import { BRONCH_SECTIONS } from '../content/sections'
+import { section as bleedingPriorities } from '../content/sections/bleeding-priorities'
+import { section as rightSide } from '../content/sections/right-side'
 import { bronchStageLessons } from '../content/stageLessons'
 import type { BronchSectionDefinition, BronchTeachingBlock } from '../content/types'
 import { REWRITTEN_FIXTURE, REWRITTEN_FIXTURE_FLOW } from '../test-support/rewrittenSectionFixture'
@@ -360,9 +362,14 @@ describe('the rewrite rules', () => {
     }
   })
 
-  it('hold every rewritten section to them', () => {
-    for (const section of BRONCH_SECTIONS) {
-      if (section.authoringContract !== 2) continue
+  it('hold every rewritten section to them, as authored', () => {
+    expect(
+      BRONCH_SECTIONS.filter((section) => section.authoringContract === 2).map(
+        (section) => section.id,
+      ),
+    ).toEqual(['right-side', 'bleeding-priorities'])
+    for (const section of [rightSide, bleedingPriorities]) {
+      expect(bronchSectionErrors(section)).toEqual([])
       expect(rewriteRuleErrors(section, COURSE_FLOWS[section.id] ?? [])).toEqual([])
     }
   })

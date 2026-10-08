@@ -450,7 +450,16 @@
 }
 .hook ol {
   margin: 0;
-  padding-inline-start: 1.3rem;
+  list-style: decimal;
+  padding-inline-start: 1.5rem;
   display: grid;
   gap: 0.3rem;
+}
+
+/* The labelled tour's one line on the airway in view: where it leaves its parent. */
+.tour .tourNote {
+  margin: 0.35rem 0 0;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--ink);
 }

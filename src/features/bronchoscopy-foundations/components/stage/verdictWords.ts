@@ -18,6 +18,22 @@ export const OUTCOME_WORDS: Readonly<Record<Plausibility, string>> = {
   unsafe: 'Not correct, and unsafe.',
 }
 
+/**
+ * What follows the outcome on a question's verdict card in a rewritten section. The shared card's
+ * own titles were written for reading a pattern on a screen ("That mechanism predicts a different
+ * pattern"), which says nothing about where a scope is or which move comes first. These fit any
+ * question. `unsafe` marks only a section's named harmful reflex, so the card can say so.
+ */
+export const REWRITTEN_VERDICT_FRAMES: Readonly<Record<Plausibility, string>> = {
+  best: 'Here is why',
+  'reasonable-but-incomplete': 'It leaves something out',
+  'incorrect-mechanism': 'Here is what it misses',
+  unsafe: 'This is the reflex to resist',
+}
+
+/** The heading over the explanation on that card. */
+export const REWRITTEN_EXPLANATION_HEADING = 'The takeaway'
+
 /** A row in a set that is simply placed where the course places it, or not. */
 export const MATCHED_WORDS = OUTCOME_WORDS.best
 export const UNMATCHED_WORDS = OUTCOME_WORDS['incorrect-mechanism']

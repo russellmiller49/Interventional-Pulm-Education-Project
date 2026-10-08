@@ -9,6 +9,7 @@ import { GRAMMAR_TREND_RULE, BRONCH_GRAMMAR } from '../../content/grammar'
 import { fiveControlsLearnInputs } from '../../content/fiveControlsLearn'
 import { isStillStructureId } from '../../content/media'
 import type { BronchStageLesson, BronchStageStep } from '../../content/stageLessons'
+import type { TourStop } from '../../content/types'
 import { ReadingTheViewTable } from '../ReadingTheViewTable'
 import { BlockCard } from './BronchTeachingBlock'
 import { BronchPilotTeaching } from './BronchPilotTeaching'
@@ -70,7 +71,16 @@ export function BronchCourseTeaching({
         <LearningRecordSummary />
       ) : null}
       {chunk.visual === 'shared-airway' ? <SharedAirwayFigure /> : null}
-      {chunk.visual === 'tour' ? <NormalAirwayTour sectionId={section.id} /> : null}
+      {chunk.visual === 'tour' ? (
+        <NormalAirwayTour
+          sectionId={section.id}
+          stops={
+            section.tour
+              ? section.tour.filter((stop) => !chunk.tour || chunk.tour.includes(stop.airway))
+              : undefined
+          }
+        />
+      ) : null}
       {chunk.visual === 'tube-geometry' ? <TubeGeometryFigure /> : null}
       {chunk.visual === 'worked-decision' ? (
         <section className={styles.worked} data-worked-example>
@@ -272,24 +282,39 @@ function tourButtonText(node: TeachingTreeNode): string {
  *
  * The stills are grouped the way the tree is (fellow walkthrough A29): the airways before the
  * segments, then each lobe's segments, so RB1 to RB3 or RB7 to RB10 can be compared side by side
- * and any still opened at full size. Each still keeps its own registered outline. The stills carry
- * no orientation or camera-roll record, and the tour says so rather than labelling a wall.
+ * and any still opened at full size. Each still keeps its own registered outline.
+ *
+ * A rewritten section passes its own `stops`: the stills to walk, in order, each with one line on
+ * where the airway leaves its parent. The tour then shows that line under the airway's name and
+ * says nothing else. Without stops it lists every still of the section's side, with the first
+ * contract's notes on what the stills do not record.
  */
-export function NormalAirwayTour({ sectionId }: { readonly sectionId: string }) {
+export function NormalAirwayTour({
+  sectionId,
+  stops,
+}: {
+  readonly sectionId: string
+  readonly stops?: readonly TourStop[]
+}) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [compare, setCompare] = useState(false)
   const headingId = useId()
   const side = sectionId === 'left-side' ? 'left' : 'right'
-  const nodes = TEACHING_TREE.filter(
-    (node) =>
-      node.lessonId &&
-      isStillStructureId(node.lessonId) &&
-      (['branch-entry', 'view-loss'].includes(sectionId)
-        ? ['TR', 'RMSB', 'LMSB'].includes(node.label ?? '')
-        : sectionId === 'reference-frames'
-          ? ['TR', 'RMSB', 'BI'].includes(node.label ?? '')
-          : node.side === side),
-  )
+  const nodes = stops
+    ? stops.flatMap((stop) => {
+        const found = TEACHING_TREE.find((entry) => entry.label === stop.airway)
+        return found && isStillStructureId(found.lessonId) ? [found] : []
+      })
+    : TEACHING_TREE.filter(
+        (entry) =>
+          entry.lessonId &&
+          isStillStructureId(entry.lessonId) &&
+          (['branch-entry', 'view-loss'].includes(sectionId)
+            ? ['TR', 'RMSB', 'LMSB'].includes(entry.label ?? '')
+            : sectionId === 'reference-frames'
+              ? ['TR', 'RMSB', 'BI'].includes(entry.label ?? '')
+              : entry.side === side),
+      )
   const node = nodes.find((entry) => entry.id === selectedId) ?? nodes[0]
   if (!node || !isStillStructureId(node.lessonId)) return null
   const groups = tourGroups(nodes)
@@ -321,17 +346,23 @@ export function NormalAirwayTour({ sectionId }: { readonly sectionId: string }) 
         ) : (
           figure(node)
         )}
-        <p>
-          Normal teaching still; clinical/media review pending. These images are not a registered
-          match to the scope model or CT study.
-        </p>
-        <p data-tour-frame>
-          Frame not recorded: these stills carry no orientation or camera-roll information, so this
-          page does not say which wall of an image is anterior.
-        </p>
+        {stops ? null : (
+          <>
+            <p>
+              Normal teaching still; clinical/media review pending. These images are not a
+              registered match to the scope model or CT study.
+            </p>
+            <p data-tour-frame>
+              Frame not recorded: these stills carry no orientation or camera-roll information, so
+              this page does not say which wall of an image is anterior.
+            </p>
+          </>
+        )}
       </div>
       <div>
-        <h3 id={headingId}>Follow the normal airway tour</h3>
+        <h3 id={headingId}>
+          {stops ? 'Normal airways, still by still' : 'Follow the normal airway tour'}
+        </h3>
         <nav className={styles.tourNav} aria-labelledby={headingId} data-tour-nav>
           {groups.map((entry) => (
             <div key={entry.title} role="group" aria-label={entry.title} data-tour-group>
@@ -365,11 +396,19 @@ export function NormalAirwayTour({ sectionId }: { readonly sectionId: string }) 
         ) : null}
         <h3 data-tour-current>{tourName(node)}</h3>
         <p>Parent: {parent ? tourName(parent) : 'none; the tree starts at the trachea'}.</p>
-        <p>
-          Name the parent first, then follow its daughter airway. The outline identifies the opening
-          in this teaching example; later interpretation checks remove the worked tour.
-        </p>
-        <p>Source: S1, PDF 61–70; S2, PDF 103, 106. One declared teaching profile.</p>
+        {stops ? (
+          <p className={styles.tourNote} data-tour-note>
+            {stops.find((stop) => stop.airway === node.label)?.note}
+          </p>
+        ) : (
+          <>
+            <p>
+              Name the parent first, then follow its daughter airway. The outline identifies the
+              opening in this teaching example; later interpretation checks remove the worked tour.
+            </p>
+            <p>Source: S1, PDF 61–70; S2, PDF 103, 106. One declared teaching profile.</p>
+          </>
+        )}
       </div>
     </section>
   )

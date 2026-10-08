@@ -13,6 +13,7 @@ import type { ControlStrip } from './controlPanel'
 import type { GrammarRowId } from './grammar'
 import type { CopyExemption } from './learnerCopy'
 import type { LocalPolicyId } from './localPolicies'
+import type { FindFrameId } from './findFrames'
 import type { MediaRef } from './media'
 import type { NumberId } from './numbers'
 import type { RegisterExemption } from './reviewRegister'
@@ -74,6 +75,17 @@ export interface AuthoredChoice {
    * defensible half-answer.
    */
   readonly plausibility: Plausibility
+  /**
+   * In a case that evolves: what the next minute looks like after this move. A wrong move plays
+   * out — the words and the monitor change — and the learner then decides again from there.
+   */
+  readonly consequence?: ChoiceConsequence
+}
+
+export interface ChoiceConsequence {
+  /** What happens, in the room and on the screen. */
+  readonly situation: string
+  readonly readings: readonly MonitorReading[]
 }
 
 export interface AuthoredItem {
@@ -292,6 +304,33 @@ export interface BronchIdentify {
   readonly sourceRefs: readonly SourceRef[]
 }
 
+/**
+ * One click-on-image question: a frame of the normal survey, where the scope came from, and the
+ * opening to click. The frame's outlines are the survey's own annotations.
+ */
+export interface BronchFindRow {
+  readonly id: string
+  readonly frameId: FindFrameId
+  /** Where the scope arrived from, said before the image: "You arrived from the bronchus intermedius." */
+  readonly context: string
+  /** What to click: "Click RB6, the superior segment." */
+  readonly prompt: string
+  /** The marker to click, by the frame's marker id. */
+  readonly targetId: string
+  /** Show the frame turned by this many degrees clockwise, as a rotated scope shows it. */
+  readonly rotation?: 90 | 180 | 270
+  /** Why, in landmarks and parentage. */
+  readonly rationale: string
+}
+
+export interface BronchFind {
+  readonly id: string
+  readonly prompt: string
+  /** At least three. */
+  readonly rows: readonly BronchFindRow[]
+  readonly sourceRefs: readonly SourceRef[]
+}
+
 export interface BronchSequenceStep {
   readonly id: string
   readonly label: string
@@ -377,6 +416,8 @@ export interface BronchReport {
 
 export interface BronchScenarioFrame {
   readonly id: string
+  /** When this is, in the case's own time: "2 minutes after the biopsy". */
+  readonly time?: string
   readonly situation: string
   readonly readings: readonly MonitorReading[]
   readonly media?: MediaRef
@@ -395,17 +436,27 @@ export interface BronchScenario {
   readonly id: string
   /** Names the situation. No digits. */
   readonly title: string
-  /** Printed with the monitor: the values are scripted for teaching, not a physiological model. */
-  readonly boundary: string
+  /**
+   * First contract: a note printed with the monitor. A rewritten case has none; the monitor says
+   * once that it is a teaching case.
+   */
+  readonly boundary?: string
   /** At least two. */
   readonly frames: readonly BronchScenarioFrame[]
   readonly sourceRefs: readonly SourceRef[]
 }
 
-export type BronchAct =
+/**
+ * An activity. `outcomeId` names the section outcome it assesses in a rewritten section; without
+ * one it assesses the first.
+ */
+export type BronchAct = BronchActBody & { readonly outcomeId?: string }
+
+type BronchActBody =
   | ScopeLabAct
   | { readonly kind: 'sort'; readonly sort: BronchSort }
   | { readonly kind: 'identify'; readonly identify: BronchIdentify }
+  | { readonly kind: 'find'; readonly find: BronchFind }
   | { readonly kind: 'sequence'; readonly sequence: BronchSequence }
   | { readonly kind: 'ledger'; readonly ledger: BronchLedger }
   | { readonly kind: 'report'; readonly report: BronchReport }
@@ -441,6 +492,12 @@ export interface AuthoredMicroCase {
   readonly situation: string
   /** One decision. Its own `situation` is left out; the case's situation is shown instead. */
   readonly item: AuthoredItem
+}
+
+export interface TourStop {
+  readonly airway: AirwayLabel
+  /** Where it leaves its parent and which way it runs in the patient. One line. */
+  readonly note: string
 }
 
 /** What a rewritten section sets out to teach. One or two, each assessed at least three times. */
@@ -519,6 +576,17 @@ export interface BronchSectionDefinition {
   /** First contract only. Validated there; the course flow has not rendered these since the redesign. */
   readonly steps?: BronchStepTexts
   readonly act: BronchAct
+  /**
+   * Further activities, by the key a course-flow screen names (`CourseChunk.act`). A section whose
+   * teaching ends in two different things to do — name the stills, then drive the scope — has its
+   * second one here.
+   */
+  readonly moreActs?: Readonly<Record<string, BronchAct>>
+  /**
+   * The labelled tour: the stills to walk, in order, each with one line on where the airway leaves
+   * its parent. Without it the tour lists every still of the section's side.
+   */
+  readonly tour?: readonly TourStop[]
   readonly prediction: AuthoredItem
   readonly transfer: AuthoredTransferItem
   /** One-decision cases paired by mechanism; at least one for mechanism and application sections. */

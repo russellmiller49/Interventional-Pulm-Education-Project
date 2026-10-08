@@ -14,6 +14,7 @@ import { bronchMicroCaseById, bronchMicroCasesInPathwayOrder } from '../content/
 import { bronchSection } from '../content/pathway'
 import { bronchSectionLinkTarget } from '../content/pathwayResolver'
 import { BRONCHOSCOPY_FOUNDATIONS_PRACTICE_HREF, bronchCaseLinkTarget } from '../content/routes'
+import { REWRITTEN_VERDICT_FRAMES } from './stage/verdictWords'
 import styles from './bronchoscopy-foundations-module.module.css'
 import { BronchExplanation } from './stage/BronchExplanation'
 
@@ -70,6 +71,7 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
             outcome="stated"
             timing="immediate-after-commit"
             theme="dark"
+            frames={section.authoringContract === 2 ? REWRITTEN_VERDICT_FRAMES : undefined}
             explanationHeading="The takeaway"
           />
           <div className="flex flex-wrap items-center gap-3">

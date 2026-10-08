@@ -57,7 +57,9 @@
       "claimClass": "transcript-source",
       "sourceRefs": ["T07, 00:15:17–00:18:10", "T07, 00:16:41–00:18:10", "S1, PDF 71–74"],
       "reviewItemIds": ["R13"],
-      "reviewItemDispositions": { "R13": "adopt_with_boundary" },
+      "reviewItemDispositions": {
+        "R13": "adopt_with_boundary"
+      },
       "learnerWordingSource": {
         "file": "src/features/bronchoscopy-foundations/content/sections/sedation-and-monitoring.ts",
         "element": "practice C14, item explanation"
@@ -113,7 +115,9 @@
         "S1, PDF 51–65"
       ],
       "reviewItemIds": ["R08"],
-      "reviewItemDispositions": { "R08": "ambiguous_transcript" },
+      "reviewItemDispositions": {
+        "R08": "ambiguous_transcript"
+      },
       "learnerWordingSource": {
         "file": "src/features/bronchoscopy-foundations/content/sections/larynx-and-entry.ts",
         "element": "transfer Q17, rationale of the option marked unsafe"
@@ -261,7 +265,9 @@
         "T09, 00:26:02–00:32:24"
       ],
       "reviewItemIds": ["R34"],
-      "reviewItemDispositions": { "R34": "context_specific" },
+      "reviewItemDispositions": {
+        "R34": "context_specific"
+      },
       "learnerWordingSource": {
         "file": "src/features/bronchoscopy-foundations/content/sections/bleeding-priorities.ts",
         "element": "teaching block breathing-before-circulation, body"
@@ -288,7 +294,8 @@
         "role": null,
         "date": null,
         "reviewedVersion": null
-      }
+      },
+      "supersededBy": "Rewrite pilot, 2026-10-08: the bleeding section was re-authored and this wording no longer exists. The claim it carried (protect the working lung before the circulation) is now the section’s first teaching card, sourced to S1 and S2."
     },
     {
       "id": "BF-01-C05",
@@ -324,7 +331,10 @@
       "claimClass": "transcript-source",
       "sourceRefs": ["T10, 00:09:41–00:10:15", "T14, 00:03:51–00:04:33", "S1, PDF 98–99"],
       "reviewItemIds": ["R42", "R02"],
-      "reviewItemDispositions": { "R42": "qualify", "R02": "device_specific" },
+      "reviewItemDispositions": {
+        "R42": "qualify",
+        "R02": "device_specific"
+      },
       "learnerWordingSource": {
         "file": "src/features/bronchoscopy-foundations/content/sections/pre-use-check.ts",
         "element": "teaching block suction-is-a-path, body"
@@ -374,7 +384,9 @@
       "claimClass": "review-flag",
       "sourceRefs": ["T11, 00:06:39–00:08:43", "S2, PDF 106–107", "S2, PDF 46", "S3, PDF 81"],
       "reviewItemIds": ["R04"],
-      "reviewItemDispositions": { "R04": "qualify" },
+      "reviewItemDispositions": {
+        "R04": "qualify"
+      },
       "learnerWordingSource": {
         "file": "src/features/bronchoscopy-foundations/content/sections/view-loss.ts",
         "element": "teaching block darkness-not-a-direction, body"
@@ -418,7 +430,9 @@
       "claimClass": "transcript-source",
       "sourceRefs": ["T10, 00:06:57–00:09:28", "T11, 00:01:47–00:05:01", "S1, PDF 89–93"],
       "reviewItemIds": ["R03"],
-      "reviewItemDispositions": { "R03": "qualify" },
+      "reviewItemDispositions": {
+        "R03": "qualify"
+      },
       "learnerWordingSource": {
         "file": "src/features/bronchoscopy-foundations/content/sections/branch-entry.ts",
         "element": "prediction Q14, item explanation"
@@ -499,7 +513,9 @@
         "S1, PDF 138–143"
       ],
       "reviewItemIds": ["R34"],
-      "reviewItemDispositions": { "R34": "context_specific" },
+      "reviewItemDispositions": {
+        "R34": "context_specific"
+      },
       "learnerWordingSource": {
         "file": "src/features/bronchoscopy-foundations/content/sections/bleeding-priorities.ts",
         "element": "prediction Q27, item explanation"
@@ -526,7 +542,8 @@
         "role": null,
         "date": null,
         "reviewedVersion": null
-      }
+      },
+      "supersededBy": "Rewrite pilot, 2026-10-08: the bleeding section was re-authored (new prediction, case and check) and this wording no longer exists there. The capstone C06 and view-loss surfaces listed are unchanged and still carry the claim, unreviewed."
     },
     {
       "id": "BF-01-C09",
@@ -549,7 +566,9 @@
       "claimClass": "review-flag",
       "sourceRefs": ["T13, 00:09:31–00:10:19", "T15, 00:32:53–00:39:19", "S1, PDF 118–120"],
       "reviewItemIds": ["R21"],
-      "reviewItemDispositions": { "R21": "qualify" },
+      "reviewItemDispositions": {
+        "R21": "qualify"
+      },
       "learnerWordingSource": {
         "file": "src/features/bronchoscopy-foundations/content/sections/poor-return.ts",
         "element": "transfer Q22, item explanation"

@@ -23,6 +23,8 @@ interface QueueItem {
   readonly surfaces: readonly Record<string, string>[]
   readonly sourceRefs: readonly string[]
   readonly learnerWording: string
+  /** Set when a later rewrite removed the wording; says what replaced it. */
+  readonly supersededBy?: string
   readonly sourceCheck: { readonly checkedBy: string; readonly supportStatus: string }
   readonly recommendation: string
   readonly proposedWording: string | null
@@ -102,11 +104,16 @@ describe('the BF-01 claim review queue', () => {
   it('quotes learner wording that still exists at this content version', () => {
     for (const item of QUEUE.items) {
       expect(item.learnerWording.length).toBeGreaterThanOrEqual(40)
+      // A rewritten section no longer carries the wording; the item says what replaced it.
       expect({ id: item.id, found: inContent(item.learnerWording) }).toEqual({
         id: item.id,
-        found: true,
+        found: item.supersededBy === undefined,
       })
     }
+    expect(QUEUE.items.filter((item) => item.supersededBy).map((item) => item.id)).toEqual([
+      'BF-01-C04',
+      'BF-01-C08',
+    ])
   })
 
   it('records the check, and changes nothing in the course in this batch', () => {

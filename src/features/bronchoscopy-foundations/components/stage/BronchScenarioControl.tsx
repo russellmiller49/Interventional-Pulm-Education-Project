@@ -29,6 +29,11 @@ import { MATCHED_WORDS, OUTCOME_WORDS } from './verdictWords'
  * Decide or Continue, focus moves to what that produced, because the control that was pressed is
  * gone. An unsafe decision is still refused: the frame stays and nothing is simulated as done
  * (SUP-17).
+ *
+ * A case that evolves (rewrite rule: a wrong choice plays out, then there is a way to recover): a
+ * choice may carry a `consequence`. When the learner makes that move the frame shows what the next
+ * minute looks like, in words and on the monitor, and the learner decides again from that state.
+ * The keyed move still leads to the next frame. Each frame may say when it is (`time`).
  */
 export function BronchScenarioControl({
   scenario,
@@ -77,7 +82,15 @@ export function BronchScenarioControl({
     : undefined
   const lastId = frame ? commitment.lastChoices[frame.id] : undefined
   const last = frame && lastId ? frame.choices.find((choice) => choice.id === lastId) : undefined
-  const lastOutcome = !last ? undefined : last.plausibility === 'unsafe' ? 'refused' : 'other'
+  const playedOut = last?.consequence
+  const lastOutcome = !last
+    ? undefined
+    : playedOut
+      ? 'played-out'
+      : last.plausibility === 'unsafe'
+        ? 'refused'
+        : 'other'
+  const caption = (time: string | undefined) => scenario.boundary ?? time ?? scenario.title
 
   const feedbackFrame =
     integrated && feedbackFrameId
@@ -96,7 +109,7 @@ export function BronchScenarioControl({
         data-scenario-feedback-open={feedbackFrame.id}
       >
         <p>{feedbackFrame.situation}</p>
-        <MonitorPanel readings={feedbackFrame.readings} caption={scenario.boundary} />
+        <MonitorPanel readings={feedbackFrame.readings} caption={caption(feedbackFrame.time)} />
         <p role="status" data-scenario-feedback>
           <strong>{MATCHED_WORDS}</strong> <strong>Your action: {feedbackChoice.label}.</strong>{' '}
           {feedbackChoice.rationale}
@@ -160,6 +173,11 @@ export function BronchScenarioControl({
         <div data-case-observations ref={frameRef} tabIndex={-1}>
           <p className={styles.kicker}>{scenario.title}</p>
           <p className={styles.verdict}>{frame.situation}</p>
+          {playedOut && last ? (
+            <p className={styles.verdict} data-scenario-consequence data-tone="refused">
+              <strong>You chose: {last.label}.</strong> {playedOut.situation}
+            </p>
+          ) : null}
           {integrated ? (
             <>
               {baseline ? (
@@ -167,7 +185,10 @@ export function BronchScenarioControl({
                   <strong>Baseline.</strong> {baseline}
                 </p>
               ) : null}
-              <MonitorPanel readings={frame.readings} caption={scenario.boundary} />
+              <MonitorPanel
+                readings={playedOut ? playedOut.readings : frame.readings}
+                caption={playedOut ? 'One minute later' : caption(frame.time)}
+              />
             </>
           ) : null}
           {frame.media ? <MediaFigure media={frame.media} compact /> : null}
@@ -226,12 +247,19 @@ export function BronchScenarioControl({
                 data-tone={lastOutcome}
               >
                 <strong>{OUTCOME_WORDS[last.plausibility]}</strong>{' '}
-                <strong>
-                  {lastOutcome === 'refused'
-                    ? 'That move is refused here, and the case does not move on with it.'
-                    : 'Not the move to make first.'}
-                </strong>{' '}
-                {last.rationale} Decide again if you like.
+                {lastOutcome === 'played-out' ? null : (
+                  <>
+                    <strong>
+                      {lastOutcome === 'refused'
+                        ? 'That move is refused here, and the case does not move on with it.'
+                        : 'Not the move to make first.'}
+                    </strong>{' '}
+                  </>
+                )}
+                {last.rationale}{' '}
+                {lastOutcome === 'played-out'
+                  ? 'Decide again from here.'
+                  : 'Decide again if you like.'}
               </p>
             ) : null}
           </div>
@@ -263,9 +291,11 @@ export function BronchScenarioControl({
           ) : null}
         </div>
       </div>
-      <p className={styles.boundaryLine} data-model-boundary>
-        {scenario.boundary}
-      </p>
+      {scenario.boundary ? (
+        <p className={styles.boundaryLine} data-model-boundary>
+          {scenario.boundary}
+        </p>
+      ) : null}
     </div>
   )
 }

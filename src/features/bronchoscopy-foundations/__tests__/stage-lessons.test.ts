@@ -23,14 +23,22 @@ describe('the stage lessons', () => {
     (sectionId) => {
       const lesson = bronchStageLesson(sectionId)
       const phases = lesson.steps.map((step) => step.phase)
+      const rewritten = lesson.section.authoringContract === 2
       expect(phases[0]).toBe('recognize')
-      expect(phases.at(-1)).toBe('transfer')
+      // A rewritten section closes on its checklist, after the check; the first contract ends on it.
+      expect(phases.at(-1)).toBe(rewritten ? 'explain' : 'transfer')
       expect(lesson.predictionStepIndex).toBeGreaterThan(0)
       expect(lesson.steps[0].activity).toBe('teaching')
       expect(lesson.steps.flatMap((step) => step.course?.blocks ?? []).sort()).toEqual(
         lesson.section.blocks.map((block) => block.id).sort(),
       )
-      expect(lesson.transferStepIndex).toBe(lesson.steps.length - 1)
+      expect(lesson.transferStepIndex).toBe(lesson.steps.length - (rewritten ? 2 : 1))
+      if (rewritten) {
+        // Hook, then the prediction, before any teaching card.
+        expect(lesson.steps[0].course).toMatchObject({ anchor: true, blocks: [] })
+        expect(lesson.predictionStepIndex).toBe(1)
+        expect(lesson.steps.at(-1)?.course).toMatchObject({ kind: 'debrief', anchor: true })
+      }
       expect(lesson.steps.filter((step) => step.interaction.kind === 'prediction')).toHaveLength(2)
       expect(lesson.steps.filter((step) => step.phase === 'act').length).toBeGreaterThanOrEqual(1)
       lesson.steps.forEach((step, index) => {

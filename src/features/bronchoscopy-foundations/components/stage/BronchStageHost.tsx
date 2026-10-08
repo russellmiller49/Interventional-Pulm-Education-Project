@@ -88,6 +88,7 @@ import { BronchoscopyFoundationsModuleFrame } from '../BronchoscopyFoundationsMo
 import { useBronchoscopyFoundationsRecord } from '../useBronchoscopyFoundationsRecord'
 import styles from './bronch-stage.module.css'
 import { BronchExplanation } from './BronchExplanation'
+import { BronchFindControl } from './BronchFindControl'
 import { BronchIdentifyControl } from './BronchIdentifyControl'
 import { BronchLedgerControl } from './BronchLedgerControl'
 import { BronchReportControl } from './BronchReportControl'
@@ -97,6 +98,7 @@ import { BronchSortControl } from './BronchSortControl'
 import { BronchSourceList } from './BronchSourceList'
 import { BronchCourseLayout } from './BronchCourseLayout'
 import { BronchCourseTeaching } from './BronchCourseTeaching'
+import { REWRITTEN_EXPLANATION_HEADING, REWRITTEN_VERDICT_FRAMES } from './verdictWords'
 import { ConfiguredPolicies, NumberSourceNote } from '../LocalNotes'
 import { useScopeDemonstration } from './useScopeDemonstration'
 import { MapWorkspace } from './MapWorkspace'
@@ -160,6 +162,7 @@ function skipLabel(kind: BronchStageStep['interaction']['kind'], last: boolean):
     case 'identify':
     case 'sequence':
       return `${verb} without checking`
+    case 'find':
     case 'ledger':
     case 'report':
     case 'scenario':
@@ -217,6 +220,8 @@ function BronchStageSessionView({
   const [identifyDraft, setIdentifyDraft] = useState<Record<string, string>>({})
   const [sequenceDraft, setSequenceDraft] = useState<Record<string, readonly string[]>>({})
   const [explanationShown, setExplanationShown] = useState<Record<string, boolean>>({})
+  // Each retry of a click-on-image set starts it again at its first image.
+  const [findRound, setFindRound] = useState(0)
   // Which scenario frame's feedback is open, held here so the Now card can say what comes next.
   const [scenarioFeedback, setScenarioFeedback] = useState<{
     readonly stepId: string
@@ -429,6 +434,7 @@ function BronchStageSessionView({
     dispatch({ type: 'RETRY_STEP', stepId: step.id })
     if (step.interaction.kind === 'prediction')
       setPendingChoice((current) => ({ ...current, [step.id]: '' }))
+    if (step.interaction.kind === 'find') setFindRound((round) => round + 1)
   }
 
   function toggleExplanation(stepId: string) {
@@ -694,6 +700,24 @@ function BronchStageSessionView({
           },
         }
       }
+      case 'find': {
+        const answered = commitments.finds[activeStep.id] ?? {}
+        const remaining = interaction.find.rows.filter((row) => !answered[row.id]).length
+        if (remaining === 0)
+          return {
+            ...base,
+            primary: isLastStep ? finishAction : continueAction,
+            secondary: { label: 'Try the images again', onActivate: () => retryStep(activeStep) },
+          }
+        return {
+          ...base,
+          primary: {
+            ...continueAction,
+            disabled: true,
+            disabledReason: `${remaining} of ${interaction.find.rows.length} images still to answer.`,
+          },
+        }
+      }
       case 'sequence':
         if (commitments.sequences[activeStep.id])
           return {
@@ -805,7 +829,9 @@ function BronchStageSessionView({
             ? 'The airway model could not be loaded. Reload the page to try again.'
             : !activeScopeState
               ? 'Loading the airway model…'
-              : 'Use the scope controls to meet the goals. The goals check the resulting view and your own actions.',
+              : lesson.section.authoringContract === 2
+                ? 'Use the scope controls to meet the goals.'
+                : 'Use the scope controls to meet the goals. The goals check the resulting view and your own actions.',
           primary: {
             ...continueAction,
             disabled: true,
@@ -875,7 +901,7 @@ function BronchStageSessionView({
       {goals.length > 0 ? (
         <p className={styles.goalLimit} data-goal-basis={goalsClaim} data-goal-now>
           {liveLocationLine ? `${liveLocationLine} ` : ''}
-          {GOAL_MODEL_LIMIT}
+          {lesson.section.authoringContract === 2 ? null : GOAL_MODEL_LIMIT}
         </p>
       ) : null}
     </>
@@ -900,7 +926,14 @@ function BronchStageSessionView({
           outcome="stated"
           timing="immediate-after-commit"
           theme="dark"
-          frames={verdictFrames(stage.item)}
+          frames={
+            lesson.section.authoringContract === 2
+              ? REWRITTEN_VERDICT_FRAMES
+              : verdictFrames(stage.item)
+          }
+          explanationHeading={
+            lesson.section.authoringContract === 2 ? REWRITTEN_EXPLANATION_HEADING : undefined
+          }
         />
         {policiesLine(stage)}
       </>
@@ -1034,6 +1067,27 @@ function BronchStageSessionView({
             />
           </>
         )
+      case 'find':
+        return (
+          <>
+            {!workDone ? explanationToggle(activeStep, 'Show the answers') : null}
+            <BronchFindControl
+              key={`${activeStep.id}:${findRound}`}
+              find={interaction.find}
+              answers={commitments.finds[activeStep.id] ?? {}}
+              revealed={explanationOpen}
+              onAnswer={(rowId, markerId) =>
+                dispatch({
+                  type: 'FIND_ANSWER',
+                  stepId: activeStep.id,
+                  rowId,
+                  markerId,
+                  rowCount: interaction.find.rows.length,
+                })
+              }
+            />
+          </>
+        )
       case 'sequence':
         return (
           <>
@@ -1102,7 +1156,9 @@ function BronchStageSessionView({
                 setScenarioFeedback(frameId ? { stepId: activeStep.id, frameId } : null)
               }
               baseline={
-                lesson.section.blocks.find((block) => block.role === 'normal-reference')?.body
+                lesson.section.authoringContract === 2
+                  ? undefined
+                  : lesson.section.blocks.find((block) => block.role === 'normal-reference')?.body
               }
               commitment={scenarioCommitment(session, activeStep.id)}
               revealed={explanationOpen}
@@ -1229,7 +1285,11 @@ function BronchStageSessionView({
       return (
         <MonitorPanel
           readings={scenarioFrame.readings}
-          caption={interaction.kind === 'scenario' ? interaction.scenario.boundary : ''}
+          caption={
+            interaction.kind === 'scenario'
+              ? (interaction.scenario.boundary ?? scenarioFrame.time ?? '')
+              : ''
+          }
         />
       )
     }
@@ -1317,6 +1377,7 @@ function BronchStageSessionView({
                 )
               }}
               controlsEnabled={controlsEnabled}
+              plain={lesson.section.authoringContract === 2}
               lockedReason={lockedReason}
               pausedReason={pausedReason}
               goals={!demonstration.state && activeStep.id === paneStep.id ? goalStatuses : []}
@@ -1453,12 +1514,20 @@ function BronchStageSessionView({
           overlay={helpDialog}
           footer={
             <>
-              <p>
-                Professional education for supervised learning. Follow current device instructions,
-                local policy and supervising judgment. Reloading starts this section again from its
-                first step: answers and scope positions are not saved. Where you left off and the
-                sections you open or mark stay on this device.
-              </p>
+              {lesson.section.authoringContract === 2 ? (
+                // The hub carries the course's one boundary statement; a section says only what
+                // happens to the learner's work.
+                <p data-stage-footer-note>
+                  Answers are not saved. Reloading starts this section again from its first screen.
+                </p>
+              ) : (
+                <p>
+                  Professional education for supervised learning. Follow current device
+                  instructions, local policy and supervising judgment. Reloading starts this section
+                  again from its first step: answers and scope positions are not saved. Where you
+                  left off and the sections you open or mark stay on this device.
+                </p>
+              )}
               <ReviewLaterToggle sectionId={lesson.sectionId} />
               <StageSourcesFooter
                 count={stageSources.evidenceIds.length}
@@ -1579,6 +1648,14 @@ function recapLines(
         : movedPast
           ? ['Moved on without naming the views.']
           : []
+    case 'find': {
+      const answered = Object.keys(commitments.finds[step.id] ?? {}).length
+      return answered
+        ? [`Images answered: ${answered} of ${step.interaction.find.rows.length}.`]
+        : movedPast
+          ? ['Moved on without answering the images.']
+          : []
+    }
     case 'sequence':
       return commitments.sequences[step.id]
         ? ['Ordered the steps and read the reasoning.']
@@ -1705,9 +1782,11 @@ function CompletionCard({
           <strong>What the app cannot see.</strong> {section.physicalSkillNote}
         </p>
       ) : null}
-      <p data-completion-competence>
-        Self-paced online learning does not establish procedural competence.
-      </p>
+      {section.authoringContract === 2 ? null : (
+        <p data-completion-competence>
+          Self-paced online learning does not establish procedural competence.
+        </p>
+      )}
       {integratedCase ? (
         <p>
           This idea also appears in the integrated case{' '}

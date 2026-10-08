@@ -198,15 +198,28 @@ describe('the branching cases show a real way on after each decision (A13, SUP-1
         'Decide on this card, open the reasoning for this observation, or continue without completing the case.',
       )
 
-      // The first frame, an unsafe move: refused, the frame stays, nothing is done.
+      // The first frame, an unsafe move: the frame stays and nothing is done. In a case that
+      // evolves the move plays out, in words and on the monitor; otherwise it is refused.
       const first = frames[0]
       const unsafe = first.choices.find((choice) => choice.plausibility === 'unsafe')!
       choose(`[data-scenario-frame="${first.id}"] input[value="${unsafe.id}"]`)
       fireEvent.click(decide())
       const refused = query('[data-scenario-outcome]')!
-      expect(refused).toHaveAttribute('data-scenario-outcome', 'refused')
       expect(refused.querySelector('strong')).toHaveTextContent(OUTCOME_WORDS.unsafe)
-      expect(refused).toHaveTextContent('the case does not move on with it')
+      if (unsafe.consequence) {
+        expect(refused).toHaveAttribute('data-scenario-outcome', 'played-out')
+        expect(refused).toHaveTextContent('Decide again from here.')
+        expect(query('[data-scenario-consequence]')).toHaveTextContent(unsafe.label)
+        expect(query('[data-scenario-consequence]')).toHaveTextContent(unsafe.consequence.situation)
+        const shown = [...document.querySelectorAll('[data-monitor-value]')].map(
+          (node) => node.textContent,
+        )
+        for (const reading of unsafe.consequence.readings)
+          if (reading.value) expect(shown.join(' ')).toContain(reading.value)
+      } else {
+        expect(refused).toHaveAttribute('data-scenario-outcome', 'refused')
+        expect(refused).toHaveTextContent('the case does not move on with it')
+      }
       expect(openFrame()).toBe(first.id)
       expect(query('[data-scenario-feedback]')).toBeNull()
       expect(nowPrimary()).toBeNull()
