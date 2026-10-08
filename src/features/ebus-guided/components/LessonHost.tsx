@@ -266,22 +266,17 @@ function LessonSession({
               : finishOrNext
   const primaryDisabled = holdRequested || (acquireStep && !labDone)
   /*
-   * How much weight the advance control carries (EBUS-PRE-REVIEW-01, L1-7). It is always in the
-   * same place and always says the same thing; only its prominence follows what it is offering.
-   *
-   *  - While a matching, sequence or record task is open it offers to leave that task
-   *    uncompleted. That stays one click away and plainly labelled, but the brightest control on
-   *    a screen whose point is the task should not be the one that skips it.
-   *  - While the primary is disabled on an acquisition step there would otherwise be no prominent
-   *    way forward at all, so "Continue without an image" carries the weight until a real
-   *    acquisition enables "Hold this acquisition" and takes it back. Nothing about what either
-   *    control does, or about the acquisition gate itself, changes here.
+   * The filled button is always the task: hold the acquisition, move on once a task is done.
+   * When the same control would instead leave a task or a check unanswered, it is a text link,
+   * and so is "Continue without an image". The brightest control on a screen used to be the one
+   * that skipped its point (visual review of 2026-10-07, item 7).
    */
-  const advanceIsProminent = !(taskOpen && !reviewId) && !primaryDisabled
-  const skipLeadsWhileDisabled = acquireStep && primaryDisabled && !holdRequested
+  const advanceIsSkip =
+    !reviewId && !holdRequested && !acquireStep && (taskOpen || (!!question && !committed))
+  const advanceIsProminent = !advanceIsSkip
   const disabledReason = holdRequested
     ? 'Waiting for the workbench to acknowledge the paused frame.'
-    : 'Complete the acquisition to hold an image, or continue without one.'
+    : 'Finish the acquisition steps above to hold an image.'
   useEffect(() => {
     if (
       !holdRequested ||
@@ -616,7 +611,7 @@ function LessonSession({
                   : !showDemo && !(current.image === 'reference' || !!figure))
               }
             >
-              {evidenceKind && (
+              {evidenceKind && evidenceKind !== 'held-missing' && (
                 <p
                   className={styles.evidenceIdentity}
                   data-evidence-identity={evidenceKind}
@@ -625,7 +620,17 @@ function LessonSession({
                   {evidenceLabel[evidenceKind]}
                 </p>
               )}
-              {runtimeActivity && runtimeLab ? (
+              {evidenceKind === 'held-missing' && runtimeActivity ? (
+                // After a skip there is nothing to show. The pane used to draw a frame titled
+                // "Retained ultrasound" beside a sentence saying no image was held.
+                <div className={styles.emptyEvidence} data-evidence-identity="held-missing">
+                  <strong>No acquisition held</strong>
+                  <p>You continued without an image, so there is nothing of yours to read here.</p>
+                  <button type="button" className={styles.button} onClick={returnToAcquisition}>
+                    Go back and acquire one
+                  </button>
+                </div>
+              ) : runtimeActivity && runtimeLab ? (
                 <Workbench
                   key={runtimeActivity.task ?? 'guided'}
                   lab={runtimeLab}
@@ -982,11 +987,8 @@ function LessonSession({
             {acquireStep && !holdRequested && !finished && (
               <button
                 type="button"
-                className={
-                  (skipLeadsWhileDisabled ? styles.button : styles.secondary) + ' ' + styles.skip
-                }
+                className={styles.skipLink + ' ' + styles.skip}
                 data-skip-acquisition
-                data-prominent={skipLeadsWhileDisabled || undefined}
                 onClick={skipAcquisition}
               >
                 Continue without an image
@@ -1005,7 +1007,7 @@ function LessonSession({
                 data-now-primary
                 data-prominent={advanceIsProminent || undefined}
                 className={
-                  (advanceIsProminent ? styles.button : styles.secondary) + ' ' + styles.advance
+                  (advanceIsProminent ? styles.button : styles.skipLink) + ' ' + styles.advance
                 }
                 disabled={primaryDisabled}
                 onClick={advance}

@@ -99,6 +99,42 @@
   text-decoration: none;
   cursor: pointer;
 }
+/* Leaving a task or a check unanswered: one click away, and never the brightest control. */
+.skipLink {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 6px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.skipLink:hover {
+  color: var(--ink);
+}
+.emptyEvidence {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  padding: 22px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+}
+.emptyEvidence strong {
+  color: var(--ink);
+  font-size: 1.05rem;
+}
+.emptyEvidence p {
+  margin: 0;
+}
+/* The task title takes focus when a task opens, for screen readers; it is not a control. */
+.taskHeading h2:focus {
+  outline: none;
+}
 .secondary {
   display: inline-flex;
   padding: 9px 13px;
@@ -631,11 +667,14 @@
  * the advance control grew by 12 px the moment an acquisition became ready and its left edge
  * moved under a pointer that had not.
  */
-.taskAdvance .advance,
-.taskAdvance .skip {
+.taskAdvance .advance {
   padding: 10px 16px;
   border-radius: 9px;
   font-weight: 700;
+}
+.taskAdvance .skipLink {
+  padding: 10px 6px;
+  font-weight: 500;
 }
 .flowFooter {
   color: var(--muted);
