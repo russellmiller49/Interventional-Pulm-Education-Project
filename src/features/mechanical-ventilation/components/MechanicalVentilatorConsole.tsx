@@ -1604,8 +1604,7 @@ export function MechanicalVentilatorConsole({
                   )}
                 </div>
                 <p className={styles.deviceNote}>
-                  High-risk bedside actions are recognition-and-priority exercises only. Perform
-                  procedures according to local policy and under appropriate supervision.
+                  Bedside actions here are simulated: choosing one shows its effect on this patient.
                 </p>
               </div>
             </div>

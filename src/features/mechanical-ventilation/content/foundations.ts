@@ -12,11 +12,10 @@ export function isFoundationUnit(id: string): id is FoundationUnitId {
 }
 export const FOUNDATION_EVIDENCE_VERSION = 2
 /** Authored lesson content; source classes inherited from the existing unit evidence IDs.
- * Review date 2026-09-13; tester-preview, pending faculty/device review. No treatment targets.
  */
 export const foundationTeaching: Record<
   FoundationUnitId,
-  { title: string; purpose: string; explanation: string; worked: string; boundary: string }
+  { title: string; purpose: string; explanation: string; worked: string; boundary?: string }
 > = {
   'breathing-with-support': {
     title: 'Read one complete passive breath',
@@ -37,7 +36,7 @@ export const foundationTeaching: Record<
     worked:
       'At the cursor in the inspiratory interval, the flow segment is nearly level while volume accumulates. The later experiment changes flow while keeping selected tidal volume fixed; compare both the duration of inspiration and delivered volume.',
     boundary:
-      'These are breaths the simulator generated from the passive MV-LAB patient. Clinical traces can include effort, leaks and nonuniform mechanics. A paused display is not an occlusion.',
+      'Real traces also show effort, leaks and uneven mechanics. A paused display is not an occlusion.',
   },
   'controls-and-goals': {
     title: 'Pair a selected setting with a measured result',
@@ -46,8 +45,6 @@ export const foundationTeaching: Record<
       'Ventilator settings are operator-selected inputs. Patient measurements describe the response. Similar numbers on the screen can have different roles: selecting a value does not prove that the patient received it.',
     worked:
       'Worked example: selecting an oxygen fraction changes the inspired gas mixture. SpO₂ is a separate patient response that evolves over time. Recheck it; do not read the selected oxygen percentage as the patient’s saturation. The map below applies that distinction to the current mode.',
-    boundary:
-      'Quick controls are educational shortcuts to the same supported settings. Use the native console for its device labels, ranges and confirmation workflow; this is not a device-operating certification.',
   },
   'mechanics-load-and-pressure': {
     title: 'Compare pressure during flow and a passive hold',
@@ -58,7 +55,7 @@ export const foundationTeaching: Record<
     worked:
       'The worked reference below includes an inspiratory hold the simulator actually performed. Flow stops while volume stays nearly constant and airway pressure settles below the flowing peak. Compare plateau with total end-expiratory pressure for elastic load, and peak with plateau for the flowing component under these passive, constant-flow assumptions.',
     boundary:
-      'The reference maneuver is a demonstration and earns no learner credit. A queued, historical or effort-contaminated hold cannot establish current passive mechanics. Recent effort remains a reason to withhold that interpretation.',
+      'A hold taken while the patient is making an effort does not show passive mechanics. Repeat it once the patient is relaxed.',
   },
   'modes-and-breath-delivery': {
     title: 'Compare conventional volume and pressure control',
@@ -68,6 +65,6 @@ export const foundationTeaching: Record<
     worked:
       'Use the idealized comparison to make the respiratory system more compliant, then restore its reference. Both columns use the same mechanics and clock. Their fixed inputs remain printed above the traces. Next, retrieve the stiffness experiment in live VC, explicitly switch to PC, and compare the different dependent variable.',
     boundary:
-      'The illustration is a passive single-compartment reference, not two live patient runs. Effort, leaks, pressure limits and adaptive targeting can change these relationships. Conventional VC/PC waveforms do not describe every pressure-support or volume-targeted mode.',
+      'Effort, leaks and pressure limits change these relationships. Pressure support and volume-targeted modes behave differently again.',
   },
 }

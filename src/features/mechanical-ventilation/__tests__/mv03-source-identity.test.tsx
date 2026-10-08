@@ -5,8 +5,6 @@ import { criticalCareEvidenceById } from '@/features/critical-care/content/evide
 import { VentilationLearningSources } from '../components/VentilationLearningVisuals'
 import { VentilationSourceList } from '../components/stage/VentilationSourceList'
 import {
-  VENTILATION_CLINICAL_REVIEW_LINE,
-  VENTILATION_SOURCE_REVIEW_STATUS,
   ventilationEvidence,
   ventilationEvidenceById,
   ventilationSourceClassLabel,
@@ -60,6 +58,11 @@ const baseClaimTypes: Readonly<Record<string, string>> = {
   'casebook-source-7': 'model-behavior',
   'casebook-source-8': 'model-behavior',
   'bounded-ventilation-model': 'model-behavior',
+  // Teaching-first rules (2026-10-08): four records added for the numbers register's sources.
+  'ardsnet-arma-2000': 'clinical',
+  'ardsnet-alveoli-2004': 'clinical',
+  'amato-driving-pressure-2015': 'clinical',
+  'tobin-3e-severe-asthma': 'clinical',
 }
 
 describe('MV-03 source identities', () => {
@@ -126,7 +129,7 @@ describe('MV-03 source identities', () => {
       expect(criticalCareEvidenceById.get(id)?.claimType).toBe(claimType)
   })
 
-  it('shows identity and the no-review line in the section footer while claims stay folded', () => {
+  it('names every record and its class in the section footer while claims stay folded', () => {
     const { container } = render(
       <VentilationSourceList
         records={formerlyUnnamed.map((id) => ventilationEvidenceById.get(id)!)}
@@ -136,36 +139,22 @@ describe('MV-03 source identities', () => {
     expect(container.querySelectorAll('[data-source-claims]')).toHaveLength(0)
     const items = container.querySelectorAll<HTMLElement>('[data-evidence-id]')
     expect(items).toHaveLength(formerlyUnnamed.length)
-    // MV-PRE-REVIEW-04 (T3): the status is said once above the list, and each record's identity
-    // check and no-review line are in the audit view under it — still on the page for every record.
-    expect(container.querySelector('[data-source-review-status]')?.textContent).toBe(
-      VENTILATION_SOURCE_REVIEW_STATUS,
-    )
-    const audit = container.querySelector('[data-source-audit]')!
-    expect(audit.tagName).toBe('DETAILS')
     items.forEach((item) => {
       const record = ventilationEvidenceById.get(item.dataset.evidenceId!)!
-      const entry = audit.querySelector<HTMLElement>(`[data-source-identity="${record.id}"]`)!
-      expect(entry.textContent).toContain(VENTILATION_CLINICAL_REVIEW_LINE)
-      expect(entry.textContent).toContain(record.identity!.note)
       expect(item.textContent).toContain(ventilationSourceClassLabel[record.sourceClass])
     })
-    expect(audit.querySelectorAll('[data-source-identity]')).toHaveLength(formerlyUnnamed.length)
     expect(container.textContent).not.toMatch(/Casebook source \d/)
   })
 
-  it('labels classes and identity in the applications source list', () => {
+  it('labels classes in the applications source list', () => {
     const { container } = render(
       <VentilationLearningSources
         evidenceIds={['casebook-source-6', 'supplied-casebook-2026', 'tobin-3e-copd']}
       />,
     )
     const text = container.textContent ?? ''
-    expect(text).toContain('Modeling preprint · ')
-    expect(text).toContain('Supplied case set, author not stated · ')
-    expect(text).toContain('Clinical reference · ')
-    expect(text).toContain('Identity as cited, not checked')
-    expect(text).toContain(VENTILATION_CLINICAL_REVIEW_LINE)
+    for (const sourceClass of ['modeling-preprint', 'curriculum', 'clinical-reference'] as const)
+      expect(text).toContain(`${ventilationSourceClassLabel[sourceClass]} · `)
     expect(text).not.toMatch(/supplied casebook and existing lesson rationales/)
   })
 })

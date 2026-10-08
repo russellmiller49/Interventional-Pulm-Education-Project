@@ -314,9 +314,9 @@ export function VentilationTeachingColumn({
       {mechanismEvidence ? (
         <MechanismReadingEvidence lesson={lesson} device={state.deviceId} />
       ) : null}
-      {boundaryShown ? (
+      {boundaryShown && unit.boundary ? (
         <p className={flow.note} data-teaching-block="boundary">
-          <strong>Model limit:</strong> {unit.boundary}
+          <strong>Keep in mind:</strong> {unit.boundary}
         </p>
       ) : null}
 
@@ -373,8 +373,7 @@ export function VentilationTeachingColumn({
             <h4>The one table: what moved → where on the breath → the shortlist</h4>
             <GrammarTable onlyHighlighted={false} highlighted={highlighted} />
             <p className={styles.quickNote}>
-              Compare every row against this patient’s own baseline. No row carries a cutoff. This
-              section’s rows are marked.
+              Compare every row against this patient’s own baseline. This section’s rows are marked.
             </p>
           </section>
         ) : null}
@@ -429,8 +428,8 @@ export function VentilationTeachingColumn({
         ) : null}
       </Disclosure>
 
-      {boundaryShown ? null : (
-        <Disclosure name="Model limits" id="model-limits">
+      {boundaryShown || !unit.boundary ? null : (
+        <Disclosure name="Keep in mind" id="model-limits">
           <p data-teaching-block="boundary">{unit.boundary}</p>
         </Disclosure>
       )}

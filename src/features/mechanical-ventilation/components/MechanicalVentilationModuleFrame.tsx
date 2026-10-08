@@ -38,14 +38,10 @@ export const mechanicalVentilationModuleNavItems: readonly ModuleNavItem[] = [
 
 export const MECHANICAL_VENTILATION_SAFETY_NOTICE = (
   <>
-    <strong>
-      Professional education only — not a clinical device, credential, or patient-specific guide.
-    </strong>{' '}
+    <strong>A teaching simulator, not a clinical device.</strong>{' '}
     <span>
-      The consoles are original functional facsimiles and are not manufactured, sponsored, or
-      endorsed by any ventilator manufacturer. Every patient, waveform and response is simulated.
-      Follow current manufacturer instructions, local protocols, and qualified supervision for
-      patient care.
+      The consoles are original facsimiles, not made or endorsed by any ventilator manufacturer, and
+      every patient is simulated.
     </span>
   </>
 )

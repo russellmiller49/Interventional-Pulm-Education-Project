@@ -16,7 +16,6 @@ import {
   paO2ForSaturation,
   phFromBicarbonateAndPaCO2,
 } from '../engine/physics'
-import { composeInterventionResponse, interventionSimulatedResponse } from './caseModelNotes'
 import { mechanicalVentilationSource, validateRuntimeCaseRegistry } from './schema'
 
 const sourceCaseById = new Map(
@@ -198,7 +197,7 @@ const interventionCatalog: Record<InterventionEffectId, InterventionDefinition> 
     category: 'airway-circuit',
     description: 'Use an appropriate suctioning workflow and check catheter passage.',
     response:
-      'Secretions may clear; difficult catheter passage supports persistent tube obstruction.',
+      'If secretions were the cause, peak pressure falls at once and the saturation follows over the next minute or two. A catheter that will not pass points to the tube.',
     effectId: 'suction-airway',
     latencySeconds: 30,
     repeatable: true,
@@ -247,8 +246,8 @@ const interventionCatalog: Record<InterventionEffectId, InterventionDefinition> 
     label: 'Correct or exchange the obstructed ETT',
     category: 'airway-circuit',
     description:
-      'Escalate a persistent kink or tube obstruction according to local airway practice.',
-    response: 'Tube resistance falls after definitive correction.',
+      'If a suction catheter will not pass, the tube is kinked, bitten or plugged: straighten it, place a bite block, or exchange it.',
+    response: 'Tube resistance falls at once; the saturation follows over the next minute or two.',
     effectId: 'reposition-ett',
     latencySeconds: 60,
     prerequisites: ['inspect-circuit'],
@@ -258,8 +257,9 @@ const interventionCatalog: Record<InterventionEffectId, InterventionDefinition> 
     label: 'Perform emergency decompression',
     category: 'procedure',
     description:
-      'Treat suspected tension pneumothorax immediately according to local emergency practice.',
-    response: 'Compliance, oxygenation, and blood pressure improve abruptly but temporarily.',
+      'Decompress the affected side at once, by needle or finger: the second intercostal space in the midclavicular line, or the fourth or fifth in the anterior axillary line.',
+    response:
+      'Compliance and blood pressure improve at once; the saturation follows over the next minute or two. A needle is temporary.',
     effectId: 'decompress-pneumothorax',
     latencySeconds: 15,
   },
@@ -268,8 +268,9 @@ const interventionCatalog: Record<InterventionEffectId, InterventionDefinition> 
     label: 'Establish definitive pleural drainage',
     category: 'procedure',
     description:
-      'Complete definitive management after emergency decompression using local supervised practice.',
-    response: 'The compliance and hemodynamic improvement is sustained.',
+      'Place a chest tube after decompression. A needle can kink or dislodge, and the lung is not yet re-expanded.',
+    response:
+      'The lung re-expands: compliance and oxygenation improve further and the gain is sustained.',
     effectId: 'pleural-drainage',
     latencySeconds: 90,
     prerequisites: ['decompress-pneumothorax'],
@@ -1052,21 +1053,7 @@ const builtCases: VentilationCaseDefinition[] = mechanicalVentilationSource.case
       ...responseDistractors,
     ],
     correctResponseId: profile.responseId,
-    /*
-     * The case's own copy of each action. Where the authored response claims something this case's
-     * model does not do, the feedback printed when the action is taken carries both: the clinical
-     * expectation and what the simulation shows (`caseModelNotes`, MV-PRE-REVIEW-02).
-     */
-    interventions: profile.interventionIds.map((id) => {
-      const intervention = interventionCatalog[id]
-      const simulated = interventionSimulatedResponse(source.id, id)
-      return simulated
-        ? {
-            ...intervention,
-            response: composeInterventionResponse(intervention.response, simulated),
-          }
-        : intervention
-    }),
+    interventions: profile.interventionIds.map((id) => interventionCatalog[id]),
     requiredInterventionIds: profile.requiredInterventionIds,
     requiredReassessmentIds: profile.requiredReassessmentIds,
     successConditions: profile.successConditions,

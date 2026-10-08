@@ -511,12 +511,12 @@
       "concept": "Dynamic hyperinflation as a circulatory emergency, and why raising the rate or the alarm limit makes it worse",
       "combinedWith": [],
       "unchangedForLegacyRecords": {
-        "prompt": "Another patient has high pressure, persistent expiratory flow at the next breath, and worsening hypotension. What is the most appropriate priority?",
+        "prompt": "Another patient has high pressure, persistent expiratory flow at the next breath, and worsening hypotension. What do you do first?",
         "correctId": "0",
         "choices": [
           {
             "id": "0",
-            "label": "Urgent bedside support and assessment of incomplete emptying",
+            "label": "Disconnect from the ventilator and let the chest empty",
             "unsafe": false
           },
           {
@@ -545,7 +545,7 @@
         {
           "field": "explanation",
           "previous": "Urgent bedside support and assessment of incomplete emptying. The pattern raises concern for dynamic hyperinflation affecting circulation. Respond under the local emergency protocol.",
-          "current": "Expiratory flow still present when the next breath starts shows incomplete emptying. As trapped volume builds, pressure in the chest rises, venous return and right-ventricular filling fall, and blood pressure can drop sharply. High airway pressure and hypotension with that flow pattern make dynamic hyperinflation the leading explanation, while other causes of high pressure with hypotension, such as tension pneumothorax, stay on the list. Treat it as a bedside emergency: get help, support the patient and assess emptying under your local emergency protocol."
+          "current": "Expiratory flow still present when the next breath starts shows incomplete emptying. As trapped volume builds, pressure in the chest rises, venous return and right-ventricular filling fall, and blood pressure can drop sharply. High airway pressure and hypotension with that flow pattern make dynamic hyperinflation the leading explanation, while other causes of high pressure with hypotension, such as tension pneumothorax, stay on the list. Disconnect the patient from the ventilator and let the chest empty; a blood pressure that recovers within seconds confirms it. Reconnect at a lower rate with a shorter inspiratory time."
         },
         {
           "field": "nextCheck",
@@ -555,7 +555,7 @@
         {
           "field": "choices[0].rationale",
           "previous": "The pattern raises concern for dynamic hyperinflation affecting circulation. Respond under the local emergency protocol.",
-          "current": "Flow still leaving at the next breath, rising pressure and falling blood pressure together point to trapped volume affecting the circulation. Getting help and assessing emptying treats the likely cause while the patient is supported."
+          "current": "Flow still leaving at the next breath, with rising pressure and a falling blood pressure, is breath stacking that is obstructing venous return. Disconnecting lets the trapped gas out within seconds, and a blood pressure that recovers confirms the cause. Reconnect at a lower rate with a shorter inspiratory time so each breath has longer to empty."
         },
         {
           "field": "choices[1].rationale",

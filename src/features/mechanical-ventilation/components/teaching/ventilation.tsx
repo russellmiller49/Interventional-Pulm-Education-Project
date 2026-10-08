@@ -13,7 +13,7 @@ import { useState } from 'react'
 import type { TrendSample, VentilationSimulationState } from '../../engine'
 import { exhaledVolumeReading } from '../../content/measurementReadiness'
 import {
-  ModelBoundary,
+  ReferenceValues,
   TextEquivalent,
   direction,
   directionGlyph,
@@ -223,11 +223,15 @@ export function VentilationCo2Response({ state }: { readonly state: VentilationS
       </div>
 
       <TextEquivalent>{summary}</TextEquivalent>
-      <ModelBoundary>
-        The lag between the two tiers is a modeled equilibration, not a validated pharmacokinetic
-        timing. No target carbon dioxide tension or pH is stated: what counts as adequate depends on
-        the condition being treated, and belongs to this module’s pending source reconciliation.
-      </ModelBoundary>
+      <ReferenceValues
+        title="Ventilation goals"
+        ids={['ph-goal', 'rate-maximum', 'ph-severe-acidosis', 'obstruction-ph']}
+      >
+        <p>
+          In ARDS, raise the rate first when pH falls under goal. In severe airflow obstruction a
+          faster rate traps more gas, so a lower pH is accepted instead.
+        </p>
+      </ReferenceValues>
     </section>
   )
 }

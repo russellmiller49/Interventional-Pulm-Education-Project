@@ -1065,3 +1065,136 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.panelNote {
+  color: #c9dadc;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.referenceValues {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #3d6a72;
+  border-radius: 0.55rem;
+  background: #10272c;
+  color: #e6f2f3;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.referenceValues h4 {
+  margin: 0;
+  color: #9fd3da;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.referenceValues dl {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+}
+
+.referenceValues dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.referenceValues dt {
+  color: #c9dadc;
+}
+
+.referenceValues dd {
+  display: grid;
+  margin: 0;
+}
+
+.referenceValues dd strong {
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.referenceValues dd small {
+  color: #9bb5b9;
+  font-size: 0.64rem;
+}
+
+.referenceValues p {
+  margin: 0;
+  color: #c9dadc;
+}
+
+.peepTables summary {
+  cursor: pointer;
+  color: #9fd3da;
+  font-weight: 700;
+}
+
+.peepTableScroll {
+  display: grid;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-top: 0.35rem;
+}
+
+.peepTable {
+  border-collapse: collapse;
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.peepTable caption {
+  padding-bottom: 0.2rem;
+  color: #c9dadc;
+  font-weight: 700;
+  text-align: left;
+}
+
+.peepTable th,
+.peepTable td {
+  padding: 0.15rem 0.4rem;
+  border: 1px solid #2f5158;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.peepTable th {
+  color: #9fd3da;
+  text-align: left;
+}
+
+.firstMoves {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #3d6a72;
+  border-radius: 0.55rem;
+  background: #10272c;
+  color: #e6f2f3;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.firstMoves h4 {
+  margin: 0;
+  color: #9fd3da;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.firstMoves ol {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding-left: 1.2rem;
+  list-style: decimal;
+}
+
+.firstMoves p {
+  margin: 0;
+  color: #c9dadc;
+}
