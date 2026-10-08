@@ -150,7 +150,17 @@ function lowPressureScaleMaximum(targetMmHg: number): 20 | 40 | 80 | 160 {
  * changing (report L2-06). The fit is kept — it is what stops a raised pressure being cut off —
  * and the change is announced instead of left to be noticed. A change of channel is not a change
  * of axis and announces nothing: the channel's own label already changed.
+ *
+ * The notice describes the axis and how to read it. It makes no statement about the pressure. It
+ * used to end "the pressure did not", which is the opposite of what happened: within one channel
+ * the fit moves only when the pressure the monitor is displaying has moved far enough to need a
+ * different axis — after a fluid step, after pericardial drainage, or after the transducer was
+ * moved (sanity review of HD-PRE-REVIEW-03, L2-06). Whether that was the patient or the
+ * instrument is not something an axis can know, so it does not say.
  */
+const AXIS_REFIT_READING =
+  'The monitor refits this axis to the pressure it is displaying, so the same height on the strip now stands for a different pressure. Read a change from the axis numbers and the readout, not from the size of the tracing.'
+
 function useAxisChangeNotice(channel: string, axis: PressureAxis): string | null {
   const [memory, setMemory] = useState<{
     channel: string
@@ -169,7 +179,7 @@ function useAxisChangeNotice(channel: string, axis: PressureAxis): string | null
     })
   }
   return memory.change
-    ? `Axis changed from ${axisWords(memory.change.from)} to ${axisWords(memory.change.to)}. The axis changed; the pressure did not.`
+    ? `Axis changed from ${axisWords(memory.change.from)} to ${axisWords(memory.change.to)}. ${AXIS_REFIT_READING}`
     : null
 }
 
@@ -182,6 +192,12 @@ interface HeldView {
   readonly heartRateBpm: number
   readonly landmarks?: readonly WaveformLandmark[]
   readonly transitionFrom?: PacTraceConfiguration['transitionFrom']
+  /**
+   * The measurement-system changes the live strip was showing when the copy was taken. Copied with
+   * the samples, because they describe those samples: the engine forgets a seam once it has left
+   * every live sweep, and the copy outlives that.
+   */
+  readonly seams: readonly WaveformStripSeam[]
   readonly takenAtSeconds: number
   readonly liveAxis: PressureAxis
 }
@@ -568,6 +584,7 @@ export function BedsideMonitor({
                         heartRateBpm: measurements.heartRateBpm,
                         landmarks: arterial ? ARTERIAL_LANDMARKS : pacTrace.landmarks,
                         transitionFrom: arterial ? undefined : pacTrace.transitionFrom,
+                        seams: arterial ? arterialSeams : pressureSeams,
                         takenAtSeconds: state.waveforms.at(-1)?.time ?? state.timeSeconds,
                         liveAxis: arterial
                           ? { minimum: 0, maximum: state.pressureScaleMmHg }
@@ -891,11 +908,26 @@ export function BedsideMonitor({
  * same buffer the strip above draws from, cut to its last two cardiac cycles and enlarged. It is a
  * view: no sample is filtered, smoothed or resampled, nothing is written to the engine, and the
  * axis is fitted to the samples so a raised pressure is enlarged where it sits rather than clipped.
+ *
+ * It keeps the live strip's seams. Two beats can straddle a change of transducer height, zero or
+ * line response, and the copy used to draw them as one unbroken line: the step the live strip had
+ * left open was joined up again, enlarged, under a caption saying only the window and the axis
+ * differ (sanity review of HD-PRE-REVIEW-03, L5-05). The copy now breaks and dims the trace where
+ * the live strip did, and its note names the change.
  */
 function HeldCopy({ held }: { readonly held: HeldView }) {
   const windowSeconds = (60 / held.heartRateBpm) * 2
   const visible = held.samples.filter(
     (sample) => sample.time >= held.takenAtSeconds - windowSeconds,
+  )
+  const windowStart = visible[0]?.time ?? held.takenAtSeconds
+  // The strip's own rule for which seams fall inside a window, so the note and the plot agree.
+  const seamsInWindow = held.seams.filter(
+    (seam) => seam.untilTime >= windowStart && seam.fromTime <= held.takenAtSeconds,
+  )
+  // A copy taken at the moment of a change holds nothing drawn after it: it ends at the change.
+  const heldPastAChange = visible.some((sample) =>
+    seamsInWindow.some((seam) => sample.time > seam.untilTime),
   )
   const axis =
     fittedPressureAxis(
@@ -916,6 +948,20 @@ function HeldCopy({ held }: { readonly held: HeldView }) {
         {held.takenAtSeconds.toFixed(1)} s of model time, on an axis fitted to them (
         {axisWords(axis)}; the live strip uses {axisWords(held.liveAxis)}). The same samples, drawn
         larger: only the time window and the axis differ.
+        {seamsInWindow.length > 0 ? (
+          <span data-held-view-seam>
+            {' '}
+            These two beats {heldPastAChange ? 'cross' : 'end at'} a change in the measurement
+            system:{' '}
+            {seamsInWindow
+              .map((seam) => `${seam.label} at ${seam.untilTime.toFixed(1)} s`)
+              .join('; ')}
+            .{' '}
+            {heldPastAChange
+              ? 'The part before the marker was drawn under the earlier setting; it is dimmed and not joined to the part after it, as on the live strip.'
+              : 'All of this copy was drawn under the earlier setting, so it is dimmed, as that part of the live strip is.'}
+          </span>
+        ) : null}
       </p>
       <WaveformStrip
         samples={held.samples}
@@ -932,6 +978,7 @@ function HeldCopy({ held }: { readonly held: HeldView }) {
         heartRateBpm={held.heartRateBpm}
         landmarks={held.landmarks}
         transitionFrom={held.transitionFrom}
+        seams={held.seams}
       />
     </section>
   )

@@ -33,6 +33,8 @@ export function HemodynamicNativeWorkspace({
   revealModel = false,
   task,
 }: HemodynamicNativeWorkspaceProps) {
+  const toolsOffered =
+    interactive || state.catheter.balloonInflated || state.catheter.floatBalloonInflated
   return (
     <div className={flowStyles.caseWorkspace} data-case-workspace>
       <div className={flowStyles.paired}>
@@ -44,8 +46,20 @@ export function HemodynamicNativeWorkspace({
         />
         {task}
       </div>
-      {interactive || state.catheter.balloonInflated || state.catheter.floatBalloonInflated ? (
-        <div className={flowStyles.toolGroups} aria-label="Measurement tools">
+      {/*
+        Where the tools are not offered they are hidden, not unmounted (ported from PR #321). The
+        case's earlier checkpoints can be reopened at any time; unmounting the tools there threw
+        away whatever lived only in them — a technique chosen for an injection not yet given, which
+        tools were open — and the learner came back to an emptied station. Hidden, they keep it and
+        are out of sight, out of the tab order and out of the accessibility tree. The debrief's
+        read-only view is a separate instance with nothing to keep, so it still mounts none.
+      */}
+      {toolsOffered || !revealModel ? (
+        <div
+          className={flowStyles.toolGroups}
+          aria-label="Measurement tools"
+          hidden={!toolsOffered}
+        >
           {showPressureSystem ? (
             <details>
               <summary>Pressure measurement · level, zero and response</summary>

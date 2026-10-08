@@ -338,42 +338,65 @@ export function HemodynamicsSimulatorPane({
               estimates, each rounded to 0.1 mmHg on its own, so a hand subtraction of the rounded
               figures can differ from the printed result by 0.1.
             </p>
-            <table>
-              <thead>
-                <tr>
-                  <th>Observation</th>
-                  <th>Reference</th>
-                  <th>Current</th>
+            {/*
+              Under 14 rem of card the stylesheet lays each row out as a block and each value shows
+              its column's name from `data-column`. The roles are the elements' own, stated because
+              some browsers stop reporting a table whose parts are no longer displayed as one.
+            */}
+            <table role="table">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th role="columnheader" scope="col">
+                    Observation
+                  </th>
+                  <th role="columnheader" scope="col">
+                    Reference
+                  </th>
+                  <th role="columnheader" scope="col">
+                    Current
+                  </th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <th>Transducer height</th>
-                  <td>{baseline.measurementSystem.transducerLevelCm} cm</td>
-                  <td>{state.measurementSystem.transducerLevelCm} cm</td>
+              <tbody role="rowgroup">
+                <tr role="row">
+                  <th role="rowheader" scope="row">
+                    Transducer height
+                  </th>
+                  <td role="cell" data-column="Reference">
+                    {baseline.measurementSystem.transducerLevelCm} cm
+                  </td>
+                  <td role="cell" data-column="Current">
+                    {state.measurementSystem.transducerLevelCm} cm
+                  </td>
                 </tr>
-                <tr>
-                  <th>Atmospheric zero</th>
-                  <td>{baseline.measurementSystem.zeroed ? 'Set' : 'Unset'}</td>
-                  <td>{state.measurementSystem.zeroed ? 'Set' : 'Unset'}</td>
+                <tr role="row">
+                  <th role="rowheader" scope="row">
+                    Atmospheric zero
+                  </th>
+                  <td role="cell" data-column="Reference">
+                    {baseline.measurementSystem.zeroed ? 'Set' : 'Unset'}
+                  </td>
+                  <td role="cell" data-column="Current">
+                    {state.measurementSystem.zeroed ? 'Set' : 'Unset'}
+                  </td>
                 </tr>
                 {/*
                   HD-PRE-REVIEW-02 (report L2-02). These rows printed the model's integer estimate
                   with a ".0", so a 7.355 mmHg offset read as 16.0 → 9.0. They are now the
                   unrounded estimates at one decimal, with the offset itself on its own row.
                 */}
-                <tr>
-                  <th>
+                <tr role="row">
+                  <th role="rowheader" scope="row">
                     {surface === 'scale-demo' ? 'Arterial MAP estimate' : 'PAC mean estimate'}
                   </th>
-                  <td data-demo-before>
+                  <td role="cell" data-column="Reference" data-demo-before>
                     {(surface === 'scale-demo'
                       ? unroundedModelEstimates(baseline).mapMmHg
                       : unroundedModelEstimates(baseline).meanPapMmHg
                     ).toFixed(1)}{' '}
                     mmHg
                   </td>
-                  <td data-demo-current>
+                  <td role="cell" data-column="Current" data-demo-current>
                     {(surface === 'scale-demo'
                       ? unroundedModelEstimates(state).mapMmHg
                       : unroundedModelEstimates(state).meanPapMmHg
@@ -382,14 +405,16 @@ export function HemodynamicsSimulatorPane({
                   </td>
                 </tr>
                 {surface === 'level-demo' ? (
-                  <tr>
-                    <th>Hydrostatic contribution of the transducer height</th>
-                    <td>
+                  <tr role="row">
+                    <th role="rowheader" scope="row">
+                      Hydrostatic contribution of the transducer height
+                    </th>
+                    <td role="cell" data-column="Reference">
                       {formatSignedPressure(
                         hydrostaticPressureOffsetMmHg(baseline.measurementSystem.transducerLevelCm),
                       )}
                     </td>
-                    <td data-demo-offset>
+                    <td role="cell" data-column="Current" data-demo-offset>
                       {formatSignedPressure(
                         hydrostaticPressureOffsetMmHg(state.measurementSystem.transducerLevelCm),
                       )}
@@ -397,10 +422,16 @@ export function HemodynamicsSimulatorPane({
                   </tr>
                 ) : null}
                 {surface === 'scale-demo' ? (
-                  <tr>
-                    <th>ART display axis</th>
-                    <td>0–{baseline.pressureScaleMmHg} mmHg</td>
-                    <td>0–{state.pressureScaleMmHg} mmHg</td>
+                  <tr role="row">
+                    <th role="rowheader" scope="row">
+                      ART display axis
+                    </th>
+                    <td role="cell" data-column="Reference">
+                      0–{baseline.pressureScaleMmHg} mmHg
+                    </td>
+                    <td role="cell" data-column="Current">
+                      0–{state.pressureScaleMmHg} mmHg
+                    </td>
                   </tr>
                 ) : null}
               </tbody>

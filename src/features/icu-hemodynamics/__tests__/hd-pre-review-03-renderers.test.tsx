@@ -390,9 +390,15 @@ describe('the monitor says when its view changed', () => {
       { type: 'TICK', seconds: 2 },
     ])
     rerender(<BedsideMonitor state={lowered} dispatch={jest.fn()} focus="pac" />)
-    expect(document.querySelector('[data-scale-change-note]')?.textContent).toBe(
-      'Axis changed from 0 to 40 mmHg to 0 to 80 mmHg. The axis changed; the pressure did not.',
-    )
+    /*
+     * This assertion used to require the sentence "The axis changed; the pressure did not." — it
+     * pinned the wording the sanity review found false (the displayed pressure had moved, which is
+     * why the axis was refitted). What the notice now has to say, and must never say, is asserted
+     * in `hd-pre-review-03-sanity-repair.test.tsx`; here it only has to announce the two axes.
+     */
+    const note = document.querySelector('[data-scale-change-note]')?.textContent ?? ''
+    expect(note).toMatch(/^Axis changed from 0 to 40 mmHg to 0 to 80 mmHg\./)
+    expect(note).not.toMatch(/pressure did not/)
   })
 
   it('announces nothing when the channel itself changed', () => {

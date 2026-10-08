@@ -208,15 +208,23 @@ export function WaveformStrip({
       current = []
     }
     for (const point of drawn) {
-      // While a setting was being changed the samples belong to neither side of it.
+      /*
+       * An action takes no model time, so the sample stamped with the moment of a change was
+       * already in the buffer when the change was made: it was acquired under the setting before
+       * it. Counting it with the samples after the change joined the earlier setting's last
+       * pressure to the new setting's first — the very step the break exists to leave open
+       * (sanity review of HD-PRE-REVIEW-03, L2-06). So a change belongs to the samples strictly
+       * after it; and while a control was still being moved, every sample up to and including the
+       * last change was drawn under a setting that is neither the earlier one nor the final one.
+       */
       if (
-        boundaries.some((boundary) => point.time > boundary.from && point.time < boundary.until)
+        boundaries.some((boundary) => point.time > boundary.from && point.time <= boundary.until)
       ) {
         flush()
         continue
       }
-      // The epoch is how many changes this sample was drawn after.
-      const epoch = boundaries.filter((boundary) => point.time >= boundary.until).length
+      // The epoch is how many changes this sample was acquired after.
+      const epoch = boundaries.filter((boundary) => point.time > boundary.until).length
       if (epoch !== currentEpoch) flush()
       currentEpoch = epoch
       current.push(`${point.x.toFixed(1)},${point.y.toFixed(1)}`)

@@ -54,12 +54,28 @@
   color: #214c75;
   background: #e8f1fb;
 }
+/*
+ * The drawing keeps a least width and scrolls inside its own box below it.
+ *
+ * Its labels are text in rem over a drawing that shrinks with the card. On a phone with text at
+ * 200 % the card is about 7 rem of drawing: the three labels sat on one another and ran past the
+ * card. That did not show while the page itself was too wide at that size and lent the card room;
+ * once the page fits its window (the PR #321 port), the drawing has to hold its own. `contain`
+ * keeps the least width from widening the card, as on the reference figure.
+ */
 .diagram {
-  position: relative;
+  min-width: 0;
   margin-top: 0.75rem;
+  overflow-x: auto;
   border: 1px solid #d6e4e1;
   border-radius: 0.65rem;
   background: #fff;
+  contain: inline-size;
+}
+.diagramFrame {
+  position: relative;
+  /* Just under the drawing's width on a 320 px phone at 100 % text, so nothing changes there. */
+  min-width: 14.5rem;
 }
 .diagram svg {
   display: block;

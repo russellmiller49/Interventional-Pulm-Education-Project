@@ -7,6 +7,7 @@
 
 .simulator {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.75rem;
   min-width: 0;
 }
@@ -42,7 +43,11 @@
 
 .docks {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.6rem;
+  min-width: 0;
+  /* The rows inside answer to this width in rem: see "Phone width with enlarged text" below. */
+  container: hd-docks / inline-size;
 }
 
 .surfaceCard {
@@ -491,8 +496,10 @@
 
 .teachingCard {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.5rem;
   min-width: 0;
+  container: hd-teaching-card / inline-size;
   padding: 0.75rem 0.9rem;
   border: 1px solid var(--line, rgba(163, 206, 209, 0.22));
   border-radius: 0.9rem;
@@ -917,5 +924,67 @@
   .comparisonKey tbody td:nth-of-type(2)::before {
     content: 'Pulmonary artery: ';
     font-weight: 700;
+  }
+}
+
+/*
+ * Phone width with enlarged text (ported in substance from PR #321).
+ *
+ * At 390 px or 320 px with text at 200 % a dock is 8 to 9 rem wide. A control row is a label beside
+ * a slider that will not go under 9 rem, and the pattern table is three columns of words: both ran
+ * past the window and the page scrolled sideways with them. PR #321 contained these surfaces and
+ * this branch had not; that branch's phone check was run against both to establish it.
+ *
+ * The rules are the same idea as there, but conditional: they apply under 15 rem of dock or card,
+ * measured in rem on the surface itself, so they follow the reader's text size and leave every
+ * layout at 100 % text — including a 320 px phone, where a dock is about 17 rem — as it was.
+ */
+@container hd-docks (max-width: 15rem) {
+  .dockRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .slider {
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-width: 0;
+  }
+  .slider input {
+    min-width: 0;
+  }
+  .dockButton,
+  .dockNote,
+  .dock legend {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+}
+@container hd-teaching-card (max-width: 15rem) {
+  .grammarTable,
+  .grammarTable :where(tbody, tr, th, td) {
+    display: block;
+  }
+  /* Kept for a screen reader; the cells below read as sentences without it. */
+  .grammarTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .grammarTable tbody tr {
+    padding-block: 0.45rem;
+    border-bottom: 1px solid var(--line, rgba(163, 206, 209, 0.22));
+  }
+  .grammarTable tbody :where(th, td) {
+    padding: 0.1rem 0;
+    border-bottom: 0;
+    overflow-wrap: anywhere;
+  }
+  .teachingCard > :where(p, h3, h4),
+  .controlStrip li {
+    overflow-wrap: anywhere;
+  }
+  .controlStrip li {
+    flex-wrap: wrap;
   }
 }

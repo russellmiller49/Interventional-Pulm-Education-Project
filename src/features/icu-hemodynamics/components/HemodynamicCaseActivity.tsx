@@ -1129,6 +1129,10 @@ export function HemodynamicCaseActivity({
  * kind of evidence, not as a reason treatment should have waited. It is HD-local data rendered
  * beside the shared debrief rather than a change to it.
  */
+/** The table's two value columns, named once: as its headers and beside each value when stacked. */
+const BEFORE_COLUMN = 'Before action'
+const CURRENT_COLUMN = 'Current'
+
 /**
  * The before-and-now table in the response step (HD-PRE-REVIEW-02).
  *
@@ -1155,24 +1159,46 @@ function BeforeAndCurrent({
         moment. Each thermodilution value is the series acquired under the conditions named; two
         series are compared as two, never averaged.
       </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Observation</th>
-            <th>Before action</th>
-            <th>Current</th>
+      {/*
+        Where three columns do not fit (a phone with text at 200 %) the stylesheet lays each row out
+        as a block, and each value then shows its column's name from `data-column`. The roles are
+        the elements' own, stated because some browsers stop reporting a table whose parts are no
+        longer displayed as one (sanity review of HD-PRE-REVIEW-03, P-03).
+      */}
+      <table role="table">
+        <thead role="rowgroup">
+          <tr role="row">
+            <th role="columnheader" scope="col">
+              Observation
+            </th>
+            <th role="columnheader" scope="col">
+              {BEFORE_COLUMN}
+            </th>
+            <th role="columnheader" scope="col">
+              {CURRENT_COLUMN}
+            </th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <th>MAP (mmHg, monitor)</th>
-            <td>{metricValue(before.arterialMean.displayedMmHg)}</td>
-            <td>{metricValue(now.arterialMean.displayedMmHg)}</td>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th role="rowheader" scope="row">
+              MAP (mmHg, monitor)
+            </th>
+            <td role="cell" data-column={BEFORE_COLUMN}>
+              {metricValue(before.arterialMean.displayedMmHg)}
+            </td>
+            <td role="cell" data-column={CURRENT_COLUMN}>
+              {metricValue(now.arterialMean.displayedMmHg)}
+            </td>
           </tr>
-          <tr>
-            <th>Accepted thermodilution CO</th>
-            <td data-before-flow>{before.flow ? flowWords(before.flow) : 'Not acquired'}</td>
-            <td data-current-flow>
+          <tr role="row">
+            <th role="rowheader" scope="row">
+              Accepted thermodilution CO
+            </th>
+            <td role="cell" data-column={BEFORE_COLUMN} data-before-flow>
+              {before.flow ? flowWords(before.flow) : 'Not acquired'}
+            </td>
+            <td role="cell" data-column={CURRENT_COLUMN} data-current-flow>
               {now.flow
                 ? flowWords(now.flow)
                 : now.earlierFlow

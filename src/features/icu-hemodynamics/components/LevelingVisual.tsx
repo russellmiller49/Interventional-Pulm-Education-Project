@@ -105,104 +105,110 @@ export function LevelingVisual({
         </strong>
       </header>
 
+      {/*
+        The frame is what the labels are placed against and what keeps a least drawing width; the
+        box around it scrolls when the card is narrower than that (a phone with text at 200 %).
+      */}
       <div className={styles.diagram} data-leveling-diagram>
-        <svg
-          viewBox={`0 0 ${VIEW.width} ${VIEW.height}`}
-          role="img"
-          aria-label={visualSummary}
-          preserveAspectRatio="xMidYMid meet"
-        >
-          <rect className={styles.bed} x="24" y={BED_TOP} width="420" height="18" rx="9" />
-          <circle className={styles.patient} cx="76" cy="182" r="36" />
-          <path
-            className={styles.patient}
-            d={`M 110 198 C 140 168, 186 ${CHEST.anteriorY}, ${CHEST.x} ${CHEST.anteriorY} C 290 ${CHEST.anteriorY}, 330 168, 372 186 L 428 ${BED_TOP} L 100 ${BED_TOP} Z`}
-          />
-          {/* The chest's front-to-back depth at the reference point, so "midway" can be seen. */}
-          <line
-            className={styles.depth}
-            data-leveling-chest-depth
-            x1={CHEST.x}
-            x2={CHEST.x}
-            y1={CHEST.anteriorY}
-            y2={CHEST.posteriorY}
-          />
-          <line
-            className={styles.axis}
-            x1="16"
-            x2={VIEW.width - 16}
-            y1={AXIS_Y}
-            y2={AXIS_Y}
-            data-leveling-axis-line
-          />
-          <circle
-            className={styles.axisPoint}
-            cx={CHEST.x}
-            cy={AXIS_Y}
-            r="8"
-            data-leveling-axis-point
-            data-anterior-y={CHEST.anteriorY}
-            data-posterior-y={CHEST.posteriorY}
-          />
-          <line className={styles.leader} x1={CHEST.x} y1={AXIS_Y} x2="300" y2="98" />
-          <line
-            className={styles.measure}
-            x1={BRACKET_X}
-            x2={BRACKET_X}
-            y1={AXIS_Y}
-            y2={transducerY}
-          />
-          <line
-            className={styles.measureCap}
-            x1={BRACKET_X - 14}
-            x2={BRACKET_X + 14}
-            y1={AXIS_Y}
-            y2={AXIS_Y}
-          />
-          <line
-            className={styles.measureCap}
-            x1={BRACKET_X - 14}
-            x2={BRACKET_X + 14}
-            y1={transducerY}
-            y2={transducerY}
-          />
-          <g transform={`translate(${BRACKET_X + 20} ${transducerY - 16})`}>
-            <rect className={styles.transducerBody} width="84" height="32" rx="8" />
-            <circle className={styles.transducerPort} cx="14" cy="16" r="6" />
-          </g>
-        </svg>
-        <span
-          className={styles.label}
-          data-leveling-label="axis"
-          style={{ left: percent(304, VIEW.width), top: percent(98, VIEW.height) }}
-        >
-          Phlebostatic axis
-          <small>mid-chest, front to back</small>
-        </span>
-        <span
-          className={styles.label}
-          data-leveling-label="transducer"
-          data-anchor="end"
-          style={{
-            left: percent(VIEW.width - 8, VIEW.width),
-            // Clear of the box: above it when the transducer is raised, beneath it otherwise.
-            top: percent(transducerY + (levelCm > 0 ? -34 : 34), VIEW.height),
-          }}
-        >
-          transducer
-        </span>
-        <span
-          className={styles.label}
-          data-leveling-label="height"
-          data-anchor="end"
-          data-tone="measure"
-          style={{
-            left: percent(BRACKET_X - 20, VIEW.width),
-            top: percent((AXIS_Y + transducerY) / 2 + (levelCm === 0 ? -16 : 0), VIEW.height),
-          }}
-        >
-          {heightLabel}
-        </span>
+        <div className={styles.diagramFrame}>
+          <svg
+            viewBox={`0 0 ${VIEW.width} ${VIEW.height}`}
+            role="img"
+            aria-label={visualSummary}
+            preserveAspectRatio="xMidYMid meet"
+          >
+            <rect className={styles.bed} x="24" y={BED_TOP} width="420" height="18" rx="9" />
+            <circle className={styles.patient} cx="76" cy="182" r="36" />
+            <path
+              className={styles.patient}
+              d={`M 110 198 C 140 168, 186 ${CHEST.anteriorY}, ${CHEST.x} ${CHEST.anteriorY} C 290 ${CHEST.anteriorY}, 330 168, 372 186 L 428 ${BED_TOP} L 100 ${BED_TOP} Z`}
+            />
+            {/* The chest's front-to-back depth at the reference point, so "midway" can be seen. */}
+            <line
+              className={styles.depth}
+              data-leveling-chest-depth
+              x1={CHEST.x}
+              x2={CHEST.x}
+              y1={CHEST.anteriorY}
+              y2={CHEST.posteriorY}
+            />
+            <line
+              className={styles.axis}
+              x1="16"
+              x2={VIEW.width - 16}
+              y1={AXIS_Y}
+              y2={AXIS_Y}
+              data-leveling-axis-line
+            />
+            <circle
+              className={styles.axisPoint}
+              cx={CHEST.x}
+              cy={AXIS_Y}
+              r="8"
+              data-leveling-axis-point
+              data-anterior-y={CHEST.anteriorY}
+              data-posterior-y={CHEST.posteriorY}
+            />
+            <line className={styles.leader} x1={CHEST.x} y1={AXIS_Y} x2="300" y2="98" />
+            <line
+              className={styles.measure}
+              x1={BRACKET_X}
+              x2={BRACKET_X}
+              y1={AXIS_Y}
+              y2={transducerY}
+            />
+            <line
+              className={styles.measureCap}
+              x1={BRACKET_X - 14}
+              x2={BRACKET_X + 14}
+              y1={AXIS_Y}
+              y2={AXIS_Y}
+            />
+            <line
+              className={styles.measureCap}
+              x1={BRACKET_X - 14}
+              x2={BRACKET_X + 14}
+              y1={transducerY}
+              y2={transducerY}
+            />
+            <g transform={`translate(${BRACKET_X + 20} ${transducerY - 16})`}>
+              <rect className={styles.transducerBody} width="84" height="32" rx="8" />
+              <circle className={styles.transducerPort} cx="14" cy="16" r="6" />
+            </g>
+          </svg>
+          <span
+            className={styles.label}
+            data-leveling-label="axis"
+            style={{ left: percent(304, VIEW.width), top: percent(98, VIEW.height) }}
+          >
+            Phlebostatic axis
+            <small>mid-chest, front to back</small>
+          </span>
+          <span
+            className={styles.label}
+            data-leveling-label="transducer"
+            data-anchor="end"
+            style={{
+              left: percent(VIEW.width - 8, VIEW.width),
+              // Clear of the box: above it when the transducer is raised, beneath it otherwise.
+              top: percent(transducerY + (levelCm > 0 ? -34 : 34), VIEW.height),
+            }}
+          >
+            transducer
+          </span>
+          <span
+            className={styles.label}
+            data-leveling-label="height"
+            data-anchor="end"
+            data-tone="measure"
+            style={{
+              left: percent(BRACKET_X - 20, VIEW.width),
+              top: percent((AXIS_Y + transducerY) / 2 + (levelCm === 0 ? -16 : 0), VIEW.height),
+            }}
+          >
+            {heightLabel}
+          </span>
+        </div>
       </div>
       <p className={styles.caption} data-leveling-caption>
         A schematic side view, not to scale. The reference point is drawn midway between the front
