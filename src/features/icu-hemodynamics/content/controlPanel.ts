@@ -141,36 +141,17 @@ export function hemodynamicsControl(id: HemodynamicsControlId): HemodynamicsCont
   return control
 }
 
-/**
- * Phrases that would hand a learner a universal number.
- *
- * The module teaches trend and relationship; a numeric band appears only with a source and an
- * institution-variation note, and never in a sentence shaped like an order.
- */
-export const hemodynamicsUniversalTargetPatterns: readonly RegExp[] = [
-  /\btarget of\s*\d/i,
-  /\bshould (always )?be (above|below|over|under|greater than|less than)\s*\d/i,
-  /\bkeep\b[^.]{0,32}\b(above|below|over|under)\s*\d/i,
-  /\bnormal is\s*\d/i,
-  /\bnormal range is\s*\d/i,
-  /\baim for\s*\d/i,
-  /\bmust (be|stay) (above|below|over|under)\s*\d/i,
-]
-
 export interface HemodynamicsLearnerCopyOptions {
   /** Names the term an override excuses; an override that excuses nothing is an error. */
   readonly learnerCopyOverrideReason?: string
-  /** Copy that legitimately carries a sourced figure (a source-backed reference interval). */
-  readonly allowsNumbers?: boolean
 }
 
 /**
  * The module-wide gate for learner-facing copy authored in the new registries.
  *
- * Three rules: the copy is not empty; it carries no software or examination vocabulary unless an
- * override names the term; and it does not phrase a number as a target. Numbers are refused by
- * default because most learner copy here has no business carrying one — the registries that do
- * (a source-backed interval, a story problem's readings) say so explicitly.
+ * Two rules: the copy is not empty, and it carries no software or examination vocabulary unless
+ * an override names the term. Numbers are welcome: a value a decision depends on is taught, with
+ * its source in the module's numbers register (`docs/teaching-first-rules.md`).
  */
 export function hemodynamicsLearnerCopyErrors(
   where: string,
@@ -192,14 +173,6 @@ export function hemodynamicsLearnerCopyErrors(
     }
   } else if (options.learnerCopyOverrideReason) {
     errors.push(`${where} declares an override that excuses nothing.`)
-  }
-  if (!options.allowsNumbers && /\d/.test(text)) {
-    errors.push(`${where} carries a number in learner copy.`)
-  }
-  for (const pattern of hemodynamicsUniversalTargetPatterns) {
-    if (pattern.test(text)) {
-      errors.push(`${where} phrases a number as a universal target (${pattern.source}).`)
-    }
   }
   return errors
 }

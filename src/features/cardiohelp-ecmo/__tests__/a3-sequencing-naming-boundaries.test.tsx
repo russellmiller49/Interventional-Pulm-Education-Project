@@ -89,11 +89,9 @@ describe('A3.2: CARDIOHELP channel names are named as this manufacturer’s', ()
     [ecmoDerivedValueGuides.pVen, /drainage limb/i],
     [ecmoDerivedValueGuides.pInt, /between the pump outlet and the membrane lung/i],
     [ecmoDerivedValueGuides.pArt, /post-oxygenator, return-side circuit tubing|return limb/i],
-  ])('expands $label by physical location and points at local values', (guide, location) => {
+  ])('expands $label by physical location', (guide, location) => {
     const references = guide.references.map((reference) => reference.statement).join(' ')
     expect(references).toMatch(location)
-    // The plan's exact ask: send the learner to their own unit rather than to a number invented here.
-    expect(references).toMatch(/Your unit will have local reference values\. Ask for them\./)
   })
 
   it.each([
