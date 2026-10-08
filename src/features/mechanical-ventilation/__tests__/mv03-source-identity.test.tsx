@@ -1,4 +1,4 @@
-import { cleanup, render, within } from '@testing-library/react'
+import { cleanup, render } from '@testing-library/react'
 
 import { criticalCareEvidenceById } from '@/features/critical-care/content/evidenceRegistry'
 
@@ -6,6 +6,7 @@ import { VentilationLearningSources } from '../components/VentilationLearningVis
 import { VentilationSourceList } from '../components/stage/VentilationSourceList'
 import {
   VENTILATION_CLINICAL_REVIEW_LINE,
+  VENTILATION_SOURCE_REVIEW_STATUS,
   ventilationEvidence,
   ventilationEvidenceById,
   ventilationSourceClassLabel,
@@ -27,6 +28,9 @@ const formerlyUnnamed = [
 const baseClaimTypes: Readonly<Record<string, string>> = {
   'aarc-assessment-2024': 'clinical',
   'ats-ards-2024': 'clinical',
+  // MV-PRE-REVIEW-04 (S6-1): one record added, for the guideline the limits come from. Every
+  // record captured on untouched main keeps its claim type.
+  'ats-esicm-sccm-ards-2017': 'clinical',
   'hamilton-c6-manual-1.2.x': 'device-workflow',
   'hamilton-c6-quick-guide': 'device-workflow',
   'hamilton-c6-intellivent-asv-1.2.x': 'device-workflow',
@@ -132,12 +136,21 @@ describe('MV-03 source identities', () => {
     expect(container.querySelectorAll('[data-source-claims]')).toHaveLength(0)
     const items = container.querySelectorAll<HTMLElement>('[data-evidence-id]')
     expect(items).toHaveLength(formerlyUnnamed.length)
+    // MV-PRE-REVIEW-04 (T3): the status is said once above the list, and each record's identity
+    // check and no-review line are in the audit view under it — still on the page for every record.
+    expect(container.querySelector('[data-source-review-status]')?.textContent).toBe(
+      VENTILATION_SOURCE_REVIEW_STATUS,
+    )
+    const audit = container.querySelector('[data-source-audit]')!
+    expect(audit.tagName).toBe('DETAILS')
     items.forEach((item) => {
       const record = ventilationEvidenceById.get(item.dataset.evidenceId!)!
-      expect(within(item).getByText(VENTILATION_CLINICAL_REVIEW_LINE)).toBeInTheDocument()
-      expect(item.textContent).toContain(record.identity!.note)
+      const entry = audit.querySelector<HTMLElement>(`[data-source-identity="${record.id}"]`)!
+      expect(entry.textContent).toContain(VENTILATION_CLINICAL_REVIEW_LINE)
+      expect(entry.textContent).toContain(record.identity!.note)
       expect(item.textContent).toContain(ventilationSourceClassLabel[record.sourceClass])
     })
+    expect(audit.querySelectorAll('[data-source-identity]')).toHaveLength(formerlyUnnamed.length)
     expect(container.textContent).not.toMatch(/Casebook source \d/)
   })
 

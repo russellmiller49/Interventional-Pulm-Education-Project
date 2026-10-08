@@ -14,7 +14,17 @@ import { Link, useRouter } from '@/i18n/navigation'
 import { LessonShell } from '@/features/learning-module/stage/LessonShell'
 import { ventilationLearningUnits } from '../../content/learningCurriculum'
 import {
+  ventilationPartSetupLine,
+  ventilationRoundRelationLine,
+  ventilationSectionLabel,
+  ventilationSectionNumber,
+  ventilationSectionTimeLine,
+} from '../../content/learnerMap'
+import {
+  resolvePresentedStepIndex,
   roundManeuver,
+  roundQuestionKind,
+  ventilationPresentedStepIndexes,
   ventilationStageLesson,
   type VentilationStageStep,
 } from '../../content/stageLessons'
@@ -92,7 +102,16 @@ function VentilationStageSession({
 }) {
   const router = useRouter()
   const lesson = useMemo(() => ventilationStageLesson(unitId), [unitId])
-  const [index, setIndex] = useState(Math.min(initialStep, lesson.steps.length - 1))
+  /*
+   * `index` is the step's position in the lesson, which is what the saved reading location holds.
+   * The learner is shown the presented steps only (N6): a saved position on a step that is no
+   * longer shown separately opens the step that now carries its content.
+   */
+  const presented = useMemo(() => ventilationPresentedStepIndexes(lesson), [lesson])
+  const [index, setIndex] = useState(() => resolvePresentedStepIndex(lesson, initialStep))
+  const position = Math.max(0, presented.indexOf(index))
+  const previousIndex = position > 0 ? presented[position - 1] : null
+  const nextIndex = position < presented.length - 1 ? presented[position + 1] : null
   const [device] = useState<VentilatorDeviceId>(readDevicePreference)
   const { session, engine, lab } = useVentilationLabSession({
     unitId,
@@ -184,7 +203,7 @@ function VentilationStageSession({
     setRestartCount((count) => count + 1)
     lab({ type: 'RESTART' })
     engine({ type: 'SET_PAUSED', paused: true })
-    setIndex(0)
+    setIndex(presented[0])
     setExplanationOpen(false)
   }
   const question =
@@ -226,16 +245,26 @@ function VentilationStageSession({
    * change, then compare it with a real run" sat over "Which phase is shown at cursor A?", which
    * involves no change and no run.
    */
+  const questionKind = roundQuestionKind(round)
   const questionPurpose =
     interaction.kind === 'locate'
       ? 'Locate the timing relationship on the breath.'
       : marker
         ? `Identify what the marked interval ${marker.markerId} shows on the captured breath above, then check your reading against its samples.`
-        : roundManeuver(round) === 'hold'
-          ? 'Interpret the measurement this maneuver produces, then compare it with the acquisition status.'
-          : roundManeuver(round) === 'pause'
-            ? 'Read the frozen traces at one instant, then compare your reading with the captured samples.'
-            : 'Predict the observable response to one change, then compare it with a real run.'
+        : roundManeuver(round) === 'pause'
+          ? 'Read the frozen traces at one instant, then compare your reading with the captured samples.'
+          : questionKind === 'identify'
+            ? 'Identify the reading or control that answers this, then check it on a real run.'
+            : questionKind === 'reflect'
+              ? 'Think through what would guide the next step. There is no reading to predict here; the experiment afterwards shows what the action changes.'
+              : questionKind === 'interpret'
+                ? roundManeuver(round) === 'hold'
+                  ? 'Interpret the measurement this maneuver produces, then compare it with the acquisition status.'
+                  : 'Interpret what these readings would mean together, then compare with a real run.'
+                : 'Predict the observable response to one change, then compare it with a real run.'
+  const relationLine = ventilationRoundRelationLine(round)
+  const startsOtherPart =
+    nextIndex !== null && stepRound(lesson.steps[nextIndex]) !== stepRound(step)
 
   return (
     <MechanicalVentilationModuleFrame
@@ -258,6 +287,11 @@ function VentilationStageSession({
               <h1>{lesson.title}</h1>
               <p>
                 Read, try a prediction, or experiment at your own pace. Every step is available.
+                This is a guided walk-through: step names, controls and explanations show what is
+                coming and can be opened before you answer anything.
+              </p>
+              <p className={styles.note} data-section-time>
+                {ventilationSectionTimeLine(unitId)}
               </p>
               <nav className={styles.tools} aria-label="Lesson navigation">
                 <label>
@@ -269,7 +303,7 @@ function VentilationStageSession({
                   >
                     {ventilationLearningUnits.map((unit) => (
                       <option key={unit.id} value={unit.id}>
-                        {unit.title}
+                        {ventilationSectionNumber(unit.id)}. {unit.title}
                       </option>
                     ))}
                   </select>
@@ -281,9 +315,9 @@ function VentilationStageSession({
                     value={index}
                     onChange={(event) => navigateToStep(Number(event.target.value))}
                   >
-                    {lesson.steps.map((item, i) => (
-                      <option key={item.id} value={i}>
-                        {i + 1}. {item.title}
+                    {presented.map((stepIndex, order) => (
+                      <option key={lesson.steps[stepIndex].id} value={stepIndex}>
+                        {order + 1}. {lesson.steps[stepIndex].title}
                       </option>
                     ))}
                   </select>
@@ -294,8 +328,8 @@ function VentilationStageSession({
                 <Link href="/mechanical-ventilation/learn">All sections</Link>
               </nav>
               <p className={styles.note}>
-                Your place and visited topics are saved on this device. Reloading or switching
-                applications starts a fresh paused patient; answers and runs are not saved.
+                Your place and visited topics are saved on this device. Reloading, or moving between
+                Part 1 and Part 2, starts a fresh paused patient; answers and runs are not saved.
               </p>
               {!storageAvailable ? (
                 <p role="status">
@@ -318,8 +352,19 @@ function VentilationStageSession({
           <div className={styles.content}>
             <section className={styles.block} data-current-step={step.id}>
               <p id={stepCountId}>
-                Step {index + 1} of {lesson.steps.length} · Application {session.round + 1}
+                Step {position + 1} of {presented.length}
+                {peepLesson ? '' : ` · Part ${session.round + 1} of 2`}
               </p>
+              {peepLesson ? null : (
+                <p className={styles.note} data-part-setup>
+                  {ventilationPartSetupLine(unitId, session.round)}
+                </p>
+              )}
+              {relationLine && !peepLesson ? (
+                <p className={styles.note} data-part-relation={round.relation?.kind}>
+                  {relationLine}
+                </p>
+              ) : null}
               <h2
                 ref={headingRef}
                 tabIndex={-1}
@@ -333,7 +378,12 @@ function VentilationStageSession({
                 {simulationStep
                   ? round.task
                   : question
-                    ? 'Consider this optional question, or open its explanation and continue.'
+                    ? /*
+                       * The round's introduction frames the question: which simulated patient this
+                       * is and, where a term is used before its own section, what it means. It was
+                       * printed on the explanation step only, after the question it introduces.
+                       */
+                      `${peepLesson ? '' : `${round.introduction} `}Consider this optional question, or open its explanation and continue.`
                     : peepLesson
                       ? step.instruction
                       : round.introduction}
@@ -359,13 +409,13 @@ function VentilationStageSession({
               <nav className={styles.tools} aria-label="Step navigation">
                 <button
                   type="button"
-                  disabled={index === 0}
-                  onClick={() => navigateToStep(index - 1)}
+                  disabled={previousIndex === null}
+                  onClick={() => previousIndex !== null && navigateToStep(previousIndex)}
                 >
                   Back
                 </button>
-                {index < lesson.steps.length - 1 ? (
-                  <button type="button" onClick={() => navigateToStep(index + 1)}>
+                {nextIndex !== null ? (
+                  <button type="button" onClick={() => navigateToStep(nextIndex)}>
                     Continue
                   </button>
                 ) : nextUnit ? (
@@ -376,15 +426,21 @@ function VentilationStageSession({
                     }}
                     onClick={(event) => continueToSection(event, nextUnit.id)}
                   >
-                    Continue to {nextUnit.title}
+                    Continue to {ventilationSectionLabel(nextUnit.id)}
                   </Link>
                 ) : (
-                  <Link href="/mechanical-ventilation/assess">Continue to worked applications</Link>
+                  <Link href="/mechanical-ventilation/assess">Continue to Applications</Link>
                 )}
                 <button type="button" onClick={() => setExplanationOpen(true)}>
                   Show explanation
                 </button>
               </nav>
+              {startsOtherPart ? (
+                <p className={styles.note} data-part-change-notice>
+                  Continue opens Part {stepRound(lesson.steps[nextIndex!]) + 1} on a fresh, paused
+                  patient. This part’s run and captured breaths are not kept.
+                </p>
+              ) : null}
             </section>
             {workingStep && evidence.baseline && evidence.response && !showExplanation ? (
               <section className={styles.block} data-captured-result-near-task>
@@ -431,7 +487,9 @@ function VentilationStageSession({
                 prompt={question.stem}
                 choices={question.choices}
                 explanation={question.explanation}
-                hint={round.look}
+                hint={interaction.kind === 'locate' ? round.look : round.hint}
+                bestChoiceId={question.correctChoiceIds[0]}
+                caseFit={false}
                 onChoose={(choice) => {
                   if (interaction.kind === 'prediction')
                     lab({ type: 'COMMIT', choice: ['a', 'b', 'c'].indexOf(choice) })
@@ -486,7 +544,7 @@ function VentilationStageSession({
                 saveDevicePreference(selected)
                 lab({ type: 'DEVICE', device: selected })
                 engine({ type: 'SET_PAUSED', paused: true })
-                setIndex(0)
+                setIndex(presented[0])
               }}
               onResetPatient={() => {
                 setResetCount((count) => count + 1)
@@ -534,15 +592,15 @@ function VentilationStageSession({
                   </>
                 ) : (
                   <p data-no-observation>
-                    No response has been captured in this application. This explanation describes
-                    the authored concept, not a result you produced.
+                    No response has been captured in this part. This explanation describes the
+                    authored concept, not a result you produced.
                   </p>
                 )}
               </section>
             ) : null}
             <nav className={styles.tools} aria-label="Continue reading">
-              {index < lesson.steps.length - 1 ? (
-                <button type="button" onClick={() => navigateToStep(index + 1)}>
+              {nextIndex !== null ? (
+                <button type="button" onClick={() => navigateToStep(nextIndex)}>
                   Continue
                 </button>
               ) : (

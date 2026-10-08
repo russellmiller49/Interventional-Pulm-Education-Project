@@ -17,7 +17,9 @@ import styles from './ventilation-course.module.css'
 export function VentilationProtectionReference() {
   return (
     <aside className={styles.breath} aria-label="Adult ARDS guideline reference">
-      <span className={styles.badge}>Guideline · ATS 2024 · adult ARDS</span>
+      <span className={styles.badge}>
+        Guideline · ATS/ESICM/SCCM 2017, kept in the ATS 2024 update · adult ARDS
+      </span>
       <h2 style={{ marginTop: 18 }}>Two measurements, together</h2>
       <p className={styles.number}>
         4–8 <small>mL/kg PBW</small>
@@ -33,11 +35,19 @@ export function VentilationProtectionReference() {
       </p>
       <a
         className={styles.textLink}
+        href="https://pubmed.ncbi.nlm.nih.gov/28459336/"
+        target="_blank"
+        rel="noreferrer"
+      >
+        Read the 2017 recommendation
+      </a>{' '}
+      <a
+        className={styles.textLink}
         href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10870893/"
         target="_blank"
         rel="noreferrer"
       >
-        Read the ATS recommendation
+        Read the 2024 update that keeps it
       </a>
     </aside>
   )

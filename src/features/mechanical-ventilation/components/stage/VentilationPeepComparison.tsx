@@ -22,12 +22,12 @@ function readingValue(record: Snapshot, key: keyof Snapshot, digits: number) {
 }
 const readings: readonly { key: keyof Snapshot; label: string; digits: number }[] = [
   { key: 'spo2', label: 'SpO₂ (%)', digits: 1 },
-  { key: 'map', label: 'MAP (mm Hg)', digits: 1 },
-  { key: 'peak', label: 'Peak airway pressure (cm H₂O)', digits: 1 },
-  { key: 'plateau', label: 'Plateau estimate (cm H₂O) · effort present', digits: 1 },
-  { key: 'modelCompliance', label: 'Model-assigned compliance (mL/cm H₂O)', digits: 0 },
+  { key: 'map', label: 'MAP (mmHg)', digits: 1 },
+  { key: 'peak', label: 'Peak airway pressure (cmH₂O)', digits: 1 },
+  { key: 'plateau', label: 'Plateau estimate (cmH₂O) · effort present', digits: 1 },
+  { key: 'modelCompliance', label: 'Model-assigned compliance (mL/cmH₂O)', digits: 0 },
   { key: 'deliveredVt', label: 'Delivered VT from waveform (mL)', digits: 1 },
-  { key: 'intrinsicPeep', label: 'Intrinsic PEEP estimate (cm H₂O)', digits: 1 },
+  { key: 'intrinsicPeep', label: 'Intrinsic PEEP estimate (cmH₂O)', digits: 1 },
 ]
 
 /** Separate engine replays. This component cannot dispatch to or capture the learner's patient. */
@@ -66,7 +66,7 @@ export function VentilationPeepComparison({ explanationOpen }: { explanationOpen
       </p>
       <div className={styles.tools}>
         <label>
-          Example PEEP (cm H₂O){' '}
+          Example PEEP (cmH₂O){' '}
           <select
             value={peep}
             onChange={(event) => {
@@ -119,7 +119,7 @@ export function VentilationPeepComparison({ explanationOpen }: { explanationOpen
         tabIndex={0}
       >
         <table>
-          <caption>Engine-generated example values · no hold acquired</caption>
+          <caption>Model-generated example values · no hold acquired</caption>
           <thead>
             <tr>
               <th scope="col">Reading</th>
@@ -157,7 +157,7 @@ export function VentilationPeepComparison({ explanationOpen }: { explanationOpen
         </table>
       </div>
       <div className={styles.peepCompactReadings} data-peep-readings-compact>
-        <p>Engine-generated example values · no hold acquired</p>
+        <p>Model-generated example values · no hold acquired</p>
         <p>
           Baseline: PEEP 5 at 30 s.
           {result
@@ -182,8 +182,8 @@ export function VentilationPeepComparison({ explanationOpen }: { explanationOpen
       </div>
       <p className={styles.note}>
         Plateau estimates are unsuitable for passive mechanics interpretation: recent effort reaches{' '}
-        {records[0].recentEffort.toFixed(1)} cm H₂O. Model-assigned compliance is not measured
-        static compliance.
+        {records[0].recentEffort.toFixed(1)} cmH₂O. Model-assigned compliance is not measured static
+        compliance.
       </p>
       {explanationOpen || revealed ? (
         <div data-peep-explanation>

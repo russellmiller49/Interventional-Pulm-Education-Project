@@ -61,7 +61,16 @@ export interface VentilationEvidenceReference {
   supports: readonly string[]
   limitations: string
   identity?: VentilationSourceIdentity
+  /**
+   * File-level audit detail — a snapshot name and hash. Shown in the source audit view, not in the
+   * citation a learner reads (MV-PRE-REVIEW-04, T3).
+   */
+  audit?: string
 }
+
+/** Said once per source list, in place of the same sentence under every citation. */
+export const VENTILATION_SOURCE_REVIEW_STATUS =
+  'No source listed here has a recorded clinical review of how this module uses it. What each source is cited for, and its limits, are shown with it; file identity checks are in the audit view below.'
 
 const TOBIN_3E =
   'In: Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013.'
@@ -188,16 +197,44 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
     limitations:
       'General adult assessment guidance; individual settings and emergency care require clinical assessment and current local protocols. Source check is not independent clinical sign-off.',
   },
+  /*
+   * MV-PRE-REVIEW-04 (S6-1). The 4–8 mL/kg PBW and plateau < 30 cmH₂O limits were attributed to
+   * the 2024 ATS update alone. They are the 2017 ATS/ESICM/SCCM recommendation; the 2024 update
+   * lists them among the "recommendations from the 2017 guideline that remain in place" and makes
+   * its own recommendations on corticosteroids, VV-ECMO, neuromuscular blockade and PEEP. Both
+   * records are kept: the origin, and its retention. Bibliographic check only; not clinical review.
+   */
+  {
+    id: 'ats-esicm-sccm-ards-2017',
+    sourceClass: 'guideline',
+    reviewedAt: '2026-10-07',
+    title: 'ATS/ESICM/SCCM guideline: Mechanical Ventilation in Adult Patients with ARDS (2017)',
+    citation:
+      'Fan E, Del Sorbo L, Goligher EC, et al. Am J Respir Crit Care Med. 2017;195:1253–1263. doi:10.1164/rccm.201703-0548ST. PMID 28459336.',
+    sourceUrl: 'https://pubmed.ncbi.nlm.nih.gov/28459336/',
+    pages: '1253–1263; recommendation stated in the abstract',
+    supports: [
+      'Origin of the adult ARDS limits: lower tidal volumes (4–8 mL/kg predicted body weight) and lower inspiratory pressures (plateau pressure below 30 cmH₂O), a strong recommendation',
+    ],
+    limitations:
+      'ARDS-scoped guideline recommendations, not a full ventilator prescription, a guarantee against injury, or a rule for every ventilated patient. Source check is not independent clinical sign-off.',
+    identity: {
+      status: 'as-cited-not-checked',
+      checkedOn: '2026-10-07',
+      note: 'No copy is held locally. The citation and the wording of the recommendation were compared with the PubMed record (PMID 28459336) by an AI authoring assistant.',
+    },
+  },
   {
     id: 'ats-ards-2024',
     sourceClass: 'guideline',
     reviewedAt: '2026-09-05',
-    title: 'ATS guideline: Management of Adult Patients with ARDS (2024)',
+    title: 'ATS guideline: Management of Adult Patients with ARDS (2024 update)',
     citation:
       'Qadir N, et al. Am J Respir Crit Care Med. 2024;209:24–36. doi:10.1164/rccm.202311-2011ST.',
     sourceUrl: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC10870893/',
     supports: [
-      'Adult ARDS: tidal volume 4–8 mL/kg predicted body weight and plateau pressure below 30 cmH₂O',
+      'Retains the 2017 recommendation to limit tidal volume (4–8 mL/kg predicted body weight) and plateau pressure (below 30 cmH₂O) in adult ARDS; it did not originate these limits',
+      'Its own recommendations: corticosteroids, venovenous ECMO in selected severe ARDS, neuromuscular blockade in early severe ARDS, and higher PEEP without prolonged lung recruitment maneuvers in moderate to severe ARDS',
     ],
     limitations:
       'These exact limits are ARDS-scoped guideline recommendations, not a full ventilator prescription or a guarantee against injury. Source check is not independent clinical sign-off.',
@@ -207,7 +244,8 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
     deviceId: source.deviceId,
     sourceClass: 'manufacturer' as const,
     title: source.title,
-    citation: `${source.citation} Source snapshot SHA-256: ${source.sourceSha256}.`,
+    citation: source.citation,
+    audit: `Source snapshot ${source.sourceFilename}; SHA-256 ${source.sourceSha256}.`,
     pages: source.pages,
     supports: [source.intendedUse],
     limitations: source.limitations,

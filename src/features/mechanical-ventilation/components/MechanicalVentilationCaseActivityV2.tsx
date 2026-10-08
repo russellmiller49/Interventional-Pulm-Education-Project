@@ -7,6 +7,8 @@ import { SimulationLaunchGate } from '@/features/learning-module/components/Simu
 import { mechanicalVentilationCaseById } from '../content/runtimeCases'
 import { branchResolution } from '../content/caseFindings'
 import { casePresentationModelNote, caseResponseModelNote } from '../content/caseModelNotes'
+import { ventilationCaseExplanation, ventilationCaseMechanismHint } from '../content/caseTeaching'
+import { isVentilationCaseLive, ventilationSectionLabel } from '../content/learnerMap'
 import { plateauReadingValidity } from '../content/plateauValidity'
 import {
   capturePostActionBaseline,
@@ -72,7 +74,7 @@ function caseReducer(session: CaseSession, action: VentilationAction): CaseSessi
 export default function MechanicalVentilationCaseActivityV2(
   props: MechanicalVentilationCaseActivityV2Props,
 ) {
-  if (props.caseId === 'MV-03') return <HeldDoubleTriggeringCase {...props} />
+  if (!isVentilationCaseLive(props.caseId)) return <HeldDoubleTriggeringCase {...props} />
   return <LiveCase key={props.caseId + ':' + props.deviceId} {...props} />
 }
 
@@ -98,14 +100,14 @@ function HeldDoubleTriggeringCase({
         <p>
           <strong>Worked explanation · live case under modeling review</strong>
         </p>
-        <p>
-          The live intrinsic PEEP display alternates between the short gap within a breath pair and
-          the longer gap between pairs. A lower displayed value after waiting does not demonstrate
-          that air trapping improved. This live example is unavailable while ventilation faculty/RT
-          review the measurement and initialization contract.
+        <p data-mv03-held-reason>
+          This case is read here as a worked explanation. Its live simulation is not offered: the
+          simulator’s intrinsic PEEP reading for paired breaths is being reviewed by ventilation
+          faculty and respiratory therapy, and until then a live run could teach the wrong
+          conclusion about air trapping.
         </p>
-        <h2>The authored mechanism</h2>
-        <p>{definition.debrief}</p>
+        <h2>The mechanism</h2>
+        <p data-case-learner-explanation>{ventilationCaseExplanation(caseId)}</p>
         <h2>What to examine in a tracing</h2>
         <ul>
           {definition.learningObjectives.map((objective) => (
@@ -116,6 +118,20 @@ function HeldDoubleTriggeringCase({
           This is a casebook explanation. No simulated intervention or observation has been
           recorded.
         </p>
+        <details data-mv03-review-detail>
+          <summary>Why the live case is held, in detail</summary>
+          <p>
+            The live intrinsic PEEP display alternates between the short gap within a breath pair
+            and the longer gap between pairs. A lower displayed value after waiting does not
+            demonstrate that air trapping improved. This live example is unavailable while
+            ventilation faculty/RT review the measurement and initialization contract.
+          </p>
+          <p>
+            <strong>Casebook wording, as supplied: </strong>
+            {definition.debrief}
+          </p>
+          <p>Review status: not reviewed. No date for the live case’s return is set.</p>
+        </details>
         <Link href="/mechanical-ventilation/practice">Continue to other cases</Link>
         <Link
           href={{
@@ -123,7 +139,7 @@ function HeldDoubleTriggeringCase({
             query: { activity: 'triggering-and-cycling' },
           }}
         >
-          Review triggering and cycling
+          Review {ventilationSectionLabel('triggering-and-cycling')}
         </Link>
         <SourcesPanel deviceId={deviceId} />
       </article>
@@ -225,7 +241,7 @@ function LiveCase({
           {explanation ? (
             <section className={task.block} data-case-explanation>
               <h2>Case explanation</h2>
-              <p>{definition.debrief}</p>
+              <p data-case-learner-explanation>{ventilationCaseExplanation(caseId)}</p>
               {resolution ? <p>{resolution.cause}</p> : null}
               <p>
                 <strong>Authored safety priority: </strong>
@@ -258,6 +274,14 @@ function LiveCase({
                   <li key={action}>{action}</li>
                 ))}
               </ul>
+              <details data-casebook-wording>
+                <summary>Casebook wording, as supplied</summary>
+                <p>{definition.debrief}</p>
+                <p>
+                  The explanation above restates this text to you. The supplied wording was written
+                  for whoever builds and runs the simulation; it is kept here unchanged.
+                </p>
+              </details>
               <p>
                 Reading this explanation does not record an action or establish a physiological
                 response.
@@ -339,6 +363,9 @@ function LiveCase({
                       >
                         {intervention.label}
                       </button>
+                      <p className={task.note} data-action-description>
+                        {intervention.description}
+                      </p>
                       {missing.length ? (
                         <p>
                           Requires the actual preceding action:{' '}
@@ -391,14 +418,12 @@ function LiveCase({
           <VentilationReinforcement
             key={caseId + ':' + repeat}
             id={caseId + '-mechanism'}
-            purpose="Connect the observed pattern with the case’s proposed mechanism."
+            purpose="A guided comparison, not a test: the case title already names the mechanism. Use this to find the observation on this patient that sets it apart from the two other mechanisms in the same group."
             prompt="Which mechanism could explain this pattern?"
             choices={definition.mechanismOptions}
-            hint={
-              definition.hintLadder[0] ??
-              'Inspect pressure, flow, volume, and patient effort together.'
-            }
-            explanation={definition.debrief}
+            bestChoiceId={definition.correctMechanismId}
+            hint={ventilationCaseMechanismHint(caseId)}
+            explanation={ventilationCaseExplanation(caseId)}
           />
           <SourcesPanel deviceId={deviceId} />
           <Link href="/mechanical-ventilation/practice">Continue to another case</Link>

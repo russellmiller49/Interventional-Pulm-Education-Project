@@ -203,7 +203,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
     analogy:
       'Setting a thermostat is a request. Reading the room thermometer tells you what happened.',
     explanation:
-      'Group the controls into oxygen concentration, pressure between breaths, breath size or support, breath frequency, and timing. Everything else helps you judge delivery and tolerance. Begin with the patient’s goal, then choose a control and a specific reassessment.',
+      'Five settings do most of the work: the mode, the size of the breath (a volume, or a pressure), the rate, the PEEP and the oxygen. Flow or inspiratory time, trigger sensitivity, cycle-off and rise time shape how each breath is delivered. Everything else helps you judge delivery and tolerance. Begin with the patient’s goal, then choose a control and a specific reassessment.',
     checklist: [
       'Name the goal.',
       'Choose a relevant control.',
@@ -220,7 +220,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
       conclusion: 'Compare the request with the result; do not assume either number is wrong.',
     },
     boundary:
-      'Control labels vary by device and mode. The five groups are a teaching aid, not a manufacturer control taxonomy.',
+      'Control labels vary by device and mode. The five main settings are a teaching aid: they are not a manufacturer’s menu grouping, and they do not list every setting of every mode.',
     evidenceIds: textbook,
     caseIds: ['MV-01', 'MV-07'],
     visual: 'controls',
@@ -251,7 +251,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
     ],
     example: {
       situation:
-        'At unchanged volume and flow, a passive patient’s peak rises while a valid plateau stays near baseline.',
+        'At unchanged volume and flow, a passive patient’s peak rises while a valid plateau stays near its previous value.',
       reasoning: [
         'The elastic pressure needed for that volume has changed little.',
         'The added pressure appears while gas is moving.',
@@ -321,7 +321,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
     analogy:
       'Choose a container’s fill by its capacity, not by the weight of everything around it.',
     explanation:
-      'Predicted body weight (PBW), calculated from height and sex using the applicable reference, is the basis for tidal-volume scaling. For adults with acute respiratory distress syndrome (ARDS), ATS guidance recommends 4–8 mL/kg PBW and plateau pressure below 30 cmH₂O. These are assessed together with effort, gas exchange, and the clinical situation.',
+      'Predicted body weight (PBW), calculated from height and sex using the applicable reference, is the basis for tidal-volume scaling. For adults with acute respiratory distress syndrome (ARDS), the 2017 ATS/ESICM/SCCM guideline recommends 4–8 mL/kg PBW and plateau pressure below 30 cmH₂O, and the 2024 ATS update keeps that recommendation in place. These are assessed together with effort, gas exchange, and the clinical situation.',
     checklist: [
       'Verify height and the PBW calculation.',
       'Express delivered tidal volume in mL/kg PBW.',
@@ -338,8 +338,8 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
       conclusion: 'Do not enlarge the breath simply to follow actual body weight.',
     },
     boundary:
-      'The stated ATS limits apply to adult ARDS and are not a complete ventilator prescription. Individual adjustment requires current guidance, bedside assessment, and supervision.',
-    evidenceIds: ['ats-ards-2024', 'aarc-assessment-2024'],
+      'The stated guideline limits apply to adult ARDS and are not a complete ventilator prescription. Individual adjustment requires current guidance, bedside assessment, and supervision.',
+    evidenceIds: ['ats-esicm-sccm-ards-2017', 'ats-ards-2024', 'aarc-assessment-2024'],
     caseIds: ['MV-01', 'MV-03'],
     visual: 'protection',
   },
@@ -437,7 +437,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
     minutes: 7,
     objective: 'gas-exchange',
     outcome:
-      'Separate oxygen concentration from pressure support for oxygenation and select reassessment.',
+      'Separate oxygen concentration from PEEP as ways to support oxygenation, and select the reassessment.',
     why: 'A patient’s saturation can rise while a pressure change worsens circulatory tolerance.',
     increment: 'Add the tradeoff between oxygenation and the effects of pressure.',
     prerequisites: ['controls-and-goals', 'mechanics-load-and-pressure', 'lung-protection'],

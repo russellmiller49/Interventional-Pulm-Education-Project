@@ -1,3 +1,4 @@
+import { ventilationApplicationConceptUnit } from '../content/learnerMap'
 import { readFileSync } from 'fs'
 import path from 'path'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
@@ -133,8 +134,9 @@ describe('MV-UX-01 purpose line', () => {
         for (const pattern of malformed) expect(purpose).not.toMatch(pattern)
         if (teaching) expect(purpose).toBe(teaching.purpose)
         else
+          // MV-PRE-REVIEW-04 (A2): the purpose is that of the section the item actually draws on.
           expect(purpose).toBe(
-            ventilationGenericQuestionPurpose(ventilationUnitById.get(question.unitId)!),
+            ventilationGenericQuestionPurpose(ventilationApplicationConceptUnit(question)),
           )
       })
     },

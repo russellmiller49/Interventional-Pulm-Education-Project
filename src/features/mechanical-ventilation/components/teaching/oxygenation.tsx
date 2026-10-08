@@ -254,7 +254,7 @@ export function VentilationOxygenationTradeoff({
 
       <TextEquivalent>{summary}</TextEquivalent>
       <p>
-        Model-assigned compliance: {round(reading.modelCompliance)} mL/cm H₂O. This is not static
+        Model-assigned compliance: {round(reading.modelCompliance)} mL/cmH₂O. This is not static
         compliance acquired from a hold.
       </p>
       <ModelBoundary>

@@ -8,6 +8,12 @@ import { mechanicalVentilationNavBase } from '@/features/learning-module/moduleR
 import { Link } from '@/i18n/navigation'
 
 import { ventilationCasePresentationTitle } from '../content/casePresentation'
+import {
+  isVentilationCaseLive,
+  ventilationCaseCountPhrase,
+  ventilationSectionLabel,
+  VENTILATION_HELD_CASE_TAG,
+} from '../content/learnerMap'
 import { ventilatorDeviceProfiles } from '../content/deviceProfiles'
 import {
   ventilationLearningUnits,
@@ -24,7 +30,8 @@ import { MechanicalVentilationModuleFrame } from './MechanicalVentilationModuleF
 import styles from './mechanical-ventilation-hub.module.css'
 
 /**
- * Practice: the fifteen clinical cases, named by what the bedside shows.
+ * Practice: every case entry — the live cases and the one held as a worked explanation — counted
+ * from the registry and named by the authored case title.
  *
  * One recommended case — the first not yet worked in the mechanism-alternating order, or the case
  * a section handed over — with the console and the amount of prompting chosen once, then every case
@@ -99,8 +106,10 @@ export function MechanicalVentilationPracticePicker({
           <p>
             One patient at a time, with the reasoning the sections built: inspect the breath, try a
             change, reassess, and open the explanation. Every case supports optional questions and
-            direct access to teaching. MV-03 is a worked explanation while its live measurement
-            display is under review.
+            direct access to teaching. There are {ventilationCaseCountPhrase()}: MV-03 is a worked
+            explanation while its live measurement display is under review. “Builds on” names the
+            section that teaches a case’s mechanism; it is a suggestion, and every case opens
+            without it.
           </p>
           <div className={styles.entryActions}>
             <Link
@@ -117,7 +126,7 @@ export function MechanicalVentilationPracticePicker({
                 </strong>
                 <small>
                   {teachingUnitFor(recommendedId)
-                    ? `Builds on: ${teachingUnitFor(recommendedId)!.title}`
+                    ? `Builds on: ${ventilationSectionLabel(teachingUnitFor(recommendedId)!.id)}`
                     : 'Applies the pathway’s reasoning'}
                 </small>
               </span>
@@ -167,7 +176,7 @@ export function MechanicalVentilationPracticePicker({
                 <div className={styles.sectionHeading}>
                   <h2 id={`mv-practice-${group.stage}`}>{group.title}</h2>
                   <span>
-                    {caseIds.length} case{caseIds.length === 1 ? '' : 's'}
+                    {caseIds.length} case{caseIds.length === 1 ? '' : 's'} paired with this stage
                   </span>
                 </div>
                 <div className={styles.chipRow}>
@@ -187,10 +196,14 @@ export function MechanicalVentilationPracticePicker({
                       >
                         <BookOpenCheck aria-hidden="true" />
                         {ventilationCasePresentationTitle(caseId)}
+                        {isVentilationCaseLive(caseId) ? '' : ` · ${VENTILATION_HELD_CASE_TAG}`}
                         {done ? ' · visited' : ''}
                         {caseId === recommendedId ? <em>Up next</em> : null}
                         {unit ? (
-                          <small style={{ opacity: 0.8 }}> · builds on {unit.shortTitle}</small>
+                          <small style={{ opacity: 0.8 }}>
+                            {' '}
+                            · builds on {ventilationSectionLabel(unit.id)}
+                          </small>
                         ) : null}
                       </Link>
                     )
@@ -201,7 +214,11 @@ export function MechanicalVentilationPracticePicker({
           })}
 
         <section className={styles.section} aria-labelledby="mv-practice-all">
-          <h2 id="mv-practice-all">Every case, in the mechanism-alternating order</h2>
+          <h2 id="mv-practice-all">Every entry, in the mechanism-alternating order</h2>
+          <p className={styles.note}>
+            {ventilationCaseCountPhrase()}. A case can appear under a stage above and again here; it
+            is the same case.
+          </p>
           <div className={styles.chipRow}>
             {ventilationPracticeOrder.map((caseId) => {
               const done = history.visited.includes(caseId)
@@ -217,9 +234,13 @@ export function MechanicalVentilationPracticePicker({
                 >
                   <BookOpenCheck aria-hidden="true" />
                   {ventilationCasePresentationTitle(caseId)}
+                  {isVentilationCaseLive(caseId) ? '' : ` · ${VENTILATION_HELD_CASE_TAG}`}
                   {done ? ' · visited' : ''}
                   {unit ? (
-                    <small style={{ opacity: 0.8 }}> · builds on {unit.shortTitle}</small>
+                    <small style={{ opacity: 0.8 }}>
+                      {' '}
+                      · builds on {ventilationSectionLabel(unit.id)}
+                    </small>
                   ) : null}
                 </Link>
               )

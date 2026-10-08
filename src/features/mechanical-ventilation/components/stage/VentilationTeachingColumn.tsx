@@ -380,7 +380,11 @@ export function VentilationTeachingColumn({
         ) : null}
         <section data-teaching-block="knob-strip">
           <h4>Which control, if any</h4>
-          <p className={styles.kicker}>The five things you can change</p>
+          <p className={styles.kicker}>The five main settings</p>
+          <p>
+            This strip is the worked reading for both parts of this section. Open it before or after
+            trying the optional questions; nothing here is held back.
+          </p>
           <p>{VENTILATION_CONTROL_PANEL.sentence}</p>
           <ul className={styles.strip}>
             {VENTILATION_CONTROL_PANEL.knobs.map((knob) => {
@@ -395,7 +399,9 @@ export function VentilationTeachingColumn({
             })}
           </ul>
           {spec.shapingNote ? <p>{spec.shapingNote}</p> : null}
+          <p className={styles.quickNote}>{VENTILATION_CONTROL_PANEL.shapingSentence}</p>
           <p className={styles.quickNote}>{VENTILATION_CONTROL_PANEL.monitoringSentence}</p>
+          <p className={styles.quickNote}>{VENTILATION_CONTROL_PANEL.notSettingsSentence}</p>
         </section>
         {!foundation && hasVentilationTeachingPanel(lesson.panelId) ? (
           <section data-teaching-block="panel" data-teaching-panel={lesson.panelId}>
