@@ -13,11 +13,13 @@ supervisor" answers.
 
 ## Where things stand
 
-| PR   | Branch                             | State                                                                                                                                                                |
-| ---- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                                                                             |
-| #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                                                                      |
-| #348 | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix (`287581f3`, plus the `components/scope/` part of `05cf6ad0`) should be lifted into its own PR before it is closed. |
+| PR   | Branch                             | State                                                                                                             |
+| ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
+| #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
+| #352 | `claude/bf-rewrite-register`       | Draft, stacked on #350. Register rows 15, 19, 20 and 21 extracted; two sources added (U17, U18). No learner copy. |
+| #351 | `claude/bf-3d-retry`               | Draft, from `main`. The 3D-retry fix lifted out of #348, with its three end-to-end cases.                         |
+| #348 | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix is now #351; close #348 once #351 merges.                        |
 
 Nothing is merged. The work was done in the worktree
 `…-Worktrees/claude-bf-pre-review-04-20261007`, which is currently on `claude/bf-rewrite-pilot`.
@@ -54,8 +56,8 @@ npx tsx scripts/bronchoscopy-foundations/check-section.ts <section-id>
 
 ## What is left
 
-In the plan's order. The plan gates the 13 remaining sections on fellow sessions with the pilot;
-ask Russell whether that gate still holds before starting them.
+In the plan's order. Russell removed the fellow-session gate on 2026-10-08: the 13 remaining
+sections no longer wait for sessions with the pilot.
 
 1. **Get #349 and #350 reviewed and merged**, then branch each batch from `origin/main`.
 2. **Still open from the pilot, for Russell:**
@@ -65,10 +67,15 @@ ask Russell whether that gate still holds before starting them.
      were derived from the survey's outlines, not from a recorded camera roll.
    - Confirm the basal mnemonic M-A-L-P.
    - Sign the remaining register rows as sections come to use them. None of rows 1–17 is signed.
-3. **Extract the `to-extract` register rows** from their sources: 15 (VAP culture thresholds,
-   U7), 19 (reversal agents and monitoring, U1), 20 (local anesthetic toxicity, U4),
-   21 (methemoglobinemia; source to add), 22 (scope diameters; the unit's instructions for use).
-   Record the recommendation number or page for every row; none has one yet.
+3. **Register rows still open.** Rows 15, 19, 20, 21 and 22 were extracted on 2026-10-08 (#352).
+   Russell signed the methylene blue rows (the expert panel's regimen, U17), the flumazenil rows
+   (the product label, U20) and the naloxone row (the product label, U21) the same day. No row
+   is left to extract. Still open:
+   - Row 22 holds current Olympus scopes from the device catalog (FDA device records, product
+     pages, the manufacturer flyer). The instructions for use themselves were not read.
+   - The ASRA checklist is under review, with an update expected in early 2027.
+   - Rows 1–17 still have no recommendation number or page, and rows 1–17, 15, 20 and 22 are
+     unsigned.
 4. **Restructure to 15 sections** (`content/sectionIds.ts`, `pathway.ts`, `BRONCH_SECTION_STAGE`,
    phases, `lessonVersions.ts`), with the progress migration map from the plan and a test for it.
    Retire `what-completion-means`.
