@@ -76,7 +76,7 @@ const NASHVILLE: NumberCitation = {
 const NASHVILLE_CHECK = {
   checkedOn: '2026-10-08',
   checkedBy: 'Claude, against the PMC article text',
-  signedBy: null,
+  signedBy: 'Russell Miller, 2026-10-08',
   isDefinition: true,
 } as const
 const TO_EXTRACT = { value: null, status: 'to-extract', checkedOn: null, checkedBy: null } as const
@@ -421,7 +421,7 @@ const ROWS = {
     label: 'Nashville grade 1',
     value: 'suction for less than 1 minute, or a wedge, and the bleeding stops by itself',
     class: 'guideline',
-    status: 'verified',
+    status: 'signed',
     sources: [NASHVILLE],
     ...NASHVILLE_CHECK,
   },
@@ -431,7 +431,7 @@ const ROWS = {
     value:
       'suction for more than 1 minute, or a repeat wedge, or cold saline, a vasoactive drug or a thrombogenic agent',
     class: 'guideline',
-    status: 'verified',
+    status: 'signed',
     sources: [NASHVILLE],
     ...NASHVILLE_CHECK,
   },
@@ -441,7 +441,7 @@ const ROWS = {
     value:
       'selective intubation with a tube or a bronchial blocker for less than 20 minutes, or stopping the procedure early',
     class: 'guideline',
-    status: 'verified',
+    status: 'signed',
     sources: [NASHVILLE],
     ...NASHVILLE_CHECK,
   },
@@ -451,7 +451,7 @@ const ROWS = {
     value:
       'selective intubation for more than 20 minutes, new ICU admission, red-cell transfusion, bronchial artery embolization or resuscitation',
     class: 'guideline',
-    status: 'verified',
+    status: 'signed',
     sources: [NASHVILLE],
     ...NASHVILLE_CHECK,
   },

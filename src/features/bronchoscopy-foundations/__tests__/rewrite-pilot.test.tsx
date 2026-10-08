@@ -221,7 +221,9 @@ describe('the numbers the pilot teaches', () => {
   it('hold publication until faculty has signed every row the pilot uses', () => {
     expect(publishBlockers('unlisted-preview', [rightSide, bleedingPriorities])).toEqual([])
     const blockers = publishBlockers('published', [rightSide, bleedingPriorities])
-    expect(blockers).toHaveLength(5)
-    for (const blocker of blockers) expect(blocker).toMatch(/^bleeding-priorities uses "/)
+    // The Nashville grades were signed on 2026-10-08; the local slot is still open.
+    expect(blockers).toEqual([
+      'bleeding-priorities uses "topical-vasoconstrictor", which faculty has not signed.',
+    ])
   })
 })
