@@ -104,9 +104,39 @@ const METHB = (grade: string | null, locator: string): NumberCitation => ({
   locator,
 })
 const METHB_COPY = 'the publisher’s version of the article (Am J Hematol 2021;96:1666–1678)'
-const LABEL_COPY = 'the DailyMed label text, revised February 2024'
-const METHB_CONFLICT =
-  'The expert panel and the product label give different first doses, infusion times and repeat intervals. Faculty chooses which the course teaches.'
+const FLUMAZENIL_ROW = {
+  class: 'guideline',
+  status: 'signed',
+  sources: [
+    {
+      sourceId: 'U20',
+      grade: null,
+      locator: 'Dosage and administration: reversal of conscious sedation',
+    },
+  ],
+  checkedOn: '2026-10-08',
+  checkedBy: 'Claude, against the DailyMed label text',
+  signedBy: 'Russell Miller, 2026-10-08',
+} as const
+/** The dose Russell Miller chose on 2026-10-08: the expert panel's, not the product label's (U18). */
+const METHYLENE_BLUE_ROW = {
+  class: 'guideline',
+  status: 'signed',
+  sources: [METHB(null, 'Methylene blue (methylthioninium chloride)')],
+  checkedOn: '2026-10-08',
+  checkedBy: 'Claude, against the Europe PMC full text (PMC9291883)',
+  signedBy: 'Russell Miller, 2026-10-08',
+  note: 'The product label (U18) gives 1 mg/kg over 5–30 minutes with a repeat at one hour; faculty chose the expert panel’s regimen. Avoid in G6PD deficiency; serotonin syndrome with serotonergic drugs.',
+} as const
+const SCOPE_ROW = (model: string) =>
+  ({
+    class: 'device',
+    status: 'verified',
+    sources: [{ sourceId: 'U19', grade: null, locator: `Olympus ${model}` }],
+    checkedOn: '2026-10-08',
+    checkedBy: 'Claude, against the device catalog record',
+    signedBy: null,
+  }) as const
 const TO_EXTRACT = { value: null, status: 'to-extract', checkedOn: null, checkedBy: null } as const
 
 const ROWS = {
@@ -516,13 +546,34 @@ const ROWS = {
     ...EXTRACTED(ASA_COPY),
     note: 'The recommendation itself (p. 448) says "a sufficient time"; the figure is printed only in Table 5.',
   },
+  'flumazenil-first-dose': {
+    row: 19,
+    label: 'Flumazenil to reverse a benzodiazepine: the first dose',
+    value: '0.2 mg intravenously over 15 seconds',
+    ...FLUMAZENIL_ROW,
+  },
+  'flumazenil-repeat': {
+    row: 19,
+    label: 'Flumazenil: further doses if the patient is not awake enough after 45 seconds',
+    value: '0.2 mg every 60 seconds, to a total of 1 mg',
+    ...FLUMAZENIL_ROW,
+    note: 'Most patients respond to 0.6–1 mg.',
+  },
+  'flumazenil-resedation': {
+    row: 19,
+    label: 'Flumazenil for resedation',
+    value:
+      'repeat at 20-minute intervals, no more than 1 mg at a time and no more than 3 mg in an hour',
+    ...FLUMAZENIL_ROW,
+    note: 'Given at 0.2 mg a minute. It can provoke seizures or withdrawal in a patient dependent on benzodiazepines.',
+  },
   'reversal-agents': {
     row: 19,
-    label: 'Naloxone and flumazenil: the doses',
+    label: 'Naloxone to reverse an opioid: the dose',
     class: 'guideline',
     sources: [],
     signedBy: null,
-    note: 'ASA 2018 names naloxone for opioids and flumazenil for benzodiazepines (p. 448, Table 4) and prints no dose for either. The doses need a second source and plan decision 4.',
+    note: 'Held for one question. Faculty gave 0.2–0.4 mg (0.5–1.0 µg/kg) every 2–3 minutes; the two figures do not agree for an adult, and the product label gives 0.1–0.2 mg at 2–3 minute intervals for postoperative opioid depression. ASA 2018 prints no dose.',
     ...TO_EXTRACT,
   },
   // 20 · Local anesthetic toxicity
@@ -633,54 +684,71 @@ const ROWS = {
   },
   'methylene-blue-dose': {
     row: 21,
-    label: 'Methylene blue, first dose (expert-panel recommendations)',
-    value: '1–2 mg/kg intravenously over 3–5 minutes',
-    class: 'guideline',
-    status: 'verified',
-    sources: [METHB(null, 'Methylene blue, p. 1673; Question 5')],
-    ...EXTRACTED(METHB_COPY),
-    note: METHB_CONFLICT,
+    label: 'Methylene blue, first dose',
+    value: '1–2 mg/kg (0.2 mL/kg of a 1% solution) intravenously over 3–5 minutes',
+    ...METHYLENE_BLUE_ROW,
   },
   'methylene-blue-repeat': {
     row: 21,
-    label: 'Methylene blue, repeat dose (expert-panel recommendations)',
-    value: '1 mg/kg if the level has not fallen within 30–60 minutes',
-    class: 'guideline',
-    status: 'verified',
-    sources: [METHB(null, 'Methylene blue, p. 1673')],
-    ...EXTRACTED(METHB_COPY),
-    note: `${METHB_CONFLICT} Question 5 caps the total at 5.5 mg/kg; the text puts toxicity above 7 mg/kg.`,
+    label: 'Methylene blue, repeat dose',
+    value: '1 mg/kg if the methemoglobin level has not fallen substantially within 30–60 minutes',
+    ...METHYLENE_BLUE_ROW,
   },
-  'methylene-blue-dose-label': {
+  'methylene-blue-response-time': {
     row: 21,
-    label: 'Methylene blue, first dose (product label)',
-    value: '1 mg/kg intravenously over 5–30 minutes',
-    class: 'guideline',
-    status: 'verified',
-    sources: [{ sourceId: 'U18', grade: null, locator: 'Section 2.1' }],
-    ...EXTRACTED(LABEL_COPY),
-    note: METHB_CONFLICT,
+    label: 'Methylene blue: when the methemoglobin level should have fallen',
+    value: 'about 1 hour',
+    ...METHYLENE_BLUE_ROW,
   },
-  'methylene-blue-repeat-label': {
+  'methylene-blue-long-acting-repeat': {
     row: 21,
-    label: 'Methylene blue, repeat dose (product label)',
-    value:
-      '1 mg/kg one hour after the first dose, if the level stays above 30% or symptoms persist',
-    class: 'guideline',
-    status: 'verified',
-    sources: [{ sourceId: 'U18', grade: null, locator: 'Section 2.1' }],
-    ...EXTRACTED(LABEL_COPY),
-    note: `${METHB_CONFLICT} Contraindicated in G6PD deficiency (section 4); boxed warning for serotonin syndrome with serotonergic drugs and opioids.`,
+    label: 'Methylene blue after dapsone or another long-acting oxidant: repeat dosing',
+    value: 'every 6–8 hours for up to 2–3 days',
+    ...METHYLENE_BLUE_ROW,
   },
-  // 22 · Scope diameters
-  'scope-diameters': {
+  'methylene-blue-infusion': {
+    row: 21,
+    label: 'Methylene blue after a long-acting oxidant: continuous infusion',
+    value: '0.1–0.25 mg/kg/hr',
+    ...METHYLENE_BLUE_ROW,
+  },
+  // 22 · Scope diameters (current Olympus scopes)
+  'scope-diagnostic-od': {
     row: 22,
-    label: 'Outer and channel diameter by scope class',
-    class: 'device',
-    sources: [],
-    signedBy: null,
-    note: 'From the instructions for the scopes the unit uses.',
-    ...TO_EXTRACT,
+    label: 'Diagnostic bronchoscope: outer diameter at the distal end',
+    value: '4.9 mm',
+    ...SCOPE_ROW('BF-H1100'),
+  },
+  'scope-diagnostic-channel': {
+    row: 22,
+    label: 'Diagnostic bronchoscope: working channel',
+    value: '2.2 mm',
+    ...SCOPE_ROW('BF-H1100'),
+  },
+  'scope-therapeutic-od': {
+    row: 22,
+    label: 'Therapeutic bronchoscope: outer diameter at the distal end',
+    value: '5.8 mm',
+    ...SCOPE_ROW('BF-1TH1100'),
+  },
+  'scope-therapeutic-channel': {
+    row: 22,
+    label: 'Therapeutic bronchoscope: working channel',
+    value: '3.0 mm',
+    ...SCOPE_ROW('BF-1TH1100'),
+  },
+  'scope-thin-od': {
+    row: 22,
+    label: 'Thin bronchoscope: outer diameter at the distal end',
+    value: '4.2 mm',
+    ...SCOPE_ROW('BF-P190'),
+    note: 'The insertion tube is 4.1 mm. The current EVIS X1 line has no thin scope in the device catalog, so this is the EVIS EXERA III model.',
+  },
+  'scope-thin-channel': {
+    row: 22,
+    label: 'Thin bronchoscope: working channel',
+    value: '2.0 mm',
+    ...SCOPE_ROW('BF-P190'),
   },
   // 23 · Topical vasoconstrictor
   'topical-vasoconstrictor': {
@@ -805,6 +873,8 @@ const SOURCE_SHORT_NAMES: Partial<Readonly<Record<BronchSourceId, string>>> = {
   U16: 'ACCP 2011',
   U17: 'Iolascon, Am J Hematol 2021',
   U18: 'methylene blue label, 2024',
+  U19: 'Olympus specifications',
+  U20: 'flumazenil label',
 }
 
 export function numberSourceName(sourceId: BronchSourceId): string {

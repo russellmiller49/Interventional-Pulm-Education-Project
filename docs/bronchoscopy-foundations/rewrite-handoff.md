@@ -56,8 +56,8 @@ npx tsx scripts/bronchoscopy-foundations/check-section.ts <section-id>
 
 ## What is left
 
-In the plan's order. The plan gates the 13 remaining sections on fellow sessions with the pilot;
-ask Russell whether that gate still holds before starting them.
+In the plan's order. Russell removed the fellow-session gate on 2026-10-08: the 13 remaining
+sections no longer wait for sessions with the pilot.
 
 1. **Get #349 and #350 reviewed and merged**, then branch each batch from `origin/main`.
 2. **Still open from the pilot, for Russell:**
@@ -67,15 +67,17 @@ ask Russell whether that gate still holds before starting them.
      were derived from the survey's outlines, not from a recorded camera roll.
    - Confirm the basal mnemonic M-A-L-P.
    - Sign the remaining register rows as sections come to use them. None of rows 1–17 is signed.
-3. **Register rows still open.** Rows 15, 19, 20 and 21 were extracted on 2026-10-08 (#352) and
-   wait for Russell's signature. Three things in them need his decision:
-   - Methylene blue: the expert panel (U17) and the product label (U18) give different doses. Both
-     are in the register; he picks one.
-   - Naloxone and flumazenil doses: ASA 2018 prints none. `reversal-agents` stays `to-extract`
-     until a source is chosen (plan decision 4).
+3. **Register rows still open.** Rows 15, 19, 20, 21 and 22 were extracted on 2026-10-08 (#352).
+   Russell signed the methylene blue rows (the expert panel's regimen, U17) and the flumazenil
+   rows (the product label, U20) the same day. Still open:
+   - Naloxone: `reversal-agents` stays `to-extract`. The dose Russell gave, 0.2–0.4 mg
+     (0.5–1.0 µg/kg) every 2–3 minutes, does not agree with itself for an adult, and the label
+     gives 0.1–0.2 mg. He has been asked which to teach.
+   - Row 22 holds current Olympus scopes from the device catalog (FDA device records, product
+     pages, the manufacturer flyer). The instructions for use themselves were not read.
    - The ASRA checklist is under review, with an update expected in early 2027.
-     Row 22 (scope diameters) needs the instructions for use of the unit's scopes. Rows 1–17 still
-     have no recommendation number or page.
+   - Rows 1–17 still have no recommendation number or page, and rows 1–17, 15, 20 and 22 are
+     unsigned.
 4. **Restructure to 15 sections** (`content/sectionIds.ts`, `pathway.ts`, `BRONCH_SECTION_STAGE`,
    phases, `lessonVersions.ts`), with the progress migration map from the plan and a test for it.
    Retire `what-completion-means`.

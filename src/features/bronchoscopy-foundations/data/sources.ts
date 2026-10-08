@@ -17,7 +17,7 @@ export type BronchSourceId =
   | 'S1'
   | 'S2'
   | 'S3'
-  | `U${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18}`
+  | `U${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20}`
   | `T${'01' | '02' | '03' | '04' | '05' | '06' | '07' | '08' | '09' | '10' | '11' | '12' | '13' | '14' | '15' | '16'}`
 
 /**
@@ -175,6 +175,8 @@ const LIMITATIONS: Readonly<Record<string, string>> = {
   U16: 'A 2011 consensus statement on topical anesthesia and sedation; later guidelines revise some of its figures.',
   U17: 'Expert-panel recommendations for inherited and acquired methemoglobinemia; its methylene blue dose differs from the product label.',
   U18: 'The prescribing information for one methylene blue product; its dose and repeat interval differ from the expert-panel recommendations.',
+  U19: 'Dimensions of one manufacturer’s current bronchoscopes, taken from device records and product specifications; other scopes differ.',
+  U20: 'The prescribing information for flumazenil injection; its effect can wear off before the benzodiazepine does.',
 }
 
 /**
@@ -249,6 +251,34 @@ export const SUPPLEMENTAL_SOURCES: readonly ManifestSource[] = [
     url: 'https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=4f6848e5-35ed-4046-b13c-3032b5ba3232',
     reviewedScope:
       'Dose and repeat dose for acquired methemoglobinemia, G6PD contraindication, serotonergic boxed warning',
+    accessedDate: '2026-10-08',
+    transcript: null,
+  },
+  {
+    id: 'U19',
+    kind: 'manufacturer product specifications',
+    title:
+      'Olympus bronchoscope specifications: EVIS X1 BF-H1100 and BF-1TH1100; EVIS EXERA III BF-P190',
+    authors: null,
+    organization: 'Olympus',
+    year: 2026,
+    doi: null,
+    url: 'https://medical.olympusamerica.com/products/bronchoscopes',
+    reviewedScope:
+      'Distal-end outer diameter and instrument-channel diameter, as recorded in the device catalog from the FDA device database, the product pages and the manufacturer flyer',
+    accessedDate: '2026-10-08',
+    transcript: null,
+  },
+  {
+    id: 'U20',
+    kind: 'manufacturer prescribing information',
+    title: 'Flumazenil injection, USP: prescribing information',
+    authors: null,
+    organization: null,
+    year: 2026,
+    doi: null,
+    url: 'https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=56452ba8-521d-1f84-e063-6294a90af6fc',
+    reviewedScope: 'Reversal of conscious sedation in adults: dose, repeat dose and resedation',
     accessedDate: '2026-10-08',
     transcript: null,
   },
