@@ -1,6 +1,14 @@
 'use client'
 
-import { Component, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  Component,
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { WebGLRenderer, type WebGLRendererParameters } from 'three'
 import { PerspectiveCamera, View } from '@react-three/drei'
@@ -14,6 +22,7 @@ import { isDetailedBench, type BenchPresentation } from './useBenchPresentation'
 import { benchOffCardNote, benchTipOrientation } from '../../engine/scope/benchOrientation'
 import { CORDS_STATE_WORDS } from '../../engine/scope/scopeMetrics'
 import { loadSceneAssets, type ScopeSceneAssets } from './scopeSceneAssets'
+import { INITIAL_SCENE_LOAD, SCENE_LOAD_DEADLINE_MS, reduceSceneLoad } from './sceneLoad'
 import {
   layoutOpticalLabels,
   opticalViewName,
@@ -61,6 +70,18 @@ function WebGLContextGuard({ onLost }: { onLost: () => void }) {
   return null
 }
 
+/** False while the tab is in the background, where the browser draws no frames. */
+function useDocumentVisible(): boolean {
+  const [visible, setVisible] = useState(true)
+  useEffect(() => {
+    const update = () => setVisible(document.visibilityState === 'visible')
+    update()
+    document.addEventListener('visibilitychange', update)
+    return () => document.removeEventListener('visibilitychange', update)
+  }, [])
+  return visible
+}
+
 function RenderLifecycle({ props, onDraw }: { props: SceneProps; onDraw: () => void }) {
   const { invalidate, gl } = useThree()
   const drawn = useRef(false)
@@ -89,8 +110,11 @@ function RenderLifecycle({ props, onDraw }: { props: SceneProps; onDraw: () => v
 
 export default function ScopeScene(props: SceneProps) {
   const [assets, setAssets] = useState<ScopeSceneAssets | null>(null)
-  const [status, setStatus] = useState<SceneStatus>('loading')
-  const [generation, setGeneration] = useState(0)
+  // Loading, drawing, failing and every way back to loading are one machine (BF-01 finding 3).
+  const [load, dispatchLoad] = useReducer(reduceSceneLoad, INITIAL_SCENE_LOAD)
+  const status: SceneStatus = load.status
+  const generation = load.attempt
+  const tabVisible = useDocumentVisible()
   const { onStatus, view, state, presentation } = props
   const detailedBench = isDetailedBench(view, state)
   // Read from the frame this pane draws, so the note and the picture cannot disagree.
@@ -103,15 +127,11 @@ export default function ScopeScene(props: SceneProps) {
   const root = useRef<HTMLDivElement>(null)
   const opticalRoot = useRef<HTMLDivElement>(null)
   const [opticalSize, setOpticalSize] = useState({ width: 320, height: 240 })
-  const report = useCallback(
-    (value: SceneStatus) => {
-      setStatus(value)
-      onStatus(value)
-    },
-    [onStatus],
-  )
-  const failed = useCallback(() => report('failed'), [report])
-  const drawn = useCallback(() => report('ready'), [report])
+  useEffect(() => {
+    onStatus(status)
+  }, [status, onStatus])
+  const failed = useCallback(() => dispatchLoad({ type: 'failed' }), [])
+  const drawn = useCallback(() => dispatchLoad({ type: 'drawn' }), [])
   const createRenderer = useCallback(
     async (options: WebGLRendererParameters) => {
       try {
@@ -130,10 +150,21 @@ export default function ScopeScene(props: SceneProps) {
     },
     [failed],
   )
-  const recover = useCallback(() => {
-    report('loading')
-    setGeneration((value) => value + 1)
-  }, [report])
+  // A lost graphics context is recovered unasked, a bounded number of times; the learner's own
+  // reload is always a new attempt.
+  const recover = useCallback(() => dispatchLoad({ type: 'context-lost' }), [])
+  const retry = useCallback(() => dispatchLoad({ type: 'retry' }), [])
+  // An attempt that is on screen in a visible tab and still has not drawn is given up on, so the
+  // view reports a failure and offers the retry and the schematic view instead of loading for
+  // good. Time offscreen or in a background tab does not count: nothing is drawn there by design.
+  useEffect(() => {
+    if (status !== 'loading' || !props.visible || !tabVisible) return
+    const timer = window.setTimeout(
+      () => dispatchLoad({ type: 'deadline' }),
+      SCENE_LOAD_DEADLINE_MS,
+    )
+    return () => window.clearTimeout(timer)
+  }, [status, props.visible, tabVisible, generation])
   useEffect(() => {
     let cancelled = false
     loadSceneAssets(view.mode, view.profile, detailedBench)
@@ -189,6 +220,8 @@ export default function ScopeScene(props: SceneProps) {
         className={styles.views}
         ref={root}
         data-three-state={status}
+        data-three-attempt={generation}
+        data-three-failure={load.failure ?? undefined}
         data-observer={observer ? 'true' : undefined}
         data-pilot-bench={
           view.physicalControlLabels && state.place === 'bench' ? 'true' : undefined
@@ -462,7 +495,7 @@ export default function ScopeScene(props: SceneProps) {
             {status === 'failed' ? (
               <>
                 The 3D view could not be loaded.{' '}
-                <button type="button" onClick={recover}>
+                <button type="button" onClick={retry}>
                   Reload the 3D view
                 </button>
               </>

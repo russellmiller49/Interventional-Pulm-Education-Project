@@ -1,5 +1,5 @@
 import { act, cleanup, render } from '@testing-library/react'
-import { useRef, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import { useScopePlayback } from '../components/scope/useScopePlayback'
 import type { ScopeCommand, ScopeInputMode, ScopePaneProps } from '../components/scope/types'
@@ -78,7 +78,7 @@ function Harness({
   controlsEnabled?: boolean
   onPlayback?: (playback: { needsStep: boolean }) => void
 }): ReactNode {
-  const root = useRef<HTMLDivElement>(null)
+  const [root, setRoot] = useState<HTMLDivElement | null>(null)
   // The host hands the pane a new callback on every render, exactly as `BronchStageHost` does.
   const [renders, setRenders] = useState(0)
   const props = {
@@ -96,7 +96,7 @@ function Harness({
   } as unknown as ScopePaneProps
   const playback = useScopePlayback(props, root, ready, forceManual)
   onPlayback?.(playback)
-  return <div ref={root} data-renders={renders} />
+  return <div ref={setRoot} data-renders={renders} />
 }
 
 describe('the pane’s scripted clock', () => {
