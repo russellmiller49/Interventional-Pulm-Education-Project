@@ -17,7 +17,7 @@ supervisor" answers.
 | ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
 | #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
-| #356 | `claude/bf-rewrite-s01`            | Draft, stacked on #355. Section 1, the procedure and the plan, rewritten.                                         |
+| #358 | `claude/bf-rewrite-s01`            | Draft, stacked on #355. Section 1, the procedure and the plan, rewritten.                                         |
 | #355 | `claude/bf-rewrite-structure`      | Draft, stacked on #352. The plan's order, five phases, and the forward map for retired sections.                  |
 | #352 | `claude/bf-rewrite-register`       | Draft, stacked on #350. Register rows 15, 19, 20 and 21 extracted; two sources added (U17, U18). No learner copy. |
 | #351 | `claude/bf-3d-retry`               | Draft, from `main`. The 3D-retry fix lifted out of #348, with its three end-to-end cases.                         |
