@@ -171,7 +171,8 @@ describe('what finishing this course means (BF-03)', () => {
     const summary = document.querySelector('[data-learning-record-summary]')
     expect(summary).not.toBeNull()
     const text = summary?.textContent ?? ''
-    expect(text).toContain('0 marked reviewed by you')
+    expect(text).toContain('0 marked reviewed. The course sets this mark when you')
+    expect(text).not.toMatch(/reviewed by you/)
     expect(text).toContain('No finished lower-airway survey.')
     expect(text).toContain('does not establish procedural competence')
     expect(

@@ -422,3 +422,17 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Wayfinding for a part (BF-PRE-REVIEW-04): what kind of screen this is. */
+.partNotes {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.partNotes p {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  border-left: 3px solid var(--line);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}

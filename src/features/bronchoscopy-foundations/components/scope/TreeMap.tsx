@@ -2,6 +2,7 @@
 
 import type { Vec3 } from '@/lib/airway-anatomy/types'
 
+import { airwayDisplayName, treeNodeByLabel } from '../../content/airwayTree'
 import styles from './scope-fallback.module.css'
 import { treePinLayout, MAP_WIDTH, MAP_HEIGHT } from './treePinLayout'
 import {
@@ -125,6 +126,44 @@ export function TreeMap({ map, lit, current, tipLps, treeAnswer }: TreeMapProps)
       <p className={styles.mapFrame} data-frame-badge="map">
         {MAP_FRAME_NOTE}
       </p>
+      {/* Not while a question is being answered on the map: its choices carry their own names. */}
+      {treeAnswer ? null : <AirwayAbbreviations labels={layout.pins.map((pin) => pin.label)} />}
     </div>
+  )
+}
+
+/**
+ * The names behind the map's labels (fellow walkthrough SUP-10). RMSB, LMSB, BI, LUL-UD, LB4+5 and
+ * LB7+8 appeared on the map with no key. The names are the teaching tree's own — the ones the
+ * tour, the inspection record and the Reference already use — so nothing is expanded from memory.
+ */
+export function AirwayAbbreviations({ labels }: { readonly labels: readonly AirwayLabel[] }) {
+  if (labels.length === 0) return null
+  const combined = labels.some((label) => label.includes('+'))
+  return (
+    <details className={styles.mapKey} data-airway-abbreviations>
+      <summary>Abbreviations on this map</summary>
+      <dl>
+        {labels.map((label) => {
+          const node = treeNodeByLabel(label)
+          const name =
+            node.type === 'segmental_bronchus'
+              ? airwayDisplayName(label).replace(`${label} · `, '')
+              : node.requiredName
+          return (
+            <div key={label} data-airway-abbreviation={label}>
+              <dt>{label}</dt>
+              <dd>{name}</dd>
+            </div>
+          )
+        })}
+      </dl>
+      {combined ? (
+        <p data-combined-label-note>
+          Labels joined by + are combined names in this course’s one declared teaching anatomy.
+          Other naming conventions exist; use the names your institution uses.
+        </p>
+      ) : null}
+    </details>
   )
 }

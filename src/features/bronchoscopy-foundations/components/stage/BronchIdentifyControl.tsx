@@ -110,8 +110,23 @@ export function BronchIdentifyControl({
   )
 }
 
-/** The parts the set names, with where each is and what it does: a text route through the set. */
-function PartReference({ identify }: { readonly identify: BronchIdentify }) {
+/**
+ * The parts the set names, with where each is and what it does: a text route through the set.
+ *
+ * It is also the section's first-use list of those names (fellow walkthrough A19): `open` shows it
+ * with the instrument overview, before the photographs, so every name the set offers has been
+ * defined before the learner is asked to place it. The names and notes are the rows' own; nothing
+ * is added, and a note's own hedge ("on models that have this function") is kept as written.
+ */
+export function PartReference({
+  identify,
+  open = false,
+  summary = 'The parts this set names: a text reference',
+}: {
+  readonly identify: BronchIdentify
+  readonly open?: boolean
+  readonly summary?: string
+}) {
   const parts = identify.rows
     .flatMap((row) => {
       const name = row.choices.find((choice) => choice.id === row.answerId)?.label
@@ -120,8 +135,12 @@ function PartReference({ identify }: { readonly identify: BronchIdentify }) {
     .sort((a, b) => a.name.localeCompare(b.name))
   if (parts.length === 0) return null
   return (
-    <details className={styles.partReference} data-part-reference>
-      <summary>The parts this set names: a text reference</summary>
+    <details
+      className={styles.partReference}
+      data-part-reference={open ? 'first-use' : 'in-set'}
+      open={open || undefined}
+    >
+      <summary>{summary}</summary>
       <dl>
         {parts.map((part) => (
           <div key={part.name}>

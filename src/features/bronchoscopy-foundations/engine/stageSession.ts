@@ -136,6 +136,8 @@ export type BronchStageAction =
       readonly optionId: string
       readonly supported: boolean
     }
+  /** Clears a report's fields when the record it is written from changes. Records nothing. */
+  | { readonly type: 'REPORT_RESET'; readonly stepId: string }
   | {
       readonly type: 'SCENARIO_CHOICE'
       readonly stepId: string
@@ -420,6 +422,18 @@ export function bronchStageReducer(lesson: BronchStageLesson) {
           commitments: {
             ...commitments,
             reports: { ...commitments.reports, [action.stepId]: next },
+          },
+        }
+      }
+      case 'REPORT_RESET': {
+        // A statement chosen for one record is never carried onto another record's fields.
+        if (commitments.finished || commitments.reports[action.stepId] === undefined) return session
+        return {
+          ...session,
+          commitments: {
+            ...commitments,
+            reports: withoutKey(commitments.reports, action.stepId),
+            performedIds: commitments.performedIds.filter((id) => id !== action.stepId),
           },
         }
       }

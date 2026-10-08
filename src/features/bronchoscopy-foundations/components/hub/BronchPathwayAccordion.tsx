@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation'
 
 import { bronchPathwaySections } from '../../content/pathway'
 import {
+  bronchMinutesEstimate,
   bronchPathwayGroups,
   bronchSectionLinkTarget,
   nextBronchSection,
@@ -104,7 +105,7 @@ export function summaryLine(group: BronchPathwayGroup): string {
   const last = Math.max(...positions)
   const span = first === last ? `Section ${first}` : `Sections ${first}–${last}`
   const sectionCount = `${group.sections.length} section${group.sections.length === 1 ? '' : 's'}`
-  return [span, sectionCount, `${minutes} min`].join(' · ')
+  return [span, sectionCount, bronchMinutesEstimate(minutes)].join(' · ')
 }
 
 /** The accordion over the stored record, for surfaces that hold none of their own. */
@@ -148,7 +149,7 @@ export function BronchContinueCta({ className }: { readonly className?: string }
       <span>
         {verb} — {next.section.title}
         <small>
-          Section {next.index + 1} of {next.total} · {next.section.minutes} min
+          Section {next.index + 1} of {next.total} · {bronchMinutesEstimate(next.section.minutes)}
         </small>
       </span>
       <ArrowRight aria-hidden="true" />

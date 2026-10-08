@@ -30,12 +30,12 @@ export function BronchSourceList({
     <ol className={shellStyles.sourcesList} data-source-list>
       {records.map(({ source, locations, pdfPages }) => {
         const transcript = source.sourceClass === 'transcript'
-        const citation = `${source.byline ? `${source.byline}. ` : ''}${source.title}${source.year ? ` (${source.year})` : ''}.`
+        const citation = `${source.byline ? `${source.byline}. ` : ''}${source.displayTitle}${source.year ? ` (${source.year})` : ''}.`
         return (
           <li key={source.id} data-evidence-id={source.id} data-source-class={source.sourceClass}>
             <small data-source-kind>{source.kindLabel}</small>
             <span>
-              <strong>{source.id}.</strong> {source.title}
+              <strong>{source.id}.</strong> <span data-source-title>{source.displayTitle}</span>
               {source.byline ? ` ${source.byline}` : ''}
               {source.year ? ` ${source.year}` : ''}. {locations.join(' · ')}.{' '}
               {source.url ? (

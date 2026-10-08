@@ -27,8 +27,11 @@ import {
   type ScopeViewSpec,
   type TreeAnswer,
 } from '../scope/types'
-import { LOCAL_POLICY_BY_ID, LOCAL_POLICY_NOT_CONFIGURED } from '../../content/localPolicies'
+import { LocalPolicyNote } from '../LocalPolicyNote'
+import { REVIEW_PENDING_EXPLANATION } from '../../content/learnerCopy'
 import { microCasesForSection } from '../../content/microCases'
+import type { CourseNote } from '../../content/courseFlow'
+import { repetitionNote } from '../../content/repetition'
 import { isBronchSectionId } from '../../content/sectionIds'
 import { benchTargetObservation } from '../../engine/scope/scopeBenchTarget'
 import {
@@ -36,7 +39,7 @@ import {
   bronchoscopyFoundationsPathway,
   type BronchSectionId,
 } from '../../content/pathway'
-import { bronchSectionLinkTarget } from '../../content/pathwayResolver'
+import { bronchMinutesEstimate, bronchSectionLinkTarget } from '../../content/pathwayResolver'
 import {
   BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF,
   BRONCHOSCOPY_FOUNDATIONS_LEARN_HREF,
@@ -104,7 +107,13 @@ import { MediaWorkspace } from './MediaWorkspace'
 import { MonitorPanel } from './MonitorPanel'
 import { loadStageScopeCase } from './scopeCaseLoader'
 import { useBronchStageSession } from './useBronchStageSession'
-import { inspectionReport } from '../../engine/inspectionReport'
+import {
+  SUPPLIED_TEACHING_REPORT_ID,
+  learnerSurveyEvidence,
+  surveyReport,
+  type SurveyEvidenceKind,
+} from '../../engine/inspectionReport'
+import { SurveyRecordChoice } from './SurveyRecordChoice'
 
 /**
  * One section of the Bronchoscopy Foundations pathway on the lesson stage.
@@ -119,7 +128,8 @@ import { inspectionReport } from '../../engine/inspectionReport'
  * explanation before answering, try again, go back to the teaching, or continue without answering
  * or completing — and moving on never records that anything was done. Nothing about answers,
  * attempts or assistance is persisted. The only writes are to the self-paced record: the section
- * opened, the reviewed mark when the learner finishes (with undo), a review-later mark, and the
+ * opened, the reviewed mark the course sets when the learner reaches the end (with undo), a
+ * review-later mark, and the
  * lower-airway survey when the learner actually met its goals.
  */
 export function BronchStageHost({
@@ -188,26 +198,31 @@ function BronchStageSessionView({
 }) {
   const router = useRouter()
   const [initialRecord] = useState(readBronchSelfPacedRecord)
+  // The learner's own finished survey, or null. Only this is ever "my recorded survey" (A35).
+  const learnerSurvey = useMemo(() => availableSurveySnapshot(initialRecord), [initialRecord])
+  // Which record the report exercise is written from, for this visit only. The supplied teaching
+  // record is transient: it is never written to storage and never becomes the learner's survey.
+  const [surveyEvidenceKind, setSurveyEvidenceKind] = useState<SurveyEvidenceKind>(() =>
+    learnerSurvey ? 'learner' : 'none',
+  )
   const lesson = useMemo(() => {
     const base = bronchStageLesson(sectionId as BronchStageLesson['sectionId'])
+    const evidence =
+      surveyEvidenceKind === 'supplied'
+        ? ({ kind: 'supplied' } as const)
+        : surveyEvidenceKind === 'learner'
+          ? learnerSurveyEvidence(learnerSurvey)
+          : ({ kind: 'none' } as const)
     return {
       ...base,
       steps: base.steps.map(
         (step): BronchStageStep =>
           step.course?.learnerRecord
-            ? {
-                ...step,
-                interaction: {
-                  kind: 'report',
-                  report: inspectionReport({
-                    inspectionSnapshot: availableSurveySnapshot(initialRecord),
-                  }),
-                },
-              }
+            ? { ...step, interaction: { kind: 'report', report: surveyReport(evidence) } }
             : step,
       ),
     }
-  }, [sectionId, initialRecord])
+  }, [sectionId, learnerSurvey, surveyEvidenceKind])
   const { session, dispatch } = useBronchStageSession(lesson)
   const nextSection = nextPathwaySection(bronchoscopyFoundationsPathway, sectionId)
   const stageSources = useMemo(() => bronchStageSources(lesson.sectionId), [lesson.sectionId])
@@ -216,6 +231,9 @@ function BronchStageSessionView({
   const [sortDraft, setSortDraft] = useState<Record<string, string>>({})
   const [identifyDraft, setIdentifyDraft] = useState<Record<string, string>>({})
   const [sequenceDraft, setSequenceDraft] = useState<Record<string, readonly string[]>>({})
+  // Which starting arrangement an ordering task shows. It changes only when the learner asks for
+  // a new one (A7); a re-render or a look back never rearranges the steps.
+  const [sequenceRound, setSequenceRound] = useState<Record<string, number>>({})
   const [explanationShown, setExplanationShown] = useState<Record<string, boolean>>({})
   // Which scenario frame's feedback is open, held here so the Now card can say what comes next.
   const [scenarioFeedback, setScenarioFeedback] = useState<{
@@ -417,7 +435,21 @@ function BronchStageSessionView({
 
   function sequenceOrder(step: BronchStageStep): readonly string[] {
     if (step.interaction.kind !== 'sequence') return []
-    return sequenceDraft[step.id] ?? initialSequenceOrder(step.interaction.sequence)
+    return (
+      sequenceDraft[step.id] ??
+      initialSequenceOrder(step.interaction.sequence, sequenceRound[step.id] ?? 0)
+    )
+  }
+
+  /** A new starting arrangement of the same steps, at the learner's request only. */
+  function shuffleSequence(step: BronchStageStep) {
+    if (step.interaction.kind !== 'sequence') return
+    setSequenceRound((current) => ({ ...current, [step.id]: (current[step.id] ?? 0) + 1 }))
+    setSequenceDraft((current) => {
+      const next = { ...current }
+      delete next[step.id]
+      return next
+    })
   }
 
   function commitSequence(step: BronchStageStep) {
@@ -429,6 +461,16 @@ function BronchStageSessionView({
     dispatch({ type: 'RETRY_STEP', stepId: step.id })
     if (step.interaction.kind === 'prediction')
       setPendingChoice((current) => ({ ...current, [step.id]: '' }))
+    // Trying the order again starts from a new arrangement, not from the order just checked.
+    if (step.interaction.kind === 'sequence') shuffleSequence(step)
+  }
+
+  /** Changes the record the report is written from; the fields start empty for the new record. */
+  function chooseSurveyEvidence(step: BronchStageStep, kind: SurveyEvidenceKind) {
+    if (kind === surveyEvidenceKind || (kind === 'learner' && !learnerSurvey)) return
+    dispatch({ type: 'REPORT_RESET', stepId: step.id })
+    setExplanationShown((current) => ({ ...current, [step.id]: false }))
+    setSurveyEvidenceKind(kind)
   }
 
   function toggleExplanation(stepId: string) {
@@ -570,7 +612,14 @@ function BronchStageSessionView({
    * The Now card
    * ---------------------------------------------------------------- */
   const chunkIds = [...new Set(lesson.steps.map((step) => step.course?.id ?? step.id))]
-  const stepPosition = `Part ${chunkIds.indexOf(activeStep.course!.id) + 1} of ${chunkIds.length} · ${activeStep.course!.title}`
+  // A part can hold more than one screen (the bench lesson's "watch and try", then its repeat).
+  // The position counts them, so two screens never carry the same number (A39).
+  const partSteps = lesson.steps.filter((step) => step.course?.id === activeStep.course!.id)
+  const withinPart =
+    partSteps.length > 1
+      ? ` · step ${partSteps.indexOf(activeStep) + 1} of ${partSteps.length}`
+      : ''
+  const stepPosition = `Part ${chunkIds.indexOf(activeStep.course!.id) + 1} of ${chunkIds.length} · ${activeStep.course!.title}${withinPart}`
   const lookInLine = undefined
   const previousStep = activeIndex > 0 ? lesson.steps[activeIndex - 1] : undefined
   const canGoBack =
@@ -723,13 +772,17 @@ function BronchStageSessionView({
         if (workDone)
           return {
             ...base,
-            status: 'Done. Every field says only what the evidence supports.',
+            status:
+              interaction.report.id === SUPPLIED_TEACHING_REPORT_ID
+                ? 'Done. Every field says only what the supplied teaching record supports. It was not your examination, and nothing was saved as your survey.'
+                : 'Done. Every field says only what the evidence supports.',
             primary: continueAction,
           }
         return {
           ...base,
-          status:
-            'Give each field a statement the evidence supports, open what it supports, or continue without completing the report.',
+          status: activeStep.course?.learnerRecord
+            ? 'Choose the record to write from, then give each field a statement that record supports, open what it supports, or continue without completing the report.'
+            : 'Give each field a statement the evidence supports, open what it supports, or continue without completing the report.',
         }
       case 'scenario': {
         if (workDone)
@@ -882,13 +935,9 @@ function BronchStageSessionView({
   )
 
   function policiesLine(stage: BronchStageItem) {
-    return stage.localPolicyIds.length > 0 ? (
-      <p className={styles.figureCaption} data-item-policies>
-        Depends on local policy:{' '}
-        {stage.localPolicyIds.map((id) => LOCAL_POLICY_BY_ID.get(id)?.title ?? id).join(', ')}.{' '}
-        {LOCAL_POLICY_NOT_CONFIGURED}
-      </p>
-    ) : null
+    return (
+      <LocalPolicyNote ids={stage.localPolicyIds} className={styles.figureCaption} marker="item" />
+    )
   }
 
   function verdictFor(stage: BronchStageItem, choiceId: string) {
@@ -1049,6 +1098,7 @@ function BronchStageSessionView({
               onChange={(order) =>
                 setSequenceDraft((current) => ({ ...current, [activeStep.id]: order }))
               }
+              onShuffle={() => shuffleSequence(activeStep)}
             />
           </>
         )
@@ -1072,6 +1122,14 @@ function BronchStageSessionView({
       case 'report':
         return (
           <>
+            {activeStep.course?.learnerRecord ? (
+              <SurveyRecordChoice
+                value={surveyEvidenceKind}
+                learnerSurveyDate={learnerSurvey ? learnerSurvey.at.slice(0, 10) : null}
+                disabled={finished}
+                onChange={(kind) => chooseSurveyEvidence(activeStep, kind)}
+              />
+            ) : null}
             {!workDone ? explanationToggle(activeStep, 'Show what the evidence supports') : null}
             <BronchReportControl
               report={interaction.report}
@@ -1367,6 +1425,13 @@ function BronchStageSessionView({
     </StageTeachingScope>
   )
 
+  // What kind of screen this is: a repeat of a worked example, a change of topic, a reflection
+  // the course does not record, or a record that is used again (A6, A31, A34, A35).
+  const partNotes = [
+    repetitionNote(lesson.sectionId, activeStep.course!.id),
+    activeStep.course!.note ?? null,
+  ].filter((note): note is CourseNote => note !== null)
+
   const movedPastTitles = [
     ...new Set(
       progress.movedPastIds.map((id) => lesson.steps.find((step) => step.id === id)?.title ?? id),
@@ -1385,7 +1450,7 @@ function BronchStageSessionView({
   const header = (
     <SectionHeader
       breadcrumb={{ href: BRONCHOSCOPY_FOUNDATIONS_NAV_BASE, label: 'Bronchoscopy foundations' }}
-      kicker={`Section ${lesson.index + 1} of ${lesson.total} · Estimated ${lesson.minutes} min`}
+      kicker={`Section ${lesson.index + 1} of ${lesson.total} · ${bronchMinutesEstimate(lesson.minutes)} (estimate, not timed with learners)`}
       title={lesson.title}
       sectionsControl={
         <SectionsDrawer
@@ -1415,6 +1480,7 @@ function BronchStageSessionView({
         Every question and activity here is optional. You can open the explanation before answering,
         try again, go back to the teaching, or continue without answering.
       </p>
+      <p data-review-status-explained>{REVIEW_PENDING_EXPLANATION}</p>
       {firstUnmetKey && !workDone ? (
         <button
           type="button"
@@ -1451,6 +1517,7 @@ function BronchStageSessionView({
           completion={completion}
           focusRef={nowFocusRef}
           storageFailed={storageFailed}
+          notes={partNotes}
           overlay={helpDialog}
           footer={
             <>
@@ -1597,7 +1664,9 @@ function recapLines(
       const done = step.interaction.report.fields.filter((field) => report.chosen[field.id]).length
       return done
         ? [
-            `Report fields filled from the evidence: ${done} of ${step.interaction.report.fields.length}.`,
+            step.interaction.report.id === SUPPLIED_TEACHING_REPORT_ID
+              ? `Report fields filled from the supplied teaching record, not your examination: ${done} of ${step.interaction.report.fields.length}.`
+              : `Report fields filled from the evidence: ${done} of ${step.interaction.report.fields.length}.`,
           ]
         : movedPast
           ? ['Moved on without completing the report.']
@@ -1678,9 +1747,10 @@ function CompletionCard({
       <p className={styles.kicker}>End of section</p>
       <p data-completion-reviewed>
         {reviewed
-          ? 'This section is marked reviewed on this device.'
+          ? 'Reaching the end marked this section reviewed on this device.'
           : 'This section is not marked reviewed.'}{' '}
-        The mark is yours to change; it records nothing about your answers.{' '}
+        The mark is for finding your way, not a sign-off: it records nothing about your answers or
+        what you completed, and it is yours to change.{' '}
         <button
           type="button"
           className={styles.completionLink}

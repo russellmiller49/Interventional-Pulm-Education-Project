@@ -73,7 +73,7 @@ describe('the hub', () => {
     const line = document.querySelector('[data-pathway-composition]')!
     expect(line.textContent).toMatch(new RegExp(`^${composition.total} sections`))
     expect(line.textContent).toContain(`${composition.byPhase.length} phases`)
-    expect(line.textContent).toMatch(new RegExp(`${composition.minutes} min estimated$`))
+    expect(line.textContent).toMatch(new RegExp(`about ${composition.minutes} min \\(estimate\\)$`))
     expect(chips()).toHaveLength(bronchPathwaySections.length)
     expect(document.querySelectorAll('[data-pathway-accordion] details')).toHaveLength(
       BRONCH_PHASES.length,

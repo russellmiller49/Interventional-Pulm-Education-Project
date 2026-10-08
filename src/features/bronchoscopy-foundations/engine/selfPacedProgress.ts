@@ -13,8 +13,10 @@ import { inspectionSnapshotSchema, type BronchInspectionSnapshot } from './learn
  * explanations opened, activities moved past or how the scope was driven is stored, and nothing
  * here is a grade or evidence of skill.
  *
- * "Reviewed" is the learner's own mark. Finishing a section sets it and the learner can undo it; it
- * says the learner has been through the section, never that anything in it was done or answered.
+ * "Reviewed" is a navigation mark. The course sets it when the learner reaches the end of a
+ * section — answered, skipped or anything between — and the learner can undo it or set it again
+ * (A42). It says the learner reached the end, never that anything in the section was done,
+ * answered or signed off. "Review later" is set only by the learner.
  */
 export const BRONCH_SELF_PACED_STORAGE_KEY = 'ip-bronchoscopy-foundations-self-paced-v1'
 export const BRONCH_SELF_PACED_CHANGED_EVENT = 'bronchoscopy-foundations-self-paced-changed'
