@@ -8,7 +8,11 @@ import {
   flushReleaseReady,
 } from './pressureObservation'
 import { currentThermodilutionAverage, thermodilutionSeriesView } from './measurementProvenance'
-import { createInitialHemodynamicState, unroundedModelEstimates } from './simulation'
+import {
+  createInitialHemodynamicState,
+  unroundedModelEstimates,
+  withOpeningTrace,
+} from './simulation'
 import type {
   CatheterPosition,
   HemodynamicAction,
@@ -219,23 +223,27 @@ export function cleanState(
   seed = 510,
   position: CatheterPosition = 'pa',
 ): HemodynamicSimulationState {
-  return reduceAll(createInitialHemodynamicState(teachingCase, 'learn', seed), [
-    { type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 },
-    { type: 'ZERO_TRANSDUCER' },
-    { type: 'SET_DAMPING', dampingRatio: 0.65 },
-    { type: 'SET_ARTIFACT', artifact: 'none' },
-    { type: 'SET_CATHETER_POSITION', position },
-  ])
+  return withOpeningTrace(
+    reduceAll(createInitialHemodynamicState(teachingCase, 'learn', seed), [
+      { type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 },
+      { type: 'ZERO_TRANSDUCER' },
+      { type: 'SET_DAMPING', dampingRatio: 0.65 },
+      { type: 'SET_ARTIFACT', artifact: 'none' },
+      { type: 'SET_CATHETER_POSITION', position },
+    ]),
+  )
 }
 
 /** The faulty line the pressure-system prediction describes: high, unzeroed, ringing. */
 export function faultyLineState(seed = 510): HemodynamicSimulationState {
-  return reduceAll(createInitialHemodynamicState(teachingCase, 'learn', seed), [
-    { type: 'SET_TRANSDUCER_LEVEL', levelCm: 10 },
-    { type: 'SET_DAMPING', dampingRatio: 0.28 },
-    { type: 'SET_ARTIFACT', artifact: 'underdamped' },
-    { type: 'SET_CATHETER_POSITION', position: 'pa' },
-  ])
+  return withOpeningTrace(
+    reduceAll(createInitialHemodynamicState(teachingCase, 'learn', seed), [
+      { type: 'SET_TRANSDUCER_LEVEL', levelCm: 10 },
+      { type: 'SET_DAMPING', dampingRatio: 0.28 },
+      { type: 'SET_ARTIFACT', artifact: 'underdamped' },
+      { type: 'SET_CATHETER_POSITION', position: 'pa' },
+    ]),
+  )
 }
 
 /** Isolated teaching states. No physiology changes or application credit are introduced. */
@@ -246,22 +254,26 @@ export function pressureDemonstrationState(topic: 'level' | 'zero' | 'scale' | '
 
 /** The pressure-system transfer: a new patient, transducer low, line damped. */
 export function dampedLineState(seed = 611): HemodynamicSimulationState {
-  return reduceAll(createInitialHemodynamicState(teachingCase, 'learn', seed), [
-    { type: 'SET_TRANSDUCER_LEVEL', levelCm: -6 },
-    { type: 'ZERO_TRANSDUCER' },
-    { type: 'SET_DAMPING', dampingRatio: 1.15 },
-    { type: 'SET_ARTIFACT', artifact: 'overdamped' },
-    { type: 'SET_CATHETER_POSITION', position: 'pa' },
-  ])
+  return withOpeningTrace(
+    reduceAll(createInitialHemodynamicState(teachingCase, 'learn', seed), [
+      { type: 'SET_TRANSDUCER_LEVEL', levelCm: -6 },
+      { type: 'ZERO_TRANSDUCER' },
+      { type: 'SET_DAMPING', dampingRatio: 1.15 },
+      { type: 'SET_ARTIFACT', artifact: 'overdamped' },
+      { type: 'SET_CATHETER_POSITION', position: 'pa' },
+    ]),
+  )
 }
 
 /** The advancement transfer: a confirmed atrium on a line that has started to ring. */
 export function ringingAtriumState(seed = 612): HemodynamicSimulationState {
-  return reduceAll(cleanState(seed, 'ra'), [
-    { type: 'VALIDATE_SIGNAL', check: 'waveform-confirmed-ra' },
-    { type: 'SET_DAMPING', dampingRatio: 0.28 },
-    { type: 'SET_ARTIFACT', artifact: 'underdamped' },
-  ])
+  return withOpeningTrace(
+    reduceAll(cleanState(seed, 'ra'), [
+      { type: 'VALIDATE_SIGNAL', check: 'waveform-confirmed-ra' },
+      { type: 'SET_DAMPING', dampingRatio: 0.28 },
+      { type: 'SET_ARTIFACT', artifact: 'underdamped' },
+    ]),
+  )
 }
 
 /** The wedge transfer: the same patient under more positive pressure, breathing faster. */
@@ -270,11 +282,13 @@ export function ventilatedWedgeState(seed = 613): HemodynamicSimulationState {
     ...teachingCase,
     initialParameters: { ...teachingCase.initialParameters, peepCmH2O: 12, respiratoryRateBpm: 22 },
   }
-  return reduceAll(createInitialHemodynamicState(variant, 'learn', seed), [
-    { type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 },
-    { type: 'ZERO_TRANSDUCER' },
-    { type: 'SET_CATHETER_POSITION', position: 'pa' },
-  ])
+  return withOpeningTrace(
+    reduceAll(createInitialHemodynamicState(variant, 'learn', seed), [
+      { type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 },
+      { type: 'ZERO_TRANSDUCER' },
+      { type: 'SET_CATHETER_POSITION', position: 'pa' },
+    ]),
+  )
 }
 
 export function standardTechnique(): ThermodilutionTechnique {
@@ -290,28 +304,32 @@ export function standardTechnique(): ThermodilutionTechnique {
 /** Three curves already on the record: two clean, one slow and irregular. */
 export function threeTrialState(seed = 510): HemodynamicSimulationState {
   const technique = standardTechnique()
-  return reduceAll(cleanState(seed, 'pa'), [
-    { type: 'GENERATE_THERMODILUTION_TRIAL', technique },
-    {
-      type: 'GENERATE_THERMODILUTION_TRIAL',
-      technique: {
-        ...technique,
-        injectionDurationSeconds: 7,
-        respiratoryPhase: 'variable',
-        smoothness: 0.3,
+  return withOpeningTrace(
+    reduceAll(cleanState(seed, 'pa'), [
+      { type: 'GENERATE_THERMODILUTION_TRIAL', technique },
+      {
+        type: 'GENERATE_THERMODILUTION_TRIAL',
+        technique: {
+          ...technique,
+          injectionDurationSeconds: 7,
+          respiratoryPhase: 'variable',
+          smoothness: 0.3,
+        },
       },
-    },
-    { type: 'GENERATE_THERMODILUTION_TRIAL', technique },
-  ])
+      { type: 'GENERATE_THERMODILUTION_TRIAL', technique },
+    ]),
+  )
 }
 
 /** The derive section: a trusted flow on a line that is not yet level. */
 export function unlevelledDerivedState(seed = 510): HemodynamicSimulationState {
-  return reduceAll(createInitialHemodynamicState(teachingCase, 'learn', seed), [
-    { type: 'SET_TRANSDUCER_LEVEL', levelCm: 8 },
-    { type: 'SET_ARTIFACT', artifact: 'none' },
-    { type: 'SET_CATHETER_POSITION', position: 'pa' },
-  ])
+  return withOpeningTrace(
+    reduceAll(createInitialHemodynamicState(teachingCase, 'learn', seed), [
+      { type: 'SET_TRANSDUCER_LEVEL', levelCm: 8 },
+      { type: 'SET_ARTIFACT', artifact: 'none' },
+      { type: 'SET_CATHETER_POSITION', position: 'pa' },
+    ]),
+  )
 }
 
 /** The capstone: HD-08 as authored — a tip that reads a false wedge on a line that is high, unzeroed and ringing. */
@@ -327,10 +345,12 @@ export function capstoneState(seed = 808): HemodynamicSimulationState {
  * restored all three. The arterial line's own response is set; the others are left clean.
  */
 export function dampedArterialState(seed = 616): HemodynamicSimulationState {
-  return reduceAll(cleanState(seed, 'pa'), [
-    { type: 'SET_DAMPING', dampingRatio: 1.15, line: 'systemic-arterial' },
-    { type: 'SET_ARTIFACT', artifact: 'overdamped', line: 'systemic-arterial' },
-  ])
+  return withOpeningTrace(
+    reduceAll(cleanState(seed, 'pa'), [
+      { type: 'SET_DAMPING', dampingRatio: 1.15, line: 'systemic-arterial' },
+      { type: 'SET_ARTIFACT', artifact: 'overdamped', line: 'systemic-arterial' },
+    ]),
+  )
 }
 
 /* ------------------------------------------------------------------ *

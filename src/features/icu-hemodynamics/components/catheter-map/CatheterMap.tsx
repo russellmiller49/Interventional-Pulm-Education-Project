@@ -19,6 +19,50 @@ import {
 } from './catheterMapGeometry'
 import styles from './catheter-map.module.css'
 
+/** The drawing's labels: where each sits, in the map's own coordinates, and which way it hangs. */
+const MAP_LABELS: readonly {
+  readonly text: string
+  /** A one-letter key used when the drawing is too narrow for the word; the key is listed below it. */
+  readonly short?: string
+  readonly x: number
+  readonly y: number
+  readonly anchor: 'above' | 'below' | 'left'
+}[] = [
+  {
+    text: 'monitor',
+    short: 'M',
+    x: LINE_PARTS.monitor.x + LINE_PARTS.monitor.width / 2,
+    y: LINE_PARTS.monitor.y + LINE_PARTS.monitor.height + 3,
+    anchor: 'below',
+  },
+  {
+    text: 'transducer',
+    short: 'T',
+    x: LINE_PARTS.transducer.x + LINE_PARTS.transducer.width / 2,
+    y: LINE_PARTS.transducer.y - 3,
+    anchor: 'above',
+  },
+  {
+    text: 'flush bag',
+    short: 'F',
+    x: LINE_PARTS.flushBag.x + LINE_PARTS.flushBag.width / 2,
+    y: LINE_PARTS.flushBag.y + LINE_PARTS.flushBag.height + 3,
+    anchor: 'below',
+  },
+  {
+    text: 'stopcock',
+    short: 'S',
+    x: LINE_PARTS.stopcock.x,
+    y: LINE_PARTS.stopcock.y + 8,
+    anchor: 'below',
+  },
+  { text: 'SVC', x: 244, y: 30, anchor: 'left' },
+  { text: 'RA', x: 240, y: 108, anchor: 'left' },
+  { text: 'RV', x: 330, y: 150, anchor: 'below' },
+  { text: 'PA', x: 412, y: 88, anchor: 'below' },
+  { text: 'distal PA', x: 512, y: 22, anchor: 'left' },
+]
+
 export interface CatheterMapAnswerChoice {
   readonly id: string
   readonly label: string
@@ -145,13 +189,6 @@ export function CatheterMap({
               className={styles.monitorTrace}
               d={`M ${LINE_PARTS.monitor.x + 8} ${LINE_PARTS.monitor.y + 34} l 8 0 l 4 -18 l 5 22 l 5 -8 l 8 0 l 4 -14 l 5 18 l 5 -6 l 8 0`}
             />
-            <text
-              className={styles.label}
-              x={LINE_PARTS.monitor.x + LINE_PARTS.monitor.width / 2}
-              y={LINE_PARTS.monitor.y + LINE_PARTS.monitor.height + 13}
-            >
-              monitor
-            </text>
             <path className={styles.cable} d={LINE_PARTS.cable} />
             <rect
               className={styles.transducer}
@@ -161,13 +198,6 @@ export function CatheterMap({
               height={LINE_PARTS.transducer.height}
               rx={4}
             />
-            <text
-              className={styles.label}
-              x={LINE_PARTS.transducer.x + LINE_PARTS.transducer.width / 2}
-              y={LINE_PARTS.transducer.y - 6}
-            >
-              transducer
-            </text>
             <path className={styles.tubing} d={LINE_PARTS.bagLine} />
             <rect
               className={styles.flushBag}
@@ -177,13 +207,6 @@ export function CatheterMap({
               height={LINE_PARTS.flushBag.height}
               rx={6}
             />
-            <text
-              className={styles.label}
-              x={LINE_PARTS.flushBag.x + LINE_PARTS.flushBag.width / 2}
-              y={LINE_PARTS.flushBag.y + LINE_PARTS.flushBag.height + 12}
-            >
-              flush bag
-            </text>
             <path className={styles.tubing} data-lit={lit.has('line')} d={LINE_TUBING_PATH} />
             <g
               className={styles.stopcock}
@@ -192,9 +215,6 @@ export function CatheterMap({
               <line x1={-6} y1={0} x2={6} y2={0} />
               <line x1={0} y1={-6} x2={0} y2={6} />
             </g>
-            <text className={styles.label} x={LINE_PARTS.stopcock.x} y={LINE_PARTS.stopcock.y + 16}>
-              stopcock
-            </text>
           </g>
 
           {/* The heart */}
@@ -227,23 +247,6 @@ export function CatheterMap({
             {tip ? (
               <circle className={styles.tip} data-map-tip cx={tip.x} cy={tip.y} r={5} />
             ) : null}
-            <g className={styles.label}>
-              <text x={226} y={34}>
-                SVC
-              </text>
-              <text x={240} y={112}>
-                RA
-              </text>
-              <text x={330} y={148}>
-                RV
-              </text>
-              <text x={412} y={92}>
-                PA
-              </text>
-              <text x={480} y={18}>
-                distal PA
-              </text>
-            </g>
           </g>
 
           {/* Halos */}
@@ -258,6 +261,34 @@ export function CatheterMap({
             />
           ))}
         </svg>
+
+        {/*
+          The drawing's labels, as page text over it. Inside the SVG they were sized in the view
+          box's units, so on a phone they shrank with the drawing to about seven pixels (report
+          X-01). Here they keep the text size the reader chose at any width.
+        */}
+        <div className={styles.labels} aria-hidden="true" data-map-labels>
+          {MAP_LABELS.map((label) => (
+            <span
+              key={label.text}
+              data-anchor={label.anchor}
+              data-map-label={label.text}
+              style={{
+                left: `${(label.x / CATHETER_MAP_VIEW.width) * 100}%`,
+                top: `${(label.y / CATHETER_MAP_VIEW.height) * 100}%`,
+              }}
+            >
+              {label.short ? (
+                <>
+                  <span data-label-form="full">{label.text}</span>
+                  <span data-label-form="short">{label.short}</span>
+                </>
+              ) : (
+                label.text
+              )}
+            </span>
+          ))}
+        </div>
 
         {answer
           ? STOP_ORDER.map((stopId) => {
@@ -285,6 +316,13 @@ export function CatheterMap({
             })
           : null}
       </div>
+
+      <p className={styles.abbreviations} data-map-abbreviations>
+        <span data-label-form="short">
+          M, monitor · T, transducer · F, flush bag · S, stopcock ·{' '}
+        </span>
+        SVC, superior vena cava · RA, right atrium · RV, right ventricle · PA, pulmonary artery
+      </p>
 
       {!answer ? (
         <ol className={styles.legend} aria-label="The five stops">

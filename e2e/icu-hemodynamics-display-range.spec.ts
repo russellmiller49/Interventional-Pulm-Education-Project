@@ -60,6 +60,10 @@ for (const condition of [
     await page.setViewportSize(condition)
     await page.goto('/en/icu-hemodynamics/learn?activity=waveform-interpretation')
     const root = page.locator('html')
+    // The theme class is set once the page has hydrated. Read before that, it is empty, and the
+    // toggle is then pressed on a page that is about to choose the wanted theme by itself
+    // (seen on a freshly started server during HD-PRE-REVIEW-03's base comparison).
+    await page.waitForFunction(() => /\b(dark|light)\b/.test(document.documentElement.className))
     if (!(await root.getAttribute('class'))?.split(' ').includes(condition.theme)) {
       await page.getByRole('button', { name: /Toggle dark mode/i }).click()
     }
@@ -77,10 +81,12 @@ for (const condition of [
         .first()
       await expect(figure).toBeVisible()
       await expect(figure.getByText(/Trace exceeds the displayed 0–20 mmHg axis/)).toBeVisible()
-      await expect(figure.locator('svg')).toHaveAttribute(
-        'aria-label',
+      // HD-PRE-REVIEW-03: the visible notice is the image's accessible description
+      // (`aria-describedby`), so the image's name stays the canonical waveform description.
+      await expect(figure.locator('svg')).toHaveAccessibleDescription(
         /out-of-range portions are clipped/,
       )
+      await expect(figure.locator('svg')).not.toHaveAttribute('aria-label', /Trace exceeds/)
       const evidence = await geometry(figure)
       expect(evidence.minimumY).toBeLessThan(66)
       expect(evidence.topBoundaryPoints).toBeLessThan(3)
