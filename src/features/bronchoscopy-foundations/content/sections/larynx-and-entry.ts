@@ -48,13 +48,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D03'],
-  prerequisites: [
-    'sedation-and-monitoring',
-    'five-controls',
-    'branch-entry',
-    'reference-frames',
-    'view-loss',
-  ],
+  prerequisites: ['sedation-and-monitoring', 'five-controls', 'branch-entry', 'reference-frames'],
 
   clinicalQuestion:
     'With the larynx in view during an oral or nasal entry, what must be identified, and when may the scope go through into the trachea?',

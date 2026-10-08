@@ -3,10 +3,12 @@ import type { CriticalCareCurriculumStage } from '@/features/learning-module/act
 /**
  * The canonical order: the one ordering authority every surface lists sections from.
  *
- * Twenty-three core sections carry the eighteen core modules of the knowledge specification in its
- * own curriculum order (§19), with five modules split in two where one section would carry two new
- * concepts (M05, M06, M12, M15, M16). Section ids are stable: the learner record keys on them.
- * Everything that counts, numbers or groups sections derives from this array at render.
+ * The order follows the scope's path, in the five phases of the rewrite plan (2026-10-08): prepare,
+ * handle, navigate, describe and sample, respond. The rewrite ends at fifteen sections. Until each
+ * absorbing section is re-authored, the section it absorbs stays here beside it; when it goes, its
+ * id moves to `RETIRED_SECTION_FORWARD` (`sectionMigration.ts`), which already knows where it leads.
+ * Section ids are stable: the learner record keys on them. Everything that counts, numbers or
+ * groups sections derives from this array at render.
  */
 export const BRONCH_SECTION_IDS = [
   'shared-airway',
@@ -16,10 +18,10 @@ export const BRONCH_SECTION_IDS = [
   'five-controls',
   'branch-entry',
   'reference-frames',
-  'view-loss',
   'larynx-and-entry',
   'right-side',
   'left-side',
+  'view-loss',
   'systematic-survey',
   'describe-findings',
   'washing-and-lavage',
@@ -73,16 +75,7 @@ export const BRONCH_SECTION_STAGE: Readonly<Record<BronchSectionId, CriticalCare
  * canonical order, and the phases tile it exactly once (validated at import), so a grouped view is
  * a presentation of the one order, never a second one.
  */
-export type BronchPhaseId =
-  | 'prepare'
-  | 'handle'
-  | 'orient'
-  | 'enter'
-  | 'survey'
-  | 'describe'
-  | 'sample'
-  | 'respond'
-  | 'close'
+export type BronchPhaseId = 'prepare' | 'handle' | 'navigate' | 'describe-and-sample' | 'respond'
 
 export interface BronchPhase {
   readonly id: BronchPhaseId
@@ -96,61 +89,48 @@ export const BRONCH_PHASES: readonly BronchPhase[] = [
     id: 'prepare',
     title: 'Prepare',
     description:
-      'Ask the clinical question, ready the instrument and plan for the patient: what bronchoscopy should add, the four functional systems of the scope, and a shared airway under topical anesthesia and sedation.',
+      'Decide whether this patient should have a bronchoscopy today, check the scope, and plan topical anesthesia, sedation and monitoring.',
     sectionIds: ['shared-airway', 'clinical-question', 'pre-use-check', 'sedation-and-monitoring'],
   },
   {
     id: 'handle',
     title: 'Handle',
+    description: 'Drive the scope on the bench, then cross the larynx and reach the carina.',
+    sectionIds: ['five-controls', 'branch-entry', 'reference-frames', 'larynx-and-entry'],
+  },
+  {
+    id: 'navigate',
+    title: 'Navigate',
     description:
-      'The five things you control at the scope, one at a time, and then together at a branch.',
-    sectionIds: ['five-controls', 'branch-entry'],
+      'Learn each lung by its branches, recover a lost view, and survey the whole tree in the same order every time.',
+    sectionIds: ['right-side', 'left-side', 'view-loss', 'systematic-survey'],
   },
   {
-    id: 'orient',
-    title: 'Orient',
+    id: 'describe-and-sample',
+    title: 'Describe and sample',
     description:
-      'Know where you are before you move: three reference frames, and what to do when the view is lost.',
-    sectionIds: ['reference-frames', 'view-loss'],
-  },
-  {
-    id: 'enter',
-    title: 'Enter',
-    description: 'Examine the larynx before crossing it, and enter the trachea without force.',
-    sectionIds: ['larynx-and-entry'],
-  },
-  {
-    id: 'survey',
-    title: 'Survey',
-    description:
-      'Right and left airways by parentage, then a systematic examination whose record claims only what was seen.',
-    sectionIds: ['right-side', 'left-side', 'systematic-survey'],
-  },
-  {
-    id: 'describe',
-    title: 'Describe',
-    description: 'Describe structure, mucosa and contents before offering a diagnosis.',
-    sectionIds: ['describe-findings'],
-  },
-  {
-    id: 'sample',
-    title: 'Sample',
-    description:
-      'Washing and lavage, poor return, protected accessories, and the specimen pathway from question to laboratory.',
-    sectionIds: ['washing-and-lavage', 'poor-return', 'protected-accessories', 'specimen-pathway'],
+      'Describe what you see and report it, then wash, lavage, biopsy and send each specimen to its test.',
+    sectionIds: [
+      'describe-findings',
+      'washing-and-lavage',
+      'poor-return',
+      'protected-accessories',
+      'specimen-pathway',
+    ],
   },
   {
     id: 'respond',
     title: 'Respond',
     description:
-      'Deterioration, bleeding, the scope inside an artificial airway, and ventilated-patient physiology.',
-    sectionIds: ['deterioration', 'bleeding-priorities', 'scope-in-a-tube', 'icu-physiology'],
-  },
-  {
-    id: 'close',
-    title: 'Close',
-    description: 'An honest report, and what each record in a training program shows.',
-    sectionIds: ['honest-report', 'what-completion-means'],
+      'Your first moves when the patient deteriorates or bleeds, and bronchoscopy in a ventilated patient.',
+    sectionIds: [
+      'deterioration',
+      'bleeding-priorities',
+      'scope-in-a-tube',
+      'icu-physiology',
+      'honest-report',
+      'what-completion-means',
+    ],
   },
 ]
 

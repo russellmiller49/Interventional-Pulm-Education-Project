@@ -22,9 +22,8 @@ export function bronchActivityId(sectionId: BronchSectionId): string {
   return `${BRONCH_MODULE_ID}:learn:${sectionId}`
 }
 
-/** The Learn landing H1: the module's verbs, in the order of its nine phases. */
-export const BRONCH_ARC_SENTENCE =
-  'Prepare, handle, orient, enter, survey, describe, sample, respond, close.'
+/** The Learn landing H1: the module's verbs, in the order of its five phases. */
+export const BRONCH_ARC_SENTENCE = 'Prepare, handle, navigate, describe and sample, respond.'
 
 function pathwaySectionOf(section: BronchSectionDefinition): LearningPathwaySection {
   return {

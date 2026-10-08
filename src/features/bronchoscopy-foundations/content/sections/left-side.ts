@@ -72,7 +72,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D07', 'D08'],
-  prerequisites: ['branch-entry', 'reference-frames', 'view-loss', 'right-side'],
+  prerequisites: ['branch-entry', 'reference-frames', 'right-side'],
 
   clinicalQuestion:
     'On the left side, how do you know which lobe an opening belongs to, and what that lobe’s segments are called?',
