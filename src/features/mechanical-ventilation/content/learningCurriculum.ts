@@ -1,3 +1,7 @@
+import { VENTILATION_NUMBERS } from './teachingNumbers'
+
+const N = VENTILATION_NUMBERS.value
+
 /** The sole ordering authority for the rebuilt course. Existing lesson/case IDs stay valid. */
 export const VENTILATION_FINAL_CHECK_ID = 'final-mixed'
 
@@ -99,7 +103,8 @@ export interface VentilationLearningUnit {
     readonly reasoning: readonly string[]
     readonly conclusion: string
   }
-  readonly boundary: string
+  /** One point worth keeping in mind at the point of use. Optional: most units need none. */
+  readonly boundary?: string
   readonly evidenceIds: readonly string[]
   readonly caseIds: readonly string[]
   readonly visual: 'breath' | 'controls' | 'protection' | 'expiration' | 'existing'
@@ -108,9 +113,6 @@ export interface VentilationLearningUnit {
 const textbook = ['tobin-3e-setting-ventilator', 'tobin-3e-monitoring']
 const mechanics = ['tobin-3e-monitoring', 'tobin-3e-fighting-ventilator']
 const interaction = ['antonogiannaki-dyssynchrony-2017', 'tobin-3e-fighting-ventilator']
-const constructed =
-  'This is a teaching example set for this simulation. It teaches a relationship, not a setting for a real patient.'
-
 export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
   {
     id: 'breathing-with-support',
@@ -143,8 +145,6 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
       ],
       conclusion: 'Read the complete cycle. A breath includes time to empty.',
     },
-    boundary:
-      'This diagram shows a passive, single-compartment breath. It omits leaks, uneven lung filling, and active patient effort.',
     evidenceIds: textbook,
     caseIds: ['MV-01'],
     visual: 'breath',
@@ -219,8 +219,6 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
       ],
       conclusion: 'Compare the request with the result; do not assume either number is wrong.',
     },
-    boundary:
-      'Control labels vary by device and mode. The five main settings are a teaching aid: they are not a manufacturer’s menu grouping, and they do not list every setting of every mode.',
     evidenceIds: textbook,
     caseIds: ['MV-01', 'MV-07'],
     visual: 'controls',
@@ -299,8 +297,6 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
       ],
       conclusion: 'The unchanged pressure does not prove unchanged ventilation.',
     },
-    boundary:
-      'These comparisons concern conventional control modes. Adaptive, proportional, and dual-control modes cannot be reduced to the mode name alone.',
     evidenceIds: textbook,
     caseIds: ['MV-01', 'MV-04'],
     visual: 'existing',
@@ -320,26 +316,31 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
     spine: 'delivery',
     analogy:
       'Choose a container’s fill by its capacity, not by the weight of everything around it.',
-    explanation:
-      'Predicted body weight (PBW), calculated from height and sex using the applicable reference, is the basis for tidal-volume scaling. For adults with acute respiratory distress syndrome (ARDS), the 2017 ATS/ESICM/SCCM guideline recommends 4–8 mL/kg PBW and plateau pressure below 30 cmH₂O, and the 2024 ATS update keeps that recommendation in place. These are assessed together with effort, gas exchange, and the clinical situation.',
+    explanation: `Size the breath to the lung, and lung size follows height and sex, not weight. Predicted body weight (PBW) for a man is ${N('pbw-male')}; for a woman, ${N('pbw-female')}. In ARDS the goal is ${N('vt-ards-goal')}, within ${N('vt-ards-range')}, with plateau pressure ${N('pplat-limit')} and driving pressure (plateau minus PEEP) ${N('driving-pressure-limit')}. If the plateau is over the limit, step the tidal volume down by 1 mL/kg, to a minimum of 4 mL/kg.`,
     checklist: [
-      'Verify height and the PBW calculation.',
-      'Express delivered tidal volume in mL/kg PBW.',
-      'Check a valid plateau and patient effort.',
-      'Reassess after changes with the clinical team.',
+      'Calculate PBW from height and sex.',
+      'Express the delivered tidal volume in mL/kg PBW.',
+      `Read a plateau on a relaxed patient with a ${N('pplat-pause')} pause.`,
+      'Subtract PEEP for the driving pressure.',
     ],
     example: {
-      situation: 'An adult with ARDS has gained fluid weight. Their height has not changed.',
+      situation:
+        'A man 70 inches tall with ARDS weighs 110 kg after resuscitation. The ventilator is set to 550 mL.',
       reasoning: [
-        'Fluid weight does not increase the PBW reference.',
-        'Recalculate if the height or recorded inputs were wrong, not because the scale rose.',
-        'Judge delivered volume and pressure together.',
+        'PBW is 50 + 2.3 × (70 − 60) = 73 kg. The scale weight does not enter.',
+        '550 mL ÷ 73 kg is 7.5 mL/kg. The goal of 6 mL/kg is 440 mL.',
+        'If the plateau is 32 cmH₂O on PEEP 10, the driving pressure is 22 cmH₂O. Both are over their limits.',
       ],
-      conclusion: 'Do not enlarge the breath simply to follow actual body weight.',
+      conclusion:
+        'Step the tidal volume down toward 440 mL and repeat the plateau after each change.',
     },
-    boundary:
-      'The stated guideline limits apply to adult ARDS and are not a complete ventilator prescription. Individual adjustment requires current guidance, bedside assessment, and supervision.',
-    evidenceIds: ['ats-esicm-sccm-ards-2017', 'ats-ards-2024', 'aarc-assessment-2024'],
+    evidenceIds: [
+      'ardsnet-arma-2000',
+      'ats-esicm-sccm-ards-2017',
+      'ats-ards-2024',
+      'amato-driving-pressure-2015',
+      'aarc-assessment-2024',
+    ],
     caseIds: ['MV-01', 'MV-03'],
     visual: 'protection',
   },
@@ -424,7 +425,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
       conclusion: 'The location in the breath guides the next assessment.',
     },
     boundary:
-      'The effort trace is an educator-only model signal, not a routine directly measured ventilator signal. Confirm bedside interpretations clinically.',
+      'The effort trace is a model signal. A real ventilator does not display it; at the bedside you infer effort from the flow and pressure traces.',
     evidenceIds: interaction,
     caseIds: ['MV-07', 'MV-09', 'MV-10'],
     visual: 'existing',
@@ -458,12 +459,12 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
       reasoning: [
         'The oxygenation response is real within the example.',
         'Pressure can affect both the lung and circulation.',
-        'Assess the patient and reconsider the overall response with the team.',
+        'Step PEEP back to the last level the blood pressure tolerated, then look for the reason: low volume or overdistension.',
       ],
       conclusion: 'Judge benefit and cost together.',
     },
     boundary:
-      'PEEP response varies with recruitability, volume status, and cardiopulmonary physiology. No universal PEEP titration sequence is taught here.',
+      'PEEP response varies with recruitability and volume status. After each step, recheck the plateau and the blood pressure before the next.',
     evidenceIds: ['tobin-3e-peep', 'aarc-assessment-2024'],
     caseIds: ['MV-01'],
     visual: 'existing',
@@ -505,11 +506,8 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
         'The expiratory pattern constrains a rate increase.',
         'Assess ventilation, emptying, and the underlying load before changing support.',
       ],
-      conclusion:
-        'Choose the mechanism and then the reassessment, rather than a single number to chase.',
+      conclusion: `Choose the mechanism, make the change, and recheck the gas. In ARDS the goal is pH ${N('ph-goal')}; in severe obstruction accept pH ${N('obstruction-ph')}.`,
     },
-    boundary:
-      'The simulator uses a simplified, delayed gas-exchange response. Its clock is not a bedside blood-gas sampling schedule.',
     evidenceIds: ['tobin-3e-setting-ventilator', 'tobin-3e-copd'],
     caseIds: ['MV-05', 'MV-06'],
     visual: 'existing',
@@ -553,8 +551,6 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
       ],
       conclusion: 'The sequence identifies the missing discriminating observation.',
     },
-    boundary:
-      'A waveform is evidence, not a diagnosis. Bedside findings and signal validity remain part of the interpretation.',
     evidenceIds: ['tobin-3e-monitoring', 'antonogiannaki-dyssynchrony-2017'],
     caseIds: ['MV-07', 'MV-08'],
     visual: 'existing',
@@ -596,8 +592,6 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
       conclusion:
         'Localize first. A dyssynchrony label is useful only when it explains the next assessment.',
     },
-    boundary:
-      'Sedation and other treatments require individualized clinical judgment. This lesson teaches mechanism recognition, not medication dosing.',
     evidenceIds: interaction,
     caseIds: ['MV-02', 'MV-03', 'MV-04', 'MV-07', 'MV-08', 'MV-09', 'MV-10', 'MV-11', 'MV-12'],
     visual: 'existing',
@@ -624,25 +618,23 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
     spine: 'whole',
     analogy: 'An alarm is a doorbell: acknowledging it does not deal with the reason it rang.',
     explanation:
-      'Assess the patient, airway, and circuit promptly. When the patient is unstable, summon help and support oxygenation and ventilation while the cause is localized according to local emergency protocols. Acknowledgment, documentation, and communication do not themselves correct physiology.',
+      'When a ventilated patient deteriorates suddenly, turn the FiO₂ to 1.0, take the patient off the ventilator and ventilate by hand, calling for help as you start. Then work through the causes in order: a displaced tube, an obstructed tube, a pneumothorax, and the equipment. Trapped gas declares itself when you disconnect: the chest empties and the blood pressure recovers. Silencing or documenting an alarm corrects nothing.',
     checklist: [
-      'Judge stability at the bedside.',
-      'Assess patient, airway, and circuit.',
-      'Coordinate support and cause-directed action.',
-      'Name and perform the reassessment.',
+      'FiO₂ 1.0, disconnect, ventilate by hand.',
+      'Tube: depth, capnography, pass a suction catheter.',
+      'Chest: breath sounds on both sides.',
+      'Treat the cause you find, then reassess.',
     ],
     example: {
       situation:
         'A high-pressure alarm accompanies falling blood pressure and new asymmetric breath sounds.',
       reasoning: [
-        'The patient is deteriorating, so stabilization and help take priority.',
-        'The examination changes the differential.',
-        'Do not wait for a perfect waveform analysis before responding to instability.',
+        'Bag by hand on 100% oxygen. A stiff bag with an easily passed suction catheter puts the problem in the chest.',
+        'Check the tube depth: a tube in the right main bronchus silences the left side but rarely drops the blood pressure.',
+        'One silent side with a falling blood pressure is a tension pneumothorax. Decompress it without waiting for a film.',
       ],
-      conclusion: 'Use the signals to support urgent bedside care, not to postpone it.',
+      conclusion: 'Examine and treat first. Read the waveform once the patient is supported.',
     },
-    boundary:
-      'Emergency procedures and manual ventilation require trained supervision and the current local protocol. This online activity cannot establish those hands-on skills.',
     evidenceIds: ['tobin-3e-fighting-ventilator', 'aarc-assessment-2024'],
     caseIds: ['MV-13', 'MV-14', 'MV-15'],
     visual: 'existing',
@@ -690,9 +682,7 @@ export const ventilationLearningUnits: readonly VentilationLearningUnit[] = [
       ],
       conclusion: 'Transfer the reading sequence, not the previous answer.',
     },
-    boundary:
-      constructed +
-      ' Several mechanisms can coexist; no single waveform rules out every competing cause.',
+    boundary: 'Several mechanisms can coexist; no single waveform rules out every competing cause.',
     evidenceIds: ['tobin-3e-monitoring', 'tobin-3e-copd', 'tobin-3e-fighting-ventilator'],
     caseIds: ['MV-13', 'MV-05', 'MV-14', 'MV-06'],
     visual: 'existing',
@@ -719,7 +709,7 @@ export const ventilationUnitHref = (id: string) =>
  * re-cased, and nothing here reads or writes an answer.
  */
 export function ventilationGenericQuestionPurpose(unit: VentilationLearningUnit): string {
-  return `${unit.outcome.replace(/\.$/, '')}, in a short authored case.`
+  return `${unit.outcome.replace(/\.$/, '')}, in a short case.`
 }
 
 /** A single table is introduced progressively and reused at debrief; never rendered during checks. */

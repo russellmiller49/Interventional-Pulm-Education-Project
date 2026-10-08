@@ -592,8 +592,7 @@ function VentilationStageSession({
                   </>
                 ) : (
                   <p data-no-observation>
-                    No response has been captured in this part. This explanation describes the
-                    authored concept, not a result you produced.
+                    You have not run this part yet. The explanation describes what to expect.
                   </p>
                 )}
               </section>

@@ -44,8 +44,7 @@ export function MechanicalVentilationAssessSetupV2({
         <p className="mt-4 text-base leading-7 text-muted-foreground">
           A local variation selects one of the fifteen cases. You will see the patient context, case
           identity, references, and evidence from the start; explanations are available whenever you
-          want them. MV-03 opens as a worked explanation while its live measurement display is under
-          review.
+          want them. MV-03 opens as a worked explanation.
         </p>
       </header>
 
@@ -120,8 +119,8 @@ export function MechanicalVentilationAssessSetupV2({
                 </li>
               </ul>
               <div className="mt-5 flex items-center gap-2 rounded-xl bg-muted/40 p-3 text-sm">
-                <ShieldCheck className="size-4 text-primary" aria-hidden="true" />
-                Synthetic educational case. No patient-specific guidance is provided.
+                <ShieldCheck className="size-4 text-primary" aria-hidden="true" />A simulated
+                patient.
               </div>
               <button
                 type="button"

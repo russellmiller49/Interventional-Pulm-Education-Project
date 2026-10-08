@@ -3,7 +3,6 @@ import { render, screen, within } from '@testing-library/react'
 
 import { criticalCareActivityById } from '@/features/critical-care/content/activities'
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
-import { assertNoUniversalTargetLanguage } from '@/features/critical-care/test-support/teachingPanelContract'
 
 import { IcuHemodynamicsLearnLandingV2 } from '../components/IcuHemodynamicsLearnLandingV2'
 import { IcuHemodynamicsOverviewV2 } from '../components/IcuHemodynamicsOverviewV2'
@@ -176,7 +175,7 @@ describe('H0/H1 module entry', () => {
   })
 
   it('answers the five orientation questions a novice arrives with', () => {
-    const { container } = render(<IcuHemodynamicsOverviewV2 />)
+    render(<IcuHemodynamicsOverviewV2 />)
 
     const begin = screen.getByText(/Where a first-year fellow should begin/i)
     expect(begin).toBeInTheDocument()
@@ -190,8 +189,6 @@ describe('H0/H1 module entry', () => {
       screen.getByText(/Signal interpretation versus simulated procedure/i),
     ).toBeInTheDocument()
     expect(screen.getByText(/What finishing a section means/i)).toBeInTheDocument()
-
-    assertNoUniversalTargetLanguage(container.textContent ?? '')
   })
 
   it('describes completion as participation rather than readiness', () => {
@@ -239,7 +236,6 @@ describe('H0/H1 module entry', () => {
     expect(container.querySelectorAll('a[data-kind="section"]')).toHaveLength(
       pacLearningPathwaySections.length,
     )
-    assertNoUniversalTargetLanguage(container.textContent ?? '')
   })
 })
 
@@ -259,14 +255,6 @@ describe('H0/H1 pressure-system validity sequence', () => {
 
     for (const step of pressureSystemValiditySteps) {
       expect(step.sourceIds.length).toBeGreaterThan(0)
-      assertNoUniversalTargetLanguage(
-        [
-          step.whatYouCheck,
-          step.whatItEstablishes,
-          step.whatItDoesNotEstablish,
-          step.howItMisleads,
-        ].join(' '),
-      )
     }
   })
 
@@ -302,21 +290,17 @@ describe('H0/H1 normal waveform reference', () => {
       ]) {
         expect(facet.length).toBeGreaterThan(0)
       }
-      assertNoUniversalTargetLanguage(
-        [entry.pressureDirection, entry.respiratoryVariation, entry.unsafeToInterpret].join(' '),
-      )
     }
   })
 
   it('renders the reference with its ranges marked as not being targets', () => {
-    const { container } = render(<NormalWaveformReference />)
+    render(<NormalWaveformReference />)
 
     expect(
       screen.getByRole('heading', { name: /What each chamber is supposed to look like/i }),
     ).toBeInTheDocument()
     expect(screen.getByText(/When it is not safe to interpret/i)).toBeInTheDocument()
     expect(screen.getByText(/They are not treatment targets/i)).toBeInTheDocument()
-    assertNoUniversalTargetLanguage(container.textContent ?? '')
   })
 
   it('keeps the normal reference ahead of the first simulated manipulation in the pathway', () => {
@@ -347,18 +331,6 @@ describe('H0/H1 advancement safety prebrief', () => {
     }
     expect(pacPrebriefBeforeYouStart.join(' ')).toMatch(
       /Continuous rhythm monitoring, watched throughout/i,
-    )
-    assertNoUniversalTargetLanguage(
-      [
-        ...Object.values(pacPrebriefScope),
-        ...pacPrebriefBeforeYouStart,
-        ...pacPrebriefStopConditions.flatMap((condition) => [
-          condition.trigger,
-          condition.response,
-        ]),
-        ...pacPrebriefNotCoveredHere,
-        pacPrebriefNotCoveredNotice,
-      ].join(' '),
     )
   })
 

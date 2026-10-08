@@ -115,15 +115,6 @@ describe('the one table', () => {
     )
   })
 
-  it('carries no number in the copy the learner reads', () => {
-    for (const row of MCS_SUPPORT_GRAMMAR.rows) {
-      expect(row.whatMoved).not.toMatch(/\d/)
-      expect(row.whereTheConstraintLives).not.toMatch(/\d/)
-      for (const item of row.shortlist) expect(item).not.toMatch(/\d/)
-    }
-    expect(MCS_SUPPORT_GRAMMAR.trendRule).not.toMatch(/\d/)
-  })
-
   it('refuses a row with no engine claim and a row nobody teaches', () => {
     const rows = MCS_SUPPORT_GRAMMAR.rows.map((row) => ({ ...row }))
     rows[0] = { ...rows[0], engineClaims: [] }

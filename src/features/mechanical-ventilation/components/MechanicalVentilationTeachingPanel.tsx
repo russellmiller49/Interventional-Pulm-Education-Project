@@ -15,7 +15,7 @@ import { VentilationOxygenationTradeoff } from './teaching/oxygenation'
 import { VentilationSafetyReassessment } from './teaching/safety'
 import {
   EMPTY_STATE_NOTE,
-  ModelBoundary,
+  ReferenceValues,
   TextEquivalent,
   latestBreath,
   round,
@@ -373,11 +373,15 @@ export function VentilationPressureDecomposition({
       <PlateauValidity acquisition={acquisition} validity={validity} />
 
       <TextEquivalent>{summary}</TextEquivalent>
-      <ModelBoundary>
-        Compliance and resistance here are derived from the bounded educational model and assume a
-        relaxed patient. Numeric safety limits are deliberately not stated; they belong to this
-        module’s source reconciliation and to local policy.
-      </ModelBoundary>
+      <ReferenceValues
+        title="In ARDS, hold these readings against"
+        ids={['pplat-limit', 'driving-pressure-limit', 'pplat-pause']}
+      >
+        <p>
+          Driving pressure is plateau minus total PEEP. Both readings need a relaxed patient: an
+          effort during the pause makes the plateau read wrong.
+        </p>
+      </ReferenceValues>
     </section>
   )
 }
@@ -932,11 +936,10 @@ export function VentilationHighPressureDiscriminator({
       )}
 
       <TextEquivalent>{summary}</TextEquivalent>
-      <ModelBoundary>
-        More than one mechanism can be present at once; the useful claim is which is dominant now.
-        The comparisons above use relationships between signals, not published thresholds, and are
-        not a corrective protocol.
-      </ModelBoundary>
+      <p className={styles.panelNote}>
+        More than one mechanism can be present at once. Decide which is dominant now, and treat that
+        first.
+      </p>
     </section>
   )
 }
@@ -1087,11 +1090,6 @@ export function VentilationSectionOverview({
           ))}
         </div>
       ) : null}
-
-      <ModelBoundary>
-        This section is showing its authored objectives because no illustrated mechanism panel is
-        registered for it yet.
-      </ModelBoundary>
     </section>
   )
 }

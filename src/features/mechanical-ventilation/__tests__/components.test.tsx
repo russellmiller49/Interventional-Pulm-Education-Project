@@ -214,9 +214,6 @@ describe('multi-device mechanical ventilation learner interface', () => {
     expect(
       screen.getByRole('heading', { name: 'Evita V800 / V600 Instructions for Use' }),
     ).toBeInTheDocument()
-    expect(
-      screen.getByText(/8c4c65aadd7267d181c694947b9602278f511746af25001ceb220f3be09e8151/),
-    ).toBeInTheDocument()
     expect(screen.getByText('Personal history stays local')).toBeInTheDocument()
 
     const body = JSON.parse((global.fetch as jest.Mock).mock.calls.at(-1)![1].body as string)

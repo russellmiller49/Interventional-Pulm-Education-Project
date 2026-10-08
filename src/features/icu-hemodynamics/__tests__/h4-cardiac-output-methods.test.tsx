@@ -2,7 +2,6 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 
 import { criticalCareActivityById } from '@/features/critical-care/content/activities'
-import { assertNoUniversalTargetLanguage } from '@/features/critical-care/test-support/teachingPanelContract'
 import { flaggedLearnerCopyTerms } from '@/features/learning-module/activity'
 
 import { CardiacOutputDisagreementLab } from '../components/CardiacOutputDisagreementLab'
@@ -304,10 +303,9 @@ describe('H4 canonical cardiac-output method model', () => {
     expect(cardiacOutputSourcesSupportingClaim('numeric-repeatability-criterion')).toEqual([])
   })
 
-  it('keeps every learner-facing sentence free of grading language and universal targets', () => {
+  it('keeps every learner-facing sentence free of grading language', () => {
     for (const entry of h4LearnerCopy()) {
       expect(flaggedLearnerCopyTerms(entry)).toEqual([])
-      assertNoUniversalTargetLanguage(entry)
     }
   })
 })

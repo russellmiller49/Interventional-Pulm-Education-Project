@@ -205,7 +205,7 @@ export function CapturedBreath({
     >
       <figcaption id={id}>
         <strong>{label}</strong>
-        {guided ? ' · Worked demonstration; no independent credit' : ''}
+        {guided ? ' · Worked demonstration' : ''}
       </figcaption>
       <svg viewBox={`0 0 ${width} ${layout.rowsHeight + 23}`} role="img" aria-label={text}>
         {zoomed ? (

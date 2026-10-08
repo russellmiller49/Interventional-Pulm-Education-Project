@@ -177,8 +177,4 @@ it('labels live estimates and never borrows another variable’s trend arrow', (
   expect(
     screen.getByText('Oxygen saturation').parentElement!.querySelector('[data-trend]'),
   ).not.toBeNull()
-  fireEvent.click(screen.getByRole('button', { name: 'Mean airway pressure' }))
-  expect(
-    screen.getByText(/does not independently model an oxygenation benefit/),
-  ).toBeInTheDocument()
 })

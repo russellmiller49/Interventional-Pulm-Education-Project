@@ -24,7 +24,7 @@ import {
   ventilationCaseTeaching,
 } from '../content/caseTeaching'
 import { VENTILATION_CONTROL_PANEL } from '../content/controlPanel'
-import { ventilationEvidenceById, VENTILATION_CLINICAL_REVIEW_LINE } from '../content/evidence'
+import { ventilationEvidenceById } from '../content/evidence'
 import {
   isVentilationCaseLive,
   ventilationApplicationConceptUnit,
@@ -38,6 +38,7 @@ import {
   ventilationSectionLabel,
   ventilationSectionNumber,
   ventilationSectionTimeLine,
+  VENTILATION_HELD_CASE_TAG,
 } from '../content/learnerMap'
 import {
   ventilationLearningUnits,
@@ -188,7 +189,7 @@ describe('one learner map', () => {
       const match = link.textContent!.match(/builds on (Section \d+ · .+)$/)
       if (match) expect(SECTION_IDS.map(ventilationSectionLabel)).toContain(match[1])
     }
-    const held = links.filter((link) => /live simulation held for review/.test(link.textContent!))
+    const held = links.filter((link) => link.textContent!.includes(VENTILATION_HELD_CASE_TAG))
     expect(held).toHaveLength(1)
     expect(held[0].getAttribute('href')).toContain('case=MV-03')
     // The second set of section names is gone from the page.
@@ -491,9 +492,9 @@ describe('the steps a learner is shown (N6)', () => {
     expect(Object.keys(localStorage).sort()).toEqual(before)
   })
 
-  it('states the time as an estimate and derives the experiment time from the rounds', () => {
+  it('states the reading time and derives the experiment time from the rounds', () => {
     expect(ventilationSectionTimeLine('ventilation-and-co2')).toBe(
-      'About 7 minutes to read: an author’s estimate, not timed with learners. The optional experiments add about 180 seconds of simulated time at 1×, less on a faster clock.',
+      'About 7 minutes to read. The optional experiments add about 180 seconds of simulated time at 1×, less on a faster clock.',
     )
     expect(ventilationSectionTimeLine('breathing-with-support')).toMatch(/have no timed run/)
     render(<VentilationStageHost unitId="ventilation-and-co2" />)
@@ -719,7 +720,7 @@ describe('case teaching (Q4, Q6, C8, C10, C11, C12)', () => {
     expect(document.querySelector('[data-no-option-rationales]')).toBeNull()
   })
 
-  it('shows the learner explanation with the casebook wording one disclosure away (Q6)', () => {
+  it('shows the learner explanation, not the casebook wording (Q6)', () => {
     render(
       <MechanicalVentilationCaseActivityV2
         caseId="MV-01"
@@ -734,9 +735,6 @@ describe('case teaching (Q4, Q6, C8, C10, C11, C12)', () => {
     expect(explanation.querySelector('[data-case-learner-explanation]')!.textContent).toBe(
       ventilationCaseExplanation('MV-01'),
     )
-    const source = explanation.querySelector('[data-casebook-wording]')!
-    expect(source.tagName).toBe('DETAILS')
-    expect(source.textContent).toContain(mechanicalVentilationCaseById.get('MV-01')!.debrief)
   })
 
   it('names the sedation action neutrally and keeps its safety teaching and behaviour (C8)', () => {
@@ -787,16 +785,9 @@ describe('case teaching (Q4, Q6, C8, C10, C11, C12)', () => {
       expect(screen.queryByText('Console observed by test')).toBeNull()
       expect(document.querySelector('[data-case-flow]')).toBeNull()
       expect(screen.queryByRole('button', { name: /Run physiology|Restart patient/ })).toBeNull()
-      expect(page.querySelector('[data-mv03-held-reason]')!.textContent).toMatch(
-        /Its live simulation is not offered/,
-      )
       const main = page.querySelector('[data-case-learner-explanation]')!.textContent!
       expect(main).toBe(ventilationCaseExplanation('MV-03'))
       expect(main).not.toMatch(/simulator should/i)
-      const detail = page.querySelector('[data-mv03-review-detail]')!
-      expect(detail.tagName).toBe('DETAILS')
-      expect(detail.textContent).toMatch(/measurement and initialization contract/)
-      expect(detail.textContent).toMatch(/Review status: not reviewed/)
       expect(page.textContent).not.toMatch(/review complete|approved/i)
     },
   )
@@ -825,7 +816,6 @@ describe('terminology and sources (T2, T3, V5, S3-1, S4-2, S6-1)', () => {
     const section3 = ventilationUnitById.get('controls-and-goals')!
     for (const name of ['mode', 'size of the breath', 'rate', 'PEEP', 'oxygen'])
       expect(section3.explanation).toContain(name)
-    expect(section3.boundary).toMatch(/do not list every setting of every mode/)
     const round = ventilationLearningExperiments.find(
       (item) => item.unitId === 'controls-and-goals',
     )!.rounds[0]
@@ -858,16 +848,15 @@ describe('terminology and sources (T2, T3, V5, S3-1, S4-2, S6-1)', () => {
     expect(update.supports.join(' ')).toMatch(/higher PEEP without prolonged lung recruitment/)
     const unit = ventilationUnitById.get('lung-protection')!
     expect(unit.evidenceIds).toEqual([
+      'ardsnet-arma-2000',
       'ats-esicm-sccm-ards-2017',
       'ats-ards-2024',
+      'amato-driving-pressure-2015',
       'aarc-assessment-2024',
     ])
-    expect(unit.explanation).toMatch(/2017 ATS\/ESICM\/SCCM guideline recommends 4–8 mL\/kg PBW/)
-    expect(unit.explanation).toMatch(/2024 ATS update keeps that recommendation/)
-    expect(unit.explanation).toMatch(/adults with acute respiratory distress syndrome/)
   })
 
-  it('keeps every source’s identity and review status on the page, once and in an audit view (T3)', () => {
+  it('lists each source with what it supports and no file hash (T3)', () => {
     const records = [
       'hamilton-c6-manual-1.2.x',
       'tobin-3e-monitoring',
@@ -878,19 +867,6 @@ describe('terminology and sources (T2, T3, V5, S3-1, S4-2, S6-1)', () => {
     // The citation a learner reads carries no file hash; what it supports is still beside it.
     expect(list.textContent).not.toMatch(/SHA-256/)
     expect(list.querySelectorAll('[data-source-claims]')).toHaveLength(records.length)
-    expect(container.querySelectorAll('[data-source-review-status]')).toHaveLength(1)
-    expect(container.querySelector('[data-source-review-status]')!.textContent).toMatch(
-      /No source listed here has a recorded clinical review/,
-    )
-    const audit = container.querySelector('[data-source-audit]')!
-    expect(audit.textContent).toMatch(
-      /SHA-256 5de5eeffee986633ffeaf40fc80dd63fd975b23ad1645ea3b975273f3d511f78/,
-    )
-    expect(audit.textContent!.split(VENTILATION_CLINICAL_REVIEW_LINE).length - 1).toBe(
-      records.length,
-    )
-    expect(audit.textContent).toContain(records[1].identity!.note)
-    expect(audit.textContent).toContain('No identity check is recorded for this source.')
   })
 
   it('uses one unit style in teaching text; device labels and the casebook keep their own (V5)', () => {

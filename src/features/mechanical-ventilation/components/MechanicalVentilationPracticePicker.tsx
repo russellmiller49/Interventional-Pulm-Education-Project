@@ -107,9 +107,8 @@ export function MechanicalVentilationPracticePicker({
             One patient at a time, with the reasoning the sections built: inspect the breath, try a
             change, reassess, and open the explanation. Every case supports optional questions and
             direct access to teaching. There are {ventilationCaseCountPhrase()}: MV-03 is a worked
-            explanation while its live measurement display is under review. “Builds on” names the
-            section that teaches a case’s mechanism; it is a suggestion, and every case opens
-            without it.
+            explanation. “Builds on” names the section that teaches a case’s mechanism; it is a
+            suggestion, and every case opens without it.
           </p>
           <div className={styles.entryActions}>
             <Link

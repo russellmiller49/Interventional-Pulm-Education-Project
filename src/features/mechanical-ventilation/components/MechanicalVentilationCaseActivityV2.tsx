@@ -98,13 +98,13 @@ function HeldDoubleTriggeringCase({
       <article className={`${task.flow} ${task.content}`} data-mv03-model-hold>
         <h1>{definition.title}</h1>
         <p>
-          <strong>Worked explanation · live case under modeling review</strong>
+          <strong>Worked explanation</strong>
         </p>
         <p data-mv03-held-reason>
-          This case is read here as a worked explanation. Its live simulation is not offered: the
-          simulator’s intrinsic PEEP reading for paired breaths is being reviewed by ventilation
-          faculty and respiratory therapy, and until then a live run could teach the wrong
-          conclusion about air trapping.
+          This case is a worked explanation without a live run. With paired breaths, the simulator’s
+          intrinsic PEEP reading alternates between the short gap inside a pair and the longer gap
+          between pairs, so a falling number on a live run would not show that air trapping
+          improved.
         </p>
         <h2>The mechanism</h2>
         <p data-case-learner-explanation>{ventilationCaseExplanation(caseId)}</p>
@@ -114,24 +114,6 @@ function HeldDoubleTriggeringCase({
             <li key={objective}>{objective}</li>
           ))}
         </ul>
-        <p>
-          This is a casebook explanation. No simulated intervention or observation has been
-          recorded.
-        </p>
-        <details data-mv03-review-detail>
-          <summary>Why the live case is held, in detail</summary>
-          <p>
-            The live intrinsic PEEP display alternates between the short gap within a breath pair
-            and the longer gap between pairs. A lower displayed value after waiting does not
-            demonstrate that air trapping improved. This live example is unavailable while
-            ventilation faculty/RT review the measurement and initialization contract.
-          </p>
-          <p>
-            <strong>Casebook wording, as supplied: </strong>
-            {definition.debrief}
-          </p>
-          <p>Review status: not reviewed. No date for the live case’s return is set.</p>
-        </details>
         <Link href="/mechanical-ventilation/practice">Continue to other cases</Link>
         <Link
           href={{
@@ -244,7 +226,7 @@ function LiveCase({
               <p data-case-learner-explanation>{ventilationCaseExplanation(caseId)}</p>
               {resolution ? <p>{resolution.cause}</p> : null}
               <p>
-                <strong>Authored safety priority: </strong>
+                <strong>Priority: </strong>
                 {
                   definition.priorityOptions.find(
                     (option) => option.id === definition.correctPriorityId,
@@ -252,7 +234,7 @@ function LiveCase({
                 }
               </p>
               <p>
-                <strong>Authored expected response: </strong>
+                <strong>Expected response: </strong>
                 {
                   definition.responseOptions.find(
                     (option) => option.id === definition.correctResponseId,
@@ -262,7 +244,7 @@ function LiveCase({
               {caseResponseModelNote(caseId) ? (
                 <p data-case-model-boundary>{caseResponseModelNote(caseId)}</p>
               ) : null}
-              <h3>Actions to consider in this authored example</h3>
+              <h3>Actions to consider</h3>
               <ul>
                 {definition.expectedActions.map((action) => (
                   <li key={action}>{action}</li>
@@ -274,18 +256,6 @@ function LiveCase({
                   <li key={action}>{action}</li>
                 ))}
               </ul>
-              <details data-casebook-wording>
-                <summary>Casebook wording, as supplied</summary>
-                <p>{definition.debrief}</p>
-                <p>
-                  The explanation above restates this text to you. The supplied wording was written
-                  for whoever builds and runs the simulation; it is kept here unchanged.
-                </p>
-              </details>
-              <p>
-                Reading this explanation does not record an action or establish a physiological
-                response.
-              </p>
             </section>
           ) : null}
           <SimulationLaunchGate
@@ -387,9 +357,7 @@ function LiveCase({
                 {state.criticalErrors.length ? (
                   <section className={task.boundary} role="alert" aria-label="Safety interruption">
                     <h3>Safety interruption</h3>
-                    <p>
-                      These simulated findings call for immediate stabilization and reassessment.
-                    </p>
+                    <p>Stop and treat these findings before you continue.</p>
                     <ul>
                       {state.criticalErrors.map((finding) => (
                         <li key={finding}>{finding}</li>

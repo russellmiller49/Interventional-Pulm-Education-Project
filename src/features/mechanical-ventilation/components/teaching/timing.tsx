@@ -305,10 +305,8 @@ export function VentilationTriggerAndCycle({
 
       <TextEquivalent>{summary}</TextEquivalent>
       <ModelBoundary>
-        Neural inspiration here is read off the modeled effort signal, using each breath’s own peak
-        effort as the reference — a shape comparison, not a measured airway occlusion pressure. No
-        limit is stated for what counts as an acceptable delay; that belongs to this module’s source
-        reconciliation and to the bedside.
+        Neural inspiration here is read from the modeled effort signal. At the bedside you infer it
+        from the flow and pressure traces, or measure it with an esophageal balloon.
       </ModelBoundary>
     </section>
   )

@@ -15,7 +15,7 @@ import { patientReportAvailability } from '../../content/patientReport'
 import { plateauAcquisition } from '../../content/plateauAcquisition'
 import { triggerDelayEvidence } from '../../engine/triggerEvidence'
 import type { VentilationSimulationState } from '../../engine'
-import { ModelBoundary, TextEquivalent, latestBreath, round, styles, tracePath } from './shared'
+import { TextEquivalent, latestBreath, round, styles, tracePath } from './shared'
 
 type Domain = 'drive' | 'load' | 'timing' | 'support' | 'patient'
 
@@ -345,11 +345,10 @@ export function VentilationDyssynchronyDomains({
       )}
 
       <TextEquivalent>{summary}</TextEquivalent>
-      <ModelBoundary>
-        “Points here” means the live signal is consistent with looking in that domain — not that the
-        mechanism is established. Effort, drive, and the human scores come from the bounded
-        educational model, and no signal here is a substitute for examining the patient.
-      </ModelBoundary>
+      <p className={styles.panelNote}>
+        “Points here” tells you which domain to examine first. Confirm it at the bedside before you
+        change a setting.
+      </p>
     </section>
   )
 }
