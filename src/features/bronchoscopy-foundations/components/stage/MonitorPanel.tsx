@@ -35,9 +35,9 @@ export const MONITOR_TREND_MEANING: Readonly<Record<MonitorTrend, string>> = {
   steady:
     'no lasting change from the earlier state; a brief change that has settled is described in the words',
   new: 'not present in the earlier state',
-  rising: 'higher than the earlier state and still moving',
-  falling: 'lower than the earlier state and still moving',
-  lost: 'present earlier and no longer available',
+  rising: 'rising compared with the earlier state',
+  falling: 'falling compared with the earlier state',
+  lost: 'available earlier and not now',
 }
 
 const TREND_ORDER: readonly MonitorTrend[] = ['steady', 'new', 'rising', 'falling', 'lost']
