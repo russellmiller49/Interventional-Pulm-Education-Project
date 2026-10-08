@@ -21,7 +21,11 @@ import { ControlHeadCloseup, DistalTipCloseup } from './BronchoscopeCloseup'
 import { isDetailedBench, type BenchPresentation } from './useBenchPresentation'
 import { benchOffCardNote, benchTipOrientation } from '../../engine/scope/benchOrientation'
 import { CORDS_STATE_WORDS } from '../../engine/scope/scopeMetrics'
-import { loadSceneAssets, type ScopeSceneAssets } from './scopeSceneAssets'
+import {
+  forgetPendingScopeModels,
+  loadSceneAssets,
+  type ScopeSceneAssets,
+} from './scopeSceneAssets'
 import { INITIAL_SCENE_LOAD, SCENE_LOAD_DEADLINE_MS, reduceSceneLoad } from './sceneLoad'
 import {
   layoutOpticalLabels,
@@ -110,6 +114,9 @@ function RenderLifecycle({ props, onDraw }: { props: SceneProps; onDraw: () => v
 
 export default function ScopeScene(props: SceneProps) {
   const [assets, setAssets] = useState<ScopeSceneAssets | null>(null)
+  // A scene mounted again after the schematic view starts its requests afresh: one left hanging
+  // by the attempt before it is not waited on. Nothing is pending on a first mount.
+  useState(() => forgetPendingScopeModels())
   // Loading, drawing, failing and every way back to loading are one machine (BF-01 finding 3).
   const [load, dispatchLoad] = useReducer(reduceSceneLoad, INITIAL_SCENE_LOAD)
   const status: SceneStatus = load.status
@@ -153,7 +160,11 @@ export default function ScopeScene(props: SceneProps) {
   // A lost graphics context is recovered unasked, a bounded number of times; the learner's own
   // reload is always a new attempt.
   const recover = useCallback(() => dispatchLoad({ type: 'context-lost' }), [])
-  const retry = useCallback(() => dispatchLoad({ type: 'retry' }), [])
+  const retry = useCallback(() => {
+    // A request that hung is asked for again; one that loaded is reused.
+    forgetPendingScopeModels()
+    dispatchLoad({ type: 'retry' })
+  }, [])
   // An attempt that is on screen in a visible tab and still has not drawn is given up on, so the
   // view reports a failure and offers the retry and the schematic view instead of loading for
   // good. Time offscreen or in a background tab does not count: nothing is drawn there by design.

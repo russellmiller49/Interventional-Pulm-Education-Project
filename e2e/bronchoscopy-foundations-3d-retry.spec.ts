@@ -1,14 +1,10 @@
-import { createHash } from 'crypto'
 import { expect, test, type Page } from '@playwright/test'
 import { bronchStageLesson } from '../src/features/bronchoscopy-foundations/content/stageLessons'
 import type { BronchSectionId } from '../src/features/bronchoscopy-foundations/content/pathway'
-import { BRONCH_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/learnProgress'
-import { BRONCH_SELF_PACED_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/selfPacedProgress'
 
 /**
- * BF-PRE-REVIEW-04 — teaching clarity, honest review state, the survey-to-report path, and the
- * 3D view's retry (BF-01 finding 3). Real routes of the production build with native pointer and
- * keyboard input: no forced clicks, no injected reducer state, no fabricated survey.
+ * The 3D view's retry (BF-01 finding 3). Real routes with native pointer and keyboard input: no
+ * forced clicks and no injected reducer state.
  */
 test.skip(!process.env.BRONCH_FOUNDATIONS_BASE_URL, 'Use the dedicated config and a local server.')
 test.setTimeout(120_000)
@@ -18,8 +14,6 @@ const primary = (page: Page) => page.locator('[data-now-card] [data-now-primary]
 const skip = (page: Page) => page.locator('[data-now-card] [data-now-skip]')
 const stage = (page: Page) => page.locator('[data-stage]')
 const three = (page: Page) => page.locator('[data-three-state]')
-const sha256 = (value: string | null) =>
-  value === null ? null : createHash('sha256').update(value).digest('hex')
 
 test.beforeEach(async ({ page }) => {
   const url = process.env.BRONCH_FOUNDATIONS_BASE_URL!
@@ -46,16 +40,6 @@ async function walkTo(page: Page, id: BronchSectionId, stop: (stepId: string) =>
     await expect(stage(page)).not.toHaveAttribute('data-stage', stepId)
   }
   throw new Error('step not reached')
-}
-
-async function stored(page: Page) {
-  return page.evaluate(
-    ([current, earlier]) => ({
-      current: localStorage.getItem(current),
-      earlier: localStorage.getItem(earlier),
-    }),
-    [BRONCH_SELF_PACED_STORAGE_KEY, BRONCH_STORAGE_KEY],
-  )
 }
 
 test.describe('BF-01 finding 3: the 3D view comes back after an asset failure', () => {
@@ -112,4 +96,29 @@ test.describe('BF-01 finding 3: the 3D view comes back after an asset failure', 
   })
 })
 
-export { sha256, stored, walkTo, openSection, primary, skip, stage }
+test('BF-01 finding 3: an attempt that hangs fails at its deadline, and the retry asks again', async ({
+  page,
+}) => {
+  test.setTimeout(240_000)
+  const LARYNX_ASSETS = '**/anatomy/larynx/**'
+  // The request is never answered: neither a failure nor a model.
+  await page.route(LARYNX_ASSETS, () => new Promise(() => {}))
+  const lesson = bronchStageLesson('larynx-and-entry')
+  const act = lesson.steps.find((step) => step.interaction.kind === 'scope-task')!
+  await walkTo(page, 'larynx-and-entry', (stepId) => stepId === act.id)
+  await three(page).scrollIntoViewIfNeeded()
+  await expect(three(page)).toHaveAttribute('data-three-state', 'loading')
+  // While it waits, the dock says the controls are waiting too.
+  await expect(page.locator('[data-scope-controls-waiting]')).toContainText('still loading')
+  await expect(three(page)).toHaveAttribute('data-three-state', 'failed', { timeout: 70_000 })
+  await expect(three(page)).toHaveAttribute('data-three-failure', 'deadline')
+  await expect(
+    page.getByRole('button', { name: 'Use the schematic view', exact: true }),
+  ).toBeVisible()
+  await page.unrouteAll({ behavior: 'ignoreErrors' })
+  await page.route('**/api/analytics', (route) => route.fulfill({ status: 204 }))
+  await page.getByRole('button', { name: 'Reload the 3D view', exact: true }).click()
+  await expect(three(page)).toHaveAttribute('data-three-state', 'ready', { timeout: 30_000 })
+  await expect(three(page)).toHaveAttribute('data-three-attempt', '1')
+  await expect(page.locator('[data-scope-controls-waiting]')).toHaveCount(0)
+})
