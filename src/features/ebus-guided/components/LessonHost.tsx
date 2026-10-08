@@ -104,7 +104,6 @@ function LessonSession({
   const heading = useRef<HTMLHeadingElement>(null)
   const lessonFlow = useRef<HTMLDivElement>(null)
   const lessonChrome = useRef<HTMLDivElement>(null)
-  useLessonChromeClearance(lessonFlow, lessonChrome)
   const [sessionId] = useState(() => lesson.id + '-' + Math.random().toString(36).slice(2))
   const position = activities.findIndex((activity) => activity.id === activeId)
   const current = activities.find((activity) => activity.id === (reviewId ?? activeId))!
@@ -271,6 +270,18 @@ function LessonSession({
    * and so is "Continue without an image". The brightest control on a screen used to be the one
    * that skipped its point (visual review of 2026-10-07, item 7).
    */
+  /*
+   * A linked acquisition is worked in a console that fits one screen: task, checklist and the
+   * Hold button in a strip, the three views under it, nothing to scroll (visual review of
+   * 2026-10-07, item 1). Recorded-clip and model labs keep the reading layout for now.
+   */
+  const consoleStage =
+    !finished &&
+    !reviewId &&
+    current.interaction === 'acquire' &&
+    runtimeLab?.kind === 'simulator' &&
+    !!runtimeLab.linkedLesson
+  useLessonChromeClearance(lessonFlow, lessonChrome, consoleStage)
   const advanceIsSkip =
     !reviewId && !holdRequested && !acquireStep && (taskOpen || (!!question && !committed))
   const advanceIsProminent = !advanceIsSkip
@@ -566,7 +577,12 @@ function LessonSession({
             nothing new is being saved. Everything stays open.
           </p>
         )}
-        <section className={styles.taskSurface} data-now-card aria-labelledby="ebus-task-title">
+        <section
+          className={styles.taskSurface}
+          data-now-card
+          data-console={consoleStage || undefined}
+          aria-labelledby="ebus-task-title"
+        >
           <div className={styles.taskHeading}>
             <p className={styles.eyebrow} data-activity-kind={current.kind}>
               {reviewId ? 'Review · Current activity paused' : KIND_LABELS[current.kind]}
@@ -640,6 +656,7 @@ function LessonSession({
                   reveal={reveal && !reviewId}
                   sessionId={sessionId + '-' + (runtimeActivity.task ?? 'guided')}
                   onObservation={onObservation}
+                  console={consoleStage}
                 />
               ) : showDemo && lesson.lab ? (
                 <Workbench
@@ -921,7 +938,7 @@ function LessonSession({
                     <p>The acquisition is ready. Hold this image to interpret it.</p>
                   ) : (
                     <>
-                      <p>
+                      <p data-acquisition-waiting>
                         Waiting for your acquisition.{' '}
                         {runtimeLab?.kind === 'knobology'
                           ? 'Selecting a recording is not yet an acquisition.'

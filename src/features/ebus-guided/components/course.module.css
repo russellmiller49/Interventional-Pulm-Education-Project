@@ -1162,3 +1162,132 @@
     margin-bottom: 4px;
   }
 }
+
+/*
+ * The acquisition console (visual review of 2026-10-07, item 1). On a wide screen a linked
+ * acquisition is one screen tall: a strip with the task and the Hold button, a line of what is
+ * still open, and the workbench filling the rest. Below 1100 px it falls back to the reading
+ * layout, where the three views stack.
+ */
+@media (min-width: 1100px) {
+  .taskSurface[data-console] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+  .taskSurface[data-console] .taskHeading {
+    grid-column: 1;
+    padding: 10px 18px 6px;
+  }
+  .taskSurface[data-console] .taskHeading h2 {
+    font-size: 1.2rem;
+    margin: 2px 0 4px;
+    /* The page's own scroll padding already clears the site header; do not clear it twice. */
+    scroll-margin-top: 0;
+  }
+  .taskSurface[data-console] .taskHeading [data-task-instruction] {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+    font-size: 0.86rem;
+    margin: 0;
+  }
+  .taskSurface[data-console] .taskHeading [data-task-instruction]:hover {
+    -webkit-line-clamp: unset;
+  }
+  .taskSurface[data-console] .taskHeading [data-activity-purpose] {
+    display: none;
+  }
+  .taskSurface[data-console] .taskAdvance {
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: flex-end;
+    max-width: 34rem;
+    padding: 10px 18px;
+    border-top: 0;
+  }
+  .taskSurface[data-console] .taskAdvance .advanceNote {
+    min-height: 0;
+    text-align: right;
+    font-size: 0.78rem;
+  }
+  .taskSurface[data-console] .taskComposition {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding: 0 12px 12px;
+  }
+  .taskSurface[data-console] .taskContent {
+    order: -1;
+    display: block;
+  }
+  .taskSurface[data-console] .taskContent > :not([data-acquisition-status]) {
+    display: none;
+  }
+  .taskSurface[data-console] [data-acquisition-status] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    align-items: baseline;
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 0.82rem;
+  }
+  .taskSurface[data-console] [data-acquisition-status] p {
+    margin: 0;
+  }
+  .taskSurface[data-console] [data-acquisition-waiting] {
+    display: none;
+  }
+  .taskSurface[data-console] [data-acquisition-status] {
+    flex-wrap: nowrap;
+    padding: 2px 6px;
+    border: 0;
+    background: none;
+  }
+  .taskSurface[data-console] [data-acquisition-status] > p {
+    flex: none;
+    color: var(--muted);
+  }
+  .taskSurface[data-console] [data-acquisition-outstanding] {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    min-width: 0;
+    padding: 0 0 2px;
+    overflow-x: auto;
+    list-style: none;
+  }
+  .taskSurface[data-console] [data-acquisition-outstanding] li {
+    flex: none;
+    padding: 1px 9px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 0.76rem;
+    white-space: nowrap;
+  }
+  /* Still announced, and still the marker the browser specs wait on; the pane badges say it. */
+  .taskSurface[data-console] .evidenceIdentity {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .taskSurface[data-console] .embed {
+    min-height: 0;
+  }
+  .embed iframe[data-console] {
+    height: max(
+      480px,
+      calc(
+        100dvh - var(--ebus-focus-clear-top, calc(var(--site-header-height, 5rem) + 1rem)) - 9rem
+      )
+    );
+  }
+}

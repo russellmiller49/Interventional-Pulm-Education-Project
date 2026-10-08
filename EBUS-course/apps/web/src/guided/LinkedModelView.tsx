@@ -1001,66 +1001,73 @@ export function LinkedModelView(props: Props) {
       </select>
     </label>
   )
-  return (
-    <section className="linked-models" aria-label="Linked teaching models">
-      <div hidden={concealed}>
-        <div className="guided-tabs" role="group" aria-label="Linked model view">
-          {(['scope', 'anatomy', 'section'] as const).map((view) => (
-            <button
-              key={view}
-              aria-pressed={mode === view}
-              onClick={() => {
-                if ((view === 'scope') !== (mode === 'scope')) {
-                  setSelection('')
-                  setSelectedPoint(null)
-                }
-                setMode(view)
-              }}
-            >
-              {view === 'scope'
-                ? 'Scope model'
-                : view === 'anatomy'
-                  ? 'Anatomy model'
-                  : 'Model section'}
-            </button>
-          ))}
-        </div>
-        <p className="guided-label">
-          {mode === 'scope'
-            ? 'Cyan fan: the ultrasound plane. Gold arrow: where the camera looks.'
-            : 'The cyan fan is the plane the ultrasound image shows. The airway is solid; vessels are outlined so you can see past them.'}
-        </p>
-        {config.linkedLesson === 'station-seven' && config.linkedVariant !== 'changed-window' && (
-          <div className="guided-tabs" role="group" aria-label="Bronchial approach">
-            {(['rms', 'lms'] as const).map((approach) => (
-              <button
-                key={approach}
-                disabled={config.locked}
-                aria-pressed={evidence.approach === approach}
-                onClick={() => props.onApproach(approach)}
-              >
-                {approach === 'rms' ? 'Right main bronchus' : 'Left main bronchus'}
-                {evidence.scannedApproaches.includes(approach) ? ' · scanned' : ''}
-              </button>
-            ))}
-          </div>
-        )}
-        {error && (
-          <div role="alert" className="guided-error">
-            <p>{error}</p>
-            <button onClick={() => window.location.reload()}>Retry teaching models</button>
-          </div>
-        )}
-        {!models && !error && <p role="status">Checking and loading teaching models…</p>}
+  const modeSwitch = (
+    <div className="linked-mode-switch" role="group" aria-label="Linked model view">
+      {(['scope', 'anatomy', 'section'] as const).map((view) => (
+        <button
+          key={view}
+          aria-pressed={mode === view}
+          onClick={() => {
+            if ((view === 'scope') !== (mode === 'scope')) {
+              setSelection('')
+              setSelectedPoint(null)
+            }
+            setMode(view)
+          }}
+        >
+          {view === 'scope' ? 'Scope model' : view === 'anatomy' ? 'Anatomy model' : 'Model section'}
+        </button>
+      ))}
+    </div>
+  )
+  const approachSwitch = config.linkedLesson === 'station-seven' &&
+    config.linkedVariant !== 'changed-window' && (
+      <div className="guided-tabs linked-approach" role="group" aria-label="Bronchial approach">
+        {(['rms', 'lms'] as const).map((approach) => (
+          <button
+            key={approach}
+            disabled={config.locked}
+            aria-pressed={evidence.approach === approach}
+            onClick={() => props.onApproach(approach)}
+          >
+            {approach === 'rms' ? 'Right main bronchus' : 'Left main bronchus'}
+            {evidence.scannedApproaches.includes(approach) ? ' · scanned' : ''}
+          </button>
+        ))}
       </div>
+    )
+  const sweepStatus =
+    identifying && config.linkedLesson !== 'acoustic-contact' && !config.locked
+      ? describeLinkedSweep({
+          sweep,
+          targetVisible: !!props.targetVisible,
+          frameReady: !!props.frameReady,
+          contact: props.contactQuality,
+          lastEvent: props.sweepReport?.event ?? null,
+          lastResetProgress: props.sweepReport?.resetProgress ?? null,
+          targetName: props.targetName ?? 'The model target',
+        })
+      : null
+  return (
+    <section className="linked-models linked-console" aria-label="Linked teaching models">
+      {/*
+        The lab console (visual review of 2026-10-07, items 1, 5 and 7): one task line, three
+        views in a row, one control bar, one status line. Everything that explains a control
+        rather than being one is folded under "View help and more options".
+      */}
+      {error && (
+        <div role="alert" className="guided-error">
+          <p>{error}</p>
+          <button onClick={() => window.location.reload()}>Retry teaching models</button>
+        </div>
+      )}
+      {!models && !error && !concealed && <p role="status">Checking and loading teaching models…</p>}
       {identifying && !config.locked && landmarkTarget && (
         <div className="linked-landmark-task">
           <h3>Find the {LANDMARK_NAMES[landmarkTarget]}</h3>
           <p>
-            Letters mark structures on the 3D {landmarkMode} model. Click or tap a letter, choose
-            it from the list, or Tab to a letter and press Enter; hovering or focusing a letter
-            highlights its structure. Then check your selection. Names are available at any time
-            from “Show structure names” — using them is allowed and nothing here is scored.
+            Click its letter on the 3D {landmarkMode} model, then check. “Names” on the model shows
+            what each letter is.
           </p>
           {mode !== landmarkMode && (
             <button
@@ -1089,12 +1096,26 @@ export function LinkedModelView(props: Props) {
           {landmarkFeedback && <p role="status">{landmarkFeedback}</p>}
         </div>
       )}
-      {/*
-        Three views, one row, one control bar (visual review of 2026-10-07, item 1). Reading the
-        white-light view and the ultrasound together is the core EBUS skill; the bronchoscopy view
-        used to open from a toggle below the fold. The ultrasound is the largest pane and wears
-        the scan plane's cyan, the same cyan as the fan's edge in the 3D pane.
-      */}
+      {identifying && !config.locked && !landmarkTarget && landmarkIds.length > 0 && (
+        <p role="status" data-landmarks-identified className="linked-task-line">
+          Landmarks identified:{' '}
+          {landmarkIds
+            .map((id) => LANDMARK_NAMES[id] + (letterOf(id) ? ` (${letterOf(id)})` : ''))
+            .join(' · ')}
+          . Acquire the required ultrasound sweep.
+        </p>
+      )}
+      {config.demonstration && (
+        <div className="linked-demo">
+          <strong>Worked demonstration</strong>
+          <span>Change one command at a time and watch all three views.</span>
+          <div className="guided-tabs">
+            <button onClick={() => props.onDemo('roll')}>Demonstrate rotation</button>
+            <button onClick={() => props.onDemo('flexion')}>Demonstrate flexion</button>
+            <button onClick={() => props.onDemo('reset')}>Reset example</button>
+          </div>
+        </div>
+      )}
       <div
         className={
           concealed
@@ -1118,57 +1139,114 @@ export function LinkedModelView(props: Props) {
         </div>
         <div className="linked-physical linked-pane" hidden={concealed} data-pane="anatomy">
           <div className="linked-pane-title">
-            <span>
-              {mode === 'scope' ? 'Scope' : mode === 'section' ? 'Model section' : '3D anatomy'}
-            </span>
+            {modeSwitch}
             <small>Model</small>
           </div>
-          <div ref={host} className="linked-canvas" hidden={mode === 'section'} />
-          {mode === 'section' && (
-            <ModelSection
-              volume={volume}
-              pose={pose}
-              selectedPoint={config.locked && !config.reveal ? null : selectedPoint}
-              onViewed={viewed}
-              discover={canDiscoverImage(config)}
-            />
-          )}
-        </div>
-      </div>
-      {props.controls && !concealed && <div className="linked-control-bar">{props.controls}</div>}
-      {!concealed && (
-        <div>
-          <div className="guided-tabs" role="group" aria-label="Observer camera">
-            <button onClick={() => controller.current?.orbit(-0.3)}>Orbit left</button>
-            <button onClick={() => controller.current?.orbit(0.3)}>Orbit right</button>
-            <button onClick={() => controller.current?.zoom(1.3)}>Zoom in</button>
-            <button onClick={() => controller.current?.zoom(1 / 1.3)}>Zoom out</button>
-            <button onClick={() => controller.current?.reset()}>Reset view</button>
-            {mode === 'scope' && (
-              <button aria-pressed={wholeScope} onClick={() => setWholeScope((v) => !v)}>
-                {wholeScope ? 'Show distal tip' : 'Show whole scope'}
-              </button>
-            )}
-            {mode === 'anatomy' && (
-              <button aria-pressed={wholeAnatomy} onClick={() => setWholeAnatomy((v) => !v)}>
-                {wholeAnatomy ? 'Frame the landmark region' : 'Show whole model'}
-              </button>
+          <div className="linked-stage">
+            <div ref={host} className="linked-canvas" hidden={mode === 'section'} />
+            {mode === 'section' && (
+              <ModelSection
+                volume={volume}
+                pose={pose}
+                selectedPoint={config.locked && !config.reveal ? null : selectedPoint}
+                onViewed={viewed}
+                discover={canDiscoverImage(config)}
+              />
             )}
             {mode !== 'section' && (
-              <button
-                aria-pressed={showNames}
-                data-structure-names
-                onClick={() => setShowNames((v) => !v)}
-              >
-                {showNames ? 'Hide structure names' : 'Show structure names'}
-              </button>
-            )}
-            {engaged && (
-              <button data-release-observer onClick={() => controller.current?.release()}>
-                Release wheel control
-              </button>
+              <div className="linked-view-chips" role="group" aria-label="Observer camera">
+                <button aria-label="Orbit left" onClick={() => controller.current?.orbit(-0.3)}>
+                  ⟲
+                </button>
+                <button aria-label="Orbit right" onClick={() => controller.current?.orbit(0.3)}>
+                  ⟳
+                </button>
+                <button aria-label="Zoom in" onClick={() => controller.current?.zoom(1.3)}>
+                  +
+                </button>
+                <button aria-label="Zoom out" onClick={() => controller.current?.zoom(1 / 1.3)}>
+                  −
+                </button>
+                <button aria-label="Reset view" onClick={() => controller.current?.reset()}>
+                  Fit
+                </button>
+                {mode === 'scope' && (
+                  <button
+                    aria-pressed={wholeScope}
+                    aria-label={wholeScope ? 'Show distal tip' : 'Show whole scope'}
+                    onClick={() => setWholeScope((v) => !v)}
+                  >
+                    Whole scope
+                  </button>
+                )}
+                {mode === 'anatomy' && (
+                  <button
+                    aria-pressed={wholeAnatomy}
+                    aria-label={wholeAnatomy ? 'Frame the landmark region' : 'Show whole model'}
+                    onClick={() => setWholeAnatomy((v) => !v)}
+                  >
+                    Whole model
+                  </button>
+                )}
+                <button
+                  aria-pressed={showNames}
+                  aria-label={showNames ? 'Hide structure names' : 'Show structure names'}
+                  data-structure-names
+                  onClick={() => setShowNames((v) => !v)}
+                >
+                  Names
+                </button>
+                {engaged && (
+                  <button data-release-observer onClick={() => controller.current?.release()}>
+                    Release wheel control
+                  </button>
+                )}
+              </div>
             )}
           </div>
+        </div>
+      </div>
+      {!concealed && (props.controls || approachSwitch) && (
+        <div className="linked-control-bar">
+          {props.controls}
+          {approachSwitch}
+        </div>
+      )}
+      {sweepStatus && (
+        <div
+          className="linked-sweep"
+          data-sweep-state={sweepStatus.state}
+          data-sweep-in-plane={props.frameReady ? String(!!props.targetVisible) : 'pending'}
+          data-sweep-samples={sweep?.samples ?? 0}
+          data-sweep-span={sweep?.span ?? 0}
+        >
+          <div role="status">
+            <strong>{sweepStatus.heading}</strong>
+            <p data-sweep-in-plane-text>{sweepStatus.inPlane}</p>
+          </div>
+          <p>{sweepStatus.waiting}</p>
+          {sweepStatus.resetReason && <p data-sweep-reset-reason>{sweepStatus.resetReason}</p>}
+          {sweepStatus.progress && (
+            <p data-sweep-progress>
+              This pass so far: {sweepStatus.progress.samples} of {sweepStatus.progress.minSamples}{' '}
+              paused frames with the target, {sweepStatus.progress.span}° of{' '}
+              {sweepStatus.progress.minSpanDeg}° rotation.
+            </p>
+          )}
+          <details>
+            <summary>How this exercise counts a sweep</summary>
+            <p>{SWEEP_TOLERANCE_NOTE}</p>
+          </details>
+        </div>
+      )}
+      {!concealed && (
+        <details className="linked-more">
+          <summary>View help and more options</summary>
+          <p className="guided-label">
+            {mode === 'scope'
+              ? 'Cyan fan: the ultrasound plane. Gold arrow: where the camera looks.'
+              : 'The cyan fan is the plane the ultrasound image shows. The airway is solid; vessels are outlined so you can see past them.'}
+          </p>
           <p className="guided-label" data-observer-caption>
             {config.reveal && mode !== 'section' && 'Hover, tap or focus a marker to name a structure. '}
             {identifying &&
@@ -1181,100 +1259,37 @@ export function LinkedModelView(props: Props) {
               ? 'Wheel and one-finger control are on for the model. Press Escape or click elsewhere to release them; the page scrolls normally once released.'
               : 'The page scrolls normally over the model. Click, tap or focus the model to turn on wheel and one-finger control.'}
           </p>
-        </div>
-      )}
-      {!config.locked && models && (
-        <>
-          {(!identifying || !landmarkTarget || mode !== landmarkMode) && structureSelector}
-          {selection && !identifying && (
-            <p className="linked-selection" role="status">
-              Selected:{' '}
-              {labelFor(
-                roots.map((root) => root.getObjectByName(selection)).find(Boolean) ??
-                  ({ name: selection, userData: {} } as THREE.Object3D),
-                config.reveal,
-              )}
-            </p>
-          )}
-          {identifying && selection && STRUCTURE_FEATURES[selection] && (
-            <p className="linked-selection-description">
-              Selected structure: {STRUCTURE_FEATURES[selection]}
-            </p>
-          )}
-          {mode !== 'scope' && (
-            <label>
-              <input
-                type="checkbox"
-                checked={isolate}
-                onChange={(e) => setIsolate(e.target.checked)}
-              />{' '}
-              Isolate selected structure
-            </label>
-          )}
-        </>
-      )}
-      {identifying && !config.locked && !landmarkTarget && landmarkIds.length > 0 && (
-        <p role="status" data-landmarks-identified>
-          Landmarks identified:{' '}
-          {landmarkIds
-            .map((id) => LANDMARK_NAMES[id] + (letterOf(id) ? ` (${letterOf(id)})` : ''))
-            .join(' · ')}
-          . Acquire the required ultrasound sweep.
-        </p>
-      )}
-      {identifying &&
-        config.linkedLesson !== 'acoustic-contact' &&
-        !config.locked &&
-        (() => {
-          const status = describeLinkedSweep({
-            sweep,
-            targetVisible: !!props.targetVisible,
-            frameReady: !!props.frameReady,
-            contact: props.contactQuality,
-            lastEvent: props.sweepReport?.event ?? null,
-            lastResetProgress: props.sweepReport?.resetProgress ?? null,
-            targetName: props.targetName ?? 'The model target',
-          })
-          return (
-            <div
-              className="linked-sweep"
-              data-sweep-state={status.state}
-              data-sweep-in-plane={props.frameReady ? String(!!props.targetVisible) : 'pending'}
-              data-sweep-samples={sweep?.samples ?? 0}
-              data-sweep-span={sweep?.span ?? 0}
-            >
-              <div role="status">
-                <strong>{status.heading}</strong>
-                <p data-sweep-in-plane-text>{status.inPlane}</p>
-              </div>
-              <p>{status.waiting}</p>
-              {status.resetReason && <p data-sweep-reset-reason>{status.resetReason}</p>}
-              {status.progress && (
-                <p data-sweep-progress>
-                  This pass so far: {status.progress.samples} of {status.progress.minSamples}{' '}
-                  paused frames with the target, {status.progress.span}° of{' '}
-                  {status.progress.minSpanDeg}° rotation. These are transient model samples for
-                  this pass — not a score, a mastery measure or course progress.
+          {!config.locked && models && (
+            <>
+              {(!identifying || !landmarkTarget || mode !== landmarkMode) && structureSelector}
+              {selection && !identifying && (
+                <p className="linked-selection" role="status">
+                  Selected:{' '}
+                  {labelFor(
+                    roots.map((root) => root.getObjectByName(selection)).find(Boolean) ??
+                      ({ name: selection, userData: {} } as THREE.Object3D),
+                    config.reveal,
+                  )}
                 </p>
               )}
-              <details>
-                <summary>How this exercise counts a sweep</summary>
-                <p>{SWEEP_TOLERANCE_NOTE}</p>
-              </details>
-            </div>
-          )
-        })()}
-      {config.demonstration && (
-        <div className="linked-demo">
-          <strong>Worked demonstration</strong>
-          <p>Change one command at a time and watch both views.</p>
-          <div className="guided-tabs">
-            <button onClick={() => props.onDemo('roll')}>Demonstrate rotation</button>
-            <button onClick={() => props.onDemo('flexion')}>Demonstrate flexion</button>
-            <button onClick={() => props.onDemo('reset')}>Reset example</button>
-          </div>
-          <p className="guided-label">Demonstration actions do not complete the activity.</p>
-        </div>
+              {identifying && selection && STRUCTURE_FEATURES[selection] && (
+                <p className="linked-selection-description">
+                  Selected structure: {STRUCTURE_FEATURES[selection]}
+                </p>
+              )}
+              {mode !== 'scope' && (
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={isolate}
+                    onChange={(e) => setIsolate(e.target.checked)}
+                  />{' '}
+                  Isolate selected structure
+                </label>
+              )}
+            </>
+          )}
+        </details>
       )}
     </section>
   )

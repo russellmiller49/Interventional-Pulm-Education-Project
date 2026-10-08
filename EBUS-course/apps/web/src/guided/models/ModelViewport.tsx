@@ -367,7 +367,7 @@ export function ModelViewport({
              */
             controls.target.copy(b)
             // Far enough back that the trachea, both main bronchi and the esophagus are in frame.
-            camera.position.copy(routeObserverPosition(a, b, 230))
+            camera.position.copy(routeObserverPosition(a, b, 165))
             controls.update()
             lastRoute = routeKey
           }
