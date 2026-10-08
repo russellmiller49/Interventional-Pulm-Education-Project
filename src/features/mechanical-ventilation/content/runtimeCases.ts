@@ -160,10 +160,13 @@ const interventionCatalog: Record<InterventionEffectId, InterventionDefinition> 
   },
   'deepen-sedation': {
     id: 'deepen-sedation',
-    label: 'Deepen sedation without correcting the mechanism',
+    // MV-PRE-REVIEW-04 (C8): the label named itself the wrong choice. The action, its effect, its
+    // `unsafe` flag and its response are unchanged; what it does and does not address is now said
+    // in the description the case prints under every action.
+    label: 'Deepen sedation',
     category: 'medication',
     description:
-      'Suppress visible respiratory effort without addressing timing, load, pain, or delirium.',
+      'Suppresses visible respiratory effort. It does not address timing, load, pain, or delirium.',
     response: 'Visible effort falls, but the uncorrected mechanism and sedation risk remain.',
     effectId: 'deepen-sedation',
     latencySeconds: 45,

@@ -3882,6 +3882,13 @@
   text-transform: uppercase;
 }
 
+.controlGroupNote {
+  margin: 0 0 0.6rem;
+  color: #b9d2d4;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
 .waveformReadouts {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -4108,4 +4115,9 @@ line.waveformAnnotation {
     border-right: 1px solid var(--screen-line);
     border-bottom: 1px solid var(--screen-line);
   }
+}
+
+/* MV-PRE-REVIEW-04: a snapshot hash is one unbroken 64-character word; let it wrap on a phone. */
+.sourcesSection code {
+  overflow-wrap: anywhere;
 }

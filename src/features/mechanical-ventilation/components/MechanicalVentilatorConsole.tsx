@@ -25,6 +25,7 @@ import {
   getVentilatorDeviceProfile,
   getVentilatorModeDescriptor,
   groupControlsForDevice,
+  VENTILATOR_CONTROL_GROUP_NOTE,
   nativeToCanonicalControlValue,
   orderControlsForDevice,
   resolveBreathPhase,
@@ -1234,6 +1235,11 @@ export function MechanicalVentilatorConsole({
                 </div>
                 <small>Select a tile, then use the physical knob or arrow keys.</small>
               </div>
+              {display.controlGroups?.length ? (
+                <p className={styles.controlGroupNote} data-control-group-note>
+                  {VENTILATOR_CONTROL_GROUP_NOTE}
+                </p>
+              ) : null}
               {groupControlsForDevice(display, displayedControls).map((group) => (
                 <section key={group.label || 'controls'} className={styles.controlGroup}>
                   {group.label ? <h4>{group.label}</h4> : null}

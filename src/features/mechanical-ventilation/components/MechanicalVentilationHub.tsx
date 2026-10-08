@@ -9,6 +9,7 @@ import { Link } from '@/i18n/navigation'
 import { mechanicalVentilationCaseById } from '../content/runtimeCases'
 import { ventilatorDeviceProfiles } from '../content/deviceProfiles'
 import { VENTILATION_CONTROL_PANEL } from '../content/controlPanel'
+import { ventilationCaseCountPhrase } from '../content/learnerMap'
 import {
   nextSelfPacedVentilationSection,
   ventilationCompositionLine,
@@ -44,10 +45,10 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
           <h1>Mechanical Ventilation</h1>
           <p>
             Fourteen short sections on a running ventilator: follow one normal breath from start to
-            finish, learn the five things you can change, then take one mechanism at a time on the
-            live patient — predict, make the change, watch, and explain. Clinical cases and optional
-            worked applications connect the mechanisms. You can open any section and reveal
-            explanations without answering.
+            finish, learn the five main settings, then take one mechanism at a time on the live
+            patient — predict, make the change, watch, and explain. Clinical cases in Practice and
+            the optional Applications tab connect the mechanisms. You can open any section and
+            reveal explanations without answering.
           </p>
           <div className={styles.entryActions}>
             {next ? (
@@ -62,7 +63,8 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
                     {next.inProgress ? 'Resume' : 'Continue'} — {next.unit.title}
                   </strong>
                   <small>
-                    Section {next.index + 1} of {composition.total} · {next.unit.minutes} minutes
+                    Section {next.index + 1} of {composition.total} · about {next.unit.minutes}{' '}
+                    minutes of reading
                   </small>
                 </span>
               </Link>
@@ -91,6 +93,10 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
             <span>Grouped by stage · open any section · your progress stays on this device</span>
           </div>
           <p className={styles.composition}>{ventilationCompositionLine()}</p>
+          <p className={styles.note}>
+            Reading times are an author’s estimate, not timed with learners; optional experiments
+            take longer and depend on the playback speed you choose.
+          </p>
           <button
             type="button"
             className={styles.browseToggle}
@@ -131,9 +137,9 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
             <li>
               <Link href={`${mechanicalVentilationNavBase}/practice`}>Practice</Link>
               <span>
-                {composition.cases} clinical cases that apply what the sections taught — inspect,
-                act, reassess, and explore the explanation — each paired to the section that taught
-                it.
+                {ventilationCaseCountPhrase()} that apply what the sections taught — inspect, act,
+                reassess, and explore the explanation — each labelled with the section it builds on.
+                Any case can be opened at any time.
               </span>
             </li>
             <li>
@@ -148,8 +154,9 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
               the emptying — and a breath map keeps you oriented in every section.
             </li>
             <li>
-              <strong>Five controls</strong>
-              {VENTILATION_CONTROL_PANEL.sentence} {VENTILATION_CONTROL_PANEL.monitoringSentence}
+              <strong>Five main settings</strong>
+              {VENTILATION_CONTROL_PANEL.sentence} {VENTILATION_CONTROL_PANEL.shapingSentence}{' '}
+              {VENTILATION_CONTROL_PANEL.monitoringSentence}
             </li>
             <li>
               <strong>Learn, apply, interpret</strong>

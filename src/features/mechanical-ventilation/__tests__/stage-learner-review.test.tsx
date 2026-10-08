@@ -3,7 +3,11 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { VentilationStageHost } from '../components/stage/VentilationStageHost'
 import { ventilatorDeviceProfiles } from '../content/deviceProfiles'
 import { ventilationLearningUnits } from '../content/learningCurriculum'
-import { ventilationStageLesson, ventilationStageLessonErrors } from '../content/stageLessons'
+import {
+  ventilationPresentedStepIndexes,
+  ventilationStageLesson,
+  ventilationStageLessonErrors,
+} from '../content/stageLessons'
 import { breathStopIds, breathStop } from '../content/breathSpine'
 import { VENTILATION_LAB_STORAGE_KEY } from '../engine/learningLab'
 
@@ -53,7 +57,7 @@ describe('self-paced task presentation and preserved device/measurement behavior
       expect(document.querySelectorAll('[data-task-workbench]')).toHaveLength(1)
       expect(
         screen.getByRole('combobox', { name: 'Choose step' }).querySelectorAll('option'),
-      ).toHaveLength(lesson.steps.length)
+      ).toHaveLength(ventilationPresentedStepIndexes(lesson).length)
       expect(localStorage.getItem(VENTILATION_LAB_STORAGE_KEY)).toBeNull()
     },
   )

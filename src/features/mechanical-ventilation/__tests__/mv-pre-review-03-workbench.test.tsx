@@ -285,7 +285,8 @@ describe('N4: navigation, focus and scroll', () => {
     expect(scrollIntoView).toHaveBeenCalledTimes(4)
     // The step count is the heading's description, so it is read with it.
     const describedBy = heading().getAttribute('aria-describedby')!
-    expect(document.getElementById(describedBy)).toHaveTextContent(/Step 6 of 10/)
+    // MV-PRE-REVIEW-04 (N6): position 5 in the lesson is the fourth of the seven steps shown.
+    expect(document.getElementById(describedBy)).toHaveTextContent(/Step 4 of 7/)
   })
 
   it('does not move focus or the page on ticks, Run/Pause, control changes or disclosures', () => {

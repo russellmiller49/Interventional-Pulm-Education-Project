@@ -37,7 +37,7 @@ export const foundationTeaching: Record<
     worked:
       'At the cursor in the inspiratory interval, the flow segment is nearly level while volume accumulates. The later experiment changes flow while keeping selected tidal volume fixed; compare both the duration of inspiration and delivered volume.',
     boundary:
-      'These are actual engine-generated breaths from the passive MV-LAB patient. Clinical traces can include effort, leaks and nonuniform mechanics. A paused display is not an occlusion.',
+      'These are breaths the simulator generated from the passive MV-LAB patient. Clinical traces can include effort, leaks and nonuniform mechanics. A paused display is not an occlusion.',
   },
   'controls-and-goals': {
     title: 'Pair a selected setting with a measured result',
@@ -56,7 +56,7 @@ export const foundationTeaching: Record<
     explanation:
       'Respiratory-system compliance describes volume change per change in distending pressure. Airway resistance adds pressure while gas flows. Peak pressure includes the flowing pressure cost. During a passive inspiratory occlusion, a settled plateau estimates static end-inspiratory alveolar pressure; it is not a direct measurement in every alveolus.',
     worked:
-      'The worked reference below includes an actual engine-executed inspiratory hold. Flow stops while volume stays nearly constant and airway pressure settles below the flowing peak. Compare plateau with total end-expiratory pressure for elastic load, and peak with plateau for the flowing component under these passive, constant-flow assumptions.',
+      'The worked reference below includes an inspiratory hold the simulator actually performed. Flow stops while volume stays nearly constant and airway pressure settles below the flowing peak. Compare plateau with total end-expiratory pressure for elastic load, and peak with plateau for the flowing component under these passive, constant-flow assumptions.',
     boundary:
       'The reference maneuver is a demonstration and earns no learner credit. A queued, historical or effort-contaminated hold cannot establish current passive mechanics. Recent effort remains a reason to withhold that interpretation.',
   },

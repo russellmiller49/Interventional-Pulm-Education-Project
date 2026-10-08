@@ -203,7 +203,7 @@ const readingDescriptors: Readonly<Record<CoachingReadingId, ReadingDescriptor>>
   map: {
     label: 'Mean arterial pressure',
     inlineLabel: 'mean arterial pressure',
-    unit: 'mm Hg',
+    unit: 'mmHg',
     precision: 0,
     betterWhen: 'higher',
   },
@@ -243,7 +243,7 @@ const readingDescriptors: Readonly<Record<CoachingReadingId, ReadingDescriptor>>
   paco2: {
     label: 'PaCO₂',
     inlineLabel: 'PaCO₂',
-    unit: 'mm Hg',
+    unit: 'mmHg',
     precision: 0,
     betterWhen: 'context',
   },

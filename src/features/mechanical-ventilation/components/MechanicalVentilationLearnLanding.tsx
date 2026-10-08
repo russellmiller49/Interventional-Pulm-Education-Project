@@ -63,7 +63,8 @@ export function MechanicalVentilationLearnLanding({
                     {next.inProgress ? 'Resume' : 'Continue'} — {next.unit.title}
                   </strong>
                   <small>
-                    Section {next.index + 1} of {composition.total} · {next.unit.minutes} minutes
+                    Section {next.index + 1} of {composition.total} · about {next.unit.minutes}{' '}
+                    minutes of reading
                   </small>
                 </span>
               </Link>

@@ -3,7 +3,7 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { VentilationStageHost } from '../components/stage/VentilationStageHost'
 import { ventilationLearningUnits } from '../content/learningCurriculum'
-import { ventilationStageLesson } from '../content/stageLessons'
+import { isPresentedVentilationStep, ventilationStageLesson } from '../content/stageLessons'
 
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -36,7 +36,12 @@ it.each(ventilationLearningUnits.map((unit) => unit.id))(
     render(<VentilationStageHost unitId={unitId} />)
     act(() => jest.advanceTimersByTime(10))
     const outline = screen.getByRole('combobox', { name: 'Choose step' })
-    for (const step of lesson.steps) expect(outline).toHaveTextContent(step.title)
+    // MV-PRE-REVIEW-04 (N6): the outline lists the steps that have a screen of their own. The
+    // two kinds that repeated a neighbouring screen stay in the lesson and out of the outline.
+    for (const step of lesson.steps.filter(isPresentedVentilationStep))
+      expect(outline).toHaveTextContent(step.title)
+    for (const step of lesson.steps.filter((item) => !isPresentedVentilationStep(item)))
+      expect(['observe', 'interpret']).toContain(step.interaction.kind)
     fireEvent.change(outline, { target: { value: lesson.predictionStepIndex } })
     fireEvent.click(screen.getAllByRole('button', { name: 'Show explanation' })[0])
     // MV-PRE-REVIEW-03 (T1): the lesson is shown, not folded inside a wrapper named like a

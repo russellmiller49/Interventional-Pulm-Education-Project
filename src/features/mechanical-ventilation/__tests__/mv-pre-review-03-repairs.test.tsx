@@ -44,7 +44,13 @@ import {
   ventilationReferenceMarker,
   ventilationReferenceMarkers,
 } from '../content/referenceEvidence'
-import { ventilationStageLesson } from '../content/stageLessons'
+import { ventilationSectionLabel } from '../content/learnerMap'
+import {
+  resolvePresentedStepIndex,
+  ventilationPresentedStepIndexes,
+  ventilationStageLesson,
+} from '../content/stageLessons'
+import { VENTILATION_SELF_PACED_KEY } from '../engine/selfPacedProgress'
 import {
   createLabSession,
   createLabSimulation,
@@ -524,7 +530,7 @@ describe('R2: Section 1’s experiment step shows the interval its instruction n
   it('reproduces the report: step 3 says "interval A, marked on the captured breath" — and now it is', () => {
     mount(SECTION_1)
     chooseStep(2)
-    expect(card().textContent).toMatch(/Step 3 of 10/)
+    expect(card().textContent).toMatch(/Step 3 of 7/)
     const look = card().querySelector('[data-step-look]')!.textContent!
     expect(look).toMatch(marked)
     expect(look).toMatch(/in the Experiment panel/)
@@ -597,17 +603,23 @@ describe('R2: Section 1’s experiment step shows the interval its instruction n
       return Boolean(named)
     }
     // Every step as first reached, then the experiment steps again after a capture.
-    const seen = lesson.steps.map((_, index) => {
+    // MV-PRE-REVIEW-04 (N6): the steps the learner is shown. The observe and interpret steps drew
+    // the task step's panel and the explanation step's comparison again; they are still lesson
+    // steps and open on those screens.
+    const shown = ventilationPresentedStepIndexes(lesson)
+    const seen = shown.map((index) => {
       chooseStep(index)
       return check()
     })
     expect(seen.filter(Boolean).length).toBeGreaterThanOrEqual(4)
+    expect(resolvePresentedStepIndex(lesson, 3)).toBe(2)
+    expect(resolvePresentedStepIndex(lesson, 4)).toBe(5)
     chooseStep(2)
     const figure = panel().querySelector('[data-captured-breath]') as HTMLElement
     fireEvent.change(within(figure).getByRole('slider'), { target: { value: '120' } })
     fireEvent.click(within(figure).getByRole('button', { name: /Use this captured/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Capture result' }))
-    for (const index of [2, 3, 4]) {
+    for (const index of [2, resolvePresentedStepIndex(lesson, 3)]) {
       chooseStep(index)
       expect(check()).toBe(false)
       expect(card().querySelector('[data-step-look]')?.textContent).toBe(
@@ -617,9 +629,19 @@ describe('R2: Section 1’s experiment step shows the interval its instruction n
   })
 
   it('names the figure by what is on screen: not started, open, captured', () => {
+    // Straight to an experiment step without passing through the chooser: a saved reading
+    // location on the former observe step opens the task step, and this part's baseline has not
+    // been captured yet.
+    localStorage.setItem(
+      VENTILATION_SELF_PACED_KEY,
+      JSON.stringify({
+        version: 1,
+        visited: [SECTION_1],
+        location: { section: 'learn', id: SECTION_1, step: 3 },
+      }),
+    )
     mount(SECTION_1)
-    // Straight to the observe step: this application's baseline has not been captured yet.
-    chooseStep(3)
+    expect(card().textContent).toMatch(/Step 3 of 7/)
     expect(panel().querySelector('[data-captured-breath]')).toBeNull()
     expect(card().querySelector('[data-step-look]')?.textContent).toBe(
       markedIntervalLook('A', 'not-started'),
@@ -876,7 +898,9 @@ describe('R4: a section’s heading is revealed only for the navigation that ask
   }
   const lastStepLink = (unitId: string) => {
     chooseStep(ventilationStageLesson(unitId).steps.length - 1)
-    return screen.getByRole('link', { name: `Continue to ${next(unitId).title}` })
+    return screen.getByRole('link', {
+      name: `Continue to ${ventilationSectionLabel(next(unitId).id)}`,
+    })
   }
   const focused = () => document.activeElement === heading()
 

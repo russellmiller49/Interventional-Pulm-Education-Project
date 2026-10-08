@@ -58,7 +58,7 @@ it('runs and replays before any answer or hold, while keeping the learner patien
   expect(screen.queryAllByRole('radio')).toHaveLength(0)
   fireEvent.click(screen.getByRole('button', { name: 'Run comparison' }))
   const table = screen.getByRole('table', {
-    name: 'Engine-generated example values · no hold acquired',
+    name: 'Model-generated example values · no hold acquired',
   })
   const first = table.textContent
   expect(within(table).getByRole('columnheader', { name: /Wait only.*75 s/ })).toBeInTheDocument()

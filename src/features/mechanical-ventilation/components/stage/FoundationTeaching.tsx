@@ -196,7 +196,7 @@ export function FoundationEvidence({
     (unitId === 'breathing-with-support' || unitId === 'waveform-anatomy') ? (
       <CapturedBreath
         key={`${roundIndex}:${figureStop ?? 'reference'}`}
-        label={`Captured reference · application ${roundIndex + 1}`}
+        label={`Captured reference · Part ${roundIndex + 1}`}
         samples={reference.waveforms}
         guided
         stop={figureStop}

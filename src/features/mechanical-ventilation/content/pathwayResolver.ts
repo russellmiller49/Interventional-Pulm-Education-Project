@@ -109,20 +109,24 @@ export function ventilationPathwayComposition(): VentilationPathwayComposition {
   }
 }
 
-/** "14 sections · 1 orientation · 2 foundations · 7 mechanisms · 3 applications · 1 capstone · 102 min". */
+/**
+ * "14 sections · 1 orientation · 2 foundations · 7 mechanisms · 3 integration sections · 1 capstone
+ * · about 102 min of reading". "Applications" is the name of the optional tab and of nothing else
+ * (MV-PRE-REVIEW-04, N2): the stage of Sections 11–13 keeps its id and is called integration here.
+ */
 export function ventilationCompositionLine(): string {
   const composition = ventilationPathwayComposition()
   const stageWords: Record<VentilationStage, [string, string]> = {
     orientation: ['orientation', 'orientations'],
     foundation: ['foundation', 'foundations'],
     mechanism: ['mechanism', 'mechanisms'],
-    application: ['application', 'applications'],
+    application: ['integration section', 'integration sections'],
     integration: ['capstone', 'capstones'],
   }
   const parts = composition.byStage.map(
     (entry) => `${entry.count} ${stageWords[entry.stage][entry.count === 1 ? 0 : 1]}`,
   )
-  return `${composition.total} sections · ${parts.join(' · ')} · ${composition.minutes} min`
+  return `${composition.total} sections · ${parts.join(' · ')} · about ${composition.minutes} min of reading`
 }
 
 export interface VentilationPathwayGroup {
@@ -130,12 +134,20 @@ export interface VentilationPathwayGroup {
   readonly title: string
   readonly description: string
   readonly units: readonly VentilationLearningUnit[]
-  /** The Practice case paired with each unit in this group, by presentation title. */
+  /**
+   * The Practice case that applies a section of this group, by presentation title.
+   *
+   * Only `mechanism-match` pairings are listed (N1). A `next-in-unit` pairing is a case the unit
+   * merely lists — Section 1 "paired" the ARDS recruitment case, whose mechanism is not taught until
+   * Section 6 — so those sections show no case here. Every case stays in the Practice index.
+   */
   readonly cases: readonly {
     readonly unitId: string
     readonly caseId: string
     readonly title: string
     readonly kind: 'mechanism-match' | 'next-in-unit'
+    /** True when an earlier section in the pathway already pairs this case. */
+    readonly revisit: boolean
   }[]
 }
 
@@ -145,21 +157,24 @@ export interface VentilationPathwayGroup {
  * order, never a second one.
  */
 export function ventilationPathwayGroups(): readonly VentilationPathwayGroup[] {
+  const seen = new Set<string>()
   return ventilationStages
     .map((stage) => {
       const units = ventilationLearningUnits.filter((unit) => unit.stage === stage.id)
       const cases = units.flatMap((unit) => {
         const pairing = ventilationSectionSpec(unit.id).practicePairing
-        return pairing
-          ? [
-              {
-                unitId: unit.id,
-                caseId: pairing.caseId,
-                title: ventilationCasePresentationTitle(pairing.caseId),
-                kind: pairing.kind,
-              },
-            ]
-          : []
+        if (!pairing || pairing.kind !== 'mechanism-match') return []
+        const revisit = seen.has(pairing.caseId)
+        seen.add(pairing.caseId)
+        return [
+          {
+            unitId: unit.id,
+            caseId: pairing.caseId,
+            title: ventilationCasePresentationTitle(pairing.caseId),
+            kind: pairing.kind,
+            revisit,
+          },
+        ]
       })
       return { stage: stage.id, title: stage.title, description: stage.description, units, cases }
     })
