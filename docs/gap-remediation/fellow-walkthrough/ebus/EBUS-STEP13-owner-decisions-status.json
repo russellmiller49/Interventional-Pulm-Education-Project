@@ -1,0 +1,88 @@
+{
+  "task": "EBUS-STEP13-owner-decisions",
+  "date": "2026-10-07",
+  "base": "b85da4a00fc1959ff9d5818d8a2b89d98d275723",
+  "implementationHead": "7d13c13d1afacc9f5bf7aca6d7d9b4563d97c233",
+  "authority": "docs/gap-remediation/fellow-walkthrough/ebus/drafts/EBUS-PRE-REVIEW-05-owner-review-worksheet.md (PR #324 merged 2026-10-07T01:28:23Z)",
+  "decisions": [
+    {
+      "id": "OD-01",
+      "disposition": "implemented approved Option A wording",
+      "limits": "Stable cutaway-observe ID, key b, retained-acquisition policy and all five supported hold conditions preserved. No new ID or held-image policy selected."
+    },
+    {
+      "id": "OD-03",
+      "disposition": "implemented approved wording only",
+      "limits": "Protected preparation separated from immediate pre-exposure target/live-image/path confirmation. Existing accepted sequence preserved; alternate-order acceptance is unapproved and not implemented."
+    },
+    {
+      "id": "OD-05",
+      "disposition": "implemented exact approved orientation/zero-axis wording",
+      "limits": "Optional head/foot marker held. No processor-specific convention or transform change."
+    },
+    {
+      "id": "OD-06",
+      "disposition": "implemented D6 and approved millimeter limitation; retained measurements",
+      "limits": "No geometry/calibration/threshold/measurement change; recorded-video control practice unchanged; optional feedback/overlays held."
+    },
+    {
+      "id": "OD-10",
+      "disposition": "implemented approved D10",
+      "limits": "Fasting required; exact intervals and drug-specific holds remain local-policy dependent; generic guidance retained."
+    },
+    {
+      "id": "OD-11",
+      "disposition": "implemented D1/D2/D3 and owner-approved core reference listing",
+      "limits": "Negative systematic examination and high false-negative risk qualification preserved. AABIP full text not independently verified; no new AABIP claim. CHEST/systematic staging/generic device/preparation teaching retained. Fujiwara/CLNS/AQuIRE source holds unchanged."
+    },
+    {
+      "id": "OD-12",
+      "disposition": "implemented full approved expanded glossary",
+      "limits": "TNM/IASLC/NSCLC/PET/FNA/ERS-ESGE-ESTS/CHEST/IFU/CHS added. IFU manufacturer-specific interpretation held; CHS descriptive ICS/IAB Table 5 only; Fujiwara full-text hold visible."
+    }
+  ],
+  "heldCurrentBehavior": ["OD-07", "OD-08", "OD-09", "OD-13", "OD-14", "OD-15", "OD-16"],
+  "otherPreserved": [
+    "OD-02 true vascular-flow interpretation; unlabeled task retained",
+    "OD-04A owner media attestation; OD-04B historical Git hold; closed redaction/cache repairs untouched",
+    "OD-17 and OD-18 retained for beta"
+  ],
+  "release": "All module rollout stages remain preview; no Prompt 06, merge, deployment or ready transition",
+  "validation": {
+    "jest": {
+      "passed": 267,
+      "suites": 17
+    },
+    "embeddedVitest": {
+      "passed": 384,
+      "files": 41
+    },
+    "newRegressionsOnBase": {
+      "expectedFailed": 5,
+      "total": 5
+    },
+    "productionBrowser": {
+      "passed": 18,
+      "uniqueTests": 18,
+      "retries": 0
+    },
+    "localBetaWrapper": {
+      "passed": 2,
+      "widths": [1440, 390]
+    },
+    "rootTypecheck": "PASS (8 GiB Node heap)",
+    "embeddedTypecheck": "PASS",
+    "productionBuild": "PASS full npm run build",
+    "scopedLint": "PASS",
+    "scopedFormat": "PASS",
+    "sourceHoldScopeComparison": "PASS"
+  },
+  "notRun": [
+    "Prompt 06 combined acceptance / whole-module certification",
+    "Full repository Jest/Playwright; unrelated board baseline reds",
+    "Real account beta-wrapper flow, report upload/storage and production invitation",
+    "New literature/clinical/source/media review or calibration",
+    "Native browser zoom/device-pixel-ratio sweep and exhaustive camera matrix"
+  ],
+  "evidenceRoot": "Interventional-Pulm-Local-Data/renders/output/ebus-step13-2026-10-07"
+}
