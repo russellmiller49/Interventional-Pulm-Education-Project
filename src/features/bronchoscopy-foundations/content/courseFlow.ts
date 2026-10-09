@@ -21,6 +21,8 @@ export type CourseVisual =
   | 'sort-example'
   | 'worked-decision'
   | 'tube-geometry'
+  | 'two-diameters'
+  | 'room-setup'
 export interface CourseChunk {
   readonly id: string
   readonly title: string
@@ -174,26 +176,47 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     close(['common-errors']),
   ],
   'pre-use-check': [
-    teach('instrument', 'Meet the bronchoscope', ['what-ready-means'], 'instrument'),
-    teach(
-      'readiness',
-      'Follow a ready scope through its systems',
-      ['ready-scope', 'suction-is-a-path', 'scene-worked'],
-      'worked-decision',
-    ),
+    hook('Is this scope ready?'),
+    check('check', 'Suction that does not draw'),
+    screen('parts', 'The parts of the scope', 'Find each part on the photograph.', ['parts'], {
+      visual: 'instrument',
+    }),
     practice(
-      'Locate the parts and their functions',
+      'Name the parts',
       'illustrated',
-      'Identify the marked parts in the photographs. The instrument overview introduced their names; now inspect without its labels.',
+      'No names this time. Name the outlined part in each of the eight views.',
     ),
-    check('check', 'Localize a readiness problem'),
-    teach('release', 'Decide whether the instrument is ready for use', [
+    screen(
       'two-diameters',
-      'released-not-clean',
-      'reprocessing-program',
+      'Every scope has two diameters',
+      'Read what each diameter decides, then the sizes of the scopes you will use.',
+      ['two-diameters'],
+      { visual: 'two-diameters' },
+    ),
+    screen('readiness', 'The pre-use check', 'Learn the five checks. Run them in this order.', [
+      'pre-use-check',
     ]),
-    debrief(['common-errors']),
-    check('transfer', 'Consider a changed readiness case'),
+    screen('suction-path', 'When suction does not draw', 'Read how suction fails, and where.', [
+      'suction-path',
+    ]),
+    {
+      ...practice(
+        'Find the failed check',
+        'case',
+        'Six scopes each fail one check. Match what you find to the check that has failed.',
+      ),
+      id: 'find-the-fault',
+      act: 'faults',
+    },
+    screen(
+      'room',
+      'The room and the release',
+      'Read what must be true before the first sedative.',
+      ['room', 'released'],
+      { visual: 'room-setup' },
+    ),
+    check('transfer', 'Choose a scope for a biopsy'),
+    close(['common-errors']),
   ],
   'right-side': [
     hook('Which airway is this?'),

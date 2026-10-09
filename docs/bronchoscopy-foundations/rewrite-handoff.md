@@ -13,15 +13,16 @@ supervisor" answers.
 
 ## Where things stand
 
-| PR   | Branch                             | State                                                                                                             |
-| ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
-| #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
-| #358 | `claude/bf-rewrite-s01`            | Draft, stacked on #355. Section 1, the procedure and the plan, rewritten.                                         |
-| #355 | `claude/bf-rewrite-structure`      | Draft, stacked on #352. The plan's order, five phases, and the forward map for retired sections.                  |
-| #352 | `claude/bf-rewrite-register`       | Draft, stacked on #350. Register rows 15, 19, 20 and 21 extracted; two sources added (U17, U18). No learner copy. |
-| #351 | `claude/bf-3d-retry`               | Draft, from `main`. The 3D-retry fix lifted out of #348, with its three end-to-end cases.                         |
-| #348 | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix is now #351; close #348 once #351 merges.                        |
+| PR     | Branch                             | State                                                                                                             |
+| ------ | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| #349   | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
+| #350   | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
+| #PRNUM | `claude/bf-rewrite-s02`            | Draft, stacked on #358. Section 2, the scope and the setup, rewritten.                                            |
+| #358   | `claude/bf-rewrite-s01`            | Draft, stacked on #355. Section 1, the procedure and the plan, rewritten.                                         |
+| #355   | `claude/bf-rewrite-structure`      | Draft, stacked on #352. The plan's order, five phases, and the forward map for retired sections.                  |
+| #352   | `claude/bf-rewrite-register`       | Draft, stacked on #350. Register rows 15, 19, 20 and 21 extracted; two sources added (U17, U18). No learner copy. |
+| #351   | `claude/bf-3d-retry`               | Draft, from `main`. The 3D-retry fix lifted out of #348, with its three end-to-end cases.                         |
+| #348   | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix is now #351; close #348 once #351 merges.                        |
 
 Nothing is merged. The work was done in the worktree
 `…-Worktrees/claude-bf-pre-review-04-20261007`, which is currently on `claude/bf-rewrite-pilot`.
@@ -88,8 +89,20 @@ sections no longer wait for sessions with the pilot.
    its tests to the absorber. `honest-report` sits late for now because its prerequisites do;
    it goes when `describe-findings` is rewritten. `what-completion-means` goes with the hub and
    closing screen (item 6).
-5. **Sections rewritten so far:** the right lung, bleeding, and section 1 (`clinical-question`,
-   2026-10-08). Twelve remain; section 2 (`pre-use-check`) is next. Notes from section 1:
+5. **Sections rewritten so far:** the right lung, bleeding, section 1 (`clinical-question`) and
+   section 2 (`pre-use-check`), all 2026-10-08. Eleven remain; section 3
+   (`sedation-and-monitoring`) is next, and it retires `shared-airway`. Notes from section 2:
+   - Two drawings were added to `BronchCourseTeaching.tsx`: `two-diameters` and `room-setup`.
+   - The photo-naming activity keeps its eight rows in order; tests pin them.
+   - The second activity is a `sort` (match a failed check to its name), run through `moreActs`.
+   - Section 2 needs register row 22 signed before it can be published.
+   - For Russell to confirm: the room-setup card (position, where you stand, bite block, IV,
+     oxygen) came from the brief, not from a mined source; the leak test is listed as one of the
+     five pre-use checks; the forceps in the check state a minimum channel of 2.8 mm (written
+     for the case).
+   - When a rewritten section replaces wording that `BF-01-claim-review-queue.json` quotes, add
+     `supersededBy` to that item and to the list in `claim-review-queue.test.ts`.
+     Notes from section 1:
    - `shared-airway` is NOT retired yet. Its monitoring teaching belongs to section 3
      (`sedation-and-monitoring`); retire it in that change. Many tests use it as their fixture
      section (hub, stage-host, actions-and-feedback, sources-and-reading-view, the e2e spec), so

@@ -7,6 +7,7 @@ export const BRONCH_LEARN_VERSIONS: Readonly<Record<string, number>> = {
   'bleeding-priorities': 2,
   // Re-authored in the rewrite, section 1 (2026-10-08).
   'clinical-question': 2,
+  'pre-use-check': 2,
 }
 
 export function bronchLearnRecordId(sectionId: string): string {

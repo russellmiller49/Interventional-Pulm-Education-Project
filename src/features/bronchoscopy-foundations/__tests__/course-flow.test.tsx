@@ -147,7 +147,7 @@ it('shows a storage failure without blocking learning', async () => {
   expect(screen.getByRole('alert')).toHaveTextContent('could not be saved')
   expect(nowPrimary()).not.toBeDisabled()
   fireEvent.click(nowPrimary()!)
-  expect(currentStepId()).toContain('readiness')
+  expect(currentStepId()).toContain('pre-use-check-flow-v1-check')
   write.mockRestore()
 })
 
