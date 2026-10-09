@@ -70,7 +70,6 @@ export function BronchCourseTeaching({
       {section.id === 'what-completion-means' && chunk.id === 'evidence' ? (
         <LearningRecordSummary />
       ) : null}
-      {chunk.visual === 'shared-airway' ? <SharedAirwayFigure /> : null}
       {chunk.visual === 'tour' ? (
         <NormalAirwayTour
           sectionId={section.id}
@@ -200,49 +199,6 @@ function SectionHook({ section }: { readonly section: BronchStageLesson['section
         ))}
       </ol>
     </section>
-  )
-}
-
-/** A schematic of the existing shared-airway teaching, not a patient or a physiology engine. */
-function SharedAirwayFigure() {
-  return (
-    <figure className={styles.sharedAirway}>
-      <svg
-        viewBox="0 0 720 220"
-        role="img"
-        aria-labelledby="shared-airway-title shared-airway-desc"
-      >
-        <title id="shared-airway-title">
-          The patient and the bronchoscopy team share one airway
-        </title>
-        <desc id="shared-airway-desc">
-          The operator sees the airway image. The monitoring team follows the patient’s breathing
-          and responsiveness. Both inform the next action.
-        </desc>
-        <path d="M110 108 H300 M420 108 H610" stroke="currentColor" strokeWidth="3" />
-        <circle cx="360" cy="70" r="32" fill="none" stroke="currentColor" strokeWidth="3" />
-        <path
-          d="M295 155 Q295 110 360 110 Q425 110 425 155 M360 108 V160 M360 138 L333 165 M360 138 L387 165"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-        />
-        <g fill="currentColor" textAnchor="middle" fontSize="18">
-          <text x="112" y="78">
-            Airway image
-          </text>
-          <text x="606" y="78">
-            Patient monitoring
-          </text>
-          <text x="360" y="205">
-            One shared airway · a communicated plan
-          </text>
-        </g>
-      </svg>
-      <figcaption>
-        Teaching schematic. Seeing a clear airway and assessing the patient are different tasks.
-      </figcaption>
-    </figure>
   )
 }
 

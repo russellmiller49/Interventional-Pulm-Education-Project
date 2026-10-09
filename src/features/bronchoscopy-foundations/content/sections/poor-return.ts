@@ -92,7 +92,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D11', 'D20'],
-  prerequisites: ['shared-airway', 'five-controls', 'washing-and-lavage'],
+  prerequisites: ['sedation-and-monitoring', 'five-controls', 'washing-and-lavage'],
 
   clinicalQuestion: 'During a lavage that is returning little fluid, what should happen next?',
   recognizeTitle: 'Low return during a supervised lavage',
@@ -600,7 +600,7 @@ export const section: BronchSectionDefinition = {
     reviewItemIds: ['R21'],
     transferVariant:
       'Before the lavage instead of during it, in another lobe, with the patient’s breathing now affected: here the collection goal (a specimen free of proximal contamination) argues against suction, where in the prediction the goal (more return) argued for more of it; in both, what the airway and the patient show sets the suction.',
-    retrievesFrom: 'shared-airway',
+    retrievesFrom: 'sedation-and-monitoring',
   },
 
   practice: [

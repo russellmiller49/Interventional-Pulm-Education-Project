@@ -65,6 +65,7 @@
         "element": "practice C14, item explanation"
       },
       "learnerWording": "the reported administration has no concentration or volume, so it can be entered neither as lidocaine nor as zero. Different local anesthetics cannot be summed as interchangeable milligrams",
+      "supersededBy": "Topical anesthesia, sedation and monitoring was rewritten on 2026-10-08 (rewrite plan, brief 3). The brief keeps one bookkeeping exercise: the ledger `shared-topical-ledger` stays, with new rows and a patient weight. Practice case C14 and the prediction Q19 are removed, the transfer is a different question, and the sentence about summing different local anesthetics is no longer in the course. The quoted wording no longer appears; review the new section instead.",
       "intendedTeachingPoint": "Topical anesthetic exposure is counted across every clinician and every preparation. Milligrams come from each line's own concentration. An administration with no recorded amount stays unknown, not zero. Arithmetic never supplies a permissible further dose: the limit comes from the approved policy.",
       "sourceCheck": {
         "checkedOn": "2026-09-14",

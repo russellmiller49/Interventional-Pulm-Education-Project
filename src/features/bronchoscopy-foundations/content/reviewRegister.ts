@@ -269,12 +269,14 @@ export const REGISTER_PATTERNS: readonly RegisterPattern[] = [
     scope: 'absolute',
     say: 'Unavailable media are not described as seen.',
   },
-  // §24.1: the manual's naloxone ceiling is not adopted, and no reversal dose appears at all.
+  // §24.1: the manual's naloxone ceiling is not adopted. The reversal doses the course teaches are
+  // the product-label doses in the numbers register (row 19), signed by faculty on 2026-10-08;
+  // before that decision this row refused any naloxone dose.
   {
     reviewItemId: 'R14',
-    pattern: /\bnaloxone\b.{0,40}\b(\d+(\.\d+)?\s*mg|ceiling|maximum)\b|\b0\.4\s*mg\b/i,
+    pattern: /\bnaloxone\b.{0,40}\b(ceiling|maximum)\b|\b0\.4\s*mg\b/i,
     scope: 'absolute',
-    say: 'Use the approved rescue protocol; no reversal doses.',
+    say: 'Teach the naloxone dose from the numbers register; the manual’s ceiling is not adopted.',
   },
   // R13/R33: educational concentration arithmetic lives only in synthesis blocks that say so.
   {

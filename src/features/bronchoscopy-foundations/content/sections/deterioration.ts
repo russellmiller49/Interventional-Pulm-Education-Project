@@ -139,7 +139,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D13'],
-  prerequisites: ['shared-airway', 'sedation-and-monitoring', 'larynx-and-entry'],
+  prerequisites: ['sedation-and-monitoring', 'larynx-and-entry'],
 
   clinicalQuestion:
     'Midway through a routine inspection under sedation, the patient becomes restless and the monitor changes. What is the next move?',
@@ -752,7 +752,7 @@ export const section: BronchSectionDefinition = {
     reviewItemIds: ['R11'],
     transferVariant:
       'A different team member, phase and signal: the learner is the designated monitoring clinician, the operator and supervisor are absorbed in a forceps sample, and the change is noisy, secretion-filled breathing with falling oximetry rather than a restless patient with fast, shallow breaths during an inspection.',
-    retrievesFrom: 'shared-airway',
+    retrievesFrom: 'sedation-and-monitoring',
   },
 
   practice: [

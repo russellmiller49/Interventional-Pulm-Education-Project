@@ -98,7 +98,7 @@ it('moves past any step without doing it, and never turns a skip, a confirm or F
 })
 
 it('keeps answers and retries in the session only', () => {
-  const lesson = bronchStageLesson('shared-airway')
+  const lesson = bronchStageLesson('what-completion-means')
   const reducer = bronchStageReducer(lesson)
   let session = emptyBronchStageSession()
   for (let index = 0; index < lesson.predictionStepIndex; index++)

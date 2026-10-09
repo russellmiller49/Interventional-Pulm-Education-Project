@@ -37,6 +37,7 @@ import { mediaRefErrors, type MediaRef } from './media'
 import { numberTokenErrors } from './numbers'
 import { REVIEW_ITEM_IDS } from './reviewRegister'
 import { BRONCH_SECTION_IDS, BRONCH_SECTION_STAGE } from './sectionIds'
+import { RETIRED_OBJECTIVE_REASONS } from './sectionMigration'
 import { isSpineStopId } from './spine'
 import type {
   AuthoredCapstoneCase,
@@ -863,7 +864,11 @@ export function validateAllSections(
   }
   if (sections.length === BRONCH_SECTION_IDS.length) {
     for (const objective of MANIFEST_OBJECTIVES) {
-      if (objective.track === 'core' && !homed.has(objective.id))
+      if (
+        objective.track === 'core' &&
+        !homed.has(objective.id) &&
+        !RETIRED_OBJECTIVE_REASONS[objective.id]
+      )
         errors.push(`Core objective ${objective.id} has no section.`)
     }
   }

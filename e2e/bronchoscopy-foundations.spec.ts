@@ -230,10 +230,10 @@ test('one entry, explanation before an answer, Back review and a reload that res
 }) => {
   await expect(page.locator('[data-bronch-continue]')).toHaveAttribute(
     'href',
-    /section=shared-airway/,
+    /section=clinical-question/,
   )
   await page.locator('[data-bronch-continue]').click()
-  const lesson = bronchStageLesson('shared-airway')
+  const lesson = bronchStageLesson('clinical-question')
   const check = lesson.steps[lesson.predictionStepIndex]
   if (check.interaction.kind !== 'prediction') throw new Error('Check expected')
   await expect(page.locator('[data-course-teaching]')).toBeVisible()
@@ -257,7 +257,10 @@ test('one entry, explanation before an answer, Back review and a reload that res
     'not-correct',
   )
   const saved = await record(page)
-  expect(saved).toMatchObject({ visitedSectionIds: ['shared-airway'], reviewedSectionIds: [] })
+  expect(saved).toMatchObject({
+    visitedSectionIds: ['clinical-question'],
+    reviewedSectionIds: [],
+  })
   expect(Object.keys(saved).sort()).toEqual([
     'lastSectionId',
     'reviewLaterSectionIds',
@@ -794,7 +797,7 @@ for (const id of ['pre-use-check', 'deterioration', 'honest-report'] as const) {
     await page.goto(base)
     await expect(page.locator('[data-bronch-continue]')).toHaveAttribute(
       'data-next-section',
-      'shared-airway',
+      'clinical-question',
     )
   })
 }
@@ -1198,7 +1201,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
   }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write'])
     await page.setViewportSize({ width: 1204, height: 987 })
-    for (const sectionId of ['shared-airway', 'sedation-and-monitoring', 'view-loss'] as const) {
+    for (const sectionId of ['deterioration', 'sedation-and-monitoring', 'view-loss'] as const) {
       await openSection(page, sectionId)
       const summary = page.locator('[data-stage-sources] summary')
       await summary.scrollIntoViewIfNeeded()
@@ -1215,9 +1218,9 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       }
     }
     // Textbook, manuals and guidelines, by id, on the real route.
-    await openSection(page, 'shared-airway')
+    await openSection(page, 'deterioration')
     await page.locator('[data-stage-sources] summary').click()
-    for (const id of ['S1', 'S2', 'S3', 'U1'])
+    for (const id of ['S1', 'S2', 'U1', 'U4'])
       await expect(page.locator(`[data-stage-sources] [data-evidence-id="${id}"]`)).toHaveAttribute(
         'data-source-class',
         'reference',
@@ -1249,7 +1252,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       }, info) => {
         await page.setViewportSize(viewport)
         // The longest list the course has, so first and last are far apart.
-        const longest = [...(['shared-airway', 'bleeding-priorities', 'view-loss'] as const)].sort(
+        const longest = [...(['deterioration', 'bleeding-priorities', 'view-loss'] as const)].sort(
           (a, b) => bronchStageSources(b).records.length - bronchStageSources(a).records.length,
         )[0]
         await openSection(page, longest)
@@ -1571,11 +1574,11 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
     { width: 1204, height: 987 },
     { width: 390, height: 844 },
   ])
-    test(`the S1 question stays in view after a wrong answer at ${viewport.width}px, and can be tried again`, async ({
+    test(`a question stays in view after a wrong answer at ${viewport.width}px, and can be tried again`, async ({
       page,
     }) => {
       await page.setViewportSize(viewport)
-      const { step } = await stepTo(page, 'shared-airway', 'prediction')
+      const { step } = await stepTo(page, 'what-completion-means', 'prediction')
       if (step.interaction.kind !== 'prediction') throw new Error('not a prediction')
       const { item } = step.interaction.stage
       const wrong = item.choices.find((choice) => choice.plausibility === 'incorrect-mechanism')!
@@ -1597,29 +1600,32 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       await expect(page.locator('[data-question-context]')).toHaveCount(0)
     })
 
-  test('the S1 matching set names the authored category, explanation first and after a wrong match', async ({
+  test('a matching set names the authored category, explanation first and after a wrong match', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1204, height: 987 })
-    const { step } = await stepTo(page, 'shared-airway', 'sort')
+    const { step } = await stepTo(page, 'what-completion-means', 'sort')
     if (step.interaction.kind !== 'sort') throw new Error('not a sort')
     const { sort } = step.interaction
     const label = (id: string) => sort.origins.find((origin) => origin.id === id)!.label
     await page.getByRole('button', { name: 'Show the worked matches' }).click()
+    // One row is placed under a category it does not belong to; the rest are placed as keyed.
+    const misplaced = sort.rows[0]
+    const chosen = sort.origins.find((origin) => origin.id !== misplaced.origin)!.id
     await expect(
-      page.locator('[data-sort-row="lavage-returned"] [data-sort-explanation]'),
-    ).toContainText(`Belongs with: ${label('result')}`)
+      page.locator(`[data-sort-row="${misplaced.id}"] [data-sort-explanation]`),
+    ).toContainText(`Belongs with: ${label(misplaced.origin)}`)
     await expect(page.locator('[data-bronch-sort]')).not.toContainText('?.')
     await page.getByRole('button', { name: 'Hide the explanation' }).click()
     for (const row of sort.rows)
       await page
         .locator(`[data-sort-row="${row.id}"] select`)
-        .selectOption(row.id === 'lavage-returned' ? 'what' : row.origin)
+        .selectOption(row.id === misplaced.id ? chosen : row.origin)
     await primary(page).click()
-    const verdict = page.locator('[data-sort-row="lavage-returned"] [data-sort-verdict]')
+    const verdict = page.locator(`[data-sort-row="${misplaced.id}"] [data-sort-verdict]`)
     await expect(verdict).toContainText('Not correct.')
-    await expect(verdict).toContainText(`You chose: ${label('what')}`)
-    await expect(verdict).toContainText(`Belongs with: ${label('result')}`)
+    await expect(verdict).toContainText(`You chose: ${label(chosen)}`)
+    await expect(verdict).toContainText(`Belongs with: ${label(misplaced.origin)}`)
     await expect(page.locator('[data-bronch-sort]')).not.toContainText('Did not hold')
     expect(await page.locator('[data-bronch-sort]').textContent()).not.toMatch(
       /\b\d+\s*(?:of|out of|\/)\s*\d+\b/,

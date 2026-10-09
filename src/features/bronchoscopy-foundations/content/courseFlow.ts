@@ -15,7 +15,6 @@ export type CourseVisual =
   | 'instrument'
   | 'section'
   | 'tour'
-  | 'shared-airway'
   | 'baseline'
   | 'sequence'
   | 'sort-example'
@@ -124,26 +123,6 @@ const close = (blocks: readonly string[]): CourseChunk => ({
 
 /** This maps presentations only. The canonical section registry still owns course order. */
 export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly CourseChunk[]>>> = {
-  'shared-airway': [
-    teach(
-      'purpose',
-      'The patient, the team and the airway',
-      ['two-sources', 'what-is-available', 'stable-examination'],
-      'shared-airway',
-    ),
-    teach('worked-safety', 'Consider the picture and the patient together', [
-      'the-scope-shares-the-airway',
-      'five-questions-worked',
-    ]),
-    check('check', 'Choose the next priority'),
-    practice(
-      'Connect each observation to its question',
-      'case',
-      'Match each statement to the question it answers. Keep a procedural observation separate from a result that could change management.',
-    ),
-    debrief(['common-errors', 'capabilities']),
-    check('transfer', 'Reassess the patient in recovery'),
-  ],
   'clinical-question': [
     hook('Should this patient have a bronchoscopy today?'),
     check('check', 'Why do this bronchoscopy?'),
@@ -256,26 +235,42 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     close(['common-errors']),
   ],
   'sedation-and-monitoring': [
-    teach(
-      'monitoring',
-      'Establish what each patient signal reports',
-      ['different-purposes', 'depth-is-the-response', 'monitoring-continuous'],
-      'baseline',
+    hook('Comfortable, counted and breathing'),
+    check('check', 'A clear view and a quiet monitor'),
+    screen('topical', 'Numb the airway', 'Read where the lidocaine goes.', ['topical']),
+    screen(
+      'lidocaine-count',
+      'Count every milligram',
+      'Learn the conversion and the limit. You will use both on the record that follows.',
+      ['lidocaine-count'],
     ),
-    teach('medication-record', 'Read the anesthetic record as a team', [
-      'medicine-and-count',
-      'what-the-team-has',
-      'reconciled-record',
-      'arithmetic-worked',
-    ]),
     practice(
-      'Account for the documented administrations',
+      'Add up one patient’s lidocaine',
       'case',
-      'Calculate each measured administration in the ledger. Preserve any unknown amount; the record cannot supply a safe or remaining dose.',
+      'Enter the milligrams for each measured line. Then say what the record tells you.',
     ),
-    check('check', 'Decide what the medication record supports'),
-    debrief(['medication-events', 'common-errors', 'local-policy']),
-    check('transfer', 'Interpret a change in responsiveness'),
+    screen('toxicity', 'Too much local anesthetic', 'Read the signs to act on.', ['toxicity']),
+    screen('sedation-drugs', 'Sedation', 'Read what each drug does, and what it does not.', [
+      'sedation-drugs',
+    ]),
+    screen('monitoring', 'Monitoring', 'Read what to watch, and in what order.', ['monitoring']),
+    {
+      ...practice(
+        'One patient, three decisions',
+        'case',
+        'Read the patient and the monitor, then decide. A move that makes things worse plays out, then you decide again.',
+      ),
+      id: 'sedation-case',
+      act: 'drift',
+    },
+    screen(
+      'before-and-after',
+      'Before, and after',
+      'Read the fasting times and the reversal doses.',
+      ['before-and-after'],
+    ),
+    check('transfer', 'A patient in recovery'),
+    close(['common-errors']),
   ],
   'branch-entry': [
     teach(

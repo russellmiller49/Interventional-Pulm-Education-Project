@@ -65,9 +65,9 @@ describe('the hub', () => {
     expect(ctas()).toHaveLength(1)
     const cta = ctas()[0]
     expect(cta.textContent).toMatch(/^Start — /)
-    expect(BRONCH_SECTION_IDS[0]).toBe('shared-airway')
-    expect(cta).toHaveAttribute('data-next-section', 'shared-airway')
-    expect(cta).toHaveAttribute('href', '/bronchoscopy-foundations/learn?section=shared-airway')
+    expect(BRONCH_SECTION_IDS[0]).toBe('clinical-question')
+    expect(cta).toHaveAttribute('data-next-section', 'clinical-question')
+    expect(cta).toHaveAttribute('href', '/bronchoscopy-foundations/learn?section=clinical-question')
     // Every count on the page is the registry's.
     const composition = bronchPathwayComposition()
     const line = document.querySelector('[data-pathway-composition]')!

@@ -17,6 +17,7 @@ supervisor" answers.
 | ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
 | #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
+| #360 | `claude/bf-rewrite-s03`            | Draft, stacked on #359. Section 3, sedation and monitoring, rewritten; `shared-airway` retired.                   |
 | #359 | `claude/bf-rewrite-s02`            | Draft, stacked on #358. Section 2, the scope and the setup, rewritten.                                            |
 | #358 | `claude/bf-rewrite-s01`            | Draft, stacked on #355. Section 1, the procedure and the plan, rewritten.                                         |
 | #355 | `claude/bf-rewrite-structure`      | Draft, stacked on #352. The plan's order, five phases, and the forward map for retired sections.                  |
@@ -89,9 +90,31 @@ sections no longer wait for sessions with the pilot.
    its tests to the absorber. `honest-report` sits late for now because its prerequisites do;
    it goes when `describe-findings` is rewritten. `what-completion-means` goes with the hub and
    closing screen (item 6).
-5. **Sections rewritten so far:** the right lung, bleeding, section 1 (`clinical-question`) and
-   section 2 (`pre-use-check`), all 2026-10-08. Eleven remain; section 3
-   (`sedation-and-monitoring`) is next, and it retires `shared-airway`. Notes from section 2:
+5. **Sections rewritten so far:** the right lung, bleeding, and sections 1 to 3
+   (`clinical-question`, `pre-use-check`, `sedation-and-monitoring`), all 2026-10-08. Ten remain;
+   section 4 (`five-controls`) is next, and it retires `branch-entry` and takes the stance and
+   image-orientation teaching from `reference-frames`. The course now lists 22 sections.
+   Notes from section 3:
+   - `shared-airway` is retired. Its objectives M01-O2 to O4 are homed in section 3 and M01-O1 in
+     section 1; M01-O5 (scope history) is cut and listed in `RETIRED_OBJECTIVE_REASONS`.
+   - The tests that used `shared-airway` as their fixture now use `what-completion-means`
+     (question and matching tests, the stage walk) and `deterioration` (source lists). Both were
+     made general, so they should move with one search and replace when those sections change.
+     `what-completion-means` retires last; move its fixtures then to the matching activity in
+     `pre-use-check`.
+   - A dose ledger may carry its own digits (`caseValues` on its copy surfaces): strengths,
+     volumes, the weight and the sums are the case's values. Rationales elsewhere still may not.
+   - Review register R14 no longer refuses a naloxone dose; it refuses only the old manual's
+     ceiling. Russell signed the label dose on 2026-10-08. The R14 rows on bicarbonate and lipid
+     emulsion doses still stand and will need the same decision for section 13.
+   - The set-level test-wise score is checked across all rewritten sections. Avoid keys that
+     alone sound cautious (stop, pause, wait, hold, ask, call) and distractors that argue for
+     themselves (since, because).
+   - Section 3 needs register rows 1 to 6, 10 and the unsigned parts of 19 signed.
+   - For Russell to confirm: nasal gel, throat spray and spray-as-you-go as the three sites;
+     the toxicity signs listed; midazolam with an opioid, propofol only with trained staff; the
+     three-frame case, which ends with bag-mask ventilation and both reversal agents.
+     Notes from section 2:
    - Two drawings were added to `BronchCourseTeaching.tsx`: `two-diameters` and `room-setup`.
    - The photo-naming activity keeps its eight rows in order; tests pin them.
    - The second activity is a `sort` (match a failed check to its name), run through `moreActs`.

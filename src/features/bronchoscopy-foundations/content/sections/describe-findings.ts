@@ -47,7 +47,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D18'],
-  prerequisites: ['shared-airway', 'right-side', 'left-side', 'systematic-survey'],
+  prerequisites: ['sedation-and-monitoring', 'right-side', 'left-side', 'systematic-survey'],
 
   clinicalQuestion:
     'A lesion appears on the wall of an airway during an inspection. What should the report say, and what is the next move?',

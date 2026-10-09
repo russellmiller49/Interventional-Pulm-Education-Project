@@ -161,9 +161,9 @@ describe('source identity is read from a validated transcript record (A8)', () =
 
 describe('the section source list (A8, SUP-02)', () => {
   it('tags only the lecture with the transcript sentence, once, in Section 1', () => {
-    render(<BronchSourceList records={bronchStageSources('shared-airway').records} />)
+    render(<BronchSourceList records={bronchStageSources('deterioration').records} />)
     const row = (id: string) => document.querySelector<HTMLElement>(`[data-evidence-id="${id}"]`)!
-    for (const id of ['S1', 'S2', 'S3', 'U1']) {
+    for (const id of ['S1', 'S2', 'U1', 'U4']) {
       expect(row(id)).toHaveAttribute('data-source-class', 'reference')
       expect(row(id).textContent).not.toContain(TRANSCRIPT_SENTENCE)
       expect(row(id).querySelector('[data-source-transcript-note]')).toBeNull()
@@ -172,9 +172,9 @@ describe('the section source list (A8, SUP-02)', () => {
     expect(row('U1').querySelector('[data-source-kind]')).toHaveTextContent(
       'Guideline or official guidance',
     )
-    expect(row('T08')).toHaveAttribute('data-source-class', 'transcript')
-    expect(row('T08').querySelector('[data-source-kind]')).toHaveTextContent('Lecture transcript')
-    expect(occurrences(row('T08').textContent ?? '', TRANSCRIPT_SENTENCE)).toBe(1)
+    expect(row('T09')).toHaveAttribute('data-source-class', 'transcript')
+    expect(row('T09').querySelector('[data-source-kind]')).toHaveTextContent('Lecture transcript')
+    expect(occurrences(row('T09').textContent ?? '', TRANSCRIPT_SENTENCE)).toBe(1)
   })
 
   it('agrees with the Reference about every source in every section', () => {
@@ -215,14 +215,14 @@ describe('the section source list (A8, SUP-02)', () => {
     expect(formatSourceRef({ sourceId: 'S2', location: { kind: 'pdf-pages', from: 44 } })).toBe(
       'S2, PDF page 44',
     )
-    render(<BronchSourceList records={bronchStageSources('shared-airway').records} />)
+    render(<BronchSourceList records={bronchStageSources('deterioration').records} />)
     const s1 = document.querySelector<HTMLElement>('[data-evidence-id="S1"]')!
     expect(s1.textContent).toMatch(/S1, PDF pages? \d+/)
     expect(s1.textContent).not.toMatch(/S1, PDF \d/)
     expect(s1.querySelectorAll('[data-source-locator-note]')).toHaveLength(1)
     expect(s1.querySelector('[data-source-locator-note]')).toHaveTextContent(PDF_PAGE_LOCATOR_NOTE)
     expect(s1.textContent).not.toMatch(/printed page \d|print(?:ed)? p\. ?\d/i)
-    for (const id of ['U1', 'T08'])
+    for (const id of ['U1', 'T09'])
       expect(
         document.querySelector(`[data-evidence-id="${id}"] [data-source-locator-note]`),
       ).toBeNull()
@@ -231,7 +231,7 @@ describe('the section source list (A8, SUP-02)', () => {
   it('copies and opens the source the control belongs to', async () => {
     const writeText = jest.fn(() => Promise.resolve())
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
-    render(<BronchSourceList records={bronchStageSources('shared-airway').records} />)
+    render(<BronchSourceList records={bronchStageSources('deterioration').records} />)
     const s2 = document.querySelector<HTMLElement>('[data-evidence-id="S2"]')!
     const copy = within(s2).getByRole('button', { name: 'Copy citation for S2' })
     fireEvent.click(copy)
@@ -242,8 +242,8 @@ describe('the section source list (A8, SUP-02)', () => {
       'Copied',
     )
     expect(
-      within(document.querySelector<HTMLElement>('[data-evidence-id="S3"]')!).getByRole('button', {
-        name: 'Copy citation for S3',
+      within(document.querySelector<HTMLElement>('[data-evidence-id="S1"]')!).getByRole('button', {
+        name: 'Copy citation for S1',
       }),
     ).toHaveTextContent('Copy citation')
     const u1 = document.querySelector<HTMLElement>('[data-evidence-id="U1"]')!
@@ -279,7 +279,7 @@ describe('focus scrolling reserves the continuation bar as measured (A9)', () =>
         }
       })
     try {
-      const { lesson } = await mountSection('shared-airway')
+      const { lesson } = await mountSection('icu-physiology')
       const root = document.documentElement
       // A reading step pins the bar: its measured height plus a small gap, never a fixed 19rem.
       expect(lesson.steps[0].course?.presentation).toBe('illustrated')
