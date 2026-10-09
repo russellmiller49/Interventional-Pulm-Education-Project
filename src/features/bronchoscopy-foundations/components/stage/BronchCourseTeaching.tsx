@@ -270,7 +270,7 @@ export function NormalAirwayTour({
         (entry) =>
           entry.lessonId &&
           isStillStructureId(entry.lessonId) &&
-          (['branch-entry', 'view-loss'].includes(sectionId)
+          (['larynx-and-entry', 'view-loss'].includes(sectionId)
             ? ['TR', 'RMSB', 'LMSB'].includes(entry.label ?? '')
             : sectionId === 'reference-frames'
               ? ['TR', 'RMSB', 'BI'].includes(entry.label ?? '')

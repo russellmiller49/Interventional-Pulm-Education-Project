@@ -397,37 +397,6 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     check('transfer', 'A patient in recovery'),
     close(['common-errors']),
   ],
-  'branch-entry': [
-    teach(
-      'reference',
-      'Start with a named opening',
-      ['carina-and-back', 'what-to-watch', 'controlled-entry'],
-      'tour',
-    ),
-    teach('worked-entry', 'Follow an entry and return to the carina', [
-      'entry-sequence-worked',
-      'where-the-turn-goes',
-    ]),
-    practice(
-      'Now enter each main bronchus',
-      'inspection',
-      'Reach the main carina, enter the right main bronchus, withdraw to the trachea, and enter the left. Establish a visible open lumen before advancing.',
-    ),
-    teach('hold', 'Keep the view stable during another task', ['holding-the-view']),
-    {
-      id: 'hold-view',
-      title: 'Hold the carina view through an interruption',
-      kind: 'observe',
-      presentation: 'inspection',
-      blocks: [],
-      visual: 'none',
-      instruction:
-        'The scope starts above the carina. Acknowledge the assistant and capture an image while maintaining depth and avoiding wall contact.',
-    },
-    check('check', 'Interpret a movement that does not reach the tip'),
-    debrief(['common-errors']),
-    check('transfer', 'Consider withdrawal from an angled bronchus'),
-  ],
   'reference-frames': [
     teach(
       'viewpoints',
@@ -494,27 +463,60 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     check('transfer', 'Choose recovery in a changed context'),
   ],
   'larynx-and-entry': [
-    teach(
-      'tour',
-      'Inspect the larynx before entry',
-      ['before-the-trachea', 'in-view-above', 'normal-laryngeal-examination'],
-      'section',
+    hook('The cords are in view'),
+    check('check', 'A pink view at the back of the inlet'),
+    screen('larynx', 'The larynx from above', 'Name each structure before you aim.', ['larynx']),
+    {
+      ...practice(
+        'Name four views',
+        'illustrated',
+        'No names this time. Click the structure or the opening each view asks for.',
+      ),
+      id: 'name-the-views',
+      act: 'images',
+    },
+    screen(
+      'crossing',
+      'Getting to the cords, and through them',
+      'Read the route in, then when to cross.',
+      ['route', 'crossing'],
+      { visual: 'section' },
     ),
-    teach('entry', 'Follow entry under vision', [
-      'crossing-on-the-opening',
-      'darkness-above-the-glottis',
-      'mouth-or-nose',
-      'where-to-look',
-    ]),
     practice(
-      'Now observe opening and enter',
+      'Cross the cords',
       'inspection',
-      'Watch the authored vocal-fold cycle. Use the controls to cross under vision while the opening permits entry; contact and closed-fold attempts do not establish safe entry.',
+      'Watch the cords through a few breaths, then cross as they part. Below them, name the trachea.',
     ),
-    // The question asks when to cross, not what is in view (fellow walkthrough SUP-13).
-    check('check', 'Decide when to cross the glottis'),
-    debrief(['common-errors', 'entry-and-withdrawal']),
-    check('transfer', 'Interpret what a different entry permits'),
+    screen(
+      'trachea-and-carina',
+      'The trachea and the carina',
+      'Walk the three stills, then read why the carina is home base.',
+      ['trachea-and-carina'],
+      { visual: 'tour', tour: ['TR', 'RMSB', 'LMSB'] },
+    ),
+    {
+      ...practice(
+        'Into each main bronchus, and back',
+        'inspection',
+        'Start in the trachea. Reach the carina, enter the right main bronchus, come back, then enter the left.',
+      ),
+      id: 'carina',
+      act: 'carina',
+    },
+    screen('holding', 'Hold the view', 'Read how to keep the scope still while others work.', [
+      'holding-the-view',
+    ]),
+    {
+      ...practice(
+        'Hold above the carina',
+        'inspection',
+        'The assistant will speak. Acknowledge, capture an image, and stay where you are until the hold ends.',
+      ),
+      id: 'hold-view',
+      act: 'hold',
+    },
+    check('transfer', 'Lost after a cough'),
+    close(['common-errors']),
   ],
   'left-side': [
     teach(

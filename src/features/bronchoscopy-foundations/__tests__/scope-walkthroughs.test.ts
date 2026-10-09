@@ -1,6 +1,6 @@
 /** @jest-environment node */
 import type { AirwayLabel, ScopeGoal, ScopeViewSpec } from '../components/scope/types'
-import { section as branchEntry } from '../content/sections/branch-entry'
+import { carinaTasks as branchEntry } from '../test-support/carinaTasks'
 import { section as fiveControls } from '../content/sections/five-controls'
 import { section as larynxAndEntry } from '../content/sections/larynx-and-entry'
 import { section as leftSide } from '../content/sections/left-side'
@@ -60,7 +60,7 @@ describe('authored scope-lab steps can be completed with the learner’s control
     expect(o.goals(suction.goals)).toEqual(allMet(suction.goals))
   })
 
-  it('branch-entry: to the carina, into each main bronchus, and a held view', () => {
+  it('the carina tasks: to the carina, into each main bronchus, and a held view', () => {
     const act = actOf(branchEntry)
     const p = pilot(act.view)
     p.goInto('RMSB')
@@ -75,7 +75,7 @@ describe('authored scope-lab steps can be completed with the learner’s control
     expect(o.goals(observe.goals)).toEqual(allMet(observe.goals))
   })
 
-  it('branch-entry: moving during the hold is drift', () => {
+  it('the carina tasks: moving during the hold is drift', () => {
     const observe = actOf(branchEntry).observe!
     const o = pilot(observe.view ?? actOf(branchEntry).view)
     o.withdraw()

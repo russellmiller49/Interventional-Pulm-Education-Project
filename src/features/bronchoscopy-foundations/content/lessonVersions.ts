@@ -10,6 +10,7 @@ export const BRONCH_LEARN_VERSIONS: Readonly<Record<string, number>> = {
   'clinical-question': 2,
   'pre-use-check': 2,
   'sedation-and-monitoring': 2,
+  'larynx-and-entry': 2,
 }
 
 export function bronchLearnRecordId(sectionId: string): string {

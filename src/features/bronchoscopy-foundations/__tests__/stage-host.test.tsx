@@ -424,10 +424,10 @@ describe('optional questions and activities', () => {
 /** Non-target lessons retain their activity and safety boundaries. */
 describe('a scope section on the stage', () => {
   it('introduces entry with teaching and opens the controls for practice before the check', async () => {
-    const { lesson } = await mountSection('branch-entry')
+    const { lesson } = await mountSection('view-loss')
     expect(controlsFieldset()).toBeNull()
     expect(document.querySelector('[data-normal-airway-tour]')).not.toBeNull()
-    expect(storedRecord()?.visitedSectionIds).toEqual(['branch-entry'])
+    expect(storedRecord()?.visitedSectionIds).toEqual(['view-loss'])
     await reachAct(lesson)
     expect(controlsFieldset()).not.toBeDisabled()
     expect(nowPrimary()).toBeDisabled()
@@ -451,7 +451,7 @@ describe('a scope section on the stage', () => {
   )
 
   it('stores nothing about how the scope was driven or which assists were used', async () => {
-    const { lesson } = await mountSection('branch-entry')
+    const { lesson } = await mountSection('view-loss')
     await reachAct(lesson)
     await performAct(lesson)
     await finishSection(lesson)

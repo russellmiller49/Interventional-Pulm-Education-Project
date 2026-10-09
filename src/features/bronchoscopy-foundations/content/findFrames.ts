@@ -66,18 +66,23 @@ export function markerClock(frame: FindFrame, marker: FindMarker, rotation = 0):
 }
 
 /**
- * A name for each outline that says where it is and not what it is: "Opening B, at 4 o'clock".
+ * A name for each outline that says where it is and not what it is: "Opening B, at 4 o'clock",
+ * or "Structure B" on a frame whose outlines are not openings.
  * Letters run clockwise from the top of the frame as shown, so the name is the same for someone
  * using a keyboard or a screen reader as the outline is for someone looking at it.
  */
-export function markerNames(frame: FindFrame, rotation = 0): ReadonlyMap<string, string> {
+export function markerNames(
+  frame: FindFrame,
+  rotation = 0,
+  word: 'Opening' | 'Structure' = 'Opening',
+): ReadonlyMap<string, string> {
   const ordered = [...frame.markers].sort(
     (a, b) => markerDegrees(frame, a, rotation) - markerDegrees(frame, b, rotation),
   )
   return new Map(
     ordered.map((marker, index) => [
       marker.id,
-      `Opening ${String.fromCharCode(65 + index)}, at ${markerClock(frame, marker, rotation)} o’clock`,
+      `${word} ${String.fromCharCode(65 + index)}, at ${markerClock(frame, marker, rotation)} o’clock`,
     ]),
   )
 }

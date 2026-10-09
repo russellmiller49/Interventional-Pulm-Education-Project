@@ -38,7 +38,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D17'],
-  prerequisites: ['five-controls', 'branch-entry'],
+  prerequisites: ['five-controls'],
 
   clinicalQuestion:
     'When the image on the monitor has turned and a CT is open beside it, what tells you which airway is in view?',

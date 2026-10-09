@@ -55,7 +55,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D05', 'D06', 'D08'],
-  prerequisites: ['branch-entry', 'reference-frames', 'larynx-and-entry'],
+  prerequisites: ['reference-frames', 'larynx-and-entry'],
 
   clinicalQuestion: 'You are in the right lung. Which airway is this, and how do you know?',
   objective: 'Name each airway of the right lung from its parent and the wall it leaves.',

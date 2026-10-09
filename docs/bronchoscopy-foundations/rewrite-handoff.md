@@ -1,6 +1,6 @@
 # Bronchoscopy Foundations rewrite: handoff
 
-Written 2026-10-08. Start the next session from this file.
+Written 2026-10-08, last updated 2026-10-09. Start the next session from this file.
 
 ## Why this work exists
 
@@ -17,6 +17,7 @@ supervisor" answers.
 | ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
 | #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
+| #364 | `claude/bf-rewrite-s05`            | Draft, stacked on #362. Section 5, larynx, trachea and carina, rewritten; `branch-entry` retired.                 |
 | #362 | `claude/bf-rewrite-s04`            | Draft, stacked on #360. Section 4, driving the scope, rewritten.                                                  |
 | #360 | `claude/bf-rewrite-s03`            | Draft, stacked on #359. Section 3, sedation and monitoring, rewritten; `shared-airway` retired.                   |
 | #359 | `claude/bf-rewrite-s02`            | Draft, stacked on #358. Section 2, the scope and the setup, rewritten.                                            |
@@ -26,8 +27,26 @@ supervisor" answers.
 | #351 | `claude/bf-3d-retry`               | Draft, from `main`. The 3D-retry fix lifted out of #348, with its three end-to-end cases.                         |
 | #348 | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix is now #351; close #348 once #351 merges.                        |
 
-Nothing is merged. The work was done in the worktree
-`…-Worktrees/claude-bf-pre-review-04-20261007`, which is currently on `claude/bf-rewrite-pilot`.
+Nothing is merged. The stack, in merge order: #349 → #350 → #352 → #355 → #358 → #359 → #360 →
+#362 → #364. #351 is independent. The work is in the worktree
+`…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s05`. Branch the
+next section from that branch (`git switch -c claude/bf-rewrite-s07`) and stack its PR on #364.
+
+## Start here next session
+
+1. Read this file, then the plan's rules and the brief for the section you are writing.
+2. Next section: 7, the left lung (`left-side`). Section 6, the right lung, was the pilot; use
+   `content/sections/right-side.ts` and its flow as the model (labelled tour, click-on-image
+   questions, then the simulator). Brief 7: start with an upright image; the LB7+8 convention in
+   one sentence; the basal mnemonic belongs to the right side.
+3. Before or with it, retire `reference-frames` (it forwards to `right-side`). See the notes
+   under section 5 below.
+4. Work one section per session. Get a digest of the old section from a subagent instead of
+   reading it into context, then write the new file. The notes under each section below say
+   what the checks will refuse.
+5. Dev server for this worktree: launch configuration `claude-bf`, port 3133. The Browser pane
+   refuses that address; verify with Playwright (a throwaway config, since the module's own
+   config matches its spec files exactly) and with `curl`.
 
 Owner decisions so far (2026-10-08):
 
@@ -35,6 +54,9 @@ Owner decisions so far (2026-10-08):
 - The four Nashville bleeding rows are signed.
 - The right lung's prediction stays as reworded in `b06c9009`. It was ambiguous before; see the
   lesson under "Traps".
+- The fellow-session gate on the remaining sections is removed.
+- Methylene blue: the expert panel's regimen (signed). Flumazenil and naloxone: the product-label
+  doses (signed). Scope diameters: current Olympus scopes from the device catalog (not signed).
 
 ## How a rewritten section is built
 
@@ -91,11 +113,35 @@ sections no longer wait for sessions with the pilot.
    its tests to the absorber. `honest-report` sits late for now because its prerequisites do;
    it goes when `describe-findings` is rewritten. `what-completion-means` goes with the hub and
    closing screen (item 6).
-5. **Sections rewritten so far:** the right lung, bleeding, and sections 1 to 4
-   (`clinical-question`, `pre-use-check`, `sedation-and-monitoring`, `five-controls`), all
-   2026-10-08. Nine remain; section 5 (`larynx-and-entry`) is next, and it retires
-   `branch-entry`. The course lists 22 sections.
-   Notes from section 4:
+5. **Sections rewritten so far:** the right lung, bleeding, and sections 1 to 5
+   (`clinical-question`, `pre-use-check`, `sedation-and-monitoring`, `five-controls`,
+   `larynx-and-entry`), all 2026-10-08. Eight remain. Section 6, the right lung, is done, so
+   section 7 (`left-side`) is next. The course lists 21 sections.
+   Notes from section 5:
+   - `branch-entry` is retired. Its two airway tasks are section 5's `moreActs.carina` and
+     `moreActs.hold`; its objectives M05-O3 to O5 and the reading-the-view row
+     `handle-turns-view-static` are homed in section 5.
+   - Three larynx frames were cut from the survey video (`larynx-inlet`, `larynx-folds`,
+     `larynx-cords`). `build-find-frames.mjs` now picks a structure by the annotation set's key
+     and writes a paired structure as two markers, `-image-left` and `-image-right`. A find row
+     sets `marks: 'structures'` when its outlines are not openings.
+   - The survey outlines only the true cords, the aryepiglottic folds and the corniculate and
+     cuneiform tubercles. The epiglottis and the false cords are taught in words and cannot be
+     asked on an image until someone outlines them.
+   - Tests that addressed `branch-entry` now reach the carina task (`larynx-and-entry-flow-v1-carina`)
+     or use `test-support/carinaTasks.ts`, which presents the two tasks in the shape the
+     simulation tests were written against. `scopeRecipe(sectionId, activity)` gives the recipe
+     for a named scope task.
+   - The registry hands out a rewritten section with its numbers resolved, so its views are new
+     objects: match a view by content, not identity.
+   - `reference-frames` still sits between sections 4 and 5. It forwards to the right lung and
+     should be retired next; the right lung is already rewritten, so that is a retirement on
+     its own (its tests and its `identify` activity need a decision).
+   - For Russell to confirm: the one-line descriptions of the laryngeal structures; "the
+     corniculate tubercles cap the arytenoids near the midline, the cuneiform sit further out
+     in the folds"; the tour notes on the right and left main bronchi; the prompts name a side
+     of the image, not of the patient.
+     Notes from section 4:
    - `branch-entry` is NOT retired yet. Its technique teaching is in section 4 now (the block
      `in-the-airway`). Its airway tasks (enter each main bronchus and come back; hold the view)
      belong to section 5 by the plan, so retire it there. About a dozen Jest files and six e2e

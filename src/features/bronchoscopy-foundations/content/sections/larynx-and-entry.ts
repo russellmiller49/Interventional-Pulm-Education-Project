@@ -1,287 +1,254 @@
-import { SIMULATOR_LANDMARKS, STEPS_LANDMARKS, TEACHING_LANDMARKS } from '../landmarks'
-import type { BronchSectionDefinition } from '../types'
+import type { ScopeViewSpec } from '../../components/scope/types'
+import { num } from '../numbers'
+import type { AuthoredChoice, BronchSectionDefinition } from '../types'
 
 /**
- * M07 — Upper airway, larynx, and tracheal entry. The Enter phase: the learner examines the larynx
- * before crossing it, crosses the glottis while the true folds are apart and without force,
- * re-identifies the trachea, and plans a withdrawal that neither claims an unseen larynx nor removes
- * an established airway to see it. Knowledge spec §5.6, §6.1, §10, §16.4, §17.1 (S1 PDF 51–65,
- * 71–79, 98–100, 115–117, 155–158; S2 PDF 27, 46, 106–107, 161–163; S3 PDF 81; T03; T11). Register
- * items R04, R05, R08, R13.
+ * Larynx, trachea and carina (rewrite, brief 5). The fellow names the laryngeal structures on
+ * stills of a normal larynx, crosses the true cords as they open, finds the membranous wall in the
+ * trachea, and uses the carina as home base: into each main bronchus and back. The airway tasks of
+ * the retired `branch-entry` section (enter each main bronchus, hold a view) are here.
+ *
+ * Sources: the course textbook (S1), the training manual (S2), the faculty manual (S3) and the
+ * lectures on inspection and handling (T10, T11).
  */
+const LARYNX = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 51, to: 65 } },
+  { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46 } },
+] as const
+const CROSSING = [
+  { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46 } },
+  { sourceId: 'S3', location: { kind: 'pdf-pages', from: 81 } },
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 51, to: 65 } },
+] as const
+const ROUTE = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 61, to: 65 } },
+  { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46 } },
+] as const
+const CARINA = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 61, to: 70 } },
+  { sourceId: 'S2', location: { kind: 'pdf-pages', from: 44, to: 47 } },
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 89, to: 93 } },
+] as const
+const HOLDING = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 89, to: 93 } },
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 98, to: 99 } },
+  { sourceId: 'S2', location: { kind: 'pdf-pages', from: 106, to: 107 } },
+  { sourceId: 'T10', location: { kind: 'time-span', start: '00:06:57', end: '00:09:28' } },
+] as const
+
+const CARINA_VIEW: ScopeViewSpec = {
+  sectionId: 'larynx-and-entry',
+  mode: 'guided-walk',
+  profile: 'adult-teaching-combined-left-basal-v1',
+  start: { kind: 'airway', label: 'TR', at: 'distal' },
+  controls: ['advance', 'withdraw', 'rotate', 'deflect', 'branchLabels'],
+  assists: { 'centerline-lock': true, 'aim-guard': true, 'branch-labels': true },
+  defaults: { branchLabels: true },
+  readouts: ['currentAirway', 'contactCount'],
+  litAirways: ['TR', 'RMSB', 'LMSB'],
+  boundary: 'Guided travel: the scope follows the lumen. Opening names are on.',
+}
+
+const choices = (
+  labels: readonly [string, string, string, string],
+  rationales: readonly [string, string, string, string],
+  unsafe?: 'b' | 'c' | 'd',
+): AuthoredChoice[] =>
+  (['a', 'b', 'c', 'd'] as const).map((id, index) => ({
+    id,
+    label: labels[index],
+    rationale: rationales[index],
+    plausibility: index === 0 ? 'best' : id === unsafe ? 'unsafe' : 'incorrect-mechanism',
+  }))
+
 export const section: BronchSectionDefinition = {
   id: 'larynx-and-entry',
-  title: 'The larynx and entry to the trachea',
-  shortTitle: 'Larynx and entry',
-  minutes: 7,
-  moduleIds: ['M07'],
+  authoringContract: 2,
+  title: 'Larynx, trachea and carina',
+  shortTitle: 'Larynx to carina',
+  minutes: 11,
+  activityMinutes: 6,
+  moduleIds: ['M07', 'M05'],
   objectives: [
     {
       objectiveId: 'M07-O1',
       subtask:
-        'Decides, in a practice case on the airway model, what the tip is aimed at when the arytenoid region is taken for the opening, and which pair of folds bounds the opening into the trachea.',
+        'Names the laryngeal structures on stills, and tells the arytenoids from the glottis.',
       evidence: 'case-decision',
     },
     {
       objectiveId: 'M07-O2',
-      subtask:
-        'Commits the moment to cross from the movement of the true folds with breathing and phonation, and records a larynx hidden by a tube as not assessed.',
+      subtask: 'Chooses the moment to cross from the movement of the true cords.',
       evidence: 'committed-explanation',
     },
     {
       objectiveId: 'M07-O3',
-      subtask:
-        'Decides, in a practice case, what resistance, pain and bleeding during a nasal entry change, including a change to the oral approach; controlled model entry is observed by faculty.',
+      subtask: 'Changes to the mouth when a nasal entry meets resistance, pain or bleeding.',
       evidence: 'observed-physical-skill-required',
     },
     {
       objectiveId: 'M07-O4',
       subtask:
-        'In the bronchoscope view, crosses the glottis while the true folds are apart, without advancing against closure, and names the trachea below by its rings and membranous wall; the hand skill on a model is observed by faculty.',
+        'Crosses while the cords are apart, and names the trachea by its rings and membranous wall.',
       evidence: 'observed-physical-skill-required',
     },
     {
       objectiveId: 'M07-O5',
-      subtask:
-        'Commits a withdrawal plan through an endotracheal tube: a deliberate look below the tube on the way out, the covered larynx and trachea recorded as not assessed, and the tube left to the airway team.',
+      subtask: 'Looks again at the subglottis and the larynx on the way out.',
       evidence: 'committed-explanation',
     },
+    {
+      objectiveId: 'M05-O3',
+      subtask: 'Enters each main bronchus from the carina and comes back to it.',
+      evidence: 'observed-physical-skill-required',
+    },
+    {
+      objectiveId: 'M05-O4',
+      subtask: 'Returns to the carina under vision when the position is in doubt.',
+      evidence: 'committed-explanation',
+    },
+    {
+      objectiveId: 'M05-O5',
+      subtask: 'Holds the view without drifting when the assistant speaks or passes an instrument.',
+      evidence: 'observed-physical-skill-required',
+    },
   ],
-  drillIds: ['D03'],
-  prerequisites: ['sedation-and-monitoring', 'five-controls', 'branch-entry', 'reference-frames'],
+  drillIds: ['D03', 'D04', 'D10'],
+  prerequisites: ['sedation-and-monitoring', 'five-controls'],
 
   clinicalQuestion:
-    'With the larynx in view during an oral or nasal entry, what must be identified, and when may the scope go through into the trachea?',
-  recognizeTitle: 'The larynx seen from above',
+    'The cords are in view. When do you cross, and where is home once you are through?',
   objective:
-    'Tell the laryngeal structures apart, decide when the scope may cross the glottis, and state what an examination of the larynx can and cannot claim.',
-  why: 'The larynx protects the airway and moves with breathing and voice. How the scope goes through it, and what the report later says about it, both depend on what was actually seen there.',
-  newConcept:
-    'What the larynx shows sets what may be done there: the aligned tip crosses gently only while the opening between the true folds is seen, usually on the breath in; folds that stay closed mean stopping stimulation and reassessing, and a larynx hidden by a tube is recorded as not assessed. Neither is forced.',
-  incrementSentence:
-    'This section adds one idea to steering and view recovery: at the larynx, what is seen sets what may be done, so the scope crosses only while the opening between the true folds is in view, and folds that stay closed, or a larynx hidden by a tube, are never forced.',
-  harmfulReflex:
-    'Advancing against closed vocal folds, or pushing harder when entry meets resistance, to keep the procedure moving.',
+    'Name the laryngeal structures, cross the true cords as they open, and work from the carina.',
+  harmfulReflex: 'Pushing against cords that are not open. Wait for them to part.',
+  harmfulReflexPatterns: [/\bpush/i],
   anchor: {
     analogy:
-      'A door that opens and closes on its own rhythm: you walk through as it opens, not by shouldering it while it is shut.',
+      'The glottis is a door that opens on its own rhythm. You do not push it. You stand ready, lined up, and step through as it opens.',
     precise:
-      'The true vocal folds abduct with inspiration and adduct with phonation. In a spontaneously breathing patient the aligned tip crosses, gently and under vision, as the opening between them widens — usually on inspiration — and is not pushed against closed folds. Below them, the tracheal lumen is re-identified before the scope goes on.',
-    checklistLabel: 'Before the tip goes through',
+      'Identify the true cords, cross them as they part, and settle above the carina with the membranous wall at 6 o’clock.',
+    checklistLabel: 'From the larynx to the carina',
     checklist: [
-      'The patient and the airway prepared',
-      'The epiglottis identified, and the true folds told apart from the false folds and the arytenoid region',
-      'In a responsive patient, the folds watched with breathing and voice',
-      'The tip aligned with the opening, the folds seen apart, then a gentle advance',
+      'True cords identified',
+      'Cross as they part',
+      'Membranous wall at 6 o’clock',
+      'Back to the carina when lost',
     ],
   },
-
-  spineStops: ['larynx', 'trachea'],
-  grammarRowIds: ['red-out', 'dark-field'],
-  controlStrip: {
-    verdict: 'this-control',
-    states: {
-      insertion: 'this-one',
-      rotation: 'this-one',
-      deflection: 'this-one',
-      suction: 'not-this-one',
-      accessory: 'not-this-one',
+  outcomes: [
+    {
+      id: 'cross-the-cords',
+      text: 'Name the laryngeal structures, and cross the true cords as they open.',
     },
-    sentence:
-      'Shaft rotation, where needed, brings the opening into the bending plane and distal deflection aligns the tip with it; insertion, timed to the folds parting, carries it through, and the same insertion against closed folds is the harmful reflex. Suction and the accessory state play no part in the crossing.',
-  },
-  precommitDenyPatterns: [
-    /\bbreath(es)? in\b/i,
-    /\binspir\w*/i,
-    /\babduct\w*/i,
-    /\bfolds\b[^.]{0,15}\b(part|apart)\b/i,
-    /\bagainst (the )?(closed|closing) folds\b|\bagainst closure\b/i,
+    {
+      id: 'carina-home',
+      text: 'Work from the carina: into each main bronchus and back, without drifting.',
+    },
   ],
-  modelBoundary:
-    'The larynx in this course is a model. Its folds move on a scripted cycle, with a scripted cough now and then, that stands in for a patient’s; its tissue has no feel and does not bleed or swell; and contact is counted, not felt as force. A patient’s larynx can be narrower, can close on contact and can cough, so the ease of crossing here says nothing about crossing in a patient. A still image is a single frame and cannot show how the folds move.',
-  physicalSkillNote:
-    'The app cannot see your hands. Oral or nasal entry on a model, a supported shaft, depth held while the lever moves, and a crossing of the glottis without force are observed by faculty before any supervised patient practice. Crossing in this scene shows the timing and the target, not the hand skill.',
-  localPolicyIds: ['topical_anesthetic_policy', 'icu_bronchoscopy_policy'],
-  reviewItemIds: ['R04', 'R05', 'R08', 'R13'],
+
+  spineStops: ['larynx', 'trachea', 'carina', 'main-bronchi'],
+  grammarRowIds: ['red-out', 'dark-field', 'handle-turns-view-static'],
+  precommitDenyPatterns: [/\barytenoid/i, /\blower pair\b/i],
+  localPolicyIds: ['topical_anesthetic_policy'],
+  reviewItemIds: ['R03', 'R04', 'R13'],
+
+  tour: [
+    { airway: 'TR', note: 'Rings in front and at the sides. The flat membranous wall is behind.' },
+    { airway: 'RMSB', note: 'Short and nearly in line with the trachea.' },
+    { airway: 'LMSB', note: 'Longer, and it leaves at a sharper angle.' },
+  ],
 
   blocks: [
     {
-      id: 'before-the-trachea',
-      kind: 'question',
-      role: 'framing',
-      heading: 'Before the trachea',
-      body: 'An oral or nasal bronchoscopy reaches the larynx before the trachea. The larynx protects the airway and serves breathing and voice; it is a structure to examine, not only an obstacle on the way down.\n\nThis section is about what to identify there, when the scope may go through, and what the examination of the larynx can claim afterwards.',
-      claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 51, to: 65 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46 } },
-      ],
-    },
-    {
-      id: 'in-view-above',
-      kind: 'signals',
-      role: 'signals',
-      heading: 'What can be seen on the way to the trachea',
-      body: 'Name each of these before the tip moves toward it.',
-      pointsLabel: 'From the entry to the trachea',
-      points: [
-        'Through the mouth: the tongue base, the soft palate and the uvula; through the nose: the nasal floor and the turbinates',
-        'The vallecula, the epiglottis, the aryepiglottic folds, the arytenoid region and the piriform recesses',
-        'The false vocal folds, above',
-        'The true vocal folds, below, and the opening between them: the glottis',
-        'Below the true folds: the subglottis, then the trachea',
-        'In a responsive patient: how the folds move with breathing and with voice',
-      ],
-      claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 51, to: 65 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46 } },
-      ],
-    },
-    {
-      id: 'normal-laryngeal-examination',
+      id: 'larynx',
       kind: 'pattern',
       role: 'normal-reference',
-      heading: 'A normal laryngeal examination',
-      body: 'In a normal examination the epiglottis is identified first and the view is carried beyond it to the laryngeal inlet. The operator names the arytenoid region, the false folds and the true folds, and the opening between the true folds. In an appropriately responsive patient the folds are watched through breathing and phonation, and the description covers their symmetry and mobility, with any swelling, lesion or abnormal closure.\n\nThe description names its conditions — the sedation, any airway device, the secretions, the urgency — because each changes what the larynx can show. Recognizing abnormal motion is expected; a definitive functional diagnosis from one image without its context is not.',
-      claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 51, to: 65 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46 } },
+      heading: 'The larynx from above',
+      body: 'Find the epiglottis first. It is the landmark on the way in, not the opening. Then name each structure before you aim.',
+      pointsLabel: 'From the front of the inlet to the back',
+      points: [
+        'Epiglottis: at the front of the inlet.',
+        'Aryepiglottic folds: the sides of the inlet, running back from the epiglottis.',
+        'Arytenoids: the mounds at the back. The corniculate and cuneiform tubercles sit on them.',
+        'False cords: the upper pair of folds.',
+        'True cords: the lower pair, with the ventricle between them and the false cords.',
+        'Glottis: the opening between the true cords. Aim here.',
       ],
+      media: { kind: 'endoscopic-still', structureId: 'larynx', outline: true },
+      claimClass: 'source',
+      sourceRefs: LARYNX,
+      reviewItemIds: ['R04'],
     },
     {
-      id: 'crossing-on-the-opening',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'Crossing on the opening',
-      body: 'The true vocal folds abduct with inspiration and adduct with phonation; in a responsive patient, their movement with both is watched before the scope crosses. With the patient and the airway prepared, the tip is aligned with the opening between the true folds and advanced gently while they are apart — usually on inspiration in a spontaneously breathing patient — under vision, not pushed against closed folds. Speech narrows the opening, so a responsive patient agrees on a simple signal for discomfort rather than speaking while the scope crosses.\n\nFolds that stay closed are not pushed through: closure with instrumentation can be laryngospasm, so stimulation stops, the problem is announced, and oxygenation and ventilation are assessed. Below the folds, avoid prolonged irritating contact and unnecessary pausing just beneath the glottis. Re-identify the tracheal lumen — cartilage rings anteriorly and laterally, the membranous wall posteriorly — and adapt to its curve.',
+      id: 'route',
+      kind: 'pattern',
+      role: 'signals',
+      heading: 'Nose or mouth',
+      body: 'Through the nose, advance gently under vision. Resistance, pain or bleeding means stop and go by the mouth.\n\nThrough the mouth, always use a bite block. Find the base of the tongue, then the epiglottis.',
       claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46 } },
-        { sourceId: 'S3', location: { kind: 'pdf-pages', from: 81 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 51, to: 65 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 50, to: 59 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 71, to: 79 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 115, to: 117 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 27 } },
-      ],
+      sourceRefs: ROUTE,
+    },
+    {
+      id: 'crossing',
+      kind: 'pattern',
+      role: 'mechanism',
+      heading: 'Cross as the cords part',
+      body: `Spray ${num('lidocaine-spray-concentration')} lidocaine onto the cords and wait for it to work. Then watch the cords through a few breaths.\n\nThey part on each breath in. They close with speech, a cough or a touch. Line the tip up with the glottis and go through as they part.\n\nNever push against closed cords. If they clamp shut, stop touching them, say so, and check the oxygen and the breathing.`,
+      claimClass: 'source',
+      sourceRefs: CROSSING,
+      localPolicyIds: ['topical_anesthetic_policy'],
+      reviewItemIds: ['R13'],
+    },
+    {
+      id: 'trachea-and-carina',
+      kind: 'pattern',
+      role: 'normal-reference',
+      heading: 'The trachea, and home base',
+      body: 'Below the cords, the trachea has cartilage rings in front and at the sides, and a flat membranous wall behind. Turn the scope until the membranous wall is at 6 o’clock. The right main bronchus is then on your right.\n\nThe carina is home base. From just above it you see both main bronchi. When you are unsure where you are, withdraw under vision until you see it again.',
+      claimClass: 'source',
+      sourceRefs: CARINA,
+    },
+    {
+      id: 'holding-the-view',
+      kind: 'pattern',
+      role: 'mechanism',
+      heading: 'Hold the view',
+      body: 'When the assistant speaks or passes an instrument, the scope must not creep forward. Hold the tube at the nose or the bite block, without leaning on the patient’s face.\n\nA view held by pressing the tip on the wall is not a safe position. On the way out, look again at the subglottis and the larynx.',
+      media: { kind: 'endoscopic-still', structureId: 'trachea', outline: false },
+      claimClass: 'source',
+      sourceRefs: HOLDING,
+      reviewItemIds: ['R03'],
     },
     {
       id: 'common-errors',
       kind: 'after-commitment',
       role: 'common-errors',
-      heading: 'Common errors and their correction',
-      body: 'Each of these errors treats the larynx as an obstacle to get past rather than a structure to read.',
-      pointsLabel: 'The error, then the correction',
+      heading: 'Six errors to expect',
+      body: 'Each one mistakes what is in view, or moves before the view allows it.',
+      pointsLabel: 'The error, then the fix',
       points: [
-        'Aiming at the arytenoid region as though it were the opening: find the true folds and aim between them.',
-        'Failing to recognize the epiglottis: identify it before approaching the larynx; it is the landmark on the way to the inlet, not the opening.',
-        'Confusing the false folds with the true folds: the opening into the trachea lies between the true folds, below the false folds.',
-        'Advancing during closure: hold the tip aligned and still, and cross when the folds are apart.',
-        'Stopping for a long anatomical explanation while the scope irritates the subglottis: move off the subglottis to a stable position, re-identify the trachea, and explain afterwards.',
-        'Losing depth while working the deflection lever: hold the depth, then bend.',
+        'Taking the arytenoids for the opening. The glottis is in front of them.',
+        'Aiming between the false cords. The true cords are the lower pair.',
+        'Pushing against closed cords. Wait for the breath in.',
+        'Crossing during a cough. A cough is a closure, not an opening.',
+        'Forcing a tight nostril. Go by the mouth.',
+        'Creeping forward when someone speaks. Hold the tube still where it enters.',
       ],
       claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46 } },
-        { sourceId: 'S3', location: { kind: 'pdf-pages', from: 81 } },
-      ],
-    },
-    {
-      id: 'darkness-above-the-glottis',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'Darkness above the glottis',
-      body: 'Above the glottis, the visible boundaries of the path are the true folds on either side of the opening. A dark space reached by aiming at the arytenoid region is not that opening.\n\nThe dark-field row in Reading the view applies here too. One lecture in this course’s sources uses darkness as a cue and encourages steady forward progress through the upper airway; the course’s wording stays the same at the larynx: identify a patent path by its visible anatomical boundaries, and advance gently only while that path stays clear. Loss of the path, resistance, new bleeding or a change in the patient overrides any wish to keep moving.',
-      claimClass: 'review-flag',
-      sourceRefs: [
-        { sourceId: 'T11', location: { kind: 'time-span', start: '00:06:39', end: '00:08:43' } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 106, to: 107 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46 } },
-        { sourceId: 'S3', location: { kind: 'pdf-pages', from: 81 } },
-      ],
+      sourceRefs: [...CROSSING, ...HOLDING],
       reviewItemIds: ['R04'],
-    },
-    {
-      id: 'mouth-or-nose',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'Through the mouth or the nose',
-      body: 'Through the mouth, a bite block protects the scope — apparent deep sedation does not replace it — and the shaft is held in a controlled position while the tongue base and the epiglottis are identified before the larynx is approached. When soft tissue closes the view, a jaw thrust or another airway-opening maneuver by a trained assistant may be needed; pressing the scope against the tongue or the back of the pharynx is not a substitute for opening the airway.\n\nThrough the nose, suitability is assessed first, the chosen nostril is prepared according to local practice, and the scope advances gently along the nasal passage under vision. Resistance, pain or bleeding is a reason to reassess the approach, not to push harder, and steering upward blindly is not a way round it. The choice between the two approaches weighs coagulopathy, anatomy and the instrument’s size; the oral approach is the alternative when nasal access is unsuitable.',
-      claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 61, to: 65 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 98, to: 100 } },
-      ],
-      localPolicyIds: ['topical_anesthetic_policy'],
-    },
-    {
-      id: 'where-to-look',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'Where to look during entry',
-      body: 'Two lectures in this course’s sources give different advice on where to look. The difficult-airway lecture says to watch the mouth while a videolaryngoscope blade or a tube goes in, before the device shows it on its camera; the bronchoscopy lecture says to use the endoscopic view as the scope enters the airway. They describe different devices and phases, not one universal rule.\n\nIntroduce the scope safely under direct external view, then keep continuous awareness of its visible path, with an assistant protecting the entry point where that helps.',
-      claimClass: 'design',
-      sourceRefs: [
-        { sourceId: 'T03', location: { kind: 'time-span', start: '00:01:16', end: '00:02:21' } },
-        { sourceId: 'T11', location: { kind: 'time-span', start: '00:06:39', end: '00:07:20' } },
-      ],
-      reviewItemIds: ['R05'],
-    },
-    {
-      id: 'entry-and-withdrawal',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'Entry and withdrawal are two looks',
-      body: 'Crossing the glottis may provoke cough, and a detailed look at the subglottis straight after crossing can be difficult. With the scope stable in the trachea, clear of the subglottis, the patient and the team can pause to reassess before going on; no fixed waiting interval is required. On the way out, a deliberate look at the proximal trachea and the subglottis may show what was not seen well on entry.\n\nAn endotracheal tube, a supraglottic airway, deep anesthesia, heavy secretions or urgency can each keep the native larynx from a meaningful examination, and fold movement during coughing, instrumentation or a changed depth of anesthesia is not over-read. The report names the limitation rather than a finding.',
-      claimClass: 'transcript-source',
-      sourceRefs: [
-        { sourceId: 'T11', location: { kind: 'time-span', start: '00:18:56', end: '00:21:13' } },
-        { sourceId: 'T11', location: { kind: 'time-span', start: '00:43:45' } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 51, to: 65 } },
-      ],
     },
   ],
 
   workspace: {
     kind: 'media',
     media: [{ kind: 'endoscopic-still', structureId: 'larynx', outline: false }],
-    caption:
-      'The larynx from above: one still from the course’s normal survey, with no structures marked on it; authored teaching media pending review',
-  },
-
-  steps: {
-    recognize: {
-      instruction:
-        'Look at the image in the Simulator panel and name each structure you can see; then read “What can be seen on the way to the trachea” in the Teaching panel.',
-      lookIn: {
-        pane: 'simulator',
-        landmark: SIMULATOR_LANDMARKS.image,
-        alsoPane: 'teaching',
-        alsoLandmark: 'What can be seen on the way to the trachea',
-      },
-    },
-    act: {
-      title: 'Into the trachea',
-      instruction:
-        'Use the scope controls under the view: watch the true folds in the bronchoscope view through a few breaths, align the tip with the opening between them, advance into the trachea, then name it in the inspection record. An advance against closed folds leaves the last goal unmet; reset and begin again. The goals on this card fill in as each one is met.',
-      lookIn: {
-        pane: 'simulator',
-        landmark: SIMULATOR_LANDMARKS.scopeView,
-        alsoPane: 'steps',
-        alsoLandmark: STEPS_LANDMARKS.goals,
-      },
-    },
-    explain: {
-      title: 'What the larynx allows',
-      instruction: `In the Teaching panel, read ${TEACHING_LANDMARKS.adds} and “Crossing on the opening”; then, on this card, why the other answers do not fit.`,
-    },
+    caption: 'A normal larynx from above, with nothing marked',
   },
 
   act: {
     kind: 'scope-lab',
+    outcomeId: 'cross-the-cords',
     view: {
       sectionId: 'larynx-and-entry',
       mode: 'larynx-entry',
@@ -293,8 +260,7 @@ export const section: BronchSectionDefinition = {
       ledger: { expected: ['TR'] },
       script: 'breathing-cords',
       litAirways: ['TR'],
-      boundary:
-        'A model larynx on a scripted cycle rather than a patient’s own pattern: the folds open widest on each breath in, narrow on each breath out, and close with a scripted cough now and then. A patient’s folds also come together with voice and can close on contact. The tissue does not bleed or swell, and contact is counted, not felt. The ease of crossing here says nothing about a patient.',
+      boundary: 'The cords part on each breath in and close with a cough.',
     },
     goals: [
       {
@@ -321,214 +287,317 @@ export const section: BronchSectionDefinition = {
     ],
   },
 
+  moreActs: {
+    images: {
+      kind: 'find',
+      outcomeId: 'cross-the-cords',
+      find: {
+        id: 'larynx-views',
+        prompt:
+          'Three views of a normal larynx and one of the carina, as the scope saw them. Click what each one asks for.',
+        rows: [
+          {
+            id: 'true-cord',
+            frameId: 'larynx-cords',
+            marks: 'structures',
+            context:
+              'You are just above the glottis. The front of the larynx is at the top of this view.',
+            prompt: 'Click the true vocal cord on the left of the image.',
+            targetId: 'vocal-cord-image-left',
+            rationale:
+              'The true cords are the pale pair that meet at the front and bound the dark opening. The mound behind them is not a cord.',
+          },
+          {
+            id: 'aryepiglottic-fold',
+            frameId: 'larynx-folds',
+            marks: 'structures',
+            context: 'You are above the laryngeal inlet. The front of the larynx is at the top.',
+            prompt: 'Click the aryepiglottic fold on the right of the image.',
+            targetId: 'aryepiglottic-fold-image-right',
+            rationale:
+              'The aryepiglottic folds form the sides of the inlet. They run back from the epiglottis to the mounds at the back.',
+          },
+          {
+            id: 'corniculate-tubercle',
+            frameId: 'larynx-inlet',
+            marks: 'structures',
+            context: 'You are above the laryngeal inlet. The front of the larynx is at the top.',
+            prompt: 'Click the corniculate tubercle on the left of the image.',
+            targetId: 'corniculate-tubercle-image-left',
+            rationale:
+              'The corniculate tubercles cap the arytenoids, at the back of the inlet near the midline. The cuneiform tubercles sit further out, in the folds.',
+          },
+          {
+            id: 'carina',
+            frameId: 'carina',
+            context:
+              'You are above the carina. The view is rolled: the membranous wall is at 7 o’clock.',
+            prompt: 'Click the left main bronchus.',
+            targetId: 'lmb',
+            rationale:
+              'Put the membranous wall back at 6 o’clock in your head. The patient’s left is then on your left, and that opening is the left main bronchus.',
+          },
+        ],
+        sourceRefs: LARYNX,
+      },
+    },
+    carina: {
+      kind: 'scope-lab',
+      outcomeId: 'carina-home',
+      view: {
+        ...CARINA_VIEW,
+        start: { kind: 'airway', label: 'TR', at: 'proximal' },
+        controls: ['advance', 'withdraw', 'rotate', 'deflect', 'branchLabels', 'reset'],
+      },
+      goals: [
+        {
+          id: 'reach-carina',
+          label: 'Advance down the trachea to the main carina',
+          test: { type: 'event', event: 'reached-carina' },
+        },
+        {
+          id: 'enter-right',
+          label: 'Aim at the right main bronchus and enter it',
+          test: { type: 'event-sequence', events: ['reached-carina', 'entered:RMSB'] },
+        },
+        {
+          id: 'back-to-trachea',
+          label: 'Withdraw from the right main bronchus into the trachea',
+          test: { type: 'event-sequence', events: ['entered:RMSB', 'returned-to-trachea'] },
+        },
+        {
+          id: 'enter-left',
+          label: 'Aim at the left main bronchus and enter it',
+          test: {
+            type: 'event-sequence',
+            events: ['entered:RMSB', 'returned-to-trachea', 'entered:LMSB'],
+          },
+        },
+        {
+          id: 'no-force',
+          label:
+            'Reach the left main bronchus with no advance refused for want of aim, none made while the model recorded a lost view, and no wall contact recorded',
+          test: {
+            type: 'all',
+            tests: [
+              { type: 'event', event: 'entered:LMSB' },
+              { type: 'without', event: 'wall-contact' },
+              { type: 'without', event: 'aim-refused' },
+              { type: 'without', event: 'advanced-blind' },
+            ],
+          },
+        },
+      ],
+    },
+    hold: {
+      kind: 'scope-lab',
+      outcomeId: 'carina-home',
+      view: {
+        ...CARINA_VIEW,
+        controls: ['advance', 'withdraw', 'rotate', 'deflect', 'capture', 'acknowledge'],
+        readouts: ['depthMm', 'contactCount', 'holdRemaining'],
+        litAirways: ['TR'],
+        script: 'assistant-interrupt',
+        boundary: 'The assistant speaks during this task. Drift is a change in depth.',
+      },
+      goals: [
+        {
+          id: 'acknowledge',
+          label: 'Acknowledge the assistant',
+          test: { type: 'event', event: 'acknowledged' },
+        },
+        {
+          id: 'capture',
+          label: 'Capture an image from above the main carina',
+          test: {
+            type: 'all',
+            tests: [
+              { type: 'event', event: 'captured' },
+              { type: 'location', airway: 'TR' },
+            ],
+          },
+        },
+        {
+          id: 'hold',
+          label: 'Stay above the carina until the hold ends',
+          test: {
+            type: 'all',
+            tests: [
+              { type: 'event', event: 'hold-completed' },
+              { type: 'location', airway: 'TR' },
+            ],
+          },
+        },
+        {
+          id: 'no-drift',
+          label: 'Finish the hold with no drift in depth recorded and no wall contact recorded',
+          test: {
+            type: 'all',
+            tests: [
+              { type: 'event', event: 'hold-completed' },
+              { type: 'without', event: 'drift-detected' },
+              { type: 'without', event: 'wall-contact' },
+            ],
+          },
+        },
+      ],
+    },
+  },
+
   prediction: {
     id: 'N04',
     itemType: 'management-decision',
     situation:
-      'An oral entry for an airway inspection under moderate sedation, with topical anesthesia given and a bite block in place. The epiglottis has been identified and the tip sits above the laryngeal inlet, aligned with it: the arytenoid region, the false folds and the true folds are in view. The patient is breathing spontaneously and responds when spoken to; the laryngeal examination is complete, and the true folds move symmetrically.',
-    stem: 'When should the tip advance through the glottis?',
-    choices: [
-      {
-        id: 'a',
-        label: 'On the next breath in, advancing gently under vision',
-        rationale:
-          'The true folds abduct with inspiration, so in a spontaneously breathing patient the opening between them is usually widest on the breath in. With the tip already aligned and the examination done, a gentle advance under vision crosses without pushing on tissue.',
-        plausibility: 'best',
-      },
-      {
-        id: 'b',
-        label: 'Now, while the tip is aligned, advancing steadily until it slips through',
-        rationale:
-          'Aligned is not open. Advancing now, and on until the tip slips through, meets the folds whenever they are closing and pushes on the structure that protects the airway; the advance waits for the opening, and resistance is a reason to pause and reassess.',
-        plausibility: 'unsafe',
-      },
-      {
-        id: 'c',
-        label: 'While the patient sustains a spoken sound, advancing gently under vision',
-        rationale:
-          'Phonation brings the true folds together, so advancing while the patient sustains a sound meets closing folds: the advance during closure the scope must not make. Watching the folds during speech belongs to the examination before crossing; while the scope crosses, the patient is not asked to speak.',
-        plausibility: 'unsafe',
-      },
-      {
-        id: 'd',
-        label: 'During the next cough, advancing gently while the folds move the most',
-        rationale:
-          'A cough is a protective reflex, and fold movement during coughing is easy to misread as an opening. Crossing may itself provoke cough; with the tip held stable, the team lets it settle rather than advancing into it.',
-        plausibility: 'incorrect-mechanism',
-      },
-    ],
+      'You pass the epiglottis and aim at two mounds of mucosa at the back of the inlet. The view turns pink. Further forward you can see two pairs of folds, one above the other.',
+    stem: 'What is your next move?',
+    choices: choices(
+      [
+        'Ease back, find the true cords and aim between them',
+        'Push on toward the dark space behind the mounds',
+        'Aim between the upper pair of folds',
+        'Pause, and wait for the mounds to part',
+      ],
+      [
+        'The opening is further forward, between the true cords. Easing back brings them into view.',
+        'The dark space behind the mounds is not the airway. Darkness alone is not a lumen.',
+        'The upper pair are the false cords. The opening lies between the pair below them.',
+        'The mounds do not open. They sit behind the opening and move with the cords.',
+      ],
+      'b',
+    ),
     explanation:
-      'The true vocal folds abduct with inspiration and adduct with phonation, so in a spontaneously breathing patient the opening between them is usually widest on the breath in, and the aligned tip advances then, while the folds are apart, gently and under vision. Advancing as soon as the tip is aligned, or while the patient speaks, risks meeting closing folds and pushing against closed folds; timing the advance to a cough mistakes a protective reflex for an opening. If the folds stay closed, stimulation stops and the team reassesses rather than pushing.',
-    objectiveIds: ['M07-O2', 'M07-O4'],
+      'The mounds are the arytenoids, at the back of the inlet. The glottis lies in front of them, between the lower pair of folds. A pink view means the tip is on mucosa.',
+    objectiveIds: ['M07-O1'],
+    outcomeIds: ['cross-the-cords'],
     claimClass: 'source',
-    sourceRefs: [
-      { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46 } },
-      { sourceId: 'S3', location: { kind: 'pdf-pages', from: 81 } },
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 51, to: 65 } },
-      { sourceId: 'S2', location: { kind: 'pdf-pages', from: 50, to: 59 } },
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 71, to: 79 } },
-      { sourceId: 'T11', location: { kind: 'time-span', start: '00:18:56', end: '00:21:13' } },
-    ],
+    sourceRefs: LARYNX,
+    reviewItemIds: ['R04'],
   },
 
   transfer: {
-    id: 'Q17',
-    seedId: 'Q17',
+    id: 'larynx-and-entry-transfer',
     itemType: 'management-decision',
     situation:
-      'In the intensive care unit, a ventilated patient has had a bronchoscopy through the existing endotracheal tube, whose tip sits in the mid trachea, and the airways beyond it have been inspected. The scope is about to be withdrawn, and the report template has a line for the larynx. Ventilation and oxygenation have stayed stable on the monitor throughout.',
-    stem: 'What is the plan for the withdrawal?',
-    choices: [
-      {
-        id: 'a',
-        label:
-          'Look below the tube tip on the way out; record the larynx and tube-covered trachea as not assessed',
-        rationale:
-          'With the patient stable, the withdrawal is a second, deliberate look at the trachea below the tube, which cough and movement may have limited on the way in. The larynx and the trachea inside the tube were never in view, so the record says not assessed rather than normal.',
-        plausibility: 'best',
-      },
-      {
-        id: 'b',
-        label:
-          'Ask the airway team to draw the tube back as the scope comes out, and record the larynx as then seen',
-        rationale:
-          'Removing or repositioning an established airway is a separate airway decision for the airway team, not a way to finish an inspection. Withdrawing the bronchoscope is not withdrawing the endotracheal tube; the unseen larynx is documented as a limitation.',
-        plausibility: 'unsafe',
-      },
-      {
-        id: 'c',
-        label:
-          'Look below the tube tip on the way out; record the larynx as normal, like the airways below it',
-        rationale:
-          'The second look holds, but normal airways below the tube say nothing about a larynx the tube covered; a line reading normal describes a larynx the tube kept out of view.',
-        plausibility: 'incorrect-mechanism',
-      },
-      {
-        id: 'd',
-        label:
-          'Withdraw without a second look; record the larynx and tube-covered trachea as not assessed',
-        rationale:
-          'The record is honest, but the way out is a second chance to look at the trachea below the tube, which cough or movement may have limited going in.',
-        plausibility: 'reasonable-but-incomplete',
-      },
-    ],
+      'You have entered a main bronchus after a bout of coughing. The image has rolled, and you are no longer sure which side you are in.',
+    stem: 'What do you do?',
+    choices: choices(
+      [
+        'Withdraw under vision to the carina and find the membranous wall',
+        'Go on to the next branch point and look for a landmark there',
+        'Rotate until the airway looks like the side you expected',
+        'Pause, and ask the assistant which side you entered',
+      ],
+      [
+        'The carina is home base. With the membranous wall at 6 o’clock again, right and left are settled.',
+        'Going deeper while lost takes you further from the one landmark that settles it.',
+        'Rotating changes the image, not where you are. Either side can be made to look like the other.',
+        'The assistant sees the same screen. The anatomy tells you, and the carina is a short way back.',
+      ],
+    ),
     explanation:
-      'Withdrawing the bronchoscope is not removing the endotracheal tube. In a stable patient the withdrawal is a planned second look at the trachea below the tube; the larynx and the tube-covered trachea were never in view, so the record says not assessed rather than normal. Any change to an established airway is coordinated with the airway team, not made to complete an inspection.',
-    objectiveIds: ['M07-O5', 'M07-O2'],
-    claimClass: 'synthesis',
-    sourceRefs: [
-      { sourceId: 'T11', location: { kind: 'time-span', start: '00:43:45' } },
-      { sourceId: 'S2', location: { kind: 'pdf-pages', from: 161, to: 163 } },
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 155, to: 158 } },
-    ],
-    reviewItemIds: ['R08'],
-    transferVariant:
-      'The end of a procedure in a ventilated patient, through an endotracheal tube: what the withdrawal may do and what the report may claim about a larynx the tube covers.',
+      'When you are unsure where you are, go back to the last place you were sure of. Above the carina you see both main bronchi, and the membranous wall tells you which is which.',
+    objectiveIds: ['M05-O4'],
+    outcomeIds: ['carina-home'],
+    claimClass: 'source',
+    sourceRefs: CARINA,
+    transferVariant: 'Deeper in the airway, after the view has rolled.',
   },
 
   practice: [
     {
-      id: 'mc-arytenoids-as-glottis',
-      presentationTitle: 'A pink view on the airway model',
+      id: 'mc-when-to-cross',
+      presentationTitle: 'Lined up above the cords',
       situation:
-        'On the airway model, a trainee has come over the epiglottis and is aiming at the mounds of mucosa at the back of the laryngeal inlet, toward a dark space behind them. Each small advance ends with the lens against mucosa and a pink view. Two pairs of folds are visible further forward, one above the other.',
+        'You are coming through the mouth with a bite block in. The cords have had lidocaine, and the tip is lined up above the glottis. The cords move evenly with each breath.',
       item: {
-        id: 'mc-arytenoids-as-glottis',
+        id: 'mc-when-to-cross',
         itemType: 'management-decision',
-        stem: 'What is the next move?',
-        choices: [
-          {
-            id: 'a',
-            label: 'Withdraw slightly, find the true folds, and aim at the opening between them',
-            rationale:
-              'The mounds at the back of the inlet are the arytenoid region, and the pink view is the lens against mucosa. Withdrawing restores a view; the opening into the trachea lies between the true folds, the lower of the two pairs, in front of the arytenoid region.',
-            plausibility: 'best',
-          },
-          {
-            id: 'b',
-            label: 'Advance a little further toward the dark space behind the mounds',
-            rationale:
-              'The mounds are the arytenoid region, and the dark space behind them is not the opening between the true folds; darkness is not proof of a lumen. Advancing into it moves the tip where no airway has been identified.',
-            plausibility: 'unsafe',
-          },
-          {
-            id: 'c',
-            label:
-              'Withdraw slightly, aim between the upper pair of folds, and advance under vision',
-            rationale:
-              'The upper pair are the false folds; the true folds lie below them, with the ventricle between. Taking the space between the false folds for the glottis means advancing before the opening between the true folds has been seen, onto folds that may be closing.',
-            plausibility: 'incorrect-mechanism',
-          },
-          {
-            id: 'd',
-            label: 'Hold this aim and wait for the two mounds to open into the airway',
-            rationale:
-              'The mounds are the arytenoid region, not the true folds; waiting for them to open keeps the tip aimed at the back of the inlet. The true folds lie further forward, and the opening between them is the glottis.',
-            plausibility: 'incorrect-mechanism',
-          },
-        ],
+        stem: 'When do you go through?',
+        choices: choices(
+          [
+            'On the next breath in, gently, with the opening in view',
+            'Now, with a steady push: the tip is lined up',
+            'While the patient holds a long “eee”',
+            'During the next cough, when the airway bursts open',
+          ],
+          [
+            'The cords part on inspiration. That is when the opening is widest.',
+            'Lined up is not open. A push meets the cords if they are closing.',
+            'Speech brings the cords together. That is the moment they are closed.',
+            'A cough closes the cords first. It is a protective reflex, not an opening.',
+          ],
+          'b',
+        ),
         explanation:
-          'The arytenoid region forms the back of the laryngeal inlet; approaching it as though it were the opening is a common error, and repeated contact gives a pink view. Withdraw slightly to restore a view, identify the false folds and the true folds below them, and aim at the opening between the true folds.',
-        objectiveIds: ['M07-O1'],
+          'Watch the cords for a few breaths, then go through as they part. If they close on the scope, stop and wait.',
+        objectiveIds: ['M07-O2', 'M07-O4'],
+        outcomeIds: ['cross-the-cords'],
         claimClass: 'source',
-        sourceRefs: [
-          { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46 } },
-          { sourceId: 'S3', location: { kind: 'pdf-pages', from: 81 } },
-          { sourceId: 'S1', location: { kind: 'pdf-pages', from: 51, to: 65 } },
-        ],
-        reviewItemIds: ['R04'],
+        sourceRefs: CROSSING,
       },
     },
     {
       id: 'mc-nasal-resistance',
       presentationTitle: 'Resistance during a nasal entry',
       situation:
-        'A nasal entry for an airway inspection under moderate sedation, with the chosen nostril prepared according to local practice. Partway along the nasal passage the tip meets resistance, the patient winces, and a streak of blood appears on the mucosa. The passage ahead looks narrow.',
+        'You are advancing through the right nostril. The passage narrows, the scope meets resistance and the patient winces. A streak of blood appears on the mucosa.',
       item: {
         id: 'mc-nasal-resistance',
         itemType: 'management-decision',
-        stem: 'What is the next move?',
-        choices: [
-          {
-            id: 'a',
-            label: 'Withdraw a little, reassess the passage, and plan the oral approach',
-            rationale:
-              'Resistance, pain and bleeding are reasons to reassess the approach, not to increase force. With the passage narrow and bleeding, the oral approach is the alternative to plan.',
-            plausibility: 'best',
-          },
-          {
-            id: 'b',
-            label: 'Advance with steadier pressure to get beyond the narrow part of the passage',
-            rationale:
-              'Resistance with pain and fresh blood is a reason to reassess, not to increase force; steadier pressure drives the tip against the same narrowing.',
-            plausibility: 'unsafe',
-          },
-          {
-            id: 'c',
-            label: 'Steer the tip upward, above the narrowing, and keep advancing',
-            rationale:
-              'Steering upward looks for a way round the narrowing instead of reassessing it. The upper nasal passage is not a path anyone has identified, and resistance, pain and fresh blood already call for a reassessment; the scope advances only along a passage it can see.',
-            plausibility: 'unsafe',
-          },
-          {
-            id: 'd',
-            label:
-              'Withdraw a little, give more topical anesthetic, and try the same passage again',
-            rationale:
-              'More topical anesthetic may ease discomfort, but it does not explain the resistance or the bleeding, and the same passage meets the same narrowing; resistance with pain and blood calls for a change of approach, not a repeat. Any added dose also goes on the team’s shared running total under the local topical-anesthetic policy.',
-            plausibility: 'incorrect-mechanism',
-          },
-        ],
+        stem: 'What do you do?',
+        choices: choices(
+          [
+            'Ease back, and go by the mouth with a bite block',
+            'Keep going with firmer, steady pressure',
+            'Angle the tip upward and keep advancing',
+            'Pause, spray more lidocaine and try the same nostril',
+          ],
+          [
+            'Resistance, pain and blood say this passage is too tight. The mouth is the other way in.',
+            'Force tears the mucosa and turns a streak of blood into a bleed.',
+            'Steering upward is a blind search. The roof of the nose is not the way through.',
+            'More lidocaine treats the pain, not the narrow passage.',
+          ],
+        ),
         explanation:
-          'Resistance, pain or bleeding during a nasal entry is a reason to reassess the approach, not to increase force or search blindly for a way through. The scope advances along the nasal passage gently and under vision; when nasal access is unsuitable, the oral approach is the alternative.',
+          'A nasal entry is gentle or it is abandoned. Resistance, pain or bleeding is the signal to change route.',
         objectiveIds: ['M07-O3'],
+        outcomeIds: ['cross-the-cords'],
         claimClass: 'source',
-        sourceRefs: [
-          { sourceId: 'S1', location: { kind: 'pdf-pages', from: 61, to: 65 } },
-          { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46 } },
-          { sourceId: 'S1', location: { kind: 'pdf-pages', from: 71, to: 74 } },
-        ],
+        sourceRefs: ROUTE,
         reviewItemIds: ['R13'],
+      },
+    },
+    {
+      id: 'mc-handle-turns-view-static',
+      presentationTitle: 'The handle turns and the image does not',
+      situation:
+        'You are above the carina and want the left main bronchus. You turn the control section, but the image barely moves. Your grip on the insertion tube is relaxed, and the tube hangs in a wide loop.',
+      item: {
+        id: 'mc-handle-turns-view-static',
+        itemType: 'management-decision',
+        stem: 'What do you fix first?',
+        choices: choices(
+          [
+            'Take the loop out of the tube, then try a small turn',
+            'Loosen your grip on the insertion tube further',
+            'Advance to take up the slack',
+            'Keep turning until the image follows',
+          ],
+          [
+            'The loop is soaking up the turn. Straighten the tube and the tip answers the handle again.',
+            'Your grip is already relaxed. The loop is what is absorbing the rotation.',
+            'Going forward moves the tip deeper without aiming it. The loop is outside the patient.',
+            'More turning winds up the tube. When it lets go, the tip swings further than you meant.',
+          ],
+        ),
+        explanation:
+          'Rotation travels from the handle down the tube to the tip. A clamped grip or a loop takes it up on the way. Find where it is lost before you turn harder.',
+        objectiveIds: ['M05-O5'],
+        outcomeIds: ['carina-home'],
+        claimClass: 'transcript-source',
+        sourceRefs: HOLDING,
+        reviewItemIds: ['R03'],
       },
     },
   ],
