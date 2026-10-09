@@ -90,8 +90,9 @@ describe('authored scope-lab steps can be completed with the learner’s control
     expect(p.state.signals.view).toBe('clear')
     p.advanceUntil(() => p.state.events.includes('reached-carina'))
     expect(p.goals(act.goals)).toEqual(allMet(act.goals))
-    const observe = act.observe!
-    const o = pilot(observe.view ?? act.view)
+    const observe = viewLoss.moreActs!.lens
+    if (observe.kind !== 'scope-lab') throw new Error('the lens task is a scope task')
+    const o = pilot(observe.view)
     expect(o.state.signals.view).toBe('contaminated')
     o.send({ type: 'clear-lens' })
     expect(o.goals(observe.goals)).toEqual(allMet(observe.goals))

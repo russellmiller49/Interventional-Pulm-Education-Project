@@ -34,9 +34,11 @@ import { section as bleedingPriorities } from '../content/sections/bleeding-prio
 import { section as clinicalQuestion } from '../content/sections/clinical-question'
 import { section as fiveControls } from '../content/sections/five-controls'
 import { section as larynxAndEntry } from '../content/sections/larynx-and-entry'
+import { section as leftSide } from '../content/sections/left-side'
 import { section as preUseCheck } from '../content/sections/pre-use-check'
 import { section as rightSide } from '../content/sections/right-side'
 import { section as sedationAndMonitoring } from '../content/sections/sedation-and-monitoring'
+import { section as viewLoss } from '../content/sections/view-loss'
 import { bronchStageLessons } from '../content/stageLessons'
 import type { BronchSectionDefinition, BronchTeachingBlock } from '../content/types'
 import { REWRITTEN_FIXTURE, REWRITTEN_FIXTURE_FLOW } from '../test-support/rewrittenSectionFixture'
@@ -384,6 +386,7 @@ describe('the rewrite rules', () => {
       'larynx-and-entry',
       'right-side',
       'left-side',
+      'view-loss',
       'bleeding-priorities',
     ])
     for (const section of [
@@ -393,6 +396,8 @@ describe('the rewrite rules', () => {
       fiveControls,
       larynxAndEntry,
       rightSide,
+      leftSide,
+      viewLoss,
       bleedingPriorities,
     ]) {
       expect(bronchSectionErrors(section)).toEqual([])

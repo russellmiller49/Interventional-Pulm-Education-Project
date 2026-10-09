@@ -425,8 +425,10 @@ describe('optional questions and activities', () => {
 describe('a scope section on the stage', () => {
   it('introduces entry with teaching and opens the controls for practice before the check', async () => {
     const { lesson } = await mountSection('view-loss')
+    // The section opens on its question and hook: teaching, with no controls yet.
     expect(controlsFieldset()).toBeNull()
-    expect(document.querySelector('[data-normal-airway-tour]')).not.toBeNull()
+    expect(currentStepId()).toBe(lesson.steps[0].id)
+    expect(lesson.steps[0].course?.anchor).toBe(true)
     expect(storedRecord()?.visitedSectionIds).toEqual(['view-loss'])
     await reachAct(lesson)
     expect(controlsFieldset()).not.toBeDisabled()
