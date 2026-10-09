@@ -144,7 +144,7 @@ export const QUESTIONS: Question[] = [
   item(
     'time-1',
     'optimize',
-    'In an authored example at fixed tube current, pulse rate is halved and pulse width is doubled. kV, filtration and geometry are held fixed. What happens to mAs per second?',
+    'In an example at fixed tube current, pulse rate is halved and pulse width is doubled. kV, filtration and geometry are held fixed. What happens to mAs per second?',
     'c',
     [
       [
@@ -476,7 +476,7 @@ export const QUESTIONS: Question[] = [
   item(
     'case-5',
     'verify',
-    'In the course’s fictional needle design, the tip lies beyond a spherical lesion, and thin reformats place part of the side-cutting window inside it. Which documentation is most accurate?',
+    'In the course’s modeled needle design, the tip lies beyond a spherical lesion, and thin reformats place part of the side-cutting window inside it. Which documentation is most accurate?',
     'a',
     [
       [
@@ -544,7 +544,7 @@ export const QUESTIONS: Question[] = [
   item(
     'case-8',
     'protect',
-    'An authored dose report lists a total KAP of 12 Gy·cm², comprising 8 Gy·cm² from fluoroscopy and 4 Gy·cm² from CBCT spins. What should the whole-procedure entry say?',
+    'A dose report lists a total KAP of 12 Gy·cm², comprising 8 Gy·cm² from fluoroscopy and 4 Gy·cm² from CBCT spins. What should the whole-procedure entry say?',
     'c',
     [
       [
@@ -617,7 +617,7 @@ export const QUESTIONS: Question[] = [
   item(
     'case-8-v2',
     'protect',
-    'An authored dose summary for one procedure lists a total kerma–area product (KAP) of 12 Gy·cm², made up of 8 Gy·cm² from fluoroscopy and 4 Gy·cm² from CBCT spins, and a cumulative reference air kerma in mGy. What should the whole-procedure dose entry say?',
+    'A dose summary for one procedure lists a total kerma–area product (KAP) of 12 Gy·cm², made up of 8 Gy·cm² from fluoroscopy and 4 Gy·cm² from CBCT spins, and a cumulative reference air kerma in mGy. What should the whole-procedure dose entry say?',
     'a',
     [
       [
@@ -870,18 +870,18 @@ export const QUESTIONS: Question[] = [
     [
       [
         'Withdraw the probe and advance the needle down the same airway to that depth.',
-        'An eccentric view is often read as arrival. The probe images only its immediate surroundings at one position, and once it is withdrawn the needle follows its own path down the sheath; the depth does not carry the direction in which the tissue lay. Dependent atelectasis can produce the same eccentric pattern.',
+        'An eccentric view is often read as arrival, but it places the probe beside the lesion, not within it. A needle sent down the same path follows the sheath alongside the lesion; in one series (Chen, 2014) the diagnostic yield was 48% with the probe adjacent to the lesion and 84% with the probe within it. Dependent atelectasis can produce the same eccentric pattern.',
       ],
       [
-        'Move the probe back and forth along the airway to define the lesion margins.',
-        'The 360-degree image shows how far around the probe the tissue extends at one position, not how far it runs along the airway. Moving the probe back and forth answers that: a lesion with margins at both ends behaves differently from tissue that continues without a margin, as dependent atelectasis usually does.',
+        'Redirect the catheter toward the lesion or enter the adjacent airway, then re-image.',
+        'The probe lies beside the lesion. Turning or angling the catheter toward it, or entering the neighbouring airway, and re-imaging until the tissue surrounds the probe puts the working channel within the lesion before anything is sampled, and adds no exposure. If the view cannot be made concentric, DTS or CBCT shows where the lesion lies relative to the catheter.',
       ],
       [
         'Advance the probe deeper along the same airway and look again.',
-        'Advancing deeper is a common reflex, but it abandons the one position that has shown tissue before that position has been characterized. A radial probe cannot be steered toward tissue beside it; it follows the airway it is in and reports a new location.',
+        'Advancing deeper is a common reflex, but it leaves the one position that has shown tissue and follows the same airway past the lesion’s edge. The probe has no steering of its own: it goes where the catheter or scope aims it, so the catheter is what has to be redirected.',
       ],
     ],
-    'An eccentric rEBUS view shows how far around the probe tissue extends at one position, not how far it runs along the airway. Moving the probe along the airway defines the margins without additional exposure; if no margin appears, the limit is the modality, and the next question needs another kind of imaging.',
+    'An eccentric rEBUS view means the probe is beside the lesion. Redirect the catheter or enter the adjacent airway and re-image until the view is concentric, then exchange for the biopsy tool without moving the sheath. If the view stays eccentric, add DTS or CBCT before sampling.',
     ['ilocate', 'setser', 'mobile'],
   ),
   item(
@@ -948,7 +948,7 @@ export const QUESTIONS: Question[] = [
     [
       [
         'The lesion margin on these planes comes from another acquisition, since the catheter is absent from them.',
-        'In this teaching figure, the projection stands for the current acquisition and deliberately contains the modeled catheter, while the three planes match the planning CT and contain no catheter. In this model, planes reconstructed from the current acquisition would carry that catheter, at least blurred on the planes near its depth. So, in this authored example, the planes were drawn from the planning CT, and their margin describes the lesion as it was when that CT was acquired. The inference rests on what this figure shows: catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system.',
+        'In this teaching figure, the projection stands for the current acquisition and deliberately contains the modeled catheter, while the three planes match the planning CT and contain no catheter. In this model, planes reconstructed from the current acquisition would carry that catheter, at least blurred on the planes near its depth. So, in this example, the planes were drawn from the planning CT, and their margin describes the lesion as it was when that CT was acquired. The inference rests on what this figure shows: catheter absence alone is not a universal sign of prior-derived content on every DTS, reconstruction or display system.',
       ],
       [
         'The catheter is too thin to appear on these planes, so the lesion margin comes from this DTS acquisition.',
@@ -1102,7 +1102,7 @@ export const QUESTIONS: Question[] = [
     [
       [
         'A cumulative reference air kerma notification: record the mGy value and included acquisitions, then start the patient dose review.',
-        'The notification is set on the cumulative reference air kerma at the interventional reference point, a running patient index across every fluoroscopic and CBCT acquisition in the case. Local policy defines the level and what the review covers: the total so far, the record entry, the imaging still planned and any follow-up. Recording the value, its units and the acquisitions included keeps it distinct from the KAP printed beside it and from peak skin dose.',
+        'The notification is set on the cumulative reference air kerma at the interventional reference point, a running patient index across every fluoroscopic and CBCT acquisition in the case. AAPM practice guideline 12.a suggests the first notification at 3 Gy and one at every further 1 Gy; your department may set its own. The review covers the total so far, the record entry, the imaging still planned and any follow-up. Recording the value, its units and the acquisitions included keeps it distinct from the KAP printed beside it and from peak skin dose.',
       ],
       [
         'A system output alert: record the mGy value and included acquisitions, then request an equipment performance review.',
@@ -1113,7 +1113,7 @@ export const QUESTIONS: Question[] = [
         'Cumulative reference air kerma is an equipment-reference index, not the highest dose to any area of skin. It does not account for how oblique projections moved the entrance field, table height or backscatter, so reading it as skin dose overstates it in some geometries and understates it in others, and the review the notification exists to prompt still has not begun.',
       ],
     ],
-    'A dose notification is set on an index that accumulates across one patient’s imaging, and it prompts review under local policy: the total so far, the record, the imaging still planned and any follow-up. It is not peak skin dose and not a statement about equipment performance. Record the quantity, its units and the acquisitions it includes.',
+    'A dose notification is set on an index that accumulates across one patient’s imaging, and it prompts review (AAPM suggests the first at 3 Gy, then every 1 Gy): the total so far, the record, the imaging still planned and any follow-up. It is not peak skin dose and not a statement about equipment performance. Record the quantity, its units and the acquisitions it includes.',
     ['aapm12', 'wabip', 'skin'],
   ),
 ]

@@ -16,6 +16,7 @@ export type ImagingVisual =
   | 'dose'
   | 'reconstruction'
   | 'provenance'
+  | 'radial-ebus'
   | 'case'
 
 export interface ImagingLearningActivity {
@@ -335,13 +336,24 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
         'Inspect the stored image',
       ],
     ),
+    // Teaching-first redo (2026-10-08): radial EBUS has its own reading step. The three views and
+    // what the fellow does next for each are a table, not an image.
+    read(
+      'radial-ebus',
+      'Read the radial EBUS view and choose the next move',
+      [
+        'Radial EBUS is a different kind of evidence',
+        'Concentric view: the probe is within the lesion',
+        'Eccentric view: the probe is beside the lesion',
+        'No lesion pattern: the probe is not at the lesion',
+      ],
+      'radial-ebus',
+      'record',
+    ),
     read(
       'additional-evidence',
       'Decide what additional imaging could establish',
-      [
-        'Radial EBUS is a different kind of evidence',
-        'Change modality when the projection stops answering',
-      ],
+      ['Change modality when the projection stops answering'],
       'suite',
       'comparison',
       ['Inspect the stored image'],
@@ -550,7 +562,7 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     read(
       'access',
       'Maintain protection and patient access',
-      ['Keep hands out of the primary beam', '@worked'],
+      ['Keep hands out of the primary beam', 'Occupational dose limits', '@worked'],
       'suite',
       'acquisition',
       ['Distance and barrier'],
@@ -585,7 +597,11 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     read(
       'notifications',
       'Interpret the record in its clinical context',
-      ['Respond to notifications through the dose-management program', '@worked'],
+      [
+        'Respond to notifications through the dose-management program',
+        'What published procedures have delivered',
+        '@worked',
+      ],
       'dose',
       'record',
     ),

@@ -85,6 +85,7 @@ it.each(peripheralImagingSectionIds)(
       'check',
     )
     expect(document.querySelector('[data-content-ref]')).toBeNull()
-    expect(document.querySelector('[data-teaching-block="boundary"]')).not.toBeNull()
+    // One statement per module (hub, Help, closing card): no per-step limitations aside.
+    expect(document.querySelector('[data-teaching-block="boundary"]')).toBeNull()
   },
 )

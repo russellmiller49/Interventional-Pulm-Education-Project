@@ -52,11 +52,8 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
   const flag = (key: string, fallback = false) =>
     typeof values[key] === 'boolean' ? Boolean(values[key]) : fallback
   const set = (patch: Values) => onChange({ ...values, ...patch })
-  const boundary = (
-    <div className={styles.simBadge}>
-      Authored teaching model · values are not equipment settings or patient measurements
-    </div>
-  )
+  // The module's one teaching-simulator statement is on the hub, in Help and on the closing screen.
+  const boundary = null
 
   if (lab === 'geometry') {
     const orbit = num('orbit', 0, -75, 75),
@@ -75,9 +72,8 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
             <h3>CT-derived fluoroscopy view</h3>
             <Projection orbit={orbit} tilt={tilt} depth={depth} />
             <p className={styles.small}>
-              The CT supplies the anatomical background. The dotted contour marks an authored
-              target; the white cross marks the tool tip. Both use the same source–detector
-              geometry.
+              The CT supplies the anatomical background. The dotted contour marks a model target;
+              the white cross marks the tool tip. Both use the same source–detector geometry.
             </p>
           </div>
           <div className={styles.controls}>
@@ -130,9 +126,9 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
         </div>
         <LabNote>
           The original FluoroView volume renderer sums through a quantized CT to create a DRR; this
-          is not acquired fluoroscopy. Target and tool are authored overlays. The tool moves along
-          the initial source–target ray, so frontal overlap can hide depth. Model axes are patient
-          left (x), anterior (y), superior (z); central beam direction is (
+          is not acquired fluoroscopy. Target and tool are drawn overlays. The tool moves along the
+          initial source–target ray, so frontal overlap can hide depth. Model axes are patient left
+          (x), anterior (y), superior (z); central beam direction is (
           {direction.map((n) => n.toFixed(2)).join(', ')}). Verify real console orientation
           conventions.
         </LabNote>
@@ -201,7 +197,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
         <LabNote>
           The area ratio assumes a square field with both side lengths scaled equally. Scatter,
           automatic exposure response, detector readout, and clinical image quality are not
-          calculated. The background is a CT-derived DRR, with an authored target and instrument.
+          calculated. The background is a CT-derived DRR, with a model target and instrument.
         </LabNote>
       </div>
     )
@@ -311,7 +307,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
             />
             <Slider
               id={controlElementId('speed')}
-              label="Authored object speed"
+              label="Object speed"
               value={speed}
               min={0}
               max={40}
@@ -336,10 +332,10 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
           </div>
         </div>
         <LabNote>
-          Authored rate, pulse width, current and speed values illustrate arithmetic, not
-          recommended presets. Tube load is not patient dose; voltage, filtration, geometry,
-          attenuation and controller behavior are held outside this model. Monitor refresh and
-          processing lag are not simulated.
+          Rate, pulse width, current and speed values illustrate arithmetic, not recommended
+          presets. Tube load is not patient dose; voltage, filtration, geometry, attenuation and
+          controller behavior are held outside this model. Monitor refresh and processing lag are
+          not simulated.
         </LabNote>
       </div>
     )
@@ -358,7 +354,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
           <div className={styles.controls}>
             <Slider
               id={controlElementId('sweep')}
-              label="Authored DTS arc"
+              label="DTS arc"
               value={sweep}
               min={20}
               max={60}
@@ -451,7 +447,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
         <Scene3D kind={kind} orbit={orbit} centerTarget offsetX={x} offsetDepth={depth} />
         <Slider
           id={controlElementId('acquisitionOrbit')}
-          label="Authored rotation for the collision check"
+          label="Rotation for the collision check"
           value={orbit}
           min={-100}
           max={100}
@@ -570,7 +566,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
           Scouts are CT-derived projections in the same geometry as the target-centering controls.
           The original FluoroView C-arm is a generic, single-axis motion reference; selecting a
           workflow does not turn it into an equipment-specific fixed or mobile clearance model. The
-          ±8 mm centering tolerance is authored for this exercise. No collision detection, clinical
+          ±8 mm centering tolerance is set for this exercise. No collision detection, clinical
           volume reconstruction or breath-hold tolerance is calculated. Follow the installed
           system’s supported acquisition method.
         </LabNote>
@@ -605,13 +601,13 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
           ))}
         </div>
         <p className={styles.small}>
-          Amber: spherical target. White: needle shaft/tip. Thick teal segment: fictional side
-          window. Each thin section projects the geometry within an authored 1.5 mm thickness; the
-          teaching slab combines all depths. Positions are relative to target center.
+          Amber: spherical target. White: needle shaft/tip. Thick teal segment: modeled side window.
+          Each thin section projects the geometry within a 1.5 mm thickness; the teaching slab
+          combines all depths. Positions are relative to target center.
         </p>
         <div className={styles.labSplit}>
           <div className={styles.controls}>
-            <h3>Move the fictional tool</h3>
+            <h3>Move the modeled tool</h3>
             <Slider
               id={controlElementId('tipX')}
               label="Tip along needle axis"
@@ -726,8 +722,8 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
           </div>
         )}
         <LabNote>
-          CT-derived lung context is combined with analytic sections of an authored 18 mm sphere and
-          fictional 8 mm side window, positioned 6–14 mm behind the tip. The teal cylinder has a 1.3
+          CT-derived lung context is combined with analytic sections of an 18 mm model sphere and an
+          8 mm modeled side window, positioned 6–14 mm behind the tip. The teal cylinder has a 1.3
           mm diameter; the white dot in 3D is a tip marker. The CT background uses nearest-voxel
           sampling; the slab uses a 102 mm maximum intensity projection. The added target and tool
           retain analytic section geometry. This is not a clinical CBCT reconstruction or a
@@ -762,7 +758,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
           <div className={styles.controls}>
             <Slider
               id={controlElementId('shift')}
-              label="Authored anatomical displacement"
+              label="Anatomical displacement"
               value={shift}
               min={-30}
               max={30}
@@ -794,7 +790,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
             </div>
             <p className={styles.result}>
               {shift === previous
-                ? 'The stored contour matches the current authored state.'
+                ? 'The stored contour matches the current state.'
                 : 'The anatomy changed. The old contour still represents its acquisition state.'}{' '}
               The fixed tool did not follow the target.
             </p>
@@ -879,7 +875,7 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
       {boundary}
       <div className={styles.labSplit}>
         <div className={styles.controls}>
-          <h3>One uniform authored exposure</h3>
+          <h3>One uniform exposure</h3>
           <Slider
             id={controlElementId('kerma')}
             label="Air kerma at the chosen plane"
@@ -930,8 +926,8 @@ export function ImagingLab({ lab, lessonId, values, onChange }: LabProps) {
       <div className={styles.worked}>
         <h3>Record every component once</h3>
         <p>
-          Authored example: fluoroscopy KAP 8 Gy·cm² + rotational KAP 4 Gy·cm² = whole-procedure KAP
-          12 Gy·cm². A report’s existing total must not be added again to its component values.
+          Example: fluoroscopy KAP 8 Gy·cm² + rotational KAP 4 Gy·cm² = whole-procedure KAP 12
+          Gy·cm². A report’s existing total must not be added again to its component values.
         </p>
       </div>
       <LabNote>

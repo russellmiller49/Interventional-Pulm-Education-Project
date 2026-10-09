@@ -1,4 +1,7 @@
+import { PI_NUMBERS } from '../content/teachingNumbers'
 import type { Lesson, ObjectiveId } from '../types'
+
+const n = PI_NUMBERS.value
 
 export const OBJECTIVES: { id: ObjectiveId; title: string; description: string }[] = [
   {
@@ -45,7 +48,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Localization vs confirmation',
     group: 'Plan',
     stage: 'Orientation',
-    minutes: 4,
+    minutes: 10,
     objective: 'choose',
     outcome:
       'Distinguish what navigation, intraprocedural imaging and a tissue result can each confirm.',
@@ -99,7 +102,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Image formation',
     group: 'Plan',
     stage: 'Foundation',
-    minutes: 6,
+    minutes: 11,
     objective: 'optimize',
     outcome:
       'Name the six components of image formation, from the X-ray tube to interpretation, and place each imaging term at the component it belongs to.',
@@ -163,7 +166,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Fluoroscopy controls',
     group: 'Localize and optimize',
     stage: 'Foundation',
-    minutes: 6,
+    minutes: 10,
     objective: 'optimize',
     outcome:
       'Distinguish the main fluoroscopy control families from the settings the system chooses for you and from operations that change only the display.',
@@ -225,7 +228,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'CT-to-body divergence',
     group: 'Localize and optimize',
     stage: 'Foundation',
-    minutes: 5,
+    minutes: 12,
     objective: 'choose',
     outcome:
       'Distinguish CT-to-body divergence from navigation registration error and from inadequate imaging coverage.',
@@ -285,7 +288,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Projection & depth',
     group: 'Localize and optimize',
     stage: 'Foundation',
-    minutes: 6,
+    minutes: 12,
     objective: 'optimize',
     outcome:
       'Distinguish projected overlap from a resolved three-dimensional tool–lesion relationship.',
@@ -346,7 +349,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Lesion visibility',
     group: 'Localize and optimize',
     stage: 'Mechanism',
-    minutes: 5,
+    minutes: 10,
     objective: 'optimize',
     outcome: 'Distinguish quantum noise from scatter and from anatomical superimposition.',
     concept: 'Lesion conspicuity has a limiting factor',
@@ -407,7 +410,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Collimation & zoom',
     group: 'Localize and optimize',
     stage: 'Mechanism',
-    minutes: 6,
+    minutes: 12,
     objective: 'optimize',
     outcome:
       'Distinguish collimation and acquisition changes from operations that change only the display.',
@@ -437,7 +440,7 @@ export const LESSONS: Lesson[] = [
         sources: ['tg272', 'tg125'],
         detail: {
           title: 'Device-dependent limits of magnification modes',
-          body: 'Image-intensifier electronic magnification generally required increased exposure. Flat-panel acquisition field and readout modes may change detector sampling, binning (see the draft definition in this section’s terms, awaiting owner review), processing and automatic exposure behavior, or may simply crop; their effect on detail and dose needs local characterization.',
+          body: 'Image-intensifier electronic magnification generally required increased exposure. Flat-panel acquisition field and readout modes may change detector sampling, binning (combining adjacent detector pixels at readout), processing and automatic exposure behavior, or may simply crop; their effect on detail and dose needs local characterization.',
         },
       },
       {
@@ -472,7 +475,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Temporal resolution',
     group: 'Localize and optimize',
     stage: 'Mechanism',
-    minutes: 6,
+    minutes: 11,
     objective: 'optimize',
     outcome: 'Distinguish motion blur within a frame, movement between frames, and image lag.',
     concept: 'Acquisition timing is different from display timing',
@@ -494,7 +497,7 @@ export const LESSONS: Lesson[] = [
         body: 'Use the lowest pulse rate and image quality that reliably show the movement the task needs. Static localization may tolerate a lower pulse rate than dynamic needle advancement. A lower pulse rate does not guarantee proportionally lower output if the system lengthens pulses or raises current.',
         points: [
           'Check the actual acquisition rate.',
-          'Shorten pulse width when motion blur dominates.',
+          'Choose a mode with a shorter pulse width when motion blur dominates.',
           'Recognize frame averaging as a cause of smear and image lag.',
           'Release the pedal to think; review last-image hold or a stored loop.',
         ],
@@ -528,7 +531,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: '2D fluoroscopy',
     group: 'Confirm',
     stage: 'Application',
-    minutes: 5,
+    minutes: 12,
     objective: 'choose',
     outcome:
       'Select the next useful adjustment when fluoroscopy does not answer the procedural question.',
@@ -559,6 +562,21 @@ export const LESSONS: Lesson[] = [
         sources: ['mobile', 'ilocate', 'frontier'],
       },
       {
+        title: 'Concentric view: the probe is within the lesion',
+        body: `Lesion-like tissue surrounds the probe through the full circle. The probe is within it at this position and depth. Hold the scope and the sheath still, note the depth, and exchange the probe for the biopsy tool without moving either. Then show the tool itself: a second fluoroscopic projection, DTS or CBCT, because the tool can leave the sheath in a different direction from the probe. A concentric view does not name the tissue; dependent atelectasis can surround the probe too. In one series the diagnostic yield was ${n('rebus-yield-by-position')} (Chen, Ann Am Thorac Soc 2014).`,
+        sources: ['ilocate', 'mobile'],
+      },
+      {
+        title: 'Eccentric view: the probe is beside the lesion',
+        body: 'Lesion-like tissue fills only part of the circle, with the bright pattern of aerated lung around the rest. The probe is in an airway that runs along the lesion’s edge, and a tool sent down the same path can run alongside it. Redirect before sampling. The probe has no steering of its own, so turn or angle the catheter or scope toward the lesion, or withdraw to the last branch point and enter the adjacent airway, and re-image. The ultrasound image has no fixed up or down: make a small adjustment and watch whether the arc of tissue widens. Repeat until the view is concentric. If it stays eccentric, use DTS or CBCT to show where the lesion lies relative to the catheter before sampling.',
+        sources: ['ilocate', 'mobile', 'setser'],
+      },
+      {
+        title: 'No lesion pattern: the probe is not at the lesion',
+        body: 'The whole circle shows the bright, snowstorm-like pattern of aerated lung. The probe is in the wrong airway or at the wrong depth, or CT-to-body divergence has moved the lesion away from the navigation target. Do not sample on navigation alone. Move the probe slowly in and out along this airway, then examine the adjacent airways. If the lesion is still not found, relocalize with DTS or CBCT instead of repeating the same approach.',
+        sources: ['ilocate', 'setser'],
+      },
+      {
         title: 'Change modality when the projection stops answering',
         body: 'Use DTS or CBCT when their depth or current anatomical information can change the next decision. More exposure in the same projection will not bring an out-of-field lesion into view, resolve every superimposition, or turn a virtual contour into an imaged nodule. Save the images that actually supported sampling.',
         sources: ['setser', 'verhoeven', 'pritchett'],
@@ -573,7 +591,7 @@ export const LESSONS: Lesson[] = [
     lab: 'geometry',
     takeaway: [
       'Fix the limiting factor before increasing exposure.',
-      'Treat radial EBUS and fluoroscopy as complementary evidence.',
+      'Concentric: exchange without moving the sheath. Eccentric: redirect and re-image. No pattern: relocalize.',
       'Stop repeating the same projection when it has stopped answering.',
     ],
     checkIds: ['workflow-1', 'time-1'],
@@ -584,7 +602,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'DTS acquisition',
     group: 'Confirm',
     stage: 'Mechanism',
-    minutes: 6,
+    minutes: 12,
     objective: 'dts',
     outcome:
       'Explain what a limited-angle acquisition adds to a single projection and what it leaves incompletely resolved.',
@@ -631,7 +649,7 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'dts',
     labTask:
-      'Scroll the reconstruction plane through the added lesion and tool, then compare the surrounding anatomy with a wider authored DTS arc.',
+      'Scroll the reconstruction plane through the added lesion and tool, then compare the surrounding anatomy with a wider DTS arc.',
     takeaway: [
       'DTS adds depth information absent from a single projection.',
       'Depth resolution depends on angular coverage.',
@@ -645,7 +663,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'DTS reconstruction',
     group: 'Confirm',
     stage: 'Mechanism',
-    minutes: 5,
+    minutes: 10,
     objective: 'dts',
     outcome:
       'Distinguish image content acquired now, prior-derived anatomy and navigation target updates.',
@@ -706,7 +724,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'CBCT acquisition',
     group: 'Confirm',
     stage: 'Mechanism',
-    minutes: 6,
+    minutes: 11,
     objective: 'cbct',
     outcome:
       'Distinguish a CBCT setup that is ready from one with unresolved coverage, motion or collision problems.',
@@ -751,7 +769,7 @@ export const LESSONS: Lesson[] = [
     },
     lab: 'acquisition',
     labTask:
-      'Set up the authored lesion and complete the readiness checks. See what happens when a checked setup is moved.',
+      'Set up the model lesion and complete the readiness checks. See what happens when a checked setup is moved.',
     takeaway: [
       'Center the lesion, not just the chest.',
       'Check clearance for the whole spin.',
@@ -765,7 +783,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Fixed CBCT',
     group: 'Confirm',
     stage: 'Application',
-    minutes: 4,
+    minutes: 9,
     objective: 'cbct',
     outcome: 'Adapt shared CBCT acquisition requirements to an integrated fixed C-arm workflow.',
     concept: 'Fixed-room CBCT workflow',
@@ -820,7 +838,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Mobile CBCT',
     group: 'Confirm',
     stage: 'Application',
-    minutes: 4,
+    minutes: 9,
     objective: 'cbct',
     outcome:
       'Adapt shared CBCT acquisition requirements to a mobile scanner in an existing procedure room.',
@@ -877,7 +895,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Tool-in-lesion',
     group: 'Sample and reconfirm',
     stage: 'Application',
-    minutes: 7,
+    minutes: 12,
     objective: 'verify',
     outcome:
       'Distinguish projected overlap, tip position and sampling-window position on multiplanar CBCT review.',
@@ -921,11 +939,11 @@ export const LESSONS: Lesson[] = [
       scenario:
         'The needle tip is beyond the nodule, and its side-cutting window lies within part of the lesion on thin reformats.',
       reasoning:
-        'Tip-in-lesion and window-in-lesion are different statements. Describe the actual component and extent shown. The module’s fictional window geometry teaches this distinction; clinical interpretation depends on the real tool, the approved technique and the surrounding safety anatomy.',
+        'Tip-in-lesion and window-in-lesion are different statements. Describe the actual component and extent shown. The module’s modeled window geometry teaches this distinction; clinical interpretation depends on the real tool, the approved technique and the surrounding safety anatomy.',
     },
     lab: 'mpr',
     labTask:
-      'Move the fictional needle in three dimensions. Compare slices through the lesion, slices along the tool and a thick slab before revealing the geometric relationship.',
+      'Move the modeled needle in three dimensions. Compare slices through the lesion, slices along the tool and a thick slab before revealing the geometric relationship.',
     takeaway: [
       'Identify the lesion independently.',
       'Follow the part of the tool that acquires tissue on thin planes.',
@@ -939,7 +957,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Reconfirmation',
     group: 'Sample and reconfirm',
     stage: 'Application',
-    minutes: 6,
+    minutes: 12,
     objective: 'verify',
     outcome:
       'Distinguish a correctable acquisition artifact from an anatomical or physiological change that requires repeat localization.',
@@ -970,7 +988,7 @@ export const LESSONS: Lesson[] = [
       },
       {
         title: 'Treat atelectasis as anatomy, not an image-quality problem',
-        body: 'Ventilation research supports preventing atelectasis in studied settings, including VESPA, a multicenter randomized trial of bronchoscopy under general anesthesia in which a bundle — an endotracheal tube, a recruitment maneuver after intubation, PEEP of 8 to 10 cm H₂O and an inspired oxygen fraction below 1.0 — reduced atelectasis on chest CT compared with conventional settings. It does not justify one pressure, PEEP, oxygen concentration or apnea duration for all patients. Position changes may help selected dependent lesions but also change access, clearance and registration.',
+        body: `Ventilation research supports preventing atelectasis in studied settings, including VESPA, a multicenter randomized trial of bronchoscopy under general anesthesia in which a bundle — an endotracheal tube, a recruitment maneuver after intubation, PEEP of 8 to 10 cm H₂O and an inspired oxygen fraction below 1.0 — reduced atelectasis on chest CT compared with conventional settings. On CT 20 to 30 minutes after airway placement, any atelectasis was present in ${n('vespa-atelectasis')} (Salahuddin, Chest 2022). The bundle was tested whole, so the trial does not say which part did the work. It does not justify one pressure, PEEP, oxygen concentration or apnea duration for all patients. Position changes may help selected dependent lesions but also change access, clearance and registration.`,
         sources: ['vespa', 'ilocate', 'setser'],
         detail: {
           title: 'Reconfirm an augmented-fluoroscopy overlay',
@@ -1000,7 +1018,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Staff protection',
     group: 'Radiation safety',
     stage: 'Mechanism',
-    minutes: 5,
+    minutes: 12,
     objective: 'protect',
     outcome:
       'Select staff protection based on the irradiated patient, the C-arm geometry and effective barriers.',
@@ -1036,6 +1054,11 @@ export const LESSONS: Lesson[] = [
         ],
         sources: ['icrp', 'wabip', 'tg125'],
       },
+      {
+        title: 'Occupational dose limits',
+        body: `Your dosimeter readings are held against occupational limits. The ICRP limit for effective dose is ${n('icrp-effective-limit')}. The limit for the lens of the eye is the same figure, and the limit for the skin, hands and feet is ${n('icrp-skin-extremity-limit')} (ICRP Publications 103 and 118). National regulators set the enforceable limits, which can differ; your radiation safety officer holds the local values. These limits apply to staff. No dose limit applies to the patient, whose exposure is justified and optimized case by case.`,
+        sources: ['icrp'],
+      },
     ],
     worked: {
       scenario:
@@ -1059,7 +1082,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Dose metrics',
     group: 'Radiation safety',
     stage: 'Mechanism',
-    minutes: 6,
+    minutes: 11,
     objective: 'protect',
     outcome:
       'Distinguish dose indices, their units, and the information needed for whole-procedure review.',
@@ -1094,8 +1117,13 @@ export const LESSONS: Lesson[] = [
       },
       {
         title: 'Respond to notifications through the dose-management program',
-        body: 'A dose notification prompts reassessment of necessity, optimization and the remaining plan. Follow local policy for medical-physics review, documentation and patient follow-up. Reference air kerma is not a diagnosis of skin injury, occupational limits are not patient medical-exposure limits, and no number of CBCT spins is universally right.',
-        sources: ['aapm12', 'skin', 'icrp'],
+        body: `AAPM Medical Physics Practice Guideline 12.a (2022) gives two kinds of level, both in cumulative reference air kerma or skin dose. Notifications during the procedure come ${n('aapm-first-notification')}. Each one asks you to weigh what remains to be done against the dose already given; it is not a stop. The substantial radiation dose level is ${n('aapm-substantial-dose')}. Above it the dose is documented, medical physics reviews it, and the patient is followed for skin injury through the dose-management program. The guideline gives no kerma–area-product level. Your institution may set its own levels. Reference air kerma is not a diagnosis of skin injury.`,
+        sources: ['aapm12', 'skin'],
+      },
+      {
+        title: 'What published procedures have delivered',
+        body: `One mobile CBCT series reported a total dose–area product of ${n('mobile-cbct-total-dap')}, range 9.10 to 113.08, of which the spins gave ${n('mobile-cbct-spin-dap')}: fluoroscopy, not the spins, gave most of the dose. The CONFIRM study of robotic bronchoscopy with mobile CBCT reported ${n('confirm-dap')}, with a median of two spins. In one fixed-system learning curve, fluoroscopy dose–area product fell ${n('verhoeven-fluoroscopy-dap')} and the procedural total ${n('verhoeven-total-dap')} as low-dose protocols and experience were added. These are single-study figures, not targets. Compare your own record with your unit’s history.`,
+        sources: ['mobile', 'confirm', 'verhoeven'],
       },
     ],
     worked: {
@@ -1120,7 +1148,7 @@ export const LESSONS: Lesson[] = [
     shortTitle: 'Integrated cases',
     group: 'Integrated cases',
     stage: 'Independent practice',
-    minutes: 8,
+    minutes: 9,
     objective: 'verify',
     outcome: 'Apply the imaging and radiation-safety principles to new procedural decisions.',
     concept: 'Integrate the earlier decisions',

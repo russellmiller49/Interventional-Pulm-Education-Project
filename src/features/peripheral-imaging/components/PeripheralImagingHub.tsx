@@ -13,6 +13,7 @@ import {
   imagingSectionLinkTarget,
 } from '../content/pathwayResolver'
 import { peripheralImagingPathway, peripheralImagingPathwaySections } from '../content/pathway'
+import { IMAGING_SHARED_BOUNDARY } from '../content/sectionSpecs'
 import {
   PERIPHERAL_IMAGING_INTEGRATED_CASES_HREF,
   PERIPHERAL_IMAGING_PRACTICE_HREF,
@@ -218,17 +219,13 @@ export function PeripheralImagingHub() {
             <dd className="text-muted-foreground">
               Where you were, the sections and cases you have opened, and the sections you mark
               reviewed or save for later — nothing about your answers. Every section and case is
-              open in any order. None of it is a claim about clinical readiness, and it does not
-              stand in for supervised C-arm operation, radiation credentialing or biopsy training.
+              open in any order.
             </dd>
           </div>
           <div>
-            <dt className="font-semibold">What the models leave out</dt>
-            <dd className="text-muted-foreground">
-              The suite combines CT-derived anatomy with authored targets, instruments and values.
-              Nothing in it predicts patient dose, safe tool placement, diagnostic yield or the
-              behaviour of a particular device. Follow current device instructions and local
-              protocols.
+            <dt className="font-semibold">What this course is</dt>
+            <dd className="text-muted-foreground" data-module-statement>
+              {IMAGING_SHARED_BOUNDARY}
             </dd>
           </div>
         </dl>

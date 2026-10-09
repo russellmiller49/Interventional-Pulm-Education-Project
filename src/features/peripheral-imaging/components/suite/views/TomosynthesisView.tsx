@@ -371,10 +371,9 @@ export function TomosynthesisMonitor({
           </label>
           {overlay && (
             <p data-dts-overlay-note>
-              A teaching overlay drawn from the model’s authored coordinates, not something detected
-              in this image. A solid outline means the selected plane passes through that object; a
-              dotted one marks an object that lies off this plane, where the image can show only its
-              blur.
+              A teaching overlay drawn from the model’s coordinates, not something detected in this
+              image. A solid outline means the selected plane passes through that object; a dotted
+              one marks an object that lies off this plane, where the image can show only its blur.
               {model.selectedLayer === 'prior'
                 ? ' The planning CT was acquired before the tool was placed, so no tool is marked on it.'
                 : ''}{' '}

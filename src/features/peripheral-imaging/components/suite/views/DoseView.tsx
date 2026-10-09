@@ -105,7 +105,7 @@ export function DosePanels({
           ))}
         </ul>
         <p>
-          Violet: reference marker, authored 150 mm toward the source from isocentre. Equipment
+          Violet: reference marker, placed 150 mm toward the source from isocentre. Equipment
           conventions determine the actual reference position. Pink: first non-air point on the
           central ray through the quantized CT envelope.
         </p>

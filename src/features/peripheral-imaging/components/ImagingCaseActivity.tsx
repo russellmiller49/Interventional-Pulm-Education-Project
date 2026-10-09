@@ -64,9 +64,8 @@ export function ImagingCaseActivity({ caseId }: { readonly caseId: string }) {
             label="Conceptual illustration of the described appearance"
           />
           <p>
-            Draft synthetic teaching illustration, not a device capture or a calibrated scatter
-            model. Use the clinical context supplied with the image; appearance alone does not
-            identify its cause.
+            A drawing of the appearance described, not a device capture. Use the clinical context
+            supplied with it; appearance alone does not identify its cause.
           </p>
         </section>
       )}

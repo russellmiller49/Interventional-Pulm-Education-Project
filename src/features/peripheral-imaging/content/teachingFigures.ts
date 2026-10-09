@@ -10,7 +10,8 @@ import { teachingDemonstration } from './teachingExamples'
  * controls, and every number a caption prints is computed from the same state the figure draws.
  * They sit on reading steps, not beside a question, so they declare what they are made of
  * (`medium`) rather than a relation to a question. Every signed angle is the model's own C-arm
- * obliquity or beam tilt; none is given a LAO/RAO or cranial/caudal name (P03-ANGLE is open).
+ * obliquity or beam tilt. The mapping to RAO/LAO and cranial angulation is stated once, in the
+ * glossary entry `obliquity-and-tilt` (PI-FELLOW 2.6, adopted 2026-10-08).
  */
 export type TeachingFigureMedium =
   /** Output of the course's CT-derived model, labelled as such. */
@@ -119,7 +120,7 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
     // Section 6's reading steps show it in place of the cartoon set (`TeachingPanels`).
     id: 'signal:conspicuity-set',
     label:
-      'Teaching model: projections computed from the course’s CT, which carries an authored nodule. Two of the effects below are simulated, and say so. Not device images, and no panel is a dose level.',
+      'Teaching model: projections computed from the course’s CT, which carries a model nodule. Two of the effects below are simulated, and say so. Not device images, and no panel is a dose level.',
     panels: [
       {
         id: 'reference',
@@ -154,14 +155,14 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
     id: 'changing-anatomy:artifact-strip',
     contentRef: '@artifact-strip',
     label:
-      'Only the truncation panel is an image, and it is a teaching model. Authentic examples of motion and of a new dependent opacity are not shown until cleared media exist.',
+      'Only the truncation panel is an image, and it is a teaching model. Motion and a new dependent opacity are described in words.',
     panels: [
       {
         id: 'motion',
         title: 'Motion · duplicated edges',
         medium: 'placeholder',
         caption:
-          'No image here: the course has no motion model, and no cleared authentic example is available yet. Look for the catheter and the lesion margin drawn twice, a small distance apart, on several planes. Duplicated edges suggest motion; with the table, the C-arm and the tool still, breathing or other patient motion during the spin is the likely source.',
+          'No image here. Look for the catheter and the lesion margin drawn twice, a small distance apart, on several planes. Duplicated edges suggest motion; with the table, the C-arm and the tool still, breathing or other patient motion during the spin is the likely source.',
       },
       {
         id: 'truncation',
@@ -175,7 +176,7 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
         title: 'New dependent opacity',
         medium: 'placeholder',
         caption:
-          'No image here: the course’s registration model moves anatomy rigidly and cannot show a new opacity, and no cleared authentic example is available yet. Look for a soft, ill-defined region in dependent lung that was absent on the earlier volume. It may be real atelectasis: anatomy, not an image-quality problem.',
+          'No image here. Look for a soft, ill-defined region in dependent lung that was absent on the earlier volume. It may be real atelectasis: anatomy, not an image-quality problem.',
       },
     ],
   },
@@ -183,7 +184,7 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
     id: 'two-dimensional:two-axis-example',
     contentRef: '@two-axis-example',
     label:
-      'Teaching model: CT-derived anatomy with an authored nodule in the posterior left lung; no lobe is named. Angles are the model’s signed C-arm obliquity and beam tilt, not console labels.',
+      'Teaching model: CT-derived anatomy with a model nodule in the posterior left lung; no lobe is named. Angles are the model’s signed C-arm obliquity and beam tilt.',
     panels: [
       {
         id: 'axial',
@@ -210,7 +211,7 @@ const DECLARATIONS: readonly TeachingFigureDeclaration[] = [
         title: 'Projection before and after',
         medium: 'model-output',
         caption:
-          'Recentred on the lesion and collimated around it and the tool’s approach. The dashed circle marks where the authored nodule projects; it is faint on any projection in this model.',
+          'Recentred on the lesion and collimated around it and the tool’s approach. The dashed circle marks where the model nodule projects; it is faint on any projection in this model.',
       },
       {
         id: 'tool-views',
@@ -233,7 +234,7 @@ export function teachingFigure(id: string): TeachingFigureDeclaration {
   return found
 }
 
-/** No figure text may give a signed angle a clinical console name. */
+/** Console names for an angle. Kept for callers; figure text is no longer refused for using them. */
 export const CLINICAL_ANGLE_LABEL = /\b(LAO|RAO|cranial|caudal)\b/i
 
 export function validateTeachingFigures(): readonly string[] {
@@ -249,8 +250,6 @@ export function validateTeachingFigures(): readonly string[] {
         ...imagingLearnerCopyErrors(`${where} ${panel.id} title`, panel.title),
         ...imagingLearnerCopyErrors(`${where} ${panel.id} caption`, panel.caption),
       )
-      if (CLINICAL_ANGLE_LABEL.test(`${panel.title} ${panel.caption}`))
-        errors.push(`${where} ${panel.id} gives an angle a console name.`)
       if (
         panel.medium === 'simulated-on-model' &&
         !/simulat|drawn|drawing/i.test(panel.title + panel.caption)

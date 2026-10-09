@@ -3,6 +3,9 @@ import { SOURCE_BY_ID } from '../data/sources'
 import type { SourceId } from '../types'
 import { imagingLearnerCopyErrors } from './learnerCopy'
 import type { ImagingSectionId } from './pathway'
+import { PI_NUMBERS } from './teachingNumbers'
+
+const n = PI_NUMBERS.value
 
 /**
  * Two reference aids for the CBCT sections (Prompt 04, owner decisions OD4-09 and OD4-10,
@@ -91,21 +94,29 @@ export const FIXED_MOBILE_COMPARISON: readonly FixedMobileRow[] = [
     ],
     sourceIds: ['setser', 'pritchett', 'verhoeven', 'confirm', 'mobile'],
   },
+  {
+    id: 'dose',
+    aspect: 'Published dose–area product',
+    fixed: `One fixed-system learning curve: the procedural total fell ${n('verhoeven-total-dap')}, and the fluoroscopy part ${n('verhoeven-fluoroscopy-dap')}, as low-dose protocols and experience were added.`,
+    mobile: `One mobile series: ${n('mobile-cbct-total-dap')} in total; the spins gave ${n('mobile-cbct-spin-dap')}. CONFIRM, robotic bronchoscopy with mobile CBCT: ${n('confirm-dap')}, with a median of two spins.`,
+    basis: [{ sectionId: 'dose-reporting', block: 'What published procedures have delivered' }],
+    sourceIds: ['verhoeven', 'mobile', 'confirm'],
+  },
 ]
 
 /** What the course's own 3D scenes do and do not distinguish (OD4-09: field sizes equalised). */
 export const FIXED_MOBILE_MODEL_NOTE =
-  'In this course’s scenes the fixed and the mobile C-arm draw the same detector field and the same field of view; they differ only in how they are mounted. The scenes are authored illustrations, not a comparison of devices.'
+  'In this course’s scenes the fixed and the mobile C-arm draw the same detector field and the same field of view; they differ only in how they are mounted.'
 
 export const FIXED_MOBILE_LIMIT =
-  'No device, ranking or number: capabilities vary by model and software version, and no study the course cites compares a fixed with a mobile installation directly.'
+  'Capabilities vary by model and software version. No study cited here compares a fixed with a mobile installation directly, so the dose figures are not a ranking.'
 
 /* ------------------------------------------------------------------ *
  * OD4-10 · team readiness before a CBCT spin (brief C)
  * ------------------------------------------------------------------ */
 
 export const TEAM_READINESS_STATUS =
-  'Teaching aid from the Peripheral Bronchoscopy Imaging course. Not an institutional protocol, an anesthesia protocol, a credentialing standard or a universal pre-procedure checklist. Your institution’s policy governs.'
+  'A team check before a CBCT spin, by role. Your unit’s own checklist may add to it.'
 
 export interface TeamReadinessRow {
   readonly id: string
@@ -191,9 +202,12 @@ export const TEAM_READINESS_ROWS: readonly TeamReadinessRow[] = [
   },
 ]
 
-/** What is deliberately absent, printed with the aid. */
-export const TEAM_READINESS_ABSENT =
-  'Deliberately absent: breath-hold durations, PEEP or oxygen settings, stopping thresholds, and collision-check procedures for any named system. Those belong to local anesthesia practice and to the device’s instructions.'
+/**
+ * The ventilation evidence behind the anesthesia rows, printed with the aid. The constant keeps its
+ * name from when this line listed what the aid withheld; it now teaches the VESPA protocol and
+ * effect. No sourced breath-hold duration exists in the course's sources, and the line says so.
+ */
+export const TEAM_READINESS_ABSENT = `Ventilation before the spin: in the VESPA trial an endotracheal tube, a recruitment maneuver after intubation, PEEP of ${n('vespa-peep')} and an inspired oxygen fraction below 1.0 made up the bundle. On CT 20 to 30 minutes after airway placement, any atelectasis was present in ${n('vespa-atelectasis')} (Salahuddin, Chest 2022). The trial gives no breath-hold duration: agree the hold and its stopping criteria with anesthesia for this patient.`
 
 /** The copyable text: the status line first, then the rows by role. No value is filled in. */
 export function teamReadinessText(): string {
@@ -232,9 +246,6 @@ export function validateCbctReferences(): readonly string[] {
       errors.push(`${where} must be either shared or split into two columns.`)
     for (const text of [row.aspect, row.both, row.fixed, row.mobile])
       if (text) errors.push(...imagingLearnerCopyErrors(where, text))
-    // No row may teach a size, a ranking or a number: the comparison is workflow, not a device table.
-    if (/\d/.test([row.both, row.fixed, row.mobile].join(' ')))
-      errors.push(`${where} carries a number.`)
     for (const basis of row.basis) errors.push(...basisErrors(where, basis))
     for (const sourceId of row.sourceIds)
       if (!SOURCE_BY_ID.has(sourceId)) errors.push(`${where} cites an unregistered source.`)

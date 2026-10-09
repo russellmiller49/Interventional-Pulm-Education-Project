@@ -11,10 +11,12 @@ import { DosePanels } from '../components/suite/views/DoseView'
 import { SignalReadout } from '../components/suite/views/SignalView'
 import { StaffPanels } from '../components/suite/views/StaffView'
 import { resolveSuiteInputs } from '../components/suite/suiteViewSpec'
+import { DOSE_NOTE_TEMPLATE_LINES } from '../content/doseQuantities'
 import { termsForSection } from '../content/glossary'
 import { imagingCases } from '../content/cases'
 import { IMAGING_SHARED_BOUNDARY, imagingSectionSpec } from '../content/sectionSpecs'
 import { suiteViewForStep } from '../content/suiteViews'
+import { PI_NUMBERS } from '../content/teachingNumbers'
 import { transferOrigin } from '../content/transferOrigins'
 import { emptyLabState } from '../engine/labGoalEvaluation'
 import { LESSONS } from '../data/lessons'
@@ -258,25 +260,41 @@ describe('report CW5 — the recap is concise and the full feedback stays one di
   })
 })
 
-describe('report CW2 — the general provenance sentence is said once in full, the specific limits stay', () => {
-  it('prints the full statement on the first step, and the specific limit with a reminder afterwards', () => {
+describe('report CW2 — the module’s one statement is on the hub, in Help and on the closing card, not on the steps', () => {
+  it('prints no limitations aside, reminder or exposure cue on a section’s steps', () => {
+    // Teaching-first rules, 2026-10-08: one boundary statement per module.
     const { lesson } = mountSection('field')
-    const specific = imagingSectionSpec('field')
-      .modelBoundary.replace(IMAGING_SHARED_BOUNDARY, '')
-      .trim()
-    let aside = document.querySelector('[data-teaching-block="boundary"]')!
-    expect(aside.getAttribute('data-boundary-full')).toBe('true')
-    expect(aside.querySelector('[data-boundary-specific]')?.textContent).toBe(specific)
-    expect(aside.querySelector('[data-boundary-shared]')?.textContent).toBe(IMAGING_SHARED_BOUNDARY)
-    expect(document.querySelector('[data-safety-cue]')).not.toBeNull()
-    clickPrimary()
-    expect(currentStepId()).toBe(lesson.steps[1].id)
-    aside = document.querySelector('[data-teaching-block="boundary"]')!
-    expect(aside.getAttribute('data-boundary-full')).toBe('false')
-    expect(aside.querySelector('[data-boundary-specific]')?.textContent).toBe(specific)
-    expect(aside.querySelector('[data-boundary-shared]')).toBeNull()
-    expect(aside.querySelector('[data-boundary-reminder]')?.textContent).toMatch(
-      /not equipment settings, patient measurements or dose/,
+    for (const stepId of [lesson.steps[0].id, lesson.steps[1].id]) {
+      expect(currentStepId()).toBe(stepId)
+      expect(document.querySelector('[data-teaching-block="boundary"]')).toBeNull()
+      expect(document.querySelector('[data-boundary-reminder]')).toBeNull()
+      expect(document.querySelector('[data-safety-cue]')).toBeNull()
+      expect(document.querySelector('[data-learning-activity]')?.textContent).not.toContain(
+        IMAGING_SHARED_BOUNDARY,
+      )
+      if (stepId === lesson.steps[0].id) clickPrimary()
+    }
+    // Help carries it (the Help test above); the hub is held in hub.test, the closing card below.
+  })
+
+  it('prints the statement on the closing card of the last section only', () => {
+    const finish = (sectionId: 'time' | 'suite-cases') => {
+      const { lesson } = mountSection(sectionId)
+      for (let guard = 0; !document.querySelector('[data-section-completion]'); guard++) {
+        if (guard > lesson.steps.length * 2) throw new Error(`${sectionId} did not end`)
+        const primary = nowPrimary()
+        if (primary && !primary.disabled) fireEvent.click(primary)
+        else fireEvent.click(nowSkip()!)
+      }
+    }
+    finish('time')
+    expect(document.querySelector('[data-closing-statement]')).toBeNull()
+    cleanup()
+    localStorage.clear()
+    finish('suite-cases')
+    expect(document.querySelectorAll('[data-closing-statement]')).toHaveLength(1)
+    expect(document.querySelector('[data-closing-statement]')?.textContent).toBe(
+      IMAGING_SHARED_BOUNDARY,
     )
   })
 
@@ -393,9 +411,9 @@ describe('report 5.4 — the provenance flow speaks the modality of the section 
     expect(flow.getAttribute('data-provenance-modality')).toBe('cbct')
     expect(flow.textContent).toMatch(/projections from the CBCT spin/)
     expect(flow.textContent).not.toMatch(/limited-angle/)
-    expect(flow.querySelector('[data-cbct-provenance-review]')?.textContent).toMatch(
-      /awaiting source-owner review/,
-    )
+    // Review status is project metadata and does not render.
+    expect(flow.querySelector('[data-cbct-provenance-review]')).toBeNull()
+    expect(flow.textContent).not.toMatch(/draft|awaiting/i)
     expect(flow.textContent).not.toMatch(/planning CT is not part|enters only/)
     expect(flow.textContent).toMatch(/Do not assume that viewing or exporting/)
     cleanup()
@@ -427,12 +445,20 @@ describe('reports 1.1 and 6.1 — the sampling component is defined and labelled
   })
 })
 
-describe('report 7.2 — the four quantities as a table and a template that prefills nothing', () => {
-  it('renders the table and a template with no number in it, on the dose section’s first step', () => {
+describe('report 7.2 — the four quantities as a table, the levels that prompt action, and a template whose blanks stay blank', () => {
+  it('renders the table, the AAPM levels from the register and the template on the dose section’s first step', () => {
     mountSection('dose-reporting')
     expect(document.querySelectorAll('[data-dose-quantities] tbody tr').length).toBe(4)
     const template = document.querySelector('[data-dose-note-lines]')!
-    expect(template.textContent).not.toMatch(/\d/)
+    // No measurement is prefilled: every blank is still a blank, and the only figures in the
+    // template are the notification levels it names.
+    expect(template.textContent).toBe(DOSE_NOTE_TEMPLATE_LINES.join('\n'))
+    expect(template.textContent).toContain(PI_NUMBERS.value('aapm-first-notification'))
+    for (const id of ['aapm-first-notification', 'aapm-substantial-dose'] as const) {
+      const row = document.querySelector(`[data-reference-values] [data-teaching-number="${id}"]`)!
+      expect(row.querySelector('strong')?.textContent).toBe(PI_NUMBERS.value(id))
+      expect(row.querySelector('small')?.textContent).toMatch(/AAPM MPPG 12\.a 2022, §5\.[34]/)
+    }
     expect(template.textContent).toMatch(/Total kerma–area product/)
     expect(document.querySelector('[data-copy-dose-note]')).not.toBeNull()
   })
@@ -532,26 +558,36 @@ describe('reports IC4 and O2 — the Safety decision tag is explained, and the m
   })
 })
 
-describe('independent review — owner holds stay visible', () => {
+describe('owner items closed on 2026-10-08 — taught as ordinary teaching, with no review label', () => {
   it.each(['source', 'detector'] as const)(
-    'marks the %s ownership account as a draft',
+    'states who sets what on the %s card (report 2.7)',
     (stopId) => {
       render(<ChainWalkCard stopId={stopId} stepId="review" />)
-      const note = document.querySelector('[data-pulse-ownership-review]')!
-      expect(note.textContent).toMatch(
-        /Draft control-ownership account.*awaiting source-owner review/,
+      expect(document.querySelector('[data-pulse-ownership-review]')).toBeNull()
+      const control = [...document.querySelectorAll('dt')].find(
+        (dt) => dt.textContent === 'What you control here',
+      )!.nextElementSibling!
+      expect(control.textContent).not.toMatch(/draft|awaiting/i)
+      // Pulse rate is chosen at the console and produced by the generator; the system selects
+      // the pulse width.
+      expect(control.textContent).toMatch(/generator/)
+      expect(control.textContent).toMatch(/pulse rate/)
+      expect(control.textContent).toMatch(
+        stopId === 'source'
+          ? /the system selects the pulse width\. You choose the pulse rate at the console/
+          : /^pulse rate, which you choose at the console.*Pulse width is selected by the system/,
       )
-      expect(note.closest('dd')?.textContent).toMatch(/generator/)
     },
   )
 
   it.each([
     ['field', 'binning'],
     ['current-anatomy', 'stored-contour'],
-  ] as const)('renders the held definition in %s with its review status', (sectionId, term) => {
+  ] as const)('renders the definition in %s with its sources and no status', (sectionId, term) => {
     render(<SectionGlossary sectionId={sectionId} variant="teaching" />)
     const entry = document.querySelector(`[data-glossary-term="${term}"]`)!
-    expect(entry.getAttribute('data-glossary-status')).toBe('drafted')
-    expect(entry.querySelector('small')?.textContent).toMatch(/awaiting the owner’s review/)
+    expect(entry.getAttribute('data-glossary-status')).toBe('existing')
+    expect(entry.querySelector('small')?.textContent).toMatch(/^Written for this course from \S/)
+    expect(entry.textContent).not.toMatch(/draft|awaiting|review/i)
   })
 })
