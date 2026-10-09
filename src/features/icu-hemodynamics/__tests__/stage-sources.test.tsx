@@ -94,7 +94,7 @@ describe('the sources a lesson cites', () => {
     const sources = hemodynamicsStageSources('pressure-system')
     advanceToPrediction('pressure-system')
     expect(claims()).toHaveLength(0)
-    commitChoice(/off level, not zeroed, and underdamped/)
+    commitChoice(/off level, not zeroed and underdamped/i)
     expect(claims()).toHaveLength(sources.evidenceIds.length)
   })
 })

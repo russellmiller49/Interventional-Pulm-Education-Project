@@ -19,6 +19,7 @@ import type { DerivedHemodynamics } from '../engine/types'
 import { cardiacOutputInputStatuses, type CardiacOutputInputStatus } from './cardiacOutputMethods'
 import { HEMODYNAMIC_CLINICAL_THRESHOLDS as thresholds } from './clinicalThresholds'
 import { hemodynamicsSourceById } from './sources'
+import { HEMODYNAMICS_NUMBERS } from './teachingNumbers'
 
 export type DerivedMetricId = keyof DerivedHemodynamics
 
@@ -174,8 +175,7 @@ export const derivedInputDefinitions: readonly DerivedInputDefinition[] = Object
     id: 'bodySurfaceAreaM2',
     label: 'Body surface area',
     unit: 'm²',
-    whatItIs:
-      'Calculated by the charting system from an entered height and weight. This module does not implement the estimating formula; it consumes the recorded value with that provenance.',
+    whatItIs: `Calculated from height and weight by the DuBois formula: ${HEMODYNAMICS_NUMBERS.value('bsa-dubois')}. Here it arrives as a charted value.`,
     requiredConvention: null,
     isCalculated: true,
     isPressureReading: false,
@@ -292,9 +292,7 @@ const CPO_UNIT_CONVERSION =
 const FLOW_LIMITATION =
   'The result carries the cardiac-output method that produced its flow input, including any assumption inside that method.'
 
-const sharedSourceLimitations = [
-  'The Bootsma Part 2 review was read against its supplied text for the formula, unit, and reference-interval claims marked verified in the H5 source boundaries; the document itself is not distributed in this repository.',
-] as const
+const sharedSourceLimitations: readonly string[] = []
 
 export const derivedMetricRecords: readonly DerivedMetricRecord[] = Object.freeze([
   {
@@ -332,7 +330,11 @@ export const derivedMetricRecords: readonly DerivedMetricRecord[] = Object.freez
       'No accepted cardiac-output result exists, or its method is unknown.',
       'Body surface area is missing or its height and weight provenance is unknown.',
     ],
-    thresholdContextIds: ['ci-adult-reference-interval', 'ci-educational-alarm-boundaries'],
+    thresholdContextIds: [
+      'ci-adult-reference-interval',
+      'ci-cardiogenic-shock-criterion',
+      'ci-educational-alarm-boundaries',
+    ],
     evidenceIds: ['pac-derived-part-2-2021'],
     sourceLimitations: [...sharedSourceLimitations],
   },
@@ -776,11 +778,9 @@ export function requireDerivedMetric(id: DerivedMetricId): DerivedMetricRecord {
  * ------------------------------------------------------------------ */
 
 /**
- * What kind of claim a displayed boundary is.
- *
- * The classification exists so a cohort observation cannot be rendered as a target. Two members are
- * deliberately unusable: `treatment-target` and `unsupported` are in the vocabulary so a test can
- * prove the validator rejects them, and no record here may carry either.
+ * What kind of claim a displayed boundary is: a reference range, a diagnostic or shock criterion, a
+ * cohort finding, or a setting of this simulator. `treatment-target` is allowed only with a cited
+ * source; `unsupported` is never displayed.
  */
 export const derivedThresholdClassifications = [
   'diagnostic-definition',
@@ -801,9 +801,9 @@ export const derivedThresholdClassificationLabels: Readonly<
   'diagnostic-definition': 'Diagnostic definition',
   'cohort-risk-association': 'Cohort risk association',
   'phenotype-specific-cutoff': 'Phenotype-specific cut point',
-  'reference-interval': 'Reference interval',
+  'reference-interval': 'Reference range',
   'device-or-protocol-value': 'Device or protocol value',
-  'model-parameter': 'Simulation parameter',
+  'model-parameter': 'Simulator setting',
   'treatment-target': 'Treatment target',
   unsupported: 'Unsupported',
 })
@@ -818,7 +818,7 @@ export interface DerivedThresholdContext {
   readonly population: string
   /** What the source used the boundary for. */
   readonly intendedUse: string
-  /** The sentence that stops the boundary from traveling where it does not belong. */
+  /** One plain clause where the number is easy to misapply. Empty otherwise. */
   readonly notUniversal: string
   readonly evidenceIds: readonly string[]
 }
@@ -832,109 +832,111 @@ export const derivedThresholdContexts: readonly DerivedThresholdContext[] = Obje
     id: 'ci-adult-reference-interval',
     metricId: 'cardiacIndexLMinM2',
     classification: 'reference-interval',
-    statement: 'A commonly cited resting adult reference interval is 2.5–4.0 L/min/m².',
-    population: 'Resting adults, as tabulated in the cited PAC review.',
-    intendedUse: 'Orientation to the usual magnitude of an indexed resting flow.',
-    notUniversal:
-      'A value inside the interval does not prove adequate perfusion, and a value outside it does not name a mechanism.',
+    statement: `Normal cardiac index is ${HEMODYNAMICS_NUMBERS.value('cardiac-index-range')}. ${HEMODYNAMICS_NUMBERS.get('cardiac-index-range').note}`,
+    population: 'Resting adults.',
+    intendedUse: 'Reference range.',
+    notUniversal: '',
     evidenceIds: ['pac-derived-part-2-2021'],
+  },
+  {
+    id: 'ci-cardiogenic-shock-criterion',
+    metricId: 'cardiacIndexLMinM2',
+    classification: 'diagnostic-definition',
+    statement: `Cardiogenic shock: cardiac index ${HEMODYNAMICS_NUMBERS.value('cardiogenic-shock-ci')}. ${HEMODYNAMICS_NUMBERS.get('cardiogenic-shock-ci').note}`,
+    population: 'Adults in shock.',
+    intendedUse: 'Hemodynamic criterion for cardiogenic shock.',
+    notUniversal: '',
+    evidenceIds: ['emcrit-rhc-supplied-2026'],
   },
   {
     id: 'ci-educational-alarm-boundaries',
     metricId: 'cardiacIndexLMinM2',
     classification: 'model-parameter',
-    statement: `This simulator warns below ${thresholds.cardiacIndexAlarm.lowLMinM2} L/min/m² and alarms below ${thresholds.cardiacIndexAlarm.criticalLowLMinM2} L/min/m².`,
-    population: 'This educational simulation only.',
-    intendedUse: 'Deterministic alarm behavior inside the module.',
-    notUniversal: 'An alarm boundary this simulator uses carries no clinical authority.',
-    // HD-03: the PAC review formerly cited here states neither figure, so only the model is cited.
-    evidenceIds: ['icu-hemodynamics-model-v1'],
+    statement: `This simulator warns below ${thresholds.cardiacIndexAlarm.lowLMinM2} L/min/m² and alarms below ${thresholds.cardiacIndexAlarm.criticalLowLMinM2} L/min/m², the two cardiogenic-shock cutoffs.`,
+    population: 'This simulator.',
+    intendedUse: 'Alarm behavior inside the module.',
+    notUniversal: '',
+    evidenceIds: ['icu-hemodynamics-model-v1', 'emcrit-rhc-supplied-2026'],
   },
   {
     id: 'sv-adult-reference-interval',
     metricId: 'strokeVolumeMl',
     classification: 'reference-interval',
-    statement: 'A commonly cited adult reference interval is roughly 60–100 mL per beat.',
-    population: 'Resting adults, as tabulated in the cited PAC review.',
-    intendedUse: 'Orientation to the usual magnitude of a per-beat flow.',
-    notUniversal: 'The interval does not identify the mechanism of an abnormal value.',
+    statement: 'Normal stroke volume is roughly 60–100 mL per beat.',
+    population: 'Resting adults.',
+    intendedUse: 'Reference range.',
+    notUniversal: '',
     evidenceIds: ['pac-derived-part-2-2021'],
   },
   {
     id: 'svi-adult-reference-interval',
     metricId: 'strokeVolumeIndexMlM2',
     classification: 'reference-interval',
-    statement: 'A commonly cited adult reference interval is roughly 33–47 mL/m².',
-    population: 'Resting adults, as tabulated in the cited PAC review.',
-    intendedUse: 'Orientation to the usual magnitude of an indexed per-beat flow.',
-    notUniversal: 'A value inside the interval does not prove adequate perfusion for this patient.',
+    statement: 'Normal stroke volume index is roughly 33–47 mL/m².',
+    population: 'Resting adults.',
+    intendedUse: 'Reference range.',
+    notUniversal: '',
     evidenceIds: ['pac-derived-part-2-2021'],
   },
   {
     id: 'svr-adult-reference-interval',
     metricId: 'systemicVascularResistance',
     classification: 'reference-interval',
-    statement: `A commonly cited adult reference interval is ${thresholds.systemicVascularResistance.referenceMinDynSecCm5.toLocaleString('en-US')}–${thresholds.systemicVascularResistance.referenceMaxDynSecCm5.toLocaleString('en-US')} dyn·s·cm⁻⁵.`,
-    population: 'Resting adults, as tabulated in the cited PAC review.',
-    intendedUse: 'Orientation to the usual magnitude of systemic resistance.',
+    statement: `Normal SVR is ${HEMODYNAMICS_NUMBERS.value('svr-range')}. ${HEMODYNAMICS_NUMBERS.get('svr-range').note}`,
+    population: 'Resting adults.',
+    intendedUse: 'Reference range.',
     notUniversal:
-      'No SVR range labels a patient good or bad on its own; the pressure–flow pattern and the validity of every input decide what the number means.',
+      'Low in distributive shock; high in hypovolemic, cardiogenic and obstructive shock.',
     evidenceIds: ['pac-derived-part-2-2021'],
   },
   {
     id: 'svri-no-bedside-boundary',
     metricId: 'systemicVascularResistanceIndex',
     classification: 'reference-interval',
-    statement:
-      'This module presents no adult reference interval for SVRI. The reference figures verified against a registered source here cover CI, SV, SVI, and SVR; no SVRI interval was verified, so no number is shown.',
-    population: 'Not applicable — no interval is presented.',
-    intendedUse:
-      'Naming the absence of a source-verified interval, so the gap is visible rather than filled.',
-    notUniversal:
-      'Indexing changes both the units and the numbers, so the verified SVR interval must not be read across as an SVRI interval.',
+    statement: `Normal SVRI is ${HEMODYNAMICS_NUMBERS.value('svri-range')}. SVRI = 80 × (MAP − CVP) ÷ cardiac index.`,
+    population: 'Resting adults.',
+    intendedUse: 'Reference range.',
+    notUniversal: 'The SVR range does not apply to SVRI: indexing changes the numbers.',
     evidenceIds: ['pac-derived-part-2-2021'],
   },
   {
     id: 'pvr-esc-ers-definition-component',
     metricId: 'pulmonaryVascularResistance',
     classification: 'diagnostic-definition',
-    statement: `A resting PVR above ${ph.elevatedPvrWoodUnits} WU contributes to the pre-capillary definition only together with mPAP above ${ph.meanPapMmHg} mmHg and PAWP at or below ${ph.preCapillaryPawpMaxMmHg} mmHg.`,
-    population: 'The 2022 ESC/ERS hemodynamic definition of pulmonary hypertension.',
+    statement: `Pre-capillary pulmonary hypertension: PVR above ${ph.elevatedPvrWoodUnits} WU with mPAP above ${ph.meanPapMmHg} mmHg and PAWP at or below ${ph.preCapillaryPawpMaxMmHg} mmHg.`,
+    population: '2022 ESC/ERS definition, at rest.',
     intendedUse: 'Diagnostic classification at right heart catheterization.',
-    notUniversal:
-      'A diagnostic definition is not a treatment target, and the guideline itself notes uncertainty about treatment evidence just above the boundary.',
+    notUniversal: 'Treatment evidence is less certain just above the PVR boundary.',
     evidenceIds: ['esc-ers-ph-2022'],
   },
   {
     id: 'pvri-no-bedside-boundary',
     metricId: 'pulmonaryVascularResistanceIndex',
     classification: 'reference-interval',
-    statement:
-      'No single adult bedside classification boundary is stated for indexed PVR in this module.',
-    population: 'Adult bedside practice; the registered sources state no boundary here.',
-    intendedUse: 'Interpretation together with PVR, body size, and phenotype.',
-    notUniversal: 'Indexing does not create a boundary the sources do not carry.',
+    statement: `Normal PVRI is ${HEMODYNAMICS_NUMBERS.value('pvri-range')}.`,
+    population: 'Resting adults.',
+    intendedUse: 'Reference range.',
+    notUniversal: '',
     evidenceIds: ['esc-ers-ph-2022', 'pac-derived-part-2-2021'],
   },
   {
     id: 'cpo-acute-cardiac-cohort-cut-point',
     metricId: 'cardiacPowerOutputW',
     classification: 'cohort-risk-association',
-    statement: `A cut point of ${cpo.originalCohortWatts} W identified a high-mortality group in the original acute-cardiac cohort.`,
-    population: 'An observational acute cardiac disease and cardiogenic shock cohort.',
-    intendedUse: 'Mortality risk association in that cohort.',
-    notUniversal:
-      'A cohort association is not a universal trigger for mechanical support and does not replace the full shock phenotype or serial response.',
+    statement: `A cardiac power output below ${cpo.originalCohortWatts} W marked the high-mortality group in the original cohort.`,
+    population: 'Acute cardiac disease and cardiogenic shock.',
+    intendedUse: 'Mortality risk in that cohort.',
+    notUniversal: '',
     evidenceIds: ['cpo-acute-cardiac-2007'],
   },
   {
     id: 'cpo-teaching-band',
     metricId: 'cardiacPowerOutputW',
     classification: 'cohort-risk-association',
-    statement: `Values near or below ${cpo.highRiskTeachingWatts} W are discussed as a high-risk low-power state in shock cohorts.`,
-    population: 'Shock cohorts discussed in the cited reviews.',
-    intendedUse: 'Teaching band drawn from those cohorts.',
-    notUniversal: 'A teaching band is not a threshold for action in any individual patient.',
+    statement: `Values near or below ${cpo.highRiskTeachingWatts} W mark a high-risk low-power state in shock.`,
+    population: 'Shock cohorts in the cited reviews.',
+    intendedUse: 'Risk marker in cardiogenic shock.',
+    notUniversal: '',
     evidenceIds: ['cpo-acute-cardiac-2007', 'pac-derived-part-2-2021'],
   },
   {
@@ -942,46 +944,40 @@ export const derivedThresholdContexts: readonly DerivedThresholdContext[] = Obje
     metricId: 'pulmonaryArteryPulsatilityIndex',
     classification: 'phenotype-specific-cutoff',
     statement: `PAPi at or below ${papi.acuteRvInfarctionHighRiskMax} identified severe RV dysfunction in acute inferior myocardial infarction.`,
-    population: 'A small acute inferior-MI cohort with suspected RV involvement.',
+    population: 'Acute inferior MI with suspected RV involvement.',
     intendedUse: 'Identifying severe RV dysfunction in that presentation.',
-    notUniversal:
-      'A PAPi boundary varies widely between studied populations and must not be extrapolated from one phenotype to another; this is not a universal definition of RV failure.',
+    notUniversal: 'PAPi cutoffs differ by population; use the one for your patient’s condition.',
     evidenceIds: ['papi-rvmi-2012', 'pac-derived-part-2-2021'],
   },
   {
     id: 'papi-advanced-hf-teaching-band',
     metricId: 'pulmonaryArteryPulsatilityIndex',
     classification: 'phenotype-specific-cutoff',
-    statement: `A PAPi below ${papi.advancedHeartFailureTeachingMax} was the receiver-operating-characteristic cut point for right ventricular failure after implantation in a 132-patient continuous-flow LVAD cohort.`,
-    population:
-      'Recipients of a durable continuous-flow left ventricular assist device in a single-center cohort of 132 patients.',
-    intendedUse:
-      "Preoperative identification of patients who went on to develop postoperative right ventricular failure under that study's definition.",
-    notUniversal:
-      'This is a surgical-cohort cut point for one postoperative outcome, not a general advanced-heart-failure threshold, not a universal RV-failure definition, and not a treatment target.',
+    statement: `A PAPi below ${papi.advancedHeartFailureTeachingMax} predicted right ventricular failure after implantation in a 132-patient continuous-flow LVAD cohort.`,
+    population: 'Durable continuous-flow LVAD recipients, single center.',
+    intendedUse: 'Preoperative prediction of postoperative RV failure.',
+    notUniversal: '',
     evidenceIds: ['papi-lvad-rvf-2016'],
   },
   {
     id: 'pa-compliance-cohort-distribution',
     metricId: 'pulmonaryArteryCompliance',
     classification: 'cohort-risk-association',
-    statement: `A broad right-heart-catheterization cohort had a median of ${thresholds.pulmonaryArteryCompliance.cohortMedianMlMmHg} mL/mmHg with an interquartile range of ${thresholds.pulmonaryArteryCompliance.cohortIqrLowMlMmHg}–${thresholds.pulmonaryArteryCompliance.cohortIqrHighMlMmHg}, with lower compliance associated with adverse events.`,
-    population: 'A single-center right-heart-catheterization cohort.',
-    intendedUse: 'Describing that cohort’s distribution and its outcome association.',
-    notUniversal:
-      'A cohort median and interquartile range describe that population; they are not a universal normal interval or a target.',
+    statement: `A right-heart-catheterization cohort had a median of ${thresholds.pulmonaryArteryCompliance.cohortMedianMlMmHg} mL/mmHg (interquartile range ${thresholds.pulmonaryArteryCompliance.cohortIqrLowMlMmHg}–${thresholds.pulmonaryArteryCompliance.cohortIqrHighMlMmHg}); lower compliance went with more adverse events.`,
+    population: 'A single-center catheterization cohort.',
+    intendedUse: 'Cohort distribution and outcome association.',
+    notUniversal: 'A cohort median, not a normal range.',
     evidenceIds: ['pa-compliance-outcomes-2026'],
   },
   {
     id: 'ppv-conditional-cohort-threshold',
     metricId: 'pulsePressureVariationPercent',
     classification: 'cohort-risk-association',
-    statement: `A variation near ${thresholds.pulsePressureVariation.responsivePercent} in every 100 predicted fluid responsiveness in the original selected, controlled-ventilation septic cohort.`,
+    statement: `A pulse pressure variation above about ${thresholds.pulsePressureVariation.responsivePercent}% predicted fluid responsiveness.`,
     population:
-      'Sedated, mechanically ventilated septic patients without spontaneous effort or arrhythmia.',
-    intendedUse: 'Predicting fluid responsiveness inside those validated conditions.',
-    notUniversal:
-      'Outside the validated conditions the number has no interpretable meaning, and inside them it predicts responsiveness — not volume status and not a mandate to give fluid.',
+      'Sedated, ventilated septic patients with a regular rhythm and no spontaneous effort.',
+    intendedUse: 'Predicting fluid responsiveness under those conditions.',
+    notUniversal: 'Outside those conditions the number cannot be read.',
     evidenceIds: ['ppv-sepsis-2000'],
   },
 ])
@@ -1021,7 +1017,7 @@ export function derivedMetricTextEquivalent(metric: DerivedMetricRecord): string
   const contexts = metric.thresholdContextIds
     .map((id) => {
       const context = requireDerivedThresholdContext(id)
-      return `${derivedThresholdClassificationLabels[context.classification]}: ${context.statement} Applies to: ${context.population} ${context.notUniversal}`
+      return `${derivedThresholdClassificationLabels[context.classification]}: ${context.statement} Applies to: ${context.population} ${context.notUniversal}`.trim()
     })
     .join(' ')
   return [
@@ -1040,7 +1036,7 @@ export function derivedMetricTextEquivalent(metric: DerivedMetricRecord): string
     `Interpretation: ${metric.interpretation}`,
     `It does not establish: ${metric.cannotEstablish}`,
     `Withhold when: ${metric.invalidWhen.join(' ')}`,
-    contexts.length > 0 ? `Context-specific boundaries: ${contexts}` : '',
+    contexts.length > 0 ? `Reference values: ${contexts}` : '',
   ]
     .filter((part) => part.trim().length > 0)
     .join(' ')
@@ -1060,7 +1056,12 @@ export function derivedMetricCopy(metric: DerivedMetricRecord): readonly string[
     ...metric.sourceLimitations,
     ...metric.thresholdContextIds.flatMap((id) => {
       const context = requireDerivedThresholdContext(id)
-      return [context.statement, context.population, context.intendedUse, context.notUniversal]
+      return [
+        context.statement,
+        context.population,
+        context.intendedUse,
+        context.notUniversal,
+      ].filter((text) => text.trim().length > 0)
     }),
   ]
 }
@@ -1077,16 +1078,15 @@ export function validateDerivedMetrics(
   const contextIds = new Set(contexts.map((context) => context.id))
 
   for (const context of contexts) {
-    if (context.classification === 'treatment-target') {
-      throw new Error(
-        `${context.id}: no derived-hemodynamics boundary may be classified as a treatment target.`,
-      )
+    // A target may be taught when a source gives it. The simulator's own record is not a source.
+    if (
+      context.classification === 'treatment-target' &&
+      context.evidenceIds.every((evidenceId) => evidenceId === 'icu-hemodynamics-model-v1')
+    ) {
+      throw new Error(`${context.id}: a treatment target must cite a source.`)
     }
     if (context.classification === 'unsupported') {
       throw new Error(`${context.id}: an unsupported boundary must not be authored for display.`)
-    }
-    if (context.notUniversal.trim().length < 20) {
-      throw new Error(`${context.id} does not say where its boundary must not travel.`)
     }
     if (context.population.trim().length < 10 || context.intendedUse.trim().length < 10) {
       throw new Error(`${context.id} is missing its population or intended use.`)

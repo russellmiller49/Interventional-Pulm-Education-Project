@@ -113,7 +113,7 @@ it('starts each pressure demonstration from its stated baseline and keeps level,
 it('requires a new observation after simulated correction and rejects stale classification', () => {
   mountSection('pressure-system')
   advanceToPrediction('pressure-system')
-  commitChoice(/off level, not zeroed, and underdamped/)
+  commitChoice(/off level, not zeroed and underdamped/i)
   clickPrimary()
   setLevel(0)
   fireEvent.click(control('zero'))

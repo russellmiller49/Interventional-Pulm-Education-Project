@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type Dispatch, type KeyboardEvent } from 'react'
+import { useId, useMemo, useState, type Dispatch, type KeyboardEvent } from 'react'
 
 import {
   getArtifactDefinition,
@@ -25,27 +25,31 @@ import {
   type ZeroLevelMode,
 } from '../engine/troubleshootingWaveforms'
 import type { HemodynamicAction, HemodynamicSimulationState } from '../engine'
+import plot from './fast-flush.module.css'
 import styles from './icu-hemodynamics.module.css'
 
-const TRACE_WIDTH = 640
-const TRACE_HEIGHT = 222
-const PLOT = { left: 48, right: 14, top: 18, bottom: 34 } as const
+const VIEW = { width: 1000, height: 200, top: 8, bottom: 192 } as const
 const DURATION_SECONDS = TROUBLESHOOTING_BEAT_COUNT * TROUBLESHOOTING_BEAT_SECONDS
 const Y_TICKS = [0, 10, 20, 30, 40] as const
 
 function xForTime(timeSeconds: number): number {
-  return PLOT.left + (timeSeconds / DURATION_SECONDS) * (TRACE_WIDTH - PLOT.left - PLOT.right)
+  return (timeSeconds / DURATION_SECONDS) * VIEW.width
 }
 
+/**
+ * A sample's own height. It is not moved to the axis' edge when it lies outside the axis: the plot
+ * clips it there instead, as every other figure in this module now does, so a pressure that leaves
+ * the scale is never drawn as a pressure *at* the scale's limit.
+ */
 function yForPressure(pressureMmHg: number): number {
-  const bounded = Math.max(
-    TROUBLESHOOTING_SCALE_MMHG.minimum,
-    Math.min(TROUBLESHOOTING_SCALE_MMHG.maximum, pressureMmHg),
-  )
   const fraction =
-    (bounded - TROUBLESHOOTING_SCALE_MMHG.minimum) /
+    (pressureMmHg - TROUBLESHOOTING_SCALE_MMHG.minimum) /
     (TROUBLESHOOTING_SCALE_MMHG.maximum - TROUBLESHOOTING_SCALE_MMHG.minimum)
-  return PLOT.top + (1 - fraction) * (TRACE_HEIGHT - PLOT.top - PLOT.bottom)
+  return VIEW.bottom - fraction * (VIEW.bottom - VIEW.top)
+}
+
+function percent(value: number, whole: number): string {
+  return `${((value / whole) * 100).toFixed(3)}%`
 }
 
 function waveformPath(samples: readonly TroubleshootingWaveformSample[]): string {
@@ -68,6 +72,14 @@ function pressureAtTime(
   ).pressureMmHg
 }
 
+/**
+ * One tracing of the atlas: the normal reference or a signal problem, on the shared axis.
+ *
+ * The samples, the scale and the callouts are unchanged. The labels are: ticks, beat names and
+ * callouts were drawn inside the SVG in its own units, so in the two-column comparison they shrank
+ * to a few pixels. They are page text around the plot now, set in rem, and each callout sits in a
+ * track above the plot with a line down to the sample it names.
+ */
 function PaWaveformFigure({
   label,
   description,
@@ -83,11 +95,30 @@ function PaWaveformFigure({
   readonly callouts?: ArtifactDefinition['callouts']
   readonly showSystoleMarkers?: boolean
 }) {
+  const clipId = useId()
   const path = useMemo(() => waveformPath(samples), [samples])
-  const accessibleDescription = `${label}. Four complete beats on a fixed 0 to 40 mmHg scale. ${description} Generated pressures: systolic ${metrics.systolicMmHg.toFixed(1)}, diastolic ${metrics.diastolicMmHg.toFixed(1)}, mean ${metrics.meanMmHg.toFixed(1)}, and pulse pressure ${metrics.pulsePressureMmHg.toFixed(1)} mmHg.`
+  const outOfRange = samples.some(
+    (sample) =>
+      sample.pressureMmHg < TROUBLESHOOTING_SCALE_MMHG.minimum ||
+      sample.pressureMmHg > TROUBLESHOOTING_SCALE_MMHG.maximum,
+  )
+  const rangeNotice = outOfRange
+    ? `Part of this tracing leaves the ${TROUBLESHOOTING_SCALE_MMHG.minimum} to ${TROUBLESHOOTING_SCALE_MMHG.maximum} mmHg axis and is clipped there, not flattened. The sampled pressures are unchanged.`
+    : ''
+  const accessibleDescription = `${label}. Four complete beats on a fixed 0 to 40 mmHg scale. ${description} Generated pressures: systolic ${metrics.systolicMmHg.toFixed(1)}, diastolic ${metrics.diastolicMmHg.toFixed(1)}, mean ${metrics.meanMmHg.toFixed(1)}, and pulse pressure ${metrics.pulsePressureMmHg.toFixed(1)} mmHg.${rangeNotice ? ` ${rangeNotice}` : ''}`
+  const placedCallouts = callouts.map((callout, index) => {
+    const x = xForTime(callout.timeSeconds)
+    return {
+      ...callout,
+      x,
+      y: yForPressure(pressureAtTime(samples, callout.timeSeconds)),
+      row: index % 2,
+      anchor: x < VIEW.width * 0.2 ? 'start' : x > VIEW.width * 0.8 ? 'end' : 'middle',
+    }
+  })
 
   return (
-    <figure className={styles.artifactWaveformFigure}>
+    <figure className={`${styles.artifactWaveformFigure} ${plot.trace}`} data-artifact-figure>
       <figcaption>
         <strong>{label}</strong>
         <span>
@@ -95,86 +126,157 @@ function PaWaveformFigure({
           mmHg · {TROUBLESHOOTING_BEAT_COUNT} beats
         </span>
       </figcaption>
-      <svg
-        viewBox={`0 0 ${TRACE_WIDTH} ${TRACE_HEIGHT}`}
-        role="img"
-        aria-label={accessibleDescription}
-        preserveAspectRatio="xMidYMid meet"
-      >
-        <rect
-          className={styles.artifactPlotBackground}
-          x={PLOT.left}
-          y={PLOT.top}
-          width={TRACE_WIDTH - PLOT.left - PLOT.right}
-          height={TRACE_HEIGHT - PLOT.top - PLOT.bottom}
-        />
-        {Y_TICKS.map((tick) => {
-          const y = yForPressure(tick)
-          return (
-            <g className={styles.artifactAxis} key={tick}>
-              <line x1={PLOT.left} x2={TRACE_WIDTH - PLOT.right} y1={y} y2={y} />
-              <text x={PLOT.left - 8} y={y + 3} textAnchor="end">
+      <div className={plot.frame}>
+        <div className={plot.track} aria-hidden="true">
+          {showSystoleMarkers ? (
+            <span
+              className={plot.marker}
+              style={{ left: percent(xForTime(0.045 * TROUBLESHOOTING_BEAT_SECONDS), VIEW.width) }}
+            >
+              QRS / systole
+            </span>
+          ) : null}
+          {placedCallouts.map((callout) => (
+            <span
+              key={callout.id}
+              className={plot.offScale}
+              data-artifact-callout={callout.id}
+              data-anchor={callout.anchor}
+              style={{
+                left: percent(callout.x, VIEW.width),
+                top: `${callout.row * 1.2}rem`,
+              }}
+            >
+              {callout.label}
+            </span>
+          ))}
+        </div>
+        <div className={plot.axis} aria-hidden="true">
+          <span className={plot.sizer}>40</span>
+          <span className={plot.unit}>mmHg</span>
+          {Y_TICKS.map((tick) => {
+            const y = yForPressure(tick)
+            return (
+              <span
+                key={tick}
+                className={plot.tick}
+                data-anchor={
+                  y / VIEW.height < 0.1 ? 'top' : y / VIEW.height > 0.9 ? 'bottom' : 'middle'
+                }
+                style={{ top: percent(y, VIEW.height) }}
+              >
                 {tick}
-              </text>
-            </g>
-          )
-        })}
-        <text
-          className={styles.artifactAxisTitle}
-          transform={`translate(13 ${TRACE_HEIGHT / 2}) rotate(-90)`}
-          textAnchor="middle"
-        >
-          pressure (mmHg)
-        </text>
-        {Array.from({ length: TROUBLESHOOTING_BEAT_COUNT + 1 }, (_, index) => {
-          const x = xForTime(index * TROUBLESHOOTING_BEAT_SECONDS)
-          return (
-            <g className={styles.artifactBeatMarker} key={index}>
-              <line x1={x} x2={x} y1={PLOT.top} y2={TRACE_HEIGHT - PLOT.bottom} />
-              {index < TROUBLESHOOTING_BEAT_COUNT ? (
-                <text
-                  x={x + (xForTime(TROUBLESHOOTING_BEAT_SECONDS) - xForTime(0)) / 2}
-                  y={TRACE_HEIGHT - 10}
-                  textAnchor="middle"
-                >
-                  beat {index + 1}
-                </text>
-              ) : null}
-            </g>
-          )
-        })}
-        {showSystoleMarkers
-          ? Array.from({ length: TROUBLESHOOTING_BEAT_COUNT }, (_, beatIndex) => {
-              const x = xForTime((beatIndex + 0.045) * TROUBLESHOOTING_BEAT_SECONDS)
+              </span>
+            )
+          })}
+        </div>
+        <div className={plot.plot}>
+          <svg
+            viewBox={`0 0 ${VIEW.width} ${VIEW.height}`}
+            role="img"
+            aria-label={accessibleDescription}
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <clipPath id={clipId}>
+                <rect x="0" y={VIEW.top} width={VIEW.width} height={VIEW.bottom - VIEW.top} />
+              </clipPath>
+            </defs>
+            {Y_TICKS.map((tick) => {
+              const y = yForPressure(tick)
               return (
-                <g className={styles.artifactSystoleMarker} key={beatIndex}>
-                  <line x1={x} x2={x} y1={PLOT.top} y2={TRACE_HEIGHT - PLOT.bottom} />
-                  {beatIndex === 0 ? (
-                    <text x={x + 4} y={PLOT.top + 11}>
-                      QRS / systole
-                    </text>
-                  ) : null}
-                </g>
+                <line
+                  key={tick}
+                  className={plot.gridLine}
+                  x1="0"
+                  x2={VIEW.width}
+                  y1={y}
+                  y2={y}
+                  vectorEffect="non-scaling-stroke"
+                />
               )
-            })
-          : null}
-        <path className={styles.artifactTracePath} d={path} />
-        {callouts.map((callout, index) => {
-          const x = xForTime(callout.timeSeconds)
-          const y = yForPressure(pressureAtTime(samples, callout.timeSeconds))
-          const labelAbove = y > 54
-          const labelY = labelAbove ? Math.max(15, y - 30 - index * 2) : y + 38 + index * 2
-          return (
-            <g className={styles.artifactCallout} key={callout.id}>
-              <circle cx={x} cy={y} r="3.5" />
-              <line x1={x} x2={x} y1={y} y2={labelAbove ? labelY + 6 : labelY - 12} />
-              <text x={x} y={labelY} textAnchor="middle">
-                {callout.label}
-              </text>
-            </g>
-          )
-        })}
-      </svg>
+            })}
+            {Array.from({ length: TROUBLESHOOTING_BEAT_COUNT + 1 }, (_, index) => {
+              const x = xForTime(index * TROUBLESHOOTING_BEAT_SECONDS)
+              return (
+                <line
+                  key={index}
+                  className={plot.timeLine}
+                  x1={x}
+                  x2={x}
+                  y1="0"
+                  y2={VIEW.height}
+                  vectorEffect="non-scaling-stroke"
+                />
+              )
+            })}
+            {showSystoleMarkers
+              ? Array.from({ length: TROUBLESHOOTING_BEAT_COUNT }, (_, beatIndex) => {
+                  const x = xForTime((beatIndex + 0.045) * TROUBLESHOOTING_BEAT_SECONDS)
+                  return (
+                    <line
+                      key={beatIndex}
+                      className={plot.eventLine}
+                      x1={x}
+                      x2={x}
+                      y1="0"
+                      y2={VIEW.height}
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  )
+                })
+              : null}
+            {placedCallouts.map((callout) => (
+              <line
+                key={callout.id}
+                className={styles.artifactCalloutLeader}
+                data-artifact-leader={callout.id}
+                x1={callout.x}
+                x2={callout.x}
+                y1="0"
+                y2={Math.max(0, Math.min(VIEW.height, callout.y))}
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
+            <path
+              className={styles.artifactTracePath}
+              d={path}
+              clipPath={`url(#${clipId})`}
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+          <div className={styles.artifactCalloutPoints} aria-hidden="true">
+            {placedCallouts
+              .filter((callout) => callout.y >= VIEW.top && callout.y <= VIEW.bottom)
+              .map((callout) => (
+                <span
+                  key={callout.id}
+                  style={{
+                    left: percent(callout.x, VIEW.width),
+                    top: percent(callout.y, VIEW.height),
+                  }}
+                />
+              ))}
+          </div>
+        </div>
+        <div className={plot.time} aria-hidden="true">
+          {Array.from({ length: TROUBLESHOOTING_BEAT_COUNT }, (_, index) => (
+            <span
+              key={index}
+              style={{
+                left: percent(xForTime((index + 0.5) * TROUBLESHOOTING_BEAT_SECONDS), VIEW.width),
+              }}
+            >
+              beat {index + 1}
+            </span>
+          ))}
+        </div>
+      </div>
+      {rangeNotice ? (
+        <p className={plot.rangeNote} data-waveform-range-note>
+          {rangeNotice}
+        </p>
+      ) : null}
     </figure>
   )
 }

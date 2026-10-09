@@ -250,7 +250,7 @@ export const cardiacOutputComparisonScenarios: readonly CardiacOutputComparisonS
           label:
             'Report the Fick number, because a Fick calculation is the more fundamental description of flow.',
           verdict: 'not-defensible',
-          why: 'The principle being sound does not make this particular calculation sound. Its numerator was not measured, and no registered source in this module ranks the two methods.',
+          why: 'The principle being sound does not make this calculation sound: its numerator was assumed, not measured. Neither method outranks the other by default.',
         },
         {
           id: 'call-it-direct-fick',
@@ -342,14 +342,14 @@ export const cardiacOutputComparisonScenarios: readonly CardiacOutputComparisonS
           label:
             'Report the thermodilution series, adjusted downward for the tricuspid regurgitation.',
           verdict: 'not-defensible',
-          why: 'This module names no direction of bias for tricuspid regurgitation, because no registered record here carries one. An adjustment in an unknown direction is not a correction.',
+          why: 'Reports of the error in tricuspid regurgitation go both ways. An adjustment in an unknown direction is not a correction.',
         },
         {
           id: 'treat-central-venous-as-mixed',
           label:
             'Report the Fick result, treating the central venous specimen as equivalent to a mixed-venous one.',
           verdict: 'not-defensible',
-          why: 'A specimen drawn before the venous streams combine describes one region of return rather than all of it. Nothing in this module’s reviewed set supports substituting one for the other here, and the state was not steady either.',
+          why: 'A specimen drawn before the venous streams combine describes one region of return rather than all of it. One does not substitute for the other, and the state was not steady either.',
         },
       ],
       defensibleOptionId: 'withhold-both-and-fix',

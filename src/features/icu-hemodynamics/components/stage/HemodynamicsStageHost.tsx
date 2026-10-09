@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { ArrowRight, Check, Circle, LocateFixed } from 'lucide-react'
+import { ArrowRight, Check, LocateFixed } from 'lucide-react'
 
 import {
   useCriticalCareActivityAnalytics,
@@ -875,7 +875,7 @@ function HemodynamicsStageSession({
         return {
           ...base,
           status: activeStep.questionTraceId
-            ? 'The question is the authored tracing and vignette on this card. Its labels appear when you check an answer or open the explanation.'
+            ? 'The question is the tracing and vignette on this card. Its labels appear when you check an answer or open the explanation.'
             : 'Optional question. Check an answer, open the explanation, or continue without answering.',
           primary: moveOn('Continue without answering'),
         }
@@ -1022,7 +1022,9 @@ function HemodynamicsStageSession({
         return (
           <section className={styles.walk} data-walk-stop={stop.id} aria-label={stop.title}>
             <p className={styles.kicker}>
-              Stop {routeStopNumber(stop.id)} · {stop.title}
+              {/* The number is the catheter map's, which also counts the line; the walk's own
+                  position is said in words beneath (report L3-05). */}
+              Map stop {routeStopNumber(stop.id)} · {stop.title}
             </p>
             <p className={styles.analogy}>{stop.analogy}</p>
             <dl>
@@ -1074,7 +1076,7 @@ function HemodynamicsStageSession({
         return predictionBody(activeStep)
       case 'derived-workbench':
         return (
-          <ul className={stageStyles.taskList} data-step-goals-optional aria-label="Things to try">
+          <ul className={styles.goalList} data-step-goals-optional aria-label="Things to try">
             {[
               'Name every input one calculation depends on',
               'Withhold a value for the input that makes it unreadable',
@@ -1084,7 +1086,7 @@ function HemodynamicsStageSession({
               'Read a boundary inside its context, not as a universal number',
             ].map((label) => (
               <li key={label}>
-                <Circle aria-hidden="true" />
+                <span className={styles.goalMark} aria-hidden="true" />
                 <span>{label}</span>
               </li>
             ))}
@@ -1149,15 +1151,20 @@ function HemodynamicsStageSession({
         return (
           <>
             {goals.length > 0 ? (
-              <ul className={stageStyles.taskList} data-step-goals aria-label="What to do">
+              /*
+               * A progress list, not a set of inputs. Each row was a bordered box led by an empty
+               * circle, which reads as a radio button and was clicked as one (report L2-11). A row
+               * is now plain text with a mark that says what happened — a tick when the engine has
+               * seen the step done, a dash when it has not — and the same fact in words.
+               */
+              <ul className={styles.goalList} data-step-goals aria-label="What to do">
                 {goals.map((goal, index) => (
                   <li key={`${goal.type}-${index}`} data-met={goalsMetNow[index]}>
-                    {goalsMetNow[index] ? (
-                      <Check aria-hidden="true" />
-                    ) : (
-                      <Circle aria-hidden="true" />
-                    )}
+                    <span className={styles.goalMark} aria-hidden="true">
+                      {goalsMetNow[index] ? <Check /> : null}
+                    </span>
                     <span>{stageGoalLabel(goal)}</span>
+                    <small>{goalsMetNow[index] ? 'done' : 'not yet done'}</small>
                   </li>
                 ))}
               </ul>
@@ -1750,10 +1757,6 @@ function HemodynamicsStageSession({
             ) : null}
             <div className={flowStyles.activity}>{task}</div>
             <footer className={flowStyles.references}>
-              <p>
-                Professional education only. All values are simulated. Follow current manufacturer
-                instructions and local protocol.
-              </p>
               <StageSourcesFooter
                 count={stageSources.evidenceIds.length}
                 label="Sources for this section"
@@ -2164,10 +2167,12 @@ function StepRecap({
   const lines = recapLines(step, commitments, performed, state)
   if (lines.length === 0) return null
   return (
-    <ul className={stageStyles.taskList} data-step-review>
+    <ul className={styles.goalList} data-step-review>
       {lines.map((line) => (
         <li key={line.text} data-met={line.met}>
-          {line.met ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
+          <span className={styles.goalMark} aria-hidden="true">
+            {line.met ? <Check /> : null}
+          </span>
           <span>{line.text}</span>
         </li>
       ))}

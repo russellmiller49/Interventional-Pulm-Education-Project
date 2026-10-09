@@ -9,9 +9,8 @@ import styles from './stage/hemodynamics-stage.module.css'
 
 export const ICU_HEMODYNAMICS_SAFETY_NOTICE = (
   <>
-    <strong>Educational model—not a clinical device.</strong> Values and responses are synthetic and
-    must not be used for patient-specific decisions. Use bedside evaluation, validated monitoring,
-    current institutional protocols, manufacturer instructions, and qualified clinical supervision.
+    <strong>Teaching simulator.</strong> The patients, tracings and responses here are simulated for
+    teaching. Do not use them to make decisions about a real patient.
   </>
 )
 

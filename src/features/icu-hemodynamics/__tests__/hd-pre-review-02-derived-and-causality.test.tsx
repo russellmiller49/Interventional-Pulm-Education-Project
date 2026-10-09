@@ -95,7 +95,8 @@ describe('E. Fick inputs keep their site, their gaps and their precision', () =>
     expect(svc.status).toBe('withheld')
     expect(svc.cardiacOutputLMin).toBeNull()
     expect(svc.withheldReasonKinds).toEqual(['not-mixed-venous'])
-    expect(svc.withheldReasons[0]).toMatch(/does not substitute one for the other/)
+    expect(svc.withheldReasons[0]).toMatch(/not a true mixed-venous specimen/)
+    expect(svc.withheldReasons[0]).toMatch(/The two are not interchangeable/)
   })
 
   it('tells a missing arterial specimen from a contradictory pair', () => {
@@ -146,7 +147,7 @@ describe('G. the leg raise, the unfavourable choice and the case briefs', () => 
     const hd01 = hemodynamicCaseById.get('HD-01')!
     const plr = hd01.interventions.find((item) => item.id === 'passive-leg-raise')!
     expect(plr.label).not.toMatch(/stroke-volume endpoint/)
-    expect(plr.response).toMatch(/no continuous cardiac-output or stroke-volume channel/)
+    expect(plr.response).toMatch(/no continuous cardiac-output channel/)
     const feedback = feedbackForHemodynamicAction(hd01, plr, false)
     expect(feedback.theCue).toMatch(/thermodilution series acquired while the leg raise lasts/)
     expect(feedback.theCue).not.toMatch(/Watch the flow trend/)
@@ -337,7 +338,7 @@ describe('the case debrief names what happened in this run', () => {
   it('P-12: the brief says model time is compressed', async () => {
     await toActions('HD-06')
     expect(document.querySelector('[data-model-time]')?.textContent).toMatch(
-      /not a clinical time course/,
+      /a response that takes minutes at the\s+bedside takes seconds here/,
     )
   })
 })

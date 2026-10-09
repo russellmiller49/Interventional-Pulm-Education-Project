@@ -8,6 +8,7 @@
  */
 
 import type { PressureArtifactKind } from '../engine/waveformArtifacts'
+import { HEMODYNAMICS_NUMBERS } from './teachingNumbers'
 
 export const ARTIFACT_IDS = [
   'overdamped',
@@ -55,7 +56,6 @@ export const artifactDefinitions = {
     appearance: [
       'The PA upstroke is rounded, the peak is blunted, and pulse pressure is narrow.',
       'The pulmonic-closure notch and other high-frequency detail are markedly reduced or lost.',
-      'This tracing is generated with low-frequency smoothing plus amplitude attenuation, not simple vertical rescaling.',
     ],
     causes: [
       'Air or blood in the catheter-tubing-transducer circuit.',
@@ -64,7 +64,7 @@ export const artifactDefinitions = {
       'A mismatched monitor scale can visually mimic damping even though it does not alter the signal itself.',
     ],
     numbersTeaching:
-      'The generated trace has a lower systolic peak, higher diastolic nadir, narrower pulse pressure, and a mean that is less affected than either endpoint.',
+      'Systolic reads low, diastolic reads high, pulse pressure narrows, and the mean is the least affected.',
     whyItMatters:
       'A damped PA tracing can hide a real systolic peak or closure notch and can make catheter position and pulmonary pressures look more reassuring than they are.',
     actions: [
@@ -72,7 +72,7 @@ export const artifactDefinitions = {
       'Confirm approximately 300 mmHg in the pressure bag and inspect every stopcock, connection, and segment of tubing.',
       'Remove air or blood from the monitoring circuit and resolve any kink or visible obstruction.',
       'After confirming a PA waveform and a fully deflated balloon, use a fast-flush response check to verify dynamic response.',
-      'When persistent wall contact or malposition is suspected, reposition according to clinician authority and local policy.',
+      'If wall contact or malposition persists, reposition the catheter.',
     ],
     doNot: [
       'Do not interpret the blunted systolic value as a reliable physiologic peak.',
@@ -99,7 +99,7 @@ export const artifactDefinitions = {
       'Catheter motion can add mechanical contamination to the resonant response.',
     ],
     numbersTeaching:
-      'The generated maximum is falsely high, the minimum falsely low, and pulse pressure falsely wide. Mean pressure is relatively preserved, not guaranteed exact.',
+      'Systolic reads falsely high, diastolic falsely low, and pulse pressure falsely wide. The mean is relatively preserved.',
     whyItMatters:
       'The exaggerated peak can be mistaken for severe pulmonary hypertension or a pressure gradient that is not actually present.',
     actions: [
@@ -126,7 +126,7 @@ export const artifactDefinitions = {
     pressureInterpretation: 'derived',
     appearance: [
       'A recognizable PA waveform remains underneath a very narrow early-systolic mechanical spike.',
-      'Spike height varies deterministically from beat to beat, with brief high-frequency motion after some spikes.',
+      'Spike height varies from beat to beat, with brief high-frequency motion after some spikes.',
     ],
     causes: [
       'Cardiac motion, right-ventricular contraction, valve closure, blood flow, or surface contact accelerates the catheter tip or fluid column.',
@@ -139,11 +139,10 @@ export const artifactDefinitions = {
     actions: [
       'Confirm complete balloon deflation and stop external catheter or tubing movement.',
       'Compare the spike timing with the ECG and with the underlying PA contour.',
-      'When appropriate and authorized, make a small catheter-position adjustment and reassess.',
+      'If it persists, make a small catheter-position adjustment and reassess.',
     ],
     doNot: [
       'Do not diagnose pulmonary hypertension or a true intracardiac gradient from an isolated narrow spike.',
-      'Do not advance or withdraw the catheter without appropriate clinical authority.',
     ],
     callouts: [{ id: 'whip-spike', label: 'mechanical spike', timeSeconds: 1.67 }],
     sourceIds: ['clinical-hemodynamics-waveforms', 'pac-waveforms-part-1-2021'],
@@ -169,7 +168,7 @@ export const artifactDefinitions = {
     actions: [
       'Verify the patient, balloon state, insertion depth, catheter course, and external tubing.',
       'Check for a kink or excessive distal migration.',
-      'Withdraw or reposition only according to clinician authority and institutional policy.',
+      'Withdraw or reposition the catheter with the balloon down.',
     ],
     doNot: [
       'Do not forcefully flush against a suspected obstructed or distally positioned catheter.',
@@ -194,11 +193,11 @@ export const artifactDefinitions = {
     numbersTeaching:
       'The display is no longer measuring PA pressure; it is sampling a wedge-type compartment. The change is positional, not electronic overdamping.',
     whyItMatters:
-      'An unrecognized spontaneous wedge can mislabel a wedge-type value as PA pressure and places a distal pulmonary-artery branch at risk.',
+      'An unrecognized spontaneous wedge mislabels a wedge value as PA pressure and risks infarction or rupture of a distal branch.',
     actions: [
       'Confirm that the balloon is completely deflated and assess for distal catheter migration.',
-      'When permitted, withdraw slowly until a clear PA waveform returns.',
-      'Notify the responsible clinician and confirm position; obtain radiographic confirmation when indicated.',
+      `Do not flush. ${capitalize(HEMODYNAMICS_NUMBERS.value('retract-distance'))} at a time until a clear PA waveform returns.`,
+      'If the PA waveform does not return, get a chest film and help.',
     ],
     doNot: [
       'Do not fast-flush the distal lumen when spontaneous wedge is suspected.',
@@ -221,7 +220,7 @@ export const artifactDefinitions = {
     appearance: [
       'Residual PA pulsatility remains superimposed on a lower-amplitude atrial-type contour.',
       'The mean does not fall plausibly below PA diastolic pressure, and the pulmonic-closure contour may remain partly visible.',
-      'The live capstone uses this same PA-contaminated waveform and labels its PAWP value invalid until position and occlusion are re-established.',
+      'The capstone uses this same waveform.',
     ],
     causes: [
       'Incomplete balloon occlusion leaves communication with the proximal pulmonary artery.',
@@ -233,13 +232,13 @@ export const artifactDefinitions = {
       'A falsely elevated PAWP can misclassify pre-capillary physiology as post-capillary disease and redirect treatment toward an unsupported mechanism.',
     actions: [
       'Deflate immediately and confirm return of a stable PA waveform.',
-      'Reassess catheter depth, course, balloon volume, and zone-3 plausibility under appropriate supervision.',
+      `Reassess depth, course and balloon volume (${HEMODYNAMICS_NUMBERS.value('balloon-volume')}), and whether the tip is in zone 3.`,
       'If morphology remains ambiguous, compare a wedged-tip sample with a simultaneous systemic arterial saturation; low systemic saturation limits discrimination.',
       'Repeat PAWP only after a valid occlusion signal is established, and reject the contaminated value.',
     ],
     doNot: [
       'Do not accept residual PA pulsatility as a true wedge.',
-      'Do not keep inflating, flush the distal lumen, or move the catheter solely to force a target number.',
+      'Do not add air beyond the full volume, flush the distal lumen, or advance to make a poor wedge look better.',
       'Do not calculate PVR from the contaminated PAWP.',
     ],
     callouts: [
@@ -265,17 +264,16 @@ export const artifactDefinitions = {
     ],
     numbersTeaching:
       'The rising, progressively nonpulsatile signal is not a valid PAWP. All displayed values are unreliable.',
-    whyItMatters:
-      'Continued inflation or flushing against an occluded distal PA branch can contribute to pulmonary-artery injury.',
+    whyItMatters: `Inflating or flushing against an occluded distal branch can rupture the pulmonary artery; mortality is ${HEMODYNAMICS_NUMBERS.value('pa-rupture-mortality')}.`,
     actions: [
       'Stop inflation immediately and allow passive balloon deflation.',
-      'Withdraw to a more proximal PA location and re-float or reposition under appropriate supervision.',
+      `Withdraw to a more proximal PA position: ${HEMODYNAMICS_NUMBERS.value('overwedge-volume')}.`,
       'Confirm that any wedge value is physiologically plausible relative to PA diastolic pressure.',
-      'Escalate immediately if pulmonary-artery injury is suspected.',
+      'Hemoptysis after a wedge means possible pulmonary-artery rupture: balloon down, affected side down, secure the airway, call for help.',
     ],
     doNot: [
       'Do not flush an overwedged catheter.',
-      'Do not exceed the manufacturer-specified balloon volume.',
+      `Do not exceed ${HEMODYNAMICS_NUMBERS.value('balloon-volume')}.`,
       'Do not continue inflating in pursuit of a prettier waveform.',
     ],
     callouts: [{ id: 'pressure-rise', label: 'pressure keeps rising', timeSeconds: 2.62 }],
@@ -399,8 +397,7 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
     causes:
       'Catheter-tip acceleration, redundant loop, cardiac motion, flow, valve or surface contact.',
     checks: 'Balloon deflation, external motion, ECG timing, depth, and catheter course.',
-    action:
-      'Secure the system and use a small clinician-directed repositioning maneuver when appropriate.',
+    action: 'Secure the system; a small repositioning of the tip may help.',
     warning: 'Do not diagnose pulmonary hypertension from the isolated spike.',
   },
   {
@@ -421,8 +418,7 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
     causes: 'Distal catheter migration with branch occlusion despite a deflated balloon.',
     checks:
       'Balloon state, depth, waveform transition, patient position, and radiographic position when indicated.',
-    action:
-      'Withdraw slowly until PA morphology returns when authorized; notify the responsible clinician.',
+    action: `Confirm the balloon is down, then ${HEMODYNAMICS_NUMBERS.value('retract-distance')} at a time until PA morphology returns.`,
     warning: 'Do not flush.',
   },
   {
@@ -434,8 +430,7 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
       'Incomplete balloon occlusion, non-zone-3 position, pulmonary hypertension, or unfavorable catheter orientation.',
     checks:
       'Balloon deflation and PA return, depth and course, PA-diastolic plausibility, West-zone context, and paired wedged-tip/systemic oximetry when useful.',
-    action:
-      'Reject the value, restore a confirmed PA signal, and repeat the occlusion check only under appropriate supervision.',
+    action: 'Reject the value, deflate, restore a confirmed PA signal, then repeat the wedge.',
     warning: 'Do not keep inflating or flush a potentially occluded distal PA branch.',
   },
   {
@@ -445,8 +440,9 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
       'Similar systolic pressure, lower diastolic pressure, no PA notch, and a ventricular or tombstone contour.',
     causes: 'Proximal catheter migration from PA into RV.',
     checks: 'Balloon deflation, rhythm, depth, PA notch, and diastolic step-down.',
-    action: 'Monitor rhythm continuously and return to PA position under appropriate supervision.',
-    warning: 'Do not ignore ventricular ectopy or manipulate the catheter without authority.',
+    action:
+      'Do not leave the tip in the RV. Inflate the balloon and re-float to the PA, or deflate and withdraw to the right atrium.',
+    warning: 'A tip in the RV causes ventricular ectopy: watch the rhythm.',
   },
   {
     id: 'unable-to-wedge',
@@ -456,8 +452,8 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
     causes:
       'Catheter too proximal, incomplete occlusion, damaged balloon system, or unfavorable pulmonary vascular anatomy.',
     checks: 'Depth, balloon integrity and volume, inflation system, and catheter course.',
-    action: 'Reposition under supervision and accept that a reliable wedge may not be obtainable.',
-    warning: 'Do not exceed specified balloon volume or repeatedly inflate aggressively.',
+    action: 'Reposition the catheter. A reliable wedge is not always obtainable.',
+    warning: `Do not exceed ${HEMODYNAMICS_NUMBERS.value('balloon-volume')} or inflate repeatedly.`,
   },
   {
     id: 'overwedging',
@@ -467,7 +463,7 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
     checks:
       'Inflation volume, time, pressure trend, PA diastolic plausibility, and catheter position.',
     action:
-      'Stop inflation, allow passive deflation, withdraw proximally, and escalate injury concern.',
+      'Stop inflating, let the balloon deflate passively, and withdraw until the PA tracing returns.',
     warning: 'Do not flush.',
   },
   {
@@ -479,7 +475,7 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
     checks:
       'Patient first, then monitor channel, scale, connections, stopcocks, transducer, pressure bag, tubing, and catheter position.',
     action:
-      'Restore the verified circuit and escalate if blood return or catheter patency cannot be confirmed.',
+      'Restore the circuit from patient to monitor. If blood return or patency cannot be confirmed, do not flush; get help.',
     warning:
       'Assess position before aspirating or flushing; do not flush a suspected distal occlusion.',
   },
@@ -489,19 +485,17 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
     waveform: 'Abrupt loss of waveform, often with atmospheric or erratic readings.',
     causes: 'Open connection, disconnected tubing, loose transducer interface, or open stopcock.',
     checks: 'Trace the system from patient to monitor and inspect every connection and stopcock.',
-    action: 'Clamp or reconnect per local protocol, maintain sterility, and re-zero when required.',
+    action: 'Clamp or reconnect, keep it sterile, and re-zero.',
     warning: 'Do not leave an open invasive pressure circuit unattended.',
   },
   {
     id: 'balloon-failure',
     problem: 'Balloon failure or rupture',
-    waveform: 'PA waveform fails to transition to wedge despite attempted inflation.',
+    waveform: 'PA waveform fails to transition to wedge when inflation is tried.',
     causes: 'Balloon or inflation-lumen damage, leak, or disconnected inflation syringe.',
-    checks:
-      'Inflation volume, resistance, return volume, and manufacturer-directed balloon integrity checks.',
-    action:
-      'Stop repeated inflation attempts and manage or replace the catheter under supervision.',
-    warning: 'Do not exceed labeled balloon volume or use liquid to inflate the balloon.',
+    checks: 'Inflation volume, resistance to inflation, and whether the syringe springs back.',
+    action: 'Stop repeated inflation attempts. Manage or replace the catheter.',
+    warning: `Do not exceed ${HEMODYNAMICS_NUMBERS.value('balloon-volume')}, and never inflate with liquid.`,
   },
   {
     id: 'lumen-obstruction',
@@ -509,9 +503,9 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
     waveform: 'Progressive or abrupt damping, delayed response, or absent signal.',
     causes:
       'Clot, kink, blood in the lumen, closed stopcock, distal wall contact, or catheter damage.',
-    checks:
-      'Catheter position, course, stopcocks, tubing, blood return, and institutional patency protocol.',
-    action: 'Resolve external causes and escalate suspected intraluminal or distal obstruction.',
+    checks: 'Catheter position, course, stopcocks, tubing and blood return.',
+    action:
+      'Fix external causes first. For a suspected intraluminal or distal obstruction, do not flush; get help.',
     warning:
       'Do not forcefully flush when distal occlusion, wedging, or pulmonary-artery injury is possible.',
   },
@@ -603,9 +597,13 @@ export const westZones: readonly WestZoneDefinition[] = [
 ]
 
 export const wedgeValidityModifiers: readonly string[] = [
-  'This educational model transmits 0.28 mmHg to PAWP for each 1 cmH₂O of PEEP above 5 cmH₂O (about 1.4 mmHg per 5 cmH₂O). That is a model assumption, not a bedside correction formula.',
-  'At the bedside, obtain PAWP at end expiration and interpret it with the ventilator and lung mechanics. Arithmetic PEEP correction is not universally validated; when pleural-pressure transmission materially changes the question, use additional physiology such as esophageal pressure rather than treating a fixed subtraction as truth.',
+  'This simulator transmits 0.28 mmHg to PAWP for each 1 cmH₂O of PEEP above 5 cmH₂O (about 1.4 mmHg per 5 cmH₂O): its own setting, not a bedside correction formula.',
+  'At the bedside, read PAWP at end expiration and interpret it with the ventilator settings. No fixed PEEP subtraction is validated; when transmission matters, measure it with an esophageal balloon.',
   'Positive end-expiratory pressure also raises alveolar pressure, which can convert a zone 3 position into a non-zone 3 position.',
   'A catheter tip below the level of the left atrium is the position most likely to be in zone 3.',
   'The wedge does not track left ventricular end-diastolic pressure in mitral stenosis, severe mitral or aortic regurgitation, pulmonary vascular obstruction, marked increases in PEEP, left atrial myxoma, marked left ventricular non-compliance, or a non-zone 3 tip position.',
 ]
+
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}

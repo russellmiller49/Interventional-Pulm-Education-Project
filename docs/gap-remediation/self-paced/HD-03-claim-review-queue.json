@@ -202,12 +202,12 @@
         {
           "file": "src/features/icu-hemodynamics/content/normalWaveformValidityChallenges.ts",
           "locator": "Waveform interpretation, display problem 'Overdamped measurement system', Why no chamber can be named (also practice tracing 6)",
-          "excerpt": "so systolic reads low and diastolic reads high while the mean stays relatively preserved."
+          "excerpt": "reads systolic low and diastolic high while the mean is relatively preserved."
         },
         {
           "file": "src/features/icu-hemodynamics/content/normalWaveformValidityChallenges.ts",
           "locator": "Same display problem, Repair or re-read first",
-          "excerpt": "then classify the fast-flush release before interpreting anything but the mean."
+          "excerpt": "then repeat the fast flush."
         }
       ],
       "learnerWording": "“Perform a fast flush from a confirmed, safe position and watch the release: prompt return with one or two rapidly decaying oscillations, a sluggish rounded return, or persistent ringing.” Overdamped: “systolic reads low and diastolic reads high while the mean stays relatively preserved.” Repair: “…classify the fast-flush release before interpreting anything but the mean.”",
@@ -268,12 +268,12 @@
         {
           "file": "src/features/icu-hemodynamics/content/normalWaveformValidityChallenges.ts",
           "locator": "Waveform interpretation, all seven display problems and practice tracing 6: the withheld line",
-          "excerpt": "Chamber interpretation withheld — this display cannot support one"
+          "excerpt": "The chamber cannot be named from this display"
         },
         {
           "file": "src/features/icu-hemodynamics/content/normalWaveformValidityChallenges.ts",
           "locator": "Display problem 'Transducer below the reference level', best-supported reading",
-          "excerpt": "Nothing yet. The morphology identifies the compartment, but the value carries a hydrostatic offset until the transducer is re-levelled and zeroed."
+          "excerpt": "Nothing yet: the value carries a hydrostatic offset until the transducer is re-levelled."
         },
         {
           "file": "src/features/icu-hemodynamics/components/WaveformRecognitionDrill.tsx",
@@ -334,17 +334,17 @@
         {
           "file": "src/features/icu-hemodynamics/content/derivedMetrics.ts",
           "locator": "Cardiac index teaching panel and derived workbench, boundary classified 'Simulation parameter'",
-          "excerpt": "This simulator warns below ${thresholds.cardiacIndexAlarm.lowLMinM2} L/min/m² and alarms below ${thresholds.cardiacIndexAlarm.criticalLowLMinM2} L/min/m²."
+          "excerpt": "This simulator warns below ${thresholds.cardiacIndexAlarm.lowLMinM2} L/min/m² and alarms below ${thresholds.cardiacIndexAlarm.criticalLowLMinM2} L/min/m², the two cardiogenic-shock cutoffs."
         },
         {
           "file": "src/features/icu-hemodynamics/content/derivedMetrics.ts",
           "locator": "Same boundary, where it must not travel",
-          "excerpt": "An alarm boundary this simulator uses carries no clinical authority."
+          "excerpt": "Alarm behavior inside the module."
         },
         {
           "file": "src/features/icu-hemodynamics/content/cases.ts",
           "locator": "Septic shock practice case, guided prompt (a treatment target, kept separate from alarms)",
-          "excerpt": "The initial modeled MAP target is around ${mapLowThresholdMmHg} mmHg; individualize after serial perfusion review."
+          "excerpt": "Start with a MAP target of about ${mapLowThresholdMmHg} mmHg, then individualize from serial perfusion review."
         }
       ],
       "learnerWording": "“This simulator warns below 2.2 L/min/m² and alarms below 1.8 L/min/m².” “An alarm boundary this simulator uses carries no clinical authority.” Septic shock case: “The initial modeled MAP target is around 65 mmHg; individualize after serial perfusion review.”",
@@ -595,22 +595,22 @@
         {
           "file": "src/features/icu-hemodynamics/content/pawpCaptureSequence.ts",
           "locator": "PAWP capture section, sequence step 4 'Commit'",
-          "excerpt": "Inflate only from a confirmed pulmonary-artery position, to the volume specified by the manufacturer for the catheter in use, and never with liquid."
+          "excerpt": "Inflate slowly with ${HEMODYNAMICS_NUMBERS.value('balloon-volume')} while watching the tracing, and stop as soon as it wedges. Never use liquid."
         },
         {
           "file": "src/features/icu-hemodynamics/content/pawpCaptureSequence.ts",
           "locator": "Sequence step 7 'Deflate'",
-          "excerpt": "Deflate promptly and deliberately, as a step of its own. Occlusion is brief; nothing about the value obtained is a reason to keep it inflated."
+          "excerpt": "Keep the wedge brief: just long enough to read the value at end expiration. Then let the balloon deflate passively."
         },
         {
           "file": "src/features/icu-hemodynamics/content/pawpCaptureSequence.ts",
           "locator": "Sequence step 9 'Continue?'",
-          "excerpt": "treat the signal and the catheter position as unsafe: stop, do not flush or manipulate the catheter, and escalate."
+          "excerpt": "Confirm the balloon is fully deflated, do not flush, and ${HEMODYNAMICS_NUMBERS.value('retract-distance')} until the pulmonary-artery tracing returns. If it does not, get a chest film and help."
         },
         {
           "file": "src/features/icu-hemodynamics/content/troubleshootingAtlas.ts",
           "locator": "Troubleshooting atlas, 'Spontaneous wedge', actions",
-          "excerpt": "When permitted, withdraw slowly until a clear PA waveform returns."
+          "excerpt": "at a time until a clear PA waveform returns."
         },
         {
           "file": "src/features/icu-hemodynamics/content/troubleshootingAtlas.ts",
@@ -690,17 +690,17 @@
         {
           "file": "src/features/icu-hemodynamics/content/pawpCaptureSequence.ts",
           "locator": "PAWP capture, outcome 'Atrial morphology with late a and v waves', next action",
-          "excerpt": "Read at end expiration — the end-diastolic point if you are estimating left ventricular end-diastolic pressure, the mean if that is the value you want, and not the two interchangeably."
+          "excerpt": "Read at end expiration, then deflate and confirm the pulmonary-artery waveform returns."
         },
         {
           "file": "src/features/icu-hemodynamics/content/pawpCaptureSequence.ts",
           "locator": "Sequence step 3 'Predict'",
-          "excerpt": "the mean typically sits a little below pulmonary-artery diastolic pressure"
+          "excerpt": "the mean sits a little below pulmonary-artery diastolic pressure"
         },
         {
           "file": "src/features/icu-hemodynamics/content/pawpCaptureSequence.ts",
           "locator": "Sequence step 6 'Plausible?'",
-          "excerpt": "In sinus rhythm that includes the a wave; in atrial fibrillation it does not"
+          "excerpt": "In atrial fibrillation there is no a wave"
         }
       ],
       "learnerWording": "“Read at end expiration — the end-diastolic point if you are estimating left ventricular end-diastolic pressure, the mean if that is the value you want, and not the two interchangeably.” “…the mean typically sits a little below pulmonary-artery diastolic pressure…” “In sinus rhythm that includes the a wave; in atrial fibrillation it does not…”",
@@ -763,7 +763,7 @@
         {
           "file": "src/features/icu-hemodynamics/content/derivedMetrics.ts",
           "locator": "PVR teaching panel and derived workbench, boundary classified 'Diagnostic definition'",
-          "excerpt": "contributes to the pre-capillary definition only together with mPAP above"
+          "excerpt": "Pre-capillary pulmonary hypertension: PVR above"
         },
         {
           "file": "src/features/icu-hemodynamics/content/cases.ts",

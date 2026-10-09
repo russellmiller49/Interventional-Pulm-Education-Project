@@ -87,7 +87,7 @@ describe('activity-specific presentation replaces permanent panes', () => {
     mountSection('pressure-system')
     advanceToPrediction('pressure-system')
     expect(document.querySelector('[data-dock]')).toBeNull()
-    commitChoice(/off level, not zeroed, and underdamped/)
+    commitChoice(/off level, not zeroed and underdamped/i)
     clickPrimary()
     expect(document.querySelector('[data-dock="line"]')).not.toBeNull()
     fireEvent.click(document.querySelector('[data-now-back]')!)
@@ -101,7 +101,7 @@ describe('the card keeps the promise the step makes', () => {
   it('shows the verdict again when the learner looks back at the prediction', () => {
     const { lesson } = mountSection('pressure-system')
     advanceToPrediction('pressure-system')
-    commitChoice(/off level, not zeroed, and underdamped/)
+    commitChoice(/off level, not zeroed and underdamped/i)
     clickPrimary()
     fireEvent.click(document.querySelector('[data-now-back]')!)
     expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex].id)
@@ -113,7 +113,7 @@ describe('the card keeps the promise the step makes', () => {
   it('renders the reasoning on the Explain step, other answers included', () => {
     const { lesson } = mountSection('why-measure')
     clickPrimary()
-    commitChoice(/arterial pressure is low at the measurement site/)
+    commitChoice(/pressure is low at this site; the output and the cause are still unknown/)
     clickPrimary()
     clickPrimary() // worked classification
     // The sort is the Act step; its commitment is exercised elsewhere. Reach Explain the honest way.
@@ -155,7 +155,7 @@ describe('the verdict is framed for the kind of item it heads', () => {
 
     mountSection('pressure-system')
     advanceToPrediction('pressure-system')
-    commitChoice(/off level, not zeroed, and underdamped/)
+    commitChoice(/off level, not zeroed and underdamped/i)
     expect(document.querySelector('[data-now-card] [data-answer-verdict] p')?.textContent).toBe(
       'Correct. That read holds',
     )
@@ -191,7 +191,10 @@ describe('one place, one number', () => {
   it('numbers the walk card by the map, and says the walk position in words', () => {
     mountSection('pressure-system')
     const card = document.querySelector('[data-walk-stop="line"]')
-    expect(card?.querySelector('p')?.textContent).toBe(`Stop ${routeStopNumber('line')} · The line`)
+    // The card names its number as the map's (HD-PRE-REVIEW-03, report L3-05).
+    expect(card?.querySelector('p')?.textContent).toBe(
+      `Map stop ${routeStopNumber('line')} · The line`,
+    )
     expect(routeStopNumber('line')).toBe(1)
     const legendRow = [...document.querySelectorAll('[aria-label="The five stops"] li')].find(
       (row) => /The line/.test(row.textContent ?? ''),
@@ -211,7 +214,7 @@ describe('one place, one number', () => {
     stops.forEach((stopId, index) => {
       const card = document.querySelector(`[data-walk-stop="${stopId}"]`)
       expect(card?.querySelector('p')?.textContent).toBe(
-        `Stop ${routeStopNumber(stopId)} · ${routeStop(stopId).title}`,
+        `Map stop ${routeStopNumber(stopId)} · ${routeStop(stopId).title}`,
       )
       const legendRow = [...document.querySelectorAll('[aria-label="The five stops"] li')].find(
         (row) => row.textContent?.endsWith(routeStop(stopId).title),

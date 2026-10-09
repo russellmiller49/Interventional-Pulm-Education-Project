@@ -50,6 +50,7 @@ import {
   ICU_HEMODYNAMICS_RELEASE_STAGE,
 } from '../content/release'
 import { hemodynamicsSectionIds, type HemodynamicsSectionId } from '../content/sectionSpecs'
+import { HEMODYNAMICS_NUMBERS } from '../content/teachingNumbers'
 
 /**
  * H2/H3 — one canonical normal reference, and PAC work that reasons about safety continuously.
@@ -237,12 +238,16 @@ describe('H2 canonical normal waveform reference', () => {
       const figure = screen.getByRole('img', { name: /Displayed axis: 0 to/i })
       // The figure's own description is the state's text equivalent, so the graphic and its
       // alternative cannot describe different axes or different chambers. Any geometric clipping
-      // notice is appended verbatim, preserving the complete canonical description.
+      // notice is the visible paragraph beneath the figure and is tied to the image as its
+      // description (HD-PRE-REVIEW-03), so the complete canonical description is still the name
+      // and the notice is still announced with it — once, rather than in the name and again below.
       const rangeNotice = figure.closest('figure')?.querySelector('[data-waveform-range-note]')
-      expect(figure.getAttribute('aria-label')).toBe(
-        normalWaveformReferenceTextEquivalent(entry) +
-          (rangeNotice ? ` ${rangeNotice.textContent}` : ''),
-      )
+      expect(figure.getAttribute('aria-label')).toBe(normalWaveformReferenceTextEquivalent(entry))
+      if (rangeNotice) {
+        expect(figure).toHaveAccessibleDescription(rangeNotice.textContent ?? '')
+      } else {
+        expect(figure).not.toHaveAttribute('aria-describedby')
+      }
       expect(figure.getAttribute('aria-label')).toContain(
         `0 to ${NORMAL_WAVEFORM_SHARED_SCALE_MAX_MMHG} mmHg`,
       )
@@ -310,18 +315,22 @@ describe('H2 canonical normal waveform reference', () => {
     }
   })
 
-  it('states no balloon volume and no inflation-time limit anywhere it added copy', () => {
-    const volume = /\b\d+(\.\d+)?\s*(ml\b|millilit|cc\b)/i
+  it('teaches the balloon volume from the numbers register, and names no inflation time in seconds', () => {
+    // No source gives a limit in seconds, so none is taught.
     const inflationDuration =
       /\b(inflat|occlu|wedge|balloon)[^.]{0,80}\b\d+(\.\d+)?\s*(second|sec\b|s\b|minute)/i
     for (const text of newLearnerCopy()) {
-      expect(text).not.toMatch(volume)
       expect(text).not.toMatch(inflationDuration)
     }
-    // The boundary is stated instead of the number, and it names where the number comes from.
-    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).toMatch(/manufacturer/i)
-    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).toMatch(/local procedure protocol/i)
-    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).toMatch(/not a clinical limit/i)
+    // The volume is taught, and it is the register's value wherever it appears.
+    const balloonVolume = HEMODYNAMICS_NUMBERS.value('balloon-volume')
+    expect(balloonVolume).toMatch(/\d+(\.\d+)?\s*mL/)
+    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).toContain(balloonVolume)
+    expect(pawpCaptureSteps.find((step) => step.id === 'commit')!.whatYouDo).toContain(
+      balloonVolume,
+    )
+    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).toMatch(/keep each inflation brief/i)
+    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).toMatch(/simulator releases the balloon itself/i)
   })
 
   it('puts the normal reference before advancement in the learner experience', () => {
@@ -487,13 +496,18 @@ describe('H3 advancement reasons about safety continuously', () => {
     }
   })
 
-  it('teaches recognition and escalation for resistance rather than a threshold or a management algorithm', () => {
+  it('teaches the first move for resistance: never push, deflate, withdraw and try again', () => {
     const resistance = pacAdvancementScenarios.find((scenario) => scenario.id === 'rv-resistance')
     expect(resistance).toBeDefined()
-    expect(resistance!.unsourcedBoundary).toMatch(/how much is too much/i)
-    expect(resistance!.unsourcedBoundary).toMatch(/knotting/i)
-    expect(resistance!.unsourcedBoundary).toMatch(/not a source-derived rule/i)
+    expect(advancementMayContinue(resistance!)).toBe(false)
+    // The keyed choice keeps its id; its label is now the first move rather than "escalate".
     expect(resistance!.commitment.correctChoiceIds).toEqual(['escalate'])
+    const best = resistance!.commitment.choices.find((choice) => choice.id === 'escalate')!
+    expect(best.plausibility).toBe('best')
+    expect(best.label).toMatch(/deflate, withdraw to where the catheter moved freely/i)
+    expect(resistance!.commitment.explanation).toMatch(/never push against resistance/i)
+    expect(resistance!.commitment.explanation).toMatch(/repeated failure means fluoroscopy/i)
+    expect(resistance!.justification).toMatch(/against resistance is not safe/i)
   })
 
   it('says in words that a matching waveform changes nothing when something says stop', () => {
@@ -509,12 +523,21 @@ describe('H3 advancement reasons about safety continuously', () => {
     expect(pacAdvancementStopReasonLabels['rhythm-concern']).toMatch(/rhythm needs attention/i)
     expect(advancementMayContinue(scenario!)).toBe(false)
 
-    // And the words the learner reads after committing say exactly that.
-    expect(scenario!.justification).toMatch(
-      /Continuing is not safe\. A stop condition outranks a matching waveform every time/i,
+    // And the words the learner reads after committing say why, and what to do with their hands.
+    expect(scenario!.justification).toMatch(/confirms where the tip is/i)
+    expect(scenario!.justification).toMatch(/also the reason for the ectopy/i)
+    expect(scenario!.commitment.explanation).toContain(
+      HEMODYNAMICS_NUMBERS.value('flotation-ectopy'),
     )
-    expect(scenario!.commitment.explanation).toMatch(/confirms which chamber the tip is in/i)
+    expect(scenario!.commitment.explanation).toMatch(/get the tip out of the ventricle/i)
+    // The keyed choice keeps its id; its label is the first move.
     expect(scenario!.commitment.correctChoiceIds).toEqual(['escalate'])
+    const best = scenario!.commitment.choices.find((choice) => choice.id === 'escalate')!
+    expect(best.label).toMatch(/do not sit in the ventricle/i)
+    // Carrying on at the same pace because the tracing matches is still the unsafe choice.
+    expect(
+      scenario!.commitment.choices.find((choice) => choice.id === 'advance')?.plausibility,
+    ).toBe('unsafe')
   })
 })
 
@@ -542,7 +565,9 @@ describe('H3 PAWP acquisition closes its safety loop', () => {
   it('refuses to let a wedge-like shape alone establish a valid PAWP', () => {
     const best = pawpPlausibilityCommitment.choices.find((choice) => choice.plausibility === 'best')
     expect(pawpPlausibilityCommitment.correctChoiceIds).toEqual([best!.id])
-    expect(best!.label).toMatch(/reconciled with the signal validity/i)
+    expect(best!.label).toMatch(/wave timing against the ECG/i)
+    expect(best!.label).toMatch(/end-expiratory reading/i)
+    expect(best!.label).toMatch(/PA return on deflation/i)
 
     const shapeIsEnough = pawpPlausibilityCommitment.choices.find(
       (choice) => choice.id === 'shape-establishes-wedge',
@@ -554,15 +579,24 @@ describe('H3 PAWP acquisition closes its safety loop', () => {
       2,
     )
     const wedgeEntry = normalWaveformReference.find((entry) => entry.position === 'wedge')
-    expect(wedgeEntry?.cannotEstablish).toMatch(/does not establish a valid PAWP/i)
+    expect(wedgeEntry?.unsafeToInterpret).toMatch(/do not accept a wedge on shape alone/i)
+    expect(wedgeEntry?.cannotEstablish).toMatch(/a valid wedge also needs/i)
   })
 
   it('never permits continuation from a state where the PA waveform did not return', () => {
     const missing = pawpRecoveryOutcomes.find((outcome) => !outcome.paWaveformReturned)
     expect(missing).toBeDefined()
     expect(missing!.continuationPermitted).toBe(false)
-    expect(missing!.requiredResponse).toMatch(/escalate/i)
+    // The response is the first move, with the register's distance, and then help.
+    expect(missing!.requiredResponse).toMatch(/do not flush/i)
+    expect(missing!.requiredResponse).toContain(HEMODYNAMICS_NUMBERS.value('retract-distance'))
+    expect(missing!.requiredResponse).toMatch(/get a chest film and help/i)
     expect(pawpRecoveryCommitment.correctChoiceIds).toEqual(['treat-as-unsafe-and-escalate'])
+    const keyed = pawpRecoveryCommitment.choices.find(
+      (choice) => choice.id === 'treat-as-unsafe-and-escalate',
+    )!
+    expect(keyed.plausibility).toBe('best')
+    expect(keyed.label).toContain(HEMODYNAMICS_NUMBERS.value('retract-distance'))
   })
 })
 
@@ -603,7 +637,10 @@ describe('H2/H3 non-regression', () => {
 
   it('keeps raw catheter-position and plausibility enums out of the copy it added', () => {
     for (const text of newLearnerCopy()) {
-      expect(text).not.toMatch(/\b(introducer|ra|rv|pa|wedge)\s*[:=]\s*/i)
+      // An enum printed as a key ("pa = …", "wedge: …" at the head of a string or after a list
+      // separator). Prose such as "that is a spontaneous wedge: withdraw" is not one.
+      expect(text).not.toMatch(/\b(introducer|ra|rv|pa|wedge)\s*=/i)
+      expect(text).not.toMatch(/(^|[,;{(]\s*)(introducer|ra|rv|pa|wedge)\s*:/i)
       expect(text).not.toMatch(/reasonable-but-incomplete|incorrect-mechanism|sme-review/i)
       expect(text).not.toMatch(/signal-invalid|position-depth-mismatch|rhythm-concern/i)
     }
@@ -632,38 +669,38 @@ describe('clinical-copy corrections', () => {
 
   it('treats an unexpected PAWP/PADP relationship as something to reconcile, not as a verdict', () => {
     const overWedged = pawpOcclusionOutcomes.find((outcome) => outcome.id === 'over-wedged')!
-    // The relationship is named, and named as insufficient on its own.
-    expect(overWedged.verdict).toMatch(/above pulmonary-artery diastolic pressure/i)
-    expect(overWedged.verdict).toMatch(/on its own it does not establish over-wedging/i)
-    // What actually identifies it is the drift plus the loss of interpretable wave components.
-    expect(overWedged.verdict).toMatch(
-      /upward drift and the loss of interpretable wave components/i,
+    // The relationship is named as frequent, not as the finding that settles it.
+    expect(overWedged.whatYouSee).toMatch(/often above pulmonary-artery diastolic pressure/i)
+    // What actually identifies it is the climb plus the loss of the waves.
+    expect(overWedged.whatYouSee).toMatch(/no a or v waves that climbs over seconds/i)
+    expect(overWedged.verdict).toMatch(/not an occlusion pressure/i)
+    const overWedgedDistortion = wedgeEntry().technicalDistortions.find(
+      (distortion) => distortion.label === 'Over-wedged',
+    )!
+    expect(overWedgedDistortion.whatItMimics).toMatch(
+      /reconcile the two readings rather than a finding that settles the matter on its own/i,
     )
 
     const pressureOnlyChoice = pawpPlausibilityCommitment.choices.find(
       (choice) => choice.id === 'shape-plus-value-enough',
     )!
     expect(pressureOnlyChoice.plausibility).not.toBe('best')
-    expect(pressureOnlyChoice.rationale).toMatch(/not decisive in either direction/i)
+    expect(pressureOnlyChoice.rationale).toMatch(/a useful comparison, not a decisive one/i)
 
     expect(overWedgeAtlas().recognitionCues.join(' ')).toMatch(
-      /on its own it does not establish over-wedging/i,
+      /a large v wave can do the same to a true wedge mean, so look for the waves/i,
     )
     expect(wedgeEntry().unsafeToInterpret).toMatch(
-      /pressure relationship alone does not establish over-wedging/i,
+      /large v wave can raise the displayed mean above pulmonary-artery diastolic pressure in a true wedge/i,
     )
   })
 
   it('distinguishes mean PAWP from end-diastolic PAWP wherever LVEDP is estimated', () => {
-    expect(wedgeEntry().pressureDirection).toMatch(
-      /displayed mean and that end-diastolic value are different measurements and are not interchangeable/i,
-    )
+    expect(wedgeEntry().pressureDirection).toMatch(/the displayed mean is a different measurement/i)
     const aWave = wedgeAtlas().annotations.find((annotation) => annotation.id === 'a')!
     expect(aWave.description).toMatch(/that end-diastolic value is not the displayed mean/i)
     // And the reason the two diverge is named where over-wedging is discussed.
-    expect(wedgeEntry().unsafeToInterpret).toMatch(
-      /large v wave can raise the displayed mean without the end-diastolic value moving with it/i,
-    )
+    expect(wedgeEntry().unsafeToInterpret).toMatch(/large v wave can raise the displayed mean/i)
   })
 
   it('reads end-diastolic PAWP just before the c wave rather than at the peak of the a wave', () => {
@@ -677,9 +714,11 @@ describe('clinical-copy corrections', () => {
       /average the peak and the trough of this a wave|average the peak and the trough/i,
     )
     expect(wedgeEntry().pressureDirection).toMatch(/just before the c wave/i)
-    expect(wedgeEntry().pressureDirection).toMatch(/average the peak and the trough of the a wave/i)
-    // The averaging fallback is scoped to sinus rhythm, where an a wave exists at all.
-    expect(wedgeEntry().pressureDirection).toMatch(/in sinus rhythm/i)
+    expect(wedgeEntry().pressureDirection).toMatch(/average the peak and trough of the a wave/i)
+    // The averaging fallback is scoped to sinus rhythm, where an a wave exists at all: on the
+    // annotation itself, and for the reference as a whole by its stated assumption.
+    expect(aWave.description).toMatch(/in sinus rhythm average the peak and the trough/i)
+    expect(NORMAL_WAVEFORM_RHYTHM_CONTEXT.assumption).toMatch(/assumes sinus rhythm/i)
   })
 
   it('states on the reference itself that it assumes sinus rhythm', () => {
@@ -699,7 +738,9 @@ describe('clinical-copy corrections', () => {
     expect(wedgeEntry().unsafeToInterpret).toMatch(
       /does not invalidate|by itself does not invalidate|that by itself does not invalidate/i,
     )
-    expect(wedgeEntry().unsafeToInterpret).toMatch(/remaining ECG and pressure landmarks/i)
+    expect(NORMAL_WAVEFORM_RHYTHM_CONTEXT.atrialFibrillation).toMatch(
+      /remaining ECG and pressure landmarks/i,
+    )
     // v > a is a typical feature, not a validity requirement.
     expect(wedgeEntry().expectedMorphology).toMatch(/typically larger than the a wave/i)
     expect(wedgeEntry().expectedMorphology).toMatch(/typical normal feature, not a requirement/i)
@@ -727,32 +768,42 @@ describe('clinical-copy corrections', () => {
     }
     // The climb is offered as possible, and read alongside the rest of the transition.
     expect(rv.expectedMorphology).toMatch(/may climb gradually/i)
-    expect(rv.expectedChangeFromPrevious).toMatch(/whole transition rather than any one feature/i)
+    expect(rv.expectedChangeFromPrevious).toMatch(/may climb as the ventricle fills/i)
     expect(rv.expectedChangeFromPrevious).toMatch(
-      /read together with the rest of the transition|rather than required on its own/i,
+      /no diastolic step-up, no runoff and no dicrotic notch/i,
     )
+    expect(
+      waveformAtlasById
+        .get('rv-normal')!
+        .annotations.map((annotation) => annotation.description)
+        .join(' '),
+    ).toMatch(/read it together with the rest of the transition/i)
     // And the pulmonary-artery side is what the discrimination actually rests on.
-    expect(rv.unsafeToInterpret).toMatch(
-      /diastolic step-up, a downward runoff, and a dicrotic notch/i,
-    )
+    expect(rv.unsafeToInterpret).toMatch(/the diastolic step-up, the runoff and the notch do/i)
     expect(waveformAtlasById.get('rv-normal')!.summary).toMatch(/may climb gradually/i)
   })
 
-  it('introduces no universal balloon volume or inflation duration, and says why', () => {
-    const volume = /\b\d+(\.\d+)?\s*(ml\b|millilit|cc\b)/i
+  it('names no inflation duration in seconds, and teaches the volume and the over-wedge sign', () => {
     const duration =
       /\b(inflat|occlu|wedge|balloon)[^.]{0,80}\b\d+(\.\d+)?\s*(second|sec\b|s\b|minute)/i
     for (const text of correctedClinicalCopy()) {
-      expect(text).not.toMatch(volume)
       expect(text).not.toMatch(duration)
     }
-    // The boundary is framed as scope, not as an absence of sources.
-    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).toMatch(
-      /does not teach a universal inflation volume or duration/i,
-    )
-    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).toMatch(/exact catheter in use/i)
-    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).toMatch(/applicable local procedure protocol/i)
-    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).toMatch(/educational safety rail, not a clinical limit/i)
+    // Every millilitre figure in this copy is one of the two register rows, never a typed number.
+    const taught = [
+      HEMODYNAMICS_NUMBERS.value('balloon-volume'),
+      HEMODYNAMICS_NUMBERS.value('overwedge-volume'),
+    ]
+    const withVolume = correctedClinicalCopy().filter((text) => /\d\s*mL\b/.test(text))
+    expect(withVolume.length).toBeGreaterThan(0)
+    for (const text of withVolume) {
+      expect({
+        text,
+        fromRegister: taught.some((value) => text.toLowerCase().includes(value.toLowerCase())),
+      }).toEqual({ text, fromRegister: true })
+    }
+    expect(PAWP_BALLOON_NUMBERS_BOUNDARY).toContain(taught[0])
+    expect(PAWP_BALLOON_NUMBERS_BOUNDARY.toLowerCase()).toContain(taught[1].toLowerCase())
     expect(PAWP_BALLOON_NUMBERS_BOUNDARY).not.toMatch(/no reviewed source/i)
   })
 
