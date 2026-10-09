@@ -25,7 +25,7 @@ owner decides later whether to pull any module before the first invitation.
 
 | Topic                          | Decision                                                                                                                                                          |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Bar for outside reviewers      | Prompt 06 with no technical blockers, every remaining hold labelled in the module and listed in a tester note, fact-level items decided, owner walkthrough done.  |
+| Bar for outside reviewers      | Prompt 06 with no technical blockers, every remaining hold listed in a tester note, fact-level items decided, owner walkthrough done.                             |
 | Rollout                        | Staged: each module is marked ready as it clears. Nothing is hidden.                                                                                              |
 | First reviewers                | Fellows. Their round is feedback only; it does not sign off the PI-02 or BF-03 usability plans or the human gates in `docs/critical-care/testing-and-release.md`. |
 | Hub modules with no pack       | One light readiness pass each.                                                                                                                                    |
@@ -43,9 +43,11 @@ owner decides later whether to pull any module before the first invitation.
 2. Prompt 06 has run once on a recorded `main` SHA, in a fresh session that did not implement the
    module, with zero technical blockers — or one consolidated repair has merged and that scope was
    re-tested. Modules with no pack: the light readiness pass instead.
-3. Every remaining clinical, model, device or source hold is labelled where the learner meets it
-   and listed in the module's tester note. An unlabelled hold blocks marking the module ready even
-   though it is not an acceptance blocker.
+3. Every remaining clinical, model, device or source hold is listed in the module's tester note.
+   A label inside the module is required only where a learner could take a wrong clinical action
+   because of the hold. Review status is never shown to learners (owner direction 2026-10-08,
+   `docs/teaching-first-rules.md`). A hold missing from the tester note blocks marking the module
+   ready.
 4. The owner has decided that module's fact-level items (section 9) and walked it.
 
 **Before anyone is invited to it**
@@ -276,7 +278,7 @@ One addendum applies to every acceptance, written into the report itself:
 5. The tester note (what the module is, minutes, what to look for, known limits), the owner's walk
    list, and any fact-level contradiction found.
 
-After acceptance, one batch per module covers blockers, unlabelled holds and the owner's decisions,
+After acceptance, one batch per module covers blockers, holds missing from the tester note and the owner's decisions,
 followed by a re-test of that scope only.
 
 ## 8. Marking a module ready, and the live check

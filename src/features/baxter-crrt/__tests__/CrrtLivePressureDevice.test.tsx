@@ -2,8 +2,6 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 
-import { assertNoUniversalTargetLanguage } from '@/features/critical-care/test-support/teachingPanelContract'
-
 import { CrrtLivePressureDevice } from '../components/CrrtLivePressureDevice'
 import { CrrtPilotCircuit } from '../components/CrrtPilotCircuit'
 import { crrtPressureSignalIds, type CrrtPressureSignalId } from '../content/circuitModel'
@@ -70,7 +68,6 @@ describe('live pressure profile — direct sites versus calculated relationships
   it('supplies no target, normal range, or alarm threshold', () => {
     const { container } = renderProfile(runningState())
     const text = container.textContent ?? ''
-    assertNoUniversalTargetLanguage(text)
     // The only mention of a normal range is the sentence refusing to give one.
     expect(text).toMatch(/supplies no target, no normal range, and no alarm setting/i)
     expect(text.match(/normal range/gi)).toHaveLength(1)

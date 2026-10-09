@@ -38,7 +38,7 @@ Legacy attempts and scores remain read-only and unchanged. Do not delete, overwr
 
 ## Clinical, source, and media boundaries
 
-Preserve engines, module-specific flows, assets, anatomical correspondence, source/model limitations, and numerical teaching. New clinical claims, source identities, dates, media rights, or review approvals must not be invented. Clinically meaningful changes remain pending attributable faculty/source review.
+Preserve engines, module-specific flows, assets, anatomical correspondence, source/model limitations, and numerical teaching. Source identities, dates, media rights, or review approvals must not be invented. A guideline-, consensus- or device-class number may be added with its source, year, grade and locator in the module's numbers register; it renders as ordinary teaching and goes onto the owner's weekly sign-off list (`docs/teaching-first-rules.md`, owner direction 2026-10-08, which supersedes the earlier rule that clinically meaningful changes stay pending review).
 
 The reported MV-03 causal issue remains a priority independent of navigation infrastructure. Removing a score does not resolve misleading cause-and-effect teaching. Investigate the case under **prompt MV-01** with matched controls; **prompt MV-03** is the later question/source slice. Any unresolved misleading example needs a narrow exclusion in that implementation slice, not a disclaimer alone.
 

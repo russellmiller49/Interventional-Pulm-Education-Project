@@ -1,6 +1,5 @@
 import { render } from '@testing-library/react'
 
-import { assertNoUniversalTargetLanguage } from '@/features/critical-care/test-support/teachingPanelContract'
 import { allCriticalCareDerivedValueGuides } from '@/features/critical-care/content/derivedValueGuides'
 
 import { EcmoFoundationTeachingPanel } from '../components/teaching/EcmoFoundationTeachingPanel'
@@ -199,7 +198,6 @@ describe('VA foundation teaching panels', () => {
       ).toBeInTheDocument()
       expect(container.querySelector('[data-text-equivalent]')).toBeInTheDocument()
       expect(container.querySelector('[data-model-boundary]')).toBeInTheDocument()
-      assertNoUniversalTargetLanguage(container.textContent ?? '')
       for (const node of container.querySelectorAll('[data-derived-value]')) {
         expect(authoredIds).toContain(node.getAttribute('data-derived-value') ?? '')
       }
@@ -360,7 +358,6 @@ describe('foundation teaching panels', () => {
       // Every figure carries a textual equivalent and names what it simplifies.
       expect(container.querySelector('[data-text-equivalent]')).toBeInTheDocument()
       expect(container.querySelector('[data-model-boundary]')).toBeInTheDocument()
-      assertNoUniversalTargetLanguage(container.textContent ?? '')
       unmount()
     }
   })
