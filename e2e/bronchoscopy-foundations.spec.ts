@@ -357,25 +357,30 @@ for (const viewport of [
       page.on('pageerror', (error) => errors.push(error.message))
       const lesson = await openSection(page, 'five-controls')
 
-      await expect(page.getByRole('heading', { name: 'What each hand does' })).toBeVisible()
-      await expect(page.locator('[data-prediction-choices]')).toHaveCount(0)
-      await page.screenshot({ path: info.outputPath('01-before-answer-teaching.png') })
-
-      await expect(page.locator('[data-instrument-orientation]')).toBeVisible()
-      await page.getByRole('button', { name: 'Steering and suction', exact: true }).click()
-      await page.screenshot({ path: info.outputPath('02-instrument.png') })
-      await pilotContinue(page)
-      for (const step of lesson.steps.slice(1)) {
+      // The section opens on its hook and its prediction; the bench units follow in the flow's order.
+      await expect(page.locator('[data-teaching-block="hook"]')).toBeVisible()
+      for (const step of lesson.steps) {
         await expect(stage(page)).toHaveAttribute('data-stage', step.id)
+        if (step.learn?.id === 'instrument') {
+          await expect(page.getByRole('heading', { name: 'What each hand does' })).toBeVisible()
+          await expect(page.locator('[data-prediction-choices]')).toHaveCount(0)
+          await expect(page.locator('[data-extended-technique]')).toHaveCount(0)
+          await page.screenshot({ path: info.outputPath('01-before-answer-teaching.png') })
+          await expect(page.locator('[data-instrument-orientation]')).toBeVisible()
+          await page.getByRole('button', { name: 'Steering and suction', exact: true }).click()
+          await page.screenshot({ path: info.outputPath('02-instrument.png') })
+        }
         if (step.interaction.kind === 'prediction') {
           const item = step.interaction.stage.item
-          // Current teaching has no example-specific answer; key/rationales are not rendered.
-          const teachingText = await page.locator('[data-pilot-teaching]').textContent()
-          for (const denied of lesson.section.precommitDenyPatterns)
-            expect(teachingText).not.toMatch(denied)
+          // The teaching beside an open question carries no phrase that gives its answer away.
+          const teachingText = (await page.locator('[data-stage]').textContent()) ?? ''
+          if (step.interaction.round === 0)
+            for (const denied of lesson.section.precommitDenyPatterns)
+              expect(teachingText).not.toMatch(denied)
           await expect(skip(page)).toHaveText('Continue without answering')
           const wrong = item.choices.find(
-            (choice) => !item.correctChoiceIds.includes(choice.id),
+            (choice) =>
+              !item.correctChoiceIds.includes(choice.id) && choice.plausibility !== 'unsafe',
           )!.id
           await page.locator('[data-prediction-choices] input[value="' + wrong + '"]').check()
           await primary(page).click()
@@ -533,7 +538,14 @@ test('the pilot retains working controls and a text equivalent when WebGL is una
     })
   })
   await openSection(page, 'five-controls')
-  await pilotContinue(page)
+  // Past the hook, the prediction and the two reading screens, to the first bench task.
+  for (let guard = 0; guard < 8; guard += 1) {
+    const current = await stage(page).getAttribute('data-stage')
+    if (current === 'five-controls-learn-depth') break
+    if (await skip(page).count()) await skip(page).click()
+    else await pilotContinue(page)
+    await expect(stage(page)).not.toHaveAttribute('data-stage', current!)
+  }
   await pilotAction(page, 'Try with guidance')
   await page.getByRole('button', { name: 'Use the schematic view', exact: true }).click()
   const schematic = page.getByRole('img', { name: /^Schematic scope view/ })

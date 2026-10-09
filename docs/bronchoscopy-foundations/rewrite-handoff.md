@@ -17,6 +17,7 @@ supervisor" answers.
 | ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
 | #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
+| #362 | `claude/bf-rewrite-s04`            | Draft, stacked on #360. Section 4, driving the scope, rewritten.                                                  |
 | #360 | `claude/bf-rewrite-s03`            | Draft, stacked on #359. Section 3, sedation and monitoring, rewritten; `shared-airway` retired.                   |
 | #359 | `claude/bf-rewrite-s02`            | Draft, stacked on #358. Section 2, the scope and the setup, rewritten.                                            |
 | #358 | `claude/bf-rewrite-s01`            | Draft, stacked on #355. Section 1, the procedure and the plan, rewritten.                                         |
@@ -90,11 +91,31 @@ sections no longer wait for sessions with the pilot.
    its tests to the absorber. `honest-report` sits late for now because its prerequisites do;
    it goes when `describe-findings` is rewritten. `what-completion-means` goes with the hub and
    closing screen (item 6).
-5. **Sections rewritten so far:** the right lung, bleeding, and sections 1 to 3
-   (`clinical-question`, `pre-use-check`, `sedation-and-monitoring`), all 2026-10-08. Ten remain;
-   section 4 (`five-controls`) is next, and it retires `branch-entry` and takes the stance and
-   image-orientation teaching from `reference-frames`. The course now lists 22 sections.
-   Notes from section 3:
+5. **Sections rewritten so far:** the right lung, bleeding, and sections 1 to 4
+   (`clinical-question`, `pre-use-check`, `sedation-and-monitoring`, `five-controls`), all
+   2026-10-08. Nine remain; section 5 (`larynx-and-entry`) is next, and it retires
+   `branch-entry`. The course lists 22 sections.
+   Notes from section 4:
+   - `branch-entry` is NOT retired yet. Its technique teaching is in section 4 now (the block
+     `in-the-airway`). Its airway tasks (enter each main bronchus and come back; hold the view)
+     belong to section 5 by the plan, so retire it there. About a dozen Jest files and six e2e
+     cases use it; the digest in the section 4 PR lists them.
+   - How section 4 is built: `content/fiveControlsBench.ts` holds each bench task's view and
+     goals; the section names them as `act` and `moreActs`; `fiveControlsLearn.ts` turns each
+     into a unit that shows one section block and adds the demonstration, the cue and the
+     line shown when the goal is met; `stageLessons.ts` lays the units out in the order of
+     `COURSE_FLOWS['five-controls']`. A unit keeps its step id (`five-controls-learn-<id>`).
+   - "One guided pass, then the assists turn off" is the guided unit followed by its repeat with
+     no demonstration and no cue. The engine was not changed.
+   - Three notes are hidden for rewritten sections through props: the collapsed "Technique
+     reference" and "More on technique and model limits" panels, "Teaching adaptation; review
+     pending", and the bench's "not a physical-skills assessment" line. The instrument picture's
+     caption drops "review pending" too, which also tidies section 2.
+   - Lesson version for `five-controls` is 3.
+   - For Russell to confirm: "If you face the patient instead, left and right swap on the
+     screen" (no source text states it; the brief asks for it); left hand on the control
+     section as the default grip; "push the lever down and the tip bends up".
+     Notes from section 3:
    - `shared-airway` is retired. Its objectives M01-O2 to O4 are homed in section 3 and M01-O1 in
      section 1; M01-O5 (scope history) is cut and listed in `RETIRED_OBJECTIVE_REASONS`.
    - The tests that used `shared-airway` as their fixture now use `what-completion-means`

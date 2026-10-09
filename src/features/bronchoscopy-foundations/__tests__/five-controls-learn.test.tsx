@@ -74,14 +74,27 @@ afterEach(() => {
 })
 const selfPaced = () =>
   parseBronchSelfPacedRecord(localStorage.getItem(BRONCH_SELF_PACED_STORAGE_KEY))!
+/** Where a bench unit sits in the lesson: the flow sets the order, the unit keeps its identity. */
+const unitIndex = (lesson: ReturnType<typeof bronchStageLesson>, id: string) => {
+  const index = lesson.steps.findIndex((step) => step.learn?.id === id)
+  if (index < 0) throw new Error(`no bench unit ${id}`)
+  return index
+}
 
-test('orientation and depth teaching precede answers; demonstrations do not count as the learner’s work', async () => {
+test('the grip and depth are taught in view, and a demonstration does not count as the learner’s work', async () => {
   const { lesson } = await mountSection('five-controls')
+  // The section opens on its hook and its prediction, then teaches the grip and the stance.
+  expect(lesson.steps[0].course?.anchor).toBe(true)
+  await performFiveControlsLearn(lesson, unitIndex(lesson, 'instrument'))
   expect(screen.getByRole('heading', { name: 'What each hand does' })).toBeVisible()
+  expect(document.querySelector('[data-extended-technique]')).toBeNull()
   expect(screen.getByRole('img', { name: /Flexible bronchoscope:/ })).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: 'Steering and suction' }))
   expect(screen.getByRole('img', { name: /Angulation lever, suction control/ })).toBeVisible()
   expect(document.querySelector('[data-prediction-choices]')).toBeNull()
+  clickPrimary()
+  await settle()
+  expect(screen.getAllByRole('heading', { name: 'Where you stand' })[0]).toBeVisible()
   clickPrimary()
   await settle()
   expect(screen.getByRole('heading', { name: 'Depth changes the distance' })).toBeVisible()
@@ -104,7 +117,7 @@ test('orientation and depth teaching precede answers; demonstrations do not coun
   fireEvent.click(control('withdraw'))
   fireEvent.click(control('withdraw'))
   expect(goalStates()).toEqual(['true'])
-  expect(currentStepId()).toBe(lesson.steps[1].id) // feedback never auto-advances
+  expect(currentStepId()).toBe(lesson.steps[unitIndex(lesson, 'depth')].id) // feedback never auto-advances
   clickPrimary()
   await settle()
   expect(document.querySelector('[data-pilot-cue]')).toBeNull()
@@ -136,7 +149,8 @@ test('the complete pilot keeps feedback in the session, allows retry and ends wi
   commitById(keyedChoiceId(check))
   clickPrimary()
   await settle()
-  for (const step of lesson.steps.slice(lesson.predictionStepIndex + 1, -1))
+  const changed = unitIndex(lesson, 'transfer')
+  for (const step of lesson.steps.slice(lesson.predictionStepIndex + 1, changed))
     await performPilotStep(step)
   expect(document.querySelector('[data-pilot-cue]')).toBeNull()
   expect(document.querySelector('[data-demonstration-caption]')).toBeNull()
@@ -145,13 +159,14 @@ test('the complete pilot keeps feedback in the session, allows retry and ends wi
   expect(nowStatus()).toContain('advanced before centering')
   expect(nowPrimary()).toBeDisabled()
   fireEvent.click(pilotButton('Reset this attempt'))
-  await performPilotStep(lesson.steps.at(-1)!) // no rotation needed for the changed target
+  await performPilotStep(lesson.steps[changed]) // no rotation needed for the changed target
+  // The check on a new opening and the closing checklist follow the last bench task.
+  for (const step of lesson.steps.slice(changed + 1)) await performPilotStep(step)
   expect(selfPaced().reviewedSectionIds).toEqual(['five-controls'])
   expect(document.querySelector('[data-next-section]')).toHaveAttribute(
     'data-next-section',
     'branch-entry',
   )
-  expect(controlsFieldset()).toBeDisabled()
   expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
   cleanup()
   await mountSection('five-controls')
@@ -179,12 +194,13 @@ test('every five-controls activity can be left without doing it, and nothing is 
 
 test('an unfinished reload and review keep nothing and do not pretend to restore the task', async () => {
   const { lesson } = await mountSection('five-controls')
-  await performFiveControlsLearn(lesson, 2)
+  const afterDepth = unitIndex(lesson, 'depth') + 1
+  await performFiveControlsLearn(lesson, afterDepth)
   fireEvent.click(pilotButton('Back'))
   expect(controlsFieldset()).toBeDisabled()
   expect(nowStatus()).toContain('looking back')
   clickPrimary()
-  expect(currentStepId()).toBe(lesson.steps[2].id)
+  expect(currentStepId()).toBe(lesson.steps[afterDepth].id)
   cleanup()
   await mountSection('five-controls')
   expect(currentStepId()).toBe(lesson.steps[0].id)
@@ -223,12 +239,13 @@ test('every worked demonstration ends with the actual modeled goal achieved, wit
 
 test('a requested transfer hint shows the cue and records nothing', async () => {
   const { lesson } = await mountSection('five-controls')
-  await performFiveControlsLearn(lesson, lesson.steps.length - 1)
+  const changed = unitIndex(lesson, 'transfer')
+  await performFiveControlsLearn(lesson, changed)
   const before = localStorage.getItem(BRONCH_SELF_PACED_STORAGE_KEY)
   fireEvent.click(screen.getByRole('button', { name: 'Show a hint' }))
   expect(document.querySelector('[data-pilot-cue]')).toHaveTextContent('Compare the target')
   expect(localStorage.getItem(BRONCH_SELF_PACED_STORAGE_KEY)).toBe(before)
-  await performPilotStep(lesson.steps.at(-1)!)
+  for (const step of lesson.steps.slice(changed)) await performPilotStep(step)
   expect(Object.keys(selfPaced()).sort()).toEqual([
     'lastSectionId',
     'reviewLaterSectionIds',
@@ -244,7 +261,7 @@ test('a requested transfer hint shows the cue and records nothing', async () => 
 
 test('actual movement direction, zero travel, transfer geometry and scripted isolation are checked by the reducer', () => {
   const lesson = bronchStageLesson('five-controls')
-  const step = lesson.steps[1]
+  const step = lesson.steps[unitIndex(lesson, 'depth')]
   if (step.interaction.kind !== 'scope-task') throw new Error('depth task missing')
   const { view, goals } = step.interaction
   const context = { view, scopeCase: null }

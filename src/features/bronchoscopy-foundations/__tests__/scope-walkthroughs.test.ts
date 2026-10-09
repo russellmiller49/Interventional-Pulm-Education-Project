@@ -46,13 +46,18 @@ describe('authored scope-lab steps can be completed with the learner’s control
     bench.send({ type: 'deflect', deg: 45 })
     bench.send({ type: 'rotate', deg: 45 })
     expect(bench.goals(act.goals)).toEqual(allMet(act.goals))
-    const observe = act.observe!
-    const o = pilot(observe.view ?? act.view, null)
-    o.advance()
-    o.withdraw()
+    // Depth and suction are bench activities of their own in the rewritten section.
+    const depth = fiveControls.moreActs!.depth
+    const suction = fiveControls.moreActs!.suction
+    if (depth.kind !== 'scope-lab' || suction.kind !== 'scope-lab') throw new Error('bench tasks')
+    const d = pilot(depth.view, null)
+    d.send({ type: 'advance', mm: 12 })
+    d.send({ type: 'advance', mm: -12 })
+    expect(d.goals(depth.goals)).toEqual(allMet(depth.goals))
+    const o = pilot(suction.view, null)
     o.send({ type: 'suction', on: true })
     o.send({ type: 'suction', on: false })
-    expect(o.goals(observe.goals)).toEqual(allMet(observe.goals))
+    expect(o.goals(suction.goals)).toEqual(allMet(suction.goals))
   })
 
   it('branch-entry: to the carina, into each main bronchus, and a held view', () => {
