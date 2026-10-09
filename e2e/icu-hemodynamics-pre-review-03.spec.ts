@@ -658,7 +658,9 @@ for (const condition of MATRIX.filter((c) => c.rootText === 100)) {
     await expect(page.locator('[data-now-card]')).not.toContainText(
       'Use the ECG and the affected wave',
     )
-    await expect(page.locator('[data-now-card]')).toContainText('are not modeled here')
+    await expect(page.locator('[data-now-card]')).toContainText(
+      'draw the pressure pattern only, without their ECG',
+    )
     for (const pattern of ['Cannon a waves', 'Atrial fibrillation']) {
       const figure = page
         .locator('figure[class*="atlasFigure"]')

@@ -310,9 +310,9 @@ describe('Practice keeps its tools after a response is observed (P-03)', () => {
     const checkpoints = screen.getByRole('navigation', { name: 'Case checkpoints' })
     expect(checkpoints.closest('details')).toBeNull()
     expect(within(checkpoints).getAllByRole('button')).toHaveLength(6)
-    // The zeroing expectation is stated in the brief, and is not a gate.
+    // The zeroing expectation is stated in the brief.
     expect(document.querySelector('[data-zero-expectation]')?.textContent).toMatch(
-      /not\s+a condition for any action/,
+      /Zero it before you trust a\s+pressure/,
     )
 
     fireEvent.click(within(checkpoints).getByRole('button', { name: /Choose an action/ }))

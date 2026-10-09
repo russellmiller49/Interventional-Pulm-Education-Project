@@ -105,7 +105,7 @@ test('pressure flow preserves independent baselines, complete repair and transfe
   await primary(page)
   await page
     .locator('[data-prediction-choices]')
-    .getByRole('radio', { name: /off level, not zeroed, and underdamped/ })
+    .getByRole('radio', { name: /off level, not zeroed and underdamped/i })
     .check()
   await primary(page)
   await primary(page)
@@ -298,7 +298,7 @@ test('wedge requires capture, learner deflation and PA return on both acquisitio
   await page.setViewportSize({ width: 1280, height: 800 })
   await open(page, 'pawp-capture')
   await primary(page)
-  await answer(page, /Place the cursor at end expiration/)
+  await answer(page, /Read at end expiration, store the value/)
   await acquireWedge(page)
   await primary(page)
   for (const block of await page.locator('[data-commitment]').all()) {
@@ -364,7 +364,7 @@ test('clinical question and all seven attribution decisions lead to transfer', a
     page.locator('[data-focused-monitor], [data-catheter-map], [data-dock]'),
   ).toHaveCount(0)
   await primary(page)
-  await answer(page, /arterial pressure is low at the measurement site/)
+  await answer(page, /pressure is low at this site; the output and the cause are still unknown/)
   await primary(page)
   const decisions: Record<string, string> = {
     'pa-pressure': 'measured',
@@ -480,7 +480,7 @@ test('integration restores actual line, catheter and trial evidence before reass
   await primary(page)
   await capture(page, 'integration-retained-response-debrief')
   await primary(page)
-  await answer(page, /Run a fast flush and read how the line settles/)
+  await answer(page, /Run a fast flush first/)
   await flush(page, 'overdamped')
   await primary(page)
   await primary(page)

@@ -57,6 +57,7 @@ import {
 } from '../engine'
 import { PA_RETURN_CHECK, goalsMet, sectionRuntime, stageGoalMet } from '../engine/stageRuntime'
 import { ICU_HEMODYNAMICS_CONTENT_VERSION } from '../content/release'
+import { HEMODYNAMICS_NUMBERS } from '../content/teachingNumbers'
 
 /**
  * H4 — a cardiac-output number, traced back to the acquisition that produced it.
@@ -263,23 +264,35 @@ describe('H4 canonical cardiac-output method model', () => {
     expect(CARDIAC_OUTPUT_VERIFICATION_DEPTH).not.toBe('source-text-and-locator-verified')
   })
 
-  it('shows no number for a parameter no registered claim supports', () => {
+  it('shows no number for an unsupported parameter, and the register’s number where one is taught', () => {
     const unsupported = cardiacOutputAcquisitionParameters.filter(
       (parameter) => parameter.provenance === 'unsupported',
     )
     expect(unsupported.length).toBeGreaterThan(0)
     for (const parameter of unsupported) expect(parameter.valueShown).toBeNull()
 
-    // The four widely taught numbers this module declines to assert.
-    expect(requireCardiacOutputParameter('numeric-repeatability-criterion').valueShown).toBeNull()
+    // The agreement criterion and the injectate volume are taught from the numbers register.
+    const agreement = requireCardiacOutputParameter('numeric-repeatability-criterion')
+    expect(agreement.numberId).toBe('thermodilution-spread')
+    expect(agreement.provenance).toBe('source-supported')
+    expect(agreement.valueShown).toBe(HEMODYNAMICS_NUMBERS.value('thermodilution-spread'))
+    expect(agreement.learnerFacingQualifier).toContain(
+      HEMODYNAMICS_NUMBERS.value('thermodilution-spread'),
+    )
+    const volume = requireCardiacOutputParameter('injectate-volume')
+    expect(volume.numberId).toBe('injectate-volume')
+    expect(volume.learnerFacingQualifier).toContain(HEMODYNAMICS_NUMBERS.value('injectate-volume'))
+    // The respiratory phase is taught as standard technique.
+    expect(requireCardiacOutputParameter('respiratory-phase-requirement').valueShown).toBe(
+      'End expiration',
+    )
+    // No estimating equation for oxygen uptake is named.
     expect(requireCardiacOutputParameter('oxygen-uptake-estimating-equation').valueShown).toBeNull()
-    expect(requireCardiacOutputParameter('respiratory-phase-requirement').valueShown).toBeNull()
     expect(requireCardiacOutputParameter('minimum-accepted-trials').provenance).toBe(
       'simulation-parameter',
     )
     expect(cardiacOutputUnsupportedClaimTopics()).toEqual(
       expect.arrayContaining([
-        'numeric-repeatability-criterion',
         'oxygen-uptake-estimating-equation',
         'oxygen-content-constants',
         'method-performance-in-tricuspid-regurgitation',
@@ -472,23 +485,29 @@ describe('H4 thermodilution acquisition, quality, and repeatability', () => {
     const readout = screen.getByRole('heading', { name: 'Accepted series' }).closest('section')
     expect(readout).not.toBeNull()
     expect(readout as HTMLElement).toHaveTextContent(/does not describe where they sit/i)
+    // The taught criterion sits beside the spread, and the call is the learner's.
     expect(readout as HTMLElement).toHaveTextContent(
-      /does not apply a numeric agreement criterion/i,
+      requireCardiacOutputParameter('numeric-repeatability-criterion').learnerFacingQualifier,
     )
+    expect(readout as HTMLElement).toHaveTextContent(/leaves that call to you/i)
   })
 
-  it('shows no numeric acquisition or agreement rule that a registered claim does not support', () => {
+  it('teaches the injectate and the agreement rule on the acquisition surface, from the register', () => {
     render(
       <PacSkillsLab state={thermodilutionState()} dispatch={jest.fn()} focus="thermodilution" />,
     )
     const panel = screen.getByRole('region', { name: /thermodilution measurement lab/i })
-    // The injectate constants appear, and they appear as this scenario's configuration.
-    expect(panel).toHaveTextContent(/configured computation constant/i)
+    // The injectate is taught, with the reason it has to match the monitor.
+    expect(panel).toHaveTextContent(/must match the monitor’s computation constant/i)
     expect(panel).toHaveTextContent(
       requireCardiacOutputParameter('injectate-volume').learnerFacingQualifier,
     )
-    // No percentage agreement criterion anywhere on the acquisition surface.
-    expect(panel.textContent ?? '').not.toMatch(/within\s*\d+\s*(percent|%)/i)
+    // The agreement criterion on this surface is the register's, not a typed figure.
+    const agreement = (panel.textContent ?? '').match(/within\s*\d+\s*(percent|%)/gi) ?? []
+    expect(agreement.length).toBeGreaterThan(0)
+    for (const phrase of agreement) {
+      expect(HEMODYNAMICS_NUMBERS.value('thermodilution-spread')).toContain(phrase)
+    }
   })
 
   it('represents the acquisition problems it teaches, and only where the engine can show them', () => {
@@ -540,7 +559,7 @@ describe('H4 thermodilution acquisition, quality, and repeatability', () => {
     const trMode = requireCardiacOutputMethod('thermodilution').failureModes.find(
       (mode) => mode.id === 'tricuspid-regurgitation',
     )
-    expect(trMode?.effectOnResult).toMatch(/does not assert a direction/i)
+    expect(trMode?.effectOnResult).toMatch(/reports go both ways on the direction of the error/i)
     expect(trMode?.effectOnResult).toMatch(/outside the recording/i)
   })
 
@@ -582,11 +601,15 @@ describe('H4 thermodilution acquisition, quality, and repeatability', () => {
         (candidate) => candidate.id === 'tricuspid-regurgitation-direction',
       )
       expect(question).toBeDefined()
-      expect(question!.whatThisModuleDoes).toMatch(/broadened curve/i)
+      expect(question!.whatThisModuleDoes).toMatch(/the curve broadens/i)
       expect(question!.whatThisModuleDoes).toMatch(
-        /may not return toward baseline inside the recorded window/i,
+        /may not return to baseline inside the recorded window/i,
       )
-      expect(question!.whatThisModuleDoes).toMatch(/states no direction of bias/i)
+      // No direction of bias is taught, and the question says why.
+      expect(question!.whyItIsOpen).toMatch(/reports go both ways/i)
+      expect(`${question!.whyItIsOpen} ${question!.whatThisModuleDoes}`).not.toMatch(
+        /reads? (systematically )?(high|low)|over-?reads?|under-?reads?/i,
+      )
     })
 
     it('never says a modeled regurgitant curve shows a secondary disturbance', () => {
@@ -621,7 +644,7 @@ describe('H4 thermodilution acquisition, quality, and repeatability', () => {
         (candidate) => candidate.id === 'tricuspid-regurgitation-direction',
       )!
       const card = screen.getByText(question.question).closest('p') as HTMLElement
-      expect(card).toHaveTextContent(/may not return toward baseline inside the recorded window/i)
+      expect(card).toHaveTextContent(/may not return to baseline inside the recorded window/i)
       expect(card).not.toHaveTextContent(/secondary disturbance/i)
     })
 
@@ -950,7 +973,9 @@ describe('H4 method disagreement', () => {
     const hierarchy = cardiacOutputOpenMethodQuestions.find(
       (question) => question.id === 'method-hierarchy',
     )
-    expect(hierarchy?.whatThisModuleDoes).toMatch(/refuses a universal ranking/i)
+    expect(hierarchy?.whyItIsOpen).toMatch(/neither is always right/i)
+    expect(hierarchy?.whatThisModuleDoes).toMatch(/how each was acquired in this episode/i)
+    expect(hierarchy?.whatThisModuleDoes).toMatch(/sometimes neither result stands/i)
 
     // Where a direction of bias is not supported, the scenario says so and names the open question.
     const unnamed = cardiacOutputComparisonScenarios.filter(

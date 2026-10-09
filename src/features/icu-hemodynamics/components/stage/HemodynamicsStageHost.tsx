@@ -875,7 +875,7 @@ function HemodynamicsStageSession({
         return {
           ...base,
           status: activeStep.questionTraceId
-            ? 'The question is the authored tracing and vignette on this card. Its labels appear when you check an answer or open the explanation.'
+            ? 'The question is the tracing and vignette on this card. Its labels appear when you check an answer or open the explanation.'
             : 'Optional question. Check an answer, open the explanation, or continue without answering.',
           primary: moveOn('Continue without answering'),
         }
@@ -1757,10 +1757,6 @@ function HemodynamicsStageSession({
             ) : null}
             <div className={flowStyles.activity}>{task}</div>
             <footer className={flowStyles.references}>
-              <p>
-                Professional education only. All values are simulated. Follow current manufacturer
-                instructions and local protocol.
-              </p>
               <StageSourcesFooter
                 count={stageSources.evidenceIds.length}
                 label="Sources for this section"

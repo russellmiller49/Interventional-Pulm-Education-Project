@@ -163,8 +163,7 @@ export interface NormalWaveformReferenceEntry {
   readonly evidenceIds: readonly string[]
 }
 
-export const NORMAL_WAVEFORM_RANGE_CAVEAT =
-  'Ranges below are commonly reported values used here to say which way a pressure should move and how the chambers relate to each other. They are not treatment targets, and no source in this module supplies one.'
+export const NORMAL_WAVEFORM_RANGE_CAVEAT = 'Normal resting adult values.'
 
 export const normalWaveformReference: readonly NormalWaveformReferenceEntry[] = [
   {
@@ -178,14 +177,14 @@ export const normalWaveformReference: readonly NormalWaveformReferenceEntry[] = 
     ecgRelation:
       'The a wave follows the P wave by roughly 80 ms; the c wave follows the QRS complex; the v wave peaks at the end of the T wave. The y descent belongs to early ventricular diastole.',
     pressureDirection:
-      'Lowest of the four tracings, and within a few mmHg of right ventricular end-diastolic pressure — that relationship is more useful than the absolute value. Commonly reported mean 2–6 mmHg.',
+      'Lowest of the four tracings, and within a few mmHg of right ventricular end-diastolic pressure. Normal mean 2–6 mmHg.',
     expectedChangeFromPrevious:
-      'The first intracardiac tracing. Coming from the introducer there is nothing to compare it against, so it is confirmed by its own morphology — identifiable a, c, and v waves at low amplitude — and never by insertion depth alone.',
+      'The first intracardiac tracing: a, c and v waves at low amplitude. Confirm it by its morphology, never by depth alone.',
     respiratoryVariation:
-      'Under controlled positive-pressure ventilation the slow venous envelope rises during inspiration, so end expiration is the trough of that swing. With spontaneous breathing the direction reverses. Freeze the trace, find end expiration, then read at the base of the c wave.',
+      'On controlled positive-pressure ventilation the tracing rises with inspiration, so end expiration is the trough. In spontaneous breathing it is the peak. Freeze the trace, find end expiration, and read at the base of the c wave.',
     respiratorySwingMmHg: 3,
     technicalDistortion:
-      'Wall contact damps the tracing and can flatten the wave components; valve contact adds a misleading spike. An off-level transducer shifts the whole tracing without changing its shape, and the relative error is large because the pressures themselves are small.',
+      'Wall contact flattens the waves; valve contact adds a spike. An off-level transducer shifts the whole tracing, and the relative error is large because the pressures are small.',
     technicalDistortions: [
       {
         id: 'ra-off-level',
@@ -223,9 +222,9 @@ export const normalWaveformReference: readonly NormalWaveformReferenceEntry[] = 
       },
     ],
     unsafeToInterpret:
-      'Do not interpret it if the transducer is off level or unzeroed, if the wave components cannot be identified at all, or if you are reading at an arbitrary point in the respiratory cycle — an inspiratory peak or a one-beat average can overstate the value substantially.',
+      'Do not read it with the transducer off level or unzeroed, when the waves cannot be identified, or at an arbitrary point in the breath.',
     cannotEstablish:
-      'A clean right-atrial tracing does not say whether the patient will respond to fluid, and it does not establish left-sided filling pressure. It establishes which compartment is being sampled, and that the sample is readable.',
+      'It does not predict fluid responsiveness, and it is not a left-sided filling pressure.',
     displayUnit: NORMAL_WAVEFORM_REFERENCE_UNIT,
     evidenceIds: [
       'clinical-hemodynamics-waveforms',
@@ -245,14 +244,14 @@ export const normalWaveformReference: readonly NormalWaveformReferenceEntry[] = 
     ecgRelation:
       'The upstroke follows the QRS complex; relaxation falls after the T wave; end-diastolic pressure is best read at the time of the R wave, at the very end of filling.',
     pressureDirection:
-      'Systolic pressure steps up sharply from the atrium and is normally equal to pulmonary-artery systolic pressure; end-diastolic pressure stays low, within a few mmHg of the right atrial mean. Commonly reported systolic 15–30 mmHg, end-diastolic 0–8 mmHg.',
+      'Systolic steps up sharply from the atrium and equals pulmonary-artery systolic pressure; end-diastolic stays within a few mmHg of the right atrial mean. Normal systolic 15–30 mmHg, end-diastolic 0–8 mmHg.',
     expectedChangeFromPrevious:
-      'From the right atrium, systolic pressure should rise sharply while diastolic pressure stays near the atrial mean. What identifies the chamber is the whole transition rather than any one feature: a rapid rise, a fall toward a low diastole that may climb gradually through filling, and the absence of a diastolic step-up, of runoff, and of a dicrotic notch. The gradual climb can be subtle or hard to see on a single strip, so it is read together with the rest of the transition rather than required on its own.',
+      'From the right atrium, systolic pressure rises sharply while diastolic stays near the atrial mean. Diastole is low and may climb as the ventricle fills. There is no diastolic step-up, no runoff and no dicrotic notch.',
     respiratoryVariation:
-      'Systolic pressure and end-diastolic pressure both move with the respiratory cycle as intrathoracic pressure changes venous return; read at end expiration for the same reason as every other chamber. The diastolic contour itself is not produced by respiration — if its shape changes with the breath, suspect the tracing rather than the physiology.',
+      'Systolic and end-diastolic pressure both move with the breath; read at end expiration. The shape of diastole does not change with breathing, so if it does, suspect the tracing.',
     respiratorySwingMmHg: 3,
     technicalDistortion:
-      'An underdamped system exaggerates the systolic peak and can add ringing that obscures the diastolic slope; an overdamped system blunts the upstroke until the contour resembles a pulmonary-artery tracing. Catheter whip from cardiac motion adds spikes that are easy to read as a higher systolic pressure.',
+      'Ringing exaggerates the systolic peak and hides the diastolic slope; overdamping blunts the upstroke until it resembles a pulmonary-artery tracing. Catheter whip adds spikes that read as a higher systolic pressure.',
     technicalDistortions: [
       {
         id: 'rv-underdamped',
@@ -281,9 +280,9 @@ export const normalWaveformReference: readonly NormalWaveformReferenceEntry[] = 
       },
     ],
     unsafeToInterpret:
-      'Do not interpret systolic pressure alone here: right ventricular and pulmonary-artery systolic pressures are nearly identical, so the number cannot tell you which chamber you are in. What separates them is the rest of the transition — a diastolic step-up, a downward runoff, and a dicrotic notch on the pulmonary-artery side. If the dynamic response is distorted, those are exactly the features that are lost, and the position is then unconfirmed.',
+      'Systolic pressure alone cannot tell the right ventricle from the pulmonary artery: the two are nearly identical. The diastolic step-up, the runoff and the notch do, and a distorted line loses exactly those.',
     cannotEstablish:
-      'A right-ventricular systolic pressure does not tell you the catheter has stopped in the right ventricle, and it does not establish pulmonary-artery pressure even though the two systolic values are normally the same.',
+      'A right-ventricular tracing means the tip is still in transit. Do not leave it there.',
     displayUnit: NORMAL_WAVEFORM_REFERENCE_UNIT,
     evidenceIds: [
       'clinical-hemodynamics-waveforms',
@@ -302,14 +301,14 @@ export const normalWaveformReference: readonly NormalWaveformReferenceEntry[] = 
     ecgRelation:
       'The systolic upstroke follows the QRS complex; the dicrotic notch falls at the end of ventricular systole, around the end of the T wave; the diastolic minimum arrives just before the next QRS.',
     pressureDirection:
-      'Systolic unchanged from the right ventricle; diastolic clearly higher than right ventricular end-diastolic pressure — that step-up is the transition. Mean wedge pressure normally sits slightly below pulmonary-artery diastolic pressure. Commonly reported systolic 15–30 mmHg, diastolic 4–12 mmHg, mean 9–19 mmHg.',
+      'Systolic unchanged from the right ventricle; diastolic clearly higher than right ventricular end-diastolic pressure. The wedge mean normally sits slightly below pulmonary-artery diastolic pressure. Normal systolic 15–30 mmHg, diastolic 4–12 mmHg, mean 9–19 mmHg.',
     expectedChangeFromPrevious:
-      'From the right ventricle, systolic pressure should not move while diastolic pressure steps up and the diastolic slope reverses from rising to falling. A dicrotic notch appears. If systolic pressure jumped as well, the change is not simply a chamber transition and needs explaining before advancing further.',
+      'From the right ventricle, systolic pressure does not move, diastolic pressure steps up, the diastolic slope turns downward, and a dicrotic notch appears. If systolic pressure jumped as well, explain it before advancing.',
     respiratoryVariation:
-      'A marked respiratory swing is common and can be larger than the pulse pressure itself under positive-pressure ventilation. Read at end expiration; comparing values sampled at different moments in the breath will produce differences that have nothing to do with the circulation.',
+      'The respiratory swing can exceed the pulse pressure on positive-pressure ventilation. Read at end expiration.',
     respiratorySwingMmHg: 5,
     technicalDistortion:
-      'A mismatched display scale is the classic problem here — a high scale makes a normal pulmonary-artery signal look small and flat, inviting a damping diagnosis from appearance alone. Air, blood, or a low pressure bag blunts the notch, which is the feature the transition depends on.',
+      'A display scale set too high makes a normal pulmonary-artery tracing look flat and damped. Air, blood or a low pressure bag blunts the notch.',
     technicalDistortions: [
       {
         id: 'pa-scale-mismatch',
@@ -339,9 +338,8 @@ export const normalWaveformReference: readonly NormalWaveformReferenceEntry[] = 
       },
     ],
     unsafeToInterpret:
-      'Do not interpret it if pulsatility and the notch have disappeared without you inflating the balloon — that is a spontaneous wedge, not a pulmonary-artery tracing, and it needs attention rather than interpretation. Using pulmonary-artery diastolic pressure to stand in for left atrial pressure is unreliable whenever pulmonary vascular resistance is abnormal.',
-    cannotEstablish:
-      'A pulmonary-artery tracing does not establish left atrial pressure, and it does not establish that the tip is at a depth where a balloon may safely be inflated. Those are separate questions with separate checks.',
+      'If pulsatility and the notch disappear without the balloon up, that is a spontaneous wedge: withdraw until the tracing returns. Pulmonary-artery diastolic pressure does not stand in for left atrial pressure when pulmonary vascular resistance is high.',
+    cannotEstablish: 'It is not a left atrial pressure.',
     displayUnit: NORMAL_WAVEFORM_REFERENCE_UNIT,
     evidenceIds: [
       'clinical-hemodynamics-waveforms',
@@ -361,14 +359,14 @@ export const normalWaveformReference: readonly NormalWaveformReferenceEntry[] = 
     ecgRelation:
       'Everything arrives late. The a wave follows the P wave by roughly 240 ms rather than 80 ms, so it appears after the QRS complex, and the v wave peaks after the T wave. That delay is what distinguishes a wedge tracing from a right atrial one.',
     pressureDirection:
-      'Lower than the pulmonary-artery tracing it replaced, and typically sitting a little below pulmonary-artery diastolic pressure. To estimate left ventricular end-diastolic pressure, read the end-diastolic point — just before the c wave; when the c wave is not discernible in sinus rhythm, which is common on a wedge tracing, average the peak and the trough of the a wave. The displayed mean and that end-diastolic value are different measurements and are not interchangeable for this purpose. Commonly reported mean 4–12 mmHg.',
+      'Lower than the pulmonary-artery tracing, a little below its diastolic pressure. For left ventricular end-diastolic pressure, read the end-diastolic point just before the c wave; when the c wave cannot be seen, in sinus rhythm average the peak and trough of the a wave. The displayed mean is a different measurement. Normal mean 4–12 mmHg.',
     expectedChangeFromPrevious:
-      'From the pulmonary artery, pulsatility and the dicrotic notch should disappear and be replaced by a lower-pressure atrial tracing whose waves arrive late. Depth does not change. A tracing that stays pulsatile is an incomplete occlusion, and one that drifts upward without identifiable waves is over-wedged — neither is a wedge.',
+      'From the pulmonary artery, pulsatility and the notch disappear and a lower atrial tracing with late waves replaces them. Depth does not change. A tracing that stays pulsatile is an incomplete occlusion; one that climbs without waves is over-wedged.',
     respiratoryVariation:
-      'Respiratory swing is often more prominent here than anywhere else, because the pressure is small and the surrounding pressure is transmitted directly to it. Read at end expiration, and expect the swing to grow with higher airway pressures — which changes the displayed pressure without changing left atrial filling.',
+      'The respiratory swing is most prominent here, because the pressure is small. Read at end expiration; higher airway pressures raise the displayed value without any change in left atrial filling.',
     respiratorySwingMmHg: 5,
     technicalDistortion:
-      'Transmitted airway pressure is the dominant confounder, not a monitoring artifact: what is measured is the pressure inside the vessel, including whatever surrounds it. An over-wedged catheter produces a tracing that drifts upward with no identifiable a or v waves.',
+      'Transmitted airway pressure is the main confounder. An over-wedged catheter gives a tracing that climbs with no a or v waves.',
     technicalDistortions: [
       {
         id: 'wedge-transmitted-airway-pressure',
@@ -398,9 +396,9 @@ export const normalWaveformReference: readonly NormalWaveformReferenceEntry[] = 
       },
     ],
     unsafeToInterpret:
-      'Do not accept it as a wedge on shape alone. Look for interpretable atrial wave components and for pulmonary-artery pressure and morphology returning abruptly on deflation. In atrial fibrillation the a wave is absent, and that by itself does not invalidate the tracing — the remaining ECG and pressure landmarks carry the timing instead. A tracing that drifts upward while its atrial wave components are absent or uninterpretable is the more concerning pattern. An unexpected relationship between the occlusion pressure and pulmonary-artery diastolic pressure is a warning that has to be reconciled rather than a rule that settles it: the pressure relationship alone does not establish over-wedging, and a large v wave can raise the displayed mean without the end-diastolic value moving with it.',
+      'Do not accept a wedge on shape alone. Look for a and v waves and an abrupt return of the pulmonary-artery tracing on deflation. In atrial fibrillation the a wave is absent, which does not invalidate the tracing. A large v wave can raise the displayed mean above pulmonary-artery diastolic pressure in a true wedge.',
     cannotEstablish:
-      'One wedge-shaped tracing does not establish a valid PAWP. Shape is one check among several: the signal has to be trustworthy, the waves identifiable and correctly timed, the reading taken at end expiration, the tip in a lung region where a blood column actually connects it to the left atrium, and the pulmonary-artery waveform has to come back on deflation.',
+      'A valid wedge also needs a trustworthy line, a reading at end expiration, a tip in zone 3, and the pulmonary-artery tracing back on deflation.',
     displayUnit: NORMAL_WAVEFORM_REFERENCE_UNIT,
     evidenceIds: [
       'clinical-hemodynamics-waveforms',

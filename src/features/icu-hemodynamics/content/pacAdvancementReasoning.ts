@@ -10,31 +10,16 @@ import {
   type PacPrebriefStopCondition,
 } from './pacAdvancementPrebrief'
 import { hemodynamicsSourceById } from './sources'
+import { HEMODYNAMICS_NUMBERS } from './teachingNumbers'
 
 /**
- * Advancement as continuous safety reasoning (H3 §6).
+ * Advancement as a decision at each stop.
  *
- * The section used to be a two-button dock: confirm the waveform, then advance. That teaches the
- * proposition this package exists to break — that recognizing the expected tracing is sufficient
- * reason to keep going. It is necessary and it is not sufficient, and the difference is where
- * patients are hurt.
- *
- * Each scenario below presents the whole situation at once: whether the pressure signal can be
- * trusted, what the current tracing is, what the reference says should change next, what the rhythm
- * and the patient are doing, whether the catheter is moving freely, whether the balloon state is
- * settled, and whether the depth readout can be reconciled with the waveform. The learner commits
- * to advance, hold, stop, or escalate *before* seeing what follows.
- *
- * Two structural decisions matter more than any sentence here:
- *
- * 1. **Whether continuing is safe is derived, not authored.** `advancementStopReasons` reads the
- *    scenario's state flags. Nothing in it looks at whether the waveform matched the prediction, so
- *    an expected morphology cannot cancel a stop condition — not because an author remembered, but
- *    because there is no code path by which it could.
- * 2. **The sentences come from the sourced records that already carry them.** Every stop scenario
- *    names a `pacAdvancementPrebrief` stop condition by id and the panel renders that record's own
- *    trigger and response. This file adds the reasoning structure and the scenario-specific
- *    observations; it does not restate clinical claims that already exist with evidence attached.
+ * Each scenario presents the whole situation at once: the signal, the current tracing, the rhythm,
+ * the patient, whether the catheter moves freely, the balloon, and the depth. The learner commits
+ * before seeing what follows. Whether continuing is safe is derived from the scenario's flags by
+ * `advancementStopReasons`, never from whether the waveform matched. Each stop scenario is keyed on
+ * the first move a fellow makes with their hands.
  */
 
 export type PacAdvancementCommitment = 'advance' | 'hold' | 'stop' | 'escalate'
@@ -43,15 +28,10 @@ export const pacAdvancementCommitmentLabels: Readonly<Record<PacAdvancementCommi
   advance: 'Advance',
   hold: 'Hold where you are',
   stop: 'Stop the maneuver',
-  escalate: 'Stop and escalate to the supervising clinician',
+  escalate: 'Stop and make the first move',
 }
 
-/**
- * The categories of stop condition this module can represent.
- *
- * `resistance` is present as a category with a deliberately unquantified meaning — see
- * `PacAdvancementScenario.unsourcedBoundary`.
- */
+/** The categories of stop condition. */
 export type PacAdvancementStopReason =
   | 'signal-invalid'
   | 'unexpected-waveform'
@@ -111,11 +91,7 @@ export interface PacAdvancementScenario {
   readonly justification: string
   /** The already-sourced stop condition this scenario exercises. */
   readonly prebriefStopConditionId: string | null
-  /**
-   * Set when the teaching point is real but the module has no source that quantifies or manages it.
-   * The panel renders it beside the `pacPrebriefNotCoveredNotice`, so a learner is never left
-   * thinking a boundary statement was a source-derived rule.
-   */
+  /** A bedside point the scenario does not cover, or null. */
   readonly unsourcedBoundary: string | null
   readonly sourceIds: readonly string[]
 }
@@ -271,7 +247,7 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
       choices: [
         {
           id: 'advance',
-          label: 'Advance, watching for a low-amplitude venous tracing to appear.',
+          label: 'Advance, watching for a venous tracing to appear.',
           rationale:
             'Nothing in the situation says stop, and the next thing that should happen is a right-atrial waveform appearing. Advancing here is a step taken in order to be confirmed, not one taken because it was confirmed.',
           plausibility: 'best',
@@ -338,21 +314,23 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
         {
           id: 'advance',
           label:
-            'Advance, expecting a rapid systolic rise and a fall toward a low diastole that may climb gradually through filling, with no step-up, no runoff, and no notch.',
+            'Advance, expecting a right-ventricular tracing: a sharp systolic rise and a diastole near zero.',
           rationale:
             'Nothing says stop, and the reference names exactly what should change: a large systolic step with a low diastole that may climb through filling, and none of the features that mark the pulmonary artery — not simply a higher number.',
           plausibility: 'best',
         },
         {
           id: 'hold',
-          label: 'Hold, because ventricular ectopy is common once the tip crosses the valve.',
+          label:
+            'Hold in the atrium, because ventricular ectopy is common once the tip crosses the tricuspid valve.',
           rationale:
             'That it is common is why the rhythm is watched continuously — it is a reason to be ready, not a reason to stop before anything has happened.',
           plausibility: 'reasonable-but-incomplete',
         },
         {
           id: 'escalate',
-          label: 'Stop and escalate, because the next chamber is the one where ectopy occurs.',
+          label:
+            'Stop and call the attending first, because the next chamber is the one where ectopy occurs.',
           rationale:
             'Escalating with no finding to report is not caution; it is deferring the check the situation actually calls for, which is watching the rhythm while advancing.',
           plausibility: 'reasonable-but-incomplete',
@@ -405,7 +383,7 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
         {
           id: 'advance',
           label:
-            'Advance, expecting diastolic pressure to step up, the diastolic slope to reverse, and a dicrotic notch to appear — with systolic pressure unchanged.',
+            'Advance, expecting the diastolic pressure to step up and a dicrotic notch to appear.',
           rationale:
             'That is the whole transition, and naming all three parts of it in advance is what makes a partial change noticeable when it happens.',
           plausibility: 'best',
@@ -474,41 +452,39 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
         {
           id: 'escalate',
           label:
-            'Stop the simulated maneuver and escalate to the supervising clinician, keeping the rhythm under continuous watch.',
+            'Do not sit in the ventricle: go promptly through to the pulmonary artery, or deflate and withdraw to the atrium.',
           rationale:
-            'The rhythm is one of the things being watched, and it has changed. Recognizing it, stopping the maneuver, and escalating is the whole of what this module teaches about it.',
+            'The tip in the right ventricle is the irritant. Either exit ends it: through to the pulmonary artery with the balloon up, or back to the right atrium with it down. Have the defibrillator available.',
           plausibility: 'best',
         },
         {
           id: 'advance',
           label:
-            'Advance promptly toward the pulmonary artery, since the tracing confirms the position and leaving the ventricle resolves the ectopy.',
+            'Keep advancing at the same slow pace, since the tracing confirms the position and ectopy is expected here.',
           rationale:
-            'This is the reasoning the section exists to break. A confirmed position answers "where is the tip"; it does not answer "is it safe to keep going", and moving a catheter during a rhythm change is a decision that needs authority behind it.',
+            'Ectopy is expected, and it is usually self-limited. Runs of it are not: a slow advance keeps the tip against the ventricular wall for longer.',
           plausibility: 'unsafe',
         },
         {
           id: 'hold',
-          label: 'Hold position and keep watching the rhythm.',
+          label: 'Hold the tip where it is and watch the rhythm until it settles.',
           rationale:
-            'Holding is safer than advancing and is not a failure. It stops short of the part that matters: a rhythm change during catheter manipulation is something to report, not something to observe alone.',
+            'Stopping the advance is a reasonable instinct, but the tip is still in the ventricle, and that is what is driving the ectopy.',
           plausibility: 'reasonable-but-incomplete',
         },
       ],
       correctChoiceIds: ['escalate'],
-      explanation:
-        'This is the case the whole section is built around. The waveform is perfect and the waveform is not the question. An expected morphology confirms which chamber the tip is in and confirms nothing else — the rhythm, the patient, the resistance, and the balloon each have to be satisfied on their own.',
+      explanation: `Ventricular ectopy while the tip crosses the right ventricle is frequent (${HEMODYNAMICS_NUMBERS.value('flotation-ectopy')}) and usually self-limited. When it is sustained, get the tip out of the ventricle: advance promptly into the pulmonary artery, or deflate and withdraw to the right atrium. Treat a sustained arrhythmia as you would any other.`,
       evidenceIds: ['clinical-hemodynamics-waveforms', 'pac-review-2014'],
     }),
     observed:
-      'The simulated maneuver stops. The rhythm stays under continuous watch and the finding is reported to the supervising clinician.',
+      'The tip leaves the ventricle and the ectopy stops. The rhythm stays under continuous watch.',
     reconciliation:
-      'Waveform and depth agree with each other and with the reference. The rhythm does not agree with continuing. Those are separate questions, and only one of them was ever answered by the tracing.',
+      'Waveform and depth agree with the reference. The rhythm is a separate question, and the tracing never answered it.',
     justification:
-      'Continuing is not safe. A stop condition outranks a matching waveform every time, because the waveform was never evidence about the rhythm.',
+      'A clean right-ventricular tracing confirms where the tip is. It is also the reason for the ectopy.',
     prebriefStopConditionId: 'ventricular-ectopy',
-    unsourcedBoundary:
-      'How ectopy occurring during catheter manipulation should then be managed is deliberately not taught here.',
+    unsourcedBoundary: null,
     sourceIds: ['clinical-hemodynamics-waveforms', 'pac-review-2014'],
   },
   {
@@ -547,9 +523,9 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
         {
           id: 'escalate',
           label:
-            'Stop the simulated maneuver and escalate to the supervising clinician, without forcing the catheter.',
+            'Deflate, withdraw to where the catheter moved freely, recheck the position, and try again.',
           rationale:
-            'A catheter that will not advance is not a catheter to push harder. Stopping and handing the situation to someone with the authority and information to act on it is what this module can support.',
+            'Never push against resistance. Back in the last chamber where the catheter moved freely, the tracing and the depth tell you where the tip is before the next attempt.',
           plausibility: 'best',
         },
         {
@@ -557,31 +533,29 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
           label:
             'Apply a little more force, since the waveform confirms the catheter is where it should be.',
           rationale:
-            'The waveform says which chamber the tip is in. It says nothing about what the catheter is caught on, or what forcing it would do to whatever that is.',
+            'The waveform says which chamber the tip is in. It says nothing about what the catheter is caught on, and force is how a catheter knots or perforates.',
           plausibility: 'unsafe',
         },
         {
           id: 'hold',
-          label: 'Hold and wait to see whether it frees up.',
+          label: 'Hold the catheter where it is and wait to see whether it frees up.',
           rationale:
-            'Holding does no harm. It leaves the situation unreported, and the reason to escalate is precisely that this module cannot tell you what the resistance means.',
+            'Holding does no harm, and it leaves an inflated balloon sitting in the ventricle with nothing changed.',
           plausibility: 'reasonable-but-incomplete',
         },
       ],
       correctChoiceIds: ['escalate'],
       explanation:
-        'This module has no reviewed source that says how much resistance means what, or how any particular cause of it is managed. What it can support is the boundary: do not force a catheter that will not advance, and get the situation to someone who can assess it.',
+        'Never push against resistance. Deflate, withdraw to the last chamber where the catheter moved freely, check the position on the tracing and the depth, and try again. Repeated failure means fluoroscopy.',
       evidenceIds: PLACEMENT_EVIDENCE,
     }),
     observed:
-      'The simulated maneuver stops with the catheter where it is, and the finding is reported.',
+      'The balloon comes down and the catheter is withdrawn to where it moved freely. The simulator meets no resistance, so this one is taught in words.',
     reconciliation:
-      'Every signal-side observable agrees. The one that does not is mechanical, and no amount of waveform confirmation speaks to it.',
-    justification:
-      'Continuing is not safe, and the reason is not that a source quantified it — it is that nothing here can tell you what is in the way.',
-    prebriefStopConditionId: null,
-    unsourcedBoundary:
-      'What resistance means, how much is too much, and how catheter knotting, coiling, or looping is recognized and managed are all deliberately absent. No reviewed source in this module supports them, and none is invented here. The stop-and-escalate boundary above is a supervision and protocol statement, not a source-derived rule about resistance.',
+      'Every signal-side observable agrees. The one that does not is mechanical, and the waveform cannot speak to it.',
+    justification: 'Continuing against resistance is not safe, whatever the tracing shows.',
+    prebriefStopConditionId: 'resistance',
+    unsourcedBoundary: null,
     sourceIds: PLACEMENT_EVIDENCE,
   },
   {
@@ -616,10 +590,9 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
       choices: [
         {
           id: 'stop',
-          label:
-            'Stop advancing and reconcile the two accounts of the tip position before doing anything else.',
+          label: 'Stop advancing and reconcile depth with the waveform before anything else.',
           rationale:
-            'Waveform and depth are two independent claims about the same thing. When they disagree, the disagreement is the finding, and advancing on either one alone advances on an assumption.',
+            'Waveform and depth are two independent accounts of where the tip is. When they disagree, sort that out before the catheter moves again.',
           plausibility: 'best',
         },
         {
@@ -627,31 +600,27 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
           label:
             'Advance, because the waveform confirms the position and depth is only ever a rough landmark.',
           rationale:
-            'Depth is indeed the weaker signal — which is a reason not to advance on depth alone, not a reason to ignore it when it contradicts the waveform. An unreconciled position is an unknown position.',
+            'Depth is the weaker signal, which is a reason not to advance on depth alone. It is not a reason to ignore it when it contradicts the waveform.',
           plausibility: 'unsafe',
         },
         {
           id: 'hold',
           label: 'Hold, and re-read the depth marking.',
-          rationale:
-            'Re-reading is the right instinct and holding is safe. It is a first step in the reconciliation rather than the whole of it — the waveform account has to be re-examined too.',
+          rationale: 'Re-reading is the right first step. The waveform has to be re-examined too.',
           plausibility: 'reasonable-but-incomplete',
         },
       ],
       correctChoiceIds: ['stop'],
       explanation:
-        'The prebrief names this exactly: do not advance further on depth alone, and an unconfirmed position is an unknown position. It cuts both ways. A waveform that confirms a chamber while the depth says the catheter never travelled there leaves the position unconfirmed no matter how good the tracing is.',
+        'A waveform that says pulmonary artery while the depth says the catheter never travelled there leaves the position unconfirmed, however good the tracing. The usual landmarks from the right internal jugular are 20–30 cm for the right atrium, 30–40 cm for the right ventricle and 40–50 cm for the pulmonary artery.',
       evidenceIds: [...PLACEMENT_EVIDENCE, 'emcrit-rhc-supplied-2026'],
     }),
-    observed:
-      'Advancement stops. Both accounts of the tip position are re-examined rather than one being chosen.',
+    observed: 'Advancement stops. The depth marking and the tracing are both re-read.',
     reconciliation:
-      'The tracing and the depth readout describe incompatible positions. Nothing about the quality of the tracing resolves that, because the tracing is one of the two things in conflict.',
-    justification:
-      'Continuing is not safe. Reconciliation has to happen first, and it is not reconciliation to prefer the signal you like better.',
+      'The tracing and the depth describe different positions, and a good tracing does not settle that.',
+    justification: 'Continuing is not safe until the two agree.',
     prebriefStopConditionId: 'waveform-does-not-confirm',
-    unsourcedBoundary:
-      'No universal insertion-depth cut point is used here. Depth is treated as a rough landmark whose disagreement with the waveform is the finding, because the sources support the landmark framing and not a numeric rule for this catheter and approach.',
+    unsourcedBoundary: null,
     sourceIds: [...PLACEMENT_EVIDENCE, 'emcrit-rhc-supplied-2026'],
   },
   {
@@ -704,19 +673,19 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
           id: 'escalate',
           label: 'Stop and escalate for the measurement problem.',
           rationale:
-            'Not unsafe, but a repairable dynamic-response problem is within the validity sequence already taught. Escalation is for what cannot be resolved or reconciled.',
+            'Not unsafe, but a ringing line is yours to repair: check for air and excess tubing, then flush again.',
           plausibility: 'reasonable-but-incomplete',
         },
       ],
       correctChoiceIds: ['hold'],
       explanation:
-        'Signal validity is the first step of the sequence for a reason. Everything downstream — identification, prediction, reconciliation — is being carried out with this tracing, so an invalid signal is not one more consideration alongside the others but the thing the others are made of.',
+        'Signal validity comes first because every later step is read from this tracing.',
       evidenceIds: [...SIGNAL_EVIDENCE, 'clinical-hemodynamics-waveforms'],
     }),
     observed:
       'The catheter stays where it is. The fluid path and the dynamic response are addressed before anything else happens.',
     reconciliation:
-      'Nothing else in the situation objects, and it does not matter: the observation that everything else looks fine was made through the instrument that has stopped being trustworthy.',
+      'Nothing else objects, but every other observation was made through a line that is now ringing.',
     justification:
       'Continuing is not safe. Advancing would mean confirming the next transition with a tracing that cannot confirm anything.',
     prebriefStopConditionId: 'waveform-does-not-confirm',
@@ -758,9 +727,9 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
         {
           id: 'escalate',
           label:
-            'Stop advancing, treat the patient rather than the tracing, and escalate to the supervising clinician.',
+            'Stop advancing, deflate, and look at the patient and the rhythm before anything else.',
           rationale:
-            'A measurement problem and a patient problem can look alike from the monitor, and only one of them is fixed at the monitor. Nothing about the catheter is the priority here.',
+            'The patient comes first. With the balloon down, examine the patient and the rhythm and treat what you find; the catheter can wait.',
           plausibility: 'best',
         },
         {
@@ -768,28 +737,26 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
           label:
             'Advance to the pulmonary artery quickly so that the measurements needed to explain the deterioration become available.',
           rationale:
-            'The reasoning has an appealing shape and it inverts the priority: it continues a procedure on a deteriorating patient in order to obtain data about the deterioration.',
+            'This continues a procedure on a deteriorating patient in order to get data about the deterioration. The catheter may be the cause.',
           plausibility: 'unsafe',
         },
         {
           id: 'hold',
-          label: 'Hold position and watch for another minute.',
+          label: 'Hold position and watch the monitor for another minute.',
           rationale:
-            'Holding stops the manipulation, which is the important half. It leaves the patient unattended to and the deterioration unreported.',
+            'Holding stops the manipulation, which is half of it. Nobody has yet looked at the patient.',
           plausibility: 'reasonable-but-incomplete',
         },
       ],
       correctChoiceIds: ['escalate'],
       explanation:
-        'The tracing is not the patient. When the displayed signal and the patient stop agreeing, the disagreement is the finding, and the patient is what gets the response.',
+        'Stop advancing, deflate, and look at the patient and the rhythm first. Treat what you find, call for help if it does not turn around, and resume only when the patient is stable.',
       evidenceIds: [...SIGNAL_EVIDENCE, 'pac-derived-part-2-2021'],
     }),
-    observed:
-      'Catheter manipulation stops. Attention moves to the patient, and the supervising clinician is called.',
+    observed: 'The balloon comes down and attention moves to the patient and the rhythm.',
     reconciliation:
-      'Every catheter-side observable is unremarkable. The patient is not, and the patient was never one of the things the tracing could vouch for.',
-    justification:
-      'Continuing is not safe. Advancing would be continuing a procedure through a deterioration whose cause has not been established.',
+      'Every catheter-side observable is unremarkable. The patient is not, and the tracing cannot vouch for the patient.',
+    justification: 'Advancing through a deterioration whose cause is unknown is not safe.',
     prebriefStopConditionId: 'patient-deteriorates',
     unsourcedBoundary: null,
     sourceIds: [...SIGNAL_EVIDENCE, 'pac-derived-part-2-2021'],
@@ -828,29 +795,29 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
         {
           id: 'escalate',
           label:
-            'Stop, do not flush or manipulate the catheter, and escalate immediately for reassessment or repositioning under supervision.',
+            'Confirm the balloon is down, do not flush, and withdraw until the PA tracing returns.',
           rationale:
-            'A wedge morphology that nobody produced is a warning sign rather than a measurement. It is treated as one, and the catheter is not flushed while distal occlusion is possible.',
+            'A wedge nobody produced means the tip has migrated distally. Confirm the syringe is passive, then pull back until the pulmonary-artery tracing is back.',
           plausibility: 'best',
         },
         {
           id: 'hold',
-          label: 'Hold and observe whether pulsatility returns on its own.',
+          label: 'Hold the catheter still and observe whether pulsatility returns on its own.',
           rationale:
-            'Stopping manipulation is right and observing alone is not enough. The prebrief treats this as something to act on and report, not something to watch.',
+            'Not manipulating blindly is right, but a tip left wedged can infarct lung or rupture the artery.',
           plausibility: 'reasonable-but-incomplete',
         },
         {
           id: 'advance',
-          label: 'Flush the line, since a damped or occluded lumen would produce this appearance.',
+          label:
+            'Flush the distal lumen, since a damped or occluded lumen would produce this appearance.',
           rationale:
-            'Flushing is specifically what not to do when distal occlusion, wedging, or pulmonary-artery injury is possible. Position has to be established before anything is flushed or aspirated.',
+            'Flushing a wedged catheter pressurizes a small occluded branch. Establish the position first.',
           plausibility: 'unsafe',
         },
       ],
       correctChoiceIds: ['escalate'],
-      explanation:
-        'Three observables disagree at once here — the morphology, the balloon state that should explain it, and the unchanged depth. Any one of them would be enough to stop; together they are the pattern the prebrief names as potentially fatal.',
+      explanation: `A spontaneous wedge means the tip is too distal. Deflate at once, confirm the syringe is passive, do not flush, and withdraw until the pulmonary-artery tracing returns. Pulmonary-artery rupture carries a mortality of ${HEMODYNAMICS_NUMBERS.value('pa-rupture-mortality')}.`,
       evidenceIds: [
         'clinical-hemodynamics-waveforms',
         'pac-review-2014',
@@ -859,12 +826,9 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
         'monitor-workflow-supplied',
       ],
     }),
-    observed:
-      'Manipulation and flushing stop. The finding is escalated for reassessment or repositioning under supervision.',
-    reconciliation:
-      'The tracing is a recognizable morphology in circumstances that do not account for it. Recognizing it correctly is what makes it alarming, not what makes it acceptable.',
-    justification:
-      'Continuing is not safe, and neither is flushing. This is the one scenario where correctly naming the tracing is itself the reason to stop.',
+    observed: 'The catheter is withdrawn until pulsatility and the dicrotic notch return.',
+    reconciliation: 'It is a wedge tracing with nothing to account for it: the tip has moved.',
+    justification: 'Continuing is not safe, and neither is flushing.',
     prebriefStopConditionId: 'spontaneous-or-over-wedge',
     unsourcedBoundary: null,
     sourceIds: [
@@ -879,13 +843,7 @@ export const pacAdvancementScenarios: readonly PacAdvancementScenario[] = [
 
 export const PAC_ADVANCEMENT_UNSOURCED_BOUNDARY_NOTICE = pacPrebriefNotCoveredNotice
 
-/**
- * Fails the import rather than the render.
- *
- * The important check is the last one: the authored best answer and the derived safety verdict have
- * to agree. If someone later marks `advance` as the best commitment in a scenario that carries a
- * stop condition, the module refuses to load rather than teaching it.
- */
+/** Fails the import when a scenario's key and its derived safety verdict disagree. */
 function assertAdvancementScenariosAreCoherent(): void {
   const ids = new Set<string>()
   const stopReasonsCovered = new Set<PacAdvancementStopReason>()

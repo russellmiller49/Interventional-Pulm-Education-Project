@@ -100,7 +100,7 @@ export function IcuHemodynamicsOverviewV2() {
             Before you start
           </p>
           <h2 id="hemodynamics-before-you-start-heading" className="mt-2 text-2xl font-bold">
-            Who this is for, and what it does not claim
+            Who this is for
           </h2>
         </div>
         <dl className="grid gap-4 text-sm leading-6">
@@ -131,17 +131,16 @@ export function IcuHemodynamicsOverviewV2() {
             <dt className="font-semibold">Signal interpretation versus simulated procedure</dt>
             <dd className="text-muted-foreground">
               Most of this module is signal interpretation. Advancing the catheter and taking a
-              wedge are <strong>simulated</strong> exercises in recognizing waveforms and knowing
-              when to stop — they are not instruction in placing a catheter in a patient.
+              wedge are <strong>simulated</strong>: you practice recognizing each waveform and the
+              first move when something goes off plan. The feel of the catheter is learned at the
+              bedside, under supervision.
             </dd>
           </div>
           <div>
             <dt className="font-semibold">What finishing a section means</dt>
             <dd className="text-muted-foreground">
-              Finishing a section marks it reviewed on this device, and you can undo that. It
-              records nothing about your answers, it does not make a claim about clinical readiness,
-              and it does not qualify anyone to place or interpret a pulmonary-artery catheter
-              without supervision and local protocol. Every question in the module is optional.
+              Finishing a section marks it reviewed on this device, and you can undo that. Every
+              question in the module is optional.
             </dd>
           </div>
         </dl>

@@ -157,7 +157,7 @@ export const derivedClaimVerifications: readonly DerivedClaimVerification[] = Ob
     depth: 'source-text-and-locator-verified',
     locator: `${PART2}, Table 1, p. 18`,
     whatWasVerified:
-      'CI 2.5–4.0 L/min/m², SV 60–100 mL, SVi 33–47 mL/m², SVR 800–1200 dyn·s·cm⁻⁵ as tabulated adult reference figures, with PAPi and CPI marked population-specific rather than given intervals. No SVRI interval was verified in that table, so this module presents none: the SVRI context states the absence instead of carrying a number.',
+      'CI 2.5–4.0 L/min/m², SV 60–100 mL, SVi 33–47 mL/m², SVR 800–1200 dyn·s·cm⁻⁵ as tabulated adult reference figures, with PAPi and CPI marked population-specific rather than given intervals. The SVRI and PVRI ranges are not in that table; they are taught from the numbers register.',
   },
   {
     topic: 'papi-phenotype-context',
@@ -227,7 +227,7 @@ export const derivedClaimVerifications: readonly DerivedClaimVerification[] = Ob
     depth: 'registry-membership-only',
     locator: null,
     whatWasVerified:
-      'No registered record’s claim names a body-surface-area estimating formula, so this module implements none and treats BSA as a recorded value with provenance.',
+      'The DuBois formula is taught from the numbers register (bsa-dubois). The engine still takes BSA as a recorded value.',
   },
   {
     topic: 'universal-derived-normal-ranges',
@@ -248,7 +248,7 @@ export const derivedClaimVerifications: readonly DerivedClaimVerification[] = Ob
     depth: 'registry-membership-only',
     locator: null,
     whatWasVerified:
-      'No registered record supports using any derived boundary here as a treatment target, and the threshold-context validator refuses the classification outright.',
+      'No treatment target is authored. The threshold-context validator allows one only with a cited source.',
   },
 ])
 

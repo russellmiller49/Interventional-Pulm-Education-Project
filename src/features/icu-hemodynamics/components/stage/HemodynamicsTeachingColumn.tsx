@@ -24,8 +24,13 @@ import {
   signalGrammarRows,
 } from '../../content/signalGrammar'
 import type { HemodynamicsStageLesson, HemodynamicsStageStep } from '../../content/stageLessons'
+import { HEMODYNAMICS_NUMBERS } from '../../content/teachingNumbers'
 import { CardiacOutputMethodModel } from '../CardiacOutputMethodModel'
 import { FickMethodWorkbench } from '../FickMethodWorkbench'
+import {
+  HemodynamicsReferenceValues,
+  HemodynamicsShockProfiles,
+} from '../HemodynamicsReferenceValues'
 import { NormalWaveformReference } from '../NormalWaveformReference'
 import { NormalWaveformValidityChallenges } from '../NormalWaveformValidityChallenges'
 import { DerivedHemodynamicsTeachingPanel } from '../PacMeasurementTeaching'
@@ -44,7 +49,7 @@ import styles from './hemodynamics-stage.module.css'
  * Before the commitment: what the section is for, the stop the step stands at (its analogy, its
  * precise statement, its checklist), and the control panel where the section introduces it.
  * After the commitment: the rows of the one table this section fills in, the control strip, the
- * section's deeper reference folded to its heading, and the model boundary. The scope decides
+ * section's deeper reference folded to its heading, and a simulator limit where one matters. The scope decides
  * which blocks are the focus; the commitment decides what may be said at all.
  */
 const STATE_WORDS: Readonly<Record<ControlStripState, string>> = {
@@ -113,8 +118,8 @@ export function HemodynamicsTeachingColumn({
       {flow && procedural && step.interaction.kind !== 'read' ? (
         <p className={styles.dockNote} data-procedural-safety>
           {lesson.sectionId === 'pawp-capture'
-            ? 'Acquire only from a confirmed PA tracing. Store an end-expiratory value, deflate, and verify the PA tracing returns. The automatic release is a model safeguard, not a clinical inflation limit.'
-            : 'Confirm each settled tracing before moving. Stop for resistance, ectopy or patient deterioration; those events are not modeled here.'}
+            ? `Wedge only from a confirmed PA tracing. Inflate slowly with ${HEMODYNAMICS_NUMBERS.value('balloon-volume')}, stop as soon as it wedges, store an end-expiratory value, deflate, and check that the PA tracing returns.`
+            : 'Confirm each settled tracing before moving. For resistance, ectopy or a deteriorating patient, make the first move from the list; the simulator shows none of them.'}
         </p>
       ) : null}
       {!independentAttempt && (!flow || (step.ordinal === 1 && !step.teaching)) ? (
@@ -262,12 +267,13 @@ export function HemodynamicsTeachingColumn({
             <DeeperReference lesson={lesson} provenanceResolved={provenanceResolved} />
           ) : null}
 
-          <StageBlock kind="boundary" heading="What this simulation leaves out">
-            <section className={styles.teachingCard} data-teaching-block="boundary">
-              <p className={styles.kicker}>What this simulation leaves out</p>
-              <p>{spec.modelBoundary}</p>
-            </section>
-          </StageBlock>
+          {spec.modelBoundary.trim().length > 0 ? (
+            <StageBlock kind="boundary" heading="Simulator limit">
+              <section className={styles.teachingCard} data-teaching-block="boundary">
+                <p>{spec.modelBoundary}</p>
+              </section>
+            </StageBlock>
+          ) : null}
         </>
       ) : null}
     </div>
@@ -287,20 +293,30 @@ function DeeperReference({
     case 'pressure-system':
     case 'pac-signal-validation':
       return (
-        <StageBlock kind="after-commitment" heading="The validity sequence, in full">
-          <section className={styles.teachingCard} data-teaching-block="validity-sequence">
-            <p className={styles.kicker}>The validity sequence, in full</p>
-            <ol className={styles.sequence}>
-              {pressureSystemValiditySteps.map((step) => (
-                <li key={step.id}>
-                  <strong>{step.shortLabel}.</strong> {step.question}{' '}
-                  <small>{step.whatItEstablishes}</small>
-                </li>
-              ))}
-            </ol>
-          </section>
-          <SignalTroubleshootingAtlas />
-        </StageBlock>
+        <>
+          {lesson.sectionId === 'pac-signal-validation' ? (
+            <StageBlock kind="after-commitment" heading="Shock profiles">
+              <section className={styles.teachingCard} data-teaching-block="shock-profiles">
+                <p className={styles.kicker}>Once the numbers are valid: which shock is it?</p>
+                <HemodynamicsShockProfiles />
+              </section>
+            </StageBlock>
+          ) : null}
+          <StageBlock kind="after-commitment" heading="The validity sequence, in full">
+            <section className={styles.teachingCard} data-teaching-block="validity-sequence">
+              <p className={styles.kicker}>The validity sequence, in full</p>
+              <ol className={styles.sequence}>
+                {pressureSystemValiditySteps.map((step) => (
+                  <li key={step.id}>
+                    <strong>{step.shortLabel}.</strong> {step.question}{' '}
+                    <small>{step.whatItEstablishes}</small>
+                  </li>
+                ))}
+              </ol>
+            </section>
+            <SignalTroubleshootingAtlas />
+          </StageBlock>
+        </>
       )
     case 'waveform-interpretation':
       return (
@@ -336,7 +352,9 @@ function DeeperReference({
           visibility={prebrief ? 'shown' : undefined}
         >
           <section className={styles.teachingCard} data-teaching-block="stop-conditions">
-            <p className={styles.kicker}>What to expect, and when to stop</p>
+            <p className={styles.kicker}>
+              What to expect, and the first move when it goes off plan
+            </p>
             <ul className={styles.checklist}>
               {pacPrebriefExpectedTransitions.map((line) => (
                 <li key={line}>{line}</li>
@@ -350,6 +368,10 @@ function DeeperReference({
                 </div>
               ))}
             </dl>
+            <HemodynamicsReferenceValues
+              title="Floating the catheter, in numbers"
+              ids={['balloon-volume', 'flotation-ectopy', 'pa-rupture-mortality']}
+            />
           </section>
         </StageBlock>
       )
@@ -366,11 +388,20 @@ function DeeperReference({
               <ol className={styles.sequence}>
                 {pawpCaptureSteps.map((step) => (
                   <li key={step.id}>
-                    <strong>{step.shortLabel}.</strong> {step.whatYouDo}{' '}
-                    <small>{step.whatItDoesNotEstablish}</small>
+                    <strong>{step.shortLabel}.</strong> {step.whatYouDo}
+                    {step.whatItDoesNotEstablish ? (
+                      <>
+                        {' '}
+                        <small>{step.whatItDoesNotEstablish}</small>
+                      </>
+                    ) : null}
                   </li>
                 ))}
               </ol>
+              <HemodynamicsReferenceValues
+                title="The balloon, in numbers"
+                ids={['balloon-volume', 'overwedge-volume', 'retract-distance']}
+              />
             </section>
           </StageBlock>
           <StageBlock
@@ -394,6 +425,21 @@ function DeeperReference({
     case 'thermodilution-series':
       return (
         <>
+          <StageBlock kind="after-commitment" heading="Thermodilution technique">
+            <section className={styles.teachingCard} data-teaching-block="thermodilution-technique">
+              <p className={styles.kicker}>Thermodilution technique</p>
+              <p>
+                Inject fast and smoothly through the proximal port at the same point in the
+                respiratory cycle each time, at end expiration. Take at least three. The injectate
+                volume and temperature must match the monitor&apos;s computation constant. Injectate
+                at room temperature is also used.
+              </p>
+              <HemodynamicsReferenceValues
+                title="Thermodilution, in numbers"
+                ids={['injectate-volume', 'thermodilution-spread']}
+              />
+            </section>
+          </StageBlock>
           <StageBlock kind="after-commitment" heading="The three ways to a flow number">
             <div data-teaching-block="method-model">
               <CardiacOutputMethodModel provenanceResolved={provenanceResolved} />
@@ -432,11 +478,19 @@ function DeeperReference({
       )
     case 'derived-hemodynamics':
       return (
-        <StageBlock kind="after-commitment" heading="The records behind every calculated value">
-          <div data-teaching-block="derived-records">
-            <DerivedHemodynamicsTeachingPanel />
-          </div>
-        </StageBlock>
+        <>
+          <StageBlock kind="after-commitment" heading="Shock profiles">
+            <section className={styles.teachingCard} data-teaching-block="shock-profiles">
+              <p className={styles.kicker}>Shock profiles: what the numbers add up to</p>
+              <HemodynamicsShockProfiles />
+            </section>
+          </StageBlock>
+          <StageBlock kind="after-commitment" heading="Each calculated value, input by input">
+            <div data-teaching-block="derived-records">
+              <DerivedHemodynamicsTeachingPanel />
+            </div>
+          </StageBlock>
+        </>
       )
     default:
       return null

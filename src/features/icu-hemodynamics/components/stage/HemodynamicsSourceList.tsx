@@ -5,7 +5,6 @@ import { useState } from 'react'
 import shellStyles from '@/features/learning-module/stage/lesson-shell.module.css'
 
 import {
-  HEMODYNAMICS_CLINICAL_REVIEW_LINE,
   hemodynamicsSourceCheckLine,
   hemodynamicsSourceClassLabel,
   hemodynamicsSourceDateLine,
@@ -62,7 +61,6 @@ export function HemodynamicsSourceList({
               {review.checks.map((check) => (
                 <li key={`${check.on}:${check.what}`}>{hemodynamicsSourceCheckLine(check)}</li>
               ))}
-              <li>{HEMODYNAMICS_CLINICAL_REVIEW_LINE}</li>
             </ul>
             {claimsVisible ? (
               <ul className={shellStyles.sourceClaims} data-source-claims>

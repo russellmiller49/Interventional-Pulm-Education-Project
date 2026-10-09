@@ -10,10 +10,7 @@ import {
   type CardiacOutputMethod,
   type CardiacOutputMethodId,
 } from '../content/cardiacOutputMethods'
-import {
-  CARDIAC_OUTPUT_VERIFICATION_NOTE,
-  cardiacOutputOpenMethodQuestions,
-} from '../content/cardiacOutputSourceBoundaries'
+import { cardiacOutputOpenMethodQuestions } from '../content/cardiacOutputSourceBoundaries'
 import { hemodynamicsSourceClassLabel } from '../content/sourceReviewMetadata'
 import { hemodynamicsSourceById } from '../content/sources'
 import styles from './icu-hemodynamics.module.css'
@@ -215,7 +212,7 @@ function MethodDetail({ method }: { readonly method: CardiacOutputMethod }) {
       </p>
 
       <h4 className={styles.thermoTrialQuality}>
-        <span>Sources and their limits</span>
+        <span>Sources</span>
       </h4>
       <ul className={styles.measurementTeachingAudit}>
         {method.evidenceIds.map((evidenceId) => {
@@ -377,17 +374,13 @@ export function CardiacOutputMethodModel({
       />
 
       <div className={styles.measurementTeachingCard}>
-        <h3>Questions this module does not answer</h3>
+        <h3>Where the methods are uncertain</h3>
         {cardiacOutputOpenMethodQuestions.map((question) => (
           <p key={question.id} className={styles.openQuestionCard}>
             <strong>{question.question}</strong> {question.whyItIsOpen}{' '}
             {question.whatThisModuleDoes}
           </p>
         ))}
-        <p className={styles.measurementTeachingSource}>
-          <span>Source boundary</span>
-          {CARDIAC_OUTPUT_VERIFICATION_NOTE}
-        </p>
       </div>
     </section>
   )

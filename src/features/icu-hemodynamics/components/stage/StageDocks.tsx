@@ -14,6 +14,7 @@ import {
   dynamicResponseDefinitions,
   getDynamicResponseDefinition,
 } from '../../content/pressureSystemVisuals'
+import { HEMODYNAMICS_NUMBERS } from '../../content/teachingNumbers'
 import { DYNAMIC_RESPONSE_REFERENCE } from '../../engine/waveformArtifacts'
 import {
   DYNAMIC_RESPONSE_CLASSIFIED_CHECK,
@@ -464,18 +465,10 @@ export function TipDock({ state, dispatch, enabled }: DockProps) {
           </button>
         </div>
       </div>
-      {/*
-        Who raised the balloon. This simulation inflates the flow-directed balloon when the tip
-        leaves the atrium and lets it down when the artery appears; the learner never chooses
-        either. Saying so is the honest reading of the report's L5-03 — the two decisions the
-        intro stresses are not practised here — and it keeps the assistance from reading as work
-        the learner performed. Whether those decisions should become controls is a review
-        question, not one this repair answers.
-      */}
       <p className={styles.dockNote} data-float-balloon-provenance>
         {state.catheter.floatBalloonInflated
-          ? 'The flow-directed balloon is up while the tip floats forward, as the manufacturer’s instructions describe. This simulation raised it for you when the tip left the atrium and lets it down when the artery appears — guided model assistance, not an action you performed, and not the wedge.'
-          : 'The flow-directed balloon is down. In this simulation it is raised and lowered for you as the tip floats; inflating and deflating it are not controls here, and nothing about it is recorded as your work.'}
+          ? `The balloon is up while the tip floats forward. The simulator raises it when the tip leaves the atrium and lets it down when the artery appears; at the bedside you inflate it with ${HEMODYNAMICS_NUMBERS.value('balloon-volume')}.`
+          : 'The balloon is down. The simulator raises and lowers it for you as the tip floats.'}
       </p>
     </fieldset>
   )
@@ -520,9 +513,9 @@ export function WedgeDock({ state, dispatch, enabled }: DockProps) {
           <span>Whether the balloon is up</span>
           <small>
             {occluding
-              ? `Up for ${elapsed.toFixed(0)} s. The simulation releases it on its own after ${WEDGE_AUTO_DEFLATION_SECONDS} s — a rail of this model, not a clinical limit.`
+              ? `Up for ${elapsed.toFixed(0)} s. Keep it brief: just long enough to read end expiration. The simulator lets it down after ${WEDGE_AUTO_DEFLATION_SECONDS} s.`
               : catheter.position === 'pa'
-                ? 'Down. A deflated balloon does not by itself establish that the occlusion has ended: the artery tracing coming back does. Inflate only from a confirmed artery tracing.'
+                ? `Down. Inflate only from a confirmed artery tracing: slowly, ${HEMODYNAMICS_NUMBERS.value('balloon-volume')}, stopping as soon as it wedges.`
                 : 'Down. The tip must be in the pulmonary artery first.'}
           </small>
         </div>

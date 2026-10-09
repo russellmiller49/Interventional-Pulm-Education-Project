@@ -4,6 +4,7 @@ import {
 } from '@/features/learning-module/activity'
 
 import type { PacGuidedSkillId } from './pacGuidedSkills'
+import { HEMODYNAMICS_NUMBERS } from './teachingNumbers'
 
 const placementEvidence = [
   'pac-waveforms-part-1-2021',
@@ -54,7 +55,7 @@ export const pacGuidedLearningItems: Readonly<
         {
           id: 'mean-only-withhold-systolic',
           label:
-            'Read the mean with caution, and withhold systolic, diastolic, and pulse pressure until the ringing is resolved.',
+            'Read the mean with caution; withhold systolic, diastolic and pulse pressure until the ringing is fixed.',
           rationale:
             'A resonating system exaggerates rapid pressure change, so systolic reads high and diastolic reads low while the mean stays relatively preserved.',
           plausibility: 'best',
@@ -94,8 +95,7 @@ export const pacGuidedLearningItems: Readonly<
       choices: [
         {
           id: 'level-zero-underdamped',
-          label:
-            'The system is off level, not zeroed, and underdamped; repair and verify each problem separately.',
+          label: 'Off level, not zeroed and underdamped; fix and recheck each problem separately.',
           rationale:
             'The height causes a hydrostatic offset, zero establishes the reference, and persistent oscillation identifies an underdamped response.',
           plausibility: 'best',
@@ -134,7 +134,8 @@ export const pacGuidedLearningItems: Readonly<
       choices: [
         {
           id: 'relevel-and-overdamping',
-          label: 'Re-level the transducer and restore the overdamped measurement response.',
+          label:
+            'Re-level the transducer and repair the overdamped line before reading pulse pressure.',
           rationale:
             'The new height creates hydrostatic error and the sluggish response attenuates rapid pressure changes.',
           plausibility: 'best',
@@ -176,7 +177,7 @@ export const pacGuidedLearningItems: Readonly<
         {
           id: 'pa-to-true-wedge',
           label:
-            'PA pulsatility and the dicrotic notch disappear, and a lower-pressure atrial waveform with delayed a and v waves appears.',
+            'The PA pulse and notch disappear and a lower atrial waveform with a and v waves appears.',
           rationale:
             'A true wedge replaces the PA contour with delayed atrial morphology sampled through the occluded pulmonary circulation.',
           plausibility: 'best',
@@ -255,7 +256,7 @@ export const pacGuidedLearningItems: Readonly<
       choices: [
         {
           id: 'tricuspid-regurgitation',
-          label: 'Systolic right-atrial filling from tricuspid regurgitation',
+          label: 'Tricuspid regurgitation filling the atrium in systole',
           rationale:
             'Regurgitant systolic flow produces a prominent c-v wave and blunts or reverses the x descent.',
           plausibility: 'best',
@@ -294,7 +295,7 @@ export const pacGuidedLearningItems: Readonly<
       choices: [
         {
           id: 'wedge',
-          label: 'Pulmonary artery occlusion (wedge) tracing',
+          label: 'Wedge tracing',
           rationale:
             'The delayed atrial morphology reflects transmission from the left atrium through the pulmonary bed.',
           plausibility: 'best',
@@ -329,12 +330,11 @@ export const pacGuidedLearningItems: Readonly<
       contextRequirement: 'technical',
       clinicalContextId: 'pac-pawp-capture',
       visualAssetIds: ['pac-live-waveform', 'wedge-respiratory-cursor'],
-      stem: 'From a confirmed PA position, a transient occlusion tracing has been sampled for one respiratory cycle. Which sequence produces the most interpretable and safest modeled PAWP?',
+      stem: 'From a confirmed PA position, a transient occlusion tracing has been sampled for one respiratory cycle. Which sequence produces the most interpretable and safest PAWP?',
       choices: [
         {
           id: 'end-exp-store-deflate',
-          label:
-            'Place the cursor at end expiration, store the value, then deflate and confirm PA return.',
+          label: 'Read at end expiration, store the value, then deflate and confirm PA return.',
           rationale:
             'End expiration minimizes respiratory pressure contribution, and prompt deflation restores pulmonary blood flow and the PA waveform.',
           plausibility: 'best',
@@ -356,8 +356,7 @@ export const pacGuidedLearningItems: Readonly<
         },
       ],
       correctChoiceIds: ['end-exp-store-deflate'],
-      explanation:
-        'An interpretable PAWP requires a confirmed PA start, brief occlusion, end-expiratory sampling, prompt deflation, and return of the PA waveform.',
+      explanation: `An interpretable PAWP needs a confirmed PA start, a slow inflation with ${HEMODYNAMICS_NUMBERS.value('balloon-volume')} that stops when the tracing wedges, an end-expiratory reading, prompt deflation, and return of the PA waveform.`,
       evidenceIds: [...placementEvidence, 'edwards-swan-ganz-ifu-2023'],
       reviewStatus: 'draft',
     }),
@@ -395,8 +394,7 @@ export const pacGuidedLearningItems: Readonly<
         },
       ],
       correctChoiceIds: ['end-exp-then-deflate'],
-      explanation:
-        'Interpret respiratory timing explicitly and close the safety loop by promptly restoring and confirming the PA waveform.',
+      explanation: 'Read at end expiration, then deflate and confirm the PA waveform is back.',
       evidenceIds: [...placementEvidence, 'edwards-swan-ganz-ifu-2023'],
       reviewStatus: 'draft',
     }),
@@ -414,8 +412,7 @@ export const pacGuidedLearningItems: Readonly<
       choices: [
         {
           id: 'accept-two-repeat-one',
-          label:
-            'Accept the two technically valid curves and repeat the irregular prolonged-injection trial.',
+          label: 'Accept the two smooth curves and repeat the trial with the prolonged injection.',
           rationale:
             'Curve quality must be reviewed before averaging, and an invalid trial should be replaced rather than forced into agreement.',
           plausibility: 'best',
@@ -437,8 +434,7 @@ export const pacGuidedLearningItems: Readonly<
         },
       ],
       correctChoiceIds: ['accept-two-repeat-one'],
-      explanation:
-        'Standardize injection technique, inspect every temperature-time curve, and average an adequate set of technically valid accepted trials.',
+      explanation: `Inject the cold bolus (${HEMODYNAMICS_NUMBERS.value('injectate-volume')}) fast and smoothly at end expiration, inspect every curve, and average at least three. They should be ${HEMODYNAMICS_NUMBERS.value('thermodilution-spread')}.`,
       evidenceIds: measurementEvidence,
       reviewStatus: 'draft',
     }),
@@ -456,14 +452,15 @@ export const pacGuidedLearningItems: Readonly<
         {
           id: 'reject-repeat-standardized',
           label:
-            'Reject the poor curve and repeat with the configured volume, consistent timing, and respiratory phase.',
+            'Reject the poor curve and repeat it at end expiration with a fast, smooth injection.',
           rationale:
             'Technique and curve quality must be standardized before the value can be accepted.',
           plausibility: 'best',
         },
         {
           id: 'accept-because-low-flow',
-          label: 'Accept it; low flow makes every curve broader and slower, and this one is.',
+          label:
+            'Accept it; low flow makes every curve broader and slower, and this one is no different.',
           rationale:
             'Low flow changes curve area but does not make a technically poor injection acceptable.',
           plausibility: 'reasonable-but-incomplete',
@@ -497,7 +494,7 @@ export const pacGuidedLearningItems: Readonly<
         {
           id: 'withhold-svr',
           label:
-            'Withhold precise SVR interpretation until the invasive-pressure inputs are valid.',
+            'Withhold SVR until the transducer is leveled and zeroed and the pressures are re-read.',
           rationale: 'A derived value inherits the validity limits of every required input.',
           plausibility: 'best',
         },
@@ -535,8 +532,7 @@ export const pacGuidedLearningItems: Readonly<
       choices: [
         {
           id: 'ppv-not-interpretable',
-          label:
-            'No; irregular rhythm and spontaneous effort violate the modeled PPV validity conditions.',
+          label: 'No; an irregular rhythm and spontaneous effort each make PPV unreadable.',
           rationale:
             'PPV requires the relevant rhythm, ventilation, effort, waveform, and right-heart conditions to be satisfied.',
           plausibility: 'best',
@@ -559,7 +555,7 @@ export const pacGuidedLearningItems: Readonly<
       ],
       correctChoiceIds: ['ppv-not-interpretable'],
       explanation:
-        'Use the explicit validity screen rather than treating a computed value as self-validating.',
+        'PPV needs controlled ventilation, a regular rhythm and no spontaneous effort. A number on the monitor does not mean the conditions are met.',
       evidenceIds: measurementEvidence,
       reviewStatus: 'draft',
     }),

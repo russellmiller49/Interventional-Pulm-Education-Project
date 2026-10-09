@@ -1,6 +1,5 @@
 import { HEMODYNAMIC_CLINICAL_THRESHOLDS, hemodynamicsSources } from '../content'
 import {
-  HEMODYNAMICS_CLINICAL_REVIEW_LINE,
   hemodynamicsSourceClassLabel,
   hemodynamicsSourceDateLine,
 } from '../content/sourceReviewMetadata'
@@ -38,7 +37,6 @@ export function SourcesPanel() {
             <small>{hemodynamicsSourceDateLine(source)}</small>
             <small>{source.intendedUse}</small>
             {source.limitation && <em>{source.limitation}</em>}
-            <small>{HEMODYNAMICS_CLINICAL_REVIEW_LINE}</small>
             {source.url && (
               <a href={source.url} target="_blank" rel="noreferrer">
                 Open source ↗

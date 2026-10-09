@@ -306,7 +306,7 @@ export function fickCardiacOutput(inputs: FickInputSet): FickResult {
   if (!site.isTrueMixedVenous) {
     withhold(
       'not-mixed-venous',
-      `The venous specimen came from the ${site.label.toLowerCase()} rather than the pulmonary artery, so it is not a true mixed-venous specimen: it is drawn upstream of where venous return from the whole body has mixed. This module does not treat the two as interchangeable and does not substitute one for the other.`,
+      `The venous specimen came from the ${site.label.toLowerCase()} rather than the pulmonary artery, so it is not a true mixed-venous specimen: it is drawn upstream of where venous return from the whole body has mixed. The two are not interchangeable.`,
     )
   }
   if (!inputs.steadyState) {

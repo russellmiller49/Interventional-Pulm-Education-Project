@@ -24,7 +24,7 @@ export function IcuHemodynamicsPracticeLandingV2() {
       <p className="mt-3 max-w-3xl leading-7 text-muted-foreground">
         Each case opens one focused simulation workspace. Act in any order, watch the modeled
         consequence of each action, ask for help at any point, and open the teaching debrief
-        whenever you want to compare your reasoning with an authored expert trace.
+        whenever you want to compare your reasoning with an expert&apos;s.
       </p>
       <ol className="mt-8 grid gap-4 md:grid-cols-2">
         {hemodynamicCases.map((definition, index) => {

@@ -87,7 +87,7 @@ describe('activity-specific presentation replaces permanent panes', () => {
     mountSection('pressure-system')
     advanceToPrediction('pressure-system')
     expect(document.querySelector('[data-dock]')).toBeNull()
-    commitChoice(/off level, not zeroed, and underdamped/)
+    commitChoice(/off level, not zeroed and underdamped/i)
     clickPrimary()
     expect(document.querySelector('[data-dock="line"]')).not.toBeNull()
     fireEvent.click(document.querySelector('[data-now-back]')!)
@@ -101,7 +101,7 @@ describe('the card keeps the promise the step makes', () => {
   it('shows the verdict again when the learner looks back at the prediction', () => {
     const { lesson } = mountSection('pressure-system')
     advanceToPrediction('pressure-system')
-    commitChoice(/off level, not zeroed, and underdamped/)
+    commitChoice(/off level, not zeroed and underdamped/i)
     clickPrimary()
     fireEvent.click(document.querySelector('[data-now-back]')!)
     expect(currentStepId()).toBe(lesson.steps[lesson.predictionStepIndex].id)
@@ -113,7 +113,7 @@ describe('the card keeps the promise the step makes', () => {
   it('renders the reasoning on the Explain step, other answers included', () => {
     const { lesson } = mountSection('why-measure')
     clickPrimary()
-    commitChoice(/arterial pressure is low at the measurement site/)
+    commitChoice(/pressure is low at this site; the output and the cause are still unknown/)
     clickPrimary()
     clickPrimary() // worked classification
     // The sort is the Act step; its commitment is exercised elsewhere. Reach Explain the honest way.
@@ -155,7 +155,7 @@ describe('the verdict is framed for the kind of item it heads', () => {
 
     mountSection('pressure-system')
     advanceToPrediction('pressure-system')
-    commitChoice(/off level, not zeroed, and underdamped/)
+    commitChoice(/off level, not zeroed and underdamped/i)
     expect(document.querySelector('[data-now-card] [data-answer-verdict] p')?.textContent).toBe(
       'Correct. That read holds',
     )

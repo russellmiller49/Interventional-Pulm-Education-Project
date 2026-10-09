@@ -260,8 +260,8 @@ function PlacedCursorFeedback({
               {difference >= 0 ? '+' : '−'}
               {Math.abs(difference).toFixed(1)} mmHg from it.{' '}
               {placed.withinModeledEndExpiratoryWindow
-                ? 'It falls inside the simulation’s modeled end-expiratory window, so a value stored from it is recorded as end-expiratory.'
-                : 'It falls outside the simulation’s modeled end-expiratory window, so a value stored from it is not recorded as end-expiratory. That window is a setting of this model, not a clinical tolerance.'}
+                ? 'It falls inside the end-expiratory window, so a value stored from it is recorded as end-expiratory.'
+                : 'It falls outside the end-expiratory window, so a value stored from it is not recorded as end-expiratory. The width of that window is the simulator’s setting.'}
             </p>
           ) : null}
         </>

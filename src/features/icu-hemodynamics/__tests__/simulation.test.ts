@@ -293,11 +293,12 @@ describe('50 Hz circulation, waveforms, and measurement system', () => {
     expect(state.catheter.balloonInflated).toBe(false)
     expect(state.catheter.position).toBe('pa')
     expect(state.criticalErrors).toContain('wedge-prolonged-inflation')
-    // The cutoff behavior is unchanged; how it is described is not. It must read as this
-    // simulation's own rail rather than as a clinical inflation-time limit no source here supplies,
-    // and it must not tell the learner the PA waveform came back.
-    expect(state.responseMessage).toMatch(/simulation ended the occlusion at its own fixed cutoff/i)
-    expect(state.responseMessage).toMatch(/manufacturer/i)
+    // The cutoff behavior is unchanged. The message says the simulator let the balloon down and
+    // teaches the rule (a brief wedge, read at end expiration). It names no limit in seconds,
+    // because no source gives one, and it must not tell the learner the PA waveform came back.
+    expect(state.responseMessage).toMatch(/the simulator let it down/i)
+    expect(state.responseMessage).toMatch(/keep each wedge brief/i)
+    expect(state.responseMessage).toMatch(/end expiration/i)
     expect(state.responseMessage).not.toMatch(/\b10[-\s]second\b/i)
     expect(state.responseMessage).not.toMatch(/waveform was restored/i)
   })

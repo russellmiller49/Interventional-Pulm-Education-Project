@@ -164,7 +164,7 @@ export function CaseWorkflow({ state, dispatch }: CaseWorkflowProps) {
         </article>
 
         <article>
-          <h3>Intervene in bounded tiers</h3>
+          <h3>Intervene</h3>
           {!state.predictionCommitted ? (
             <p className={styles.lockMessage}>
               You may act now or record a working frame first; the initial frame can make later

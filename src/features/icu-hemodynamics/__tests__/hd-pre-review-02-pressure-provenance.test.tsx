@@ -321,7 +321,8 @@ describe('D. the wedge cursor is placed on captured samples, by someone', () => 
     const feedback = document.querySelector('[data-cursor-placed="manual"]')!
     expect(feedback.textContent).toMatch(/Your cursor/)
     expect(feedback.textContent).toMatch(/At the modeled end expiration the same capture reads/)
-    expect(feedback.textContent).toMatch(/model, not a clinical tolerance|inside the simulation/)
+    // The window's width is named as the simulator's, so it is not read as a clinical tolerance.
+    expect(feedback.textContent).toMatch(/width of that window is the simulator’s setting/)
     // The live strip no longer shows an automatic end-expiration marker during the occlusion.
     cleanup()
     render(<BedsideMonitor state={state} dispatch={jest.fn()} focus="pac" />)

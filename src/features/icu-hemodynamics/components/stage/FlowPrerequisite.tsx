@@ -130,7 +130,7 @@ function MetricReading({ metricId }: { readonly metricId: DerivedMetricId }) {
       <h3>What does {metric.shortLabel} help describe?</h3>
       <p>{metric.interpretation}</p>
       <p>
-        <strong>Authored measurement episode:</strong> {episode.presentation}
+        <strong>Measurement episode:</strong> {episode.presentation}
       </p>
       <h4>Source inputs</h4>
       <dl className={styles.stopFacts}>

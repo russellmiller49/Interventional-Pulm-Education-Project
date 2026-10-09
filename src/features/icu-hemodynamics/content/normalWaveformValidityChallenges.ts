@@ -11,29 +11,9 @@ import {
 import { hemodynamicsSourceById } from './sources'
 
 /**
- * Representative signal-validity problems, shown against the same normal reference (H2 §5).
- *
- * The reference teaches what each chamber should look like. On its own that produces a learner who
- * can name four tracings and will name them just as confidently when the tracing is a display
- * artifact — which is the failure the pressure-system section exists to prevent and which has to be
- * exercised, not merely stated.
- *
- * Each challenge draws one of the four normal tracings through one authored display fault. Nothing
- * here re-implements waveform physics: the fault is a display specification the figure applies using
- * the same artifact transforms the live monitor uses, and the underlying trace is the atlas entry
- * the reference already points at.
- *
- * The answer is always the same shape — the number on this display cannot be used as it stands,
- * and something has to be repaired or re-read first. Whether the *chamber* can still be named is a
- * separate question with a different answer per fault (HD-PRE-REVIEW-02, report L3-09): an offset,
- * a moving catheter or a reading taken at the wrong point in the breath leave the shape that names
- * the chamber intact, while damping, ringing, a wrong label or a wrong axis take it away. Each
- * challenge carries both answers, written from its own key and explanation. Withholding is
- * prevented from becoming a guessable habit by distractors that are the genuine physiologic
- * misreads each fault produces.
- *
- * Nothing here gates. Every station stays reachable by URL, and a learner who never opens a
- * challenge can still work through every other part of the section.
+ * Seven display faults, each drawn through one of the four normal tracings with the same artifact
+ * transforms the live monitor uses. Each carries two answers: whether the chamber can still be
+ * named, and whether the number can be used.
  */
 
 export type NormalWaveformFaultKind =
@@ -101,7 +81,7 @@ export interface NormalWaveformValidityChallenge {
   readonly whyInterpretationIsWithheld: string
   /** The chamber and the value, judged separately, from this challenge's own key. */
   readonly readout: NormalWaveformValidityReadout
-  /** The first thing to do about it, bounded to what the sources support. */
+  /** The first thing to do about it. */
   readonly repairFirst: string
   /** Text equivalent of the drawn figure, for a learner who cannot see it. */
   readonly figureTextEquivalent: string
@@ -126,10 +106,9 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
     fault: { levelOffsetMmHg: 7.4 },
     whatYouSee:
       'An a, c, v tracing with normal shape and normal respiratory swing, sitting several mmHg higher on the axis than the reference.',
-    whatItInvites:
-      'A raised right-atrial pressure, and a decision about volume built on it. Every wave component is where it belongs, so nothing on the tracing argues against the number.',
+    whatItInvites: 'A raised right-atrial pressure, and a volume decision built on it.',
     whyInterpretationIsWithheld:
-      'A hydrostatic offset moves the whole tracing without changing its shape. Shape is the only thing this display can vouch for, and shape is exactly what the fault leaves intact.',
+      'A transducer 10 cm below the reference adds about 7.4 mmHg to every sample without changing the shape.',
     readout: {
       chamber: {
         identifiable: true,
@@ -139,7 +118,7 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
         'not usable until the transducer is re-levelled and zeroed: every sample carries the same hydrostatic offset',
     },
     repairFirst:
-      'Return the transducer to the institutional phlebostatic reference and establish atmospheric zero as a separate step, then read the tracing again.',
+      'Put the transducer back at the phlebostatic axis, zero it to atmosphere, then read again.',
     figureTextEquivalent:
       'A right-atrial venous tracing with identifiable a, c, and v waves and x and y descents, drawn several mmHg above where the reference places it. The morphology is unchanged; only the position on the axis has moved.',
     commitment: commitment({
@@ -155,17 +134,16 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
         {
           id: 'withhold-until-levelled',
           label:
-            'Nothing yet. The morphology identifies the compartment, but the value carries a hydrostatic offset until the transducer is re-levelled and zeroed.',
+            'Nothing yet: the value carries a hydrostatic offset until the transducer is re-levelled.',
           rationale:
-            'An off-level transducer shifts every sample by a fixed number of mmHg without touching the shape. Because right-atrial pressures are small, that fixed offset is proportionally large.',
+            'An off-level transducer shifts every sample by the same number of mmHg and leaves the shape alone.',
           plausibility: 'best',
         },
         {
           id: 'read-rising-filling-pressure',
           label:
             'Right-atrial pressure has risen since the earlier reading, so filling pressure is higher than it was.',
-          rationale:
-            'This is the reading the fault is designed to produce. Two values taken at different transducer heights are not comparable, whatever the trend looks like.',
+          rationale: 'Two values taken at different transducer heights cannot be compared.',
           plausibility: 'incorrect-mechanism',
         },
         {
@@ -173,13 +151,13 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
           label:
             'The value can be used, because the a, c, and v waves are clean and the respiratory swing is normal.',
           rationale:
-            'Clean morphology establishes which compartment is being sampled. It says nothing about the reference the pressure is reported against.',
+            'Clean morphology names the compartment. It says nothing about the reference the pressure is measured against.',
           plausibility: 'reasonable-but-incomplete',
         },
       ],
       correctChoiceIds: ['withhold-until-levelled'],
       explanation:
-        'Level and zero establish the reference; morphology establishes the compartment. A tracing can be flawless on the second and unusable on the first, and this is the fault that looks least like a fault.',
+        'Level and zero set the reference; morphology names the compartment. Right-atrial pressures are small, so a fixed offset is proportionally large.',
       evidenceIds: [...DISPLAY_EVIDENCE, 'clinical-hemodynamics-waveforms'],
       reviewStatus: 'sme-review',
     }),
@@ -194,10 +172,9 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
     fault: { mislabeledAs: 'PA' },
     whatYouSee:
       'A low-amplitude venous tracing with a, c, and v waves, displayed under a channel labelled as the pulmonary artery.',
-    whatItInvites:
-      'A diagnosis. A venous-looking tracing on a pulmonary-artery channel reads as severe damping, or as a spontaneous wedge, and both invite immediate action.',
+    whatItInvites: 'Calling it severe damping or a spontaneous wedge, and acting on either.',
     whyInterpretationIsWithheld:
-      'The tracing is a valid signal under a label that does not belong to it. Nothing about the shape is abnormal, so any conclusion drawn from the mismatch is a conclusion about the label.',
+      'The tracing is a normal venous signal under a label that does not belong to it.',
     readout: {
       chamber: {
         identifiable: false,
@@ -206,8 +183,7 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
       },
       value: 'not usable until the channel and the tracing are reconciled',
     },
-    repairFirst:
-      'Read the channel label and the axis before the shape, and reconcile the displayed channel with where the catheter is supposed to be. Confirm which pressure this lumen is actually connected to before naming what is at fault in it.',
+    repairFirst: 'Check which lumen is connected to this channel before naming the tracing.',
     figureTextEquivalent:
       'A low-amplitude venous tracing with three positive waves and two descents — the right-atrial pattern — displayed beneath a channel heading that reads pulmonary artery.',
     commitment: commitment({
@@ -222,10 +198,9 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
       choices: [
         {
           id: 'reconcile-channel-first',
-          label:
-            'Establish which pressure this channel is connected to before naming the tracing, because the shape shown is a normal venous pattern rather than a damaged pulmonary-artery one.',
+          label: 'Check which pressure this channel is connected to before naming the tracing.',
           rationale:
-            'A venous morphology under a pulmonary-artery heading is a mismatch between signal and label. Which of the two is mistaken has to be settled before either is interpreted.',
+            'Three positive waves and two descents are a normal venous pattern. The label or the connection is the first suspect.',
           plausibility: 'best',
         },
         {
@@ -233,21 +208,20 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
           label:
             'Name it a severely overdamped pulmonary-artery tracing and troubleshoot the fluid path.',
           rationale:
-            'Overdamping blunts a pulmonary-artery contour; it does not manufacture a, c, and v waves. Troubleshooting the tubing here repairs something that is not broken.',
+            'Overdamping blunts a pulmonary-artery contour; it does not create a, c and v waves.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'call-it-spontaneous-wedge',
-          label:
-            'Treat it as a spontaneous wedge and withdraw the catheter under supervision straight away.',
+          label: 'Treat it as a spontaneous wedge and withdraw the catheter straight away.',
           rationale:
-            'A spontaneous wedge is a real emergency and the reasoning is sound if the label is right — which is precisely the assumption that has not been checked.',
+            'A spontaneous wedge is an emergency, and the reasoning holds if the label is right. That is the part not yet checked.',
           plausibility: 'reasonable-but-incomplete',
         },
       ],
       correctChoiceIds: ['reconcile-channel-first'],
       explanation:
-        'A displayed label is a claim about the signal, not part of it. When morphology and label disagree, the disagreement itself is the finding, and acting on either one before reconciling them means acting on an unverified assumption.',
+        'A channel label is a claim about the signal. When shape and label disagree, find out which is mistaken before acting on either.',
       evidenceIds: [...DISPLAY_EVIDENCE, ...MORPHOLOGY_EVIDENCE],
       reviewStatus: 'sme-review',
     }),
@@ -262,10 +236,9 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
     fault: { scaleMaxMmHg: 160 },
     whatYouSee:
       'A normal pulmonary-artery tracing compressed into the bottom of an axis wide enough for a systemic arterial pressure. The notch is still there, but too small to find.',
-    whatItInvites:
-      'A damping diagnosis made from appearance. A flat-looking tracing is the classic picture of an overdamped system, and the axis is the last thing a hurried reader looks at.',
+    whatItInvites: 'A diagnosis of overdamping made from appearance.',
     whyInterpretationIsWithheld:
-      'Nothing about the signal changed. The axis changed, and with it every judgement about amplitude, pulse pressure, and how sharp the contour looks.',
+      'The signal has not changed. The axis has, and with it every judgement about amplitude and sharpness.',
     readout: {
       chamber: {
         identifiable: false,
@@ -274,8 +247,7 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
       value:
         'not judged from how much of the axis the tracing fills: the axis changes how large it is drawn, not the pressure',
     },
-    repairFirst:
-      'Set a display range that fits the pressure you expect from this chamber, then judge the contour. Compare the axis before comparing two tracings to each other.',
+    repairFirst: 'Set a display range that fits pulmonary-artery pressure, then judge the contour.',
     figureTextEquivalent:
       'A pulmonary-artery tracing with a systolic peak, a dicrotic notch, and down-sloping diastole, drawn against an axis running to 160 mmHg so that the whole waveform occupies the lowest fifth of the plot.',
     commitment: commitment({
@@ -290,10 +262,8 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
       choices: [
         {
           id: 'appearance-is-the-axis',
-          label:
-            'Nothing about the signal. Set a display range appropriate to pulmonary-artery pressure and judge the contour again before naming any distortion.',
-          rationale:
-            'Amplitude on screen is signal divided by axis. Changing the denominator changes every visual judgement while the pressure stays where it was.',
+          label: 'Nothing about the signal; set a pulmonary-artery display range and look again.',
+          rationale: 'How tall a tracing is drawn depends on the axis. The pressure has not moved.',
           plausibility: 'best',
         },
         {
@@ -301,20 +271,20 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
           label:
             'The system is overdamped, because a blunted low-amplitude tracing is what overdamping looks like.',
           rationale:
-            'It is what overdamping looks like — and also what a mismatched axis looks like. Appearance alone cannot separate them; a fast-flush response can.',
+            'An overdamped line and a mismatched axis look alike. A fast flush separates them.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'low-pa-pressure',
           label: 'Pulmonary-artery pressure is low, given how little of the axis it occupies.',
           rationale:
-            'How much of the axis a tracing occupies is a property of the axis. Read the numbers on it rather than the fraction of the plot filled.',
+            'How much of the axis a tracing fills is a property of the axis. Read the numbers.',
           plausibility: 'incorrect-mechanism',
         },
       ],
       correctChoiceIds: ['appearance-is-the-axis'],
       explanation:
-        'The scale-and-channel step of the validity sequence exists for this. A high range flattens a normal signal and a narrow one clips it, and both invite a damping diagnosis that belongs to the display rather than the patient.',
+        'A wide range flattens a normal signal and a narrow one clips it. Check the axis before you call a tracing damped.',
       evidenceIds: [...DISPLAY_EVIDENCE, 'emcrit-rhc-supplied-2026'],
       reviewStatus: 'sme-review',
     }),
@@ -330,9 +300,9 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
     whatYouSee:
       'A rounded upstroke, a blunted peak, a narrowed pulse pressure, and a dicrotic notch that has largely disappeared.',
     whatItInvites:
-      'Either a falsely reassuring pulmonary-artery systolic pressure, or — because the notch is what marks the pulmonic valve — the conclusion that the tip is still in the right ventricle.',
+      'A falsely reassuring systolic pressure, or the conclusion that the tip is still in the right ventricle because the notch is gone.',
     whyInterpretationIsWithheld:
-      'An overdamped system attenuates rapid pressure change, so systolic reads low and diastolic reads high while the mean stays relatively preserved. The features that identify the chamber are the first thing lost.',
+      'An overdamped line reads systolic low and diastolic high while the mean is relatively preserved. The peak and the notch, which identify the chamber, go first.',
     readout: {
       chamber: {
         identifiable: false,
@@ -343,7 +313,7 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
         'the mean only, with caution; systolic, diastolic and pulse pressure are withheld until the fluid path is repaired',
     },
     repairFirst:
-      'Trace the fluid path for air, blood, kinks, loose connections, and a low pressure bag, then classify the fast-flush release before interpreting anything but the mean.',
+      'Check the line for air, blood, kinks, loose connections and a low pressure bag, then repeat the fast flush.',
     figureTextEquivalent:
       'A pulmonary-artery tracing whose upstroke is rounded, whose peak is blunted and lower than the reference, and whose dicrotic notch is barely visible. The pulse pressure is narrower and the mean is close to the reference.',
     commitment: commitment({
@@ -359,30 +329,29 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
         {
           id: 'mean-only-repair-path',
           label:
-            'The mean, with caution. Withhold systolic, diastolic, and pulse pressure, and repair the fluid path before judging the contour or the catheter position.',
+            'The mean, with caution; repair the fluid path before judging the contour or the position.',
           rationale:
-            'Damping attenuates rapid pressure change and leaves the mean relatively preserved. The creeping fast-flush release is what identifies the problem as the measurement system.',
+            'Damping spares the mean. The creeping fast flush puts the problem in the line.',
           plausibility: 'best',
         },
         {
           id: 'tip-back-in-rv',
           label:
-            'The absent notch means the tip has fallen back into the right ventricle; withdraw the assumption of a pulmonary-artery position.',
+            'The absent notch means the tip has fallen back into the right ventricle, so reposition it.',
           rationale:
-            'The notch is the pulmonary-artery marker, so its loss is worth taking seriously — but damping erases it too, and a right-ventricular tracing would also slope up through diastole.',
+            'Damping erases the notch too, and a right-ventricular tracing would have a diastole near zero.',
           plausibility: 'reasonable-but-incomplete',
         },
         {
           id: 'reassuring-systolic',
           label: 'The lower systolic pressure is reassuring and can be recorded as an improvement.',
-          rationale:
-            'A damped systolic pressure is falsely low by an amount nobody can quantify from the tracing. Recording it as improvement records the tubing rather than the patient.',
+          rationale: 'A damped systolic pressure is falsely low by an unknown amount.',
           plausibility: 'unsafe',
         },
       ],
       correctChoiceIds: ['mean-only-repair-path'],
       explanation:
-        'Damping is a property of the catheter, tubing, and transducer, not of the circulation. It removes exactly the features — peak sharpness and the notch — that chamber identification depends on, which is why a damped tracing cannot confirm a position.',
+        'Damping belongs to the catheter, tubing and transducer. It removes the sharp peak and the notch, so a damped tracing cannot confirm a position.',
       evidenceIds: [...DISPLAY_EVIDENCE, 'clinical-hemodynamics-waveforms'],
       reviewStatus: 'sme-review',
     }),
@@ -398,9 +367,9 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
     whatYouSee:
       'An exaggerated systolic peak with rapid oscillations after it that run down into the diastolic segment and obscure its contour.',
     whatItInvites:
-      'A raised right-ventricular systolic pressure, and — because the diastolic contour is buried under the ringing — the conclusion that the tip has already reached the pulmonary artery.',
+      'A raised systolic pressure, and the conclusion that the tip has reached the pulmonary artery because the diastolic slope is hidden.',
     whyInterpretationIsWithheld:
-      'Resonance exaggerates rapid pressure change: systolic reads high, diastolic reads low, and the pulse pressure widens independently of the patient. Here it also destroys the one feature that separates this chamber from the next one.',
+      'Ringing reads systolic high and diastolic low. Here it also sits on the diastolic contour that separates the right ventricle from the pulmonary artery.',
     readout: {
       chamber: {
         identifiable: false,
@@ -410,7 +379,7 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
       value: 'the peak is not usable: resonance exaggerates it',
     },
     repairFirst:
-      'Classify the fast-flush release; persistent ringing identifies the system rather than the patient. Resolve it before either reading the peak or deciding which chamber the tip is in.',
+      'Do a fast flush. If it rings, shorten the tubing and remove extra stopcocks before reading the peak or naming the chamber.',
     figureTextEquivalent:
       'A right-ventricular tracing whose systolic peak overshoots the reference and is followed by several narrow, rapidly decaying oscillations. The diastolic segment beneath them is disturbed, so its upward slope is difficult to trace.',
     commitment: commitment({
@@ -426,9 +395,9 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
         {
           id: 'resolve-ringing-before-naming',
           label:
-            'Neither the peak nor the chamber can be settled here. Resolve the ringing first, because the diastolic contour it obscures is part of what distinguishes the right ventricle from the pulmonary artery.',
+            'Neither the peak nor the chamber; resolve the ringing first, because it hides the diastolic contour.',
           rationale:
-            'Resonance widens pulse pressure independently of the circulation, and the oscillations sit exactly where the diastolic contour has to be read.',
+            'Resonance widens the pulse pressure, and the oscillations sit where the diastolic contour has to be read.',
           plausibility: 'best',
         },
         {
@@ -436,7 +405,7 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
           label:
             'Pulmonary pressures are rising, since the systolic peak is clearly higher than it was.',
           rationale:
-            'An underdamped system overshoots the true peak. A rise seen only after the tracing started ringing is a property of the tubing until proven otherwise.',
+            'An underdamped line overshoots the true peak. A rise that appears with the ringing belongs to the tubing.',
           plausibility: 'incorrect-mechanism',
         },
         {
@@ -444,13 +413,13 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
           label:
             'The tip has reached the pulmonary artery, because the diastolic segment no longer slopes up.',
           rationale:
-            'It no longer looks as though it climbs, which is not the same thing. Losing a feature to artifact is not the same as the feature being absent — and a pulmonary-artery position would also need a diastolic step-up, a downward runoff, and a notch, none of which this tracing can show through the ringing.',
+            'A slope hidden by artifact is not a slope that is absent. A pulmonary-artery tracing also needs a diastolic step-up and a notch.',
           plausibility: 'unsafe',
         },
       ],
       correctChoiceIds: ['resolve-ringing-before-naming'],
       explanation:
-        'A distorted dynamic response is not a physiologic finding. When the distortion lands on the feature that identifies the chamber, the position is unconfirmed — and an unconfirmed position is not somewhere to advance from.',
+        'Ringing is a property of the line. When it lands on the feature that identifies the chamber, the position is unconfirmed, and you do not advance from an unconfirmed position.',
       evidenceIds: [...DISPLAY_EVIDENCE, 'clinical-hemodynamics-waveforms'],
       reviewStatus: 'sme-review',
     }),
@@ -465,10 +434,9 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
     fault: { artifact: 'catheter-whip', dampingRatio: 0.62, naturalFrequencyHz: 12 },
     whatYouSee:
       'Narrow spikes added to an otherwise recognizable pulmonary-artery tracing, varying from beat to beat rather than repeating identically.',
-    whatItInvites:
-      'A higher systolic pressure and a wider pulse pressure than the artery is producing, and a derived value calculated from both.',
+    whatItInvites: 'A systolic pressure and pulse pressure higher than the artery is producing.',
     whyInterpretationIsWithheld:
-      'The spikes come from the catheter moving inside the vessel, not from the pressure inside it. They overestimate systolic pressure and underestimate diastolic pressure, and they change from beat to beat, so no single beat can be trusted.',
+      'The spikes come from the catheter moving in the vessel. They change from beat to beat, so no single beat can be trusted.',
     readout: {
       chamber: {
         identifiable: true,
@@ -479,7 +447,7 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
         'no single beat’s systolic or diastolic value is usable: the spikes overestimate the one and underestimate the other, differently on every beat',
     },
     repairFirst:
-      'Note that the extra deflections do not repeat identically beat to beat, and reassess the catheter and its loop under appropriate supervision rather than recording the peak.',
+      'Do not record the peak. Secure the catheter and tubing; if the spikes persist, reposition the tip slightly.',
     figureTextEquivalent:
       'A pulmonary-artery tracing with its usual systolic peak, dicrotic notch, and down-sloping diastole, carrying additional narrow spikes near the upstroke whose height differs from beat to beat.',
     commitment: commitment({
@@ -495,17 +463,16 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
         {
           id: 'withhold-peak-beat-variation',
           label:
-            'Not the peak. Beat-to-beat variation in an added deflection indicates the catheter is moving rather than the pressure changing, and the systolic value it produces is unusable.',
+            'Not the peak: spikes that change height on every beat are catheter motion, not pressure.',
           rationale:
-            'Motion of the fluid column inside a moving catheter overestimates systolic and underestimates diastolic pressure. Physiologic beats repeat; this deflection does not.',
+            'A moving catheter adds a deflection that overestimates systolic pressure. Physiologic beats repeat; this does not.',
           plausibility: 'best',
         },
         {
           id: 'record-highest-beat',
           label:
             'The highest beat, since a peak pressure should be recorded at its maximum to avoid understating it.',
-          rationale:
-            'Choosing the largest deflection selects the beat most contaminated by motion. The maximum is the least representative sample here, not the most.',
+          rationale: 'The tallest deflection is the beat most contaminated by motion.',
           plausibility: 'unsafe',
         },
         {
@@ -513,13 +480,13 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
           label:
             'Record it as an underdamped system and adjust the tubing before reading the tracing.',
           rationale:
-            'Resonance produces a regular oscillation that repeats identically beat to beat. This deflection does not repeat, which implicates the catheter rather than the tubing.',
+            'Resonance repeats identically beat to beat. This does not, which implicates the catheter.',
           plausibility: 'reasonable-but-incomplete',
         },
       ],
       correctChoiceIds: ['withhold-peak-beat-variation'],
       explanation:
-        'Beat-to-beat reproducibility is the readable difference between a system artifact and a moving catheter. Neither is physiology, and both make a systolic pressure unusable — but they are repaired in different places.',
+        'Ringing repeats identically on every beat; catheter whip does not. Neither is physiology, and they are fixed in different places.',
       evidenceIds: [...MORPHOLOGY_EVIDENCE, 'pac-review-2014'],
       reviewStatus: 'sme-review',
     }),
@@ -534,10 +501,9 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
     fault: { readAtStripFraction: 0.02 },
     whatYouSee:
       'A wedge tracing with well-formed a and v waves, and a cursor sitting on the peak of the slow respiratory envelope instead of its trough.',
-    whatItInvites:
-      'A raised occlusion pressure, and a diuretic or fluid decision built on the difference between two readings taken at different moments in the breath.',
+    whatItInvites: 'A raised wedge pressure, and a diuretic or fluid decision built on it.',
     whyInterpretationIsWithheld:
-      'The displayed pressure includes whatever surrounds the vessel. Moving along the respiratory swing changes the number without anything changing in the circulation, and the swing is largest exactly here.',
+      'The displayed pressure includes the pressure around the vessel, so it moves along the respiratory swing with no change in the circulation.',
     readout: {
       chamber: {
         identifiable: true,
@@ -547,7 +513,7 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
         'not usable as taken: it was read at the top of the respiratory swing; re-read at end expiration',
     },
     repairFirst:
-      'Freeze the trace, identify the trough of the slow envelope under controlled positive-pressure ventilation, and read there. Confirm the ventilation mode first, because spontaneous breathing moves the envelope the other way.',
+      'Freeze the trace and read at end expiration: the trough of the swing on controlled ventilation, the peak in spontaneous breathing.',
     figureTextEquivalent:
       'A wedge tracing with identifiable a and v waves, drawn across one respiratory cycle. The reading marker sits at the peak of the slow respiratory envelope rather than at its trough, which is where end expiration falls under controlled positive-pressure ventilation.',
     commitment: commitment({
@@ -563,9 +529,9 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
         {
           id: 'reread-at-end-expiration',
           label:
-            'A pressure sampled at the point in the breath where surrounding pressure contributes most. Re-read at the trough of the slow envelope, which is end expiration in this ventilation mode.',
+            'An overestimate from airway pressure; re-read at the trough of the swing, which is end expiration here.',
           rationale:
-            'What is measured is the pressure inside the vessel including whatever surrounds it. End expiration is the agreed sampling point precisely because it makes two readings comparable.',
+            'At the inspiratory peak of a positive-pressure breath, airway pressure adds most to the number.',
           plausibility: 'best',
         },
         {
@@ -573,7 +539,7 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
           label:
             'The highest value in the breath, which is the safest estimate of true left-sided filling pressure.',
           rationale:
-            'The inspiratory maximum carries the largest contribution from airway pressure. Taking the highest value systematically overstates the vascular pressure of interest.',
+            'The inspiratory maximum carries the largest contribution from airway pressure.',
           plausibility: 'incorrect-mechanism',
         },
         {
@@ -581,13 +547,13 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
           label:
             'Averaging the whole breath removes the respiratory contribution and gives a usable number.',
           rationale:
-            'An average across the breath depends on how big the swing is, so it moves with airway pressure rather than removing it, and it loses the reference point that makes readings comparable.',
+            'An average moves with the size of the swing, so it tracks airway pressure instead of removing it.',
           plausibility: 'reasonable-but-incomplete',
         },
       ],
       correctChoiceIds: ['reread-at-end-expiration'],
       explanation:
-        'Respiratory phase is a validity step, not a refinement. The swing is most prominent on the wedge, where the pressure is small and the surrounding pressure is transmitted directly to it, so where you read matters more here than anywhere else.',
+        'End expiration is where pleural pressure is closest to atmospheric and readings are comparable. The swing matters most on the wedge, where the pressure is small.',
       evidenceIds: ['cvp-measurement-2017', 'pac-waveforms-part-1-2021', 'pac-derived-part-2-2021'],
       reviewStatus: 'sme-review',
     }),
@@ -595,7 +561,7 @@ export const normalWaveformValidityChallenges: readonly NormalWaveformValidityCh
   },
 ] as const
 
-/** Fails the import rather than the render — same reasoning as the reference itself. */
+/** Fails the import rather than the render. */
 function assertValidityChallengesAreResolvable(): void {
   const ids = new Set<string>()
   const faultKinds = new Set<NormalWaveformFaultKind>()
@@ -639,16 +605,9 @@ export function normalWaveformValidityChallenge(id: string): NormalWaveformValid
   return challenge
 }
 
-/**
- * The answer a valid signal would license, and a morphology-destroying fault does not.
- *
- * Held as data rather than as a sentence inside a component, so the contract "a display that has
- * lost the features that identify the chamber prevents a confident chamber interpretation" is
- * something a suite can assert against the record rather than against rendered prose. Since
- * HD-PRE-REVIEW-02 it is shown only for those faults; see `NormalWaveformValidityReadout`.
- */
+/** Shown when a fault removes the features that identify the chamber. */
 export const NORMAL_WAVEFORM_INTERPRETATION_WITHHELD =
-  'Chamber interpretation withheld — this display cannot support one'
+  'The chamber cannot be named from this display'
 
 /**
  * Whether a chamber may be named from the display. A clean display always; a faulted one only when
