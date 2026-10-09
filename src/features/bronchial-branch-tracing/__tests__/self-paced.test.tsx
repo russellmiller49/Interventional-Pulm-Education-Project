@@ -252,7 +252,7 @@ describe('Follow one airway is authored for its own intervals', () => {
       for (const step of l.steps)
         expect([l.id, step.id, step.gate]).toEqual([l.id, step.id, 'open'])
   })
-  it('leaves exercise geometry, CT traces, targets and local draft signatures as they were before BBT-01', () => {
+  it('leaves exercise geometry, CT traces, targets and local draft signatures as recorded, apart from the first bifurcation moved to slice 372', () => {
     // Recorded at 5d21844f, before any BBT-01 edit (Local-Data evidence: baseline/geometry-signatures.json).
     const baseline: Record<string, [string, string]> = {
       'follow-one-airway': [
@@ -263,9 +263,11 @@ describe('Follow one airway is authored for its own intervals', () => {
         'c6-local-teaching-r1.9fd5eccd',
         '1d93a6faf80561a8f3082722d7ca184fa4f54389a699cc5f8eec4d08415d7b56',
       ],
+      // Moved on purpose by the teaching-first pass (2026-10-08): the first bifurcation is marked
+      // on slice 372 through LOCAL_RESPONSE_SLICE. Before: 71168219 / fef17cc0…cb10.
       continuity: [
-        'c6-local-teaching-r1.71168219',
-        'fef17cc0dc16d6661d2f06de9e7b5473f898d0402110d9e803747ac426b2cb10',
+        'c6-local-teaching-r1.56426fa5',
+        '5217095f117fdd77c1f41fe41ead16e1315036920787295a381cebbb069860b5',
       ],
       vertical: [
         'c6-local-teaching-r1.e1832196',
@@ -312,7 +314,17 @@ describe('Follow one airway is authored for its own intervals', () => {
       )
       expect([l.id, signature, geometry]).toEqual([l.id, ...baseline[l.id]])
     }
+    // The route traces are untouched: the routes still mark the main bronchi on slice 387.
     expect(sha(CT_TRACES)).toBe('86b223c8ef59e3d7943d52984718cff853615a5f876dd2556614742f3e0581a4')
+    expect(
+      traceById('central-right')
+        .checkpoints.find((p) => p.id === 'junction-1')!
+        .decision!.options.map((o) => o.slice),
+    ).toEqual([387, 387])
+    const firstBifurcation = localExercise(
+      LESSONS.find((l) => l.id === 'continuity')!.exercises![0],
+    )
+    expect(firstBifurcation.answerPoints.map((p) => p.slice)).toEqual([372, 372])
     expect(sha(CT_TARGETS)).toBe('ca1a873b489309e16009b8c3dd7c080fe9890a0a0a38c903c0f4d9685643f957')
   })
 })

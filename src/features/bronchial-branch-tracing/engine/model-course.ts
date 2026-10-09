@@ -131,5 +131,5 @@ export function modelCourseLocators(
 export function courseLocatorNote(locators: CourseLocator[]): string | null {
   if (!locators.length) return null
   const names = [...new Set(locators.map((l) => `${l.roleLabel} · ${l.code}`))].join(' and ')
-  return `Dotted gold crosshair: where the model centreline of ${names} crosses this plane. A model course locator, not a reviewed lumen boundary.`
+  return `Dotted gold crosshair: where the model centreline of ${names} crosses this plane. It marks the centre of the airway, not its wall.`
 }

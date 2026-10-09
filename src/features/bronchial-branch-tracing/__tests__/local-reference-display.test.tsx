@@ -418,7 +418,9 @@ describe('genuine learner display choices outside reference viewing still persis
       const saved = raw(id)
       const reloaded = await reload(id, view)
       const learner = shown()
-      expect(learner).toMatchObject({ full: 'false', magnification: '2.3', paired: 'true' })
+      // The parent airway view is on by default, so the learner's toggle turned it off. That choice
+      // was saved and survives the reload: the default does not override it.
+      expect(learner).toMatchObject({ full: 'false', magnification: '2.3', paired: 'false' })
       click('Show reference')
       expect(shown()).toMatchObject({ orientation: learner.orientation, full: 'false' })
       toggleFull()

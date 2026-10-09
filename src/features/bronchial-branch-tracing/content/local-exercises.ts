@@ -5,7 +5,44 @@ import manifest from '../../../../public/branch-tracing/native-v1/manifest.json'
 import { localTeaching } from './local-teaching'
 
 export const ANNOTATION_VERSION = 'local-ct-model-locators-v1'
-export const MODEL_REFERENCE_LABEL = 'Model reference — not yet faculty reviewed'
+export const MODEL_REFERENCE_LABEL = 'Gold crosshairs mark the airway model'
+
+/**
+ * A local example may be marked on a different plane from the route's own response plane.
+ *
+ * The route export puts both main-bronchus response points 5 mm below the tracheal node, on slice
+ * 387, where the two bronchi still share one air column. They are separate lumens from slice 375
+ * down, so Lesson 3's first example is marked on slice 372, where the carina stands between them
+ * and the two centrelines are 30.5 mm apart. Only this local example moves: the routes that open
+ * on this junction keep the exported plane.
+ */
+export const LOCAL_RESPONSE_SLICE: Record<string, number> = {
+  'central-right.junction-1.bifurcation': 372,
+}
+
+/** The checkpoint with its daughter response points moved along their own centrelines. */
+function atResponseSlice(checkpoint: CtCheckpoint, slice: number | undefined): CtCheckpoint {
+  if (slice === undefined || !checkpoint.decision) return checkpoint
+  return {
+    ...checkpoint,
+    decision: {
+      ...checkpoint.decision,
+      options: checkpoint.decision.options.map((option) => {
+        const pixel = modelPoint(option.sourceEdgeId, slice, option.lps)
+        return {
+          ...option,
+          slice,
+          pixel,
+          lps: [
+            NATIVE_CT.origin[0] + pixel[0] * NATIVE_CT.spacing[0],
+            NATIVE_CT.origin[1] + pixel[1] * NATIVE_CT.spacing[1],
+            sliceZ(slice),
+          ] as [number, number, number],
+        }
+      }),
+    },
+  }
+}
 
 /** A model locator on a native plane. This is not an inferred lumen boundary. */
 export function modelPoint(
@@ -35,8 +72,13 @@ export function modelPoint(
 
 export function localExercise(spec: LocalExerciseSpec): LocalCtExercise {
   const source = traceById(spec.traceId)
-  const checkpoint = source.checkpoints.find((p) => p.id === spec.checkpointId)
-  if (!checkpoint?.decision) throw new Error(`Missing local bifurcation: ${spec.checkpointId}`)
+  const exported = source.checkpoints.find((p) => p.id === spec.checkpointId)
+  if (!exported?.decision) throw new Error(`Missing local bifurcation: ${spec.checkpointId}`)
+  const checkpoint = atResponseSlice(
+    exported,
+    LOCAL_RESPONSE_SLICE[`${spec.traceId}.${spec.checkpointId}.${spec.kind}`],
+  )
+  if (!checkpoint.decision) throw new Error(`Missing local bifurcation: ${spec.checkpointId}`)
   const parent = checkpoint.decision.parent
   const sameLumen = ['same-lumen', 'viewpoint'].includes(spec.kind)
   // The introductory interval stays proximal to the authored parent point.
@@ -70,12 +112,12 @@ export function localExercise(spec: LocalExerciseSpec): LocalCtExercise {
         slice,
         caption:
           slice === start
-            ? `Start at ${parent.airway.code}, slice ${slice}. ${teaching.finding} The ring is a model locator, not a wall boundary.`
+            ? `Start at ${parent.airway.code}, slice ${slice}. ${teaching.finding} The ring marks the lumen's centre, not its wall.`
             : sameLumen
-              ? `Slice ${slice}: ${slice === end ? 'Compare the same lumen here with the supplied starting airway.' : 'Inspect the air column and its bounding walls on this neighboring plane.'} If uncertain, backtrack to slice ${start}.`
+              ? `Slice ${slice}: ${slice === end ? 'This is the same lumen you started in. Compare its position and size with the starting slice.' : 'Keep the same dark lumen and its wall in view on this neighboring plane.'} Lost it? Go back to slice ${start}.`
               : overlays.length
-                ? `Slice ${slice}: model locations for ${overlays.map((o) => o.label).join(' and ')}. ${teaching.comparison}`
-                : `Slice ${slice}, ${sliceZ(slice) > sliceZ(start) ? 'cranial' : 'caudal'} to the parent reference: inspect the lumen and any separating wall where resolved. ${teaching.interval}`,
+                ? `Slice ${slice}: ${overlays.map((o) => o.label).join(' and ')} are marked here. ${teaching.comparison}`
+                : `Slice ${slice}, ${sliceZ(slice) > sliceZ(start) ? 'cranial' : 'caudal'} to the parent slice: keep the lumen in view and watch for a wall appearing inside it. ${teaching.interval}`,
         overlays,
       })
       if (slice === to) break
@@ -165,7 +207,7 @@ export function localExercise(spec: LocalExerciseSpec): LocalCtExercise {
       parentEdge: parent.sourceEdgeId,
       daughterEdges: sameLumen ? [] : checkpoint.decision.options.map((o) => o.sourceEdgeId),
       responseReason:
-        'These source planes locate the supplied parent or daughter response. Browsing remains unrestricted within the local interval; a point is a selection, not a wall trace.',
+        'Each answer slice is where that daughter is marked. You can browse the whole interval; a mark is a point inside the lumen, not an outline of its wall.',
       overlayKind: 'model-locator',
       referenceFrame:
         'Native axial LPS; parent schematic uses the independently declared parent camera basis.',
@@ -176,15 +218,15 @@ export function localExercise(spec: LocalExerciseSpec): LocalCtExercise {
         'Locations come from the existing airway model. Wall contours, continuous CT correspondence and parent-view openings await faculty review.',
     },
     task: sameLumen
-      ? `Follow ${parent.airway.code} to the nearby answer slice and mark the same lumen, or record uncertainty.`
-      : `Follow ${parent.airway.code} through this division. Mark each daughter on its answer slice, or record uncertainty.${spec.kind === 'integration' ? ' Then choose the branch you would follow toward the target segment.' : spec.kind === 'pattern' ? ' Describe its course in patient coordinates.' : ''}`,
+      ? `Follow ${parent.airway.code} to the nearby answer slice and mark the same lumen. If you lose it, go back to the last slice you were sure of and step again.`
+      : `Follow ${parent.airway.code} through this division and mark each daughter on its answer slice. If the two lumens are not yet separate where you are looking, keep scrolling until a wall stands between them, then mark.${spec.kind === 'integration' ? ' Then choose the branch you would follow toward the target segment.' : spec.kind === 'pattern' ? ' Describe its course in patient coordinates.' : ''}`,
     explanation: sameLumen
-      ? 'Compare the marked air column with the starting lumen by replaying the short interval. A model point is only a location aid: a valid lumen mark need not sit on it. Keep uncertainty if you cannot maintain airway identity.'
-      : `Return to ${parent.airway.code}, then follow each candidate through the intervening CT slices. Proximity or a matching branch name cannot establish continuity. Model daughter points support comparison; they do not validate your marks.`,
+      ? 'Replay the short interval and compare your marked lumen with the starting lumen: same place, same size, wall unbroken on every slice between. The ring marks the centre of the lumen; a mark anywhere inside that lumen is in the right place.'
+      : `Go back to ${parent.airway.code} and follow each daughter through every slice between the parent and its answer slice. The lumen you can follow without a break is the daughter; a dark spot that is merely close by is not. The gold crosshairs show the centre of each lumen in the airway model.`,
     hints: [
-      `Inspect the cropped region around ${parent.airway.code}; keep its air-filled lumen and walls in view.`,
-      `Return to the parent on slice ${start}. Step one slice at a time toward slice ${end}; backtrack whenever the connection becomes uncertain.`,
-      'Replay the captioned CT interval and compare the model locators with the image. These provisional points are not reviewed wall contours or an answer key.',
+      `Look at the cropped region around ${parent.airway.code}; keep its dark lumen and its wall in view.`,
+      `Go back to the parent on slice ${start}. Step one slice at a time toward slice ${end}. When you lose the lumen, step back to the last slice you were sure of.`,
+      'Replay the captioned CT interval and compare the gold crosshairs with the image. Each crosshair is the centre of that lumen in the airway model.',
     ],
   }
 }

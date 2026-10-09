@@ -1,60 +1,59 @@
 import type { CtCheckpoint, LocalExerciseSpec } from './ct-types'
 
-// Source-specific observations of the supplied geometry, not reviewed CT findings.
-// Learner-facing sentences name airways, not source edge or checkpoint identifiers; those stay
-// in the exercise's teaching metadata and in the comparison's source and review detail.
+// What to look at in each division, from the airway model's own levels and directions.
+// Learner-facing sentences name airways, not source edge or checkpoint identifiers.
 const NOTES: Record<string, [string, string]> = {
   'junction-1': [
-    'The supplied parent is the trachea above the carina.',
-    'Compare the right and left main bronchial locations at the same daughter level.',
+    'Start in the trachea above the carina.',
+    'On slice 372 the carina stands between two ovals: the right main bronchus on the patient’s right, the left main bronchus on the patient’s left.',
   ],
   'junction-3': [
-    'The supplied parent is the left main bronchus.',
-    'The model separates the lower- and upper-lobe continuations at different levels; return to the parent for each.',
+    'Start in the left main bronchus.',
+    'The upper-lobe bronchus leaves forward and outward at about the level of the division; the lower-lobe bronchus continues backward and down. Return to the parent for each.',
   ],
   'junction-6': [
-    'Begin in the left lower-lobe bronchus before the superior/basal division.',
-    'Compare the posterior LB6 location with the more caudal basal continuation.',
+    'Start in the left lower-lobe bronchus, above where LB6 leaves it.',
+    'LB6 is the posterior part of the dark area on slice 326; the basal trunk is the single lumen lower down, on slice 313.',
   ],
   'junction-14': [
-    'Begin in RB1. Both model daughters advance toward cranial levels.',
-    'Compare RB1b and RB1a across the 422–424 interval; the labels identify these source subsegments.',
+    'Start in RB1. Both daughters keep climbing.',
+    'On slices 422 to 424 RB1b is the anterior ring and RB1a the posterior ring.',
   ],
   'junction-9': [
-    'Begin in RLL before the basal/superior division.',
-    'The basal model location is more caudal than the RB6 location. This differs from the cranial RB1 example.',
+    'Start in the right lower-lobe bronchus, above where RB6 leaves it.',
+    'The basal trunk continues down to slice 294; RB6 reaches backward and is marked higher, on slice 309. Unlike RB1, the two daughters go opposite ways.',
   ],
   'junction-10': [
-    'The RML parent and both daughter locations lie near axial level 307.',
-    'Follow the in-plane RML connection toward RB4 and RB5, then inspect the neighboring planes.',
+    'The middle-lobe bronchus and both daughters lie on or next to slice 307.',
+    'Follow the middle-lobe channel in the plane to its fork: RB4 carries on laterally, RB5 turns forward. Then look one slice up and down.',
   ],
   'junction-19': [
-    'This next local interval starts in RB4; the supplied daughter points share level 307.',
-    'Compare the in-plane separation of these source daughters. Slice movement alone cannot represent this course.',
+    'Start in RB4; both daughters are marked on slice 307.',
+    'The two daughters part front to back within the plane, 6 mm apart. Scrolling will not separate them: follow the channel across the slice to its fork.',
   ],
   'junction-20': [
-    'Begin in RB5 before its subsegmental division.',
-    'Compare RB5a at level 309 with RB5b at 301. This is the same division revisited, not a new anatomical transfer case.',
+    'Start in RB5, at the front end of its channel.',
+    'RB5a rises to slice 309; RB5b drops to slice 301. This lesson shows the same division twice.',
   ],
   'junction-16': [
-    'Begin in RB3a. The model daughters move laterally with different changes in level.',
-    'Keep the neighboring continuation in view while comparing lateral displacement and cranial–caudal change.',
+    'Start in RB3a. Both daughters head laterally; one climbs and one descends.',
+    'The cranial daughter is marked on slice 396 and the caudal one on slice 384, at almost the same spot on the screen. Slice direction tells them apart.',
   ],
   'junction-23': [
-    'Begin in the left upper division. This regional comparison has a stronger craniocaudal component.',
-    'Compare LB3 and LB1+2. This is a regional contrast, not an interchangeable copy of the RB3a oblique pattern.',
+    'Start in the left upper division, a single ring that climbs straight up.',
+    'From slice 374 a wall separates LB3 in front from LB1+2 behind. This division is steeper than the RB3a example.',
   ],
   'junction-11': [
-    'Begin the recorded short route at LB6 after the caudal LLL approach. LB6 itself now advances cranially.',
-    'The reference route continues into one of these daughters toward more cranial levels. Preserve the other daughter when adding this division.',
+    'You came down the lower-lobe bronchus; LB6 itself now runs backward and up. The recorded route starts here.',
+    'One daughter turns back down (slice 324), the other keeps climbing (slice 334). The reference route follows the one that climbs; keep the other on your map.',
   ],
   'junction-25': [
-    'This division continues directly from the daughter the previous division entered.',
-    'Compare both daughter locations before accepting the reference continuation.',
+    'This division is the next one along the daughter you just entered.',
+    'One daughter runs outward in the plane on slice 337; the other keeps climbing to slice 345. Find both before you choose.',
   ],
   'junction-52': [
-    'The final mapped division is reached along the daughter the previous division entered.',
-    'Both supplied daughters lie cranial to the parent here. Distal travel has reversed the earlier caudal direction.',
+    'The last mapped division is the next one along the daughter you just entered.',
+    'Both daughters lie above the parent here (slices 354 and 358). You came down to reach LB6 and have been going up ever since.',
   ],
 }
 
@@ -64,13 +63,12 @@ export function localTeaching(spec: LocalExerciseSpec, point: CtCheckpoint) {
   const warm = spec.kind === 'same-lumen' || spec.kind === 'viewpoint'
   return {
     finding: warm
-      ? `Keep the supplied ${point.decision!.parent.airway.code} lumen in view before its division.`
+      ? `Keep the ${point.decision!.parent.airway.code} lumen in view above its division.`
       : note[0],
     comparison: warm
       ? 'Replay the intervening planes and compare the same lumen with its starting location.'
       : note[1],
-    interval:
-      'A model connection does not establish a visible lumen connection; backtrack when the image is unclear.',
+    interval: 'If you lose the lumen, step back to the last slice you were sure of.',
   }
 }
 

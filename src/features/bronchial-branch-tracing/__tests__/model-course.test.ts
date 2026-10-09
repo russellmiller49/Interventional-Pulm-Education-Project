@@ -66,7 +66,7 @@ test('the first bifurcation: the parent crosses the planes above its node, the d
     'Daughter B',
   ])
   expect(courseLocatorNote(modelCourseLocators(exercise, below))).toBe(
-    'Dotted gold crosshair: where the model centreline of Daughter A · RMSB and Daughter B · LMSB crosses this plane. A model course locator, not a reviewed lumen boundary.',
+    'Dotted gold crosshair: where the model centreline of Daughter A · RMSB and Daughter B · LMSB crosses this plane. It marks the centre of the airway, not its wall.',
   )
   expect(courseLocatorNote([])).toBeNull()
 })

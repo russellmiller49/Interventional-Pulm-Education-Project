@@ -165,7 +165,6 @@ export function CtBranchDecision({
       {reveal && (
         <div className={styles.feedback} role="status" data-branch-comparison={point.id}>
           <strong>{recorded ? 'Junction comparison' : 'Worked junction'}</strong>
-          <p>Model reference — not yet faculty reviewed.</p>
           {recorded && <p>{recordedChoice}</p>}
           <p>
             The model reference route continues through{' '}
@@ -175,10 +174,9 @@ export function CtBranchDecision({
               : `The other ${decision.options.length === 2 ? 'daughter leaves' : 'daughters leave'} this route at the same junction. Compare the parent and each opening on the CT and the paired airway view.`}
           </p>
           <p>
-            Compare any lumen mark with the gold cross and browse the intervening slices. A valid
-            lumen mark need not lie on the centerline; a difference is not an automatic error. The
-            next junction follows the model reference route; your own responses stay as you left
-            them.
+            Compare your lumen mark with the gold cross and browse the slices in between. The cross
+            is the centre of the lumen; a mark anywhere inside that lumen is in the right place. The
+            next junction follows the reference route; your own responses stay as you left them.
           </p>
         </div>
       )}
@@ -191,7 +189,8 @@ export function CtJunctionTeaching({ trace, active }: { trace: CtTrace; active: 
   if (!decision) return null
   // Where the packet already records that the response plane precedes a visible separation,
   // say so before the task rather than only in the comparison afterwards.
-  const limitation = junctionFeedbackPacket(point.id)?.entryLimitation
+  const packet = junctionFeedbackPacket(point.id)
+  const limitation = packet?.routeEntryNote ?? packet?.entryLimitation
   return (
     <section className={styles.junctionTeaching} aria-label="Current airway division">
       <h2>This junction</h2>
@@ -436,7 +435,7 @@ export function CtContinuationFeedback({
         {chosen
           ? `${chosen.label}, marked on slice ${chosen.slice}, ${levelPhrase(chosen)}, source direction label “${chosen.direction}”.`
           : choice === 'unresolved'
-            ? 'continuation unresolved. That response stays unresolved; it is not turned into a branch.'
+            ? 'continuation unresolved. Follow the reference route below on the CT, then choose a daughter.'
             : 'no continuation was recorded at this division.'}
       </p>
       <p>

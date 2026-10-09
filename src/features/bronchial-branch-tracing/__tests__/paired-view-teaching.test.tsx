@@ -93,26 +93,38 @@ it('BBTF-04 · Lesson 2 opens paired: the parent airway view is beside the CT fr
   expect(draft('orientation').history).toEqual({})
 })
 
-it('BBTF-04 · every local lesson offers the parent airway view before any answer, and CT transforms leave the modelled camera unchanged while the display caption follows the CT', async () => {
+it('BBTF-04 · every local lesson opens with the parent airway view before any answer, a learner can turn it off and that choice is saved, and CT transforms leave the modelled camera unchanged while the display caption follows the CT', async () => {
   render(<BranchTracingLesson requestedId="continuity" />)
   await screen.findByRole('button', { name: 'Focus on this airway' })
   ready()
-  // Available, off by default outside the viewpoint lesson: one click, no answer required.
-  expect(screen.getByRole('button', { name: 'Show parent airway view' })).toBeVisible()
-  expect(scopeColumn()).toBeNull()
+  const exerciseId = localExercise(LESSONS.find((l) => l.id === 'continuity')!.exercises![0]).id
+  // On by default in every local lesson (teaching-first pass): no click and no answer required.
+  expect(screen.getByRole('button', { name: 'Hide parent airway view' })).toBeVisible()
+  expect(scopeColumn()).not.toBeNull()
   click('Focus on this airway')
-  expect(screen.getByRole('button', { name: 'Show parent airway view' })).toBeVisible()
-  click('Show parent airway view')
+  expect(screen.getByRole('button', { name: 'Hide parent airway view' })).toBeVisible()
   expect(scopeColumn()).not.toBeNull()
   const pose = scopePose()
   expect(pose).toMatch(/^[-\d.,]+\|[-\d.,]+\|[-\d.,]+$/)
-  click('Start marking branches')
-  // PR #273 final repair: the paired view opened on the worked example was the reference's display
-  // and does not follow the learner into the try. It is still one click away, at the same pose.
+  // The learner can turn it off; it comes back at the same pose.
+  click('Hide parent airway view')
   expect(scopeColumn()).toBeNull()
+  expect(screen.getByRole('button', { name: 'Show parent airway view' })).toBeVisible()
   click('Show parent airway view')
   expect(scopeColumn()).not.toBeNull()
   expect(scopePose()).toBe(pose)
+  click('Start marking branches')
+  // The try opens paired as well, at the same pose.
+  expect(scopeColumn()).not.toBeNull()
+  expect(scopePose()).toBe(pose)
+  // Turning it off during the try is the learner's own choice, and it is saved with the draft.
+  click('Hide parent airway view')
+  expect(scopeColumn()).toBeNull()
+  await waitFor(() => expect(draft('continuity').views[exerciseId].showScope).toBe(false))
+  click('Show parent airway view')
+  expect(scopeColumn()).not.toBeNull()
+  expect(scopePose()).toBe(pose)
+  await waitFor(() => expect(draft('continuity').views[exerciseId].showScope).toBe(true))
   const preset = () => document.querySelector('[data-preset]')!.getAttribute('data-preset')
   const displayCaption = () => document.querySelector('[data-display-caption]')!.textContent
   expect(preset()).toBe('standard')
@@ -146,7 +158,7 @@ it('BBTF-26 · intermediate demonstration planes carry dotted model course locat
   })
   const locator = document.querySelector('[data-course-locator]')!
   expect(locator.getAttribute('aria-label')).toMatch(
-    /^Model course locator: Parent · Trachea, centreline crossing on slice \d+; provisional model position, not a lumen boundary$/,
+    /^Model course locator: Parent · Trachea, centreline crossing on slice \d+; the centre of the airway, not its wall$/,
   )
   expect(locator.querySelector('path')!.getAttribute('stroke-dasharray')).toBeTruthy()
   expect(locator.querySelector('text')).toBeNull()
@@ -211,7 +223,7 @@ it('BBTF-13 · the branch-matching diagram carries the CT letters and both ends 
   expect(draft('continuity')).toMatchObject({ viewAnswer: null })
 })
 
-it('BBTF-06 and BBTF-34 · repeated source names are told apart by role and direction, and the RB1 a/b assignment is stated as this source’s before marking', async () => {
+it('BBTF-06 and BBTF-34 · repeated source names are told apart by role and direction, and the RB1 a/b letters are named before marking with no review status', async () => {
   const view = render(<BranchTracingLesson requestedId="vertical" />)
   await screen.findByRole('button', { name: 'Start marking branches' })
   ready()
@@ -221,8 +233,9 @@ it('BBTF-06 and BBTF-34 · repeated source names are told apart by role and dire
     /Parent · RB1 · Right apical segmental bronchus · parent point on slice 401/,
   )
   expect(identities.textContent).toMatch(
-    /Daughter A is labelled RB1b in this source \(more anterior\); Daughter B is labelled RB1a in this source \(more posterior\)\. The a\/b letters follow this source’s labelling and are pending nomenclature review: they are shown so you can follow each lumen, not asked\./,
+    /Daughter A is labelled RB1b in this source \(more anterior\); Daughter B is labelled RB1a in this source \(more posterior\)\. The a and b letters name subsegments: follow each lumen by its letter\./,
   )
+  expect(identities.textContent).not.toMatch(/pending|nomenclature review|provisional|not asked/i)
   // The schematic is one click away before marking, with the same fixed camera basis.
   expect(document.querySelector('[data-parent-schematic]')).not.toBeNull()
   click('Start marking branches')
@@ -246,8 +259,8 @@ it('BBTF-06 and BBTF-34 · repeated source names are told apart by role and dire
   ).toBeVisible()
   const oblique = document.querySelector('[data-branch-identities="junction-16"]') as HTMLElement
   expect(oblique.textContent).toMatch(/Parent · RB3a/)
-  // The a suffix is this source's, so the provisional note is right; no finer suffix is invented.
-  expect(oblique.textContent).toMatch(/pending nomenclature review/)
+  // No review status is shown, and no finer suffix is invented.
+  expect(oblique.textContent).not.toMatch(/pending|nomenclature review|provisional/i)
   expect(oblique.textContent).not.toMatch(/RB3a[a-c]\b/)
   // The stored labels are untouched: the draft records the same answer-point slices as before.
   expect(draft('horizontal-oblique').marks).toEqual([null, null])

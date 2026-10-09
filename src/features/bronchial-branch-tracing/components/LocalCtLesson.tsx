@@ -27,7 +27,7 @@ import {
   demonstrationFrameIndex,
   modelCourseLocators,
 } from '../engine/model-course'
-import { localExercise, MODEL_REFERENCE_LABEL } from '../content/local-exercises'
+import { localExercise } from '../content/local-exercises'
 import {
   browserStorage,
   readSelfPacedRecord,
@@ -574,8 +574,8 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
             ? exercise.task
             : s.phase === 'compare'
               ? parentRequired
-                ? 'Compare your marks with the model locations, then relate this division to the declared parent view, or skip it. Repeating the marks is optional.'
-                : 'Review your marks on the CT. Retain uncertainty before continuing.'
+                ? 'Read which lumen each mark is in, then relate this division to the parent airway view, or skip it. Repeating the marks is optional.'
+                : 'Read which lumen each mark is in. Redo a mark that missed, or continue.'
               : attemptReady
                 ? 'All responses are ready. Select Check my tracing to see the comparison.'
                 : nextMarkSlot !== null
@@ -614,7 +614,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
         : modelCourseLocators(exercise, frameIndex).map((l) => ({
             id: l.id,
             pixel: l.pixel,
-            ariaLabel: `Model course locator: ${l.roleLabel} · ${l.code}, centreline crossing on slice ${l.slice}; provisional model position, not a lumen boundary`,
+            ariaLabel: `Model course locator: ${l.roleLabel} · ${l.code}, centreline crossing on slice ${l.slice}; the centre of the airway, not its wall`,
           })),
     [exercise, frameIndex],
   )
@@ -758,7 +758,6 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
             {SOURCE.title}
           </a>
           <span>{lesson.sourcePages}</span>
-          <span>{MODEL_REFERENCE_LABEL}</span>
         </div>
       }
     >
@@ -1037,7 +1036,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                     <p>
                       Follow the lumen from slice {exercise.trace.anchor.slice} to {slot.slice}{' '}
                       using the CT slice controls. Place a mark on {slot.slice}. If you lose track,
-                      return to the starting slice or record uncertainty. Then select{' '}
+                      return to the starting slice and step again. Then select{' '}
                       <strong>Check my tracing</strong>.
                     </p>
                   ) : (
@@ -1046,8 +1045,10 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                       follow continuity, start from the parent and step through the slices in
                       between; the jump is there when you want it. Place its mark, then follow the
                       next action above. Once all daughter responses are placed, select{' '}
-                      <strong>Check my tracing</strong>. If you cannot identify a lumen, choose{' '}
-                      <strong>Lumen unresolved here</strong> beside the CT.
+                      <strong>Check my tracing</strong>. If two lumens are not yet separate, keep
+                      scrolling until a wall stands between them, then mark. If you still cannot
+                      tell, choose <strong>Lumen unresolved here</strong> and the comparison will
+                      show you how to resolve it.
                     </p>
                   )}
                   {authoredInterval && s.exercise > 0 && <p>{lesson.transferPrompt}</p>}
@@ -1216,8 +1217,8 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                     </>
                   )}
                   <p>
-                    ○ cyan rings are your marks · ＋ gold crosshairs are model locations. No
-                    automatic accuracy verdict is assigned.
+                    ○ cyan rings are your marks · ＋ gold crosshairs are the centre of each lumen in
+                    the airway model.
                   </p>
                   <button onClick={() => act({ type: 'retry' })}>
                     {sameLumen ? 'Try this lumen again' : 'Redo branch marks (optional)'}
@@ -1349,22 +1350,13 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                 </details>
               )}
               <details>
-                <summary>Optional: full-route Practice and source limits</summary>
+                <summary>Optional: full-route Practice</summary>
                 <p>
                   <Link href={`${BASE_PATH}/practice`}>Open full-route Practice (optional)</Link>.
                   Practice is open whenever you want it.{' '}
                   {nextLesson
                     ? `The suggested path continues with Lesson ${lessonNumber(nextLesson.id)}: ${nextLesson.title}.`
                     : 'It is the suggested next step after this lesson.'}
-                </p>
-                <p>
-                  {exercise.review.status === 'provisional'
-                    ? exercise.review.reason
-                    : `Reviewed by ${exercise.review.reviewer}, ${exercise.review.date}`}
-                </p>
-                <p>
-                  Educational spatial reasoning only. This activity does not establish instrument
-                  reach, tool-in-lesion or procedural competence.
                 </p>
               </details>
             </>
@@ -1384,7 +1376,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
                   full: false,
                   magnification: 1,
                   showNodule: false,
-                  showScope: false,
+                  showScope: true,
                 }),
                 slice: exercise.trace.anchor.slice,
               }}
@@ -1414,7 +1406,7 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
               demonstrate={s.phase === 'demo'}
               scopeAvailable={!guide || guide === 'context'}
               scopeLabels={scopeLabels}
-              scopeDefault={viewpoint}
+              scopeDefault
               scopeRequest={scopeRequest}
               courseLocators={courseLocators}
               onMark={
@@ -1471,8 +1463,8 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
             </div>
           )}
           <p className={styles.referenceNotice}>
-            Gold crosshairs are model reference points, not yet faculty reviewed; this interval has
-            no reviewed wall outlines.
+            Gold crosshairs mark the centre of each lumen in the airway model. A mark anywhere
+            inside the lumen counts.
           </p>
         </div>
         {exercise.spec.kind === 'integration' && (
@@ -1496,8 +1488,8 @@ export function LocalCtLesson({ lesson }: { lesson: CtLesson }) {
         <p>{taskInstruction}</p>
         <p>
           Slice controls browse the CT. Go to response slice restores the marking frame. Show
-          reference displays the model locations without placing a mark. Check my tracing opens the
-          comparison with your marks; it does not grade anatomical accuracy. Continue without
+          reference displays the model locations without placing a mark. Check my tracing shows
+          which lumen each mark is in and which way to move one that missed. Continue without
           marking moves on and records nothing for that example.
         </p>
         <p>

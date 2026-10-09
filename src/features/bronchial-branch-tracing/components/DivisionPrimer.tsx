@@ -1,9 +1,6 @@
 import type { LocalCtExercise } from '../content/ct-types'
 import { DIRECTION_CHANGE, lessonNumber } from '../content/course-guide'
-import {
-  JUNCTION_FEEDBACK_OBSERVATION,
-  type JunctionFeedbackPacket,
-} from '../content/junction-feedback'
+import type { JunctionFeedbackPacket } from '../content/junction-feedback'
 import { divisionIdentities } from '../engine/branch-identity'
 import { count } from '../engine/display-text'
 import { divisionCourse, type DivisionCourse } from '../engine/model-reference'
@@ -88,8 +85,7 @@ export function courseSentences(course: DivisionCourse, lessonId: string) {
 /**
  * Teaching a learner needs before marking a division, shown in the worked example and kept one
  * click away during the try (BBTF-07): the division's source levels, and, where the BBT-02 packet
- * already wrote them, "Where the paths diverge" and "Which wall or lumen decides it". The packet
- * text is shown exactly as authored, with its review status; nothing is added to it.
+ * already wrote them, "Where the paths diverge" and "Which wall or lumen decides it".
  */
 export function DivisionPrimer({
   exercise,
@@ -108,9 +104,6 @@ export function DivisionPrimer({
       {courseSentences(course, lessonId).map((sentence) => (
         <p key={sentence}>{sentence}</p>
       ))}
-      <p className={styles.small}>
-        From the source model’s point levels, not a reviewed course description.
-      </p>
       {packet &&
         (packet.entryLimitation ? (
           // The limitation above the task already summarises this reading; keep the full text
@@ -133,10 +126,6 @@ function PacketReading({ packet }: { packet: JunctionFeedbackPacket }) {
       <p>{packet.divergence}</p>
       <h4>Which wall or lumen decides it</h4>
       <p>{packet.continuity}</p>
-      <p className={styles.small}>
-        Image readings: {JUNCTION_FEEDBACK_OBSERVATION.by}, {JUNCTION_FEEDBACK_OBSERVATION.date}.{' '}
-        {JUNCTION_FEEDBACK_OBSERVATION.status}.
-      </p>
     </>
   )
 }

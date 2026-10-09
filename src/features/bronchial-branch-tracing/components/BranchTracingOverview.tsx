@@ -12,6 +12,7 @@ import {
   moreRoutesSet,
   patternFor,
   targetNaming,
+  TEACHING_SIMULATOR_STATEMENT,
 } from '../content/course-guide'
 import { targetForTrace, traceById } from '../geometry/native-ct'
 import { browserStorage, recommendedLesson } from '../engine/selfPacedProgress'
@@ -46,8 +47,7 @@ export function BranchTracingOverview() {
     <ModuleFrame section="overview">
       <main className={styles.overview} data-course-overview>
         <div className={styles.eyebrow}>
-          <GitBranch size={18} aria-hidden /> BRONCHOSCOPY / SPATIAL ANATOMY{' '}
-          <span>Unpublished preview</span>
+          <GitBranch size={18} aria-hidden /> BRONCHOSCOPY / SPATIAL ANATOMY
         </div>
         <header className={styles.hero}>
           <div>
@@ -127,8 +127,8 @@ export function BranchTracingOverview() {
                 from the parent airway.
               </li>
               <li>
-                Plan a segmental airway approach to a simulated nodule and record where distal
-                continuity stays uncertain.
+                Plan a segmental airway approach to a simulated nodule and say how far the airway
+                can be followed toward it.
               </li>
             </ul>
             <p className={styles.small}>
@@ -208,10 +208,7 @@ export function BranchTracingOverview() {
             a correct branch. All exercises use one teaching scan. Different targets in that scan do
             not demonstrate transfer to an unfamiliar patient CT.
           </p>
-          <p>
-            Educational spatial reasoning only. This module does not establish device reach,
-            patient-specific routes, or independent procedural competence.
-          </p>
+          <p data-teaching-simulator-statement>{TEACHING_SIMULATOR_STATEMENT}</p>
         </section>
         <section className={styles.notice} aria-labelledby="bbt-course-reference">
           <h2 id="bbt-course-reference">Course reference</h2>
@@ -279,9 +276,8 @@ export function BranchTracingOverview() {
             the existing airway model. The textbook guides the method; its figures are not copied.
           </p>
           <p>
-            Target nodules use the navigation trainer’s CT intensity compositor. They are authored
-            teaching targets, not findings in the original scan. CT route planning does not confirm
-            instrument reach or tool-in-lesion.
+            Target nodules use the navigation trainer’s CT intensity compositor. They are simulated
+            teaching targets, not findings in the original scan.
           </p>
           <p>
             This device keeps your place: the last lesson, lessons opened or finished, lessons saved

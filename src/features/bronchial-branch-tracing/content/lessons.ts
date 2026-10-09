@@ -267,17 +267,17 @@ const ROUTE_LESSONS: CtLesson[] = [
     objective:
       'Record a continuous route and explicitly identify any level where the lumen cannot be resolved.',
     prerequisite: 'All four patterns and the display conventions.',
-    concept: 'A defensible trace preserves uncertainty.',
+    concept: 'Trace every level; where two lumens will not separate, scroll until they do.',
     teaching: [
       'Apply the same sequence to each junction: identify the parent, follow its lumen, inspect the next division, and draw the relationship from the parent viewpoint. Preserve siblings and common stems rather than forcing every division into two identical branches.',
-      'If the air column cannot be resolved, record that uncertainty. A nearby vessel or a centerline is supporting context, not confirmation of a patent airway. The book distinguishes a lateral daughter-branch asterisk from a subsuperior bronchus; neither should be inferred from this graph.',
+      'If two lumens will not separate on a slice, scroll a few slices either way until a wall stands between them, then mark. A vessel beside the airway is bright in the middle; an airway is dark. Only where the scan itself does not show the lumen do you record it as unresolved. The book distinguishes a lateral daughter-branch asterisk from a subsuperior bronchus; neither should be inferred from this graph.',
     ],
     worked:
       'The basal example provides a longer caudal trace. Work through each fork, including the distal daughters that share a segment name. Browse every interval; a mark at each fork does not by itself prove continuity through the intervening slices.',
     interpretation:
-      'Compare your route one level at a time. If you marked uncertainty, revisit that interval and state what remains unresolved. This preview uses one source CT and does not establish performance on a new patient.',
+      'Compare your route one level at a time. Where you recorded a lumen as unresolved, go back to that interval, scroll until the lumens separate, and mark it.',
     transferPrompt:
-      'Trace another lobar route and decide whether the lumen is adequately visible at every level. Record uncertainty when the source image does not resolve it.',
+      'Trace another lobar route. At every level, find the wall between the two daughters before you mark; scroll until you see it.',
     sourcePages: 'Chapter 1, pp. 1–4, 15–18',
     example: 'right-lower-basal',
     prediction: 'left-lower-basal',
@@ -336,7 +336,7 @@ const LOCAL_STEPS: StageStepBase<string>[] = [
     phase: 'predict',
     title: 'Follow the lumen',
     instruction:
-      'Browse adjacent slices, then mark the lumen on the answer slice. You can show the reference or continue without marking.',
+      'Browse adjacent slices, then mark the lumen on the answer slice. The parent airway view is open beside the CT. You can show the reference or continue without marking.',
     actionLabel: 'Check my tracing',
     interaction: 'choose',
     gate: 'open',
@@ -348,7 +348,7 @@ const LOCAL_STEPS: StageStepBase<string>[] = [
     phase: 'observe',
     title: 'Compare and retry',
     instruction:
-      'Review the image evidence. Keep uncertainty where continuity cannot be established.',
+      'Read which lumen each mark is in. Redo a mark that missed, using the direction given.',
     actionLabel: 'Relate the parent view',
     interaction: 'observe',
     gate: 'open',
@@ -384,7 +384,7 @@ export const LESSONS: CtLesson[] = [
       'Start on the outlined lumen and note where it sits against R, L, A and P.',
       'Step one slice at a time, keeping the same air column and its wall in view.',
       'Adjacent 0.5 mm slices change little; a sudden jump in position or size means you may have left the lumen.',
-      'Lost it? Go back to the last slice you were sure of, or record uncertainty.',
+      'Lost it? Go back to the last slice you were sure of and step again.',
     ],
     teaching: [
       'Standard axial CT is viewed from the feet: patient right is on screen-left and anterior is at the top. The air-filled lumen is dark, bounded by its wall. Both intervals in this lesson stay in this standard display.',
@@ -395,9 +395,8 @@ export const LESSONS: CtLesson[] = [
     interpretation:
       'Compare your marked slice with the starting slice. If you stayed in the same airway, its lumen sits in almost the same place, with a similar size and a continuous wall on every slice between them. The ring is a model locator, not a wall outline: a mark anywhere inside the lumen is valid. If you lost the airway, return to the starting slice and step through the interval again.',
     transferPrompt:
-      'Repeat the task in the left main bronchus: keep the outlined lumen in view across the adjacent slices, then mark it or record uncertainty.',
-    // The method is the book's; the exact page for single-lumen continuity awaits faculty review.
-    sourcePages: 'Chapter 1 · exact page not yet confirmed',
+      'Repeat the task in the left main bronchus: keep the outlined lumen in view across the adjacent slices, then mark it.',
+    sourcePages: 'Chapter 1',
     // Demonstration and first try share the tracheal interval; the repeat moves to the LMSB.
     example: 'central-right',
     prediction: 'central-right',

@@ -114,8 +114,9 @@ function contextView(exercise: LocalCtExercise) {
     full: true,
     magnification: 1,
     showNodule: false,
-    // The viewpoint lesson teaches the CT beside the parent airway view, so it opens paired.
-    showScope: exercise.spec.kind === 'viewpoint',
+    // Every local example opens with the parent airway view beside the CT. A saved view keeps
+    // whatever the learner last chose.
+    showScope: true,
   }
 }
 const usesTracingView = (s: LocalSession, exercise: LocalCtExercise) =>

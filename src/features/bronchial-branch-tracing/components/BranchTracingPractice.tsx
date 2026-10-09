@@ -193,9 +193,8 @@ export function BranchTracingPractice({ mode }: { mode: 'practice' | 'assess' })
           <TargetCtPreview traceId={ids[0]} />
         </div>
         <p className={styles.notice}>
-          These authored nodule targets share one teaching CT. Source-derived comparisons support
-          self-review; clinical case labels and camera checkpoints are awaiting faculty review.
-          Nothing here is scored and there is no pass threshold.
+          Every target here is a simulated nodule placed in one teaching CT. After each junction you
+          compare your mark and branch choice with the reference route. Nothing here is scored.
         </p>
         {mode === 'practice' && (
           <section className={styles.source}>
@@ -885,10 +884,11 @@ function CtPracticeSession({
             different branch choice. An axial slice and an endoscopic view have different
             projections; compare their branch relationships.
           </p>
-          <h2>Record uncertainty honestly</h2>
+          <h2>When you cannot separate two lumens</h2>
           <p>
-            If the source image does not resolve the connection, use “Lumen unresolved here.” A
-            centerline or nearby vessel would not establish continuity by itself.
+            Scroll a few slices either way until a wall stands between them, then come back and
+            mark. A vessel beside the airway is bright in the middle; an airway is dark. If the scan
+            still does not show it, use “Lumen unresolved here” and compare with the reference.
           </p>
           <p className={styles.small}>
             Each junction is presented on the source route, even if your preceding choice differs.

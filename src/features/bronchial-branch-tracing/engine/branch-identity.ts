@@ -41,7 +41,7 @@ export interface DivisionIdentities {
   parent: ParentIdentity
   daughters: DaughterIdentity[]
   anyRepeatedName: boolean
-  /** A daughter carries a subsegmental a/b/c letter, which this source assigns provisionally. */
+  /** A daughter carries a subsegmental a/b/c letter. */
   provisionalSuffix: boolean
 }
 
@@ -97,8 +97,11 @@ export function sourceNamingNote(identities: DivisionIdentities): string {
   const names = identities.daughters
     .map((d) => `${d.role} is labelled ${d.code} in this source (${d.direction.toLowerCase()})`)
     .join('; ')
-  const suffix = identities.provisionalSuffix
-    ? ' The a/b letters follow this source’s labelling and are pending nomenclature review: they are shown so you can follow each lumen, not asked.'
-    : ''
+  const sameLabel = new Set(identities.daughters.map((d) => d.code)).size === 1
+  const suffix = sameLabel
+    ? ' Both daughters carry the same label here: tell them apart by direction.'
+    : identities.provisionalSuffix
+      ? ' The a and b letters name subsegments: follow each lumen by its letter.'
+      : ''
   return `${names}.${suffix}`
 }

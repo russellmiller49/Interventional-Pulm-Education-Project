@@ -439,7 +439,7 @@ export function NativeCtViewer({
               : !onMark
                 ? `Reviewing slice ${slice}. Responses stay as you placed them.`
                 : atCheckpoint
-                  ? `Response slice ${submissionSlice}: mark the lumen, or record uncertainty.`
+                  ? `Response slice ${submissionSlice}: click inside the lumen to mark it.`
                   : `Exploring slice ${slice}. Your current task is unchanged; marks are recorded on slice ${submissionSlice}.`}
         </p>
         <div className={styles.answerActions}>
@@ -1144,7 +1144,7 @@ export function NativeCtViewer({
       {revealed && (
         <p className={styles.ctLegend}>
           <span>○ ring · your trace</span>
-          <span>＋ open crosshair · model reference — not yet faculty reviewed</span>
+          <span>＋ open crosshair · centre of the lumen in the airway model</span>
         </p>
       )}
       {courseLocators.length > 0 && showOverlays && (

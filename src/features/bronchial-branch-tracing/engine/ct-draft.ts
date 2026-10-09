@@ -10,7 +10,8 @@ export const freshRouteView = (trace: CtTrace): CtViewerState => ({
   full: false,
   magnification: 1,
   showNodule: true,
-  showScope: false,
+  // Routes open with the bronchoscopic view beside the CT; a saved view keeps the learner's choice.
+  showScope: true,
 })
 
 export const DRAFT_PREFIX = 'branch-tracing.draft.'
