@@ -397,33 +397,6 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     check('transfer', 'A patient in recovery'),
     close(['common-errors']),
   ],
-  'reference-frames': [
-    teach(
-      'viewpoints',
-      'Compare anatomy with camera orientation',
-      [
-        'which-airway',
-        'on-hand-at-the-scope',
-        'trachea-to-bronchus-intermedius',
-        'one-airway-three-frames',
-      ],
-      'tour',
-    ),
-    teach(
-      'ct-display',
-      'Read the orientation of the CT display',
-      ['how-each-display-is-made', 'tracing-the-right-side'],
-      'section',
-    ),
-    practice(
-      'Identify the structure in each representation',
-      'illustrated',
-      'Use parent–daughter continuity and the displayed orientation, then name each outlined structure. These are supported teaching views, not a registered matched study.',
-    ),
-    check('check', 'Interpret a camera orientation'),
-    debrief(['common-errors']),
-    check('transfer', 'Interpret a changed viewing direction'),
-  ],
   'view-loss': [
     teach(
       'normal-view',
@@ -519,26 +492,38 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     close(['common-errors']),
   ],
   'left-side': [
-    teach(
-      'tour',
-      'Follow the left-sided airways',
-      ['naming-the-left', 'what-you-have', 'usual-left-side', 'left-names'],
-      'tour',
+    hook('Which lobe owns this airway?'),
+    check('check', 'A long way with no opening'),
+    screen(
+      'main-and-upper',
+      'The left main bronchus and the upper lobe',
+      'Walk the stills. Each outline marks the opening the button names.',
+      ['left-main', 'upper-lobe'],
+      { visual: 'tour', tour: ['LMSB', 'LUL', 'LUL-UD', 'LB1+2', 'LB3', 'LB4+5', 'LB4', 'LB5'] },
     ),
-    teach(
-      'parentage',
-      'Move from lingula to lower lobe',
-      ['lingula-to-lower-lobe', 'basal-convention', 'basal-relationships'],
-      'tour',
+    screen(
+      'lower-lobe',
+      'The lower lobe',
+      'Walk the stills from the lower lobe opening to the basal segments.',
+      ['lower-lobe'],
+      { visual: 'tour', tour: ['LLL', 'LB6', 'LB7+8', 'LB9', 'LB10'] },
     ),
+    {
+      ...practice(
+        'Name six views',
+        'illustrated',
+        'No names this time. Click the opening each view asks for. One view is rotated.',
+      ),
+      id: 'name-the-views',
+      act: 'images',
+    },
     practice(
-      'Now navigate the left side',
+      'Drive into the lingula and the superior segment',
       'inspection',
-      'Follow the left upper lobe, lingular and lower lobe relationships. Use full names and the declared combined basal convention to interpret each opening.',
+      'The scope starts in the left main bronchus, upright, with opening names off. Meet the four goals.',
     ),
-    check('check', 'Identify a left-sided branch'),
-    debrief(['common-errors']),
-    check('transfer', 'Interpret another left-sided view'),
+    check('transfer', 'Two openings after a cough'),
+    close(['common-errors']),
   ],
   'systematic-survey': [
     teach('survey-order', 'Plan a systematic inspection', [

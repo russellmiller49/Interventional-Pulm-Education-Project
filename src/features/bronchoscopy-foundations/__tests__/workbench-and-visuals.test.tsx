@@ -33,6 +33,7 @@ import { goalHelp, pendingRequirement } from '../engine/scope/goalHelp'
 import { annularArea, formatScopeMetric, tubeGeometry } from '../engine/scope/scopeMetrics'
 import { OPTICAL_ASPECT } from '../engine/scope/scopeOstia'
 import { ScopeDriver, teachingCase } from '../test-support/teachingCase'
+import { COMPARISON_WORKSPACE } from '../test-support/comparisonWorkspace'
 
 /**
  * BF-PRE-REVIEW-03 — readable images and coherent scope workspaces (fellow walkthrough A18, A20,
@@ -713,16 +714,14 @@ describe('A33 — the scope in the tube, one calculation for numbers and circles
   })
 })
 
-describe('A25 — the S7 CT and still are compared side by side, for what they are', () => {
+describe('A25 — a CT and a still are compared side by side, for what they are', () => {
   it('lays the two out as a comparison, each with its frame, and states what is not shown', async () => {
-    const section = BRONCH_SECTIONS.find((s) => s.id === 'reference-frames')!
-    if (section.workspace.kind !== 'media') throw new Error('media workspace expected')
     const { container } = render(
       <MediaWorkspace
-        media={section.workspace.media}
-        caption={section.workspace.caption}
-        mediaNotes={section.workspace.mediaNotes}
-        comparisonNote={section.workspace.comparisonNote}
+        media={COMPARISON_WORKSPACE.media}
+        caption={COMPARISON_WORKSPACE.caption}
+        mediaNotes={COMPARISON_WORKSPACE.mediaNotes}
+        comparisonNote={COMPARISON_WORKSPACE.comparisonNote}
       />,
     )
     await flush()
@@ -730,11 +729,10 @@ describe('A25 — the S7 CT and still are compared side by side, for what they a
     const notes = [...container.querySelectorAll('[data-media-frame]')].map((p) => p.textContent)
     expect(notes).toHaveLength(2)
     expect(notes[0]).toContain('as if viewed from the patient’s feet')
-    expect(notes[1]).toContain('orientation and camera roll were not recorded')
+    expect(notes[1]).toContain('camera roll was not recorded')
     const comparison = container.querySelector('[data-media-comparison]')!.textContent!
-    expect(comparison).toContain('not a registered pair')
-    expect(comparison).toContain('this panel shows one axial slice')
-    // Only the section's own two files: no other case's CT and no added levels.
+    expect(comparison).toContain('not one patient’s matched study')
+    // Only the pair's own two files: no other case's CT and no added levels.
     expect(
       [...container.querySelectorAll('figure')].map((f) => f.getAttribute('data-media-id')),
     ).toEqual(['rmb', 'rmb'])

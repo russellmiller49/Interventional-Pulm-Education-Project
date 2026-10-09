@@ -1,319 +1,214 @@
-import type { ScopeViewSpec } from '../../components/scope/types'
-import { SIMULATOR_LANDMARKS, STEPS_LANDMARKS, TEACHING_LANDMARKS } from '../landmarks'
 import type { BronchSectionDefinition } from '../types'
 
 /**
- * M09 — Left-sided anatomy and explicit variants. The learner names left-sided lobes and segments
- * from their parent airway rather than from a segment number, a count of openings or a screen
- * position, walks the lingula to the lower lobe from a rotated start (drill D07), and records the
- * declared combined LB7+8 convention (drill D08). Knowledge spec §6.4–§6.7 and §11.6–§11.7
- * (S1 PDF 63, 65–70; S2 PDF 46–47, 103, 106, 159–160; T11).
+ * The left lung (rewrite, brief 7). The same three steps as the right lung: the fellow learns the
+ * left-sided airways from the survey stills, names six unlabelled views by clicking the opening
+ * asked for, one of them rotated, and then drives from the left main bronchus into the lingula
+ * and LB6 with the labels off. The simulator starts upright. Sources: the course textbook's
+ * bronchial anatomy chapter (S1) and the training manual's navigation and nomenclature pages (S2).
  */
+const ANATOMY = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 61, to: 70 } },
+  { sourceId: 'S2', location: { kind: 'pdf-pages', from: 103 } },
+] as const
+const NAVIGATION = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 65, to: 70 } },
+  { sourceId: 'S2', location: { kind: 'pdf-pages', from: 44, to: 47 } },
+] as const
+const BASAL = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 67, to: 70 } },
+  { sourceId: 'S2', location: { kind: 'pdf-pages', from: 159, to: 160 } },
+] as const
 
-/** The rotated left-sided walk: shown at Recognize (controls locked) and driven at Act. */
-const LEFT_WALK: ScopeViewSpec = {
-  sectionId: 'left-side',
-  mode: 'guided-walk',
-  profile: 'adult-teaching-combined-left-basal-v1',
-  start: { kind: 'airway', label: 'LMSB', at: 'mid' },
-  controls: ['advance', 'withdraw', 'rotate', 'deflect'],
-  assists: {
-    'centerline-lock': true,
-    'aim-guard': true,
-    'branch-labels': false,
-    'align-to-branch': false,
-    'reference-orientation': false,
-    recenter: false,
-    'teleport-to-start': false,
-  },
-  // An authored camera roll, so the view starts away from any upright picture (drill D07).
-  defaults: { rotationDeg: 120, branchLabels: false },
-  litAirways: ['LMSB', 'LUL', 'LLL'],
-  boundary:
-    'An authored teaching model with one declared anatomy profile. The image starts rotated on purpose, and the centerline-guided walk is recorded as assisted.',
-}
+const VIEW_LINE = 'Guided travel: the scope follows the lumen. Opening names are off.'
 
 export const section: BronchSectionDefinition = {
   id: 'left-side',
-  title: 'The left airways',
-  shortTitle: 'Left side',
-  minutes: 10,
+  authoringContract: 2,
+  title: 'The left lung',
+  shortTitle: 'Left lung',
+  minutes: 9,
+  activityMinutes: 5,
   moduleIds: ['M09'],
   objectives: [
     {
       objectiveId: 'M09-O1',
       subtask:
-        'From a rotated start in the left main bronchus, enters the lingular division without entering the upper division, then withdraws to the left main bronchus and enters LB6 without entering a basal branch.',
-      evidence: 'simulated-navigation',
+        'Tells the upper division, the lingula and the lower lobe apart on survey frames by their parent.',
+      evidence: 'committed-explanation',
     },
     {
       objectiveId: 'M09-O2',
-      subtask:
-        'Commits the name of left B4 against the right side’s name for the same number, before the section’s naming block opens at Explain.',
+      subtask: 'Names the lingular segments, which do not take the names of RB4 and RB5.',
       evidence: 'committed-explanation',
     },
     {
       objectiveId: 'M09-O3',
       subtask:
-        'Walks LB4, LB5 and then LB6, retracing to the left main bronchial division between the lingula and the lower lobe; the hand skill itself needs faculty observation.',
-      evidence: 'observed-physical-skill-required',
+        'Enters LB4 and LB5 from the lingula, returns to the left main bronchus and enters LB6.',
+      evidence: 'simulated-navigation',
     },
     {
       objectiveId: 'M09-O4',
-      subtask:
-        'Decides, in a practice case, what the record says when a checklist expects a separate LB7 on a combined LB7+8 profile.',
+      subtask: 'Decides what to do when the left lower lobe shows three basal openings.',
       evidence: 'case-decision',
     },
     {
       objectiveId: 'M09-O5',
-      subtask:
-        'Commits the next move before naming the basal bronchi of the left lower lobe after the shaft has been turned, when a count or a screen order offers a name.',
+      subtask: 'Clicks LB7+8 among the basal openings from a stated direction, not a screen order.',
       evidence: 'committed-explanation',
     },
   ],
   drillIds: ['D07', 'D08'],
-  prerequisites: ['larynx-and-entry', 'reference-frames', 'right-side'],
+  prerequisites: ['larynx-and-entry', 'right-side'],
 
-  clinicalQuestion:
-    'On the left side, how do you know which lobe an opening belongs to, and what that lobe’s segments are called?',
-  recognizeTitle: 'The left main bronchus in a rotated image',
+  clinicalQuestion: 'You are in the left lung. Which airway is this, and which lobe owns it?',
   objective:
-    'Distinguish the left upper lobe’s divisions from the left lower lobe, and name the left-sided segments, in an image that is not upright.',
-  why: 'On the left, a lobe or segment name decides where a sample, a photograph or a line of the report belongs, and a mistaken name sends each of them to another segment.',
-  newConcept:
-    'A segment number does not imply the same name on both sides: left B4 and B5 are the superior and inferior lingular segments because their parent is the lingula, a division of the left upper lobe, while right B4 and B5 are the middle lobe’s lateral and medial segments. LB6 belongs to the left lower lobe.',
-  incrementSentence:
-    'This section adds one idea to the right side: the same segment number can carry a different name on the left, because the parent is different.',
+    'Name each airway of the left lung from its parent, and know where it differs from the right.',
   harmfulReflex:
-    'Naming a left-sided opening from what the view offers — the count of openings, its place on the screen or the right side’s name for its number — and advancing on that name instead of retracing to the parent.',
+    'Pushing on when the opening you expect is not in view. Withdraw to its parent instead.',
+  harmfulReflexPatterns: [/\badvanc/i, /\bprob(e|ing)\b/i, /\bpush/i],
   anchor: {
     analogy:
-      'Street addresses again: the parent airway is the street and the segment number the house. House four on the lingula’s street is not house four on the middle lobe’s, and you know the street by the turns you took, not by where the door appears in the window.',
+      'A sibling’s house has the same room numbers and a different floor plan. Carry the numbers across from the right lung. Leave the layout and the names behind.',
     precise:
-      'Left B4 is the superior and left B5 the inferior lingular segment, both in the lingula of the left upper lobe; LB6 is the superior segment of the left lower lobe. A branch’s origin is stronger evidence than the number of openings at its end or where they sit on the screen.',
-    checklistLabel: 'Before naming a left-sided opening',
+      'On the left, name the lobe before the segment: the lingula belongs to the upper lobe, and LB6 opens the lower lobe.',
+    checklistLabel: 'Naming a left-sided airway',
     checklist: [
-      'Name the parent: upper division, lingula or lower lobe',
-      'Retrace to the left main bronchial division if the parent is uncertain',
-      'Read the segment name from its parent, not from the right side',
-      'State the basal convention: one combined LB7+8 in this profile',
+      'Say which parent you are in',
+      'Name the lobe you are entering',
+      'Name the division, then the segment',
+      'Count the basal openings: three',
     ],
   },
-
-  // The 'segmental' stop names left B4 and B5, which the prediction asks for; it stays off this
-  // section until the host confirms spine stops open only after the commitment.
-  spineStops: ['lobar'],
-  grammarRowIds: ['clear-but-lost', 'missing-expected-branch'],
-  controlStrip: {
-    verdict: 'no-control-retrace',
-    states: {
-      insertion: 'harmful-reflex',
-      rotation: 'not-this-one',
-      deflection: 'not-this-one',
-      suction: 'not-this-one',
-      accessory: 'not-this-one',
+  outcomes: [
+    {
+      id: 'name-left-airways',
+      text: 'Name each left-sided airway from its parent and its lobe, on a rolled view.',
     },
-    sentence:
-      'No control names an airway. Rotation turns the image, not the anatomy; the name comes from retracing to the last certain parent, and advancing on a name you have not checked is the reflex to resist.',
-  },
-  precommitDenyPatterns: [
-    /superior lingular/i,
-    /\bLB4\b\W{1,3}superior/i,
-    /\bleft B4\b[^.]{0,30}\bsuperior\b/i,
-    /same (directional )?name on both sides/i,
+    {
+      id: 'reach-lb4-lb6',
+      text: 'Drive from the left main bronchus into LB4, LB5 and LB6.',
+    },
   ],
-  modelBoundary:
-    'One declared teaching profile, with a combined LB7+8; patients vary, and a separate LB7 or another variant is a different profile. The walk is guided along the centerline, the starting rotation is authored for teaching, this section shows no secretions or patient movement, and nothing here shows the hand skill.',
-  physicalSkillNote:
-    'The walk is guided along the airway centerline and refuses an advance until the tip is aimed at a branch, so it shows the path from the lingula to the lower lobe and the parent at each step. It cannot see your hands on the control section and shaft; walking LB4, LB5 and LB6 with a real scope needs faculty observation on a model and in supervised practice.',
+
+  spineStops: ['main-bronchi', 'lobar', 'segmental'],
+  grammarRowIds: ['clear-but-lost', 'missing-expected-branch'],
+  precommitDenyPatterns: [/\blonger\b/i, /until it ends/i],
   localPolicyIds: [],
   reviewItemIds: ['R01', 'R06'],
 
+  tour: [
+    { airway: 'LMSB', note: 'Long. No lobe leaves it on the way down.' },
+    { airway: 'LUL', note: 'Leaves where the left main bronchus ends, and divides at once.' },
+    { airway: 'LUL-UD', note: 'The upper division. It runs up toward the apex.' },
+    { airway: 'LB1+2', note: 'Apicoposterior. One opening for two segments.' },
+    { airway: 'LB3', note: 'Anterior.' },
+    { airway: 'LB4+5', note: 'The lingula. Part of the upper lobe. It runs forward and down.' },
+    { airway: 'LB4', note: 'Superior lingular segment.' },
+    { airway: 'LB5', note: 'Inferior lingular segment.' },
+    { airway: 'LLL', note: 'The other opening where the left main bronchus ends.' },
+    { airway: 'LB6', note: 'Superior segment. Leaves the posterior wall first.' },
+    { airway: 'LB7+8', note: 'Anteromedial basal. One opening on the left.' },
+    { airway: 'LB9', note: 'Lateral basal.' },
+    { airway: 'LB10', note: 'Posterior basal.' },
+  ],
+
   blocks: [
     {
-      id: 'naming-the-left',
-      kind: 'question',
-      role: 'framing',
-      heading: 'Naming the left side',
-      body: 'The left main bronchus leads to two lobes, and the upper lobe divides again before its segments begin.\n\nThis section is about how you know which lobe you are in on the left, and what that lobe’s segments are called.',
-      claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 65, to: 70 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 61, to: 70 } },
-      ],
-    },
-    {
-      id: 'what-you-have',
-      kind: 'signals',
-      role: 'signals',
-      heading: 'What you have to go on',
-      body: 'All of these are available at a left-sided opening. Before naming it, decide which of them the name rests on.',
-      pointsLabel: 'Evidence at a left-sided opening',
-      points: [
-        'The length of the left main bronchus before it divides',
-        'The airways already travelled since the main carina',
-        'How many openings are ahead, and their size',
-        'Where each opening sits on the screen',
-        'The names already recorded for the right side',
-        'The anatomy profile this model declares',
-      ],
-      claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 61, to: 70 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 44, to: 47 } },
-      ],
-    },
-    {
-      id: 'usual-left-side',
+      id: 'left-main',
       kind: 'pattern',
       role: 'normal-reference',
-      heading: 'A usual left side, lobe by lobe',
-      body: 'The left main bronchus runs longer than the right before it divides, at the left main bronchial division, into the left upper and left lower lobe bronchi. The upper lobe bronchus then divides again, into an upper division and the lingula. The lingula is part of the left upper lobe, not a separate lobe, and neither division is itself a lobe.\n\nThat is the reference this section works from: two lobes on the left, and an upper lobe with two divisions.',
+      heading: 'A long main bronchus',
+      body: 'The left main bronchus is much longer than the right. No lobe leaves it on the way down.\n\nIt ends at two openings: the upper lobe and the lower lobe. Stop there and name both before you enter either.',
       claimClass: 'source',
-      sourceRefs: [{ sourceId: 'S1', location: { kind: 'pdf-pages', from: 65, to: 70 } }],
+      sourceRefs: ANATOMY,
     },
     {
-      id: 'left-names',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'The left-sided names, by parent',
-      body: 'Name the parent first, then the segment. The same number can name a different segment on each side: right B4 and B5 are the middle lobe’s lateral and medial segments, while left B4 and B5 are the lingula’s superior and inferior segments. B6 is the superior segment of the lower lobe on both sides.',
-      pointsLabel: 'The left side in this teaching profile',
-      points: [
-        'Upper division: LB1+2 apicoposterior, often one combined origin rather than two openings, and LB3 anterior',
-        'Lingula: LB4 superior lingular and LB5 inferior lingular',
-        'Lower lobe: LB6 superior, which belongs to the lower lobe and not to the lingula',
-        'Lower lobe basal group: LB7+8 anteromedial basal, LB9 lateral basal and LB10 posterior basal',
-      ],
-      media: { kind: 'endoscopic-still', structureId: 'lingula', outline: true },
+      id: 'upper-lobe',
+      kind: 'pattern',
+      role: 'normal-reference',
+      heading: 'One lobe, two divisions',
+      body: 'The upper lobe divides at once. The upper division runs up and gives LB1+2, apicoposterior, and LB3, anterior.\n\nThe lingula runs forward and down. It is part of the upper lobe, not a lobe of its own. It gives LB4, superior, and LB5, inferior.\n\nRB4 and RB5 are lateral and medial: the numbers cross over, the names do not.',
       claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 63 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 65, to: 67 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 67, to: 70 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 103 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 106 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 159, to: 160 } },
-      ],
+      sourceRefs: ANATOMY,
       reviewItemIds: ['R01'],
     },
     {
-      id: 'lingula-to-lower-lobe',
-      kind: 'after-commitment',
-      role: 'worked-example',
-      heading: 'Lingula to lower lobe, worked',
-      body: 'The left B4–5–6 drill crosses from one lobe to another. Naming the parent at each transition is what makes the crossing visible, whatever the rotation of the image.',
-      pointsLabel: 'The walk, transition by transition',
-      points: [
-        'Left main bronchus: the division ahead is between the upper and lower lobes. With the image rotated, their places on the screen are not those of an upright picture.',
-        'Left upper lobe: it divides into the upper division and the lingula.',
-        'Lingula: LB4, then LB5. Still the left upper lobe.',
-        'Back to the left main bronchial division: the parent changes here, not inside the lingula.',
-        'Left lower lobe, then LB6: the superior segment of the lower lobe.',
-      ],
-      claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 66, to: 70 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 63 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 67, to: 70 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46, to: 47 } },
-      ],
-    },
-    {
-      id: 'basal-convention',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'The left basal convention',
-      body: 'The sources differ on the left anteromedial basal bronchus. The textbook lists a combined left B7/8 anteromedial branch; the training manual’s principal skills checklist lists LB8, LB9 and LB10, while its step-by-step checklist acknowledges LB7 when present. Neither is a universal human anatomy.\n\nThis course teaches one combined LB7+8. A separate LB7 belongs to a different anatomy profile, and a record states which convention it follows. A branch the declared profile does not have is not a missed branch. In a patient the anatomy decides: a separate LB7 is recognized and recorded when present, an expected branch not seen is not assumed absent, and uncertainty is recorded rather than resolved by inventing a branch. LB7 names a bronchus; it is not the subcarinal lymph-node station 7.',
+      id: 'lower-lobe',
+      kind: 'pattern',
+      role: 'normal-reference',
+      heading: 'The lower lobe: superior segment, then three',
+      body: 'LB6, the superior segment, leaves the posterior wall first, as RB6 does on the right. It belongs to the lower lobe.\n\nPast it, count three basal openings, not four: LB7+8 anteromedial, LB9 lateral, LB10 posterior. On the left LB7 and LB8 usually share one opening; when LB7 opens separately, report it as you see it.',
       claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 63 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 67, to: 70 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 103 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 106 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 159, to: 160 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46, to: 47 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 61, to: 70 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 146, to: 147 } },
-      ],
+      sourceRefs: BASAL,
       reviewItemIds: ['R01'],
-    },
-    {
-      id: 'basal-relationships',
-      kind: 'after-commitment',
-      role: 'mechanism',
-      heading: 'Basal relationships, not screen order',
-      body: 'A lecture mnemonic orders the basal branches anterior, lateral, posterior; adding medial, with the superior segment remembered above them, gives its MALPS cue. The words describe the anatomy in the patient. They are not a fixed top-to-bottom order or a clock position on the screen, which changes whenever the scope turns.\n\nOn the left, the anterior and medial parts follow the declared LB7+8 convention, and LB6 is the lower lobe’s superior segment, not one of the basal branches.',
-      claimClass: 'transcript-source',
-      sourceRefs: [
-        { sourceId: 'T11', location: { kind: 'time-span', start: '00:28:21', end: '00:30:34' } },
-        { sourceId: 'T11', location: { kind: 'time-span', start: '00:33:54', end: '00:34:48' } },
-      ],
     },
     {
       id: 'common-errors',
       kind: 'after-commitment',
       role: 'common-errors',
-      heading: 'Common errors and their correction',
-      body: 'Each of these names a left-sided airway from something other than its parent.',
-      pointsLabel: 'The error, then the correction',
+      heading: 'Four errors to expect',
+      body: 'Each one carries the right lung’s map across to the left.',
+      pointsLabel: 'The error, then the fix',
       points: [
-        'Calling the lingula’s two openings the lower lobe because two openings are in view: retrace to the left main bronchial division and name the parent upper lobe.',
-        'Taking the long, straight-looking left main bronchus for the lower lobe: find the division first.',
-        'Carrying the right side’s names across: left B4 and B5 are superior and inferior lingular, not lateral and medial.',
-        'Placing LB6 with the lingula because the drill groups them: LB6 is the lower lobe’s superior segment.',
-        'Filling a separate LB7 line on a combined profile, or calling it missed: record the declared convention.',
-        'Reading the basal branches off the screen in a fixed order: set the image against landmarks first.',
+        'Taking the long main bronchus for the lower lobe. No lobe has left yet. Keep going to the two openings.',
+        'Calling the lingula a lobe, or filing its openings under the lower lobe. It leaves the upper lobe.',
+        'Naming LB4 and LB5 lateral and medial. They are superior and inferior.',
+        'Hunting for a fourth basal opening. Three is the full count when LB7 and LB8 share one.',
       ],
-      claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 66, to: 70 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 67, to: 70 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 159, to: 160 } },
-        { sourceId: 'T11', location: { kind: 'time-span', start: '00:28:21', end: '00:30:34' } },
-      ],
+      claimClass: 'source',
+      sourceRefs: NAVIGATION,
+      reviewItemIds: ['R06'],
     },
   ],
 
-  workspace: { kind: 'scope', view: LEFT_WALK },
-
-  steps: {
-    recognize: {
-      instruction:
-        'Look at the bronchoscope view in the Simulator panel: the scope is in the left main bronchus and the image is rotated. Note what you can see ahead before naming anything.',
-      lookIn: { pane: 'simulator', landmark: SIMULATOR_LANDMARKS.scopeView },
-    },
-    act: {
-      title: 'From the lingula to the lower lobe',
-      instruction:
-        'Meet the goals on this card with the scope controls under the view, starting from the rotated image. After each entry, check the lobe you named against the parentage in the readouts under the controls.',
-      lookIn: {
-        pane: 'simulator',
-        landmark: SIMULATOR_LANDMARKS.controls,
-        alsoPane: 'steps',
-        alsoLandmark: STEPS_LANDMARKS.goals,
+  workspace: {
+    kind: 'scope',
+    view: {
+      sectionId: 'left-side',
+      mode: 'guided-walk',
+      profile: 'adult-teaching-combined-left-basal-v1',
+      start: { kind: 'airway', label: 'LMSB', at: 'proximal' },
+      controls: [],
+      assists: {
+        'centerline-lock': true,
+        'aim-guard': true,
+        'branch-labels': false,
+        'reference-orientation': true,
       },
-    },
-    explain: {
-      title: 'The left side, explained',
-      instruction: `Read ${TEACHING_LANDMARKS.adds} and “The left-sided names, by parent” in the Teaching panel, then why the other answers do not fit, on this card.`,
+      defaults: { branchLabels: false },
+      litAirways: [],
+      boundary: VIEW_LINE,
     },
   },
 
   act: {
     kind: 'scope-lab',
-    // The walk the learner drives: a reset, so a goal broken by an off-path entry can be started
-    // again, and the parentage readout, against which the lobe named aloud is checked.
+    outcomeId: 'reach-lb4-lb6',
     view: {
-      ...LEFT_WALK,
-      controls: ['advance', 'withdraw', 'rotate', 'deflect', 'reset'],
-      readouts: ['parentage'],
+      sectionId: 'left-side',
+      mode: 'guided-walk',
+      profile: 'adult-teaching-combined-left-basal-v1',
+      start: { kind: 'airway', label: 'LMSB', at: 'mid' },
+      controls: ['advance', 'withdraw', 'rotate', 'deflect', 'recenter', 'reset'],
+      assists: {
+        'centerline-lock': true,
+        'aim-guard': true,
+        'branch-labels': false,
+        'align-to-branch': false,
+        recenter: true,
+        'reference-orientation': true,
+      },
+      defaults: { branchLabels: false },
+      readouts: ['currentAirway', 'parentage'],
+      litAirways: ['LMSB', 'LUL', 'LB4+5', 'LB4', 'LB5', 'LLL', 'LB6'],
+      boundary: VIEW_LINE,
     },
     goals: [
       {
         id: 'lingular-division',
-        label:
-          'Enter LB4+5, the lingular division, without entering the upper division. Before you enter, say which lobe it belongs to.',
+        label: 'Enter the upper lobe, then the lingula, without entering the upper division',
         test: {
           type: 'all',
           tests: [
@@ -324,8 +219,7 @@ export const section: BronchSectionDefinition = {
       },
       {
         id: 'lingular-segments',
-        label:
-          'Enter LB4, the superior lingular segment, then LB5, the inferior lingular segment, withdrawing into the lingular division between them.',
+        label: 'Enter LB4, withdraw into the lingula, then enter LB5',
         test: {
           type: 'event-sequence',
           events: ['entered:LB4', 'withdrew-to:LB4+5', 'entered:LB5'],
@@ -333,13 +227,12 @@ export const section: BronchSectionDefinition = {
       },
       {
         id: 'retrace',
-        label: 'Withdraw from LB5 into the left main bronchus.',
+        label: 'Withdraw from LB5 to the left main bronchus',
         test: { type: 'event-sequence', events: ['entered:LB5', 'withdrew-to:LMSB'] },
       },
       {
         id: 'superior-segment',
-        label:
-          'Enter LB6 without entering a basal branch. Before you enter, say which lobe LB6 belongs to and which lobe you have left.',
+        label: 'Enter the lower lobe, then LB6, without entering a basal segment',
         test: {
           type: 'all',
           tests: [
@@ -356,170 +249,265 @@ export const section: BronchSectionDefinition = {
     ],
   },
 
+  moreActs: {
+    images: {
+      kind: 'find',
+      outcomeId: 'name-left-airways',
+      find: {
+        id: 'left-lung-views',
+        prompt:
+          'Six views of the left lung, as the scope saw them. Click the opening each one asks for.',
+        rows: [
+          {
+            id: 'main-end',
+            frameId: 'left-main-end',
+            context: 'You have followed the left main bronchus to where it ends.',
+            prompt: 'Click the left lower lobe.',
+            targetId: 'lll',
+            rationale:
+              'The upper lobe opening shows its own division just inside: the upper division and the lingula. The lower lobe is the other opening.',
+          },
+          {
+            id: 'upper-lobe',
+            frameId: 'left-upper-lobe',
+            context:
+              'You are inside the left upper lobe bronchus. The patient’s head is toward the top of this view.',
+            prompt: 'Click the lingula.',
+            targetId: 'lingula',
+            rationale:
+              'The upper division runs up toward the apex. The lingula is the opening that runs down and forward, and it is still part of the upper lobe.',
+          },
+          {
+            id: 'upper-division',
+            frameId: 'left-upper-division',
+            context: 'You are inside the upper division. Anterior is to the right of this view.',
+            prompt: 'Click LB1+2, the apicoposterior segment.',
+            targetId: 'lb1-2',
+            rationale:
+              'LB3 is anterior, so it is the opening on the right. LB1+2 is the other one: a single opening for the apical and posterior segments.',
+          },
+          {
+            id: 'lingula',
+            frameId: 'lingula',
+            context:
+              'You are in the left upper lobe, looking down the lingula. The upper division is the large opening above it.',
+            prompt: 'Click LB4.',
+            targetId: 'lb4',
+            rationale:
+              'LB4 is the superior lingular segment, so it is the opening nearer the upper division. LB5, the inferior segment, lies below it.',
+          },
+          {
+            id: 'lower-lobe',
+            frameId: 'left-lower-lobe',
+            rotation: 90,
+            context:
+              'You have just entered the left lower lobe. The scope has been rotated a quarter turn.',
+            prompt: 'Click LB6, the superior segment.',
+            targetId: 'lb6',
+            rationale:
+              'LB6 leaves first and stands apart from the basal openings beyond it. Rotation moved it on the screen. It did not change which opening comes first.',
+          },
+          {
+            id: 'basal',
+            frameId: 'left-basal',
+            context:
+              'You are past LB6, at the basal openings. Posterior is to the right of this view.',
+            prompt: 'Click LB7+8, the anteromedial basal segment.',
+            targetId: 'lb7-8',
+            rationale:
+              'LB10 is posterior, so it is on the right. LB7+8 is anteromedial and sits on the opposite side. LB9, lateral, lies between them here.',
+          },
+        ],
+        sourceRefs: ANATOMY,
+      },
+    },
+  },
+
   prediction: {
-    id: 'Q02',
-    seedId: 'Q02',
-    itemType: 'signal-recognition',
+    id: 'mc-left-main-length',
+    itemType: 'management-decision',
     situation:
-      'The right-sided survey is finished and recorded, including RB4 lateral and RB5 medial. The scope is now in the left main bronchus, and the next line of the record is for LB4.',
-    stem: 'What name goes on that line?',
+      'You finish the right lung, withdraw to the carina and enter the left main bronchus. You advance as far as the right upper lobe came on the other side, watching the walls. No opening has appeared.',
+    stem: 'What do you do?',
     choices: [
       {
         id: 'a',
-        label: 'Lateral lingular',
+        label: 'Withdraw to the carina and check which bronchus you entered',
         rationale:
-          'Lateral is right B4’s name, and it comes from the middle lobe, not from the number. Left B4 arises in the lingula, whose two segments are named superior and inferior.',
+          'You entered the left side, and the walls look as they should. A run with no openings is the normal left main bronchus.',
         plausibility: 'incorrect-mechanism',
       },
       {
         id: 'b',
-        label: 'Superior lingular',
+        label: 'Continue down the left main bronchus, lumen centred, to its end',
         rationale:
-          'Left B4 arises in the lingula, a division of the left upper lobe, and is its superior segment. The number is shared with the right side; the parent, and so the name, is not.',
+          'The left main bronchus is far longer than the right. No lobe leaves it until it ends at the upper and lower lobes.',
         plausibility: 'best',
       },
       {
         id: 'c',
-        label: 'Inferior lingular',
+        label: 'Rotate and deflect to search the lateral wall at this level',
         rationale:
-          'Inferior lingular is LB5, the lingula’s other segment. Swapping the pair files the superior segment’s description, photograph or sample under the inferior one.',
+          'This stretch has no opening to find. The upper lobe leaves at the far end of the main bronchus, not beside the carina.',
         plausibility: 'incorrect-mechanism',
       },
       {
         id: 'd',
-        label: 'Medial lingular',
+        label: 'Record a missing left upper lobe and move to the lower lobe',
         rationale:
-          'Medial is the name of right B5, not B4, and it belongs to the middle lobe. The lingula has no medial segment; its two segments are superior and inferior.',
+          'Nothing is missing. You have not reached the upper lobe yet, and the lumen ahead is still the main bronchus.',
         plausibility: 'incorrect-mechanism',
       },
     ],
     explanation:
-      'A segment’s name is read from its parent, and the parents differ: right B4 and B5 are the lateral and medial segments of the middle lobe, while LB4 superior lingular and LB5 inferior lingular are the segments of the lingula, a division of the left upper lobe. The number does not imply the same directional name on both sides. LB6 is also named superior, but it is the superior segment of the left lower lobe, not of the lingula.',
-    objectiveIds: ['M09-O2'],
+      'The left main bronchus is much longer than the right. No lobe leaves it until it ends, where the upper lobe and the lower lobe open together. Follow it there before you name anything.',
+    objectiveIds: ['M09-O1'],
+    outcomeIds: ['name-left-airways'],
     claimClass: 'source',
-    sourceRefs: [
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 63 } },
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 65, to: 67 } },
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 67, to: 70 } },
-      { sourceId: 'S2', location: { kind: 'pdf-pages', from: 103 } },
-      { sourceId: 'S2', location: { kind: 'pdf-pages', from: 106 } },
-    ],
-    reviewItemIds: ['R01'],
+    sourceRefs: ANATOMY,
   },
 
   transfer: {
     id: 'left-side-transfer',
     itemType: 'management-decision',
     situation:
-      'Later in the same survey, LB6 has been entered and recorded, and the scope is back in the left lower lobe bronchus with three basal openings in view. The shaft was turned to reach LB6, and the trainee is about to name the three for the record.',
-    stem: 'What is the next move?',
+      'You are on the left when the patient coughs and the view rolls. When it settles you face an opening with two smaller openings inside. It could be the lingula or the basal end of the lower lobe.',
+    stem: 'What do you do before you name them?',
     choices: [
       {
         id: 'a',
-        label:
-          'Count the openings along the lower lobe bronchus and name them LB7+8, LB9 and LB10 in that order',
+        label: 'Name them LB4 and LB5 from the count of two',
         rationale:
-          'A count gives the number of openings, not their direction or their parent. The basal group is an educational grouping rather than one division with a fixed order, so numbering the openings as they come into view does not identify them.',
+          'A close view of the basal openings can show two as well. The count does not tell you which lobe you are in.',
         plausibility: 'incorrect-mechanism',
       },
       {
         id: 'b',
-        label:
-          'Name them anterior, lateral and posterior from the top of the screen downward, as the mnemonic lists them',
+        label: 'Advance into the larger one and name it from inside',
         rationale:
-          'The mnemonic names relationships in the patient, not rows on the screen. Read from the top of a turned image, it gives each name to whichever opening happens to sit highest.',
-        plausibility: 'incorrect-mechanism',
+          'Deeper is one more step from the last airway you could name. Nothing inside a segment tells you its parent.',
+        plausibility: 'unsafe',
       },
       {
         id: 'c',
-        label:
-          'Set the patient’s directions from landmarks and the airways already travelled, then name them',
+        label: 'Withdraw until the upper and lower lobe openings are both in view',
         rationale:
-          'Camera roll changes where the openings sit, not which bronchus each is. Landmarks and the path from the lower lobe bronchus fix the patient’s directions, and the anterior, lateral and posterior relationships then name the branches.',
+          'From the end of the left main bronchus you can name the lobe you enter. The division and the segment follow from that.',
         plausibility: 'best',
       },
       {
         id: 'd',
-        label:
-          'Advance into the opening lowest on the screen as the posterior basal, and confirm the name from inside it',
+        label: 'Pause and rotate the view until the pair looks like the atlas',
         rationale:
-          'This advances on a name taken from the screen. Inside one segment the neighboring origins are out of view, so the name cannot be checked there, and a description or sample goes on under a name nobody established.',
-        plausibility: 'unsafe',
+          'Rotation changes where the openings sit on the screen. It does not tell you which lobe you are in.',
+        plausibility: 'incorrect-mechanism',
       },
     ],
     explanation:
-      'Camera roll moves every opening on the screen without changing which bronchus it is, so a screen order no longer identifies a branch once the image turns, and a count gives a number, not a direction. The anterior–lateral–posterior mnemonic describes the basal branches in the patient; on the left, the anteromedial branch follows the declared LB7+8 convention. Set the image against landmarks and the path already travelled, and name each branch before entering it.',
-    objectiveIds: ['M09-O5'],
-    claimClass: 'synthesis',
-    sourceRefs: [
-      { sourceId: 'T11', location: { kind: 'time-span', start: '00:28:21', end: '00:30:34' } },
-      { sourceId: 'T11', location: { kind: 'time-span', start: '00:33:54', end: '00:34:48' } },
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 61, to: 70 } },
-      { sourceId: 'S2', location: { kind: 'pdf-pages', from: 44, to: 47 } },
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 63 } },
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 67, to: 70 } },
-    ],
+      'On the left, the lobe comes first. Withdraw to the two openings where the main bronchus ends, choose the lobe, and name the division and the segment on the way back in.',
+    objectiveIds: ['M09-O1', 'M09-O3'],
+    outcomeIds: ['name-left-airways'],
+    claimClass: 'source',
+    sourceRefs: NAVIGATION,
     transferVariant:
-      'A different airway later in the survey: the lower lobe’s basal branches after the shaft was turned to reach LB6, where the prediction named a lingular segment. The misleading cues are now a count and a screen order rather than a segment number, and the name still comes from the patient’s anatomy and the path travelled.',
-    retrievesFrom: 'reference-frames',
+      'Lost inside a lobe after a cough, where the prediction was on the way down the main bronchus with nothing yet passed.',
   },
 
   practice: [
     {
       id: 'mc-lb7-8-convention',
-      presentationTitle: 'An empty checklist line in the left lower lobe',
+      presentationTitle: 'Three basal openings on the left',
       situation:
-        'A trainee finishes the left lower lobe of the teaching model: the superior segment, one anteromedial basal opening, then the lateral and posterior basal openings. The inspection checklist in use lists LB7 and LB8 on separate lines, and the LB7 line is still empty.',
+        'You are in the left lower lobe of a stable patient, past LB6. You count three basal openings. Your report template has four basal lines, as it does for the right.',
       item: {
         id: 'mc-lb7-8-convention',
         itemType: 'management-decision',
-        stem: 'What should the record say about the empty line?',
+        stem: 'What do you do next?',
         choices: [
           {
             id: 'a',
-            label:
-              'LB7+8 recorded as one anteromedial basal bronchus, under the convention the model declares',
+            label: 'Inspect all three and record LB7+8, LB9 and LB10',
             rationale:
-              'The model declares one combined anteromedial basal bronchus, LB7+8. Recording that name and the convention lets anyone reading the record against a separate-LB7 profile see why there is no LB7 line.',
+              'On the left LB7 and LB8 usually share one opening. Three basal openings is the full count.',
             plausibility: 'best',
           },
           {
             id: 'b',
-            label:
-              'LB7 marked as missed, so the left lower lobe stays incomplete until a separate opening is found',
+            label: 'Record LB7 as not seen and the lobe as incomplete',
             rationale:
-              'On this model a branch absent from the declared profile is not a missed branch, and keeping the lobe incomplete until one appears invites inventing it. In a patient the anatomy decides, and a separate LB7 is recorded when present.',
+              'You saw every opening this lobe has. LB7 is inside the anteromedial opening you inspected, not missing.',
             plausibility: 'incorrect-mechanism',
           },
           {
             id: 'c',
-            label:
-              'The medial part of the anteromedial opening labeled LB7, so that the checklist has no empty line',
+            label: 'Advance into the medial opening to find a separate LB7',
             rationale:
-              'This manufactures a bronchus to complete a list. A record that names a bronchus nobody identified misleads anyone who later samples or compares by that name.',
+              'There is no fourth opening to reach. Going deeper searches for a branch this patient does not have.',
             plausibility: 'unsafe',
           },
           {
             id: 'd',
-            label: 'LB7 marked not applicable on this model',
+            label: 'Go back to LB6 and look beside it for the fourth',
             rationale:
-              'Not applicable is true for this model, but a bare mark does not say why. Without the convention named, the record cannot be read against a separate-LB7 profile or a patient whose anatomy differs.',
-            plausibility: 'reasonable-but-incomplete',
+              'LB6 is the superior segment and has no basal neighbour. The basal openings are the three already in view.',
+            plausibility: 'incorrect-mechanism',
           },
         ],
         explanation:
-          'The sources differ on the left anteromedial basal bronchus, and this course’s profile declares one combined LB7+8; a separate LB7 belongs to a different profile. The record names the convention it follows. It does not fill a line by inventing a branch, and it does not count a branch absent from the declared profile as missed.',
+          'The left lower lobe usually has three basal openings: LB7+8, LB9 and LB10. Inspect each and record them by those names. When LB7 does open separately, report four.',
         objectiveIds: ['M09-O4'],
+        outcomeIds: ['name-left-airways'],
         claimClass: 'source',
-        sourceRefs: [
-          { sourceId: 'S1', location: { kind: 'pdf-pages', from: 63 } },
-          { sourceId: 'S1', location: { kind: 'pdf-pages', from: 67, to: 70 } },
-          { sourceId: 'S2', location: { kind: 'pdf-pages', from: 103 } },
-          { sourceId: 'S2', location: { kind: 'pdf-pages', from: 106 } },
-          { sourceId: 'S2', location: { kind: 'pdf-pages', from: 159, to: 160 } },
-          { sourceId: 'S2', location: { kind: 'pdf-pages', from: 46, to: 47 } },
-        ],
+        sourceRefs: BASAL,
         reviewItemIds: ['R01', 'R06'],
+      },
+    },
+    {
+      id: 'mc-lb4-name',
+      presentationTitle: 'The same numbers, different names',
+      situation:
+        'You have surveyed the right lung and recorded RB4 as lateral and RB5 as medial. Now you are inside the lingula, at its two segmental openings.',
+      item: {
+        id: 'mc-lb4-name',
+        seedId: 'Q02',
+        itemType: 'signal-recognition',
+        stem: 'What do you call LB4?',
+        choices: [
+          {
+            id: 'a',
+            label: 'Lateral lingular segment',
+            rationale:
+              'Lateral is the name of RB4, in the middle lobe. The lingular segments lie one above the other.',
+            plausibility: 'incorrect-mechanism',
+          },
+          {
+            id: 'b',
+            label: 'Superior lingular segment',
+            rationale:
+              'The lingula divides into an upper and a lower segment. LB4 is the upper one, and LB5 is inferior.',
+            plausibility: 'best',
+          },
+          {
+            id: 'c',
+            label: 'Inferior lingular segment',
+            rationale: 'Inferior is LB5. The lower number is the upper segment.',
+            plausibility: 'incorrect-mechanism',
+          },
+          {
+            id: 'd',
+            label: 'Medial lingular segment',
+            rationale:
+              'Medial is the name of RB5, in the middle lobe. No lingular segment is called medial.',
+            plausibility: 'incorrect-mechanism',
+          },
+        ],
+        explanation:
+          'The numbers match across the two lungs and the names do not. RB4 and RB5 are lateral and medial. LB4 and LB5 are superior and inferior.',
+        objectiveIds: ['M09-O2'],
+        outcomeIds: ['name-left-airways'],
+        claimClass: 'source',
+        sourceRefs: ANATOMY,
+        reviewItemIds: ['R01'],
       },
     },
   ],

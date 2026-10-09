@@ -272,9 +272,7 @@ export function NormalAirwayTour({
           isStillStructureId(entry.lessonId) &&
           (['larynx-and-entry', 'view-loss'].includes(sectionId)
             ? ['TR', 'RMSB', 'LMSB'].includes(entry.label ?? '')
-            : sectionId === 'reference-frames'
-              ? ['TR', 'RMSB', 'BI'].includes(entry.label ?? '')
-              : entry.side === side),
+            : entry.side === side),
       )
   const node = nodes.find((entry) => entry.id === selectedId) ?? nodes[0]
   if (!node || !isStillStructureId(node.lessonId)) return null

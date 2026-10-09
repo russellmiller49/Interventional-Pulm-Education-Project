@@ -134,7 +134,8 @@ export const section: BronchSectionDefinition = {
 
   spineStops: ['segmental', 'main-bronchi'],
   grammarRowIds: ['red-field-wedged-bleeding', 'red-out'],
-  precommitDenyPatterns: [/\bleft lung\b/i, /\bother lung\b/i],
+  // "The left lung" is also a section title in the course map, so the guard keeps the pronoun.
+  precommitDenyPatterns: [/\bher left lung\b/i, /\bother lung\b/i],
   localPolicyIds: ['bleeding_rescue', 'blocker_ifu_and_rescue'],
   reviewItemIds: ['R33', 'R34', 'R37', 'R42'],
 

@@ -557,7 +557,7 @@ describe('a scenario in frames (A13, A32)', () => {
 
 describe('naming views and ordering steps', () => {
   it('names every view, opens the names on request, and can be tried again', async () => {
-    const { lesson } = await mountSection('reference-frames')
+    const { lesson } = await mountSection('pre-use-check')
     await reachAct(lesson)
     const act = stepOfKind(lesson, 'identify')
     if (act.interaction.kind !== 'identify') return

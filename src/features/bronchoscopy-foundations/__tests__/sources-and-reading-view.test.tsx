@@ -314,7 +314,6 @@ describe('focus scrolling reserves the continuation bar as measured (A9)', () =>
  */
 const GRAMMAR_SECTIONS: readonly BronchSectionId[] = [
   'view-loss',
-  'left-side',
   'systematic-survey',
   'poor-return',
   'protected-accessories',

@@ -12,10 +12,10 @@ import { ScopeScenePane } from '../components/scope/ScopeScenePane'
 import { TipCompass } from '../components/scope/TipCompass'
 import type { ScopePaneProps, ScopeState, ScopeViewSpec } from '../components/scope/types'
 import { MediaWorkspace } from '../components/stage/MediaWorkspace'
-import { BRONCH_SECTIONS } from '../content/sections'
 import { benchTipOrientation, compassRadius } from '../engine/scope/benchOrientation'
 import { authoredScopePose } from '../engine/scope/scopeAuthoredPose'
 import { ScopeDriver } from '../test-support/teachingCase'
+import { COMPARISON_WORKSPACE } from '../test-support/comparisonWorkspace'
 
 /**
  * BF-PRE-REVIEW-03 independent review, blockers 2, 3 and 4.
@@ -479,14 +479,12 @@ describe('blocker 4 — the S7 comparison limits the card’s frame, not the enl
   })
 
   it('matches the card’s frame and neither enlarged frame, for the CT and for the still', async () => {
-    const section = BRONCH_SECTIONS.find((s) => s.id === 'reference-frames')!
-    if (section.workspace.kind !== 'media') throw new Error('media workspace expected')
     const { container } = render(
       <MediaWorkspace
-        media={section.workspace.media}
-        caption={section.workspace.caption}
-        mediaNotes={section.workspace.mediaNotes}
-        comparisonNote={section.workspace.comparisonNote}
+        media={COMPARISON_WORKSPACE.media}
+        caption={COMPARISON_WORKSPACE.caption}
+        mediaNotes={COMPARISON_WORKSPACE.mediaNotes}
+        comparisonNote={COMPARISON_WORKSPACE.comparisonNote}
       />,
     )
     await act(async () => {

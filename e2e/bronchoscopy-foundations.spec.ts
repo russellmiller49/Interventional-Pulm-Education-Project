@@ -527,7 +527,7 @@ for (const viewport of [
       expect(await earlierRecord(page)).toBeNull()
       await expect(page.locator('[data-section-completion] [data-next-section]')).toHaveAttribute(
         'data-next-section',
-        'reference-frames',
+        'larynx-and-entry',
       )
       await page.reload()
       await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[0].id)
@@ -711,6 +711,7 @@ for (const viewport of [
               'pre-use-check',
               'five-controls',
               'right-side',
+              'left-side',
               'deterioration',
               'honest-report',
             ] as const)
@@ -827,8 +828,8 @@ for (const id of ['pre-use-check', 'deterioration', 'honest-report'] as const) {
 test('missing teaching media is explicitly identified', async ({ page }) => {
   await page.route('**/airway-quiz/quiz-frames.json', (route) => route.abort())
   await page.route('**/*quiz*frames*.json', (route) => route.abort())
-  // The left lung still opens on its tour; the rewritten right lung opens on its hook.
-  await openSection(page, 'left-side')
+  // Losing the view still opens on its tour; the rewritten lungs open on their hook.
+  await openSection(page, 'view-loss')
   await expect(page.locator('[data-media-state="failed"]').first()).toBeVisible()
   expect((await record(page)).reviewedSectionIds).toEqual([])
 })
@@ -1336,7 +1337,6 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
   // the table in the lesson; the Reference keeps all of it.
   const GRAMMAR_SECTIONS = [
     'view-loss',
-    'left-side',
     'systematic-survey',
     'poor-return',
     'protected-accessories',
@@ -1386,9 +1386,9 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
         await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[index + 1].id)
       }
     }
-    // Seven sections, nine places: view-loss and poor-return show the rows twice. A rewritten
+    // Six sections, eight places: view-loss and poor-return show the rows twice. A rewritten
     // section no longer prints the table in the lesson.
-    expect(occurrences).toBe(9)
+    expect(occurrences).toBe(8)
     await page.goto(base + '/reference')
     const reference = page.locator('#reading-the-view table[data-grammar]')
     await expect(reference.locator('thead th')).toHaveText([
@@ -2160,42 +2160,6 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
       expect(focus.bottom).toBeLessThanOrEqual(viewport.height + 1)
     })
 
-  test('S7: the CT and the still are compared side by side at laptop sizes, each for what it is', async ({
-    page,
-  }, info) => {
-    for (const viewport of [
-      { width: 1204, height: 987 },
-      { width: 1024, height: 768 },
-      { width: 390, height: 844 },
-    ]) {
-      await page.setViewportSize(viewport)
-      await goToStep(page, 'reference-frames', 'reference-frames-flow-v1-ct-display')
-      const figures = page.locator('[data-media-workspace] figure')
-      await expect(figures).toHaveCount(2)
-      await expect(figures.nth(1).locator('img')).toBeVisible()
-      await figures.first().scrollIntoViewIfNeeded()
-      const [ct, still] = await figures.evaluateAll((elements) =>
-        elements.map((figure) => {
-          const r = figure.querySelector('img')!.getBoundingClientRect()
-          return { top: r.top, bottom: r.bottom, left: r.left, width: r.width }
-        }),
-      )
-      if (viewport.width >= 1024) {
-        expect(Math.abs(ct.top - still.top)).toBeLessThan(2)
-        expect(Math.max(ct.bottom, still.bottom) - Math.min(ct.top, still.top)).toBeLessThan(
-          viewport.height - 100,
-        )
-        expect(still.left).toBeGreaterThan(ct.left + ct.width)
-      } else expect(still.top).toBeGreaterThan(ct.bottom)
-      await expect(page.locator('[data-media-frame]')).toHaveCount(2)
-      await expect(page.locator('[data-media-comparison]')).toContainText('not a registered pair')
-      await expect(page.locator('[data-media-comparison]')).toContainText(
-        'this panel shows one axial slice',
-      )
-      await page.screenshot({ path: info.outputPath(`s7-${viewport.width}.png`) })
-    }
-  })
-
   test('S20: the scope in the tube is drawn in cross-section, to scale, from the readouts’ numbers', async ({
     page,
   }, info) => {
@@ -2650,125 +2614,4 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
     const savedAfter = await record(page)
     expect({ ...savedAfter, updatedAt: null }).toEqual({ ...savedBefore, updatedAt: null })
   })
-
-  /** The image inside a figure's card frame and inside its open enlarged view, as painted. */
-  async function imageBox(image: Locator) {
-    return image.evaluate((element) => {
-      const img = element as HTMLImageElement
-      const box = img.getBoundingClientRect()
-      return {
-        width: box.width,
-        height: box.height,
-        left: box.left,
-        right: box.right,
-        top: box.top,
-        bottom: box.bottom,
-        src: img.currentSrc,
-        natural: img.naturalWidth / img.naturalHeight,
-      }
-    })
-  }
-  for (const viewport of [
-    { width: 1204, height: 987 },
-    { width: 1024, height: 768 },
-    { width: 390, height: 844 },
-  ])
-    test(`review repair 4: S7 Enlarge shows each image at the size the screen allows at ${viewport.width}×${viewport.height}`, async ({
-      page,
-    }, info) => {
-      await page.setViewportSize(viewport)
-      await goToStep(page, 'reference-frames', 'reference-frames-flow-v1-ct-display')
-      const figures = page.locator('[data-media-workspace] figure')
-      await expect(figures).toHaveCount(2)
-      const desktop = viewport.width >= 1024
-      const measured: Record<string, unknown> = { viewport }
-      for (const [index, name] of [
-        [0, 'ct'],
-        [1, 'still'],
-      ] as const) {
-        const figure = figures.nth(index)
-        const cardImage = figure.locator('[data-media-frame-size="card"] img')
-        await expect(cardImage).toBeVisible()
-        await cardImage.scrollIntoViewIfNeeded()
-        const card = await imageBox(cardImage)
-        const enlarge = figure.getByRole('button', { name: `Enlarge image ${index + 1} of 2` })
-        await enlarge.click()
-        const dialog = page.locator('dialog[data-media-dialog][open]')
-        await expect(dialog).toBeVisible()
-        await expect(
-          dialog.getByRole('heading', { name: `Image ${index + 1} of 2, enlarged` }),
-        ).toBeVisible()
-        await expect(dialog.locator('[data-media-dialog-close]')).toBeFocused()
-        const largeImage = dialog.locator('[data-media-frame-size="enlarged"] img')
-        await expect(largeImage).toBeVisible()
-        const large = await imageBox(largeImage)
-        const frame = await dialog.evaluate((element) => {
-          const box = element.getBoundingClientRect()
-          return {
-            left: box.left,
-            right: box.right,
-            top: box.top,
-            bottom: box.bottom,
-            scrollHeight: element.scrollHeight,
-            clientHeight: element.clientHeight,
-            scrollWidth: element.scrollWidth,
-            clientWidth: element.clientWidth,
-          }
-        })
-        measured[name] = {
-          card: { width: card.width, height: card.height },
-          dialog: { width: large.width, height: large.height },
-          ratio: large.width / card.width,
-        }
-        writeFileSync(info.outputPath('s7-sizes.json'), JSON.stringify(measured, null, 1))
-
-        // The same file at its own proportions, not a stretched or substituted one.
-        expect(large.src).toBe(card.src)
-        expect(large.width / large.height).toBeCloseTo(large.natural, 2)
-        expect(card.width / card.height).toBeCloseTo(card.natural, 2)
-        if (desktop) {
-          // Materially larger: the reviewed build showed it at exactly the card's size.
-          expect(large.width).toBeGreaterThan(card.width * 1.3)
-          expect(large.height).toBeGreaterThan(card.height * 1.3)
-        } else {
-          // A phone's card already spans the column, so the enlarged view cannot be larger than
-          // it: the dialog is the screen less its own border and padding. It stays close to it.
-          expect(large.width).toBeGreaterThan(card.width * 0.9)
-          expect(large.width).toBeGreaterThan(viewport.width * 0.85)
-        }
-        // It uses the screen without spilling off it or needing the dialog scrolled.
-        expect(frame.left).toBeGreaterThanOrEqual(0)
-        expect(frame.right).toBeLessThanOrEqual(viewport.width)
-        expect(frame.top).toBeGreaterThanOrEqual(0)
-        expect(frame.bottom).toBeLessThanOrEqual(viewport.height)
-        expect(frame.scrollWidth).toBeLessThanOrEqual(frame.clientWidth + 1)
-        expect(large.left).toBeGreaterThanOrEqual(frame.left)
-        expect(large.right).toBeLessThanOrEqual(frame.right)
-        if (desktop) {
-          expect(frame.scrollHeight).toBeLessThanOrEqual(frame.clientHeight + 1)
-          expect(large.bottom).toBeLessThanOrEqual(frame.bottom)
-        }
-        await page.screenshot({
-          path: info.outputPath(`repair4-s7-${name}-enlarged-${viewport.width}.png`),
-        })
-
-        // Close returns the focus to this figure's own Enlarge button; so does Escape.
-        await dialog.locator('[data-media-dialog-close]').click()
-        await expect(page.locator('dialog[data-media-dialog][open]')).toHaveCount(0)
-        await expect(enlarge).toBeFocused()
-        await page.keyboard.press('Enter')
-        await expect(page.locator('dialog[data-media-dialog][open]')).toBeVisible()
-        await page.keyboard.press('Escape')
-        await expect(page.locator('dialog[data-media-dialog][open]')).toHaveCount(0)
-        await expect(enlarge).toBeFocused()
-        // The card is as it was: the comparison row is not made larger to fake the enlargement.
-        const after = await imageBox(cardImage)
-        expect(after.width).toBeCloseTo(card.width, 0)
-      }
-      // The side-by-side comparison and its wording are untouched.
-      await expect(page.locator('[data-media-comparison]')).toContainText('not a registered pair')
-      expect(
-        await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
-      ).toBeLessThanOrEqual(0)
-    })
 })
