@@ -96,9 +96,8 @@ describe('ECMO localization card — the scaffolded table', () => {
     expect(container.querySelector('[data-localization-scaffold-note]')?.textContent).toMatch(
       /no problem introduced/i,
     )
-    expect(container.querySelector('[data-model-boundary]')?.textContent).toMatch(
-      /simulation|model/i,
-    )
+    // Teaching-first: one boundary statement per module, on the hub. The card carries none.
+    expect(container.querySelector('[data-model-boundary]')).toBeNull()
     expect(container.querySelector('[data-text-equivalent]')?.textContent).toBe(
       ecmoLocalizationScaffoldTextEquivalent('vv'),
     )
@@ -130,9 +129,9 @@ describe('ECMO localization card — one revealed row', () => {
     for (const cause of row.causes) expect(text).toContain(cause)
     expect(text).toContain(row.actionClass)
     expect(text).toContain(row.harmfulReflex)
-    expect(container.querySelector('[data-model-boundary]')?.textContent).toContain(
-      row.modelBoundary,
-    )
+    // The per-row model boundary is no longer rendered or read out with the row.
+    expect(container.querySelector('[data-model-boundary]')).toBeNull()
+    expect(text).not.toContain(row.modelBoundary)
     expect(container.querySelector('[data-text-equivalent]')?.textContent).toBe(
       ecmoLocalizationRowTextEquivalent('vv', rowId),
     )

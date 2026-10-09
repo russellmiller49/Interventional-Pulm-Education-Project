@@ -237,10 +237,7 @@ export function EcmoCaseDebrief({
 
   return (
     <div className={styles.debriefPanel} data-case-debrief>
-      <p>
-        This is the authored case explanation. It does not claim that you performed the actions
-        described.
-      </p>
+      <p>The case explained. It describes the intended management, not a record of what you did.</p>
       <Block kicker="Case explanation" heading="Your reasoning and the case's own">
         <dl className={styles.planComparison}>
           {rows.map((row) => (
@@ -400,10 +397,8 @@ export function EcmoCaseDebrief({
         </div>
         {recognitionOnly && causeCorrected ? (
           <p role="note" data-recognition-only>
-            What this case asks for here is recognition and escalation, and that is what it
-            represents. Recognition and escalation do not themselves treat this pattern. The
-            readings above show the current simulated patient state, including any changes as the
-            model clock advanced; they do not demonstrate a treatment response to recognition.
+            The definitive step in this case is not carried out on the simulator, so the readings
+            above show the patient before it, not a response to it.
           </p>
         ) : null}
         {submitted ? (
@@ -482,7 +477,6 @@ export function EcmoCaseDebrief({
                 <li key={objective}>{objective}</li>
               ))}
             </ul>
-            <small>Curriculum source: {clinicalCase.sourceCase}</small>
           </>
         ) : null}
       </Block>

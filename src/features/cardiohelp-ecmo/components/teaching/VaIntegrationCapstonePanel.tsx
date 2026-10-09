@@ -9,13 +9,11 @@ import { CapstoneHypothesisMatrix, CapstoneMatrixSentences } from './CapstoneHyp
 import {
   AwaitingCircuit,
   GuidedValue,
-  ModelBoundary,
   TextEquivalent,
   direction,
   directionWord,
   round,
   styles,
-  VA_CONFIGURATION_BOUNDARY,
   VaConfigurationLabel,
 } from './shared'
 import { VaConfigurationStrategyCard } from './VaConfigurationStrategyCard'
@@ -182,16 +180,12 @@ const rows: readonly MatrixRow[] = [
           'Unchanged. In this simulation the loading preview leaves the circuit flow and every circuit pressure identical to the presenting case.',
         discriminator:
           'Identical circuit numbers beside a changed patient is the pattern that moves attention off the console.',
-        limitation:
-          'This simulation authors loading as a patient-side state and does not feed it back into circuit flow. At the bedside a ventricle distending against the return changes what the return side is working against.',
       },
       'membrane-dysfunction': {
         direction:
           'Falls in this simulation, because the membrane resistance also constrains flow.',
         discriminator:
           'Read the gradient rather than the flow: the gradient rises here even though the flow carrying it has fallen.',
-        limitation:
-          'A membrane can lose gas transfer at the bedside without its resistance having risen enough to constrain flow. This simulation couples the two, so do not take an unchanged flow here as ruling a membrane problem out.',
       },
       'gas-side-interruption': {
         direction: 'Unchanged. The pump keeps moving blood through a membrane receiving no gas.',
@@ -203,8 +197,6 @@ const rows: readonly MatrixRow[] = [
           'Little changed in a speed-controlled circuit, and if anything slightly easier as the pump works against less resistance.',
         discriminator:
           'Maintained circuit flow beside a falling pressure is the whole of this explanation, and the reason raising the speed is the wrong reflex.',
-        limitation:
-          'None of the VA states this lesson loads carries vasoplegia, so nothing here will show you this row.',
       },
     },
   },
@@ -222,15 +214,11 @@ const rows: readonly MatrixRow[] = [
         direction: 'Unchanged in this simulation.',
         discriminator:
           'A drainage pressure standing still while the patient side changes is what keeps this a patient-side explanation.',
-        limitation:
-          'A congested circulation changes what a drainage cannula sees at the bedside. This simulation does not couple loading back to the drainage pressure.',
       },
       'membrane-dysfunction': {
         grammarRowId: 'membrane-resistance',
         discriminator:
           'A drainage pressure that has not moved argues against the drainage side; the problem sits downstream of the pump.',
-        limitation:
-          'The membrane preview in this simulation also constrains flow, so the drainage pressure moves a little with the lower flow rather than standing entirely still.',
       },
       'gas-side-interruption': {
         grammarRowId: 'gas-path-failure',
@@ -242,7 +230,6 @@ const rows: readonly MatrixRow[] = [
           'Unchanged, unless the vasodilated patient is also under-filled, which drainage would then report.',
         discriminator:
           'Drainage is where a coexisting volume problem would appear, and it is worth reading before tone is blamed for everything.',
-        limitation: 'Not demonstrable in the states this lesson loads.',
       },
     },
   },
@@ -269,15 +256,11 @@ const rows: readonly MatrixRow[] = [
         direction: 'Unchanged in this simulation.',
         discriminator:
           'Return-side pressure holding still while pulsatility disappears separates the ventricle from the circuit.',
-        limitation:
-          'At the bedside the return side works against the arterial pressure, so a rising load can raise pArt. This simulation does not model that coupling.',
       },
       'membrane-dysfunction': {
         grammarRowId: 'membrane-resistance',
         discriminator:
           'Separation between the two is the membrane signature; rising together is a return-side one.',
-        limitation:
-          'In this simulation pArt falls as the flow falls, because the membrane preview constrains flow as well as raising the gradient. Read the separation, not where pArt has settled.',
       },
       'gas-side-interruption': {
         grammarRowId: 'gas-path-failure',
@@ -289,7 +272,6 @@ const rows: readonly MatrixRow[] = [
           'pArt would be expected to fall with the arterial pressure the circuit returns against, carrying pInt down with it and leaving the difference between them alone.',
         discriminator:
           'Both falling together while the gradient stays put is what separates a tone problem from a membrane one.',
-        limitation: 'Not demonstrable in the states this lesson loads.',
       },
     },
   },
@@ -321,7 +303,6 @@ const rows: readonly MatrixRow[] = [
         direction: 'Little changed.',
         discriminator:
           'The gradient is a resistance multiplied by a flow, and this explanation changes neither.',
-        limitation: 'Not demonstrable in the states this lesson loads.',
       },
     },
   },
@@ -354,7 +335,6 @@ const rows: readonly MatrixRow[] = [
         direction: 'Can rise: a vasodilated circulation extracts less from the same delivery.',
         discriminator:
           'A drainage saturation that has risen while the pressure has fallen is the pattern that suggests tone rather than flow.',
-        limitation: 'Not demonstrable in the states this lesson loads.',
       },
     },
   },
@@ -385,7 +365,6 @@ const rows: readonly MatrixRow[] = [
       vasoplegia: {
         direction: 'Unchanged.',
         discriminator: 'Vascular tone does not change what the membrane returns.',
-        limitation: 'Not demonstrable in the states this lesson loads.',
       },
     },
   },
@@ -405,15 +384,11 @@ const rows: readonly MatrixRow[] = [
           'Stays high in this simulation: with the valve not opening, the upper body is supplied almost entirely by circuit blood.',
         discriminator:
           'A well-saturated arm beside a flat pulse pressure is loading without a distribution problem.',
-        limitation:
-          'The two coexist at the bedside — a ventricle ejecting poorly oxygenated blood while it distends — and this simulation authors them as separate states.',
       },
       'membrane-dysfunction': {
         direction: 'Unchanged in this simulation, even though the post-membrane value has fallen.',
         discriminator:
           'Read the post-membrane value and the gradient here rather than waiting for the arm to report a membrane problem.',
-        limitation:
-          'This simulation authors the VA arterial saturations from whether gas is reaching the membrane and from whether the differential-oxygenation state is active, so the membrane preview leaves both arterial sites where they were. At the bedside a failing membrane does lower what it returns to the patient.',
       },
       'gas-side-interruption': {
         direction: 'Falls, together with the femoral value.',
@@ -425,7 +400,6 @@ const rows: readonly MatrixRow[] = [
           'Little changed. The saturation of what is delivered is not what has gone wrong.',
         discriminator:
           'A normal-looking upper-body saturation beside a low pressure keeps attention on tone rather than on gas exchange.',
-        limitation: 'Not demonstrable in the states this lesson loads.',
       },
     },
   },
@@ -446,8 +420,7 @@ const rows: readonly MatrixRow[] = [
       'membrane-dysfunction': {
         direction: 'Unchanged in this simulation.',
         discriminator:
-          'Same reason as the row above: both arterial sites are authored rather than derived from what the membrane returns.',
-        limitation: 'Authored in this simulation, not derived from the post-membrane value.',
+          'Same reason as the row above: both arterial sites are set by the case rather than derived from what the membrane returns.',
       },
       'gas-side-interruption': {
         direction: 'Falls, and falls until it meets the upper-body value.',
@@ -456,7 +429,6 @@ const rows: readonly MatrixRow[] = [
       vasoplegia: {
         direction: 'Little changed.',
         discriminator: 'It reports oxygenation, not the pressure that oxygen is delivered at.',
-        limitation: 'Not demonstrable in the states this lesson loads.',
       },
     },
   },
@@ -489,8 +461,6 @@ const rows: readonly MatrixRow[] = [
       'membrane-dysfunction': {
         direction: 'Narrow in this simulation, because both sites are held where they were.',
         discriminator: 'A narrow gap here says the two sites agree, not that the membrane is well.',
-        limitation:
-          'Both arterial sites are authored in this simulation, so this row cannot demonstrate a membrane problem in either direction.',
       },
       'gas-side-interruption': {
         direction: 'Narrow: both values fall together.',
@@ -500,7 +470,6 @@ const rows: readonly MatrixRow[] = [
         direction: 'Narrow.',
         discriminator:
           'Tone changes the pressure the two sites are perfused at, not the difference between their saturations.',
-        limitation: 'Not demonstrable in the states this lesson loads.',
       },
     },
   },
@@ -514,8 +483,6 @@ const rows: readonly MatrixRow[] = [
           'Present, and wider than it was — recovering native ejection is the mechanism itself.',
         discriminator:
           'A pulse pressure that has recovered is the reason to sample the right arm at all. The two findings belong together.',
-        limitation:
-          'This simulation authors pulsatility from whether the loading state is active, so it never shows a pulse pressure recovering as native function returns. Read this row here as pulsatility being present, not as pulsatility having risen.',
       },
       'lv-distension': {
         direction: 'Narrows toward flat as the ventricle stops ejecting.',
@@ -536,8 +503,6 @@ const rows: readonly MatrixRow[] = [
           'Can widen while the mean pressure falls, because the same stroke meets less resistance.',
         discriminator:
           'A wide pulse pressure with a low mean is the tone pattern, and it is the mirror image of the loading picture.',
-        limitation:
-          'Not demonstrable in the states this lesson loads. This simulation authors pulsatility from whether the loading state is active, not from vascular tone.',
       },
     },
   },
@@ -568,7 +533,6 @@ const rows: readonly MatrixRow[] = [
         direction: 'Opens more readily, as the load the ventricle ejects against has fallen.',
         discriminator:
           'A valve opening more freely alongside a falling pressure points at tone rather than at loading.',
-        limitation: 'Not demonstrable in the states this lesson loads.',
       },
     },
   },
@@ -600,7 +564,6 @@ const rows: readonly MatrixRow[] = [
       vasoplegia: {
         direction: 'Unchanged, or less than it was as filling pressures fall.',
         discriminator: 'Congestion moving the other way argues against loading.',
-        limitation: 'Not demonstrable in the states this lesson loads.',
       },
     },
   },
@@ -633,8 +596,6 @@ const rows: readonly MatrixRow[] = [
         direction: 'Falls, and the fall is the finding.',
         discriminator:
           'A falling mean pressure with circuit flow maintained is what makes tone the explanation rather than flow.',
-        limitation:
-          'None of the VA states this lesson loads carries vasoplegia, and in those states this simulation generates the modeled mean arterial pressure from circuit flow, so it barely moves across them. In the Practice vasoplegia case the model instead holds pressure at the level the tone problem sets, and more circuit flow does not move it at all; neither is a bedside relationship. This column is authored teaching the states here cannot demonstrate.',
       },
     },
   },
@@ -683,33 +644,26 @@ const rows: readonly MatrixRow[] = [
           'Normal, unless the arterial cannula is obstructing the limb as well — a separate problem that can sit alongside this one.',
         discriminator:
           'The limb is the one VA finding that appears nowhere on the console. It is found by going and looking at it.',
-        limitation:
-          'None of the VA states this lesson loads moves the limb: distal perfusion reads normal and the NIRS value is fixed across every one of them. Limb ischemia is a real and important VA explanation, and it is the one this simulation cannot show you.',
       },
       'lv-distension': {
         direction: 'Normal in this simulation.',
         discriminator:
           'The limb is checked on its own account, not as evidence about the ventricle.',
-        limitation: 'Fixed across every VA state this lesson loads.',
       },
       'membrane-dysfunction': {
         direction: 'Normal in this simulation.',
         discriminator:
           'A device problem and a limb problem are separate findings on separate paths.',
-        limitation: 'Fixed across every VA state this lesson loads.',
       },
       'gas-side-interruption': {
         direction: 'Normal in this simulation.',
         discriminator: 'Nothing about the gas path reaches the limb.',
-        limitation: 'Fixed across every VA state this lesson loads.',
       },
       vasoplegia: {
         direction:
           'A vasodilated limb can look and feel well perfused while the mean pressure is low.',
         discriminator:
           'Warm, well-perfused extremities beside a low pressure is the tone pattern rather than a flow one.',
-        limitation:
-          'Fixed across every VA state this lesson loads, and vasoplegia is not among those states.',
       },
     },
   },
@@ -733,8 +687,6 @@ const rows: readonly MatrixRow[] = [
       'membrane-dysfunction': {
         direction: 'Would be expected to rise as transfer is lost.',
         discriminator: 'A rise here alongside a rising gradient points firmly at the device.',
-        limitation:
-          'In this simulation the carbon dioxide value follows the sweep setting and whether gas is reaching the membrane, so the membrane preview leaves it where it was. This row cannot be demonstrated with that preview.',
       },
       'gas-side-interruption': {
         direction: 'Rises quickly, with the pH following it down.',
@@ -746,7 +698,6 @@ const rows: readonly MatrixRow[] = [
           'Little changed until perfusion has been poor for long enough for lactate to appear.',
         discriminator:
           'The acid–base change of shock arrives late and does not separate tone from the rest of the list on its own.',
-        limitation: 'Not demonstrable in the states this lesson loads.',
       },
     },
   },
@@ -843,7 +794,6 @@ export function VaIntegrationCapstonePanel({
   return (
     <div className={styles.panel} data-teaching-panel="va-integration-capstone">
       <VaConfigurationLabel />
-      <ModelBoundary>{VA_CONFIGURATION_BOUNDARY}</ModelBoundary>
       <section className={styles.section} aria-labelledby="va-capstone-flow-heading">
         <h3 id="va-capstone-flow-heading" className={styles.heading}>
           The two signals that cannot settle this
@@ -898,7 +848,7 @@ export function VaIntegrationCapstonePanel({
 
         <CapstoneHypothesisMatrix
           idPrefix="va-capstone"
-          caption="Each observed signal with its live value in the case currently loaded, and the direction each of the five selected explanations predicts for it, together with what makes that row useful and any limitation that applies. These five are not the whole differential; cannulated-limb ischemia is described in its own card after this table."
+          caption="Each observed signal with its live value in the case currently loaded, and the direction each of the five selected explanations predicts for it, together with what makes that row useful. These five are not the whole differential; cannulated-limb ischemia is described in its own card after this table."
           hypotheses={hypotheses}
           rows={rows.map((row) => ({
             id: row.id,
@@ -919,10 +869,6 @@ export function VaIntegrationCapstonePanel({
                   (row) =>
                     `${row.label}: ${matrixCellEquivalent(row.cells, hypothesis.id, SUPPORT_MODE)}`,
                 )
-                .join(' ')}{' '}
-              {rows
-                .filter((row) => row.cells[hypothesis.id].limitation)
-                .map((row) => `Limitation for ${row.label}: ${row.cells[hypothesis.id].limitation}`)
                 .join(' ')}
             </TextEquivalent>
           ))}
@@ -948,16 +894,6 @@ export function VaIntegrationCapstonePanel({
             {patient.paCO2.toFixed(1)} mmHg with a pH of {patient.pH.toFixed(2)}.
           </TextEquivalent>
         </CapstoneMatrixSentences>
-
-        <ModelBoundary>
-          The directions in the matrix are what these mechanisms do. The magnitudes, and the speed
-          at which the modeled values reach them, belong to this simulation — and one whole column,
-          vasoplegia, cannot be shown live here at all, while the cannulated-limb row never moves in
-          any state this lesson can load. The limitations below say why. One further display
-          convention: the two arterial sites are reported as agreeing whenever they differ by no
-          more than {SATURATION_GAP_DEADBAND} saturation points, so that a value moving in its last
-          decimal does not read as a gap. The difference itself is printed beside the words.
-        </ModelBoundary>
       </section>
 
       {/*
@@ -997,13 +933,6 @@ export function VaIntegrationCapstonePanel({
           with a near-infrared value of {patient.distalLimbNirs.toFixed(0)}. Read that as what this
           simulation was built to show, not as a finding: both values are fixed.
         </p>
-        <ModelBoundary>
-          This simulation holds distal-limb perfusion and the near-infrared value fixed across every
-          VA state this lesson can load, so it cannot demonstrate limb ischemia developing. The
-          absence of a modeled change is therefore not evidence that limb perfusion is adequate — it
-          is the model having nothing to say. The one action that sends you to look at the limb is
-          in the panel beside this one, and it is there because that look is the measurement.
-        </ModelBoundary>
       </section>
 
       <section className={styles.section} aria-labelledby="va-presenting-case-heading">
@@ -1085,18 +1014,6 @@ export function VaIntegrationCapstonePanel({
             </p>
           </>
         )}
-        <ModelBoundary>
-          The words higher, lower and unchanged come from a display deadband this simulation applies
-          so a value moving in its last decimal does not read as movement. The raw change is printed
-          beside every one of them. When you have captured no snapshot, the earlier value comes from
-          the first sample in this circuit&rsquo;s retained trend, which this simulation writes as
-          the state is built rather than after the loaded condition has taken effect — so a preview
-          that opens with its mechanism already active is being compared with a frame that circuit
-          was never actually in. Read that particular comparison as the difference between an
-          undisturbed circuit and this one, not as a deterioration you watched happen. Neither the
-          deadband nor the observed window is a clinical tolerance, and a window of modeled seconds
-          is not the window over which a real circuit is trended.
-        </ModelBoundary>
       </section>
 
       {/*
@@ -1110,20 +1027,24 @@ export function VaIntegrationCapstonePanel({
       <VaConfigurationStrategyCard detail="concise" headingLevel={3} />
 
       <section className={styles.section} aria-labelledby="va-capstone-limitations-heading">
-        <h3 id="va-capstone-limitations-heading" className={styles.heading}>
-          Where this simulation stops
-        </h3>
-        <ul className="mt-3 grid gap-2" data-model-limitations>
-          {modelLimitations.map((limitation) => (
-            <li
-              key={limitation.id}
-              className="rounded-xl border px-3 py-2 text-sm leading-6"
-              data-model-limitation={limitation.id}
-            >
-              {limitation.text}
-            </li>
-          ))}
-        </ul>
+        <details data-model-boundary>
+          <summary className="cursor-pointer">
+            <h3 id="va-capstone-limitations-heading" className={`${styles.heading} inline`}>
+              Where this simulation stops
+            </h3>
+          </summary>
+          <ul className="mt-3 grid gap-2" data-model-limitations>
+            {modelLimitations.map((limitation) => (
+              <li
+                key={limitation.id}
+                className="rounded-xl border px-3 py-2 text-sm leading-6"
+                data-model-limitation={limitation.id}
+              >
+                {limitation.text}
+              </li>
+            ))}
+          </ul>
+        </details>
       </section>
 
       <GuidedValue

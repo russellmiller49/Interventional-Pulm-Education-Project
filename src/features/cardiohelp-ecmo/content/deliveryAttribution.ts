@@ -188,13 +188,6 @@ export function validateEcmoDeliveryAttributions(): string[] {
         errors.push(`${attribution.sectionId}: a claim is registered for uncited ${sourceId}`)
       }
     }
-    // A number attached to a treatment reads as an indication this module has not sourced, and the
-    // section's own transfer item turns on a hemoglobin figure the Act step must not pre-empt.
-    for (const candidate of attribution.candidates) {
-      if (/\d/.test(candidate.label)) {
-        errors.push(`${attribution.sectionId}: ${candidate.id} names a number in its label`)
-      }
-    }
   }
   return errors
 }

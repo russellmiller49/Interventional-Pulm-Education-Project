@@ -199,7 +199,8 @@ describe.each([
     expect(stem).toMatch(/startup diagnostic has not/)
     expect(atPrediction.selfTest).toBe('pending')
 
-    expect(stem).toMatch(/unavailable indication/)
+    // The stem says what the fellow sees on the screen rather than naming the indication.
+    expect(stem).toMatch(/show dashes instead of numbers/)
     expect([atPrediction.pVen, atPrediction.pInt, atPrediction.pArt]).toEqual([
       'simulation-unmodeled',
       'simulation-unmodeled',

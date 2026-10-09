@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 
 import type { EcmoResolvedCitation } from '../../content/evidenceResolver'
-import { ECMO_SOURCE_REVIEW_LINE } from '../../content/sourceReviewMetadata'
 import styles from './evidence.module.css'
 
 /**
@@ -71,7 +70,6 @@ export function EcmoCitation({
   const supports = supportsVisible ? allSupports : []
   // The limitation is a caveat about the source, not a claim it supports, so it survives the gate.
   const limitVisible = (showLimitations ?? !compact) && citation.limitations.length > 0
-  const checkDetailVisible = footnote || !compact
 
   const revealFallback = () => {
     setFallbackVisible(true)
@@ -125,26 +123,11 @@ export function EcmoCitation({
       <p className={styles.dating} data-citation-published>
         <span className={styles.key}>Date: </span>
         {citation.published}
-        {citation.publishedBasis ? ` (${citation.publishedBasis})` : ''}
       </p>
       {citation.revision ? (
         <p className={styles.dating} data-citation-revision>
           <span className={styles.key}>Revision: </span>
           {citation.revision}
-        </p>
-      ) : null}
-      {checkDetailVisible
-        ? citation.checks.map((check) => (
-            <p key={`${check.on}:${check.what}`} className={styles.dating} data-citation-check>
-              <span className={styles.key}>Document checked: </span>
-              {check.on}, {check.by ?? 'checker not recorded'}
-              {footnote ? '' : `. ${check.what}`}
-            </p>
-          ))
-        : null}
-      {checkDetailVisible && citation.sourceClass !== 'unregistered' ? (
-        <p className={styles.dating} data-citation-review>
-          {ECMO_SOURCE_REVIEW_LINE}
         </p>
       ) : null}
       {supports.map((entry) => (

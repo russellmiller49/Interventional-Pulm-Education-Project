@@ -1,3 +1,9 @@
+import {
+  ECMO_AIR_RESUME,
+  ECMO_AIR_RESUME_SENTENCE,
+  ECMO_EMERGENCY_DRIVE_SENTENCE,
+  ECMO_NUMBERS,
+} from './teachingNumbers'
 import type {
   ClinicalCaseDefinition,
   ClinicalInterventionDefinition,
@@ -183,7 +189,7 @@ const vvInitiationCase: ClinicalCaseDefinition = {
       label: 'Confirm cannulation and connect the prepared VV circuit',
       category: 'procedure',
       description:
-        'Stands in for completion of supervised cannulation and connection; this is not a cannulation trainer.',
+        'The cannulas are placed and connected; cannulation technique is not taught here.',
       effect: 'supportive',
       response: 'Drainage and return limbs are connected with the circuit still stopped.',
       prerequisites: ['vv-readiness-check'],
@@ -257,7 +263,7 @@ const vaInitiationCase: ClinicalCaseDefinition = {
       label: 'Confirm cannulation and connect the prepared VA circuit',
       category: 'procedure',
       description:
-        'Represent supervised cannulation and connection; this module does not teach cannulation technique.',
+        'The cannulas are placed and connected; cannulation technique is not taught here.',
       effect: 'supportive',
       response:
         'Venous drainage and femoral arterial return are connected with the circuit stopped.',
@@ -341,8 +347,9 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'Establish forward flow, then reassess oxygenation, PaCO₂/pH, drainage, pressures, and native ventilation.',
       ],
       safetyNotes: [
-        'The displayed start settings are simulated case orders, not universal targets.',
-        'Cannulation and initiation require supervised team training and local protocols.',
+        `Usual starting points: flow toward ${ECMO_NUMBERS.value('full-support-flow')} for full support, sweep ${ECMO_NUMBERS.value('sweep-start')}, and an arterial blood gas at ${ECMO_NUMBERS.value('sweep-recheck')}. Typical; your program may vary.`,
+        `Heparin ${ECMO_NUMBERS.value('heparin-bolus')} is given just before the cannulas go in; on the infusion the usual targets are an ACT of ${ECMO_NUMBERS.value('act-target')}, anti-Xa ${ECMO_NUMBERS.value('anti-xa-target')}, or an aPTT ${ECMO_NUMBERS.value('aptt-target')}.`,
+        `Bring PaCO₂ down over ${ECMO_NUMBERS.value('paco2-correction-time')}, not at once.`,
       ],
     },
     evidenceIds: [
@@ -434,7 +441,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           label: 'Transfuse red cells with hemostatic resuscitation',
           category: 'resuscitation',
           description:
-            'Represent blood-product support according to the local massive-hemorrhage protocol.',
+            'Activate the massive-transfusion protocol and give red cells with plasma and platelets.',
           effect: 'supportive',
           response: 'Hemoglobin, preload, and MAP improve, but bleeding must still be controlled.',
           patch: {
@@ -458,7 +465,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           label: 'Activate definitive hemorrhage control',
           category: 'procedure',
           description:
-            'Mobilize procedural or surgical source control and modify anticoagulation through local protocols.',
+            'Call surgery or interventional radiology for source control and hold the heparin infusion until the bleeding is controlled.',
           effect: 'definitive',
           response:
             'Bleeding is controlled; drainage, MAP, and lactate begin to recover after resuscitation.',
@@ -507,7 +514,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Reduce repeated suction events while rapidly assessing the patient and full cannulation pathway.',
         'Find the bleeding source and activate hemostatic blood-product support.',
-        'Control the source, address anticoagulation through local protocols, and trend flow, hemoglobin, MAP, and lactate.',
+        'Control the source, hold heparin until hemostasis and then reintroduce it gradually, and trend flow, hemoglobin, MAP, and lactate.',
       ],
       safetyNotes: [
         'Do not reflexively escalate RPM or give unlimited crystalloid during drainage collapse.',
@@ -987,17 +994,17 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           label: 'Prepare replacement circuit and team',
           category: 'circuit',
           description:
-            'Mobilize your unit’s emergency circuit-exchange process while maintaining support.',
+            'Call the perfusionist with the primed backup circuit and raise ventilator support while the pump is still running.',
           effect: 'supportive',
           response: 'A primed replacement and trained exchange team are ready.',
           prerequisites: ['oxygenator-verify'],
         }),
         intervention({
           id: 'oxygenator-exchange',
-          label: 'Perform supervised oxygenator/circuit exchange',
+          label: 'Exchange the oxygenator or circuit',
           category: 'procedure',
           description:
-            'Represent definitive component exchange under the local emergency protocol.',
+            'Clamp, swap to the primed backup, de-air and restart flow, with the ventilator turned up for the minutes the patient is off support.',
           effect: 'definitive',
           response:
             'Resistance falls, post-oxygenator gas transfer normalizes, and effective flow recovers.',
@@ -1038,10 +1045,10 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Verify the full pressure pattern and pre/post gas transfer.',
         'Inspect for clot and mobilize the exchange team early.',
-        'Exchange the failing component through your unit’s exchange process and reassess the patient and circuit.',
+        'Exchange the oxygenator or the circuit and reassess the patient and circuit.',
       ],
       safetyNotes: [
-        'This simulator deliberately does not set a universal Δp alarm priority or exchange threshold.',
+        `The usual pressure drop is ${ECMO_NUMBERS.value('pressure-drop-typical')} and the console’s factory upper limit is ${ECMO_NUMBERS.value('pressure-drop-factory-limit')}. A rising trend at a fixed flow with a failing post-oxygenator gas is the reason to exchange, not one value.`,
       ],
     },
     evidenceIds: [
@@ -1058,7 +1065,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
     supportMode: 'vv',
     title: 'Air entrainment with emergency circuit isolation',
     summary:
-      'Air is entrained into the circuit during a bedside line exchange; the bubble intervention stops the pump. Isolate, de-air, then resume support per the current IFU and your local protocol.',
+      'Air is entrained into the circuit during a bedside line exchange; the bubble intervention stops the pump. Clamp, call for the backup circuit, de-air, then reset the bubble stop and reopen with the return clamp last.',
     clinicalPhase: 'maintenance',
     clinicalCase: {
       kind: 'complication',
@@ -1071,11 +1078,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       openingNarrative:
         'During a central-line exchange, air is entrained into the drainage limb. The bubble intervention alarms, the pump stops, and visible air remains in the circuit.',
       decisionPrompt:
-        'Isolate the patient from the circuit, correct and clear the air, then resume support per the current IFU and your local protocol.',
+        'The pump has stopped and both lines are open. What do your hands do first, and what must be true before flow returns?',
       learningObjectives: [
         'Decide from a bubble alarm with the pump stopped and both lines still open whether the stop itself has already made the bedside safe or has only paused the flow.',
         'Decide, before anything is opened or restarted, in what order the two lines and the air source have to be dealt with, and what must be true of the tubing before flow is allowed back.',
-        'Decide what this simulation stands for and what it leaves out: it shows why the tubing must be clear before flow comes back, and it leaves how flow is resumed to the current IFU and your local protocol.',
+        'Decide, once the tubing is clear, in what order the two clamps and the bubble-stop reset bring flow back on this console.',
       ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'critical',
@@ -1120,10 +1127,10 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         }),
         intervention({
           id: 'air-support-patient',
-          label: 'Support the patient off circuit flow',
+          label: 'Call for help and the backup circuit; raise patient support',
           category: 'resuscitation',
           description:
-            'Increase conventional ventilation and hemodynamic support while the circuit is isolated.',
+            'With the patient isolated, call for help and the primed backup circuit, and raise ventilator support: the native lungs are all the patient has until flow returns.',
           effect: 'supportive',
           response:
             'The patient is temporarily supported conventionally while the circuit is cleared.',
@@ -1131,10 +1138,10 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         }),
         intervention({
           id: 'air-deair',
-          label: 'De-air the circuit and correct the source',
+          label: 'Find the source and aspirate the air',
           category: 'procedure',
           description:
-            'Correct the entrainment source, clear the lines through your unit’s de-airing process, and confirm the circuit is bubble free.',
+            'Close the entrainment source, walk the air back to the nearest port and aspirate it, and confirm the circuit is free of bubbles. If it cannot be cleared quickly, exchange the circuit.',
           effect: 'definitive',
           response: 'The air source is corrected and the circuit is confirmed clear.',
           prerequisites: ['air-clamp-drainage'],
@@ -1142,19 +1149,18 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         }),
         intervention({
           id: 'air-resume-support',
-          label: 'Resume support per current IFU and local protocol',
+          label: ECMO_AIR_RESUME.label,
           category: 'circuit',
-          description:
-            'With the source corrected and the circuit confirmed clear, resume support according to the current manufacturer instructions for use (IFU) and your unit’s own ECMO air-emergency protocol. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+          description: ECMO_AIR_RESUME_SENTENCE,
           effect: 'definitive',
           response:
-            'Support resumes as one step; the patient is never left on both open limbs of a stopped circuit.',
+            'The bubble stop is reset, the pump restarts and the return clamp is opened last.',
           prerequisites: ['air-deair'],
           simulatorAction: {
             control: 'resume-after-bubble',
             visibility: 'prompted',
             instruction:
-              'On the bedside circuit, resume support per the current IFU and your local protocol.',
+              'On the bedside circuit, reset the bubble stop and reopen the clamps, return clamp last.',
             target: 'circuit',
             controlId: 'cardiohelp-resume-support',
           },
@@ -1176,7 +1182,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'air-resume-support',
       ],
       completionResponse:
-        'The circuit is isolated, de-aired, and support is resumed per the current IFU and your local protocol; forward flow and oxygenation recover.',
+        'The circuit is isolated and de-aired, the bubble stop is reset and the return clamp is opened last; forward flow and oxygenation recover.',
       deteriorationResponse:
         'While air remains in an open circuit, the patient is at embolic risk and support stays interrupted.',
     },
@@ -1204,14 +1210,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'Resuming flow before de-airing risks driving air to the patient.',
       ],
       correctWorkflow: [
-        'Clamp the return limb, then the drainage limb, near the patient and support the patient conventionally.',
-        'Correct the air source and confirm the circuit is clear.',
-        'Resume support per the current IFU and your local protocol, then reassess. This module teaches the precondition, not the resumption choreography.',
+        'Clamp the return limb, then the drainage limb, near the patient. Call for help and the backup circuit, and raise ventilator support.',
+        'Find and close the air source, aspirate the air, and confirm the circuit is clear. Exchange the circuit if the air cannot be cleared quickly.',
+        `${ECMO_AIR_RESUME_SENTENCE} Then reassess.`,
       ],
-      safetyNotes: [
-        'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s own ECMO air-emergency protocol; this simulation does not teach that choreography and holds no copy of that protocol.',
-        'This is recognition-and-sequence training, not a substitute for supervised circuit-emergency competency.',
-      ],
+      safetyNotes: [ECMO_EMERGENCY_DRIVE_SENTENCE],
     },
     evidenceIds: [
       'elso-circuit-2022',
@@ -1267,8 +1270,8 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'Reassess MAP, lactate, pulsatility, aortic-valve opening, right-arm oxygenation, and the cannulated limb.',
       ],
       safetyNotes: [
-        'The start settings are simulated orders, not universal VA targets.',
-        'Cannulation and initiation require supervised multidisciplinary training.',
+        `Usual starting points: VA flow about ${ECMO_NUMBERS.value('va-flow-goal')}, titrated to the lowest that perfuses; sweep ${ECMO_NUMBERS.value('sweep-start')}; an arterial blood gas from the right arm at ${ECMO_NUMBERS.value('sweep-recheck')}. Typical; your program may vary.`,
+        `Heparin ${ECMO_NUMBERS.value('heparin-bolus')} is given just before the cannulas go in; on the infusion the usual targets are an ACT of ${ECMO_NUMBERS.value('act-target')}, anti-Xa ${ECMO_NUMBERS.value('anti-xa-target')}, or an aPTT ${ECMO_NUMBERS.value('aptt-target')}.`,
       ],
     },
     evidenceIds: [
@@ -1345,9 +1348,10 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         }),
         intervention({
           id: 'differential-native-lung',
-          label: 'Optimize native-lung oxygenation and ventilation',
+          label: 'Raise ventilator FiO₂ and PEEP',
           category: 'resuscitation',
-          description: 'Address the poorly oxygenated native cardiac output.',
+          description:
+            'The blood reaching the right arm, the brain and the coronaries came through the native lungs. Improve it with the ventilator first.',
           effect: 'supportive',
           response:
             'Right-arm oxygenation improves partially as native-lung gas exchange improves.',
@@ -1355,10 +1359,10 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         }),
         intervention({
           id: 'differential-escalate-config',
-          label: 'Escalate the configuration decision to the ECMO team',
+          label: 'Add a venous return limb (V-AV), or convert to VV',
           category: 'procedure',
           description:
-            'Activate expert evaluation for a configuration change when upper-body hypoxemia persists.',
+            'The right arm is still low on the ventilator. If the heart has recovered and the lungs have not, convert to VV; if both still need support, add a venous return limb (V-AV). Raising VA flow is only a temporary step, because it loads the recovering ventricle.',
           effect: 'definitive',
           /*
            * Escalation is escalation. The response says so.
@@ -1371,7 +1375,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
            * getting the recognition and the escalation right.
            */
           response:
-            'The configuration decision is escalated to the ECMO team. This simulator does not carry out a configuration change, so read the right-arm saturation against the femoral sample: what the upper body is receiving has not been altered by this step.',
+            'The ECMO team is called to add a venous return limb. The new cannula is not placed in this case, so the right-arm saturation on the monitor stays where the ventilator left it.',
           prerequisites: ['differential-right-arm', 'differential-native-lung'],
         }),
       ],
@@ -1381,7 +1385,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'differential-escalate-config',
       ],
       completionResponse:
-        'The upper-body mismatch is verified against independent right-arm data, native-lung gas exchange is optimized, and the configuration decision is escalated. Recognition and escalation are what this case asks for and what it represents: the differential pattern is still running, so keep reading the right arm rather than the femoral sample.',
+        'The mismatch is confirmed at the right arm, the ventilator is turned up, and a venous return limb is planned. Until it is placed the differential pattern continues, so keep reading the right arm, not the femoral sample.',
       deteriorationResponse:
         'Cerebral and coronary hypoxemia worsen despite reassuring femoral data.',
     },
@@ -1416,10 +1420,10 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Confirm right-arm and cerebral oxygenation.',
         'Integrate native ejection, lung function, circuit performance, and the mixing region.',
-        'Optimize the native lung and escalate the support configuration through your local escalation pathway.',
+        'Raise ventilator FiO₂ and PEEP first. If the right arm stays low, convert to VV when the heart has recovered, or add a venous return limb (V-AV) when both heart and lungs still need support.',
       ],
       safetyNotes: [
-        'Configuration changes and LV-unloading decisions remain outside this simulator.',
+        'A femoral sample or a left-hand oximeter can read normal while the brain and the coronaries are hypoxemic. Monitor the right arm.',
       ],
     },
     evidenceIds: [
@@ -1614,7 +1618,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         }),
         intervention({
           id: 'vasoplegia-pressors',
-          label: 'Titrate vasopressor through the local shock protocol',
+          label: 'Start or raise norepinephrine to restore MAP',
           category: 'medication',
           description: 'Restore vascular tone while following perfusion endpoints.',
           effect: 'supportive',
@@ -1672,11 +1676,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       ],
       correctWorkflow: [
         'Confirm native recovery, perfusion, and circuit adequacy.',
-        'Treat vascular tone through the local shock protocol.',
+        'Treat vascular tone with a vasopressor, norepinephrine first, and treat the cause.',
         'Reassess source control, antimicrobial exposure, lactate, and ongoing need for VA support.',
       ],
       safetyNotes: [
-        'Medication selection and dosing remain institution-specific and are intentionally not simulated numerically.',
+        'Vasopressor doses are not simulated in this case; MAP responds to the choice, not to a rate.',
       ],
     },
     evidenceIds: [
@@ -1819,7 +1823,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       openingNarrative:
         'The oxygenator gradient rises, post-oxygenator performance falls, and flow becomes constrained at the same RPM while MAP and right-arm oxygenation decline.',
       decisionPrompt:
-        'Confirm the failing component and execute your unit’s circuit-exchange pathway before systemic support collapses.',
+        'Confirm the failing oxygenator and exchange the circuit before systemic support collapses.',
       learningObjectives: [
         'Decide from pInt set against pArt and the Δp trend whether VA flow is being held back between those two readings, beyond pArt or on the drainage side.',
         'Decide from a climbing Δp beside a falling MAP, visible fibrin and a falling saturation leaving the circuit whether one sensor has drifted or the component between pInt and pArt is itself failing, and why on VA that is a circulation problem and not only a gas one.',
@@ -1864,9 +1868,10 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         }),
         intervention({
           id: 'va-oxygenator-exchange',
-          label: 'Perform supervised oxygenator/circuit exchange',
+          label: 'Exchange the oxygenator or circuit',
           category: 'procedure',
-          description: 'Represent your unit’s emergency circuit-exchange process.',
+          description:
+            'Start inotropes and vasopressors, clamp, swap to the primed backup circuit and restart flow.',
           effect: 'definitive',
           response: 'Resistance falls and systemic flow, MAP, and gas transfer recover.',
           prerequisites: ['va-oxygenator-prepare'],
@@ -1906,9 +1911,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Confirm the pressure and gas-transfer pattern.',
         'Prepare backup circulation and a replacement circuit early.',
-        'Execute your unit’s exchange process and reassess MAP, flow, pressures, and oxygenation.',
+        'Exchange the circuit and reassess MAP, flow, pressures, and oxygenation.',
       ],
-      safetyNotes: ['No universal Δp exchange threshold is set here.'],
+      safetyNotes: [
+        `The usual pressure drop is ${ECMO_NUMBERS.value('pressure-drop-typical')} and the console’s factory upper limit is ${ECMO_NUMBERS.value('pressure-drop-factory-limit')}. On VA the exchange interrupts the circulation: start inotropes and vasopressors before the pump stops.`,
+      ],
     },
     evidenceIds: [
       'elso-circuit-2022',
@@ -1924,7 +1931,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
     supportMode: 'va',
     title: 'VA circuit air with emergency arterial isolation',
     summary:
-      'Air is entrained into the VA circuit; the bubble intervention stops the pump while the arterial return threatens direct embolism. Isolate, de-air, then resume support per the current IFU and your local protocol.',
+      'Air is entrained into the VA circuit; the bubble intervention stops the pump while the arterial return threatens direct embolism. Clamp, call for the backup circuit, de-air, then reset the bubble stop and reopen with the return clamp last.',
     clinicalPhase: 'maintenance',
     clinicalCase: {
       kind: 'complication',
@@ -1937,11 +1944,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
       openingNarrative:
         'A drainage-limb connector loosens during repositioning and entrains air. The bubble intervention stops the pump, interrupting VA circulatory support with visible air in the circuit.',
       decisionPrompt:
-        'Isolate the arterial circulation, support the patient conventionally, correct and clear the air, then resume VA support per the current IFU and your local protocol.',
+        'The pump has stopped, both lines are open and the circulation has lost the circuit’s share. What do your hands do first, and what must be true before flow returns?',
       learningObjectives: [
         'Decide from a bubble alarm with the pump stopped and both lines still open whether the stop itself has already made the bedside safe or has only paused a flow that was carrying the circulation.',
         'Decide, before anything is opened or restarted, in what order the two lines and the air source have to be dealt with on a VA run, and what must be true of the tubing before flow is allowed back.',
-        'Decide what this simulation stands for and what it leaves out: it shows why the tubing must be clear before flow comes back, and it leaves how VA flow is resumed to the current IFU and your local protocol.',
+        'Decide, once the tubing is clear, in what order the two clamps and the bubble-stop reset bring flow back on this console.',
       ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'critical',
@@ -1987,20 +1994,20 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         }),
         intervention({
           id: 'va-air-support-patient',
-          label: 'Support the patient off circuit flow',
+          label: 'Call for help and the backup circuit; raise patient support',
           category: 'resuscitation',
           description:
-            'Escalate conventional hemodynamic support and ventilation while VA support is interrupted.',
+            'With the patient isolated, call for help and the primed backup circuit, and raise inotropes, vasopressors and the ventilator: the circuit’s share of the circulation is gone.',
           effect: 'supportive',
           response: 'MAP is temporarily supported conventionally while the circuit is cleared.',
           patch: { patient: { meanArterialPressure: 55 } },
         }),
         intervention({
           id: 'va-air-deair',
-          label: 'De-air the circuit and correct the source',
+          label: 'Find the source and aspirate the air',
           category: 'procedure',
           description:
-            'Secure the loosened connector, clear the lines through your unit’s de-airing process, and confirm the circuit is bubble free.',
+            'Secure the loosened connector, aspirate the air from the nearest port, and confirm the circuit is free of bubbles. If it cannot be cleared quickly, exchange the circuit.',
           effect: 'definitive',
           response:
             'The connector is secured, the air source corrected, and the circuit confirmed clear.',
@@ -2009,19 +2016,18 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         }),
         intervention({
           id: 'va-air-resume-support',
-          label: 'Resume support per current IFU and local protocol',
+          label: ECMO_AIR_RESUME.label,
           category: 'circuit',
-          description:
-            'With the source corrected and the circuit confirmed clear, resume venoarterial support according to the current manufacturer instructions for use (IFU) and your unit’s own ECMO air-emergency protocol. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+          description: ECMO_AIR_RESUME_SENTENCE,
           effect: 'definitive',
           response:
-            'Support resumes as one step; the patient is never left on both open limbs of a stopped circuit.',
+            'The bubble stop is reset, the pump restarts and the return clamp is opened last.',
           prerequisites: ['va-air-deair'],
           simulatorAction: {
             control: 'resume-after-bubble',
             visibility: 'prompted',
             instruction:
-              'On the bedside circuit, resume support per the current IFU and your local protocol.',
+              'On the bedside circuit, reset the bubble stop and reopen the clamps, return clamp last.',
             target: 'circuit',
             controlId: 'cardiohelp-resume-support',
           },
@@ -2044,7 +2050,7 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'va-air-resume-support',
       ],
       completionResponse:
-        'The circuit is isolated, de-aired, and support is resumed per the current IFU and your local protocol; VA support, MAP, and perfusion recover.',
+        'The circuit is isolated and de-aired, the bubble stop is reset and the return clamp is opened last; VA support, MAP, and perfusion recover.',
       deteriorationResponse:
         'While air remains in an open circuit, the patient faces arterial embolism and absent circulatory support.',
     },
@@ -2078,14 +2084,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'Resuming flow before de-airing risks systemic arterial embolism.',
       ],
       correctWorkflow: [
-        'Clamp the arterial return limb, then the drainage limb, near the patient; support the patient conventionally.',
-        'Secure the connector, correct the air source, and confirm the circuit is clear.',
-        'Resume venoarterial support per the current IFU and your local protocol, then reassess perfusion. Where clamp opening, pump restart and console reset fall relative to one another is set by those documents, not by this module.',
+        'Clamp the arterial return limb, then the drainage limb, near the patient. Call for help and the backup circuit, and raise inotropes, vasopressors and the ventilator.',
+        'Secure the connector, aspirate air from the arterial limb, and confirm the circuit is clear. Exchange the circuit if the air cannot be cleared quickly.',
+        `${ECMO_AIR_RESUME_SENTENCE} Then reassess perfusion.`,
       ],
-      safetyNotes: [
-        'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s own ECMO air-emergency protocol; this simulation does not teach that choreography and holds no copy of that protocol.',
-        'This is recognition-and-sequence training, not a substitute for supervised circuit-emergency competency.',
-      ],
+      safetyNotes: [ECMO_EMERGENCY_DRIVE_SENTENCE],
     },
     evidenceIds: [
       'elso-circuit-2022',

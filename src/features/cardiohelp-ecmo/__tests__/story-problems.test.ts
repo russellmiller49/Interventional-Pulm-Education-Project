@@ -21,8 +21,10 @@ import type { EcmoSimulationState } from '../engine/types'
  * starts moving it with speed, the copy is wrong and this fails before a learner reads it.
  */
 
+// "%", "percent", "test" and "assessment" left the shared vocabulary gate on 2026-10-08
+// (docs/teaching-first-rules.md); scoring words and the answer-leak words stay refused.
 const BANNED =
-  /\b(score|points|grade|pass|fail|correct|incorrect|wrong|mastery|exam|test|quiz|assessment|percent|competency)\b|%/i
+  /\b(score|points|grade|pass|fail|correct|incorrect|wrong|mastery|exam|quiz|competency)\b/i
 
 function reference(): EcmoSimulationState {
   const runtime = ecmoFoundationLessonRuntime('blood-flow-versus-sweep')
@@ -60,7 +62,7 @@ describe('the story problems are valid items on the section that owns them', () 
     }
   })
 
-  it('carries no banned learner-copy term and no invented threshold', () => {
+  it('carries no scoring or answer-leak term', () => {
     for (const story of ecmoStoryProblems) {
       const text = [
         story.title,

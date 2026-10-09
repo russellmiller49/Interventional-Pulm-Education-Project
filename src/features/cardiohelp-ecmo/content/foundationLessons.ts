@@ -1,3 +1,4 @@
+import { ECMO_NUMBERS } from './teachingNumbers'
 import type { SupportMode } from '../engine/types'
 
 /**
@@ -180,10 +181,10 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
       'A stable VV run has a settled relationship between its parts: a drainage pressure that is negative but steady, a flow that matches the set speed without hunting, a pressure drop across the membrane that is stable from hour to hour, and gas exchange that is adequate on an unremarkable sweep setting.',
       'The patient side is equally part of the normal state. The native lungs are still there and still contributing; the ventilator is typically set to rest them rather than to achieve gas exchange alone; the patient has a cardiac output that is doing the systemic work. Sedation, volume state, and temperature all sit inside this picture.',
       'What matters for the sections that follow is the idea of a baseline that is stable over time rather than any particular value. Every failure pattern in this track is a departure from a run that was previously steady: a drainage pressure that has become more negative than it was, a membrane pressure drop that has been climbing for hours, a saturation that has drifted.',
-      'This module deliberately does not publish target ranges for these variables. Values depend on cannula size and position, patient size, temperature, hemoglobin, the specific device configuration, and local protocol. The teaching claim is about the trend and the relationship between signals, not about a number.',
+      `The usual numbers: full-support flow of ${ECMO_NUMBERS.value('full-support-flow')}; pressure before the pump of ${ECMO_NUMBERS.value('pump-inlet-pressure-typical')} (Schmidt 2022), with the console’s factory pVen limits set at ${ECMO_NUMBERS.value('pven-factory-limits')}; and a pressure drop across the oxygenator of ${ECMO_NUMBERS.value('pressure-drop-typical')}. Typical; your program may vary. Cannula size, patient size and hemoglobin move each of them, which is why this circuit’s own trend is read beside the range.`,
     ],
     bullets: [
-      'Normal is a stable relationship among signals, not a set of universal numbers.',
+      'Know the usual ranges, then read this circuit against its own baseline.',
       'Establish the baseline for this patient and this circuit before interpreting a change.',
       'The native lungs and native cardiac output remain part of the state.',
       'Trends over hours carry more information than any single reading.',
@@ -256,7 +257,7 @@ export const ecmoFoundationSections: readonly EcmoFoundationSection[] = Object.f
       'A stable VA run shares the circuit-side picture of a stable VV run: a steady negative drainage pressure, a flow that matches the set speed, a stable pressure drop across the membrane, and adequate gas exchange on an unremarkable sweep. Those are read the same way here.',
       'What is added is everything produced by parallel circulation. There is an arterial waveform whose pulsatility reports how much the native heart is still ejecting. There is evidence about whether the aortic valve is opening. There is an upper-body oxygenation signal that is distinct from the circuit’s own, because of the mixing watershed. And there is a perfusion question at the cannulated limb, distal to an arterial cannula that occupies part of the vessel.',
       'A normal state therefore includes a pulsatility that is present and stable, an upper-body saturation that is being monitored at a site chosen deliberately, a limb that is being checked, and a left ventricle that is being watched for distension. Losing any of these is a change even when circuit flow is unchanged.',
-      'As in the VV track, this module does not publish target values. Pulsatility, saturation, and pressure targets depend on the cannulation strategy, native function, the assay and monitoring site, and local protocol. What transfers is which signals belong to the normal state and what a departure in each one implies.',
+      `The usual numbers: VA flow of about ${ECMO_NUMBERS.value('va-flow-goal')} (Taha 2024), titrated to the lowest that perfuses. Watch the arterial pulsatility: when it stays ${ECMO_NUMBERS.value('lv-vent-pulsatility')}, the left ventricle is vented. Circuit pressures read as on VV. Typical; your program may vary.`,
     ],
     bullets: [
       'The VA normal state includes native pulsatility and aortic-valve opening.',

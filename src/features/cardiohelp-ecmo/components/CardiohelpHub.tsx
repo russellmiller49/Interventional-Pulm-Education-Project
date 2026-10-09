@@ -14,7 +14,7 @@ import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import { orderedCaseScenarioIds } from '../content/curriculum'
-import { cardiohelpDeviceProfile, cardiohelpEcmoPublicationStatus } from '../content/deviceProfile'
+import { cardiohelpDeviceProfile } from '../content/deviceProfile'
 import { ecmoPathwayComposition, nextIncompleteSectionLink } from '../content/pathwayResolver'
 import { ecmoTrackIncrement } from '../content/trackIncrements'
 import type { ProgressV2, SupportMode } from '../engine'
@@ -341,16 +341,11 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
             <strong>thApp</strong> {cardiohelpDeviceProfile.thApp}
           </span>
           <span>
-            {/*
-              One phrasing for one status. A language audit in September 2026 found the module
-              saying this three ways on three surfaces, of which "draft review" was the most
-              cryptic. This now matches the sentence the Sources panel below it prints.
-            */}
-            <strong>Pathway</strong> VV + peripheral VA · clinical and device review pending
+            <strong>Pathway</strong> VV + peripheral VA
           </span>
         </section>
 
-        <SourcesPanel publicationStatus={cardiohelpEcmoPublicationStatus} />
+        <SourcesPanel />
       </div>
     </CardiohelpModuleFrame>
   )

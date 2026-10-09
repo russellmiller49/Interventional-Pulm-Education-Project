@@ -3,6 +3,7 @@ import { ECMO_CONTROL_PANEL, ecmoControlKnob } from '../../content/controlPanel'
 import { ecmoDerivedValueGuides } from '../../content/ecmoValueGuides'
 import { EcmoSourceList } from '../evidence/EcmoSourceList'
 import type { EcmoSimulationState } from '../../engine/types'
+import { EcmoSweepReference } from './EcmoReferenceValues'
 import {
   FoundationTeachingBlock,
   GuidedValue,
@@ -204,17 +205,10 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
             <p className="mt-2 text-sm leading-6" data-comparison-limitation>
               {state.supportMode === 'va'
                 ? 'This model changes post-oxygenator saturation but holds VA regional patient saturations fixed in this preview. Their unchanged values do not show that gas oxygen fraction is clinically unimportant.'
-                : 'The VV model also changes patient saturation. Its response size is an authored teaching curve, not a prediction for a patient.'}
+                : 'The VV model also changes patient saturation. Its response size is a teaching curve, not a prediction for a patient.'}
             </p>
           </section>
         </FoundationTeachingBlock>
-        <ModelBoundary>
-          <span data-local-model-boundary="demand-and-native-lung-fixed">
-            Oxygen consumption and native lung contribution remain fixed in these comparisons. Each
-            result is retained at its stated modeled time; neither tissue adequacy nor clinical
-            competence is established.
-          </span>
-        </ModelBoundary>
       </div>
     )
 
@@ -328,32 +322,11 @@ export function BloodFlowVsSweepPanel({ state }: { readonly state: EcmoSimulatio
           mostly by the gas side rather than by how much blood is passing the membrane.
         </TextEquivalent>
 
-        <ModelBoundary>
-          The magnitude of any change you produce here is this simulation&rsquo;s, not a bedside
-          dose-response. Each comparison restores the reference circuit first, so the second result
-          is never the sum of two changes.
-        </ModelBoundary>
+        <EcmoSweepReference />
 
         <ModelBoundary>
-          <span data-local-model-boundary="sweep-linearity">
-            PaCO₂ responds to sweep as a straight line in this simulation, by construction, until it
-            stops at a fixed lower bound of 20 mmHg — about 7.5 L/min of sweep on the reference
-            circuit. Past that bound more sweep changes nothing here; before it there is no
-            diminishing return, because none is modeled. The bound is a limit of this simulation,
-            not a physiological plateau. Real CO₂ removal shows diminishing returns and becomes
-            limited by blood flow through the membrane, membrane performance, and the remaining
-            gas-side gradient — so read the direction here, not the slope.
-          </span>
-        </ModelBoundary>
-
-        <ModelBoundary>
-          <span data-local-model-boundary="demand-and-native-lung-fixed">
-            Two of the factors in that sentence never move in this simulation. The patient&rsquo;s
-            oxygen consumption is an authored constant, and the native lung&rsquo;s contribution is
-            fixed, so nothing here can show you a patient whose demand rose or whose own lungs
-            recovered. Both are among the commonest reasons a real ECMO patient&rsquo;s numbers
-            change without anyone touching the circuit.
-          </span>
+          PaCO₂ falls in a straight line with sweep in this simulation and stops at 20 mmHg. At the
+          bedside CO₂ removal shows diminishing returns, so read the direction here, not the slope.
         </ModelBoundary>
       </section>
 

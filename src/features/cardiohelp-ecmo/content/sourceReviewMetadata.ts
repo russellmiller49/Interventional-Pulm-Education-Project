@@ -204,7 +204,7 @@ const metadata: Readonly<Record<string, EcmoSourceReviewMetadata>> = {
       'An unpublished Word document supplied by the course author; its document properties name the course author as creator.',
     published: 'Not published',
     publishedBasis:
-      'an unpublished draft; its document properties record creation and last change on 2026-07-16',
+      'unpublished; its document properties record creation and last change on 2026-07-16',
     revision: null,
     checks: [
       {
@@ -216,8 +216,8 @@ const metadata: Readonly<Record<string, EcmoSourceReviewMetadata>> = {
     ],
   },
   'bounded-educational-model': {
-    identity: 'Authored for this module: the simulation model in this repository.',
-    published: 'Not applicable: an authored simulation, not a publication',
+    identity: 'Written for this module: the simulation model in this repository.',
+    published: 'Not applicable: a simulation model, not a publication',
     publishedBasis: 'the model changes with the repository, and its behavior is pinned by tests',
     revision: null,
     checks: [

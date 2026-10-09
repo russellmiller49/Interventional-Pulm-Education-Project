@@ -974,7 +974,7 @@ export function CardiohelpConsole({
                 role="note"
                 aria-label="RPM initiation order"
               >
-                <span>Simulated case order</span>
+                <span>Case order</span>
                 <strong>{initiationTargets.rpm} RPM</strong>
                 <small>
                   Current: {state.device.rpmSetpoint} RPM · Select RPM mode and use the rotary

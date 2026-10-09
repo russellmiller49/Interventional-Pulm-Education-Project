@@ -267,7 +267,7 @@ export const ecmoFoundationTeachingTasks: Readonly<
       actionId: 'double-sweep',
       storyProblemId: 'story-doubled-sweep',
       instruction:
-        'Predict the response in this authored story, then run its own comparison from the reference. Read the result before continuing.',
+        'Predict the response in this story, then run its own comparison from the reference. Read the result before continuing.',
       lookIn: steps('the story choices and guided comparison below'),
     },
     {

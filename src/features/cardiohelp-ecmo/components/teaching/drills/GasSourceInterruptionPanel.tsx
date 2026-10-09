@@ -47,11 +47,7 @@ export function GasSourceInterruptionPanel({ state }: { readonly state: EcmoSimu
       supportMode="vv"
       clinicalQuestion="The carbon-dioxide value is climbing and the saturation is drifting, while displayed flow and every circuit pressure sit exactly where they have all shift. Which of the two paths through this circuit has failed?"
       boundaries={[
-        'This simulation carries the modeled patient along bounded educational curves, and it moves far faster than the few minutes such a change takes at a bedside. The endpoints and the speed are teaching shapes, not a prediction for any particular patient.',
-        'The sweep response in this model is a straight line. Real carbon-dioxide removal is diminishing and multiply limited — by membrane surface, by blood flow, and by the gradient itself — so nothing here should be read as a dose-response curve.',
-        // S14-1 / C6-1 (ECMO-FELLOW-02): why the recovery here looks instant, and why it is not.
-        'In this drill the source is off for one modeled second before you restore it, so carbon dioxide moves one step up and one step back and the recovery looks instant. The model brings it back at the same rate it rose: after a longer interruption, as in the gas-disconnection case, recovery takes as long as the rise did.',
-        'The gas panel is a schematic stand-in for a source, a blender, and a line into the membrane. This simulation does not represent the individual connections, the wall or cylinder supply, or the analyser a real check would use.',
+        'The modeled patient moves in seconds. At the bedside PaCO₂ climbs over minutes once the gas stops and takes about as long to come back after it is restored.',
       ]}
     >
       <SignalRegister
@@ -245,7 +241,7 @@ export function GasSourceInterruptionPanel({ state }: { readonly state: EcmoSimu
             The blood-path channels, and what they were able to tell you
           </h3>
           <TextEquivalent>
-            Circuit blood flow and the transmembrane gradient, with their authored interpretations.
+            Circuit blood flow and the transmembrane gradient, with their interpretations.
           </TextEquivalent>
           <div className="mt-3 grid gap-3">
             <GuidedValue

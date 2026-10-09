@@ -124,7 +124,7 @@ export function VaAorticStreamsDiagram({
       ) : null}
       <p className={styles.caveat} data-diagram-preview-boundary>
         Hand-placed illustrations, not patient-specific predictions. This model computes neither a
-        mixing location nor coronary oxygenation or perfusion. Clinical review is pending.
+        mixing location nor coronary oxygenation or perfusion.
       </p>
       <div className={styles.drawing}>
         <svg viewBox="0 0 540 400" role="img" aria-labelledby={`${titleId} ${descId}`}>

@@ -392,14 +392,9 @@ export function OxygenDeliveryExplorer({
       </TextEquivalent>
 
       <ModelBoundary>
-        Both figures are arithmetic on the three numbers you set, and three things about them are
-        worth knowing. {OXYGEN_BINDING_CONSTANT_QUALIFIER} The small amount of oxygen dissolved in
-        plasma rather than bound to hemoglobin is left out, so the content figure is the bound
-        oxygen alone, exactly as this module&rsquo;s own simulation computes it. And the flow here
-        is the patient&rsquo;s own cardiac output: on arterial support the circuit returns blood to
-        the artery as well, and this explorer does not add the two together into a single systemic
-        flow. No target delivery is shown, because what is enough depends on what the tissues are
-        asking for and on the patient in front of you, neither of which is on these controls.
+        {OXYGEN_BINDING_CONSTANT_QUALIFIER} Dissolved oxygen is left out, so the content figure is
+        bound oxygen alone. The flow here is the patient&rsquo;s own cardiac output; on VA the
+        circuit&rsquo;s return is not added to it.
       </ModelBoundary>
 
       <div className="mt-3">

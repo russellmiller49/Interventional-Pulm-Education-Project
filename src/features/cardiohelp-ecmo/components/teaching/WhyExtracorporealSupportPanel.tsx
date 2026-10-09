@@ -13,7 +13,6 @@ import {
   FoundationTeachingBlock,
   VaConfigurationLabel,
   GuidedValue,
-  ModelBoundary,
   TextEquivalent,
   styles,
   trackDescription,
@@ -140,10 +139,9 @@ export function WhyExtracorporealSupportPanel({ state }: { readonly state: EcmoS
               Support while the cause is treated
             </h3>
             <p className="mt-3 text-sm leading-6">
-              <strong>Worked example — authored for teaching.</strong> Oxygen demand rises while
-              blood flow, hemoglobin, and saturation stay unchanged. Oxygen delivery has not
-              increased, but the amount needed has. The unchanged saturation does not settle the
-              balance.
+              <strong>Worked example.</strong> Oxygen demand rises while blood flow, hemoglobin, and
+              saturation stay unchanged. Oxygen delivery has not increased, but the amount needed
+              has. The unchanged saturation does not settle the balance.
             </p>
             {/*
               S1-6 (ECMO-FELLOW-04): both sentences pointed at a circuit "beside you". This section
@@ -246,12 +244,6 @@ export function WhyExtracorporealSupportPanel({ state }: { readonly state: EcmoS
             mL per minute. No single one of these three components establishes whether delivery is
             adequate.
           </TextEquivalent>
-
-          <ModelBoundary>
-            The bars show each component on its own arbitrary scale so the three can be seen side by
-            side. They are not to a common unit, and no delivery figure or target is computed from
-            them.
-          </ModelBoundary>
         </section>
       </PhaseBlock>
 

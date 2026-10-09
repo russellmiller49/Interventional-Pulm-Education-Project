@@ -2,6 +2,7 @@ import {
   ECMO_BASELINE_DISPLAY_DEADBANDS,
   ecmoDerivedValueGuides,
 } from '../../../content/ecmoValueGuides'
+import { EcmoDifferentialHypoxemiaMoves } from '../EcmoReferenceValues'
 import type { EcmoSimulationState } from '../../../engine/types'
 import { VaAorticStreamsDiagram } from '../VaAorticStreamsDiagram'
 import { GuidedValue, TextEquivalent, VaConfigurationLabel, styles } from '../shared'
@@ -54,9 +55,7 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
       supportMode="va"
       clinicalQuestion="A right-hand oximeter is low while a femoral arterial sample and the blood leaving the membrane both read high, and the arterial trace is pulsatile. Are these three readings disagreeing with each other, or reporting different things?"
       boundaries={[
-        'This simulation models peripheral femoral venoarterial support with retrograde arterial return. V-AV, upper-body arterial return, and central venoarterial ECMO change the flow topology, and conclusions drawn here do not carry to them.',
-        'This simulation does not derive or move a mixing point. It reproduces the upper-body oxygenation cue with a bounded educational response curve, and changing circuit flow will not move the displayed mixing region here. At a bedside, retrograde flow and native ejection genuinely do determine where the two streams meet — that this lab holds the region fixed is a limitation of the lab, not a statement that flow does not matter.',
-        'Ventilator settings, cannulation options, and cerebral oximetry are not modeled. The single corrective action here stands for verification and escalation through your local protocol, not for a bedside manoeuvre that resolves differential oxygenation on its own.',
+        'The right-radial saturation on this monitor does not respond to pump speed or to ventilator settings. At the bedside, more retrograde flow moves the mixing point toward the aortic root and a better-ventilated lung raises the right-arm value; here one step stands for both the confirmation and the ventilator change.',
       ]}
     >
       <section className={styles.section} aria-labelledby="va-config-heading">
@@ -221,7 +220,7 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
             {differentialActive
               ? `The upper-body pattern is active on this circuit, with the two arterial sites ${gap.toFixed(1)} points apart.`
               : corrected
-                ? 'The upper-body pattern has been recognised and escalated on this circuit, and the modeled right-radial value is moving along its authored recovery curve.'
+                ? 'The upper-body pattern has been recognised and escalated on this circuit, and the modeled right-radial value is moving along its recovery curve.'
                 : 'No upper-body differential is active on this circuit at the moment.'}
           </p>
         </Mechanism>
@@ -241,29 +240,28 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
             {
               candidate: 'The native lungs, the ventilator, and the recovering ventricle',
               standing:
-                'Very much on the table, and the reason the upper-body stream is poorly oxygenated in the first place. This simulation does not model ventilator settings, so this line of reasoning is described here rather than testable here.',
+                'The reason the upper-body stream is poorly oxygenated in the first place, and so the first thing to treat: ventilator FiO₂, PEEP and recruitment.',
             },
             {
               candidate: 'Cannulation strategy',
               standing:
-                'The definitive answer in many real cases, and outside what this lab can do. It belongs to the ECMO team under your local protocol.',
+                'The definitive answer when the ventilator is not enough: conversion to VV if the heart has recovered, or a venous return limb (V-AV) if both heart and lungs still need support.',
             },
           ]}
         />
 
         <FittingResponse>
           <p>
-            Establish the pattern before moving a circuit setting. Confirm the upper-body value with
-            a right radial blood gas, read it against native ejection, the native lungs and the
-            circuit data, and escalate the support and cannulation strategy to the ECMO team under
-            your local protocol.
+            Establish the pattern before moving a circuit setting, then treat the native lungs
+            first.
           </p>
+          <EcmoDifferentialHypoxemiaMoves />
         </FittingResponse>
 
         <ThreeDomainResponse
           device="Circuit settings left alone while the pattern is established. Circuit flow and pArt are read as circuit quantities, neither of which reports systemic perfusion or patient arterial pressure."
           circuitOrGas="Circuit performance confirmed — membrane output, gradient, cannula position — so that the circuit can be excluded as the limitation rather than assumed adequate."
-          patient="Right radial blood gas obtained; native ejection and native lung function assessed; upper-body monitoring chosen for the territory at risk; the strategy escalated to the ECMO team."
+          patient="Right radial blood gas obtained; native ejection and native lung function assessed; ventilator FiO₂ and PEEP raised; V-AV or conversion to VV planned if the right arm stays low."
         />
 
         <HarmfulReflex action="Raising pump speed reflexively, because a saturation of this level is read as the patient being under-supported.">
@@ -283,10 +281,9 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
             systemic saturation.
           </p>
           <p data-model-response-caveat>
-            None of that is visible here. In this simulation the modeled right-radial value does not
-            respond to circuit flow at all, so the manoeuvre appears to do nothing rather than to
-            trade one problem for another. That is a limitation of the model, and it is why the
-            reasoning above is written out rather than demonstrated.
+            On this monitor the right-radial value does not respond to circuit flow, so the
+            manoeuvre appears to do nothing. At the bedside it lifts the right arm and loads the
+            ventricle.
           </p>
         </HarmfulReflex>
       </AfterCommitment>
@@ -297,8 +294,8 @@ export function VaDifferentialHypoxemiaPanel({ state }: { readonly state: EcmoSi
         </h3>
         <TextEquivalent>
           The recirculation-adjusted circuit flow, which in venoarterial support equals displayed
-          circuit flow, together with the modeled systemic venous estimate — each with the authored
-          caveat that neither describes total systemic perfusion.
+          circuit flow, together with the modeled systemic venous estimate. Neither describes total
+          systemic perfusion.
         </TextEquivalent>
         <div className="mt-3 grid gap-3">
           <GuidedValue

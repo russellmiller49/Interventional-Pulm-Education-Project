@@ -15,8 +15,10 @@ import type { ReassessmentQuestion } from '../engine/types'
  * Every reassessment option in a Practice case carries a rationale that the debrief renders beside
  * the option the learner recorded and the one the model expected. Because it is shown only after
  * the reveal it may name the diagnosis and the mechanism, but it is still learner copy, so it may
- * not grade ("the right answer"), may not invent a threshold (no digits the label did not already
- * carry), and may not teach an air-event resumption order. And because a learner who opens the
+ * not grade ("the right answer") and may not overclaim what the simulator verified or contradict
+ * the taught air-event resumption order. Since the teaching-first redo (2026-10-08) a rationale may
+ * state a number: the old rule that it carry no digit its label did not already carry is gone, and
+ * so is the ban on naming the resumption order. And because a learner who opens the
  * debrief of one case can carry what they noticed into the next, the modeled option's rationale
  * may not be systematically the longest of its set — the same length cue the option labels are
  * held to, applied one layer down.
@@ -51,7 +53,10 @@ const fallbackSets: readonly RationaleSet[] = fallbackScenarios.flatMap((scenari
   }))
 })
 
-/** Grading vocabulary, matched as a substring of the lower-cased rationale. */
+/**
+ * Grading and answer-leak vocabulary, matched as a substring of the lower-cased rationale.
+ * "test", "assessment", "percent" and "%" left this list with the shared gate on 2026-10-08.
+ */
 const BANNED_TERMS: readonly string[] = [
   'score',
   'points',
@@ -63,37 +68,21 @@ const BANNED_TERMS: readonly string[] = [
   'wrong',
   'mastery',
   'exam',
-  'test',
   'quiz',
-  'assessment',
-  'percent',
-  '%',
   'competency',
 ]
 
 /**
- * Phrasings that teach an air-event resumption order or overclaim what was verified. The first
- * group is the set this increment retired from the case copy; the second mirrors the module-wide
- * resumption contract so a rationale cannot reintroduce what it bans.
+ * Phrasings that overclaim what was verified, or that contradict the resumption order the module
+ * now teaches (drainage clamp open, bubble stop reset, return clamp open last). These mirror the
+ * module-wide resumption contract so a rationale cannot reintroduce what it bans.
  */
 const RESUMPTION_PATTERNS: readonly RegExp[] = [
-  /reopened in order/i,
-  /resume support in order/i,
-  /ordered unclamping/i,
-  /bounded, ordered sequence/i,
-  /re-establish (VA )?support in the correct order/i,
   /verif(y|ied) backup/i,
-  /\blast step\b/i,
-  /deliberate last step/i,
-  /one bounded sequence for consistency/i,
-  /resume in order/i,
-  /ordered resumption/i,
   /verified (manufacturer|protocol|resumption)/i,
   /on the verified/i,
-  /bring the circuit back and reset/i,
-  /unclamp in order/i,
   /reset(?:ting)? (?:is|comes|falls) (?:the )?last\b/i,
-  /open (?:the )?drainage(?: limb)?,? then (?:the )?return/i,
+  /open (?:the )?return(?: limb| clamp)?,? then (?:the )?drainage/i,
 ]
 
 const MAX_RATIONALE_LENGTH = 220
@@ -107,10 +96,6 @@ function rationaleOf(set: RationaleSet, optionId: string): string {
 
 function sentenceCount(text: string): number {
   return text.split(/[.!?](?:\s|$)/).filter((part) => part.trim().length > 0).length
-}
-
-function digitsIn(text: string): ReadonlySet<string> {
-  return new Set(text.match(/[0-9]/g) ?? [])
 }
 
 function bestRationaleIsUniquelyLongest(set: RationaleSet): boolean {
@@ -155,13 +140,6 @@ function expectCopyRules(set: RationaleSet): void {
         `${set.key}/${option.id}: clean`,
       )
     }
-
-    const allowed = digitsIn(option.label)
-    for (const digit of digitsIn(rationale)) {
-      expect(
-        `${set.key}/${option.id}: digit ${digit} ${allowed.has(digit) ? 'in label' : 'invented'}`,
-      ).toBe(`${set.key}/${option.id}: digit ${digit} in label`)
-    }
   }
 }
 
@@ -185,7 +163,7 @@ describe('authored reassessment rationales', () => {
   })
 
   it.each(authoredSets.map((set) => [set.key, set] as const))(
-    '%s: one or two sentences, no grading vocabulary, no invented digit, no resumption order',
+    '%s: one or two sentences, no grading vocabulary, no overclaim about the resumption',
     (_key, set) => {
       expectCopyRules(set)
     },
@@ -230,7 +208,7 @@ describe('fallback reassessment rationales', () => {
   })
 
   it.each(fallbackSets.map((set) => [set.key, set] as const))(
-    '%s: one or two sentences, no grading vocabulary, no invented digit, no resumption order',
+    '%s: one or two sentences, no grading vocabulary, no overclaim about the resumption',
     (_key, set) => {
       expectCopyRules(set)
     },
@@ -238,7 +216,7 @@ describe('fallback reassessment rationales', () => {
 })
 
 describe('the practice-support source', () => {
-  it('carries no resumption-order phrasing anywhere, labels included', () => {
+  it('carries no overclaim about the resumption anywhere, labels included', () => {
     const source = readFileSync(
       join(process.cwd(), 'src/features/cardiohelp-ecmo/content/practiceSupport.ts'),
       'utf8',

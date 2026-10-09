@@ -17,6 +17,7 @@ import { pairedLessonIdsForCase } from '../content/curriculum'
 import { cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
 import { ecmoSafetyEventLabels } from '../content/safetyEventLabels'
 import { cardiohelpScenarioById } from '../content/scenarios'
+import { ECMO_OXYGENATOR_FAILURE_SENTENCE } from '../content/teachingNumbers'
 import {
   createInitialSimulationState,
   ecmoSimulationReducer,
@@ -631,7 +632,7 @@ describe('E · no-action and explanation-only paths fabricate nothing', () => {
     expect(opened.scenario.criticalErrors).toEqual([])
   })
 
-  it('S10-2: the exchange step is named as a teaching transition, not as a performed exchange', () => {
+  it('S10-2: the exchange step says it stands for the exchange, not that one was performed', () => {
     for (const lessonId of [
       'afterload-oxygenator-resistance',
       'va-afterload-oxygenator-resistance',
@@ -642,8 +643,10 @@ describe('E · no-action and explanation-only paths fabricate nothing', () => {
           (action) => action.type === 'CORRECT_FAULT' && action.fault === 'oxygenator-resistance',
         ),
       )!
-      expect(step.rationale).toMatch(/teaching transition/i)
-      expect(step.rationale).toMatch(/not simulated/i)
+      expect(step.rationale).toMatch(/the exchange itself is not simulated/i)
+      expect(step.rationale).toMatch(/this one step takes the circuit to its state after/i)
+      // And what a fellow does about a failing oxygenator is taught beside it.
+      expect(step.rationale).toContain(ECMO_OXYGENATOR_FAILURE_SENTENCE)
     }
   })
 

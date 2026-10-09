@@ -142,7 +142,11 @@ it.each(['vv', 'va'] as const)(
     render(<EcmoPracticeActivity section="assess" />)
     await waitFor(() => expect(document.querySelector('[data-hydrated="true"]')).not.toBeNull())
     fireEvent.click(screen.getByRole('button', { name: 'Show explanation without answering' }))
-    expect(screen.getByText(/authored case explanation/)).toBeInTheDocument()
+    // "Authored" is project vocabulary and is no longer shown. The line still says that this is
+    // the intended management and not a record of what the learner did.
+    expect(
+      screen.getByText(/The case explained\. It describes the intended management, not a record/),
+    ).toBeInTheDocument()
     expect(screen.getAllByText(/No prediction recorded/).length).toBeGreaterThan(0)
     expect(screen.getByText('No action was recorded in this run.')).toBeInTheDocument()
     expect(stored().scenarioAttempts).toBeUndefined()

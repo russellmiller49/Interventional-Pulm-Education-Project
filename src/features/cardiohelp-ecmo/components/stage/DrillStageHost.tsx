@@ -519,8 +519,7 @@ export function DrillStageHost({
       return {
         ...base,
         primary: { label: 'Start guided activity', onActivate: startTransfer },
-        status:
-          'New clinical situation. Start to initialize its authored event; no prediction is required.',
+        status: 'New clinical situation. Start to begin its event; no prediction is required.',
       }
     }
     if (finished) {
@@ -987,11 +986,6 @@ export function DrillStageHost({
           task={task}
           footer={
             <>
-              <p className={styles.footerLine}>
-                Professional education only. Not a clinical device or a patient-specific guide;
-                every value is simulated. Follow current manufacturer instructions and local
-                protocol.
-              </p>
               <EcmoStageSources
                 sources={stageSources}
                 label="Sources for this lesson"

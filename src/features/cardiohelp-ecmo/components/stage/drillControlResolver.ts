@@ -211,7 +211,7 @@ export function resolveGuidedSimulatorTask(
       return {
         controlId: 'cardiohelp-resume-support',
         instruction:
-          'On the bedside circuit, resume support per the current IFU and your local protocol.',
+          'On the bedside circuit, reset the bubble stop and reopen the clamps, return clamp last.',
         satisfied,
       }
     case 'RESET_BUBBLE':

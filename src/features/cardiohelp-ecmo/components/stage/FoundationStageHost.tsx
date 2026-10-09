@@ -117,9 +117,6 @@ const COMBINED_BASELINE_PRESENTATION = {
 const DEVICE_BOUNDARY_SHORT =
   'Console follows the U.S. CARDIOHELP Instructions for Use, Revision 2.3 (January 2025). The VV and VA teaching is not limited to the U.S. labeled indication or duration.'
 
-const DEVICE_BOUNDARY_FULL =
-  'The simulated console follows the U.S. CARDIOHELP System Instructions for Use, Revision 2.3, January 2025. The VV and VA clinical teaching reflects contemporary ECMO practice and is not limited to the U.S. labeled indication or duration. This independent educational module does not replace current manufacturer instructions, local protocol, or supervised competency validation.'
-
 const LOOKING_BACK =
   'You are looking back at an earlier step; nothing you have worked through is lost.'
 
@@ -674,7 +671,7 @@ function FoundationStageSession({
     if (normalReading)
       return {
         ...base,
-        body: `Read ${baselineGroupLabels[baselineGroup ?? 'all'].toLowerCase()} against this modeled run's own reference. These values are not universal treatment targets.`,
+        body: `Read ${baselineGroupLabels[baselineGroup ?? 'all'].toLowerCase()} against this modeled run's own reference.`,
         kicker: `${stepPosition} · Signal group ${baselineGroupIndex + 1} of ${readingGroups.length}`,
         ...(baselineGroupIndex > 0
           ? {
@@ -1389,7 +1386,7 @@ function FoundationStageSession({
                 ))}
               </ul>
             ) : null}
-            <p className="mt-3 text-muted-foreground">{DEVICE_BOUNDARY_FULL}</p>
+            <p className="mt-3 text-muted-foreground">{DEVICE_BOUNDARY_SHORT}</p>
           </>
         ) : null}
         {/*
@@ -1810,14 +1807,6 @@ function FoundationStageSession({
           compactPane={compactPane}
           footer={
             <>
-              <p className={styles.boundaryNote} data-device-boundary>
-                {DEVICE_BOUNDARY_SHORT}
-              </p>
-              <p className={styles.footerLine}>
-                Professional education only. Not a clinical device or a patient-specific guide;
-                every value is simulated. Follow current manufacturer instructions and local
-                protocol.
-              </p>
               <EcmoStageSources
                 sources={stageSources}
                 label="Sources for this section"
