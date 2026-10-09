@@ -1,6 +1,6 @@
 # Bronchoscopy Foundations rewrite: handoff
 
-Written 2026-10-08, last updated 2026-10-09. Start the next session from this file.
+Written 2026-10-08, last updated 2026-10-09 (after section 7). Start the next session from this file.
 
 ## Why this work exists
 
@@ -17,6 +17,7 @@ supervisor" answers.
 | ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
 | #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
+| #368 | `claude/bf-rewrite-s07`            | Draft, stacked on #364. Section 7, the left lung, rewritten; `reference-frames` retired.                          |
 | #364 | `claude/bf-rewrite-s05`            | Draft, stacked on #362. Section 5, larynx, trachea and carina, rewritten; `branch-entry` retired.                 |
 | #362 | `claude/bf-rewrite-s04`            | Draft, stacked on #360. Section 4, driving the scope, rewritten.                                                  |
 | #360 | `claude/bf-rewrite-s03`            | Draft, stacked on #359. Section 3, sedation and monitoring, rewritten; `shared-airway` retired.                   |
@@ -28,25 +29,28 @@ supervisor" answers.
 | #348 | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix is now #351; close #348 once #351 merges.                        |
 
 Nothing is merged. The stack, in merge order: #349 → #350 → #352 → #355 → #358 → #359 → #360 →
-#362 → #364. #351 is independent. The work is in the worktree
-`…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s05`. Branch the
-next section from that branch (`git switch -c claude/bf-rewrite-s07`) and stack its PR on #364.
+#362 → #364 → #368. #351 is independent. The work is in the worktree
+`…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s07`. Branch the
+next section from that branch (`git switch -c claude/bf-rewrite-s08`) and stack its PR on #368.
 
 ## Start here next session
 
 1. Read this file, then the plan's rules and the brief for the section you are writing.
-2. Next section: 7, the left lung (`left-side`). Section 6, the right lung, was the pilot; use
-   `content/sections/right-side.ts` and its flow as the model (labelled tour, click-on-image
-   questions, then the simulator). Brief 7: start with an upright image; the LB7+8 convention in
-   one sentence; the basal mnemonic belongs to the right side.
-3. Before or with it, retire `reference-frames` (it forwards to `right-side`). See the notes
-   under section 5 below.
+2. Next section: 8, losing and regaining the view (`view-loss`). Brief 8: the five causes of a
+   lost view, each on a still, then the four-step recovery; name the cause on five stills, then
+   recover in the simulator. The stills of red-out, smear, secretions and blood are abnormal
+   images (item 8 below) and may not exist yet: check what the repo has before you plan the
+   image questions, and say what is missing instead of inventing a picture.
+3. `view-loss` still has two scope tasks and a "lens" observe step in its flow, and it homes the
+   Reading-the-view row `clear-but-lost`. It is the first unrewritten section to open on a tour,
+   so the end-to-end "missing teaching media" case opens it; move that case when it is rewritten.
 4. Work one section per session. Get a digest of the old section from a subagent instead of
    reading it into context, then write the new file. The notes under each section below say
    what the checks will refuse.
 5. Dev server for this worktree: launch configuration `claude-bf`, port 3133. The Browser pane
    refuses that address; verify with Playwright (a throwaway config, since the module's own
-   config matches its spec files exactly) and with `curl`.
+   config matches its spec files exactly) and with `curl`. Keep the throwaway config and spec
+   inside the repository while they run, or `@playwright/test` does not resolve, then delete them.
 
 Owner decisions so far (2026-10-08):
 
@@ -115,9 +119,29 @@ sections no longer wait for sessions with the pilot.
    closing screen (item 6).
 5. **Sections rewritten so far:** the right lung, bleeding, and sections 1 to 5
    (`clinical-question`, `pre-use-check`, `sedation-and-monitoring`, `five-controls`,
-   `larynx-and-entry`), all 2026-10-08. Eight remain. Section 6, the right lung, is done, so
-   section 7 (`left-side`) is next. The course lists 21 sections.
-   Notes from section 5:
+   `larynx-and-entry`), all 2026-10-08, and section 7 (`left-side`) on 2026-10-09. Seven remain.
+   Section 8 (`view-loss`) is next. The course lists 20 sections.
+   Notes from section 7:
+   - `reference-frames` is retired. M06-O1 and M06-O2 are homed in the right lung; M06-O5 (CT
+     tracing) is in `RETIRED_OBJECTIVE_REASONS`. Its six-row CT identify activity is gone.
+   - The two-image media workspace has no section left. Its Jest tests use
+     `test-support/comparisonWorkspace.ts`. Its two browser tests (S7 layout, S7 enlarge) were
+     removed with the page.
+   - Six left-lung frames were added to `build-find-frames.mjs`. Check the size of an outline
+     before you pick a frame: the first pick's lower lobe outline was too small to tap. No frame
+     shows LB6 with LB7+8, and none shows all four lower lobe openings.
+   - A section title appears in the course map on every page. A leak guard in another section
+     that matches it fails the rendered leak scan: bleeding's guard is now `her left lung`.
+   - A guard must still match the keyed answer, its explanation or the new concept, or the
+     registry refuses to load and most suites fail at import.
+   - A practice item's id is a manifest case id or `mc-<slug>`; a seed id alone is refused.
+   - The four simulator goals kept their ids and event tests, so `scopeRecipes.ts` did not change.
+   - It states 9 minutes, not the plan's 7: the activities are timed at 5, as on the right.
+   - For Russell to confirm: four orientation statements in the image questions (head toward
+     the top; anterior to the right; LB4 nearer the upper division; posterior to the right),
+     read from the outlines; the unoutlined fourth opening on the basal frame; "the lingula
+     runs forward and down"; the new prediction and check; retiring M06-O5.
+     Notes from section 5:
    - `branch-entry` is retired. Its two airway tasks are section 5's `moreActs.carina` and
      `moreActs.hold`; its objectives M05-O3 to O5 and the reading-the-view row
      `handle-turns-view-static` are homed in section 5.
@@ -134,9 +158,6 @@ sections no longer wait for sessions with the pilot.
      for a named scope task.
    - The registry hands out a rewritten section with its numbers resolved, so its views are new
      objects: match a view by content, not identity.
-   - `reference-frames` still sits between sections 4 and 5. It forwards to the right lung and
-     should be retired next; the right lung is already rewritten, so that is a retirement on
-     its own (its tests and its `identify` activity need a decision).
    - For Russell to confirm: the one-line descriptions of the laryngeal structures; "the
      corniculate tubercles cap the arytenoids near the midline, the cuneiform sit further out
      in the folds"; the tour notes on the right and left main bronchi; the prompts name a side
@@ -239,7 +260,7 @@ npx eslint src/features/bronchoscopy-foundations
 BRONCH_FOUNDATIONS_BASE_URL=http://localhost:3120 npx playwright test -c playwright.bronchoscopy-foundations.config.ts -g "<title>"
 ```
 
-State at handoff: 39 Jest suites pass; type check and lint are clean; the end-to-end tests that
+State at handoff: 40 Jest suites pass; type check and lint are clean; the end-to-end tests that
 touch the two pilot sections pass against the dev server. The full end-to-end suite has not been
 run. Nine Jest suites in other features fail in this checkout and were not touched by this work.
 
