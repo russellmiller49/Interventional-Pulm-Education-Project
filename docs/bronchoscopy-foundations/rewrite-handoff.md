@@ -1,6 +1,6 @@
 # Bronchoscopy Foundations rewrite: handoff
 
-Written 2026-10-08. Start the next session from this file.
+Written 2026-10-08, last updated 2026-10-09. Start the next session from this file.
 
 ## Why this work exists
 
@@ -27,8 +27,26 @@ supervisor" answers.
 | #351 | `claude/bf-3d-retry`               | Draft, from `main`. The 3D-retry fix lifted out of #348, with its three end-to-end cases.                         |
 | #348 | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix is now #351; close #348 once #351 merges.                        |
 
-Nothing is merged. The work was done in the worktree
-`…-Worktrees/claude-bf-pre-review-04-20261007`, which is currently on `claude/bf-rewrite-pilot`.
+Nothing is merged. The stack, in merge order: #349 → #350 → #352 → #355 → #358 → #359 → #360 →
+#362 → #364. #351 is independent. The work is in the worktree
+`…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s05`. Branch the
+next section from that branch (`git switch -c claude/bf-rewrite-s07`) and stack its PR on #364.
+
+## Start here next session
+
+1. Read this file, then the plan's rules and the brief for the section you are writing.
+2. Next section: 7, the left lung (`left-side`). Section 6, the right lung, was the pilot; use
+   `content/sections/right-side.ts` and its flow as the model (labelled tour, click-on-image
+   questions, then the simulator). Brief 7: start with an upright image; the LB7+8 convention in
+   one sentence; the basal mnemonic belongs to the right side.
+3. Before or with it, retire `reference-frames` (it forwards to `right-side`). See the notes
+   under section 5 below.
+4. Work one section per session. Get a digest of the old section from a subagent instead of
+   reading it into context, then write the new file. The notes under each section below say
+   what the checks will refuse.
+5. Dev server for this worktree: launch configuration `claude-bf`, port 3133. The Browser pane
+   refuses that address; verify with Playwright (a throwaway config, since the module's own
+   config matches its spec files exactly) and with `curl`.
 
 Owner decisions so far (2026-10-08):
 
@@ -36,6 +54,9 @@ Owner decisions so far (2026-10-08):
 - The four Nashville bleeding rows are signed.
 - The right lung's prediction stays as reworded in `b06c9009`. It was ambiguous before; see the
   lesson under "Traps".
+- The fellow-session gate on the remaining sections is removed.
+- Methylene blue: the expert panel's regimen (signed). Flumazenil and naloxone: the product-label
+  doses (signed). Scope diameters: current Olympus scopes from the device catalog (not signed).
 
 ## How a rewritten section is built
 
