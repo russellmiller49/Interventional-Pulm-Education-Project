@@ -9,7 +9,6 @@ import { MCS_PRODUCT_FLOW_BOUNDARY } from '../../content/supportPathways'
 import type { McsTeachingPanelProps } from './panelProps'
 import { mcsComparesAgainstActionBaseline, mcsMechanismDisclosed } from './revealStage'
 import {
-  MCS_ESTIMATED_FLOW_BOUNDARY,
   activeAlarms,
   beforeAfterReadings,
   displaySignalNumber,
@@ -22,13 +21,12 @@ import {
   AfterCommitment,
   AlarmBand,
   BeforeAfter,
-  DEADBAND_CAPTION,
-  FigureScope,
   FlowAccount,
   LiveSetting,
   LiveValue,
   ModelBoundary,
   PanelSection,
+  ReferenceValues,
   PathwayGraphic,
   TextEquivalent,
   TransferState,
@@ -136,27 +134,27 @@ export function ImpellaUnloadingPlacementPanel({
       id: 'position',
       label: '1 · Where the inlet is sitting',
       value: pump?.leftPositionWords ?? 'no transvalvular pathway in place',
-      kind: 'modeled placement state',
+      kind: 'placement state',
       detail:
-        'An anatomical relationship between the inlet, the aortic valve and the outlet — not a depth reading.',
+        'Where the inlet and outlet sit relative to the aortic valve: inlet in the ventricle, outlet in the aorta.',
     },
     {
       id: 'gradient',
       label: '2 · What the pump works across',
       value:
         gradient === null
-          ? 'not reported in this state'
+          ? 'not available'
           : `${reading(gradient, 0)} mm Hg between the aorta and the left-sided filling pressure`,
       kind: 'modeled',
       detail:
-        'The pressure difference the pump has to move blood across, together with whatever is available to draw from inside the chamber.',
+        'The pressure difference the pump moves blood across. The higher it is, the less flow at the same P-level.',
     },
     {
       id: 'estimated-flow',
       label: '3 · What the pump estimates it is moving',
       value: `${reading(metrics.leftDeviceFlowLMin, 1)} L/min`,
       kind: 'estimated',
-      detail: `At performance level ${pump ? pump.leftLevel : '—'}. The level is a setting; this figure is what the pump believes it achieved.`,
+      detail: `At P-${pump ? pump.leftLevel : '—'}. The P-level is the setting; the flow is the controller’s estimate of what it delivers.`,
     },
     {
       id: 'unloading',
@@ -164,7 +162,7 @@ export function ImpellaUnloadingPlacementPanel({
       value: `${reading(metrics.lvedvMl, 0)} mL end-diastolic volume · wedge ${reading(metrics.pcwpMmHg, 0)} mm Hg · aortic valve ${metrics.aorticValveOpening ? 'opening' : 'not opening'}`,
       kind: 'modeled',
       detail:
-        'Unloading is the removal of volume. This is where the claim in the link above is checked against the chamber it was supposed to relieve.',
+        'Unloading is the removal of volume. A pump that is unloading leaves a smaller ventricle and a lower wedge pressure.',
     },
     {
       id: 'effective',
@@ -172,7 +170,7 @@ export function ImpellaUnloadingPlacementPanel({
       value: `${reading(metrics.effectiveSystemicFlowLMin, 1)} L/min`,
       kind: 'reasoned',
       detail:
-        'Native contribution and pump flow reconciled, with anything that regurgitates back into the chamber taken out.',
+        'Native output plus pump flow, minus anything that leaks back through the aortic valve.',
     },
   ]
 
@@ -185,33 +183,25 @@ export function ImpellaUnloadingPlacementPanel({
             label="Placement state"
             value={pump?.leftPositionWords ?? 'not applicable'}
             kind="modeled"
-            note="A teaching state this simulation holds, moved by a control rather than by a catheter."
+            note="Aligned, too deep or too shallow."
           />
           <LiveValue
             label="Performance level"
             value={pump ? pump.leftLevel : null}
             digits={0}
             kind="displayed"
-            note="The selected level. It sets what the pump is asked for, not what it delivers."
+            note="The P-level sets motor speed. Flow at that level depends on filling, position and afterload."
           />
         </div>
         <TextEquivalent>
-          {pathwaySentence(mcsComparisonPathways.impellaLeft)} The modeled placement state is{' '}
+          {pathwaySentence(mcsComparisonPathways.impellaLeft)} The placement state is{' '}
           {pump?.leftPositionWords ?? 'not applicable'}, at performance level{' '}
           {pump ? pump.leftLevel : '—'}.
         </TextEquivalent>
-        <ModelBoundary>
-          The three placement states in this simulation — aligned, too deep, too shallow — are
-          teaching states, not measurements, and the figure is a schematic rather than an image.
-          Real position is confirmed with imaging and the placement signal, by qualified operators,
-          under the current instructions for the specific device in use and local procedure
-          standards. Nothing in this module is an insertion, advancement, or repositioning
-          instruction.
-        </ModelBoundary>
-        <FigureScope
-          establishes="Which compartment the pump draws from and which one it returns to, and what the modeled placement state currently is."
-          doesNotEstablish="Where the inlet actually is in a patient. That is an imaging question, and this panel is not a placement guide."
-        />
+        <p className="mt-3 text-xs leading-5" data-placement-teaching>
+          At the bedside, position is confirmed with echo and the placement signal on the
+          controller. Check position before you change the P-level.
+        </p>
       </PanelSection>
 
       <PanelSection title="Position, gradient, flow, unloading, delivery" id="placement-chain">
@@ -234,22 +224,29 @@ export function ImpellaUnloadingPlacementPanel({
         </TextEquivalent>
         {disclosed ? (
           <p className="mt-2 text-xs leading-5" data-chain-claim>
-            These five readings are links, not five independent gauges. A fall at link three is a
-            question about links one and two before it is a question about the setting, and link
-            four is where the unloading claim is checked rather than assumed.
+            These five readings are links in a chain. When flow falls at link three, check position
+            and filling at links one and two before you touch the P-level. Link four tells you
+            whether the ventricle is unloading.
           </p>
         ) : null}
         <ModelBoundary>
-          Left ventricular end-diastolic volume in this simulation is an educational surrogate
-          derived from loading, contractility, valve recirculation and unloading, not a volume
-          traced from an image. Read it as a direction, not as a measurement.
+          Left ventricular end-diastolic volume here is a simulator surrogate, not a volume traced
+          on echo. Read its direction, not its value.
         </ModelBoundary>
       </PanelSection>
 
       <PanelSection title="The flow account on this pathway" id="placement-flow">
         <FlowAccount account={account} disclosed={disclosed} />
         <TextEquivalent>{flowAccountSentence(account, disclosed)}</TextEquivalent>
-        <ModelBoundary>{MCS_ESTIMATED_FLOW_BOUNDARY}</ModelBoundary>
+        <ReferenceValues
+          title="Impella: mean flow to expect at each P-level"
+          ids={['impella-cp-flow-by-level', 'impella-cp-peak-flow', 'impella-55-flow-by-level']}
+        >
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            The displayed flow is calculated by the controller; no probe measures it. A flow below
+            the range for the P-level in use means suction, malposition or a high afterload.
+          </p>
+        </ReferenceValues>
         <AlarmBand alarms={alarms} disclosed={disclosed} />
         <TextEquivalent>{alarmSentence(alarms)}.</TextEquivalent>
       </PanelSection>
@@ -262,13 +259,12 @@ export function ImpellaUnloadingPlacementPanel({
             caption="Displayed pump flow, effective delivery, and the two chamber readings that check the unloading claim."
           />
           <TextEquivalent>{beforeAfterSentence(rows)}.</TextEquivalent>
-          <ModelBoundary>{DEADBAND_CAPTION}</ModelBoundary>
         </PanelSection>
       ) : null}
 
       {reveal === 'transfer' ? (
         <PanelSection title="The transfer patient, read live" id="placement-transfer">
-          <TransferState principle="A displayed pump flow that falls at an unchanged setting is a statement about the pathway — position, filling, or the pressure at the outlet. Which of the three it is has to be worked out before the setting is touched.">
+          <TransferState principle="When displayed pump flow falls at an unchanged P-level, the cause is position, filling or the pressure at the outlet. Work out which before you touch the P-level.">
             <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <LiveSetting
                 label="Placement state"
@@ -311,27 +307,25 @@ export function ImpellaUnloadingPlacementPanel({
       ) : null}
 
       {disclosed ? (
-        <PanelSection title="What a published flow figure is a figure of" id="placement-evidence">
-          <AfterCommitment summary="Several published flow numbers for the same pump — what each one measures">
+        <PanelSection title="Which flow figure is which" id="placement-evidence">
+          <AfterCommitment summary="Three flow numbers for the Impella CP, and what each one measures">
             <MeasurementClarification clarification={clarification} headingLevel={5} />
             <p className="mt-3 text-xs leading-5" data-clarification-note>
-              These figures do not contradict each other. They are different quantities: a maximum
-              mean flow, a peak flow at systole, and an average observed during support. None of
-              them substitutes for another, and none of them is averaged with another anywhere in
-              this module.
+              Three different quantities: a maximum mean flow, a peak flow in systole, and an
+              average observed during support. Compare a displayed flow with the mean, never with
+              the peak.
             </p>
           </AfterCommitment>
 
-          <AfterCommitment summary="One textbook, two different maximum-flow statements — held rather than resolved">
+          <AfterCommitment summary="One textbook gives two different maximum flows">
             <HeldDisagreement conflict={conflict} headingLevel={5} />
             <p className="mt-3 text-xs leading-5" data-conflict-note>
-              This is an inconsistency inside a single textbook, not a disagreement between that
-              textbook and the manufacturer, and neither of its two figures is used as the current
-              device specification. Both are kept as they were published.
+              The textbook contradicts itself. Use the instructions for use for the device
+              specification.
             </p>
           </AfterCommitment>
 
-          <ModelBoundary>{MCS_PRODUCT_FLOW_BOUNDARY}</ModelBoundary>
+          <p className="mt-3 text-xs leading-5">{MCS_PRODUCT_FLOW_BOUNDARY}</p>
         </PanelSection>
       ) : null}
     </div>

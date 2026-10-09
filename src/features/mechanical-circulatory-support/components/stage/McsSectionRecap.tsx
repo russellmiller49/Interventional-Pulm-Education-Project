@@ -2,6 +2,7 @@
 
 import { STAGE_PHASE_LABELS } from '@/features/learning-module/stage/stageModel'
 
+import { MCS_TEACHING_SIMULATOR_STATEMENT } from '../../content/modelLimits'
 import type { McsStageLesson } from '../../content/stageLessons'
 import styles from './mcs-stage.module.css'
 
@@ -14,10 +15,8 @@ import styles from './mcs-stage.module.css'
  * would turn a self-paced lesson into a quiz with the questions made compulsory in hindsight.
  *
  * What a learner can use at the end of a section is the section's own point, said compactly: what
- * it was teaching, the distinctions to keep, what the model leaves out, and where to go back to.
- * Every sentence here is one the section already carries — its objective, its one new idea, what
- * it establishes, the misreading it names, and what it does not establish — so the recap adds no
- * claim. It counts nothing, and it says so.
+ * it was teaching, the distinctions to keep, what to do at the bedside, and where to go back to.
+ * It counts nothing, and it says so.
  */
 export function McsSectionRecap({
   lesson,
@@ -50,9 +49,13 @@ export function McsSectionRecap({
         ))}
       </ul>
 
-      <h4>What remains a limit of the model</h4>
+      <h4>At the bedside</h4>
       <p data-recap-limit>{contract.whatThisDoesNotEstablish}</p>
       {contract.unmodeledNote ? <p data-recap-unmodeled>{contract.unmodeledNote}</p> : null}
+      {/* The module's one boundary statement, on its closing screen: the last section's recap. */}
+      {lesson.sectionId === 'mcs-device-selection-integration' ? (
+        <p data-teaching-simulator-statement>{MCS_TEACHING_SIMULATOR_STATEMENT}</p>
+      ) : null}
 
       {/* The way back to each step, folded so the recap itself stays a few lines. */}
       <details data-recap-revisit-disclosure>

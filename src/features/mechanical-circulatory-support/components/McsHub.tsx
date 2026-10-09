@@ -6,7 +6,8 @@ import { ArrowRight } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { mechanicalCirculatorySupportNavBase } from '@/features/learning-module/moduleRoutes'
 
-import { mcsDeviceProfiles, mcsReleaseGates } from '../content'
+import { mcsDeviceProfiles } from '../content'
+import { MCS_TEACHING_SIMULATOR_STATEMENT } from '../content/modelLimits'
 import { MCS_DEVICE_INCREMENTS } from '../content/deviceIncrements'
 import {
   MCS_HUB_AUDIENCE,
@@ -118,7 +119,7 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
           <h2 id="mcs-hub-pathway-heading">{composition.total} sections, in one order</h2>
           <p>
             The common model first, then each device as the model plus a counted number of new
-            ideas, then integration with patient assessment. Every section opens from its own link;
+            ideas, then integration with patient evaluation. Every section opens from its own link;
             the order is a recommendation, not a lock.
           </p>
           <ul className={styles.incrementList} data-track-increments>
@@ -209,35 +210,9 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
           <summary>Sources, device revisions, and the model card</summary>
           <McsSourcesPanel />
         </details>
-        {/*
-         * Review status and what is still open, kept and placed with the reference (F02). The
-         * status line stays in the open — the module is a preview pending clinical review, and a
-         * learner should know it — while the reviewer's checklist is one click further in, where
-         * it no longer competes with the way into the module.
-         */}
         <div className={styles.releaseReview} data-review-governance>
-          <strong>Preview · pending clinical review</strong>
-          <p>
-            Device responses here are bounded teaching approximations. Nothing in this module is a
-            source for a device specification, and device selection, timing, and escalation remain
-            team decisions under current manufacturer instructions and local protocol.
-          </p>
-          <details data-reviewer-layer>
-            <summary>For reviewers: what is still open before publication</summary>
-            <p>
-              Publication awaits review by an advanced-heart-failure/MCS physician and an ICU nurse,
-              APP, perfusionist, or clinical engineer, covering the clinical content, device
-              revision, model behavior, accessibility, 3D provenance, and safety boundaries.
-            </p>
-            <ul>
-              {mcsReleaseGates.map((gate) => (
-                <li key={gate.id} data-complete={gate.complete}>
-                  {gate.complete ? 'Complete' : 'Pending'} · {gate.label}
-                  {gate.evidence ? <small>{gate.evidence}</small> : null}
-                </li>
-              ))}
-            </ul>
-          </details>
+          <strong>A teaching simulator</strong>
+          <p>{MCS_TEACHING_SIMULATOR_STATEMENT}</p>
         </div>
       </section>
     </McsModuleFrame>

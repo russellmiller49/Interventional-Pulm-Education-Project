@@ -1,3 +1,4 @@
+import { MCS_NUMBERS } from './teachingNumbers'
 /**
  * The abbreviations a lesson uses, for the in-lesson glossary (F42).
  *
@@ -54,7 +55,7 @@ export const MCS_GLOSSARY_ABBREVIATIONS: readonly McsGlossaryAbbreviation[] = Ob
   {
     abbreviation: 'PI',
     expansion: 'Pulsatility index',
-    note: 'A unitless controller parameter related to pulsatility. Here it is an authored function of native flow, pump flow and preload, not a measured clinical PI or flow-estimator input.',
+    note: `How much the flow through the pump swings with each heartbeat: ${MCS_NUMBERS.value('lvad-pulsatility-index')}. It falls when the ventricle is underfilled or the speed is raised, and rises with afterload and as the ventricle recovers.`,
   },
   {
     abbreviation: 'P-level',

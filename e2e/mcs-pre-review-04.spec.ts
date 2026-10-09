@@ -121,7 +121,7 @@ for (const size of SIZES) {
         objectives: top('[data-hub-objectives]'),
         start: top('[data-mcs-continue]'),
         pathway: top('#mcs-hub-pathway'),
-        reviewer: top('[data-reviewer-layer]'),
+        reviewer: top('[data-review-governance]'),
       }
     })
     expect(order.objectives).toBeLessThan(order.start)
@@ -129,11 +129,10 @@ for (const size of SIZES) {
     expect(order.pathway).toBeLessThan(order.reviewer)
 
     await expect(page.locator('[data-hub-refresher]')).toContainText('not required')
-    expect(
-      await page
-        .locator('[data-reviewer-layer]')
-        .evaluate((node) => (node as HTMLDetailsElement).open),
-    ).toBe(false)
+    await expect(page.locator('[data-reviewer-layer]')).toHaveCount(0)
+    await expect(page.locator('[data-review-governance]')).toContainText(
+      'This is a teaching simulator.',
+    )
     expect(await documentOverflow(page)).toBeLessThanOrEqual(1)
 
     // An objective's link opens its section directly: the refresher gates nothing.
@@ -396,7 +395,7 @@ test('F39 · the timing reference keeps its limit in the open and folds its lege
   await goToStep(page, 3)
   await expect(page.locator('[data-iabp-live-trace-rule]')).toBeVisible()
   await expect(page.locator('[data-iabp-authored-reference]')).toContainText(
-    'not a run of this simulation',
+    'The live strip shows the same five landmarks',
   )
   expect(
     await page
@@ -414,7 +413,7 @@ for (const size of SIZES) {
     await page.setViewportSize(size)
     await openLesson(page, 'mcs-device-selection-integration')
     await expect(page.locator('[data-common-model-answers]')).toBeVisible()
-    await expect(page.locator('[data-congestion-limit]')).toBeVisible()
+    await expect(page.locator('[data-congestion-reconcile]')).toBeVisible()
     for (const id of [
       'integration-congestion-evidence',
       'integration-flow',
@@ -560,8 +559,8 @@ for (const size of SIZES) {
       await page.waitForTimeout(500)
     }
     const reasoning = page.locator('[data-prediction-reasoning-list]')
-    await expect(reasoning).toContainText('Why this does not fit this modeled state')
-    await expect(reasoning).toContainText('Why this fits this modeled state')
+    await expect(reasoning).toContainText('Why this does not fit this patient')
+    await expect(reasoning).toContainText('Why this fits this patient')
     expect(await reasoning.locator('[data-prediction-reasoning]').count()).toBe(3)
     expect(await reasoning.innerText()).not.toMatch(SCORE_LANGUAGE)
     // The reasoning uses the width it has.
@@ -610,7 +609,7 @@ test('F10 · the section sources are classed, with authoring provenance last and
   ).toContainText('not independent clinical evidence')
   const checks = page.locator('[data-mcs-stage] [data-claim-source-checks]')
   await checks.locator('summary').click()
-  await expect(checks).toContainText('NOT REVIEWED')
+  await expect(checks).not.toContainText('NOT REVIEWED')
   await expect(checks.locator('[data-claim-check]')).toHaveCount(3)
 })
 
@@ -624,8 +623,7 @@ for (const lesson of ['mcs-foundations-signals', 'mcs-device-selection-integrati
     await openLesson(page, lesson)
     await expect(page.locator('[data-glossary-trigger]')).toBeVisible()
     await expect(page.locator('[data-step-bar-continue]')).toBeVisible()
-    await page.locator('[data-model-limits] summary').click()
-    await expect(page.locator('[data-model-limit="simulated-values"]')).toBeVisible()
+    await expect(page.locator('[data-model-limits]')).toHaveCount(0)
     expect(await documentOverflow(page)).toBeLessThanOrEqual(1)
   })
 }

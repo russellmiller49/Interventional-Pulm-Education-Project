@@ -190,11 +190,15 @@ export const MCS_SUPPORT_GRAMMAR: McsSupportGrammar = {
     },
     {
       id: 'active-component-power',
-      whatMoved: 'Power rises while the displayed flow and the delivered flow do not move.',
+      whatMoved:
+        'Power rises and the displayed flow rises with it, while the delivered flow falls.',
       whereTheConstraintLives:
-        'The active component: the assumptions behind the flow estimate have broken, so the display can no longer be read as delivery.',
+        'The active component: thrombus on the rotor adds drag, and the flow estimate, calculated from power, reads falsely high.',
       stopIds: ['left-ventricle'],
-      shortlist: ['the high-power pattern', 'the trend of power against the display'],
+      shortlist: [
+        'the high-power pattern',
+        'power and displayed flow against the pulsatility index',
+      ],
       taughtIn: ['lvad-alarms-emergencies'],
       engineClaims: [
         {
@@ -204,8 +208,9 @@ export const MCS_SUPPORT_GRAMMAR: McsSupportGrammar = {
           change: [{ type: 'SET_LVAD_CONTROL', control: 'suspectedPumpThrombosis', value: true }],
           expect: [
             { metric: 'pumpPowerW', direction: 'up', by: 1 },
-            { metric: 'deviceFlowLMin', direction: 'flat', by: 0.25 },
-            { metric: 'effectiveSystemicFlowLMin', direction: 'flat', by: 0.25 },
+            { metric: 'estimatedPumpFlowLMin', direction: 'up', by: 1 },
+            { metric: 'deviceFlowLMin', direction: 'down', by: 0.5 },
+            { metric: 'effectiveSystemicFlowLMin', direction: 'down', by: 0.25 },
           ],
           alarmsActive: ['lvad-high-power'],
         },

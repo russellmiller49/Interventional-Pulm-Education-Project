@@ -84,7 +84,7 @@ export const mcsLearnControls: Readonly<Record<McsLearnControlId, McsLearnContro
       changes:
         'Nothing in the patient. It reports the displayed device contribution and the effective systemic delivery back to you as two separate lines.',
       doesNotGuarantee:
-        'The displayed device number describes movement along the device pathway. It does not establish arrival in a tissue bed.',
+        'The displayed device number is flow along the device pathway. Whether it reaches the tissues is read at the bedside.',
     }),
     'control:select-iabp': control({
       id: 'control:select-iabp',
@@ -95,7 +95,7 @@ export const mcsLearnControls: Readonly<Record<McsLearnControlId, McsLearnContro
       changes:
         'The mechanism on display, and with it the pathway drawn in the anatomy pane. The patient returns to the shared baseline so the three mechanisms are compared at the same starting point.',
       doesNotGuarantee:
-        'Switching the mechanism on a model is not a device decision. Selection at the bedside follows the limiting problem and belongs to the responsible team.',
+        'At the bedside the mechanism follows the limiting problem: name what is failing, then choose the pathway that supports it.',
     }),
     'control:select-impella': control({
       id: 'control:select-impella',
@@ -106,7 +106,7 @@ export const mcsLearnControls: Readonly<Record<McsLearnControlId, McsLearnContro
       changes:
         'The mechanism on display, and with it the pathway drawn in the anatomy pane. The patient returns to the shared baseline so the three mechanisms are compared at the same starting point.',
       doesNotGuarantee:
-        'Switching the mechanism on a model is not a device decision. Selection at the bedside follows the limiting problem and belongs to the responsible team.',
+        'At the bedside the mechanism follows the limiting problem: name what is failing, then choose the pathway that supports it.',
     }),
     'control:select-lvad': control({
       id: 'control:select-lvad',
@@ -157,9 +157,9 @@ export const mcsLearnControls: Readonly<Record<McsLearnControlId, McsLearnContro
       actionId: 'impella:left:set-position',
       deviceKind: 'impella',
       changes:
-        'The modeled relationship between the inlet, the aortic valve, and the outlet — aligned, too deep, or too shallow.',
+        'Where the inlet and outlet sit relative to the aortic valve: aligned, too deep, or too shallow.',
       doesNotGuarantee:
-        'This is a teaching state, not a depth measurement. Real placement is confirmed with imaging and the placement signal, never assumed from a display.',
+        'At the bedside, confirm position with echo and the placement signal before you change the P-level.',
     }),
     'control:impella-right-enable': control({
       id: 'control:impella-right-enable',
@@ -179,9 +179,9 @@ export const mcsLearnControls: Readonly<Record<McsLearnControlId, McsLearnContro
       actionId: 'lvad:set-thrombosis',
       deviceKind: 'lvad',
       changes:
-        'Whether the modeled pump is running with the power signature associated with an obstructed flow path.',
+        'Whether the pump has thrombus on its rotor: the high-power pattern of suspected pump thrombosis.',
       doesNotGuarantee:
-        'A power signature is a reason to bring the mechanical-support team and imaging to the bedside. It is not a diagnosis, and nothing here is a troubleshooting instruction.',
+        'At the bedside the first moves are LDH and plasma free hemoglobin, a check of the anticoagulation, an echo, and a call to the LVAD team and surgeon.',
     }),
     'control:patient-rv-contractility': control({
       id: 'control:patient-rv-contractility',
@@ -190,9 +190,9 @@ export const mcsLearnControls: Readonly<Record<McsLearnControlId, McsLearnContro
       actionId: 'patient:set-rv',
       deviceKind: null,
       changes:
-        'How hard the modeled right ventricle contracts, and therefore how much blood is delivered through the lungs to the left heart.',
+        'How hard the right ventricle contracts, and so how much blood reaches the left heart through the lungs.',
       doesNotGuarantee:
-        'This is a modelling control, not a bedside one. It exists so the same well-timed support can be watched against two different circulations.',
+        'A simulator control: it lets you watch the same well-timed support against two different right ventricles.',
     }),
     'control:patient-svr': control({
       id: 'control:patient-svr',
@@ -200,20 +200,19 @@ export const mcsLearnControls: Readonly<Record<McsLearnControlId, McsLearnContro
       location: 'patient-conditions',
       actionId: 'patient:set-svr',
       deviceKind: null,
-      changes:
-        'The modeled systemic vascular resistance, and therefore the pressure a pump ejects against.',
+      changes: 'Systemic vascular resistance, and so the pressure a pump ejects against.',
       doesNotGuarantee:
-        'This is a modelling control, not a bedside one. It exists so a fixed pump setting can be watched under two different loading conditions.',
+        'A simulator control: it lets you watch a fixed pump setting under two different afterloads. At the bedside you change afterload with a vasodilator or a vasopressor.',
     }),
     'control:team-escalate': control({
       id: 'control:team-escalate',
-      label: 'Escalate to the shock / mechanical-support team',
+      label: 'Call the shock or LVAD team',
       location: 'guided-actions',
       actionId: 'team:escalate',
       deviceKind: null,
-      changes: 'Records, inside this simulation, that the responsible team has been brought in.',
+      changes: 'Records that you have called the team.',
       doesNotGuarantee:
-        'Recording an escalation here is not a handover. Nothing in this module substitutes for the bedside conversation.',
+        'The call is one step in the sequence. Start the first moves while you make it.',
     }),
   },
 )

@@ -49,7 +49,7 @@ export const MCS_SOURCE_CLASS_MEANING: Readonly<Record<McsSourceClass, string>> 
   'model-provenance':
     'The description of this simulation itself. It supports statements about the model, never about patients.',
   'authoring-provenance':
-    'A document the module was drafted from. It records where wording came from and is not, by itself, a reason to believe a clinical statement.',
+    'A reference synthesis. Check a clinical statement against a primary source.',
 }
 
 export type McsSourceVerification = 'read-first-hand' | 'registered-not-opened'
@@ -122,9 +122,7 @@ export function mcsSourceVerification(sourceId: string): McsSourceVerification {
 export function mcsSourceVerificationLabel(sourceId: string): string {
   const record = RECORDS[sourceId]
   if (!record) throw new Error(`No source class for ${sourceId}`)
-  return record.verification === 'read-first-hand'
-    ? `Opened and read for this module (${record.readIn}); not clinically reviewed`
-    : 'Registered, not opened for this module'
+  return record.verification === 'read-first-hand' ? 'Read first-hand' : 'Listed for reference'
 }
 
 export const MCS_AUTHORING_PROVENANCE_SOURCE_IDS: readonly string[] = Object.keys(RECORDS).filter(

@@ -64,7 +64,7 @@ export const mcsCommonModelQuestions: readonly McsCommonModelQuestion[] = Object
     whyItMatters:
       'The source and the destination define what the device can and cannot reach. A pathway drawn correctly answers most troubleshooting questions before any alarm is read.',
     answeredBy: [
-      'The authored pathway card for this device',
+      'The pathway card for this device',
       'Imaging or a position signal confirming where the inlet and outlet actually sit',
       'The direction of flow, which is not the direction the cannula or catheter was advanced',
     ],
@@ -79,7 +79,7 @@ export const mcsCommonModelQuestions: readonly McsCommonModelQuestion[] = Object
     question:
       'Does the device alter pressure timing, directly pump blood, or create an extracorporeal pathway?',
     whyItMatters:
-      'These are three different things, and only one of them puts a flow number on a screen that represents blood the device itself moved. Reading all three as though they were the same quantity is the most common error in this module.',
+      'These are three different things, and only one of them puts a flow number on a screen that represents blood the device itself moved. Reading all three as though they were the same quantity is the most common error.',
     answeredBy: [
       'The mechanism field on the pathway card',
       'Whether the display reports a flow at all, and which stream that flow describes',
@@ -236,10 +236,7 @@ export const mcsCausalLadder: readonly McsCausalLevel[] = Object.freeze([
       'The only level at which the goal of support is stated. Mentation, urine output, skin perfusion, and the lactate trajectory answer here and nowhere else.',
     whatItCannotEstablish:
       'Nothing above it — this is the top of the ladder. What it cannot do is respond instantly: an organ answers on its own timescale, so an unchanged organ finding shortly after a setting change is not yet evidence of failure.',
-    liveSignalLabels: [
-      'The bedside examination, which this simulation represents only in part',
-      'Convergent signals that do not share a sensor',
-    ],
+    liveSignalLabels: ['The bedside examination', 'Convergent signals that do not share a sensor'],
     conceptIds: [
       'cc.perfusion.macro-micro-coherence',
       'cc.troubleshooting.reassess-convergent-signals',
@@ -278,7 +275,7 @@ export const mcsFlowAccount: readonly McsFlowAccountLine[] = Object.freeze([
       'Concurrent native forward output through the aortic valve during support. It is affected by loading and pump operation; it is not native output measured before support.',
     valueType: 'inferred',
     valueTypeStatement:
-      'In this simulation the native contribution is reasoned from the modelled circulation. At the bedside it is rarely measured directly while a device is running.',
+      'At the bedside, native output is rarely measured directly while a device is running.',
     howItMisleads:
       'It is easy to forget the native contribution entirely once a device display exists, and then to attribute the whole of the patient’s circulation to the device — or to miss that a falling native contribution is being masked by a steady device number.',
     conceptIds: ['cc.perfusion.cardiac-output', 'cc.device.native-device-effective-flow'],
@@ -291,7 +288,7 @@ export const mcsFlowAccount: readonly McsFlowAccountLine[] = Object.freeze([
       'The number the device reports for the blood it is moving. IABP has no separate pump-flow stream; it can change native output through its loading effects.',
     valueType: 'estimated',
     valueTypeStatement:
-      'On the pumps modelled here the displayed flow is an algorithmic estimate derived from pump behaviour and assumed loading, not a flow probe on the outflow. Keep the label visible so an estimate is not read as a direct measurement.',
+      'On these pumps the displayed flow is an estimate calculated by the controller, not a flow probe on the outflow.',
     howItMisleads:
       'It is the largest and most legible number on the screen, it responds to a setting change immediately, and it can rise while the blood it describes is going somewhere other than a tissue bed.',
     conceptIds: [
@@ -309,7 +306,7 @@ export const mcsFlowAccount: readonly McsFlowAccountLine[] = Object.freeze([
     valueTypeStatement:
       'This is a reasoned quantity, not a reading. It is the one the patient experiences, and it is the one no console displays.',
     howItMisleads:
-      'It describes modeled net blood flow, not oxygen delivery or clinical organ response. Substituting a device estimate for this quantity can obscure native output or recirculation.',
+      'It is net blood flow, not oxygen delivery or organ response. Using the device number in its place hides native output and recirculation.',
     conceptIds: [
       'cc.device.native-device-effective-flow',
       'cc.perfusion.oxygen-delivery-extraction',
@@ -328,7 +325,7 @@ export const MCS_FLOW_ADDITIVITY_WARNING = Object.freeze({
   id: 'mcs.model.flows-are-not-additive',
   headline: 'Displayed flows are not automatically additive.',
   statement:
-    'Identify the routes and observation time before combining flows. Concurrent native forward output and left-pump forward flow meet in parallel and combine, with represented regurgitant recirculation subtracted. Pre-support native output is a different baseline. Serial right- and left-pump flows must not be added. Device estimates and modeled components are not measured bedside cardiac output.',
+    'Identify the routes and the moment before combining flows. Native forward output and left-pump flow at the same moment add, minus any regurgitant return. Native output from before support is a different baseline. Right- and left-pump flows are in series and are never added.',
   worked: Object.freeze([
     'Serial pathways — a right-sided pump delivering into the pulmonary circulation and a left-sided pump drawing from the left ventricle handle the *same* blood one after the other. Their displayed estimates describe the same serial throughput at different sites, so summing them counts that stream twice.',
     'Parallel pathways — a device returning blood to the aorta while the native ventricle also ejects into the aorta produces two streams meeting in one vessel. Concurrent net forward components combine. Physiological interaction changes each component; it does not make their sum double-counting. Regurgitant or recirculating flow is subtracted once.',
@@ -407,7 +404,7 @@ export const mcsFirstUseTerms: readonly McsFirstUseTerm[] = Object.freeze([
       'Raising pressure during a particular part of the cardiac cycle — classically diastolic pressure — by changing the timing and shape of the pressure wave rather than by adding a stream of blood.',
     clinicalQuestion: 'Has the pressure the coronary and systemic beds see during diastole risen?',
     howItMisleads:
-      'It reads as an improvement on the arterial trace at the pressure level of the causal ladder, and it is easy to carry that impression up to the flow and delivery levels where it was never established.',
+      'It reads as an improvement on the arterial trace at the pressure level of the causal ladder, and it is easy to carry that impression up to the flow and delivery levels, where nothing has shown it.',
     conceptIds: ['cc.flow.pressure-gradient', 'cc.perfusion.macro-micro-coherence'],
   },
   {
@@ -459,10 +456,8 @@ export const MCS_RECOMMENDED_FIRST_SECTION_ID = 'mcs-foundations-signals'
  */
 export const MCS_COMPLETION_BOUNDARY = Object.freeze({
   id: 'mcs.model.completion-boundary',
-  headline:
-    'Working through this module does not establish that you are ready to operate these devices.',
-  statement:
-    'These sections record educational participation, and nothing more. Running a balloon pump, a microaxial pump, a durable pump, or an extracorporeal circuit safely requires device-specific training on the equipment in use, the current manufacturer instructions for that equipment, local protocol, and supervision by the responsible shock or mechanical-support team.',
+  headline: 'A teaching simulator.',
+  statement: `${MCS_TEACHING_SIMULATOR_STATEMENT} Running these devices takes hands-on training on the equipment your unit uses.`,
 })
 
 function validateCommonModel(): readonly string[] {
@@ -520,3 +515,4 @@ const commonModelErrors = validateCommonModel()
 if (commonModelErrors.length > 0) {
   throw new Error(`Invalid MCS common model:\n- ${commonModelErrors.join('\n- ')}`)
 }
+import { MCS_TEACHING_SIMULATOR_STATEMENT } from './modelLimits'

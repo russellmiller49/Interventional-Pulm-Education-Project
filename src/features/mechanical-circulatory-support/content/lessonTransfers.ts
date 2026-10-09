@@ -4,6 +4,7 @@ import {
 } from '@/features/learning-module/activity'
 
 import type { McsObservedSignal } from './sectionLearningContracts'
+import { MCS_NUMBERS } from './teachingNumbers'
 import type { McsAction, McsDeviceKind, McsSimulationState } from '../engine/types'
 
 export interface McsLessonTransferDefinition {
@@ -158,7 +159,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
           label:
             'Add native output measured before support to the current pump estimate and label that sum measured cardiac output',
           rationale:
-            'Pre-support native output differs from concurrent native forward output. Parallel net components combine in this model, but device estimates and modeled components do not constitute a measured bedside cardiac output.',
+            'Native output before support is not native output during support. Add the pump flow to the native flow measured at the same time.',
           plausibility: 'incorrect-mechanism',
         },
         {
@@ -202,7 +203,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
     isWorkSatisfied: (state) => state.device.kind === 'iabp' && state.device.running,
     requiredActionIds: ['iabp:set-trigger'],
     requiredActionLabel:
-      'Try the trigger sources and read each assisted beat on the arterial waveform. Read the synchrony figure as this model’s output only: in atrial fibrillation it rates pressure triggering above ECG triggering, which the supplied Cardiosave operating instructions do not support.',
+      'Try the trigger sources and read each assisted beat on the arterial waveform. Do not choose from the synchrony figure: in atrial fibrillation the simulator rates pressure triggering above ECG triggering, which the supplied Cardiosave operating instructions do not support.',
     item: item({
       id: 'mcs-iabp-trigger-transfer-1',
       activityId: 'mcs:learn:iabp-timing-triggering',
@@ -240,7 +241,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       ],
       correctChoiceIds: ['compare-trigger-to-waveform'],
       explanation:
-        'The transfer introduces an irregular rhythm. A trigger is judged by whether inflation and deflation still land in the right places on the arterial trace, beat by beat. The modeled synchrony figure does not settle that: in atrial fibrillation it rates pressure triggering above ECG triggering, which the supplied Cardiosave material advises against, and the model does not represent R-wave quality or a console’s own handling of an irregular rhythm. Those, with the console’s instructions, are what to check.',
+        'The transfer introduces an irregular rhythm. Judge a trigger by whether inflation and deflation still land in the right places on the arterial trace, beat by beat. The simulator’s synchrony figure does not settle that: in atrial fibrillation it rates pressure triggering above ECG triggering, which the supplied Cardiosave material advises against, and the simulator has no R-wave quality and no console arrhythmia handling. Check the trace and the console’s instructions.',
       evidenceIds: [
         ...iabpEvidence,
         'getinge-cardiosave-hybrid-operating-instructions',
@@ -273,7 +274,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
     ],
     requiredActionIds: ['team:escalate'],
     requiredActionLabel:
-      'Escalate to the shock/MCS team after recognizing the support-mechanism ceiling.',
+      'Call the shock team once you have recognized that the balloon is not the limit.',
     item: item({
       id: 'mcs-iabp-limits-transfer-1',
       activityId: 'mcs:learn:iabp-efficacy-limits',
@@ -303,7 +304,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
         {
           id: 'accept-map-only',
           label: 'Defer escalation while the mean pressure stays above a single numeric threshold',
-          rationale: 'Pressure alone does not establish adequate flow or end-organ perfusion.',
+          rationale: 'Pressure alone does not tell you flow or end-organ perfusion.',
           plausibility: 'unsafe',
         },
       ],
@@ -378,7 +379,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       ],
       correctChoiceIds: ['pressure-gradient-dependent'],
       explanation:
-        'The authored variant holds the performance setting while changing afterload, requiring interpretation of the resulting pressure-flow relationship.',
+        'The P-level is unchanged and afterload has risen, so the fall in flow is a pressure-flow effect, not a setting.',
       evidenceIds: ['impella-cp-ifu-rev-v-supplied', ...impellaEvidence],
       reviewStatus: 'draft',
     }),
@@ -441,14 +442,14 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       ],
       correctChoiceIds: ['reduce-and-diagnose'],
       explanation:
-        'The transfer creates underfilling at high support. In this model a one- or two-level reduction leaves the suction pattern in place while effective flow and mean pressure fall; reducing further clears it only by trading it for a low-flow alarm, and restoring filling clears both. Lowering the level is the first step, not the whole response. The model does not show the rest of the evaluation — volume status, the pump position on imaging and right ventricular function — and those are what to reassess before returning to the previous level.',
+        'The transfer creates underfilling at high support. Here a one- or two-level reduction leaves the suction pattern in place while effective flow and mean pressure fall, and restoring filling clears it. Lowering the level is the first step, not the whole response: give volume if the patient is underfilled, check position with echo and assess the right ventricle before you return to the previous level.',
       evidenceIds: impellaEvidence,
       reviewStatus: 'draft',
     }),
   },
   {
     lessonId: 'lvad-parameters-assessment',
-    title: 'Transfer afterload: low modeled flow with hypertension',
+    title: 'Transfer afterload: low flow with hypertension',
     contextItems: [
       { label: 'Device', value: 'Durable continuous-flow LVAD at unchanged speed' },
       { label: 'Change', value: 'SVR rises markedly' },
@@ -475,20 +476,19 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       clinicalContextId: 'mcs-transfer-lvad-hypertension',
       visualAssetIds: ['mcs-monitor', 'mcs-lvad-controls'],
       transferVariantId: 'mcs-lvad-fixed-speed-high-afterload',
-      stem: 'At unchanged LVAD speed, MAP and SVR rise while modeled flow falls. What is the best interpretation?',
+      stem: 'At unchanged LVAD speed, MAP and SVR rise while displayed flow falls. What is the best interpretation?',
       choices: [
         {
           id: 'afterload-sensitive-assessment',
           label:
-            'Treat the value as an afterload-sensitive model output and assess the patient as a whole',
+            'Afterload is limiting pump flow: lower the blood pressure toward the goal, and do not raise the speed',
           rationale:
-            'Continuous-flow output depends on the pressure gradient and cannot be interpreted from displayed flow alone.',
+            'A continuous-flow pump is afterload-sensitive. Low flow with a high mean pressure and a high pulsatility index is afterload, and flow returns as the pressure comes down.',
           plausibility: 'best',
         },
         {
           id: 'speed-first',
-          label:
-            'Increase the speed before evaluating blood pressure, filling, or the device team’s authorization',
+          label: 'Increase the speed before evaluating blood pressure and filling',
           rationale:
             'Reflexive speed changes can worsen suction, septal shift, RV failure, or aortic-valve closure.',
           plausibility: 'unsafe',
@@ -498,13 +498,12 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
           label:
             'Assume the displayed flow is a direct measurement of the patient’s total cardiac output',
           rationale:
-            'Displayed flow here is modeled pump transfer; it does not include native output or establish systemic perfusion. Real controller estimates are a separate device-specific quantity.',
+            'Displayed flow is the pump’s flow alone. It does not include native output, and it does not tell you perfusion.',
           plausibility: 'incorrect-mechanism',
         },
       ],
       correctChoiceIds: ['afterload-sensitive-assessment'],
-      explanation:
-        'The new loading condition changes modeled pump transfer without changing speed. The interpretation must remain patient- and hemodynamics-centered.',
+      explanation: `Higher afterload lowers pump flow at an unchanged speed, and the pulsatility index rises. Lower mean arterial pressure to ${MCS_NUMBERS.value('lvad-map-goal')} with afterload reduction; do not raise the speed.`,
       evidenceIds: lvadEvidence,
       reviewStatus: 'sme-review',
     }),
@@ -514,21 +513,24 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
     // MCS-03-08: the setup switches on only the high-power pattern, which in this model raises power
     // without moving modeled flow. The context and stem used to say effective flow and perfusion
     // worsen, which the patient on screen does not show.
-    title: 'Transfer emergency: high power with an unchanged flow display',
+    title: 'Transfer emergency: high power and a patient who is worse',
     contextItems: [
       { label: 'Device', value: 'Durable continuous-flow LVAD' },
-      { label: 'Change', value: 'Power rises; the displayed and effective flows barely move' },
+      {
+        label: 'Change',
+        value: 'Power rises and the displayed flow rises with it; the pulsatility index falls',
+      },
       {
         label: 'Concern',
-        value: 'Pump thrombosis or flow obstruction pattern, which this model does not diagnose',
+        value: 'Suspected pump thrombosis',
       },
-      { label: 'Boundary', value: 'Urgent MCS-team and bedside evaluation required' },
+      { label: 'Patient', value: 'Lower mean pressure and falling perfusion' },
     ],
     setupDevice: 'lvad',
     setupActions: [{ type: 'SET_LVAD_CONTROL', control: 'suspectedPumpThrombosis', value: true }],
     requiredActionIds: ['team:escalate'],
     requiredActionLabel:
-      'Escalate urgently to the MCS team while preserving power and reassessing the patient and circuit.',
+      'Call the LVAD team and surgeon while you keep power connected and start the first moves.',
     item: item({
       id: 'mcs-lvad-emergency-transfer-1',
       activityId: 'mcs:learn:lvad-alarms-emergencies',
@@ -538,34 +540,34 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       clinicalContextId: 'mcs-transfer-lvad-high-power-low-flow',
       visualAssetIds: ['mcs-monitor', 'mcs-lvad-controls'],
       transferVariantId: 'mcs-lvad-high-power-perfusion-decline',
-      stem: 'At an unchanged speed, LVAD power rises and a high-power alarm appears while the displayed flow and the effective flow barely move. Which response best respects the emergency and device boundary?',
+      stem: 'At an unchanged speed, LVAD power rises and a high-power alarm appears. The displayed flow rises with it, the pulsatility index falls, and the mean pressure is lower. What do you do first?',
       choices: [
         {
           id: 'preserve-power-escalate',
-          label: 'Preserve verified power, reassess the patient, and escalate to the support team',
+          label:
+            'Keep power connected, send LDH and plasma free hemoglobin, check the anticoagulation, get an echo, and call the LVAD team and surgeon',
           rationale:
-            'A rising power signature may indicate a time-critical pump or flow-path problem that requires specialist evaluation, even while the flow display looks unchanged.',
+            'Power up with displayed flow up, pulsatility index down and a worse patient is suspected pump thrombosis. The displayed flow is calculated from power, so it reads falsely high.',
           plausibility: 'best',
         },
         {
           id: 'disconnect-power',
           label: 'Disconnect the power briefly to see whether the alarm clears, then reconnect it',
           rationale:
-            'Stopping a continuous-flow pump can cause immediate hemodynamic collapse and retrograde flow.',
+            'Stopping a continuous-flow pump can cause immediate hemodynamic collapse and backflow through the pump.',
           plausibility: 'unsafe',
         },
         {
           id: 'controller-only',
-          label:
-            'Treat the controller display as sufficient and defer examination or imaging for now',
+          label: 'Read the higher displayed flow as better support and keep observing',
           rationale:
-            'The bedside patient, flow path, power sources, controller trend, and focused imaging must be reconciled, and in a time-critical pattern deferring them is the delay that does the harm.',
+            'The displayed flow is calculated from power. Thrombus raises power, so the display rises while the real flow falls. Waiting is the delay that does the harm.',
           plausibility: 'incorrect-mechanism',
         },
       ],
       correctChoiceIds: ['preserve-power-escalate'],
       explanation:
-        'The transfer separates a high-power pattern from an ordinary loading change. In this model the pattern raises power without reducing modeled flow, so neither the flow display nor the effective flow says the pump is safe, and the model does not establish a diagnosis. The bedside perfusion picture, the power sources, the controller trend and focused imaging are what the responsible team reconciles; in a time-critical pattern the response is to keep verified power connected and escalate rather than wait for the numbers to move.',
+        'A loading change moves power and displayed flow in the same direction as the patient. Here power and displayed flow are up while the pulsatility index, the mean pressure and the patient are down: suspected pump thrombosis. Keep power connected, send LDH and plasma free hemoglobin, check the anticoagulation, get an echo, and call the LVAD team and surgeon.',
       evidenceIds: lvadEvidence,
       reviewStatus: 'draft',
     }),
@@ -630,7 +632,7 @@ export const mcsLessonTransfers: readonly McsLessonTransferDefinition[] = [
       ],
       correctChoiceIds: ['name-rv-limitation-first'],
       explanation:
-        'The transfer keeps the presenting number — low output — and moves the limiting problem upstream. Device selection follows the limiting problem; it is not a fixed ranking of devices by support magnitude. Actual device choice, timing, and escalation remain team decisions under current instructions and local protocol.',
+        'The transfer keeps the presenting number — low output — and moves the limiting problem upstream. Device selection follows the limiting problem; it is not a ranking of devices by flow. Here the right heart is the limit: treat it (an inotrope, a pulmonary vasodilator, right-sided support) instead of raising the left pump.',
       evidenceIds: [...bedsideEvidence, 'ishlt-durable-mcs-2023'],
       // MCS-03-07: the best option said left-sided escalation adds no effective flow here; the model
       // adds a little and the suction pattern stays. Reworded, so draft until a reviewer reads it.

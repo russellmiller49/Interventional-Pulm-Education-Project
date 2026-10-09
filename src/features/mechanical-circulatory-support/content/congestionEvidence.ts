@@ -106,7 +106,7 @@ export const mcsCongestionSources: readonly McsClinicalSourceRecord[] = Object.f
     appliesWhen:
       'Asking what a complete invasive hemodynamic profile contains, and what a partial one leaves unanswered.',
     doNotInfer:
-      'This study defines what counts as a complete profile. It publishes no filling-pressure cut point, and it does not say what any individual value means.',
+      'This study defines what counts as a complete profile. It gives no filling-pressure cut point.',
   },
 ])
 

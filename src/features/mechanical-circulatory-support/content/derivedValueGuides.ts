@@ -67,7 +67,7 @@ const cardiacPowerOutput: CriticalCareDerivedValueGuide = {
     },
     {
       id: 'mcs.cpo.above-cited-bands',
-      statement: `Above the cited ${cpoThresholds.highRiskTeachingWatts} W cohort band; this alone does not establish adequate perfusion.`,
+      statement: `Above the cited ${cpoThresholds.highRiskTeachingWatts} W cohort band. That alone is not adequate perfusion.`,
       referenceIds: ['mcs.cpo.high-risk-teaching-band'],
     },
   ],
@@ -164,9 +164,8 @@ export const MCS_MODEL_BOUNDARY_REFERENCES = Object.freeze({
   rvLimitedPapiMax: {
     id: 'mcs.papi.simulator-rv-limited-boundary',
     kind: 'educational-model-boundary' as const,
-    statement: `This simulator treats a PAPi below ${MCS_MODEL_BOUNDARIES.rvLimitedPapiMax} as its RV-limited state.`,
-    appliesWhen:
-      'Inside this simulation only. It is a rule this model follows in order to behave deterministically, and carries no clinical authority.',
+    statement: `The simulator treats a PAPi below ${MCS_MODEL_BOUNDARIES.rvLimitedPapiMax} as right-ventricle-limited.`,
+    appliesWhen: 'In the simulator. Published cut points differ by setting.',
     evidenceIds: ['mcs-educational-model-v1'] as readonly string[],
   },
 })

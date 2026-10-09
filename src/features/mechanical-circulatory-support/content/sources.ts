@@ -24,7 +24,7 @@ export const mcsSources: readonly McsSource[] = [
     intendedUse:
       'Whole-patient review, supported-chamber and circuit-path checks, loading-condition troubleshooting, device-flow interpretation, and escalation boundaries.',
     limitation:
-      'A synthesis with incomplete authorship and source provenance, so no clinical statement should rest on it alone. Educational bedside framework only; current manufacturer instructions, imaging, local policy, and the responsible shock or MCS team remain authoritative.',
+      'A synthesis with incomplete authorship and source provenance. Check a clinical statement against a primary source.',
   },
   {
     id: 'master-hemodynamics-reference',
@@ -37,7 +37,7 @@ export const mcsSources: readonly McsSource[] = [
     intendedUse:
       'Temporary MCS mechanisms, IABP timing, Impella unloading, device comparison, and response/warning patterns.',
     limitation:
-      'A synthesis with incomplete authorship and source provenance, so no clinical statement should rest on it alone. Durable LVAD operations require separate current guidance and labeling.',
+      'A synthesis with incomplete authorship and source provenance. Check a clinical statement against a primary source.',
   },
   {
     id: 'ishlt-hfsa-acute-mcs-2023',
@@ -66,8 +66,7 @@ export const mcsSources: readonly McsSource[] = [
     url: 'https://www.getinge.com/us/products-and-solutions/cardiovascular-procedures/iabp-counterpulsation/iabp-information/',
     intendedUse:
       'Counterpulsation controls, trigger/timing concepts, operational cautions, and update checks.',
-    limitation:
-      'The module does not reproduce a branded console or replace operating instructions.',
+    limitation: 'General product material, not the operating instructions for one console.',
   },
   {
     id: 'getinge-iabp-placement-training',
@@ -91,7 +90,7 @@ export const mcsSources: readonly McsSource[] = [
     intendedUse:
       'Trigger-source warnings: pressure triggering is not recommended in a sustained irregular rhythm or tachyarrhythmia, and internal triggering is not to be kept while the patient generates a cardiac output. Also the timing relationship itself (printed page xiv): inflation is initiated at the onset of diastole at the dicrotic notch, and the balloon is deflated at, or just prior to, the onset of systole.',
     limitation:
-      'An operating manual for one console family, dated 2015. Whether it is the current revision for a local console has not been verified, and the balloon pump in this module is a console-neutral model rather than this console.',
+      'An operating manual for one console family, dated 2015. Check the revision against the console on your unit.',
   },
   {
     id: 'getinge-cardiosave-troubleshooting-strategies',
@@ -120,7 +119,7 @@ export const mcsSources: readonly McsSource[] = [
     intendedUse:
       'Names the five landmarks of an assisted arterial trace — unassisted systole, diastolic augmentation, assisted systole, unassisted end-diastolic pressure and assisted end-diastolic pressure — and states the relationships to look for: inflation at the dicrotic notch appearing as a sharp V, diastolic augmentation that ideally rises above systole, and deflation just before ejection that reduces the assisted end-diastolic and assisted systolic pressures.',
     limitation:
-      'An educational booklet, not operating instructions and not a specification. It gives no millimetre-of-mercury magnitude for any of those reductions, says augmentation rises above systole ideally rather than always, and describes a real patient on a real console — not this simulation. Its figures are the manufacturer’s and are not reproduced here; the module’s reference diagram is drawn from the text relationships and its rights question is open as OD-06.',
+      'An educational booklet, not operating instructions. It names the landmarks and the relationships between them and gives no millimetre-of-mercury size for them.',
   },
   /*
    * Added by MCS-PRE-REVIEW-04 (F10). These four are the documents opened and read, page by page,
@@ -138,8 +137,7 @@ export const mcsSources: readonly McsSource[] = [
     url: 'https://doi.org/10.1007/978-3-031-05713-7',
     intendedUse:
       'A textbook for bedside VAD clinicians, read for two statements: what mistimed balloon inflation and deflation do (early inflation and late deflation raise afterload; early deflation gives little or no afterload reduction; early deflation and late inflation shorten diastolic augmentation), and that high blood pressure on a durable pump raises afterload and can reduce flow through the pump.',
-    limitation:
-      'A secondary educational text, not a guideline and not device instructions. It gives no magnitudes, thresholds or blood-pressure targets for these statements, and none is taken from it.',
+    limitation: 'A secondary educational text, not a guideline and not device instructions.',
   },
   {
     id: 'impella-cp-ifu-rev-v-supplied',
@@ -151,7 +149,7 @@ export const mcsSources: readonly McsSource[] = [
     intendedUse:
       'Where the inlet and outlet sit when the catheter is positioned correctly; the P-level flow table and its note that flow can vary with suction or incorrect positioning; what suction is, that it may indicate right heart failure, and the recommended checks; catheter position as a factor in hemolysis; and high afterload pressure as a named check for a low-flow alarm.',
     limitation:
-      'One supplied revision for the United States. Whether revision V is the current revision for a local device has not been verified, and its flow figures remain under open items MCS-03-01 and MCS-03-02.',
+      'Revision V, United States, February 2026. Check the revision against the device on your unit.',
   },
   {
     id: 'impella-55-ifu-rev-l-supplied',
@@ -163,7 +161,7 @@ export const mcsSources: readonly McsSource[] = [
     intendedUse:
       'The Impella 5.5 P-level flow table, read beside the Impella CP table: the same P-level corresponds to a different mean flow range on each pump.',
     limitation:
-      'One supplied revision for the United States; currency for a local device is not verified (open item MCS-03-03). The table gives flow ranges, not an equivalence between the two pumps.',
+      'One revision for the United States. Check the revision against the device on your unit. The table gives flow ranges, not an equivalence between the two pumps.',
   },
   {
     id: 'impella-rp-ifu-rev-n-supplied',
@@ -174,8 +172,7 @@ export const mcsSources: readonly McsSource[] = [
     year: 2024,
     intendedUse:
       'The right-sided pathway: when properly positioned the catheter delivers blood from an inlet area in the inferior vena cava, through the cannula, to an outlet opening in the pulmonary artery.',
-    limitation:
-      'This document is for the Impella RP System. It is not the Impella RP Flex, and which right-sided product this module teaches is open (MCS-03-04). It says nothing about adding right- and left-sided flows.',
+    limitation: 'This document is for the Impella RP System, not the Impella RP Flex.',
   },
   {
     id: 'fda-impella-cp-labeling',
@@ -332,7 +329,7 @@ export const mcsSources: readonly McsSource[] = [
     intendedUse:
       'Apical inflow/ascending-aortic outflow anatomy plus controller parameters, authorized settings, alarms, power, and safety framing.',
     limitation:
-      'Speed changes are represented only as an explicitly authorized educational exercise.',
+      'Instructions for use for the HeartMate 3. Check the revision against the device on your unit.',
   },
   {
     /*
@@ -348,9 +345,9 @@ export const mcsSources: readonly McsSource[] = [
     year: 2025,
     url: 'https://www.cardiovascular.abbott/content/dam/cv/cardiovascular/hcp/education-training/heart-failure/documents/hf-heartmate3-lvad-pump-parameters.pdf',
     intendedUse:
-      'Names the direction of dependence between the four monitored parameters: device power is a direct measurement of pump motor voltage and current, and flow is an estimate derived from a calculation of fixed speed, power and the patient’s hematocrit. That is the reverse of this teaching model, where flow is generated from speed and loading and power is derived afterwards, and the card is cited wherever the module shows a high-power pattern so the two are not confused. It also states that no single parameter is a surrogate for a patient’s clinical status.',
+      'Names the direction of dependence between the four monitored parameters: device power is a direct measurement of pump motor voltage and current, and flow is an estimate derived from a calculation of fixed speed, power and the patient’s hematocrit. The simulator follows the same direction: its displayed flow is calculated from power at the set speed. It also states that no single parameter is a surrogate for a patient’s clinical status.',
     limitation:
-      'A two-page clinician card, not the instructions for use. It names the inputs to the flow estimate and gives no estimator equation, no failure-mode behaviour and no validation data, so no controller model may be reverse-engineered from it. Its clinical-considerations figures are Abbott’s statements about HeartMate 3 patients under its own measurement conditions; this module cites them as that and has adopted none of them as a criterion or a target.',
+      'A two-page clinician card, not the instructions for use. It states that power is measured directly and that displayed flow is calculated from speed, power and hematocrit. It gives no equation.',
   },
   {
     id: 'fda-heartmate3-pma-current',
@@ -385,8 +382,7 @@ export const mcsSources: readonly McsSource[] = [
     url: 'https://www.fda.gov/medical-devices/medical-device-recalls-and-early-alerts/mobile-power-unit-ac-power-cord-recall-abbott-medical-removes-ac-power-cord-associated-heartmate',
     intendedUse:
       'Flags power-path interpretation and affected-lot reconciliation before publication.',
-    limitation:
-      'The simulator teaches diagnosis only and does not reproduce device-specific emergency procedures.',
+    limitation: 'A recall notice. Check the current notice for the equipment on your unit.',
   },
   {
     id: 'mcs-educational-model-v1',
@@ -396,8 +392,7 @@ export const mcsSources: readonly McsSource[] = [
     year: 2026,
     intendedUse:
       'Links device settings and patient loading conditions to coherent directional trends.',
-    limitation:
-      'Not a validated digital twin, clinical device, dosing model, or patient predictor.',
+    limitation: 'The teaching simulator’s own model. Its numbers are not patient data.',
   },
 ] as const
 

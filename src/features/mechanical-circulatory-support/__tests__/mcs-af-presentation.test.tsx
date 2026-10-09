@@ -282,19 +282,21 @@ describe('the wording is the wording MCS-03 already wrote', () => {
      * panel was left byte-identical. This assertion is what keeps the two copies from drifting.
      */
     expect(panel.container.querySelector('[data-trigger-source-hold]')?.textContent?.trim()).toBe(
-      `${MCS_AF_TRIGGER_LIMIT.modelRating} ${MCS_AF_TRIGGER_LIMIT.deviceLabeling} ${MCS_AF_TRIGGER_LIMIT.besideTheFigure}`,
+      `${MCS_AF_TRIGGER_LIMIT.modelRating} ${MCS_AF_TRIGGER_LIMIT.deviceLabeling} Do not choose a trigger from the synchrony figure.`,
     )
   })
 
   it('matches the lead and closing sentence of both worked case explanations', () => {
     for (const id of ['IABP-02', 'CAP-IABP-01']) {
       const line = scenarioById(id).debrief.find((item) =>
-        item.startsWith(MCS_AF_TRIGGER_LIMIT.heldLead),
+        item.includes('this simulator rates pressure triggering above ECG triggering'),
       )
       expect({ id, found: line !== undefined }).toEqual({ id, found: true })
       expect({
         id,
-        closes: line!.toLowerCase().includes(MCS_AF_TRIGGER_LIMIT.atTheControl.toLowerCase()),
+        closes: line!.includes(
+          'against the console’s own instructions and the trace, not against the synchrony figure.',
+        ),
       }).toEqual({ id, closes: true })
     }
   })
@@ -309,7 +311,7 @@ describe('the wording is the wording MCS-03 already wrote', () => {
   it('leaves the transfer exercise label, key and options as MCS-03 left them', () => {
     expect(transfer.requiredActionIds).toEqual(['iabp:set-trigger'])
     expect(transfer.requiredActionLabel).toContain(
-      'in atrial fibrillation it rates pressure triggering above ECG triggering',
+      'in atrial fibrillation the simulator rates pressure triggering above ECG triggering',
     )
     expect(transfer.item.correctChoiceIds).toEqual(['compare-trigger-to-waveform'])
     expect(transfer.item.choices.map((choice) => [choice.id, choice.plausibility])).toEqual([

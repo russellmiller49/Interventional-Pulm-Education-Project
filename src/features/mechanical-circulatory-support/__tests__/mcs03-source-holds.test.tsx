@@ -37,6 +37,7 @@ import { mcsSourceById } from '../content/sources'
 import { mcsSupportPathwayCardById } from '../content/supportPathways'
 import { createInitialMcsState, mcsReducer } from '../engine'
 import type { McsAction, McsDeviceKind, McsSimulationState } from '../engine'
+import { IMPELLA_MEAN_FLOW_BY_P_LEVEL_LMIN } from '../engine/model'
 
 /** The replay the queue's model outputs came from: learn mode, seed 417, 0.2 s steps. */
 function settle(state: McsSimulationState, seconds = 8): McsSimulationState {
@@ -96,17 +97,16 @@ describe('MCS-03-01 and MCS-03-02 — manufacturer measurands and the textbook d
     expect(textbook.citation).not.toMatch(/reviewed/i)
   })
 
-  it('still holds the model’s Impella CP ceiling at the peak systolic figure (held, not repaired)', () => {
-    // The supplied instructions for use give 3.7 L/min as the maximum mean flow and 4.3 L/min as a
-    // peak systolic flow at P-9. The model's reference ceiling is 4.3 and its mean pump flow at P-9
-    // exceeds 3.7. That is a model/measurand disagreement for faculty, not a number to change here.
-    expect(
-      impellaAnatomyVariants.find((variant) => variant.id === 'cp')!.modeledReferenceFlowLMin,
-    ).toBe(4.3)
+  it('keeps the model’s Impella CP mean flow at P-9 inside the printed range, never at the systolic peak', () => {
+    // The supplied instructions for use give 3.3–3.7 L/min as the mean flow at P-9 and 4.3 L/min
+    // as a peak systolic flow. The model's mean pump flow is held to the mean-flow table.
+    const [floor, ceiling] = IMPELLA_MEAN_FLOW_BY_P_LEVEL_LMIN.cp[9]
+    expect(ceiling).toBe(3.7)
     const p9 = build('impella', [
       { type: 'SET_IMPELLA_CONTROL', side: 'left', control: 'performanceLevel', value: 9 },
     ])
-    expect(p9.metrics.leftDeviceFlowLMin).toBeGreaterThan(3.7)
+    expect(p9.metrics.leftDeviceFlowLMin).toBeGreaterThanOrEqual(floor)
+    expect(p9.metrics.leftDeviceFlowLMin).toBeLessThanOrEqual(ceiling)
   })
 })
 
@@ -121,7 +121,8 @@ describe('MCS-03-03 — the Impella 5.5 figure names one measurand wherever it a
 
     expect(reference.valueText).toBe('5.5 L/min')
     expect(reference.measurand).toBe('Maximum mean flow')
-    expect(variant.productFlowFraming).toMatch(/^Maximum mean flow of 5\.5 L\/min/)
+    expect(variant.productFlowFraming).toMatch(/^Mean flow P-2 /)
+    expect(variant.productFlowFraming).toMatch(/P-9 5\.0–5\.5 L\/min\.$/)
     expect(source.intendedUse).toMatch(/maximum mean flow/)
     for (const text of [reference.condition, variant.productFlowFraming, source.intendedUse]) {
       expect(text).not.toMatch(/not a guaranteed maximum|product-reported (mean|maximum)/i)
@@ -183,7 +184,7 @@ describe('MCS-03-05 — trigger choice in atrial fibrillation', () => {
       <McsTeachingPanel contract={contract} state={af} reveal="transfer" beforeMetrics={null} />,
     )
     expect(first.container.querySelector('[data-trigger-source-hold]')?.textContent).toMatch(
-      /not as a guide to choosing a trigger/,
+      /Do not choose a trigger from the synchrony figure/,
     )
     first.unmount()
 
@@ -205,7 +206,9 @@ describe('MCS-03-05 — trigger choice in atrial fibrillation', () => {
       )!
       expect(scenario.initialPatient.rhythm).toBe('atrial-fibrillation')
       expect(
-        scenario.debrief.some((line) => line.startsWith('Model limit held for faculty review')),
+        scenario.debrief.some((line) =>
+          line.includes('this simulator rates pressure triggering above ECG triggering'),
+        ),
       ).toBe(true)
     }
   })
@@ -236,9 +239,9 @@ describe('MCS-03-06 — suction: lowering the level is the first step, not the w
     })
     expect(alarmIds(refilled)).not.toContain('impella-left-suction')
 
-    expect(transfer.item.explanation).toMatch(/volume status/)
-    expect(transfer.item.explanation).toMatch(/imaging/)
-    expect(transfer.item.explanation).toMatch(/right ventricular function/)
+    expect(transfer.item.explanation).toMatch(/give volume if the patient is underfilled/)
+    expect(transfer.item.explanation).toMatch(/check position with echo/)
+    expect(transfer.item.explanation).toMatch(/assess the right ventricle/)
     const best = transfer.item.choices.find((choice) => choice.plausibility === 'best')!
     expect(best.id).toBe('reduce-and-diagnose')
     expect(best.rationale).not.toMatch(/limits ongoing suction/)
@@ -270,15 +273,20 @@ describe('MCS-03-07 — right-limited selection: a small effective gain, not non
 describe('MCS-03-08 — the LVAD high-power transfer describes the patient on screen', () => {
   const transfer = transferFor('lvad-alarms-emergencies')
 
-  it('says the flows barely move, because in this model they do not', () => {
+  it('says the display rises while the patient falls, because in this model they do', () => {
     const baseline = build('lvad', [])
     const setup = build(transfer.setupDevice, transfer.setupActions)
     expect((setup.metrics.pumpPowerW ?? 0) - (baseline.metrics.pumpPowerW ?? 0)).toBeGreaterThan(1)
-    expect(
-      Math.abs(
-        setup.metrics.effectiveSystemicFlowLMin - baseline.metrics.effectiveSystemicFlowLMin,
-      ),
-    ).toBeLessThan(0.1)
+    // Each clause of the stem is true of the patient on screen.
+    expect(setup.metrics.estimatedPumpFlowLMin!).toBeGreaterThan(
+      baseline.metrics.estimatedPumpFlowLMin!,
+    )
+    expect(setup.metrics.deviceFlowLMin).toBeLessThan(baseline.metrics.deviceFlowLMin)
+    expect(setup.metrics.pulsatilityIndex!).toBeLessThan(baseline.metrics.pulsatilityIndex!)
+    expect(setup.metrics.mapMmHg).toBeLessThan(baseline.metrics.mapMmHg)
+    expect(setup.metrics.effectiveSystemicFlowLMin).toBeLessThan(
+      baseline.metrics.effectiveSystemicFlowLMin - 0.3,
+    )
     expect(alarmIds(setup)).toContain('lvad-high-power')
 
     const copy = [
@@ -286,9 +294,10 @@ describe('MCS-03-08 — the LVAD high-power transfer describes the patient on sc
       transfer.item.stem,
       ...transfer.contextItems.map((context) => context.value),
     ].join(' ')
-    expect(copy).not.toMatch(/worsen/i)
-    expect(transfer.item.stem).toMatch(/barely move/)
-    expect(transfer.item.explanation).toMatch(/does not establish a diagnosis/)
+    expect(copy).not.toMatch(/barely move|unchanged flow display/i)
+    expect(transfer.item.stem).toMatch(
+      /displayed flow rises with it, the pulsatility index falls, and the mean pressure is lower/,
+    )
     expect(transfer.item.correctChoiceIds).toEqual(['preserve-power-escalate'])
   })
 })
@@ -302,7 +311,7 @@ describe('MCS-03-10 — supplied syntheses carry the identity their files show',
       expect(source.citation).toMatch(/names no human author, publisher or publication date/)
       expect(source.citation).toMatch(/OpenAI/)
       expect(source.citation).not.toMatch(/reviewed/i)
-      expect(source.limitation).toMatch(/no clinical statement should rest on it alone/)
+      expect(source.limitation).toMatch(/Check a clinical statement against a primary source/)
     },
   )
 
@@ -315,8 +324,9 @@ describe('MCS-03-10 — supplied syntheses carry the identity their files show',
     const { container } = render(<McsSourcesPanel />)
     const terms = Array.from(container.querySelectorAll('dt')).map((node) => node.textContent)
     expect(terms).not.toContain('Reviewed')
-    expect(container.textContent).toMatch(/no clinical review is recorded/)
-    expect(container.textContent).toMatch(/has not been verified here/)
+    expect(container.textContent).toMatch(
+      /Check that an instructions-for-use revision matches the device on your unit/,
+    )
     expect(container.textContent).not.toMatch(/current FDA labeling/)
   })
 })

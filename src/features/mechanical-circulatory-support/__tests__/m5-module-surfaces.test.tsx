@@ -141,18 +141,17 @@ describe('MCS M5 — the module front door derives what it claims', () => {
     ).toBeInTheDocument()
   })
 
-  it('keeps the preview warning in the primary path and the gate list behind the disclosure', async () => {
+  it('keeps the teaching-simulator statement in the primary path, with no release checklist', async () => {
     const { container } = await renderHub()
 
     const governance = container.querySelector('[data-review-governance]') as HTMLElement
     expect(
       within(governance)
-        .getByText(/bounded teaching approximations/)
+        .getByText(/This is a teaching simulator\./)
         .closest('details'),
     ).toBeNull()
-    const reviewerLayer = governance.querySelector('[data-reviewer-layer]') as HTMLElement
-    expect(reviewerLayer.tagName.toLowerCase()).toBe('details')
-    expect(within(reviewerLayer).getByText(/Publication awaits review/)).toBeInTheDocument()
+    expect(container.querySelector('[data-reviewer-layer]')).toBeNull()
+    expect(container.textContent).not.toMatch(/Publication awaits review|pending clinical review/i)
   })
 
   it('renders the lazy comparison previews behind an accessible boundary', async () => {
@@ -224,7 +223,7 @@ describe('MCS M5 — module chrome on every route', () => {
     for (const section of ['practice', 'assess'] as const) {
       const view = await renderWorkbench({ section })
       expect(screen.getByRole('note', { name: 'Educational safety notice' })).toHaveTextContent(
-        /Educational model—not a clinical device/,
+        /Teaching simulator\. Its numbers come from a model, not from a patient or a real console/,
       )
       view.unmount()
     }
@@ -232,11 +231,11 @@ describe('MCS M5 — module chrome on every route', () => {
 
   it('shows the English fallback only on a non-English route', async () => {
     const english = await renderWorkbench({ section: 'practice' })
-    expect(screen.queryByText(/English fallback/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Shown in English/)).not.toBeInTheDocument()
     english.unmount()
 
     await renderWorkbench({ section: 'practice', locale: 'es' })
-    expect(screen.getByText(/English fallback/)).toBeInTheDocument()
+    expect(screen.getByText(/Shown in English/)).toBeInTheDocument()
     expect(screen.queryByText(/Reviewed[- ]English/i)).not.toBeInTheDocument()
   })
 })

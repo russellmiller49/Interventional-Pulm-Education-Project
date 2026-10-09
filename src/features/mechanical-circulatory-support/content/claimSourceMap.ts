@@ -133,7 +133,7 @@ export const MCS_CLAIM_SOURCE_MAP: readonly McsClaimSourceMapping[] = Object.fre
     learnerSurface: 'Section 3, late-inflation and early-deflation demonstrations',
     currentWording: [
       'Inflation begins after the valve-closure reference. The opportunity for diastolic augmentation is shortened. Deflation remains at its reference.',
-      'Inflation remains aligned. The balloon band ends earlier in diastole, shortening augmentation. The exact clinical arterial contour is not faithfully reproduced by this model.',
+      'Inflation remains aligned. The balloon band ends earlier in diastole, shortening augmentation. On the live strip the assisted end-diastolic pressure climbs back toward the unassisted one.',
     ],
     previousSourceIds: ['master-hemodynamics-reference', 'getinge-iabp-current'],
     synthesisRole: SYNTHESIS_FIRST,
@@ -262,7 +262,7 @@ export const MCS_CLAIM_SOURCE_MAP: readonly McsClaimSourceMapping[] = Object.fre
     caseIds: ['IMP-01'],
     learnerSurface: 'Case IMP-01 worked explanation',
     currentWording: [
-      'Suction is a cause-finding problem, not simply a low-setting problem.',
+      'Suction is a cause-finding problem. First moves: reduce the P-level by one or two levels, give volume if the patient is underfilled, check position with echo, assess the right ventricle, then return to the previous level.',
       'Suction can itself be an indicator of right heart failure, so right ventricular function is part of the evaluation.',
     ],
     previousSourceIds: ['master-hemodynamics-reference', 'fda-impella-cp-labeling'],
@@ -347,7 +347,7 @@ export const MCS_CLAIM_SOURCE_MAP: readonly McsClaimSourceMapping[] = Object.fre
     sectionIds: ['lvad-parameters-assessment'],
     caseIds: ['LVAD-01'],
     learnerSurface: 'Case LVAD-01 worked explanation; Section 7',
-    currentWording: ['Continuous-flow LVAD output is afterload sensitive.'],
+    currentWording: ['Continuous-flow LVAD output is afterload-sensitive.'],
     previousSourceIds: ['ishlt-durable-mcs-2023', 'fda-heartmate3-ifu'],
     synthesisRole:
       'None on the case itself: its two cited records were never opened. The section’s items cite the bedside synthesis first.',

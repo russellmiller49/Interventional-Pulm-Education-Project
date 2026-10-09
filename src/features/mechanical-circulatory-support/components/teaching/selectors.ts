@@ -65,8 +65,8 @@ export interface McsInflowLimitView {
 
 const inflowLimiterLabels: Readonly<Record<McsLeftPreloadLimiter, string>> = {
   'rv-delivery': 'right-sided delivery to the left heart',
-  'lv-compartment-filling': 'the modeled volume in the left ventricle',
-  'circulating-volume': 'the modeled circulating volume',
+  'lv-compartment-filling': 'left ventricular filling',
+  'circulating-volume': 'circulating volume',
 }
 
 export function inflowLimitView(state: McsSimulationState): McsInflowLimitView | null {
@@ -77,10 +77,10 @@ export function inflowLimitView(state: McsSimulationState): McsInflowLimitView |
     label: inflowLimiterLabels[diagnostics.leftPreloadLimiter],
     note:
       diagnostics.leftPreloadLimiter === 'rv-delivery'
-        ? 'The smallest of the three terms is upstream of the left ventricle, so the filling pressure and the end-diastolic volume on the monitor can both be high while the pump is still short of blood. They are answering a different question.'
+        ? 'The left pump can only move what the right heart delivers. In this simulator the wedge pressure and end-diastolic volume can still read high while the inlet is short of blood.'
         : diagnostics.leftPreloadLimiter === 'lv-compartment-filling'
-          ? 'The minimum comes from the conserved LV compartment volume. That reservoir is distinct from the displayed LV end-diastolic surrogate and wedge pressure.'
-          : 'The minimum comes from the circulating-volume input. This term is distinct from both the conserved LV compartment and the filling numbers on the monitor.',
+          ? 'The left ventricle itself is underfilled for the P-level in use.'
+          : 'Circulating volume is low for the P-level in use.',
     value: diagnostics.leftPreloadFactor,
     threshold: diagnostics.leftSuctionThreshold,
     suction: diagnostics.leftSuction,
@@ -191,6 +191,7 @@ export const MCS_DISPLAY_DEADBANDS: Readonly<Partial<Record<keyof McsDerivedMetr
   leftDeviceFlowLMin: 0.4,
   rightDeviceFlowLMin: 0.3,
   deviceFlowLMin: 0.4,
+  estimatedPumpFlowLMin: 0.4,
   effectiveSystemicFlowLMin: 0.25,
   recirculatingFlowLMin: 0.2,
   pumpBalanceLMin: 0.4,
@@ -218,6 +219,7 @@ export const MCS_MEASURED_IDLE_DRIFT: Readonly<Partial<Record<keyof McsDerivedMe
   nativeFlowLMin: 0.14,
   leftDeviceFlowLMin: 0.34,
   deviceFlowLMin: 0.34,
+  estimatedPumpFlowLMin: 0.34,
   effectiveSystemicFlowLMin: 0.2,
   svo2Percent: 1,
   cardiacPowerOutputW: 0.07,
@@ -364,9 +366,9 @@ export function flowAccountView(state: McsSimulationState): McsFlowAccountView {
     lines.push({
       id: 'device',
       label: 'Displayed pump flow',
-      valueText: `${reading(metrics.deviceFlowLMin, 1)} L/min`,
-      value: metrics.deviceFlowLMin,
-      kind: 'modeled',
+      valueText: mcsDisplayedDurableFlowText(metrics),
+      value: mcsDisplayedDurableFlow(metrics),
+      kind: 'estimated',
       destination: 'left ventricular apex into the ascending aorta',
     })
   }
@@ -424,6 +426,23 @@ export function mcsDeviceFlowLine(state: McsSimulationState): McsFlowAccountLine
       destination: 'no pathway of its own on this mechanism',
     }
   )
+}
+
+/** The durable pump's displayed flow: the controller's estimate from power at the set speed. */
+export function mcsDisplayedDurableFlow(metrics: McsDerivedMetrics): number {
+  return metrics.estimatedPumpFlowLMin ?? metrics.deviceFlowLMin
+}
+
+/**
+ * The displayed flow as text. When the estimate and the real pump flow have separated, both are
+ * printed, because that separation is the finding.
+ */
+export function mcsDisplayedDurableFlowText(metrics: McsDerivedMetrics): string {
+  const displayed = mcsDisplayedDurableFlow(metrics)
+  const separated = Math.abs(displayed - metrics.deviceFlowLMin) >= 0.1
+  return separated
+    ? `${reading(displayed, 1)} L/min displayed; ${reading(metrics.deviceFlowLMin, 1)} L/min really crossing the pump`
+    : `${reading(displayed, 1)} L/min`
 }
 
 /**
@@ -923,7 +942,7 @@ export function lvadView(state: McsSimulationState): McsLvadView | null {
     highPowerPattern: device.suspectedPumpThrombosis,
     pumpPowerW: state.metrics.pumpPowerW,
     pulsatilityIndex: state.metrics.pulsatilityIndex,
-    displayedFlowLMin: state.metrics.deviceFlowLMin,
+    displayedFlowLMin: mcsDisplayedDurableFlow(state.metrics),
   }
 }
 
@@ -1045,9 +1064,6 @@ export const MCS_UNMODELED_ORGAN_SIGNALS: readonly McsUnmodeledSignal[] = Object
   },
 ])
 
-export const MCS_OXYGEN_DELIVERY_BOUNDARY =
-  'This simulation does not calculate whole-body oxygen delivery. Hemoglobin and arterial oxygen content are not modeled, so no oxygen-delivery figure exists here. The mixed venous saturation beside it is a modeled delivery–consumption balance signal, influenced by the modeled balance among blood flow, oxygen availability assumptions, and tissue consumption and extraction assumptions. It is not a measurement of delivery, not a calculation of delivery, not proof that delivery is adequate, and not a value to drive a patient toward.'
-
 /**
  * What the durable pump's afterload loading actually costs it, read from the model's own terms.
  *
@@ -1094,7 +1110,7 @@ export function afterloadCostView(state: McsSimulationState): McsAfterloadCostVi
  * names its inputs without giving the equation, so no estimator is reproduced and none is claimed.
  */
 export const MCS_DURABLE_FLOW_IDENTITY =
-  'Three quantities, kept apart. The modeled pump transfer is what this simulation actually moves from the ventricle to the aorta. The displayed pump flow is that same transfer, rounded — this model has no separate estimator, so it does not model estimator bias. This does not establish accuracy of the modeled transfer. Effective systemic delivery is the transfer plus what the native ventricle still ejects, minus any modeled regurgitant return. On a HeartMate 3 the displayed flow is not the first of these: Abbott’s parameter card states it is an estimate calculated from fixed speed, power and the patient’s hematocrit, which is the reverse of the direction here. That card names the inputs and gives no equation, so no controller estimator is reproduced in this module and none is claimed; the product-identity decision is open as OD-02.'
+  'Three flows. Displayed pump flow is the controller’s estimate, calculated from power at the set speed and the hematocrit entered. Real pump flow is what crosses the pump; it equals the estimate until power rises for another reason, such as thrombus. Effective systemic delivery is real pump flow plus what the native ventricle still ejects, minus any flow that leaks back through the aortic valve.'
 
 export const MCS_ESTIMATED_FLOW_BOUNDARY =
-  'Displayed pump flow here is modeled transfer, rounded for display, rather than measured blood flow or a separate controller estimate. This simulation does not reproduce each controller’s proprietary calculation or display. Nothing here reads blood with a probe: the figure depends on modeled pump behavior and modeled loading.'
+  'No pump measures its own flow with a probe. The displayed number is calculated, so check it against the patient whenever the two disagree.'

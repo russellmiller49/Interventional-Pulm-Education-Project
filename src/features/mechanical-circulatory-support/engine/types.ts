@@ -115,6 +115,11 @@ export interface McsDerivedMetrics {
   timingQualityPercent: number | null
   pumpPowerW: number | null
   pulsatilityIndex: number | null
+  /**
+   * The durable pump's displayed flow: the controller's estimate from power at the set speed.
+   * Null for devices without one. `deviceFlowLMin` stays the hydraulic flow the circulation gets.
+   */
+  estimatedPumpFlowLMin: number | null
 }
 
 export interface McsWaveformSample {
@@ -468,9 +473,13 @@ export interface McsLvadDiagnostics {
   readonly afterloadFactor: number
   readonly pressureGradientFactor: number
   readonly baselineMapMmHg: number
+  /** The displayed mean arterial pressure the afterload alarm reads. */
   readonly highAfterloadPredicateInput: number
   readonly highAfterloadPredicateMet: boolean
+  /** Hydraulic flow the pump delivers. */
   readonly deviceFlow: number
+  /** Flow the controller displays, estimated from power at the set speed. */
+  readonly estimatedFlow: number
   readonly pumpPower: number
   readonly thrombosisPowerAdditionW: number
   readonly pulsatilityIndex: number

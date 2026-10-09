@@ -22,14 +22,11 @@ export function McsSourcesPanel() {
     <section className={styles.sourcesSection} aria-labelledby="mcs-sources-heading">
       <div className={styles.sectionHeading}>
         <span className={styles.kicker}>EVIDENCE & MODEL CARD</span>
-        <h2 id="mcs-sources-heading">Source-backed, bounded, and revision-aware</h2>
+        <h2 id="mcs-sources-heading">Sources</h2>
         <p>
-          Sources are listed by kind. Society guidelines, instructions for use and regulator records
-          are primary sources; textbook chapters and manufacturer teaching material are secondary;
-          two supplied Word syntheses are authoring provenance, kept on record as the documents this
-          module was drafted from and not as evidence for it. Whether a labeling record is the
-          current revision for a local device has not been verified here. Directional outputs are
-          educational estimates.
+          Sources are listed by kind: society guidelines, instructions for use and regulator
+          records; textbook chapters and manufacturer teaching material; and two reference
+          syntheses. Check that an instructions-for-use revision matches the device on your unit.
         </p>
         <dl data-source-class-key>
           {MCS_SOURCE_CLASS_ORDER.map((sourceClass) => (
@@ -44,10 +41,8 @@ export function McsSourcesPanel() {
       <aside className={styles.safetyReview} aria-label="Registered FDA notice records">
         <strong>Registered safety-notice references</strong>
         <p>
-          The source registry lists {safetyNotices.length} FDA notice records. These records were
-          not opened for this module; current recall status, affected units and labeling have not
-          been verified. They do not replace current device instructions or an authoritative recall
-          check before publication.
+          The registry lists {safetyNotices.length} FDA notice records. Check the current recall
+          status for the device in front of you.
         </p>
         <ul>
           {safetyNotices.map((source) => (
@@ -126,7 +121,7 @@ export function McsSourcesPanel() {
                 </p>
                 {source.limitation ? (
                   <p>
-                    <strong>Boundary:</strong> {source.limitation}
+                    <strong>Note:</strong> {source.limitation}
                   </p>
                 ) : null}
                 {source.url ? (

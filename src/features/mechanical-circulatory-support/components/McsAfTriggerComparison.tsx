@@ -26,15 +26,15 @@ export function McsAfTriggerComparison({ state }: { readonly state: McsSimulatio
       <table data-af-trigger-comparison-table>
         <caption>
           Atrial fibrillation, 1:{comparison.assistRatio}, inflation {comparison.inflationOffsetMs}{' '}
-          ms and deflation {comparison.deflationOffsetMs} ms against this model’s own landmarks,
-          balloon {comparison.running ? 'running' : 'stopped'}, all three read at{' '}
+          ms and deflation {comparison.deflationOffsetMs} ms, balloon{' '}
+          {comparison.running ? 'running' : 'stopped'}, all three read at{' '}
           {comparison.observedAtSeconds.toFixed(2)} simulated seconds.
         </caption>
         <thead>
           <tr>
             <th scope="col">Trigger source</th>
-            <th scope="col">This model’s synchrony rating</th>
-            <th scope="col">This model’s trigger alarm</th>
+            <th scope="col">Simulator synchrony rating</th>
+            <th scope="col">Simulator trigger alarm</th>
           </tr>
         </thead>
         <tbody>
@@ -56,11 +56,8 @@ export function McsAfTriggerComparison({ state }: { readonly state: McsSimulatio
       </table>
       <p data-af-trigger-comparison-hold>
         <strong>{MCS_AF_TRIGGER_LIMIT.heldLead}.</strong> {MCS_AF_TRIGGER_LIMIT.deviceLabeling} The
-        ordering in this table is the disagreement, not the answer to it: the highest figure here
-        belongs to the source that material advises against, so this module does not judge a trigger
-        choice in atrial fibrillation and does not treat any of these figures as a correction.{' '}
-        {MCS_AF_TRIGGER_LIMIT.atTheControl} Open item {MCS_AF_TRIGGER_LIMIT.queueItemId}, still{' '}
-        <span data-af-trigger-review-status>NOT REVIEWED</span>.
+        highest figure in this table belongs to the trigger that material advises against, so do not
+        read the table as a ranking. {MCS_AF_TRIGGER_LIMIT.atTheControl}
       </p>
     </details>
   )

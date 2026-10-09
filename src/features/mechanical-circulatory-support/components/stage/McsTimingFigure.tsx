@@ -158,10 +158,9 @@ export function McsTimingFigure({
           </p>
         </details>
         <figcaption>
-          Authored timing references, not detected clinical landmarks. Zero offset aligns this
-          model’s event; it is not a universal manufacturer setting. The arterial trace is drawn on
-          a fixed {MCS_IABP_PRESSURE_SCALE.minMmHg}–{MCS_IABP_PRESSURE_SCALE.maxMmHg} mm Hg scale,
-          the same one every timing figure and the reference contour below use.
+          Zero offset places each event at its landmark. The arterial trace is drawn on a fixed{' '}
+          {MCS_IABP_PRESSURE_SCALE.minMmHg}–{MCS_IABP_PRESSURE_SCALE.maxMmHg} mm Hg scale, the same
+          one every timing figure and the landmark diagram below use.
         </figcaption>
         <McsIabpLiveTraceLimits detailOpen={detailOpen} />
       </figure>
