@@ -1,5 +1,14 @@
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
 
+import {
+  ECMO_AIR_RESUME,
+  ECMO_AIR_RESUME_SENTENCE,
+  ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES,
+  ECMO_EMERGENCY_DRIVE_SENTENCE,
+  ECMO_LV_DISTENSION_MOVES,
+  ECMO_NUMBERS,
+  ECMO_OXYGENATOR_FAILURE_SENTENCE,
+} from './teachingNumbers'
 import type {
   CircuitViewPreference,
   GuidedLessonDefinition,
@@ -974,15 +983,12 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         // S8-3 (ECMO-FELLOW-02): one authored corrective event, said to be one, and said to be
         // compressed. Choosing between causes and a realistic recovery are ECMO-OWNER-10's to draft.
         instruction:
-          'Assess cannula position, kinks, coughing or straining, venous volume, and other patient/circuit causes; correct the identified cause. In this lab one step stands for whichever correction your assessment points to.',
+          'Assess cannula position, kinks, coughing or straining, venous volume, and other patient/circuit causes; correct the identified cause.',
         rationale:
-          'A temporary RPM reduction manages pump demand but does not by itself remove the drainage problem. The correction here is one authored event that restores drainage at once; the lab does not let you choose between causes, and the recovery is compressed rather than a bedside time course.',
+          'A temporary RPM reduction manages pump demand but does not by itself remove the drainage problem. Here one step restores drainage at once; at the bedside recovery takes longer.',
         actionLabel: 'Correct the identified drainage cause',
         actions: [{ type: 'CORRECT_FAULT', fault: 'preload-limited' }],
-        expectedResponse: [
-          'Drainage cause cleared, as one authored step',
-          'Flow, pVen and chatter recover at once: compressed, not a bedside recovery',
-        ],
+        expectedResponse: ['Drainage cause cleared, in one step', 'Flow, pVen and chatter recover'],
       },
     ],
     reassessment: {
@@ -1058,27 +1064,16 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       {
         id: 'correct-oxygenator-resistance',
         target: 'circuit',
-        title: 'Escalate the oxygenator/circuit cause',
+        title: 'Confirm the failing oxygenator and exchange it',
         instruction:
-          'Inspect sensor plausibility, oxygenator/circuit resistance, and gas transfer; escalate according to the local exchange protocol.',
-        /*
-         * One action, and an honest account of how much of the story it carries.
-         *
-         * This step escalates, and the model then jumps the circuit to the state it would be in
-         * after the component had been changed — in one simulated second, with no exchange
-         * represented in between (S10-2). The jump is the authored teaching transition and stays;
-         * what changes is that it is named as one instead of reading as an escalation that fixed a
-         * membrane. The exchange procedure itself, how long it takes and what it risks, is outside
-         * this module and awaits a clinical and device review.
-         */
-        rationale:
-          'A rising cross-oxygenator pattern should not be managed by repeatedly increasing RPM. This one action stands for two separate things: your escalation, and — as a teaching transition — the circuit as it would be once the exchange your unit performs has been done. The exchange is not simulated, and nothing here says how long it takes or what it costs.',
-        actionLabel: 'Escalate, then move to the post-exchange circuit',
+          'Check that pInt and pArt are plausible, confirm the rising Δp at an unchanged flow, send a post-oxygenator gas, then call for the primed backup and exchange the oxygenator.',
+        rationale: `${ECMO_OXYGENATOR_FAILURE_SENTENCE} The exchange itself is not simulated: this one step takes the circuit to its state after the exchange.`,
+        actionLabel: 'Call for the backup and exchange the oxygenator',
         actions: [{ type: 'CORRECT_FAULT', fault: 'oxygenator-resistance' }],
         expectedResponse: [
-          'The escalation is recorded',
-          'The circuit moves to its post-exchange state as a teaching transition, not as a simulated procedure',
-          'No fixed Δp threshold or priority is taught',
+          'The perfusionist and the primed backup are called',
+          'The circuit moves to its state after the exchange',
+          `Δp returns toward the usual ${ECMO_NUMBERS.value('pressure-drop-typical')}`,
         ],
       },
     ],
@@ -1207,7 +1202,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         expectedResponse: [
           'Sweep remains unchanged',
           'The compensated state is acknowledged',
-          'No universal PaCO₂ target is implied',
+          `Hypercapnia is corrected over ${ECMO_NUMBERS.value('paco2-correction-time')}, not at once`,
         ],
       },
     ],
@@ -1302,7 +1297,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         instruction:
           'Close the drainage-limb clamp near the patient so the circuit is fully isolated before de-airing.',
         rationale:
-          'With both limbs clamped, the circuit can be worked on without exposing the patient.',
+          'With both limbs clamped the patient is off the circuit. Call for help and the primed backup circuit now, and raise ventilator support: on VV the patient has only the native lungs until flow returns.',
         actionLabel: 'Close the drainage-limb clamp',
         actions: [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'drainage', closed: true }],
         expectedResponse: ['Drainage clamp CLOSED', 'Circuit isolated from the patient'],
@@ -1313,9 +1308,9 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         preferredCircuitView: 'bedside',
         title: 'Correct and clear the air source',
         instruction:
-          'With the circuit isolated, correct the source of air and confirm the return path is bubble free.',
+          'With the circuit isolated, find where the air came in and close it. Walk the air back to the nearest port and aspirate it. If it cannot be cleared quickly, exchange the circuit.',
         rationale:
-          'Resetting before source correction risks returning air and is a critical shortcut in Practice.',
+          'A reset with the source open or air still in the line pumps that air to the patient.',
         actionLabel: 'Correct the source and clear the circuit',
         actions: [{ type: 'CORRECT_FAULT', fault: 'arterial-bubble' }],
         expectedResponse: [
@@ -1328,17 +1323,15 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         id: 'resume-support',
         target: 'circuit',
         preferredCircuitView: 'bedside',
-        title: 'Resume support per the current IFU and your local protocol',
-        instruction:
-          'With the source corrected and the circuit confirmed clear, resume support according to the current manufacturer instructions for use (IFU) and your unit’s own ECMO air-emergency protocol.',
-        rationale:
-          'This module does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific. What it does teach is the precondition — nothing resumes until the air source is corrected and the circuit is confirmed clear. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
-        actionLabel: 'Resume support per current IFU and local protocol',
+        title: 'Resume: reset the bubble stop, return clamp last',
+        instruction: ECMO_AIR_RESUME_SENTENCE,
+        rationale: `The manual’s warning before a reset is that the cause is corrected and the system is free of bubbles; a reset with air still in the line pumps it to the patient. The return clamp comes off last: a running pump with the drainage side still clamped cavitates, and the return clamp is the last barrier between any missed air and the patient. Here the whole sequence is one press. ${ECMO_EMERGENCY_DRIVE_SENTENCE}`,
+        actionLabel: ECMO_AIR_RESUME.label,
         actions: [{ type: 'RESUME_SUPPORT_AFTER_BUBBLE' }],
         expectedResponse: [
-          'Support resumes as one bounded step, with no moment where both limbs are open on a stopped pump',
+          'The pump restarts with both limbs open; here that is one press',
           'The bubble latch clears and the pump runs',
-          'Where clamp opening, pump restart and console reset fall relative to one another is governed by the current IFU and your own local protocol, not by this simulation',
+          'Drainage clamp open, bubble stop reset, return clamp open last',
         ],
       },
     ],
@@ -1420,7 +1413,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         title: 'Reduce pump demand first',
         instruction: 'Reduce the setpoint from 3600 to 3300 RPM while the cause is localized.',
         rationale:
-          'A bounded reduction can relieve suction while the underlying VA drainage problem is assessed.',
+          'A small reduction can relieve suction while the underlying VA drainage problem is assessed.',
         actionLabel: 'Reduce RPM to 3300',
         actions: [{ type: 'SET_RPM', rpm: 3300 }],
         expectedResponse: [
@@ -1518,18 +1511,16 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       {
         id: 'escalate-oxygenator',
         target: 'circuit',
-        title: 'Escalate the oxygenator/circuit problem',
+        title: 'Confirm the failing oxygenator and exchange it',
         instruction:
-          'Check sensor plausibility, resistance, gas transfer, and the circuit; escalate under your unit’s circuit-exchange protocol.',
-        // Same composite action as the VV lesson, named the same way. See the note there.
-        rationale:
-          'Repeated RPM escalation does not correct a rising cross-oxygenator resistance pattern. This one action stands for two separate things: your escalation, and — as a teaching transition — the circuit as it would be once the exchange your unit performs has been done. The exchange is not simulated, and nothing here says how long it takes or what it costs.',
-        actionLabel: 'Escalate, then move to the post-exchange circuit',
+          'Check that pInt and pArt are plausible, confirm the rising pressure drop at an unchanged flow, send a post-oxygenator gas, then call for the primed backup and exchange the oxygenator. On VA, have inotropes and vasopressors running before the pump stops.',
+        rationale: `${ECMO_OXYGENATOR_FAILURE_SENTENCE} The exchange itself is not simulated: this one step takes the circuit to its state after the exchange.`,
+        actionLabel: 'Call for the backup and exchange the oxygenator',
         actions: [{ type: 'CORRECT_FAULT', fault: 'oxygenator-resistance' }],
         expectedResponse: [
-          'The escalation is recorded',
-          'The circuit moves to its post-exchange state as a teaching transition, not as a simulated procedure',
-          'No fixed pressure-drop alarm threshold is taught',
+          'The perfusionist and the primed backup are called',
+          'The circuit moves to its state after the exchange',
+          `Pressure drop returns toward the usual ${ECMO_NUMBERS.value('pressure-drop-typical')}`,
         ],
       },
     ],
@@ -1561,16 +1552,15 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       {
         id: 'verify-and-escalate-mixing',
         target: 'patient-monitor',
-        title: 'Verify the upper-body mismatch and escalate',
-        instruction:
-          'Verify right-arm oxygenation, assess native ejection and lung oxygenation, compare circuit data, and escalate the support strategy.',
+        title: 'Confirm at the right arm, then treat the native lungs first',
+        instruction: `${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.recognize} Then, in order: ${ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves.join(' ')}`,
         rationale:
-          'No single pump or sweep adjustment safely represents every differential-oxygenation cause.',
-        actionLabel: 'Verify the pattern and escalate under local protocol',
+          'The blood reaching the right arm, the brain and the coronaries came through the native lungs, so the ventilator is the first lever: FiO₂, PEEP and recruitment. The membrane is already delivering fully saturated blood to the lower body, so sweep and sweep-gas FiO₂ change nothing here.',
+        actionLabel: 'Confirm at the right arm and raise ventilator support',
         actions: [{ type: 'CORRECT_FAULT', fault: 'differential-hypoxemia' }],
         expectedResponse: [
-          'Upper-body pattern recognized',
-          'Heart, lungs, circuit, and mixing are assessed together',
+          'Right radial gas confirms the oximeter',
+          'Ventilator FiO₂ and PEEP raised; V-AV or conversion to VV planned if the right arm stays low',
         ],
       },
     ],
@@ -1603,16 +1593,15 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       {
         id: 'escalate-lv-loading',
         target: 'patient-monitor',
-        title: 'Escalate concerning LV-loading cues',
-        instruction:
-          'Integrate pulsatility, valve opening, LV/echo and lung findings, then escalate for expert unloading evaluation.',
+        title: 'Unload the left ventricle',
+        instruction: `Confirm with echo, then in order: ${ECMO_LV_DISTENSION_MOVES.moves.join(' ')}`,
         rationale:
-          'This module teaches recognition and escalation rather than a universal unloading device or threshold.',
-        actionLabel: 'Escalate for unloading evaluation',
+          'More VA flow is more afterload for a ventricle that is not ejecting. Lowering flow and giving an inotrope let the valve open; if pulsatility does not return, the ventricle is vented mechanically before it distends, the lungs flood and thrombus forms.',
+        actionLabel: 'Lower flow, add an inotrope, call for a vent',
         actions: [{ type: 'CORRECT_FAULT', fault: 'lv-loading' }],
         expectedResponse: [
-          'Expert escalation documented',
-          'No device-selection algorithm is implied',
+          'Flow titrated down and inotrope started',
+          `A vent is placed if pulsatility stays ${ECMO_NUMBERS.value('lv-vent-pulsatility')}`,
         ],
       },
     ],
@@ -1620,10 +1609,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
       target: 'patient-monitor',
       instruction:
         'Recheck pulse pressure, aortic-valve opening, pulmonary congestion, perfusion, and circuit flow.',
-      expectedResponse: [
-        'Pulsatility begins to improve',
-        'Aortic-valve opening returns in the bounded model',
-      ],
+      expectedResponse: ['Pulsatility begins to improve', 'The aortic valve opens again'],
     },
   }),
   standardLesson({
@@ -1736,7 +1722,7 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         title: 'Complete isolation: clamp the drainage limb',
         instruction: 'Close the drainage-limb clamp so the circuit is fully isolated.',
         rationale:
-          'Full isolation lets the team manage the patient conventionally while the circuit is cleared.',
+          'With both limbs clamped the patient is off the circuit and has lost the circuit’s share of the circulation. Call for help and the primed backup circuit now, and raise inotropes, vasopressors and the ventilator.',
         actionLabel: 'Close the drainage-limb clamp',
         actions: [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'drainage', closed: true }],
         expectedResponse: ['Drainage clamp CLOSED', 'Circuit isolated from the patient'],
@@ -1747,8 +1733,9 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         preferredCircuitView: 'bedside',
         title: 'Correct and clear the air source',
         instruction:
-          'Identify and correct the source of air and confirm the arterial return path is clear.',
-        rationale: 'Premature reset risks arterial air return and is a critical Practice error.',
+          'Find where the air came in and close it. Aspirate air from the arterial limb at the nearest port. If it cannot be cleared quickly, exchange the circuit.',
+        rationale:
+          'A reset with the source open or air still in the line pumps that air into the arterial circulation.',
         actionLabel: 'Correct the source and clear the circuit',
         actions: [{ type: 'CORRECT_FAULT', fault: 'arterial-bubble' }],
         expectedResponse: ['Air source corrected', 'Reset remains deliberate and separate'],
@@ -1757,17 +1744,15 @@ const baseCardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         id: 'resume-support',
         target: 'circuit',
         preferredCircuitView: 'bedside',
-        title: 'Resume support per the current IFU and your local protocol',
-        instruction:
-          'With the source corrected and the circuit confirmed clear, resume venoarterial support according to the current manufacturer instructions for use (IFU) and your unit’s own ECMO air-emergency protocol.',
-        rationale:
-          'This module does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific. What it does teach is the precondition — nothing resumes until the air source is corrected and the circuit is confirmed clear. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
-        actionLabel: 'Resume support per current IFU and local protocol',
+        title: 'Resume: reset the bubble stop, return clamp last',
+        instruction: ECMO_AIR_RESUME_SENTENCE,
+        rationale: `The manual’s warning before a reset is that the cause is corrected and the system is free of bubbles; a reset with air still in the line pumps it to the patient. The return clamp comes off last: a running pump with the drainage side still clamped cavitates, and the return clamp is the last barrier between any missed air and the patient. Here the whole sequence is one press. ${ECMO_EMERGENCY_DRIVE_SENTENCE}`,
+        actionLabel: ECMO_AIR_RESUME.label,
         actions: [{ type: 'RESUME_SUPPORT_AFTER_BUBBLE' }],
         expectedResponse: [
-          'Support resumes as one bounded step, with no moment where both limbs are open on a stopped pump',
+          'The pump restarts with both limbs open; here that is one press',
           'The bubble latch clears and the pump runs',
-          'Where clamp opening, pump restart and console reset fall relative to one another is governed by the current IFU and your own local protocol, not by this simulation',
+          'Drainage clamp open, bubble stop reset, return clamp open last',
         ],
       },
     ],

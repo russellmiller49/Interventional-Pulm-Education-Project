@@ -1,4 +1,5 @@
 import { EcmoSourceList } from '../evidence/EcmoSourceList'
+import { EcmoDifferentialHypoxemiaMoves } from './EcmoReferenceValues'
 import { ModelBoundary, styles, VA_MODELED_CONFIGURATION } from './shared'
 
 /**
@@ -96,7 +97,7 @@ export const VA_CONFIGURATION_STRATEGIES: readonly VaConfigurationStrategy[] = [
     doesNotChange:
       'It does not change the cannulation topology and it does not move where the two streams meet. It addresses the content of the native stream rather than the position of the mixing point.',
     caution:
-      'What can be done for the native lungs, and whether anything can be, is a judgement about that patient made by the treating team under local practice. This entry names the part of the problem the change acts on, not a ventilator strategy and no value to reach.',
+      'This is the first move, because nothing about the cannulation has to change: ventilator FiO₂, PEEP and recruitment. It helps only as far as the native lungs can still exchange gas.',
     modelBoundary:
       'Not available as a manoeuvre here. This simulation authors the two arterial saturations from the loaded case rather than deriving them from what the native lungs are doing, so native-lung recovery cannot be applied and watched.',
     evidenceIds: [...DUAL_CIRCULATION_SOURCES, 'elso-adult-va-2021'],
@@ -203,9 +204,6 @@ export function vaConfigurationStrategiesByClass(
   return VA_CONFIGURATION_STRATEGIES.filter((strategy) => strategy.changeClass === changeClass)
 }
 
-const NOT_AN_ALGORITHM =
-  'These are five different things to change, not five steps in an order. Nothing here says which one is preferred, when a change should be made, or what value to reach: that depends on the patient, on the mechanism that has actually been established, and on the practice of the program looking after them.'
-
 const CARD_SOURCES = [
   'elso-dual-circulation-2024',
   'elso-maastricht-nomenclature-2019',
@@ -279,16 +277,11 @@ export function VaConfigurationStrategyCard({
           stasis. It is not a way of improving the native-lung zone, and it is not V-AV.
         </p>
 
-        <p className="mt-3 text-sm leading-6">{NOT_AN_ALGORITHM}</p>
+        <EcmoDifferentialHypoxemiaMoves />
 
         <ModelBoundary>
-          V-AV, upper-body arterial return and central V-A ECMO are described here and are not
-          simulated: this simulation carries one return limb, in one femoral artery, and computes no
-          split between two returns and no recirculation between a venous return and the drainage
-          cannula. The mixing point does not move here either — the two arterial saturations are
-          authored by the loaded case rather than derived from native ejection and circuit flow. The
-          full account of all five, with the caution that belongs to each, is in the
-          parallel-physiology section of this track.
+          V-AV, upper-body arterial return and central V-A ECMO are described here, not simulated.
+          The right-arm and femoral saturations on this page do not move with pump speed.
         </ModelBoundary>
 
         <div className="mt-3" data-configuration-card-sources>
@@ -314,8 +307,8 @@ export function VaConfigurationStrategyCard({
         Everything above this point is a consequence of two streams meeting inside one aorta. That
         meeting is a property of the configuration rather than of venoarterial support in general,
         so the same reasoning reaches different answers when the blood is given back somewhere else.
-        Each entry below names what changes, what it leaves alone, the caution that goes with it,
-        and where this simulation stops.
+        Each entry below names what changes, what it leaves alone, and the caution that goes with
+        it.
       </p>
 
       <dl className="mt-3 grid gap-3">
@@ -349,30 +342,17 @@ export function VaConfigurationStrategyCard({
               <span className="font-semibold">Caution. </span>
               {strategy.caution}
             </dd>
-            <dd
-              className="mt-1 rounded-xl border border-dashed px-3 py-2 text-xs leading-5"
-              data-configuration-model-boundary
-            >
-              <span className="font-semibold">Model boundary. </span>
-              {strategy.modelBoundary}
-            </dd>
           </div>
         ))}
       </dl>
 
-      <p className="mt-3 text-sm leading-6" data-configuration-not-an-algorithm>
-        {NOT_AN_ALGORITHM}
-      </p>
+      <div data-configuration-not-an-algorithm>
+        <EcmoDifferentialHypoxemiaMoves />
+      </div>
 
       <ModelBoundary>
-        One of these five is available on this page and four are not. Femoral circuit flow can be
-        changed here, but even for that one the mixing point does not move: this simulation authors
-        the upper-body and lower-body saturations from the loaded case rather than computing where
-        native and circuit blood meet. V-AV, upper-body arterial return and central V-A ECMO have no
-        representation in it at all — there is one return limb, in one femoral artery, and no split
-        between two returns, no cannula interaction and no V-AV recirculation is computed. Read the
-        four described entries as physiology to carry to a different configuration, not as states
-        you can load and check.
+        Only femoral circuit flow can be changed on this page, and the right-arm and femoral
+        saturations do not move with it. The other four are described, not simulated.
       </ModelBoundary>
 
       <div className="mt-3" data-configuration-card-sources>

@@ -230,12 +230,6 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
           systemic circulation. The circuit sits inside that loop rather than beside it, which is
           why some of what it returns can be drained again before it has been anywhere.
         </TextEquivalent>
-
-        <ModelBoundary>
-          The diagram is a teaching sequence of where blood goes, not a scale drawing of cannula
-          positions or vessel anatomy, and the share that recirculates depends on a cannula geometry
-          this simulation does not draw.
-        </ModelBoundary>
       </section>
 
       <section className={styles.section} aria-labelledby="two-flows-heading">
@@ -440,14 +434,6 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
           the venous-line saturation can move opposite to the systemic estimate. That is the whole
           point of reading them separately.
         </TextEquivalent>
-
-        <ModelBoundary>
-          The reference column is this simulation&rsquo;s own authored teaching circuit, derived by
-          the same model that produces every other number here, not a set of bedside values to
-          reproduce. The words higher, lower and about the same come from an authored display
-          deadband for this simulation and mark no boundary of safety; the raw values either side of
-          them are printed above.
-        </ModelBoundary>
       </section>
 
       <section className={styles.section} aria-labelledby="mixture-heading">
@@ -460,7 +446,7 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
             <>
               Do not infer a bedside recirculation fraction from two saturations. There is no
               validated way to do it, the systemic value the arithmetic below needs is not measured
-              anywhere on a real circuit, and this simulation only reproduces its own authored share
+              anywhere on a real circuit, and this simulation only reproduces its own set share
               because it was the input in the first place.
             </>
           }
@@ -506,24 +492,11 @@ export function VvSeriesPhysiologyPanel({ state }: { readonly state: EcmoSimulat
           </TextEquivalent>
 
           <ModelBoundary>
-            This is the mixing relationship this simulation uses to produce its own numbers. It is
-            not a validated bedside method for estimating recirculation from two saturations, and
-            the systemic value in it is a model estimate rather than anything the CARDIOHELP
-            measures.
+            This is the mixing relationship the simulation uses for its own numbers. It is not a
+            validated bedside method for estimating recirculation from two saturations, and the
+            systemic value in it is a model estimate, not a CARDIOHELP measurement.
           </ModelBoundary>
         </DisclosedWorking>
-
-        <ModelBoundary>
-          This simulation takes the recirculating share the cannula relationship starts at from the
-          authored case. The reference circuit has no established recirculation, so its share stays
-          at the baseline whatever the speed. In a case that opens with established recirculation,
-          asking the circuit for more flow than the case opened with raises that share, so the flow
-          left after re-drainage falls while the displayed L/min keeps rising — the direction is the
-          teaching object here, not the size of the change. Lowering the speed does not move the
-          share back below the authored value, because turning a pump down does not reposition a
-          cannula. Cannula position and volume state, which set recirculation at the bedside, are
-          not modeled at all.
-        </ModelBoundary>
       </section>
 
       <div data-presentation-section="derived-values">

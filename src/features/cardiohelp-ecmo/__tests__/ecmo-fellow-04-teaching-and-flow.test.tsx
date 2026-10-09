@@ -62,7 +62,6 @@ import { ecmoLearnPredictions } from '../content/learnPredictionItems'
 import { cardiohelpScenarioById } from '../content/scenarios'
 import { resolveScenarioReassessment as reassessmentForReview } from '../content/practiceSupport'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
-import { ECMO_MODULE_REVIEW_LINE } from '../content/sourceReviewMetadata'
 import {
   createInitialSimulationState,
   createReferenceSimulationState,
@@ -547,7 +546,7 @@ describe('S16-1 / VA16-1: the battery reading carries its typed unit, on both tr
     expect(reading?.[2]).toBe('percent')
     // A charge is not a duration: nothing in the item converts one into the other.
     expect(itemCopy(va)).not.toMatch(/\bminutes? (?:of battery|remaining|left)\b/i)
-    expect(itemCopy(va)).toMatch(/rather than a duration/)
+    expect(itemCopy(va)).toMatch(/24 percent is charge, not minutes/)
   })
 
   it('VA: the reading needs no vocabulary exception, and the key is unchanged', () => {
@@ -559,7 +558,7 @@ describe('S16-1 / VA16-1: the battery reading carries its typed unit, on both tr
   })
 
   it('preserved (#315): the venovenous item still reads "24 percent"', () => {
-    expect(vv.stem).toContain('a battery reserve reading of 24 percent')
+    expect(vv.stem).toContain('a battery reserve of 24 percent')
     expect(cardiohelpScenarioById.get('transport-power-loss')?.initialState?.device).toMatchObject({
       batteryPercent: 24,
     })
@@ -575,7 +574,9 @@ describe('S5-3, S5-4, VA5-2: the baseline teaching comes before the optional pre
     [
       'vv-normal-state',
       'vv',
-      'Normal is a stable relationship among signals, not a set of universal numbers.',
+      // Teaching-first (2026-10-08): the first key point used to deny that there are numbers to
+      // know. It now tells the fellow to know them, then read the circuit against its own baseline.
+      'Know the usual ranges, then read this circuit against its own baseline.',
     ],
     [
       'va-normal-state',
@@ -803,7 +804,7 @@ describe('IV-1, IV-3, IA-1: an integrated case says what it rehearses and where 
     ).toBeEnabled()
   })
 
-  it('VA: the single action is named as an authored composite, not as procedures performed', () => {
+  it('VA: the single step says what it stands for, and that nothing treats the cause here', () => {
     const scenario = cardiohelpScenarioById.get('va-mixed-circulation-capstone')!
     const view = render(
       <ActionPanel
@@ -816,9 +817,13 @@ describe('IV-1, IV-3, IA-1: an integrated case says what it rehearses and where 
       />,
     )
     const scope = view.container.querySelector('[data-integrated-case-scope]')
-    expect(scope).toHaveTextContent('The one management action is an authored composite')
-    expect(scope).toHaveTextContent('it performs no configuration change')
-    expect(scope).toHaveTextContent('The right-arm reading stays low afterwards')
+    // "Authored composite" was project vocabulary; the scope now names the two bedside steps.
+    expect(scope).toHaveTextContent(
+      'The one management step stands for the right radial gas and the ventilator change together',
+    )
+    expect(scope).toHaveTextContent('No venous return limb is placed here')
+    expect(scope).toHaveTextContent('the right-arm reading stays low afterwards')
+    expect(scope).not.toHaveTextContent(/authored/i)
   })
 
   it('VV debrief: an empty safety log is not a verdict, and the paired lesson is scoped', () => {
@@ -858,25 +863,33 @@ describe('IV-1, IV-3, IA-1: an integrated case says what it rehearses and where 
  * 6. OV-2: less repetition on the hub, and the review status still in plain sight
  * ------------------------------------------------------------------------------------------ */
 
-describe('OV-2: the hub folds per-source provenance without folding the review status', () => {
-  it.each(['draft', 'published'] as const)('%s: the status is outside the disclosure', (status) => {
-    const view = render(<SourcesPanel publicationStatus={status} />)
-    const registry = view.container.querySelector<HTMLDetailsElement>(
-      'details[data-source-registry]',
-    )
-    expect(registry).not.toBeNull()
-    expect(registry?.open).toBe(false)
-    // Every source row is still rendered, each with its own review line, inside the registry.
-    expect(registry?.querySelectorAll('[data-evidence-id]')).toHaveLength(cardiohelpEvidence.length)
-    // The fact that nothing has been reviewed is stated where no disclosure can hide it.
-    const badge = view.container.querySelector('[data-review-status]')
-    expect(badge).toHaveTextContent(ECMO_MODULE_REVIEW_LINE)
-    expect(badge?.closest('details')).toBeNull()
-    const line = view.container.querySelector('[data-source-registry-status]')
-    expect(line).toHaveTextContent('No source has a clinical or device review on record')
-    expect(line?.closest('details')).toBeNull()
-    expect(view.container.textContent ?? '').not.toMatch(/clinically reviewed|device reviewed/i)
-  })
+describe('OV-2: the hub folds per-source provenance and renders no review status', () => {
+  it.each(['draft', 'published'] as const)(
+    '%s: the registry is folded, the numbers are not',
+    (status) => {
+      const view = render(<SourcesPanel publicationStatus={status} />)
+      const registry = view.container.querySelector<HTMLDetailsElement>(
+        'details[data-source-registry]',
+      )
+      expect(registry).not.toBeNull()
+      expect(registry?.open).toBe(false)
+      // Every source row is still rendered inside the registry.
+      expect(registry?.querySelectorAll('[data-evidence-id]')).toHaveLength(
+        cardiohelpEvidence.length,
+      )
+      // Teaching-first rule 6: review status is project metadata. The badge and the registry status
+      // line that this test used to require outside the disclosure are no longer rendered at all.
+      expect(view.container.querySelector('[data-review-status]')).toBeNull()
+      expect(view.container.querySelector('[data-source-registry-status]')).toBeNull()
+      expect(view.container.textContent ?? '').not.toMatch(
+        /review on record|none recorded|clinically reviewed|device reviewed/i,
+      )
+      // What sits in plain sight instead is the taught reference values, outside any disclosure.
+      const boxes = [...view.container.querySelectorAll('[data-reference-values]')]
+      expect(boxes.length).toBeGreaterThanOrEqual(4)
+      for (const box of boxes) expect(box.closest('details')).toBeNull()
+    },
+  )
 })
 
 /* ------------------------------------------------------------------------------------------ *

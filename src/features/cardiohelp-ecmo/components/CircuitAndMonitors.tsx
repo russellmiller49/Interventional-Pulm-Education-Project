@@ -42,6 +42,7 @@ import {
   circuitMapGeometry,
   type CircuitMapFrame,
 } from './circuit-map/circuitMapGeometry'
+import { ECMO_NUMBERS } from '../content/teachingNumbers'
 import { drainageChatterActive } from './ecmo-circuit/chatter'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoCircuit3D } from './EcmoCircuit3D'
@@ -1354,7 +1355,7 @@ export function GasBlenderPanel({
             role="note"
             aria-label="Sweep initiation order"
           >
-            <span>Simulated case order</span>
+            <span>Case order</span>
             <strong>{initiationTargets.sweepLpm.toFixed(1)} L/min</strong>
             <small>Current: {state.gas.sweepLpm.toFixed(1)} L/min</small>
           </span>
@@ -1421,7 +1422,7 @@ export function GasBlenderPanel({
             role="note"
             aria-label="Sweep-gas FiO2 initiation order"
           >
-            <span>Simulated case order</span>
+            <span>Case order</span>
             <strong>{Math.round(initiationTargets.fio2 * 100)}%</strong>
             <small>Current: {Math.round(state.gas.fio2 * 100)}%</small>
           </span>
@@ -1863,8 +1864,7 @@ export function TrendPanel({
       ) : null}
       {parameter === 'deltaP' ? (
         <p className={styles.deltaBoundary}>
-          Δp is presented as a trend only. No fixed alarm priority is set pending target-device
-          review.
+          {`Usual Δp ${ECMO_NUMBERS.value('pressure-drop-typical')}; factory upper limit ${ECMO_NUMBERS.value('pressure-drop-factory-limit')}. Read the trend at a fixed flow.`}
         </p>
       ) : null}
     </section>

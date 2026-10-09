@@ -106,9 +106,7 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
       supportMode="vv"
       clinicalQuestion="Before this venovenous circuit carries blood, what has actually been established — and by which of the four sources of information in the room?"
       boundaries={[
-        'The circuit walk in this simulation resolves to a single recorded check. A real pre-use list is dozens of separate confirmations, and local pre-use documentation, the manufacturer instructions, and the unit backup and escalation policy govern the real sequence.',
-        'The absent pressure numbers are this simulation declining to produce flow-dependent values for a stopped pump. A stopped pump on a primed circuit has genuine static pressures; this model does not represent them, and the dashes are not a claim about what any particular console would display.',
-        'The console follows the U.S. CARDIOHELP Instructions for Use, Revision 2.3 (January 2025). This simulation does not reproduce the physical work of priming, de-airing, or securing a circuit.',
+        'With the pump stopped this simulation shows dashes for pVen, pInt and pArt. A primed circuit has real static pressures, and a real console may display them.',
       ]}
     >
       <section className={styles.section} aria-labelledby="startup-stage-heading">
@@ -290,8 +288,8 @@ export function StartupSensorOrientationPanel({ state }: { readonly state: EcmoS
           The channels, and what each is for
         </h3>
         <TextEquivalent>
-          Flow, the three pressure channels, and the gradient with their authored interpretations.
-          Where a channel is not reporting, its guide shows no value rather than an invented one.
+          Flow, the three pressure channels, and the gradient with their interpretations. Where a
+          channel is not reporting, its guide shows no value rather than an invented one.
         </TextEquivalent>
         <div className="mt-3 grid gap-3">
           <GuidedValue

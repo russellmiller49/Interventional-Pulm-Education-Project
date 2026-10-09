@@ -134,12 +134,6 @@ export function CapstoneMatrixCellBody({
       >
         {cell.discriminator}
       </span>
-      {cell.limitation ? (
-        <span className="mt-1 block text-xs leading-5" data-cell-limitation>
-          <span className="font-semibold">Limitation. </span>
-          {cell.limitation}
-        </span>
-      ) : null}
     </>
   )
 }

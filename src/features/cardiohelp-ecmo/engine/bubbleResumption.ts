@@ -133,6 +133,6 @@ export function resolveBubbleResumption(state: EcmoSimulationState): BubbleResum
     status: 'eligible',
     eligible: true,
     reason:
-      'The air source is corrected, the circuit is confirmed clear and the patient is isolated. Resuming is one bounded simulated step, governed at the bedside by the current IFU and your local protocol.',
+      'The air source is corrected, the circuit is confirmed clear and the patient is isolated. One press here; at the bedside: drainage clamp open, bubble stop reset, return clamp open last.',
   }
 }

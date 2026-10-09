@@ -10,6 +10,7 @@ import {
   type VaConfigurationStrategyId,
 } from '../components/teaching/VaConfigurationStrategyCard'
 import { evidenceById, validateEvidenceIds } from '../content/evidence'
+import { ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES } from '../content/teachingNumbers'
 import { ecmoFoundationSectionById } from '../content/foundationLessons'
 import { ecmoFoundationLearningItems } from '../content/foundationLearningItems'
 import {
@@ -245,7 +246,7 @@ describe('the modeled configuration is named, not implied', () => {
   })
 
   it('says the other configurations are described but not simulated', () => {
-    expect(corpus).toMatch(/described but not simulated here/i)
+    expect(corpus).toMatch(/described(?: here)?,? (?:but )?(?:not|rather than) simulated/i)
   })
 })
 
@@ -483,20 +484,33 @@ describe('configuration is taught as five distinct changes, not one lever', () =
     expect(native.doesNotChange).toMatch(
       /content of the native stream rather than the position of the mixing point/i,
     )
-    // And it is not turned into a ventilator algorithm.
-    expect(strategyText('improve-native-lung-zone')).not.toMatch(
-      /PEEP|tidal volume|driving pressure|recruit/i,
-    )
+    // Teaching-first (2026-10-08): this is taught as the first move, with what the move is. It
+    // still carries no ventilator target: no number to reach.
+    expect(native.caution).toMatch(/first move/i)
+    expect(native.caution).toMatch(/ventilator FiO₂, PEEP and recruitment/i)
+    expect(strategyText('improve-native-lung-zone')).not.toMatch(/tidal volume|driving pressure/i)
   })
 
-  it('reads as five parallel options rather than an ordered escalation', () => {
+  it('gives the differential-hypoxemia moves in order, from the register, in both densities', () => {
+    // Until the teaching-first redo this card had to say "not five steps in an order". The five
+    // entries are still five different things to change; what a fellow does about a low right arm
+    // is now taught beside them as a sequence, keyed on the first move.
     for (const detail of ['full', 'concise'] as const) {
-      const text = renderCard(detail)
-      expect(text).toContain('not five steps in an order')
-      expect(text).not.toMatch(/first[- ]line|second[- ]line|next step|step one|escalat/i)
-      expect(text).not.toMatch(/if that fails|failing that|only then/i)
+      const { container, unmount } = render(<VaConfigurationStrategyCard detail={detail} />)
+      const box = container.querySelector('[data-first-moves="differential-hypoxemia"]')
+      expect(box).not.toBeNull()
+      expect(box?.textContent).toContain(ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.recognize)
+      expect([...(box?.querySelectorAll('ol > li') ?? [])].map((node) => node.textContent)).toEqual(
+        [...ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves],
+      )
+      const text = container.textContent ?? ''
+      expect(text).not.toContain('not five steps in an order')
       expect(text).not.toMatch(/(?:always|invariably) (?:prefer|choose|start with)/i)
+      unmount()
     }
+    // The ventilator comes first and raising flow is named as temporary, not as the answer.
+    expect(ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves[0]).toMatch(/native lung.*ventilator/i)
+    expect(ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves.join(' ')).toMatch(/temporary step/i)
     for (const entry of VA_CONFIGURATION_STRATEGIES) {
       expect(strategyText(entry.id)).not.toMatch(/is (?:always|the) preferred/i)
     }
@@ -625,16 +639,20 @@ describe('cannulated-limb ischemia stays on the differential without widening th
     )
   })
 
-  it('shows the fixed-limb boundary where the explanation is read', () => {
-    const card = renderCapstone().querySelector(
+  it('keeps the fixed-limb limit in the list of where the simulation stops', () => {
+    // Teaching-first (2026-10-08): the boundary note inside the limb card was removed. This is a
+    // place a learner could take a simulated value for a real one — a limb that reads normal in
+    // every state — so the limit is still stated once, in the panel's own limits list.
+    const capstone = renderCapstone()
+    const card = capstone.querySelector(
       '[data-additional-va-hypothesis="cannulated-limb-ischemia"]',
     )
-    const boundary = card?.querySelector('[data-model-boundary]')?.textContent ?? ''
-    expect(boundary).toMatch(/holds distal-limb perfusion and the near-infrared value fixed/i)
-    expect(boundary).toMatch(/cannot demonstrate limb ischemia developing/i)
-    expect(boundary).toMatch(
-      /absence of a modeled change is therefore not evidence that limb perfusion is adequate/i,
-    )
+    expect(card?.querySelector('[data-model-boundary]')).toBeNull()
+    const limit =
+      capstone.querySelector('[data-model-limitation="limb-fixed-across-states"]')?.textContent ??
+      ''
+    expect(limit).toMatch(/near-infrared value is fixed across every one of them/i)
+    expect(limit).toMatch(/distal limb perfusion reads normal/i)
   })
 
   it('keeps the guided action that sends the learner to look at the limb', () => {

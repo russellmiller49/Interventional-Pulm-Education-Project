@@ -1,5 +1,7 @@
 import { ecmoDerivedValueGuides } from '../../../content/ecmoValueGuides'
+import { ECMO_EMERGENCY_DRIVE_SENTENCE } from '../../../content/teachingNumbers'
 import type { EcmoSimulationState } from '../../../engine/types'
+import { EcmoAirFirstMoves } from '../EcmoReferenceValues'
 import { GuidedValue, TextEquivalent, styles } from '../shared'
 import {
   AfterCommitment,
@@ -24,22 +26,7 @@ import {
  * around a pattern: what the device has done, what isolation has and has not been achieved, whether
  * the source has been corrected, and whether the latch is still set. Each of those is a separate
  * state flag in the engine, and reading them as one — "the alarm is handled" — is the error.
- *
- * No bubble size appears anywhere, and none should: the manufacturer document supplied for this
- * module is internally inconsistent on a size threshold, so this exercise teaches a sequence rather
- * than a rule about how much air matters.
  */
-
-/**
- * What the one resumption action is, said in the same words everywhere it appears.
- *
- * The module teaches recognition, isolation, source correction and de-airing. It does not teach
- * where clamp opening, pump restart and console reset fall relative to one another afterwards —
- * that is device- and program-specific — so the action that stands in for it has to say so wherever
- * it is described.
- */
-const BOUNDED_ACTION_NOTE =
-  'This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.'
 
 interface BubbleStep {
   readonly label: string
@@ -76,14 +63,14 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
         'The only step that stops air returning as soon as flow does. Nothing before it addresses the cause.',
     },
     {
-      label: 'Support resumed per the current IFU and your local protocol',
+      label: 'Bubble stop reset and clamps reopened, return clamp last',
       done:
         !circuit.bubbleResetRequired &&
         !circuit.drainageClampClosed &&
         !circuit.returnClampClosed &&
         device.pumpRunning,
       detail:
-        'One simulated step here, taken only once the source and the circuit are both right. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
+        'Only once the source is fixed and the circuit is free of bubbles. One press here stands for the reset and both clamps.',
     },
   ]
 
@@ -93,9 +80,7 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
       supportMode="vv"
       clinicalQuestion="The bubble channel has raised a high-priority alarm and the pump has stopped on its own. What has that stop actually achieved, and what has to be true before this circuit carries blood to the patient again?"
       boundaries={[
-        'This exercise injects an air event with no volume assigned to it and no threshold behind it. The manufacturer document supplied for this module is internally inconsistent on a bubble-size threshold, so this simulation offers no trigger value and teaches a sequence instead.',
-        'This module teaches isolation — return limb, then drainage limb, near the patient — because that is what separates a patient from an air column wherever the air is found. It deliberately does not teach where clamp opening, pump restart and console reset fall relative to one another during resumption: that choreography is device- and program-specific, local protocols differ on it, and this module holds no copy of one. This single simulated action stands in for the device- and program-specific resumption sequence; it does not reproduce or teach that sequence.',
-        'This simulation does not represent the physical work of de-airing a real circuit, and it does not model the patient being carried conventionally while the circuit is off. Both are real and both happen in the time this lab compresses to a button.',
+        'De-airing and resumption are each one press here. At the bedside they take minutes, during which the patient is supported on the ventilator and with drugs; the saturation on this monitor does not show that time.',
       ]}
     >
       <SignalRegister
@@ -229,9 +214,9 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
             The device intervention and the isolation are two different acts. Stopping the pump
             removes the forward push; only the near-patient clamps separate the patient from an air
             column; and only finding where air is entering keeps it from returning as soon as flow
-            does. Reset is never a response to the alarm, and never a substitute for source
-            correction and de-airing; where it falls within resumption is governed by the current
-            IFU and your unit&apos;s own protocol. The patient is carried conventionally throughout.
+            does. Reset is never a response to the alarm: the manual&apos;s warning is that the
+            cause is corrected and the system is free of bubbles before the bubble sensor is reset,
+            because the reset restarts the pump.
           </p>
           <p data-live-bubble-state>
             {sourceCorrected
@@ -268,16 +253,10 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
           <p>
             Recognise that the device has stopped forward flow and nothing else; close the return
             limb and then the drainage limb near the patient to isolate; find and correct where air
-            is entering and confirm the circuit is clear. After the source is corrected and the
-            circuit is confirmed clear, resume support through the protocol-governed clamp, pump,
-            and device sequence.
+            is entering, aspirate the air, and confirm the circuit is clear.
           </p>
-          <p>
-            Which limb opens first, when the pump turns, and where the console reset falls are
-            device- and program-specific, and are governed by the current IFU and your unit&apos;s
-            own ECMO air-emergency protocol, which this module does not hold a copy of. This
-            simulation is not the authority on any of it. {BOUNDED_ACTION_NOTE}
-          </p>
+          <EcmoAirFirstMoves supportMode={state.supportMode} />
+          <p>{ECMO_EMERGENCY_DRIVE_SENTENCE}</p>
           <p>
             Acknowledgement is not correction, and reset is not source control. Each is a separate
             act with a separate purpose.
@@ -285,9 +264,9 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
         </FittingResponse>
 
         <ThreeDomainResponse
-          device="Alarm recognised rather than merely silenced; the intervention left latched until the circuit is right; the device brought back only as part of the protocol-governed resumption."
-          circuitOrGas="Return limb clamped, then the drainage limb, near the patient; the air source found and eliminated; the circuit confirmed bubble free; then support resumed per the current IFU and your local protocol."
-          patient="Carried conventionally while the circuit is off, with oxygenation and haemodynamics followed independently of a console that has nothing to report while the pump is stopped."
+          device="Alarm recognised rather than merely silenced; the bubble stop left latched until the circuit is free of air; then reset on the Interventions screen, which restarts the pump."
+          circuitOrGas="Return limb clamped, then the drainage limb, near the patient; the air source found and eliminated; the circuit confirmed bubble free; then the drainage clamp opened, the bubble stop reset, and the return clamp opened last."
+          patient="Ventilator support raised, and inotropes on VA, while the circuit is off. Help and the primed backup circuit called as soon as the clamps are on."
         />
 
         <HarmfulReflex action="Getting the pump turning again before the air source has been dealt with.">
@@ -311,8 +290,8 @@ export function ArterialBubbleStopPanel({ state }: { readonly state: EcmoSimulat
           What the console can and cannot report here
         </h3>
         <TextEquivalent>
-          Circuit blood flow with its authored interpretation, and the drainage-limb pressure
-          showing no value rather than an invented one while the pump is stopped.
+          Circuit blood flow with its interpretation, and the drainage-limb pressure showing no
+          value rather than an invented one while the pump is stopped.
         </TextEquivalent>
         <div className="mt-3 grid gap-3">
           <GuidedValue

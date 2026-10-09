@@ -399,8 +399,9 @@ describe('B4: the panels read the live circuit rather than static prose', () => 
       .map((node) => node.textContent ?? '')
       .join(' ')
 
-    expect(boundaries).toMatch(/does not derive or move a mixing point/i)
-    expect(boundaries).toMatch(/limitation of the lab, not a statement that flow does not matter/i)
+    // Still a statement about this monitor, with what the bedside does said beside it.
+    expect(boundaries).toMatch(/does not respond to pump speed or to ventilator settings/i)
+    expect(boundaries).toMatch(/at the bedside, more retrograde flow moves the mixing point/i)
     expect(container.textContent).toMatch(/femoral|post-membrane/i)
     expect(container.textContent).toMatch(/pArt/)
   })
@@ -443,7 +444,8 @@ describe('R2: the circuit map and localization row inside the pilot drills', () 
       const row = ecmoLocalizationRow(plan.rowId)
       expect(container.querySelector(`[data-localization-row="${row.id}"]`)).not.toBeNull()
       expect(container.textContent).toContain(row.problemLocation)
-      expect(container.textContent).toContain(row.modelBoundary)
+      // The row's model-boundary sentence is no longer rendered with it (teaching-first rule 5).
+      expect(container.textContent).not.toContain(row.modelBoundary)
     } else {
       expect(container.querySelector('[data-localization-row]')).toBeNull()
     }

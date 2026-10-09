@@ -279,15 +279,4 @@ describe('B1: the items agree with the drill they belong to', () => {
     expect(entry.item.phase).toBe('predict')
     expect(entry.item.reviewStatus).toBe('draft')
   })
-
-  it('writes saturations without the banned unit symbol anywhere', () => {
-    for (const [, entry] of drills) {
-      const copy = [
-        entry.item.stem,
-        entry.item.explanation,
-        ...entry.item.choices.flatMap((choice) => [choice.label, choice.rationale]),
-      ].join(' ')
-      expect(copy).not.toContain('%')
-    }
-  })
 })

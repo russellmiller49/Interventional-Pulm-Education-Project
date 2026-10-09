@@ -21,7 +21,7 @@ import {
 import type { EcmoSimulationState } from '../../engine/types'
 import { EcmoSourceList } from '../evidence/EcmoSourceList'
 import { useStageSourcesCollected } from '../stage/StageSourcesScope'
-import { ChannelValue, ModelBoundary, TextEquivalent, styles } from './shared'
+import { ChannelValue, TextEquivalent, styles } from './shared'
 
 /**
  * The walk, one stop at a time.
@@ -327,8 +327,6 @@ export function EcmoCircuitWalk({
           })}
         </TextEquivalent>
       </details>
-
-      <ModelBoundary>{resolveEcmoModeText(stop.modelBoundary, supportMode)}</ModelBoundary>
 
       {sourcesCollectedElsewhere ? null : (
         <div className="mt-3" data-walk-sources>
