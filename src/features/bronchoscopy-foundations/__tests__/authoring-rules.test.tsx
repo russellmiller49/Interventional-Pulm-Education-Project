@@ -383,6 +383,7 @@ describe('the rewrite rules', () => {
       'five-controls',
       'larynx-and-entry',
       'right-side',
+      'left-side',
       'bleeding-priorities',
     ])
     for (const section of [

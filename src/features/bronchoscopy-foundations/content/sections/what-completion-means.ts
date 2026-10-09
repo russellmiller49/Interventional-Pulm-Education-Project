@@ -57,7 +57,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D14'],
-  prerequisites: ['reference-frames', 'scope-in-a-tube', 'honest-report'],
+  prerequisites: ['right-side', 'scope-in-a-tube', 'honest-report'],
 
   clinicalQuestion: 'Which decision can each record in a bronchoscopy trainee’s file support?',
   recognizeTitle: 'A fellow’s file at the end of the course',
@@ -504,7 +504,7 @@ export const section: BronchSectionDefinition = {
     reviewItemIds: ['R06'],
     transferVariant:
       'From reading a file at the end of the course to a first supervised patient task in a changed setting: a tube, a ventilator and a rotated image that the observed simulation did not include.',
-    retrievesFrom: 'reference-frames',
+    retrievesFrom: 'right-side',
   },
 
   practice: [],

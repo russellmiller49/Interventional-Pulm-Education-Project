@@ -76,4 +76,6 @@ export function forwardSectionIds(
  */
 export const RETIRED_OBJECTIVE_REASONS: Readonly<Record<string, string>> = {
   'M01-O5': 'Brief 1 cuts the history of rigid and flexible scopes.',
+  'M06-O5':
+    'The fifteen sections have no CT-tracing activity. Naming an airway on a rolled view is assessed in the right lung.',
 }

@@ -25,8 +25,18 @@ export const section: BronchSectionDefinition = {
   shortTitle: 'Right lung',
   minutes: 9,
   activityMinutes: 5,
-  moduleIds: ['M08'],
+  moduleIds: ['M06', 'M08'],
   objectives: [
+    {
+      objectiveId: 'M06-O1',
+      subtask: 'Finds the right main bronchus above the carina from the membranous wall.',
+      evidence: 'committed-explanation',
+    },
+    {
+      objectiveId: 'M06-O2',
+      subtask: 'Names a basal opening after a quarter turn has moved it on the screen.',
+      evidence: 'committed-explanation',
+    },
     {
       objectiveId: 'M08-O1',
       subtask: 'Says where the tip is after an advance from the carina that passed a side opening.',
@@ -55,7 +65,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D05', 'D06', 'D08'],
-  prerequisites: ['reference-frames', 'larynx-and-entry'],
+  prerequisites: ['five-controls', 'larynx-and-entry'],
 
   clinicalQuestion: 'You are in the right lung. Which airway is this, and how do you know?',
   objective: 'Name each airway of the right lung from its parent and the wall it leaves.',

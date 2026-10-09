@@ -59,6 +59,13 @@ const PICKS = [
   { id: 'larynx-inlet', frame: 60, markers: [CORD, ARYEPIGLOTTIC, CORNICULATE, CUNEIFORM] },
   { id: 'larynx-folds', frame: 136, markers: [CORD, ARYEPIGLOTTIC, CUNEIFORM] },
   { id: 'larynx-cords', frame: 170, markers: [CORD, CUNEIFORM] },
+  // The left lung, in the order the survey reaches it.
+  { id: 'left-main-end', frame: 1410, markers: ['lul', 'lll'] },
+  { id: 'left-upper-lobe', frame: 1434, markers: ['lul-upper', 'lingula'] },
+  { id: 'left-upper-division', frame: 1510, markers: ['lb1-2', 'lb3'] },
+  { id: 'lingula', frame: 1596, markers: ['lb4', 'lb5'] },
+  { id: 'left-lower-lobe', frame: 1710, markers: ['lb6', 'lb9', 'lb10'] },
+  { id: 'left-basal', frame: 1842, markers: ['lb7-8', 'lb9', 'lb10'] },
 ]
 
 const overlays = JSON.parse(readFileSync(path.join(root, OVERLAYS), 'utf8'))
