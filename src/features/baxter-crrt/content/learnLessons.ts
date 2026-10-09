@@ -1,6 +1,9 @@
 import type { LearnBlock } from '@/features/learning-module/types'
 
 import { BAXTER_CRRT_LEARN_LESSON_IDS, type BaxterCrrtLearnLessonId } from './learnerRegistry'
+import { CRRT_NUMBERS } from './teachingNumbers'
+
+const N = CRRT_NUMBERS.value
 
 export type BaxterCrrtEmbeddedLabId = 'LAB-PRESCRIPTION' | 'LAB-PRESSURE-LOCALIZATION'
 
@@ -163,16 +166,16 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
     summary:
       'Follow citrate into the circuit and calcium back to the patient, and keep the two sampling domains answering different questions.',
     paragraphs: [
-      'Anticoagulation strategy is shaped by bleeding risk, circuit behavior, treatment goals, monitoring capability, and the authorized local protocol. The circuit and the patient must be reassessed together.',
+      'Regional citrate is the first-choice anticoagulant for CRRT where it is available and not contraindicated, because it anticoagulates the circuit without raising the patient’s bleeding risk. Heparin is the alternative. The choice turns on bleeding risk, liver function and perfusion.',
       'Citrate makes that pairing concrete: it binds ionized calcium in the circuit, and some citrate–calcium complexes leave in effluent. Remaining citrate returns to the patient for metabolism. In this schematic, citrate enters before the blood pump and calcium replacement uses a separate patient line; actual infusion sites depend on the approved configuration. Circuit and systemic ionized calcium samples answer different questions, and neither substitutes for the other.',
-      'For citrate-based therapy, trend recognition matters: verify sampling and timing, review circuit delivery, compare linked calcium and acid-base information, and escalate discordant patterns. This module intentionally does not provide medication quantities or a dosing protocol.',
+      `Two samples answer two questions. The post-filter ionized calcium tells you whether the circuit is anticoagulated: the target is ${N('postfilter-ica')}. Higher than that, the circuit is under-anticoagulated and the citrate dose goes up; lower, it comes down. The systemic ionized calcium tells you whether the patient is safe, and it sets the calcium replacement. Citrate the liver cannot clear accumulates: the systemic ionized calcium falls, the calcium requirement keeps rising, the total calcium climbs, and a total-to-ionized calcium ratio ${N('calcium-ratio')} with a new metabolic acidosis makes the diagnosis. The first move is to reduce or stop the citrate while you keep replacing calcium.`,
     ],
     bullets: [
       'Confirm the prescribed strategy and the monitoring plan before treatment.',
       'Say which compartment a result describes before saying what it means.',
       'Distinguish recurrent filter burden from an isolated pressure fluctuation.',
-      'Treat verification, communication, and reassessment as safety actions.',
-      'Follow the current local citrate/calcium protocol and responsible clinical team.',
+      `Post-filter ionized calcium ${N('postfilter-ica')} is the circuit; systemic ionized calcium is the patient.`,
+      `Total-to-ionized calcium ratio ${N('calcium-ratio')}: reduce or stop citrate.`,
     ],
     sourceRecordIds: [
       'TEXT-CRRT-NEYRA-2026',
@@ -219,7 +222,7 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
       'Every earlier section supplies one reading of the same run. Circuit anatomy says where each transducer sits. Transport and prescription say what the run was supposed to deliver. Anticoagulation says how the filter was being protected. The fluid ledger says what was being removed and at what rate. A single pressure value does not distinguish among those; the profile read together with its trend often does.',
       'Read the profile as a set of relationships rather than a list of numbers. Access pressure describes the inflow side, return pressure the outflow side, and transmembrane pressure with filter pressure drop describe the membrane and the filter itself. Ask which combination of those would have to be true for each competing explanation, then look for the one the whole profile supports. Name the location before naming the fix.',
       'The competing explanations usually available are a patient-side or access-side inflow limitation, a return-side obstruction, progressive filter clotting, and a delivery target that is simply too aggressive for the current hemodynamics. Each of these can present with a falling delivered dose and a rising alarm burden, so the discriminating information is which pressures moved, in which direction, and over what interval — together with what the patient was doing at the time.',
-      'This section does not supply a threshold table or a universal corrective sequence. Exact alarm limits, restart behavior, and the actions permitted at each state come from current PrisMax instructions and local policy, and the anticoagulation response comes from the authorized local protocol and the responsible clinical team.',
+      `The limits to hold the profile against are the PrisMax’s own: access ${N('access-low-limit')}, return ${N('return-high-limit')}, filter ${N('filter-high-limit')}, TMP ${N('tmp-alarm')}, and a clotting advisory when the pressure drop or TMP is ${N('clotting-advisory')}. Your unit may set tighter limits.`,
     ],
     bullets: [
       'Start with the patient and a visible circuit inspection before interpreting any number.',

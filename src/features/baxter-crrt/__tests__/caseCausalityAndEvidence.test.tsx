@@ -52,41 +52,46 @@ const sectionFor = (name: RegExp) =>
 beforeEach(() => window.localStorage.clear())
 
 describe('the case states its evidence scope in the task', () => {
-  it('CRRT-17 shows the one supplied systemic calcium with its sample identity and time', () => {
-    render(<Player definition={getBaxterCrrtCase('CRRT-17')} />)
+  it('CRRT-17 shows the supplied systemic calcium with its sample identity and time', () => {
+    const definition = getBaxterCrrtCase('CRRT-17')
+    render(<Player definition={definition} />)
     const scope = sectionFor(/What this case can show you/)
-    expect(scope).toHaveTextContent('1.05 mmol/L')
+    const ionized = definition.initialPatient.solutes.systemicIonizedCalciumMmolPerL
+    expect(ionized).toBe(0.88)
+    expect(definition.patientDescription).toContain(`${ionized.toFixed(2)} mmol/L`)
+    expect(scope).toHaveTextContent(`${ionized.toFixed(2)} mmol/L`)
     expect(scope).toHaveTextContent('Systemic sample — patient blood, not the circuit')
     expect(scope).toHaveTextContent('At case start')
-    expect(scope).toHaveTextContent('SYNTH-CRRT-17')
+    expect(scope).toHaveTextContent('Case CRRT-17')
   })
 
-  it('CRRT-17 keeps the absent citrate evidence absent, and never zero or normal', () => {
-    render(<Player definition={getBaxterCrrtCase('CRRT-17')} />)
+  it('CRRT-17 supplies the total calcium the ratio needs, matching the case description', () => {
+    const definition = getBaxterCrrtCase('CRRT-17')
+    render(<Player definition={definition} />)
     const scope = sectionFor(/What this case can show you/)
+    const total = definition.initialPatient.solutes.totalCalciumMgPerDl
+    expect(total).not.toBeNull()
     const totalCalcium = within(scope).getByText('Total calcium').closest('div') as HTMLElement
-    expect(totalCalcium).toHaveTextContent('Not supplied')
-    expect(totalCalcium).not.toHaveTextContent('0.0')
-    expect(scope).toHaveTextContent('A post-filter (circuit) ionized calcium')
-    expect(scope).toHaveTextContent('Serial calcium values, or any calcium trend')
-    expect(scope).toHaveTextContent('A total/ionized calcium relationship')
-    expect(scope).toHaveTextContent('The linked trend-direction display')
+    expect(totalCalcium).toHaveTextContent(`${total!.toFixed(1)} mg/dL`)
+    expect(totalCalcium).not.toHaveTextContent('Not supplied')
+    expect(definition.patientDescription).toContain(`total calcium ${total!.toFixed(1)} mg/dL`)
+    // Only the repeat samples are outside the case; the teaching is pointed at, with its source.
+    expect(scope).toHaveTextContent('Repeat calcium and blood gas after you act')
     expect(scope).toHaveTextContent(
-      'Citrate physiology, calcium kinetics, citrate accumulation, or any threshold',
+      'Post-filter ionized calcium tells you whether the circuit is anticoagulated',
     )
-    // The supported teaching that does exist is pointed at, with its source.
-    expect(scope).toHaveTextContent('Post-filter ionized calcium describes anticoagulant effect')
   })
 
-  it('CRRT-18 states that no recovery trajectory exists and shows the single supplied values', () => {
-    render(<Player definition={getBaxterCrrtCase('CRRT-18')} />)
+  it('CRRT-18 shows the supplied urine output from the fixture and what the run leaves out', () => {
+    const definition = getBaxterCrrtCase('CRRT-18')
+    render(<Player definition={definition} />)
     const scope = sectionFor(/What this case can show you/)
     expect(scope).toHaveTextContent('2.9 mg/dL')
-    expect(scope).toHaveTextContent('5 mL/h')
-    expect(scope).toHaveTextContent('0 mL/min')
-    expect(scope).toHaveTextContent('A recovery trend')
-    expect(scope).toHaveTextContent('There is no second time point and no improving signal')
-    expect(scope).toHaveTextContent('Renal recovery, a falling creatinine, rising urine output')
+    // 620 mL over 24 hours in the case description is the 26 mL/h the fluid ledger carries.
+    expect(definition.patientDescription).toContain('620 mL over the last 24 hours')
+    expect(definition.initialPatient.urineOutputMlPerHour).toBe(Math.round(620 / 24))
+    expect(scope).toHaveTextContent(`${definition.initialPatient.urineOutputMlPerHour} mL/h`)
+    expect(scope).toHaveTextContent('The days after stopping')
   })
 
   it('CRRT-18 no longer claims its recovery signals are improving', () => {
@@ -134,7 +139,7 @@ describe('the case states its evidence scope in the task', () => {
     expect(scope).toHaveTextContent('The earlier failed circuits')
     expect(scope).toHaveTextContent('They exist only in the case description')
     expect(scope).toHaveTextContent('A filter exchange, or any effect of your plan on this circuit')
-    expect(scope).toHaveTextContent('it does not change the running circuit')
+    expect(scope).toHaveTextContent('The circuit beside the case keeps running as it is')
   })
 
   it('CRRT-11 names the held blood pressure as a model limit before the learner acts', () => {
@@ -171,7 +176,6 @@ describe('the debrief separates action time, elapsed time and downtime', () => {
       .getAllByRole('article')
       .find((candidate) => /Reduce/i.test(candidate.textContent ?? ''))!
     expect(card).toHaveTextContent('advances the simulated clock by 1 hr')
-    expect(card).toHaveTextContent('its authored observation interval')
   })
 
   it('reports a same-timestamp CRRT-13 pause and resume as zero downtime and explains it', () => {
@@ -221,9 +225,7 @@ describe('Batch-01 debrief truth still holds', () => {
       screen.getByRole('heading', { name: 'Supplied teaching path · worked example' }),
     ).toBeInTheDocument()
     const evidence = sectionFor(/What you did in this run/)
-    expect(evidence).toHaveTextContent(
-      'Not recorded. The recommended reassessment below is the authored answer',
-    )
+    expect(evidence).toHaveTextContent('Not recorded. The reassessment below is the worked answer')
     expect(screen.queryByText('Run reviewed')).toBeNull()
   })
 

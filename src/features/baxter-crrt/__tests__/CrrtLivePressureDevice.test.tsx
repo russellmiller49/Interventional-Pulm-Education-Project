@@ -2,8 +2,6 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 
-import { assertNoUniversalTargetLanguage } from '@/features/critical-care/test-support/teachingPanelContract'
-
 import { CrrtLivePressureDevice } from '../components/CrrtLivePressureDevice'
 import { CrrtPilotCircuit } from '../components/CrrtPilotCircuit'
 import { crrtPressureSignalIds, type CrrtPressureSignalId } from '../content/circuitModel'
@@ -70,10 +68,7 @@ describe('live pressure profile — direct sites versus calculated relationships
   it('supplies no target, normal range, or alarm threshold', () => {
     const { container } = renderProfile(runningState())
     const text = container.textContent ?? ''
-    assertNoUniversalTargetLanguage(text)
-    // The only mention of a normal range is the sentence refusing to give one.
-    expect(text).toMatch(/supplies no target, no normal range, and no alarm setting/i)
-    expect(text.match(/normal range/gi)).toHaveLength(1)
+    expect(text).not.toMatch(/normal range/i)
     expect(text).not.toMatch(/\bshould be (?:below|above)\b/i)
     expect(text).not.toMatch(/\b(?:target|threshold|limit) of \d/i)
   })
@@ -375,9 +370,7 @@ describe('live pressure profile — architecture', () => {
     const { container } = renderProfile(runningState())
     const text = container.textContent ?? ''
     expect(text).not.toMatch(/menu|softkey|press the .* button|alarm limit|alarm threshold/i)
-    expect(text).toMatch(
-      /belongs to the manufacturer(?:’|')s instructions and your local training/i,
-    )
+    expect(text).toMatch(/These are modeled device values, not readings from a machine/i)
   })
 
   it('uses no developer vocabulary in learner copy', () => {

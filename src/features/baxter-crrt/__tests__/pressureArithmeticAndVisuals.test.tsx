@@ -74,7 +74,7 @@ describe('F-14 pressure arithmetic presents the existing formula and nothing els
     expect(drop.terms.find((term) => term.role === 'intermediate')?.valueMmHg).toBe(30)
     // The −25 placement is still held; the −18 is printed in the manual.
     expect(drop.correction.status).toBe('placement-held-for-device-review')
-    expect(drop.correction.note).toMatch(/where the correction belongs awaits device review/)
+    expect(drop.correction.note).toMatch(/applies the −25 mmHg to the drop itself/)
     expect(tmp.correction.status).toBe('printed-in-manual')
     // Rounded terms either reproduce the rounded result or the display says they do not.
     for (const raw of cases) {
@@ -103,8 +103,7 @@ describe('F-14 pressure arithmetic presents the existing formula and nothing els
     expect(within(block).getByRole('note')).toHaveTextContent(
       CRRT_CALCULATED_PRESSURE_NO_FLOW_REASON,
     )
-    expect(block).toHaveTextContent('placement held for device review')
-    expect(block).toHaveTextContent('clinical and device review of this arithmetic is pending')
+    expect(block).toHaveTextContent('Correction applied by this simulation · correction term')
   })
 
   it.each([

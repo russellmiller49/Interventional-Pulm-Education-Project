@@ -33,13 +33,19 @@ describe('runnable cause-first rapid drills', () => {
     }
   })
 
-  it('keeps wrong-solution content inside a verification boundary', () => {
+  it('keys the wrong-solution drill on stopping the fluid and teaches the correction', () => {
     const wrongSolution = baxterCrrtRapidDrillManifest.find(
       (drill) => drill.id === 'DRILL-WRONG-SOLUTION',
-    )
-    expect(wrongSolution?.predictionOptions[0]?.label).toMatch(/Stop.*verify.*escalate/i)
-    expect(wrongSolution?.correctionBoundary).toMatch(
-      /local mismatch procedure.*does not recommend a substitute/i,
+    )!
+    const safe = wrongSolution.predictionOptions.find(
+      (option) => option.id === wrongSolution.candidateCauseOptionId,
+    )!
+    expect(safe.disposition).toBe('safe')
+    expect(safe.label).toMatch(/^Stop that fluid/)
+    expect(safe.label).not.toMatch(/escalat/i)
+    expect(wrongSolution.correctionBoundary.length).toBeGreaterThan(0)
+    expect(wrongSolution.correctionBoundary).not.toMatch(
+      /local (policy|mismatch procedure)|does not (teach|recommend)/i,
     )
   })
 

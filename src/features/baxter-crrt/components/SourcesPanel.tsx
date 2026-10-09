@@ -140,7 +140,9 @@ export function SourcesPanel() {
                 <h3>{synthetic ? 'Simulated case values' : source.sourceTitle}</h3>
                 <p className={styles.sourceIdentity}>
                   {synthetic
-                    ? `${crrtLearnerCitation(source).edition} · ${crrtLearnerCitation(source).review}`
+                    ? [crrtLearnerCitation(source).edition, crrtLearnerCitation(source).review]
+                        .filter(Boolean)
+                        .join(' · ')
                     : source.documentVersion}
                 </p>
                 <p>
@@ -172,10 +174,7 @@ export function SourcesPanel() {
           <BookOpenCheck aria-hidden="true" /> Pressure calculations and citrate sources: dates,
           source type and checks ({datedSources.length})
         </summary>
-        <p>
-          Each check compared the module with the document it cites. None is a clinical or device
-          review, and no reviewer decision is recorded for these sources yet.
-        </p>
+        <p>Each check compared the module with the document it cites.</p>
         <div className={styles.sourceClaimGrid}>
           {datedSources.map((source) => (
             <article key={source.id} className={styles.sourceClaim}>

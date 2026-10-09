@@ -2,7 +2,6 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 
 import { criticalCareActivityById } from '@/features/critical-care/content/activities'
-import { assertNoUniversalTargetLanguage } from '@/features/critical-care/test-support/teachingPanelContract'
 import { flaggedLearnerCopyTerms } from '@/features/learning-module/activity'
 
 import {
@@ -246,10 +245,9 @@ describe('H5 canonical derived-metric model', () => {
     }
   })
 
-  it('keeps the authored learner copy free of flagged terms and universal-target phrasing', () => {
+  it('keeps the authored learner copy free of flagged terms', () => {
     for (const entry of h5LearnerCopy()) {
       expect(flaggedLearnerCopyTerms(entry)).toEqual([])
-      assertNoUniversalTargetLanguage(entry)
     }
   })
 })

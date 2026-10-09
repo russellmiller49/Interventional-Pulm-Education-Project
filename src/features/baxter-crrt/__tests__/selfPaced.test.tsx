@@ -86,7 +86,7 @@ it.each(baxterCrrtCases.map((definition) => [definition.id, definition] as const
     expect(screen.getByText('Debrief opened · no run performed')).toBeInTheDocument()
     expect(facts()).toEqual(initial)
     expect(view.container.textContent).not.toMatch(
-      /\b(?:mastered|mastery|grade)\b|best score|minimum score|pass\/fail|percentage correct/i,
+      /\b(?:mastered|mastery)\b|\bgrade\b(?! \d)|best score|minimum score|pass\/fail|percentage correct/i,
     )
     expect(window.localStorage).toHaveLength(0)
     click('Reset case')
@@ -171,7 +171,7 @@ it('offers explanation, wrong-answer feedback, retry, and navigation without wri
   click('Show worked explanation')
   expect(screen.getByText('Worked explanation · no answer recorded.')).toBeVisible()
   expect(screen.queryByRole('radio', { checked: true })).toBeNull()
-  fireEvent.click(screen.getByRole('radio', { name: /Fluid removal alone/ }))
+  fireEvent.click(screen.getByRole('radio', { name: /One goal, fluid removal/ }))
   click('Check reasoning')
   expect(screen.getByRole('status')).toHaveTextContent('Your choice is not the accepted answer')
   click('Try again')

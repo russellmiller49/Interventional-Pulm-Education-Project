@@ -142,20 +142,15 @@ describe('live pressure profile — provenance', () => {
   })
 
   /**
-   * Anything the surface says about a commercial console has to be a boundary
-   * statement, not an assertion of behaviour. This is the sentence that keeps
-   * exact-fidelity work out of this package.
+   * The one model-limit note this surface keeps: a learner could take a modeled value for a
+   * bedside reading. It asserts nothing about how a commercial console presents the values.
    */
-  it('labels device behaviour as out of scope rather than describing it', () => {
+  it('says the values are modeled and asserts no console behaviour', () => {
     const text = profileText()
-    expect(text).toMatch(
-      /Exactly how a commercial machine displays, groups, or alarms on these values belongs to the manufacturer(?:’|')s instructions and your local training, not to this model/i,
-    )
     expect(text).toMatch(
       /These are modeled device values, not readings from a machine at a bedside/i,
     )
     expect(text).not.toMatch(/the console (?:shows|displays|groups)/i)
-    expect(text).not.toMatch(/PrisMax/)
   })
 
   it('never presents an educational number as a device specification', () => {

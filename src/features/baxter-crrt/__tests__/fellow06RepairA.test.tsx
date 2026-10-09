@@ -4,6 +4,7 @@ import { useReducer } from 'react'
 import { CrrtCasePlayer } from '../components/CrrtCasePlayer'
 import { baxterCrrtCases, getBaxterCrrtCase } from '../content/completeCases'
 import type { CrrtCaseId, RuntimeCrrtCase } from '../content/schema'
+import { CRRT_NUMBERS } from '../content/teachingNumbers'
 import { selectCrrtBloodFlowState } from '../engine/circuitDelivery'
 import {
   createCrrtLearningSession,
@@ -26,6 +27,10 @@ import { selectCrrtLabEvidence } from '../labEvidence'
  *
  * Every repair here is wording and one debrief section boundary. The engine, the fixtures and the
  * actual-run ledger are unchanged, and these tests hold both halves.
+ *
+ * Teaching-first revision (2026-10-08): CRRT-03, 08, 09 and 17 now state their values and key on
+ * a first move. The tests keep the three truths (no promised laboratory series, a prospective
+ * worked teaching, a running fixture that no action changes) and no longer require hedge wording.
  */
 
 jest.mock('@/i18n/navigation', () => ({
@@ -144,27 +149,28 @@ describe.each(['CRRT-03', 'CRRT-04'] as const)(
       }
     })
 
-    it('says in the debrief that serial measurements would have to be obtained separately', () => {
-      expect(definition.debrief.trendReview).toMatch(/once, at case start/)
-      expect(definition.debrief.trendReview).toMatch(/obtained (and reviewed )?separately/)
+    it('reviews delivered treatment in the debrief', () => {
       expect(definition.debrief.trendReview).toMatch(/delivered/)
     })
   },
 )
 
-describe('F06-R01 · CRRT-03 is framed around delivery evidence and missing measurements', () => {
+describe('F06-R01 · CRRT-03 states its values, keys on the dose and shows no solute series', () => {
   const definition = getBaxterCrrtCase('CRRT-03')
   const coordinate = intervention(definition, 'action-safe-candidate')
 
-  it('states the evidence boundary in the introduction, before any action', () => {
+  it('states the case-start values of the fixture in the introduction, before any action', () => {
     render(<Player initial={newSession('CRRT-03')} />)
     const brief = screen.getByText(definition.patientDescription).closest('section') as HTMLElement
-    expect(brief).toHaveTextContent('it carries no serial solute measurements')
-    expect(brief).toHaveTextContent('serial solute measurements are not')
+    const { solutes, simulatedBodyWeightKg } = definition.initialPatient
+    expect(brief).toHaveTextContent(`${simulatedBodyWeightKg} kg`)
+    expect(brief).toHaveTextContent(`Potassium is ${solutes.potassiumMmolPerL.toFixed(1)} mmol/L`)
+    expect(brief).toHaveTextContent(`pH ${solutes.pH.toFixed(2)}`)
+    expect(brief).toHaveTextContent(`bicarbonate ${solutes.bicarbonateMmolPerL} mmol/L`)
     expect(brief).not.toHaveTextContent(/trend .* visible/i)
   })
 
-  it('records the coordination plan without changing the simulation or announcing a trend', () => {
+  it('records the dose plan without changing the simulation, with arithmetic that matches the fixture', () => {
     const assessed = reduce(newSession('CRRT-03'), {
       type: 'PERFORM_INTERVENTION',
       interventionId: intervention(definition, 'action-assess').id,
@@ -175,15 +181,22 @@ describe('F06-R01 · CRRT-03 is framed around delivery evidence and missing meas
     })
     expect(coordinate.effects).toEqual([])
     expect(planned.simulation).toEqual(assessed.simulation)
-    expect(coordinate.response).toMatch(/No solute series appears, because this case carries none/)
-    expect(coordinate.response).toMatch(/obtained separately/)
+    expect(coordinate.label).toContain(CRRT_NUMBERS.value('dose-delivered'))
+    expect(coordinate.response).toMatch(/plan is recorded/)
+    expect(coordinate.response).toMatch(/laboratory values are the case-start set/)
+    // The dose the response quotes is the fixture's dialysate flow over its body weight.
+    const dose =
+      definition.initialPrescription.dialysateFlowMlPerHour /
+      definition.initialPatient.simulatedBodyWeightKg
+    expect(coordinate.response).toContain(`about ${dose.toFixed(1)} mL/kg/h`)
+    expect(definition.debrief.trendReview).toContain(`about ${dose.toFixed(1)} mL/kg/h`)
   })
 
   it('keeps delivery evidence and shows no solute value after two hours', () => {
     render(<Player initial={newSession('CRRT-03')} />)
     perform('Complete the initial clinical assessment')
     perform(coordinate.label)
-    expect(cardFor(coordinate.label)).toHaveTextContent('No solute series appears')
+    expect(cardFor(coordinate.label)).toHaveTextContent(coordinate.response)
     fireEvent.click(screen.getByRole('button', { name: '+1 hr' }))
     fireEvent.click(screen.getByRole('button', { name: '+1 hr' }))
     const patient = sectionFor(/Patient and delivered-therapy state/)
@@ -192,8 +205,8 @@ describe('F06-R01 · CRRT-03 is framed around delivery evidence and missing meas
     expect(patient).not.toHaveTextContent(/potassium|urea|bicarbonate|creatinine/i)
 
     openDebrief()
-    // The laboratory section's own caption says no laboratory trend is claimed; the promise may
-    // not come back in the action notes or the worked teaching around it.
+    // The laboratory section says the values stay at case start; the promise of a series may not
+    // come back in the action notes or the worked teaching around it.
     for (const section of [sectionFor(/Action teaching notes from this run/), workedTeaching()]) {
       for (const pattern of laboratoryTrendPromises) {
         expect(section.textContent ?? '').not.toMatch(pattern)
@@ -305,7 +318,9 @@ describe('F06-R02 · a no-action debrief reports no action, reassessment or resu
       )
 
       const teaching = workedTeaching()
-      expect(teaching).toHaveTextContent('do not report an action, a reassessment, or a result')
+      expect(teaching).toHaveTextContent(
+        'They are the same after every run; what you did in this run is listed above.',
+      )
       const definition = getBaxterCrrtCase(caseId as CrrtCaseId)
       expect(teaching).toHaveTextContent(definition.debrief.trendReview)
       expect(teaching).toHaveTextContent(definition.debrief.transferQuestion)
@@ -333,12 +348,25 @@ describe('F06-R02 · a no-action debrief reports no action, reassessment or resu
     const debrief = sectionFor(/Causal debrief/)
     expect(debrief).not.toHaveTextContent(/escalation and reassessment plan is recorded/i)
     expect(debrief).not.toHaveTextContent(/responsible team receives/i)
-    expect(workedTeaching()).toHaveTextContent(/An escalation would give the responsible team/)
-    // The physiology containment is unchanged: still no calcium series, ratio or citrate value.
-    expect(definition.debrief.trendReview).toMatch(
-      /cannot show a calcium trend, a total-to-ionized ratio, or a citrate measurement/,
+    expect(workedTeaching()).not.toHaveTextContent(/escalation would give|responsible team/i)
+    // The case now carries both calcium values, and the worked ratio is their arithmetic.
+    const { totalCalciumMgPerDl, systemicIonizedCalciumMmolPerL } =
+      definition.initialPatient.solutes
+    expect(totalCalciumMgPerDl).not.toBeNull()
+    // The stem quotes the total in both units; they are the same value (1 mmol/L = 4.008 mg/dL).
+    const quoted = definition.patientDescription.match(
+      /total calcium ([\d.]+) mg\/dL \(([\d.]+) mmol\/L\)/,
+    )!
+    expect(Number(quoted[1])).toBe(totalCalciumMgPerDl)
+    const totalMmolPerL = Number(quoted[2])
+    expect((totalMmolPerL * 4.008).toFixed(1)).toBe(totalCalciumMgPerDl!.toFixed(1))
+    expect(definition.debrief.trendReview).toContain(
+      `${totalMmolPerL.toFixed(2)} ÷ ${systemicIonizedCalciumMmolPerL.toFixed(2)} is ${(
+        totalMmolPerL / systemicIonizedCalciumMmolPerL
+      ).toFixed(1)}`,
     )
-    expect(definition.initialPatient.solutes.totalCalciumMgPerDl).toBeNull()
+    expect(totalMmolPerL / systemicIonizedCalciumMmolPerL).toBeGreaterThan(2.5)
+    expect(definition.debrief.trendReview).toContain(CRRT_NUMBERS.value('calcium-ratio'))
   })
 
   it('no case reuses an action response as its debrief teaching paragraph', () => {
@@ -352,7 +380,7 @@ describe('F06-R02 · a no-action debrief reports no action, reassessment or resu
 })
 
 describe('F06-R02 · a run that acted and reassessed still reads as actual', () => {
-  it('CRRT-17 records the performed escalation and the committed reassessment', () => {
+  it('CRRT-17 records the performed citrate reduction and the committed reassessment', () => {
     const definition = getBaxterCrrtCase('CRRT-17')
     const escalate = intervention(definition, 'action-safe-candidate')
     const reassessment = definition.reassessmentOptions.find(({ id }) =>
@@ -379,11 +407,12 @@ describe('F06-R02 · a run that acted and reassessed still reads as actual', () 
     const actual = sectionFor(/What you did in this run/)
     expect(actual).toHaveTextContent(escalate.label)
     expect(actual).toHaveTextContent(reassessment.label)
-    expect(actual).not.toHaveTextContent('Not recorded. The recommended reassessment')
+    expect(actual).not.toHaveTextContent('Not recorded. The reassessment below')
 
     // The performed action's own response is real and stays in the actual-action notes.
     const notes = sectionFor(/Action teaching notes from this run/)
-    expect(notes).toHaveTextContent('The escalation and reassessment plan is recorded.')
+    expect(escalate.label).not.toMatch(/escalat/i)
+    expect(notes).toHaveTextContent(escalate.response)
     // The worked teaching below it stays prospective either way.
     for (const pattern of completedRunLanguage) {
       expect(workedTeaching().textContent ?? '').not.toMatch(pattern)
@@ -475,13 +504,13 @@ describe.each(['CRRT-08', 'CRRT-09'] as const)(
       }
     })
 
-    it('tells the learner the machine is already running, before and after the action', () => {
-      expect(definition.patientDescription).toMatch(/already-running demonstration/)
-      expect(definition.visibleFindings[0]).toMatch(/already running/)
-      expect(verify.response).toMatch(/recorded in the case timeline/)
+    it('tells the learner on the action card that the machine keeps running, before and after the action', () => {
+      expect(verify.description).toMatch(/machine beside the case keeps running as it is/)
+      expect(verify.response).toMatch(/is recorded\. The machine beside this case/)
       expect(verify.response).not.toMatch(/remains (paused|unavailable)/)
 
       render(<Player initial={newSession(caseId)} />)
+      expect(cardFor(verify.label)).toHaveTextContent(verify.description)
       perform('Complete the initial clinical assessment')
       perform(verify.label)
       expect(cardFor(verify.label)).toHaveTextContent(verify.response)
@@ -501,23 +530,23 @@ describe.each(['CRRT-08', 'CRRT-09'] as const)(
 describe('F06-R03 · the educational objective survives the reframing', () => {
   it('CRRT-08 still teaches verification that belongs before connection', () => {
     const definition = getBaxterCrrtCase('CRRT-08')
-    expect(definition.learningObjectives[0]).toBe(
-      'Use a deliberate pre-connection verification sequence.',
+    expect(definition.learningObjectives[0]).toMatch(
+      /^Run the pre-connection check in a fixed order/,
     )
-    expect(definition.debrief.trendReview).toMatch(
-      /connection would wait until the mismatch is resolved or escalated/,
-    )
-    expect(definition.debrief.trendReview).toMatch(/does not model that hold/)
+    expect(definition.debrief.trendReview).toMatch(/repeat the whole check/)
+    expect(definition.debrief.requiredActionsReview).toMatch(/^Stop before connecting/)
   })
 
-  it('CRRT-09 still supplies no medication instruction and adds no medication behavior', () => {
+  it('CRRT-09 teaches the registered calcium targets and adds no medication behavior', () => {
     const definition = getBaxterCrrtCase('CRRT-09')
-    expect(definition.patientDescription).toMatch(
-      /Medication quantities and adjustment rules are intentionally not shown/,
-    )
+    for (const id of ['postfilter-ica', 'postfilter-ica-ceiling', 'systemic-ica'] as const) {
+      expect(definition.debrief.trendReview).toContain(CRRT_NUMBERS.value(id))
+    }
+    expect(definition.debrief.trendReview).toContain(CRRT_NUMBERS.value('citrate-monitoring'))
+    // No drug dose is taught and no action changes the simulated circuit.
     expect(
-      learnerCopy(definition).filter((line) => /\b(units?\/|mg\/|mmol\/L citrate)/i.test(line)),
+      learnerCopy(definition).filter((line) => /\b(units?\/|mg\/kg|mmol\/L citrate)/i.test(line)),
     ).toEqual([])
-    expect(definition.debrief.trendReview).toMatch(/no anticoagulation workflow, medication effect/)
+    expect(definition.interventions.every(({ effects }) => effects.length === 0)).toBe(true)
   })
 })

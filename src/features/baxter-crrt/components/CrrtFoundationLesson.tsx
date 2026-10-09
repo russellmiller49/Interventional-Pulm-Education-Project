@@ -38,6 +38,7 @@ import { CrrtPressureLocalizationLab } from './CrrtPressureLocalizationLab'
 import { CrrtStagedPrescriptionBuilder } from './CrrtStagedPrescriptionBuilder'
 import { createSyntheticPressureLocalizationResult } from '../pressureLocalizationLabModel'
 import styles from './crrt-foundations.module.css'
+import { CRRT_NUMBERS } from '../content/teachingNumbers'
 
 export function CrrtFoundationLesson({
   lessonId,
@@ -338,15 +339,13 @@ export function CrrtFoundationLesson({
         }
         contextStrip={
           <p className={styles.context}>
-            Education only · synthetic examples · PrisMax AW8035 / 2.xx. Use current manufacturer
-            instructions and local protocol for patient care. Topics visited and your location stay
-            on this device. Each visit starts a fresh simulation; answers and controls are not
-            saved. Historical records remain unchanged.
+            PrisMax AW8035 / 2.xx. Topics visited and your location stay on this device. Each visit
+            starts a fresh simulation; answers and controls are not saved. Historical records remain
+            unchanged.
           </p>
         }
         footer={
           <p className={styles.footer}>
-            Education only · exploring a topic does not establish device competence.{' '}
             <Link href={`${baxterCrrtNavBase}/practice`}>Practice</Link> ·{' '}
             <Link href={`${baxterCrrtNavBase}/assess`}>Challenge</Link>
           </p>
@@ -601,11 +600,10 @@ export function CrrtFoundationLesson({
             </div>
           )}
           <details className={styles.sources}>
-            <summary>Explanation, sources and limits</summary>
+            <summary>Sources</summary>
             <p>
-              Draft teaching: no clinician or device specialist has reviewed this lesson yet. Reopen
-              any reached task from Lesson tasks to review its explanation without resetting your
-              work.
+              Reopen any reached task from Lesson tasks to review its explanation without resetting
+              your work.
             </p>
             {lesson.sourceRecordIds.map((id) => {
               const source = baxterCrrtLearnerFacingSourceById.get(id)
@@ -622,7 +620,8 @@ export function CrrtFoundationLesson({
                       <>
                         <br />
                         <small>
-                          {citation.kind} · {citation.review}
+                          {citation.kind}
+                          {citation.review ? ` · ${citation.review}` : ''}
                         </small>
                       </>
                     )}
@@ -642,29 +641,14 @@ export function CrrtFoundationLesson({
                 >
                   KDIGO 2012 AKI guideline, chapter 5.2
                 </a>
-                . This supplies conceptual stopping/reassessment guidance, not a device procedure or
-                a universal threshold. No clinician has reviewed this teaching yet.
+                .
               </p>
             ) : null}
             <p>
-              <strong>Not calculated here: filtration fraction.</strong> The PrisMax manual&apos;s
-              filtration-fraction display needs a pre-infusion flow, and its printed pre-infusion
-              expression is ambiguous (held as source conflict CONFLICT-002, manual p220); its
-              printed post-filter ultrafiltration expression carries a sign that conflicts with the
-              filtration-fraction numerator beside it (CONFLICT-001, manual p218). The simulation
-              uses neither and carries filtration fraction as a fixed model value, so it does not
-              respond to the flows. Both conflicts await device review.
-            </p>
-            <p>
-              <strong>Unresolved: makeup flow.</strong> The manual counts makeup in the effluent
-              total but not in the patient-fluid-removed total, so where it belongs in the fluid
-              ledger is unresolved (MATH-PM-001, FLUID-PM-002). Worked examples hold makeup at zero;
-              whenever makeup has run, the simulation withholds cumulative machine removal and
-              whole-patient balance rather than guess.
-            </p>
-            <p>
-              Citrate dosing and operating sequences require the current reviewed local protocol and
-              exact manufacturer instructions.
+              <strong>Two things this simulator does not compute.</strong> Filtration fraction is a
+              fixed value here and does not respond to the flows; work it out by hand and keep it
+              under {CRRT_NUMBERS.value('filtration-fraction-ceiling')}. When a makeup flow has run,
+              cumulative machine removal and whole-patient balance are not shown.
             </p>
             {lessonId === 'crrt-prescription-dosing' ? (
               <details onToggle={(event) => setFreeBuilderOpen(event.currentTarget.open)}>

@@ -38,6 +38,7 @@ import type {
 } from '../prescriptionWorkbenchModel'
 import { CrrtPilotCircuit } from './CrrtPilotCircuit'
 import styles from './crrt-staged-prescription-builder.module.css'
+import { CRRT_NUMBERS } from '../content/teachingNumbers'
 
 /* ------------------------------------------------------------------ *
  * Entry specification
@@ -631,19 +632,18 @@ export function CrrtStagedPrescriptionBuilder({
         role="note"
         aria-label="Educational calculation boundary"
       >
-        <strong>Calculation practice — not for patient care.</strong>
+        <strong>Calculation practice.</strong>
         <p>
           {guided
-            ? 'Compare entered assumptions. These calculations do not apply a device prescription.'
-            : 'Build the prescription in three steps and watch what each step changes. This builder provides no clinical target, no recommended set of flows, no patient prediction, and no device-control instruction. You can move between steps in either direction and nothing is lost.'}
+            ? 'Change one entry at a time and compare the results.'
+            : 'Build the prescription in three steps and watch what each step changes. You can move between steps in either direction and nothing is lost.'}
         </p>
       </div>
 
       {guided ? (
         <p className={styles.stageSummary}>
-          Synthetic 80 kg example · 24-hour window · CVVHD · blood flow 120 mL/min = 7,200 mL/h;
-          fluid rates below are mL/h. These entries are a calculation preview, not an applied device
-          prescription.
+          80 kg example · 24-hour window · CVVHD · blood flow 120 mL/min = 7,200 mL/h; fluid rates
+          below are mL/h.
         </p>
       ) : null}
       <nav className={styles.stageRail} aria-label="Prescription building steps">
@@ -841,16 +841,16 @@ export function CrrtStagedPrescriptionBuilder({
                           >
                             <option value="none">None — only available selection</option>
                             <option value="systemic" disabled>
-                              Systemic — unavailable pending protocol
+                              Systemic heparin — not used in this exercise
                             </option>
                             <option value="citrate" disabled>
-                              Regional citrate — unavailable pending local protocol
+                              Regional citrate — taught in the anticoagulation lesson
                             </option>
                           </select>
                           <small id={`${idPrefix}-anticoagulation-description`}>
-                            This setting is fixed in this exercise. No dosing, target, monitoring
-                            plan, or recommendation is provided here. The citrate section teaches
-                            where citrate acts, not how much to give.
+                            Fixed at none in this exercise. The anticoagulation lesson teaches
+                            citrate: where it acts, the calcium targets and what accumulation looks
+                            like.
                           </small>
                         </div>
                       )
@@ -972,8 +972,8 @@ export function CrrtStagedPrescriptionBuilder({
                         {formatNumber(consequences.intensity.prescribedDoseMlPerKgHour, 2)} mL/kg/h
                       </strong>
                       <small>
-                        The weight-normalized display for the prescription as written. No target
-                        range is supplied.
+                        The dose as written. Guidelines recommend delivering{' '}
+                        {CRRT_NUMBERS.value('dose-delivered')}; downtime lowers what is delivered.
                       </small>
                     </dd>
                   </div>
@@ -1204,7 +1204,7 @@ export function CrrtStagedPrescriptionBuilder({
                       </li>
                     ))}
                   </ul>
-                  <ul className={styles.boundaryList} aria-label="Model boundaries">
+                  <ul className={styles.boundaryList} aria-label="Targets and limits">
                     {consequences.modelBoundaries.map((boundary) => (
                       <li key={boundary}>{boundary}</li>
                     ))}
@@ -1260,10 +1260,8 @@ export function CrrtStagedPrescriptionBuilder({
           ))}
         </ul>
         <p>
-          Educational calculation tool only. Actual CRRT selection, prescription, solution use,
-          anticoagulation, device setup, and monitoring depend on the patient, the exact device and
-          disposable set, approved institutional protocols, manufacturer instructions, and the
-          treating team&rsquo;s judgment.
+          The arithmetic is the same at the bedside. The solutions, the set and the citrate rates
+          come from your unit&rsquo;s protocol.
         </p>
       </details>
     </section>

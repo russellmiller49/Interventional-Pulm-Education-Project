@@ -10,6 +10,7 @@ import {
   crrtCitrateComparisonRows,
   crrtCitrateDifferentialCategories,
   CRRT_CITRATE_DIFFERENTIAL_IDS,
+  CRRT_CITRATE_SCOPE_NOTICE,
   unresolvedCrrtCitrateSourceIds,
 } from '../content/citrateDifferential'
 import { crrtSourceSupportsClaim } from '../content/learnerSourceMap'
@@ -37,7 +38,7 @@ describe('sourced citrate teaching', () => {
     })
     expect(unresolvedCrrtCitrateSourceIds()).toEqual([])
   })
-  it('separates sourced physiology from unresolved inference with no medication quantities', () => {
+  it('separates sourced physiology from unresolved inference', () => {
     expect(crrtCitrateDifferentialCategories.map((c) => c.id)).toEqual([
       ...CRRT_CITRATE_DIFFERENTIAL_IDS,
     ])
@@ -57,9 +58,6 @@ describe('sourced citrate teaching', () => {
     expect(text).toMatch(/metabolism is preserved/)
     expect(text).toMatch(/insufficient systemic buffer delivery/)
     expect(text).toMatch(/Other protocols use an approved return-line site/)
-    expect(text).not.toMatch(
-      /\b\d+(\.\d+)?\s*(mmol|mEq|mg|mL|µmol|umol)|every\s+\d+\s*h|increase by|decrease by|\b2\.5\b/i,
-    )
   })
   it('requires all actual path selections including both sampling domains for guided readiness', async () => {
     const onReviewed = jest.fn()
@@ -81,7 +79,7 @@ describe('sourced citrate teaching', () => {
     expect(screen.getByRole('heading', { name: 'Systemic sample' })).toBeInTheDocument()
     expect(await axe(view.container)).toHaveNoViolations()
   })
-  it('shows all four comparisons after real selection, with publication support in words', async () => {
+  it('shows all four comparisons after real selection, with the circuit target and ratio stated', async () => {
     const onReviewed = jest.fn()
     const view = render(
       <CrrtCitrateDifferential presentation="comparison" onReviewed={onReviewed} />,
@@ -93,10 +91,7 @@ describe('sourced citrate teaching', () => {
       screen.getByRole('heading', { name: 'Citrate-related metabolic alkalosis' }),
     ).toBeInTheDocument()
     expect(screen.getByText(/calcium indices can remain stable/)).toBeInTheDocument()
-    expect(
-      screen.getAllByText('Clinical-publication support · review pending').length,
-    ).toBeGreaterThan(0)
-    expect(screen.getByRole('note')).toHaveTextContent(/not a bedside algorithm/)
+    expect(screen.getByRole('note')).toHaveTextContent(CRRT_CITRATE_SCOPE_NOTICE)
     expect(await axe(view.container)).toHaveNoViolations()
   })
   it('keeps the complete text reference aligned with every category and unresolved limitation', () => {

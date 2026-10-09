@@ -46,7 +46,7 @@ describe('CRRT runnable rapid-drill interface', () => {
     fireEvent.click(within(drillUi).getByRole('button', { name: 'Check this response' }))
     fireEvent.click(within(drillUi).getByRole('button', { name: 'Acknowledge signal' }))
     expect(within(drillUi).getByRole('status')).toHaveTextContent(
-      /Acknowledgement does not resolve the cause/i,
+      /The cause is still there until you fix it/i,
     )
 
     for (const step of [...CRRT_CAUSE_FIRST_STEPS].reverse()) {

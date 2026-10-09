@@ -1,52 +1,48 @@
 import type { EngineAlarmCode } from '../engine/types'
 
 /**
- * Learner wording for the simulation's generic alerts (CRRT-FELLOW-04, F-19).
+ * The name a learner reads for each alert the simulation raises.
  *
- * Every alert this engine raises is a generic model alert: `ActiveAlarm.deviceMappingStatus` is
- * `pending-device-adapter` and `urgency` is null for all of them, because no reviewed device
- * adapter maps a modeled fault to a PrisMax alarm. Learners used to see the raw engine code
- * (`ACCESS_OBSTRUCTION`), which reads like a console message, or a title-cased copy of it.
- *
- * The label says what the alert is — a simulated alert for a modeled fault — and nothing more.
- * It invents no manufacturer alarm name, priority, color, reset behavior or pump response, and
- * the boundary sentence says so wherever alerts are listed.
+ * Each modeled fault carries the title the PrisMax shows for the same condition (Operator's
+ * Manual AW8035 Rev B, alarm tables, PDF pp. 102–132), so the name learned here is the name on
+ * the screen at the bedside. Two faults have no PrisMax title of their own and say what they are.
+ * The engine's alert is still generic: priority and the automatic pump response are simplified.
  */
-const faultWords: Readonly<Record<EngineAlarmCode, string>> = Object.freeze({
-  ACCESS_OBSTRUCTION: 'access-obstruction',
-  ACCESS_DISCONNECTION: 'access-disconnection',
-  RETURN_OBSTRUCTION: 'return-obstruction',
-  RETURN_DISCONNECTION: 'return-disconnection',
-  FILTER_FOULING: 'filter-fouling',
-  EFFLUENT_OBSTRUCTION: 'effluent-obstruction',
-  AIR_DETECTED: 'air-detection',
-  BLOOD_LEAK_DETECTED: 'blood-leak-detection',
-  SUPPLY_BAG_EMPTY: 'empty-supply-bag',
-  EFFLUENT_BAG_FULL: 'full-effluent-bag',
-  SCALE_OPEN: 'open-scale',
-  FLUID_GAIN_LOSS: 'fluid gain-or-loss',
-  POWER_INTERRUPTION: 'power-interruption',
+const alarmTitles: Readonly<Record<EngineAlarmCode, string>> = Object.freeze({
+  ACCESS_OBSTRUCTION: 'Access Extremely Negative',
+  ACCESS_DISCONNECTION: 'Set Disconnection',
+  RETURN_OBSTRUCTION: 'Return Extremely Positive',
+  RETURN_DISCONNECTION: 'Return Disconnection',
+  FILTER_FOULING: 'High Filter Pressure',
+  EFFLUENT_OBSTRUCTION: 'Effluent line obstruction',
+  AIR_DETECTED: 'Air Detected in Blood',
+  BLOOD_LEAK_DETECTED: 'Blood Leak Detected',
+  SUPPLY_BAG_EMPTY: 'Bag Empty',
+  EFFLUENT_BAG_FULL: 'Effluent Bag Full',
+  SCALE_OPEN: 'Scale Open',
+  FLUID_GAIN_LOSS: 'CRRT Gain/Loss Limit Reached',
+  POWER_INTERRUPTION: 'Loss of AC Power',
 })
 
-/** For example `ACCESS_OBSTRUCTION` → “Simulated access-obstruction alert”. */
+/** For example `ACCESS_OBSTRUCTION` → “Access Extremely Negative alarm”. */
 export function crrtSimulatedAlertLabel(code: EngineAlarmCode): string {
-  return `Simulated ${faultWords[code]} alert`
+  return `${alarmTitles[code]} alarm`
 }
 
 /**
  * For surfaces that receive the code as a plain string (the PrisMax facsimile's operations view).
- * An unrecognized code still reads as a generic simulated alert, never as a raw engine code.
+ * An unrecognized code reads as a generic alarm, never as a raw engine code.
  */
 export function crrtSimulatedAlertLabelFromCode(code: string): string {
-  return Object.hasOwn(faultWords, code)
+  return Object.hasOwn(alarmTitles, code)
     ? crrtSimulatedAlertLabel(code as EngineAlarmCode)
-    : 'Simulated alert'
+    : 'Alarm'
 }
 
-/** The same label inside a sentence: “the simulated access-obstruction alert”. */
+/** The same label inside a sentence: “the Access Extremely Negative alarm”. */
 export function crrtSimulatedAlertPhrase(code: EngineAlarmCode): string {
-  return `simulated ${faultWords[code]} alert`
+  return `${alarmTitles[code]} alarm`
 }
 
 export const CRRT_SIMULATED_ALERT_BOUNDARY =
-  'Simulated alerts come from this teaching model. They are not PrisMax alarm names, and no manufacturer priority, color or automatic pump response has been mapped to them; that mapping awaits device review.' as const
+  'Alarm names follow the PrisMax operator’s manual. On the machine a high-priority alarm stops the pumps; here they keep running so you can watch the pressures.' as const

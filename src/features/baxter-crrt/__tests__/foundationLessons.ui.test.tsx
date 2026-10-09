@@ -112,7 +112,7 @@ describe('rendered CRRT introductory pathway', () => {
     next()
     modalities()
     expect(await axe(view.container)).toHaveNoViolations()
-    answer(/Fluid removal alone/)
+    answer(/One goal, fluid removal/)
     expect(await axe(view.container)).toHaveNoViolations()
     openLesson('crrt-prescription-dosing')
     next()
@@ -135,7 +135,7 @@ describe('rendered CRRT introductory pathway', () => {
     modalities()
     const current = crrtFoundationTasks['crrt-indications-modality']![3]
     expect(screen.queryByText(current.choices![0].feedback)).not.toBeInTheDocument()
-    answer(/Fluid removal alone/)
+    answer(/One goal, fluid removal/)
     expect(screen.getByRole('status')).toHaveTextContent(
       current.choices!.find((choice) => choice.id === 'fluid-only')!.feedback,
     )
@@ -145,7 +145,7 @@ describe('rendered CRRT introductory pathway', () => {
     expect(
       screen.getByRole('heading', { name: 'Apply again: a different fluid goal' }),
     ).toBeVisible()
-    answer(/Solute support and zero net CRRT removal/)
+    answer(/Solute is cleared and the patient gains 2\.4 L/)
     expect(readProgress().completedLessonIds).toEqual([])
     reviewedAnswer()
     expect(readCrrtSelfPacedProgress().visitedLessonIds).toContain('crrt-indications-modality')
@@ -157,7 +157,7 @@ describe('rendered CRRT introductory pathway', () => {
     next()
     next()
     modalities()
-    answer(/most mechanisms/)
+    answer(/One goal, maximal clearance/)
     expect(readProgress().learnTaskHistory).toBeUndefined()
     openLesson('crrt-prescription-dosing')
     await waitFor(() =>
@@ -177,7 +177,7 @@ describe('rendered CRRT introductory pathway', () => {
     next()
     next()
     modalities()
-    answer(/Solute\/acid-base support and fluid management/)
+    answer(/Two goals, acid-base control and fluid removal/)
     expect(readProgress().learnTaskHistory).toBeUndefined()
     fireEvent.click(button('Restart lesson'))
     expect(
@@ -248,7 +248,7 @@ describe('rendered CRRT introductory pathway', () => {
     expect(
       screen.queryByText(/The access pressure became more negative while/),
     ).not.toBeInTheDocument()
-    answer(/An access-side problem is supported/)
+    answer(/Check the access line for a kink or clamp/)
     reviewedAnswer()
     answer(/Assess the patient and inspect the return path/)
     reviewedAnswer()
@@ -265,9 +265,9 @@ describe('rendered CRRT introductory pathway', () => {
       'Net CRRT removal +100 mL/h',
     ])
     reviewedObservations()
-    answer(/Dialysate-supported transport and total effluent/)
+    answer(/Clearance and effluent rise; fluid removal stays the same/)
     reviewedAnswer()
-    answer(/More water crosses the membrane with convective/)
+    answer(/More water crosses the membrane, carrying solute by convection/)
     reviewedAnswer()
     expect(readCrrtSelfPacedProgress().visitedLessonIds).toContain('crrt-solute-transport')
   })

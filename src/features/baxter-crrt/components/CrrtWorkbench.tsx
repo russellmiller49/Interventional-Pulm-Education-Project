@@ -158,7 +158,7 @@ export function CrrtEvidenceSummary({
         )
       })}
       <details className={styles.evidenceMore}>
-        <summary>Device profile and safety constraints</summary>
+        <summary>Device profile</summary>
         <p>Device profile: {deviceLabel}</p>
         {safetyConstraints.length > 0 ? (
           <ul aria-label="Safety constraints">

@@ -508,7 +508,7 @@ describe('CRRT-02 worked cases in the case player', () => {
       expect(region).toHaveTextContent('Modeled comparison')
       expect(region).toHaveTextContent('It is an example, not your run.')
       expect(region).toHaveTextContent('No run yet')
-      expect(region).toHaveTextContent('no answer, intervention, or observation')
+      expect(region).not.toHaveTextContent(/awaiting clinical review|review remains pending/i)
       for (const line of example.comparison.interpretation) expect(region).toHaveTextContent(line)
       expect(await axe(region)).toHaveNoViolations()
 
@@ -621,9 +621,7 @@ describe('CRRT-02 worked cases in the case player', () => {
       name: 'Filter-loss domains; horizontally scrollable',
     })
     expect(within(domains).getAllByRole('row')).toHaveLength(6)
-    expect(domains).toHaveTextContent(
-      'No anticoagulation method is listed in this case prescription.',
-    )
+    expect(domains).toHaveTextContent('This circuit is running without an anticoagulant.')
     expect(
       screen.getByText(
         /Filter-burden terms active in the simulator now: Access dysfunction, Filtration fraction, Hematocrit\./,
@@ -636,6 +634,8 @@ describe('CRRT-02 worked cases in the case player', () => {
     expect(region).toHaveTextContent(
       'delivered dose not yet charted against 20.6 mL/kg/h prescribed',
     )
-    expect(screen.getAllByText(/do not change the simulated circuit/).length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByText(/The circuit beside the case keeps running as it is/).length,
+    ).toBeGreaterThan(0)
   })
 })

@@ -2,8 +2,6 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { assertNoUniversalTargetLanguage } from '@/features/critical-care/test-support/teachingPanelContract'
-
 import { CrrtPilotCircuit, type CrrtPilotCircuitProps } from '../components/CrrtPilotCircuit'
 import {
   crrtCircuitNodes,
@@ -12,7 +10,9 @@ import {
   crrtCircuitTextEquivalent,
   crrtCitrateCalciumTerms,
   crrtCitrateOverlayHeldOpenStatements,
+  crrtPressureSignalDetails,
 } from '../content/circuitModel'
+import { CRRT_NUMBERS } from '../content/teachingNumbers'
 import {
   PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG,
   PRISMAX_TMP_HYDROSTATIC_OFFSET_MMHG,
@@ -298,14 +298,16 @@ describe('CRRT universal educational circuit', () => {
     expect(within(pressureList).getAllByText('Calculated relationship')).toHaveLength(2)
   })
 
-  it('explains each pressure with a location, a cause list, and an escalation boundary', () => {
+  it('explains each pressure with a location, a cause list, and its first moves', () => {
     const { container } = renderCircuit({ pressure: suppliedPressures })
 
     const tmp = container.querySelector('[data-signal="tmp"]') as HTMLElement
     expect(tmp).toHaveTextContent(/Nowhere\. TMP has no transducer of its own/i)
     // The offsets are read from the engine constants, so this copy cannot drift.
     expect(tmp).toHaveTextContent(String(PRISMAX_TMP_HYDROSTATIC_OFFSET_MMHG))
-    expect(tmp).toHaveTextContent(/responsible clinical team and the local protocol/i)
+    expect(tmp).toHaveTextContent(
+      crrtPressureSignalDetails.find((detail) => detail.id === 'tmp')!.firstInspectionBoundary,
+    )
 
     const drop = container.querySelector('[data-signal="filter-drop"]') as HTMLElement
     expect(drop).toHaveTextContent(String(PRISMAX_FILTER_DROP_HYDROSTATIC_OFFSET_MMHG))
@@ -313,14 +315,17 @@ describe('CRRT universal educational circuit', () => {
     const access = container.querySelector('[data-signal="access"]') as HTMLElement
     expect(access).toHaveTextContent(/between the access lumen and the blood pump/i)
     expect(access).toHaveTextContent(/more negative even when nothing has changed anatomically/i)
-    expect(access).toHaveTextContent(/responsible clinical team and the local protocol/i)
+    expect(access).toHaveTextContent(
+      crrtPressureSignalDetails.find((detail) => detail.id === 'access')!.firstInspectionBoundary,
+    )
   })
 
   it('shows the worked conservation ledger when no live flows are supplied', () => {
     renderCircuit()
 
     const ledger = screen.getByRole('region', { name: 'Where every milliliter goes' })
-    expect(ledger).toHaveTextContent(/Authored worked example/i)
+    expect(ledger).toHaveTextContent(/Worked example/i)
+    expect(ledger).not.toHaveTextContent(/authored/i)
     expect(within(ledger).getByText('2,100 mL/h')).toBeInTheDocument()
     expect(within(ledger).getByText('100 mL/h')).toBeInTheDocument()
     expect(within(ledger).getByText('1,100 mL/h')).toBeInTheDocument()
@@ -412,10 +417,9 @@ describe('CRRT universal educational circuit', () => {
     for (const id of ['REVIEW-CKRT-CORE-2025', 'TEXT-CRRT-NEYRA-2026', 'GUID-RRT-ICU-2026']) {
       expect(terms.innerHTML).not.toContain(id)
     }
-    expect(
-      within(terms).getAllByText('Clinical-publication support · review pending').length,
-    ).toBeGreaterThan(0)
-    expect(terms).toHaveTextContent(/approved local protocol/)
+    // The view states the two numbers the samples are read against, from the numbers register.
+    expect(terms).toHaveTextContent(CRRT_NUMBERS.value('postfilter-ica'))
+    expect(terms).toHaveTextContent(CRRT_NUMBERS.value('calcium-ratio'))
     // A gap is stated in words, not only by a border colour — in the vocabulary list…
     const termList = terms.querySelector('dl') as HTMLElement
     expect(within(termList).queryAllByText('Awaiting a source').length).toBe(
@@ -486,15 +490,6 @@ describe('CRRT universal educational circuit', () => {
     }
     expect(within(legend).getByText('solid heavy line')).toBeInTheDocument()
     expect(within(legend).getByText('long dashes')).toBeInTheDocument()
-  })
-
-  it('introduces no universal target language anywhere it renders', () => {
-    const { container } = renderCircuit({ pressure: suppliedPressures })
-
-    for (const overlay of crrtCircuitOverlays) {
-      fireEvent.click(overlayButton(overlay.label))
-      assertNoUniversalTargetLanguage(container.textContent ?? '')
-    }
   })
 
   it('encodes focus visibility, running-only motion, and reduced-motion suppression', () => {

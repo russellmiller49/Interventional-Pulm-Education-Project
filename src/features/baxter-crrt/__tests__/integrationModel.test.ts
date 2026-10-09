@@ -111,23 +111,27 @@ describe('bounded integration of the unchanged CRRT-14 engine case', () => {
     const evidence = {
       ...crrtCurrentTaskIdentity(state),
       mode: 'independent' as const,
-      response: 'defer',
+      response: 'correct',
       correct: true,
       feedbackDisplayed: false,
       reviewed: false,
     }
+    // Staying paused and calling is no longer an accepted answer: a "correct" defer is forged.
+    for (const response of ['defer', 'unsafe-flow']) {
+      expect(
+        crrtLearnAttemptReducer(state, {
+          type: 'evidence',
+          evidence: { ...evidence, response, correct: true },
+        }),
+      ).toBe(state)
+    }
     state = crrtLearnAttemptReducer(state, { type: 'evidence', evidence }) as typeof state
+    expect(state.evidence).toHaveLength(1)
     expect(
       crrtLearnAttemptReducer(state, {
         type: 'complete',
         identity: evidence,
-        evidence: { ...evidence, response: 'correct', reviewed: true, feedbackDisplayed: true },
-      }),
-    ).toBe(state)
-    expect(
-      crrtLearnAttemptReducer(state, {
-        type: 'evidence',
-        evidence: { ...evidence, response: 'unsafe-flow', correct: true },
+        evidence: { ...evidence, response: 'defer', reviewed: true, feedbackDisplayed: true },
       }),
     ).toBe(state)
     const next = crrtLearnAttemptReducer(state, {
@@ -144,6 +148,6 @@ describe('bounded integration of the unchanged CRRT-14 engine case', () => {
     expect(chosen.run?.integrationPlan).toBe('defer')
     expect(chosen.run?.session).toBe(next.run?.session)
     expect(chosen.run?.snapshots).toBe(next.run?.snapshots)
-    expect(next.evidence[0].response).toBe('defer')
+    expect(next.evidence[0].response).toBe('correct')
   })
 })

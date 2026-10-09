@@ -54,13 +54,10 @@ export function BaxterCrrtModuleFrame({
           activityMode={activityMode}
           safetyNotice={
             <>
-              <strong>
-                Education only—never patient-specific advice or a local operating policy.
-              </strong>{' '}
+              <strong>A teaching simulator, not a clinical device.</strong>{' '}
               <span>
-                Patient values and device responses are simulated. Use current manufacturer
-                instructions, authorized local protocols, supervision, and clinical judgment for
-                patient care. This module does not establish readiness or grant a credential.
+                Patients and device responses are simulated. Alarm names and limits follow the
+                PrisMax operator’s manual.
               </span>
             </>
           }

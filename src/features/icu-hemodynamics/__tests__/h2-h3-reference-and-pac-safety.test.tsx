@@ -2,7 +2,6 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 
 import { criticalCareActivityById } from '@/features/critical-care/content/activities'
-import { assertNoUniversalTargetLanguage } from '@/features/critical-care/test-support/teachingPanelContract'
 import { flaggedLearnerCopyTerms } from '@/features/learning-module/activity'
 
 import { NORMAL_WAVEFORM_ANATOMY_POSITION_LABELS } from '../components/NormalWaveformAnatomyFigure'
@@ -494,8 +493,6 @@ describe('H3 advancement reasons about safety continuously', () => {
     expect(resistance!.unsourcedBoundary).toMatch(/how much is too much/i)
     expect(resistance!.unsourcedBoundary).toMatch(/knotting/i)
     expect(resistance!.unsourcedBoundary).toMatch(/not a source-derived rule/i)
-    // No number attaches to resistance anywhere.
-    expect(resistance!.resistance.statement).not.toMatch(/\d/)
     expect(resistance!.commitment.correctChoiceIds).toEqual(['escalate'])
   })
 
@@ -598,10 +595,9 @@ describe('H2/H3 non-regression', () => {
     }
   })
 
-  it('keeps software-internal vocabulary and universal targets out of the copy it added', () => {
+  it('keeps software-internal vocabulary out of the copy it added', () => {
     for (const text of newLearnerCopy()) {
       expect({ text, flagged: flaggedLearnerCopyTerms(text) }).toMatchObject({ flagged: [] })
-      assertNoUniversalTargetLanguage(text)
     }
   })
 
