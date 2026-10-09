@@ -51,14 +51,10 @@ export function McsModuleFrame({
           activityMode={activityMode}
           safetyNotice={
             <>
-              <strong>
-                Educational model—not a clinical device, digital twin, credential, or
-                patient-specific guide.
-              </strong>{' '}
+              <strong>Teaching simulator.</strong>{' '}
               <span>
-                Use current manufacturer instructions, local policy, direct examination and imaging,
-                and the responsible shock/LVAD team. Insertion, anticoagulation dosing, device
-                selection, and supervised operational performance are outside this lab.
+                Its numbers come from a model, not from a patient or a real console. At the bedside,
+                work from the patient and the device&rsquo;s instructions for use.
               </span>
             </>
           }
@@ -67,8 +63,8 @@ export function McsModuleFrame({
             <div className={styles.englishFallback} role="note" data-no-handoff-translate>
               <Languages aria-hidden="true" />
               <span>
-                <strong>English fallback.</strong> Localized clinical content remains pending until
-                specialty review is complete.
+                <strong>Shown in English.</strong> A translation of this module is not available
+                yet.
               </span>
             </div>
           ) : null}

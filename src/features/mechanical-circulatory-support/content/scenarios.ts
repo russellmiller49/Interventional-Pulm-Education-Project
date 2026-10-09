@@ -7,6 +7,7 @@ import type {
   McsScenarioDefinition,
 } from '../engine/types'
 import { MCS_AF_TRIGGER_CONTAINMENT } from './afTriggerLimit'
+import { MCS_NUMBERS } from './teachingNumbers'
 
 export const defaultMcsPatient: McsPatientState = {
   heartRateBpm: 96,
@@ -86,7 +87,7 @@ function authored(quantity: string): McsConditionClassification {
  */
 function heldAfTimingCondition(): McsConditionClassification {
   return {
-    ...authored('this model’s own trigger/timing index, which no IABP console reports'),
+    ...authored('the simulator’s timing index, which no IABP console reports'),
     held: {
       reason: MCS_AF_TRIGGER_CONTAINMENT.conditionHoldReason,
       openItemId: MCS_AF_TRIGGER_CONTAINMENT.openItemId,
@@ -174,16 +175,14 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-least',
         value: 80,
         label: 'Timing quality ≥80%',
-        classification: authored(
-          'this model’s own trigger/timing index, which no IABP console reports',
-        ),
+        classification: authored('the simulator’s timing index, which no IABP console reports'),
       },
       {
         metric: 'mapMmHg',
         operator: 'at-least',
         value: 58,
         label: 'MAP ≥58 mm Hg',
-        classification: authored('the model’s mean arterial pressure'),
+        classification: authored('mean arterial pressure'),
       },
     ],
     guidedPrompt: 'Compare assisted end-diastolic pressure with the next systolic upstroke.',
@@ -243,7 +242,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     debrief: [
       'An irregular rhythm reduces trigger reliability and time available for counterpulsation.',
       'The waveform—not the selected mode alone—confirms useful timing.',
-      'Model limit held for faculty review: in atrial fibrillation this model rates pressure triggering above ECG triggering. The supplied Cardiosave material recommends ECG triggering for arrhythmias and warns against pressure triggering in a sustained irregular rhythm, so check a trigger choice against the console’s own instructions and the trace, not against the modeled synchrony figure.',
+      'In atrial fibrillation this simulator rates pressure triggering above ECG triggering. The supplied Cardiosave material recommends ECG triggering for arrhythmias and warns against pressure triggering in a sustained irregular rhythm, so check a trigger choice against the console’s own instructions and the trace, not against the synchrony figure.',
     ],
     sourceIds: [...commonSources, 'getinge-iabp-current'],
     evidenceSourceIds: [...commonSources, 'getinge-iabp-current'],
@@ -297,15 +296,13 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-least',
         value: 80,
         label: 'Timing remains technically adequate',
-        classification: authored(
-          'this model’s own trigger/timing index, which no IABP console reports',
-        ),
+        classification: authored('the simulator’s timing index, which no IABP console reports'),
       },
     ],
     guidedPrompt: 'Separate device timing from the amount of native LV and RV output available.',
     debrief: [
       'IABP provides modest support and requires native ejection.',
-      'Persistent hypoperfusion should trigger shock-team reassessment.',
+      'When hypoperfusion persists on a well-timed balloon, stop adjusting the timing. Get an echo, find what limits output, and call the shock team with that assessment.',
     ],
     sourceIds: commonSources,
     evidenceSourceIds: commonSources,
@@ -358,20 +355,20 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-most',
         value: 18,
         label: 'RAP not progressively rising',
-        classification: authored('the model’s mean right atrial pressure'),
+        classification: authored('mean right atrial pressure'),
       },
       {
         metric: 'deviceFlowLMin',
         operator: 'at-least',
         value: 2,
         label: 'Stable device flow ≥2 L/min',
-        classification: authored('the model’s pump-flow estimate for this mechanism'),
+        classification: authored('displayed pump flow'),
       },
     ],
     guidedPrompt:
       'Do not escalate through suction. Reconcile RAP, PCWP, RV delivery, and LV volume.',
     debrief: [
-      'Suction is a cause-finding problem, not simply a low-setting problem.',
+      'Suction is a cause-finding problem. First moves: reduce the P-level by one or two levels, give volume if the patient is underfilled, check position with echo, assess the right ventricle, then return to the previous level.',
       'Suction can itself be an indicator of right heart failure, so right ventricular function is part of the evaluation.',
     ],
     sourceIds: [...impellaCpAuditedSources, ...commonSources, 'fda-impella-cp-labeling'],
@@ -418,13 +415,13 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-least',
         value: 2.5,
         label: 'Effective device flow restored',
-        classification: authored('the model’s pump-flow estimate for this mechanism'),
+        classification: authored('displayed pump flow'),
       },
     ],
     guidedPrompt: 'Correct placement in the simulation before changing support.',
     debrief: [
       'Malposition can reduce flow and increase hemolysis risk.',
-      'Real repositioning requires imaging and qualified operators.',
+      'At the bedside, confirm position with echo and reposition under imaging before raising the P-level.',
     ],
     sourceIds: [...impellaCpAuditedSources, ...commonSources, 'fda-impella-cp-labeling'],
     evidenceSourceIds: [...impellaCpAuditedSources, ...commonSources, 'fda-impella-cp-labeling'],
@@ -474,21 +471,21 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-most',
         value: 100,
         label: 'Excess afterload reduced',
-        classification: authored('the model’s mean arterial pressure'),
+        classification: authored('mean arterial pressure'),
       },
       {
         metric: 'deviceFlowLMin',
         operator: 'at-least',
         value: 2.5,
         label: 'Pump flow improves',
-        classification: authored('the model’s pump-flow estimate for this mechanism'),
+        classification: authored('displayed pump flow'),
       },
     ],
     guidedPrompt:
       'Treat the patient–pump gradient and purge warning as related observations, not one diagnosis.',
     debrief: [
       'Higher aortic pressure can reduce microaxial flow at the same setting.',
-      'Purge abnormalities require current device instructions and expert support.',
+      'A purge-pressure alarm is a problem in the purge system. Work through it separately from the afterload.',
     ],
     sourceIds: [...impellaCpAuditedSources, ...commonSources, 'fda-impella-cp-labeling'],
     evidenceSourceIds: [...impellaCpAuditedSources, ...commonSources, 'fda-impella-cp-labeling'],
@@ -504,7 +501,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
       'A durable LVAD patient has a low-flow alarm, elevated MAP, high SVR, and preserved filling.',
     learningObjectives: [
       'Recognize afterload-limited LVAD flow.',
-      'Avoid reflexive volume or unauthorized speed changes.',
+      'Lower the blood pressure; do not give volume or raise the speed.',
     ],
     initialPatient: patient({ systemicVascularResistanceDynSecCm5: 2050, preloadPercent: 112 }),
     initialDevice: { ...defaultLvadDevice },
@@ -534,21 +531,21 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
         metric: 'mapMmHg',
         operator: 'at-most',
         value: 95,
-        label: 'MAP returns to modeled target range',
-        classification: authored('the model’s mean arterial pressure'),
+        label: 'MAP returns toward the goal',
+        classification: authored('mean arterial pressure'),
       },
       {
         metric: 'deviceFlowLMin',
         operator: 'at-least',
         value: 3.2,
         label: 'Flow improves without speed change',
-        classification: authored('the model’s pump-flow estimate for this mechanism'),
+        classification: authored('displayed pump flow'),
       },
     ],
     guidedPrompt: 'Compare MAP, filling, speed, flow, and power before changing the pump.',
     debrief: [
-      'Continuous-flow LVAD output is afterload sensitive.',
-      'Low flow does not automatically mean low volume.',
+      `Continuous-flow LVAD output is afterload-sensitive. Lower mean arterial pressure to ${MCS_NUMBERS.value('lvad-map-goal')} with afterload reduction; pump flow rises as the pressure falls.`,
+      'Low flow does not automatically mean low volume. Low flow with a high pulsatility index and a high mean pressure is afterload.',
     ],
     sourceIds: [...lvadAfterloadAuditedSources, ...lvadSources],
     evidenceSourceIds: [...lvadAfterloadAuditedSources, ...lvadSources],
@@ -564,7 +561,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
       'LVAD flow is low, RAP is high, PCWP is low-normal, PAPi is reduced, and pulmonary vascular load is elevated.',
     learningObjectives: [
       'Identify RV-limited LVAD filling.',
-      'Reassess both ventricles before changing speed.',
+      'Treat the right heart; do not raise the speed.',
     ],
     initialPatient: patient({
       rightVentricularContractility: 0.36,
@@ -599,16 +596,14 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-least',
         value: 1,
         label: 'PAPi improves',
-        classification: authored(
-          'the model’s pulmonary artery pulsatility index, derived from its own PA and RA pressures',
-        ),
+        classification: authored('pulmonary artery pulsatility index'),
       },
       {
         metric: 'deviceFlowLMin',
         operator: 'at-least',
         value: 2.8,
         label: 'LVAD filling and flow improve',
-        classification: authored('the model’s pump-flow estimate for this mechanism'),
+        classification: authored('displayed pump flow'),
       },
     ],
     guidedPrompt: 'Use RAP, PCWP, PAPi, and the LV size together.',
@@ -625,9 +620,9 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
      * two situations this case is.
      */
     debrief: [
-      'A durable LVAD still depends on right-sided delivery.',
+      'A left-sided pump cannot pump what the right heart does not deliver. Low flow with a low pulsatility index and a high right atrial pressure is right heart failure.',
       'Raising speed cannot create preload and may worsen suction.',
-      'In the worked comparison that restores modeled RV contractility, the pulmonary pulsatility ratio rises; this is not a claim about which actions you took. Section 9 separately shows the same index barely moving when right-sided support is what changes. It is one observation alongside right atrial pressure and modeled pump flow, and this module does not treat it as a response measure on its own. The case condition requires both PAPi at least 1 and modeled pump flow at least 2.8 L/min; these are authored case criteria, not universal treatment targets.',
+      'Treat the right heart: an inotrope, a pulmonary vasodilator, right-sided support. As the right ventricle recovers, right atrial pressure falls, the pulmonary pulsatility ratio rises and pump flow returns.',
     ],
     sourceIds: lvadSources,
     evidenceSourceIds: lvadSources,
@@ -639,11 +634,10 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
     device: 'lvad',
     title: 'Controller alarm after power interruption',
     shortTitle: 'Power emergency',
-    presentation:
-      'The controller reports loss of external power and modeled pump flow falls to zero.',
+    presentation: 'The controller reports loss of external power and pump flow falls to zero.',
     learningObjectives: [
       'Recognize a time-critical loss-of-support pattern.',
-      'Restore the simulated power path and escalate immediately.',
+      'Reconnect power at once, and call the LVAD team while doing it.',
     ],
     initialPatient: patient({ leftVentricularContractility: 0.32 }),
     initialDevice: { ...defaultLvadDevice, powerConnected: false },
@@ -656,9 +650,13 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
       'team:escalate',
     ],
     criticalErrorIds: ['lvad-unauthorized-speed-change', 'lvad-power-disconnected-by-learner'],
-    predictionPrompt: 'What is the immediate simulated priority?',
+    predictionPrompt: 'What do you do first?',
     predictionOptions: [
-      { id: 'restore-power', label: 'Restore an approved power source and call the LVAD team' },
+      {
+        id: 'restore-power',
+        label:
+          'Reconnect power at once (a charged battery or the power module), check the driveline connection, and call the LVAD team while you do it',
+      },
       { id: 'speed-up', label: 'Increase speed while power is absent' },
       { id: 'observe', label: 'Wait for spontaneous recovery' },
     ],
@@ -669,21 +667,21 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
         metric: 'deviceFlowLMin',
         operator: 'at-least',
         value: 3,
-        label: 'Modeled pump flow restored',
-        classification: authored('the model’s pump-flow estimate for this mechanism'),
+        label: 'Pump flow restored',
+        classification: authored('displayed pump flow'),
       },
       {
         metric: 'mapMmHg',
         operator: 'at-least',
         value: 55,
         label: 'Perfusion pressure recovers',
-        classification: authored('the model’s mean arterial pressure'),
+        classification: authored('mean arterial pressure'),
       },
     ],
     guidedPrompt: 'Treat loss of continuous-flow support as time critical.',
     debrief: [
-      'Preserve power and use current device emergency procedures.',
-      'This simulator does not teach controller exchange or establish readiness for emergency operation.',
+      'Reconnect power at once: a charged battery or the power module. Check the driveline connection.',
+      'A controller fault means changing to the backup controller. Call the LVAD team while you do it.',
     ],
     sourceIds: lvadSources,
     evidenceSourceIds: lvadSources,
@@ -759,14 +757,14 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-least',
         value: 50,
         label: 'MAP ≥50 mm Hg',
-        classification: authored('the model’s mean arterial pressure'),
+        classification: authored('mean arterial pressure'),
       },
     ],
     guidedPrompt: '',
     debrief: [
       'Rapid irregular rhythm narrows the counterpulsation window and exposes trigger limitations.',
       'Both inflation and deflation landmarks must be confirmed on the live waveform.',
-      'Model limit held for faculty review: this case opens on internal triggering, which the supplied Cardiosave instructions say not to keep while the patient generates a cardiac output, and in atrial fibrillation this model rates pressure triggering above ECG triggering, which the same material advises against. Check a trigger choice against the console’s own instructions and the trace, not against the modeled synchrony figure.',
+      'This case opens on internal triggering, which the supplied Cardiosave instructions say not to keep while the patient generates a cardiac output. In atrial fibrillation this simulator rates pressure triggering above ECG triggering, which the same material advises against. Check a trigger choice against the console’s own instructions and the trace, not against the synchrony figure.',
     ],
     sourceIds: [...commonSources, 'getinge-iabp-current'],
     evidenceSourceIds: [...commonSources, 'getinge-iabp-current'],
@@ -830,7 +828,7 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
         operator: 'at-least',
         value: 2.4,
         label: 'Device flow ≥2.4 L/min',
-        classification: authored('the model’s pump-flow estimate for this mechanism'),
+        classification: authored('displayed pump flow'),
       },
       {
         metric: 'recirculatingFlowLMin',
@@ -838,7 +836,7 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
         value: 0.5,
         label: 'Recirculation ≤0.5 L/min',
         classification: authored(
-          'the part of the model’s pump flow that returns to the ventricle instead of reaching the body',
+          'the part of pump flow that returns to the ventricle instead of reaching the body',
         ),
       },
     ],
@@ -858,10 +856,10 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
     title: 'Advanced durable-LVAD constrained-filling challenge',
     shortTitle: 'LVAD capstone',
     presentation:
-      'A continuous-flow LVAD patient develops low flow with rising and converging filling pressures after a bedside procedure; speed and power are unchanged.',
+      'A continuous-flow LVAD patient develops low flow with rising and converging filling pressures after a bedside procedure; pump speed is unchanged and the power path remains connected.',
     learningObjectives: [
       'Differentiate constrained filling from hypertension, hypovolemia, and pump thrombosis.',
-      'Avoid unauthorized speed changes and escalate definitive evaluation.',
+      'Get an echo, give volume as a bridge and arrange drainage; do not change the speed.',
     ],
     initialPatient: patient({
       preloadPercent: 116,
@@ -898,21 +896,21 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
         metric: 'deviceFlowLMin',
         operator: 'at-least',
         value: 3,
-        label: 'Modeled pump flow recovers',
-        classification: authored('the model’s pump-flow estimate for this mechanism'),
+        label: 'Pump flow recovers',
+        classification: authored('displayed pump flow'),
       },
       {
         metric: 'mapMmHg',
         operator: 'at-least',
         value: 55,
         label: 'Perfusion pressure recovers',
-        classification: authored('the model’s mean arterial pressure'),
+        classification: authored('mean arterial pressure'),
       },
     ],
     guidedPrompt: '',
     debrief: [
-      'Tamponade can present as LVAD low flow and requires urgent diagnosis and definitive care.',
-      'Speed does not correct external filling constraint and can worsen inflow limitation.',
+      'Tamponade after a procedure presents as LVAD low flow with a low pulsatility index and rising, equalizing filling pressures. Echo now, volume as a bridge, and surgical or percutaneous drainage.',
+      'Do not change the speed. More speed against a ventricle that cannot fill causes suction.',
     ],
     sourceIds: lvadSources,
     evidenceSourceIds: lvadSources,

@@ -29,7 +29,7 @@ const timingExample = (
     'Compare the balloon band with valve closure and the next ejection on the Timing reference. This is a demonstrated condition; Continue opens the next example.',
   paragraphs: [
     explanation,
-    'The colored band follows the same timing source as the waveform and 3D balloon. The pressure trace is schematic: it does not reproduce every clinical contour of early or late deflation. Use the event relationship here; confirm clinical timing on the actual device and arterial trace.',
+    'The colored band follows the same timing source as the waveform and 3D balloon. Read where each event falls in the beat, then check the three pressure relationships on the five-pressure readout at 1:2.',
   ],
   setupActions: [
     { type: 'SET_IABP_CONTROL', control: 'assistRatio', value: 2 },
@@ -118,7 +118,7 @@ export const mcsIntroductions: Readonly<Record<string, readonly McsIntroduction[
       'Demonstration: early deflation',
       0,
       -120,
-      'Inflation remains aligned. The balloon band ends earlier in diastole, shortening augmentation. The exact clinical arterial contour is not faithfully reproduced by this model.',
+      'Inflation remains aligned. The balloon band ends earlier in diastole, shortening augmentation. On the live strip the assisted end-diastolic pressure climbs back toward the unassisted one.',
     ),
     timingExample(
       'late-deflation-example',
@@ -150,7 +150,7 @@ export const mcsIntroductions: Readonly<Record<string, readonly McsIntroduction[
         'Compare the filled and underfilled examples below at matched times. Read the explanation, replay the comparison, try P8, or Continue. No answer or model action is required.',
       setupActions: [{ type: 'SET_IMPELLA_CONTROL', control: 'performanceLevel', value: 5 }],
       paragraphs: [
-        'Unloading reduces the volume and pressure burden on the LV by removing blood through the pump route. In this model, the size of the response depends on filling and support. Read volume and pressure separately; neither must fall at every setting change.',
+        'Unloading reduces the volume and pressure burden on the LV by removing blood through the pump. How much depends on filling and on the P-level. Read volume and pressure separately.',
         'The next exercise resets this aligned baseline and introduces a simulated too-deep condition separately. A flow change alone cannot diagnose position. Clinical position requires appropriate imaging and device-specific interpretation.',
       ],
     },
@@ -164,7 +164,7 @@ export const mcsIntroductions: Readonly<Record<string, readonly McsIntroduction[
         'Study the controller quantities one at a time, then open the device reading below. All values on this screen are simulated.',
       paragraphs: [
         'An implanted inflow cannula draws from the LV apex; an outflow graft returns blood to the ascending aorta. The controller describes pump operation. Independent patient assessment supplies pressure, filling, imaging and perfusion information.',
-        'This simplified model generates flow from speed and loading, then derives power and pulsatility index (PI). It does not implement a manufacturer’s power-and-speed flow estimator; PI is not an input to its flow calculation.',
+        'Speed is set. Power is measured. The controller calculates the displayed flow from power at that speed, and the pulsatility index from how much that flow swings with each heartbeat.',
       ],
       allowedControls: ['control:inspect-device'],
       isSatisfied: inspected('device'),
@@ -184,7 +184,7 @@ export const mcsIntroductions: Readonly<Record<string, readonly McsIntroduction[
       ],
       paragraphs: [
         'Systemic vascular resistance (SVR) is a simulated patient condition here. Raising it is expected to reduce pump flow at unchanged speed. Compare this run’s direction and magnitude, including unchanged values.',
-        'The model derives electrical power partly from modeled flow. Its power response is not a universal diagnostic rule for durable pumps or obstruction. Speed changes require the prescribing team and current device instructions; they are unavailable in this task.',
+        'Power follows flow: less blood crossing the pump at the same speed draws less power. Against a high blood pressure, lower the pressure; do not raise the speed.',
       ],
       allowedControls: ['control:patient-svr'],
       isSatisfied: (state) =>

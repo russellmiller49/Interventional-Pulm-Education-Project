@@ -55,7 +55,7 @@ export const MCS_STEP_HINTS: Readonly<Record<string, McsSectionHints>> = Object.
     observe:
       'Read the timing row and the L/min row separately. One says the events are aligned; the other says how far flow moved.',
     transfer:
-      'With an irregular rhythm, judge each assisted beat on the trace itself. The synchrony figure is this model’s own rating, and here it is held.',
+      'With an irregular rhythm, judge each assisted beat on the trace itself, not from the synchrony figure.',
   },
   'iabp-efficacy-limits': {
     identify:
@@ -94,7 +94,7 @@ export const MCS_STEP_HINTS: Readonly<Record<string, McsSectionHints>> = Object.
   },
   'lvad-parameters-assessment': {
     identify:
-      'Go back to the controller tour and open Estimated pump flow. It says what this model makes that number from.',
+      'Go back to the controller tour and open the displayed pump flow. Which value does the controller measure, and which does it calculate?',
     prediction:
       'Speed is fixed. What does a higher pressure at the outlet do to the volume crossing the pump — and which row multiplies a pressure by a flow?',
     action: 'Raise SVR with the highlighted control. The pump speed control stays untouched.',
@@ -105,9 +105,9 @@ export const MCS_STEP_HINTS: Readonly<Record<string, McsSectionHints>> = Object.
   },
   'lvad-alarms-emergencies': {
     identify:
-      'Read the line under the alarm’s name. Is it a published limit, a diagnosis, or this model’s own description of a state it has entered?',
+      'Read the line under the alarm’s name. Does it give you a diagnosis, or a pattern you still have to explain?',
     prediction:
-      'In this model flow is generated first and power is derived afterwards. Which of the two is the high-power pattern added to?',
+      'The controller measures power and calculates the displayed flow from it. If something other than flow raises power, what happens to the display?',
     action:
       'Switch the High-power / thrombosis pattern on and read power and displayed flow in the same glance.',
     observe: 'Compare how far the power row moved with how far the two flow rows moved.',

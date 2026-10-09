@@ -26,13 +26,13 @@ export const MCS_CASE_PREDICTION_REASONING: Readonly<
     underfilled:
       'Nothing about filling was changed in this case: preload is the reference patient’s and the wedge pressure reads elevated, not low. The timing alarm concerns assisted-beat deflation; the case also changes LV contractility.',
     'low-svr':
-      'Systemic vascular resistance is at the reference value in this case. The late-deflation alarm identifies an authored timing offset; it does not establish that timing is the only difference from the reference patient.',
+      'Systemic vascular resistance is at the reference value in this case. The late-deflation alarm points to deflation timing; check it on the trace at 1:2.',
   },
   'IABP-02': {
     trigger:
-      'The case is built in atrial fibrillation, with the model’s trigger-reliability alarm active and inconsistent assisted beats. Which signal the balloon is triggering from, and whether each beat is recognized, is what the trace can confirm first. This does not say which trigger to choose: in atrial fibrillation this model rates pressure triggering above ECG triggering, which the supplied Cardiosave material advises against, and that rating is held as NOT REVIEWED.',
+      'The case is built in atrial fibrillation, with the model’s trigger-reliability alarm active and inconsistent assisted beats. Which signal the balloon is triggering from, and whether each beat is recognized, is what the trace can confirm first. In atrial fibrillation this model rates pressure triggering above ECG triggering, which the supplied Cardiosave material advises against.',
     'more-volume':
-      'Preload is the reference patient’s in this case and the wedge pressure reads elevated. These readings do not establish a volume deficit, and the option skips the bedside review.',
+      'Preload is the reference patient’s in this case and the wedge pressure reads elevated. A high wedge pressure argues against a volume deficit.',
     'inflate-early':
       'Inflation is at its reference in this case. Moving it ahead of valve closure is the early-inflation relationship Section 3 demonstrates: the balloon would inflate while ejection is still under way.',
   },
@@ -48,7 +48,7 @@ export const MCS_CASE_PREDICTION_REASONING: Readonly<
     'rv-preload':
       'The case is built with low preload, a weakened right ventricle and a high pulmonary vascular resistance, at a high performance level. Right atrial pressure reads above the wedge pressure and the suction alarm is active: the pump is short of filling at its inlet, not short of setting.',
     'raise-level':
-      'The pump is already at a high performance level with the suction alarm active. In this model, raising the level into suction gains little flow and leaves the alarm in place.',
+      'The pump is already at a high performance level with the suction alarm active. Raising the level into suction gains little flow and leaves the alarm in place.',
     vasoplegia:
       'Systemic vascular resistance is at the reference value in this case. The suction alarm and the filling pressures put the limit at the inlet rather than at the outlet.',
   },
@@ -58,7 +58,7 @@ export const MCS_CASE_PREDICTION_REASONING: Readonly<
     'low-level':
       'Nothing about the level is the limit here: it has not been lowered, and the flow is low because of where the inlet sits. The hemolysis-risk pattern is also active, and a higher level does not correct a position.',
     normal:
-      'A position alarm and a hemolysis-risk pattern are both active. That is not the expected state at this level in this model.',
+      'A position alarm and a hemolysis-risk pattern are both active. That is not expected at this level: check position.',
   },
   'IMP-03': {
     'afterload-purge':
@@ -66,15 +66,15 @@ export const MCS_CASE_PREDICTION_REASONING: Readonly<
     'suction-only':
       'No suction alarm is active, and neither preload nor the wedge pressure is low in this case. Suction is a filling problem at the inlet; this state is built at the outlet.',
     normal:
-      'A purge-pressure alarm is active and estimated flow is low at the authored performance level. Both are findings to evaluate under current device instructions, not an expected state.',
+      'A purge-pressure alarm is active and estimated flow is low for the P-level in use. Neither is expected: work through purge system, position and filling.',
   },
   'LVAD-01': {
     hypertension:
-      'The case is built with a high systemic vascular resistance and preserved filling, and mean pressure reads very high at an unchanged speed. In this model a continuous-flow pump moves less blood against a higher outlet pressure.',
+      'The case is built with a high systemic vascular resistance and preserved filling, and mean pressure reads very high at an unchanged speed. A continuous-flow pump moves less blood against a higher outlet pressure.',
     hypovolemia:
       'Preload is above the reference value in this case and the filling pressures are not low. The low flow here does not come from an empty ventricle.',
     power:
-      'The power path reads connected and the pump is running: the displayed flow is reduced, not zero. In this model a lost power path takes pump flow to zero with its own critical alarm.',
+      'The power path reads connected and the pump is running: the displayed flow is reduced, not zero. A lost power path takes pump flow to zero with its own critical alarm.',
   },
   'LVAD-02': {
     'rv-failure':
@@ -86,15 +86,15 @@ export const MCS_CASE_PREDICTION_REASONING: Readonly<
   },
   'LVAD-03': {
     'restore-power':
-      'The case is built with the power path disconnected: the external-power alarm is active and modeled pump flow is zero. Nothing else restores flow in this model. The module does not teach controller exchange or emergency operation; current device emergency procedures and the LVAD team govern the real response.',
+      'The case is built with the power path disconnected: the external-power alarm is active and pump flow is zero. Nothing else restores flow. Reconnect power at once (a charged battery or the power module), check the driveline connection, and call the LVAD team while you do it.',
     'speed-up':
-      'Speed changes are locked without an authorized-personnel order, and a pump with no power does not answer a speed setting: modeled flow is zero because power is absent.',
+      'Speed changes are locked without an authorized-personnel order, and a pump with no power does not answer a speed setting: flow is zero because power is absent.',
     observe:
       'The model does not restore power or flow by itself. Loss of continuous-flow support is treated as time-critical in this case.',
   },
   'CAP-IABP-01': {
     'trigger-plus-timing':
-      'Three settings are off their references in this case: the trigger source is internal in a patient with a rhythm of their own, inflation is late and deflation is early. The model’s alarms for all three are active. This names what is on the screen; it does not say which trigger to choose, and that question is held as NOT REVIEWED.',
+      'Three settings are off their references in this case: the trigger source is internal in a patient with a rhythm of their own, inflation is late and deflation is early. The alarms for all three are active.',
     'late-deflation':
       'Deflation is set early in this case, not late, and it is not the only setting off its reference.',
     'volume-only':
@@ -110,7 +110,7 @@ export const MCS_CASE_PREDICTION_REASONING: Readonly<
   },
   'CAP-LVAD-01': {
     'constrained-filling':
-      'The case is built with the modeled pericardial constraint switched on. Both filling pressures read high and close together, pump flow is low at unchanged speed, and the power path is connected. Derived pump power is lower than in the reference run; the high-power pattern is not switched on.',
+      'The case is built with tamponade. Both filling pressures read high and close together, pump flow is low at unchanged speed, and the power path is connected. Pump power and the pulsatility index are low; the high-power pattern is absent.',
     hypertension:
       'Systemic vascular resistance is at the reference value in this case and the mean pressure is not high.',
     thrombosis:
@@ -125,7 +125,7 @@ export function mcsCasePredictionReasoning(caseId: string, optionId: string): st
 
 /** The heading said over an option's reasoning. It names a fit to the model, not a verdict on a learner. */
 export function mcsCaseReasoningHeading(fits: boolean): string {
-  return fits ? 'Why this fits this modeled state' : 'Why this does not fit this modeled state'
+  return fits ? 'Why this fits this patient' : 'Why this does not fit this patient'
 }
 
 function validateCaseReasoning(): readonly string[] {

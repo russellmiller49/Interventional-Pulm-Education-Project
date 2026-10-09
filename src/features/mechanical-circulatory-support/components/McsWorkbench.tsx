@@ -304,9 +304,7 @@ export function McsWorkbench({
             id: source.id,
             title: source.title,
             sourceLabel: `${MCS_SOURCE_CLASS_LABELS[mcsSourceClass(source.id)]} · ${mcsSourceVerificationLabel(source.id)}. ${source.citation}`,
-            limitation:
-              source.limitation ??
-              'Use the current source, manufacturer instructions, local policy, and supervised clinical judgment.',
+            limitation: source.limitation ?? 'Check the current edition of this source.',
           })),
         ...derivedValueEvidence.map((source) => ({
           id: source.id,
@@ -431,13 +429,12 @@ export function McsWorkbench({
                       state.alarms.find((alarm) => alarm.active)?.label ??
                       (mcsAfTriggerLimitApplies(state)
                         ? MCS_AF_TRIGGER_CONTAINMENT.notAnAllClear
-                        : 'No active modeled alarm'),
+                        : 'No active alarm'),
                   },
                 ]}
                 immediateGoal={currentObjective}
                 safetyConstraints={[
-                  'Educational model only; verify current device instructions and local policy.',
-                  'Use direct examination, imaging, and the responsible shock or LVAD team.',
+                  'Examine the patient and get an echo before you change a device setting.',
                   /*
                    * The two boundaries that belong beside the two values above, in the words the
                    * accepted content already uses: a congestion pattern selects no device, and a

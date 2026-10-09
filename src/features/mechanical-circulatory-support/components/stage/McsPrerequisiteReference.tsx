@@ -8,13 +8,13 @@ const references: Readonly<Record<string, readonly { title: string; text: string
   'iabp-efficacy-limits': [
     {
       title: 'From timing to patient response',
-      text: 'First establish the relationship between inflation, valve closure and the next ejection. Then assess flow and filling alongside pressure. Technically satisfactory counterpulsation does not establish adequate patient perfusion. The upcoming RV-contractility control changes an experimental condition; it is not a therapy.',
+      text: 'First check timing: inflation at the dicrotic notch, deflation just before the next upstroke. Then read flow and filling alongside pressure. A well-timed balloon is not proof of adequate perfusion. The RV-contractility control you are about to use changes the patient, not the treatment.',
     },
   ],
   'impella-suction-purge-rv': [
     {
       title: 'Upstream filling and RV delivery',
-      text: 'The left pump draws from the LV. Blood must arrive through the right heart and lungs before it can enter that pump. Filling pressures, pump estimates and modeled LV volume answer different questions; one low-flow display does not determine the cause.',
+      text: 'The left pump draws from the LV. Blood must arrive through the right heart and lungs before it can enter that pump. A left pump cannot pump what the right heart does not deliver, so one low-flow display does not tell you the cause.',
     },
     {
       title: 'Right-sided support and serial flow',
@@ -22,11 +22,11 @@ const references: Readonly<Record<string, readonly { title: string; text: string
     },
     {
       title: 'Suction: inspect more than the setting',
-      text: 'Distinguish patient filling and upstream delivery, pump position, and device problems. A performance-level increase or a fluid bolus is not a universal response. In the application you will compare actual observations after enabling the represented right-sided pathway, then reassess a different preload state.',
+      text: 'Suction means the inlet is short of blood for the P-level in use. First moves (Impella instructions for use, p. 7.17): reduce the P-level by one or two levels; give volume if the patient is underfilled; check catheter position with echo; assess the right ventricle; then return to the previous level. In the application you will start right-sided support, compare what you observe, then reassess at a different preload.',
     },
     {
-      title: 'Purge and hemolysis: reference scope',
-      text: 'The section retains source-backed purge and hemolysis context in its explanation and references. Mechanism Studio includes a purge-state selector. There is no interactive purge-management lesson here. Use current device-specific instructions and the responsible team; no purge solution, pressure target, line manipulation or diagnostic shortcut is taught.',
+      title: 'Purge and hemolysis',
+      text: 'The purge system runs fluid through the motor to keep blood out of it. A purge alarm is a problem in that system, not in blood flow, and it is not suction. Suction and malposition both cause hemolysis. Mechanism Studio has a purge-state selector.',
     },
   ],
 }

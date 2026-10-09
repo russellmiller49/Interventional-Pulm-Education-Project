@@ -174,7 +174,7 @@ function PathwayCard({ card }: { card: McsSupportPathwayCard }) {
           <dd>{supportRoleLabels[card.supportRole]}</dd>
         </div>
         <div data-field="bridgeExitBoundary">
-          <dt>Bridge and exit-strategy boundary</dt>
+          <dt>Bridge and exit strategy</dt>
           <dd>{card.bridgeExitBoundary}</dd>
         </div>
       </dl>

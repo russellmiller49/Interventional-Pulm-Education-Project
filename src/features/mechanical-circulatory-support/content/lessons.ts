@@ -96,7 +96,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
         instruction:
           'Select durable continuous flow and inspect flow, speed, power, pulsatility index, and aortic-valve opening as one interdependent set.',
         rationale:
-          'The blood follows the same left-ventricle-to-aorta path as the temporary pump, but the decision is different in kind: candidacy, implantation, and an agreed exit strategy are settled before support begins. The simulated flow comes from speed and loading; power and PI are derived afterward. Clinical flow estimation methods depend on the device.',
+          'The blood follows the same left-ventricle-to-aorta path as the temporary pump, but the decision is different in kind: candidacy, implantation, and an agreed exit strategy are settled before support begins. The controller measures power and calculates the displayed flow from it.',
         targetActionId: 'device:select:lvad',
       },
     ],
@@ -182,7 +182,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
         id: 'iabp-escalate',
         title: 'Recognize the support ceiling',
         instruction:
-          'Escalate to the MCS team when perfusion remains inadequate despite correct timing.',
+          'When perfusion stays inadequate on a well-timed balloon, find what limits output and call the shock team with it.',
         rationale: 'Persistent low flow requires reassessment of phenotype and support strategy.',
         targetActionId: 'team:escalate',
       },
@@ -197,7 +197,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
     title: 'Where is the inlet sitting?',
     summary: 'Relate performance level and transvalvular position to flow and unloading.',
     objectives: [
-      'Compare CP and 5.5 at the same modeled loading and performance level.',
+      'Compare CP and 5.5 at the same loading and P-level.',
       'Distinguish device flow from effective systemic flow.',
       'Recognize directional placement-signal patterns.',
     ],
@@ -208,7 +208,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
         instruction:
           'Select CP and then 5.5 at the same performance level and loading; compare left-pump flow, LVEDV, PCWP, and the distinct access descriptions.',
         rationale:
-          'The two left-sided pumps share an LV-to-aorta mechanism but have different access pathways and modeled flow references.',
+          'The two left-sided pumps share an LV-to-aorta mechanism but differ in access and in the flow each delivers at a given P-level.',
         targetActionId: 'impella:set-left-variant',
       },
       {
@@ -335,7 +335,8 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
         title: 'Confirm simulated authorization',
         instruction:
           'Enable the simulated authorized-personnel order before exploring a speed change.',
-        rationale: 'Real settings changes require the prescribing team and current instructions.',
+        rationale:
+          'Raising the speed against a high blood pressure does not restore flow. Lower the pressure.',
         targetActionId: 'lvad:authorize-speed',
       },
     ],
@@ -351,7 +352,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
       'Use competing diagnoses and immediate safety checks before treating a controller number.',
     objectives: [
       'Differentiate common low-flow mechanisms.',
-      'Recognize power and high-power patterns that need urgent MCS-team action.',
+      'Recognize the high-power pattern of suspected pump thrombosis and name the first moves.',
     ],
     steps: [
       {
@@ -367,7 +368,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
         title: 'Recognize high power',
         instruction: 'Activate suspected pump thrombosis and compare power with effective flow.',
         rationale:
-          'High power with hemocompatibility concerns needs urgent device-team evaluation.',
+          'High power with hemolysis is suspected pump thrombosis: send LDH and plasma free hemoglobin, check the anticoagulation, get an echo, and call the LVAD team and surgeon.',
         targetActionId: 'lvad:set-thrombosis',
       },
       {

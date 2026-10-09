@@ -11,11 +11,7 @@ import { mcsIntroductions } from '../content/introductorySteps'
 import { mcsPracticeScenarios } from '../content/scenarios'
 import { mcsSectionLearningContractById } from '../content/sectionLearningContracts'
 import { mcsLessonTransferByLessonId } from '../content/lessonTransfers'
-import {
-  advanceMcsSimulation,
-  createInitialMcsState,
-  deriveBaselineMeasurements,
-} from '../engine/model'
+import { createInitialMcsState, deriveBaselineMeasurements } from '../engine/model'
 import { mcsReducer } from '../engine/reducer'
 import {
   applyMcsLearningAction,
@@ -54,15 +50,9 @@ function reachAct(id: string) {
   continueFromVerdict()
 }
 
-/**
- * The run's identity line with its seed. MCS-PRE-REVIEW-03 moved the seed out of the always-visible
- * line into the step bar's "Run details" disclosure (F03); the identity these assertions compare is
- * unchanged, so the helper reads the seed from where it now lives.
- */
+/** The run's identity line: which run this is and its simulated time. No seed is rendered. */
 function sessionIdentity(): string {
-  const line = document.querySelector('[data-session-identity]')?.textContent ?? ''
-  const seed = document.querySelector('[data-run-details] p')?.textContent?.match(/Seed (\d+)/)?.[1]
-  return seed ? `${line} seed ${seed}` : line
+  return document.querySelector('[data-session-identity]')?.textContent ?? ''
 }
 
 describe('targeted introductions through the actual host', () => {
@@ -88,8 +78,7 @@ describe('targeted introductions through the actual host', () => {
     const id = 'mcs-foundations-mechanisms'
     mountSection(id)
     reachAct(id)
-    const identity = sessionIdentity()
-    const seed = Number(identity.match(/seed (\d+)/)![1])
+    expect(sessionIdentity()).not.toMatch(/seed|Example number/i)
     for (const [device, label] of [
       ['lvad', /Select durable LVAD/],
       ['impella', /Select Impella CP/],
@@ -97,7 +86,12 @@ describe('targeted introductions through the actual host', () => {
     ] as const) {
       fireEvent.click(within(nowCard()).getByRole('button', { name: label }))
       const row = document.querySelector(`[data-comparison-device="${device}"]`)!
-      const actual = advanceMcsSimulation(createInitialMcsState('learn', device, null, seed), 8)
+      // The metrics compared here are not seed-dependent, so the default seed reproduces them.
+      // The page holds one patient across the three devices, as `captureMcsDeviceComparison` does.
+      const actual = captureMcsDeviceComparison(
+        createInitialMcsState('learn', 'iabp', null),
+        device,
+      ).state
       expect(
         document.querySelector(
           `[data-comparison-metric="nativeFlowLMin"] [data-device="${device}"]`,
@@ -108,7 +102,8 @@ describe('targeted introductions through the actual host', () => {
           `[data-comparison-metric="effectiveSystemicFlowLMin"] [data-device="${device}"]`,
         )?.textContent,
       ).toBe(actual.metrics.effectiveSystemicFlowLMin.toFixed(2))
-      expect(row.textContent).toContain(`Seed ${seed} · captured at 8.00 s`)
+      expect(row.textContent).toContain('Captured at 8.00 s')
+      expect(row.textContent).not.toMatch(/Example number|\bseed\b/i)
     }
     expect(nowPrimary()).toBeEnabled()
     continueStep()
@@ -145,7 +140,7 @@ describe('targeted introductions through the actual host', () => {
     reachAct(id)
     performAction(id)
     continueStep()
-    const row = document.querySelector('[data-signal="deviceFlowLMin"]')!
+    const row = document.querySelector('[data-signal="estimatedPumpFlowLMin"]')!
     expect(row.textContent).toContain('decreased')
     expect(nowPrimary()).toBeEnabled()
     fireEvent.click(within(nowCard()).getByRole('radio', { name: 'Increased' }))
@@ -170,7 +165,8 @@ describe('targeted introductions through the actual host', () => {
     const priorIdentity = sessionIdentity()
     continueStep()
     const transferIdentity = sessionIdentity()
-    expect(transferIdentity.match(/seed \d+/)?.[0]).not.toBe(priorIdentity.match(/seed \d+/)?.[0])
+    expect(priorIdentity).not.toMatch(/^Transfer patient/)
+    expect(transferIdentity).toMatch(/^Transfer patient/)
     commitTransfer(id)
     fireEvent.change(screen.getByRole('combobox', { name: 'Trigger source' }), {
       target: { value: 'pressure' },
@@ -178,7 +174,6 @@ describe('targeted introductions through the actual host', () => {
     expect(storedLessonIds()).toEqual([]) // Changing source alone is insufficient.
     const current = sessionIdentity()
     fireEvent.click(document.querySelector('[data-now-back]')!)
-    expect(sessionIdentity()).toContain(priorIdentity.match(/seed \d+/)![0])
     expect(sessionIdentity()).toMatch(/^Captured review/)
     expect(document.querySelectorAll('[data-task-controls] input:not(:disabled)')).toHaveLength(0)
     continueStep()

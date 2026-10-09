@@ -11,8 +11,7 @@ import {
 } from './selectors'
 import {
   BeforeAfter,
-  DEADBAND_CAPTION,
-  FigureScope,
+  FigureCaption,
   FlowAccount,
   ModelBoundary,
   PanelSection,
@@ -28,7 +27,7 @@ import {
 /**
  * Section 2 — where blood enters, what changes it, where it returns, and what that loads.
  *
- * The comparison table is the figure. It is authored from the standardized pathway cards rather than
+ * The comparison table is the figure. It is built from the standardized pathway cards rather than
  * from a second description of the same devices, so a distinction that is true on the cards cannot
  * quietly become untrue here: the balloon has no source and no destination, the two microaxial
  * pathways run to different destinations and are serial, a durable pump is a different decision in
@@ -165,24 +164,18 @@ export function SupportPathwayMechanismsPanel({
           {pathways.map((pathway) => pathwaySentence(pathway)).join(' ')} The flow account reads:{' '}
           {flowAccountSentence(account, disclosed)}
         </TextEquivalent>
-        <ModelBoundary>
-          The diagram is a statement about which compartments a mechanism connects, not a scale
-          drawing of a catheter, a cannula, or a vessel. Insertion route is not drawn at all, and
-          the direction a device was advanced is not the direction blood travels through it.
-        </ModelBoundary>
-        <FigureScope
-          establishes="Which compartment this mechanism draws from, which one it returns to, which chamber it relieves, and which chamber or vascular bed inherits the consequence."
-          doesNotEstablish="Which mechanism this patient should receive. A pathway describes what a mechanism does; it does not diagnose what is limiting this circulation."
-        />
+        <FigureCaption>
+          Where this mechanism takes blood from, where it returns it, which chamber it unloads and
+          which chamber or vascular bed it can load. The direction a catheter was advanced is not
+          the direction blood travels through it.
+        </FigureCaption>
       </PanelSection>
 
       {disclosed ? (
         <PanelSection title="The mechanisms side by side" id="mechanisms-comparison">
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Read down the &ldquo;moves blood&rdquo; column first. It is the column that separates a
-            mechanism with a pathway from a mechanism without one, and it is the distinction every
-            other row depends on. The two extracorporeal pathways are named here for comparison and
-            are not simulated in this module.
+            Read down the &ldquo;moves blood&rdquo; column first. It separates a mechanism with a
+            pathway from one without, and every other row depends on it.
           </p>
           <div className={styles.scroller}>
             <table className={`${styles.table} min-w-[46rem]`} data-mechanism-comparison>
@@ -230,7 +223,7 @@ export function SupportPathwayMechanismsPanel({
                     <th scope="row" className="py-1 pr-3 align-top font-medium">
                       {row.name}
                       <span className="block text-xs font-normal text-muted-foreground">
-                        {row.simulated ? 'simulated here' : 'named for comparison, not simulated'}
+                        {row.simulated ? 'in the simulator' : 'comparison only'}
                         {active.includes(row.id) ? ' · on screen now' : ''}
                       </span>
                     </th>
@@ -279,28 +272,25 @@ export function SupportPathwayMechanismsPanel({
               <span className="font-semibold">
                 A durable pump is a different decision in kind.{' '}
               </span>
-              Candidacy, implantation, and an agreed exit strategy are settled before support
-              begins, which is not true of any temporary pathway here.
+              Candidacy, implantation and an exit strategy are settled before support begins. No
+              temporary pathway asks for that.
             </li>
             <li data-distinction="vv-ecmo-adds-no-systemic-flow">
               <span className="font-semibold">
                 Venovenous extracorporeal support provides gas exchange without a direct arterial
                 flow stream.{' '}
               </span>
-              It returns blood to the venous side, so it creates no direct arterial pump-flow
-              contribution and systemic circulatory flow remains native cardiac output — although
-              improved gas exchange and altered right ventricular loading may indirectly affect that
-              native output.
+              It returns blood to the venous side, so systemic flow is still the native cardiac
+              output. Better gas exchange and a lighter right ventricular load can raise that output
+              indirectly.
             </li>
             <li data-distinction="va-ecmo-loads-the-lv">
               <span className="font-semibold">
                 Venoarterial extracorporeal support may load the left ventricle.{' '}
               </span>
-              It creates an extracorporeal arterial-flow pathway and may increase left ventricular
-              afterload and loading — particularly with peripheral retrograde arterial return,
-              higher circuit flow, and limited native ejection. How much, and in which direction,
-              depends on the configuration, so it is the opposite tendency to a transvalvular pump
-              rather than a fixed quantity.
+              Arterial return raises left ventricular afterload, most with peripheral retrograde
+              return, high circuit flow and little native ejection. That is the opposite tendency to
+              a transvalvular pump.
             </li>
             <li data-distinction="insertion-direction-is-not-flow-direction">
               <span className="font-semibold">
@@ -311,10 +301,8 @@ export function SupportPathwayMechanismsPanel({
           </ul>
 
           <ModelBoundary>
-            Two of the six mechanisms in this table are described rather than simulated. Nothing in
-            this module produces an extracorporeal circuit, a gas-exchange failure state, or a
-            membrane lung, so the last two rows are comparison content and the workspace cannot be
-            used to explore them.
+            The two extracorporeal rows are for comparison. The simulator runs no ECMO circuit, so
+            the workspace cannot show them.
           </ModelBoundary>
         </PanelSection>
       ) : (
@@ -346,7 +334,6 @@ export function SupportPathwayMechanismsPanel({
             caption="The flow lines and the two chamber readings, on the mechanism the task opened with and on the one in place now."
           />
           <TextEquivalent>{beforeAfterSentence(rows)}.</TextEquivalent>
-          <ModelBoundary>{DEADBAND_CAPTION}</ModelBoundary>
         </PanelSection>
       ) : null}
 

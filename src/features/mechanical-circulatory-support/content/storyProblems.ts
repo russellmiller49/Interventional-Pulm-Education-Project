@@ -1,3 +1,4 @@
+import { MCS_NUMBERS } from './teachingNumbers'
 import {
   clinicalLearningItemSchema,
   type ClinicalLearningItem,
@@ -174,7 +175,7 @@ const authored: readonly McsStoryProblem[] = [
       ],
       correctChoiceIds: ['small-rise-alarm-stays'],
       explanation:
-        'The level asks the pump for more. What the pump can move is decided upstream of the inlet, by what has arrived, so the display gains a little, the chamber it draws from empties further, and the alarm stays. The colleague reached for the setting axis; the problem lives on the loading axis. Model boundary: the suction alarm here is a modeled state, not a device’s own alarm logic, and blood trauma from a pump pulling on an empty chamber is named but not simulated.',
+        'The level asks the pump for more. What the pump can move is decided upstream of the inlet, by what has arrived, so the display gains a little, the chamber it draws from empties further, and the alarm stays. The colleague reached for the setting axis; the problem lives on the loading axis. Pulling on an empty chamber also causes hemolysis.',
       evidenceIds: [...impellaSources],
       reviewStatus: 'draft',
     }),
@@ -198,7 +199,7 @@ const authored: readonly McsStoryProblem[] = [
      * on this surface and this slice keeps.
      */
     changeScope:
-      'The one change is this model’s preload control, 55 per cent to 100 per cent — the whole circulating volume of the simulation, moved in one step. It is not a specified bolus, it has no dose and no rate, and nothing here says what volume a real patient should receive or whether they should receive any. Because that control rescales the entire circulation rather than adding a measured quantity to it, the response magnitude cannot be translated into a bedside fluid-challenge response: read it as which model input changed, not as the size or expected effect of a clinical intervention.',
+      'The one change is the preload control, moved from 55 to 100 per cent of reference in one step. That is far more than a fluid bolus: read the direction of the response, not its size.',
     sectionId: 'impella-suction-purge-rv',
     title: 'Story problem: volume for the same alarm',
     device: 'impella',
@@ -249,7 +250,7 @@ const authored: readonly McsStoryProblem[] = [
       ],
       correctChoiceIds: ['larger-rise-alarm-clears'],
       explanation:
-        'Volume answered the question the alarm was asking. With something arrived in front of the inlet the pump moves what it was asked for, the display rises by more than the level ever managed, and the alarm clears — at an unchanged setting. The wedge pressure rises as the chamber refills, which is what a chamber with something to offer looks like. Model boundary: volume here is a single slider on a simulated circulation; how much, how fast and whether to give it at all are bedside decisions this module does not make.',
+        'Volume answered the question the alarm was asking. With something arrived in front of the inlet the pump moves what it was asked for, the display rises by more than the level ever managed, and the alarm clears — at an unchanged setting. The wedge pressure rises as the chamber refills, which is what a chamber with something to offer looks like. At the bedside, give volume if the patient is underfilled, after turning the P-level down by one or two levels.',
       evidenceIds: [...impellaSources],
       reviewStatus: 'draft',
     }),
@@ -312,7 +313,7 @@ const authored: readonly McsStoryProblem[] = [
       ],
       correctChoiceIds: ['small-rise-pressure-higher'],
       explanation:
-        'Speed asks the pump for more against the same stiff circulation. The pump gains a little, and every litre it adds is pushed into a vessel that already pushes back, so the pressure rises further. The display rose because the estimate follows power and speed, not because more reached the organs. Model boundary: the speed change here is a simulated order; the device’s own speed logic and alarm limits are not reproduced.',
+        'Speed asks the pump for more against the same stiff circulation. The pump gains a little, and every litre it adds is pushed into a vessel that already pushes back, so the pressure rises further. The display rose because the estimate follows power and speed, not because more reached the organs. Do not raise the speed against a high blood pressure.',
       evidenceIds: [...lvadSources],
       reviewStatus: 'draft',
     }),
@@ -323,7 +324,7 @@ const authored: readonly McsStoryProblem[] = [
     baselineNote:
       'A constructed high-resistance illustration built for this pair: the reference durable-support patient with the systemic vascular resistance raised and nothing else changed. “The same starting point” means this baseline, shared by both stories in the pair.',
     changeScope:
-      'The one change is this model’s systemic vascular resistance slider. It names no drug, no dose and no rate, and the pump setting is untouched.',
+      'The one change is systemic vascular resistance, lowered. The pump setting is untouched.',
     sectionId: 'lvad-parameters-assessment',
     title: 'Story problem: the resistance comes down',
     device: 'lvad',
@@ -374,8 +375,7 @@ const authored: readonly McsStoryProblem[] = [
         },
       ],
       correctChoiceIds: ['larger-rise-pressure-falls'],
-      explanation:
-        'A continuous-flow pump delivers more against less. With the circulation less stiff, the same speed moves more blood, the display rises by more than the speed change managed, and the pressure falls at the same time — the pressure improvement and the perfusion improvement finally pointing the same way. Model boundary: the resistance here is one slider; which drug, how much and how quickly are bedside decisions this module does not make, and a pressure can be lowered too far.',
+      explanation: `A continuous-flow pump delivers more against less. With the circulation less stiff, the same speed moves more blood, the display rises by more than the speed change managed, and the pressure falls at the same time: the pressure improvement and the perfusion improvement finally point the same way. The goal is a mean arterial pressure of ${MCS_NUMBERS.value('lvad-map-goal')}.`,
       evidenceIds: [...lvadSources],
       reviewStatus: 'draft',
     }),

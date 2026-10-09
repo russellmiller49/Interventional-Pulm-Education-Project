@@ -3,6 +3,7 @@ import { criticalCareSourceConflictById } from '@/features/critical-care/content
 
 import type { McsSupportMechanismClass } from './commonModel'
 import { mcsSourceById } from './sources'
+import { MCS_NUMBERS } from './teachingNumbers'
 
 /**
  * One card schema, used identically for every support pathway this module names.
@@ -103,12 +104,14 @@ export interface McsSupportPathwayCard {
   readonly reviewStatus: 'draft' | 'sme-review' | 'released'
 }
 
-/** The single sentence that travels with every product flow figure in this module. */
+/** The sentence that travels with every product flow figure. */
 export const MCS_PRODUCT_FLOW_BOUNDARY =
-  'A product reference flow is a specification for the device, not a treatment target for the patient. It is what the pump can do under stated conditions, not what this patient is receiving, and no part of this module asks a learner to drive a number toward it.'
+  'A specification says what the pump can deliver under stated conditions. What this patient receives depends on filling, position and afterload, so read the displayed flow against the table for the P-level in use.'
 
 const NO_PRODUCT_FLOW_BOUNDARY =
-  'This pathway publishes no product flow figure here, because it reports no device flow of its own.'
+  'The console reports no device flow, because the balloon moves no blood along a pathway of its own.'
+
+const sentenceCase = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 
 export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.freeze([
   {
@@ -240,6 +243,14 @@ export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.f
       'Temporary support that carries an exit question from the moment it starts: recovery, escalation to a pathway that also supports the right heart or gas exchange, durable support, or transplant evaluation. Duration of support is itself a selection criterion, not an afterthought.',
     productReferences: [
       {
+        id: 'mcs.pathway.impella-cp.mean-flow-by-level',
+        productName: 'Impella CP with SmartAssist',
+        valueText: MCS_NUMBERS.value('impella-cp-flow-by-level'),
+        measurand: 'Mean flow at each P-level',
+        condition: 'Instructions for use, Table 5.3. Flow varies with suction and position.',
+        evidenceIds: ['impella-cp-ifu-rev-v-supplied'],
+      },
+      {
         id: 'mcs.pathway.impella-cp.maximum-mean-flow',
         productName: 'Impella CP with SmartAssist',
         valueText: '3.7 L/min',
@@ -250,9 +261,9 @@ export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.f
       {
         id: 'mcs.pathway.impella-cp.peak-systolic-flow',
         productName: 'Impella CP with SmartAssist',
-        valueText: 'Up to 4.3 L/min',
+        valueText: sentenceCase(MCS_NUMBERS.value('impella-cp-peak-flow')),
         measurand: 'Peak flow rate at systole',
-        condition: 'At performance level P-9; explicitly not a maximum mean flow',
+        condition: 'At performance level P-9. A systolic peak, not a mean.',
         evidenceIds: ['fda-impella-cp-labeling', 'jnj-impella-cp-current'],
       },
       {
@@ -261,7 +272,7 @@ export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.f
         valueText: '3.8 ± 0.6 L/min',
         measurand: 'Average flow observed during support',
         condition:
-          'Reported in the supporting clinical evidence; an observation in a studied population, not a device specification',
+          'Observed in the clinical studies in the labeling; a studied population, not a specification',
         evidenceIds: ['fda-impella-cp-labeling'],
       },
       {
@@ -269,9 +280,17 @@ export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.f
         productName: 'Impella 5.5 with SmartAssist',
         valueText: '5.5 L/min',
         measurand: 'Maximum mean flow',
-        condition:
-          'Device specification for the Impella 5.5, a different pump from the Impella CP figures above; not a guaranteed patient flow',
+        condition: 'Device specification for the Impella 5.5, a different pump from the Impella CP',
         evidenceIds: ['fda-impella-55-labeling', 'jnj-impella-55-current'],
+      },
+      {
+        id: 'mcs.pathway.impella-55.mean-flow-by-level',
+        productName: 'Impella 5.5 with SmartAssist',
+        valueText: MCS_NUMBERS.value('impella-55-flow-by-level'),
+        measurand: 'Mean flow at each P-level',
+        condition:
+          'Instructions for use, Table 5.3, at a 30–60 mm Hg pressure difference across the pump',
+        evidenceIds: ['impella-55-ifu-rev-l-supplied'],
       },
     ],
     productReferenceBoundary: MCS_PRODUCT_FLOW_BOUNDARY,
@@ -283,6 +302,8 @@ export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.f
       'ishlt-hfsa-acute-mcs-2023',
       'fda-impella-cp-labeling',
       'jnj-impella-cp-current',
+      'impella-cp-ifu-rev-v-supplied',
+      'impella-55-ifu-rev-l-supplied',
       'impella-cp-smartassist-insertion',
       'fda-impella-55-labeling',
       'jnj-impella-55-current',
@@ -352,8 +373,7 @@ export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.f
         productName: 'Impella RP',
         valueText: 'Up to 4.0 L/min',
         measurand: 'Product-framed flow',
-        condition:
-          'Product information framing for the device family; delivered flow remains loading-dependent',
+        condition: 'Product information for the device family; delivered flow depends on loading',
         evidenceIds: ['fda-impella-rp-labeling', 'jnj-impella-rp-current'],
       },
     ],
@@ -409,9 +429,9 @@ export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.f
     displayedFlow: {
       valueType: 'estimated',
       statement:
-        'Derived from pump power and speed against an assumed blood viscosity, not measured in the bloodstream. The estimate becomes least reliable in exactly the states that disturb the power–flow relationship, such as a suspected thrombus.',
+        'Calculated by the controller from power at the set speed and the hematocrit entered; not measured in the bloodstream. Thrombus on the rotor raises power, so the display reads falsely high.',
       additivity:
-        'Partly additive with whatever the native ventricle still ejects, minus any volume returning through an incompetent aortic valve. Because the estimate and the native contribution are both uncertain, the sum is an argument rather than an arithmetic result.',
+        'Partly additive with whatever the native ventricle still ejects, minus any volume returning through an incompetent aortic valve.',
     },
     lowFlowDifferential: {
       patient:
@@ -422,13 +442,12 @@ export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.f
         'Pump thrombosis with a rising power signature, outflow graft obstruction, a controller fault, or an interrupted power path.',
     },
     firstUnsafeReflex:
-      'Changing pump speed in response to a displayed number. Speed is prescribed, and a change belongs to the responsible team working from current instructions — the low-flow differential has to be worked through first.',
+      'Raising pump speed because the displayed flow is low. Read the pulsatility index with it first. Low flow with a low index is an underfilled ventricle, and more speed empties it further. Low flow with a high index and a high blood pressure is afterload, and the treatment is the blood pressure.',
     supportRole: 'durable',
     bridgeExitBoundary:
       'Durable support is a different decision from temporary support, not a longer version of it. Candidacy evaluation, implantation, anticoagulation, driveline care, and an agreed strategy — bridge to transplant, bridge to candidacy, or destination therapy — are settled before implantation. A patient arriving in the intensive-care unit with a durable pump already carries that strategy with them.',
     productReferences: [],
-    productReferenceBoundary:
-      'Speed and flow ranges for a durable pump are prescribed per patient by the implanting programme. This module publishes no reference flow for it, because a number without that patient’s prescription is not usable.',
+    productReferenceBoundary: `HeartMate 3 speed in use: ${MCS_NUMBERS.value('heartmate3-speed-typical')}. Each patient has a baseline flow, power and pulsatility index; read every value against that baseline.`,
     measurementClarificationIds: [],
     sourceConflictIds: [],
     sourceIds: [
@@ -501,7 +520,7 @@ export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.f
       'Temporary support for a lung problem, held to recovery, to transplantation, or to a decision that neither is achievable. It does not become durable support by continuing.',
     productReferences: [],
     productReferenceBoundary:
-      'Circuit flows are set per patient against the oxygen requirement and the drainage available. This module publishes no reference figure for a comparison pathway.',
+      'Circuit flow is set per patient against the oxygen requirement and the drainage available.',
     measurementClarificationIds: [],
     sourceConflictIds: [],
     sourceIds: ['elso-vv-ecmo-guideline', 'mcs-bedside-reference-supplied'],
@@ -568,7 +587,7 @@ export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.f
       'Temporary support held to recovery, to a durable device, to transplantation, or to a decision that none of those is achievable. The exit strategy is agreed early because the pathway itself imposes a time limit.',
     productReferences: [],
     productReferenceBoundary:
-      'Circuit flows are set per patient against the perfusion requirement and the drainage available. This module publishes no reference figure for a comparison pathway.',
+      'Circuit flow is set per patient against the perfusion requirement and the drainage available.',
     measurementClarificationIds: [],
     sourceConflictIds: [],
     sourceIds: ['elso-va-ecmo-guideline', 'mcs-bedside-reference-supplied'],
@@ -630,8 +649,7 @@ export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.f
     bridgeExitBoundary:
       'Temporary support for a failing right ventricle, held to recovery, to a change of strategy, or to a decision about durable support or transplantation.',
     productReferences: [],
-    productReferenceBoundary:
-      'Circuit flows are set per patient. This module publishes no reference figure for a comparison pathway.',
+    productReferenceBoundary: 'Circuit flow is set per patient.',
     measurementClarificationIds: [],
     sourceConflictIds: [],
     sourceIds: ['ishlt-hfsa-acute-mcs-2023', 'mcs-bedside-reference-supplied'],
@@ -695,8 +713,7 @@ export const mcsSupportPathwayCards: readonly McsSupportPathwayCard[] = Object.f
     bridgeExitBoundary:
       'Temporary support held to recovery, to a durable device, or to transplantation. The transseptal communication is itself part of the exit plan.',
     productReferences: [],
-    productReferenceBoundary:
-      'Circuit flows are set per patient. This module publishes no reference figure for a comparison pathway.',
+    productReferenceBoundary: 'Circuit flow is set per patient.',
     measurementClarificationIds: [],
     sourceConflictIds: [],
     sourceIds: ['ishlt-hfsa-acute-mcs-2023', 'mcs-bedside-reference-supplied'],
@@ -876,7 +893,7 @@ export function validateMcsSupportPathways(
       card.productReferences.length > 0 &&
       card.productReferenceBoundary !== MCS_PRODUCT_FLOW_BOUNDARY
     ) {
-      errors.push(`${card.id}: publishes product figures without the shared not-a-target boundary`)
+      errors.push(`${card.id}: product figures without the shared specification sentence`)
     }
 
     for (const clarificationId of card.measurementClarificationIds) {

@@ -44,7 +44,7 @@ export function McsNamingCrosswalk() {
                 <dd>{row.productIdentity}</dd>
               </div>
               <div>
-                <dt>What this model is</dt>
+                <dt>In the simulator</dt>
                 <dd>{row.modelIdentity}</dd>
               </div>
               <div>

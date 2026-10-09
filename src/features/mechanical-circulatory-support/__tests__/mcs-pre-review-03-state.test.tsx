@@ -71,10 +71,8 @@ function snapshot(): Snapshot {
   expect(mockMonitorState).not.toBeNull()
   return {
     modelState: JSON.stringify(mockMonitorState),
-    // The identity line carries the run and its simulated time; the seed sits in Run details.
-    identity: `${document.querySelector('[data-session-identity]')?.textContent ?? ''} ${
-      document.querySelector('[data-run-details] p')?.textContent?.match(/Seed \d+/)?.[0] ?? ''
-    }`,
+    // The identity line carries the run and its simulated time.
+    identity: document.querySelector('[data-session-identity]')?.textContent ?? '',
     step: currentStepId(),
     checked: [...document.querySelectorAll<HTMLInputElement>('input[type="radio"]:checked')].map(
       (radio) => `${radio.name}=${radio.value}`,
@@ -109,11 +107,11 @@ describe('a live Learn section: presentation operations change nothing the model
     )
     fireEvent.click(within(nowCard()).getByRole('button', { name: 'Show explanation' }))
     const taken = snapshot()
-    // Not vacuous: there is an answer, an explanation, a clock and a seed to lose.
+    // Not vacuous: there is an answer, an explanation, a clock and a run identity to lose.
     expect(taken.checked).toHaveLength(1)
     expect(taken.explanationShown).toBe(true)
     expect(taken.monitorTime).toMatch(/\d+\.\d s/)
-    expect(taken.identity).toMatch(/Seed \d+/)
+    expect(taken.identity).toMatch(/Current exercise · \d+\.\d\d simulated seconds/)
     return taken
   }
 

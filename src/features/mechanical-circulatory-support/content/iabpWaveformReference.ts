@@ -1,28 +1,11 @@
 /**
- * An authored reference contour for the assisted arterial trace, and the record of why it exists.
+ * A labeled reference contour for the assisted arterial trace.
  *
- * Section 3 asks a learner to recognize timing on the arterial waveform, and the two features they
- * are told to look for are the ones this simulation does not produce. Measured on the production
- * engine at the section's own 1:2 demonstration settings, matched beats, aligned timing:
- *
- *   assisted beat     systolic peak 98.1 · diastolic augmentation peak 92.4 · end-diastolic 60.5
- *   unassisted beat   systolic peak 97.8 · diastolic peak 76.2        · end-diastolic 61.0
- *
- * So the augmented peak sits below the systolic peak, and the assisted end-diastolic pressure is
- * 0.5 mm Hg below the unassisted one — a number no one can read off a trace. That is not a bug to
- * be tuned away: `generateMcsWaveformSample` adds a fixed-amplitude augmentation bump to assisted
- * beats and has no mechanism at all for reducing the pressure at the start of the next ejection,
- * and raising that amplitude until the picture matched the teaching would be changing a waveform
- * to agree with a sentence (F17).
- *
- * What is here instead is an authored diagram of the relationships the manufacturer's own booklet
- * names, on a fixed labelled pressure scale, kept visibly separate from the live trace. It is a
- * drawing of a principle. It is not this patient, not a run of this model, and not a measurement,
- * and every surface that shows it says so.
- *
- * Nothing in this file is a clinical magnitude. The booklet gives none; the report's "15–20 mm Hg
- * below unassisted" figure is a third-party interpretation that was not verified for this slice
- * and is deliberately absent. The shape below is schematic and its numbers exist only to draw it.
+ * Until 2026-10-08 the live strip did not draw the two relationships a learner is told to look
+ * for, and this diagram stood in for them. The engine now draws them (`iabpPressureEffect` in
+ * `engine/model.ts`): at aligned timing and 1:2 the augmented peak stands above unassisted
+ * systole, and the assisted end-diastolic and assisted systolic pressures sit below their
+ * unassisted partners. The diagram stays as a key to the five landmark names.
  */
 
 /** The source whose text the diagram's relationships come from. */
@@ -110,15 +93,16 @@ export const MCS_IABP_REFERENCE_LANDMARKS: readonly McsIabpReferenceLandmark[] =
 
 /** Said wherever the diagram is drawn. It is the whole point of keeping it separate. */
 export const MCS_IABP_REFERENCE_IDENTITY = Object.freeze({
-  heading: 'Authored reference contour',
-  lead: 'A drawing of the relationships a counterpulsation trace is read for, on the same pressure scale as the live strip above.',
+  heading: 'The five landmarks',
+  lead: 'A labeled diagram of the pressures a counterpulsation trace is read by, on the same pressure scale as the live strip above.',
   notThis:
-    'This is not this patient’s trace, not a run of this simulation, and not a measurement. Nothing on it was produced by the model.',
+    'The live strip shows the same five landmarks for this patient; the readout beside it gives their pressures.',
   sourceLead:
-    'The landmark names and each stated relationship come from Getinge’s own IABP waveform booklet, read for this slice. The drawing is this module’s, not the booklet’s figure.',
+    'The landmark names and each relationship come from Getinge’s IABP waveform booklet. The drawing is original.',
   noMagnitude:
-    'The booklet gives no millimetre-of-mercury size for the reductions it describes, and none is claimed here. The pressures on the diagram exist only to draw the shape.',
-  reviewNote: 'Diagram content and its rights question are open for review as OD-01 and OD-06.',
+    'How large each change is depends on the patient: balloon volume, heart rate, stroke volume and how stiff the aorta is.',
+  reviewNote:
+    'Check timing at a 1:2 ratio, so an assisted beat and an unassisted beat sit side by side.',
 })
 
 /**
@@ -128,11 +112,11 @@ export const MCS_IABP_REFERENCE_IDENTITY = Object.freeze({
  * question, instead of being left to discover that the live one does not carry the features.
  */
 export const MCS_IABP_LIVE_TRACE_LIMITS = Object.freeze({
-  heading: 'What the live trace above can and cannot show you',
+  heading: 'Reading the live trace',
   shows:
-    'Where inflation and deflation fall inside the beat, which beats are assisted, and how the four timing errors move those events — all from the same clock the balloon and the 3D model use.',
+    'Where inflation and deflation fall inside the beat, which beats are assisted, and how each timing error changes the shape, all from the same clock the balloon and the 3D model use.',
   doesNotShow:
-    'The two pressure relationships. Measured on this model at aligned timing and a 1:2 ratio, the augmented peak reaches about 92 mm Hg against a systolic peak of about 98, and the assisted end-diastolic pressure sits about 0.5 mm Hg below the unassisted one. This model adds a fixed-amplitude augmentation to assisted beats and models no reduction in the pressure the next ejection opens against.',
+    'With good timing, three things are true. The augmented diastolic peak stands above unassisted systole. The assisted end-diastolic pressure is lower than the unassisted one. The assisted systolic peak is lower than unassisted systole. Late deflation removes the last two; late or early inflation shrinks the first.',
   soRead:
-    'Read event timing from the live strip and the two pressure relationships from the authored reference below. Neither picture substitutes for the trace on the console in front of you.',
+    'Set the ratio to 1:2 to check timing: the strip then shows an assisted beat and an unassisted beat side by side.',
 })

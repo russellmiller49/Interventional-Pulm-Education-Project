@@ -185,8 +185,9 @@ describe('F19 — no surface answers a trigger choice in atrial fibrillation wit
         const heldEntry = panel.querySelector<HTMLElement>('[data-condition-held="true"]')!
         expect(heldEntry).not.toBeNull()
         expect(heldEntry.textContent).toContain(MCS_AF_TRIGGER_CONTAINMENT.conditionHoldReason)
-        expect(heldEntry.textContent).toContain(MCS_AF_TRIGGER_CONTAINMENT.openItemId)
-        expect(heldEntry.textContent).toContain('NOT REVIEWED')
+        // Packet ids and review status stay out of the learner's explanation.
+        expect(panel.textContent).not.toContain(MCS_AF_TRIGGER_CONTAINMENT.openItemId)
+        expect(panel.textContent).not.toContain('NOT REVIEWED')
         // No met/achieved/success signal anywhere in the worked explanation.
         expect(panel.textContent).not.toMatch(/\b(met|achieved|passed|success|well done)\b/i)
         expect(scenario.successCriteria.some((c) => c.classification.held)).toBe(true)
@@ -257,7 +258,7 @@ describe('F19 — no surface answers a trigger choice in atrial fibrillation wit
     const comparison = note.querySelector<HTMLDetailsElement>('[data-af-trigger-comparison]')!
     expect(comparison.open).toBe(true)
     expect(comparison.textContent).toContain(MCS_AF_TRIGGER_LIMIT.deviceLabeling)
-    expect(comparison.textContent).toContain('NOT REVIEWED')
+    expect(comparison.textContent).not.toContain('NOT REVIEWED')
     for (const source of TRIGGERS) {
       expect(comparison.querySelector(`[data-af-trigger-rating="${source}"]`)).not.toBeNull()
     }
@@ -371,8 +372,8 @@ describe('F26 — a story says which patient it starts from, before it asks', ()
 
   it('states the scope of the loading change and implies no dose, rate or fluid recommendation', () => {
     const volume = pair.find((story) => story.id === 'story-volume-for-suction')!
-    expect(volume.changeScope).toMatch(/55 per cent to 100 per cent/)
-    expect(volume.changeScope).toMatch(/not a specified bolus/i)
+    expect(volume.changeScope).toMatch(/55 to 100 per cent/)
+    expect(volume.changeScope).toMatch(/far more than a fluid bolus/i)
     const view = render(<McsStoryProblems stories={[volume]} />)
     const text = view.container.querySelector('[data-story-change-scope]')!.textContent!
     expect(text).not.toMatch(/\b\d+\s*(mL|ml|millilitres|cc)\b/)
@@ -452,7 +453,7 @@ describe('F33 — every numerical condition in the twelve cases says what kind o
       const view = render(<McsCaseWorkflow state={state} dispatch={jest.fn()} />)
       const panel = view.container.querySelector<HTMLElement>('[data-worked-explanation]')!
       expect(panel.querySelector('[data-condition-contract]')!.textContent).toMatch(
-        /not a treatment target/,
+        /simulator’s checkpoints for ending the case, not treatment targets/,
       )
       const entries = panel.querySelectorAll('[data-condition-list] > li')
       expect(entries).toHaveLength(scenario.successCriteria.length)
@@ -460,7 +461,8 @@ describe('F33 — every numerical condition in the twelve cases says what kind o
         const criterion = scenario.successCriteria[index]
         expect(entry.textContent).toContain(criterion.label)
         expect(entry.getAttribute('data-condition-class')).toBe(criterion.classification.kind)
-        expect(entry.textContent).toContain('Authored for this simulation')
+        expect(entry.textContent).toContain('Simulator checkpoint')
+        expect(entry.textContent).not.toMatch(/\bauthored\b/i)
         expect(entry.textContent).toContain(criterion.classification.quantity)
       })
       // No universal target was substituted for the authored numbers.
@@ -517,18 +519,20 @@ describe('F27 / F28 — the durable reference is named, and the estimator direct
   const section7 = mcsSectionLearningContractById.get('lvad-parameters-assessment')!
   const section8 = mcsSectionLearningContractById.get('lvad-alarms-emergencies')!
 
-  it('reproduces the elevated reference pressure and does not call it normal', () => {
+  it('starts the durable reference inside the taught goal range, and says so', () => {
     const reference = settle(createInitialMcsState('learn', 'lvad', null, 417))
-    expect(reference.metrics.mapMmHg).toBeGreaterThan(100)
+    expect(reference.metrics.mapMmHg).toBeGreaterThanOrEqual(70)
+    expect(reference.metrics.mapMmHg).toBeLessThanOrEqual(80)
     expect(reference.alarms.filter((alarm) => alarm.active)).toHaveLength(0)
-    expect(section7.startingContext).not.toMatch(/reading normally/)
-    expect(section7.startingContext).toMatch(/Steady is not the same as normal/)
-    expect(section7.startingContext).toMatch(/not adopted as this module’s target/)
-    expect(section7.startingContext).toMatch(/OD-02/)
-    expect(section8.startingContext).toMatch(/not a target/)
+    // The copy's claim is now true of the state it opens on.
+    expect(section7.startingContext).toMatch(
+      /mean arterial pressure is in the goal range of 70–80 mm Hg/,
+    )
+    expect(section7.startingContext).not.toMatch(/OD-0\d/)
+    expect(section8.startingContext).not.toMatch(/OD-0\d/)
   })
 
-  it('separates this model’s power-from-flow from the card’s flow-from-power', () => {
+  it('models the card’s flow-from-power estimate, so thrombus raises the display and lowers real flow', () => {
     /*
      * Matched elapsed time, one fork. Settling the high-power branch on top of an already-settled
      * control would compare eight seconds against sixteen, and the small drift between them would
@@ -544,26 +548,32 @@ describe('F27 / F28 — the durable reference is named, and the estimator direct
     const rest = branch(false)
     const highPower = branch(true)
     expect(highPower.timeSeconds).toBeCloseTo(rest.timeSeconds, 5)
-    // The model's behaviour, reproduced: power moves, the displayed flow does not.
-    expect(highPower.metrics.pumpPowerW!).toBeGreaterThan(rest.metrics.pumpPowerW! + 2)
-    expect(highPower.metrics.deviceFlowLMin).toBe(rest.metrics.deviceFlowLMin)
+    // Power up by more than a watt, the estimate up with it, real flow and pulsatility down.
+    expect(highPower.metrics.pumpPowerW!).toBeGreaterThan(rest.metrics.pumpPowerW! + 1)
+    expect(highPower.metrics.estimatedPumpFlowLMin!).toBeGreaterThan(
+      rest.metrics.estimatedPumpFlowLMin!,
+    )
+    expect(highPower.metrics.deviceFlowLMin).toBeLessThan(rest.metrics.deviceFlowLMin)
+    expect(highPower.metrics.pulsatilityIndex!).toBeLessThan(rest.metrics.pulsatilityIndex!)
+    // With no fault the estimate is the real flow.
+    expect(
+      Math.abs(rest.metrics.estimatedPumpFlowLMin! - rest.metrics.deviceFlowLMin),
+    ).toBeLessThanOrEqual(0.02)
 
     const card = mcsSources.find(
       (source) => source.id === 'abbott-heartmate3-pump-parameters-card',
     )!
     expect(card.sourceType).toBe('manufacturer')
     expect(card.intendedUse).toMatch(/fixed speed, power and the patient’s hematocrit/)
-    expect(card.limitation).toMatch(/no estimator equation/)
+    expect(card.limitation).toMatch(/gives no equation/)
     for (const text of [
       section8.teaching.flowAccountNote,
       section8.explanation,
       section7.recognizeOptions.find((option) => option.id === 'from-power-and-speed')!.feedback,
     ]) {
-      expect(text).toMatch(/(fixed )?speed, power and (the patient’s )?hematocrit/)
+      expect(text).toMatch(/estimate from power|calculat\w+ (flow |it )?from (pump )?(power|it)\b/i)
     }
-    expect(section8.teaching.flowAccountNote).toMatch(/OD-02/)
-    // No reverse-engineered controller is claimed anywhere.
-    expect(section8.teaching.flowAccountNote).toMatch(/gives no estimator equation/)
+    expect(section8.teaching.flowAccountNote).not.toMatch(/OD-0\d/)
     // The card is attached to the durable-support evidence set the section's items cite.
     expect(section8.predictionItem.evidenceIds).toContain('abbott-heartmate3-pump-parameters-card')
   })
@@ -577,7 +587,7 @@ describe('F18 — no screen claims unannotated while the annotated reference is 
   it('removes the claim from the copy without concealing the landmarks or the alarm', () => {
     expect(contract.recognizePrompt).not.toMatch(/unannotated/i)
     expect(contract.startingContext).not.toMatch(/unannotated/i)
-    expect(contract.recognizePrompt).toMatch(/annotated Timing reference/)
+    expect(contract.recognizePrompt).toMatch(/live strip at 1:2 and its five-pressure readout/)
 
     setupMcsStage()
     try {

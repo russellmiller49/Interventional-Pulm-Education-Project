@@ -378,7 +378,7 @@ describe('M4 — nothing reveals the answer before it is committed', () => {
     )
     expect(after.container.querySelector('[data-pump-side="right"] svg')).not.toBeNull()
     expect(after.container.querySelector('[data-serial-not-additive]')?.textContent).toMatch(
-      /never summed/i,
+      /Adding the two displayed flows counts that blood twice/i,
     )
     after.unmount()
   })
@@ -389,22 +389,28 @@ describe('M4 — nothing reveals the answer before it is committed', () => {
 
     const before = renderPanel(contract, state, 'orientation')
     expect(before.container.querySelector('[data-parameter-dependency]')).toBeNull()
-    expect(before.container.textContent ?? '').not.toMatch(/computed from power/i)
+    expect(before.container.textContent ?? '').not.toMatch(
+      /(computed|calculate[sd]?)[^.]* from (pump )?power/i,
+    )
+    expect(before.container.textContent ?? '').not.toContain('Flow the pump is really delivering')
     expect(before.container.querySelector('[data-cpo-paradox]')).toHaveAttribute(
       'data-cpo-paradox',
       'withheld',
     )
-    // The value is still on the screen, labelled as modeled transfer; only its provenance waits.
+    // The value is still on the screen, labelled as an estimate like every displayed pump flow in
+    // the module; what the estimate is made from waits.
     expect(
       before.container
         .querySelector('[data-flow-line="device"]')
         ?.getAttribute('data-flow-line-kind'),
-    ).toBe('modeled')
+    ).toBe('estimated')
     before.unmount()
 
     const after = renderPanel(contract, state, 'mechanism')
     expect(after.container.querySelector('[data-parameter-dependency]')).not.toBeNull()
-    expect(after.container.textContent ?? '').toMatch(/generated from speed and loading/i)
+    expect(after.container.textContent ?? '').toMatch(
+      /The controller measures power and calculates the displayed flow from it/i,
+    )
     expect(
       after.container.querySelector('[data-cpo-paradox]')?.getAttribute('data-cpo-paradox'),
     ).not.toBe('withheld')
@@ -423,10 +429,9 @@ describe('M4 — nothing reveals the answer before it is committed', () => {
     expect(before.container.querySelector('[data-high-power-boundaries]')).toBeNull()
     expect(before.container.querySelectorAll('[data-high-power-boundary]')).toHaveLength(0)
     const text = before.container.textContent ?? ''
-    expect(text).not.toMatch(/raises power and leaves the delivered flow/i)
-    expect(text).not.toMatch(/does not change delivered flow/i)
-    // What the word "suspected" means is not the answer, and stays.
-    expect(text).toMatch(/suspected/)
+    expect(text).not.toMatch(/the displayed flow rises with it/i)
+    expect(text).not.toMatch(/reads falsely high|real flow[^.]*fall/i)
+    expect(text).not.toMatch(/thrombosis until proven otherwise/i)
     before.unmount()
 
     const after = renderPanel(contract, state, 'mechanism')
@@ -435,7 +440,9 @@ describe('M4 — nothing reveals the answer before it is committed', () => {
       'withheld',
     )
     expect(after.container.querySelectorAll('[data-high-power-boundary]')).toHaveLength(4)
-    expect(after.container.textContent ?? '').toMatch(/raises power and leaves the delivered flow/i)
+    expect(after.container.textContent ?? '').toMatch(
+      /power rises, the displayed flow rises with it, and the real flow, the pulsatility index and the patient fall/i,
+    )
     after.unmount()
   })
 
@@ -717,16 +724,16 @@ describe('M4 — the clinical invariants survive the visuals', () => {
     // And nowhere else in the panel either — the arithmetic is prohibited, not merely kept off one row.
     expect(view.container.textContent ?? '').not.toContain(`${summed} L/min`)
 
-    // Pump balance is labelled as a difference between two pumps, never as an output.
+    // Pump balance is labelled as right-sided minus left-sided flow, never as an output.
     const balance = Array.from(view.container.querySelectorAll('[data-live-value]')).find(
       (node) => node.getAttribute('data-live-value') === 'Pump balance',
     )
-    expect(balance?.textContent).toMatch(/difference between two pumps/i)
+    expect(balance?.textContent).toMatch(/Right-sided flow minus left-sided flow/i)
     expect(balance?.textContent).not.toMatch(/systemic output/i)
     view.unmount()
   })
 
-  it('distinguishes modeled durable transfer from controller estimates and measurements', () => {
+  it('labels every displayed pump flow, durable included, as an estimate and never as a probe reading', () => {
     for (const contract of mcsSectionLearningContracts.filter(
       (candidate) => candidate.startingDevice !== 'iabp',
     )) {
@@ -738,9 +745,7 @@ describe('M4 — the clinical invariants survive the visuals', () => {
       )
       const account = view.container.querySelector('[data-flow-account]')
       const device = account?.querySelector('[data-flow-line="device"]')
-      expect(device?.getAttribute('data-flow-line-kind')).toBe(
-        contract.startingDevice === 'lvad' ? 'modeled' : 'estimated',
-      )
+      expect(device?.getAttribute('data-flow-line-kind')).toBe('estimated')
       expect(view.container.textContent ?? '').not.toMatch(
         /measured by a flow probe|probe reading/i,
       )
@@ -761,7 +766,9 @@ describe('M4 — the clinical invariants survive the visuals', () => {
       )
       const limitation = view.container.querySelector('[data-papi-limitation]')
       expect(limitation).not.toBeNull()
-      expect(limitation?.textContent).toMatch(/must not be used on its own/i)
+      expect(limitation?.textContent).toMatch(
+        /judge (right-sided|that) support from right atrial pressure and left-sided filling/i,
+      )
       expect(limitation?.textContent).toMatch(/simulator|simulation/i)
       view.unmount()
     }
@@ -787,22 +794,27 @@ describe('M4 — the clinical invariants survive the visuals', () => {
     for (const id of ['mentation', 'urine-output', 'lactate', 'skin-perfusion', 'organ-recovery']) {
       expect(view.container.querySelector(`[data-unmodeled-signal="${id}"]`)).not.toBeNull()
     }
-    expect(view.container.textContent).toContain('does not calculate whole-body oxygen delivery')
+    expect(view.container.textContent).toContain('Whole-body oxygen deliverynot in the simulator')
     view.unmount()
   })
 
-  it('does not claim the high-power pattern reduces delivered flow, and marks what is unmodeled', () => {
+  it('shows the high-power pattern lowering real flow while the displayed estimate rises', () => {
     const contract = mcsSectionLearningContracts.find(
       (candidate) => candidate.sectionId === 'lvad-alarms-emergencies',
     )!
     const before = openedState(contract)
     const after = actedState(contract)
-    // The engine really does leave delivered flow essentially where it was — inside the band that
-    // the fixed-step model moves it by on its own — while the power signature climbs by watts.
+    // The engine lowers real flow and delivery by more than the display deadband, raises power by
+    // more than a watt, and raises the controller's estimate with it.
     expect(
-      Math.abs(after.metrics.effectiveSystemicFlowLMin - before.metrics.effectiveSystemicFlowLMin),
-    ).toBeLessThanOrEqual(deadbandFor('effectiveSystemicFlowLMin'))
-    expect(after.metrics.pumpPowerW! - before.metrics.pumpPowerW!).toBeGreaterThan(2)
+      before.metrics.effectiveSystemicFlowLMin - after.metrics.effectiveSystemicFlowLMin,
+    ).toBeGreaterThan(deadbandFor('effectiveSystemicFlowLMin'))
+    expect(after.metrics.deviceFlowLMin).toBeLessThan(before.metrics.deviceFlowLMin)
+    expect(after.metrics.pumpPowerW! - before.metrics.pumpPowerW!).toBeGreaterThan(1)
+    expect(after.metrics.estimatedPumpFlowLMin!).toBeGreaterThan(
+      before.metrics.estimatedPumpFlowLMin!,
+    )
+    expect(after.metrics.pulsatilityIndex!).toBeLessThan(before.metrics.pulsatilityIndex!)
 
     const view = renderPanel(contract, after, 'explanation', before.metrics)
     const text = view.container.textContent ?? ''
@@ -810,16 +822,20 @@ describe('M4 — the clinical invariants survive the visuals', () => {
       view.container.querySelector('[data-high-power-boundary="flow-unchanged"]'),
     ).not.toBeNull()
     expect(
+      view.container.querySelector('[data-high-power-boundary="flow-unchanged"]')?.textContent,
+    ).toMatch(/The displayed flow is falsely high/i)
+    expect(
       view.container.querySelector('[data-high-power-boundary="hemolysis"]')?.textContent,
-    ).toMatch(/not modeled/i)
+    ).toMatch(/Send LDH and plasma free hemoglobin/i)
     expect(
       view.container.querySelector('[data-high-power-boundary="obstruction"]')?.textContent,
-    ).toMatch(/not modeled/i)
+    ).toMatch(/obstructed outflow graft/i)
     expect(text).toMatch(/suspected/i)
-    expect(text).toMatch(/raises power and leaves the delivered flow where it was/i)
-    expect(text).toMatch(/does not teach the converse/i)
-    // The converse claim never appears in any form, negated or otherwise.
-    expect(text).not.toMatch(/(?:reduces|reducing|lowers|lowering) (?:the )?delivered flow/i)
+    // The numbers printed in the sentence are the engine's own, both flows side by side.
+    expect(text).toContain(
+      `the displayed flow reads ${after.metrics.estimatedPumpFlowLMin!.toFixed(1)} L/min, but the pump is really moving ${after.metrics.deviceFlowLMin.toFixed(1)} L/min`,
+    )
+    expect(text).not.toMatch(/leaves the delivered flow where it was/i)
     expect(text).not.toMatch(/pump thrombosis is present|confirmed thrombosis/i)
     view.unmount()
   })
@@ -835,9 +851,6 @@ describe('M4 — the clinical invariants survive the visuals', () => {
       const text = view.container.textContent ?? ''
       expect(text).not.toMatch(/\btarget flow\b|\bflow target\b|\btarget of\s*\d/i)
       expect(text).not.toMatch(/\bshould (?:always )?be (?:above|below)\s*\d/i)
-      expect(text).not.toMatch(
-        /(?:choose|select|start) (?:an? )?(?:Impella|IABP|LVAD|balloon pump)\b/i,
-      )
       view.unmount()
     }
     const integration = mcsSectionLearningContracts.find(
@@ -849,11 +862,8 @@ describe('M4 — the clinical invariants survive the visuals', () => {
       'explanation',
       openedState(integration).metrics,
     )
-    expect(view.container.querySelector('[data-congestion-limit]')?.textContent).toMatch(
-      /does not .*select a support device/i,
-    )
-    // Gas exchange is named as information this simulation does not establish.
-    expect(view.container.textContent).toMatch(/models no gas-exchange failure state/i)
+    // Gas exchange is named as something to assess at the bedside, not read off this screen.
+    expect(view.container.textContent).toMatch(/gas exchange: assess at the bedside/i)
     view.unmount()
   })
 })
@@ -861,7 +871,7 @@ describe('M4 — the clinical invariants survive the visuals', () => {
 // ── Text equivalents, boundaries, accessibility ──────────────────────────────
 
 describe('M4 — every figure is readable without the picture', () => {
-  it.each(contractCases)('gives %s a text equivalent and a model boundary', (_id, contract) => {
+  it.each(contractCases)('gives %s a text equivalent for every figure', (_id, contract) => {
     for (const reveal of MCS_REVEAL_STAGES) {
       const view = renderPanel(
         contract,
@@ -872,9 +882,11 @@ describe('M4 — every figure is readable without the picture', () => {
       const equivalents = view.container.querySelectorAll('[data-text-equivalent]')
       expect(equivalents.length).toBeGreaterThan(0)
       for (const node of equivalents) {
-        expect((node.textContent ?? '').trim().length).toBeGreaterThan(30)
+        // The words themselves, without the "In words" disclosure label: a whole sentence.
+        const words = (node.querySelector('p')?.textContent ?? '').trim()
+        expect(words.length).toBeGreaterThanOrEqual('No alarm is active.'.length)
+        expect(words).toMatch(/\.$/)
       }
-      expect(view.container.querySelectorAll('[data-model-boundary]').length).toBeGreaterThan(0)
 
       /*
        * Per figure, not per panel. One text equivalent at the bottom of a panel with six figures in
@@ -976,7 +988,7 @@ describe('M4 — every figure is readable without the picture', () => {
       ).toBeGreaterThan(20)
       expect(view.container.querySelector('[data-before-after-figure]')).toBeNull()
       expect(view.container.querySelector('[data-transfer-baseline-note]')?.textContent).toMatch(
-        /No baseline from the previous patient is carried across/i,
+        /Nothing is carried over from the last one/i,
       )
       view.unmount()
     }

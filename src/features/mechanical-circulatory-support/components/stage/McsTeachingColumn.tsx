@@ -94,12 +94,11 @@ export function McsTeachingColumn({
         ) : (
           <>
             <p>
-              <strong>Expected response in this model:</strong>{' '}
-              {contract.teaching.howTheActionAffectsTheModel}
+              <strong>What the action does:</strong> {contract.teaching.howTheActionAffectsTheModel}
             </p>
             <p data-flow-account-note>{contract.teaching.flowAccountNote}</p>
             <p data-does-not-establish>
-              <strong>This exercise does not establish:</strong> {contract.whatThisDoesNotEstablish}
+              <strong>What to do with it:</strong> {contract.whatThisDoesNotEstablish}
             </p>
             {/*
              * The same three paragraphs stood open on every step of the five introductory sections
@@ -112,10 +111,7 @@ export function McsTeachingColumn({
               <summary>
                 Reading the result: pressure, flow, oxygen delivery, patient response
               </summary>
-              <p>
-                Use the captured results in this task to establish what actually changed in this
-                run. Expected direction is a hypothesis; unchanged values remain valid observations.
-              </p>
+              <p>Read the captured results to see what actually changed in this run.</p>
               <div data-causal-ladder-summary>
                 <p>
                   <strong>Pressure and blood flow:</strong> mm Hg and L/min answer different
@@ -123,8 +119,8 @@ export function McsTeachingColumn({
                 </p>
                 <p>
                   <strong>Oxygen delivery and patient response:</strong> oxygen content and
-                  consumption matter. Mentation, urine output, skin findings and lactate trend
-                  require clinical assessment; these responses are not simulated.
+                  consumption matter. Mentation, urine output, skin findings and the lactate trend
+                  are read at the bedside.
                 </p>
               </div>
             </details>
@@ -150,9 +146,6 @@ export function McsTeachingColumn({
             </details>
           </>
         )}
-        <p className={styles.footnote} data-simulated-values-note>
-          Every value is simulated · see Limits of this simulation, above.
-        </p>
       </section>
     )
   }
@@ -321,10 +314,10 @@ export function McsTeachingColumn({
             </li>
           </ol>
           <p>
-            <strong>This establishes:</strong> {contract.whatThisEstablishes}
+            <strong>What this shows:</strong> {contract.whatThisEstablishes}
           </p>
           <p data-does-not-establish>
-            <strong>This does not establish:</strong> {contract.whatThisDoesNotEstablish}
+            <strong>What to do with it:</strong> {contract.whatThisDoesNotEstablish}
           </p>
           <p className={styles.warning} data-common-misinterpretation>
             <strong>One way this is read wrongly:</strong> {contract.commonMisinterpretation}
@@ -423,19 +416,15 @@ export function McsTeachingColumn({
         </section>
       </StageBlock>
 
-      {/* 8. The boundary: what the model leaves out, read once the mechanism is the learner's. */}
-      <StageBlock kind="boundary" heading="What this simulation does not represent">
-        <section className={styles.block} data-teaching-block="boundary">
-          <h3>What this simulation does not represent</h3>
-          {contract.unmodeledNote ? <p data-unmodeled-note>{contract.unmodeledNote}</p> : null}
-          <p>
-            Displayed pump flows are this model’s own estimates and are labelled so; effective
-            delivery is a reasoned line no console shows. A control change advances the model by a
-            small fixed step. No insertion, repositioning, purge, anticoagulation or alarm-limit
-            instruction is given, and no patient outcome is modelled.
-          </p>
-        </section>
-      </StageBlock>
+      {/* 8. A simulator limit, only on the sections where a simulated value could be taken for a real one. */}
+      {contract.unmodeledNote ? (
+        <StageBlock kind="boundary" heading="A simulator value on this screen">
+          <section className={styles.block} data-teaching-block="boundary">
+            <h3>A simulator value on this screen</h3>
+            <p data-unmodeled-note>{contract.unmodeledNote}</p>
+          </section>
+        </StageBlock>
+      ) : null}
     </div>
   )
 }

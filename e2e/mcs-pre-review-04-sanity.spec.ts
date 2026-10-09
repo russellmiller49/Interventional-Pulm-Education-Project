@@ -19,9 +19,8 @@ async function open(page: Page, section: string) {
   await page.goto(`${route}/learn?lesson=${section}`)
   await page.waitForSelector('[data-now-card], [data-prerequisite-reference]')
   await page.waitForTimeout(800)
-  if (await page.locator('[data-prerequisite-reference]').count()) {
-    await expect(page.locator('[data-source-review-hold]')).toBeVisible()
-  }
+  // Review status is project metadata and is no longer rendered to learners.
+  await expect(page.locator('[data-source-review-hold]')).toHaveCount(0)
   for (let i = 0; i < 6; i++) {
     const button = page.locator('[data-prerequisite-reference] button', {
       hasText: /Next reference|Begin the patient example|Continue/,
@@ -73,7 +72,7 @@ for (const width of [1280, 390]) {
     await forward(page)
     await expect(page.locator('[data-section-recap]')).toBeVisible()
   })
-  test(`all nine skip paths keep the hold visible and preserve only navigation at ${width}px`, async ({
+  test(`all nine skip paths show no review status and preserve only navigation at ${width}px`, async ({
     page,
   }) => {
     test.setTimeout(180000)
@@ -81,10 +80,8 @@ for (const width of [1280, 390]) {
     for (const section of sections) {
       await open(page, section)
       for (let step = 0; step < 25; step++) {
-        const hold = page.locator('[data-source-review-hold]')
-        await expect(hold).toBeVisible()
-        await expect(hold).toContainText('MCS-03-10 · NOT REVIEWED · source-owner review required')
-        expect(await hold.evaluate((el) => Boolean(el.closest('details')))).toBe(false)
+        await expect(page.locator('[data-source-review-hold]')).toHaveCount(0)
+        await expect(page.locator('[data-mcs-stage]')).not.toContainText(/MCS-03-\d+|NOT REVIEWED/)
         expect(await page.locator('input[type="radio"]:checked').count()).toBe(0)
         if (await page.locator('[data-section-recap]').count()) break
         await forward(page)
@@ -111,12 +108,11 @@ for (const width of [1280, 390]) {
   })
 }
 
-test('unmapped cases and Studio expose the source hold before explanations; Studio has no accessible stepper', async ({
-  page,
-}) => {
+test('unmapped cases show no review status; Studio has no accessible stepper', async ({ page }) => {
   for (const id of ['IABP-03', 'IMP-03', 'LVAD-02', 'CAP-LVAD-01']) {
     await page.goto(`${route}/${id.startsWith('CAP-') ? 'assess' : 'practice'}?case=${id}`)
-    await expect(page.locator('[data-source-review-hold]')).toBeVisible()
+    await expect(page.locator('[data-case-workflow]')).toBeVisible()
+    await expect(page.locator('[data-source-review-hold]')).toHaveCount(0)
   }
   await page.goto(`${route}/practice`)
   await page.getByRole('button', { name: 'Explore mechanisms' }).click()

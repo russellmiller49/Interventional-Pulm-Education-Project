@@ -118,7 +118,7 @@ const definitions: Readonly<Record<McsCongestionProfileId, McsCongestionProfileD
       id: 'neither-elevated',
       label: 'Neither filling pressure is elevated by this framework',
       statement:
-        'Neither pressure is above the threshold the consensus statement describes. This does not establish true euvolemia, adequate preload, adequate forward flow, or adequate organ perfusion.',
+        'Neither pressure is above the consensus threshold. That is not the same as euvolemia or adequate perfusion.',
       cohortLabel: 'the quadrant the cohort labeled “euvolemic”',
     },
   })
@@ -161,12 +161,11 @@ export function mcsCongestionProfileId(
  * label rather than sitting somewhere a learner has to go and find.
  */
 export const MCS_CONGESTION_PATTERN_BOUNDARY = Object.freeze({
-  establishes:
-    'Where filling pressures are elevated right now, under a named framework, with the threshold and the source visible.',
+  establishes: 'Which filling pressures are elevated right now, by the ACC consensus thresholds.',
   doesNotEstablish:
-    'This pattern describes where filling pressures are elevated. It does not independently establish the cause of shock, prove isolated ventricular failure, measure organ perfusion, or select a support device.',
+    'The pattern says where filling pressures are high. The cause of shock, organ perfusion and the choice of device need the rest of the assessment.',
   reconcileWith:
-    'Reconcile the congestion pattern with cardiac output or effective flow, pulmonary artery pressures, PA saturation when measured, echocardiography, clinical examination, gas-exchange requirements, and trajectory.',
+    'Read the pattern with cardiac output, pulmonary artery pressures and saturation, echo, the examination, gas exchange and the trend.',
 })
 
 /**
@@ -190,7 +189,7 @@ export const MCS_COMPLETE_PROFILE_BOUNDARY = Object.freeze({
   statement:
     'A complete invasive profile in this registry meant all five measured components. Derived values — cardiac index, cardiac power output, pulmonary artery pulsatility index, vascular resistance — were recorded but were not counted toward a complete profile, because a derived number cannot replace a measurement that was never taken.',
   inThisSimulation:
-    'This simulation models right atrial, pulmonary artery and wedge pressures. Its mixed venous saturation is a modeled balance signal rather than a measured pulmonary artery saturation, and organ-level perfusion findings are not modeled at all. Two filling pressures are a congestion pattern, not a complete profile.',
+    'Two filling pressures are a congestion pattern, not a complete profile. The simulator’s mixed venous saturation is a simulated value, not a measured pulmonary artery saturation.',
 })
 
 /**
