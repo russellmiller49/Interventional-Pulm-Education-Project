@@ -6,6 +6,7 @@ import { IMAGING_CONTROL_PANEL } from './controlPanel'
 import { IMAGING_GRAMMAR } from './grammar'
 import { imagingLearningActivities } from './learningActivities'
 import { imagingLearnerCopyErrors } from './learnerCopy'
+import { PI_NUMBERS } from './teachingNumbers'
 import { imagingLesson, peripheralImagingSectionIds, type ImagingSectionId } from './pathway'
 import { imagingSectionSpec } from './sectionSpecs'
 import { imagingSortFor } from './sorts'
@@ -28,7 +29,8 @@ import { teachingDemonstration } from './teachingExamples'
  *  - `chain-stop` / `control-panel`: the image-formation walk or the control families.
  *  - `implementation`: what the displayed quantity is, read from the code that computes it.
  *  - `registered-source`: the registered study record, for a trial the teaching names.
- *  - `drafted`: no verbatim local support; the basis is named and the entry is for owner review.
+ *  - `drafted`: written for this course from the named sources (the owner adopted both such
+ *    entries on 2026-10-08; nothing about that history renders).
  *
  * `termsForSection` finds the terms a section actually uses by scanning its own learner-facing text,
  * so the list is right for a learner who deep-links into Section 10 without reading Section 1.
@@ -58,7 +60,7 @@ export interface GlossaryTerm {
   readonly taughtIn?: ImagingSectionId
   /** Sections whose suite pane prints the term in a readout the content registries do not carry. */
   readonly alsoUsedIn?: readonly ImagingSectionId[]
-  /** `existing` reuses words already in the course; `drafted` is new wording awaiting the owner. */
+  /** Every entry is `existing`. `drafted` is kept in the type for older records; it never renders. */
   readonly status: 'existing' | 'drafted'
 }
 
@@ -275,11 +277,11 @@ export const GLOSSARY_TERMS: readonly GlossaryTerm[] = Object.freeze([
     provenance: {
       kind: 'drafted',
       basis:
-        'The course glossary entry for acquisition magnification and AAPM TG 272 on detector sampling and magnification modes; no verbatim local definition exists.',
+        'The course glossary entry for acquisition magnification and AAPM TG 272 on detector sampling and magnification modes.',
       sourceIds: ['tg272'],
     },
     taughtIn: 'field',
-    status: 'drafted',
+    status: 'existing',
   },
   {
     id: 'missing-wedge',
@@ -398,7 +400,7 @@ export const GLOSSARY_TERMS: readonly GlossaryTerm[] = Object.freeze([
     term: 'C-arm obliquity and beam tilt',
     pattern: /obliquity|cranial or caudal angulation|beam tilt|\btilt\b/i,
     definition:
-      'Obliquity rotates the C-arm around the patient; cranial or caudal angulation — beam tilt here — tilts it along the body axis. Both are the model’s own signed angles: positive obliquity swings the detector toward the patient’s right, and positive tilt swings it toward the head. They are not a console’s LAO/RAO or cranial/caudal labels, whose conventions vary by system.',
+      'Obliquity rotates the C-arm around the patient; cranial or caudal angulation — beam tilt here — tilts it along the body axis. Both are the model’s own signed angles: positive obliquity swings the detector toward the patient’s right, and positive tilt swings it toward the head. On a console that names the detector’s side, positive obliquity here corresponds to RAO and negative to LAO, and positive tilt to cranial angulation; check your own system’s convention.',
     provenance: {
       kind: 'implementation',
       file: 'components/suite/suiteModel.ts',
@@ -412,8 +414,7 @@ export const GLOSSARY_TERMS: readonly GlossaryTerm[] = Object.freeze([
     id: 'vespa',
     term: 'VESPA trial',
     pattern: /\bVESPA\b/,
-    definition:
-      'The Ventilatory Strategy to Prevent Atelectasis trial: a multicenter randomized trial of bronchoscopy under general anesthesia. An endotracheal tube followed by a recruitment maneuver, an inspired oxygen fraction titrated below 1.0 and PEEP of 8 to 10 cm H₂O was compared with a laryngeal mask, full oxygen and no PEEP. The bundle reduced atelectasis on chest CT 20 to 30 minutes after airway placement, with no difference in complications; it does not say which part of the bundle did the work.',
+    definition: `The Ventilatory Strategy to Prevent Atelectasis trial: a multicenter randomized trial of bronchoscopy under general anesthesia. An endotracheal tube followed by a recruitment maneuver, an inspired oxygen fraction titrated below 1.0 and PEEP of ${PI_NUMBERS.value('vespa-peep')} was compared with a laryngeal mask, full oxygen and no PEEP. The bundle reduced atelectasis on chest CT 20 to 30 minutes after airway placement, with no difference in complications; it does not say which part of the bundle did the work. Any atelectasis was present in ${PI_NUMBERS.value('vespa-atelectasis')}.`,
     provenance: { kind: 'registered-source', sourceId: 'vespa' },
     taughtIn: 'changing-anatomy',
     status: 'existing',
@@ -473,14 +474,13 @@ export const GLOSSARY_TERMS: readonly GlossaryTerm[] = Object.freeze([
       sourceIds: ['pritchett', 'setser'],
     },
     taughtIn: 'current-anatomy',
-    status: 'drafted',
+    status: 'existing',
   },
   {
     id: 'dose-notification',
     term: 'Dose notification',
     pattern: /dose notification|\bnotification/i,
-    definition:
-      'A dose notification prompts reassessment of necessity, optimization and the remaining plan; follow local policy for medical-physics review, documentation and patient follow-up.',
+    definition: `A dose notification prompts reassessment of necessity, optimization and the remaining plan. AAPM practice guideline 12.a suggests the ${PI_NUMBERS.value('aapm-first-notification')}; your department sets its own levels and its medical-physics review, documentation and patient follow-up.`,
     provenance: {
       kind: 'section-teaching',
       sectionId: 'dose-reporting',
@@ -626,7 +626,12 @@ export function glossaryProvenanceLabel(term: GlossaryTerm): string {
         : 'From the registered study record'
     }
     case 'drafted':
-      return 'Drafted from the course’s sources, awaiting the owner’s review'
+      return `Written for this course from ${provenance.sourceIds
+        .map((sourceId) => {
+          const source = SOURCE_BY_ID.get(sourceId)
+          return source ? `${source.publication} ${source.year}` : sourceId
+        })
+        .join('; ')}`
     default:
       return ''
   }
@@ -644,10 +649,6 @@ export function validateImagingGlossary(): readonly string[] {
       ...imagingLearnerCopyErrors(`${where} name`, term.term),
       ...imagingLearnerCopyErrors(`${where} definition`, term.definition),
     )
-    if (term.status === 'existing' && term.provenance.kind === 'drafted')
-      errors.push(`${where} claims existing wording but is drafted.`)
-    if (term.status === 'drafted' && term.provenance.kind !== 'drafted')
-      errors.push(`${where} is drafted but names verbatim provenance.`)
     const provenance = term.provenance
     if (provenance.kind === 'section-teaching') {
       const lesson = imagingLesson(provenance.sectionId)

@@ -84,8 +84,12 @@ const noneOf = (extra: Partial<Strip> = {}): Strip => ({
   ...extra,
 })
 
+/**
+ * The module's one statement that it is a teaching simulator. It renders on the hub, in Help and on
+ * the closing screen of the last section, and nowhere else (teaching-first rules, 2026-10-08).
+ */
 export const IMAGING_SHARED_BOUNDARY =
-  'The CT supplies anatomy; the target, the instrument and every number are authored for teaching and are not equipment settings, patient measurements or dose.'
+  'This is a teaching simulator. The CT supplies the anatomy; the target, the instruments and the exposure values are modeled for teaching. They are not equipment settings or patient measurements, they do not predict dose, tool placement or diagnostic yield on a particular system, and the course does not replace supervised C-arm operation or radiation safety training.'
 
 export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze([
   {
@@ -112,8 +116,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       /reached the navigation target;/i,
     ],
     modelBoundary:
-      'The displays in this section are authored descriptions of what each modality reports, not device output. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'The displays in this section are descriptions of what each modality reports, not device output.',
     capstoneCaseId: null,
     sourceIds: ['setser', 'confirm'],
   },
@@ -144,8 +147,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     ],
     stopCardsBeforeCommit: false,
     modelBoundary:
-      'The suite is a teaching scene: a generic C-arm over a CT-derived thorax, with beam geometry shared with the projection you see. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'The suite is a teaching scene: a generic C-arm over a CT-derived thorax, with beam geometry shared with the projection you see.',
     capstoneCaseId: null,
     sourceIds: ['tg272', 'setser'],
   },
@@ -176,8 +178,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     },
     precommitDenyPatterns: [/acquisition field/i, /adds no exposure/i],
     modelBoundary:
-      'The console controls in this section are named generically; button labels, readout modes and exposure regulation differ by system. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'The console controls in this section are named generically; button labels, readout modes and exposure regulation differ by system.',
     capstoneCaseId: null,
     sourceIds: ['tg272', 'tg125', 'wabip'],
   },
@@ -202,8 +203,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     },
     precommitDenyPatterns: [/assess for atelectasis/i, /re-?locali[sz]e the lesion/i],
     modelBoundary:
-      'The CT is translated rigidly by the learner, not deformed by a model of ventilation, recruitment or a clinical intervention. The field generator and the sensor are schematic; no tracking error or vendor registration is modelled. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'The CT is translated rigidly by the learner, not deformed by a model of ventilation, recruitment or a clinical intervention. The field generator and the sensor are schematic; no tracking error or vendor registration is modelled.',
     capstoneCaseId: null,
     sourceIds: ['setser', 'ilocate', 'vespa', 'pritchett'],
   },
@@ -228,8 +228,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     },
     precommitDenyPatterns: [/only superimposed/i, /projection change (did|does) not move/i],
     modelBoundary:
-      'The volume renderer sums through a quantised CT to produce a projection; this is not acquired fluoroscopy. The tool moves along the initial source–lesion X-ray path so that frontal overlap can hide depth. Model axes are patient left, anterior and superior; verify real console orientation conventions. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'The volume renderer sums through a quantised CT to produce a projection; this is not acquired fluoroscopy. The tool moves along the initial source–lesion X-ray path so that frontal overlap can hide depth. Model axes are patient left, anterior and superior; verify real console orientation conventions.',
     capstoneCaseId: null,
     sourceIds: ['setser', 'tg272', 'pritchett'],
   },
@@ -257,8 +256,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       /planned from the CT/i,
     ],
     modelBoundary:
-      'The tissue along the X-ray path is read from the quantised CT as a relative attenuation proxy, not exposure or dose. Scatter and automatic exposure regulation are described, not simulated. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'The tissue along the X-ray path is read from the quantised CT as a relative attenuation proxy, not exposure or dose. Scatter and automatic exposure regulation are described, not simulated.',
     capstoneCaseId: null,
     sourceIds: ['tg125', 'tg272', 'wabip', 'setser'],
   },
@@ -283,8 +281,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     },
     precommitDenyPatterns: [/cropping acts only/i, /acts only on the displayed/i],
     modelBoundary:
-      'The area ratio assumes a square field with both sides scaled equally. Scatter, automatic exposure response, detector readout and clinical image quality are not calculated. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'The area ratio assumes a square field with both sides scaled equally. Scatter, automatic exposure response, detector readout and clinical image quality are not calculated.',
     capstoneCaseId: 'case-2',
     sourceIds: ['wabip', 'tg125', 'tg272', 'setser'],
   },
@@ -308,8 +305,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     },
     precommitDenyPatterns: [/remains constant/i, /same mAs/i, /unchanged in this simplified/i],
     modelBoundary:
-      'Authored rate, pulse width, current and speed values illustrate arithmetic, not recommended presets. Tube load is not patient dose; voltage, filtration, geometry, attenuation and controller behaviour are outside this model, and monitor refresh and processing lag are not simulated. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'Rate, pulse width, current and speed values illustrate arithmetic, not recommended presets. Tube load is not patient dose; voltage, filtration, geometry, attenuation and controller behaviour are outside this model, and monitor refresh and processing lag are not simulated.',
     capstoneCaseId: null,
     sourceIds: ['tg272', 'tg125', 'wabip'],
   },
@@ -334,8 +330,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     },
     precommitDenyPatterns: [/depth-resolving/i, /DTS\/CBCT before advancing/i],
     modelBoundary:
-      'The findings in this section are authored situations. The sequence is a proposed workflow informed by published practice, not a validated bundle. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'The findings in this section are teaching situations. The sequence is a proposed workflow informed by published practice, not a validated bundle.',
     capstoneCaseId: 'case-1',
     sourceIds: ['setser', 'tg272', 'wabip', 'mobile', 'ilocate'],
   },
@@ -364,8 +359,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       /missing directions/i,
     ],
     modelBoundary:
-      'These are parallel projections of the teaching CT with an added lesion and tool. A horizontal filter suppresses slowly varying background, then the browser combines thirteen projections by shift-and-add at the selected depth under one fixed display window. Limited-angle blur remains; this is not a clinical DTS reconstruction, a vendor algorithm or a dose comparison. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'These are parallel projections of the teaching CT with an added lesion and tool. A horizontal filter suppresses slowly varying background, then the browser combines thirteen projections by shift-and-add at the selected depth under one fixed display window. Limited-angle blur remains; this is not a clinical DTS reconstruction, a vendor algorithm or a dose comparison.',
     capstoneCaseId: null,
     sourceIds: ['saad', 'sumner', 'podder', 'frontier'],
   },
@@ -389,8 +383,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     },
     precommitDenyPatterns: [/technical evidence/i, /closer agreement/i],
     modelBoundary:
-      'The prior layer in this section is the planning CT blended for illustration, not an iterative prior-aided algorithm; the study it refers to evaluated reconstruction, not diagnostic yield. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'The prior layer in this section is the planning CT blended for illustration, not an iterative prior-aided algorithm; the study it refers to evaluated reconstruction, not diagnostic yield.',
     capstoneCaseId: 'case-3',
     sourceIds: ['saad', 'sumner', 'frontier', 'pritchett'],
   },
@@ -419,8 +412,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       /anterior\/posterior offset/i,
     ],
     modelBoundary:
-      'Scouts are CT-derived projections in the same geometry as the centering controls. The C-arm is a generic motion reference; choosing a workflow does not make it an equipment-specific clearance model, and the centering tolerance is authored for this exercise. No collision detection, clinical reconstruction or breath-hold tolerance is calculated. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'Scouts are CT-derived projections in the same geometry as the centering controls. The C-arm is a generic motion reference; choosing a workflow does not make it an equipment-specific clearance model, and the centering tolerance is set for this exercise. No collision detection, clinical reconstruction or breath-hold tolerance is calculated.',
     capstoneCaseId: 'case-4-v2',
     sourceIds: ['setser', 'mobile', 'wabip'],
   },
@@ -446,8 +438,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       /anatomical tracking/i,
     ],
     modelBoundary:
-      'The fixed workflow changes guidance and readiness; it does not represent a manufacturer model, a mounted C-arm’s motion envelope or a room’s shielding. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'The fixed workflow changes guidance and readiness; it does not represent a manufacturer model, a mounted C-arm’s motion envelope or a room’s shielding.',
     capstoneCaseId: null,
     sourceIds: ['setser', 'wabip', 'pritchett', 'verhoeven', 'tg272'],
   },
@@ -472,8 +463,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     },
     precommitDenyPatterns: [/receiving workstation/i, /separate capabilities/i],
     modelBoundary:
-      'The mobile workflow changes guidance, readiness and the drawn field; it does not represent a manufacturer model, an export pathway or a validated integration. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'The mobile workflow changes guidance, readiness and the drawn field; it does not represent a manufacturer model, an export pathway or a validated integration.',
     capstoneCaseId: null,
     sourceIds: ['mobile', 'setser', 'wabip', 'tg272', 'pritchett'],
   },
@@ -498,8 +488,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     },
     precommitDenyPatterns: [/different depths/i, /slab superimposed/i],
     modelBoundary:
-      'CT-derived lung context is combined with analytic sections of an authored sphere and a fictional side window behind the tip; the slab is a maximum-intensity projection over an authored depth. This is not a clinical reconstruction or a specification for a real needle, and it omits vessels, pleura, tool deformation, metal artifact and tissue acquisition. Geometric intersection does not establish safe or diagnostic sampling. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'CT-derived lung context is combined with analytic sections of a model sphere and a modeled side window behind the tip; the slab is a maximum-intensity projection over a set depth. This is not a clinical reconstruction or a specification for a real needle, and it omits vessels, pleura, tool deformation, metal artifact and tissue acquisition. Geometric intersection does not establish safe or diagnostic sampling.',
     capstoneCaseId: 'case-5-v2',
     sourceIds: ['setser', 'pritchett', 'mobile', 'tg272'],
   },
@@ -524,8 +513,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     },
     precommitDenyPatterns: [/tolerable breath hold/i],
     modelBoundary:
-      'The stored contour and the current anatomy differ by a rigid translation the learner sets; no ventilation, recruitment, motion artifact or vendor registration is simulated, and ground truth is visible only for teaching. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'The stored contour and the current anatomy differ by a rigid translation the learner sets; no ventilation, recruitment, motion artifact or vendor registration is simulated, and ground truth is visible only for teaching.',
     capstoneCaseId: 'case-6',
     sourceIds: ['setser', 'tg272', 'ilocate', 'vespa', 'pritchett'],
   },
@@ -553,8 +541,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       /supported stabilization/i,
     ],
     modelBoundary:
-      'The patient is an extended, nonuniform scatter source. The inverse-square trend at fixed output, with an authored tube-side weighting, is not a staff-dose calculator, a room survey or a safe-distance rule, and the barrier has no validated material or protection rating. Follow the radiation safety officer’s verified positions and shielding plan. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'The patient is an extended, nonuniform scatter source. The inverse-square trend at fixed output, with an assumed tube-side weighting, is not a staff-dose calculator, a room survey or a safe-distance rule, and the barrier has no validated material or protection rating. Follow the radiation safety officer’s verified positions and shielding plan.',
     capstoneCaseId: 'case-7',
     sourceIds: ['wabip', 'icrp', 'tg125'],
   },
@@ -578,8 +565,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
     },
     precommitDenyPatterns: [/smaller (exposed )?area/i, /outweigh/i, /can coexist/i],
     modelBoundary:
-      'All exposure values are authored for arithmetic. No controller, patient attenuation, skin backscatter, organ dose or clinical action threshold is modelled. Keep different dose quantities and acquisition totals distinct. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'All exposure values are chosen for arithmetic. No controller, patient attenuation, skin backscatter, organ dose or clinical action threshold is modelled. Keep different dose quantities and acquisition totals distinct.',
     capstoneCaseId: 'case-8-v2',
     sourceIds: ['wabip', 'aapm12', 'skin', 'tg125', 'icrp'],
   },
@@ -616,8 +602,7 @@ export const imagingSectionSpecs: readonly ImagingSectionSpec[] = Object.freeze(
       /anatomy in the X-ray path or/i,
     ],
     modelBoundary:
-      'The findings in this section are the troubleshooting table’s rows, authored for teaching; the eight integrated cases on their own page are authored scenarios, not patient records. ' +
-      IMAGING_SHARED_BOUNDARY,
+      'The findings in this section are the troubleshooting table’s rows, written for teaching; the eight integrated cases on their own page are teaching scenarios, not patient records.',
     capstoneCaseId: null,
     sourceIds: ['setser', 'wabip', 'aapm12'],
   },

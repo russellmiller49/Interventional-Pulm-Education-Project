@@ -64,7 +64,8 @@ describe('a check keeps its explanation for the learner to open, and hides no te
       expect(
         document.querySelector('[data-teaching-block="mechanism"], [data-teaching-block="adds"]'),
       ).not.toBeNull()
-      expect(document.querySelector('[data-teaching-block="boundary"]')).not.toBeNull()
+      // One statement per module (hub, Help, closing card): no per-step limitations aside.
+      expect(document.querySelector('[data-teaching-block="boundary"]')).toBeNull()
       expect(document.querySelector('[data-answer-verdict]')).toBeNull()
 
       reachIndependent(lesson)

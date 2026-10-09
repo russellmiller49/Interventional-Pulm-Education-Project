@@ -14,23 +14,25 @@ import { SignalComparison, TeachingPanels } from '../components/stage/TeachingPa
 import {
   FIXED_MOBILE_COMPARISON,
   REMOVED_ORGANIZATIONAL_SUGGESTIONS,
+  TEAM_READINESS_ABSENT,
   TEAM_READINESS_ROWS,
   TEAM_READINESS_STATUS,
   teamReadinessText,
   validateCbctReferences,
 } from '../content/cbctReferences'
+import { glossaryTerm } from '../content/glossary'
 import {
   imagingLearningActivities,
   IMAGING_FIGURE_REFS,
   validateImagingLearningActivities,
 } from '../content/learningActivities'
 import {
-  CLINICAL_ANGLE_LABEL,
   SIGNAL_LATER_DEMONSTRATION_OBLIQUITY,
   teachingFigureDeclarations,
   TWO_AXIS_EXAMPLE,
   validateTeachingFigures,
 } from '../content/teachingFigures'
+import { PI_NUMBERS } from '../content/teachingNumbers'
 import { fovCylinder, GANTRY_VARIANTS } from '../components/suite/suiteModel'
 import { WARNING_INVENTORY } from '../content/warningInventory'
 
@@ -127,7 +129,6 @@ describe('the teaching figures are declared data and validate at import', () => 
         if (panel.medium === 'simulated-on-model')
           expect(`${panel.title} ${panel.caption}`).toMatch(/simulated|drawn|drawing/i)
         if (panel.medium === 'placeholder') expect(panel.caption).toMatch(/^No image here/)
-        expect(`${panel.title} ${panel.caption}`).not.toMatch(CLINICAL_ANGLE_LABEL)
       }
   })
 
@@ -158,7 +159,10 @@ describe('OD4-06 · Section 6 compares three causes on the course’s CT', () =>
     const check = document.querySelector('[data-signal-comparison]')!
     expect(check).toHaveTextContent('Image A')
     expect(check).toHaveTextContent('Image B')
-    expect(check.querySelector('[data-draft-status]')).toHaveTextContent('draft illustrations')
+    // Review status is project metadata and does not render (teaching-first rules, 2026-10-08).
+    expect(check).toHaveTextContent('Matched conceptual images')
+    expect(check.querySelector('[data-draft-status]')).toBeNull()
+    expect(check).not.toHaveTextContent(/draft/i)
     expect(document.querySelector('[data-teaching-figure]')).toBeNull()
     cleanup()
     render(<SignalComparison />)
@@ -222,24 +226,21 @@ describe('OD4-06 · Section 16 shows truncation as coverage and draws no motion 
   }, 30_000)
 })
 
-describe('OD4-08 · the two-axis example uses the model’s signed angles only', () => {
-  it('labels signed values as C-arm obliquity and beam tilt, never with a console name', async () => {
+describe('OD4-08 · the two-axis example uses the model’s signed angles and states the console mapping once', () => {
+  it('labels signed values as C-arm obliquity and beam tilt, and prints the adopted RAO/LAO mapping under the figure', async () => {
     render(<TwoAxisWorkedExample />)
     await ready('[data-teaching-figure="two-dimensional:two-axis-example"]')
     const figure = document.querySelector(
       '[data-teaching-figure="two-dimensional:two-axis-example"]',
     )!
-    // The only place the console names appear is the note that says they are not used.
+    // Owner item 2.6 (adopted 2026-10-08): the note under the figure is the glossary entry, which
+    // maps the model's signed angles to console names; nothing is held back.
     const convention = figure.querySelector('[data-angle-convention]')!
-    expect(convention).toHaveTextContent(/not a console’s LAO\/RAO or cranial\/caudal labels/)
-    expect(convention).toHaveTextContent(/held for owner review/)
-    const rest = [...figure.childNodes]
-      .filter((node) => node !== convention)
-      .map((node) => node.textContent ?? '')
-      .join(' ')
-    expect(rest).not.toMatch(/\b(LAO|RAO|cranial|caudal)\b/i)
-    // A signed value is never adjacent to a clinical direction word.
-    expect(figure.textContent).not.toMatch(/[+−-]?\d+°\s*(LAO|RAO|cranial|caudal)/i)
+    expect(convention.textContent?.trim()).toBe(glossaryTerm('obliquity-and-tilt').definition)
+    expect(convention).toHaveTextContent(
+      /positive obliquity here corresponds to RAO and negative to LAO, and positive tilt to cranial angulation/,
+    )
+    expect(convention).not.toHaveTextContent(/held for owner review/)
     // Beam lines carry signed model values; the strip and tilt tables carry the same set.
     expect(
       [...figure.querySelectorAll('[data-beam-line]')].map((line) =>
@@ -337,7 +338,7 @@ describe('OD4-08 · the two-axis example uses the model’s signed angles only',
 })
 
 describe('OD4-09 · the fixed/mobile comparison and the equalised field', () => {
-  it('compares workflow in words, with no number, device or ranking, and says the scenes no longer differ in field', () => {
+  it('compares workflow in words with no ranking, teaches the published dose–area products from the register, and says the scenes no longer differ in field', () => {
     render(<FixedMobileComparison />)
     const table = document.querySelector('[data-fixed-mobile-comparison]')!
     expect(
@@ -347,7 +348,20 @@ describe('OD4-09 · the fixed/mobile comparison and the equalised field', () => 
     ).toEqual(FIXED_MOBILE_COMPARISON.map((row) => row.id))
     expect(table.querySelectorAll('[data-comparison-both]')).toHaveLength(2)
     const cells = [...table.querySelectorAll('tbody td')].map((cell) => cell.textContent).join(' ')
-    expect(cells).not.toMatch(/\d/)
+    // The workflow rows stay in words; the one row with figures is the published dose–area
+    // products, and every figure in it is a register value.
+    const numbered = [...table.querySelectorAll('[data-comparison-row]')].filter((row) =>
+      /\d/.test([...row.querySelectorAll('td')].map((cell) => cell.textContent).join(' ')),
+    )
+    expect(numbered.map((row) => row.getAttribute('data-comparison-row'))).toEqual(['dose'])
+    for (const id of [
+      'verhoeven-total-dap',
+      'verhoeven-fluoroscopy-dap',
+      'mobile-cbct-total-dap',
+      'mobile-cbct-spin-dap',
+      'confirm-dap',
+    ] as const)
+      expect(numbered[0]).toHaveTextContent(PI_NUMBERS.value(id))
     expect(cells).not.toMatch(/better|superior|inferior|equivalent|always|never has/i)
     expect(table.querySelector('[data-model-note]')).toHaveTextContent(
       /draw the same detector field and the same field of view; they differ only in how they are mounted/,
@@ -361,15 +375,17 @@ describe('OD4-09 · the fixed/mobile comparison and the equalised field', () => 
 })
 
 describe('OD4-10 · the team-readiness aid', () => {
-  it('holds only the source-backed rows, says first what it is not, and copies the same lines', async () => {
+  it('holds only the source-backed rows, says first what it is, teaches the VESPA bundle, and copies the same lines', async () => {
     const writeText = jest.fn().mockResolvedValue(undefined)
     Object.assign(navigator, { clipboard: { writeText } })
     render(<TeamReadinessAid />)
     const aid = document.querySelector('[data-team-readiness]')!
     expect(aid.querySelector('[data-readiness-status]')).toHaveTextContent(TEAM_READINESS_STATUS)
-    expect(TEAM_READINESS_STATUS).toMatch(
-      /Not an institutional protocol, an anesthesia protocol, a credentialing standard or a universal pre-procedure checklist/,
-    )
+    expect(TEAM_READINESS_STATUS).toMatch(/^A team check before a CBCT spin, by role\./)
+    // The ventilation line teaches the VESPA protocol and effect from the register.
+    expect(aid).toHaveTextContent(TEAM_READINESS_ABSENT)
+    expect(TEAM_READINESS_ABSENT).toContain(`PEEP of ${PI_NUMBERS.value('vespa-peep')}`)
+    expect(TEAM_READINESS_ABSENT).toContain(PI_NUMBERS.value('vespa-atelectasis'))
     expect(
       [...aid.querySelectorAll('[data-readiness-row]')].map((row) =>
         row.getAttribute('data-readiness-row'),

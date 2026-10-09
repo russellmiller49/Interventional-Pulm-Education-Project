@@ -8,6 +8,9 @@ import {
   DOSE_QUANTITIES,
 } from '../../content/doseQuantities'
 import { glossaryTerm } from '../../content/glossary'
+import { RADIAL_EBUS_VIEWS } from '../../content/radialEbusViews'
+import { PI_NUMBERS, piNumberCitation } from '../../content/teachingNumbers'
+import { ImagingReferenceValues } from './ImagingReferenceValues'
 import {
   INDEPENDENT_IMAGE_PANEL_SECTIONS,
   type ImagingVisual,
@@ -102,9 +105,7 @@ export function SignalImage({
 export function SignalComparison() {
   return (
     <section className={styles.teachingCard} data-signal-comparison>
-      <p className={styles.kicker} data-draft-status>
-        Matched conceptual images · draft illustrations
-      </p>
+      <p className={styles.kicker}>Matched conceptual images</p>
       <div className={styles.exampleGrid}>
         <SignalImage label="Image A" />
         <SignalImage factor="contrast" label="Image B" />
@@ -131,7 +132,7 @@ export function FieldComparison() {
     <section className={styles.teachingCard} data-field-comparison>
       <p>
         Matched geometric illustrations · same target, excursion and context; different acquisition
-        fields. Draft teaching marks, not device images.
+        fields.
       </p>
       <div className={styles.exampleGrid}>
         {[100, 45].map((width, i) => {
@@ -214,13 +215,67 @@ export function DoseQuantityTable() {
   )
 }
 
+/** Section 9: the three radial EBUS views, what each establishes and the next move. */
+export function RadialEbusViews() {
+  return (
+    <>
+      <section className={styles.teachingCard} data-radial-ebus-views>
+        <p className={styles.kicker}>Three views, three next moves</p>
+        <table className={styles.doseTable}>
+          <thead>
+            <tr>
+              <th scope="col">View</th>
+              <th scope="col">What you see</th>
+              <th scope="col">What it establishes</th>
+              <th scope="col">Next move</th>
+            </tr>
+          </thead>
+          <tbody>
+            {RADIAL_EBUS_VIEWS.map((row) => (
+              <tr key={row.id} data-radial-ebus-view={row.id}>
+                <th scope="row">{row.view}</th>
+                <td data-label="What you see">{row.see}</td>
+                <td data-label="What it establishes">{row.establishes}</td>
+                <td data-label="Next move">{row.next}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+      <ImagingReferenceValues title="Why the view matters" ids={['rebus-yield-by-position']} />
+    </>
+  )
+}
+
+/** Section 18: the levels that prompt action, and what published procedures have delivered. */
+export function DoseReferenceValues() {
+  return (
+    <>
+      <ImagingReferenceValues
+        title="Dose levels that prompt action"
+        ids={['aapm-first-notification', 'aapm-substantial-dose']}
+      />
+      <ImagingReferenceValues
+        title="Dose–area product in published navigation bronchoscopy"
+        ids={[
+          'mobile-cbct-total-dap',
+          'mobile-cbct-spin-dap',
+          'confirm-dap',
+          'verhoeven-fluoroscopy-dap',
+          'verhoeven-total-dap',
+        ]}
+      />
+    </>
+  )
+}
+
 export function DoseNoteTemplate() {
   return (
     <section className={styles.teachingCard} data-dose-note-template>
       <p className={styles.kicker}>Record the whole procedure once · copyable aid</p>
       <p>
-        An educational aid for the procedure note, listing the fields the section teaches. Nothing
-        is filled in: every value comes from your own record and local policy.
+        The fields the section teaches, for the procedure note. Nothing is filled in: every value
+        comes from your own record.
       </p>
       <pre className={styles.template} data-dose-note-lines>
         {DOSE_NOTE_TEMPLATE_LINES.join('\n')}
@@ -240,7 +295,7 @@ export function DoseRecord({ independent = false }: { independent?: boolean }) {
   return (
     <section className={styles.teachingCard} data-dose-record>
       <table className={styles.beforeAfter}>
-        <caption>Fictional procedure record · authored 2026-09-13</caption>
+        <caption>Example procedure record for the arithmetic</caption>
         <thead>
           <tr>
             <th scope="col">Included modes</th>
@@ -271,9 +326,10 @@ export function DoseRecord({ independent = false }: { independent?: boolean }) {
           </tr>
         </tbody>
       </table>
-      <p data-draft-status>
-        Fictional report values, not expected bronchoscopy exposures. Peak skin dose and effective
-        dose are not supplied.
+      <p data-example-record-scale>
+        These values are small round numbers chosen for the arithmetic. Published series are larger:{' '}
+        {PI_NUMBERS.value('mobile-cbct-total-dap')} of total dose–area product with mobile CBCT (
+        {piNumberCitation('mobile-cbct-total-dap')}).
       </p>
     </section>
   )
@@ -406,8 +462,7 @@ export function ImagingQuestionPanels() {
       <p>
         The virtual target guides navigation. Current imaging can show a different lesion location.
         After tool exchange, assess the actual sampling component. Even tool-in-lesion does not
-        establish diagnostic tissue. These are conceptual teaching diagrams, not matched patient
-        acquisitions or captured device screens.
+        establish diagnostic tissue.
       </p>
     </section>
   )
@@ -427,12 +482,6 @@ function ProvenanceFlow({ modality }: { readonly modality: 'dts' | 'cbct' }) {
       data-provenance-modality={modality}
     >
       <p className={styles.kicker}>From acquisition to guidance</p>
-      {modality === 'cbct' ? (
-        <p role="note" data-cbct-provenance-review>
-          Draft CBCT provenance account — awaiting source-owner review for the platform and protocol
-          described. Image review, navigation target update and overlay are separate capabilities.
-        </p>
-      ) : null}
       <ol>
         <li>
           <strong>Acquired now</strong>
@@ -497,6 +546,7 @@ export function TeachingPanels({
         modality={sectionId === 'mobile-suite' || sectionId === 'fixed-suite' ? 'cbct' : 'dts'}
       />
     )
+  if (visual === 'radial-ebus') return <RadialEbusViews />
   if (sectionId === 'signal') return independent ? <SignalComparison /> : <ConspicuityComparison />
   if (sectionId === 'dose-reporting')
     return independent ? (
@@ -504,6 +554,7 @@ export function TeachingPanels({
     ) : (
       <>
         <DoseQuantityTable />
+        <DoseReferenceValues />
         <DoseNoteTemplate />
         <DoseRecord />
       </>
@@ -513,7 +564,7 @@ export function TeachingPanels({
   if (sectionId === 'time' && independent)
     return (
       <section className={styles.teachingCard}>
-        <p>Two authored moving-tool acquisitions · same speed and pulse width</p>
+        <p>Two moving-tool acquisitions · same speed and pulse width</p>
         {[10, 5].map((rate, i) => (
           <div key={rate}>
             <p>Image {i ? 'B' : 'A'}</p>

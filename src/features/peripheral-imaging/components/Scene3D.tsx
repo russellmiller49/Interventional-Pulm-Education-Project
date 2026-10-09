@@ -154,7 +154,7 @@ function Objects({ props, layers }: { props: SceneProps; layers: string[] }) {
           <meshStandardMaterial color="#e6edf0" metalness={0.72} roughness={0.28} />
         </mesh>
         <Html position={[LESION_CENTER[0] + 15, LESION_CENTER[1], LESION_CENTER[2]]}>
-          <span className={styles.modelLabel}>Authored target</span>
+          <span className={styles.modelLabel}>Model target</span>
         </Html>
         {!props.compact && !props.safety && <primitive object={arrow} />}
       </group>
@@ -195,7 +195,7 @@ export default function Scene3D(props: SceneProps) {
         aria-label={
           suite
             ? 'Original FluoroView C-arm animation, a generic motion reference.'
-            : 'CT-derived thorax, segmented airways, lungs and skeleton with an authored teaching target and instrument.'
+            : 'CT-derived thorax, segmented airways, lungs and skeleton with a model target and instrument.'
         }
       >
         <SceneBoundary>
@@ -322,7 +322,7 @@ export function SamplingScene3D({ tip }: { tip: [number, number, number] }) {
       <div
         className={styles.sceneCompact}
         role="img"
-        aria-label="3D teaching sphere and fictional needle. The thick sampling-window segment is distinct from the tip. Linked slices below provide the same geometry."
+        aria-label="3D teaching sphere and modeled needle. The thick sampling-window segment is distinct from the tip. Linked slices below provide the same geometry."
       >
         <SceneBoundary>
           <Canvas
@@ -353,7 +353,7 @@ export function SamplingScene3D({ tip }: { tip: [number, number, number] }) {
         </SceneBoundary>
       </div>
       <div className={styles.sceneToolbar}>
-        <span>Same authored geometry as the linked slices</span>
+        <span>Same geometry as the linked slices</span>
         <div className={styles.buttonRow} aria-label="Sampling model views">
           {['Perspective', 'Anterior', 'Side', 'Head'].map((label, i) => (
             <button

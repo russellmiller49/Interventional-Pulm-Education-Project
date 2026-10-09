@@ -8,6 +8,7 @@ import { DOSE_NOTE_TEMPLATE_LINES, DOSE_QUANTITIES } from '../content/doseQuanti
 import {
   GLOSSARY_TERMS,
   firstSectionUsing,
+  glossaryProvenanceLabel,
   glossaryTerm,
   termsForSection,
 } from '../content/glossary'
@@ -21,9 +22,11 @@ import { IMAGING_SHARED_BOUNDARY, imagingSectionSpec } from '../content/sectionS
 import { imagingStageLesson } from '../content/stageLessons'
 import { imagingSectionItems, questionIdOf } from '../content/stageItems'
 import { teachingDemonstration } from '../content/teachingExamples'
+import { PI_NUMBERS } from '../content/teachingNumbers'
 import { transferOrigin } from '../content/transferOrigins'
 import { WARNING_INVENTORY, warningsInCategory } from '../content/warningInventory'
 import { LESSONS } from '../data/lessons'
+import { QUESTIONS } from '../data/questions'
 import { MODALITIES } from '../data/resources'
 import { SOURCE_BY_ID } from '../data/sources'
 import {
@@ -75,14 +78,20 @@ describe('reports CW3, O2, 1.1/6.1, 1.8, 4.4, 4.6 — every term the walkthrough
     },
   )
 
-  it('names exactly the drafted definitions, so none is added silently', () => {
-    expect(
-      GLOSSARY_TERMS.filter((term) => term.status === 'drafted').map((term) => term.id),
-    ).toEqual(['binning', 'stored-contour'])
-    for (const term of GLOSSARY_TERMS.filter((t) => t.status === 'drafted')) {
+  it('shows no review status on a definition; the two written for the course name their sources', () => {
+    // Teaching-first rules, 2026-10-08: review status is project metadata and never renders.
+    expect(GLOSSARY_TERMS.filter((term) => term.status === 'drafted')).toEqual([])
+    const written = GLOSSARY_TERMS.filter((term) => term.provenance.kind === 'drafted')
+    expect(written.map((term) => term.id)).toEqual(['binning', 'stored-contour'])
+    for (const term of written) {
       if (term.provenance.kind !== 'drafted') throw new Error('unreachable')
       expect(term.provenance.basis.length).toBeGreaterThan(20)
       expect(term.provenance.sourceIds.length).toBeGreaterThan(0)
+      for (const sourceId of term.provenance.sourceIds)
+        expect(SOURCE_BY_ID.has(sourceId)).toBe(true)
+      const label = glossaryProvenanceLabel(term)
+      expect(label).toMatch(/^Written for this course from \S/)
+      expect(label).not.toMatch(/draft|awaiting|review/i)
     }
   })
 
@@ -132,7 +141,7 @@ describe('reports CW3, O2, 1.1/6.1, 1.8, 4.4, 4.6 — every term the walkthrough
     expect(term.definition).toMatch(/zero when the plane passes through the object/)
   })
 
-  it('states the model’s signed-angle convention from its own geometry, and no console label (reports 2.6, 3.2)', () => {
+  it('states the model’s signed-angle convention from its own geometry, and maps it to RAO/LAO and cranial the same way (reports 2.6, 3.2)', () => {
     // x is patient left, z superior (lib/physics.ts). Positive obliquity moves the detector end of
     // the C-arm toward the patient's right; positive tilt moves it toward the head.
     expect(suiteFrame(30, 0).detectorCenter[0]).toBeLessThan(0)
@@ -145,9 +154,12 @@ describe('reports CW3, O2, 1.1/6.1, 1.8, 4.4, 4.6 — every term the walkthrough
       /positive obliquity swings the detector toward the patient’s right/,
     )
     expect(term.definition).toMatch(/positive tilt swings it toward the head/)
-    // Named as not a console convention; no mapping to LAO/RAO or cranial/caudal is asserted.
-    expect(term.definition).toMatch(/not a console’s LAO\/RAO or cranial\/caudal labels/)
-    expect(term.definition).not.toMatch(/positive .* (is|means) (LAO|RAO|cranial|caudal)/i)
+    // Owner item 2.6, adopted 2026-10-08: the mapping is taught, and it agrees with the geometry
+    // pinned above — detector toward the patient's right is RAO, detector toward the head is cranial.
+    expect(term.definition).toMatch(
+      /On a console that names the detector’s side, positive obliquity here corresponds to RAO and negative to LAO, and positive tilt to cranial angulation/,
+    )
+    expect(term.definition).toMatch(/check your own system’s convention/)
   })
 
   it('resolves a deep-linked section’s own terms from its own text', () => {
@@ -313,9 +325,8 @@ describe('reports 3.3, 4.4, 2.14 and 2.11 — the rule or the worked example lea
       /Image-intensifier electronic magnification generally required increased exposure/,
     )
     expect(block.detail?.body).toMatch(/needs local characterization/)
-    expect(block.detail?.body).toMatch(
-      /binning \(see the draft definition.*awaiting owner review\)/,
-    )
+    expect(block.detail?.body).toMatch(/binning \(combining adjacent detector pixels at readout\)/)
+    expect(block.detail?.body).not.toMatch(/draft|awaiting/i)
   })
 
   it('puts the worked example first where the walkthrough asked (Sections 4, 10 and 11)', () => {
@@ -387,23 +398,25 @@ describe('reports 3.3, 4.4, 2.14 and 2.11 — the rule or the worked example lea
 })
 
 describe('report CW2 — caveats are classed, and only the repeated general one is consolidated', () => {
-  it('consolidates nothing in the figure-limitation, immediate-safety and unresolved-status classes', () => {
-    for (const category of [
-      'figure-limitation',
-      'immediate-safety',
-      'unresolved-status',
-    ] as const) {
+  it('consolidates nothing in the figure-limitation and immediate-safety classes, and renders no review status', () => {
+    for (const category of ['figure-limitation', 'immediate-safety'] as const) {
       const surfaces = warningsInCategory(category)
       expect(surfaces.length).toBeGreaterThan(0)
       for (const surface of surfaces) expect(surface.treatment).not.toBe('consolidated')
     }
+    // Review status is project metadata (teaching-first rules, 2026-10-08): no surface carries it.
+    expect(warningsInCategory('unresolved-status')).toEqual([])
+    // The one module statement: hub, Help and the closing screen.
+    expect(WARNING_INVENTORY.find((s) => s.id === 'shared-model-boundary')?.selector).toBe(
+      '[data-module-statement], [data-help-models], [data-closing-statement]',
+    )
     expect(
       warningsInCategory('general-provenance').some((s) => s.treatment === 'consolidated'),
     ).toBe(true)
     expect(new Set(WARNING_INVENTORY.map((s) => s.id)).size).toBe(WARNING_INVENTORY.length)
   })
 
-  it('keeps the primary-beam warning as its own callout (report 7.4) and every section’s specific limit', () => {
+  it('keeps the primary-beam warning as its own callout (report 7.4), and no section repeats the module statement', () => {
     const block = LESSONS.find((l) => l.id === 'staff-protection')!.blocks.find(
       (b) => b.title === 'Keep hands out of the primary beam',
     )!
@@ -413,8 +426,9 @@ describe('report CW2 — caveats are classed, and only the repeated general one 
     expect(block.body).not.toMatch(/lead apron/)
     for (const id of peripheralImagingSectionIds) {
       const boundary = imagingSectionSpec(id).modelBoundary
-      expect(boundary.endsWith(IMAGING_SHARED_BOUNDARY)).toBe(true)
-      expect(boundary.replace(IMAGING_SHARED_BOUNDARY, '').trim().length).toBeGreaterThan(30)
+      // The statement is said once per module, so a section's own limit never carries it.
+      expect(boundary).not.toContain(IMAGING_SHARED_BOUNDARY)
+      expect(boundary.trim().length).toBeGreaterThan(30)
     }
   })
 
@@ -431,7 +445,7 @@ describe('report CW2 — caveats are classed, and only the repeated general one 
 })
 
 describe('reports 7.1, 7.2, 5.3, 3.11, PR4, IC4 — supported distinctions first, no invented values', () => {
-  it('tables the four dose quantities from the section’s teaching, with sources, and a template with no numbers', () => {
+  it('tables the four dose quantities from the section’s teaching, with sources, and a template that names the notification levels', () => {
     expect(DOSE_QUANTITIES.map((r) => r.id)).toEqual([
       'reference-air-kerma',
       'kap',
@@ -440,7 +454,12 @@ describe('reports 7.1, 7.2, 5.3, 3.11, PR4, IC4 — supported distinctions first
     ])
     for (const row of DOSE_QUANTITIES)
       expect(row.sourceIds.every((s) => SOURCE_BY_ID.has(s))).toBe(true)
-    expect(DOSE_NOTE_TEMPLATE_LINES.join('\n')).not.toMatch(/\d/)
+    // The blanks stay blank; the only figures are the AAPM notification levels, from the register.
+    const notification = PI_NUMBERS.value('aapm-first-notification')
+    expect(notification).toMatch(/\d\s*Gy/)
+    expect(DOSE_NOTE_TEMPLATE_LINES.filter((line) => /\d/.test(line))).toEqual([
+      `Dose notifications (${notification}), limitations and dose-management follow-up: ______`,
+    ])
     expect(DOSE_NOTE_TEMPLATE_LINES.join('\n')).toMatch(/kerma–area product/)
     expect(DOSE_NOTE_TEMPLATE_LINES.join('\n')).toMatch(/reference air kerma/)
     expect(DOSE_NOTE_TEMPLATE_LINES.join('\n')).toMatch(/Reason for each repeated acquisition/)
@@ -456,14 +475,23 @@ describe('reports 7.1, 7.2, 5.3, 3.11, PR4, IC4 — supported distinctions first
     expect(INTERPRETATION_CHECKS['two-dimensional']!.correct).toBe('c')
   })
 
-  it('offers the praised eccentric rEBUS case from Section 1 without moving or rewriting it (report PR4)', () => {
+  it('offers the eccentric rEBUS case from Section 1 without moving it, keyed on redirecting the catheter (report PR4)', () => {
     const related = relatedPracticeCase('imaging-questions:transfer')!
     expect(related.microCase.id).toBe('two-dimensional-practice-1')
     expect(related.microCase.sectionId).toBe('two-dimensional')
     expect(related.microCase.presentationTitle).toBe('Eccentric radial EBUS view')
-    expect(imagingMicroCaseById.get('two-dimensional-practice-1')!.item.explanation).toMatch(
-      /^An eccentric rEBUS view shows how far around the probe tissue extends/,
+    // Rewritten 2026-10-08 (teaching-first): the first move is with the hands — redirect and
+    // re-image until concentric — and imaging is added only if the view stays eccentric.
+    const item = imagingMicroCaseById.get('two-dimensional-practice-1')!.item
+    expect(item.explanation).toMatch(
+      /^An eccentric rEBUS view means the probe is beside the lesion\. Redirect the catheter or enter the adjacent airway and re-image until the view is concentric/,
     )
+    const best = item.choices.filter((choice) => choice.plausibility === 'best')
+    expect(best).toHaveLength(1)
+    const keyed = best[0]
+    expect(QUESTIONS.find((q) => q.id === 'two-dimensional-practice-1')?.correct).toBe('b')
+    expect(keyed.label).toMatch(/^Redirect the catheter/)
+    expect(keyed.rationale).toMatch(/re-imaging until the tissue surrounds the probe/)
     expect(relatedPracticeCase('imaging-questions:interpretation')).toBeNull()
   })
 

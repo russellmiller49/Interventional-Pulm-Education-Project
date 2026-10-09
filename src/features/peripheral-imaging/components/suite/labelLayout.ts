@@ -5,7 +5,7 @@
  * parked in two fixed columns at the edges of the figure, joined to their objects by leaders that
  * crossed the whole scene: the "X-ray tube" label sat top-left while the tube is under the table,
  * and was read as the box above the patient. In the beam's-eye view, where every component lies on
- * one line of sight, all six were drawn at the same point. "Tool tip" and "Authored target" were
+ * one line of sight, all six were drawn at the same point. "Tool tip" and "Model target" were
  * offset in world space, so from most angles one printed over the other.
  *
  * Every label now starts beside the projected position of the object it names, on the side of the
