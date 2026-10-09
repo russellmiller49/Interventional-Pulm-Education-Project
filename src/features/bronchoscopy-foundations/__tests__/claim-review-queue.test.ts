@@ -95,7 +95,8 @@ describe('the BF-01 claim review queue', () => {
       for (const surface of item.surfaces) {
         if (surface.sectionId) expect(BRONCH_SECTION_IDS).toContain(surface.sectionId)
         if (surface.capstoneCaseId) expect(capstoneIds.has(surface.capstoneCaseId)).toBe(true)
-        if (surface.practiceCaseId)
+        // A superseded item names surfaces the rewrite replaced; its practice case may be gone.
+        if (surface.practiceCaseId && !item.supersededBy)
           expect(bronchMicroCaseById.has(surface.practiceCaseId)).toBe(true)
       }
     }
@@ -111,6 +112,7 @@ describe('the BF-01 claim review queue', () => {
       })
     }
     expect(QUEUE.items.filter((item) => item.supersededBy).map((item) => item.id)).toEqual([
+      'BF-01-C01',
       'BF-01-C04',
       'BF-01-C05',
       'BF-01-C08',

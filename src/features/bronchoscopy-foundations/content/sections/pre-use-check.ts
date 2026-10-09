@@ -83,7 +83,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D01', 'D15'],
-  prerequisites: ['shared-airway'],
+  prerequisites: ['clinical-question'],
 
   clinicalQuestion: 'Is this scope ready, and is the room ready for it?',
   objective:

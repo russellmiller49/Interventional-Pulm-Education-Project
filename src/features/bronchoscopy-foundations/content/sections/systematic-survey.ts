@@ -489,7 +489,7 @@ export const section: BronchSectionDefinition = {
     ],
     transferVariant:
       'A safety stop instead of a smeared lens: on the other side of the tree the patient, not the view, ends the survey, and a whole lobe is seen only as far as its origin, from its parent.',
-    retrievesFrom: 'shared-airway',
+    retrievesFrom: 'sedation-and-monitoring',
   },
 
   practice: [

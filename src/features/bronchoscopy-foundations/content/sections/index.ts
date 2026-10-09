@@ -19,7 +19,6 @@ import { section as referenceFrames } from './reference-frames'
 import { section as rightSide } from './right-side'
 import { section as scopeInATube } from './scope-in-a-tube'
 import { section as sedationAndMonitoring } from './sedation-and-monitoring'
-import { section as sharedAirway } from './shared-airway'
 import { section as specimenPathway } from './specimen-pathway'
 import { section as systematicSurvey } from './systematic-survey'
 import { section as viewLoss } from './view-loss'
@@ -33,7 +32,6 @@ import { section as whatCompletionMeans } from './what-completion-means'
  * out has its numbers-register tokens resolved to their values (`sectionNumbers.ts`).
  */
 const AUTHORED: readonly BronchSectionDefinition[] = [
-  sharedAirway,
   clinicalQuestion,
   preUseCheck,
   sedationAndMonitoring,

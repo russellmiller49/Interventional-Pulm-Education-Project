@@ -11,7 +11,6 @@ import type { CriticalCareCurriculumStage } from '@/features/learning-module/act
  * groups sections derives from this array at render.
  */
 export const BRONCH_SECTION_IDS = [
-  'shared-airway',
   'clinical-question',
   'pre-use-check',
   'sedation-and-monitoring',
@@ -45,7 +44,6 @@ export function isBronchSectionId(value: unknown): value is BronchSectionId {
 /** The teaching stage of each section: internal to the pedagogy checks; learners see the phase. */
 export const BRONCH_SECTION_STAGE: Readonly<Record<BronchSectionId, CriticalCareCurriculumStage>> =
   {
-    'shared-airway': 'orientation',
     'clinical-question': 'foundation',
     'pre-use-check': 'foundation',
     'sedation-and-monitoring': 'mechanism',
@@ -90,7 +88,7 @@ export const BRONCH_PHASES: readonly BronchPhase[] = [
     title: 'Prepare',
     description:
       'Decide whether this patient should have a bronchoscopy today, check the scope, and plan topical anesthesia, sedation and monitoring.',
-    sectionIds: ['shared-airway', 'clinical-question', 'pre-use-check', 'sedation-and-monitoring'],
+    sectionIds: ['clinical-question', 'pre-use-check', 'sedation-and-monitoring'],
   },
   {
     id: 'handle',

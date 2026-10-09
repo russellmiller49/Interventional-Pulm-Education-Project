@@ -77,7 +77,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D02', 'D16'],
-  prerequisites: ['shared-airway', 'pre-use-check'],
+  prerequisites: ['sedation-and-monitoring', 'pre-use-check'],
 
   clinicalQuestion:
     'When one control at the bronchoscope moves, what changes at the tip and in the image?',

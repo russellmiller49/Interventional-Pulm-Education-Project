@@ -158,7 +158,7 @@ async function walkByLeavingEveryStep(lesson: BronchStageLesson) {
  * own reviewed mark — with no answer saved anywhere.
  */
 describe('the opening screen', () => {
-  it.each(['shared-airway', 'right-side', 'bleeding-priorities'] as const)(
+  it.each(['what-completion-means', 'right-side', 'bleeding-priorities'] as const)(
     'opens %s with its clinical question and its memory hook',
     async (sectionId) => {
       const { lesson } = await mountSection(sectionId)
@@ -199,8 +199,8 @@ describe('a question in a rewritten section', () => {
 })
 
 describe('a sort section on the stage', () => {
-  it('walks the first section from the read to the reviewed mark, saving no answer', async () => {
-    const { lesson } = await mountSection('shared-airway')
+  it('walks a matching section from the read to the reviewed mark, saving no answer', async () => {
+    const { lesson } = await mountSection('what-completion-means')
     const steps = lesson.steps
     expect(currentStepId()).toBe(steps[0].id)
     expect(screen.getByRole('heading', { name: steps[0].title })).toBeInTheDocument()
@@ -208,44 +208,55 @@ describe('a sort section on the stage', () => {
     expect(document.querySelector('[data-course-teaching]')).not.toBeNull()
     expect(document.querySelector('[data-step-list]')).toBeNull()
     expect(storedRecord()).toMatchObject({
-      lastSectionId: 'shared-airway',
-      visitedSectionIds: ['shared-airway'],
+      lastSectionId: 'what-completion-means',
+      visitedSectionIds: ['what-completion-means'],
       reviewedSectionIds: [],
     })
 
-    await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
-    expect(currentStepId()).toBe(steps[lesson.predictionStepIndex].id)
-    expect(nowPrimary()?.disabled).toBe(true)
-    expect(skipButton()?.textContent).toBe('Continue without answering')
-    expect(verdictOutcome()).toBeNull()
-    expect(document.querySelector('[data-item-situation]')).not.toBeNull()
-    expect(
-      document.querySelector('[data-stage-sources]')?.getAttribute('data-stage-sources-claims'),
-    ).toBe('true')
-    expect(document.querySelector('[data-course-teaching]')).toBeNull()
-    const predictStep = steps[lesson.predictionStepIndex]
-    commitById(keyedChoiceId(predictStep))
-    expect(verdictOutcome()).toBe('correct')
-    expect(skipButton()).toBeNull()
-    expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
-    expect(Object.keys(storedRecord()!).sort()).toEqual(SELF_PACED_KEYS)
-    clickPrimary()
-    await settle()
+    // The question and the matching activity are met in whichever order this section has them.
+    const answerTheQuestion = async () => {
+      await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
+      expect(currentStepId()).toBe(steps[lesson.predictionStepIndex].id)
+      expect(nowPrimary()?.disabled).toBe(true)
+      expect(skipButton()?.textContent).toBe('Continue without answering')
+      expect(verdictOutcome()).toBeNull()
+      expect(document.querySelector('[data-item-situation]')).not.toBeNull()
+      expect(
+        document.querySelector('[data-stage-sources]')?.getAttribute('data-stage-sources-claims'),
+      ).toBe('true')
+      expect(document.querySelector('[data-course-teaching]')).toBeNull()
+      const predictStep = steps[lesson.predictionStepIndex]
+      commitById(keyedChoiceId(predictStep))
+      expect(verdictOutcome()).toBe('correct')
+      expect(skipButton()).toBeNull()
+      expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
+      expect(Object.keys(storedRecord()!).sort()).toEqual(SELF_PACED_KEYS)
+      clickPrimary()
+      await settle()
+    }
+    const matchTheSet = async () => {
+      const act = stepOfKind(lesson, 'sort')
+      await reachCourseStep(lesson, act)
+      expect(currentStepId()).toBe(act.id)
+      expect(nowPrimary()?.disabled).toBe(true)
+      expect(skipButton()?.textContent).toBe('Continue without checking')
+      placeSortRows(act)
+      expect(nowPrimary()?.disabled).toBe(false)
+      clickPrimary()
+      expect(document.querySelectorAll('[data-sort-verdict="held"]').length).toBe(
+        act.interaction.kind === 'sort' ? act.interaction.sort.rows.length : -1,
+      )
+      expect(nowButton('Try the set again')).toBeDefined()
+      clickPrimary()
+      await settle()
+    }
+    const questionFirst = lesson.predictionStepIndex < steps.indexOf(stepOfKind(lesson, 'sort'))
+    for (const part of questionFirst
+      ? [answerTheQuestion, matchTheSet]
+      : [matchTheSet, answerTheQuestion])
+      await part()
 
-    const act = stepOfKind(lesson, 'sort')
-    expect(currentStepId()).toBe(act.id)
-    expect(nowPrimary()?.disabled).toBe(true)
-    expect(skipButton()?.textContent).toBe('Continue without checking')
-    placeSortRows(act)
-    expect(nowPrimary()?.disabled).toBe(false)
-    clickPrimary()
-    expect(document.querySelectorAll('[data-sort-verdict="held"]').length).toBe(
-      act.interaction.kind === 'sort' ? act.interaction.sort.rows.length : -1,
-    )
-    expect(nowButton('Try the set again')).toBeDefined()
-    clickPrimary()
-    await settle()
-
+    await reachCourseStep(lesson, stepOfKind(lesson, 'explain'))
     expect(currentStepId()).toBe(stepOfKind(lesson, 'explain').id)
     expect(document.querySelector('[data-explain-recap] [data-answer-verdict]')).not.toBeNull()
     expect(document.querySelector('[data-teaching-block="anchor"]')).not.toBeNull()
@@ -255,9 +266,11 @@ describe('a sort section on the stage', () => {
     await settle()
 
     const transfer = steps[lesson.transferStepIndex]
+    await reachCourseStep(lesson, transfer)
     expect(currentStepId()).toBe(transfer.id)
     commitById(otherChoiceId(transfer))
-    expect(verdictOutcome()).toBe('not-correct')
+    // Any answer but the keyed one: the verdict depends on which distractor the section offers.
+    expect(['not-correct', 'unsafe']).toContain(verdictOutcome())
     while (nowPrimary()) {
       clickPrimary()
       await settle()
@@ -269,11 +282,13 @@ describe('a sort section on the stage', () => {
     expect(completion.textContent).toContain(
       'Self-paced online learning does not establish procedural competence.',
     )
+    // After the last section the way on is the integrated cases.
+    const next = BRONCH_SECTION_IDS[BRONCH_SECTION_IDS.indexOf('what-completion-means') + 1]
     expect(completion.querySelector('[data-next-section]')).toHaveAttribute(
       'data-next-section',
-      BRONCH_SECTION_IDS[1],
+      next ?? 'assess',
     )
-    expect(storedRecord()?.reviewedSectionIds).toEqual(['shared-airway'])
+    expect(storedRecord()?.reviewedSectionIds).toEqual(['what-completion-means'])
     expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
 
     fireEvent.click(completion.querySelector('[data-toggle-reviewed]')!)
@@ -285,7 +300,7 @@ describe('a sort section on the stage', () => {
   })
 
   it('lets a learner look back without losing the live step, and restarts with nothing kept', async () => {
-    const { lesson } = await mountSection('shared-airway')
+    const { lesson } = await mountSection('what-completion-means')
     await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
     commitById(keyedChoiceId(lesson.steps[lesson.predictionStepIndex]))
     clickPrimary()
@@ -309,7 +324,7 @@ describe('a sort section on the stage', () => {
   })
 
   it('opens at the first step whatever phase the address names, and restores no answer after a reload', async () => {
-    const { lesson } = await mountSection('shared-airway')
+    const { lesson } = await mountSection('what-completion-means')
     await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
     commitById(otherChoiceId(lesson.steps[lesson.predictionStepIndex]))
     cleanup()
@@ -317,9 +332,9 @@ describe('a sort section on the stage', () => {
     window.history.replaceState(
       null,
       '',
-      '/bronchoscopy-foundations/learn?section=shared-airway&phase=explain',
+      '/bronchoscopy-foundations/learn?section=what-completion-means&phase=explain',
     )
-    await mountSection('shared-airway')
+    await mountSection('what-completion-means')
     expect(currentStepId()).toBe(lesson.steps[0].id)
     await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
     expect(verdictOutcome()).toBeNull()
@@ -331,7 +346,7 @@ describe('a sort section on the stage', () => {
 /** Self-paced contract (BF-01): explanation first, back to teaching, on without answering. */
 describe('optional questions and activities', () => {
   it('opens a question’s explanation before an answer, returns to the teaching, and moves on without answering', async () => {
-    const { lesson } = await mountSection('shared-airway')
+    const { lesson } = await mountSection('what-completion-means')
     const check = lesson.steps[lesson.predictionStepIndex]
     await reachCourseStep(lesson, check)
     fireEvent.click(screen.getByRole('button', { name: 'Show the explanation' }))
