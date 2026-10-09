@@ -340,6 +340,7 @@
         "element": "teaching block suction-is-a-path, body"
       },
       "learnerWording": "Suction being requested is not material moving: a pressed valve or a live vacuum indicator does not prove aspiration. The response is a reasoned check along the path, not more vacuum.",
+      "supersededBy": "The scope and the setup was rewritten on 2026-10-08 (rewrite plan, brief 2). The prediction N02 keeps the same key in new words (trace the suction from the tip back to the wall), only turning the vacuum up is flagged unsafe, and the block `suction-is-a-path` is replaced by `suction-path`. The quoted wording no longer appears; review the new section instead.",
       "intendedTeachingPoint": "Suction runs along a physical path. A pressed valve or a live indicator does not prove flow at the tip. A failed check is traced and corrected, or the equipment replaced, before insertion rather than compensated for with more vacuum.",
       "sourceCheck": {
         "checkedOn": "2026-09-14",

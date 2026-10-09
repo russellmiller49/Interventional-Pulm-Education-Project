@@ -744,6 +744,10 @@ for (const id of ['pre-use-check', 'deterioration', 'honest-report'] as const) {
             .locator('[data-identify-row="' + row.id + '"] input[value="' + row.answerId + '"]')
             .check()
         await primary(page).click()
+      } else if (task.kind === 'sort') {
+        for (const row of task.sort.rows)
+          await page.locator('[data-sort-row="' + row.id + '"] select').selectOption(row.origin)
+        await primary(page).click()
       } else if (task.kind === 'report') {
         for (const field of task.report.fields)
           await page

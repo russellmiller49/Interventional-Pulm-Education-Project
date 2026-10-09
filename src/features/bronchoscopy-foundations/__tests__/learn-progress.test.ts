@@ -112,8 +112,9 @@ describe('the earlier module record, read-only', () => {
     ).toBe(true)
     expect(
       isSectionCompleted(
-        { ...createEmptyBronchRecord(), completedSectionIds: ['pre-use-check'] },
-        'pre-use-check',
+        // A section with no content version: the completion stands as recorded.
+        { ...createEmptyBronchRecord(), completedSectionIds: ['a-section-without-a-version'] },
+        'a-section-without-a-version',
       ),
     ).toBe(true)
   })

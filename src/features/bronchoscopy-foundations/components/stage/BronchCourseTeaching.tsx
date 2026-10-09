@@ -57,7 +57,7 @@ export function BronchCourseTeaching({
       {chunk.visual === 'instrument' ? (
         <div className={styles.illustratedPair}>
           <InstrumentOrientation />
-          {section.id === 'pre-use-check' ? (
+          {section.id === 'pre-use-check' && !rewritten ? (
             <section>
               <h3>What each hand does</h3>
               {fiveControlsLearnInputs()[0].learn!.paragraphs.map((line) => (
@@ -82,6 +82,8 @@ export function BronchCourseTeaching({
         />
       ) : null}
       {chunk.visual === 'tube-geometry' ? <TubeGeometryFigure /> : null}
+      {chunk.visual === 'two-diameters' ? <TwoDiametersFigure /> : null}
+      {chunk.visual === 'room-setup' ? <RoomSetupFigure /> : null}
       {chunk.visual === 'worked-decision' ? (
         <section className={styles.worked} data-worked-example>
           <h3>A worked situation</h3>
@@ -411,6 +413,110 @@ export function NormalAirwayTour({
         )}
       </div>
     </section>
+  )
+}
+
+/** The scope in cross-section: what the outer diameter and the channel each decide. */
+function TwoDiametersFigure() {
+  return (
+    <figure className={styles.sharedAirway} data-two-diameters>
+      <svg
+        viewBox="0 0 640 240"
+        role="img"
+        aria-label="Cross-section of a bronchoscope. The outer diameter decides fit and how much airway the scope fills. The channel inside it decides which tools pass and how well it suctions."
+      >
+        <circle cx="150" cy="120" r="92" fill="none" stroke="currentColor" strokeWidth="4" />
+        <circle cx="182" cy="150" r="30" fill="none" stroke="currentColor" strokeWidth="3" />
+        <circle cx="118" cy="88" r="16" fill="currentColor" opacity="0.35" />
+        <path d="M58 120 H242" stroke="currentColor" strokeWidth="2" strokeDasharray="6 5" />
+        <path d="M242 96 H330 M212 150 H330" stroke="currentColor" strokeWidth="2" />
+        <path d="M118 104 V222" stroke="currentColor" strokeWidth="1.5" opacity="0.6" />
+        <g fill="currentColor" fontSize="18">
+          <text x="340" y="88">
+            Outer diameter
+          </text>
+          <text x="340" y="110" fontSize="15" opacity="0.8">
+            Fit, and how much airway it fills
+          </text>
+          <text x="340" y="150">
+            Working channel
+          </text>
+          <text x="340" y="172" fontSize="15" opacity="0.8">
+            Tools and suction
+          </text>
+          <text x="76" y="238" fontSize="15" opacity="0.8">
+            Lens and light
+          </text>
+        </g>
+      </svg>
+      <figcaption>The tip of the scope, seen end on. Not to scale.</figcaption>
+    </figure>
+  )
+}
+
+/** The room from above: where the operator, the screen, the monitor and the assistant are. */
+function RoomSetupFigure() {
+  return (
+    <figure className={styles.sharedAirway} data-room-setup>
+      <svg
+        viewBox="0 0 640 260"
+        role="img"
+        aria-label="The room from above. The patient lies on the bed. The operator stands at the head of the bed. The screen is at the foot, in the operator’s line of sight. The monitor and the nurse are at the patient’s side, with oxygen and suction at the head."
+      >
+        <rect
+          x="230"
+          y="60"
+          width="180"
+          height="130"
+          rx="14"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+        />
+        <circle cx="262" cy="125" r="18" fill="none" stroke="currentColor" strokeWidth="3" />
+        <path d="M282 125 H392" stroke="currentColor" strokeWidth="3" />
+        <circle cx="170" cy="125" r="20" fill="currentColor" opacity="0.35" />
+        <rect x="520" y="85" width="16" height="80" fill="currentColor" />
+        <path
+          d="M194 125 H228 M412 125 H516"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeDasharray="6 5"
+        />
+        <rect
+          x="290"
+          y="14"
+          width="60"
+          height="26"
+          rx="4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <circle cx="320" cy="224" r="16" fill="none" stroke="currentColor" strokeWidth="3" />
+        <g fill="currentColor" fontSize="16" textAnchor="middle">
+          <text x="170" y="170">
+            You
+          </text>
+          <text x="150" y="84">
+            Oxygen, suction
+          </text>
+          <text x="320" y="56" fontSize="14">
+            Monitor
+          </text>
+          <text x="320" y="256">
+            Nurse
+          </text>
+          <text x="560" y="72">
+            Screen
+          </text>
+        </g>
+      </svg>
+      <figcaption>
+        One layout, with you at the head of the bed. If you face the patient instead, the screen
+        goes behind the patient’s head.
+      </figcaption>
+    </figure>
   )
 }
 
