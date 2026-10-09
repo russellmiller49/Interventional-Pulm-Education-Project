@@ -689,7 +689,9 @@ export function ScopePaneFrame(
         {view.physicalControlLabels
           ? lastMode === 'scripted'
             ? 'Demonstration · not your own attempt'
-            : `Screen-based learning · ${lastMode ?? 'no input yet'} · not a physical-skills assessment`
+            : props.plain
+              ? ''
+              : `Screen-based learning · ${lastMode ?? 'no input yet'} · not a physical-skills assessment`
           : `${describeScopePerformance(state)}${props.referenceLabels?.used ? ' · opening names shown for reference' : ''}`}
       </p>
 

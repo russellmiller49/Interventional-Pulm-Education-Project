@@ -23,12 +23,6 @@ export const SCOPE_RECIPES: Partial<Record<BronchSectionId, ScopeRecipe>> = {
       p.send({ type: 'deflect', deg: 45 })
       p.send({ type: 'rotate', deg: 45 })
     },
-    observe: (p) => {
-      p.advance()
-      p.withdraw()
-      p.send({ type: 'suction', on: true })
-      p.send({ type: 'suction', on: false })
-    },
   },
   'branch-entry': {
     act: (p) => {

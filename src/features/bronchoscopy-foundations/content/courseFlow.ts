@@ -197,6 +197,131 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     check('transfer', 'Choose a scope for a biopsy'),
     close(['common-errors']),
   ],
+  // Driving the scope. Each bench screen is one unit of `fiveControlsLearn.ts`, which adds the
+  // demonstration and the cue; the chunk ids are the unit ids.
+  'five-controls': [
+    hook('Making the tip go where you look'),
+    check('check', 'Before you touch it: what does turning do?'),
+    screen('instrument', 'Hold the scope', 'Find each part your hands will use.', ['grip'], {
+      visual: 'instrument',
+    }),
+    screen(
+      'stance',
+      'Where you stand',
+      'Read how your position sets left and right on the screen.',
+      ['stance'],
+      {
+        visual: 'room-setup',
+      },
+    ),
+    {
+      ...practice(
+        'Advance and withdraw',
+        'skill',
+        'Watch the example, then move the tip forward and back yourself.',
+      ),
+      id: 'depth',
+      blocks: ['depth'],
+      act: 'depth',
+    },
+    {
+      ...practice(
+        'Depth again, without the cue',
+        'skill',
+        'Make the card look closer, then return to the starting depth.',
+      ),
+      id: 'depth-repeat',
+      blocks: [],
+      act: 'depth-repeat',
+    },
+    {
+      ...practice(
+        'Bend the tip',
+        'skill',
+        'Watch the lever and the tip, then bend and release the tip yourself.',
+      ),
+      id: 'bend',
+      blocks: ['bend'],
+      act: 'bend',
+    },
+    {
+      ...practice(
+        'The bend again, without the cue',
+        'skill',
+        'Change the direction the tip faces, then bring it back to straight.',
+      ),
+      id: 'bend-repeat',
+      blocks: [],
+      act: 'bend-repeat',
+    },
+    {
+      ...practice(
+        'Rotate the scope',
+        'skill',
+        'Watch the image and the bend turn together, then turn, bend and turn again yourself.',
+      ),
+      id: 'rotation',
+      blocks: ['rotation'],
+    },
+    {
+      ...practice(
+        'Rotation again, without the cue',
+        'skill',
+        'The tip starts bent. Turn it without changing its bend or its depth.',
+      ),
+      id: 'rotation-repeat',
+      blocks: [],
+      act: 'rotation-repeat',
+    },
+    {
+      ...practice(
+        'Aim at a target',
+        'skill',
+        'Keep the gold target centered as you advance into the depth band.',
+      ),
+      id: 'combine',
+      blocks: ['combine'],
+      act: 'combine',
+    },
+    {
+      ...practice(
+        'Suction',
+        'skill',
+        'Watch the suction valve, then apply and release it yourself.',
+      ),
+      id: 'suction',
+      blocks: ['suction'],
+      act: 'suction',
+    },
+    {
+      ...practice(
+        'Suction again, without the cue',
+        'skill',
+        'Apply suction, then release it. Watch whether the tip moves.',
+      ),
+      id: 'suction-repeat',
+      blocks: [],
+      act: 'suction-repeat',
+    },
+    screen(
+      'in-the-airway',
+      'Into an opening, and back',
+      'Read how the same three movements enter an airway, and how you come back.',
+      ['in-the-airway'],
+    ),
+    {
+      ...practice(
+        'A target in a new place',
+        'skill',
+        'The target has moved. Decide which movements you need, then center it and advance.',
+      ),
+      id: 'changed-target',
+      blocks: [],
+      act: 'changed-target',
+    },
+    check('transfer', 'An opening at the edge of the image'),
+    close(['common-errors']),
+  ],
   'right-side': [
     hook('Which airway is this?'),
     check('check', 'Where is the scope?'),

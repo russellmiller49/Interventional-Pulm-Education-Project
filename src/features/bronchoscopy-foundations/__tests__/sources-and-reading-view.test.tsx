@@ -288,13 +288,18 @@ describe('focus scrolling reserves the continuation bar as measured (A9)', () =>
       expect(root.style.getPropertyValue('--bronch-focus-clear-bottom')).toBe('')
       // A skill step keeps its bar in the flow above the workbench, so nothing is reserved.
       await mountSection('five-controls')
-      clickPrimary()
-      await settle()
-      expect(
+      const presentation = () =>
         document
           .querySelector('[data-course-presentation]')
-          ?.getAttribute('data-course-presentation'),
-      ).toBe('skill')
+          ?.getAttribute('data-course-presentation')
+      // Past the hook, the prediction and the two reading screens, to the first bench task.
+      for (let guard = 0; guard < 8 && presentation() !== 'skill'; guard += 1) {
+        const skip = document.querySelector<HTMLElement>('[data-now-card] [data-now-skip]')
+        if (skip) fireEvent.click(skip)
+        else clickPrimary()
+        await settle()
+      }
+      expect(presentation()).toBe('skill')
       expect(root.style.getPropertyValue('--bronch-focus-clear-bottom')).toBe('')
     } finally {
       rect.mockRestore()

@@ -56,7 +56,7 @@ export function BronchCourseTeaching({
       ) : null}
       {chunk.visual === 'instrument' ? (
         <div className={styles.illustratedPair}>
-          <InstrumentOrientation />
+          <InstrumentOrientation plain={rewritten} />
           {section.id === 'pre-use-check' && !rewritten ? (
             <section>
               <h3>What each hand does</h3>
@@ -90,12 +90,15 @@ export function BronchCourseTeaching({
         </section>
       ) : null}
       {step.learn && blocks.length ? (
-        <details className={styles.worked} data-extended-technique>
-          <summary>Technique reference for this concept</summary>
-          {blocks.map((block, index) => (
-            <BlockCard key={block.id} block={block} listId={`${id}-${index}`} role="mechanism" />
-          ))}
-        </details>
+        // A rewritten section's bench unit shows its block as the unit's own text, in view.
+        rewritten ? null : (
+          <details className={styles.worked} data-extended-technique>
+            <summary>Technique reference for this concept</summary>
+            {blocks.map((block, index) => (
+              <BlockCard key={block.id} block={block} listId={`${id}-${index}`} role="mechanism" />
+            ))}
+          </details>
+        )
       ) : (
         blocks.map((block, index) => (
           <BlockCard
