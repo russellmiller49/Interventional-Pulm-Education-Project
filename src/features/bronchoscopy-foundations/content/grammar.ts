@@ -151,7 +151,7 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
     verdict: 'this-control',
     thisControl: ['rotation'],
     harmfulReflex: 'insertion',
-    taughtIn: 'branch-entry',
+    taughtIn: 'larynx-and-entry',
     sourceRefs: [
       { sourceId: 'T10', location: { kind: 'time-span', start: '00:06:57', end: '00:09:28' } },
       { sourceId: 'T11', location: { kind: 'time-span', start: '00:01:47', end: '00:05:01' } },

@@ -33,6 +33,7 @@ import { BRONCH_SECTIONS } from '../content/sections'
 import { section as bleedingPriorities } from '../content/sections/bleeding-priorities'
 import { section as clinicalQuestion } from '../content/sections/clinical-question'
 import { section as fiveControls } from '../content/sections/five-controls'
+import { section as larynxAndEntry } from '../content/sections/larynx-and-entry'
 import { section as preUseCheck } from '../content/sections/pre-use-check'
 import { section as rightSide } from '../content/sections/right-side'
 import { section as sedationAndMonitoring } from '../content/sections/sedation-and-monitoring'
@@ -380,6 +381,7 @@ describe('the rewrite rules', () => {
       'pre-use-check',
       'sedation-and-monitoring',
       'five-controls',
+      'larynx-and-entry',
       'right-side',
       'bleeding-priorities',
     ])
@@ -388,6 +390,7 @@ describe('the rewrite rules', () => {
       preUseCheck,
       sedationAndMonitoring,
       fiveControls,
+      larynxAndEntry,
       rightSide,
       bleedingPriorities,
     ]) {

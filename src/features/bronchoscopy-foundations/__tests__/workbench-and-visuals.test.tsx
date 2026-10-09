@@ -281,7 +281,8 @@ describe('A28, SUP-13 — captions and titles say what is actually there', () =>
       (step) => step.activity === 'independent-check' && step.id.endsWith('-check'),
     )!
     expect(check.title).not.toMatch(/identify the structures/i)
-    expect(check.title).toBe('Decide when to cross the glottis')
+    // The rewritten section's first question is the pink view at the arytenoids.
+    expect(check.title).toBe('A pink view at the back of the inlet')
   })
 
   it('says, when a still is enlarged, that the corner rectangle is part of the recorded frame', async () => {
@@ -342,7 +343,7 @@ describe('A29 — the airway tour follows the tree and lets a group be compared'
   })
 
   it('does not give the trachea a parent', async () => {
-    const { container } = render(<NormalAirwayTour sectionId="branch-entry" />)
+    const { container } = render(<NormalAirwayTour sectionId="larynx-and-entry" />)
     await flush()
     expect(container.textContent).not.toContain('Parent: Trachea.')
     expect(container.textContent).toContain('Parent: none; the tree starts at the trachea.')
@@ -457,7 +458,7 @@ describe('A21, A22, SUP-08 — the bench says where the tip points at every angl
 })
 
 const walkView: ScopeViewSpec = {
-  sectionId: 'branch-entry',
+  sectionId: 'larynx-and-entry',
   mode: 'guided-walk',
   profile: 'adult-teaching-combined-left-basal-v1',
   start: { kind: 'airway', label: 'TR', at: 'distal' },

@@ -191,4 +191,154 @@ export const FIND_FRAMES = {
       },
     ],
   },
+  'larynx-inlet': {
+    src: '/bronchoscopy-foundations/find-frames/larynx-inlet.jpg',
+    sourceFrame: 60,
+    markers: [
+      {
+        id: 'vocal-cord-image-left',
+        name: 'True vocal cord, left of the image',
+        points: [
+          626, 690, 632, 663, 626, 637, 616, 530, 626, 505, 662, 458, 685, 442, 685, 408, 701, 385,
+          703, 359, 699, 332, 673, 326, 619, 334, 592, 341, 569, 355, 530, 396, 521, 423, 510, 476,
+          525, 532, 575, 633, 591, 656, 612, 674,
+        ],
+      },
+      {
+        id: 'vocal-cord-image-right',
+        name: 'True vocal cord, right of the image',
+        points: [
+          723, 343, 805, 350, 835, 362, 858, 380, 874, 405, 883, 432, 912, 485, 921, 566, 917, 592,
+          896, 644, 890, 671, 876, 694, 826, 716, 812, 714, 723, 475, 709, 409, 709, 345,
+        ],
+      },
+      {
+        id: 'aryepiglottic-fold-image-left',
+        name: 'Aryepiglottic fold, left of the image',
+        points: [
+          28, 192, 61, 289, 90, 406, 108, 555, 142, 518, 155, 491, 173, 465, 184, 455, 212, 438,
+          245, 428, 272, 414, 298, 405, 273, 392, 243, 358, 193, 321, 148, 280, 134, 241, 113, 201,
+          109, 170, 93, 127,
+        ],
+      },
+      {
+        id: 'aryepiglottic-fold-image-right',
+        name: 'Aryepiglottic fold, right of the image',
+        points: [1345, 234, 1232, 401, 1191, 450, 1253, 466, 1344, 530],
+      },
+      {
+        id: 'corniculate-tubercle-image-left',
+        name: 'Corniculate tubercle, left of the image',
+        points: [
+          529, 983, 553, 999, 572, 1020, 597, 1031, 624, 1034, 651, 1033, 670, 1013, 681, 986, 686,
+          933, 676, 906, 651, 895, 624, 899, 594, 911, 570, 927, 547, 945, 529, 967,
+        ],
+      },
+      {
+        id: 'corniculate-tubercle-image-right',
+        name: 'Corniculate tubercle, right of the image',
+        points: [
+          1018, 963, 1012, 930, 998, 905, 973, 895, 918, 895, 891, 905, 856, 948, 857, 975, 872,
+          998, 891, 1020, 918, 1023, 945, 1016, 993, 987, 1018, 968,
+        ],
+      },
+      {
+        id: 'cuneiform-tubercle-image-left',
+        name: 'Cuneiform tubercle, left of the image',
+        points: [
+          182, 471, 156, 510, 105, 565, 106, 646, 137, 745, 213, 806, 326, 815, 463, 785, 530, 722,
+          557, 683, 532, 575, 467, 470, 403, 423, 304, 408,
+        ],
+      },
+      {
+        id: 'cuneiform-tubercle-image-right',
+        name: 'Cuneiform tubercle, right of the image',
+        points: [
+          1109, 462, 1026, 522, 999, 576, 996, 635, 1023, 675, 1139, 725, 1270, 772, 1333, 722,
+          1347, 692, 1347, 564, 1343, 552, 1267, 495, 1206, 471,
+        ],
+      },
+    ],
+  },
+  'larynx-folds': {
+    src: '/bronchoscopy-foundations/find-frames/larynx-folds.jpg',
+    sourceFrame: 136,
+    markers: [
+      {
+        id: 'vocal-cord-image-left',
+        name: 'True vocal cord, left of the image',
+        points: [
+          570, 793, 575, 766, 560, 638, 568, 612, 602, 566, 621, 553, 624, 521, 641, 499, 643, 471,
+          640, 449, 622, 441, 578, 436, 551, 441, 527, 453, 491, 487, 450, 583, 442, 632, 447, 685,
+          470, 738, 548, 856, 564, 847, 571, 805,
+        ],
+      },
+      {
+        id: 'vocal-cord-image-right',
+        name: 'True vocal cord, right of the image',
+        points: [
+          707, 439, 784, 446, 814, 456, 838, 473, 856, 496, 891, 571, 896, 597, 911, 620, 923, 696,
+          893, 854, 876, 876, 834, 897, 813, 900, 790, 880, 763, 775, 697, 619, 695, 573, 684, 520,
+          679, 457, 695, 442,
+        ],
+      },
+      {
+        id: 'aryepiglottic-fold-image-left',
+        name: 'Aryepiglottic fold, left of the image',
+        points: [
+          -4, 358, 0, 583, -4, 660, 13, 642, 17, 648, 59, 591, 81, 570, 124, 548, 167, 531, 169,
+          519, 174, 517, 43, 404, 30, 379, 7, 315, -1, 285, -8, 332,
+        ],
+      },
+      {
+        id: 'aryepiglottic-fold-image-right',
+        name: 'Aryepiglottic fold, right of the image',
+        points: [1350, 377, 1252, 526, 1211, 574, 1272, 591, 1326, 628, 1351, 648],
+      },
+      {
+        id: 'cuneiform-tubercle-image-left',
+        name: 'Cuneiform tubercle, left of the image',
+        points: [
+          61, 599, 34, 638, -3, 680, -2, 773, 16, 873, 92, 935, 205, 944, 342, 913, 409, 850, 436,
+          811, 411, 703, 346, 598, 282, 551, 183, 537,
+        ],
+      },
+      {
+        id: 'cuneiform-tubercle-image-right',
+        name: 'Cuneiform tubercle, right of the image',
+        points: [
+          1129, 590, 1041, 640, 1014, 693, 1011, 753, 1037, 792, 1144, 857, 1301, 913, 1348, 856,
+          1352, 663, 1350, 658, 1282, 612, 1221, 589,
+        ],
+      },
+    ],
+  },
+  'larynx-cords': {
+    src: '/bronchoscopy-foundations/find-frames/larynx-cords.jpg',
+    sourceFrame: 170,
+    markers: [
+      {
+        id: 'vocal-cord-image-left',
+        name: 'True vocal cord, left of the image',
+        points: [
+          615, 606, 649, 576, 619, 461, 591, 466, 430, 585, 347, 732, 332, 800, 343, 854, 400, 906,
+          421, 973, 463, 1008, 476, 1054, 495, 1063, 544, 1047, 569, 999, 572, 777, 614, 624,
+        ],
+      },
+      {
+        id: 'vocal-cord-image-right',
+        name: 'True vocal cord, right of the image',
+        points: [
+          797, 495, 879, 502, 909, 515, 1042, 637, 1099, 714, 1089, 779, 1103, 804, 1108, 860, 1091,
+          943, 1065, 995, 988, 1079, 913, 1079, 893, 1055, 883, 1006, 866, 970, 832, 933, 773, 821,
+          736, 726, 711, 606, 706, 514, 711, 484, 795, 477,
+        ],
+      },
+      {
+        id: 'cuneiform-tubercle',
+        name: 'Cuneiform tubercle',
+        points: [-5, 852, 171, 1080, 396, 1080, 356, 937, 300, 857, 133, 713, 41, 667, -2, 652],
+      },
+    ],
+  },
 } as const

@@ -111,7 +111,9 @@ function FindRow({
 }) {
   const frame = findFrame(row.frameId)
   const rotation = row.rotation ?? 0
-  const names = markerNames(frame, rotation)
+  const plural = row.marks ?? 'openings'
+  const singular = plural === 'structures' ? 'structure' : 'opening'
+  const names = markerNames(frame, rotation, plural === 'structures' ? 'Structure' : 'Opening')
   const target = frame.markers.find((marker) => marker.id === row.targetId)
   const chosen = frame.markers.find((marker) => marker.id === answer)
   const open = answer === undefined && !revealed
@@ -148,7 +150,7 @@ function FindRow({
             src={frame.src}
             width={width}
             height={height}
-            alt={`A bronchoscopic view with ${frame.markers.length} openings outlined. ${row.context}`}
+            alt={`A bronchoscopic view with ${frame.markers.length} ${plural} outlined. ${row.context}`}
           />
           <svg
             className={styles.findOverlay}
@@ -156,7 +158,7 @@ function FindRow({
             preserveAspectRatio="none"
             role="group"
             aria-label={
-              open ? 'The outlined openings. Choose one.' : 'The outlined openings, named'
+              open ? `The outlined ${plural}. Choose one.` : `The outlined ${plural}, named`
             }
           >
             {frame.markers.map((marker) => {
@@ -205,7 +207,7 @@ function FindRow({
         </div>
       </div>
       {open ? (
-        <p className={styles.boundaryLine}>Click or tap an outlined opening.</p>
+        <p className={styles.boundaryLine}>Click or tap an outlined {singular}.</p>
       ) : (
         <p
           ref={feedbackRef}
@@ -229,7 +231,11 @@ function FindRow({
   )
 }
 
-/** "RB6 · Superior" is drawn as "RB6"; a bronchus without a code keeps its name. */
+/**
+ * "RB6 · Superior" is drawn as "RB6"; a bronchus without a code keeps its name; a paired structure
+ * ("True vocal cord, left of the image") is drawn by its name alone.
+ */
 function shortName(name: string): string {
-  return name.includes(' · ') ? name.split(' · ')[0] : name.replace(/ bronchus$/, '')
+  if (name.includes(' · ')) return name.split(' · ')[0]
+  return name.replace(/, (left|right) of the image$/, '').replace(/ bronchus$/, '')
 }

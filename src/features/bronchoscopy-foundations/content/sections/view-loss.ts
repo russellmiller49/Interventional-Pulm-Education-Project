@@ -29,7 +29,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D09'],
-  prerequisites: ['five-controls', 'branch-entry', 'reference-frames'],
+  prerequisites: ['five-controls', 'larynx-and-entry', 'reference-frames'],
 
   clinicalQuestion:
     'When the bronchoscope view no longer shows a lumen you can name, what decides the next move?',

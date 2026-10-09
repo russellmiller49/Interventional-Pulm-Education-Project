@@ -1,6 +1,6 @@
 import { cleanup, fireEvent } from '@testing-library/react'
 
-import { SCOPE_RECIPES } from '../test-support/scopeRecipes'
+import { CARINA_RECIPE, SCOPE_RECIPES } from '../test-support/scopeRecipes'
 import {
   clickPrimary,
   currentStepId,
@@ -85,10 +85,22 @@ describe('a finished scope card after the tip has moved on', () => {
     }))
   const cardText = () => document.querySelector('[data-now-card]')?.textContent ?? ''
 
-  async function reachPractice(section: 'view-loss' | 'branch-entry' | 'systematic-survey') {
+  async function reachPractice(section: 'view-loss' | 'systematic-survey') {
     const { lesson } = await mountSection(section)
     while (lesson.steps.find((step) => step.id === currentStepId())?.course?.kind !== 'practice') {
       clickPrimary()
+      await settle()
+    }
+    return lesson
+  }
+
+  /** The carina task of "Larynx, trachea and carina": every card before it can be left. */
+  async function reachCarina() {
+    const { lesson } = await mountSection('larynx-and-entry')
+    while (lesson.steps.find((step) => step.id === currentStepId())?.course?.id !== 'carina') {
+      const skip = document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-skip]')
+      if (skip) fireEvent.click(skip)
+      else clickPrimary()
       await settle()
     }
     return lesson
@@ -125,9 +137,9 @@ describe('a finished scope card after the tip has moved on', () => {
   })
 
   it('frames the pane’s own goal card the same way', async () => {
-    await reachPractice('branch-entry')
+    await reachCarina()
     const pilot = scopePilot()
-    SCOPE_RECIPES['branch-entry']!.act(pilot)
+    CARINA_RECIPE(pilot)
     await settle()
     expect(goalStates()).toEqual(['true', 'true', 'true', 'true', 'true'])
     // BF-PRE-REVIEW-03 (A37) replaced the duplicated list under the controls with one card beside
@@ -144,17 +156,18 @@ describe('a finished scope card after the tip has moved on', () => {
     expect(document.getElementById(labelledBy ?? '')?.textContent).toBe(
       'On the record for this attempt',
     )
-    expect(document.querySelector('[data-scope-goals-limit]')?.textContent).toContain(
-      'does not judge the bronchoscope image',
-    )
+    // A rewritten section's card says where the tip is and carries no sentence about the model.
+    const limit = document.querySelector('[data-scope-goals-limit]')?.textContent ?? ''
+    expect(limit).toContain('Where the tip is now')
+    expect(limit).not.toContain('does not judge the bronchoscope image')
     for (const pattern of APPROVING)
       expect(document.querySelector('[data-scope-goal-now]')?.textContent).not.toMatch(pattern)
   })
 
   it('says only what the model records about the view and the wall', async () => {
-    await reachPractice('branch-entry')
+    await reachCarina()
     const pilot = scopePilot()
-    SCOPE_RECIPES['branch-entry']!.act(pilot)
+    CARINA_RECIPE(pilot)
     await settle()
     const labels = [...document.querySelectorAll('[data-step-goals] li')]
       .map((row) => row.textContent?.trim())
@@ -166,7 +179,7 @@ describe('a finished scope card after the tip has moved on', () => {
   })
 
   it('marks the two kinds apart on a card that carries both', async () => {
-    const lesson = await mountSection('branch-entry')
+    const lesson = await mountSection('larynx-and-entry')
     while (
       lesson.lesson.steps.find((step) => step.id === currentStepId())?.course?.id !== 'hold-view'
     ) {
@@ -216,7 +229,7 @@ describe('a finished scope card after the tip has moved on', () => {
   })
 
   it('shows the scripted hold from the clock, and finishes it on the learner’s own actions', async () => {
-    const { lesson } = await mountSection('branch-entry')
+    const { lesson } = await mountSection('larynx-and-entry')
     while (lesson.steps.find((step) => step.id === currentStepId())?.course?.id !== 'hold-view') {
       // Every card on the way can be left; the observation step is the one under test.
       const skip = document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-skip]')
@@ -241,7 +254,7 @@ describe('a finished scope card after the tip has moved on', () => {
   })
 
   it('does not call a hold steady when the depth drifted during it', async () => {
-    const { lesson } = await mountSection('branch-entry')
+    const { lesson } = await mountSection('larynx-and-entry')
     while (lesson.steps.find((step) => step.id === currentStepId())?.course?.id !== 'hold-view') {
       const skip = document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-skip]')
       if (skip) fireEvent.click(skip)

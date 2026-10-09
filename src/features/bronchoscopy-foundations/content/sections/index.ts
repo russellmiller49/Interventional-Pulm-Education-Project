@@ -3,7 +3,6 @@ import { withResolvedNumbers } from '../sectionNumbers'
 import { validateAllSections } from '../sectionValidation'
 import type { BronchSectionDefinition } from '../types'
 import { section as bleedingPriorities } from './bleeding-priorities'
-import { section as branchEntry } from './branch-entry'
 import { section as clinicalQuestion } from './clinical-question'
 import { section as describeFindings } from './describe-findings'
 import { section as deterioration } from './deterioration'
@@ -36,7 +35,6 @@ const AUTHORED: readonly BronchSectionDefinition[] = [
   preUseCheck,
   sedationAndMonitoring,
   fiveControls,
-  branchEntry,
   referenceFrames,
   larynxAndEntry,
   rightSide,

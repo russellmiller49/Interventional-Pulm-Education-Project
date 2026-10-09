@@ -13,18 +13,19 @@ supervisor" answers.
 
 ## Where things stand
 
-| PR   | Branch                             | State                                                                                                             |
-| ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
-| #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
-| #362 | `claude/bf-rewrite-s04`            | Draft, stacked on #360. Section 4, driving the scope, rewritten.                                                  |
-| #360 | `claude/bf-rewrite-s03`            | Draft, stacked on #359. Section 3, sedation and monitoring, rewritten; `shared-airway` retired.                   |
-| #359 | `claude/bf-rewrite-s02`            | Draft, stacked on #358. Section 2, the scope and the setup, rewritten.                                            |
-| #358 | `claude/bf-rewrite-s01`            | Draft, stacked on #355. Section 1, the procedure and the plan, rewritten.                                         |
-| #355 | `claude/bf-rewrite-structure`      | Draft, stacked on #352. The plan's order, five phases, and the forward map for retired sections.                  |
-| #352 | `claude/bf-rewrite-register`       | Draft, stacked on #350. Register rows 15, 19, 20 and 21 extracted; two sources added (U17, U18). No learner copy. |
-| #351 | `claude/bf-3d-retry`               | Draft, from `main`. The 3D-retry fix lifted out of #348, with its three end-to-end cases.                         |
-| #348 | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix is now #351; close #348 once #351 merges.                        |
+| PR     | Branch                             | State                                                                                                             |
+| ------ | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| #349   | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
+| #350   | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
+| #PRNUM | `claude/bf-rewrite-s05`            | Draft, stacked on #362. Section 5, larynx, trachea and carina, rewritten; `branch-entry` retired.                 |
+| #362   | `claude/bf-rewrite-s04`            | Draft, stacked on #360. Section 4, driving the scope, rewritten.                                                  |
+| #360   | `claude/bf-rewrite-s03`            | Draft, stacked on #359. Section 3, sedation and monitoring, rewritten; `shared-airway` retired.                   |
+| #359   | `claude/bf-rewrite-s02`            | Draft, stacked on #358. Section 2, the scope and the setup, rewritten.                                            |
+| #358   | `claude/bf-rewrite-s01`            | Draft, stacked on #355. Section 1, the procedure and the plan, rewritten.                                         |
+| #355   | `claude/bf-rewrite-structure`      | Draft, stacked on #352. The plan's order, five phases, and the forward map for retired sections.                  |
+| #352   | `claude/bf-rewrite-register`       | Draft, stacked on #350. Register rows 15, 19, 20 and 21 extracted; two sources added (U17, U18). No learner copy. |
+| #351   | `claude/bf-3d-retry`               | Draft, from `main`. The 3D-retry fix lifted out of #348, with its three end-to-end cases.                         |
+| #348   | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix is now #351; close #348 once #351 merges.                        |
 
 Nothing is merged. The work was done in the worktree
 `…-Worktrees/claude-bf-pre-review-04-20261007`, which is currently on `claude/bf-rewrite-pilot`.
@@ -91,11 +92,35 @@ sections no longer wait for sessions with the pilot.
    its tests to the absorber. `honest-report` sits late for now because its prerequisites do;
    it goes when `describe-findings` is rewritten. `what-completion-means` goes with the hub and
    closing screen (item 6).
-5. **Sections rewritten so far:** the right lung, bleeding, and sections 1 to 4
-   (`clinical-question`, `pre-use-check`, `sedation-and-monitoring`, `five-controls`), all
-   2026-10-08. Nine remain; section 5 (`larynx-and-entry`) is next, and it retires
-   `branch-entry`. The course lists 22 sections.
-   Notes from section 4:
+5. **Sections rewritten so far:** the right lung, bleeding, and sections 1 to 5
+   (`clinical-question`, `pre-use-check`, `sedation-and-monitoring`, `five-controls`,
+   `larynx-and-entry`), all 2026-10-08. Eight remain. Section 6, the right lung, is done, so
+   section 7 (`left-side`) is next. The course lists 21 sections.
+   Notes from section 5:
+   - `branch-entry` is retired. Its two airway tasks are section 5's `moreActs.carina` and
+     `moreActs.hold`; its objectives M05-O3 to O5 and the reading-the-view row
+     `handle-turns-view-static` are homed in section 5.
+   - Three larynx frames were cut from the survey video (`larynx-inlet`, `larynx-folds`,
+     `larynx-cords`). `build-find-frames.mjs` now picks a structure by the annotation set's key
+     and writes a paired structure as two markers, `-image-left` and `-image-right`. A find row
+     sets `marks: 'structures'` when its outlines are not openings.
+   - The survey outlines only the true cords, the aryepiglottic folds and the corniculate and
+     cuneiform tubercles. The epiglottis and the false cords are taught in words and cannot be
+     asked on an image until someone outlines them.
+   - Tests that addressed `branch-entry` now reach the carina task (`larynx-and-entry-flow-v1-carina`)
+     or use `test-support/carinaTasks.ts`, which presents the two tasks in the shape the
+     simulation tests were written against. `scopeRecipe(sectionId, activity)` gives the recipe
+     for a named scope task.
+   - The registry hands out a rewritten section with its numbers resolved, so its views are new
+     objects: match a view by content, not identity.
+   - `reference-frames` still sits between sections 4 and 5. It forwards to the right lung and
+     should be retired next; the right lung is already rewritten, so that is a retirement on
+     its own (its tests and its `identify` activity need a decision).
+   - For Russell to confirm: the one-line descriptions of the laryngeal structures; "the
+     corniculate tubercles cap the arytenoids near the midline, the cuneiform sit further out
+     in the folds"; the tour notes on the right and left main bronchi; the prompts name a side
+     of the image, not of the patient.
+     Notes from section 4:
    - `branch-entry` is NOT retired yet. Its technique teaching is in section 4 now (the block
      `in-the-airway`). Its airway tasks (enter each main bronchus and come back; hold the view)
      belong to section 5 by the plan, so retire it there. About a dozen Jest files and six e2e

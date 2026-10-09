@@ -61,6 +61,18 @@ async function openSection(page: Page, id: BronchSectionId) {
   await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[0].id)
   return lesson
 }
+/** To a named step, leaving every card on the way: each can be left without doing it. */
+async function walkToStep(page: Page, id: BronchSectionId, stepId: string) {
+  const lesson = await openSection(page, id)
+  for (let guard = 0; guard <= lesson.steps.length; guard += 1) {
+    const current = (await stage(page).getAttribute('data-stage'))!
+    if (current === stepId) return { lesson }
+    if (await skip(page).count()) await skip(page).click()
+    else await primary(page).click()
+    await expect(stage(page)).not.toHaveAttribute('data-stage', current)
+  }
+  throw new Error(`step ${stepId} not reached`)
+}
 async function reachAct(page: Page, id: BronchSectionId) {
   const lesson = await openSection(page, id)
   for (const step of lesson.steps) {
@@ -150,9 +162,7 @@ for (const viewport of [
     page,
   }, testInfo) => {
     await page.setViewportSize(viewport)
-    await openSection(page, 'larynx-and-entry')
-    await primary(page).click()
-    await primary(page).click()
+    await walkToStep(page, 'larynx-and-entry', 'larynx-and-entry-flow-v1-application')
     await ready(page)
     // The learner reaches the real controls without a control-identification answer.
     await expect(page.locator('[data-prediction-choices]')).toHaveCount(0)
@@ -517,7 +527,7 @@ for (const viewport of [
       expect(await earlierRecord(page)).toBeNull()
       await expect(page.locator('[data-section-completion] [data-next-section]')).toHaveAttribute(
         'data-next-section',
-        'branch-entry',
+        'reference-frames',
       )
       await page.reload()
       await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[0].id)
@@ -905,7 +915,7 @@ test.describe('the scripted scene runs on its own clock', () => {
     page,
   }) => {
     test.setTimeout(240_000)
-    await reachAct(page, 'larynx-and-entry')
+    await walkToStep(page, 'larynx-and-entry', 'larynx-and-entry-flow-v1-application')
     await ready(page)
     expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(
       false,
@@ -927,7 +937,7 @@ test.describe('the scripted scene runs on its own clock', () => {
   test('the carina hold runs down on its own and finishes on the learner’s actions', async ({
     page,
   }) => {
-    const lesson = await openSection(page, 'branch-entry')
+    const lesson = await openSection(page, 'larynx-and-entry')
     for (const step of lesson.steps) {
       if (step.course?.id === 'hold-view') break
       const leave = skip(page)
@@ -962,7 +972,7 @@ test('closed folds still refuse the advance, and the manual step is the reduced-
   // The module config holds motion reduced; the scene then exposes Step one second, and the
   // authored breath moves only when the learner moves it. That makes this check exact.
   test.setTimeout(240_000)
-  await reachAct(page, 'larynx-and-entry')
+  await walkToStep(page, 'larynx-and-entry', 'larynx-and-entry-flow-v1-application')
   await ready(page)
   expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(
     true,
@@ -1325,9 +1335,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
   // The rewritten sections (the right lung, bleeding) close on their checklist and do not print
   // the table in the lesson; the Reference keeps all of it.
   const GRAMMAR_SECTIONS = [
-    'branch-entry',
     'view-loss',
-    'larynx-and-entry',
     'left-side',
     'systematic-survey',
     'poor-return',
@@ -1378,9 +1386,9 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
         await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[index + 1].id)
       }
     }
-    // Nine sections, eleven places: view-loss and poor-return show the rows twice. The two
-    // rewritten sections no longer print the table in the lesson.
-    expect(occurrences).toBe(11)
+    // Seven sections, nine places: view-loss and poor-return show the rows twice. A rewritten
+    // section no longer prints the table in the lesson.
+    expect(occurrences).toBe(9)
     await page.goto(base + '/reference')
     const reference = page.locator('#reading-the-view table[data-grammar]')
     await expect(reference.locator('thead th')).toHaveText([
@@ -1759,7 +1767,8 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
     page,
   }, info) => {
     await page.setViewportSize({ width: 1204, height: 987 })
-    await openSection(page, 'larynx-and-entry')
+    // The screen on getting to the cords shows the section's unmarked larynx still.
+    await goToStep(page, 'larynx-and-entry', 'larynx-and-entry-flow-v1-crossing')
     await expect(page.locator('[data-workspace-caption]')).not.toContainText('annotated')
     const larynx = page.locator('[data-media-workspace] figure').first()
     await larynx.scrollIntoViewIfNeeded()
@@ -1859,7 +1868,7 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
   }, info) => {
     test.setTimeout(240_000)
     await page.setViewportSize({ width: 1204, height: 987 })
-    await goToStep(page, 'branch-entry', 'branch-entry-flow-v1-application')
+    await goToStep(page, 'larynx-and-entry', 'larynx-and-entry-flow-v1-carina')
     await ready(page)
     // Held keys are discoverable, and W advances once the view is selected.
     await expect(page.locator('[data-keyboard-help]')).toContainText('Hold a movement key')
@@ -2082,7 +2091,7 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
       page,
     }, info) => {
       await page.setViewportSize(viewport)
-      await goToStep(page, 'branch-entry', 'branch-entry-flow-v1-application')
+      await goToStep(page, 'larynx-and-entry', 'larynx-and-entry-flow-v1-carina')
       if (text === 200)
         await page.evaluate(() => {
           document.documentElement.style.fontSize = '200%'
@@ -2228,8 +2237,8 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
   }, info) => {
     test.setTimeout(240_000)
     await page.setViewportSize({ width: 1204, height: 987 })
-    const practice = 'branch-entry-flow-v1-application'
-    await goToStep(page, 'branch-entry', practice)
+    const practice = 'larynx-and-entry-flow-v1-carina'
+    await goToStep(page, 'larynx-and-entry', practice)
     await ready(page)
     const now = page.locator('[data-now-card]')
     const help = page.locator('[data-goal-help]')

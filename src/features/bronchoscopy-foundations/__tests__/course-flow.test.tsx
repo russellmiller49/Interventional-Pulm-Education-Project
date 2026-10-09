@@ -6,7 +6,7 @@ import {
   parseBronchSelfPacedRecord,
 } from '../engine/selfPacedProgress'
 import { performFiveControlsLearn } from '../test-support/fiveControlsLearnHarness'
-import { SCOPE_RECIPES } from '../test-support/scopeRecipes'
+import { SCOPE_RECIPES, scopeRecipe } from '../test-support/scopeRecipes'
 import {
   answerFindRows,
   answerLedger,
@@ -123,7 +123,7 @@ it.each(BRONCH_SECTION_IDS)('walks the content-led %s lesson through real handle
           decideAllFrames(step)
           break
         case 'scope-task':
-          SCOPE_RECIPES[id]!.act(scopePilot())
+          scopeRecipe(id, step.course?.act)(scopePilot())
           expect(goalStates().every((state) => state === 'true')).toBe(true)
           break
         case 'observe':

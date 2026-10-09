@@ -124,6 +124,7 @@
         "element": "transfer Q17, rationale of the option marked unsafe"
       },
       "learnerWording": "Removing or repositioning an established airway is a separate airway decision for the airway team, not a way to finish an inspection. Withdrawing the bronchoscope is not withdrawing the endotracheal tube; the unseen larynx is documented as a limitation.",
+      "supersededBy": "Larynx, trachea and carina was rewritten on 2026-10-08 (rewrite plan, brief 5). The transfer question Q17 (withdrawing through an endotracheal tube) and the block `entry-and-withdrawal` are removed from this section; bronchoscopy through a tube belongs to the section on the ventilated patient. The quoted wording no longer appears; review that section when it is rewritten.",
       "intendedTeachingPoint": "Withdrawing the bronchoscope is a planned second look; it is not removal of an endotracheal tube. An airway is never changed to complete an inspection, and what was never in view is recorded as not assessed.",
       "sourceCheck": {
         "checkedOn": "2026-09-14",
@@ -440,6 +441,7 @@
         "element": "prediction Q14, item explanation"
       },
       "learnerWording": "Rotation reaches the tip only along the shaft. A hard insertion-hand grip and a bowed shaft absorb the rotation, so the control section turns while the image barely moves",
+      "supersededBy": "The section `branch-entry` was retired on 2026-10-08 (rewrite plan, brief 5); its tasks are in Larynx, trachea and carina. The prediction Q14 is removed. The same teaching, that a clamped grip or a loop takes up rotation, is now in the practice case `mc-handle-turns-view-static` and in Driving the scope, in new words. The quoted wording no longer appears.",
       "intendedTeachingPoint": "Rotation from the control section reaches the tip only through a shaft that runs smoothly. When the image does not follow a turn, the fix is the shaft course and grip, retested with a small isolated turn; forward force does not fix it.",
       "sourceCheck": {
         "checkedOn": "2026-09-14",

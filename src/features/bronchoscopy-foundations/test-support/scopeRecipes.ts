@@ -12,6 +12,32 @@ import { teachingCase } from './teachingCase'
 export interface ScopeRecipe {
   readonly act: (p: ScopePilot) => void
   readonly observe?: (p: ScopePilot) => void
+  /** Recipes for a section's further scope tasks, by the activity's name in `moreActs`. */
+  readonly more?: Readonly<Record<string, (p: ScopePilot) => void>>
+}
+
+/** The recipe for one scope task of a section: its own, or the named further activity's. */
+export function scopeRecipe(
+  sectionId: BronchSectionId,
+  activity?: string,
+): (p: ScopePilot) => void {
+  const recipe = SCOPE_RECIPES[sectionId]
+  const run = activity ? recipe?.more?.[activity] : recipe?.act
+  if (!run) throw new Error(`No scope recipe for ${sectionId}${activity ? ` (${activity})` : ''}`)
+  return run
+}
+
+/** Into the right main bronchus, back to the trachea, then into the left. */
+export const CARINA_RECIPE = (p: ScopePilot) => {
+  p.goInto('RMSB')
+  p.withdrawTo('TR')
+  p.goInto('LMSB')
+}
+/** Acknowledge the assistant, capture, and stay still until the hold ends. */
+export const HOLD_RECIPE = (p: ScopePilot) => {
+  p.send({ type: 'acknowledge' })
+  p.send({ type: 'capture' })
+  for (let i = 0; i < 6; i += 1) p.send({ type: 'tick', seconds: 1 })
 }
 
 const origin = (label: AirwayLabel) => teachingCase().originEdge.get(label)!
@@ -22,18 +48,6 @@ export const SCOPE_RECIPES: Partial<Record<BronchSectionId, ScopeRecipe>> = {
       p.send({ type: 'rotate', deg: 45 })
       p.send({ type: 'deflect', deg: 45 })
       p.send({ type: 'rotate', deg: 45 })
-    },
-  },
-  'branch-entry': {
-    act: (p) => {
-      p.goInto('RMSB')
-      p.withdrawTo('TR')
-      p.goInto('LMSB')
-    },
-    observe: (p) => {
-      p.send({ type: 'acknowledge' })
-      p.send({ type: 'capture' })
-      for (let i = 0; i < 6; i += 1) p.send({ type: 'tick', seconds: 1 })
     },
   },
   'view-loss': {
@@ -55,6 +69,7 @@ export const SCOPE_RECIPES: Partial<Record<BronchSectionId, ScopeRecipe>> = {
       p.advanceUntil(() => p.state.place === 'airway')
       p.send({ type: 'declare', airway: 'TR', status: 'identified' })
     },
+    more: { carina: CARINA_RECIPE, hold: HOLD_RECIPE },
   },
   'right-side': {
     act: (p) => {

@@ -313,9 +313,7 @@ describe('focus scrolling reserves the continuation bar as measured (A9)', () =>
  * the Reference keeps the whole table.
  */
 const GRAMMAR_SECTIONS: readonly BronchSectionId[] = [
-  'branch-entry',
   'view-loss',
-  'larynx-and-entry',
   'left-side',
   'systematic-survey',
   'poor-return',
