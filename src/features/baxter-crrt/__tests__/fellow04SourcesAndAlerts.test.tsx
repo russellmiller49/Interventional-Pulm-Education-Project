@@ -123,9 +123,10 @@ describe('plain learner citations keep the exact record reachable (F-19)', () =>
     expect(panel).toHaveTextContent(
       'cumulative machine removal and whole-patient balance are not shown',
     )
-    // Plain words on the main path; the raw record one disclosure away.
+    // Plain words on the main path; example values carry no build identifier as a citation.
     const record = panel.querySelector('[data-source-record="SYNTH-LAB-PRESCRIPTION-001"]')!
-    expect(record).toHaveTextContent('Registered section: LAB-PRESCRIPTION reviewer prototype')
+    expect(record).toHaveTextContent('Example values written for this exercise.')
+    expect(record).not.toHaveTextContent(/reviewer prototype|SYNTH-/)
     const mainPath = Array.from(panel.children)
       .filter((child) => child.tagName === 'P')
       .map((child) => child.textContent)
@@ -149,7 +150,7 @@ describe('alerts carry a PrisMax alarm title, never a raw engine code (F-19)', (
     expect(crrtSimulatedAlertLabelFromCode('NOT_A_CODE')).toBe('Alarm')
     // The one model limit a learner could mistake for device behaviour stays stated.
     expect(CRRT_SIMULATED_ALERT_BOUNDARY).toMatch(
-      /priority and the automatic pump response are simplified/,
+      /On the machine a high-priority alarm stops the pumps; here they keep running/,
     )
   })
 

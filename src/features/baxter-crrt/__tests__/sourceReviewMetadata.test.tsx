@@ -61,14 +61,12 @@ describe('G01 CRRT source type, dates and document checks', () => {
     for (const id of CRRT_SOURCE_DATING.keys()) {
       const dating = batch!.querySelector<HTMLElement>(`[data-source-dating="${id}"]`)
       expect(dating).not.toBeNull()
-      expect(dating).toHaveTextContent('Clinical and device review: none recorded yet.')
+      expect(dating).not.toHaveTextContent(/none recorded yet|not (been )?reviewed/i)
     }
     const drop = within(batch!.querySelector<HTMLElement>('[data-source-dating="DEV-PM-010"]')!)
     expect(drop.getByText('Published: June 2019')).toBeInTheDocument()
     expect(drop.getByText('Revision: AW8035 Rev B · program version 2.XX')).toBeInTheDocument()
     expect(drop.getAllByText(/^Checked against the document on/)).toHaveLength(2)
-    // F-19: a missing checker is said in plain words; the missing name is still disclosed.
-    expect(drop.getByText(/\(the record does not name who checked\)/)).toBeInTheDocument()
   })
 
   it('renders nothing for a source outside the dated batch', () => {

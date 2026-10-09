@@ -491,16 +491,14 @@ function WorkedExampleBody({
       ) : null}
       <CrrtWorkedRunComparison session={session} example={example} />
       <section>
-        <h5>Taught here, not shown by the simulator</h5>
+        <h5>Also worth knowing</h5>
         <ul>
           {example.taughtNotShown.map((note) => (
             <li key={note.text}>
               {note.text}
-              <span className={styles.citation}>
-                {note.sourceIds.length > 0
-                  ? citationText(note.sourceIds)
-                  : 'No registered source yet; awaiting clinical review.'}
-              </span>
+              {note.sourceIds.length > 0 ? (
+                <span className={styles.citation}>{citationText(note.sourceIds)}</span>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -514,25 +512,13 @@ function WorkedExampleBody({
         </ul>
       </section>
       <section>
-        <h5>Acceptable alternatives and uncertainty</h5>
+        <h5>Acceptable alternatives</h5>
         <ul>
           {example.alternatives.map((line) => (
             <li key={line}>{line}</li>
           ))}
         </ul>
       </section>
-      <section>
-        <h5>Awaiting clinical review</h5>
-        <ul>
-          {example.awaitingReview.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-      </section>
-      <p className={styles.caption}>
-        Viewing this example records no answer, intervention, or observation. Clinical and device
-        review remains pending.
-      </p>
     </section>
   )
 }

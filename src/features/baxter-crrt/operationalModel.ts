@@ -131,7 +131,7 @@ export function nextCrrtOperationalCommand(
     return observe(
       until,
       `Record to ${until / 3600} hours`,
-      'Stop at each hourly observation and any earlier scheduled event. The 2-hour pause and 3-hour resumption are authored case events.',
+      'Stop at each hourly observation and any earlier scheduled event. The 2-hour pause and 3-hour resumption are part of this case.',
     )
   }
   if (run.id === 'access') {
@@ -165,7 +165,7 @@ export function nextCrrtOperationalCommand(
         return perform(
           'crrt13-inspect-access-path',
           'Inspect the modeled access path',
-          'Use the authored inspection before selecting a mechanical correction.',
+          'Inspect the access line and catheter before you choose a correction.',
         )
       if (!done('crrt13-pause-treatment'))
         return perform(

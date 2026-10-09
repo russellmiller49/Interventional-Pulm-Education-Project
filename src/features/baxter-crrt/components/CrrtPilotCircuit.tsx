@@ -1002,7 +1002,7 @@ export function CrrtPilotCircuit({
                 <p className={styles.panelNote}>
                   {ledgerIsLive
                     ? 'Computed from the flows currently set on this circuit.'
-                    : `Authored worked example: ${crrtWorkedLedgerExample.title}`}
+                    : `Worked example: ${crrtWorkedLedgerExample.title}`}
                 </p>
                 <dl className={styles.ledgerGrid}>
                   <div>

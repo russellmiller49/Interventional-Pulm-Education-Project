@@ -230,8 +230,15 @@ export function CrrtCitrateDifferential({
           return (
             <Fragment key={id}>
               <p>
-                <strong>{source.sourceTitle}</strong> · {source.documentVersion}.{' '}
-                {source.pageOrSection}.{dated || !citation.review ? null : ` ${citation.review}.`}
+                {id.startsWith('SYNTH-') ? (
+                  <strong>{citation.line}</strong>
+                ) : (
+                  <>
+                    <strong>{source.sourceTitle}</strong> · {source.documentVersion}.{' '}
+                    {source.pageOrSection}.
+                    {dated || !citation.review ? null : ` ${citation.review}.`}
+                  </>
+                )}
               </p>
               <CrrtSourceDating sourceId={id} />
               <CrrtSourceRecord citation={citation} />

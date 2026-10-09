@@ -68,7 +68,7 @@ describe('static device reference', () => {
   it('puts the live pressure profile ahead of the static drawing', () => {
     const { container } = renderMachineSurface()
     const html = container.innerHTML
-    const liveIndex = html.indexOf('Live educational pressure profile')
+    const liveIndex = html.indexOf('Live pressure profile')
     const staticIndex = html.indexOf(prismaxStaticReferenceNotice.title)
     expect(liveIndex).toBeGreaterThanOrEqual(0)
     expect(staticIndex).toBeGreaterThan(liveIndex)

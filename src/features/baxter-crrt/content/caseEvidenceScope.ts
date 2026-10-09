@@ -20,10 +20,10 @@ import type { CrrtCaseId } from './schema'
  * carries one case-start record, the patient model never writes temperature, no
  * medication or nutrition quantity exists, and the run starts with delivery running.
  *
- * Every line here is a statement about this repository — a fixture field, an
- * engine constant, or an already-registered source. Nothing here supplies a
- * clinical value, a threshold or a trend. The missing models stay missing; the
- * point is that the learner is told so before committing, not after.
+ * Teaching-first revision (2026-10-08): CRRT-12, CRRT-17 and CRRT-18 now state their
+ * laboratory values in the case description and mirror them in the fixture, so the entries
+ * for those cases say where to find the values and what the run does not advance. They no
+ * longer list every missing model.
  */
 
 /** Supplied case values this block can read out of `initialPatient`. */
@@ -76,13 +76,13 @@ const scopes: readonly CrrtCaseEvidenceScope[] = Object.freeze([
   {
     caseId: 'CRRT-05',
     headline:
-      'This case compares where replacement fluid enters the circuit. The flow split is real; the clearance consequence of diluting blood before the filter is not modeled.',
+      'This case compares where replacement fluid enters the circuit. The flows change as you set them; the simulator does not change clearance or filter pressure with the split, so read those from the teaching below.',
     suppliedEvidenceFieldIds: [],
     absentEvidence: [
       {
         label: 'Filtration fraction for each split',
         reason:
-          'The engine carries filtration fraction as a fixed model coefficient, not a quantity calculated from the flows, so it cannot differ between the two splits. The PrisMax expressions that would calculate it are held for device review.',
+          'The engine carries filtration fraction as a fixed model coefficient, not a quantity calculated from the flows, so it does not differ between the two splits here. Work it out by hand: fluid across the membrane divided by plasma flow plus pre-filter fluid.',
       },
       {
         label: 'Concentration of blood reaching the filter',
@@ -104,7 +104,7 @@ const scopes: readonly CrrtCaseEvidenceScope[] = Object.freeze([
         sourceIds: [CORE_REVIEW],
       },
       {
-        text: 'PrisMax presents total predilution and filtration fraction as calculations from the circuit flows. This module calculates neither, because the device expression it would need is held for review.',
+        text: 'PrisMax presents total predilution and filtration fraction as calculations from the circuit flows. Post-filter replacement raises filtration fraction; pre-filter replacement lowers it.',
         sourceIds: [PRISMAX_FF],
       },
     ],
@@ -134,7 +134,7 @@ const scopes: readonly CrrtCaseEvidenceScope[] = Object.freeze([
     ],
     furtherTeaching: [
       {
-        text: 'Reassessment after a fluid-removal change belongs with the patient, the monitoring available and the local protocol, not with a single displayed number.',
+        text: 'After any change in fluid removal, go back to the patient: blood pressure, vasopressor dose and perfusion over the next hour.',
         sourceIds: [RRT_ICU],
       },
     ],
@@ -142,56 +142,31 @@ const scopes: readonly CrrtCaseEvidenceScope[] = Object.freeze([
   {
     caseId: 'CRRT-12',
     headline:
-      'This case is a multidisciplinary review with incomplete information. It supplies case-start values and the live treatment-delivery record; the serial electrolyte, temperature, medication and nutrition data a review would rest on are not in this case.',
+      'The case description gives this morning’s results. The machine beside it shows what CRRT has delivered: dose, downtime and the fluid ledger.',
     suppliedEvidenceFieldIds: ['potassium', 'bicarbonate', 'ph', 'temperature'],
     absentEvidence: [
       {
-        label: 'Serial electrolyte and acid-base values',
+        label: 'Repeat results after you act',
         reason:
-          'Potassium, bicarbonate and pH are supplied once, at case start. There is no second time point, and the simulation produces no laboratory values over time, so none are displayed.',
-      },
-      {
-        label: 'Serial temperature',
-        reason:
-          'One temperature is supplied at case start. The patient model has no temperature term, so the value is never recalculated during the run.',
-      },
-      {
-        label: 'Medication delivery or drug exposure over time',
-        reason:
-          'The case carries no medication order, dose, level or administration record. The whole-patient fluid balance includes a medication-carrier volume, which is fluid, not drug delivered or drug exposure.',
-      },
-      {
-        label: 'Nutrition intake or its effect over time',
-        reason:
-          'The case carries no nutrition prescription or intake record, and nothing in the simulation responds to nutrition. The fluid balance counts nutrition, where any is supplied, as volume only.',
-      },
-      {
-        label: 'An earlier treatment interruption',
-        reason:
-          'No interruption history is supplied, and no action in this case pauses delivery; the run starts with treatment running. Interruptions belong in the review as history to obtain, not as something this run shows.',
-      },
-      {
-        label: 'Results of a multidisciplinary reassessment',
-        reason:
-          'Requesting a pharmacist, dietitian, nursing or prescriber review records your plan. No result comes back, because the case contains none.',
+          'The laboratory values are the ones in the case description. They are a single set and stay as they are while the run advances.',
       },
     ],
     modelCalculates: [
-      'Delivered dose, elapsed time and downtime, as they actually occur in this run.',
-      'The whole-patient fluid ledger: machine removal plus the supplied external inputs and outputs.',
-      'The current settings, the circuit pressures, and the timeline of the actions you perform.',
+      'Delivered dose, elapsed time and downtime, as they occur in this run.',
+      'The whole-patient fluid ledger: machine removal plus the other inputs and outputs.',
+      'The current settings and the circuit pressures.',
     ],
     modelDoesNotModel: [
-      'How electrolytes, acid-base status or temperature change during treatment, medication exposure or clearance, or any effect of nutrition. Because it produces none of those, it cannot attribute a change in any of them to CRRT or to anything else.',
+      'Electrolyte replacement, temperature, drug clearance or nutrition. Your plan is recorded and the debrief explains what each move would do.',
     ],
     furtherTeaching: [
       {
-        text: 'Interruptions open a gap between the therapy prescribed and the therapy delivered. Compare the two over the same interval before linking a clinical change to the treatment.',
+        text: 'Compare the dose prescribed with the dose delivered over the same hours before you link a result to the treatment. Downtime is the usual gap.',
         sourceIds: [RRT_ICU],
       },
       {
-        text: 'A CRRT review extends beyond the machine: electrolytes and acid-base status, temperature, medication dosing and nutrition each need review alongside the treatment actually delivered, with pharmacy, nutrition, nursing and the prescriber.',
-        sourceIds: [],
+        text: 'What crosses the membrane is decided by size and protein binding. Phosphate, potassium, magnesium, amino acids and many antibiotics are small and unbound, so they are cleared with the urea.',
+        sourceIds: [CORE_REVIEW],
       },
     ],
   },
@@ -235,7 +210,7 @@ const scopes: readonly CrrtCaseEvidenceScope[] = Object.freeze([
       {
         label: 'A filter exchange, or any effect of your plan on this circuit',
         reason:
-          'Every action in this case carries no simulated effect. Choosing an explanation, planning an exchange or escalating records what you would do; it does not change the running circuit, and no filter-loss model exists to respond to it.',
+          'The actions in this case record your plan. The circuit beside the case keeps running as it is.',
       },
     ],
     modelCalculates: [
@@ -254,52 +229,32 @@ const scopes: readonly CrrtCaseEvidenceScope[] = Object.freeze([
   {
     caseId: 'CRRT-17',
     headline:
-      'This case is about recognizing that circuit anticoagulation and patient calcium are different questions, and escalating. The calcium data it would take to read a citrate-accumulation pattern is not in this case.',
+      'The case description gives the calcium, acid-base and lactate results. Work out the total-to-ionized calcium ratio yourself, in mmol/L: the description gives total calcium as 2.75 mmol/L.',
     suppliedEvidenceFieldIds: ['systemic-ionized-calcium', 'total-calcium', 'bicarbonate', 'ph'],
     absentEvidence: [
       {
-        label: 'A post-filter (circuit) ionized calcium',
+        label: 'Repeat calcium and blood gas after you act',
         reason:
-          'The patient fixture has no circuit or post-filter sample field at all, so the sample that describes circuit anticoagulant effect cannot be shown.',
-      },
-      {
-        label: 'Serial calcium values, or any calcium trend',
-        reason:
-          'The case supplies one systemic value at case start. There is no second time point, and the simulation does not model how calcium changes.',
-      },
-      {
-        label: 'A total/ionized calcium relationship',
-        reason:
-          'Total calcium is not supplied for this case, so no relationship between total and ionized calcium can be formed. Absent is not zero and not normal.',
-      },
-      {
-        label: 'Citrate delivery, calcium replacement, or their interruption',
-        reason:
-          'No citrate or calcium infusion quantity exists anywhere in the engine. The module carries no dose, target or adjustment.',
-      },
-      {
-        label: 'The linked trend-direction display',
-        reason:
-          'The conceptual citrate state carries every linked direction as unknown for every case and is not rendered on any learner surface.',
+          'The laboratory values are the ones in the case description. They are a single set and stay as they are while the run advances.',
       },
     ],
     modelCalculates: [
-      'The circuit and delivery context: measured pressures, delivered dose, downtime and the fluid ledger.',
+      'The circuit and delivery picture: pressures, delivered dose, downtime and the fluid ledger.',
     ],
     modelDoesNotModel: [
-      'Citrate physiology, calcium kinetics, citrate accumulation, or any threshold that would separate those patterns.',
+      'Citrate and calcium infusions or their effect. The machine beside the case runs without anticoagulant; your plan is recorded and the debrief explains what it would do.',
     ],
     furtherTeaching: [
       {
-        text: 'Post-filter ionized calcium describes anticoagulant effect inside the circuit; a systemic sample cannot replace it, and a satisfactory circuit sample does not establish patient calcium safety. The sampling site is what separates the two questions.',
+        text: 'Post-filter ionized calcium tells you whether the circuit is anticoagulated. Systemic ionized calcium tells you whether the patient is safe. A good post-filter value says nothing about the patient.',
         sourceIds: [SAMPLING],
       },
       {
-        text: 'Citrate not removed in the effluent returns to the patient to be metabolized, which is why impaired metabolism is a systemic question rather than a circuit-dose question.',
+        text: 'Citrate that is not removed in the effluent returns to the patient and is metabolized mainly in the liver. When the liver cannot do it, citrate accumulates however well the circuit is running.',
         sourceIds: [MECHANISM],
       },
       {
-        text: 'The four-pattern comparison in the anticoagulation lesson works through insufficient circuit effect, inadequate calcium replacement, accumulation and citrate-associated alkalosis, each with the sampling domain it belongs to.',
+        text: 'The anticoagulation lesson compares four patterns side by side: too little citrate effect in the circuit, too little calcium replacement, accumulation, and citrate alkalosis.',
         sourceIds: [SAMPLING, CORE_REVIEW],
       },
     ],
@@ -307,34 +262,24 @@ const scopes: readonly CrrtCaseEvidenceScope[] = Object.freeze([
   {
     caseId: 'CRRT-18',
     headline:
-      'This case is about keeping the clinical decision to stop kidney support separate from the machine stop and end controls. It carries no recovery trajectory to read.',
-    suppliedEvidenceFieldIds: ['creatinine-marker', 'urine-output', 'residual-kidney-clearance'],
+      'The case description gives the urine output and the clinical course. The decision to stop is yours; ending a treatment on the machine is a separate step that follows it.',
+    suppliedEvidenceFieldIds: ['creatinine-marker', 'urine-output'],
     absentEvidence: [
       {
-        label: 'A recovery trend',
+        label: 'The days after stopping',
         reason:
-          'The case supplies one creatinine value at case start, a constant urine output and zero residual kidney clearance. There is no second time point and no improving signal; the supplied urine output does not change during the run.',
-      },
-      {
-        label: 'Recovering kidney function',
-        reason:
-          'The engine has no model of returning kidney function: residual clearance is a fixed fixture input, and urine output is a fixed external rate in the fluid ledger.',
-      },
-      {
-        label: 'Serial chemistry after stopping treatment',
-        reason:
-          'Nothing continues after the run, and no post-treatment observation exists in the case.',
+          'The run ends when the case does. The debrief describes what to measure each day off treatment and what would make you restart.',
       },
     ],
     modelCalculates: [
-      'Delivered dose, downtime, the fluid ledger including the supplied urine output, and the machine stop and end workflow.',
+      'Delivered dose, downtime, the fluid ledger including urine output, and the machine’s stop and end steps.',
     ],
     modelDoesNotModel: [
-      'Renal recovery, a falling creatinine, rising urine output, or clearance returning. Those are the signals the decision would rest on, and this exercise does not produce them.',
+      'Kidney recovery over time. Urine output is a fixed rate in the fluid ledger for the length of the run.',
     ],
     furtherTeaching: [
       {
-        text: 'Whether kidney support is still needed is a clinical decision about the whole patient, taken with the responsible team; the machine stop and end controls are a separate operation that follows it.',
+        text: 'Deciding that kidney support is no longer needed is a clinical decision about the whole patient. Stop and End on the machine carry it out; they do not make it.',
         sourceIds: [NICE, RRT_ICU],
       },
     ],

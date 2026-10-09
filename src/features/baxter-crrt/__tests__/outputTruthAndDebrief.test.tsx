@@ -89,12 +89,14 @@ describe('CRRT laboratory output stays inside what the model supports', () => {
     expect(labs).toHaveTextContent(
       `${definition.initialPatient.solutes.creatinineMgPerDl.toFixed(1)} mg/dL`,
     )
-    expect(labs).toHaveTextContent(/no laboratory trend, correction, or worsening is claimed/)
+    expect(labs).toHaveTextContent(
+      'Laboratory values stay at their case-start values during a run.',
+    )
     for (const label of ['Sodium', 'Potassium', 'Bicarbonate', 'Phosphate', 'Magnesium']) {
       expect(within(labs).getAllByText(new RegExp(label)).length).toBeGreaterThan(0)
     }
     expect(labs).toHaveTextContent(
-      /no reviewed specification for dialysate and replacement solution concentrations/,
+      /the simulator would need dialysate and replacement solution concentrations/,
     )
   })
 
@@ -111,7 +113,7 @@ describe('CRRT laboratory output stays inside what the model supports', () => {
 })
 
 describe('CRRT debrief separates the worked example from this run', () => {
-  it('labels the authored explanation and never calls a run safe or successful', () => {
+  it('labels the worked explanation and never calls a run safe or successful', () => {
     render(<Player definition={getBaxterCrrtCase('CRRT-13')} />)
     performAction(/Assess the patient and treatment/)
     click('+30 min')
@@ -122,9 +124,8 @@ describe('CRRT debrief separates the worked example from this run', () => {
     ).toBeInTheDocument()
     expect(screen.queryByText('Run reviewed')).toBeNull()
     expect(screen.getByText(/^Debrief opened · \d+ recorded events? in this run$/)).toBeVisible()
-    expect(
-      screen.getByText(/not a judgment that the care was safe, complete, or successful/),
-    ).toBeVisible()
+    expect(screen.getByText('This lists what you did in this run.')).toBeVisible()
+    expect(document.body.textContent).not.toMatch(/\brun (?:was|is) (?:safe|successful)\b/i)
   })
 
   it('keeps the explanation and debrief available with no run at all', () => {
@@ -179,7 +180,7 @@ describe('CRRT debrief separates the worked example from this run', () => {
     performAction(/Assess the patient and treatment/)
     performAction(/Advance to the worsening pattern/)
     performAction(/Increase BFR through unresolved access resistance/)
-    performAction(/Acknowledge the generic training alert/)
+    performAction(/Silence the alarm/)
     performAction(/Declare resolution after acknowledgement alone/)
     click('+1 hr')
     click('End run and review debrief')

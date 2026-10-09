@@ -155,8 +155,7 @@ const publication = (
   return Object.freeze({ support: 'clinical-publication', statement, topic, sourceIds })
 }
 const open = (statement: string): CrrtCitrateField => ({ support: 'held-open', statement })
-const VERIFICATION_BOUNDARY =
-  'Verify sampling site, timing and actual infusions with the responsible clinical team and authorised local protocol. This module carries no quantity, no target, and no adjustment.'
+const VERIFICATION_BOUNDARY = `Before you act on a calcium result, confirm where the sample was drawn and when, and what the citrate and calcium pumps were delivering at that time. Targets: post-filter ${CRRT_NUMBERS.value('postfilter-ica')}, systemic ${CRRT_NUMBERS.value('systemic-ica')}.`
 
 export const crrtCitrateDifferentialCategories: readonly CrrtCitrateDifferentialCategory[] = [
   {

@@ -1,3 +1,4 @@
+import { CRRT_NUMBERS } from './teachingNumbers'
 import type { CrrtClaimTopic } from './learnerSourceMap'
 import type { CrrtWorkedFilterTermId, CrrtWorkedSignalId } from '../workedCaseModel'
 
@@ -11,6 +12,8 @@ import type { CrrtWorkedFilterTermId, CrrtWorkedSignalId } from '../workedCaseMo
  * `__tests__/workedCaseExamples.test.tsx`. Clinical statements remain pending attributable review;
  * `awaitingReview` lists the decisions this content does not make.
  */
+const N = CRRT_NUMBERS.value
+
 export const CRRT_WORKED_CASE_EXAMPLE_VERSION = 'crrt-02-worked-examples-2026-09-14'
 
 export const crrtWorkedCaseIds = ['CRRT-05', 'CRRT-15', 'CRRT-16'] as const
@@ -201,7 +204,7 @@ const replacementSplitExample: CrrtWorkedCaseExample = {
       claimTopics: ['solute-transport-mechanisms'],
     },
     {
-      text: 'PrisMax presents total predilution and filtration fraction as calculations from the circuit flows. This module calculates neither, because the device expression it would need is held for review.',
+      text: 'PrisMax presents total predilution and filtration fraction as calculations from the circuit flows. Work filtration fraction out by hand: fluid across the membrane divided by plasma flow plus pre-filter fluid.',
       sourceIds: ['MATH-PM-003'],
       claimTopics: [],
     },
@@ -215,12 +218,12 @@ const replacementSplitExample: CrrtWorkedCaseExample = {
     'The flow display: pre- and post-filter replacement changed, while total replacement and effluent did not.',
     'Treatment is still running: delivered dose matches the prescribed dose and no downtime has accrued.',
     'Filter pressure, TMP and the solute trend over hours rather than a single reading.',
-    "The prescriber's reason for the split and the local protocol that governs it.",
+    'Filter life with this split compared with the last filter.',
   ],
   alternatives: [
-    'Keeping all replacement after the filter, splitting it, or giving more before the filter can each be reasonable; the choice depends on filter life, blood flow, hematocrit and the clearance goal, and it belongs to the prescriber under local protocol.',
-    'Whether and how to adjust the prescription for pre-filter dilution is a clinical decision this module does not calculate.',
-    'Keeping the original split and deferring quantitative interpretation remains an acceptable path in this case.',
+    'Keeping all replacement after the filter, splitting it, or giving more before the filter can each be reasonable; the choice depends on filter life, blood flow, hematocrit and the clearance goal.',
+    `Pre-filter fluid dilutes the blood the filter sees, so each liter of effluent clears a little less; this is why ${N('dose-prescribed')} is prescribed to deliver ${N('dose-delivered')}.`,
+    'Keeping the original split and comparing filter life over the next day is also reasonable.',
   ],
   check: {
     id: 'crrt05-dose-display-after-split',
@@ -358,7 +361,7 @@ const filterTrendExample: CrrtWorkedCaseExample = {
   domainDemonstration: null,
   taughtNotShown: [
     {
-      text: 'PrisMax presents the filter pressure drop as filter minus return pressure. Where its sensor-height correction belongs in the displayed drop is held for device review.',
+      text: 'PrisMax presents the filter pressure drop as filter minus return pressure. The manual applies a sensor-height correction to the filter and return readings.',
       sourceIds: ['DEV-PM-010'],
       claimTopics: [],
     },
@@ -373,7 +376,7 @@ const filterTrendExample: CrrtWorkedCaseExample = {
       claimTopics: [],
     },
     {
-      text: 'Effluent pressure is held constant in this case, the prescription lists no anticoagulation method, and no anticoagulation control is available, so the simulator cannot examine those contributors. Alarm limits and PrisMax troubleshooting sequences are not modeled.',
+      text: 'Effluent pressure is held constant in this case, the prescription lists no anticoagulation method, and no anticoagulation control is available, so this case cannot show an effluent-side or anticoagulation cause.',
       sourceIds: [],
       claimTopics: [],
     },
@@ -383,12 +386,12 @@ const filterTrendExample: CrrtWorkedCaseExample = {
     'TMP and effluent pressure, for the membrane and effluent side.',
     'Access pressure and delivered blood flow, for contributors upstream of the filter.',
     'Delivered versus prescribed dose and downtime, to see whether interruptions are part of the picture.',
-    'The trend over time rather than a single reading, with filter change and anticoagulation decisions made under the device instructions and local protocol.',
+    `The trend over time rather than a single reading. PrisMax advises that the filter is clotting at ${N('clotting-advisory')}.`,
   ],
   alternatives: [
-    'Holding the current state and requesting review of the whole trend is reasonable when inspection does not find a correctable cause.',
+    'Leaving the settings and rechecking the drop and TMP in an hour is reasonable when you find no correctable cause.',
     'A filter-side pattern is compatible with more than one cause. Clotting is one possibility, and it does not by itself identify the anticoagulation plan as the problem.',
-    'When to change the filter, and whether to change anticoagulation, follow the device instructions and local protocol.',
+    `Plan the filter change while the blood can still be returned: the PrisMax advisory is ${N('clotting-advisory')}, and the set must be changed by ${N('set-life')}.`,
   ],
   check: {
     id: 'crrt15-where-resistance-increased',
@@ -476,7 +479,7 @@ const filterTrendExample: CrrtWorkedCaseExample = {
         'The filter pressure drop is filter pressure minus return pressure.',
         'Resistance inside the filter raises filter pressure and the drop; return-side resistance raises filter and return pressure together; an effluent-side change moves TMP without changing the drop.',
         'The location narrows the inspection; delivered dose, downtime and access pressure are checked before a cause is assigned.',
-        'A pressure trend alone does not establish anticoagulation status; filter change and anticoagulation decisions follow the device instructions and local protocol.',
+        `A rising drop means the filter is clotting; it does not say why. Check blood flow, stops and filtration fraction before blaming the anticoagulation, and plan the change at ${N('clotting-advisory')}.`,
       ],
       transferQuestion:
         'Another circuit shows return and filter pressures rising together with an unchanged drop. Where would you look first, and why?',
@@ -486,8 +489,7 @@ const filterTrendExample: CrrtWorkedCaseExample = {
 
 const recurrentFilterLossExample: CrrtWorkedCaseExample = {
   caseId: 'CRRT-16',
-  learningPoint:
-    'Recurrent early filter loss can have more than one contributor acting together. Work domain by domain: access and blood-flow delivery, filtration and concentration inside the filter, interruptions and downtime, the pressure pattern across the filter, and anticoagulation or protocol. Verify what the circuit data can show, fix what is mechanical and verified, and escalate what depends on medication choice or local policy with a concise summary.',
+  learningPoint: `Filters clot early when blood stops, slows or is over-concentrated. Take the causes in a fixed order: access and blood flow, filtration fraction, interruptions and downtime, the pressure pattern across the filter, then anticoagulation. Fix what is mechanical first. Here the catheter is the problem and filtration fraction is about 16%, under the ${N('filtration-fraction-ceiling')} ceiling.`,
   readFirst: [
     'blood-flow',
     'access-pressure',
@@ -500,8 +502,7 @@ const recurrentFilterLossExample: CrrtWorkedCaseExample = {
     'delivered-dose',
     'downtime',
   ],
-  readFirstNote:
-    'Values update with this run. Earlier circuits are described in the case history, not simulated.',
+  readFirstNote: 'Values update with this run. The three lost filters are in the case history.',
   tryIt: [
     {
       text: 'Advance +6 hr and watch access pressure, filter pressure, the drop, delivered dose and downtime.',
@@ -512,7 +513,7 @@ const recurrentFilterLossExample: CrrtWorkedCaseExample = {
       actionSuffixes: [],
     },
     {
-      text: 'Record your plan with the case actions. They document the plan and do not change the simulated circuit.',
+      text: 'Record your plan with the case actions. The circuit beside the case keeps running as it is.',
       actionSuffixes: ['action-assess', 'action-safe-candidate', 'action-communicate'],
     },
   ],
@@ -535,9 +536,9 @@ const recurrentFilterLossExample: CrrtWorkedCaseExample = {
       'downtime',
     ],
     interpretation: [
-      'Both arms are identical: recording the plan documents your reasoning but does not change access, the filter or delivery in this simulator.',
+      'Both arms are identical: recording the plan does not change access, the filter or delivery in this run.',
       "At the start of the run, the simulator's filter-burden terms come from access dysfunction, filtration fraction and hematocrit; the interruption, low-effective-flow and procoagulant terms are zero.",
-      'Over six hours those terms raise filter pressure by well under 1 mmHg, so the simulator does not reproduce the earlier circuit losses. The summary relies on the case history and on the data you can verify.',
+      'Over six hours those terms raise filter pressure by well under 1 mmHg. This run does not reproduce the three earlier losses; they are in the case history.',
     ],
     runNote:
       'The modeled difference is what recording the plan changes, and it is zero for every signal. Changes in your run come from time passing or from the machine controls.',
@@ -551,16 +552,16 @@ const recurrentFilterLossExample: CrrtWorkedCaseExample = {
         thisRun: (context) =>
           `Access pressure ${context.formatted['access-pressure']} at blood flow ${context.formatted['blood-flow']}; this case's access resistance is position dependent.`,
         canVerify: 'Yes: access pressure and delivered blood flow.',
-        decidedBy: 'Bedside team, for catheter position and access function.',
+        decidedBy: `Reposition, flush or replace the catheter, then raise blood flow into the usual ${N('blood-flow-range')}.`,
       },
       {
         id: 'filtration',
         label: 'Filtration and concentration inside the filter',
         thisRun: (context) =>
           `${context.modalityLabel} with ${context.formatted['pre-replacement-flow']} replacement before and ${context.formatted['post-replacement-flow']} after the filter; hematocrit ${context.formatted.hematocrit}.`,
-        canVerify:
-          'Partly: flows and hematocrit are shown; filtration fraction is not calculated here.',
-        decidedBy: 'Prescriber.',
+        canVerify: `Yes, by hand: 850 mL/h across the membrane over about 5,400 mL/h of plasma and pre-filter fluid is 16%, under ${N('filtration-fraction-ceiling')}.`,
+        decidedBy:
+          'No change needed. Above the ceiling you would raise blood flow or move replacement before the filter.',
       },
       {
         id: 'interruptions',
@@ -568,7 +569,7 @@ const recurrentFilterLossExample: CrrtWorkedCaseExample = {
         thisRun: (context) =>
           `Downtime ${context.formatted.downtime}; delivered dose ${deliveredDoseText(context)} against ${context.formatted['prescribed-dose']} prescribed.`,
         canVerify: 'Yes: downtime and delivered versus prescribed dose.',
-        decidedBy: 'Bedside team.',
+        decidedBy: 'Count the stops and what caused each. Here they are access alarms.',
       },
       {
         id: 'pressure-pattern',
@@ -576,17 +577,18 @@ const recurrentFilterLossExample: CrrtWorkedCaseExample = {
         thisRun: (context) =>
           `Filter ${context.formatted['filter-pressure']}, return ${context.formatted['return-pressure']}, drop ${context.formatted['filter-drop']}, TMP ${context.formatted.tmp}.`,
         canVerify: 'Yes, for location: filter and return pressure, the drop and TMP.',
-        decidedBy: 'Bedside team, with the device instructions.',
+        decidedBy: `A rising drop or TMP means the filter is clotting; PrisMax advises at ${N('clotting-advisory')}.`,
       },
       {
         id: 'anticoagulation',
         label: 'Anticoagulation and protocol',
         thisRun: (context) =>
           context.anticoagulationListed
-            ? 'An anticoagulation method is listed, but its protocol is not represented here.'
-            : 'No anticoagulation method is listed in this case prescription.',
-        canVerify: 'No: no anticoagulation protocol is represented in this case.',
-        decidedBy: 'Responsible clinical team under local protocol.',
+            ? 'An anticoagulation method is listed for this circuit.'
+            : 'This circuit is running without an anticoagulant.',
+        canVerify: 'Yes: the prescription shows whether a method is running.',
+        decidedBy:
+          'Once the catheter works, start regional citrate unless the liver or a rising lactate rules it out.',
       },
     ],
     filterTermLabels: {
@@ -598,35 +600,35 @@ const recurrentFilterLossExample: CrrtWorkedCaseExample = {
       procoagulant: 'Procoagulant burden',
     },
     teamSummary: (context) => [
-      'Recurrent early filter loss; earlier circuits are described in the history.',
-      `Access: access pressure ${context.formatted['access-pressure']} at ${context.formatted['blood-flow']}; check catheter position and access function.`,
-      `Filtration: ${context.modalityLabel}, ${context.formatted['pre-replacement-flow']} before and ${context.formatted['post-replacement-flow']} after the filter, hematocrit ${context.formatted.hematocrit}; filtration fraction not calculated here.`,
+      'Three filters lost in 36 hours, none lasting 12.',
+      `Access: access pressure ${context.formatted['access-pressure']} at ${context.formatted['blood-flow']}; the catheter alarms on turning and needs repositioning or replacing.`,
+      `Filtration: ${context.modalityLabel}, ${context.formatted['pre-replacement-flow']} before and ${context.formatted['post-replacement-flow']} after the filter, hematocrit ${context.formatted.hematocrit}; filtration fraction about 16%.`,
       `Delivery: downtime ${context.formatted.downtime}; delivered dose ${deliveredDoseText(context)} against ${context.formatted['prescribed-dose']} prescribed.`,
       `Pressure pattern: filter ${context.formatted['filter-pressure']}, return ${context.formatted['return-pressure']}, drop ${context.formatted['filter-drop']}, TMP ${context.formatted.tmp}.`,
       context.anticoagulationListed
-        ? 'Anticoagulation: a method is listed; protocol questions go to the responsible team.'
-        : 'Anticoagulation: no method listed; the plan goes to the responsible team.',
-      'Request: team review of access and of the anticoagulation or protocol question; reassess the pressure pattern, delivered dose and downtime on the next circuit.',
+        ? 'Anticoagulation: a method is listed; review it after the catheter is fixed.'
+        : 'Anticoagulation: none; plan regional citrate with the next filter.',
+      'Plan: fix the catheter, raise blood flow, start citrate with the next filter, and watch its pressure drop, TMP, delivered dose and downtime.',
     ],
   },
   taughtNotShown: [
     {
-      text: 'Access dysfunction, concentration effects, interruptions, and other patient or protocol factors can combine to shorten filter life rather than act alone.',
+      text: 'A poor catheter, a high filtration fraction and repeated stops each shorten filter life, and they often occur together.',
       sourceIds: [],
       claimTopics: [],
     },
     {
-      text: 'Circuit pressures depend on flow, resistance and the operating point rather than universal normal values.',
+      text: 'Circuit pressures depend on flow and resistance, so read each one against its own starting value and trend.',
       sourceIds: ['DEV-PM-009'],
       claimTopics: [],
     },
     {
-      text: 'The filter pressure drop is filter minus return pressure, which locates resistance within the filter but does not identify its cause.',
+      text: 'The filter pressure drop is filter pressure minus return pressure. A rising drop puts the resistance inside the filter.',
       sourceIds: ['DEV-PM-010'],
       claimTopics: [],
     },
     {
-      text: 'Anticoagulation choice, filter-change criteria and alarm responses are not represented; they follow the device instructions and local protocol.',
+      text: `Regional citrate is the first-choice anticoagulant when nothing contraindicates it. PrisMax allows a set to run ${N('set-life')}.`,
       sourceIds: [],
       claimTopics: [],
     },
@@ -635,12 +637,12 @@ const recurrentFilterLossExample: CrrtWorkedCaseExample = {
     'Access pressure and delivered blood flow after any access intervention.',
     'Filter pressure, the drop and TMP over time on the next circuit.',
     'Delivered versus prescribed dose, and downtime by reason.',
-    "The team's response to the escalation summary, and the life of the next filter.",
+    'How long the next filter lasts.',
   ],
   alternatives: [
-    'Preserving the circuit state and escalating before attributing a cause is an acceptable path.',
-    'Teams differ in access management and anticoagulation choices under local protocol; the simulator cannot judge whether an anticoagulation plan is adequate.',
-    'More than one domain may need action at the same time.',
+    'Replacing the catheter and starting citrate with the same new filter is reasonable when the catheter is plainly at fault.',
+    'Units differ in whether they flush, reposition or replace a failing catheter first.',
+    'More than one cause may need fixing at the same time.',
   ],
   check: null,
   retired: {
@@ -656,37 +658,35 @@ const recurrentFilterLossExample: CrrtWorkedCaseExample = {
     'Which escalation path and summary content the local team expects.',
   ],
   revision: {
-    goal: 'Summarize recurrent filter loss domain by domain and escalate what the circuit data cannot settle.',
+    goal: 'Find why the filters are clotting, mechanical causes first',
     visibleFindings: [
-      'The case history describes repeated early filter loss with more than one plausible contributor; earlier circuits are described, not simulated.',
-      'The simulation runs the current circuit: access, filter and return pressures, delivered dose and downtime are available.',
-      'The actions in this case record your plan and do not change the simulated circuit.',
+      'Three filters in 36 hours, blood flow 130 mL/min, and an access pressure alarm at every turn.',
+      'The current circuit is running: access, filter and return pressures, delivered dose and downtime are live.',
     ],
     hints: [
-      'List the domains: access and blood-flow delivery, filtration and concentration, interruptions and downtime, the pressure pattern across the filter, and anticoagulation or protocol.',
-      'For each domain, name the run data that can verify it; the actions in this case record the plan and do not change the circuit.',
-      'Escalate the domains the circuit data cannot settle, such as anticoagulation choice, to the responsible team with a short summary.',
+      'Take the causes in order: access and blood flow, filtration fraction, downtime, the pressure pattern across the filter, then anticoagulation.',
+      'Work out the filtration fraction: fluid across the membrane divided by plasma flow plus pre-filter fluid.',
+      'The catheter is the problem. Fix it and raise blood flow, then add citrate with the next filter.',
     ],
     interventions: {
       'action-safe-candidate': {
         response:
-          'Plan recorded. This action does not change the simulated circuit; use the domain table to separate verified contributors from questions for the team.',
+          'Plan recorded. The access-pressure alarms point to the catheter, and filtration fraction is about 16%, so over-concentration is not the cause.',
       },
     },
     reassessmentLabel:
-      'Reassessed access, the filter pressure pattern, delivered dose, downtime and the escalation summary',
+      'With the next filter, watch access pressure, pump stops, and the pressure drop and TMP trend',
     debrief: {
       summary:
-        'Recurrent filter loss is summarized domain by domain: what the circuit data verified, what was corrected, and what was escalated.',
-      trendReview:
-        "The actions in this case record the plan and do not change the simulated circuit. Compare the domain table with your run's pressures, delivered dose and downtime.",
+        'Three early filter losses, worked cause by cause: the catheter and low blood flow explain them, and filtration fraction does not.',
+      trendReview: `Access: 130 mL/min is at the bottom of the usual ${N('blood-flow-range')}, and every access alarm stops the pump. Filtration: plasma flow is 130 × 60 × (1 − 0.36), about 5,000 mL/h; 400 + 400 + 50 = 850 mL/h crosses the membrane; with the pre-filter fluid in the denominator the fraction is about 16%, under ${N('filtration-fraction-ceiling')}. Anticoagulation comes last, once the catheter works.`,
       causalChain: [
-        'Access, filtration and concentration, interruptions, and anticoagulation or protocol factors can combine to shorten filter life.',
-        'Circuit data can verify access pressure, the pressure pattern across the filter, delivered dose and downtime.',
-        'Verified mechanical contributors are corrected; medication and local-policy questions go to the responsible team with the summary.',
+        'The catheter cannot supply the set blood flow when the patient moves, so the pump stops repeatedly.',
+        'Stopped blood clots in the fibers; each stop takes a little more of the filter.',
+        'Filtration fraction is about 16%, so the fix is the access and the blood flow, and then an anticoagulant.',
       ],
       transferQuestion:
-        'Which pressure, delivery and downtime values would you put in a one-paragraph summary for the team reviewing the next circuit?',
+        'The catheter is replaced and blood flow is 200 mL/min, and all 800 mL/h of replacement is moved after the filter. What is the filtration fraction now?',
     },
   },
 }

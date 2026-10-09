@@ -459,13 +459,6 @@ function CrrtCasePlayerContent({
           </strong>
         </header>
 
-        <div className={styles.syntheticNotice} role="note">
-          <ShieldAlert aria-hidden="true" />
-          <p>
-            <strong>Simulated case.</strong> The patient and the numbers are invented for teaching.
-          </p>
-        </div>
-
         <section
           className={styles.findingsSection}
           aria-labelledby={scopedId('crrt-case-findings')}
@@ -596,9 +589,8 @@ function CrrtCasePlayerContent({
                     {observationIntervalSeconds > 0 ? (
                       <small>
                         Performing this advances the simulated clock by{' '}
-                        {formatCrrtRunClock(observationIntervalSeconds)} — its authored observation
-                        interval. Compare it with another path at the same elapsed time, not at the
-                        same number of clicks.
+                        {formatCrrtRunClock(observationIntervalSeconds)}. Compare it with another
+                        path at the same elapsed time, not at the same number of clicks.
                       </small>
                     ) : null}
                     {missingPrerequisite ? (
@@ -742,14 +734,11 @@ function CrrtCasePlayerContent({
           <div className={styles.criticalBanner} role="alert">
             <ShieldAlert aria-hidden="true" />
             <div>
-              <strong>Simulation safety notice</strong>
+              <strong>Unsafe action</strong>
               {session.criticalErrorIds.map((id) => (
                 <p key={id}>{selectedLabel(definition.criticalErrors, id)}</p>
               ))}
-              <p>
-                Review the action and its explanation in the debrief. These case rules have not been
-                clinically reviewed.
-              </p>
+              <p>The debrief explains what this action skips.</p>
             </div>
           </div>
         ) : null}
@@ -923,7 +912,7 @@ function CrrtCasePlayerContent({
               <p>
                 {runReview.reassessmentLabels.length > 0
                   ? runReview.reassessmentLabels.join('; ')
-                  : 'Not recorded. The recommended reassessment below is the authored answer, not something you entered.'}
+                  : 'Not recorded. The reassessment below is the worked answer, not something you entered.'}
               </p>
 
               <h6>Where this run&rsquo;s simulated time came from</h6>
@@ -1117,9 +1106,8 @@ function CrrtCasePlayerContent({
                   <ul>
                     {labEvidence.unmodeledGroups.map((group) => (
                       <li key={group.key}>
-                        <strong>{group.soluteLabels.join(', ')}</strong> — this exercise has no
-                        reviewed specification for {group.missingInputText}, so it cannot represent
-                        how these values would move during treatment.
+                        <strong>{group.soluteLabels.join(', ')}</strong> — the simulator would need{' '}
+                        {group.missingInputText} to move these values during treatment.
                       </li>
                     ))}
                   </ul>

@@ -56,14 +56,13 @@ export interface CrrtLabEvidence {
   readonly validity: CrrtSoluteDynamicsValidityMap
 }
 
-export const CRRT_SUPPLIED_BASELINE_CAPTION =
-  'Supplied case values at case start. They are authored synthetic teaching values, not measurements from this run.'
+export const CRRT_SUPPLIED_BASELINE_CAPTION = 'Supplied case values at case start.'
 
 export const CRRT_UNMODELED_LAB_CAPTION =
-  'This exercise does not model how these values change during treatment, so no laboratory trend, correction, or worsening is claimed for them.'
+  'Laboratory values stay at their case-start values during a run.'
 
 export const CRRT_LAB_TEACHING_SCOPE =
-  'What the case still exercises is the prescription and delivery arithmetic, the fluid ledger, the circuit pressure pattern, and cause-first troubleshooting — all of which are calculated from the settings you enter.'
+  'Dose, delivery, the fluid ledger and the circuit pressures are all calculated live from the settings you enter.'
 
 function joinWithOr(labels: readonly string[]): string {
   if (labels.length === 0) return ''

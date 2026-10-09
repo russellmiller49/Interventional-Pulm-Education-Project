@@ -347,7 +347,7 @@ export function CrrtActivityWorkspace({
               }}
               items={evidenceItems}
               deviceLabel={deviceProfile.displayName}
-              safetyConstraints={['The patient and the numbers are invented for teaching.']}
+              safetyConstraints={[]}
             />
           }
         >

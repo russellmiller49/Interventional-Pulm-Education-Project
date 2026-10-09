@@ -45,4 +45,4 @@ export function crrtSimulatedAlertPhrase(code: EngineAlarmCode): string {
 }
 
 export const CRRT_SIMULATED_ALERT_BOUNDARY =
-  'Alarm names follow the PrisMax operator’s manual. Their priority and the automatic pump response are simplified in this simulator.' as const
+  'Alarm names follow the PrisMax operator’s manual. On the machine a high-priority alarm stops the pumps; here they keep running so you can watch the pressures.' as const

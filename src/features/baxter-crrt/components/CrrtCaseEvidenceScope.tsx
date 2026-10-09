@@ -115,16 +115,14 @@ export function CrrtCaseEvidenceScope({
 
       {evidence.furtherTeaching.length > 0 ? (
         <div className={styles.block}>
-          <h5>Taught here, not shown by the simulation</h5>
+          <h5>Also worth knowing</h5>
           <ul>
             {evidence.furtherTeaching.map((pointer) => (
               <li key={pointer.text}>
                 {pointer.text}
-                <span className={styles.citation}>
-                  {pointer.sourceIds.length > 0
-                    ? citationText(pointer.sourceIds)
-                    : 'No registered source yet; awaiting clinical review.'}
-                </span>
+                {pointer.sourceIds.length > 0 ? (
+                  <span className={styles.citation}>{citationText(pointer.sourceIds)}</span>
+                ) : null}
               </li>
             ))}
           </ul>

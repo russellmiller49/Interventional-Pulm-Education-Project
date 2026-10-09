@@ -324,7 +324,8 @@ describe('CRRT universal educational circuit', () => {
     renderCircuit()
 
     const ledger = screen.getByRole('region', { name: 'Where every milliliter goes' })
-    expect(ledger).toHaveTextContent(/Authored worked example/i)
+    expect(ledger).toHaveTextContent(/Worked example/i)
+    expect(ledger).not.toHaveTextContent(/authored/i)
     expect(within(ledger).getByText('2,100 mL/h')).toBeInTheDocument()
     expect(within(ledger).getByText('100 mL/h')).toBeInTheDocument()
     expect(within(ledger).getByText('1,100 mL/h')).toBeInTheDocument()

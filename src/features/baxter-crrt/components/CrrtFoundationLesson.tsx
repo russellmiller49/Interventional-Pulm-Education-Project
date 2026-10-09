@@ -346,7 +346,6 @@ export function CrrtFoundationLesson({
         }
         footer={
           <p className={styles.footer}>
-            Education only · exploring a topic does not establish device competence.{' '}
             <Link href={`${baxterCrrtNavBase}/practice`}>Practice</Link> ·{' '}
             <Link href={`${baxterCrrtNavBase}/assess`}>Challenge</Link>
           </p>

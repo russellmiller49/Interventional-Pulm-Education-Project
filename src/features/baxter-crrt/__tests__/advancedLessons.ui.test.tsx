@@ -52,7 +52,7 @@ it('completes the actual citrate pathway after selections and reviewed applicati
   expect(
     screen.queryByText(/Obtain correctly identified systemic information/),
   ).not.toBeInTheDocument()
-  fireEvent.click(screen.getByRole('radio', { name: /Patient calcium is adequate/ }))
+  fireEvent.click(screen.getByRole('radio', { name: /the patient’s calcium is adequate/ }))
   click('Check reasoning')
   expect(screen.getByRole('status')).toHaveTextContent('Your choice is not the accepted answer')
   expect(readProgress().learnTaskHistory).toBeUndefined()
@@ -63,10 +63,10 @@ it('completes the actual citrate pathway after selections and reviewed applicati
   ).getAllByRole('button'))
     fireEvent.click(b)
   click('Review observations and continue')
-  answer(/Conclude that circuit anticoagulation is insufficient/)
-  answer(/Net alkali excess/)
+  answer(/Calcium lost in the effluent/)
+  answer(/Citrate load exceeds effluent removal/)
   expect(screen.queryByText('End of this lesson')).not.toBeInTheDocument()
-  answer(/Assess patient and circuit/)
+  answer(/Assess the patient and circuit, verify delivery/)
   expect(screen.getByText('End of this lesson')).toBeInTheDocument()
   expect(readProgress().learnTaskHistory).toBeUndefined()
   expect(readCrrtSelfPacedProgress().visitedLessonIds).toContain('crrt-anticoagulation')
@@ -91,35 +91,35 @@ it.each(['correct', 'defer', 'unsafe-flow'] as const)(
     )
     const view = render(<BaxterCrrtLearn initialLessonId="crrt-pressure-profile-integration" />)
     expect(view.container.innerHTML).not.toMatch(
-      /return-obstruction|High return pressure versus return disconnection|restriction is verified|reposition-access/,
+      /return-obstruction|High return pressure versus return disconnection|Inspection finds a restriction|reposition-access/,
     )
     click('Review patient and treatment')
     click('Record the first 30 minutes')
     expect(view.container.innerHTML).not.toMatch(
-      /return-obstruction|restriction is verified|What produces it|Inspect the corresponding return/,
+      /return-obstruction|Inspection finds a restriction|What produces it|Inspect the corresponding return/,
     )
     click('Review observations and continue')
     answer(
       plan === 'defer'
-        ? /The return region needs inspection/
-        : /Increased return-side resistance is plausible/,
+        ? /On the return side; line, catheter or position/
+        : /After the filter; something on the return side/,
     )
-    answer(/Assess patient safety and inspect return tubing/)
+    answer(/The patient, then the return line, clamp and catheter/)
     click('Record the selected circuit inspection')
     expect(
-      screen.getByText(/Authored inspection: a return-region restriction is verified/),
+      screen.getByText(/Inspection finds a restriction on the return side/),
     ).toBeInTheDocument()
     expect(screen.getByTestId('integration-state')).toHaveTextContent('Delivery: running')
     click('Pause modeled delivery')
     click('Record 10 minutes paused')
     click('Review observations and continue')
-    answer(/Address the verified mechanical contributor/)
+    answer(/Clear the restriction first, then revisit anticoagulation/)
     answer(
       plan === 'defer'
-        ? /Keep delivery paused and escalate/
+        ? /Stay paused and call the nephrology team/
         : plan === 'correct'
-          ? /Apply the existing verified regional correction/
-          : /Increase blood flow through the unresolved restriction/,
+          ? /Clear the restriction, restart, then confirm delivery/
+          : /Restart at a lower blood flow/,
     )
     click(plan === 'defer' ? 'Explore paused escalation path' : 'Explore correction path')
     if (plan !== 'defer') {
@@ -148,9 +148,9 @@ it.each(['correct', 'defer', 'unsafe-flow'] as const)(
     expect(screen.getByRole('status')).not.toHaveTextContent('stopped hour')
     click('Review feedback and continue')
     if (plan !== 'defer') click('Record reassessment of this run')
-    answer(/Report regional findings, actions/)
+    answer(/Report findings, actions, pump state/)
     expect(screen.queryByLabelText('Current run and recorded observations')).not.toBeInTheDocument()
-    answer(/Retain the reported effluent total/)
+    answer(/Keep the effluent total and request/)
     expect(screen.getByText('End of this lesson')).toBeInTheDocument()
     expect(readProgress().learnTaskHistory).toBeUndefined()
     expect(readCrrtSelfPacedProgress().visitedLessonIds).toContain(
@@ -171,7 +171,7 @@ it('resets the whole capstone on history navigation and rejects stale callbacks 
   click('Review patient and treatment')
   click('Record the first 30 minutes')
   click('Review observations and continue')
-  answer(/An isolated access-side limitation/)
+  answer(/Before the pump; the access lumen/)
   fireEvent.change(screen.getByRole('combobox', { name: 'CRRT lesson' }), {
     target: { value: 'crrt-anticoagulation' },
   })

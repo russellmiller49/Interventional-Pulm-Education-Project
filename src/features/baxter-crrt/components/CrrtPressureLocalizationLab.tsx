@@ -185,16 +185,16 @@ export function CrrtPressureLocalizationLab({
       <div className={styles.reviewBoundary} role="note" aria-label="Educational boundary">
         <strong>Known fault → predict and explain the pressure response</strong>
         <p>
-          The values are simplified for education. They are not a patient model, device operating
-          range, clinical target, or alarm limit.
+          You are told where the fault is. Predict which pressures move and in which direction, then
+          check.
         </p>
       </div>
 
       <div className={styles.sourceNote} aria-label="Lab scope" role="note">
         <strong>Scope of this lab</strong>
         <small>
-          The exercise uses manufacturer-referenced pressure relationships to teach direction and
-          localization. It does not establish a clinical normal or validate a disconnection pattern.
+          The pressure relationships are the ones in the PrisMax operator&rsquo;s manual. Read
+          direction and location here; the alarm limits are in the lesson beside it.
         </small>
       </div>
 
@@ -202,9 +202,7 @@ export function CrrtPressureLocalizationLab({
         {lockedPlacement
           ? 'For the known return-line obstruction, predict each pressure change, then reveal the pattern.'
           : 'Choose an obstruction site, predict how each pressure will change, then reveal the pressure pattern.'}{' '}
-        Disconnection is unavailable because a supported disconnection pattern is not included in
-        this exercise. Alarm priority, automatic device response, and troubleshooting steps are
-        outside this lab.
+        Disconnection is taught in the return-pressure case.
       </p>
 
       {!lockedPlacement ? (
@@ -475,9 +473,8 @@ export function CrrtPressureLocalizationLab({
             Review pressure comparison and continue
           </button>
           <p className={styles.resultBoundary}>
-            This trace demonstrates pressure direction only. It does not provide a clinical normal,
-            alarm limit, automatic device response, troubleshooting sequence, or patient-specific
-            conclusion.
+            Direction locates the fault: the pressure upstream of a resistance rises and the
+            pressure downstream of it falls.
           </p>
         </section>
       ) : null}

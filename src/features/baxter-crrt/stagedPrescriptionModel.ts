@@ -114,7 +114,7 @@ export const crrtPrescriptionStages: readonly CrrtPrescriptionStage[] = Object.f
     title: 'What does this construction predict?',
     question: 'What follows from these entries — and what still does not follow from them?',
     summary:
-      'Everything here is read back from the same circuit and the same source-pinned expressions used everywhere else in the module. A prediction about this construction is not a recommendation for a patient.',
+      'Each result is calculated from your entries with the same expressions the rest of the module uses.',
   }),
 ])
 
@@ -416,8 +416,7 @@ export const crrtConstructionGroups: readonly CrrtConstructionGroup[] = Object.f
     id: 'how-the-circuit-is-protected' as const,
     ordinal: 5,
     title: 'How the circuit is protected',
-    causalNote:
-      'Named as a concept only. This module carries no medication quantity, and the circuit-protection decision belongs to the authorised local protocol and the responsible clinical team.',
+    causalNote: `Regional citrate is the first choice when nothing contraindicates it. It is followed by two calcium values: post-filter ${N('postfilter-ica')} for the circuit and systemic ${N('systemic-ica')} for the patient.`,
     fieldIds: Object.freeze(['anticoagulationConcept'] as const),
   }),
   Object.freeze({
