@@ -395,6 +395,7 @@
         "element": "teaching block darkness-not-a-direction, body"
       },
       "learnerWording": "One inspection lecture uses darkness as a cue toward the open lumen and stresses smooth progress through the upper airway.",
+      "supersededBy": "Rewrite, section 8, 2026-10-09: Losing and regaining the view was re-authored and the block `darkness-not-a-direction` is removed, with its report of the lecture (brief 8 cuts the narration of lectures). The teaching point is kept in new words: the practice case `mc-dark-field` and the common-errors card say that darkness is not a direction and that you withdraw to a view you know. The quoted wording no longer appears.",
       "intendedTeachingPoint": "Darkness alone is not a direction. The scope advances gently only along a path identified from visible anatomy, and stops for a lost path, resistance, bleeding or a change in the patient.",
       "sourceCheck": {
         "checkedOn": "2026-09-14",
@@ -547,7 +548,7 @@
         "date": null,
         "reviewedVersion": null
       },
-      "supersededBy": "Rewrite pilot, 2026-10-08: the bleeding section was re-authored (new prediction, case and check) and this wording no longer exists there. The capstone C06 and view-loss surfaces listed are unchanged and still carry the claim, unreviewed."
+      "supersededBy": "Rewrite pilot, 2026-10-08: the bleeding section was re-authored (new prediction, case and check) and this wording no longer exists there. The capstone C06 surface listed is unchanged and still carries the claim, unreviewed. The view-loss block `scope-holding-a-bleed` was removed when that section was re-authored on 2026-10-09; its first-move card now says that a scope wedged on a bleeding segment stays where it is."
     },
     {
       "id": "BF-01-C09",

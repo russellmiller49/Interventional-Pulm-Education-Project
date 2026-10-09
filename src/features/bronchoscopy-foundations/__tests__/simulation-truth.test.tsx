@@ -372,7 +372,9 @@ describe('a met goal says what kind of claim it is (A4, A5)', () => {
     // not a reading of the image, and the label may not imply one.
     expect(entry).not.toMatch(/without a clear view/i)
     expect(entry).toMatch(/while the model recorded a lost view/i)
-    expect(labels(act(viewLoss).observe!.goals)).not.toMatch(/usable view/i)
+    const lens = viewLoss.moreActs!.lens
+    if (lens.kind !== 'scope-lab') throw new Error('the lens task is a scope task')
+    expect(labels(lens.goals)).not.toMatch(/usable view/i)
     expect(labels(act(branchEntry).observe!.goals)).not.toMatch(/no change in depth/i)
   })
 

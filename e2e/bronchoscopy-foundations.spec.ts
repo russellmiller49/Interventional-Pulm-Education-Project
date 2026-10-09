@@ -76,7 +76,12 @@ async function walkToStep(page: Page, id: BronchSectionId, stepId: string) {
 async function reachAct(page: Page, id: BronchSectionId) {
   const lesson = await openSection(page, id)
   for (const step of lesson.steps) {
-    if (step.course?.kind === 'practice') break
+    // The section's own activity. A further activity before it (`CourseChunk.act`) is left.
+    if (step.course?.kind === 'practice' && !step.course.act) break
+    if (step.course?.kind === 'practice') {
+      await skip(page).click()
+      continue
+    }
     if (step.interaction.kind === 'prediction') {
       await page
         .locator(
@@ -828,8 +833,8 @@ for (const id of ['pre-use-check', 'deterioration', 'honest-report'] as const) {
 test('missing teaching media is explicitly identified', async ({ page }) => {
   await page.route('**/airway-quiz/quiz-frames.json', (route) => route.abort())
   await page.route('**/*quiz*frames*.json', (route) => route.abort())
-  // Losing the view still opens on its tour; the rewritten lungs open on their hook.
-  await openSection(page, 'view-loss')
+  // A rewritten section opens on its hook; the left lung's stills are on its third screen.
+  await walkToStep(page, 'left-side', 'left-side-flow-v1-main-and-upper')
   await expect(page.locator('[data-media-state="failed"]').first()).toBeVisible()
   expect((await record(page)).reviewedSectionIds).toEqual([])
 })
@@ -1032,7 +1037,9 @@ for (const viewport of [
       const limit = page.locator('[data-goal-now]')
       await expect(status).toHaveText('Recorded: every step this card asks for.')
       await expect(heading).toHaveText('On the record for this attempt')
-      await expect(limit).toContainText('does not judge the bronchoscope image')
+      // A rewritten section's card says where the tip is and nothing about what it does not judge.
+      await expect(limit).toContainText('Where the tip is now')
+      await expect(limit).not.toContainText('usable')
       // Keep going past the target, the way the walkthrough did.
       for (let i = 0; i < 12; i++) await control(page, 'advance').press('Enter')
       // The events happened, so the ticks stay; the headline still reports only the record.
@@ -1049,9 +1056,8 @@ for (const viewport of [
       await expect(page.locator('[data-scope-goals-group]')).toHaveText(
         'On the record for this attempt',
       )
-      await expect(page.locator('[data-scope-goals-limit]')).toContainText(
-        'does not judge the bronchoscope image',
-      )
+      await expect(page.locator('[data-scope-goals-limit]')).toContainText('Where the tip is now')
+      await expect(page.locator('[data-scope-goals-limit]')).not.toContainText('usable')
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
       ).toBe(true)
@@ -1336,7 +1342,6 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
   // The rewritten sections (the right lung, bleeding) close on their checklist and do not print
   // the table in the lesson; the Reference keeps all of it.
   const GRAMMAR_SECTIONS = [
-    'view-loss',
     'systematic-survey',
     'poor-return',
     'protected-accessories',
@@ -1386,9 +1391,9 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
         await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[index + 1].id)
       }
     }
-    // Six sections, eight places: view-loss and poor-return show the rows twice. A rewritten
-    // section no longer prints the table in the lesson.
-    expect(occurrences).toBe(8)
+    // Five sections, six places: poor-return shows the rows twice. A rewritten section no longer
+    // prints the table in the lesson.
+    expect(occurrences).toBe(6)
     await page.goto(base + '/reference')
     const reference = page.locator('#reading-the-view table[data-grammar]')
     await expect(reference.locator('thead th')).toHaveText([
@@ -1413,7 +1418,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       page,
     }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await stepTo(page, 'view-loss', 'read', { grammar: true })
+      await stepTo(page, 'poor-return', 'read', { grammar: true })
       if (viewport.text === 200)
         await page.evaluate(() => {
           document.documentElement.style.fontSize = '200%'
@@ -1446,7 +1451,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       const rowHeaders = nodes
         .filter((node) => node.role?.value === 'rowheader')
         .map((node) => node.name?.value ?? '')
-      for (const id of bronchSection('view-loss').grammarRowIds)
+      for (const id of bronchSection('poor-return').grammarRowIds)
         expect(
           rowHeaders.some((name) =>
             name.includes(BRONCH_GRAMMAR.find((row) => row.id === id)!.see),

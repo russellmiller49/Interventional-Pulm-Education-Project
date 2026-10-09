@@ -17,6 +17,7 @@ supervisor" answers.
 | ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
 | #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
+| #369 | `claude/bf-rewrite-s08`            | Draft, stacked on #368. Section 8, losing and regaining the view, rewritten.                                      |
 | #368 | `claude/bf-rewrite-s07`            | Draft, stacked on #364. Section 7, the left lung, rewritten; `reference-frames` retired.                          |
 | #364 | `claude/bf-rewrite-s05`            | Draft, stacked on #362. Section 5, larynx, trachea and carina, rewritten; `branch-entry` retired.                 |
 | #362 | `claude/bf-rewrite-s04`            | Draft, stacked on #360. Section 4, driving the scope, rewritten.                                                  |
@@ -29,21 +30,22 @@ supervisor" answers.
 | #348 | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix is now #351; close #348 once #351 merges.                        |
 
 Nothing is merged. The stack, in merge order: #349 → #350 → #352 → #355 → #358 → #359 → #360 →
-#362 → #364 → #368. #351 is independent. The work is in the worktree
-`…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s07`. Branch the
-next section from that branch (`git switch -c claude/bf-rewrite-s08`) and stack its PR on #368.
+#362 → #364 → #368 → #369. #351 is independent. The work is in the worktree
+`…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s08`. Branch the
+next section from that branch (`git switch -c claude/bf-rewrite-s09`) and stack its PR on #369.
 
 ## Start here next session
 
 1. Read this file, then the plan's rules and the brief for the section you are writing.
-2. Next section: 8, losing and regaining the view (`view-loss`). Brief 8: the five causes of a
-   lost view, each on a still, then the four-step recovery; name the cause on five stills, then
-   recover in the simulator. The stills of red-out, smear, secretions and blood are abnormal
-   images (item 8 below) and may not exist yet: check what the repo has before you plan the
-   image questions, and say what is missing instead of inventing a picture.
-3. `view-loss` still has two scope tasks and a "lens" observe step in its flow, and it homes the
-   Reading-the-view row `clear-but-lost`. It is the first unrewritten section to open on a tour,
-   so the end-to-end "missing teaching media" case opens it; move that case when it is rewritten.
+2. Next section: 9, the systematic survey (`systematic-survey`). Brief 9: survey in the same
+   order every time, the presumed normal side first, each segment on the way in and on the way
+   out; the annotated survey video as the worked example; a full-tree survey in the simulator,
+   both lungs, each segment recorded as seen, not seen or not reachable (three statuses, down
+   from six).
+3. The brief allows two simulator changes there and no others: surveying the full tree, and the
+   three-status record. Find out first whether the survey ledger's statuses live in the section
+   or in the scope engine. If the engine has to change, stop and say so before you change it.
+   The survey video has no player in the course yet; that is new component work.
 4. Work one section per session. Get a digest of the old section from a subagent instead of
    reading it into context, then write the new file. The notes under each section below say
    what the checks will refuse.
@@ -119,9 +121,29 @@ sections no longer wait for sessions with the pilot.
    closing screen (item 6).
 5. **Sections rewritten so far:** the right lung, bleeding, and sections 1 to 5
    (`clinical-question`, `pre-use-check`, `sedation-and-monitoring`, `five-controls`,
-   `larynx-and-entry`), all 2026-10-08, and section 7 (`left-side`) on 2026-10-09. Seven remain.
-   Section 8 (`view-loss`) is next. The course lists 20 sections.
-   Notes from section 7:
+   `larynx-and-entry`), all 2026-10-08, and sections 7 and 8 (`left-side`, `view-loss`) on 2026-10-09. Six
+   remain. Section 9 (`systematic-survey`) is next. The course lists 20 sections.
+   Notes from section 8:
+   - No photograph of a red-out, a fogged lens, secretions or blood exists in the repository or
+     in Local-Data, and `MediaRef` carries only normal structures. The causes are named from
+     five written descriptions (`moreActs.causes`, a `sort`). Replace it with image questions
+     when the abnormal images are cleared.
+   - The simulator shows three view states: `red-out`, `contaminated` (a smear) and an unused
+     `unfamiliar-clear` script for disorientation. It has no state for secretions or blood, and
+     its `dark` signal is never set.
+   - The lens task is `moreActs.lens`, a second scope task, not an `observe` step. An `observe`
+     chunk can only read `act.observe`; a rewritten section uses `moreActs`.
+   - A teach screen cannot show the scope pane. Its picture is a block's `media`, a tour, or one
+     of the drawings.
+   - A rewritten section's goal card carries no "does not judge the bronchoscope image" note;
+     the tests that pinned it now check that it is absent.
+   - The end-to-end `reachAct` skips a further activity that comes before the section's own.
+     The "missing teaching media" case walks to the left lung's stills.
+   - It states 8 minutes, not the plan's 6; the activities are timed at 4 by estimate.
+   - For Russell to confirm: the wording around his four recovery steps (say it, stop, sheath
+     the tool; suction on the wall pulls mucosa onto the lens; the call-for-help line); how each
+     of the five causes looks; the prediction asks for the cause, not the action.
+     Notes from section 7:
    - `reference-frames` is retired. M06-O1 and M06-O2 are homed in the right lung; M06-O5 (CT
      tracing) is in `RETIRED_OBJECTIVE_REASONS`. Its six-row CT identify activity is gone.
    - The two-image media workspace has no section left. Its Jest tests use

@@ -55,8 +55,10 @@ export const SCOPE_RECIPES: Partial<Record<BronchSectionId, ScopeRecipe>> = {
       p.withdraw()
       p.advanceUntil(() => p.state.events.includes('reached-carina'))
     },
-    observe: (p) => {
-      p.send({ type: 'clear-lens' })
+    more: {
+      lens: (p) => {
+        p.send({ type: 'clear-lens' })
+      },
     },
   },
   'larynx-and-entry': {
