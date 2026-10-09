@@ -726,7 +726,7 @@ export function HemodynamicCaseActivity({
                 ? 'No action taken yet'
                 : requiredCompleted === definition.requiredInterventionIds.length
                   ? 'Ready to observe'
-                  : 'Continue the action sequence'}
+                  : 'More actions remain available'}
             </dd>
           </div>
           <div className="flex justify-between">
@@ -735,6 +735,28 @@ export function HemodynamicCaseActivity({
           </div>
         </dl>
         {legRaise ? <LegRaiseModelOnly record={legRaise} state={state} /> : null}
+        {/*
+          The way back to the action cards, said in place. It changes the view only: the same
+          patient, monitor, measurements and decision trace carry over, and nothing is reset.
+        */}
+        <button
+          type="button"
+          disabled={balloonActive}
+          data-return-to-actions
+          className="min-h-11 rounded-xl border px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
+          onClick={() => {
+            checkpoint('act')
+            setMessage(
+              'Back at the actions. The patient, the monitor and everything measured so far are unchanged.',
+            )
+          }}
+        >
+          Back to actions and measurements
+        </button>
+        <p className="text-xs text-muted-foreground">
+          The measurement tools below stay available while you observe. Going back keeps this
+          patient exactly as they are now.
+        </p>
         <button
           type="button"
           className="min-h-11 rounded-xl border px-4 py-2.5 text-sm font-semibold"
@@ -923,11 +945,18 @@ export function HemodynamicCaseActivity({
                 trigger={<button type="button">Evidence</button>}
               />
             </div>
-            <details>
-              <summary>Case checkpoints · open any of them</summary>
+            {/*
+              The checkpoints, in view. "Act in any order" was true only for a learner who found
+              and opened a collapsed list: after observing a response the action cards were gone
+              and this was the one way back to them (report P-03). The list is now always shown,
+              with the current checkpoint marked; opening one changes the view and nothing else —
+              the patient, the measurements and the decision trace are the same engine state.
+            */}
+            <div className={flowStyles.caseSteps} data-case-checkpoints>
+              <p id="case-checkpoints-label">Case checkpoints · open any of them, in any order</p>
               <nav aria-label="Case checkpoints">
                 {(['recognize', 'predict', 'act', 'observe', 'explain', 'transfer'] as const).map(
-                  (candidate) => (
+                  (candidate, index) => (
                     <button
                       type="button"
                       key={candidate}
@@ -935,12 +964,13 @@ export function HemodynamicCaseActivity({
                       aria-current={candidate === phase ? 'step' : undefined}
                       onClick={() => selectPhase(candidate)}
                     >
+                      <span aria-hidden="true">{index + 1}</span>
                       {objectives[candidate]}
                     </button>
                   ),
                 )}
               </nav>
-            </details>
+            </div>
           </header>
           <section className={flowStyles.caseBrief} aria-label="Patient brief">
             <h2>Patient brief</h2>
@@ -953,6 +983,14 @@ export function HemodynamicCaseActivity({
               Model time: the clock on the monitor counts simulation seconds. Responses here are
               compressed, and their timing is not a clinical time course.
             </p>
+            {!state.measurementSystem.zeroed ? (
+              <p data-zero-expectation>
+                The monitor opens with ZERO REQUIRED: this case&apos;s pressure line has not been
+                zeroed. Zeroing it is one of the things you can do here, when you choose; it is not
+                a condition for any action, and the debrief notes which pressures were read on an
+                unzeroed line.
+              </p>
+            ) : null}
           </section>
           {state.catheter.balloonInflated ? (
             <aside className={flowStyles.safety} role="status">
@@ -1045,7 +1083,8 @@ export function HemodynamicCaseActivity({
               <HemodynamicNativeWorkspace
                 state={state}
                 dispatch={dispatch}
-                interactive={phase === 'act' || phase === 'transfer'}
+                // The measurement tools stay usable while a response is observed (report P-03).
+                interactive={phase === 'act' || phase === 'observe' || phase === 'transfer'}
                 task={currentTask}
                 pressureChallengeMode={
                   definition.id === 'HD-08' || phase === 'transfer' ? 'current-state' : 'selectable'
@@ -1090,6 +1129,10 @@ export function HemodynamicCaseActivity({
  * kind of evidence, not as a reason treatment should have waited. It is HD-local data rendered
  * beside the shared debrief rather than a change to it.
  */
+/** The table's two value columns, named once: as its headers and beside each value when stacked. */
+const BEFORE_COLUMN = 'Before action'
+const CURRENT_COLUMN = 'Current'
+
 /**
  * The before-and-now table in the response step (HD-PRE-REVIEW-02).
  *
@@ -1116,24 +1159,46 @@ function BeforeAndCurrent({
         moment. Each thermodilution value is the series acquired under the conditions named; two
         series are compared as two, never averaged.
       </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Observation</th>
-            <th>Before action</th>
-            <th>Current</th>
+      {/*
+        Where three columns do not fit (a phone with text at 200 %) the stylesheet lays each row out
+        as a block, and each value then shows its column's name from `data-column`. The roles are
+        the elements' own, stated because some browsers stop reporting a table whose parts are no
+        longer displayed as one (sanity review of HD-PRE-REVIEW-03, P-03).
+      */}
+      <table role="table">
+        <thead role="rowgroup">
+          <tr role="row">
+            <th role="columnheader" scope="col">
+              Observation
+            </th>
+            <th role="columnheader" scope="col">
+              {BEFORE_COLUMN}
+            </th>
+            <th role="columnheader" scope="col">
+              {CURRENT_COLUMN}
+            </th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <th>MAP (mmHg, monitor)</th>
-            <td>{metricValue(before.arterialMean.displayedMmHg)}</td>
-            <td>{metricValue(now.arterialMean.displayedMmHg)}</td>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th role="rowheader" scope="row">
+              MAP (mmHg, monitor)
+            </th>
+            <td role="cell" data-column={BEFORE_COLUMN}>
+              {metricValue(before.arterialMean.displayedMmHg)}
+            </td>
+            <td role="cell" data-column={CURRENT_COLUMN}>
+              {metricValue(now.arterialMean.displayedMmHg)}
+            </td>
           </tr>
-          <tr>
-            <th>Accepted thermodilution CO</th>
-            <td data-before-flow>{before.flow ? flowWords(before.flow) : 'Not acquired'}</td>
-            <td data-current-flow>
+          <tr role="row">
+            <th role="rowheader" scope="row">
+              Accepted thermodilution CO
+            </th>
+            <td role="cell" data-column={BEFORE_COLUMN} data-before-flow>
+              {before.flow ? flowWords(before.flow) : 'Not acquired'}
+            </td>
+            <td role="cell" data-column={CURRENT_COLUMN} data-current-flow>
               {now.flow
                 ? flowWords(now.flow)
                 : now.earlierFlow

@@ -495,7 +495,7 @@ export const troubleshootingReferenceRows: readonly TroubleshootingReferenceRow[
   {
     id: 'balloon-failure',
     problem: 'Balloon failure or rupture',
-    waveform: 'PA waveform fails to transition to wedge despite attempted inflation.',
+    waveform: 'PA waveform fails to transition to wedge when inflation is tried.',
     causes: 'Balloon or inflation-lumen damage, leak, or disconnected inflation syringe.',
     checks:
       'Inflation volume, resistance, return volume, and manufacturer-directed balloon integrity checks.',

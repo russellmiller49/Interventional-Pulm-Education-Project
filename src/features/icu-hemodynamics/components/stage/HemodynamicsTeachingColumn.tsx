@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useEffect, useRef } from 'react'
+import { useId, useEffect, useRef, useState } from 'react'
 
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
 import { useStageTeachingScope } from '@/features/learning-module/stage/StageTeachingScope'
@@ -29,9 +29,12 @@ import { FickMethodWorkbench } from '../FickMethodWorkbench'
 import { NormalWaveformReference } from '../NormalWaveformReference'
 import { NormalWaveformValidityChallenges } from '../NormalWaveformValidityChallenges'
 import { DerivedHemodynamicsTeachingPanel } from '../PacMeasurementTeaching'
+import { TroubleshootingPanel } from '../TroubleshootingPanel'
 import { WaveformAtlasPanel } from '../WaveformAtlasPanel'
 import { WedgeValidityPanel } from '../WedgeValidityPanel'
 import type { HemodynamicSimulationState } from '../../engine/types'
+import { Link } from '@/i18n/navigation'
+
 import { IntroductoryTeaching } from './IntroductoryTeaching'
 import styles from './hemodynamics-stage.module.css'
 
@@ -166,7 +169,7 @@ export function HemodynamicsTeachingColumn({
                   aria-label={stop.title}
                 >
                   <p className={styles.kicker}>
-                    Stop {routeStopNumber(stopId)} · {stop.title}
+                    Map stop {routeStopNumber(stopId)} · {stop.title}
                   </p>
                   <p className={styles.analogy}>{stop.analogy}</p>
                   <p>{stop.precise}</p>
@@ -296,6 +299,7 @@ function DeeperReference({
               ))}
             </ol>
           </section>
+          <SignalTroubleshootingAtlas />
         </StageBlock>
       )
     case 'waveform-interpretation':
@@ -378,6 +382,13 @@ function DeeperReference({
               <WedgeValidityPanel />
             </div>
           </StageBlock>
+          <StageBlock
+            kind="after-commitment"
+            heading="Signal problems, each beside a normal tracing"
+            visibility={prebrief ? 'collapsed' : undefined}
+          >
+            <SignalTroubleshootingAtlas />
+          </StageBlock>
         </>
       )
     case 'thermodilution-series':
@@ -393,6 +404,30 @@ function DeeperReference({
               <FickMethodWorkbench />
             </div>
           </StageBlock>
+          <StageBlock kind="after-commitment" heading="Vary the technique yourself">
+            {/*
+              The thermodilution lab with adjustable volume, temperature, respiratory phase and
+              injection time lives in the Practice workspace, on that case's own engine. It is
+              linked rather than embedded: a second copy here would be a second patient running
+              beside this lesson's (report P-06).
+            */}
+            <section className={styles.teachingCard} data-teaching-block="thermodilution-lab-link">
+              <p className={styles.kicker}>Vary the technique yourself</p>
+              <p>
+                The Practice cases include a thermodilution lab where the injectate volume, its
+                temperature, the respiratory timing and the length of the injection can each be
+                changed and the curve regenerated. In a case, open{' '}
+                <strong>Cardiac-output trials</strong>.
+              </p>
+              <p>
+                <Link href={{ pathname: '/icu-hemodynamics/practice', query: { case: 'HD-01' } }}>
+                  Open the thermodilution lab in Practice case HD-01
+                </Link>{' '}
+                — this leaves the lesson; the sections you have opened stay recorded on this device,
+                and the lesson&apos;s live patient is not carried over.
+              </p>
+            </section>
+          </StageBlock>
         </>
       )
     case 'derived-hemodynamics':
@@ -406,4 +441,34 @@ function DeeperReference({
     default:
       return null
   }
+}
+
+/**
+ * The Practice troubleshooting atlas, in Learn.
+ *
+ * It shows a normal pulmonary-artery tracing beside each signal problem on one scale, with the
+ * direction of error for each number — what the pressure-system and wedge sections describe in
+ * words — and it was reachable only from inside a collapsed panel of a Practice case (report P-06).
+ * This is the same component reading the same generator, with no engine attached: here it is a
+ * reference to read, not a control, so it offers no "apply to the live monitor" action and cannot
+ * change this lesson's patient.
+ */
+function SignalTroubleshootingAtlas() {
+  // Mounted when first opened: eight generated comparisons are not built for a learner who never
+  // opens them. Once opened it stays mounted, so closing and reopening keeps the selected problem.
+  const [opened, setOpened] = useState(false)
+  return (
+    <details
+      className={styles.teachingCard}
+      data-learn-troubleshooting-atlas
+      onToggle={(event) => {
+        if (event.currentTarget.open) setOpened(true)
+      }}
+    >
+      <summary>
+        Open the signal troubleshooting atlas: each problem beside a normal tracing, on one scale
+      </summary>
+      {opened ? <TroubleshootingPanel /> : null}
+    </details>
+  )
 }
