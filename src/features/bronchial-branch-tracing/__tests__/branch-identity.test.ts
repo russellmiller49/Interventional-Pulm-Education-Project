@@ -51,20 +51,25 @@ test('daughters that repeat a name are told apart by role and the source directi
     }
 })
 
-test('the RB1 naming aid states the source assignment before marking and marks it provisional', () => {
+test('the RB1 naming aid tells the daughters apart by their letters before marking, with no review status', () => {
   const rb1 = divisionIdentities(checkpoint('right-upper-apical', 'junction-14'))!
   expect(rb1.provisionalSuffix).toBe(true)
   const note = sourceNamingNote(rb1)
+  // RB1b anterior, RB1a posterior: the textbook orientation (Kurimoto and Morita, p. 27).
   expect(note).toBe(
-    'Daughter A is labelled RB1b in this source (more anterior); Daughter B is labelled RB1a in this source (more posterior). The a/b letters follow this source’s labelling and are pending nomenclature review: they are shown so you can follow each lumen, not asked.',
+    'Daughter A is labelled RB1b in this source (more anterior); Daughter B is labelled RB1a in this source (more posterior). The a and b letters name subsegments: follow each lumen by its letter.',
   )
   expect(note).not.toMatch(/always|universal|anatomically/i)
+  expect(note).not.toMatch(/pending|provisional|review|not asked/i)
   const carina = divisionIdentities(checkpoint('central-right', 'junction-1'))!
   expect(carina.provisionalSuffix).toBe(false)
-  expect(sourceNamingNote(carina)).not.toMatch(/pending nomenclature review/)
+  expect(sourceNamingNote(carina)).not.toMatch(/a and b letters|pending|review/)
 })
 
-test('stored answer labels, answer points, frame counts and draft signatures are unchanged from the base SHA', () => {
+// The baseline is the base SHA's, except Lesson 3 example 1 (central-right.junction-1.bifurcation),
+// which the teaching-first pass moved from slice 387 to slice 372: its slices, frames, range and
+// the `continuity` signature are the new values. Everything else is unchanged.
+test('stored answer labels, answer points, frame counts and draft signatures match the recorded baseline', () => {
   const signatures: Record<string, string> = {}
   const answers: Record<string, unknown> = {}
   for (const lesson of LESSONS) {
@@ -98,4 +103,12 @@ test('stored answer labels, answer points, frame counts and draft signatures are
   }
   expect(signatures).toEqual(baseline.signatures)
   expect(answers).toEqual(baseline.answers)
+  expect(baseline.signatures.continuity).toBe('c6-local-teaching-r1.56426fa5')
+  expect(baseline.answers['central-right.junction-1.bifurcation']).toMatchObject({
+    slices: [372, 372],
+    range: [369, 411],
+  })
+  // Only that one example moved off its exported response plane.
+  for (const [id, entry] of Object.entries(baseline.answers))
+    if (id !== 'central-right.junction-1.bifurcation') expect(entry.slices).not.toContain(372)
 })

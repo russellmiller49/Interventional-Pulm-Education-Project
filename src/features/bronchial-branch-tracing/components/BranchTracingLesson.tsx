@@ -16,6 +16,7 @@ import { StepList } from '@/features/learning-module/stage/StepList'
 import { SectionHeader } from '@/features/learning-module/stage/SectionHeader'
 import { StageBlock } from '@/features/learning-module/stage/StageBlock'
 import { BASE_PATH, LESSONS, SOURCE, lessonAfter, lessonById } from '../content/lessons'
+import { TEACHING_SIMULATOR_STATEMENT } from '../content/course-guide'
 import { type CtLesson } from '../content/ct-types'
 import { traceById, targetForTrace } from '../geometry/native-ct'
 import {
@@ -369,7 +370,7 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                       : recordedCount === 1
                         ? 'You recorded one of the two routes and compared it with the CT; the other was passed without recording.'
                         : 'You moved through both routes without recording an interpretation.'
-                  } Finishing is a note for finding your place, not a result or clinical competence.${
+                  } Finishing is a note for finding your place. ${TEACHING_SIMULATOR_STATEMENT}${
                     next ? '' : ' Practice is the suggested next step; every lesson stays open.'
                   }`
                 : reopened
@@ -755,10 +756,6 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
                       ? 'Compare the marked air column with the source-derived trace at each level. State the patient-space course, then explain how the display convention changes its appearance.'
                       : lesson.interpretation}
                   </p>
-                  <p className={styles.small}>
-                    The comparison follows existing centerline geometry. It is not a
-                    physician-approved clinical answer key or an annotation of mucosal ostia.
-                  </p>
                 </StageBlock>
               ) : (
                 <StageBlock kind="pattern" heading="Keep the view straight" visibility="shown">
@@ -887,12 +884,12 @@ function LessonSession({ lesson }: { lesson: CtLesson }) {
             {SOURCE.title}
           </a>
           <span>{lesson.sourcePages}</span>
-          <span>One teaching CT · model reference not yet faculty reviewed</span>
+          <span>One teaching CT</span>
           <details className={styles.footerDetails}>
             <summary>Source details</summary>
             <span>
               Native axial CT exported with 3D Slicer 5.12.3 from the same source volume as the
-              airway model; clinical review pending.
+              airway model.
             </span>
           </details>
         </div>

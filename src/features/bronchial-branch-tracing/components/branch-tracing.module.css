@@ -2039,7 +2039,27 @@
 .namingTry {
   margin-top: 0.5rem;
 }
-/* A source limitation stated before the task, not a warning about the learner's work. */
+.verdictList {
+  list-style: none;
+  padding-left: 0 !important;
+}
+/* The result for one mark: which lumen it is in. Tone is carried by the headline text as well. */
+.verdictBand {
+  display: block;
+  margin: 0.3rem 0;
+  padding: 0.45rem 0.65rem;
+  border-left: 4px solid var(--amber);
+  border-radius: 0 6px 6px 0;
+  background: #14252c;
+  line-height: 1.5;
+}
+.verdictBand[data-verdict-tone='in'] {
+  border-left-color: var(--green);
+}
+.verdictBand[data-verdict-tone='miss'] {
+  border-left-color: #e9a39a;
+}
+/* What the learner will see on the answer slice, stated before the task. */
 .entryLimitation {
   margin: 0.4rem 0 0.6rem;
   padding: 0.5rem 0.65rem;

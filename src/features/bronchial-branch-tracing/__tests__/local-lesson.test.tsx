@@ -3,7 +3,9 @@ import { axe } from 'jest-axe'
 import { CRITICAL_CARE_PROGRESS_STORAGE_KEY } from '@/features/learning-module/activity/progress'
 import { BranchTracingLesson } from '../components/BranchTracingLesson'
 import { LESSONS } from '../content/lessons'
+import { junctionFeedbackPacket } from '../content/junction-feedback'
 import { localExercise } from '../content/local-exercises'
+import { localTeaching } from '../content/local-teaching'
 import { displayAnswerLabel } from '../engine/branch-identity'
 import { DRAFT_PREFIX } from '../engine/ct-draft'
 import { readSelfPacedRecord } from '../engine/selfPacedProgress'
@@ -238,9 +240,10 @@ it('renders pattern-specific teaching before application, keeps neutral controls
   await screen.findByRole('button', { name: 'Start marking branches' })
   ready()
   expect(screen.getByText(lesson.teaching[0])).toBeVisible()
-  expect(
-    screen.getByText('The RML parent and both daughter locations lie near axial level 307.'),
-  ).toBeVisible()
+  const exercise = localExercise(lesson.exercises![0])
+  const { finding } = localTeaching(exercise.spec, exercise.trace.checkpoints[0])
+  expect(finding).toBe('The middle-lobe bronchus and both daughters lie on or next to slice 307.')
+  expect(screen.getByText(finding)).toBeVisible()
   expect(document.querySelector('[data-preset]')).toHaveAttribute('data-preset', 'standard')
 })
 it('retains keyboard marking, an open outline with a next-lesson link, save for review and automated accessibility checks', async () => {
@@ -276,13 +279,14 @@ it('retains keyboard marking, an open outline with a next-lesson link, save for 
   )
   expect(await axe(container)).toHaveNoViolations()
 })
-// BBT-02: the comparison explains where each mark sits against the model locators, where the
-// paths diverge and what to revisit; uncertainty starts guidance; naming is shown on request.
+// BBT-02, teaching-first pass: the comparison says which lumen each mark is in, where the paths
+// diverge and what to revisit; an unresolved response is told what to scroll to; naming is shown
+// on request. Lesson 3's first example is marked on slice 372, below the carina.
 it('gives junction feedback from the learner’s own marks, navigates to revisit slices, guides an unresolved response and names on request without recording', async () => {
   render(<BranchTracingLesson requestedId="continuity" />)
   await begin('continuity')
   const rmsb = localExercise(LESSONS.find((l) => l.id === 'continuity')!.exercises![0])
-  click(/^Daughter A · RMSB · slice 387/)
+  click(/^Daughter A · RMSB · slice 372/)
   const image = screen.getByRole('group', { name: /^CT image\./ })
   // Ten cursor steps toward screen-left (patient right) from the crop centre, then place the mark.
   fireEvent.keyDown(image, { key: 'ArrowLeft', shiftKey: true })
@@ -291,9 +295,9 @@ it('gives junction feedback from the learner’s own marks, navigates to revisit
   ready()
   expect(screen.getByRole('heading', { name: '2. Daughter A · RMSB placed' })).toBeVisible()
   const placed = draft('continuity').marks[0]
-  expect(placed.slice).toBe(387)
+  expect(placed.slice).toBe(372)
   expect(placed.pixel[0]).toBeLessThan(rmsb.trace.cropCenter[0])
-  click(/^Daughter B · LMSB · slice 387/)
+  click(/^Daughter B · LMSB · slice 372/)
   click('Lumen unresolved here')
   click('Check my tracing')
   await screen.findByRole('heading', { name: 'Review the image evidence' })
@@ -303,28 +307,43 @@ it('gives junction feedback from the learner’s own marks, navigates to revisit
     'nearest-intended',
     'unresolved',
   ])
-  expect(items[0]).toHaveTextContent(
-    /Your mark is \d+\.\d mm from the RMSB model locator; the nearest other named model locator on slice 387, LMSB, is \d+\.\d mm away\./,
+  // The verdict is given: the mark is air that connects to the right main bronchus centre.
+  expect(items[0]).toHaveAttribute('data-mark-verdict', 'intended-lumen')
+  expect(within(items[0] as HTMLElement).getByRole('status')).toHaveTextContent(
+    'In RMSB. Your mark is inside the lumen of RMSB on slice 372.',
   )
-  expect(within(feedback).getByRole('heading', { name: 'Uncertain? Start here' })).toBeVisible()
+  expect(items[0]).toHaveTextContent(
+    /Your mark is \d+\.\d mm from the RMSB centre; the next nearest named airway on slice 372, \S+, is \d+\.\d mm away\./,
+  )
+  // The unresolved response gets no result band; it is told to scroll until the lumens separate.
+  expect(items[1]).not.toHaveAttribute('data-mark-verdict')
+  expect(within(items[1] as HTMLElement).queryByRole('status')).toBeNull()
   expect(
-    within(feedback).getByText(/Within this interval the evidence is the side of the midline/),
+    within(feedback).getByRole('heading', { name: 'Could not separate them? Do this' }),
   ).toBeVisible()
+  expect(
+    within(feedback).getByText(junctionFeedbackPacket('junction-1')!.moreEvidence),
+  ).toBeVisible()
+  expect(feedback.textContent).toMatch(
+    /Scroll down one slice at a time from 376: the wall appears on 375 and is thick by 372\. Mark each oval on 372\./,
+  )
+  expect(feedback.textContent).not.toMatch(/valid response|reasonable (record|response)/i)
   expect(within(feedback).getByRole('heading', { name: 'Slices to revisit' })).toBeVisible()
   click('Go to slice 392')
   expect(screen.getByRole('slider', { name: 'CT slice' })).toHaveValue('392')
   // The learner's marks are untouched by the comparison, the navigation and the naming aid.
   expect(draft('continuity').marks[0]).toEqual(placed)
-  expect(draft('continuity').marks[1]).toEqual({ slice: 387, pixel: null })
+  expect(draft('continuity').marks[1]).toEqual({ slice: 372, pixel: null })
   const attempts = Object.values(draft('continuity').history)[0] as { marks: unknown[] }[]
   expect(attempts).toHaveLength(1)
   expect(attempts[0].marks[0]).toEqual(placed)
   click('Show the names')
-  expect(within(feedback).getByRole('status')).toHaveTextContent(
+  const naming = feedback.querySelector('[data-naming-aid]') as HTMLElement
+  expect(within(naming).getByRole('status')).toHaveTextContent(
     /RMSB lies on the patient's right.*Nothing is recorded/,
   )
   click('LMSB · left main bronchus')
-  expect(within(feedback).getByRole('status')).toHaveTextContent(
+  expect(within(naming).getByRole('status')).toHaveTextContent(
     /LMSB is the daughter on the patient's left/,
   )
   expect(draft('continuity').history).toEqual({ [rmsb.id]: attempts })
@@ -338,6 +357,7 @@ it('gives junction feedback from the learner’s own marks, navigates to revisit
   click('Next example: LLL')
   recordLocal('continuity', 1)
   await screen.findByRole('heading', { name: 'Review the image evidence' })
-  expect(screen.getByText(/The model node sits at about slice 321/)).toBeVisible()
+  expect(screen.getByText(junctionFeedbackPacket('junction-6')!.divergence)).toBeVisible()
+  expect(junctionFeedbackPacket('junction-6')!.divergence).toMatch(/divides at about slice 321/)
   expect(screen.getByText('Replay CT walkthrough (optional)')).toBeVisible()
 })

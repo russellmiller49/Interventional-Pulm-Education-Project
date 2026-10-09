@@ -10,6 +10,7 @@ import {
   parseLocalSession,
 } from '../engine/local-session'
 import { draftSignature, readCtDraft, writeCtDraft } from '../engine/ct-draft'
+import { LOCAL_DRAFT_ALIASES } from '../engine/local-draft-migration'
 import { parentMap } from '../geometry/parent-map'
 import { orientationFor, STANDARD_ORIENTATION, orientationLabels } from '../geometry/orientation'
 
@@ -234,6 +235,83 @@ it('restores only compatible, structurally valid drafts and reports damaged or c
   expect(parse({ ...s, exercise: 100 })).toBeNull()
   expect(parse({ ...s, marks: [{ slice: 300, pixel: null }] })).toBeNull()
   expect(writeCtDraft(null, 'unit', signature, s)).toBe(false)
+})
+describe('drafts saved before the first bifurcation moved from slice 387 to slice 372', () => {
+  const lesson = LESSONS.find((l) => l.id === 'continuity')!
+  const current = draftSignature([
+    lesson.id,
+    'local-tracing',
+    exercises.map((e) => ({ id: e.id, trace: e.trace, answers: e.answerPoints, review: e.review })),
+  ])
+  const BEFORE = 'c6-local-teaching-r1.71168219'
+  const parse = (v: unknown) => parseLocalSession(v, exercises)
+  /** A draft as the old lesson saved it: both main bronchi marked and checked on slice 387. */
+  const oldDraft = () => {
+    const checked = reduce(answer(), { type: 'check' })
+    const on387 = (marks: typeof checked.marks) => marks.map((m) => (m ? { ...m, slice: 387 } : m))
+    return {
+      ...checked,
+      marks: on387(checked.marks),
+      history: Object.fromEntries(
+        Object.entries(checked.history).map(([id, attempts]) => [
+          id,
+          attempts.map((a) => ({ ...a, marks: on387(a.marks) })),
+        ]),
+      ),
+    }
+  }
+  beforeEach(() => window.localStorage.clear())
+
+  it('the lesson is on a new signature and its first division is marked on 372', () => {
+    expect(current).toBe('c6-local-teaching-r1.56426fa5')
+    expect(current).not.toBe(BEFORE)
+    expect(exercises[0].spec.kind).toBe('bifurcation')
+    expect(exercises[0].answerPoints.map((p) => p.slice)).toEqual([372, 372])
+    // The old signature is not carried forward as a compatible one.
+    expect(LOCAL_DRAFT_ALIASES.continuity).not.toContain(BEFORE)
+  })
+  it('an old draft is set aside whole, not loaded with marks on slice 387, and is kept for recovery', () => {
+    const storage = window.localStorage
+    const saved = oldDraft()
+    expect(saved.marks.map((m) => m?.slice)).toEqual([387, 387])
+    expect(writeCtDraft(storage, 'learn.continuity', BEFORE, saved)).toBe(true)
+    const loaded = readCtDraft(
+      storage,
+      'learn.continuity',
+      current,
+      parse,
+      LOCAL_DRAFT_ALIASES.continuity,
+    )
+    expect(loaded.value).toBeNull()
+    expect(loaded.notice).toMatch(/cannot be resumed\. A new draft starts here/)
+    // The first save of the new session archives the old draft instead of overwriting it.
+    const fresh = emptyLocalSession(exercises)
+    expect(writeCtDraft(storage, 'learn.continuity', current, fresh)).toBe(true)
+    expect(
+      JSON.parse(storage.getItem(`branch-tracing.draft.learn.continuity.recovery.${BEFORE}`)!),
+    ).toMatchObject({ signature: BEFORE, value: { marks: [{ slice: 387 }, { slice: 387 }] } })
+    expect(readCtDraft(storage, 'learn.continuity', current, parse).value).toEqual(fresh)
+  })
+  it('marks on slice 387 are refused under any signature the loader still accepts', () => {
+    const storage = window.localStorage
+    const saved = oldDraft()
+    expect(parse(saved)).toBeNull()
+    // Checked attempts on 387 alone are enough to refuse the draft.
+    expect(parse({ ...saved, marks: [null, null], phase: 'attempt' })).toBeNull()
+    for (const signature of [current, ...LOCAL_DRAFT_ALIASES.continuity]) {
+      storage.clear()
+      expect(writeCtDraft(storage, 'learn.continuity', signature, saved)).toBe(true)
+      const loaded = readCtDraft(
+        storage,
+        'learn.continuity',
+        current,
+        parse,
+        LOCAL_DRAFT_ALIASES.continuity,
+      )
+      expect([signature, loaded.value]).toEqual([signature, null])
+      expect(loaded.notice).toMatch(/cannot be resumed/)
+    }
+  })
 })
 it('keeps parent-view projection finite, independent of CT display rotation, and retains siblings', () => {
   for (const exercise of exercises) {

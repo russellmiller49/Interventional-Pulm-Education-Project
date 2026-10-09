@@ -8,7 +8,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { BranchTracingLesson } from '../components/BranchTracingLesson'
 import { courseFor, courseSentences } from '../components/DivisionPrimer'
 import { LESSONS } from '../content/lessons'
-import { localExercise } from '../content/local-exercises'
+import { LOCAL_RESPONSE_SLICE, localExercise } from '../content/local-exercises'
 import { divisionIdentities } from '../engine/branch-identity'
 import decisions from '../geometry/branch-decisions.json'
 import nativeManifest from '../../../../public/branch-tracing/native-v1/manifest.json'
@@ -96,12 +96,21 @@ describe('every generated level sentence matches the raw source offsets', () => 
         const text = courseSentences(course, lesson.id).join(' ')
         expect(text).toContain(`The model node lies nearest native slice ${node}.`)
         const identities = divisionIdentities(ex.trace.checkpoints[0])!
+        // A local example is marked on the route export's response plane unless the lesson moves
+        // it: Lesson 3's first bifurcation is marked on slice 372, and the route keeps slice 387.
+        const moved = LOCAL_RESPONSE_SLICE[ex.id]
+        if (ex.id === 'central-right.junction-1.bifurcation') {
+          expect(moved).toBe(372)
+          expect(raw.options.map((o) => o.slice)).toEqual([387, 387])
+        } else expect([ex.id, moved]).toEqual([ex.id, undefined])
         raw.options.forEach((option, i) => {
-          const offset = option.slice - node
+          const slice = ex.trace.checkpoints[0].decision!.options[i].slice
+          expect(slice).toBe(moved ?? option.slice)
+          const offset = slice - node
           const expected =
             offset === 0
-              ? `${identities.daughters[i].display}’s response slice, ${option.slice}, is the native slice nearest the model node`
-              : `${identities.daughters[i].display}’s response slice, ${option.slice}, lies ${slices(Math.abs(offset))} ${offset > 0 ? 'cranial' : 'caudal'} of the model node`
+              ? `${identities.daughters[i].display}’s response slice, ${slice}, is the native slice nearest the model node`
+              : `${identities.daughters[i].display}’s response slice, ${slice}, lies ${slices(Math.abs(offset))} ${offset > 0 ? 'cranial' : 'caudal'} of the model node`
           expect(text).toMatch(new RegExp(escape(expected)))
         })
         expect(text).not.toMatch(/on the node’s level/)

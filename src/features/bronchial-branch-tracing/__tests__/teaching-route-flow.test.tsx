@@ -27,7 +27,16 @@ import { BASE_PATH, LESSONS, ORIENTATION_CONTRACT } from '../content/lessons'
 import { localExercise } from '../content/local-exercises'
 import { ASSESS_TRACES, PRACTICE_TRACES, SEGMENT_PRACTICE_TRACES } from '../content/practice'
 import { displayAnswerLabel, divisionIdentities } from '../engine/branch-identity'
-import { DRAFT_PREFIX, draftSignature } from '../engine/ct-draft'
+import {
+  DRAFT_PREFIX,
+  draftSignature,
+  freshRouteView,
+  readCtDraft,
+  writeCtDraft,
+} from '../engine/ct-draft'
+import { emptyCtSession, emptyTraceWork } from '../engine/ct-session'
+import { ROUTE_DRAFT_ALIASES } from '../engine/local-draft-migration'
+import { parseRouteDraft } from '../engine/route-draft'
 import { count, displayName, displayOptionLabel } from '../engine/display-text'
 import {
   SELF_PACED_STORAGE_KEY,
@@ -306,7 +315,7 @@ describe('local lessons teach before the try', () => {
     expect(document.querySelector('[data-naming-key]')).toHaveTextContent(
       /B denotes a bronchus and S its pulmonary segment/,
     )
-    expect(screen.getByText(/Optional: full-route Practice and source limits/)).toBeVisible()
+    expect(screen.getByText('Optional: full-route Practice')).toBeVisible()
     expect(
       screen.getByRole('link', { name: 'Open full-route Practice (optional)' }),
     ).toHaveAttribute('href', `${BASE_PATH}/practice`)
@@ -490,7 +499,7 @@ describe('consistent labels and copy-editing without touching stored data', () =
 })
 
 describe('protected state is unchanged', () => {
-  it('keeps every Learn, Practice and More routes draft signature at its base value', () => {
+  it('keeps every Learn, Practice and More routes draft signature at its recorded value: two moved on purpose, nineteen did not', () => {
     const now: Record<string, string> = {}
     for (const lesson of LESSONS) {
       if (lesson.exercises) {
@@ -521,6 +530,63 @@ describe('protected state is unchanged', () => {
     for (const [mode, ids] of sets)
       now[`${mode}.${ids.join('.')}`] = draftSignature([mode, ids.map(traceById)])
     expect(now).toEqual(signatureBaseline.signatures)
+    // The teaching-first pass moved exactly these two; see the fixture note.
+    expect(now['learn.continuity']).toBe('c6-local-teaching-r1.56426fa5')
+    expect(now['learn.variants-limits']).toBe('c6-local-teaching-r1.dcc069af')
+    expect(Object.keys(now)).toHaveLength(21)
+    // Lesson 3's first example is marked on slice 372; the routes keep the exported plane, 387.
+    const firstBifurcation = localExercise(
+      LESSONS.find((l) => l.id === 'continuity')!.exercises![0],
+    )
+    expect(firstBifurcation.answerPoints.map((p) => p.slice)).toEqual([372, 372])
+    expect(
+      traceById('central-right')
+        .checkpoints.find((p) => p.id === 'junction-1')!
+        .decision!.options.map((o) => o.slice),
+    ).toEqual([387, 387])
+  })
+  it('still resumes a Lesson 9 draft saved under the signature from before the copy pass', () => {
+    const lesson = LESSONS.find((l) => l.id === 'variants-limits')!
+    const prediction = traceById(lesson.prediction)
+    const transfer = traceById(lesson.transfer)
+    const example = traceById(lesson.example)
+    const signature = draftSignature([lesson, prediction, transfer, example])
+    const BEFORE = 'c6-local-teaching-r1.64b88cd0'
+    expect(signature).not.toBe(BEFORE)
+    expect(ROUTE_DRAFT_ALIASES['variants-limits']).toContain(BEFORE)
+    const point = prediction.checkpoints[0]
+    const mark = { slice: point.slice, pixel: [200, 210] as [number, number] }
+    const branch = point.decision!.options[0].sourceEdgeId
+    const work = emptyTraceWork(prediction)
+    const draft = {
+      session: {
+        ...emptyCtSession(prediction),
+        step: 1,
+        marks: [mark, ...work.marks.slice(1)],
+        branches: [branch, ...work.branches.slice(1)],
+        recorded: [true, ...work.recorded.slice(1)],
+        junctionHistory: { [`${prediction.id}.${point.id}`]: [{ mark, branch }] },
+      },
+      views: { [prediction.id]: { ...freshRouteView(prediction), showScope: false } },
+    }
+    const parse = (v: unknown) => parseRouteDraft(v, prediction, transfer, example)
+    expect(parse(draft)).not.toBeNull()
+    expect(writeCtDraft(localStorage, 'learn.variants-limits', BEFORE, draft)).toBe(true)
+    const resumed = readCtDraft(
+      localStorage,
+      'learn.variants-limits',
+      signature,
+      parse,
+      ROUTE_DRAFT_ALIASES['variants-limits'],
+    )
+    expect(resumed.notice).toMatch(/Draft restored on this device/)
+    // The marks come back on the slice they were made on, and a hidden parent airway view
+    // stays hidden: the new default does not override a saved choice.
+    expect(resumed.value!.session.marks[0]).toEqual(mark)
+    expect(resumed.value!.session.recorded[0]).toBe(true)
+    expect(resumed.value!.views[prediction.id].showScope).toBe(false)
+    // Without the alias the same draft would be set aside.
+    expect(readCtDraft(localStorage, 'learn.variants-limits', signature, parse).value).toBeNull()
   })
   it('adds a primer that quotes the packet unchanged and never rewrites a stored answer label', () => {
     for (const lesson of LESSONS)

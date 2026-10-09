@@ -73,8 +73,7 @@ export function CourseReference({
           <p className={styles.small}>
             Each description is taken from its lesson. The four names are the Chapter 1 concepts
             recorded from Kurimoto &amp; Morita; the book’s figures are not reproduced, and one
-            route can combine several patterns. Page pointers are the lessons’ own and are pending
-            faculty review:{' '}
+            route can combine several patterns. Pages:{' '}
             {PATTERNS.map((p) => `Lesson ${lessonNumber(p.lessonId)}, ${patternSource(p)}`).join(
               '; ',
             )}

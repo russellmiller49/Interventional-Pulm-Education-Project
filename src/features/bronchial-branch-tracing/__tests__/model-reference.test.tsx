@@ -143,11 +143,12 @@ test('the continuation comparison explains the difference by level and direction
     expect(container.textContent).toMatch(/the name does not tell them apart/)
   expect(container.textContent!.match(VERDICT)?.[0] ?? null).toBeNull()
 
-  // An unresolved continuation stays unresolved and is never turned into a branch.
+  // An unresolved continuation is not turned into a branch; the learner is told what to do next.
   const unresolved = render(<CtContinuationFeedback checkpoint={checkpoint} choice="unresolved" />)
   expect(unresolved.container.textContent).toMatch(
-    /continuation unresolved\. That response stays unresolved; it is not turned into a branch\./,
+    /Your recorded continuation: continuation unresolved\. Follow the reference route below on the CT, then choose a daughter\./,
   )
+  expect(unresolved.container.textContent).not.toMatch(/Your recorded continuation: [AB] · /)
   // Moving past without choosing is not presented as a recorded choice either.
   const none = render(<CtContinuationFeedback checkpoint={checkpoint} choice={null} />)
   expect(none.container.textContent).toMatch(/no continuation was recorded at this division\./)

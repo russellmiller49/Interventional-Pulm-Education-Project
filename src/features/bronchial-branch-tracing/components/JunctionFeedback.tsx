@@ -2,29 +2,117 @@
 
 import { useState } from 'react'
 import type { CtMark, LocalCtExercise } from '../content/ct-types'
+import type { JunctionFeedbackPacket } from '../content/junction-feedback'
 import {
-  JUNCTION_FEEDBACK_OBSERVATION,
-  JUNCTION_FEEDBACK_SCOPE,
-  type JunctionFeedbackPacket,
-} from '../content/junction-feedback'
-import { compareMarks, type MarkComparison } from '../engine/junction-feedback'
-import { displayAnswerLabel } from '../engine/branch-identity'
+  compareMarks,
+  FILL_CAP_MM,
+  type MarkComparison,
+  type ModelLocator,
+  type PlaneMove,
+} from '../engine/junction-feedback'
+import { displayAnswerLabel, divisionIdentities } from '../engine/branch-identity'
 import styles from './branch-tracing.module.css'
 
 const mm = (value: number) => `${value.toFixed(1)} mm`
 
-/** One sentence per response: position against the model locators on that slice, never a verdict. */
+/** "about 6 mm posterior and toward the patient's right", in patient directions. */
+export function moveSentence(move: PlaneMove) {
+  const parts: string[] = []
+  if (Math.abs(move.posteriorMm) >= 0.4 * move.mm)
+    parts.push(move.posteriorMm > 0 ? 'posterior' : 'anterior')
+  if (Math.abs(move.leftMm) >= 0.4 * move.mm)
+    parts.push(move.leftMm > 0 ? 'toward the patient’s left' : 'toward the patient’s right')
+  const distance = move.mm < 1.5 ? '1 to 2 mm' : `about ${Math.round(move.mm)} mm`
+  return `${distance} ${parts.join(' and ')}`.trim()
+}
+
+/** How a model locator is named to the learner: by code, or by role where codes repeat. */
+export function locatorName(exercise: LocalCtExercise, locator: ModelLocator) {
+  const checkpoint = exercise.trace.checkpoints[0]
+  const identities = divisionIdentities(checkpoint)
+  if (!identities?.anyRepeatedName) return locator.airway.code
+  if (locator.role === 'parent') return `the parent (${locator.airway.code})`
+  const daughter = identities.daughters.find((d) => d.sourceEdgeId === locator.edgeId)
+  if (daughter)
+    return `${daughter.role} (${daughter.code}${daughter.repeatedName ? `, ${daughter.direction.toLowerCase()}` : ''})`
+  return locator.airway.code
+}
+
+export interface VerdictBand {
+  tone: 'in' | 'near' | 'miss'
+  headline: string
+  detail: string
+}
+
+/**
+ * The result band for one mark: what the mark is in, and for a miss, which way to move. Null when
+ * the response was recorded as unresolved or the plane has no air mask.
+ */
+export function verdictBand(
+  exercise: LocalCtExercise,
+  comparison: MarkComparison,
+): VerdictBand | null {
+  const result = comparison.verdict
+  const intended = comparison.intended
+  if (!result || !intended) return null
+  const target = locatorName(exercise, intended.locator)
+  const move = `Move ${moveSentence(result.toIntended)} to reach ${target}.`
+  // Only this division's own airways are named: the parent and the other daughter.
+  const others = result.reached.filter(
+    (r) => r.locator.role === 'parent' || r.locator.role === 'daughter',
+  )
+  if (result.verdict === 'intended-lumen')
+    return {
+      tone: 'in',
+      headline: `In ${target}.`,
+      detail: others.length
+        ? `Your mark is inside ${target}. On slice ${comparison.slice} it is still one air column with ${locatorName(exercise, others[0].locator)}, and your mark is in the part that is ${target}.`
+        : `Your mark is inside the lumen of ${target} on slice ${comparison.slice}.`,
+    }
+  const nearest = result.nearest ? locatorName(exercise, result.nearest) : ''
+  if (result.verdict === 'near-fork')
+    return {
+      tone: 'near',
+      headline:
+        result.nearest?.role === 'parent'
+          ? `Still in ${nearest}, before the fork.`
+          : `At the fork, on the side of ${nearest}.`,
+      detail: `On slice ${comparison.slice} ${target} and ${nearest} are one air column, and your mark is nearer ${nearest}. ${move}`,
+    }
+  if (result.verdict === 'other-airway')
+    return {
+      tone: 'miss',
+      headline: `In ${nearest}, not ${target}.`,
+      detail: `Your mark is inside the lumen of ${nearest} on slice ${comparison.slice}. ${move}`,
+    }
+  return result.markInAir
+    ? {
+        tone: 'miss',
+        headline: 'In air that does not join a named airway.',
+        detail: `The dark spot you marked does not connect to ${target} within ${FILL_CAP_MM} mm on slice ${comparison.slice}: lung, or a small branch off this route. ${move}`,
+      }
+    : {
+        tone: 'miss',
+        headline: 'Not in a lumen.',
+        detail: `Your mark is on wall, vessel or lung, not on air. ${move}`,
+      }
+}
+
+/** One sentence per response: distance to the model centres on that slice. */
 export function positionSentence(comparison: MarkComparison) {
   const { intended, nearestOther, status } = comparison
   if (status === 'unresolved' || !intended)
-    return `You recorded ${comparison.label} as unresolved on slice ${comparison.slice}. That is a valid response; see "Uncertain? Start here" below.`
+    return `You recorded ${comparison.label} as unresolved on slice ${comparison.slice}. See "Could not separate them? Do this" below, then mark it.`
   const code = intended.locator.airway.code
   if (!nearestOther)
-    return `Your mark is ${mm(intended.mm)} from the ${code} model locator; no other named model airway crosses slice ${comparison.slice}.`
-  const other = nearestOther.locator.airway.code
+    return `Your mark is ${mm(intended.mm)} from the ${code} centre; no other named airway crosses slice ${comparison.slice}.`
+  const other =
+    nearestOther.locator.airway.code === code
+      ? `other ${code} branch`
+      : nearestOther.locator.airway.code
   if (status === 'nearest-other')
-    return `Your mark is ${mm(nearestOther.mm)} from the ${other} model locator and ${mm(intended.mm)} from the ${code} locator: of the named model locators crossing slice ${comparison.slice}, ${other} is the closer one.`
-  return `Your mark is ${mm(intended.mm)} from the ${code} model locator; the nearest other named model locator on slice ${comparison.slice}, ${other}, is ${mm(nearestOther.mm)} away.`
+    return `Your mark is ${mm(nearestOther.mm)} from the ${other} centre and ${mm(intended.mm)} from the ${code} centre.`
+  return `Your mark is ${mm(intended.mm)} from the ${code} centre; the next nearest named airway on slice ${comparison.slice}, ${other}, is ${mm(nearestOther.mm)} away.`
 }
 
 /**
@@ -42,9 +130,18 @@ export function spanSentence(comparison: MarkComparison) {
 export function siblingSentence(comparison: MarkComparison) {
   const { intended, nearestOther, nearestSibling } = comparison
   if (!intended || !nearestSibling) return null
-  if (nearestOther && nearestOther.locator.airway.code === nearestSibling.locator.airway.code)
-    return null
+  if (nearestOther && nearestOther.locator.edgeId === nearestSibling.locator.edgeId) return null
   return `The other daughter of this division, ${nearestSibling.locator.airway.code}, is ${mm(nearestSibling.mm)} away on this slice.`
+}
+
+/** The model locator a missed mark ended up in or nearer, for the written guidance. */
+function missedInto(comparison: MarkComparison): ModelLocator | null {
+  const result = comparison.verdict
+  if (result) {
+    if (result.verdict === 'intended-lumen') return null
+    if (result.nearest) return result.nearest
+  }
+  return comparison.status === 'nearest-other' ? (comparison.nearestOther?.locator ?? null) : null
 }
 
 export function JunctionFeedback({
@@ -60,45 +157,45 @@ export function JunctionFeedback({
 }) {
   const comparisons = compareMarks(exercise, marks)
   if (!comparisons.length) return null
-  const decision = exercise.trace.checkpoints[0].decision!
-  const parentCode = decision.parent.airway.code
+  const checkpoint = exercise.trace.checkpoints[0]
   const anchorSlice = exercise.trace.anchor.slice
   const unresolved = comparisons.filter((c) => c.status === 'unresolved')
   return (
     <div className={styles.junctionFeedback} data-junction-feedback>
-      <h3>Where your marks sit</h3>
-      <ul>
+      <h3>Where your marks are</h3>
+      <ul className={styles.verdictList}>
         {comparisons.map((c) => {
-          const span = spanSentence(c)
-          const sibling = siblingSentence(c)
+          const band = verdictBand(exercise, c)
+          const sibling = band ? null : siblingSentence(c)
           return (
-            <li key={c.slot} data-mark-status={c.status}>
+            <li key={c.slot} data-mark-status={c.status} data-mark-verdict={c.verdict?.verdict}>
               <strong>
-                {displayAnswerLabel(exercise.trace.checkpoints[0], c.slot, c.label)} · slice{' '}
-                {c.slice}.
+                {displayAnswerLabel(checkpoint, c.slot, c.label)} · slice {c.slice}.
               </strong>{' '}
-              {positionSentence(c)}
-              {sibling ? ` ${sibling}` : ''}
-              {span ? ` ${span}` : ''}
+              {band && (
+                <span className={styles.verdictBand} data-verdict-tone={band.tone} role="status">
+                  <strong>{band.headline}</strong> {band.detail}
+                </span>
+              )}{' '}
+              <span className={band ? styles.small : undefined}>
+                {positionSentence(c)}
+                {sibling ? ` ${sibling}` : ''}
+              </span>
             </li>
           )
         })}
       </ul>
       <p className={styles.small}>
-        Distances are measured on the slice between your mark and the model centreline samples. They
-        show where a mark sits, not why it was placed there. This comparison cannot establish which
-        lumen contains a mark: follow continuity from {parentCode} through the intervening slices. A
-        mark inside the intended lumen can lie a few millimetres from its locator; a mark nearer
-        another locator is a reason to re-trace, not a verdict, and by itself it cannot show that a
-        vessel or another structure was taken for this airway. Your marks stay exactly where you
-        placed them; the gold crosshairs are model references, not corrections.
+        The result reads the CT’s own air: your mark is in a lumen when the air under it connects to
+        the centre of that airway. Anywhere inside the lumen counts; you do not need to hit the gold
+        crosshair. Your marks stay where you placed them.
       </p>
       {unresolved.length > 0 && (
         <>
-          <h3>Uncertain? Start here</h3>
+          <h3>Could not separate them? Do this</h3>
           <p>
             {packet?.moreEvidence ??
-              `Return to ${exercise.trace.anchor.airway.code} on slice ${anchorSlice} and step toward the answer slice one slice at a time, keeping the air column and its wall in view. The general explanation below describes the method for this division.`}
+              `Go back to ${exercise.trace.anchor.airway.code} on slice ${anchorSlice} and step toward the answer slice one slice at a time. Keep the dark lumen and its wall in view; when a wall appears inside it, you have two lumens. Then mark each one.`}
           </p>
           <p className={styles.revisitControls}>
             <button onClick={() => onGoToSlice(anchorSlice)}>
@@ -106,44 +203,31 @@ export function JunctionFeedback({
             </button>
             {[...new Set(unresolved.map((c) => c.slice))].map((slice) => (
               <button key={slice} onClick={() => onGoToSlice(slice)}>
-                Go to response slice {slice}
+                Go to answer slice {slice}
               </button>
             ))}
           </p>
           <p>
-            Reference trace: the gold crosshairs mark the model locators on the demonstration
-            slices. Replay the walkthrough below, then redo the marks or continue. An unresolved
-            response stays unresolved: it is neither counted against you nor turned into an
-            identification.
+            Then use Redo branch marks below and mark the lumen. The gold crosshairs on the CT show
+            where each one is.
           </p>
         </>
       )}
-      {packet ? (
+      {packet && (
         <>
           <h3>Where the paths diverge</h3>
           <p>{packet.divergence}</p>
           <h3>Which wall or lumen decides it</h3>
           <p>{packet.continuity}</p>
           {comparisons.map((c) => {
-            if (c.status !== 'nearest-other' || !c.nearestOther) return null
-            const code = decision.options[c.slot].airway.code
-            const entry = packet.whenNearer[code]
-            if (!entry) return null
-            const nearest = c.nearestOther.locator.airway.code
-            if (entry.appliesTo === 'any' || entry.appliesTo.includes(nearest))
-              return (
-                <p key={c.slot} data-when-nearer={code}>
-                  {entry.text}
-                </p>
-              )
+            const into = missedInto(c)
+            const entry = packet.whenNearer[c.slot]
+            if (!into || !entry) return null
+            if (entry.appliesTo !== 'any' && !entry.appliesTo.some((role) => role === into.role))
+              return null
             return (
-              <p key={c.slot} data-when-nearer-scope={code}>
-                Your {code} mark sits nearer the {nearest} model locator. The written guidance for
-                this division compares {code} with {entry.appliesTo.join(' and ')}; {nearest} is a
-                different model airway crossing this slice, so that comparison does not apply to
-                your mark. Return to {parentCode} on slice {anchorSlice} and follow the lumen into
-                this division one slice at a time; the comparison above cannot say which lumen your
-                mark is in.
+              <p key={c.slot} data-when-nearer={c.slot}>
+                {entry.text}
               </p>
             )
           })}
@@ -162,88 +246,21 @@ export function JunctionFeedback({
             ))}
           </ul>
           <details>
-            <summary>Known relationships and open review items</summary>
-            <h4>From the source model</h4>
+            <summary>Levels and distances at this division</summary>
             <ul>
               {packet.known.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
-            <h4>Pending faculty review</h4>
-            <ul>
-              {packet.uncertain.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <p className={styles.small}>
-              Image readings: {JUNCTION_FEEDBACK_OBSERVATION.by},{' '}
-              {JUNCTION_FEEDBACK_OBSERVATION.date}. {JUNCTION_FEEDBACK_OBSERVATION.status}.
-            </p>
-            <SourceIdentifiers exercise={exercise} />
           </details>
           <NamingAid packet={packet} />
-        </>
-      ) : (
-        <>
-          <p data-feedback-scope>
-            A written explanation of this division has not been authored yet, so nothing below
-            describes its walls or its course. The position comparison above, the general
-            explanation below and the CT interval you just browsed are what is available here.
-          </p>
-          <p className={styles.revisitControls}>
-            <button onClick={() => onGoToSlice(anchorSlice)}>
-              Go to the parent slice {anchorSlice}
-            </button>
-            {exercise.answerPoints.map((p, i) => (
-              <button key={p.slice} onClick={() => onGoToSlice(p.slice)}>
-                Go to {displayAnswerLabel(exercise.trace.checkpoints[0], i, p.label)} · slice{' '}
-                {p.slice}
-              </button>
-            ))}
-          </p>
-          <details>
-            <summary>Source and review details</summary>
-            <SourceIdentifiers exercise={exercise} />
-          </details>
         </>
       )}
     </div>
   )
 }
 
-/**
- * Technical identifiers stay here, in the source and review detail, and out of the teaching
- * sentences above.
- */
-function SourceIdentifiers({ exercise }: { exercise: LocalCtExercise }) {
-  const { teaching, spec, review } = exercise
-  return (
-    <ul className={styles.small}>
-      <li>Source case: {teaching.sourceCase}.</li>
-      <li>
-        Division: {spec.checkpointId} · parent source edge {teaching.parentEdge}
-        {teaching.daughterEdges.length
-          ? ` · daughter source edges ${teaching.daughterEdges.join(', ')}`
-          : ''}
-        .
-      </li>
-      <li>
-        Volume {teaching.sourceSha256.slice(0, 12)}… · airway graph{' '}
-        {teaching.graphSha256.slice(0, 12)}….
-      </li>
-      <li>
-        Authored feedback exists for these divisions only: {JUNCTION_FEEDBACK_SCOPE.join(', ')}.
-      </li>
-      <li>
-        {review.status === 'provisional'
-          ? review.reason
-          : `Reviewed by ${review.reviewer}, ${review.date}.`}
-      </li>
-    </ul>
-  )
-}
-
-/** Names are shown directly; the try is optional, unrecorded and can be repeated. */
+/** Names are taught first; the question is optional, unrecorded and can be repeated. */
 function NamingAid({ packet }: { packet: JunctionFeedbackPacket }) {
   const [choice, setChoice] = useState<string | null>(null)
   const [namesShown, setNamesShown] = useState(false)
@@ -251,15 +268,14 @@ function NamingAid({ packet }: { packet: JunctionFeedbackPacket }) {
   const revealed = choice !== null || namesShown
   return (
     <details data-naming-aid>
-      <summary>Name the daughters (optional)</summary>
+      <summary>Name the daughters</summary>
       {naming.demonstration.map((paragraph) => (
         <p key={paragraph}>{paragraph}</p>
       ))}
-      {naming.uncertainty && <p className={styles.small}>{naming.uncertainty}</p>}
       {naming.try && (
         <div className={styles.namingTry}>
           <p>
-            <strong>Try it (optional):</strong> {naming.try.prompt}
+            <strong>Try it:</strong> {naming.try.prompt}
           </p>
           <div className={styles.namingChoices}>
             {naming.try.choices.map((option) => (

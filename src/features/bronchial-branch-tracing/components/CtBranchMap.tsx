@@ -274,8 +274,8 @@ export function CtProgressiveMap({
         <p className={styles.small}>
           Connected divisions in source-route order, with every sibling retained. Your selections
           and unresolved responses are recorded separately. Continuing follows the source route even
-          after a different or uncertain choice; it does not simulate your proposed path. Parent
-          views have provisional opening positions. CT display changes never change this map.
+          after a different or uncertain choice; it does not simulate your proposed path. CT display
+          changes never change this map.
         </p>
       </details>
     </section>

@@ -88,7 +88,7 @@ it('Lesson 4 · each demonstration pass through slice 419 keeps its own daughter
     'Dotted gold crosshair: where the model centreline of Daughter A · RB1b crosses this plane.',
   )
   expect(locatorLabels()).toEqual([
-    'Model course locator: Daughter A · RB1b, centreline crossing on slice 419; provisional model position, not a lumen boundary',
+    'Model course locator: Daughter A · RB1b, centreline crossing on slice 419; the centre of the airway, not its wall',
   ])
 
   // Second use, still inside Daughter A's pass: the return trip toward the parent.
@@ -104,7 +104,7 @@ it('Lesson 4 · each demonstration pass through slice 419 keeps its own daughter
   )
   expect(transport()).not.toHaveTextContent('Daughter A · RB1b crosses this plane.')
   expect(locatorLabels()).toEqual([
-    'Model course locator: Daughter B · RB1a, centreline crossing on slice 419; provisional model position, not a lumen boundary',
+    'Model course locator: Daughter B · RB1a, centreline crossing on slice 419; the centre of the airway, not its wall',
   ])
 
   // Stepping off the plane and back stays in Daughter B's pass.
@@ -123,7 +123,7 @@ it('Lesson 4 · each demonstration pass through slice 419 keeps its own daughter
   expect(transport()).toHaveTextContent(`Demonstration slice 419 · 63 of ${vertical.frames.length}`)
   expect(transport()).toHaveTextContent('Daughter B · RB1a crosses this plane.')
   expect(locatorLabels()).toEqual([
-    'Model course locator: Daughter B · RB1a, centreline crossing on slice 419; provisional model position, not a lumen boundary',
+    'Model course locator: Daughter B · RB1a, centreline crossing on slice 419; the centre of the airway, not its wall',
   ])
   click('Return to standard axial')
   await waitFor(() => ready())

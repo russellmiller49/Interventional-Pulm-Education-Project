@@ -14,6 +14,9 @@ export const LOCAL_DRAFT_ALIASES: Record<string, string[]> = {
 // Route drafts sign the whole lesson, including step metadata. BBT-01 opened every step gate and
 // reworded two step instructions; source geometry and the response model are unchanged, and
 // parseRouteDraft still validates every response. Signature recorded before that change.
+// The teaching-first copy pass (2026-10-08) reworded this lesson's concept, teaching and
+// interpretation text; geometry and the response model are again unchanged, so the signature
+// from before that pass (64b88cd0) stays readable.
 export const ROUTE_DRAFT_ALIASES: Record<string, string[]> = {
-  'variants-limits': ['c6-local-teaching-r1.e2c2c01a'],
+  'variants-limits': ['c6-local-teaching-r1.e2c2c01a', 'c6-local-teaching-r1.64b88cd0'],
 }

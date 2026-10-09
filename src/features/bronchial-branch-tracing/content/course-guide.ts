@@ -117,15 +117,15 @@ export const TERMS: Term[] = [
   },
   {
     term: 'Model reference',
-    text: 'Gold crosshairs and the reference route come from the existing airway model of this CT. They are location aids for comparison: not reviewed wall contours, not an answer key, and not yet faculty reviewed.',
+    text: 'Gold crosshairs and the reference route come from the airway model of this CT. Each crosshair marks the centre of a lumen, not its wall, so a mark anywhere inside that lumen is in the right place.',
   },
   {
     term: 'Response slice',
-    text: 'The CT plane that locates a supplied parent or daughter point, where a response is placed. You can still browse every neighbouring plane; a mark is a selection, not a wall trace.',
+    text: 'The CT plane on which you mark a parent or daughter. You can still browse every neighbouring plane; a mark is one point inside the lumen, not an outline of its wall.',
   },
   {
     term: 'Worked example, Try tracing, Compare with reference',
-    text: 'A worked example plays the interval with the model reference shown. Try tracing opens a clean view of the same example; Show reference brings the reference back at any time and records nothing. After you check, Compare with reference shows your own marks beside it. Marking an example you have just watched is guided practice on that example, not an independent test.',
+    text: 'A worked example plays the interval with the model reference shown. Try tracing opens a clean view of the same example; Show reference brings the reference back at any time and records nothing. After you check, Compare with reference shows your own marks beside it and tells you which lumen each mark is in.',
   },
   {
     term: 'Save for later and Mark reviewed',
@@ -139,7 +139,11 @@ export const NAMING_KEY =
 export const NAMING_USE =
   'Targets are named by the segment they sit in (S); routes are traced through bronchi (B).'
 export const SUBSEGMENT_NOTE =
-  'Subsegment letters (a, b) follow this source’s labelling and are pending nomenclature review.'
+  'Subsegment letters follow Kurimoto and Morita: RB1a posterior and RB1b anterior; RB5a horizontal and RB5b caudal.'
+
+/** The module's one boundary statement: shown on the hub and on the closing screen. */
+export const TEACHING_SIMULATOR_STATEMENT =
+  'This is a teaching simulator built on one CT scan. It trains you to read an airway route off axial slices; it does not show what a bronchoscope or tool can reach, and it does not replace supervised practice on patients.'
 
 /** Distinguishes a target segment (S code) from the bronchi a route follows (B codes). */
 export function targetNaming(target: CtNoduleTarget) {
@@ -148,11 +152,7 @@ export function targetNaming(target: CtNoduleTarget) {
     segment: `${code} · ${name}`,
     sentence: `The target ${code} (${name.toLowerCase()}) is a segment; its segmental bronchus is ${bronchusCode}${
       target.approachCode !== bronchusCode
-        ? `, and the route to this target ends in ${target.approachCode}${
-            /\d[a-c]$/.test(target.approachCode)
-              ? ' (a subsegment letter pending nomenclature review)'
-              : ''
-          }`
+        ? `, and the route to this target ends in ${target.approachCode}`
         : ''
     }.`,
   }

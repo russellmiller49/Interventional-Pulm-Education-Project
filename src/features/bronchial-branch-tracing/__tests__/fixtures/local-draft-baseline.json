@@ -3,7 +3,7 @@
   "signatures": {
     "follow-one-airway": "c6-local-teaching-r1.95260c11",
     "orientation": "c6-local-teaching-r1.9fd5eccd",
-    "continuity": "c6-local-teaching-r1.71168219",
+    "continuity": "c6-local-teaching-r1.56426fa5",
     "vertical": "c6-local-teaching-r1.e1832196",
     "horizontal-horizontal": "c6-local-teaching-r1.775e75c0",
     "horizontal-vertical": "c6-local-teaching-r1.c31265d3",
@@ -31,9 +31,9 @@
     },
     "central-right.junction-1.bifurcation": {
       "labels": ["A · RMSB", "B · LMSB"],
-      "slices": [387, 387],
-      "frames": 22,
-      "range": [384, 411]
+      "slices": [372, 372],
+      "frames": 37,
+      "range": [369, 411]
     },
     "left-lower-returning.junction-6.bifurcation": {
       "labels": ["A · LB6", "B · L basal"],

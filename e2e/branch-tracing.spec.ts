@@ -1318,7 +1318,7 @@ test('the RB1 source naming is stated before marking and repeated names are told
   await page.setViewportSize({ width: 1427, height: 1226 })
   await startLocal(page, 'vertical')
   await expect(page.locator('[data-branch-identities="junction-14"]')).toContainText(
-    'Daughter A is labelled RB1b in this source (more anterior); Daughter B is labelled RB1a in this source (more posterior). The a/b letters follow this source’s labelling and are pending nomenclature review',
+    'Daughter A is labelled RB1b in this source (more anterior); Daughter B is labelled RB1a in this source (more posterior). The a and b letters name subsegments: follow each lumen by its letter.',
   )
   await expect(button(page, /^Daughter A · RB1b · slice 422/)).toBeVisible()
   await expect(page.getByRole('heading', { name: '2. Mark Daughter A · RB1b' })).toBeVisible()
@@ -2094,6 +2094,48 @@ test('final repair · Lesson 7: two reference cycles and a same-task rapid close
   expect(JSON.parse((await storedRaw(page, key))!).value).toEqual(after)
 })
 
+for (const magnification of ['3', '4'])
+  test(`saved magnifier · ${magnification}× and partial work survive reload`, async ({ page }) => {
+    await localPartialWork(page, 'vertical')
+    await page.getByLabel('CT magnification').fill(magnification)
+    const saved = await draft(page, 'vertical')
+    const learner = await shownDisplay(page)
+    expect(learner.magnification).toBe(magnification)
+    expect(Object.values(saved.views)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ magnification: Number(magnification) })]),
+    )
+    await page.reload()
+    await ctReady(page)
+    expect(await shownDisplay(page)).toEqual(learner)
+    expect(await draft(page, 'vertical')).toEqual(saved)
+    await capture(page, `step10-${magnification}x-reloaded`)
+  })
+
+test('saved magnifier · invalid magnification resets only that field after reload', async ({
+  page,
+}) => {
+  await localPartialWork(page, 'vertical')
+  await orientationControl(page, /Flip left–right/)
+  // The parent airway view is open by default; the learner's toggle hides it.
+  await button(page, 'Hide parent airway view').click()
+  const learner = await shownDisplay(page)
+  // Corrupt only this stored preference, leaving the learner's partial work intact.
+  const expected = await page.evaluate(() => {
+    const key = 'branch-tracing.draft.learn.vertical'
+    const envelope = JSON.parse(localStorage.getItem(key)!)
+    const id = Object.keys(envelope.value.views)[0]
+    envelope.value.views[id].magnification = 5
+    localStorage.setItem(key, JSON.stringify(envelope))
+    envelope.value.views[id].magnification = 1
+    return envelope.value
+  })
+  await page.reload()
+  await ctReady(page)
+  expect(await draft(page, 'vertical')).toEqual(expected)
+  expect(await shownDisplay(page)).toEqual({ ...learner, magnification: '1' })
+  await capture(page, 'step10-invalid-magnification-reloaded')
+})
+
 test('final repair · genuine learner display choices outside reference viewing still persist after reload', async ({
   page,
 }) => {
@@ -2108,14 +2150,15 @@ test('final repair · genuine learner display choices outside reference viewing 
   await expect.poll(async () => (await saved()).views[exercise].full).toBe(true)
   await button(page, 'Airway detail').click()
   await page.getByLabel('CT magnification').fill('2.3')
-  await button(page, 'Show parent airway view').click()
+  // Open by default: hiding the parent airway view is the learner's choice, and it is saved.
+  await button(page, 'Hide parent airway view').click()
   await button(page, 'More cranial CT slice').click()
   await expect
     .poll(async () => (await saved()).views[exercise])
     .toMatchObject({
       full: false,
       magnification: 2.3,
-      showScope: true,
+      showScope: false,
       slice: was.views[exercise].slice + 1,
     })
   const final = await saved()
