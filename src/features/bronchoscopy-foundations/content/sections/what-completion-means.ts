@@ -57,7 +57,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D14'],
-  prerequisites: ['right-side', 'scope-in-a-tube', 'honest-report'],
+  prerequisites: ['right-side', 'scope-in-a-tube', 'describe-findings'],
 
   clinicalQuestion: 'Which decision can each record in a bronchoscopy trainee’s file support?',
   recognizeTitle: 'A fellow’s file at the end of the course',

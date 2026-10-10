@@ -633,7 +633,7 @@ test('a survey left without completing it saves no survey and claims nothing', a
 test('the report refuses unsupported claims and only opens Continue when every field is supported', async ({
   page,
 }) => {
-  const { lesson } = await reachAct(page, 'honest-report')
+  const { lesson } = await reachAct(page, 'describe-findings')
   const interaction = lesson.steps.find((step) => step.interaction.kind === 'report')!.interaction
   if (interaction.kind !== 'report') throw new Error('Report expected')
   await expect(primary(page)).toHaveCount(0)
@@ -731,7 +731,7 @@ for (const viewport of [
               'right-side',
               'left-side',
               'deterioration',
-              'honest-report',
+              'describe-findings',
             ] as const)
       for (const id of ids) {
         await openSection(page, id)
@@ -767,7 +767,7 @@ for (const viewport of [
   )
 }
 
-for (const id of ['pre-use-check', 'deterioration', 'honest-report'] as const) {
+for (const id of ['pre-use-check', 'deterioration', 'describe-findings'] as const) {
   test('complete course workspace through native responses: ' + id, async ({ page }, info) => {
     const lesson = await openSection(page, id)
     for (const step of lesson.steps) {

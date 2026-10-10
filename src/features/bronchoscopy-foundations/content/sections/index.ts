@@ -7,7 +7,6 @@ import { section as clinicalQuestion } from './clinical-question'
 import { section as describeFindings } from './describe-findings'
 import { section as deterioration } from './deterioration'
 import { section as fiveControls } from './five-controls'
-import { section as honestReport } from './honest-report'
 import { section as icuPhysiology } from './icu-physiology'
 import { section as larynxAndEntry } from './larynx-and-entry'
 import { section as leftSide } from './left-side'
@@ -48,7 +47,6 @@ const AUTHORED: readonly BronchSectionDefinition[] = [
   bleedingPriorities,
   scopeInATube,
   icuPhysiology,
-  honestReport,
   whatCompletionMeans,
 ]
 

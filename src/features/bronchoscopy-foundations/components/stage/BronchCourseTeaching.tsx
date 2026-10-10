@@ -85,6 +85,7 @@ export function BronchCourseTeaching({
       {chunk.visual === 'two-diameters' ? <TwoDiametersFigure /> : null}
       {chunk.visual === 'room-setup' ? <RoomSetupFigure /> : null}
       {chunk.visual === 'survey-video' ? <SurveyVideo /> : null}
+      {chunk.visual === 'obstruction-types' ? <ObstructionTypesFigure /> : null}
       {chunk.visual === 'worked-decision' ? (
         <section className={styles.worked} data-worked-example>
           <h3>A worked situation</h3>
@@ -409,6 +410,65 @@ function TwoDiametersFigure() {
         </g>
       </svg>
       <figcaption>The tip of the scope, seen end on. Not to scale.</figcaption>
+    </figure>
+  )
+}
+
+/** Three airways in cross-section: tissue inside the lumen, the wall pushed in, and both. */
+function ObstructionTypesFigure() {
+  const airways = [
+    { x: 110, name: 'Endoluminal', note: 'Tissue inside the lumen' },
+    { x: 340, name: 'Extrinsic', note: 'The wall pushed in' },
+    { x: 570, name: 'Mixed', note: 'Both' },
+  ]
+  return (
+    <figure className={styles.sharedAirway} data-obstruction-types>
+      <svg
+        viewBox="0 0 710 250"
+        role="img"
+        aria-label="Three airways in cross-section. Endoluminal: tissue grows from the wall into the lumen and the wall keeps its shape. Extrinsic: a mass outside pushes the wall in and the lining over it is intact. Mixed: a mass outside pushes the wall in and tissue also grows into the lumen."
+      >
+        {/* Endoluminal: a round wall, with tissue growing in from one side. */}
+        <circle cx="110" cy="100" r="78" fill="none" stroke="currentColor" strokeWidth="4" />
+        <path d="M179 64 C128 70 122 130 179 136 Z" fill="currentColor" opacity="0.45" />
+        {/* Extrinsic: the wall itself is bowed in by a mass outside it. */}
+        <path
+          d="M397 47 A78 78 0 1 0 397 153 C358 132 358 68 397 47 Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+        <circle cx="428" cy="100" r="46" fill="currentColor" opacity="0.18" />
+        <circle cx="428" cy="100" r="46" fill="none" stroke="currentColor" strokeDasharray="6 5" />
+        {/* Mixed: the wall bowed in, and tissue through it into the lumen. */}
+        <path
+          d="M627 47 A78 78 0 1 0 627 153 C588 132 588 68 627 47 Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+        <circle cx="654" cy="100" r="42" fill="currentColor" opacity="0.18" />
+        <circle cx="654" cy="100" r="42" fill="none" stroke="currentColor" strokeDasharray="6 5" />
+        <path d="M600 76 C562 82 562 118 600 124 Z" fill="currentColor" opacity="0.45" />
+        <g fill="currentColor" fontSize="18" textAnchor="middle">
+          {airways.map((airway) => (
+            <text key={airway.name} x={airway.x} y="212">
+              {airway.name}
+            </text>
+          ))}
+        </g>
+        <g fill="currentColor" fontSize="15" opacity="0.8" textAnchor="middle">
+          {airways.map((airway) => (
+            <text key={airway.name} x={airway.x} y="236">
+              {airway.note}
+            </text>
+          ))}
+        </g>
+      </svg>
+      <figcaption>
+        Three airways, seen end on. Solid shading is tissue in the lumen. The dashed circle is a
+        mass outside the wall. Not to scale.
+      </figcaption>
     </figure>
   )
 }

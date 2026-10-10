@@ -32,6 +32,7 @@ import { bronchSectionErrors } from '../content/sectionValidation'
 import { BRONCH_SECTIONS } from '../content/sections'
 import { section as bleedingPriorities } from '../content/sections/bleeding-priorities'
 import { section as clinicalQuestion } from '../content/sections/clinical-question'
+import { section as describeFindings } from '../content/sections/describe-findings'
 import { section as fiveControls } from '../content/sections/five-controls'
 import { section as larynxAndEntry } from '../content/sections/larynx-and-entry'
 import { section as leftSide } from '../content/sections/left-side'
@@ -389,6 +390,7 @@ describe('the rewrite rules', () => {
       'left-side',
       'view-loss',
       'systematic-survey',
+      'describe-findings',
       'bleeding-priorities',
     ])
     for (const section of [
@@ -401,6 +403,7 @@ describe('the rewrite rules', () => {
       leftSide,
       viewLoss,
       systematicSurvey,
+      describeFindings,
       bleedingPriorities,
     ]) {
       expect(bronchSectionErrors(section)).toEqual([])

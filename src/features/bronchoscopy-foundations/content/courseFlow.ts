@@ -23,6 +23,7 @@ export type CourseVisual =
   | 'two-diameters'
   | 'room-setup'
   | 'survey-video'
+  | 'obstruction-types'
 export interface CourseChunk {
   readonly id: string
   readonly title: string
@@ -551,25 +552,36 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     close(['common-errors']),
   ],
   'describe-findings': [
-    teach(
-      'normal',
-      'Establish the normal comparison',
-      ['something-unexpected', 'normal-right-main', 'structure-mucosa-contents'],
-      'section',
+    hook('Something you did not expect'),
+    check('check', 'A red lesion in the right main bronchus'),
+    screen(
+      'describe',
+      'Describe before you name',
+      'Read the three headings, then the three kinds of narrowing in the drawing.',
+      ['three-headings', 'obstruction'],
+      { visual: 'obstruction-types' },
     ),
-    teach('written-finding', 'Describe the finding in this written vignette', [
-      'the-finding',
-      'finding-described',
-      'still-and-screen',
+    screen(
+      'findings',
+      'Findings you will meet',
+      'Read each pair, then the lesion you leave alone.',
+      ['findings-list', 'vascular-lesion'],
+    ),
+    {
+      ...practice('Name six findings', 'illustrated', 'Match each description to the finding.'),
+      id: 'name-the-finding',
+      act: 'findings',
+    },
+    screen('model-report', 'A model report', 'Read the report line by line, with its notes.', [
+      'model-report',
     ]),
     practice(
-      'Construct a supported description',
+      'Write the report for one survey',
       'report',
-      'The abnormal finding is supplied in words. Use those observations to build the description; no abnormal image is being shown.',
+      'Read what the survey showed beside each line. Choose the entry it supports.',
     ),
-    check('check', 'Separate observation from inference'),
-    debrief(['findings-that-pause', 'common-errors']),
-    check('transfer', 'Describe a different finding'),
+    check('transfer', 'A line the template filled in for you'),
+    close(['common-errors']),
   ],
   'washing-and-lavage': [
     teach('purposes', 'Distinguish saline procedures by their purpose', [
@@ -798,39 +810,6 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     ),
     debrief(['fluoroscopy-principles', 'radiation-and-staff', 'common-errors']),
     check('transfer', 'Interpret changed resistance during a breath'),
-  ],
-  'honest-report': [
-    teach('record', 'Write from the examination record', [
-      'what-a-report-is-for',
-      'what-the-report-rests-on',
-      'uncomplicated-report',
-      'four-states',
-    ]),
-    teach('worked-report', 'Follow a report from evidence to statement', [
-      'template-line-by-line',
-      'describe-what-was-done',
-    ]),
-    practice(
-      'Build the report for the written case',
-      'report',
-      'Read the written case evidence beside each report field and choose a statement it supports. An airway entered is not automatically an airway inspected.',
-    ),
-    {
-      ...practice(
-        'Use your findings to build the report',
-        'report',
-        'Now use your own available survey record. Preserve any limitation or missing evidence; do not fill a normal template from memory.',
-      ),
-      id: 'your-record',
-      learnerRecord: true,
-    },
-    check('check', 'Decide what the entry approach supports'),
-    teach('handoff', 'Close the procedure and arrange follow-up', [
-      'ending-and-handoff',
-      'recovery-and-results',
-    ]),
-    debrief(['common-errors']),
-    check('transfer', 'Report a changed examination'),
   ],
   'what-completion-means': [
     teach('evidence', 'Understand what your record can establish', [
