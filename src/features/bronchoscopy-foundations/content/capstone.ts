@@ -359,7 +359,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
     situation:
       'A simulated procedure report, generated from a template, states that the vocal folds and all segmental bronchi are normal. The bronchoscopy was performed through an endotracheal tube, and the scope could not be advanced through a tight lesion at one lobar origin without force, so nothing beyond it was examined. The report is waiting for the bronchoscopist’s signature.',
     critical: true,
-    pairedSectionId: 'honest-report',
+    pairedSectionId: 'describe-findings',
     item: {
       id: 'C10',
       itemType: 'management-decision',

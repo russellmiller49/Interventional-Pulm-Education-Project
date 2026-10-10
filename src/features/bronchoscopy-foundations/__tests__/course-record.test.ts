@@ -64,7 +64,7 @@ it('keeps entry, inspection declarations and absent examination evidence separat
  * past any step, and moving never records that the step was done.
  */
 it('moves past any step without doing it, and never turns a skip, a confirm or Finish into activity evidence', () => {
-  for (const id of ['five-controls', 'systematic-survey', 'honest-report'] as const) {
+  for (const id of ['five-controls', 'systematic-survey', 'describe-findings'] as const) {
     const lesson = bronchStageLesson(id)
     const reducer = bronchStageReducer(lesson)
     let session = emptyBronchStageSession()

@@ -4,9 +4,12 @@ import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { BRONCH_SECTION_IDS, type BronchSectionId } from '../content/pathway'
 import type { BronchStageLesson, BronchStageStep } from '../content/stageLessons'
 import { BRONCH_STORAGE_KEY, createEmptyBronchRecord } from '../engine/learnProgress'
+import { inspectionReport } from '../engine/inspectionReport'
 import {
+  availableSurveySnapshot,
   BRONCH_SELF_PACED_STORAGE_KEY,
   parseBronchSelfPacedRecord,
+  readBronchSelfPacedRecord,
 } from '../engine/selfPacedProgress'
 import { performFiveControlsLearn } from '../test-support/fiveControlsLearnHarness'
 import { SCOPE_RECIPES } from '../test-support/scopeRecipes'
@@ -88,6 +91,15 @@ const SELF_PACED_KEYS = [
   'visitedSectionIds',
 ]
 
+/**
+ * The evidence line of a report built from the survey saved on this device. No section shows that
+ * report since `honest-report` was retired; the saved survey and what it supports are still kept.
+ */
+function savedSurveyEvidence(): string {
+  return inspectionReport({
+    inspectionSnapshot: availableSurveySnapshot(readBronchSelfPacedRecord()),
+  }).fields.find((field) => field.id === 'survey-source')!.evidence
+}
 function storedRecord() {
   return parseBronchSelfPacedRecord(localStorage.getItem(BRONCH_SELF_PACED_STORAGE_KEY))
 }
@@ -387,13 +399,8 @@ describe('optional questions and activities', () => {
     })
     cleanup()
 
-    const report = await mountSection('honest-report')
-    const yourRecord = report.lesson.steps.find((step) => step.course?.learnerRecord)!
-    await reachCourseStep(report.lesson, yourRecord)
-    expect(
-      document.querySelector('[data-report-field="survey-source"] [data-report-field-evidence]')
-        ?.textContent,
-    ).toMatch(/No completed survey record/)
+    // What a report built from the saved record would have to say about its own evidence.
+    expect(savedSurveyEvidence()).toMatch(/No completed survey record/)
   })
 
   it('saves the survey only when its goals were met on the learner’s controls, leaving the earlier record untouched', async () => {
@@ -410,13 +417,7 @@ describe('optional questions and activities', () => {
     expect(storedRecord()?.surveySnapshot?.sectionId).toBe('systematic-survey')
     cleanup()
 
-    const report = await mountSection('honest-report')
-    const yourRecord = report.lesson.steps.find((step) => step.course?.learnerRecord)!
-    await reachCourseStep(report.lesson, yourRecord)
-    expect(
-      document.querySelector('[data-report-field="survey-source"] [data-report-field-evidence]')
-        ?.textContent,
-    ).toMatch(/saved inspection record is available/)
+    expect(savedSurveyEvidence()).toMatch(/saved inspection record is available/)
     expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBe(earlier)
   })
 })
@@ -501,7 +502,7 @@ describe('the accounting ledger (A10)', () => {
 
 describe('the report builder (A08)', () => {
   it('refuses a statement the evidence does not support, shows what it supports on request, and completes only on supported ones', async () => {
-    const { lesson } = await mountSection('honest-report')
+    const { lesson } = await mountSection('describe-findings')
     await reachAct(lesson)
     const act = stepOfKind(lesson, 'report')
     if (act.interaction.kind !== 'report') return
