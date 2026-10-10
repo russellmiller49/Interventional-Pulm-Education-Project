@@ -20,8 +20,10 @@ import {
   openingName,
   openingNumber,
   openingShort,
+  packetProse,
   summaryLines,
 } from '../content/bench-copy'
+import { JUNCTION_FEEDBACK_SCOPE, junctionFeedbackPacket } from '../content/junction-feedback'
 import type { CtTrace } from '../content/ct-types'
 import { forkFacts, lesionFromFork, type ForkFacts, type LesionFacts } from '../engine/fork-facts'
 import {
@@ -133,6 +135,7 @@ test('every function the bench can call is exercised below', () => {
     'openingName',
     'openingNumber',
     'openingShort',
+    'packetProse',
     'summaryLines',
   ])
   expect(STATIONS).toHaveLength(128)
@@ -408,6 +411,66 @@ describe('identify', () => {
       detail:
         'An airway is a dark lumen with a thin bright wall. Your mark is on wall, vessel or lung.',
     })
+  })
+
+  test('a mark in air that joins no airway of the fork is told so, not told it missed the air', () => {
+    const { facts } = stationOn('central-right', 'junction-1')
+    const [rmsb] = facts.openings
+    const inAir = { ...verdictOf('not-in-airway'), markInAir: true }
+    expect(band(identifyVerdict(rmsb, inAir, true, null, false))).toEqual({
+      tone: 'miss',
+      headline: 'In air, but not in a named airway.',
+      detail:
+        'The dark area you marked does not join opening 1 on this slice. It is a small branch off this route, or lung.',
+    })
+    expect(band(identifyVerdict(rmsb, inAir, true, null, true)).detail).toMatch(
+      /or lung\. Opening 1 is about 6 mm /,
+    )
+  })
+
+  test('a fork explanation is shown with numbered openings, never lettered daughters', () => {
+    expect(packetProse('Daughter A, more cranial, and Daughter B, more caudal.')).toBe(
+      'opening 1, more cranial, and opening 2, more caudal.',
+    )
+    expect(packetProse('Daughter C')).toBe('opening 3')
+    expect(packetProse('The daughter RB4a')).toBe('The daughter RB4a')
+    const lettered: string[] = []
+    for (const id of JUNCTION_FEEDBACK_SCOPE) {
+      const packet = junctionFeedbackPacket(id)!
+      // Everything the bench can show from an explanation (NavigationBench: the entry note, the
+      // advice for a mark in the other airway, and the fork's "More about this fork" section).
+      const shown = [
+        ...(packet.entryLimitation ? [packet.entryLimitation] : []),
+        packet.divergence,
+        packet.continuity,
+        ...packet.naming.demonstration,
+        ...packet.known,
+        ...packet.revisit.map((r) => r.look),
+        ...packet.whenNearer.flatMap((advice) => (advice ? [advice.text] : [])),
+      ]
+      if (shown.some((text) => /\bDaughter [A-C]\b/.test(text))) lettered.push(id)
+      for (const text of shown) {
+        const prose = sentence(packetProse(text))
+        expect(prose).not.toMatch(/\b[Dd]aughter [A-C]\b/)
+      }
+    }
+    // The five that told same-named daughters apart by letter. A is the first opening at each:
+    // RB4 forward of RB4a, the cranial RB3a, the caudal LB6, and the lateral LB6 twice.
+    expect(lettered).toEqual([
+      'junction-19',
+      'junction-16',
+      'junction-11',
+      'junction-25',
+      'junction-52',
+    ])
+    const first = (trace: string, id: string) => stationOn(trace, id).facts.openings[0]
+    expect(first('middle-lobe-lateral', 'junction-19').course).toMatch(/^forward/)
+    expect(first('upper-oblique-lateral', 'junction-16').course).toMatch(/^up/)
+    expect(first('left-lower-returning', 'junction-11').course).toMatch(/down$/)
+    expect(first('left-lower-returning', 'junction-25').course).toMatch(/patient’s left/)
+    expect(stationOn('left-lower-returning', 'junction-52').facts.openings[1].course).toMatch(
+      /patient’s right/,
+    )
   })
 
   test('on real marks at the carina the band and the engine agree', () => {

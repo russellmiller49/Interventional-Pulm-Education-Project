@@ -36,6 +36,7 @@ import {
   openingName,
   openingNumber,
   openingShort,
+  packetProse,
 } from '../content/bench-copy'
 import { junctionFeedbackPacket } from '../content/junction-feedback'
 import { displayName } from '../engine/display-text'
@@ -462,7 +463,7 @@ export function NavigationBench({
     if (!advice) return null
     const role = lastVerdict.nearest.role
     return advice.appliesTo === 'any' || advice.appliesTo.includes(role as never)
-      ? advice.text
+      ? packetProse(advice.text)
       : null
   })()
   // The airways driven so far, each named once: a route can pass several forks of one bronchus.
@@ -834,21 +835,43 @@ export function NavigationBench({
                   </tbody>
                 </table>
                 <p>{forkPatternSentence(facts)}</p>
-                {packet?.entryLimitation && help && asksIdentify && phase === 'identify' && (
-                  <p className={styles.note} data-fork-entry-note>
-                    {packet.entryLimitation}
-                  </p>
-                )}
-                {packet && help && !independent && (
+                {/* Said before the openings are identified: what the lumens look like on their
+                    slices. It names the airways, so it is kept off the trips that withhold names. */}
+                {packet?.entryLimitation &&
+                  help &&
+                  !independent &&
+                  asksIdentify &&
+                  phase === 'identify' && (
+                    <p className={styles.note} data-fork-entry-note>
+                      {packetProse(packet.entryLimitation)}
+                    </p>
+                  )}
+                {/* The written explanation names each daughter and says where it is, so it opens
+                    once the openings are named: after they are identified, or straight away at a
+                    fork where the bench letters them itself. */}
+                {packet && help && !independent && facts.openings.every(named) && (
                   <details data-fork-more>
                     <summary>More about this fork on the CT</summary>
-                    <p>{packet.divergence}</p>
-                    <p>{packet.continuity}</p>
+                    <p>{packetProse(packet.divergence)}</p>
+                    <p>{packetProse(packet.continuity)}</p>
+                    <h4>Slices to step through</h4>
                     <ul>
-                      {packet.known.map((line) => (
-                        <li key={line}>{line}</li>
+                      {packet.revisit.map((interval) => (
+                        <li key={`${interval.from}-${interval.to}`}>
+                          {interval.from} to {interval.to}: {packetProse(interval.look)}.
+                        </li>
                       ))}
                     </ul>
+                    <h4>From the airway model</h4>
+                    <ul>
+                      {packet.known.map((line) => (
+                        <li key={line}>{packetProse(line)}</li>
+                      ))}
+                    </ul>
+                    <h4>The names</h4>
+                    {packet.naming.demonstration.map((line) => (
+                      <p key={line}>{packetProse(line)}</p>
+                    ))}
                   </details>
                 )}
               </section>

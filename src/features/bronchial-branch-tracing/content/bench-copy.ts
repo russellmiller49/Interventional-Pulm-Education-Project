@@ -207,11 +207,30 @@ export function identifyVerdict(
       headline: nearestName ? `That lumen is ${nearestName}.` : 'That is another airway.',
       detail: `Your mark is inside an airway, but not opening ${number}.${move}`,
     }
+  // Air, but air that reaches no named airway nearby: an unnamed branch, or very dark lung.
+  if (result.markInAir)
+    return {
+      tone: 'miss',
+      headline: 'In air, but not in a named airway.',
+      detail: `The dark area you marked does not join opening ${number} on this slice. It is a small branch off this route, or lung.${move}`,
+    }
   return {
     tone: 'miss',
     headline: 'Not in an airway.',
     detail: `An airway is a dark lumen with a thin bright wall. Your mark is on wall, vessel or lung.${move}`,
   }
+}
+
+/**
+ * A fork explanation as the bench shows it. Five of the earlier explanations tell same-named
+ * daughters apart as "Daughter A" and "Daughter B"; the bench numbers openings, so the letters
+ * are shown as its numbers.
+ */
+export function packetProse(text: string) {
+  return text.replace(
+    /\bDaughter ([A-C])\b/g,
+    (_, letter: string) => `opening ${letter.charCodeAt(0) - 64}`,
+  )
 }
 
 // ── Choose ───────────────────────────────────────────────────────────────────────────────────

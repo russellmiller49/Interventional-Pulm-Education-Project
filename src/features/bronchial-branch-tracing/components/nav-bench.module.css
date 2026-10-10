@@ -596,6 +596,18 @@
 .forkCard details p {
   margin-top: 0.4rem;
 }
+.forkCard details h4 {
+  margin: 0.6rem 0 0.15rem;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.forkCard details ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
 .notes {
   border: 1px solid var(--line);
   border-radius: 9px;

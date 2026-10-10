@@ -42,7 +42,7 @@ const FORBIDDEN =
   /\b(score|scored|grade|graded|fail|failed|penalt\w*|incorrect|wrong|correct)\b|you (mistook|confused)/i
 
 describe('fork explanations', () => {
-  it('covers thirteen divisions, the central one first, each of them on a route', () => {
+  it('covers twenty-three divisions, the central one first, each of them on a route', () => {
     expect(JUNCTION_FEEDBACK_SCOPE).toEqual([
       'junction-1',
       'junction-3',
@@ -57,8 +57,19 @@ describe('fork explanations', () => {
       'junction-11',
       'junction-25',
       'junction-52',
+      // The ten lobar and basal forks added on October 9, 2026.
+      'junction-2',
+      'junction-4',
+      'junction-5',
+      'junction-7',
+      'junction-8',
+      'junction-21',
+      'junction-22',
+      'junction-12',
+      'junction-17',
+      'junction-26',
     ])
-    expect(new Set(JUNCTION_FEEDBACK_SCOPE).size).toBe(13)
+    expect(new Set(JUNCTION_FEEDBACK_SCOPE).size).toBe(23)
     for (const id of JUNCTION_FEEDBACK_SCOPE) {
       const packet = junctionFeedbackPacket(id)!
       expect(packet.checkpointId).toBe(id)
@@ -80,7 +91,8 @@ describe('fork explanations', () => {
       expect(packet.continuity.length).toBeGreaterThan(0)
       expect(packet.moreEvidence.length).toBeGreaterThan(0)
     }
-    expect(junctionFeedbackPacket('junction-2')).toBeUndefined()
+    // A small distal fork has computed levels only, no written explanation.
+    expect(junctionFeedbackPacket('junction-30')).toBeUndefined()
     expect(junctionFeedbackPacket('target-approach')).toBeUndefined()
   })
 
@@ -166,6 +178,14 @@ describe('fork explanations', () => {
       'junction-10',
       'junction-20',
       'junction-23',
+      'junction-2',
+      'junction-4',
+      'junction-5',
+      'junction-7',
+      'junction-21',
+      'junction-22',
+      'junction-12',
+      'junction-26',
     ])
     for (const id of JUNCTION_FEEDBACK_SCOPE) {
       const packet = junctionFeedbackPacket(id)!
@@ -201,6 +221,14 @@ describe('fork explanations', () => {
       if (id === 'junction-14') expectMore('anterior', -1) // RB1a is the posterior (dorsal) one
       if (id === 'junction-20') expectMore('caudal') // RB5b descends
       if (id === 'junction-23') expectMore('anterior') // LB3 is the anterior (ventral) one
+      if (id === 'junction-2') expectMore('caudal') // the bronchus intermedius carries on down
+      if (id === 'junction-4') expectMore('anterior') // RB3 is the anterior segmental bronchus
+      if (id === 'junction-5') expectMore('anterior') // the middle-lobe bronchus leaves the front wall
+      if (id === 'junction-7') expectMore('caudal', -1) // RB1 climbs to the apex
+      if (id === 'junction-21') expectMore('caudal', -1) // the upper division climbs
+      if (id === 'junction-22') expectMore('caudal') // LB5, the inferior lingular bronchus, turns down
+      if (id === 'junction-12') expectMore('anterior', -1) // LB10 is the posterior basal bronchus
+      if (id === 'junction-26') expectMore('caudal') // LB9 carries on down
     }
     // Kurimoto & Morita: B1a dorsal, B1b ventral; B5a horizontal, B5b caudal.
     const rb1 = junctionFeedbackPacket('junction-14')!.naming

@@ -252,6 +252,44 @@ test.describe('lesson 2: choose and drive', () => {
     await expectStage(page, '0:match')
   })
 
+  test('a fork is explained in writing: a note before its openings are marked, the rest after', async ({
+    page,
+  }) => {
+    const note = page.locator('[data-fork-entry-note]')
+    const more = page.locator('[data-fork-more]')
+    // While the match is asked, nothing names the openings.
+    await expect(note).toHaveCount(0)
+    await expect(more).toHaveCount(0)
+    await showUntil(page, /^0:identify:0$/)
+    // What the upper-lobe bronchus looks like on its slice, said before the learner marks it.
+    await expect(note).toContainText('slice 374')
+    await expect(note).toContainText('one dark channel')
+    await expect(more).toHaveCount(0)
+    await showUntil(page, /^0:choose$/)
+    await expect(note).toHaveCount(0)
+    await more.locator('summary').click()
+    await expect(more).toContainText('The right main bronchus divides at about slice 365')
+    await expect(more).toContainText('Slices to step through')
+    await expect(more).toContainText('From the airway model')
+    await expect(more).toContainText('The names')
+    const text = await more.innerText()
+    expect(text).not.toMatch(BANNED)
+    expect(text).not.toMatch(/\bDaughter [A-C]\b/)
+    // Open, it scrolls inside the task column: the page itself still does not scroll.
+    const page_ = await page.evaluate(() => ({
+      scroll: document.documentElement.scrollHeight,
+      client: document.documentElement.clientHeight,
+    }))
+    expect(page_.scroll).toBeLessThanOrEqual(page_.client)
+    // The next fork down, the bronchus intermedius, has its own.
+    await page.locator('[data-choice="2"]').click()
+    await nowButton(page, 'Drive on').click()
+    await expectStage(page, '1:identify:0')
+    await expect(note).toContainText('slice 313')
+    await showUntil(page, /^1:choose$/)
+    await expect(more).toContainText('The bronchus intermedius divides at about slice 315')
+  })
+
   test('with reduced motion the drive does not animate', async ({ browser }) => {
     const context = await browser.newContext({ reducedMotion: 'reduce' })
     const page = await context.newPage()
@@ -328,6 +366,9 @@ test.describe('whole routes', () => {
     await nowButton(page, 'Show me').click()
     await expectStage(page, '0:ready')
     await expect(page.locator('[data-fork-card]')).toContainText('LMSB')
+    // The written explanations are teaching: the closing set shows none of them.
+    await expect(page.locator('[data-fork-more]')).toHaveCount(0)
+    await expect(page.locator('[data-fork-entry-note]')).toHaveCount(0)
   })
 })
 
