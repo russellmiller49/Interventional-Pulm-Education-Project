@@ -27,7 +27,7 @@ const scrollRoutes = [
   },
   {
     id: 'bbt',
-    route: '/en/learn/anatomy/branch-tracing/learn?lesson=follow-one-airway',
+    route: '/en/learn/anatomy/branch-tracing/learn?lesson=carina-orientation',
     owner: 'workspace',
   },
   {

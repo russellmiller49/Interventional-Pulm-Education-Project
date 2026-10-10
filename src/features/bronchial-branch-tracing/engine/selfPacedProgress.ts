@@ -1,15 +1,10 @@
 import { z } from 'zod'
-import { LESSONS } from '../content/lessons'
-import { TRACING_PRESETS, type TaughtPreset } from './local-session'
+import { NAV_LESSONS } from '../content/nav-lessons'
 
 /**
- * Self-paced course state (BBT-01), the only BBT writer of learning progress.
- *
- * It keeps where the learner was, which lessons they opened, which they finished and so marked
- * reviewed, which they saved for review, and which display-convention explanations this device
- * has shown. It holds no marks, branch choices, answers, correctness, hints, attempts or support
- * labels. The learner's own working marks stay in the resumable drafts of `ct-draft.ts`. Legacy
- * participation records in the shared activity envelope are never written or read here.
+ * Self-paced course state: where the learner was, which lessons they opened, which they reached
+ * the end of, and which they saved for later. It holds no marks, choices or results. The place
+ * within a trip is kept separately (`nav-storage.ts`).
  */
 export const SELF_PACED_STORAGE_KEY = 'branch-tracing.self-paced-v1'
 export const SELF_PACED_CHANGED_EVENT = 'branch-tracing-self-paced-changed'
@@ -22,7 +17,8 @@ const recordSchema = z
     visitedLessonIds: z.array(lessonId),
     reviewedLessonIds: z.array(lessonId),
     reviewLaterLessonIds: z.array(lessonId),
-    displayExplanationsShown: z.array(z.enum(TRACING_PRESETS)),
+    // Written by an earlier version of the course; kept so those records still read.
+    displayExplanationsShown: z.array(z.string()).optional(),
     updatedAt: z.string(),
   })
   .strict()
@@ -43,7 +39,6 @@ export const emptySelfPacedRecord = (): SelfPacedRecord => ({
   visitedLessonIds: [],
   reviewedLessonIds: [],
   reviewLaterLessonIds: [],
-  displayExplanationsShown: [],
   updatedAt: '',
 })
 
@@ -128,22 +123,12 @@ export const setLessonReviewLater = (id: string, saved: boolean, storage?: Stora
     storage,
   )
 
-/** The explanation was displayed on this device. It is not a comprehension claim. */
-export const recordDisplayExplanationShown = (preset: TaughtPreset, storage?: Storage | null) =>
-  updateSelfPacedRecord(
-    (record) => ({
-      ...record,
-      displayExplanationsShown: withItem(record.displayExplanationsShown, preset, true),
-    }),
-    storage,
-  )
-
 /** Resume the last lesson left open, otherwise the first lesson not yet marked reviewed. */
 export function recommendedLesson(record: SelfPacedRecord) {
-  const last = LESSONS.find((lesson) => lesson.id === record.lastLessonId)
+  const last = NAV_LESSONS.find((lesson) => lesson.id === record.lastLessonId)
   if (last && !record.reviewedLessonIds.includes(last.id))
     return { lesson: last, kind: 'resume' as const }
-  const next = LESSONS.find((lesson) => !record.reviewedLessonIds.includes(lesson.id))
+  const next = NAV_LESSONS.find((lesson) => !record.reviewedLessonIds.includes(lesson.id))
   if (!next) return null
   return { lesson: next, kind: record.visitedLessonIds.length ? 'continue' : 'start' } as const
 }

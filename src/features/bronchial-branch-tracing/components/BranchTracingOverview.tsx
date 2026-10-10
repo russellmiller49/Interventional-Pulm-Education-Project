@@ -1,24 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { ArrowRight, GitBranch } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
-import { BASE_PATH, LESSONS, SOURCE } from '../content/lessons'
-import {
-  LESSON_GROUPS,
-  NAMING_KEY,
-  courseMap,
-  lessonNumber,
-  moreRoutesSet,
-  patternFor,
-  targetNaming,
-  TEACHING_SIMULATOR_STATEMENT,
-} from '../content/course-guide'
-import { targetForTrace, traceById } from '../geometry/native-ct'
-import { browserStorage, recommendedLesson } from '../engine/selfPacedProgress'
-import { savedRouteDrafts } from '../engine/route-drafts'
+import { PRIMER, PRIMER_TITLE, TEACHING_SIMULATOR_STATEMENT } from '../content/bench-copy'
+import { NAMING_KEY, NAMING_USE, patternFor } from '../content/course-guide'
+import { BASE_PATH, SOURCE, lessonHref } from '../content/module'
+import { LESSON_GROUPS, NAV_LESSONS, lessonNumber, totalMinutes } from '../content/nav-lessons'
+import { ASSESS_TARGET_IDS, TARGET_IDS } from '../content/targets'
+import { recommendedLesson } from '../engine/selfPacedProgress'
 import { useSelfPacedProgress } from './useSelfPacedProgress'
-import { CourseReference } from './CourseReference'
 import { ModuleFrame } from './ModuleFrame'
 import { TargetCtPreview } from './TargetCtPreview'
 import styles from './branch-tracing.module.css'
@@ -28,21 +18,8 @@ const HERO_TRACE = 'middle-lobe-caudal'
 export function BranchTracingOverview() {
   const { ready, status, record } = useSelfPacedProgress()
   const recommendation = recommendedLesson(record)
-  const opened = LESSONS.filter((l) => record.visitedLessonIds.includes(l.id))
-  const reviewed = LESSONS.filter((l) => record.reviewedLessonIds.includes(l.id))
-  const savedForLater = LESSONS.filter((l) => record.reviewLaterLessonIds.includes(l.id))
-  const door = recommendation?.lesson ?? LESSONS[0]
-  const map = courseMap()
-  const heroTarget = targetForTrace(traceById(HERO_TRACE))
-  // Which route drafts this device already keeps. Read after hydration; a draft is a saved place,
-  // never a result, and nothing here is written.
-  const [routeDrafts, setRouteDrafts] = useState({ practice: false, assess: false })
-  useEffect(() => {
-    // Read the saved drafts from browser storage after hydration.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setRouteDrafts(savedRouteDrafts(browserStorage()))
-  }, [])
-  const minutesEstimate = (minutes: number) => `about ${minutes} min`
+  const reviewed = NAV_LESSONS.filter((l) => record.reviewedLessonIds.includes(l.id))
+  const door = recommendation?.lesson ?? NAV_LESSONS[0]
   return (
     <ModuleFrame section="overview">
       <main className={styles.overview} data-course-overview>
@@ -53,239 +30,131 @@ export function BranchTracingOverview() {
           <div>
             <h1>Bronchial branch tracing</h1>
             <p className={styles.subtitle}>
-              Follow one lumen, establish the viewpoint, then build a route.
+              Read the route off the CT, then drive it with the scope.
             </p>
             <p>
-              Start with a short CT interval and one visible airway. Compare a demonstration with
-              your own marks, show the reference whenever you want it, then relate the daughter
-              branches to the view from their parent.
+              Branch tracing is how you plan a bronchoscopic route to a peripheral lesion before you
+              scope. This course puts a virtual bronchoscope beside the axial CT. At every fork you
+              turn the CT so it faces the way the scope does, find each opening on the CT, choose
+              the one that leads toward the lesion, and drive on to the next fork, until the airway
+              ends beside the lesion.
             </p>
-            <Link
-              className={styles.primary}
-              href={`${BASE_PATH}/learn?lesson=${door.id}`}
-              aria-disabled={!ready}
-            >
+            <Link className={styles.primary} href={lessonHref(door.id)} aria-disabled={!ready}>
               {!ready
                 ? 'Loading your place'
                 : !recommendation
                   ? 'Review the course'
                   : recommendation.kind === 'start'
-                    ? 'Start learning'
-                    : recommendation.kind === 'resume'
-                      ? `Resume: ${door.title}`
-                      : `Continue: ${door.title}`}
+                    ? 'Start lesson 1'
+                    : `${recommendation.kind === 'resume' ? 'Resume' : 'Continue'}: ${door.title}`}
               <ArrowRight size={18} aria-hidden />
             </Link>
             <p className={styles.small}>
-              {map.lessons} lessons · about {map.estimatedMinutes} minutes by the authors’ estimate
-              · every lesson open · {opened.length} opened and {reviewed.length} marked reviewed on
-              this device
+              {NAV_LESSONS.length} lessons, about {totalMinutes()} minutes, then Practice on{' '}
+              {TARGET_IDS.length} lesions. Every lesson is open. {reviewed.length} of{' '}
+              {NAV_LESSONS.length} reached on this device.
             </p>
-            {ready && !recommendation && (
-              <p className={styles.small} data-after-learn>
-                Every lesson is marked reviewed on this device.{' '}
-                <Link href={`${BASE_PATH}/practice`}>Practice</Link> is the suggested next step;
-                every lesson stays open.
-              </p>
-            )}
             <p className={styles.namingKey} data-naming-key>
-              <strong>Naming:</strong> {NAMING_KEY} {targetNaming(heroTarget).sentence}
+              <strong>Names:</strong> {NAMING_KEY} {NAMING_USE}
             </p>
           </div>
           <TargetCtPreview traceId={HERO_TRACE} />
         </header>
         {status === 'unavailable' && (
           <p className={styles.notice} role="status">
-            This browser is not saving your place. Every lesson and route set stays open.
+            This browser is not saving your place. Every lesson and route stays open.
           </p>
         )}
         {status === 'unreadable' && (
           <p className={styles.notice} role="status">
             Your saved place on this device could not be read, so it has been left untouched and
-            nothing new is saved over it. Every lesson and route set stays open.
+            nothing new is saved over it. Every lesson and route stays open.
           </p>
         )}
+        <section className={styles.courseMap} aria-labelledby="bbt-why" data-course-primer>
+          <h2 id="bbt-why">{PRIMER_TITLE}</h2>
+          {PRIMER.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </section>
+        <section>
+          <div className={styles.sectionTitle}>
+            <h2>Lessons</h2>
+            <span>
+              {reviewed.length}/{NAV_LESSONS.length} reached on this device
+            </span>
+          </div>
+          {LESSON_GROUPS.map((group) => (
+            <div key={group.label} data-lesson-group>
+              <h3 className={styles.small}>{group.label}</h3>
+              <ol className={styles.lessonList}>
+                {group.ids.map((id) => {
+                  const lesson = NAV_LESSONS.find((entry) => entry.id === id)!
+                  const pattern = patternFor(id)
+                  return (
+                    <li key={id}>
+                      <span className={styles.lessonNumber}>
+                        {String(lessonNumber(id)).padStart(2, '0')}
+                      </span>
+                      <div>
+                        <Link href={lessonHref(id)}>{lesson.title}</Link>
+                        {pattern && (
+                          <span className={styles.patternTag}>Pattern: {pattern.name}</span>
+                        )}
+                        <p>{lesson.objective}</p>
+                      </div>
+                      <span>
+                        {record.reviewedLessonIds.includes(id) ? (
+                          <>
+                            <strong>Reached the end</strong> · about {lesson.minutes} min
+                          </>
+                        ) : record.visitedLessonIds.includes(id) ? (
+                          `Opened · about ${lesson.minutes} min`
+                        ) : (
+                          `about ${lesson.minutes} min`
+                        )}
+                      </span>
+                    </li>
+                  )
+                })}
+              </ol>
+            </div>
+          ))}
+        </section>
         <div className={styles.introGrid}>
           <section>
-            <h2>What you will practise</h2>
-            <ul>
-              <li>
-                Keep the same air-filled lumen across adjacent 0.5 mm CT slices instead of switching
-                to a nearby airway.
-              </li>
-              <li>
-                Turn or reflect the CT display while keeping patient directions straight, and
-                compare it with the parent airway view: the model camera looking down the parent
-                airway.
-              </li>
-              <li>
-                At each fork, choose the daughter that continues toward a named target and mark its
-                lumen on CT.
-              </li>
-              <li>
-                Recognise the four tracing patterns this course uses and relate each to the view
-                from the parent airway.
-              </li>
-              <li>
-                Plan a segmental airway approach to a simulated nodule and say how far the airway
-                can be followed toward it.
-              </li>
-            </ul>
-            <p className={styles.small}>
-              New terms such as parent viewpoint and camera roll are defined in the course reference
-              below and again where each is first used.
+            <h2>
+              <Link href={`${BASE_PATH}/practice`}>Practice: pick a lesion</Link>
+            </h2>
+            <p>
+              {TARGET_IDS.length} simulated lesions across five lobes. Each route runs from the
+              trachea to the lesion with the same four moves at every fork, and help on request.
             </p>
           </section>
           <section>
-            <h2>Before you begin</h2>
+            <h2>
+              <Link href={`${BASE_PATH}/assess`}>
+                Closing set: {ASSESS_TARGET_IDS.length} lesions, no hints
+              </Link>
+            </h2>
             <p>
-              For PCCM and IP fellows and practicing bronchoscopists. Familiarity with lobar anatomy
-              is helpful. Start with patient orientation if CT-to-scope correlation is new to you.
-            </p>
-            <p>
-              Use a laptop for detailed CT and parent-view comparison. On narrow screens the task
-              stays above the workspace; scrolling and touch controls remain available.
+              Three routes in three lobes. Openings are numbered but not named until you have
+              chosen, and a missed mark is told what it landed in, not which way to move.
             </p>
           </section>
         </div>
-        <section className={styles.courseMap} aria-labelledby="bbt-course-map" data-course-map>
-          <h2 id="bbt-course-map">How the course is organised</h2>
-          <ol>
-            <li>
-              <h3>
-                <Link href={`${BASE_PATH}/learn?lesson=${LESSONS[0].id}`}>Learn</Link>
-              </h3>
-              <p>
-                {map.lessons} lessons, about {map.estimatedMinutes} minutes in total by the authors’
-                estimate: a planning aid, not a measured learner time. The suggested order is 1 to{' '}
-                {map.lessons}, and every lesson is open.
-              </p>
-              <ul>
-                {LESSON_GROUPS.map((group) => (
-                  <li key={group.label}>
-                    {group.ids.length > 1
-                      ? `Lessons ${lessonNumber(group.ids[0])}–${lessonNumber(group.ids.at(-1)!)}`
-                      : `Lesson ${lessonNumber(group.ids[0])}`}
-                    : {group.label}
-                  </li>
-                ))}
-              </ul>
-            </li>
-            <li>
-              <h3>
-                <Link href={`${BASE_PATH}/practice`}>Practice</Link>
-              </h3>
-              <p>
-                Full routes from the trachea to a simulated nodule in one of {map.practiceTargets}{' '}
-                segments, or a mixed set of {map.mixedSet}. Suggested after Learn and open now. The
-                reference is available at every junction.
-                {routeDrafts.practice ? ' A Practice draft is saved on this device.' : ''}
-              </p>
-            </li>
-            <li>
-              <h3>
-                <Link href={`${BASE_PATH}/assess`}>More routes</Link> (optional)
-              </h3>
-              <p>
-                A mixed set of {map.moreRoutes} further routes in the same teaching CT:{' '}
-                {moreRoutesSet()
-                  .map((e) => e.target.segment.code)
-                  .join(', ')}
-                . {map.moreRoutesAlsoInLearn} of them also appear in{' '}
-                {map.moreRoutesLearnLessons.map((n) => `Lesson ${n}`).join(' and ')} and{' '}
-                {map.moreRoutesAlsoInPractice === map.moreRoutes
-                  ? 'all'
-                  : map.moreRoutesAlsoInPractice}{' '}
-                can be chosen in Practice, so treat the set as a revisit, not a new patient or a
-                test. The reference stays available.
-                {routeDrafts.assess ? ' A More routes draft is saved on this device.' : ''}
-              </p>
-            </li>
-          </ol>
-          <p>
-            In Learn, Practice and More routes you can show the reference before you mark, compare
-            after you check, or continue without marking. Nothing is scored, and no lesson waits on
-            a correct branch. All exercises use one teaching scan. Different targets in that scan do
-            not demonstrate transfer to an unfamiliar patient CT.
-          </p>
-          <p data-teaching-simulator-statement>{TEACHING_SIMULATOR_STATEMENT}</p>
-        </section>
-        <section className={styles.notice} aria-labelledby="bbt-course-reference">
-          <h2 id="bbt-course-reference">Course reference</h2>
-          <CourseReference disclosure={false} target={heroTarget} />
-        </section>
-        {savedForLater.length > 0 && (
-          <section>
-            <h2>Saved for later</h2>
-            <ul>
-              {savedForLater.map((lesson) => (
-                <li key={lesson.id}>
-                  <Link href={`${BASE_PATH}/learn?lesson=${lesson.id}`}>{lesson.title}</Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-        <section>
-          <div className={styles.sectionTitle}>
-            <h2>Your lesson pathway</h2>
-            <span>
-              {reviewed.length}/{LESSONS.length} marked reviewed on this device
-            </span>
-          </div>
-          <ol className={styles.lessonList}>
-            {LESSONS.map((lesson, i) => {
-              const pattern = patternFor(lesson.id)
-              return (
-                <li key={lesson.id}>
-                  <span className={styles.lessonNumber}>{String(i + 1).padStart(2, '0')}</span>
-                  <div>
-                    <Link href={`${BASE_PATH}/learn?lesson=${lesson.id}`}>{lesson.title}</Link>
-                    {pattern && <span className={styles.patternTag}>Pattern: {pattern.name}</span>}
-                    <p>{lesson.objective}</p>
-                  </div>
-                  <span>
-                    {record.reviewedLessonIds.includes(lesson.id) ? (
-                      <>
-                        <strong>Reviewed</strong> · {minutesEstimate(lesson.minutes)}
-                      </>
-                    ) : record.visitedLessonIds.includes(lesson.id) ? (
-                      `Opened · ${minutesEstimate(lesson.minutes)}`
-                    ) : (
-                      minutesEstimate(lesson.minutes)
-                    )}
-                    {record.reviewLaterLessonIds.includes(lesson.id) ? ' · Saved for later' : ''}
-                  </span>
-                </li>
-              )
-            })}
-          </ol>
-          <p className={styles.small}>
-            Times are the authors’ estimates. Reviewed is your own note that you reached the end of
-            a lesson; Saved for later is a bookmark. Neither is a result.
-          </p>
-        </section>
         <section className={styles.source}>
-          <h2>Source and model limits</h2>
+          <h2>What this is built on</h2>
+          <p data-teaching-simulator-statement>{TEACHING_SIMULATOR_STATEMENT}</p>
           <p>
-            The four-pattern framework follows{' '}
+            The method and the four fork patterns follow{' '}
             <a href={SOURCE.url} target="_blank" rel="noreferrer">
               {SOURCE.title}
             </a>
-            , Chapter 1. The native CT was exported with 3D Slicer from the same source volume as
-            the existing airway model. The textbook guides the method; its figures are not copied.
-          </p>
-          <p>
-            Target nodules use the navigation trainer’s CT intensity compositor. They are simulated
-            teaching targets, not findings in the original scan.
-          </p>
-          <p>
-            This device keeps your place: the last lesson, lessons opened or finished, lessons saved
-            for later, and a draft of your current marks, CT slice, orientation and viewing state so
-            you can resume. Nothing is scored and hint use is not counted. Participation records
-            from earlier versions stay on this device untouched and are not shown as progress. A
-            changed lesson or annotation version explains why an older draft cannot be resumed.
-            Saving failures are disclosed before you leave.
+            . The CT is one real scan at 0.5 mm slices; the scope view is the airway surface
+            segmented from that same scan, and the lesions are simulated on it. For PCCM and IP
+            fellows and practicing bronchoscopists; a laptop screen shows the scope and CT side by
+            side.
           </p>
         </section>
       </main>

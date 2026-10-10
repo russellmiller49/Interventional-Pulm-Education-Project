@@ -419,7 +419,7 @@ describe('refreshers and tool links say where they go (L1-3, part D)', () => {
     expect(refreshers).toHaveTextContent('nothing here requires them')
     const links = within(refreshers).getAllByRole('link')
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
-      '/learn/anatomy/branch-tracing/learn?lesson=orientation',
+      '/learn/anatomy/branch-tracing/learn?lesson=carina-orientation',
       '/bronchoscopy-foundations/learn?section=right-side',
       '/bronchoscopy-foundations/learn?section=left-side',
     ])
