@@ -1,4 +1,4 @@
-import { BranchTracingLesson } from '@/features/bronchial-branch-tracing/components/BranchTracingLesson'
+import { NavLessonHost } from '@/features/bronchial-branch-tracing/components/NavLessonHost'
 
 export default async function BranchTracingLearnPage({
   searchParams,
@@ -6,5 +6,5 @@ export default async function BranchTracingLearnPage({
   searchParams: Promise<{ lesson?: string }>
 }) {
   const { lesson } = await searchParams
-  return <BranchTracingLesson requestedId={typeof lesson === 'string' ? lesson : undefined} />
+  return <NavLessonHost requestedId={typeof lesson === 'string' ? lesson : undefined} />
 }

@@ -1,13 +1,17 @@
 import airPlanes from '../geometry/answer-plane-air.json'
 import decisions from '../geometry/branch-decisions.json'
 import routes from '../geometry/paired-routes.json'
-import type { AirwayLabel, CtMark, LocalCtExercise } from '../content/ct-types'
+import type { AirwayLabel, CtMark, CtTrace } from '../content/ct-types'
 import { NATIVE_CT, sliceZ } from '../geometry/native-ct'
+import { RESPONSE_PLANE_OVERRIDES } from './response-planes'
 
 /**
- * Comparison between a learner's checked marks and the model locators on the same axial plane.
- * It reports where a mark sits relative to named model airways, in millimetres, and, where the
- * answer plane has an air mask, which lumen the mark is in (`markVerdict`). It never moves a mark.
+ * Which lumen a mark is in, read from the CT's own air.
+ *
+ * Each daughter of a fork is identified on one axial plane (`responsePlane`). The plane has an air
+ * mask (geometry/answer-plane-air.json). A mark's air region is flood-filled out to FILL_CAP_MM;
+ * a named airway is reached when the air at its model centre is part of that region, and the mark
+ * is taken to be in the reached airway whose centre is nearest. Nothing here moves a mark.
  */
 export type LocatorRole = 'intended' | 'daughter' | 'parent' | 'other'
 export interface ModelLocator {
@@ -21,31 +25,6 @@ export interface LocatorDistance {
   locator: ModelLocator
   mm: number
 }
-export type MarkStatus = 'unresolved' | 'nearest-intended' | 'nearest-other'
-export interface MarkComparison {
-  slot: number
-  label: string
-  slice: number
-  status: MarkStatus
-  /** Null only for an unresolved response. */
-  intended: LocatorDistance | null
-  /** Other model airways crossing this slice, nearest first: this division's parent and other daughter, then one per unrelated airway code. */
-  others: LocatorDistance[]
-  /** The nearest of `others`, whatever its role. Null when no other locator crosses this slice. */
-  nearestOther: LocatorDistance | null
-  /**
-   * The nearest other daughter of this same division, when one of them crosses this plane.
-   * Sibling-specific feedback is written about this locator, never about `nearestOther`.
-   */
-  nearestSibling: LocatorDistance | null
-  /** Distance between the intended locator and `nearestOther`, in millimetres on this plane. */
-  spanMm: number | null
-  /** The mark is farther from the intended locator than the two locators are from each other. */
-  beyondSpan: boolean
-  /** Which lumen the mark is in. Null for an unresolved response or a plane without a mask. */
-  verdict: VerdictResult | null
-}
-
 /**
  * Where a mark is, read from the CT's own air:
  * - `intended-lumen`: in the air of the airway asked for;
@@ -80,6 +59,8 @@ export const FILL_CAP_MM = airPlanes.capMm
 export const MARK_SNAP_MM = 1
 /** A centreline sample may sit on the wall of a small lumen; its lumen is the air this close. */
 export const LOCATOR_SNAP_MM = 1.5
+/** Without an air mask a mark counts for the model centre nearest it, no farther than this. */
+export const NO_MASK_REACH_MM = 3
 
 export interface AirPlane {
   x0: number
@@ -178,59 +159,6 @@ const planeMove = (from: readonly number[], to: readonly number[]): PlaneMove =>
   posteriorMm: (to[1] - from[1]) * NATIVE_CT.spacing[1],
 })
 
-/**
- * Which lumen a mark is in on its answer slice. The mark's air region is flood-filled out to
- * FILL_CAP_MM; a named airway is reached when the air at its model locator is part of that
- * region. The mark is taken to be in the reached airway whose locator is nearest.
- *
- * Returns null when no verdict can be given honestly: the slice has no air mask, or the intended
- * locator has no air within LOCATOR_SNAP_MM at this threshold.
- */
-export function markVerdict(
-  exercise: LocalCtExercise,
-  slot: number,
-  mark: CtMark | null | undefined,
-): VerdictResult | null {
-  const point = exercise.answerPoints[slot]
-  if (!point || !mark?.pixel || mark.slice !== point.slice) return null
-  const plane = airPlane(point.slice)
-  if (!plane) return null
-  // The mask covers the region around the answer. A mark outside it gets no verdict: an airway
-  // out there would otherwise read as "not air".
-  const mx = Math.round(mark.pixel[0]),
-    my = Math.round(mark.pixel[1])
-  if (mx < plane.x0 || my < plane.y0 || mx >= plane.x0 + plane.w || my >= plane.y0 + plane.h)
-    return null
-  const locators = slotLocators(exercise, slot)
-  const intended = locators.find((l) => l.role === 'intended')
-  if (!intended || !nearestAir(plane, intended.pixel, LOCATOR_SNAP_MM)) return null
-  const toIntended = planeMove(mark.pixel, intended.pixel)
-  const seed = nearestAir(plane, mark.pixel, MARK_SNAP_MM)
-  if (!seed)
-    return { verdict: 'not-in-airway', markInAir: false, reached: [], nearest: null, toIntended }
-  const region = floodFillAir(plane, seed, FILL_CAP_MM)
-  const reached: LocatorDistance[] = []
-  for (const locator of locators) {
-    const lumen = nearestAir(plane, locator.pixel, LOCATOR_SNAP_MM)
-    if (!lumen || !region.has(lumen[1] * NATIVE_CT.size + lumen[0])) continue
-    const candidate = { locator, mm: planeDistanceMm(mark.pixel, locator.pixel) }
-    // One entry per source edge: an edge that crosses the plane twice is still one airway.
-    const index = reached.findIndex((r) => r.locator.edgeId === locator.edgeId)
-    if (index < 0) reached.push(candidate)
-    else if (candidate.mm < reached[index].mm) reached[index] = candidate
-  }
-  reached.sort((a, b) => a.mm - b.mm)
-  const nearest = reached[0]?.locator ?? null
-  const verdict: MarkVerdict = !nearest
-    ? 'not-in-airway'
-    : nearest.role === 'intended'
-      ? 'intended-lumen'
-      : reached.some((r) => r.locator.role === 'intended')
-        ? 'near-fork'
-        : 'other-airway'
-  return { verdict, markInAir: true, reached, nearest, toIntended }
-}
-
 const UNNAMED: AirwayLabel = {
   code: 'model airway',
   name: 'Unnamed model airway',
@@ -281,26 +209,51 @@ export function edgeCrossings(edgeId: number, slice: number): [number, number][]
 }
 
 /**
- * Model locators on one answer slice: the intended daughter (the exercise's own
- * answer point), the other daughters, the parent where its edge still crosses
- * the plane, and every other named model edge crossing it.
+ * The plane a daughter is identified on, and its model locator there. The export's own response
+ * point, except where `RESPONSE_PLANE_OVERRIDES` moves the plane along the daughter's centreline.
  */
-export function slotLocators(exercise: LocalCtExercise, slot: number): ModelLocator[] {
-  const decision = exercise.trace.checkpoints[0].decision
-  const point = exercise.answerPoints[slot]
+export function responsePlane(
+  trace: CtTrace,
+  checkpointIndex: number,
+  optionIndex: number,
+): { slice: number; pixel: [number, number] } | null {
+  const checkpoint = trace.checkpoints[checkpointIndex]
+  const option = checkpoint?.decision?.options[optionIndex]
+  if (!checkpoint || !option) return null
+  const override = RESPONSE_PLANE_OVERRIDES[checkpoint.id]
+  if (override === undefined || override === option.slice)
+    return { slice: option.slice, pixel: option.pixel }
+  const crossing = edgeCrossings(option.sourceEdgeId, override)[0]
+  return crossing
+    ? { slice: override, pixel: crossing }
+    : { slice: option.slice, pixel: option.pixel }
+}
+
+/**
+ * Model locators on one daughter's response plane: that daughter, the other daughters, the parent
+ * where its edge still crosses the plane, and every other named model edge crossing it.
+ */
+export function optionLocators(
+  trace: CtTrace,
+  checkpointIndex: number,
+  optionIndex: number,
+): ModelLocator[] {
+  const decision = trace.checkpoints[checkpointIndex]?.decision
+  const point = responsePlane(trace, checkpointIndex, optionIndex)
   if (!decision || !point) return []
-  const option = decision.options[slot]
+  const option = decision.options[optionIndex]
   const locators: ModelLocator[] = [
     { edgeId: option.sourceEdgeId, airway: option.airway, role: 'intended', pixel: point.pixel },
   ]
   decision.options.forEach((other, i) => {
-    if (i === slot) return
-    if (other.slice === point.slice)
+    if (i === optionIndex) return
+    const there = responsePlane(trace, checkpointIndex, i)
+    if (there && there.slice === point.slice)
       locators.push({
         edgeId: other.sourceEdgeId,
         airway: other.airway,
         role: 'daughter',
-        pixel: other.pixel,
+        pixel: there.pixel,
       })
     else
       for (const pixel of edgeCrossings(other.sourceEdgeId, point.slice))
@@ -327,61 +280,104 @@ export function slotLocators(exercise: LocalCtExercise, slot: number): ModelLoca
   return locators
 }
 
-export function compareMarks(
-  exercise: LocalCtExercise,
-  marks: readonly (CtMark | null)[],
-): MarkComparison[] {
-  if (!exercise.trace.checkpoints[0].decision) return []
-  return exercise.answerPoints.map((point, slot) => {
-    const mark = marks[slot]
-    const base = { slot, label: point.label, slice: point.slice }
-    if (!mark?.pixel || mark.slice !== point.slice)
-      return {
-        ...base,
-        status: 'unresolved',
-        intended: null,
-        others: [],
-        nearestOther: null,
-        nearestSibling: null,
-        spanMm: null,
-        beyondSpan: false,
-        verdict: null,
-      }
-    const locators = slotLocators(exercise, slot)
-    const intendedLocator = locators.find((l) => l.role === 'intended')!
-    const intended = {
-      locator: intendedLocator,
-      mm: planeDistanceMm(mark.pixel, intendedLocator.pixel),
-    }
-    const byCode = new Map<string, LocatorDistance>()
-    for (const locator of locators) {
-      if (locator.role === 'intended' || locator.edgeId === intendedLocator.edgeId) continue
-      // The parent and the other daughter of this division always count, even when they share
-      // the intended daughter's code (LB6 into LB6 and LB6). An unrelated edge that shares it
-      // does not, and unrelated edges are merged one per code.
-      const ofDivision = locator.role === 'daughter' || locator.role === 'parent'
-      if (!ofDivision && locator.airway.code === intendedLocator.airway.code) continue
-      const key = ofDivision ? `${locator.role}:${locator.edgeId}` : locator.airway.code
-      const candidate = { locator, mm: planeDistanceMm(mark.pixel, locator.pixel) }
-      const current = byCode.get(key)
-      if (!current || candidate.mm < current.mm) byCode.set(key, candidate)
-    }
-    const others = [...byCode.values()].sort((a, b) => a.mm - b.mm)
-    const nearestOther = others[0] ?? null
-    const nearestSibling = others.find((o) => o.locator.role === 'daughter') ?? null
-    const spanMm = nearestOther
-      ? planeDistanceMm(intendedLocator.pixel, nearestOther.locator.pixel)
-      : null
+/**
+ * The area of a daughter's lumen on its response plane, in mm², read from the air mask: 0 when
+ * the plane has no mask or the locator has no air under it. A lumen a pixel or two across cannot
+ * be clicked reliably, so the bench asks for a mark only above a minimum area.
+ */
+export function optionLumenAreaMm2(trace: CtTrace, checkpointIndex: number, optionIndex: number) {
+  const point = responsePlane(trace, checkpointIndex, optionIndex)
+  const plane = point ? airPlane(point.slice) : null
+  const seed = point && plane ? nearestAir(plane, point.pixel, LOCATOR_SNAP_MM) : null
+  if (!plane || !seed) return 0
+  return floodFillAir(plane, seed, FILL_CAP_MM).size * NATIVE_CT.spacing[0] * NATIVE_CT.spacing[1]
+}
+
+/**
+ * Where the bench itself marks a daughter: the air nearest its model centre on its response
+ * plane. A centreline sample can sit on the wall of a small lumen, a millimetre outside the air a
+ * click must land in, so the centre itself is not always inside the lumen it names.
+ */
+export function responseLumen(
+  trace: CtTrace,
+  checkpointIndex: number,
+  optionIndex: number,
+): { slice: number; pixel: [number, number] } | null {
+  const point = responsePlane(trace, checkpointIndex, optionIndex)
+  if (!point) return null
+  const plane = airPlane(point.slice)
+  const air = plane ? nearestAir(plane, point.pixel, LOCATOR_SNAP_MM) : null
+  return air ? { slice: point.slice, pixel: air } : point
+}
+
+/** True when the daughter's locator has air under it, so a mark there can be given a verdict. */
+export function optionHasVerdict(trace: CtTrace, checkpointIndex: number, optionIndex: number) {
+  const point = responsePlane(trace, checkpointIndex, optionIndex)
+  const plane = point ? airPlane(point.slice) : null
+  return Boolean(point && plane && nearestAir(plane, point.pixel, LOCATOR_SNAP_MM))
+}
+
+/**
+ * Which lumen a mark is in on a daughter's response plane.
+ *
+ * Where the plane has an air mask, the mark's air region decides. Where it has none, or the
+ * daughter's locator has no air under it at this threshold (a lumen a pixel or two wide), the
+ * nearest model locator decides instead and `markInAir` is left false.
+ */
+export function optionVerdict(
+  trace: CtTrace,
+  checkpointIndex: number,
+  optionIndex: number,
+  mark: CtMark | null | undefined,
+): VerdictResult | null {
+  const point = responsePlane(trace, checkpointIndex, optionIndex)
+  if (!point || !mark?.pixel || mark.slice !== point.slice) return null
+  const locators = optionLocators(trace, checkpointIndex, optionIndex)
+  const intended = locators.find((l) => l.role === 'intended')
+  if (!intended) return null
+  const toIntended = planeMove(mark.pixel, intended.pixel)
+  const plane = airPlane(point.slice)
+  const mx = Math.round(mark.pixel[0]),
+    my = Math.round(mark.pixel[1])
+  const inMask =
+    plane && mx >= plane.x0 && my >= plane.y0 && mx < plane.x0 + plane.w && my < plane.y0 + plane.h
+  if (!plane || !inMask || !nearestAir(plane, intended.pixel, LOCATOR_SNAP_MM)) {
+    // No air evidence for this lumen: fall back to the nearest model centre, within a lumen's reach.
+    const ranked = locators
+      .map((locator) => ({ locator, mm: planeDistanceMm(mark.pixel!, locator.pixel) }))
+      .sort((a, b) => a.mm - b.mm)
+    const nearest = ranked[0]
+    if (!nearest || nearest.mm > NO_MASK_REACH_MM)
+      return { verdict: 'not-in-airway', markInAir: false, reached: [], nearest: null, toIntended }
     return {
-      ...base,
-      status: nearestOther && nearestOther.mm < intended.mm ? 'nearest-other' : 'nearest-intended',
-      intended,
-      others,
-      nearestOther,
-      nearestSibling,
-      spanMm,
-      beyondSpan: Boolean(spanMm !== null && intended.mm > spanMm),
-      verdict: markVerdict(exercise, slot, mark),
+      verdict: nearest.locator.role === 'intended' ? 'intended-lumen' : 'other-airway',
+      markInAir: false,
+      reached: [nearest],
+      nearest: nearest.locator,
+      toIntended,
     }
-  })
+  }
+  const seed = nearestAir(plane, mark.pixel, MARK_SNAP_MM)
+  if (!seed)
+    return { verdict: 'not-in-airway', markInAir: false, reached: [], nearest: null, toIntended }
+  const region = floodFillAir(plane, seed, FILL_CAP_MM)
+  const reached: LocatorDistance[] = []
+  for (const locator of locators) {
+    const lumen = nearestAir(plane, locator.pixel, LOCATOR_SNAP_MM)
+    if (!lumen || !region.has(lumen[1] * NATIVE_CT.size + lumen[0])) continue
+    const candidate = { locator, mm: planeDistanceMm(mark.pixel, locator.pixel) }
+    const index = reached.findIndex((r) => r.locator.edgeId === locator.edgeId)
+    if (index < 0) reached.push(candidate)
+    else if (candidate.mm < reached[index].mm) reached[index] = candidate
+  }
+  reached.sort((a, b) => a.mm - b.mm)
+  const nearest = reached[0]?.locator ?? null
+  const verdict: MarkVerdict = !nearest
+    ? 'not-in-airway'
+    : nearest.role === 'intended'
+      ? 'intended-lumen'
+      : reached.some((r) => r.locator.role === 'intended')
+        ? 'near-fork'
+        : 'other-airway'
+  return { verdict, markInAir: true, reached, nearest, toIntended }
 }

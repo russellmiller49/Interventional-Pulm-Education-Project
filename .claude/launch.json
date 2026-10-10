@@ -212,6 +212,22 @@
         "NEXT_PUBLIC_SUPABASE_ANON_KEY": "public-anon-key-placeholder",
         "NEXT_PUBLIC_SUPABASE_PROJECT_REF": "YOUR_PROJECT_REF"
       }
+    },
+    {
+      "name": "claude-bbt-nav",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/russellmiller/Projects/Interventional-Pulm-Education-Worktrees/claude-bbt-nav && exec npx next dev --port 3127 --webpack"
+      ],
+      "port": 3127,
+      "autoPort": false,
+      "env": {
+        "NEXT_PUBLIC_SITE_URL": "http://localhost:3127",
+        "NEXT_PUBLIC_SUPABASE_URL": "https://YOUR_PROJECT_REF.supabase.co",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY": "public-anon-key-placeholder",
+        "NEXT_PUBLIC_SUPABASE_PROJECT_REF": "YOUR_PROJECT_REF"
+      }
     }
   ]
 }

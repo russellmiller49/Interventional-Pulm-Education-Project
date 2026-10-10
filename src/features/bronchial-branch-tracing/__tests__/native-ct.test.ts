@@ -1,4 +1,3 @@
-import { orientationFor } from '../geometry/orientation'
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { inflateSync } from 'node:zlib'
@@ -11,10 +10,10 @@ import {
   pixelToDisplay,
   sliceZ,
   ORIENTATION_LABELS,
+  nativeImageUrl,
   targetForTrace,
+  traceById,
 } from '../geometry/native-ct'
-import { LESSONS, lessonLocationErrors } from '../content/lessons'
-import { ctSessionReducer, emptyCtSession } from '../engine/ct-session'
 
 function pngPixels(bytes: Buffer) {
   expect(bytes.readUInt32BE(16)).toBe(512)
@@ -92,16 +91,20 @@ test('book rotations and reflection preserve native pixel identity in full field
   expect(pixelToDisplay([20, 40], [40, 40], 100, 'rul')).toEqual([50, 70])
   expect(pixelToDisplay([20, 40], [40, 40], 100, 'mirror')).toEqual([70, 50])
 })
-test('every lesson has real CT traces, a changed transfer and a visible stage landmark', () => {
-  expect(lessonLocationErrors()).toEqual([])
-  for (const lesson of LESSONS) {
-    for (const id of [lesson.example, lesson.prediction, lesson.transfer])
-      expect(CT_TRACES.some((t) => t.id === id)).toBe(true)
-    expect(lesson.prediction).not.toBe(lesson.transfer)
-    expect(targetForTrace(CT_TRACES.find((t) => t.id === lesson.prediction)!).id).not.toBe(
-      targetForTrace(CT_TRACES.find((t) => t.id === lesson.transfer)!).id,
-    )
+test('every route resolves by id to its own target, and every slice it can show has an image address', () => {
+  expect(CT_TRACES).toHaveLength(17)
+  expect(new Set(CT_TRACES.map((t) => t.id)).size).toBe(17)
+  for (const trace of CT_TRACES) {
+    expect(traceById(trace.id)).toBe(trace)
+    expect(targetForTrace(trace).id).toBe(trace.targetId)
   }
+  expect(() => traceById('not-a-route')).toThrow('Unknown CT trace: not-a-route')
+  // Native planes are zero-padded under native-v1; planes outside them come from the target set.
+  expect(nativeImageUrl(240)).toBe('/branch-tracing/native-v1/axial/240.png')
+  expect(nativeImageUrl(475)).toBe('/branch-tracing/native-v1/axial/475.png')
+  expect(nativeImageUrl(239)).toBe('/branch-tracing/targets-v1/axial/239.png')
+  expect(sliceZ(0)).toBe(NATIVE_CT.origin[2])
+  expect(sliceZ(372) - sliceZ(371)).toBe(NATIVE_CT.spacing[2])
 })
 test('preserved c3 source checkpoints distinguish segment identity from CT indices and distal sampling positions', () => {
   const codes: Record<string, string[]> = {
@@ -191,53 +194,4 @@ test('anatomical labels use the exact matching case graph and preserve the sourc
       expect(Math.min(...distances)).toBeLessThan(0.0001)
     }
   }
-})
-test('CT actions reject an unrecorded response and wrong slice while preserving the actual learner point', () => {
-  const [prediction, transfer] = CT_TRACES
-  const reduce = ctSessionReducer(prediction, transfer)
-  let s = reduce(emptyCtSession(), { type: 'advance' })
-  expect(reduce(s, { type: 'advance' })).toBe(s)
-  expect(reduce(s, { type: 'mark', index: 0, mark: { slice: 0, pixel: [100, 100] } })).toBe(s)
-  expect(
-    reduce(s, {
-      type: 'mark',
-      index: 0,
-      mark: { slice: prediction.checkpoints[0].slice, pixel: [NaN, 100] },
-    }),
-  ).toBe(s)
-  s = reduce(s, { type: 'orientation', value: orientationFor(prediction.preset) })
-  s = reduce(s, { type: 'check-orientation' })
-  for (let i = 0; i < prediction.checkpoints.length; i++) {
-    s = reduce(s, { type: 'active', index: i })
-    if (prediction.checkpoints[i].decision)
-      s = reduce(s, { type: 'branch', index: i, value: 'unresolved' })
-    s = reduce(s, {
-      type: 'mark',
-      index: i,
-      mark: { slice: prediction.checkpoints[i].slice, pixel: [10, 10] },
-    })
-    s = reduce(s, { type: 'record-junction' })
-  }
-  s = reduce(s, { type: 'advance' })
-  expect(reduce(s, { type: 'advance' })).toBe(s)
-  s = reduce(s, { type: 'course', value: 'cranial' })
-  expect(reduce(s, { type: 'advance' })).toBe(s)
-  s = reduce(s, { type: 'target-relation', value: 'unresolved' })
-  expect(reduce(s, { type: 'advance' })).toBe(s)
-  s = reduce(s, { type: 'target-inspected' })
-  s = reduce(s, { type: 'advance' })
-  expect(s.prediction?.targetRelation).toBe('unresolved')
-  expect(s.prediction?.marks[0].pixel).toEqual([10, 10])
-  expect(
-    reduce(s, {
-      type: 'mark',
-      index: 0,
-      mark: { slice: prediction.checkpoints[0].slice, pixel: [20, 20] },
-    }),
-  ).toBe(s)
-  s = reduce(reduce(s, { type: 'advance' }), { type: 'advance' })
-  expect(s.marks).toEqual(transfer.checkpoints.map(() => null))
-  expect(s.targetRelation).toBe('')
-  expect(reduce(s, { type: 'advance' })).toBe(s)
-  expect(s.complete).toBe(false)
 })

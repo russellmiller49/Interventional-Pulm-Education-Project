@@ -1,4 +1,5 @@
-// Junction explanations for the local lessons: one per division the lessons mark.
+// Fork explanations: what the CT shows at thirteen forks, slice by slice. The bench shows these
+// beside the fork's computed levels (engine/fork-facts.ts), which every fork has.
 //
 // Where each statement comes from:
 //  - levels, directions and distances: the airway model (geometry/branch-decisions.json and the
@@ -49,12 +50,10 @@ export interface JunctionFeedbackPacket {
   parent: string
   daughters: [string, string]
   /**
-   * Shown before the task in the local lesson and on the routes: what the learner will see on
-   * the answer slices when the two lumens are not yet separate there, and what to do about it.
+   * Shown before the openings are identified: what the learner will see on the identifying
+   * slices when the two lumens are not yet separate there, and what to do about it.
    */
   entryLimitation?: string
-  /** Shown before the task on the routes only, where the response plane differs from the lesson's. */
-  routeEntryNote?: string
   /** Model node level and the slices on which the two paths separate. */
   divergence: string
   /** The wall or lumen relationship that decides identity on the answer slices. */
@@ -83,8 +82,6 @@ const PACKETS: JunctionFeedbackPacket[] = [
     checkpointId: 'junction-1',
     parent: 'Trachea',
     daughters: ['RMSB', 'LMSB'],
-    routeEntryNote:
-      "On this route the two main bronchi are marked on slice 387, 5 mm below the tracheal bifurcation, where they still share one wide air column. Mark RMSB in the half on the patient's right and LMSB in the half on the patient's left. Scroll down to slice 375 to see the carina come between them; by slice 372 they are two separate ovals.",
     divergence:
       'The tracheal centreline divides at about slice 392. From there the lumen widens side to side but stays one air column down to slice 376. On slice 375 a thin wall, the carina, first crosses it; on 374 to 372 that wall is plain. You mark both main bronchi on slice 372, where they are two separate ovals 30 mm apart, centre to centre.',
     continuity:
@@ -120,7 +117,7 @@ const PACKETS: JunctionFeedbackPacket[] = [
     ],
     uncertain: [
       'Separation at 375 is threshold arithmetic on the shipped PNGs (same at −950, −900 and −850 HU), not a reviewed annotation.',
-      'The lesson marks on slice 372 by a local override; the routes keep the exported plane, slice 387 (OD-01).',
+      'Both main bronchi are identified on slice 372 by an override (engine/response-planes.ts); the export keeps slice 387.',
     ],
     naming: {
       demonstration: [
@@ -593,7 +590,7 @@ const PACKETS: JunctionFeedbackPacket[] = [
       'Go to slice 389 and find the lateral end of the RB3a channel. Step up one slice at a time to 396, keeping the small round lumen in view, and mark it. Go back to 389, step down to 384, and mark the lumen you followed that way. If you lose it, you have probably stepped onto a vessel: an airway stays dark in the middle.',
     known: [
       'RB3a divides at about slice 389. The cranial daughter runs 23 mm outward, rising 13 mm; the caudal daughter runs 7 mm outward, dropping 3.6 mm.',
-      'The two answer points are 0.3 mm apart on the screen and 6 mm apart in height (slices 396 and 384).',
+      'The two daughters’ centres are 0.3 mm apart on the screen and 6 mm apart in height (slices 396 and 384).',
     ],
     uncertain: [
       'Both daughters carry the code RB3a. Kurimoto & Morita p. 39 describe B3a dividing into B3ai (cranial) and B3aii (caudal); the directions match, the names are not in the source labels.',
@@ -821,7 +818,7 @@ const PACKETS: JunctionFeedbackPacket[] = [
     naming: {
       demonstration: [
         'Both daughters are distal branches of LB6 and both are labelled LB6 here. They are told apart on screen by direction: Daughter A, more left (lateral), and Daughter B, more right (medial).',
-        'At this depth the name matters less than the count: note how many divisions you passed after entering LB6, and which way you turned at each.',
+        'At this depth the name matters less than the count: note how many divisions you went through after entering LB6, and which way you turned at each.',
       ],
     },
   },

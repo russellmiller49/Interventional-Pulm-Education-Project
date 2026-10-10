@@ -7,18 +7,20 @@
 //
 // Output: src/features/bronchial-branch-tracing/geometry/answer-plane-air.json
 //
-// For every answer slice a local lesson asks for a mark on, it crops the shipped axial PNG around
-// that division's model locators and stores which pixels are air (HU at or below AIR_HU). The
-// lesson's result band (engine/junction-feedback.ts, `markVerdict`) flood-fills that mask from the
-// learner's mark to say which lumen the mark is in.
+// For every plane a daughter is identified on (every division of every route in
+// geometry/branch-decisions.json), it crops the shipped axial PNG around that division's model
+// locators and stores which pixels are air (HU at or below AIR_HU). The result band
+// (engine/junction-feedback.ts, `optionVerdict`) flood-fills that mask from the learner's mark to
+// say which lumen the mark is in.
 //
 // Each plane is { x0, y0, w, h, runs }. `runs` is a row-major run-length string: alternating
 // counts of not-air and air pixels, starting with not-air, separated by spaces. The output is
 // deterministic: same PNGs and geometry in, same bytes out.
 //
-// Add a division to a local lesson: add its checkpoint id to LOCAL_JUNCTIONS (or a plane to
-// EXTRA_PLANES) and regenerate. `__tests__/answer-plane-air.test.ts` fails when a local exercise
-// has an answer plane without a mask.
+// A new route or division in branch-decisions.json is picked up on the next run. To identify a
+// division on a different plane from its export, add it to RESPONSE_PLANE_OVERRIDES here and in
+// engine/response-planes.ts and regenerate. `__tests__/answer-plane-air.test.ts` fails when a
+// response plane has no mask.
 
 import { readFileSync, writeFileSync } from 'node:fs'
 import { inflateSync } from 'node:zlib'
@@ -39,22 +41,12 @@ export const AIR_HU = HU_FLOOR + (AIR_BYTE * HU_SPAN) / 255
 export const CAP_MM = 12
 const PAD_MM = CAP_MM + 4
 
-/** Divisions the local lessons mark (content/lessons.ts LOCAL_PLANS). */
-const LOCAL_JUNCTIONS = [
-  'junction-6',
-  'junction-14',
-  'junction-9',
-  'junction-10',
-  'junction-19',
-  'junction-20',
-  'junction-16',
-  'junction-23',
-  'junction-11',
-  'junction-25',
-  'junction-52',
-]
-/** Planes a local exercise overrides: the first bifurcation is marked where the carina shows. */
-const EXTRA_PLANES = [{ slice: 372, parentEdge: 0, edges: [1, 2] }]
+/**
+ * Planes that differ from the route export, by checkpoint id. The same table as
+ * src/features/bronchial-branch-tracing/engine/response-planes.ts (a test holds them together):
+ * the tracheal bifurcation is identified on slice 372, where the carina shows.
+ */
+export const RESPONSE_PLANE_OVERRIDES = { 'junction-1': 372 }
 
 const decisions = JSON.parse(readFileSync(`${MODULE}/geometry/branch-decisions.json`))
 const routes = JSON.parse(readFileSync(`${MODULE}/geometry/paired-routes.json`))
@@ -99,37 +91,49 @@ export function edgeCrossings(edgeId, slice) {
   return crossings
 }
 
-function decisionFor(checkpointId) {
+/** Every division once, by graph node: [{ id, decision }]. */
+export function divisions() {
+  const seen = new Map()
   for (const trace of decisions.traces)
     for (const point of trace.checkpoints)
-      if (point.id === checkpointId && point.decision) return point.decision
-  throw new Error(`No decision for ${checkpointId}`)
+      if (point.decision && !seen.has(point.id)) seen.set(point.id, point.decision)
+  return [...seen].map(([id, decision]) => ({ id, decision }))
 }
 
-/** slice → the model points the crop must hold, with the slots that are marked there. */
+/** Where each daughter of a division is identified: the export's plane, or its override. */
+export function responsePoints(id, decision) {
+  const override = RESPONSE_PLANE_OVERRIDES[id]
+  return decision.options.map((option) => {
+    if (override === undefined || override === option.slice)
+      return { option, slice: option.slice, pixel: option.pixel }
+    const pixel = edgeCrossings(option.sourceEdgeId, override)[0]
+    return pixel
+      ? { option, slice: override, pixel }
+      : { option, slice: option.slice, pixel: option.pixel }
+  })
+}
+
+/** slice → the model points the crop must hold. */
 export function planeRequests() {
   const planes = new Map()
   const need = (slice, pixel) => {
     if (!planes.has(slice)) planes.set(slice, [])
     planes.get(slice).push(pixel)
   }
-  for (const id of LOCAL_JUNCTIONS) {
-    const decision = decisionFor(id)
-    for (const option of decision.options) {
-      need(option.slice, option.pixel)
-      for (const other of decision.options)
-        if (other !== option)
-          for (const pixel of other.slice === option.slice
+  for (const { id, decision } of divisions()) {
+    const points = responsePoints(id, decision)
+    for (const point of points) {
+      need(point.slice, point.pixel)
+      for (const other of points)
+        if (other !== point)
+          for (const pixel of other.slice === point.slice
             ? [other.pixel]
-            : edgeCrossings(other.sourceEdgeId, option.slice))
-            need(option.slice, pixel)
-      for (const pixel of edgeCrossings(decision.parent.sourceEdgeId, option.slice))
-        need(option.slice, pixel)
+            : edgeCrossings(other.option.sourceEdgeId, point.slice))
+            need(point.slice, pixel)
+      for (const pixel of edgeCrossings(decision.parent.sourceEdgeId, point.slice))
+        need(point.slice, pixel)
     }
   }
-  for (const plane of EXTRA_PLANES)
-    for (const edge of [plane.parentEdge, ...plane.edges])
-      for (const pixel of edgeCrossings(edge, plane.slice)) need(plane.slice, pixel)
   return planes
 }
 
@@ -206,25 +210,15 @@ const hu = (byte) => Math.round(HU_FLOOR + (byte * HU_SPAN) / 255)
 
 function report() {
   const rows = []
-  const targets = LOCAL_JUNCTIONS.flatMap((id) =>
-    decisionFor(id).options.map((option, slot) => ({
+  const targets = divisions().flatMap(({ id, decision }) =>
+    responsePoints(id, decision).map((point, slot) => ({
       id,
       slot,
-      code: option.airway.code,
-      slice: option.slice,
-      pixel: option.pixel,
+      code: point.option.airway.code,
+      slice: point.slice,
+      pixel: point.pixel,
     })),
   )
-  for (const plane of EXTRA_PLANES)
-    plane.edges.forEach((edge, slot) =>
-      targets.push({
-        id: `first bifurcation @${plane.slice}`,
-        slot,
-        code: `edge ${edge}`,
-        slice: plane.slice,
-        pixel: edgeCrossings(edge, plane.slice)[0],
-      }),
-    )
   for (const t of targets) {
     const pixels = slicePixels(t.slice)
     const seed = seedNear(pixels, t.pixel, AIR_BYTE)
