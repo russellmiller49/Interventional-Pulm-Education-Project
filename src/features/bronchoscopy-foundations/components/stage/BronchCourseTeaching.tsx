@@ -15,6 +15,7 @@ import { BlockCard } from './BronchTeachingBlock'
 import { BronchPilotTeaching } from './BronchPilotTeaching'
 import { InstrumentOrientation } from './InstrumentOrientation'
 import { MediaFigure } from './MediaFigure'
+import { SurveyVideo } from './SurveyVideo'
 import styles from './course-flow.module.css'
 
 /**
@@ -83,6 +84,7 @@ export function BronchCourseTeaching({
       {chunk.visual === 'tube-geometry' ? <TubeGeometryFigure /> : null}
       {chunk.visual === 'two-diameters' ? <TwoDiametersFigure /> : null}
       {chunk.visual === 'room-setup' ? <RoomSetupFigure /> : null}
+      {chunk.visual === 'survey-video' ? <SurveyVideo /> : null}
       {chunk.visual === 'worked-decision' ? (
         <section className={styles.worked} data-worked-example>
           <h3>A worked situation</h3>

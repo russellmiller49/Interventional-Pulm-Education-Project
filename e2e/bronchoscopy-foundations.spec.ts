@@ -580,13 +580,24 @@ test('the survey distinguishes entering from inspecting and refuses an unseen-ai
   await reachAct(page, 'systematic-survey')
   await ready(page)
   const rows = page.locator('[data-inspection-ledger] [data-ledger-row]')
-  await expect(rows).toHaveCount(6)
-  await expect(page.locator('[data-ledger-row="RLL"]')).not.toHaveAttribute(
-    'data-ledger-status',
-    'inspected',
-  )
-  const rll = page.locator('[data-ledger-row="RLL"] select')
-  expect(await rll.locator('option[value="inspected"]').isDisabled()).toBe(true)
+  // Every segment of both lungs has a line.
+  await expect(rows).toHaveCount(18)
+  // The record offers three statuses, under the section's own words, and nothing is declared.
+  const first = page.locator('[data-ledger-row="RB1"] select')
+  expect(await first.locator('option').allTextContents()).toEqual([
+    'Record…',
+    'Seen',
+    'Not seen',
+    'Not reachable',
+  ])
+  await expect(page.locator('[data-inspection-ledger] thead th')).toHaveText([
+    'Airway',
+    'Status',
+    'Record',
+  ])
+  await expect(page.locator('[data-ledger-row="RB1"] td').first()).toHaveText('To do')
+  // Seen needs the scope inside the segment; not reachable needs its opening in view.
+  expect(await first.locator('option[value="inspected"]').isDisabled()).toBe(true)
   const rb10 = page.locator('[data-ledger-row="RB10"] select')
   expect(await rb10.locator('option[value="not-safely-accessible"]').isDisabled()).toBe(true)
   await rb10.selectOption('not-observed')
@@ -595,11 +606,13 @@ test('the survey distinguishes entering from inspecting and refuses an unseen-ai
     'data-ledger-status',
     'not-observed',
   )
+  await expect(page.locator('[data-ledger-row="RB10"] td').first()).toHaveText('Not seen')
   await expect(primary(page)).toBeDisabled()
   await expect(skip(page)).toHaveText('Continue without completing')
-  await expect(page.locator('[data-scope-scene]')).toContainText(
-    'Entering an airway is not inspecting it',
-  )
+  const scene = page.locator('[data-scope-scene]')
+  await expect(scene).toContainText('Seen needs a clear view from inside the segment.')
+  await expect(scene).not.toContainText('Declare')
+  await expect(scene).not.toContainText('only a declaration records an inspection')
 })
 
 test('a survey left without completing it saves no survey and claims nothing', async ({ page }) => {
@@ -1106,8 +1119,8 @@ test('a completed inspection record stays a record after the scope leaves those 
   await ready(page)
   // Every goal on this card reads the attempt: the sequences it walked and the record it wrote.
   const rows = page.locator('[data-step-goals] li')
-  await expect(rows).toHaveCount(5)
-  expect(await page.locator('[data-step-goals] li[data-goal-claim="history"]').count()).toBe(5)
+  await expect(rows).toHaveCount(3)
+  expect(await page.locator('[data-step-goals] li[data-goal-claim="history"]').count()).toBe(3)
   await expect(page.locator('[data-goal-group]')).toHaveAttribute('data-goal-group', 'history')
   await expect(page.locator('[data-now-card]')).not.toContainText('Read from the scope right now')
   await expect(page.locator('[data-goal-now]')).toContainText('Where the tip is now:')
@@ -1342,7 +1355,6 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
   // The rewritten sections (the right lung, bleeding) close on their checklist and do not print
   // the table in the lesson; the Reference keeps all of it.
   const GRAMMAR_SECTIONS = [
-    'systematic-survey',
     'poor-return',
     'protected-accessories',
     'deterioration',
@@ -1391,9 +1403,9 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
         await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[index + 1].id)
       }
     }
-    // Five sections, six places: poor-return shows the rows twice. A rewritten section no longer
+    // Four sections, five places: poor-return shows the rows twice. A rewritten section no longer
     // prints the table in the lesson.
-    expect(occurrences).toBe(6)
+    expect(occurrences).toBe(5)
     await page.goto(base + '/reference')
     const reference = page.locator('#reading-the-view table[data-grammar]')
     await expect(reference.locator('thead th')).toHaveText([

@@ -15,6 +15,8 @@ export const BRONCH_LEARN_VERSIONS: Readonly<Record<string, number>> = {
   'left-side': 2,
   // Re-authored in the rewrite, section 8 (2026-10-09).
   'view-loss': 2,
+  // Re-authored in the rewrite, section 9 (2026-10-09).
+  'systematic-survey': 2,
 }
 
 export function bronchLearnRecordId(sectionId: string): string {

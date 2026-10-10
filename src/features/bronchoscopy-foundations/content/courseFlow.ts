@@ -22,6 +22,7 @@ export type CourseVisual =
   | 'tube-geometry'
   | 'two-diameters'
   | 'room-setup'
+  | 'survey-video'
 export interface CourseChunk {
   readonly id: string
   readonly title: string
@@ -526,25 +527,28 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     close(['common-errors']),
   ],
   'systematic-survey': [
-    teach('survey-order', 'Plan a systematic inspection', [
-      'what-a-survey-leaves',
-      'what-the-record-rests-on',
-      'default-order',
-    ]),
-    teach('worked-record', 'Follow one lower lobe into the record', [
-      'separate-observations',
-      'lower-lobe-worked',
-      'withdrawal-and-return',
-      'when-the-survey-yields',
-    ]),
-    practice(
-      'Inspect and maintain the examination record',
-      'inspection',
-      'Navigate the authored survey and declare what you actually inspected. Record nonvisualized or inaccessible regions explicitly. Entering an airway does not complete its inspection.',
+    hook('Every airway, every time'),
+    check('check', 'A smeared lens in a segment'),
+    screen(
+      'the-order',
+      'One survey, start to finish',
+      'Watch the whole survey once with the names on. Then turn them off and name each airway yourself.',
+      ['same-order', 'normal-side-first'],
+      { visual: 'survey-video' },
     ),
-    check('check', 'Distinguish an entry from an inspection'),
-    debrief(['common-errors']),
-    check('transfer', 'Decide how to record a limited view'),
+    screen(
+      'the-record',
+      'What each segment needs',
+      'Read how to look at a segment, then the three things the record can say.',
+      ['in-and-out', 'three-statuses'],
+    ),
+    practice(
+      'Survey both lungs',
+      'inspection',
+      'Start above the carina. Enter each segment, and record it in the table under the controls. RB10 is narrowed.',
+    ),
+    check('transfer', 'A mass in the right upper lobe'),
+    close(['common-errors']),
   ],
   'describe-findings': [
     teach(

@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import type { AirwayLabel, ScopeGoal, ScopeViewSpec } from '../components/scope/types'
+import type { ScopeGoal, ScopeViewSpec } from '../components/scope/types'
 import { carinaTasks as branchEntry } from '../test-support/carinaTasks'
 import { section as fiveControls } from '../content/sections/five-controls'
 import { section as larynxAndEntry } from '../content/sections/larynx-and-entry'
@@ -13,6 +13,7 @@ import type { BronchSectionDefinition, ScopeLabAct } from '../content/types'
 import { createScopeCase, type ScopeCase } from '../engine/scope/scopeCase'
 import { breathPhaseAt, LARYNX_GLOTTIS_MM } from '../engine/scope/scopeScripts'
 import { ScopePilot } from '../test-support/scopePilot'
+import { SCOPE_RECIPES } from '../test-support/scopeRecipes'
 import {
   ScopeDriver,
   centerlineTubeCollider,
@@ -158,30 +159,22 @@ describe('authored scope-lab steps can be completed with the learner’s control
     expect(p.goals(act.goals)).toEqual(allMet(act.goals))
   })
 
-  it('systematic-survey: every airway accounted for, the smear cleared, the narrowed one recorded', () => {
+  it('systematic-survey: every segment of both lungs seen and recorded, the narrowed one not reachable', () => {
     const act = actOf(systematicSurvey)
     const p = pilot(act.view)
-    const inspect = (label: AirwayLabel) => {
-      p.goInto(label)
-      if (p.state.signals.view === 'contaminated') p.send({ type: 'clear-lens' })
-      p.goDeep(label)
-      p.send({ type: 'declare', airway: label, status: 'inspected' })
-    }
-    inspect('RLL')
-    inspect('RB6')
-    p.withdrawTo('RLL')
-    inspect('RB7')
-    p.withdrawTo('RLL')
-    inspect('RB8')
-    p.withdrawTo('RLL')
-    inspect('RB9')
-    p.withdrawTo('RLL')
-    p.lookAt('RB10')
-    p.send({ type: 'declare', airway: 'RB10', status: 'not-safely-accessible' })
+    SCOPE_RECIPES['systematic-survey']!.act(p)
     expect(p.state.events).toContain('survey-complete')
-    p.withdrawToEdge(scopeCaseOrigin('RLL'))
-    p.goInto('RB6')
+    expect(p.state.events).not.toContain('entry-refused')
     expect(p.goals(act.goals)).toEqual(allMet(act.goals))
+  })
+
+  it('systematic-survey: the record offers three statuses under this view’s own words', () => {
+    const record = actOf(systematicSurvey).view.ledger?.record
+    expect(record?.offer).toEqual([
+      { status: 'inspected', word: 'Seen' },
+      { status: 'not-observed', word: 'Not seen' },
+      { status: 'not-safely-accessible', word: 'Not reachable' },
+    ])
   })
 
   it('protected-accessories: expose only beyond the tip; retrieve only once the image agrees', () => {
@@ -233,10 +226,6 @@ describe('authored scope-lab steps can be completed with the learner’s control
     expect(bent.state.events).toContain('wall-contact')
   })
 })
-
-function scopeCaseOrigin(label: AirwayLabel): number {
-  return teachingCase().originEdge.get(label)!
-}
 
 describe('free drive against a lumen', () => {
   const file = readTeachingGraphFile()

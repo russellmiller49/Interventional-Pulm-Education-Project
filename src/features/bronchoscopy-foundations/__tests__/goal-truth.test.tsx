@@ -227,14 +227,14 @@ describe('a finished scope card after the tip has moved on', () => {
     // met ledger goal is a record of the attempt — never a reading of what is in view now.
     expect(claims().every((claim) => claim === 'history')).toBe(true)
     expect(heading()?.getAttribute('data-goal-group')).toBe('history')
-    pilot.withdrawTo('BI')
+    pilot.withdrawTo('LMSB')
     await settle()
-    expect(pilot.state.location.label).toBe('BI')
+    expect(pilot.state.location.label).toBe('LMSB')
     expect(goalStates().every((state) => state === 'true')).toBe(true)
     expect(claims().every((claim) => claim === 'history')).toBe(true)
     expect(heading()?.textContent).toBe('On the record for this attempt')
     expect(cardText()).not.toContain('Read from the scope right now')
-    expect(limit()).toContain('Where the tip is now: Bronchus intermedius.')
+    expect(limit()).toContain('Where the tip is now: Left main bronchus.')
   })
 
   it('shows the scripted hold from the clock, and finishes it on the learner’s own actions', async () => {

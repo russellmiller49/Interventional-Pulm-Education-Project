@@ -2,7 +2,6 @@ import type { AirwayLabel } from '../components/scope/types'
 import type { BronchSectionId } from '../content/pathway'
 import { LARYNX_GLOTTIS_MM } from '../engine/scope/scopeScripts'
 import type { ScopePilot } from './scopePilot'
-import { teachingCase } from './teachingCase'
 
 /**
  * How a learner meets every authored goal of each scope-lab section, with the learner's own
@@ -39,8 +38,6 @@ export const HOLD_RECIPE = (p: ScopePilot) => {
   p.send({ type: 'capture' })
   for (let i = 0; i < 6; i += 1) p.send({ type: 'tick', seconds: 1 })
 }
-
-const origin = (label: AirwayLabel) => teachingCase().originEdge.get(label)!
 
 export const SCOPE_RECIPES: Partial<Record<BronchSectionId, ScopeRecipe>> = {
   'five-controls': {
@@ -94,25 +91,32 @@ export const SCOPE_RECIPES: Partial<Record<BronchSectionId, ScopeRecipe>> = {
   },
   'systematic-survey': {
     act: (p) => {
-      const inspect = (label: AirwayLabel) => {
-        p.goInto(label)
-        if (p.state.signals.view === 'contaminated') p.send({ type: 'clear-lens' })
+      // To a segment from wherever the tip is: back out until it is on the way, then in.
+      const reach = (label: AirwayLabel) => {
+        for (let guard = 0; ; guard += 1) {
+          try {
+            p.goInto(label)
+            return
+          } catch (error) {
+            if (guard > 400 || !/is not on the way/.test(String(error))) throw error
+            p.straighten()
+            p.withdraw()
+          }
+        }
+      }
+      const see = (label: AirwayLabel) => {
+        reach(label)
         p.goDeep(label)
         p.send({ type: 'declare', airway: label, status: 'inspected' })
       }
-      inspect('RLL')
-      inspect('RB6')
-      p.withdrawTo('RLL')
-      inspect('RB7')
-      p.withdrawTo('RLL')
-      inspect('RB8')
-      p.withdrawTo('RLL')
-      inspect('RB9')
+      for (const label of ['RB1', 'RB2', 'RB3', 'RB4', 'RB5', 'RB6', 'RB7', 'RB8', 'RB9'] as const)
+        see(label)
+      // RB10 is narrowed: looked at from the lower lobe and recorded, never entered.
       p.withdrawTo('RLL')
       p.lookAt('RB10')
       p.send({ type: 'declare', airway: 'RB10', status: 'not-safely-accessible' })
-      p.withdrawToEdge(origin('RLL'))
-      p.goInto('RB6')
+      for (const label of ['LB1+2', 'LB3', 'LB4', 'LB5', 'LB6', 'LB7+8', 'LB9', 'LB10'] as const)
+        see(label)
     },
   },
   'protected-accessories': {
