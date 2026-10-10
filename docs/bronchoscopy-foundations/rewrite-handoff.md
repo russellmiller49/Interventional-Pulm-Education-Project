@@ -17,6 +17,7 @@ supervisor" answers.
 | ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
 | #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
+| #373 | `claude/bf-rewrite-s10`            | Draft, stacked on #371. Section 10, findings and the report, rewritten; `honest-report` retired.                  |
 | #371 | `claude/bf-rewrite-s09`            | Draft, stacked on #369. Section 9, the systematic survey, rewritten; one approved scope-pane change.              |
 | #369 | `claude/bf-rewrite-s08`            | Draft, stacked on #368. Section 8, losing and regaining the view, rewritten.                                      |
 | #368 | `claude/bf-rewrite-s07`            | Draft, stacked on #364. Section 7, the left lung, rewritten; `reference-frames` retired.                          |
@@ -31,24 +32,29 @@ supervisor" answers.
 | #348 | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix is now #351; close #348 once #351 merges.                        |
 
 Nothing is merged. The stack, in merge order: #349 → #350 → #352 → #355 → #358 → #359 → #360 →
-#362 → #364 → #368 → #369 → #371. #351 is independent. The work is in the worktree
-`…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s09`. Branch the
-next section from that branch (`git switch -c claude/bf-rewrite-s10`) and stack its PR on #371.
+#362 → #364 → #368 → #369 → #371 → #373. #351 is independent. The work is in the worktree
+`…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s10`. Branch the
+next section from that branch (`git switch -c claude/bf-rewrite-s11`) and stack its PR on #373.
 
 ## Start here next session
 
 1. Read this file, then the plan's rules and the brief for the section you are writing.
-2. Next section: 10, findings and the report (`describe-findings`, which absorbs
-   `honest-report`). Brief 10: describing structure, mucosa and contents; endoluminal, extrinsic
-   and mixed obstruction; an image atlas in contrast pairs; one annotated model report;
-   describe four images, then write the report for one survey.
-3. Two things to settle before writing it:
-   - The atlas needs abnormal images, and none is in the repository or in Local-Data (see the
-     notes from section 8). Ask Russell whether to wait for images or to write the section with
-     the image questions held back, as section 8 was.
-   - `honest-report` retires in that change. It reads the saved survey, which now has 18 lines,
-     and it holds the report activity, the `learnerRecord` step and several tests
-     (`stage-host`, `course-record`, the e2e report case). Budget for moving them.
+2. Next section: 11, washings and BAL (`washing-and-lavage`, which absorbs `poor-return`).
+   Brief 11: washing, BAL and therapeutic aspiration; choose the site from the CT; the wedge,
+   aliquots, suction pressure and return; what poor return means; processing; why lavage comes
+   before biopsy. Do: run a BAL in which the learner computes the return from the volumes, then
+   troubleshoot a poor return.
+3. Things to know before writing it:
+   - It is the first section since section 3 that teaches numbers. Use register rows 13, 14 and
+     15 through `num('id')`; look up the row ids in `content/numbers.ts`. None of them is signed.
+   - Review-register rows R25 and R26 refuse colony counts. Row 15 (quantitative cultures for
+     VAP) is extracted, but a refusal row can still block it: lifting one needs Russell's
+     decision, recorded (see the note on R14 under section 3).
+   - `poor-return` retires in that change, with its flow, its tests and its Reading-the-view
+     rows (`poor-return-leak`, `poor-return-collapse`, `no-return-patent-view`). The end-to-end
+     stacked-table case and the Reading-the-view count use it; move them to a section that
+     still prints the table.
+   - Claim-queue items C09 and C10 quote `poor-return` wording.
 4. Work one section per session. Get a digest of the old section from a subagent instead of
    reading it into context, then write the new file. The notes under each section below say
    what the checks will refuse.
@@ -124,10 +130,29 @@ sections no longer wait for sessions with the pilot.
    closing screen (item 6).
 5. **Sections rewritten so far:** the right lung, bleeding, and sections 1 to 5
    (`clinical-question`, `pre-use-check`, `sedation-and-monitoring`, `five-controls`,
-   `larynx-and-entry`), all 2026-10-08, and sections 7 to 9 (`left-side`, `view-loss`,
-   `systematic-survey`) on 2026-10-09. Five remain. Section 10 (`describe-findings`) is next.
-   The course lists 20 sections.
-   Notes from section 9:
+   `larynx-and-entry`), all 2026-10-08, and sections 7 to 10 (`left-side`, `view-loss`,
+   `systematic-survey`, `describe-findings`) on 2026-10-09. Four remain. Section 11
+   (`washing-and-lavage`) is next. The course lists 19 sections.
+   Notes from section 10:
+   - `honest-report` is retired. M17-O1, O2, O4 and O5 are homed in section 10; M17-O3 (recovery
+     instructions) is in `RETIRED_OBJECTIVE_REASONS`.
+   - Russell said to hold the image questions back (2026-10-09). The findings are named from six
+     descriptions in three pairs (`moreActs.findings`, a `sort`). Sections 12 and 14 will meet
+     the same gap; hold their image questions back the same way unless he says otherwise.
+   - No section shows the report built from the learner's own saved survey now. The survey is
+     still saved, and `engine/inspectionReport.ts` and the `learnerRecord` step type are kept but
+     unused. Whether to remove them is Russell's call: it changes the saved-progress record.
+   - A report act refuses an unsupported entry and leaves it unselected. In a browser test,
+     click such an option; `check()` fails because the state does not change.
+   - A report act's prompt is held to three sentences a paragraph, like a block.
+   - `kind: 'worked-example'` is not a block kind; the role carries that. Use `kind: 'pattern'`.
+   - New drawing `ObstructionTypesFigure` (`visual: 'obstruction-types'`). Leave room between
+     shapes: the first version's outside mass overlapped the next airway.
+   - It states 10 minutes, not the plan's 9.
+   - For Russell to confirm: the vascular-lesion teaching and its key; the four pairs; the
+     definition of extrinsic compression; the model report and the six report lines; retiring
+     M17-O3; whether to keep the saved survey.
+     Notes from section 9:
    - Russell approved one change to the scope pane on 2026-10-09: a view may name its record's
      own words (`ledger.record`, type `LedgerRecordWords`). Only `ScopeFallback.tsx` and
      `types.ts` changed; the reducer and the ledger's rules did not. Any further pane or engine
