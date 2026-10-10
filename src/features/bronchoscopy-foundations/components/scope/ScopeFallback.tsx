@@ -42,8 +42,10 @@ import {
   scopeControlId,
   type AccessoryPosition,
   type AccessoryState,
+  type AirwayInspectionRecord,
   type DeclarableStatus,
   type InspectionStatus,
+  type LedgerRecordWords,
   type OstiumPin,
   type ScopeCommand,
   type ScopeControlKey,
@@ -91,6 +93,18 @@ const DECLARED_WITHOUT_VIEW = 'declared inspected without a view beyond its open
 /** Printed wherever the record shows (A07/A30). */
 export const LEDGER_CAVEAT =
   'Entering an airway is not inspecting it; only a declaration records an inspection.'
+
+/** What a row shows when the view names its own record words (`LedgerRecordWords`). */
+function recordWord(words: LedgerRecordWords, record: AirwayInspectionRecord): string {
+  const status = ledgerStatus(record)
+  const recorded: DeclarableStatus | null =
+    status === 'inspected' || status === 'not-safely-accessible'
+      ? status
+      : record.limitation === 'not-observed'
+        ? 'not-observed'
+        : null
+  return words.offer.find((entry) => entry.status === recorded)?.word ?? words.open
+}
 
 const ACCESSORY_STATES = Object.keys(ACCESSORY_STATE_WORDS) as readonly AccessoryState[]
 const ACCESSORY_POSITIONS = Object.keys(ACCESSORY_POSITION_WORDS) as readonly AccessoryPosition[]
@@ -198,6 +212,7 @@ export function ScopePaneFrame(
     (key) => key !== 'declare' && view.controls.includes(key),
   )
   const declareOffered = view.controls.includes('declare')
+  const recordWords = view.ledger?.record
   const readouts = scopeReadouts(view, state)
   const records = expectedLedgerAirways(view).length > 0 ? inspectionRecords(state.ledger) : []
   const lastMode = state.inputModes[state.inputModes.length - 1]
@@ -626,7 +641,7 @@ export function ScopePaneFrame(
               <tr>
                 <th scope="col">Airway</th>
                 <th scope="col">Status</th>
-                {declareOffered ? <th scope="col">Declare</th> : null}
+                {declareOffered ? <th scope="col">{recordWords ? 'Record' : 'Declare'}</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -639,16 +654,18 @@ export function ScopePaneFrame(
                   >
                     <th scope="row">{airwayDisplayName(record.label)}</th>
                     <td>
-                      {INSPECTION_STATUS_WORDS[status]}
+                      {recordWords
+                        ? recordWord(recordWords, record)
+                        : INSPECTION_STATUS_WORDS[status]}
                       {record.inspected === 'declared-without-view'
-                        ? ` · ${DECLARED_WITHOUT_VIEW}`
+                        ? ` · ${recordWords ? recordWords.withoutView : DECLARED_WITHOUT_VIEW}`
                         : ''}
                     </td>
                     {declareOffered ? (
                       <td>
                         <select
                           id={scopeControlId(`declare-${record.label}`)}
-                          aria-label={`Declare ${record.label}`}
+                          aria-label={`${recordWords ? 'Record' : 'Declare'} ${record.label}`}
                           value=""
                           disabled={!controlsEnabled}
                           onChange={(event) => {
@@ -657,14 +674,20 @@ export function ScopePaneFrame(
                               send({ type: 'declare', airway: record.label, status: declared })
                           }}
                         >
-                          <option value="">Declare…</option>
-                          {DECLARABLE_STATUSES.map((declared) => (
+                          <option value="">{recordWords ? 'Record…' : 'Declare…'}</option>
+                          {(recordWords
+                            ? recordWords.offer
+                            : DECLARABLE_STATUSES.map((declared) => ({
+                                status: declared,
+                                word: DECLARATION_WORDS[declared],
+                              }))
+                          ).map(({ status: declared, word }) => (
                             <option
                               key={declared}
                               value={declared}
                               disabled={!declarationAllowed(record, declared)}
                             >
-                              {DECLARATION_WORDS[declared]}
+                              {word}
                             </option>
                           ))}
                         </select>
@@ -675,7 +698,13 @@ export function ScopePaneFrame(
               })}
             </tbody>
           </table>
-          <p className={styles.caveat}>{LEDGER_CAVEAT}</p>
+          {recordWords ? (
+            recordWords.note ? (
+              <p className={styles.caveat}>{recordWords.note}</p>
+            ) : null
+          ) : (
+            <p className={styles.caveat}>{LEDGER_CAVEAT}</p>
+          )}
         </div>
       ) : null}
 

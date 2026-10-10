@@ -463,3 +463,67 @@
   line-height: 1.55;
   color: var(--ink);
 }
+
+/* The annotated survey, played as a worked example. The outlines sit over the picture and clear
+   the player's own controls along its bottom edge. */
+.surveyVideo {
+  display: grid;
+  gap: 0.6rem;
+  max-width: 40rem;
+}
+.surveyFrame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: #000;
+}
+.surveyFrame video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.surveyOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.surveyOverlay polygon {
+  fill: rgba(113, 225, 229, 0.06);
+  stroke: #71e1e5;
+  stroke-width: 2;
+}
+.surveyOverlay text {
+  fill: #fff;
+  font-size: 40px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.75);
+  stroke-width: 6px;
+}
+.surveyControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+.surveyControls button {
+  min-height: 2.75rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+}
+.surveyControls label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+}
+.surveyNote {
+  min-height: 1.5rem;
+  font-size: 0.9rem;
+}

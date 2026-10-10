@@ -38,6 +38,7 @@ import { section as leftSide } from '../content/sections/left-side'
 import { section as preUseCheck } from '../content/sections/pre-use-check'
 import { section as rightSide } from '../content/sections/right-side'
 import { section as sedationAndMonitoring } from '../content/sections/sedation-and-monitoring'
+import { section as systematicSurvey } from '../content/sections/systematic-survey'
 import { section as viewLoss } from '../content/sections/view-loss'
 import { bronchStageLessons } from '../content/stageLessons'
 import type { BronchSectionDefinition, BronchTeachingBlock } from '../content/types'
@@ -387,6 +388,7 @@ describe('the rewrite rules', () => {
       'right-side',
       'left-side',
       'view-loss',
+      'systematic-survey',
       'bleeding-priorities',
     ])
     for (const section of [
@@ -398,6 +400,7 @@ describe('the rewrite rules', () => {
       rightSide,
       leftSide,
       viewLoss,
+      systematicSurvey,
       bleedingPriorities,
     ]) {
       expect(bronchSectionErrors(section)).toEqual([])

@@ -17,6 +17,7 @@ supervisor" answers.
 | ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
 | #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
+| #371 | `claude/bf-rewrite-s09`            | Draft, stacked on #369. Section 9, the systematic survey, rewritten; one approved scope-pane change.              |
 | #369 | `claude/bf-rewrite-s08`            | Draft, stacked on #368. Section 8, losing and regaining the view, rewritten.                                      |
 | #368 | `claude/bf-rewrite-s07`            | Draft, stacked on #364. Section 7, the left lung, rewritten; `reference-frames` retired.                          |
 | #364 | `claude/bf-rewrite-s05`            | Draft, stacked on #362. Section 5, larynx, trachea and carina, rewritten; `branch-entry` retired.                 |
@@ -30,22 +31,24 @@ supervisor" answers.
 | #348 | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix is now #351; close #348 once #351 merges.                        |
 
 Nothing is merged. The stack, in merge order: #349 → #350 → #352 → #355 → #358 → #359 → #360 →
-#362 → #364 → #368 → #369. #351 is independent. The work is in the worktree
-`…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s08`. Branch the
-next section from that branch (`git switch -c claude/bf-rewrite-s09`) and stack its PR on #369.
+#362 → #364 → #368 → #369 → #371. #351 is independent. The work is in the worktree
+`…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s09`. Branch the
+next section from that branch (`git switch -c claude/bf-rewrite-s10`) and stack its PR on #371.
 
 ## Start here next session
 
 1. Read this file, then the plan's rules and the brief for the section you are writing.
-2. Next section: 9, the systematic survey (`systematic-survey`). Brief 9: survey in the same
-   order every time, the presumed normal side first, each segment on the way in and on the way
-   out; the annotated survey video as the worked example; a full-tree survey in the simulator,
-   both lungs, each segment recorded as seen, not seen or not reachable (three statuses, down
-   from six).
-3. The brief allows two simulator changes there and no others: surveying the full tree, and the
-   three-status record. Find out first whether the survey ledger's statuses live in the section
-   or in the scope engine. If the engine has to change, stop and say so before you change it.
-   The survey video has no player in the course yet; that is new component work.
+2. Next section: 10, findings and the report (`describe-findings`, which absorbs
+   `honest-report`). Brief 10: describing structure, mucosa and contents; endoluminal, extrinsic
+   and mixed obstruction; an image atlas in contrast pairs; one annotated model report;
+   describe four images, then write the report for one survey.
+3. Two things to settle before writing it:
+   - The atlas needs abnormal images, and none is in the repository or in Local-Data (see the
+     notes from section 8). Ask Russell whether to wait for images or to write the section with
+     the image questions held back, as section 8 was.
+   - `honest-report` retires in that change. It reads the saved survey, which now has 18 lines,
+     and it holds the report activity, the `learnerRecord` step and several tests
+     (`stage-host`, `course-record`, the e2e report case). Budget for moving them.
 4. Work one section per session. Get a digest of the old section from a subagent instead of
    reading it into context, then write the new file. The notes under each section below say
    what the checks will refuse.
@@ -121,9 +124,33 @@ sections no longer wait for sessions with the pilot.
    closing screen (item 6).
 5. **Sections rewritten so far:** the right lung, bleeding, and sections 1 to 5
    (`clinical-question`, `pre-use-check`, `sedation-and-monitoring`, `five-controls`,
-   `larynx-and-entry`), all 2026-10-08, and sections 7 and 8 (`left-side`, `view-loss`) on 2026-10-09. Six
-   remain. Section 9 (`systematic-survey`) is next. The course lists 20 sections.
-   Notes from section 8:
+   `larynx-and-entry`), all 2026-10-08, and sections 7 to 9 (`left-side`, `view-loss`,
+   `systematic-survey`) on 2026-10-09. Five remain. Section 10 (`describe-findings`) is next.
+   The course lists 20 sections.
+   Notes from section 9:
+   - Russell approved one change to the scope pane on 2026-10-09: a view may name its record's
+     own words (`ledger.record`, type `LedgerRecordWords`). Only `ScopeFallback.tsx` and
+     `types.ts` changed; the reducer and the ledger's rules did not. Any further pane or engine
+     change still needs asking first.
+   - `SurveyVideo` (`components/stage`) plays the annotated survey with its outlines; a teach
+     screen shows it with `visual: 'survey-video'`. It reuses
+     `src/lib/airway-anatomy-lesson/video-atlas.ts`. Section 5 could use it for the larynx.
+   - The survey's ledger is `expected: 'segmental'` (18 lines) with `inaccessible: ['RB10']`.
+     The ledger allows "not seen" only before an opening has come into view, and it does not
+     count toward `ledger-complete`; the goals therefore use `ledger … 'inspected'` tests.
+   - Goals written as `ledger` tests give the help line "Record … in the inspection record";
+     `declared:` events give "Declare …".
+   - The recipe in `scopeRecipes.ts` backs out until the target is on the way, then goes in.
+     It ends in LB10, so tests that move on afterwards withdraw to the left main bronchus.
+   - A step title may not carry a digit, segment codes included ("A smeared lens in RB4" was
+     refused); the stage lessons then fail at import.
+   - A long word in the record's Status column breaks mid-word at 390 px; the word for an
+     unrecorded line is "To do" for that reason.
+   - It states 11 minutes, not the plan's 7: the full-tree survey is timed at 7 by estimate.
+   - For Russell to confirm: the reason given for "presumed normal side first"; the meaning of
+     each status; the new check (a right upper lobe mass: left lung first) and the two new
+     practice cases; whether 18 segments in one task is too long.
+     Notes from section 8:
    - No photograph of a red-out, a fogged lens, secretions or blood exists in the repository or
      in Local-Data, and `MediaRef` carries only normal structures. The causes are named from
      five written descriptions (`moreActs.causes`, a `sort`). Replace it with image questions
