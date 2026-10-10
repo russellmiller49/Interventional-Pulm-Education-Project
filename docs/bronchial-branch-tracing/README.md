@@ -98,7 +98,7 @@ These were decided by the build and are easy to change:
 1. The tracheal bifurcation is identified on slice 372 everywhere (lessons, Practice and the closing set).
 2. An opening that leads away from the lesion is refused at the fork. The scope does not drive into it and come back. Every daughter now has a centreline, so a short look into the other branch could be added if wanted.
 3. The scope's roll follows the three-part rule above. It is a rule for a teaching model, not a recording of how any one operator holds the scope.
-4. Twenty-three of the 57 forks have a written slice-by-slice explanation (see [Written fork explanations](#written-fork-explanations)). The other 34 show their computed levels and directions only. Twelve of those are forks where the openings are marked; all twelve are subsegmental divisions whose daughters carry the parent's name.
+4. Twenty-three of the 57 forks have a written slice-by-slice explanation (see [Written fork explanations](#written-fork-explanations)). The other 34 show their computed levels and directions only. Twelve of those are forks where the openings are marked. All twelve lie beyond the segmental bronchi; at eleven both daughters carry the parent's name, and at one RB8 fork (`junction-36`) a daughter carries the basal-trunk label.
 5. The "looking up, turn and do not flip" teaching in lesson 1 follows from the geometry and the book's right upper lobe display; it has not been checked line by line against Kurimoto and Morita pp. 4–8.
 
 ## Earlier design records
