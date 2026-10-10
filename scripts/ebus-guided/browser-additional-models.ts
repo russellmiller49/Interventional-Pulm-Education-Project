@@ -135,7 +135,7 @@ async function main() {
     await page.screenshot({ path: out + '/phone-gate.png' })
     await page.setViewportSize({ width: 1500, height: 1050 })
     // A failed new model must not earn completion.
-    await page.route('**/guided-v2/*.glb', (route) => route.abort())
+    await page.route('**/guided-v2/*.glb*', (route) => route.abort())
     await page.goto(base + '/en/ebus-guided/learn?section=contact-cutaway-model')
     await next()
     await next()

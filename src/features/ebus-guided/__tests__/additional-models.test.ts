@@ -237,5 +237,11 @@ it('ships optimized semantic assets matching their analytic and dependency valid
     proof.assets.find((a: { path: string }) => a.path === 'measurement-phantoms.glb')
       .maxEllipsoidEquationResidual,
   ).toBeLessThan(0.00001)
-  expect(proof.totalBytes).toBeLessThan(500000)
+  // The needle assembly is a detailed true-scale model with baked contact shading (about 2.4 MB);
+  // the other three stay small.
+  expect(proof.totalBytes).toBeLessThan(3_000_000)
+  for (const a of manifest.assets.filter(
+    (x: { path: string }) => x.path !== 'ebus-needle-assembly.glb',
+  ))
+    expect(a.bytes).toBeLessThan(200_000)
 })
