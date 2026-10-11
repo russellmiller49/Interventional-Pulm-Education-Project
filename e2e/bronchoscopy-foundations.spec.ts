@@ -882,7 +882,7 @@ const readout = (page: Page, id: string) => page.locator('[data-readout="' + id 
 test('the worked accessory exchange keeps its false report and still ends protected', async ({
   page,
 }) => {
-  await reachAct(page, 'protected-accessories')
+  await reachAct(page, 'biopsy-and-specimens')
   await ready(page)
   const caption = page.locator('[data-demonstration-caption]')
   const message = page.locator('[data-scope-message]')
@@ -1354,7 +1354,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
 
   // The rewritten sections (the right lung, bleeding) close on their checklist and do not print
   // the table in the lesson; the Reference keeps all of it.
-  const GRAMMAR_SECTIONS = ['protected-accessories', 'deterioration', 'scope-in-a-tube'] as const
+  const GRAMMAR_SECTIONS = ['deterioration', 'scope-in-a-tube'] as const
 
   async function expectGrammarRows(table: Locator, rowIds: readonly string[]) {
     await expect(table.locator('tbody tr[data-grammar-row]')).toHaveCount(rowIds.length)
@@ -1398,8 +1398,8 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
         await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[index + 1].id)
       }
     }
-    // Three sections, one place each. A rewritten section no longer prints the table in the lesson.
-    expect(occurrences).toBe(3)
+    // Two sections, one place each. A rewritten section no longer prints the table in the lesson.
+    expect(occurrences).toBe(2)
     await page.goto(base + '/reference')
     const reference = page.locator('#reading-the-view table[data-grammar]')
     await expect(reference.locator('thead th')).toHaveText([

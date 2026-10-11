@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react'
 
 import {
-  FIND_FRAME_SIZE,
+  findFrameSize,
   findFrame,
   markerCentre,
   markerNames,
@@ -112,13 +112,17 @@ function FindRow({
   const frame = findFrame(row.frameId)
   const rotation = row.rotation ?? 0
   const plural = row.marks ?? 'openings'
-  const singular = plural === 'structures' ? 'structure' : 'opening'
-  const names = markerNames(frame, rotation, plural === 'structures' ? 'Structure' : 'Opening')
+  const singular = plural.slice(0, -1)
+  const names = markerNames(
+    frame,
+    rotation,
+    plural === 'structures' ? 'Structure' : plural === 'tools' ? 'Tool' : 'Opening',
+  )
   const target = frame.markers.find((marker) => marker.id === row.targetId)
   const chosen = frame.markers.find((marker) => marker.id === answer)
   const open = answer === undefined && !revealed
   const matched = answer === row.targetId
-  const { width, height } = FIND_FRAME_SIZE
+  const { width, height } = findFrameSize(frame)
   // A quarter turn swaps the frame's sides; scale it so the turned frame still fits its box.
   const scale = rotation === 90 || rotation === 270 ? height / width : 1
   const choose = (markerId: string) => {
@@ -199,7 +203,7 @@ function FindRow({
                       aria-hidden="true"
                       data-find-label={marker.id}
                     >
-                      {shortName(marker.name)}
+                      {marker.short ?? shortName(marker.name)}
                     </text>
                   )
                 })}

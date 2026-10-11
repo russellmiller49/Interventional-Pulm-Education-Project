@@ -119,7 +119,7 @@ export const SCOPE_RECIPES: Partial<Record<BronchSectionId, ScopeRecipe>> = {
         see(label)
     },
   },
-  'protected-accessories': {
+  'biopsy-and-specimens': {
     act: (p) => {
       p.send({ type: 'accessory-move', to: 'in-channel' })
       p.send({ type: 'accessory-move', to: 'extended' })

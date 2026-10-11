@@ -271,7 +271,7 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
     verdict: 'this-control',
     thisControl: ['accessory'],
     harmfulReflex: 'insertion',
-    taughtIn: 'protected-accessories',
+    taughtIn: 'biopsy-and-specimens',
     sourceRefs: [
       { sourceId: 'T13', location: { kind: 'time-span', start: '00:20:40', end: '00:22:51' } },
     ],

@@ -4,7 +4,7 @@ import { carinaTasks as branchEntry } from '../test-support/carinaTasks'
 import { section as fiveControls } from '../content/sections/five-controls'
 import { section as larynxAndEntry } from '../content/sections/larynx-and-entry'
 import { section as leftSide } from '../content/sections/left-side'
-import { section as protectedAccessories } from '../content/sections/protected-accessories'
+import { section as protectedAccessories } from '../content/sections/biopsy-and-specimens'
 import { section as rightSide } from '../content/sections/right-side'
 import { section as scopeInATube } from '../content/sections/scope-in-a-tube'
 import { section as systematicSurvey } from '../content/sections/systematic-survey'
@@ -177,7 +177,7 @@ describe('authored scope-lab steps can be completed with the learner’s control
     ])
   })
 
-  it('protected-accessories: expose only beyond the tip; retrieve only once the image agrees', () => {
+  it('biopsy-and-specimens: expose only beyond the tip; retrieve only once the image agrees', () => {
     const act = actOf(protectedAccessories)
     const p = pilot(act.view)
     p.send({ type: 'accessory-move', to: 'in-channel' })
@@ -192,7 +192,7 @@ describe('authored scope-lab steps can be completed with the learner’s control
     expect(p.goals(act.goals)).toEqual(allMet(act.goals))
   })
 
-  it('protected-accessories: an exposed accessory is never moved through the channel (A12)', () => {
+  it('biopsy-and-specimens: an exposed accessory is never moved through the channel (A12)', () => {
     const view = actOf(protectedAccessories).view
     const early = pilot(view)
     early.send({ type: 'accessory-move', to: 'in-channel' })
