@@ -411,18 +411,23 @@ export function ConeBeamPanels({
         modeled C-arm sweeps through, drawn for orientation only; it is not a collision or clearance
         check.
       </p>
-      <div className={styles.sequenceToolbar}>
-        <button
-          type="button"
-          disabled={!enabled || a.sourceState !== 'ready'}
-          onClick={() => (a.busy ? a.stop() : void a.run())}
-        >
-          {a.busy ? 'Pause the spin' : 'Run the CBCT spin'}
-        </button>
-        <span>
-          {a.frames.length} / {inputs.projectionCount} projections
-        </span>
-      </div>
+      {/* Offered only where the spin can be run: not on a fixed example, not while looking back. */}
+      {enabled && (
+        <div className={styles.sequenceToolbar}>
+          <button
+            type="button"
+            disabled={a.sourceState !== 'ready'}
+            // One spin button. On a centered, checked setup the spin is the acquisition the
+            // section asks for; before that it is a spin to watch.
+            onClick={() => (a.busy ? a.stop() : void a.run(a.ready))}
+          >
+            {a.busy ? 'Pause the spin' : 'Run the CBCT spin'}
+          </button>
+          <span>
+            {a.frames.length} / {inputs.projectionCount} projections
+          </span>
+        </div>
+      )}
       <div className={styles.scoutPair}>
         {a.scouts.map((copy) => (
           <Snapshot key={copy.angle} copy={copy} scout inputs={inputs} />

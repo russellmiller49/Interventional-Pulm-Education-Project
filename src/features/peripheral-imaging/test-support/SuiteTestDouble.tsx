@@ -15,8 +15,8 @@ import {
 /**
  * A DOM-only simulator pane for the flow tests.
  *
- * Renders one native input per lab control with the contract's element id, the readouts the
- * step names, the chain caption strip and the chain answer fieldset — nothing else — so a test
+ * Renders one native input per lab control the step hands over, with the contract's element id,
+ * the readouts the step names, the chain caption strip and the chain answer fieldset — nothing else — so a test
  * can drive a section the way a learner does without WebGL, `@fluoroview/*` or `next/dynamic`.
  * Mount it with `jest.mock('../components/suite/ImagingSuitePane', () => require('../test-support/SuiteTestDouble').suitePaneDouble)`.
  */
@@ -41,13 +41,20 @@ export function SuiteTestDouble(props: ImagingSuitePaneProps) {
     >
       <ChainCaptionStrip lit={view.litStop} caption={props.chainCaption} />
       {props.chainAnswer ? <ChainAnswerFieldset answer={props.chainAnswer} /> : null}
-      {!controlsEnabled ? (
-        <p role="status">{props.lockedReason ?? props.pausedReason ?? 'Controls unavailable'}</p>
+      {!controlsEnabled && (props.lockedReason ?? props.pausedReason) ? (
+        <p role="status">{props.lockedReason ?? props.pausedReason}</p>
       ) : null}
-      {view.lab ? (
-        <fieldset disabled={!controlsEnabled} data-suite-controls>
+      {/* What the pane was handed, for a test to read where the pane shows no control for it. */}
+      <output hidden data-suite-values={JSON.stringify(lab.values)} />
+      {/* As the real dock: a control the step has not handed over is left out, not disabled. */}
+      {view.lab && controlsEnabled && (!view.controls || view.controls.length > 0) ? (
+        <fieldset data-suite-controls>
           {LAB_CONTROLS[view.lab]
-            .filter((control) => !view.controls || view.controls.includes(control.key))
+            .filter(
+              (control) =>
+                (!view.controls || view.controls.includes(control.key)) &&
+                control.key !== 'captured',
+            )
             .map((control) => {
               const id = controlElementId(control.key)
               const current = labValue(view.lab!, lab.values, control.key, lessonId)
@@ -124,6 +131,19 @@ export function SuiteTestDouble(props: ImagingSuitePaneProps) {
               }
             })}
         </fieldset>
+      ) : null}
+      {/* The CBCT spin's one button, as in `ConeBeamPanels`: it acquires only a centered, checked
+          setup, and it is not offered on a fixed example or while looking back. */}
+      {view.mode === 'cbct' && view.lab && controlsEnabled && !props.independent ? (
+        <button
+          id={controlElementId('captured')}
+          type="button"
+          onClick={() => {
+            if (readouts.ready === true) onLabChange({ captured: true })
+          }}
+        >
+          Run the CBCT spin
+        </button>
       ) : null}
       <dl {...{ [SUITE_DOM.readouts]: '' }}>
         {metricIds.map((metric) => (

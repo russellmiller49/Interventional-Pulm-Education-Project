@@ -54,12 +54,12 @@ const capturedGoal: LabGoal = {
   type: 'flag',
   key: 'captured',
   value: true,
-  label: 'Capture the checked model setup',
+  label: 'Run the CBCT spin on the centered, checked setup',
 }
 const movedAfterCapture: LabGoal = {
   type: 'event',
   id: 'moved-after-capture',
-  label: 'Move the setup after capturing, and watch readiness lapse',
+  label: 'After the spin, change the lesion offset and see the checks clear',
 }
 
 export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, SectionLabGoals>>> = {
@@ -144,15 +144,13 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
     act: [
       {
         type: 'event',
-        id: 'touched-field',
-        label: 'Adjust physical collimation around the target',
+        id: 'path-kept-collimated',
+        label: 'Narrow the field with the planned tool path and both landmarks still inside it',
       },
       {
-        type: 'metric',
-        metric: 'contextRetained',
-        op: 'eq',
-        value: true,
-        label: 'Retain the modeled target, planned excursion and both landmarks',
+        type: 'event',
+        id: 'spine-excluded',
+        label: 'Then, with the tool at the lesion, narrow it until the spine is out of the field',
       },
     ],
     observe: [
@@ -167,7 +165,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         label: 'Enlarge the stored image and inspect its acquisition metadata',
       },
     ],
-    watch: ['irradiatedAreaPct', 'contextRetained', 'zoomAddsExposure'],
+    watch: ['irradiatedAreaPct', 'contextRetained', 'spineInField', 'zoomAddsExposure'],
   },
   time: {
     act: [
@@ -203,7 +201,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
         metric: 'contextRetained',
         op: 'eq',
         value: true,
-        label: 'Keep the modeled excursion and required landmarks in the field',
+        label: 'Keep the planned tool path and both landmarks in the field',
       },
       { type: 'event', id: 'touched-zoom', label: 'Inspect the stored image with display zoom' },
     ],
@@ -247,11 +245,11 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
       {
         type: 'event',
         id: 'touched-offsetX',
-        label: 'Model a setup move and inspect the changed scout',
+        label: 'Change the horizontal offset and inspect the scout',
       },
     ],
     observe: [],
-    watch: ['centered', 'ready'],
+    watch: ['centered'],
   },
   'mobile-suite': {
     act: [
@@ -263,7 +261,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
       },
     ],
     observe: [],
-    watch: ['centered', 'ready'],
+    watch: ['centered'],
   },
   'tool-confirmation': {
     act: [
@@ -313,7 +311,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
       {
         type: 'event',
         id: 'touched-distance',
-        label: 'Change staff distance and compare the idealized exposure path',
+        label: 'Change the operator’s distance from the patient',
       },
     ],
     observe: [
@@ -331,7 +329,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
       {
         type: 'event',
         id: 'touched-area',
-        label: 'Change the modeled area input at fixed kerma',
+        label: 'Change the field area at fixed air kerma',
       },
     ],
     observe: [],

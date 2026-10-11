@@ -1,6 +1,5 @@
 import { cleanup, fireEvent } from '@testing-library/react'
 
-import { controlElementId } from '../components/suite/types'
 import { imagingStageLesson } from '../content/stageLessons'
 import {
   clickPrimary,
@@ -62,11 +61,14 @@ afterEach(() => {
 
 const WALK_SECTION = 'chain-walk'
 
-/** The value shown on a control in the suite dock, as the learner reads it. */
+/**
+ * The value the suite pane is drawing at. A fixed example shows no control for it (owner feedback,
+ * 2026-10-11: no slider that does nothing), so it is read from what the pane was handed.
+ */
 function controlValue(key: string): string {
-  const element = document.getElementById(controlElementId(key))
-  if (!element) throw new Error(`No control ${key} on step ${currentStepId()}`)
-  return (element as HTMLInputElement).value
+  const values = document.querySelector('[data-suite-values]')?.getAttribute('data-suite-values')
+  if (!values) throw new Error(`No suite pane on step ${currentStepId()}`)
+  return String((JSON.parse(values) as Record<string, unknown>)[key])
 }
 
 function exampleIdentity(): string | null {
@@ -81,14 +83,8 @@ function exampleState() {
     identity: exampleIdentity(),
     orbit: controlValue('orbit'),
     tilt: controlValue('tilt'),
-    lockedReason:
-      [...document.querySelectorAll('[role="status"]')]
-        .map((node) => node.textContent?.trim() ?? '')
-        .find((text) => /stays fixed/.test(text)) ?? null,
-    // A control inside a disabled fieldset keeps `disabled === false` of its own; the dock is the
-    // thing the learner cannot move.
-    controlsDisabled:
-      document.querySelector<HTMLFieldSetElement>('[data-suite-controls]')?.disabled ?? null,
+    // Nothing on a fixed example can be moved: it offers no control at all.
+    controlsOffered: document.querySelector('[data-suite-controls]') !== null,
   }
 }
 
@@ -130,8 +126,7 @@ describe('a fixed example is the same image whatever the learner did before reac
     expect(first.read.identity).toBe(`${WALK_SECTION}:example:0`)
     expect(first.read.orbit).toBe('0')
     expect(first.read.tilt).toBe('0')
-    expect(first.read.controlsDisabled).toBe(true)
-    expect(first.read.lockedReason).toMatch(/stays fixed so the question and the image match/)
+    expect(first.read.controlsOffered).toBe(false)
     for (const other of rest) {
       expect({ history: other.history, ...other.read }).toEqual({
         history: other.history,

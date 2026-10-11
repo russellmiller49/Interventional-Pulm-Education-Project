@@ -72,6 +72,9 @@ export function ImagingTeachingColumn({
       </div>
     )
   }
+  // A hands-on step authors no reading: its text column is the task card the host renders, and an
+  // empty panel here would be an empty box beside the image.
+  if (activity.content.length === 0) return null
   return (
     <div className={styles.teaching} data-teaching-panel>
       {activity.content.map((ref) => (

@@ -132,6 +132,7 @@ export function LessonDemonstration({
             key={replay}
             viewMemory={viewMemory}
             presentation={activity.presentation}
+            comparable={examples.length > 1}
             onRepresentationReady={onRepresentationReady}
             view={view}
             lab={lab}

@@ -510,8 +510,8 @@ export function TomosynthesisPanels({
           ? 'The display colour-codes the image source: gray from the thirteen DTS projections, teal from the planning CT.'
           : '13 parallel teaching projections; the cone arc is drawn for orientation. Dashed arc: the directions the arc never sampled, the missing wedge. Bars on the focal plane: how far each object spreads out of plane.'}
       </p>
-      {prior && (
-        <fieldset disabled={!enabled} className={styles.controls}>
+      {prior && enabled && (
+        <fieldset className={styles.controls}>
           <legend>Image source</legend>
           {(['measured', 'prior', 'blend'] as const).map((layer) => (
             <button

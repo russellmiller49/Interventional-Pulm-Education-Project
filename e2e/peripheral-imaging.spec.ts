@@ -279,7 +279,7 @@ test('field crop and zoom preserve a saved acquisition and restricted context ca
   await primary(page).click()
   await expect(primary(page)).toBeEnabled({ timeout: 60000 })
   await page.getByRole('button', { name: 'Crop the baseline stored frame', exact: true }).click()
-  await expect(page.locator('[data-current-image]')).toContainText('acquired field 100%')
+  await expect(page.locator('[data-current-image]')).toContainText('field 100%')
   await page.getByRole('button', { name: 'Zoom the baseline stored frame', exact: true }).click()
   await expect(page.locator('[data-current-image] [data-monitor-zoom]')).toHaveAttribute(
     'data-monitor-zoom',
@@ -290,12 +290,26 @@ test('field crop and zoom preserve a saved acquisition and restricted context ca
   await capture(page, info, 'field-stored-zoom.png')
   await expectNoStoredResponses(page)
   await primary(page).click()
-  await setRange(page, 'Collimated field width', 45)
+  // Owner's teaching, 2026-10-11: two fields. Straight to a tight field takes the spine out of
+  // it, and the display range with it, but the field for the tool path was never held.
+  await expect(page.locator('[data-current-image]')).toHaveAttribute('data-display-gain', '1.00')
+  await setRange(page, 'Collimated field width', 40)
   await expect(primary(page)).toHaveCount(0)
   await expect(skip(page)).toBeVisible()
   await expect(page.locator('[data-readout="contextRetained"]')).toContainText('no')
-  await setRange(page, 'Collimated field width', 90)
+  await expect(page.locator('[data-readout="spineInField"]')).toContainText('no')
+  await expect
+    .poll(async () =>
+      Number(await page.locator('[data-current-image]').getAttribute('data-display-gain')),
+    )
+    .toBeGreaterThan(1.8)
+  await expect(page.locator('[data-step-goals] li[data-met="true"]')).toHaveCount(1)
+  await setRange(page, 'Collimated field width', 70)
+  await expect(page.locator('[data-readout="contextRetained"]')).toContainText('yes')
+  await expect(page.locator('[data-readout="spineInField"]')).toContainText('yes')
+  await expect(page.locator('[data-step-goals] li[data-met="true"]')).toHaveCount(2)
   await expect(primary(page)).toBeEnabled()
+  await capture(page, info, 'field-two-stage-collimation.png')
 })
 
 test('timing changes depict separate within-frame and between-frame effects with reduced motion', async ({
@@ -573,12 +587,8 @@ test('acquisition movement invalidates readiness and the sampling check example 
   await setRange(page, 'Tip along needle axis', 10)
   await setRange(page, 'Anterior / posterior offset', 0)
   await primary(page).click()
-  await page
-    .getByRole('checkbox', { name: 'Combine depths into a teaching slab', exact: true })
-    .check()
-  await page
-    .getByRole('checkbox', { name: 'Combine depths into a teaching slab', exact: true })
-    .uncheck()
+  await page.getByRole('checkbox', { name: 'Thick slab (combine depths)', exact: true }).check()
+  await page.getByRole('checkbox', { name: 'Thick slab (combine depths)', exact: true }).uncheck()
   await page.getByRole('checkbox', { name: 'Reveal geometric explanation', exact: true }).check()
   await primary(page).click()
   await expect(page.locator('[data-sampling-state]')).toHaveAttribute(
@@ -709,7 +719,10 @@ for (const id of [
       await primary(page).click()
     }
     if (id === 'field') {
-      await controlRange(page, 'field', 90)
+      // Two stages: the field for the tool path, then the spine out of the field.
+      await controlRange(page, 'field', 70)
+      await controlRange(page, 'field', 40)
+      await expect(page.locator('[data-readout="spineInField"]')).toContainText('no')
       await primary(page).click()
       await controlCheck(page, 'crop')
       await controlRange(page, 'zoom', 1.5)
@@ -739,7 +752,7 @@ for (const id of [
       await page.locator('#peripheral-imaging-control-center').click()
       for (const key of ['target', 'clearance', 'state', 'protection'])
         await controlCheck(page, key)
-      await page.locator('#peripheral-imaging-control-captured').click()
+      await page.getByRole('button', { name: 'Run the CBCT spin', exact: true }).click()
       await expect(page.locator('[data-readout="captured"]')).toContainText('yes', {
         timeout: 60000,
       })
@@ -849,7 +862,7 @@ test('frozen learner images survive resizing, outline, demonstration replay and 
   await primary(page).click()
   expect((await fingerprint()) === baseline).toBe(true)
   await page.getByRole('button', { name: 'Back', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Save baseline image' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Save baseline image' })).toHaveCount(0)
   expect((await fingerprint()) === baseline).toBe(true)
   await page.getByRole('button', { name: /Return to step/ }).click()
   await page.getByText('Review earlier activities', { exact: true }).click()
@@ -1447,27 +1460,19 @@ async function reachWalkCheckWithObliquity(page: Page, priorObliquity: number | 
 async function fixedExampleReading(page: Page) {
   await expect(page.locator('[data-authored-example]')).toHaveCount(1)
   return page.evaluate(() => {
-    const value = (key: string) =>
-      (document.getElementById(`peripheral-imaging-control-${key}`) as HTMLInputElement | null)
-        ?.value ?? null
-    const output = (key: string) =>
-      document
-        .querySelector(`output[for="peripheral-imaging-control-${key}"]`)
-        ?.textContent?.trim() ?? null
+    // A fixed example offers no control (owner feedback, 2026-10-11): its acquisition context is
+    // the caption under the image.
+    const context =
+      document.querySelector('[data-authored-example] [data-acquisition-context]')?.textContent ??
+      ''
     return {
       identity: document
         .querySelector('[data-authored-example]')
         ?.getAttribute('data-authored-example'),
-      orbit: value('orbit'),
-      tilt: value('tilt'),
-      orbitShown: output('orbit'),
-      tiltShown: output('tilt'),
-      dockDisabled:
-        document.querySelector<HTMLFieldSetElement>('[data-suite-controls]')?.disabled ?? null,
-      lockedReason:
-        Array.from(document.querySelectorAll('[data-suite-locked], .reason, p'))
-          .map((node) => node.textContent?.trim() ?? '')
-          .find((text) => /stays fixed so the question and the image match/.test(text)) ?? null,
+      orbitShown: context.match(/C-arm obliquity (-?\d+°)/)?.[1] ?? null,
+      tiltShown: context.match(/beam tilt (-?\d+°)/)?.[1] ?? null,
+      controls: document.querySelectorAll('[data-authored-example] :is(input, select, button)')
+        .length,
     }
   })
 }
@@ -1490,11 +1495,9 @@ test('report 2.1: the fixed example is one authored image whatever the learner s
   }
   const [first, ...rest] = readings
   expect(first.reading.identity).toBe('chain-walk:example:0')
-  expect(first.reading.orbit).toBe('0')
-  expect(first.reading.tilt).toBe('0')
   expect(first.reading.orbitShown).toBe('0°')
-  expect(first.reading.dockDisabled).toBe(true)
-  expect(first.reading.lockedReason).not.toBeNull()
+  expect(first.reading.tiltShown).toBe('0°')
+  expect(first.reading.controls).toBe(0)
   for (const other of rest) expect(other.reading).toEqual(first.reading)
 
   // Reading, revealing and retrying the example is not work performed.
@@ -1824,12 +1827,13 @@ for (const size of [
       expect(seen.lit!.fraction).toBeGreaterThan(0.99)
       expect(seen.text!.visiblePx).toBeGreaterThan(200)
       expect(seen.text!.top).toBeGreaterThanOrEqual(0)
-      // Beside it, not below it.
+      // Beside it, not below it; and on the left, where the reading starts (owner feedback,
+      // 2026-10-11).
       const [scene, text] = await Promise.all([
         page.locator('[data-suite-viewport]').boundingBox(),
         page.locator('[data-walk-stop]').boundingBox(),
       ])
-      expect(text!.x).toBeGreaterThanOrEqual(scene!.x + scene!.width)
+      expect(text!.x + text!.width).toBeLessThanOrEqual(scene!.x)
     }
     await together()
     const titles = new Set<string>()
@@ -2026,27 +2030,30 @@ test('report 2.9, 2.10, 2.13 and 2.15: cue before the figure, checklist with the
   expect(footer.position).toBe('sticky')
   expect(footer.background).toMatch(/^rgb\(/)
 
-  // 2.13 — PDF p.21/p.27: "the changes listed below" pointed at a list under the fold.
+  // 2.13 — PDF p.21/p.27: "the changes listed below" pointed at a list under the fold. Owner
+  // feedback, 2026-10-11 (slide 5): the list is the text column's task card, on the left beside
+  // the image and its controls, and the dock holds no second copy.
   await advanceToKind(page, 'good-image', 'lab-task')
   await sceneReady(page)
-  await expect(page.locator('[data-now-status]')).toContainText('listed with the controls')
-  await expect(page.locator('[data-step-goals]')).toHaveCount(0)
+  await expect(page.locator('[data-now-status]')).toContainText('checklist')
+  await expect(page.locator('[data-dock-goals]')).toHaveCount(0)
+  await expect(page.locator('[data-step-goals]')).toHaveCount(1)
   const list = await inUncoveredBand(page, {
-    goals: '[data-dock-goals]',
+    goals: '[data-task-card] [data-step-goals]',
     controls: '[data-suite-controls]',
     image: '[data-current-image] canvas',
   })
   expect(list.goals!.fraction).toBeGreaterThan(0.99)
   expect(list.image!.fraction).toBeGreaterThan(0.9)
-  const [goals, controls] = await Promise.all([
-    page.locator('[data-dock-goals]').boundingBox(),
-    page.locator('[data-suite-controls]').boundingBox(),
+  expect(list.controls!.fraction).toBeGreaterThan(0.9)
+  const [goals, image] = await Promise.all([
+    page.locator('[data-task-card]').boundingBox(),
+    page.locator('[data-current-image] canvas').boundingBox(),
   ])
-  // In the same dock, directly above the controls it is about.
-  expect(Math.abs(goals!.x - controls!.x)).toBeLessThan(40)
-  expect(controls!.y - (goals!.y + goals!.height)).toBeLessThan(40)
-  // A real change ticks the list where the learner is looking.
-  const unmet = page.locator('[data-dock-goals] li[data-met="false"]')
+  // The text column leads: the task is to the left of the image it is done on.
+  expect(goals!.x + goals!.width).toBeLessThanOrEqual(image!.x)
+  // A real change ticks the list where the learner is reading.
+  const unmet = page.locator('[data-step-goals] li[data-met="false"]')
   const before = await unmet.count()
   expect(before).toBeGreaterThan(0)
   await controlRange(page, 'orbit', 35)
@@ -2081,7 +2088,9 @@ test('report 3.8: the pulse strip has the width of its card, one text size, and 
       }
     })
   const first = await reading()
-  expect(first.span).toBeGreaterThan(200)
+  // The strip shares its row with the text column now (owner feedback, 2026-10-11), so at 1280 px
+  // it is narrower than when the workbench had the page to itself; the defect was about 100 px.
+  expect(first.span).toBeGreaterThan(160)
   expect(first.svgText).toBe(0)
   expect(first.sizes).toHaveLength(1)
   // The scale is fixed, so a lower pulse rate visibly spreads the samples: the causal picture.
@@ -2420,14 +2429,15 @@ for (const condition of [
       )
     }
     await sceneReady(page)
-    // Stacked, in reading order: the scene, then the text about it. No pinned side column, and so
-    // no fixed-height panel with a scrollbar of its own.
+    // Stacked, in reading order: the text for the component, then the scene it is highlighted in
+    // (owner feedback, 2026-10-11: text leads). No pinned side column, and so no fixed-height
+    // panel with a scrollbar of its own.
     const [scene, text] = await Promise.all([
       page.locator('[data-suite-viewport]').boundingBox(),
       page.locator('[data-walk-stop]').boundingBox(),
     ])
-    expect(text!.y).toBeGreaterThan(scene!.y)
-    const explanation = page.locator('[data-current-task] > div').nth(1)
+    expect(text!.y).toBeLessThan(scene!.y)
+    const explanation = page.locator('[data-current-task] > [data-text-column]')
     expect(await explanation.evaluate((node) => getComputedStyle(node).position)).toBe('static')
     expect(
       await explanation.evaluate((node) => node.scrollHeight - node.clientHeight),

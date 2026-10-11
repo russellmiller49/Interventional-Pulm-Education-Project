@@ -121,11 +121,37 @@ export const FIELD_CONTEXT: readonly { label: string; point: Point3 }[] = [
   { label: 'Planned excursion end', point: [130, -20, -30] },
 ]
 
-export function fieldContextCoverage(field: number, orbit = 25, tilt = 0) {
+/** The collimated field on the detector, in detector millimetres: centred on the lesion, kept on the panel. */
+export function collimatedFieldRect(field: number, orbit = 25, tilt = 0) {
   const center = projectToDetector(LESION_CENTER, orbit, tilt)
   const half = (DETECTOR_FIELD * field) / 200
   const left = clamp(center[0] - half, -DETECTOR_FIELD / 2, DETECTOR_FIELD / 2 - 2 * half)
   const bottom = clamp(center[1] - half, -DETECTOR_FIELD / 2, DETECTOR_FIELD / 2 - 2 * half)
+  return { left, bottom, side: 2 * half }
+}
+
+/**
+ * The vertebral column of the teaching CT, read off the volume: centred on the midline about
+ * 100 mm behind the isocentre, some 27 mm to each side, the length of the scan. `model-truth.test.ts`
+ * holds these to the CT's own bone, so "the spine is out of the field" is a statement about the
+ * image the learner is looking at.
+ */
+export const SPINE_COLUMN = { x: 0, y: -100, halfWidth: 27, zLow: -140, zHigh: 140 } as const
+
+/** Whether any of the vertebral column's silhouette falls inside the collimated field. */
+export function spineInField(field: number, orbit = 25, tilt = 0): boolean {
+  const { left, bottom, side } = collimatedFieldRect(field, orbit, tilt)
+  for (let z = SPINE_COLUMN.zLow; z <= SPINE_COLUMN.zHigh; z += 20)
+    for (const dx of [-SPINE_COLUMN.halfWidth, 0, SPINE_COLUMN.halfWidth]) {
+      const [u, v] = projectToDetector([SPINE_COLUMN.x + dx, SPINE_COLUMN.y, z], orbit, tilt)
+      if (u >= left && u <= left + side && v >= bottom && v <= bottom + side) return true
+    }
+  return false
+}
+
+export function fieldContextCoverage(field: number, orbit = 25, tilt = 0) {
+  const { left, bottom, side } = collimatedFieldRect(field, orbit, tilt)
+  const half = side / 2
   const points = [
     ...FIELD_CONTEXT.map(({ point }) => point),
     ...([-1, 1] as const).flatMap((sign) => [

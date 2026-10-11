@@ -359,3 +359,61 @@
   border-radius: 0.15rem;
   vertical-align: -0.1rem;
 }
+
+/*
+ * The course's opening figure (owner feedback, 2026-10-11). Label text is sized in the drawing's
+ * own units, so it scales with the figure and stays where it was placed.
+ */
+.evidenceFigure {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Wide panes would otherwise make the drawing taller than the screen it is read on. */
+  max-height: min(37vh, 26rem);
+  border-radius: 0.75rem;
+}
+.evidenceFigure text {
+  font-family: inherit;
+  font-size: 14px;
+  paint-order: stroke;
+  stroke: #0e2630;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.evidenceLabel {
+  fill: #e4f1f3;
+}
+.evidenceFaint {
+  fill: #86a9b3;
+  font-size: 12px !important;
+}
+.evidenceTargetLabel {
+  fill: #f0cd8f;
+}
+.evidenceLesionLabel {
+  fill: #f8e1b3;
+  font-weight: 650;
+}
+.evidenceToolLabel {
+  fill: #7eecd2;
+  font-weight: 650;
+}
+.evidenceCardTitle {
+  fill: #7eecd2;
+  font-size: 16px !important;
+  font-weight: 700;
+  stroke: none !important;
+}
+.evidenceLeader {
+  stroke: #c8dde2;
+  stroke-width: 1;
+}
+.evidenceLeaderTeal {
+  stroke: #7eecd2;
+  stroke-width: 1;
+}
+
+/* One image on its own, on a case page: as large as it reads well, no larger. */
+.singlePanel {
+  max-width: 22rem;
+}

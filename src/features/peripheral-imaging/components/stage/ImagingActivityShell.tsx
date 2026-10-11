@@ -196,11 +196,16 @@ export function ImagingActivityShell({
         <h2>{model.heading}</h2>
         <p>{model.body}</p>
       </div>
+      {/* Owner feedback, 2026-10-11: the text comes first — on the left beside the image, above it
+          where the two stack — so the page reads in the order the learner works: what to do, then
+          the image it is done on. */}
       <div className={styles.task} data-current-task>
-        <div className={styles.evidence}>{visual}</div>
-        <div className={styles.explanation}>
+        <div className={styles.explanation} data-text-column>
           {teaching}
           {response}
+        </div>
+        <div className={styles.evidence} data-visual-column>
+          {visual}
         </div>
       </div>
       {children}

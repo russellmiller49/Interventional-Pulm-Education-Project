@@ -196,8 +196,8 @@ describe('a check whose model does not depict its scenario says so', () => {
   it('draws every one of the three from its authored state, not from learner controls', () => {
     for (const { sectionId } of ILLUSTRATIVE) {
       reachCheck(sectionId)
-      const dock = document.querySelector<HTMLFieldSetElement>('[data-suite-controls]')
-      expect(dock?.disabled ?? null).toBe(true)
+      // No control is offered on a fixed example (owner feedback, 2026-10-11): nothing to move.
+      expect(document.querySelector('[data-suite-controls]')).toBeNull()
       cleanup()
       localStorage.clear()
     }
@@ -213,8 +213,8 @@ describe('a check whose image is the evidence keeps saying so', () => {
     ).toMatch(/^Choose the interpretation this image and its acquisition context support\./)
     expect(seen.identity).toBe('chain-walk:example:0')
     expect(seen.evidence).toBe('depicts-the-question')
-    expect(seen.banner).toMatch(MATCHING_CLAIM)
-    expect(seen.banner).not.toMatch(MODEL_DISCLAIMER)
+    // An image that depicts its question carries no banner: it shows no controls to explain.
+    expect(seen.banner).toBeNull()
     expect(seen.nowCard).toMatch(/Inspect the image and acquisition context/)
     expect(seen.nowCard).not.toMatch(/Answer from the written scenario/)
     expect(seen.stem).toMatch(/superimposed/i)
@@ -225,8 +225,7 @@ describe('a check whose image is the evidence keeps saying so', () => {
     const seen = checkSurfaces()
     expect(seen.identity).toBe('cbct-acquisition:example:0')
     expect(seen.evidence).toBe('depicts-the-question')
-    expect(seen.banner).toMatch(MATCHING_CLAIM)
-    expect(seen.banner).not.toMatch(MODEL_DISCLAIMER)
+    expect(seen.banner).toBeNull()
     expect(seen.nowCard).toMatch(/Inspect the image and acquisition context/)
     expect(seen.nowCard).not.toMatch(/Answer from the written scenario/)
     expect(seen.stem).toMatch(/lateral view/i)

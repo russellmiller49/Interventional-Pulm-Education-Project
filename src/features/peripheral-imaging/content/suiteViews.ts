@@ -182,7 +182,7 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     litStop: 'beam',
     camera: 'suite',
     layers: [...ANATOMY, ...SUITE, 'monitor'],
-    readouts: ['irradiatedAreaPct', 'contextRetained', 'zoomAddsExposure'],
+    readouts: ['irradiatedAreaPct', 'contextRetained', 'spineInField', 'zoomAddsExposure'],
     defaults: { orbit: 25, toolDepth: 12 },
   }),
   time: view('time', {
@@ -234,7 +234,8 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     layers: [...ANATOMY, ...SUITE, 'fov', 'monitor'],
     variant: 'fixed',
     animation: { kind: 'orbit', autoplay: false, loop: false },
-    readouts: ['centered', 'ready', 'captured'],
+    // This section sets up and moves; the readiness checks and the capture are Section 12's.
+    readouts: ['centered'],
   }),
   'mobile-suite': view('mobile-suite', {
     mode: 'cbct',
@@ -243,7 +244,8 @@ export const SUITE_VIEWS: Readonly<Record<ImagingSectionId, SuiteViewSpec>> = {
     layers: [...ANATOMY, ...SUITE, 'fov', 'monitor'],
     variant: 'mobile',
     animation: { kind: 'orbit', autoplay: false, loop: false },
-    readouts: ['centered', 'ready', 'captured'],
+    // This section sets up and moves; the readiness checks and the capture are Section 12's.
+    readouts: ['centered'],
   }),
   'tool-confirmation': view('tool-confirmation', {
     mode: 'sampling',

@@ -27,13 +27,19 @@ const projection: readonly TeachingExample[] = [
 const field: readonly TeachingExample[] = [
   {
     title: 'Baseline · full acquisition field',
-    look: 'Identify the target, dashed planned excursion and two context landmarks. The amber outline is the acquired field.',
+    look: 'The open field takes in the spine and the mediastinum. Find the lesion, the dashed planned tool path and the two landmarks. The amber outline is the collimated field.',
     values: { field: 100, crop: false, cropWidth: 70, zoom: 1 },
   },
   {
     title: 'Physical collimation',
-    look: 'The shutters, beam and acquired region narrow together. Check the planned excursion and landmarks before accepting this field. The percentage is geometry, not patient dose.',
+    look: 'The shutters close, and the beam and the exposed area narrow together. The planned tool path and both landmarks are still inside the field: this is the field for advancing the tool.',
     values: { field: 80, crop: false, cropWidth: 70, zoom: 1 },
+  },
+  {
+    // Owner's teaching, 2026-10-11. 40% is past the width at which the spine leaves this field.
+    title: 'Collimated to the lesion · spine out of the field',
+    look: 'With the tool at the lesion the field is closed until the spine is outside it. Compare with the baseline: the lung, the lesion and the tool have more contrast, because less tissue is producing scatter and the display range is no longer spent on the spine.',
+    values: { field: 40, crop: false, cropWidth: 70, zoom: 1 },
   },
   {
     title: 'Crop the baseline stored frame',
@@ -186,7 +192,7 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
         lab: 'geometry',
         examples: [
           ...projection,
-          ...field.slice(2).map((example) => ({
+          ...field.slice(3).map((example) => ({
             ...example,
             values: { orbit: 0, tilt: 0, depth: 22, ...example.values },
           })),

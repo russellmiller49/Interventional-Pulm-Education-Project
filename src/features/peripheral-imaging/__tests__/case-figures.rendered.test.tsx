@@ -75,16 +75,19 @@ describe('case figures are declared, not defaulted (OD4-04)', () => {
     }
   })
 
-  it('leaves every other case without a figure, and the practice 1–3 cartoon with its plain caption', () => {
+  it('leaves every other case without a figure, and shows practice 1–3 the appearance they describe on the course’s CT', () => {
     render(<ImagingIntegratedCaseActivity caseId="case-1" />)
     expect(figure()).toBeNull()
     cleanup()
     for (const caseId of ['signal-practice-1', 'signal-practice-2', 'field-practice-1']) {
       render(<ImagingCaseActivity caseId={caseId} />)
       expect(figure()).toBeNull()
-      expect(document.querySelector('[data-case-image]')).toHaveTextContent(
-        'A drawing of the appearance described, not a device capture. Use the clinical context supplied with it; appearance alone does not identify its cause.',
-      )
+      // Owner feedback, 2026-10-11: a projection of the course's CT, not a cartoon with a note
+      // about being a drawing.
+      const image = document.querySelector('[data-case-image]')!
+      expect(image.querySelectorAll('canvas')).toHaveLength(1)
+      expect(image).toHaveTextContent('The image on the monitor')
+      expect(image).not.toHaveTextContent(/drawing|not a device capture/i)
       cleanup()
     }
   })

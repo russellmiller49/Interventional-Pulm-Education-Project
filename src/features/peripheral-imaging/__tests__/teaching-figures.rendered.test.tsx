@@ -10,7 +10,8 @@ import {
   targetRayGeometry,
   TOOL_VIEW_FRAME,
 } from '../components/figures/teachingFigureModel'
-import { SignalComparison, TeachingPanels } from '../components/stage/TeachingPanels'
+import { ConspicuityPair } from '../components/figures/CheckImages'
+import { TeachingPanels } from '../components/stage/TeachingPanels'
 import {
   FIXED_MOBILE_COMPARISON,
   REMOVED_ORGANIZATIONAL_SUGGESTIONS,
@@ -150,7 +151,7 @@ describe('the teaching figures are declared data and validate at import', () => 
 })
 
 describe('OD4-06 · Section 6 compares three causes on the course’s CT', () => {
-  it('shows the CT-derived set on the reading steps and keeps the check’s fixed Images A and B', async () => {
+  it('shows the CT-derived set on the reading steps and the check’s Images A and B from the same CT', async () => {
     render(<TeachingPanels sectionId="signal" />)
     expect(document.querySelector('[data-teaching-figure="signal:conspicuity-set"]')).not.toBeNull()
     expect(document.querySelector('[data-signal-comparison]')).toBeNull()
@@ -159,13 +160,16 @@ describe('OD4-06 · Section 6 compares three causes on the course’s CT', () =>
     const check = document.querySelector('[data-signal-comparison]')!
     expect(check).toHaveTextContent('Image A')
     expect(check).toHaveTextContent('Image B')
+    // Owner feedback, 2026-10-11: the two images are projections of the course's CT, not drawings,
+    // and carry no note about what a drawing does not calculate.
+    expect(check.querySelectorAll('canvas')).toHaveLength(2)
+    expect(check).not.toHaveTextContent(/conceptual|drawing|do not calculate/i)
     // Review status is project metadata and does not render (teaching-first rules, 2026-10-08).
-    expect(check).toHaveTextContent('Matched conceptual images')
     expect(check.querySelector('[data-draft-status]')).toBeNull()
     expect(check).not.toHaveTextContent(/draft/i)
     expect(document.querySelector('[data-teaching-figure]')).toBeNull()
     cleanup()
-    render(<SignalComparison />)
+    render(<ConspicuityPair />)
     expect(document.querySelectorAll('[data-signal-comparison] button')).toHaveLength(0)
   })
 

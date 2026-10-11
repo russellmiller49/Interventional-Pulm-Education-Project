@@ -24,7 +24,7 @@ import { SceneLabels } from './SceneLabels'
 import { ChainPins } from './ChainPins'
 import { ChainAnswerFieldset } from './ChainAnswerFieldset'
 import { WebGLContextGuard } from './WebGLContextGuard'
-import { LabDock, LabGoals } from './LabDock'
+import { LabDock, LabGoals, visibleLabControls } from './LabDock'
 import { ConeBeamView, ConeBeamPanels, useCbctAcquisition } from './views/ConeBeamView'
 import {
   TomosynthesisView,
@@ -51,7 +51,14 @@ import { rayProfile } from '../../lib/rayProfile'
 import { labControl, labNumber } from '../../engine/labMetrics'
 import { LESION_CENTER, clamp, type Point3 } from '../../lib/physics'
 import { resolveSuiteInputs } from './suiteViewSpec'
-import { rayThrough, suiteFrame, temporal, cbctOrbitSamples, roomMonitorOffset } from './suiteModel'
+import {
+  rayThrough,
+  suiteFrame,
+  temporal,
+  cbctOrbitSamples,
+  roomMonitorOffset,
+  fieldGeometry,
+} from './suiteModel'
 import { SuiteFallback } from './SuiteFallback'
 import type { ImagingSuitePaneProps, SuiteCamera } from './types'
 import styles from './suite-scene.module.css'
@@ -123,17 +130,16 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
     return source.subscribe(update)
   }, [source])
   const reducedMotion = useSyncExternalStore(motionSubscribe, motionSnapshot, () => true)
-  const [steppedOrbit, setSteppedOrbit] = useState(0)
   const [registeredSensor, setRegisteredSensor] = useState<Point3 | null>(null)
   const isRegistration = view.mode === 'navigation' || view.mode === 'augmented'
   const inputs = useMemo(() => {
     const resolved = resolveSuiteInputs(view, props.lab.values)
     return {
       ...resolved,
-      orbit: resolved.orbit + steppedOrbit,
+      orbit: resolved.orbit,
       toolFollowsAnatomy: isRegistration ? false : resolved.toolFollowsAnatomy,
     }
-  }, [view, props.lab.values, steppedOrbit, isRegistration])
+  }, [view, props.lab.values, isRegistration])
   const registered = useMemo(
     () => (isRegistration ? registration(inputs) : null),
     [isRegistration, inputs],
@@ -359,18 +365,41 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
             : 'Rotate the C-arm by one degree'
   const fieldVisible =
     view.mode === 'field' || view.sectionId === 'two-dimensional' || view.sectionId === 'good-image'
+  // Owner feedback, 2026-10-11 (slides 4 and 6): nothing is offered that cannot be used. A control
+  // the step has not handed over is left out, a baseline is kept only where something can change
+  // the image, and Step appears only where it advances something this step shows.
+  // The collimation section draws what the collimated field does to the image (`lib/fieldDisplay`).
+  const fieldProcessing = useMemo(() => {
+    if (view.mode !== 'field') return undefined
+    const { image } = fieldGeometry(frame, inputs.fieldPercent, false)
+    const detector = frame.geometry.field
+    return {
+      rect: {
+        left: (image.left + detector / 2) / detector,
+        top: (detector / 2 - (image.bottom + image.side)) / detector,
+        size: image.side / detector,
+      },
+      areaFraction: (inputs.fieldPercent / 100) ** 2,
+    }
+  }, [view.mode, frame, inputs.fieldPercent])
+  const viewControls = visibleLabControls(view, props.independent)
+  const comparable = !props.independent && (viewControls.length > 0 || props.comparable === true)
+  const orbitBinding = view.bindings.find((b) => b.input === 'orbit')
+  const sequenceStep =
+    (view.mode === 'sampling' && !!view.lab) || dts.active || isCbct || view.mode === 'time'
+  const stepAvailable =
+    props.controlsEnabled &&
+    (sequenceStep ||
+      (!!orbitBinding && viewControls.some((control) => control.key === orbitBinding.control)))
   const controlDock = (
     <LabDock
       {...props}
+      controlsWithheld={!props.controlsEnabled}
       controlsEnabled={props.controlsEnabled && representationReady}
-      disabledControls={
-        isCbct && (cbct.sourceState !== 'ready' || cbct.busy) ? new Set(['captured']) : undefined
-      }
       onLabChange={(patch) =>
         isCbct && patch.captured === true ? void cbct.run(true) : props.onLabChange(patch)
       }
       onLabReset={() => {
-        setSteppedOrbit(0)
         playback.reset()
         cbct.reset()
         dts.reset()
@@ -404,9 +433,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
             {view.stopSentence}
           </p>
         )}
-        {!props.controlsEnabled && (
+        {!props.controlsEnabled && (props.lockedReason ?? props.pausedReason) && (
           <p role="status" className={styles.reason}>
-            {props.lockedReason ?? props.pausedReason ?? 'Controls unavailable'}
+            {props.lockedReason ?? props.pausedReason}
           </p>
         )}
         <div
@@ -597,7 +626,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                         <CameraRig
                           view={displayCamera}
                           frame={frame}
-                          enabled={props.controlsEnabled}
+                          enabled
                           labelled={showChain}
                           roomComposition={isRoom}
                           monitorOffset={monitorOffset}
@@ -621,84 +650,64 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 </div>
                 {!isRoom && (
                   <div className={styles.toolbar} aria-label="3D camera views">
-                    <button
-                      type="button"
-                      disabled={
-                        !props.controlsEnabled ||
-                        (!view.lab && !dts.active) ||
-                        (!view.bindings.some((b) => b.input === 'orbit') &&
-                          ![
-                            'field',
-                            'time',
-                            'cbct',
-                            'dts',
-                            'dts-prior',
-                            'sampling',
-                            'navigation',
-                            'augmented',
-                            'dose',
-                          ].includes(view.mode))
-                      }
-                      onClick={() => {
-                        if (view.mode === 'sampling' && view.lab) {
-                          const control = labControl(view.lab, 'axial')
+                    {stepAvailable && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (view.mode === 'sampling' && view.lab) {
+                            const control = labControl(view.lab, 'axial')
+                            props.onLabChange({
+                              slab: false,
+                              axial:
+                                inputs.axial >= (control?.max ?? 20)
+                                  ? (control?.min ?? -20)
+                                  : inputs.axial + (control?.step ?? 1),
+                            })
+                            return
+                          }
+                          if (dts.active) {
+                            dts.step()
+                            return
+                          }
+                          if (isCbct) {
+                            cbct.step()
+                            return
+                          }
+                          if (view.mode === 'time') {
+                            playback.step(1 / inputs.pulseRate)
+                            return
+                          }
+                          const binding = orbitBinding
+                          if (!binding || !view.lab) return
+                          const control = labControl(view.lab, binding.control)
+                          const value = labNumber(
+                            view.lab,
+                            props.lab.values,
+                            binding.control,
+                            view.sectionId,
+                          )
                           props.onLabChange({
-                            slab: false,
-                            axial:
-                              inputs.axial >= (control?.max ?? 20)
-                                ? (control?.min ?? -20)
-                                : inputs.axial + (control?.step ?? 1),
+                            [binding.control]: clamp(
+                              value + 1,
+                              control?.min ?? -Infinity,
+                              control?.max ?? Infinity,
+                            ),
                           })
-                          return
-                        }
-                        if (dts.active) {
-                          dts.step()
-                          return
-                        }
-                        if (isCbct) {
-                          cbct.step()
-                          return
-                        }
-                        if (view.mode === 'time') {
-                          playback.step(1 / inputs.pulseRate)
-                          return
-                        }
-                        const binding = view.bindings.find((b) => b.input === 'orbit')
-                        if (!binding || !view.lab) {
-                          setSteppedOrbit((n) => n + 1)
-                          return
-                        }
-                        const control = labControl(view.lab, binding.control)
-                        const value = labNumber(
-                          view.lab,
-                          props.lab.values,
-                          binding.control,
-                          view.sectionId,
-                        )
-                        props.onLabChange({
-                          [binding.control]: clamp(
-                            value + 1,
-                            control?.min ?? -Infinity,
-                            control?.max ?? Infinity,
-                          ),
-                        })
-                      }}
-                      title={stepPurpose}
-                      // The name stays "Step"; what a step does here is its description.
-                      aria-describedby={stepPurposeId}
-                      data-scene-step
-                    >
-                      Step
-                    </button>
+                        }}
+                        title={stepPurpose}
+                        // The name stays "Step"; what a step does here is its description.
+                        aria-describedby={stepPurposeId}
+                        data-scene-step
+                      >
+                        Step
+                      </button>
+                    )}
                     <span id={stepPurposeId} hidden>
                       {stepPurpose}
                     </span>
-                    {view.animation && !isCbct && (
-                      <button
-                        type="button"
-                        disabled={!props.controlsEnabled || reducedMotion}
-                        onClick={dts.active ? dts.play : playback.toggle}
-                      >
+                    {/* With reduced motion nothing plays; Step advances the same sequence by hand. */}
+                    {view.animation && !isCbct && props.controlsEnabled && !reducedMotion && (
+                      <button type="button" onClick={dts.active ? dts.play : playback.toggle}>
                         {running ? 'Pause' : 'Play'}
                       </button>
                     )}
@@ -735,7 +744,6 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                           key={kind}
                           aria-label={name}
                           title={name}
-                          disabled={!props.controlsEnabled}
                           data-camera-move={kind}
                           onClick={() => moveCamera(kind)}
                         >
@@ -744,7 +752,6 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       ))}
                       <button
                         type="button"
-                        disabled={!props.controlsEnabled}
                         data-camera-move="reset"
                         onClick={() => moveCamera('reset')}
                       >
@@ -777,8 +784,14 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 }}
                 pose={pose}
                 depth={inputs.toolDepth}
-                comparison={!props.independent}
+                comparison={comparable}
+                comparisonHint={
+                  viewControls.some((control) => ['crop', 'zoom'].includes(control.key))
+                    ? 'The baseline is the image this step opened with. Change a control and compare. Crop and zoom act on the current view only, so the saved baseline never shows them.'
+                    : 'The baseline is the image this step opened with. Change a control and compare the current image with it.'
+                }
                 acquisitionField={inputs.fieldPercent}
+                fieldProcessing={fieldProcessing}
                 displayMask={
                   fieldVisible && inputs.crop ? (
                     <FieldMask frame={frame} fieldPercent={inputs.cropWidth} crop />
@@ -816,16 +829,14 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                 onSource={setSource}
                 hidden={view.monitor === 'hidden'}
               />
-              {/* Reports 2.6 and 3.2: the same words as the sliders, and the model's own signed
-                  convention stated in patient terms and pinned by a geometry test. The owner adopted
-                  the RAO/LAO and cranial mapping on 2026-10-08 (PI-FELLOW 2.6, option b). */}
+              {/* Reports 2.6 and 3.2: the same words as the sliders, and the signed convention stated
+                  in patient terms and pinned by a geometry test. The owner adopted the RAO/LAO and
+                  cranial mapping on 2026-10-08 (PI-FELLOW 2.6, option b); it is stated as the
+                  convention it is (owner feedback, 2026-10-11). */}
               <p className={styles.monitorCaption} data-orientation-caption>
-                At frontal: screen right = patient left; top = superior. The zero-angle beam travels
-                from the tube behind the patient to the detector in front. C-arm obliquity and beam
-                tilt are the model’s signed angles: positive obliquity swings the detector toward
-                the patient’s right, and positive tilt swings it toward the head. On a console that
-                names the detector’s side, positive obliquity here corresponds to RAO and negative
-                to LAO, and positive tilt to cranial angulation; check your own system’s convention.
+                Screen right is the patient’s left; top is superior. At 0° the tube is behind the
+                patient and the detector in front. Positive obliquity is RAO and negative is LAO;
+                positive tilt is cranial and negative is caudal.
               </p>
               {/* Report 2.11: the numbered crosses and the dashed line were on the image and not in
                   the legend. */}
@@ -837,8 +848,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                   : isRegistration
                     ? 'Amber: current target · teal: stored contour · white: model tool'
                     : fieldVisible
-                      ? 'Amber contour: model target · white mark: tool tip · numbered crosses: modeled landmarks 1 and 2 · dashed teal line: planned tool excursion'
-                      : 'Amber contour: model target · white mark: tool tip'}
+                      ? 'Amber contour: target lesion · white mark: tool tip · numbered crosses: landmarks 1 and 2 · dashed teal line: planned tool path'
+                      : 'Amber contour: target lesion · white mark: tool tip'}
               </p>
             </section>
           )}
@@ -877,7 +888,11 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
           </div>
         )}
         {isCbct && (
-          <ConeBeamPanels acquisition={cbct} inputs={inputs} enabled={props.controlsEnabled} />
+          <ConeBeamPanels
+            acquisition={cbct}
+            inputs={inputs}
+            enabled={props.controlsEnabled && !props.independent}
+          />
         )}
         {dts.active && !props.independent && (
           <TomosynthesisPanels

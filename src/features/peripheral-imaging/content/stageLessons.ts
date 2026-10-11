@@ -106,6 +106,9 @@ export const IN_TEACHING = {
 
 const CONTINUE = 'Continue'
 
+/** A hands-on step: the text column holds what to do and its checklist. */
+const HANDS_ON_INSTRUCTION = 'Do the steps in the checklist, using the controls beside the image.'
+
 interface StepInput {
   readonly activity: ImagingLearningActivity
   readonly phase: StagePhase
@@ -125,11 +128,6 @@ function prediction(
   round: 0 | 1,
 ): Extract<ImagingStageInteraction, { kind: 'prediction' }> {
   return { kind: 'prediction', item, round, chainTargets: null }
-}
-
-function firstSentence(text: string): string {
-  const match = text.match(/^[^.!?]*[.!?]/)
-  return (match ? match[0] : text).trim()
 }
 
 /**
@@ -218,12 +216,14 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
         return {
           ...base,
           phase: 'act',
+          // Owner feedback, 2026-10-11: an instruction names only what its own step shows. The
+          // section's `labTask` spans every hands-on step, so quoting it here asked for controls
+          // the step did not have; what to move and what to watch is the task lead in the text
+          // column (`taskLeads.ts`), beside the step's checklist.
           instruction:
             spec.act.kind === 'walk'
-              ? 'Follow one component at a time. At beam geometry, change the C-arm obliquity and compare the image with the beam path. This X-ray map does not apply to radial EBUS.'
-              : sectionId === 'good-image'
-                ? 'Change the projection, then use display zoom. Compare the visible effect of each action with the same tool and lesion geometry.'
-                : `${firstSentence(lesson.labTask ?? activity.title)} Follow the requirements below; each is checked against the supported model.`,
+              ? 'Follow the image through its six components, one at a time. Each is highlighted in the 3D view as you reach it.'
+              : HANDS_ON_INSTRUCTION,
           interaction:
             spec.act.kind === 'walk'
               ? { kind: 'walk', stops: spec.chainStops, lab: lesson.lab, goals: goals.act }
@@ -236,8 +236,7 @@ function buildInputs(sectionId: ImagingSectionId): readonly StepInput[] {
         return {
           ...base,
           phase: 'observe',
-          instruction:
-            'Compare the image as you make the changes listed below. Describe what changed on the image and what stayed fixed in the model.',
+          instruction: HANDS_ON_INSTRUCTION,
           interaction: {
             kind: 'observe',
             lab: lesson.lab,

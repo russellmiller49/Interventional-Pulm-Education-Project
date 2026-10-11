@@ -38,6 +38,7 @@ import {
   type ImagingStageStep,
 } from '../../content/stageLessons'
 import { imagingStageSources } from '../../content/stageSources'
+import { imagingTaskLead } from '../../content/taskLeads'
 import {
   fixedExampleEvidence,
   fixedExampleIdentity,
@@ -71,6 +72,7 @@ import { ChainWalkCard, walkPositionWords } from './ChainWalkCard'
 import { ImagingActivityShell, type ImagingNowModel } from './ImagingActivityShell'
 import { ImagingSortControl } from './ImagingSortControl'
 import { ImagingSourceList } from './ImagingSourceList'
+import { ImagingTaskCard, ImagingWalkRecap } from './ImagingTaskCard'
 import { SectionGlossary } from './SectionGlossary'
 import { ImagingTeachingColumn } from './ImagingTeachingColumn'
 import { LessonDemonstration } from './LessonDemonstration'
@@ -150,6 +152,8 @@ const EVENT_CONTROL: Readonly<Record<string, string>> = {
   'contour-captured': 'capture',
   'contour-recaptured': 'capture',
   'ray-cleared': 'orbit',
+  'path-kept-collimated': 'field',
+  'spine-excluded': 'field',
 }
 
 function goalControlKey(goal: LabGoal): string | null {
@@ -553,7 +557,7 @@ function ImagingStageSession({
             : {
                 ...base,
                 status:
-                  'Every component visited. This step is done when every item listed with the controls is met, or you can skip it.',
+                  'All six components visited. Finish the checklist to continue, or skip this step.',
                 secondary: showWhereAction,
                 skip: skipStep('Skip this step'),
               }
@@ -651,14 +655,14 @@ function ImagingStageSession({
         if (workDone)
           return {
             ...base,
-            status: 'The required observations are complete. Review the image, then continue.',
+            status: 'Checklist complete. Look at the image once more, then continue.',
             primary: continueAction,
           }
         return {
           ...base,
           status: !imageReady
             ? 'The required image is unavailable or loading. Retry the view; text explanations remain available, and you can skip this step.'
-            : 'Compare the image as you make the changes listed with the controls, or skip this step.',
+            : 'Work through the checklist and watch the image change, or skip this step.',
           secondary: showWhereAction,
           skip: skipStep('Skip this step'),
         }
@@ -671,7 +675,7 @@ function ImagingStageSession({
           ...base,
           status: nothingChangedYet
             ? 'This comparison starts from the change in the step before. Go back to make it, change the view here, or skip this step.'
-            : 'Complete the listed comparison to continue, or skip this step.',
+            : 'Finish the checklist to continue, or skip this step.',
           secondary: showWhereAction,
           skip: skipStep('Skip this step'),
         }
@@ -686,16 +690,10 @@ function ImagingStageSession({
   /* ---------------------------------------------------------------- *
    * The Now card's body
    * ---------------------------------------------------------------- */
-  const goalList = (
-    <ul className={stageStyles.taskList} data-step-goals aria-label="What to do">
-      {goals.map((goal, index) => (
-        <li key={goal.label} data-met={goalsMetNow[index]}>
-          {goalsMetNow[index] ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
-          <span>{goal.label}</span>
-        </li>
-      ))}
-    </ul>
-  )
+  // The checklist of a hands-on step lives in the text column, with what to do and what to watch
+  // (owner feedback, 2026-10-11): it used to sit in the control dock while the text column beside
+  // the image stood empty.
+  const taskGoals = goals.map((goal, index) => ({ label: goal.label, met: goalsMetNow[index] }))
 
   const nowBody: ReactNode = (() => {
     if (lookingBack) {
@@ -734,7 +732,15 @@ function ImagingStageSession({
     }
     switch (interaction.kind) {
       case 'walk':
-        if (commitments.walkDone) return null
+        // Slide 5 of the owner's 2026-10-11 feedback: when the last component had been read the
+        // column went blank. It now closes the walk: the six components once more, and the one
+        // thing left to do on the suite.
+        if (commitments.walkDone)
+          return (
+            <ImagingTaskCard lead={imagingTaskLead(lesson.sectionId, 'act')} goals={taskGoals}>
+              <ImagingWalkRecap />
+            </ImagingTaskCard>
+          )
         return walkStop ? <ChainWalkCard stopId={walkStop} stepId={activeStep.id} /> : null
       case 'prediction': {
         const committedId = commitments.choices[activeStep.id]
@@ -848,9 +854,15 @@ function ImagingStageSession({
         )
       case 'lab-task':
       case 'observe':
-        // Report 2.13: the checklist is printed in the control dock, beside the controls it is
-        // about. A step with no suite pane has no dock, and keeps it here.
-        return activity.visual === 'case' ? goalList : null
+        return (
+          <ImagingTaskCard
+            lead={imagingTaskLead(
+              lesson.sectionId,
+              interaction.kind === 'observe' ? 'observe' : 'act',
+            )}
+            goals={taskGoals}
+          />
+        )
       case 'explain': {
         const predictionStep = lesson.steps[lesson.predictionStepIndex]
         const predictionItem =
@@ -926,16 +938,15 @@ function ImagingStageSession({
   // A pending check's image is held. What the banner may claim about it depends on this exact
   // question and round: three checks put a written clinical scenario beside the section's teaching
   // model, which does not represent it, and must not say the two match.
-  const lockedReason = checkPending
-    ? exampleEvidence === 'illustrative-model'
+  // An example that depicts its question needs no banner now that it shows no controls to explain
+  // (owner feedback, 2026-10-11). The three illustrative ones still say what their image is.
+  const lockedReason =
+    checkPending && exampleEvidence === 'illustrative-model'
       ? 'This image stays fixed while you read it. It is this section’s teaching model of the equipment, not a picture of the situation in the question — answer from the written scenario.'
-      : 'This example stays fixed so the question and the image match.'
-    : beforePrediction
-      ? 'The worked demonstration uses separate state. The guided task starts from its own baseline.'
       : undefined
   const pausedReason =
     !checkPending && !beforePrediction && lookingBack
-      ? 'The controls are paused while you look back at an earlier step. Return to the live step to take them.'
+      ? 'You are looking back at an earlier step, so its controls are put away. Return to the current step to use them.'
       : undefined
 
   // The fixed example's own state, and nothing else. `fixedExampleValues` is total, so a check can
@@ -955,19 +966,14 @@ function ImagingStageSession({
     interaction.round === 0 &&
     hasIndependentImagePanel(lesson.sectionId)
   const independentImage = interaction.kind === 'prediction'
-  const imageView = browsingIndependent
-    ? {
-        ...suiteView,
-        controls:
-          suiteView.mode === 'sampling' ? ['axial', 'coronal', 'sagittal', 'slab'] : ['plane'],
-      }
+  // A check's image is fixed. The only controls it shows are the ones that browse it (the planes of
+  // a multiplanar example); a projection example shows none, where it used to show the section's
+  // sliders, disabled before the answer and inert after it (owner feedback, 2026-10-11, slide 6).
+  const browsingControls =
+    suiteView.mode === 'sampling' ? ['axial', 'coronal', 'sagittal', 'slab'] : ['plane']
+  const imageView = independentImage
+    ? { ...suiteView, controls: browsingIndependent ? browsingControls : [] }
     : suiteView
-  // The walk lists its goals once every component has been visited; until then its card is the
-  // instruction. Looking back shows the recap instead, so the dock carries no live checklist.
-  const paneGoals =
-    lookingBack || (interaction.kind === 'walk' && !commitments.walkDone)
-      ? []
-      : goals.map((goal, index) => ({ goal, met: goalsMetNow[index] }))
   const captureGroup = activity.captureGroup ?? activity.id
   const demoMemory = (demonstrationMemories.current[captureGroup] ??= { current: {} })
   const simulator =
@@ -1011,12 +1017,8 @@ function ImagingStageSession({
             }
             onLabChange={(patch) => {
               if (independentImage) {
-                const allowed =
-                  suiteView.mode === 'sampling'
-                    ? ['axial', 'coronal', 'sagittal', 'slab']
-                    : ['plane']
                 const displayPatch = Object.fromEntries(
-                  Object.entries(patch).filter(([key]) => allowed.includes(key)),
+                  Object.entries(patch).filter(([key]) => browsingControls.includes(key)),
                 )
                 setIndependentDisplay((current) => ({
                   ...current,
@@ -1035,7 +1037,7 @@ function ImagingStageSession({
             controlsEnabled={controlsEnabled}
             lockedReason={lockedReason}
             pausedReason={pausedReason}
-            goals={paneGoals}
+            goals={[]}
             chainCaption={suiteView.stopSentence}
             chainAnswer={chainAnswer}
             spotlightKey={spotlight?.stepId === activeStep.id ? spotlight.key : undefined}

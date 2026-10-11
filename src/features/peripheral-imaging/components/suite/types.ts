@@ -221,6 +221,12 @@ export interface ImagingSuitePaneProps {
   readonly spotlightKey?: string
   /** Learn keeps independent geometry/answer cues separate from foundational teaching. */
   readonly independent?: boolean
+  /**
+   * The host can change the image by something other than a dock control — a demonstration with
+   * more than one example. With neither that nor a control, the monitor shows one image and offers
+   * no baseline to compare it with.
+   */
+  readonly comparable?: boolean
   readonly onRepresentationReady?: (ready: boolean) => void
   readonly children?: ReactNode
 }

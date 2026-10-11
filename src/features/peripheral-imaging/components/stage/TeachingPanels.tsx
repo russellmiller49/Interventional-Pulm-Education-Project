@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from '@/i18n/navigation'
 import {
   DOSE_NOTE_TEMPLATE_LINES,
@@ -21,167 +21,13 @@ import {
   type ImagingSectionId,
 } from '../../content/pathway'
 import { imagingSectionLinkTarget } from '../../content/pathwayResolver'
-import { FIELD_CONTEXT, LESION_CENTER, projectToDetector } from '../../lib/physics'
-import { collimator, suiteFrame } from '../suite/suiteModel'
 import { TimeSamples } from '../suite/views/TimeView'
 import { temporal } from '../suite/suiteModel'
+import { ConspicuityPair, FieldPair } from '../figures/CheckImages'
 import { ConspicuityComparison } from '../figures/ConspicuityComparison'
+import { EvidenceSequenceFigure, type EvidenceStep } from '../figures/EvidenceSequenceFigure'
 import { CopyTextButton } from '../figures/CopyTextButton'
 import styles from './imaging-stage.module.css'
-
-/** Vector teaching panels, not device captures or a calibrated noise/scatter simulation. */
-export function SignalImage({
-  factor = 'reference',
-  label,
-}: {
-  factor?: 'reference' | 'noise' | 'contrast' | 'overlap'
-  label: string
-}) {
-  const id = useId().replace(/:/g, '')
-  return (
-    <figure className={styles.teachingFigure}>
-      <figcaption>{label}</figcaption>
-      <svg
-        viewBox="0 0 240 180"
-        role="img"
-        aria-label={
-          factor === 'noise'
-            ? 'Illustration with irregular mottling across the image'
-            : factor === 'contrast'
-              ? 'Illustration with smooth low contrast and a sharp tool edge'
-              : factor === 'overlap'
-                ? 'Illustration with a dense silhouette crossing the circular target'
-                : 'Reference illustration with distinguishable background structures and a tool'
-        }
-      >
-        <defs>
-          <clipPath id={id}>
-            <rect width="240" height="180" rx="5" />
-          </clipPath>
-        </defs>
-        <g clipPath={`url(#${id})`}>
-          <rect width="240" height="180" fill="#1e2934" />
-          <g opacity={factor === 'contrast' ? 0.24 : 1}>
-            <ellipse cx="70" cy="92" rx="45" ry="73" fill="#73818a" />
-            <ellipse cx="174" cy="92" rx="43" ry="73" fill="#667680" />
-            {[40, 65, 90, 115, 140].map((y) => (
-              <path
-                key={y}
-                d={`M20 ${y} Q65 ${y - 26} 110 ${y} M135 ${y} Q180 ${y - 26} 225 ${y}`}
-                fill="none"
-                stroke="#a7b2b7"
-                strokeWidth="4"
-                opacity=".4"
-              />
-            ))}
-            <circle cx="173" cy="104" r="13" fill="#cad5d1" />
-            {factor === 'overlap' && <ellipse cx="165" cy="116" rx="32" ry="55" fill="#c4ccd1" />}
-          </g>
-          <path d="M100 32L169 99" stroke="#f1f7f5" strokeWidth="3" />
-          {factor === 'noise' &&
-            Array.from({ length: 360 }, (_, i) => (
-              <rect
-                key={i}
-                x={(i * 67 + 23) % 240}
-                y={(i * 41 + 19) % 180}
-                width={2 + (i % 4)}
-                height={2 + (i % 3)}
-                fill={i % 2 ? '#f6f6ed' : '#05070b'}
-                opacity=".4"
-              />
-            ))}
-        </g>
-      </svg>
-    </figure>
-  )
-}
-
-/**
- * The Section 6 check's Image A and Image B: optional companions to QS-3's text variant, which
- * carries its evidence in the stem (OD4-02). The section's reading steps show the CT-derived
- * comparison instead (`ConspicuityComparison`, OD4-06); the image variant of this check waits for
- * honest media.
- */
-export function SignalComparison() {
-  return (
-    <section className={styles.teachingCard} data-signal-comparison>
-      <p className={styles.kicker}>Matched conceptual images</p>
-      <div className={styles.exampleGrid}>
-        <SignalImage label="Image A" />
-        <SignalImage factor="contrast" label="Image B" />
-      </div>
-      {/* Report CW2: one caveat where there were two overlapping ones. */}
-      <p>
-        Each panel changes one illustrative limiting factor from the reference. These drawings do
-        not calculate photon statistics, scatter, dose response or patient anatomy, and none of them
-        establishes lesion identity.
-      </p>
-    </section>
-  )
-}
-
-export function FieldComparison() {
-  const frame = suiteFrame(25, 0)
-  const screen = (point: Parameters<typeof projectToDetector>[0]) => {
-    const [u, v] = projectToDetector(point, 25)
-    return [128 + u * 0.4, 128 - v * 0.4]
-  }
-  const target = screen(LESION_CENTER)
-  const points = FIELD_CONTEXT.map(({ point }) => screen(point))
-  return (
-    <section className={styles.teachingCard} data-field-comparison>
-      <p>
-        Matched geometric illustrations · same target, excursion and context; different acquisition
-        fields.
-      </p>
-      <div className={styles.exampleGrid}>
-        {[100, 45].map((width, i) => {
-          const aperture = collimator(frame, width)
-          const left = 128 + aperture.left * 0.4
-          const top = 128 - (aperture.bottom + aperture.side) * 0.4
-          const side = aperture.side * 0.4
-          return (
-            <figure key={width} className={styles.teachingFigure}>
-              <figcaption>Field {i ? 'B' : 'A'}</figcaption>
-              <svg
-                viewBox="0 0 256 256"
-                role="img"
-                aria-label={
-                  i
-                    ? 'Field B includes target but truncates the dashed excursion and left context mark'
-                    : 'Field A includes target, both context marks and dashed excursion'
-                }
-              >
-                <rect width="256" height="256" fill="#172633" />
-                <circle cx={target[0]} cy={target[1]} r="9" fill="#edc480" />
-                <line
-                  x1={points[2][0]}
-                  y1={points[2][1]}
-                  x2={points[3][0]}
-                  y2={points[3][1]}
-                  stroke="#77dccf"
-                  strokeDasharray="4 3"
-                  strokeWidth="3"
-                />
-                {points.slice(0, 2).map(([x, y], j) => (
-                  <text key={j} x={x} y={y} fill="#c9f6ee" fontSize="14">
-                    {j + 1}
-                  </text>
-                ))}
-                <path
-                  d={`M0 0H256V256H0Z M${left} ${top}v${side}h${side}v-${side}Z`}
-                  fill="#050a0e"
-                  fillRule="evenodd"
-                />
-                <rect x={left} y={top} width={side} height={side} fill="none" stroke="#ecc178" />
-              </svg>
-            </figure>
-          )
-        })}
-      </div>
-    </section>
-  )
-}
 
 /**
  * Report 7.2: the four quantities as a table, and the whole-procedure record as a copyable
@@ -335,100 +181,74 @@ export function DoseRecord({ independent = false }: { independent?: boolean }) {
   )
 }
 
+/**
+ * The four questions an image can be asked, on one drawing (`EvidenceSequenceFigure`). The steps sit
+ * above the figure, so the control and what it changes are on screen together, and each step says
+ * what that evidence shows and what it does not.
+ */
+const EVIDENCE_STEPS = [
+  {
+    button: 'Planning target',
+    question: 'Navigation: where is the catheter relative to the navigation target?',
+    shows:
+      'The catheter has reached the target defined on the planning CT. The planning target guides the catheter to a previously defined location.',
+    not: 'It does not establish where the lesion is today.',
+  },
+  {
+    button: 'Current lesion',
+    question: 'Localization: where is the lesion now?',
+    shows:
+      'Current imaging localizes the lesion as it is at this moment, here beside the planned target and not on it.',
+    not: 'It does not confirm a tool exchanged afterward.',
+  },
+  {
+    button: 'Sampling component',
+    question:
+      'Tool-in-lesion confirmation: where is the actual biopsy tool relative to the lesion?',
+    shows:
+      'Assess the actual sampling component against the current lesion. The tool tip is a different part of the tool.',
+    not: 'It does not establish that the tissue obtained is diagnostic.',
+  },
+  {
+    button: 'Tissue result',
+    question: 'Diagnosis: did the specimen answer the clinical question?',
+    shows: 'The specimen result answers this question.',
+    not: 'An image of the tool in the lesion does not establish diagnostic tissue.',
+  },
+] as const
+
 export function ImagingQuestionPanels() {
-  const [panel, setPanel] = useState(0)
+  const [panel, setPanel] = useState<EvidenceStep>(0)
+  const step = EVIDENCE_STEPS[panel]
   return (
-    <section className={styles.teachingCard} data-imaging-question-example>
-      <p className={styles.kicker}>Navigation indicates arrival · conceptual evidence sequence</p>
-      <div className={styles.exampleGrid}>
-        {[
-          'Navigation target · planning CT',
-          'Current lesion · updated imaging',
-          'Actual biopsy tool · sampling component',
-          'Tissue result · still awaited',
-        ].map((title, i) =>
-          i === panel ? (
-            <figure key={title} className={styles.teachingFigure}>
-              <figcaption>{title}</figcaption>
-              <svg viewBox="0 0 200 115" role="img" aria-label={title}>
-                <rect width="200" height="115" fill="#152935" rx="5" />
-                {i < 3 ? (
-                  <>
-                    <path
-                      d="M80 10V45L40 88M80 45L135 85"
-                      fill="none"
-                      stroke="#87a7b2"
-                      strokeWidth="7"
-                    />
-                    <circle
-                      cx={i ? 143 : 132}
-                      cy={i ? 72 : 85}
-                      r="13"
-                      stroke="#e8bb70"
-                      strokeDasharray={i ? undefined : '4 3'}
-                      fill="none"
-                      strokeWidth="2"
-                    />
-                    {i === 2 && (
-                      <>
-                        <path d="M85 48L151 75" stroke="#edf8f6" strokeWidth="3" />
-                        <path d="M132 67L142 71" stroke="#61d8bc" strokeWidth="5" />
-                        {/* Report 1.1: the teal segment and the tip are named on the figure, in
-                            the drawing's own coordinates. */}
-                        <text x="150" y="92" fill="#edf8f6" fontSize="9" data-figure-label="tip">
-                          tip
-                        </text>
-                        <line
-                          x1="151"
-                          y1="75"
-                          x2="156"
-                          y2="84"
-                          stroke="#edf8f6"
-                          strokeWidth="0.8"
-                        />
-                        <text
-                          x="120"
-                          y="104"
-                          textAnchor="middle"
-                          fill="#8de7d1"
-                          fontSize="9"
-                          data-figure-label="sampling-component"
-                        >
-                          sampling component (teal)
-                        </text>
-                        <line
-                          x1="137"
-                          y1="69"
-                          x2="122"
-                          y2="96"
-                          stroke="#8de7d1"
-                          strokeWidth="0.8"
-                        />
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <text x="32" y="62" fill="#e7f2ef" fontSize="17">
-                    No diagnosis yet
-                  </text>
-                )}
-              </svg>
-            </figure>
-          ) : null,
-        )}
+    <section className={styles.evidenceCard} data-imaging-question-example>
+      <p className={styles.kicker}>
+        Navigation indicates arrival · what each kind of evidence adds
+      </p>
+      <div className={styles.evidenceSteps} role="group" aria-label="Evidence sequence">
+        {EVIDENCE_STEPS.map((entry, i) => (
+          <button
+            type="button"
+            key={entry.button}
+            aria-pressed={panel === i}
+            onClick={() => setPanel(i as EvidenceStep)}
+          >
+            {entry.button}
+          </button>
+        ))}
       </div>
+      <figure className={styles.evidenceFrame}>
+        {/* The caption leads: the question, then the drawing that answers it. */}
+        <figcaption data-panel-caption={panel}>
+          <strong>{step.question}</strong>
+          <span>
+            {step.shows} <span className={styles.evidenceNot}>{step.not}</span>
+          </span>
+        </figcaption>
+        <EvidenceSequenceFigure step={panel} />
+      </figure>
       {/* Reports 1.1 and 6.1: the term is defined on the screen where it is first used, in Section
           15's words, and the section that teaches it in full is linked. */}
-      <p data-panel-caption={panel}>
-        {
-          [
-            'The planning target guides the catheter to a previously defined location. It does not establish the current lesion location.',
-            'Current imaging can localize the lesion in the depicted state. It does not confirm a tool exchanged afterward.',
-            'Assess the actual sampling component against the current intended lesion. The tool tip is a different component.',
-            'An image of tool–lesion position does not establish diagnostic tissue. The specimen result answers that question.',
-          ][panel]
-        }
-      </p>
       {panel === 2 ? (
         <p data-sampling-component-definition>
           <strong>Sampling component:</strong> {glossaryTerm('sampling-component').definition}{' '}
@@ -441,28 +261,9 @@ export function ImagingQuestionPanels() {
         </p>
       ) : null}
       <p className={styles.figureLegend} data-figure-legend>
-        Dashed amber circle: the navigation target from the planning CT · solid amber circle: the
-        lesion on current imaging · white line: the biopsy tool · teal segment: its sampling
-        component.
-      </p>
-      <div className={styles.demoButtons} aria-label="Evidence sequence">
-        {['Planning target', 'Current lesion', 'Sampling component', 'Tissue result'].map(
-          (label, i) => (
-            <button
-              type="button"
-              key={label}
-              aria-pressed={panel === i}
-              onClick={() => setPanel(i)}
-            >
-              {label}
-            </button>
-          ),
-        )}
-      </div>
-      <p>
-        The virtual target guides navigation. Current imaging can show a different lesion location.
-        After tool exchange, assess the actual sampling component. Even tool-in-lesion does not
-        establish diagnostic tissue.
+        Dashed amber circle: the navigation target from the planning CT · amber nodule: the lesion
+        on current imaging · white line: the catheter and the biopsy tool · teal segment: the tool’s
+        sampling component.
       </p>
     </section>
   )
@@ -547,7 +348,7 @@ export function TeachingPanels({
       />
     )
   if (visual === 'radial-ebus') return <RadialEbusViews />
-  if (sectionId === 'signal') return independent ? <SignalComparison /> : <ConspicuityComparison />
+  if (sectionId === 'signal') return independent ? <ConspicuityPair /> : <ConspicuityComparison />
   if (sectionId === 'dose-reporting')
     return independent ? (
       <DoseRecord independent />
@@ -559,7 +360,7 @@ export function TeachingPanels({
         <DoseRecord />
       </>
     )
-  if (sectionId === 'field' && independent) return <FieldComparison />
+  if (sectionId === 'field' && independent) return <FieldPair />
   if (sectionId === 'imaging-questions' && !independent) return <ImagingQuestionPanels />
   if (sectionId === 'time' && independent)
     return (

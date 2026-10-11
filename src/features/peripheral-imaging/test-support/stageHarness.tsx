@@ -99,8 +99,8 @@ export function commitChainChoice(pattern: RegExp) {
 }
 
 export function goalStates(): readonly string[] {
-  // The checklist is printed in the control dock (report 2.13); a step with no suite pane keeps it
-  // on the Now card. Never both.
+  // The checklist is printed once, in the task card of the text column (owner feedback,
+  // 2026-10-11). The second selector is the static room view's list, which no step uses.
   return [...document.querySelectorAll('[data-step-goals] li, [data-suite-goals] li')].map(
     (item) => item.getAttribute('data-met') ?? 'unknown',
   )
@@ -211,7 +211,11 @@ export function performGuidedStep(lesson: ImagingStageLesson) {
       if (observe) {
         setToggle('crop', true)
         setRange('zoom', 1.5)
-      } else setRange('field', 90)
+      } else {
+        // Two stages: the field for the tool path, then the spine out of the field.
+        setRange('field', 70)
+        setRange('field', 40)
+      }
       break
     case 'time':
       if (observe) {

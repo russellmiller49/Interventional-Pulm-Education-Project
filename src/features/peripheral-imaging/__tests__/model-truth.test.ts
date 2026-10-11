@@ -28,8 +28,26 @@ import {
 import { DTS_PLANE, priorPlanePoint } from '../components/suite/dtsModel'
 import { rayThrough, suiteFrame } from '../components/suite/suiteModel'
 import { sampleAnatomy } from '../lib/anatomy'
-import { ctSampler, projectCt, projectionPixelOf, projectionPixels } from '../lib/ctProjection'
-import { beamDirection, LESION_CENTER, LESION_RADIUS, windowRelationship } from '../lib/physics'
+import {
+  ctSampler,
+  projectCt,
+  projectionDisplay,
+  projectionPixelOf,
+  projectionPixels,
+} from '../lib/ctProjection'
+import { teachingDemonstration } from '../content/teachingExamples'
+import { fieldDisplay } from '../lib/fieldDisplay'
+import {
+  beamDirection,
+  collimatedFieldRect,
+  DETECTOR_FIELD,
+  fieldContextCoverage,
+  LESION_CENTER,
+  LESION_RADIUS,
+  SPINE_COLUMN,
+  spineInField,
+  windowRelationship,
+} from '../lib/physics'
 import { rayProfile } from '../lib/rayProfile'
 
 /*
@@ -441,5 +459,93 @@ describe('the CPU projection keeps the suite’s geometry', () => {
       const slow = rayProfile(volume, LESION_CENTER, ray.hit, { stepMm: 1 })
       expect(Math.abs(fast.detectorSide.soft - slow.tissueMm.soft)).toBeLessThanOrEqual(1)
     }
+  })
+})
+
+/*
+ * Owner's teaching, 2026-10-11 (collimation). The section says that closing the field until the
+ * spine is outside it lets the display range work on the lung, and its readout says when the spine
+ * is in the field. Both are claims about this CT at this section's projection, held here.
+ */
+describe('collimating the spine out of the field, on the teaching CT', () => {
+  /** The collimation section's projection. */
+  const ORBIT = 25
+
+  it('the authored vertebral column is where the CT has its midline bone', () => {
+    const sample = ctSampler(volume)
+    for (const z of [-90, -30, 30, 90]) {
+      let sumX = 0
+      let sumY = 0
+      let count = 0
+      for (let x = -45; x <= 45; x += 2)
+        for (let y = -170; y <= -20; y += 2)
+          if (sample(x, y, z) > 200) {
+            sumX += x
+            sumY += y
+            count++
+          }
+      expect(count).toBeGreaterThan(50)
+      expect(Math.abs(sumX / count - SPINE_COLUMN.x)).toBeLessThan(10)
+      expect(Math.abs(sumY / count - SPINE_COLUMN.y)).toBeLessThan(25)
+    }
+  })
+
+  it('the spine is in the open field and leaves it a little under half width', () => {
+    expect(spineInField(100)).toBe(true)
+    expect(spineInField(70)).toBe(true)
+    const widths = Array.from({ length: 71 }, (_, i) => 100 - i)
+    const firstOut = widths.find((width) => !spineInField(width))!
+    expect(firstOut).toBeGreaterThanOrEqual(42)
+    expect(firstOut).toBeLessThanOrEqual(50)
+    // Once out it stays out as the field closes further.
+    for (const width of widths.filter((w) => w <= firstOut)) expect(spineInField(width)).toBe(false)
+  })
+
+  it('the worked examples show what their captions say', () => {
+    const examples = teachingDemonstration('field')!.examples
+    const value = (title: string) =>
+      Number(examples.find((example) => example.title === title)!.values.field)
+    const open = value('Baseline · full acquisition field')
+    const path = value('Physical collimation')
+    const lesion = value('Collimated to the lesion · spine out of the field')
+    expect([spineInField(open), fieldContextCoverage(open)]).toEqual([true, true])
+    expect([spineInField(path), fieldContextCoverage(path)]).toEqual([true, true])
+    expect(spineInField(lesion)).toBe(false)
+  })
+
+  it('with the spine out, the display range is spent on a much narrower span of the image', () => {
+    const size = 96
+    const projection = projectCt(ctSampler(volume), {
+      orbit: ORBIT,
+      tilt: 0,
+      sizePx: size,
+      fieldMm: DETECTOR_FIELD,
+      centre: [0, 0, 0],
+    })
+    const gray = Uint8Array.from(projection.lineIntegral, (value) =>
+      Math.round(projectionDisplay(value) * 255),
+    )
+    const display = (width: number) => {
+      const rect = collimatedFieldRect(width, ORBIT, 0)
+      return fieldDisplay(
+        gray,
+        size,
+        {
+          left: (rect.left + DETECTOR_FIELD / 2) / DETECTOR_FIELD,
+          top: (DETECTOR_FIELD / 2 - (rect.bottom + rect.side)) / DETECTOR_FIELD,
+          size: rect.side / DETECTOR_FIELD,
+        },
+        (width / 100) ** 2,
+      )
+    }
+    const open = display(100)
+    const forPath = display(80)
+    const atLesion = display(40)
+    expect(open.gain).toBeCloseTo(1, 6)
+    // Narrowing for the tool path helps a little; taking the spine out helps a lot.
+    expect(forPath.gain).toBeGreaterThan(1)
+    expect(forPath.gain).toBeLessThan(1.5)
+    expect(atLesion.gain).toBeGreaterThan(1.8)
+    expect(atLesion.window[1]).toBeLessThan(open.window[1])
   })
 })
