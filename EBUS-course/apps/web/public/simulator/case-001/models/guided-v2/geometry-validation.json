@@ -3,18 +3,18 @@
   "assets": [
     {
       "path": "ebus-needle-assembly.glb",
-      "sha256": "a494942a33fade0afea6db8e71e3fc54ab1b46e74a33c6e516d63ef51ac38b81",
-      "vertices": 3489,
+      "sha256": "a3c2e9a0ac692ed07556d049af489d9fd0b6a7ff5b49d6f9f77e33820ccb7c33",
+      "vertices": 55224,
       "boundsWebMm": [
         [
-          -90.00000357627869,
-          -14.500000514090061,
-          -12.000000104308128
+          -313.60000371932983,
+          -23.833835497498512,
+          -12.820737436413765
         ],
         [
           32.00000151991844,
-          30.99999949336052,
-          12.000000104308128
+          30.959900468587875,
+          15.230000950396061
         ]
       ],
       "tipAnchorErrorMm": 0
@@ -72,7 +72,7 @@
       ]
     }
   ],
-  "totalBytes": 378168,
+  "totalBytes": 2623972,
   "semanticHierarchy": "preserved through optimization",
   "coordinates": "Blender (L,P,S) meters -> glTF (L,S,-P) meters -> browser mm once",
   "dependencies": "Phase 1 anatomy and nodes unchanged; same target coordinates for both route views",
@@ -80,7 +80,7 @@
   "deviceValidation": "generic conceptual model, no device-specific claims",
   "runtimeNeedle": {
     "poses": 12,
-    "maxEndpointErrorMm": 0.0000010390405549287607,
+    "maxEndpointErrorMm": 4.2796967392177976e-7,
     "check": "Actual GLB vertices, pivot, cylinder axis and rendered shaft scaling compared with fixed entry and true tip."
   }
 }

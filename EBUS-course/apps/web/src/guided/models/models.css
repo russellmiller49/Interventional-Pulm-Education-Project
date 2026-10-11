@@ -244,6 +244,10 @@
   padding: 6px 9px;
   font-size: 12px;
 }
+.model-observer-buttons button[aria-pressed='true'] {
+  background: #1f4a55;
+  border-color: #5fe0e6;
+}
 .model-viewport canvas:focus-visible {
   outline: 3px solid #7ce2c7;
   outline-offset: -3px;

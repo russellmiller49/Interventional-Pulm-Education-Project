@@ -4,18 +4,20 @@ Continuation of draft PR #189 from `e6eaa66f`. The reference is the existing EBU
 
 ## Delivered teaching objects
 
-| Package                                                     | New lesson ID           | Runtime GLB                    | Size          |
-| ----------------------------------------------------------- | ----------------------- | ------------------------------ | ------------- |
-| Generic needle assembly and finite-plane tip visibility     | `needle-assembly-model` | `ebus-needle-assembly.glb`     | 104,708 bytes |
-| Acoustic-contact and artifact cutaway                       | `contact-cutaway-model` | `acoustic-contact-cutaway.glb` | 89,668 bytes  |
-| Sphere, elongated, adjacent and lobulated analytic phantoms | `measurement-phantoms`  | `measurement-phantoms.glb`     | 125,920 bytes |
-| Same-frame EUS-B orientation locators and lower example     | `eus-b-route-model`     | `eus-b-route-locators.glb`     | 57,872 bytes  |
+| Package                                                     | New lesson ID           | Runtime GLB                    | Size            |
+| ----------------------------------------------------------- | ----------------------- | ------------------------------ | --------------- |
+| TBNA needle assembly and finite-plane tip visibility        | `needle-assembly-model` | `ebus-needle-assembly.glb`     | 2,350,512 bytes |
+| Acoustic-contact and artifact cutaway                       | `contact-cutaway-model` | `acoustic-contact-cutaway.glb` | 89,668 bytes    |
+| Sphere, elongated, adjacent and lobulated analytic phantoms | `measurement-phantoms`  | `measurement-phantoms.glb`     | 125,920 bytes   |
+| Same-frame EUS-B orientation locators and lower example     | `eus-b-route-model`     | `eus-b-route-locators.glb`     | 57,872 bytes    |
 
-The four new GLBs total 378,168 bytes. Route comparison reuses the Phase 1 anatomy and node GLBs. Model state drives the visible geometry, schematic/section and completion evidence. Each new lesson has an orientation, worked model, independent prediction, required actions, retained observation, explanation and changed transfer situation.
+The four GLBs total 2,623,972 bytes. Route comparison reuses the Phase 1 anatomy and node GLBs. Model state drives the visible geometry, schematic/section and completion evidence. Each new lesson has an orientation, worked model, independent prediction, required actions, retained observation, explanation and changed transfer situation.
 
 Original lessons, case questions, clinical media, acoustic worker, Phase 1 hashes, routes, station/scope calibration and IDs remain intact. Four companion lessons extend the canonical registry to 26 lessons. Historical answers and completions stay in the existing store; new lessons become the next incomplete work. The incomplete-lesson restart boundary remains unchanged.
 
 ## Representation and sources
+
+**2026-10-09: the needle assembly was rebuilt.** `ebus-needle-assembly.glb` is now a true-scale teaching model (100,912 triangles) from `scripts/ebus-guided/models/build_needle_assembly.py`: a needle handle with scope adaptor, sheath adjuster and lock knob, depth scale and stopper, needle adjuster, slider, aspiration port and stylet knob; a green ribbed sheath; a dimpled single-bevel needle; a convex-probe scope tip with the needle leaving the channel at 20° to the tip axis; and the wall, node and vessel sectioned just behind the needle's plane. Its references are the ViziShot 2 quick reference guide (Olympus, 2017) and Zhu et al., Chin Med J Pulm Crit Care Med 2024;2:162–170, Fig. 2. It is drawn from those photographs, is not manufacturer CAD and carries no maker's mark. The contract (`outlet`, `axis`, `retractedTip`, `maxTravel`) is unchanged; the scope's length between port and insertion tube is not drawn. The viewer gained three framings (Needle tip, Handle, Whole assembly). The first bullet below describes the model it replaced.
 
 - Needle travel and dimensions are illustrative. The assembly is generic, compressed longitudinally and is not commercial-device CAD. Its shaft, tip and sheath share an outlet axis. No fixed clinical extension, force, tissue yield, transvascular passage, or disappearance/reappearance maneuver is taught. The model explicitly blocks advancement without current live tip guidance and does not permit exposed-tip channel removal.
 - The contact image is an authored qualitative schematic, separate from the original acoustic renderer. Contact state governs both the cutaway and the schematic. Gain does not restore an absent window. Balloon assistance, focal air interruption and reflector shadow are mechanism demonstrations, without pressure or inflation volume.
@@ -27,6 +29,7 @@ Clinical propositions retain the course's existing ICS/IAB 2023 safety teaching 
 ## Reproduction and geometry proof
 
 1. Blender 5.1: `--background --factory-startup --python-exit-code 1 --python scripts/ebus-guided/models/build_additional.py`.
+   The needle assembly has its own script, run after it: `--python scripts/ebus-guided/models/build_needle_assembly.py` (add `-- --preview DIR` for stills), then `node scripts/ebus-guided/models/optimize-additional.mjs ebus-needle-assembly.glb`.
 2. `node scripts/ebus-guided/models/optimize-additional.mjs` uses glTF Transform 4.5.0 deduplication without collapsing semantic pivots or simplifying geometry.
 3. Blender: `--background --factory-startup --python-exit-code 1 --python scripts/ebus-guided/models/validate_additional.py`.
 4. `node scripts/ebus-guided/models/validate-additional-runtime.mjs` checks 12 actual GLB needle poses against fixed-entry and true-tip endpoints (maximum error 0.00000104 mm).

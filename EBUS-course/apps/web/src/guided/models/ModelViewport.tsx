@@ -63,12 +63,26 @@ async function load(pkg: ModelPackage) {
     throw new Error('A model package is missing from its manifest.')
   return Promise.all(
     records.map(async (r) => {
-      const data = await bytes(r.path)
+      // Model files are served as immutable for a year while the manifest is not, so each is
+      // requested by its content hash: a rebuilt model reaches a returning browser with its manifest.
+      const data = await bytes(r.path + '?v=' + r.sha256.slice(0, 12))
       if ((r.bytes && data.byteLength !== r.bytes) || (await hash(data)) !== r.sha256)
         throw new Error('A teaching model failed its integrity check.')
       return (await loader.parseAsync(data, '')).scene
     }),
   )
+}
+/** What the needle model's camera frames: the distal end, the handle, or both. */
+type NeedleView = 'tip' | 'handle' | 'whole'
+const NEEDLE_VIEWS: { id: NeedleView; label: string }[] = [
+  { id: 'tip', label: 'Needle tip' },
+  { id: 'handle', label: 'Handle' },
+  { id: 'whole', label: 'Whole assembly' },
+]
+/** The parts each close view frames. The handle is at true scale, so one view cannot show both ends well. */
+const NEEDLE_VIEW_PARTS: Record<Exclude<NeedleView, 'whole'>, string[]> = {
+  tip: ['target_node', 'airway_wall', 'adjacent_vessel', 'scope_distal_end', 'scope_bending_section'],
+  handle: ['handle_assembly'],
 }
 function dispose(root: THREE.Object3D) {
   root.traverse((o) => {
@@ -105,6 +119,9 @@ export function ModelViewport({
   const showLabelsRef = useRef(showLabels)
   showLabelsRef.current = showLabels
   const [arrowPx, setArrowPx] = useState<number | null>(null)
+  const [needleView, setNeedleView] = useState<NeedleView>('tip')
+  const needleViewRef = useRef(needleView)
+  needleViewRef.current = needleView
   useEffect(() => {
     const el = host.current
     if (!el) return
@@ -218,7 +235,11 @@ export function ModelViewport({
           'needle_motion',
           d.map((n) => n * (s.extension + s.sheath)),
         )
+        // The handle body slides on the scope adaptor with the sheath; the slider rides on the body.
+        setPosition('handle_body_motion', [s.sheath, 0, 0])
         setPosition('handle_motion', [s.extension, 0, 0])
+        const lock = root.getObjectByName('sheath_lock')
+        if (lock) lock.rotation.z = s.secured ? Math.PI / 2 : 0
         const shaft = root.getObjectByName('needle_shaft')
         if (shaft) {
           const base = shaft.userData.fixedBaseWebMm as number[]
@@ -238,6 +259,7 @@ export function ModelViewport({
         setVisible('needle_motion', r || s.extension === 0)
         setVisible('needle_tip', r)
         for (const name of [
+          'handle_assembly',
           'mount_connector',
           'sheath_adjuster',
           'sheath_lock',
@@ -384,7 +406,8 @@ export function ModelViewport({
               id === 'air_gap' ||
               id === 'air_bubble' ||
               id === 'calcified_focus')
-          if (!hiddenAnswer)
+          // A part drawn in several materials arrives as several meshes with one id: list it once.
+          if (!hiddenAnswer && !items.some((item) => item.id === id))
             items.push({
               id,
               label:
@@ -439,8 +462,16 @@ export function ModelViewport({
             // `root` carries the glTF metre-to-millimetre scale, so its world matrix has to be
             // current before the box means anything in the units the rest of this file uses.
             scene.updateMatrixWorld(true)
+            const view = needleViewRef.current
             const bounds = new THREE.Box3()
-            for (const group of groups) bounds.expandByObject(group)
+            const parts =
+              view === 'whole'
+                ? []
+                : NEEDLE_VIEW_PARTS[view]
+                    .map((name) => root.getObjectByName(name))
+                    .filter((o): o is THREE.Object3D => Boolean(o))
+            // An older export without these parts falls back to the whole model.
+            for (const part of parts.length ? parts : groups) bounds.expandByObject(part)
             const centre = bounds.getCenter(new THREE.Vector3())
             const size = bounds.getSize(new THREE.Vector3())
             const aspect = el.clientHeight > 0 ? el.clientWidth / el.clientHeight : 4 / 3
@@ -448,12 +479,16 @@ export function ModelViewport({
             // The assembly is long and shallow, so the width against the panel's aspect ratio is
             // what actually sets the distance; the old fixed position ignored both.
             const fit = Math.max(size.y / 2 / halfFov, size.x / 2 / halfFov / aspect)
+            const margin = view === 'handle' && parts.length ? 1.06 : 1.12
             const distance =
-              Number.isFinite(fit) && fit > 0 ? fit * 1.12 + size.z / 2 : 176
+              Number.isFinite(fit) && fit > 0 ? fit * margin + size.z / 2 : 176
             controls.target.copy(Number.isFinite(centre.x) ? centre : new THREE.Vector3(-29, 4, 0))
+            // The handle is seen slightly from its distal end, so its knob, scale and lever separate.
+            const along = view === 'handle' && parts.length ? 0.3 : 0.05
+            const above = view === 'handle' && parts.length ? -0.3 : 0.15
             camera.position.set(
-              controls.target.x + distance * 0.05,
-              controls.target.y + distance * 0.15,
+              controls.target.x + distance * along,
+              controls.target.y + distance * above,
               controls.target.z + distance,
             )
           } else {
@@ -568,11 +603,25 @@ export function ModelViewport({
     setSelected('')
     update.current?.()
   }, [state, reveal, showLabels])
+  useEffect(() => {
+    resetCamera.current?.()
+  }, [needleView])
   return (
     <section className="model-3d">
       <div className="model-heading">
         <h2>3D relationship</h2>
         <div className="model-observer-buttons" role="group" aria-label="Observer camera">
+          {state.package === 'needle' &&
+            NEEDLE_VIEWS.map((view) => (
+              <button
+                key={view.id}
+                aria-pressed={needleView === view.id}
+                data-needle-view={view.id}
+                onClick={() => setNeedleView(view.id)}
+              >
+                {view.label}
+              </button>
+            ))}
           <button onClick={() => observerRef.current?.orbit(-0.3)}>Orbit left</button>
           <button onClick={() => observerRef.current?.orbit(0.3)}>Orbit right</button>
           <button onClick={() => observerRef.current?.zoom(1.3)}>Zoom in</button>

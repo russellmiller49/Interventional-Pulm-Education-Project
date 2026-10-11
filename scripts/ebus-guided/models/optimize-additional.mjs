@@ -12,7 +12,10 @@ const scratch = localDataPath('raw-assets', 'ebus-guided-models', 'additional', 
 mkdirSync(scratch, { recursive: true })
 const path = resolve(directory, 'asset-manifest.json')
 const manifest = JSON.parse(readFileSync(path, 'utf8'))
+// Optional file names limit the pass to those assets, so one rebuilt model leaves the others' bytes alone.
+const only = process.argv.slice(2)
 for (const asset of manifest.assets) {
+  if (only.length && !only.includes(asset.path)) continue
   const input = resolve(directory, asset.path),
     output = resolve(scratch, asset.path)
   const result = spawnSync(

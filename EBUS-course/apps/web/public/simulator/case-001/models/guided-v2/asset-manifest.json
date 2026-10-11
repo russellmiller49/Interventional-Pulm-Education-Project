@@ -3,13 +3,23 @@
   "assets": [
     {
       "path": "ebus-needle-assembly.glb",
-      "bytes": 104708,
-      "sha256": "a494942a33fade0afea6db8e71e3fc54ab1b46e74a33c6e516d63ef51ac38b81",
+      "bytes": 2350512,
+      "sha256": "a3c2e9a0ac692ed07556d049af489d9fd0b6a7ff5b49d6f9f77e33820ccb7c33",
       "objects": [
         {
+          "id": "handle_assembly",
+          "label": "Needle handle assembly",
+          "role": "pivot"
+        },
+        {
           "id": "mount_connector",
-          "label": "Mount / connector",
+          "label": "Scope adaptor",
           "role": "structure"
+        },
+        {
+          "id": "handle_body_motion",
+          "label": "Handle body, moves with the sheath",
+          "role": "pivot"
         },
         {
           "id": "sheath_adjuster",
@@ -22,9 +32,19 @@
           "role": "structure"
         },
         {
+          "id": "depth_scale",
+          "label": "Depth scale",
+          "role": "structure"
+        },
+        {
           "id": "extension_stop",
           "label": "Needle extension stop",
           "role": "structure"
+        },
+        {
+          "id": "handle_motion",
+          "label": "Needle slider, moves with the needle",
+          "role": "pivot"
         },
         {
           "id": "needle_handle",
@@ -32,18 +52,23 @@
           "role": "structure"
         },
         {
-          "id": "stylet",
-          "label": "Stylet, shown seated",
+          "id": "suction_connection",
+          "label": "Aspiration port",
           "role": "structure"
         },
         {
-          "id": "handle_motion",
-          "label": "handle motion",
-          "role": "pivot"
+          "id": "stylet",
+          "label": "Stylet knob, stylet seated",
+          "role": "structure"
         },
         {
-          "id": "suction_connection",
-          "label": "Optional suction connection",
+          "id": "scope_port",
+          "label": "Scope instrument port",
+          "role": "structure"
+        },
+        {
+          "id": "scope_length_break",
+          "label": "Scope length not shown",
           "role": "structure"
         },
         {
@@ -52,9 +77,39 @@
           "role": "structure"
         },
         {
+          "id": "protected_needle_in_channel",
+          "label": "Sheath and needle inside the channel",
+          "role": "structure"
+        },
+        {
+          "id": "scope_bending_section",
+          "label": "Bending section",
+          "role": "structure"
+        },
+        {
+          "id": "scope_distal_end",
+          "label": "Scope distal end",
+          "role": "structure"
+        },
+        {
+          "id": "scope_optics",
+          "label": "Objective lens and light guide",
+          "role": "structure"
+        },
+        {
           "id": "channel_outlet",
           "label": "Working-channel outlet",
           "role": "structure"
+        },
+        {
+          "id": "transducer",
+          "label": "Transducer",
+          "role": "structure"
+        },
+        {
+          "id": "sheath_motion",
+          "label": "Sheath, moves with the sheath adjuster",
+          "role": "pivot"
         },
         {
           "id": "sheath",
@@ -62,8 +117,8 @@
           "role": "structure"
         },
         {
-          "id": "sheath_motion",
-          "label": "sheath motion",
+          "id": "needle_motion",
+          "label": "Needle, moves with the needle slider",
           "role": "pivot"
         },
         {
@@ -72,23 +127,8 @@
           "role": "structure"
         },
         {
-          "id": "protected_needle_in_channel",
-          "label": "Protected proximal needle, cutaway",
-          "role": "structure"
-        },
-        {
           "id": "needle_tip",
           "label": "True needle tip (teaching view)",
-          "role": "structure"
-        },
-        {
-          "id": "needle_motion",
-          "label": "needle motion",
-          "role": "pivot"
-        },
-        {
-          "id": "transducer",
-          "label": "Transducer",
           "role": "structure"
         },
         {
@@ -107,11 +147,11 @@
           "role": "structure"
         }
       ],
-      "triangles": 4536,
+      "triangles": 100912,
       "units": "m",
-      "notes": "Generic compressed assembly, not device CAD. Distal needle + sheath share an outlet axis. No prescribed extension, force, or puncture safety result.",
+      "notes": "True-scale teaching model of a TBNA needle handle, sheath and dimpled bevel needle with a convex-probe scope tip, drawn from published photographs; not device CAD and unbranded. Scope length between port and insertion tube is not shown. Needle axis, outlet and tip come from the model contract. No prescribed extension, force, or puncture safety result.",
       "reviewStatus": "faculty review pending",
-      "materials": 8,
+      "materials": 36,
       "optimization": "glTF Transform 4.5.0: accessor/material/texture deduplication; no quantization, simplification, hierarchy flattening or decoder"
     },
     {
