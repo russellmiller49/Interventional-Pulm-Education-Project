@@ -25,13 +25,21 @@ export const MONITOR_TREND_WORDS: Readonly<Record<MonitorTrend, string>> = {
   new: 'new',
 }
 
-export const MONITOR_BOUNDARY =
-  'Scripted readings in words, against this patient’s own earlier state. Not a physiological model, and never a threshold.'
+/** The one line under the monitor. A case's values are written for it, not computed. */
+export const MONITOR_BOUNDARY = 'Teaching case. The values are written for this case.'
+
+/** A reading's number as the monitor shows it: "91 %", "118/72 mmHg". */
+export function readingValue(reading: MonitorReading): string | null {
+  if (reading.value === undefined) return null
+  return reading.unit === '%'
+    ? `${reading.value}%`
+    : `${reading.value} ${reading.unit ?? ''}`.trim()
+}
 
 /**
- * The monitor: scripted readings in words, each with its trend against this patient's own
- * baseline. The airway view is a channel like the others — a moving picture that reports nothing
- * about the patient — which is the point the panel makes by listing it beside them.
+ * The monitor in a teaching case: each channel with its number where it has one, what it means in
+ * words, and its trend against this patient's own baseline. The airway view is a channel like the
+ * others, listed beside them because a clear picture says nothing about the patient.
  */
 export function MonitorPanel({
   readings,
@@ -49,6 +57,11 @@ export function MonitorPanel({
         {readings.map((reading) => (
           <div key={reading.channel} data-monitor-channel={reading.channel}>
             <dt>{MONITOR_CHANNEL_WORDS[reading.channel]}</dt>
+            {readingValue(reading) ? (
+              <dd className={styles.monitorValue} data-monitor-value>
+                {readingValue(reading)}
+              </dd>
+            ) : null}
             <dd>{reading.words}</dd>
             <dd>
               <span className={styles.trend} data-trend={reading.trend}>
@@ -59,7 +72,7 @@ export function MonitorPanel({
         ))}
       </dl>
       <p className={styles.boundaryLine} data-model-boundary>
-        <strong>Model boundary.</strong> {MONITOR_BOUNDARY}
+        {MONITOR_BOUNDARY}
       </p>
     </div>
   )

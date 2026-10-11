@@ -1,4 +1,5 @@
 import { BRONCH_SECTION_IDS, type BronchSectionId } from '../sectionIds'
+import { withResolvedNumbers } from '../sectionNumbers'
 import { validateAllSections } from '../sectionValidation'
 import type { BronchSectionDefinition } from '../types'
 import { section as bleedingPriorities } from './bleeding-priorities'
@@ -28,7 +29,8 @@ import { section as whatCompletionMeans } from './what-completion-means'
 /**
  * The section registry: every authored section, in the canonical order of `sectionIds.ts`,
  * validated as a set at import. A section that fails its contract is a build failure here, before
- * any adapter or page reads it.
+ * any adapter or page reads it. Validation reads the sections as authored; what the registry hands
+ * out has its numbers-register tokens resolved to their values (`sectionNumbers.ts`).
  */
 const AUTHORED: readonly BronchSectionDefinition[] = [
   sharedAirway,
@@ -56,22 +58,6 @@ const AUTHORED: readonly BronchSectionDefinition[] = [
   whatCompletionMeans,
 ]
 
-const byId = new Map<BronchSectionId, BronchSectionDefinition>(
-  AUTHORED.map((section) => [section.id, section] as const),
-)
-
-export const BRONCH_SECTIONS: readonly BronchSectionDefinition[] = BRONCH_SECTION_IDS.map((id) => {
-  const section = byId.get(id)
-  if (!section) throw new Error(`No authored section for ${id}`)
-  return section
-})
-
-export function bronchSection(sectionId: BronchSectionId): BronchSectionDefinition {
-  const section = byId.get(sectionId)
-  if (!section) throw new Error(`No section ${sectionId}`)
-  return section
-}
-
 const registryErrors = [
   ...(AUTHORED.length === BRONCH_SECTION_IDS.length
     ? []
@@ -89,4 +75,20 @@ if (registryErrors.length > 0) {
   throw new Error(
     `The Bronchoscopy Foundations sections are invalid:\n${registryErrors.join('\n')}`,
   )
+}
+
+const byId = new Map<BronchSectionId, BronchSectionDefinition>(
+  AUTHORED.map((section) => [section.id, withResolvedNumbers(section)] as const),
+)
+
+export const BRONCH_SECTIONS: readonly BronchSectionDefinition[] = BRONCH_SECTION_IDS.map((id) => {
+  const section = byId.get(id)
+  if (!section) throw new Error(`No authored section for ${id}`)
+  return section
+})
+
+export function bronchSection(sectionId: BronchSectionId): BronchSectionDefinition {
+  const section = byId.get(sectionId)
+  if (!section) throw new Error(`No section ${sectionId}`)
+  return section
 }
