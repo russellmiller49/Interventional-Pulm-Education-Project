@@ -407,18 +407,18 @@
         "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
       },
       "unchangedForLegacyRecords": {
-        "prompt": "A patient develops an alarm, new hypoxemia, hypotension, and asymmetric breath sounds. Which priority best fits?",
+        "prompt": "A ventilated patient develops an alarm, new hypoxemia, hypotension, and asymmetric breath sounds. What do you do first?",
         "correctId": "0",
         "choice": {
           "id": "1",
-          "label": "Finish waveform classification before calling for help",
+          "label": "Classify the waveform fully, then go to the bedside",
           "rationale": "This delays stabilization of a deteriorating patient.",
           "unsafe": true
         }
       },
       "learnerFacingSafety": {
         "previous": null,
-        "current": "New hypoxemia with hypotension can be fatal within minutes if the cause is not found and treated, and asymmetric breath sounds point to causes found at the bedside, such as a pneumothorax or a tube that has moved into the right main bronchus. Classifying the waveform before calling for help delays the support and bedside checks this patient needs now."
+        "current": "New hypoxemia with hypotension can be fatal within minutes if the cause is not found and treated, and asymmetric breath sounds point to causes found at the bedside, such as a pneumothorax or a tube that has moved into the right main bronchus. Classifying the waveform first delays the support and bedside checks this patient needs now."
       },
       "teachingPoint": "New hypoxemia and hypotension with asymmetric breath sounds is time-critical: support and bedside checks for a pneumothorax or tube position come before classifying the waveform.",
       "sourceLocators": [
@@ -534,11 +534,11 @@
         "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
       },
       "unchangedForLegacyRecords": {
-        "prompt": "A patient develops an alarm, new hypoxemia, hypotension, and asymmetric breath sounds. Which priority best fits?",
+        "prompt": "A ventilated patient develops an alarm, new hypoxemia, hypotension, and asymmetric breath sounds. What do you do first?",
         "correctId": "0",
         "choice": {
           "id": "2",
-          "label": "Acknowledge the alarm and observe for improvement",
+          "label": "Silence the alarm and watch the next few breaths",
           "rationale": "Acknowledgment does not treat the cause of instability.",
           "unsafe": true
         }
@@ -648,11 +648,11 @@
         "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
       },
       "unchangedForLegacyRecords": {
-        "prompt": "A ventilated patient suddenly becomes hypoxemic and hypotensive during a high-pressure alarm. What is the best initial priority?",
+        "prompt": "A ventilated patient suddenly becomes hypoxemic and hypotensive during a high-pressure alarm. What do you do first?",
         "correctId": "0",
         "choice": {
           "id": "1",
-          "label": "Alarm acknowledgment and documentation alone",
+          "label": "Acknowledge the alarm and document the event",
           "rationale": "These do not support a deteriorating patient.",
           "unsafe": true
         }
@@ -740,11 +740,11 @@
         "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
       },
       "unchangedForLegacyRecords": {
-        "prompt": "A ventilated patient suddenly becomes hypoxemic and hypotensive during a high-pressure alarm. What is the best initial priority?",
+        "prompt": "A ventilated patient suddenly becomes hypoxemic and hypotensive during a high-pressure alarm. What do you do first?",
         "correctId": "0",
         "choice": {
           "id": "2",
-          "label": "Detailed waveform analysis before bedside evaluation",
+          "label": "Analyze the waveforms in detail before going to the bedside",
           "rationale": "This delays assessment and stabilization.",
           "unsafe": true
         }
@@ -1100,18 +1100,18 @@
         "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
       },
       "unchangedForLegacyRecords": {
-        "prompt": "A new high-pressure alarm occurs with abrupt hypotension and asymmetric breath sounds. Which next priority is most appropriate?",
+        "prompt": "A new high-pressure alarm occurs with abrupt hypotension and absent breath sounds on one side. What do you do next?",
         "correctId": "1",
         "choice": {
           "id": "0",
-          "label": "Wait for a relaxed plateau before requesting assistance",
+          "label": "Wait for a relaxed plateau before acting",
           "rationale": "A deteriorating patient cannot wait for a perfect mechanics measurement.",
           "unsafe": true
         }
       },
       "learnerFacingSafety": {
         "previous": null,
-        "current": "A high-pressure alarm with abrupt hypotension and asymmetric breath sounds raises concern for a tension pneumothorax, and a patient this unstable may die within minutes if the cause is not treated. A plateau is worth measuring when possible, but waiting for a relaxed one before asking for help delays the support and treatment that come first."
+        "current": "A high-pressure alarm with abrupt hypotension and one silent side is a tension pneumothorax until proven otherwise, and a patient this unstable may die within minutes if it is not treated. A plateau is worth measuring when possible, but waiting for a relaxed one delays the decompression that comes first."
       },
       "teachingPoint": "High pressure, abrupt hypotension and asymmetric breath sounds raise concern for a tension pneumothorax; help and support come before waiting for a relaxed plateau.",
       "sourceLocators": [
@@ -1226,18 +1226,18 @@
         "where": "Under “Potential harm in this case”: after Show explanation, inside “Compare the possibilities”; and directly below the choice after Compare my choice."
       },
       "unchangedForLegacyRecords": {
-        "prompt": "A new high-pressure alarm occurs with abrupt hypotension and asymmetric breath sounds. Which next priority is most appropriate?",
+        "prompt": "A new high-pressure alarm occurs with abrupt hypotension and absent breath sounds on one side. What do you do next?",
         "correctId": "1",
         "choice": {
           "id": "2",
-          "label": "Silence the alarm while waiting for spontaneous resolution",
+          "label": "Silence the alarm and wait for it to settle",
           "rationale": "Acknowledgment does not treat the cause of instability.",
           "unsafe": true
         }
       },
       "learnerFacingSafety": {
         "previous": null,
-        "current": "Silencing only mutes the alarm for a short time and treats nothing. High pressure, abrupt hypotension and asymmetric breath sounds together raise concern for a tension pneumothorax, which needs recognition and treatment rather than waiting; left untreated, a patient this unstable may die within minutes."
+        "current": "Silencing only mutes the alarm for a short time and treats nothing. High pressure, abrupt hypotension and one silent side together mean a tension pneumothorax until proven otherwise, which needs decompression rather than waiting; left untreated, a patient this unstable may die within minutes."
       },
       "teachingPoint": "Silencing an alarm only mutes it; suspected tension pneumothorax needs recognition and treatment, not waiting.",
       "sourceLocators": [

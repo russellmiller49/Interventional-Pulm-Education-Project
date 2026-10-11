@@ -12,11 +12,11 @@ const channels: Record<
 > = {
   'oxygenation-response': [
     { key: 'spo2Percent', label: 'SpO₂ (%)', max: 100 },
-    { key: 'mapMmHg', label: 'Mean arterial pressure (mm Hg)', max: 140 },
+    { key: 'mapMmHg', label: 'Mean arterial pressure (mmHg)', max: 140 },
     { key: 'peakPressureCmH2O', label: 'Peak airway pressure (cmH₂O)', max: 80 },
   ],
   'ventilation-and-co2': [
-    { key: 'paCO2MmHg', label: 'Modeled PaCO₂ (mm Hg)', max: 100 },
+    { key: 'paCO2MmHg', label: 'Modeled PaCO₂ (mmHg)', max: 100 },
     { key: 'peakPressureCmH2O', label: 'Peak airway pressure (cmH₂O)', max: 80 },
   ],
 }

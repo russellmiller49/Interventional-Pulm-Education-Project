@@ -6,6 +6,11 @@ import { BookOpenCheck, GraduationCap } from 'lucide-react'
 import { mechanicalVentilationNavBase } from '@/features/learning-module/moduleRoutes'
 import { Link } from '@/i18n/navigation'
 
+import {
+  isVentilationCaseLive,
+  ventilationSectionNumber,
+  VENTILATION_HELD_CASE_TAG,
+} from '../content/learnerMap'
 import { ventilationLearningUnits } from '../content/learningCurriculum'
 import {
   nextSelfPacedVentilationSection,
@@ -94,7 +99,7 @@ export function VentilationPathwayAccordion({
                     }}
                   >
                     <GraduationCap aria-hidden="true" />
-                    {unit.title}
+                    {ventilationSectionNumber(unit.id)}. {unit.title}
                     {done ? ' · visited' : ''}
                     {isNext ? <em>Up next</em> : null}
                   </Link>
@@ -115,6 +120,8 @@ export function VentilationPathwayAccordion({
                   >
                     <BookOpenCheck aria-hidden="true" />
                     Case · {entry.title}
+                    {isVentilationCaseLive(entry.caseId) ? '' : ` · ${VENTILATION_HELD_CASE_TAG}`}
+                    {entry.revisit ? ' · revisit' : ''}
                     {done ? ' · visited' : ''}
                   </Link>
                 )
@@ -136,7 +143,11 @@ function dedupeCases(cases: VentilationPathwayGroup['cases']): VentilationPathwa
   })
 }
 
-/** "Sections 4–10 · 7 sections · 5 cases · 53 min", every number counted from the registry. */
+/**
+ * "Sections 4–10 · 7 sections · 4 paired cases · about 53 min of reading", every number counted
+ * from the registry. The case count is the cases paired with this stage's sections, not a share of
+ * the whole case set; the Practice page lists every entry.
+ */
 export function summaryLine(group: VentilationPathwayGroup): string {
   const positions = group.units.map(
     (unit) => ventilationLearningUnits.findIndex((u) => u.id === unit.id) + 1,
@@ -147,8 +158,11 @@ export function summaryLine(group: VentilationPathwayGroup): string {
   const span = first === last ? `Section ${first}` : `Sections ${first}–${last}`
   const sectionCount = `${group.units.length} section${group.units.length === 1 ? '' : 's'}`
   const caseIds = new Set(group.cases.map((entry) => entry.caseId))
-  const caseCount = caseIds.size > 0 ? `${caseIds.size} case${caseIds.size === 1 ? '' : 's'}` : null
-  return [span, sectionCount, caseCount, `${minutes} min`].filter(Boolean).join(' · ')
+  const caseCount =
+    caseIds.size > 0 ? `${caseIds.size} paired case${caseIds.size === 1 ? '' : 's'}` : null
+  return [span, sectionCount, caseCount, `about ${minutes} min of reading`]
+    .filter(Boolean)
+    .join(' · ')
 }
 
 /** The accordion over stored progress, for surfaces that hold none of their own. */

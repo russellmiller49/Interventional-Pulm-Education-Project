@@ -130,7 +130,7 @@ describe('self-paced public MV (supersedes commitment, grading and replay gates)
       fireEvent.change(screen.getByRole('combobox', { name: 'Choose step' }), {
         target: { value: lesson.steps.length - 1 },
       })
-      expect(screen.getByText(/No response has been captured/)).toBeInTheDocument()
+      expect(document.querySelector('[data-no-observation]')).not.toBeNull()
       expect(consoleState?.interventions).toEqual([])
       expect(consoleState?.prediction.mechanismId).toBeNull()
       expect(consoleState?.prediction.committed).toBe(false)
@@ -196,7 +196,7 @@ describe('self-paced public MV (supersedes commitment, grading and replay gates)
   it('excludes the misleading MV-03 live example on a saved challenge URL', () => {
     render(<CaseActivity caseId="MV-03" deviceId="hamilton-c6" mode="challenge" section="assess" />)
     boot()
-    expect(screen.getByText(/live case under modeling review/)).toBeInTheDocument()
+    expect(document.querySelector('[data-mv03-model-hold]')).not.toBeNull()
     expect(screen.queryByRole('button', { name: 'Change oxygen' })).not.toBeInTheDocument()
     expect(consoleState).toBeUndefined()
     expectLegacyUnchanged()

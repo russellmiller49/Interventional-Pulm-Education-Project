@@ -311,7 +311,7 @@ describe('C1 · untreated trajectories and matched-time attribution', () => {
     )
   })
 
-  it('MV-14: decompression restores compliance and MAP; oxygenation has no modeled dependency', () => {
+  it('MV-14: decompression restores compliance, MAP and oxygenation; drainage adds to it', () => {
     const { arm, control } = atTime('MV-14', 'unstable', [
       [12, { type: 'PERFORM_INTERVENTION', interventionId: 'decompress-pneumothorax' }],
     ])
@@ -319,22 +319,35 @@ describe('C1 · untreated trajectories and matched-time attribution', () => {
     expect(
       control[1].breath.plateauEstimateCmH2O - arm[1].breath.plateauEstimateCmH2O,
     ).toBeGreaterThan(20)
-    // Stated on the case page (content/caseModelNotes.ts) and held for review; not drifting in
-    // either arm, where the base let both climb identically to 97 %.
-    expect(arm[1].gas.spo2).toBe(control[1].gas.spo2)
+    // Oxygenation follows the lesion: the untreated arm stays where it opened (the base let both
+    // arms climb identically to 97 %), and the decompressed arm recovers as its shunt falls.
     expect(control[1].gas.spo2).toBe(76)
+    expect(arm[1].gas.shunt).toBeLessThan(control[1].gas.shunt)
+    expect(arm[1].gas.spo2 - control[1].gas.spo2).toBeGreaterThan(10)
+    expect(arm[1].gas.paO2 - control[1].gas.paO2).toBeGreaterThan(15)
+    const drained = atTime('MV-14', 'unstable', [
+      [12, { type: 'PERFORM_INTERVENTION', interventionId: 'decompress-pneumothorax' }],
+      [40, { type: 'PERFORM_INTERVENTION', interventionId: 'pleural-drainage' }],
+    ])
+    expect(drained.arm[1].gas.shunt).toBeLessThan(arm[1].gas.shunt)
+    expect(drained.arm[1].gas.spo2).toBeGreaterThan(arm[1].gas.spo2)
+    expect(drained.arm[1].gas.paO2).toBeGreaterThan(arm[1].gas.paO2)
   })
 
-  it('MV-13: the treatment that reaches the branch lowers peak pressure; the wrong one does nothing', () => {
+  it('MV-13: the treatment that reaches the branch lowers peak pressure and raises oxygenation; the wrong one does nothing', () => {
     const right = atTime('MV-13', 'secretions', [
       [12, { type: 'PERFORM_INTERVENTION', interventionId: 'inspect-circuit' }],
       [33, { type: 'PERFORM_INTERVENTION', interventionId: 'suction-airway' }],
     ])
     expect(right.control[1].breath.peakCmH2O - right.arm[1].breath.peakCmH2O).toBeGreaterThan(15)
+    expect(right.control[1].gas.spo2).toBe(88)
+    expect(right.arm[1].gas.spo2 - right.control[1].gas.spo2).toBeGreaterThan(2)
+    expect(right.arm[1].gas.paO2 - right.control[1].gas.paO2).toBeGreaterThan(5)
     const wrong = atTime('MV-13', 'secretions', [
       [12, { type: 'PERFORM_INTERVENTION', interventionId: 'bronchodilator' }],
     ])
     expect(wrong.arm[1].breath).toEqual(wrong.control[1].breath)
+    expect(wrong.arm[1].gas).toEqual(wrong.control[1].gas)
   })
 
   it('MV-08: stopping the false triggers lets the alkalosis correct, and only then', () => {
@@ -623,7 +636,6 @@ describe('C3 · MV-13 high-pressure alarm', () => {
     act(() => jest.advanceTimersByTime(10))
     const note = document.querySelector('[data-case-model-note]')?.textContent ?? ''
     expect(note).toMatch(/high-pressure limit at 60 cmH₂O/)
-    expect(note).toMatch(/held for RT and device review/)
     expect(screen.queryByText('High pressure')).toBeNull()
     jest.useRealTimers()
   })

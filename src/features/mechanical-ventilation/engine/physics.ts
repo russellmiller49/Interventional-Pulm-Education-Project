@@ -872,6 +872,23 @@ export function deriveEffectivePatient(
   if (effects.has('pleural-drainage')) {
     patient.mechanics.complianceLPerCmH2O = Math.max(patient.mechanics.complianceLPerCmH2O, 0.035)
   }
+  /*
+   * Gas exchange follows the lesion. Lung collapsed under a tension pneumothorax, or lung behind
+   * an obstructed airway, is perfused and not ventilated: the hypoxemia the case opens with is
+   * that shunt. Treating the lesion re-expands or re-opens the lung, so the shunt falls and
+   * `updateSlowPhysiology` carries PaO₂ and SpO₂ up over its usual time constants. Decompression
+   * alone leaves the lung partly collapsed; drainage re-expands it. The floors stay above a normal
+   * lung because both patients have underlying lung disease (ARDS, pneumonia).
+   */
+  if (definition.phenotype === 'tension-pneumothorax' && !patient.airway.pneumothorax) {
+    patient.gasExchange.shuntFraction = Math.min(
+      patient.gasExchange.shuntFraction,
+      effects.has('pleural-drainage') ? 0.1 : 0.14,
+    )
+  }
+  if (definition.phenotype === 'high-resistance' && branchCorrected(state, definition)) {
+    patient.gasExchange.shuntFraction = Math.min(patient.gasExchange.shuntFraction, 0.03)
+  }
   if (effects.has('disconnect-bag')) {
     patient.mechanics.endExpiratoryVolumeL *= 0.1
     patient.mechanics.intrinsicPeepCmH2O *= 0.2

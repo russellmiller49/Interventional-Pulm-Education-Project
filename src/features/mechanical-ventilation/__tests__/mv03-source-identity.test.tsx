@@ -1,11 +1,10 @@
-import { cleanup, render, within } from '@testing-library/react'
+import { cleanup, render } from '@testing-library/react'
 
 import { criticalCareEvidenceById } from '@/features/critical-care/content/evidenceRegistry'
 
 import { VentilationLearningSources } from '../components/VentilationLearningVisuals'
 import { VentilationSourceList } from '../components/stage/VentilationSourceList'
 import {
-  VENTILATION_CLINICAL_REVIEW_LINE,
   ventilationEvidence,
   ventilationEvidenceById,
   ventilationSourceClassLabel,
@@ -27,6 +26,9 @@ const formerlyUnnamed = [
 const baseClaimTypes: Readonly<Record<string, string>> = {
   'aarc-assessment-2024': 'clinical',
   'ats-ards-2024': 'clinical',
+  // MV-PRE-REVIEW-04 (S6-1): one record added, for the guideline the limits come from. Every
+  // record captured on untouched main keeps its claim type.
+  'ats-esicm-sccm-ards-2017': 'clinical',
   'hamilton-c6-manual-1.2.x': 'device-workflow',
   'hamilton-c6-quick-guide': 'device-workflow',
   'hamilton-c6-intellivent-asv-1.2.x': 'device-workflow',
@@ -56,6 +58,11 @@ const baseClaimTypes: Readonly<Record<string, string>> = {
   'casebook-source-7': 'model-behavior',
   'casebook-source-8': 'model-behavior',
   'bounded-ventilation-model': 'model-behavior',
+  // Teaching-first rules (2026-10-08): four records added for the numbers register's sources.
+  'ardsnet-arma-2000': 'clinical',
+  'ardsnet-alveoli-2004': 'clinical',
+  'amato-driving-pressure-2015': 'clinical',
+  'tobin-3e-severe-asthma': 'clinical',
 }
 
 describe('MV-03 source identities', () => {
@@ -122,7 +129,7 @@ describe('MV-03 source identities', () => {
       expect(criticalCareEvidenceById.get(id)?.claimType).toBe(claimType)
   })
 
-  it('shows identity and the no-review line in the section footer while claims stay folded', () => {
+  it('names every record and its class in the section footer while claims stay folded', () => {
     const { container } = render(
       <VentilationSourceList
         records={formerlyUnnamed.map((id) => ventilationEvidenceById.get(id)!)}
@@ -134,25 +141,20 @@ describe('MV-03 source identities', () => {
     expect(items).toHaveLength(formerlyUnnamed.length)
     items.forEach((item) => {
       const record = ventilationEvidenceById.get(item.dataset.evidenceId!)!
-      expect(within(item).getByText(VENTILATION_CLINICAL_REVIEW_LINE)).toBeInTheDocument()
-      expect(item.textContent).toContain(record.identity!.note)
       expect(item.textContent).toContain(ventilationSourceClassLabel[record.sourceClass])
     })
     expect(container.textContent).not.toMatch(/Casebook source \d/)
   })
 
-  it('labels classes and identity in the applications source list', () => {
+  it('labels classes in the applications source list', () => {
     const { container } = render(
       <VentilationLearningSources
         evidenceIds={['casebook-source-6', 'supplied-casebook-2026', 'tobin-3e-copd']}
       />,
     )
     const text = container.textContent ?? ''
-    expect(text).toContain('Modeling preprint · ')
-    expect(text).toContain('Supplied case set, author not stated · ')
-    expect(text).toContain('Clinical reference · ')
-    expect(text).toContain('Identity as cited, not checked')
-    expect(text).toContain(VENTILATION_CLINICAL_REVIEW_LINE)
+    for (const sourceClass of ['modeling-preprint', 'curriculum', 'clinical-reference'] as const)
+      expect(text).toContain(`${ventilationSourceClassLabel[sourceClass]} · `)
     expect(text).not.toMatch(/supplied casebook and existing lesson rationales/)
   })
 })

@@ -54,7 +54,7 @@ export function IdealizedComparison() {
   return (
     <section className={styles.idealReference} data-idealized-comparison>
       <h3>Idealized passive comparison</h3>
-      <p>Reference illustration only; no live-patient change or learning credit.</p>
+      <p>A reference illustration. It does not change the live patient.</p>
       <p data-fixed-inputs>
         <strong>Fixed inputs:</strong> VC 400 mL at 24 L/min. PC{' '}
         {IDEAL_REFERENCE.pressure.toFixed(2)} cmH₂O above PEEP. Both: PEEP 5 cmH₂O, inspiration 1.00

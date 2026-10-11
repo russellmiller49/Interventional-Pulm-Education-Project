@@ -4,7 +4,8 @@
  * 1. The breath clock held a period but not the next onset, so repeated rate changes moved it.
  * 2. A communication board restored a patient report under deep sedation or paralysis.
  * 3. PEEP 13's held lung state also answered "is the case resolved".
- * 4. MV-14's (and MV-13's) action feedback claimed responses the model does not produce.
+ * 4. MV-14's (and MV-13's) action feedback claimed responses the model does not produce. Since
+ *    2026-10-08 the model produces them: block 4 now pins the oxygenation response itself.
  * 5. MV-13's alarm note said "no alarm" beside a console sounding one.
  *
  * Each block names the behaviour reproduced on `dea2738a` (the reproduction scripts and their output
@@ -18,11 +19,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { BedsidePanel } from '../components/BedsidePanel'
 import CaseActivity from '../components/MechanicalVentilationCaseActivityV2'
 import { PostActionCoachingPanel } from '../components/PostActionCoachingPanel'
-import {
-  caseResponseModelNote,
-  casePresentationModelNote,
-  faultOxygenationBoundary,
-} from '../content/caseModelNotes'
+import { casePresentationModelNote } from '../content/caseModelNotes'
 import { patientReportAvailability } from '../content/patientReport'
 import {
   capturePostActionBaseline,
@@ -562,7 +559,7 @@ describe('3 · PEEP 13 keeps the held lung state and does not resolve the case',
 })
 
 /* ------------------------------------------------------------------------------------------------
- * 4 · Unsupported response claims, where the learner meets them
+ * 4 · The oxygenation response to treating the lesion
  * ---------------------------------------------------------------------------------------------- */
 
 function observe(
@@ -583,79 +580,62 @@ function observe(
   return { state, feedback, coaching: coaching! }
 }
 
-const coachingText = (coaching: PostActionCoaching) =>
-  [
-    coaching.observedSummary,
-    coaching.interpretation,
-    coaching.notDemonstrated,
-    coaching.reassess,
-    coaching.modelBoundary ?? '',
-  ].join(' ')
+const oxygenation = (state: VentilationSimulationState) => state.patient.gasExchange
+const interventionResponse = (definition: VentilationCaseDefinition, id: string) =>
+  definition.interventions.find((intervention) => intervention.id === id)!.response
 
-describe('4 · MV-14 and MV-13 say what the simulation shows where the response is read', () => {
+/**
+ * Teaching-first rules (2026-10-08): the model was fixed instead of being explained. Treating the
+ * lesion now lowers the shunt, so PaO₂ and SpO₂ recover, and the "not linked to" notes are gone.
+ */
+describe('4 · MV-14 and MV-13: oxygenation follows the treated lesion', () => {
   const mv14 = definitionOf('MV-14')
   const mv13 = definitionOf('MV-13')
 
   it.each(['unstable', 'stable'])(
-    'MV-14 %s: decompression feedback keeps the expectation and states the model',
+    'MV-14 %s: decompression raises SpO₂, PaO₂ and MAP, and drainage raises oxygenation further',
     (branch) => {
       const start = run(opened('MV-14', branch), 12)
       const { state, feedback, coaching } = observe(start, mv14, 'decompress-pneumothorax')
-      // The model is unchanged: SpO₂ stays where it opened, MAP recovers.
-      expect(state.patient.gasExchange.spo2Percent).toBe(start.patient.gasExchange.spo2Percent)
       expect(state.patient.hemodynamics.mapMmHg).toBeGreaterThan(start.patient.hemodynamics.mapMmHg)
-      // Head `dea2738a`: "Compliance, oxygenation, and blood pressure improve abruptly but temporarily."
-      expect(feedback).toMatch(/^Clinically expected: Compliance, oxygenation, and blood pressure/)
-      expect(feedback).toMatch(/In this simulation compliance and blood pressure improve/)
-      expect(feedback).toMatch(/does not fade — the model has no decay for it/)
-      expect(feedback).toMatch(/SpO₂ is not linked to the pneumothorax here, so it does not change/)
+      expect(oxygenation(state).spo2Percent).toBeGreaterThan(oxygenation(start).spo2Percent)
+      expect(oxygenation(state).paO2MmHg).toBeGreaterThan(oxygenation(start).paO2MmHg)
+      expect(feedback).toBe(interventionResponse(mv14, 'decompress-pneumothorax'))
       expect(state.interventions.at(-1)!.response).toBe(feedback)
+      expect(coaching.observed.find((reading) => reading.id === 'spo2')?.direction).toBe('rose')
+      expect(coaching.modelBoundary).toBeNull()
 
-      const text = coachingText(coaching)
-      expect(coaching.observed.find((reading) => reading.id === 'spo2')?.direction).toBe('held')
-      expect(coaching.modelBoundary).toMatch(
-        /moved toward better over this interval; SpO₂ did not change/,
+      // The response continues over the gas-exchange time constant, then holds.
+      const decompressed = run(state, 120)
+      expect(oxygenation(decompressed).spo2Percent).toBeGreaterThan(
+        oxygenation(state).spo2Percent + 5,
       )
-      expect(coaching.modelBoundary).toMatch(/not linked to the pneumothorax/)
-      // No claim that a modeled response will fade, and none that oxygenation improved.
-      expect(text).not.toMatch(/a response that fades is the expected course/)
-      expect(text).not.toMatch(/need securing rather than to hold on its own/)
-      expect(text).not.toMatch(/oxygenation (improved|recovered|rose)/i)
-      expect(coaching.notDemonstrated).toMatch(/does not model that loss/)
+      expect(oxygenation(decompressed).paO2MmHg).toBeGreaterThan(oxygenation(state).paO2MmHg + 5)
+      expect(oxygenation(run(decompressed, 120)).spo2Percent).toBeGreaterThanOrEqual(
+        oxygenation(decompressed).spo2Percent,
+      )
+
+      // Drainage re-expands the lung: a further gain over decompression alone.
+      const drainage = observe(decompressed, mv14, 'pleural-drainage')
+      expect(drainage.feedback).toBe(interventionResponse(mv14, 'pleural-drainage'))
+      expect(drainage.coaching.modelBoundary).toBeNull()
+      const drained = run(drainage.state, 120)
+      const undrained = run(decompressed, drained.simulationTime - decompressed.simulationTime)
+      expect(oxygenation(drained).spo2Percent).toBeGreaterThan(
+        oxygenation(undrained).spo2Percent + 1,
+      )
+      expect(oxygenation(drained).paO2MmHg).toBeGreaterThan(oxygenation(undrained).paO2MmHg + 3)
     },
   )
 
-  it('MV-14: a saturation moved by FiO₂ during the interval is not credited to the decompression', () => {
-    const start = run(opened('MV-14', 'unstable'), 12)
-    const { coaching } = observe(start, mv14, 'decompress-pneumothorax', [
-      { type: 'SET_CONTROL', control: 'oxygenPercent', value: 100 },
-    ])
-    expect(coaching.observed.find((reading) => reading.id === 'spo2')?.direction).toBe('rose')
-    expect(coaching.modelBoundary).toMatch(/SpO₂ rose, but not because of this action/)
-  })
-
-  it('MV-14: drainage feedback does not imply the improvement would otherwise fade', () => {
-    let state = run(opened('MV-14', 'unstable'), 12)
-    state = observe(state, mv14, 'decompress-pneumothorax').state
-    const { feedback, coaching } = observe(state, mv14, 'pleural-drainage')
-    expect(feedback).toMatch(/^Clinically expected: The compliance and hemodynamic improvement/)
-    expect(feedback).toMatch(/does not fade whether or not drainage is placed/)
-    expect(coaching.modelBoundary).toMatch(/SpO₂ did not change/)
-  })
-
-  it('MV-14: the explanation beside the authored expected response states both limits', () => {
-    const note = caseResponseModelNote('MV-14')!
-    expect(note).toMatch(/saturation is not linked to the pneumothorax/)
-    expect(note).toMatch(/does not fade/)
-  })
-
-  it('MV-14: the Practice page prints the qualified feedback when the action is taken', () => {
+  it('MV-14: the Practice page prints the intervention’s response when the action is taken', () => {
     jest.useFakeTimers()
     render(<CaseActivity caseId="MV-14" deviceId={DEVICE} mode="challenge" section="practice" />)
     act(() => jest.advanceTimersByTime(10))
     fireEvent.click(screen.getByRole('button', { name: 'Perform emergency decompression' }))
-    const status = screen.getByText(/^Clinically expected: Compliance, oxygenation/)
-    expect(status.textContent).toMatch(/SpO₂ is not linked to the pneumothorax here/)
+    expect(
+      screen.getByText(interventionResponse(mv14, 'decompress-pneumothorax')),
+    ).toBeInTheDocument()
     jest.useRealTimers()
   })
 
@@ -663,43 +643,37 @@ describe('4 · MV-14 and MV-13 say what the simulation shows where the response 
     { branch: 'secretions', treatments: ['suction-airway'] },
     { branch: 'hme-or-ett', treatments: ['inspect-circuit', 'remove-hme'] },
   ])(
-    'MV-13 $branch: the correct treatment is read against an unlinked saturation',
+    'MV-13 $branch: the treatment that reaches the narrowing raises SpO₂ and PaO₂',
     ({ branch, treatments }) => {
-      let state = run(opened('MV-13', branch), 12)
-      let result = observe(state, mv13, treatments[0])
-      for (const id of treatments.slice(1)) {
-        state = result.state
-        result = observe(state, mv13, id)
-      }
-      const { coaching, state: after } = result
-      expect(after.patient.gasExchange.spo2Percent).toBe(88)
+      const start = run(opened('MV-13', branch), 12)
+      let result = observe(start, mv13, treatments[0])
+      for (const id of treatments.slice(1)) result = observe(result.state, mv13, id)
+      const { coaching, state: treated } = result
       expect(coaching.observed.find((reading) => reading.id === 'peak-pressure')?.direction).toBe(
         'fell',
       )
-      expect(coaching.modelBoundary).toMatch(
-        /^Peak airway pressure[^;]* moved toward better over this interval; SpO₂ did not change/,
-      )
-      expect(coaching.modelBoundary).toMatch(/not linked to the airway obstruction/)
-      expect(coachingText(coaching)).not.toMatch(/oxygenation (improved|recovered|rose)/i)
+      expect(coaching.modelBoundary).toBeNull()
+      expect(oxygenation(treated).paO2MmHg).toBeGreaterThan(oxygenation(start).paO2MmHg)
+      const later = run(treated, 120)
+      expect(oxygenation(later).spo2Percent).toBeGreaterThan(oxygenation(start).spo2Percent + 2)
+      expect(oxygenation(later).paO2MmHg).toBeGreaterThan(oxygenation(start).paO2MmHg + 5)
     },
   )
 
-  it('MV-13: a treatment that misses the cause gets the same model statement, so it leaks no branch', () => {
-    const state = run(opened('MV-13', 'secretions'), 12)
-    const inspected = observe(state, mv13, 'inspect-circuit').state
-    const missed = observe(inspected, mv13, 'remove-hme').coaching
-    expect(missed.modelBoundary).toMatch(/SpO₂ did not change. In this simulation oxygenation/)
-    expect(missed.modelBoundary).not.toMatch(/secretion|tube|bronchospasm/i)
+  it('MV-13: a treatment that does not reach this branch’s narrowing leaves oxygenation where it was', () => {
+    const start = run(opened('MV-13', 'secretions'), 12)
+    const inspected = observe(start, mv13, 'inspect-circuit').state
+    const missed = observe(inspected, mv13, 'remove-hme')
+    const later = run(missed.state, 120)
+    expect(oxygenation(later).spo2Percent).toBe(oxygenation(start).spo2Percent)
+    expect(oxygenation(later).paO2MmHg).toBeCloseTo(oxygenation(start).paO2MmHg, 6)
+    expect(missed.coaching.observed.find((reading) => reading.id === 'spo2')?.direction).toBe(
+      'held',
+    )
+    expect(missed.coaching.modelBoundary).toBeNull()
   })
 
-  it('MV-13: the explanation states the oxygenation limit beside the authored response', () => {
-    expect(caseResponseModelNote('MV-13')).toMatch(/not linked to the airway obstruction/)
-    expect(caseResponseModelNote('MV-13')).toMatch(/held for faculty review/)
-  })
-
-  it('names no boundary where the model does represent the response', () => {
-    expect(faultOxygenationBoundary('MV-01', 'decompress-pneumothorax', [])).toBeNull()
-    expect(faultOxygenationBoundary('MV-14', 'assess-patient', [])).toBeNull()
+  it('composes no model statement into an action’s feedback', () => {
     const other = observe(run(opened('MV-06'), 12), definitionOf('MV-06'), 'disconnect-bag')
     expect(other.coaching.modelBoundary).toBeNull()
     expect(other.feedback).not.toMatch(/^Clinically expected/)
@@ -725,7 +699,6 @@ describe('5 · the MV-13 alarm note cannot contradict the live console', () => {
     expect(state.ventilator.settings.highPressureLimitCmH2O).toBe(60)
     expect(alarmCodes(state)).not.toContain('HIGH_PRESSURE')
     expect(note(state)).toMatch(/opens after that event, with the high-pressure limit at 60 cmH₂O/)
-    expect(note(state)).toMatch(/held for RT and device review/)
     expect(note(state)).not.toMatch(/Now the limit/)
   })
 

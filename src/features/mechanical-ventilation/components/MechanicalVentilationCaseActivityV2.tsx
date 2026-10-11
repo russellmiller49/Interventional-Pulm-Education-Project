@@ -7,6 +7,8 @@ import { SimulationLaunchGate } from '@/features/learning-module/components/Simu
 import { mechanicalVentilationCaseById } from '../content/runtimeCases'
 import { branchResolution } from '../content/caseFindings'
 import { casePresentationModelNote, caseResponseModelNote } from '../content/caseModelNotes'
+import { ventilationCaseExplanation, ventilationCaseMechanismHint } from '../content/caseTeaching'
+import { isVentilationCaseLive, ventilationSectionLabel } from '../content/learnerMap'
 import { plateauReadingValidity } from '../content/plateauValidity'
 import {
   capturePostActionBaseline,
@@ -72,7 +74,7 @@ function caseReducer(session: CaseSession, action: VentilationAction): CaseSessi
 export default function MechanicalVentilationCaseActivityV2(
   props: MechanicalVentilationCaseActivityV2Props,
 ) {
-  if (props.caseId === 'MV-03') return <HeldDoubleTriggeringCase {...props} />
+  if (!isVentilationCaseLive(props.caseId)) return <HeldDoubleTriggeringCase {...props} />
   return <LiveCase key={props.caseId + ':' + props.deviceId} {...props} />
 }
 
@@ -96,26 +98,22 @@ function HeldDoubleTriggeringCase({
       <article className={`${task.flow} ${task.content}`} data-mv03-model-hold>
         <h1>{definition.title}</h1>
         <p>
-          <strong>Worked explanation · live case under modeling review</strong>
+          <strong>Worked explanation</strong>
         </p>
-        <p>
-          The live intrinsic PEEP display alternates between the short gap within a breath pair and
-          the longer gap between pairs. A lower displayed value after waiting does not demonstrate
-          that air trapping improved. This live example is unavailable while ventilation faculty/RT
-          review the measurement and initialization contract.
+        <p data-mv03-held-reason>
+          This case is a worked explanation without a live run. With paired breaths, the simulator’s
+          intrinsic PEEP reading alternates between the short gap inside a pair and the longer gap
+          between pairs, so a falling number on a live run would not show that air trapping
+          improved.
         </p>
-        <h2>The authored mechanism</h2>
-        <p>{definition.debrief}</p>
+        <h2>The mechanism</h2>
+        <p data-case-learner-explanation>{ventilationCaseExplanation(caseId)}</p>
         <h2>What to examine in a tracing</h2>
         <ul>
           {definition.learningObjectives.map((objective) => (
             <li key={objective}>{objective}</li>
           ))}
         </ul>
-        <p>
-          This is a casebook explanation. No simulated intervention or observation has been
-          recorded.
-        </p>
         <Link href="/mechanical-ventilation/practice">Continue to other cases</Link>
         <Link
           href={{
@@ -123,7 +121,7 @@ function HeldDoubleTriggeringCase({
             query: { activity: 'triggering-and-cycling' },
           }}
         >
-          Review triggering and cycling
+          Review {ventilationSectionLabel('triggering-and-cycling')}
         </Link>
         <SourcesPanel deviceId={deviceId} />
       </article>
@@ -225,10 +223,10 @@ function LiveCase({
           {explanation ? (
             <section className={task.block} data-case-explanation>
               <h2>Case explanation</h2>
-              <p>{definition.debrief}</p>
+              <p data-case-learner-explanation>{ventilationCaseExplanation(caseId)}</p>
               {resolution ? <p>{resolution.cause}</p> : null}
               <p>
-                <strong>Authored safety priority: </strong>
+                <strong>Priority: </strong>
                 {
                   definition.priorityOptions.find(
                     (option) => option.id === definition.correctPriorityId,
@@ -236,7 +234,7 @@ function LiveCase({
                 }
               </p>
               <p>
-                <strong>Authored expected response: </strong>
+                <strong>Expected response: </strong>
                 {
                   definition.responseOptions.find(
                     (option) => option.id === definition.correctResponseId,
@@ -246,7 +244,7 @@ function LiveCase({
               {caseResponseModelNote(caseId) ? (
                 <p data-case-model-boundary>{caseResponseModelNote(caseId)}</p>
               ) : null}
-              <h3>Actions to consider in this authored example</h3>
+              <h3>Actions to consider</h3>
               <ul>
                 {definition.expectedActions.map((action) => (
                   <li key={action}>{action}</li>
@@ -258,10 +256,6 @@ function LiveCase({
                   <li key={action}>{action}</li>
                 ))}
               </ul>
-              <p>
-                Reading this explanation does not record an action or establish a physiological
-                response.
-              </p>
             </section>
           ) : null}
           <SimulationLaunchGate
@@ -339,6 +333,9 @@ function LiveCase({
                       >
                         {intervention.label}
                       </button>
+                      <p className={task.note} data-action-description>
+                        {intervention.description}
+                      </p>
                       {missing.length ? (
                         <p>
                           Requires the actual preceding action:{' '}
@@ -360,9 +357,7 @@ function LiveCase({
                 {state.criticalErrors.length ? (
                   <section className={task.boundary} role="alert" aria-label="Safety interruption">
                     <h3>Safety interruption</h3>
-                    <p>
-                      These simulated findings call for immediate stabilization and reassessment.
-                    </p>
+                    <p>Stop and treat these findings before you continue.</p>
                     <ul>
                       {state.criticalErrors.map((finding) => (
                         <li key={finding}>{finding}</li>
@@ -391,14 +386,12 @@ function LiveCase({
           <VentilationReinforcement
             key={caseId + ':' + repeat}
             id={caseId + '-mechanism'}
-            purpose="Connect the observed pattern with the case’s proposed mechanism."
+            purpose="A guided comparison, not a test: the case title already names the mechanism. Use this to find the observation on this patient that sets it apart from the two other mechanisms in the same group."
             prompt="Which mechanism could explain this pattern?"
             choices={definition.mechanismOptions}
-            hint={
-              definition.hintLadder[0] ??
-              'Inspect pressure, flow, volume, and patient effort together.'
-            }
-            explanation={definition.debrief}
+            bestChoiceId={definition.correctMechanismId}
+            hint={ventilationCaseMechanismHint(caseId)}
+            explanation={ventilationCaseExplanation(caseId)}
           />
           <SourcesPanel deviceId={deviceId} />
           <Link href="/mechanical-ventilation/practice">Continue to another case</Link>

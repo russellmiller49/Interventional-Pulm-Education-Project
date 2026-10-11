@@ -19,7 +19,6 @@ import {
 import type { VentilationSimulationState } from '../../engine'
 import {
   AwaitingBreath,
-  ModelBoundary,
   TextEquivalent,
   fractionAt,
   latestBreath,
@@ -291,11 +290,10 @@ export function VentilationModeVariables({
       ) : null}
 
       <TextEquivalent>{summary}</TextEquivalent>
-      <ModelBoundary>
-        Mode availability, labels, and confirmation workflow are specific to the selected training
-        console and come from its source-bound profile. The four-variable description is what
-        carries across devices; the names do not.
-      </ModelBoundary>
+      <p className={styles.panelNote}>
+        Mode names and confirmation steps differ between consoles. The four variables carry across
+        every one of them.
+      </p>
     </section>
   )
 }
