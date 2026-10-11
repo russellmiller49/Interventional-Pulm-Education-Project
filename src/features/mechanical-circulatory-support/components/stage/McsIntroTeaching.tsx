@@ -53,7 +53,7 @@ export function McsIntroTeaching({
             calculate a full oxygen transport balance; its SvO2 value is a flow-linked teaching
             surrogate.
           </dd>
-          <dt>Clinical perfusion assessment</dt>
+          <dt>Clinical perfusion evaluation</dt>
           <dd>
             Mentation, urine output, skin perfusion and lactate trend require patient observations
             and context. These organ responses are not simulated here.
@@ -126,7 +126,7 @@ export function McsIntroTeaching({
             ) : null}
             {parameter === 4 ? (
               <>
-                <dt>Separate patient assessment</dt>
+                <dt>Separate patient evaluation</dt>
                 <dd>
                   Blood pressure, filling pressures, echocardiography and clinical perfusion
                   findings supply information beyond the controller. Modeled LV volume (mL)

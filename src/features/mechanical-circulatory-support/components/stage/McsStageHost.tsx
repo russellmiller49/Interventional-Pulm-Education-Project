@@ -1776,9 +1776,10 @@ function McsStageSession({
           <details className={styles.runDetails} data-run-details>
             <summary>Run details</summary>
             <p>
-              Seed {state.seed} · the run’s identifier for reproducing it, not a clinical value. The
-              simulated clock moves only while display playback runs or a step runs the model;
-              opening a panel, changing the theme or resizing the window adds no simulated time.
+              Example number {state.seed} · the run’s identifier for reproducing it, not a clinical
+              value. The simulated clock moves only while display playback runs or a step runs the
+              model; opening a panel, changing the theme or resizing the window adds no simulated
+              time.
             </p>
           </details>
         )}
