@@ -222,15 +222,16 @@ export function identifyVerdict(
 }
 
 /**
- * A fork explanation as the bench shows it. Five of the earlier explanations tell same-named
- * daughters apart as "Daughter A" and "Daughter B"; the bench numbers openings, so the letters
- * are shown as its numbers.
+ * A fork explanation as the bench shows it. Where a fork's daughters share one name, its
+ * explanation tells them apart as "Daughter A", "Daughter B" and "Daughter C", in the fork's own
+ * order. The bench numbers openings, so the letters are shown as its numbers: "opening 1" inside a
+ * sentence, "Opening 1" at the start of one.
  */
 export function packetProse(text: string) {
-  return text.replace(
-    /\bDaughter ([A-C])\b/g,
-    (_, letter: string) => `opening ${letter.charCodeAt(0) - 64}`,
-  )
+  return text.replace(/\bDaughter ([A-C])\b/g, (_, letter: string, offset: number) => {
+    const opensSentence = /(^|[.!?]\s+)$/.test(text.slice(0, offset))
+    return `${opensSentence ? 'Opening' : 'opening'} ${letter.charCodeAt(0) - 64}`
+  })
 }
 
 // ── Choose ───────────────────────────────────────────────────────────────────────────────────

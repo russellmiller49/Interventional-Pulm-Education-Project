@@ -41,7 +41,12 @@ import {
 import { junctionFeedbackPacket } from '../content/junction-feedback'
 import { displayName } from '../engine/display-text'
 import { forkFacts, lesionFromFork, type OpeningFacts } from '../engine/fork-facts'
-import { optionVerdict, responseLumen, responsePlane } from '../engine/junction-feedback'
+import {
+  locatorOpening,
+  optionVerdict,
+  responseLumen,
+  responsePlane,
+} from '../engine/junction-feedback'
 import {
   onwardOption,
   type NavAction,
@@ -569,9 +574,10 @@ export function NavigationBench({
     const nearest = lastVerdict?.nearest
     if (!nearest || !identifying) return null
     if (nearest.role === 'parent') return `the parent, ${nearest.airway.code}`
-    const sibling = facts.openings.find(
-      (o) => o.airway.code === nearest.airway.code && nearest.role === 'daughter',
-    )
+    // By airway edge, not by code: at a fork whose daughters share one name the code would
+    // find the first of them, which may be the very opening being identified.
+    const siblingIndex = locatorOpening(trace, checkpointIndex, nearest)
+    const sibling = siblingIndex === null ? undefined : facts.openings[siblingIndex]
     if (sibling)
       return named(sibling)
         ? openingShort(sibling, true)

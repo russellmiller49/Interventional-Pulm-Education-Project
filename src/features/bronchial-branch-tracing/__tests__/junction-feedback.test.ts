@@ -1,10 +1,13 @@
 import { JUNCTION_FEEDBACK_SCOPE, junctionFeedbackPacket } from '../content/junction-feedback'
+import { NAV_LESSONS, buildTrip, routePlan } from '../content/nav-lessons'
 import {
   edgeAirway,
   edgeCrossings,
+  locatorOpening,
   optionLocators,
   optionVerdict,
   planeDistanceMm,
+  responseLumen,
   responsePlane,
 } from '../engine/junction-feedback'
 import decisions from '../geometry/branch-decisions.json'
@@ -42,7 +45,7 @@ const FORBIDDEN =
   /\b(score|scored|grade|graded|fail|failed|penalt\w*|incorrect|wrong|correct)\b|you (mistook|confused)/i
 
 describe('fork explanations', () => {
-  it('covers twenty-three divisions, the central one first, each of them on a route', () => {
+  it('covers thirty-five divisions, the central one first, each of them on a route', () => {
     expect(JUNCTION_FEEDBACK_SCOPE).toEqual([
       'junction-1',
       'junction-3',
@@ -68,8 +71,21 @@ describe('fork explanations', () => {
       'junction-12',
       'junction-17',
       'junction-26',
+      // The twelve subsegmental forks where openings are marked, added on October 10, 2026.
+      'junction-36',
+      'junction-73',
+      'junction-138',
+      'junction-42',
+      'junction-86',
+      'junction-161',
+      'junction-43',
+      'junction-46',
+      'junction-94',
+      'junction-47',
+      'junction-53',
+      'junction-91',
     ])
-    expect(new Set(JUNCTION_FEEDBACK_SCOPE).size).toBe(23)
+    expect(new Set(JUNCTION_FEEDBACK_SCOPE).size).toBe(35)
     for (const id of JUNCTION_FEEDBACK_SCOPE) {
       const packet = junctionFeedbackPacket(id)!
       expect(packet.checkpointId).toBe(id)
@@ -86,7 +102,8 @@ describe('fork explanations', () => {
       expect(packet.daughters).toEqual(decision.options.map((o) => o.airway.code))
       // Keyed by opening, not by code: several divisions have daughters that share a code.
       expect(packet.whenNearer).toHaveLength(decision.options.length)
-      expect(packet.whenNearer).toHaveLength(2)
+      // Two openings everywhere but the one three-way fork on a route.
+      expect([id, decision.options.length]).toEqual([id, id === 'junction-138' ? 3 : 2])
       expect(packet.divergence.length).toBeGreaterThan(0)
       expect(packet.continuity.length).toBeGreaterThan(0)
       expect(packet.moreEvidence.length).toBeGreaterThan(0)
@@ -94,6 +111,20 @@ describe('fork explanations', () => {
     // A small distal fork has computed levels only, no written explanation.
     expect(junctionFeedbackPacket('junction-30')).toBeUndefined()
     expect(junctionFeedbackPacket('target-approach')).toBeUndefined()
+  })
+
+  it('explains every fork where a learner is asked to mark the openings', () => {
+    // Whole routes (Practice and the closing set) and every lesson trip.
+    const plans = [
+      ...CT_TRACES.map((trace) => ({ trace, plan: routePlan(trace) })),
+      ...NAV_LESSONS.flatMap((lesson) => lesson.trips.map((trip) => buildTrip(trip))),
+    ]
+    const marked = new Set<string>()
+    for (const { trace, plan } of plans)
+      for (const stop of plan.stations)
+        if (stop.steps.includes('identify')) marked.add(trace.checkpoints[stop.checkpointIndex].id)
+    expect(marked.size).toBeGreaterThanOrEqual(30)
+    expect([...marked].filter((id) => !junctionFeedbackPacket(id))).toEqual([])
   })
 
   it('ties every revisit interval to slices the learner can browse and to the model node', () => {
@@ -192,7 +223,8 @@ describe('fork explanations', () => {
       expect(packet.naming.demonstration.length).toBeGreaterThan(0)
       // No question where this source gives both daughters, or one daughter and the parent, one code.
       const distinct =
-        new Set(packet.daughters).size === 2 && !packet.daughters.includes(packet.parent)
+        new Set(packet.daughters).size === packet.daughters.length &&
+        !packet.daughters.includes(packet.parent)
       expect([id, Boolean(packet.naming.try)]).toEqual([id, distinct])
       if (!packet.naming.try) continue
       const attempt = packet.naming.try
@@ -345,6 +377,60 @@ describe('model locators on a response plane', () => {
     })!.reached
     expect(new Set(reached.map((r) => r.locator.edgeId)).size).toBe(reached.length)
     expect(reached.map((r) => r.mm)).toEqual([...reached.map((r) => r.mm)].sort((a, b) => a - b))
+  })
+
+  it('says which opening a mark landed in by airway edge, where the daughters share one name', () => {
+    // At every fork with an explanation: a mark in one opening's own lumen, made while another
+    // opening is being identified, is traced back to the opening it is in.
+    let checked = 0
+    for (const id of JUNCTION_FEEDBACK_SCOPE) {
+      const { trace, index } = station(id)
+      const options = trace.checkpoints[index].decision!.options
+      options.forEach((_, asked) => {
+        options.forEach((_, landed) => {
+          if (asked === landed) return
+          const plane = responsePlane(trace, index, asked)!
+          const there = responsePlane(trace, index, landed)!
+          // Only where both are identified on one slice can a mark for one fall in the other.
+          if (plane.slice !== there.slice) return
+          const own = responseLumen(trace, index, landed)!
+          const result = optionVerdict(trace, index, asked, {
+            slice: plane.slice,
+            pixel: own.pixel,
+          })!
+          const sibling = result.reached.find((r) => r.locator.role === 'daughter')
+          if (!sibling) return
+          expect([id, asked, landed, locatorOpening(trace, index, sibling.locator)]).toEqual([
+            id,
+            asked,
+            landed,
+            landed,
+          ])
+          checked += 1
+        })
+      })
+    }
+    expect(checked).toBeGreaterThanOrEqual(8)
+    // The three-way fork: all three daughters are RB8. The two lower ones share slice 243.
+    const three = station('junction-138')
+    const lower = [1, 2].map((option) => responseLumen(three.trace, three.index, option)!)
+    const inThird = optionVerdict(three.trace, three.index, 1, {
+      slice: 243,
+      pixel: lower[1].pixel,
+    })!
+    expect(inThird.verdict).toBe('other-airway')
+    expect(inThird.nearest!.airway.code).toBe('RB8')
+    expect(locatorOpening(three.trace, three.index, inThird.nearest!)).toBe(2)
+    const inSecond = optionVerdict(three.trace, three.index, 2, {
+      slice: 243,
+      pixel: lower[0].pixel,
+    })!
+    expect(locatorOpening(three.trace, three.index, inSecond.nearest!)).toBe(1)
+    // The parent and airways of other forks are nobody's opening.
+    const parentRole = optionLocators(three.trace, three.index, 0).find((l) => l.role === 'parent')!
+    expect(locatorOpening(three.trace, three.index, parentRole)).toBeNull()
+    expect(locatorOpening(three.trace, three.index, { edgeId: 0, role: 'other' })).toBeNull()
+    expect(locatorOpening(three.trace, three.index, { edgeId: 0, role: 'daughter' })).toBeNull()
   })
 
   it('gives every division with an explanation an intended locator at each opening’s own response pixel', () => {

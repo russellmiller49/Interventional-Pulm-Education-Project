@@ -429,10 +429,14 @@ describe('identify', () => {
   })
 
   test('a fork explanation is shown with numbered openings, never lettered daughters', () => {
-    expect(packetProse('Daughter A, more cranial, and Daughter B, more caudal.')).toBe(
-      'opening 1, more cranial, and opening 2, more caudal.',
+    // Inside a sentence the number is lower case; where it opens one, it is capitalised.
+    expect(packetProse('They are told apart as Daughter A, more cranial, and Daughter B.')).toBe(
+      'They are told apart as opening 1, more cranial, and opening 2.',
     )
-    expect(packetProse('Daughter C')).toBe('opening 3')
+    expect(
+      packetProse('Both climb. Daughter B is short: Daughter A is not; Daughter C ends.'),
+    ).toBe('Both climb. Opening 2 is short: opening 1 is not; opening 3 ends.')
+    expect(packetProse('Daughter C')).toBe('Opening 3')
     expect(packetProse('The daughter RB4a')).toBe('The daughter RB4a')
     const lettered: string[] = []
     for (const id of JUNCTION_FEEDBACK_SCOPE) {
@@ -454,23 +458,69 @@ describe('identify', () => {
         expect(prose).not.toMatch(/\b[Dd]aughter [A-C]\b/)
       }
     }
-    // The five that told same-named daughters apart by letter. A is the first opening at each:
-    // RB4 forward of RB4a, the cranial RB3a, the caudal LB6, and the lateral LB6 twice.
+    // The forks that tell same-named daughters apart by letter: five of the first thirteen and
+    // eleven of the twelve subsegmental forks (the twelfth has two different names).
     expect(lettered).toEqual([
       'junction-19',
       'junction-16',
       'junction-11',
       'junction-25',
       'junction-52',
+      'junction-73',
+      'junction-138',
+      'junction-42',
+      'junction-86',
+      'junction-161',
+      'junction-43',
+      'junction-46',
+      'junction-94',
+      'junction-47',
+      'junction-53',
+      'junction-91',
     ])
-    const first = (trace: string, id: string) => stationOn(trace, id).facts.openings[0]
-    expect(first('middle-lobe-lateral', 'junction-19').course).toMatch(/^forward/)
-    expect(first('upper-oblique-lateral', 'junction-16').course).toMatch(/^up/)
-    expect(first('left-lower-returning', 'junction-11').course).toMatch(/down$/)
-    expect(first('left-lower-returning', 'junction-25').course).toMatch(/patient’s left/)
-    expect(stationOn('left-lower-returning', 'junction-52').facts.openings[1].course).toMatch(
-      /patient’s right/,
-    )
+    // A is the first opening, B the second, C the third. Each line below is what the text says of
+    // that daughter, held against the course the bench computes for the same opening.
+    const course = (trace: string, id: string, opening: number) =>
+      stationOn(trace, id).facts.openings[opening].course
+    const said: [string, string, number, RegExp][] = [
+      ['middle-lobe-lateral', 'junction-19', 0, /^forward/], // RB4, forward of RB4a
+      ['upper-oblique-lateral', 'junction-16', 0, /^up/], // the cranial RB3a
+      ['left-lower-returning', 'junction-11', 0, /down$/], // the caudal LB6
+      ['left-lower-returning', 'junction-25', 0, /patient’s left/], // the lateral LB6
+      ['left-lower-returning', 'junction-52', 1, /patient’s right/], // the medial LB6
+      ['right-lower-basal', 'junction-73', 0, /patient’s right and back/], // turns outward
+      ['right-lower-basal', 'junction-73', 1, /^forward and down$/],
+      ['right-lower-basal', 'junction-138', 0, /^forward$/], // stays almost level
+      ['right-lower-basal', 'junction-138', 1, /^forward and down$/],
+      ['right-lower-basal', 'junction-138', 2, /patient’s right and down/],
+      ['middle-lobe-entry', 'junction-42', 0, /patient’s left/],
+      ['middle-lobe-entry', 'junction-42', 1, /forward and to the patient’s right/],
+      ['middle-lobe-entry', 'junction-86', 1, /^forward and up$/], // climbs
+      ['middle-lobe-entry', 'junction-161', 0, /patient’s right/],
+      ['middle-lobe-entry', 'junction-161', 1, /^forward$/],
+      ['central-right', 'junction-43', 0, /^forward$/],
+      ['central-right', 'junction-43', 1, /^down and back$/], // the short one
+      ['left-upper-anterior', 'junction-46', 0, /patient’s left and back/],
+      ['left-upper-anterior', 'junction-46', 1, /^forward$/],
+      ['left-upper-anterior', 'junction-94', 0, /^up$/],
+      ['left-upper-anterior', 'junction-94', 1, /^forward$/],
+      ['left-upper-division', 'junction-47', 0, /^back and to the patient’s left$/],
+      ['left-upper-division', 'junction-47', 1, /^up$/],
+      ['left-lower-basal', 'junction-53', 0, /^back and to the patient’s left$/], // the side branch
+      ['left-lower-basal', 'junction-53', 1, /^down$/], // the continuation
+      ['central-left', 'junction-91', 0, /patient’s left and forward/],
+      ['central-left', 'junction-91', 1, /^down$/],
+    ]
+    for (const [trace, id, opening, words] of said)
+      expect([id, opening, course(trace, id, opening)]).toEqual([
+        id,
+        opening,
+        expect.stringMatching(words),
+      ])
+    // "Turns down and is found below the division": the slices say it where the course does not.
+    const arch = stationOn('middle-lobe-entry', 'junction-86').facts
+    expect(arch.openings[0].slice).toBeLessThan(arch.forkSlice)
+    expect(arch.openings[1].slice).toBeGreaterThan(arch.forkSlice)
   })
 
   test('on real marks at the carina the band and the engine agree', () => {

@@ -230,6 +230,22 @@ export function responsePlane(
 }
 
 /**
+ * Which of a fork's openings a locator is, by its airway edge. Null for the parent and for
+ * airways that are not this fork's daughters. Never matched by airway code: at many forks two or
+ * three daughters carry one code.
+ */
+export function locatorOpening(
+  trace: CtTrace,
+  checkpointIndex: number,
+  locator: Pick<ModelLocator, 'edgeId' | 'role'>,
+): number | null {
+  if (locator.role !== 'daughter' && locator.role !== 'intended') return null
+  const options = trace.checkpoints[checkpointIndex]?.decision?.options ?? []
+  const index = options.findIndex((option) => option.sourceEdgeId === locator.edgeId)
+  return index < 0 ? null : index
+}
+
+/**
  * Model locators on one daughter's response plane: that daughter, the other daughters, the parent
  * where its edge still crosses the plane, and every other named model edge crossing it.
  */

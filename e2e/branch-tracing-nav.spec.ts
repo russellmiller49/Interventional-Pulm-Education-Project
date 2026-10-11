@@ -57,6 +57,19 @@ async function clickCt(page: Page, fx: number, fy: number) {
   await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy)
 }
 
+/** Clicks the CT at a pixel of the source image, whatever way the CT is turned or zoomed. */
+async function clickSourcePixel(page: Page, x: number, y: number) {
+  const at = await ct(page).evaluate(
+    (element, [px, py]) => {
+      const image = element.querySelector('image') as SVGImageElement
+      const point = new DOMPoint(px + 0.5, py + 0.5).matrixTransform(image.getScreenCTM()!)
+      return { x: point.x, y: point.y }
+    },
+    [x, y],
+  )
+  await page.mouse.click(at.x, at.y)
+}
+
 test.describe('course', () => {
   test('the hub and every section open without an account and are not indexed', async ({
     page,
@@ -330,8 +343,32 @@ test.describe('whole routes', () => {
     await expectStage(page, '0:match')
     await nowButton(page, 'Show me').click()
     await expectStage(page, '0:choose')
-    // The last fork of this route divides three ways.
+    // The last fork of this route divides three ways, and all three branches are RB8.
+    await showUntil(page, /^7:identify:0$/)
+    // The first is marked above the fork, where it is the thin front end of the parent lumen.
+    const note = page.locator('[data-fork-entry-note]')
+    await expect(note).toContainText('This fork has three openings')
+    await expect(note).toContainText('Opening 1 is marked above the fork, on slice 253')
+    await nowButton(page, /^Show/).first().click()
+    await expectStage(page, '7:identify:1')
+    // A mark for opening 2 placed in opening 3's lumen is told it is in opening 3.
+    await nowButton(page, /Go to slice 243/).click()
+    await expect(ct(page)).toHaveAttribute('data-slice', '243')
+    await clickSourcePixel(page, 161.7, 312)
+    await expectStage(page, '7:identify:1')
+    await expect(feedback(page)).toContainText('That lumen is opening 3.')
+    await expect(feedback(page)).toContainText(
+      'which is opening 3. On slice 243 the two lie side by side, 7 mm apart: opening 2 is the one in front',
+    )
+    await clickSourcePixel(page, 170.2, 305.9)
+    await expectStage(page, '7:identify:2')
     await showUntil(page, /^7:choose$/)
+    const more = page.locator('[data-fork-more]')
+    await more.locator('summary').click()
+    await expect(more).toContainText('divides in three at about slice 249')
+    await expect(more).toContainText('opening 1 stays almost level')
+    expect(await more.innerText()).not.toMatch(/\bDaughter [A-C]\b/)
+    await more.locator('summary').click()
     await expect(page.locator('[data-choice]')).toHaveCount(3)
     await expect(scope(page).locator('[data-scope-opening]')).toHaveCount(3)
     const labels = await page.locator('[data-choice] strong').allInnerTexts()
