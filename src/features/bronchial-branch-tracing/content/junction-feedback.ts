@@ -54,7 +54,8 @@ export interface JunctionFeedbackPacket {
   daughters: string[]
   /**
    * Shown before the openings are identified: what the learner will see on the identifying
-   * slices when the two lumens are not yet separate there, and what to do about it.
+   * slices when the two lumens are not yet separate there, and what to do about it. Absent at a
+   * fork that is chosen at, not marked.
    */
   entryLimitation?: string
   /** Model node level and the slices on which the two paths separate. */
@@ -62,7 +63,10 @@ export interface JunctionFeedbackPacket {
   /** The wall or lumen relationship that decides identity on the answer slices. */
   continuity: string
   revisit: JunctionRevisit[]
-  /** By answer slot, one per opening: read when that slot's mark is in, or nearer, another airway. */
+  /**
+   * By answer slot, one per opening: read when that slot's mark is in, or nearer, another airway.
+   * Null where the fork is chosen at, not marked.
+   */
   whenNearer: (JunctionWhenNearer | null)[]
   /** What to do when the two lumens could not be told apart. */
   moreEvidence: string
@@ -1520,12 +1524,10 @@ const PACKETS: JunctionFeedbackPacket[] = [
     checkpointId: 'junction-138',
     parent: 'RB8',
     daughters: ['RB8', 'RB8', 'RB8'],
-    entryLimitation:
-      'This fork has three openings. Daughter A is marked above the fork, on slice 253, where it is not a separate ring: the parent lumen there is a teardrop, and Daughter A is the thin channel drawn out from its front. Mark the thin front end, not the round part behind it. Daughter B and Daughter C are marked on slice 243, where they are two small lumens side by side.',
     divergence:
-      'This branch of RB8 divides in three at about slice 249. Two daughters leave downward and are marked on slice 243: Daughter B runs forward and toward the patient’s left, and Daughter C runs toward the patient’s right. Daughter A leaves forward and slightly upward, so it is marked above the division, on slice 253.',
+      'This branch of RB8 divides in three at about slice 249. Two daughters leave downward and are seen on slice 243: Daughter B runs forward and toward the patient’s left, and Daughter C runs toward the patient’s right. Daughter A leaves forward and slightly upward, so it is seen above the division, on slice 253.',
     continuity:
-      'Scroll down from the division and the single small lumen splits in two between slices 248 and 247. On slice 243 the two lie side by side, 7 mm apart, each 3 to 4 mm across: Daughter B is the one in front and toward the patient’s left, and Daughter C is the one behind and toward the patient’s right. Daughter A is found by scrolling up, not down. On slices 251 to 254 the parent lumen is a teardrop, round at the back and drawn out at the front into a thin dark channel that runs forward and toward the patient’s right between two thin bright walls. That thin channel is Daughter A. On slice 253 it is still one air column with the round part behind it.',
+      'Scroll down from the division and the single small lumen splits in two between slices 248 and 247. On slice 243 the two lie side by side, 7 mm apart, each 3 to 4 mm across: Daughter B is the one in front and toward the patient’s left, and Daughter C is the one behind and toward the patient’s right. Daughter A is found by scrolling up, not down. On slices 251 to 254 the parent lumen is a teardrop, round at the back and drawn out at the front into a thin dark channel that runs forward and toward the patient’s right between two thin bright walls. That thin channel is Daughter A; turn Zoom up to see it. On slice 253 it is still one air column with the round part behind it.',
     revisit: [
       {
         from: 254,
@@ -1538,28 +1540,17 @@ const PACKETS: JunctionFeedbackPacket[] = [
         look: 'one small lumen splitting into two that move apart: Daughter B toward the patient’s left, Daughter C toward the patient’s right',
       },
     ],
-    whenNearer: [
-      {
-        appliesTo: ['parent'],
-        text: 'Your mark is in the round part of the lumen, which is the parent. On slice 253 Daughter A is the thin channel drawn out from its front, about 7 mm toward the A marker and slightly toward the patient’s right. Turn Zoom up and mark the thin front end.',
-      },
-      {
-        appliesTo: ['daughter'],
-        text: 'Your mark is in the lumen behind and toward the patient’s right, which is Daughter C. On slice 243 the two lie side by side, 7 mm apart: Daughter B is the one in front, toward the patient’s left.',
-      },
-      {
-        appliesTo: ['daughter'],
-        text: 'Your mark is in the lumen in front and toward the patient’s left, which is Daughter B. On slice 243 the two lie side by side, 7 mm apart: Daughter C is the one behind, toward the patient’s right.',
-      },
-    ],
+    // Chosen at, not marked: there is no mark to give advice on.
+    whenNearer: [null, null, null],
     moreEvidence:
-      'Go to slice 249, where there is one small lumen. Step down: it splits in two by slice 247. Follow both to 243 and mark them: Daughter B is in front and toward the patient’s left, Daughter C is behind and toward the patient’s right. Then go back up to slice 253, find the teardrop-shaped lumen, and mark the thin front end where it runs on forward: Daughter A.',
+      'Go to slice 249, where there is one small lumen. Step down: it splits in two by slice 247. Follow both to 243: Daughter B is in front and toward the patient’s left, Daughter C is behind and toward the patient’s right. Then go back up to slice 253, find the teardrop-shaped lumen, and look at its thin front end where it runs on forward: Daughter A.',
     known: [
       'The division is at about slice 249. Daughter A runs 25 mm forward and toward the patient’s right, rising 3.5 mm. Daughter B runs 8 mm forward and toward the patient’s left, dropping 5 mm. Daughter C runs 9 mm toward the patient’s right, dropping 6 mm.',
       'Daughter B and Daughter C are one air column on slices 249 and 248 and separate from slice 247 down; on slice 243 their centres are 7.2 mm apart.',
       'On slice 253 Daughter A is 6.6 mm in front of the centre of the parent lumen, in the same air column.',
     ],
     uncertain: [
+      'Chosen at, not marked, by the owner’s decision on 2026-10-10 (THIN_LUMEN_FORKS in content/nav-lessons.ts): Daughter A is a channel about 2 mm wide on its slice.',
       'The only three-way division on a route. Daughter A (edge 220) has no daughters in the model; its channel is 1.4 mm wide below −900 HU on slice 253 and its centre reads −951 HU.',
       'Parent and Daughter A read as joined on slices 253, 251 and 250 and as separate on 252: the neck is a pixel wide.',
     ],
@@ -1574,12 +1565,10 @@ const PACKETS: JunctionFeedbackPacket[] = [
     checkpointId: 'junction-42',
     parent: 'RB5a',
     daughters: ['RB5a', 'RB5a'],
-    entryLimitation:
-      'Neither daughter is a ring here: both run forward in the plane. On slice 308 Daughter A is a short, narrow dark slot beside the main channel, on the side toward the patient’s left, with a bright vessel between the two. Turn Zoom up and mark the slot, not the main channel. On slice 312 Daughter B is the main dark channel itself; mark it a few millimetres forward of the division.',
     divergence:
-      'RB5a divides at about slice 310, only 4.5 mm after it begins. Both daughters run forward almost in the plane. Daughter A leaves toward the patient’s left, stays level, and is marked just below the division, on slice 308. Daughter B carries on forward and toward the patient’s right, rising slowly, and is marked on slice 312.',
+      'RB5a divides at about slice 310, only 4.5 mm after it begins. Both daughters run forward almost in the plane. Daughter A leaves toward the patient’s left, stays level, and is seen just below the division, on slice 308. Daughter B carries on forward and toward the patient’s right, rising slowly, and is seen on slice 312.',
     continuity:
-      'Because both daughters lie in the plane, neither is a ring. On slices 310 to 315 the main dark channel, about 4 mm wide, runs forward and toward the patient’s right: that is Daughter B, one unbroken channel from the division forward, a little farther forward on each slice up. Daughter A shows only on slices 309 and 308: a short dark slot, about 2 mm wide and 7 mm long, lying beside the main channel on the side toward the patient’s left, with a bright vessel between the two. On slice 308 the slot is 5 mm from the centre of the main channel.',
+      'Because both daughters lie in the plane, neither is a ring. On slices 310 to 315 the main dark channel, about 4 mm wide, runs forward and toward the patient’s right: that is Daughter B, one unbroken channel from the division forward, a little farther forward on each slice up. Daughter A shows only on slices 309 and 308: a short dark slot, about 2 mm wide and 7 mm long, lying beside the main channel on the side toward the patient’s left, with a bright vessel between the two. On slice 308 the slot is 5 mm from the centre of the main channel; turn Zoom up to see it.',
     revisit: [
       {
         from: 310,
@@ -1592,24 +1581,17 @@ const PACKETS: JunctionFeedbackPacket[] = [
         look: 'the main channel running forward and toward the patient’s right, a little farther forward on each slice up: Daughter B',
       },
     ],
-    whenNearer: [
-      {
-        appliesTo: ['parent'],
-        text: 'Your mark is in the main channel, which is the parent airway. On slice 308 Daughter A is the short narrow slot beside it, about 5 mm away toward the patient’s left and front, across a bright vessel. Turn Zoom up and mark the slot.',
-      },
-      {
-        appliesTo: 'any',
-        text: 'Your mark is not in the lumen of Daughter B. On slice 312 it is the main dark channel, about 4 mm wide, running forward and toward the patient’s right. Mark the channel a few millimetres forward of the division; about 20 mm farther forward the same channel belongs to the next fork.',
-      },
-    ],
+    // Chosen at, not marked: there is no mark to give advice on.
+    whenNearer: [null, null],
     moreEvidence:
-      'Go to slice 310 and find the main dark channel. Step up to 312 and mark the channel a few millimetres forward of the division: Daughter B. Go back to 310 and step down to 308: a short narrow slot appears beside the channel, toward the patient’s left, across a bright vessel. Turn Zoom up and mark the slot: Daughter A.',
+      'Go to slice 310 and find the main dark channel. Step up to 312: the channel a few millimetres forward of the division is Daughter B. Go back to 310 and step down to 308: a short narrow slot appears beside the channel, toward the patient’s left, across a bright vessel. Turn Zoom up: the slot is Daughter A.',
     known: [
       'RB5a divides at about slice 310; Daughter A runs 6 mm forward and toward the patient’s left, almost level; Daughter B runs 16 mm forward and toward the patient’s right, rising 3 mm, to the next fork at about slice 316.',
       'On slice 308 Daughter A is 5.3 mm from the centre of the parent channel, and a wall separates the two on slice 309.',
-      'The two marks are 6.3 mm apart on the screen and 2 mm apart in height (slices 308 and 312).',
+      'The two centres are 6.3 mm apart on the screen and 2 mm apart in height (slices 308 and 312).',
     ],
     uncertain: [
+      'Chosen at, not marked, by the owner’s decision on 2026-10-10 (THIN_LUMEN_FORKS in content/nav-lessons.ts): Daughter A is a slot about 2 mm wide.',
       'The slot is 1.4 mm wide and 7.6 mm long below −900 HU on slice 308; "about 2 mm wide and 7 mm long" is read from that and from the image.',
       'On slice 312 edge 159, a daughter of junction-86, crosses 21.5 mm forward of the response point in the same in-plane channel.',
     ],
@@ -1624,12 +1606,10 @@ const PACKETS: JunctionFeedbackPacket[] = [
     checkpointId: 'junction-86',
     parent: 'RB5a',
     daughters: ['RB5a', 'RB5a'],
-    entryLimitation:
-      'On slice 312, where you mark Daughter A, it is not a separate ring: the parent and Daughter A are one long narrow channel running forward, and Daughter A is its front part. Mark the front part, about 17 mm forward of the centre of the wider back part. Daughter B is marked on slice 321, where it is a slim dark lumen against a large bright vessel.',
     divergence:
-      'This branch of RB5a rises as it runs forward and divides at about slice 316, the top of its arch. Daughter A turns back down and runs on forward, so it is marked below the division, on slice 312. Daughter B keeps climbing forward and is marked above it, on slice 321.',
+      'This branch of RB5a rises as it runs forward and divides at about slice 316, the top of its arch. Daughter A turns back down and runs on forward, so it is seen below the division, on slice 312. Daughter B keeps climbing forward and is seen above it, on slice 321.',
     continuity:
-      'The parent and Daughter A form an arch with its top at slice 316. A slice just below the top cuts both sides of the arch, so on slices 315 to 311 they show as one long narrow channel running forward: the back part, wider, is the parent on its way up, and the front part, about 2 mm wide, is Daughter A on its way down. On slices 314 and 313 the two are one air column. Daughter B is seen only above the division: on slices 317 to 322 it is a slim dark lumen, about 3 mm wide, lying against a large bright vessel on the side toward the patient’s right, and it moves forward as you scroll up. On the screen the two marks fall almost on the same spot, 1.4 mm apart; the slice tells them apart.',
+      'The parent and Daughter A form an arch with its top at slice 316. A slice just below the top cuts both sides of the arch, so on slices 315 to 311 they show as one long narrow channel running forward: the back part, wider, is the parent on its way up, and the front part, about 2 mm wide, is Daughter A on its way down. On slices 314 and 313 the two are one air column. Daughter B is seen only above the division: on slices 317 to 322 it is a slim dark lumen, about 3 mm wide, lying against a large bright vessel on the side toward the patient’s right, and it moves forward as you scroll up. On the screen the two fall almost on the same spot, 1.4 mm apart; the slice tells them apart.',
     revisit: [
       {
         from: 316,
@@ -1642,24 +1622,17 @@ const PACKETS: JunctionFeedbackPacket[] = [
         look: 'a slim dark lumen moving forward along a large bright vessel: Daughter B',
       },
     ],
-    whenNearer: [
-      {
-        appliesTo: ['parent'],
-        text: 'Your mark is in the back part of the channel, which is the parent on its way up. On slice 312 Daughter A is the front part of the same channel, about 17 mm farther forward and slightly toward the patient’s right. Follow the channel forward and mark its narrow front part.',
-      },
-      {
-        appliesTo: 'any',
-        text: 'Your mark is not in the lumen of Daughter B. On slice 321 it is the slim dark lumen, about 3 mm wide, lying against the large bright vessel. Step from 316 up to 321 and keep to the lumen that moves forward along the vessel.',
-      },
-    ],
+    // Chosen at, not marked: there is no mark to give advice on.
+    whenNearer: [null, null],
     moreEvidence:
-      'Go to slice 316, the top of the arch, where the lumen is at its thinnest. Step up to 321, following the slim lumen forward along the bright vessel, and mark it: Daughter B. Go back to 316 and step down to 312: one long narrow channel reappears. Mark its front part: Daughter A.',
+      'Go to slice 316, the top of the arch, where the lumen is at its thinnest. Step up to 321, following the slim lumen forward along the bright vessel: Daughter B. Go back to 316 and step down to 312: one long narrow channel reappears. Its narrow front part is Daughter A.',
     known: [
       'The division is at about slice 316. Daughter A runs 29 mm forward, dropping 3 mm; Daughter B runs 6.5 mm forward, rising 3 mm.',
       'The parent and Daughter A are one air column on slices 314 and 313; on slice 312 their centres are 17.5 mm apart along the same channel.',
-      'The two marks are 1.4 mm apart on the screen and 4.5 mm apart in height (slices 312 and 321).',
+      'The two centres are 1.4 mm apart on the screen and 4.5 mm apart in height (slices 312 and 321).',
     ],
     uncertain: [
+      'Chosen at, not marked, by the owner’s decision on 2026-10-10 (THIN_LUMEN_FORKS in content/nav-lessons.ts): Daughter A is the front part of a channel about 2 mm wide.',
       'On slice 312 the parent and Daughter A centres are 17.5 mm apart, beyond the 12 mm fill cap, so "one channel" there is read from the image; the mask joins them on 314 and 313.',
       'Widths below −900 HU: 2.1 mm for Daughter A on slice 312, 2.8 mm for Daughter B on slice 321.',
     ],
@@ -1674,12 +1647,10 @@ const PACKETS: JunctionFeedbackPacket[] = [
     checkpointId: 'junction-161',
     parent: 'RB5a',
     daughters: ['RB5a', 'RB5a'],
-    entryLimitation:
-      'These lumens are about 2 mm wide and both lie in the plane. Neither is a ring: each is a thin dark line. Turn Zoom up. On slice 310 Daughter A is the limb that turns toward the patient’s right, beside a long thin bright vessel. On slice 309 Daughter B is the limb that carries on forward, slightly toward the patient’s left. Both leave the same stem, about 6 mm apart.',
     divergence:
-      'This branch of RB5a runs forward almost level and divides at about slice 310. Both daughters stay in the plane: Daughter A runs forward and toward the patient’s right and is marked on slice 310; Daughter B runs forward and toward the patient’s left and is marked on slice 309.',
+      'This branch of RB5a runs forward almost level and divides at about slice 310. Both daughters stay in the plane: Daughter A runs forward and toward the patient’s right and is seen on slice 310; Daughter B runs forward and toward the patient’s left and is seen on slice 309.',
     continuity:
-      'This division lies in one axial plane, far out in the lobe, and the lumens are about 2 mm wide. Neither is a ring: each is a thin dark line with a faint bright wall on either side. On slices 310 and 309 the parent comes forward as the stem of a narrow Y. Daughter A is the limb that turns toward the patient’s right and runs beside a long thin bright vessel; Daughter B is the limb that carries on forward and slightly toward the patient’s left. The limbs are 6 mm apart where they are marked, and the wedge of lung between them widens as they run forward. Scrolling does not separate them: both lie on the same slice or the one next to it.',
+      'This division lies in one axial plane, far out in the lobe, and the lumens are about 2 mm wide. Neither is a ring: each is a thin dark line with a faint bright wall on either side, so turn Zoom up. On slices 310 and 309 the parent comes forward as the stem of a narrow Y. Daughter A is the limb that turns toward the patient’s right and runs beside a long thin bright vessel; Daughter B is the limb that carries on forward and slightly toward the patient’s left. Five millimetres beyond the division the limbs are 6 mm apart, and the wedge of lung between them widens as they run forward. Scrolling does not separate them: both lie on the same slice or the one next to it.',
     revisit: [
       {
         from: 311,
@@ -1687,26 +1658,19 @@ const PACKETS: JunctionFeedbackPacket[] = [
         look: 'a narrow Y of thin dark lines: the stem, Daughter A toward the patient’s right beside a thin bright vessel, and Daughter B straight on',
       },
     ],
-    whenNearer: [
-      {
-        appliesTo: 'any',
-        text: 'Your mark is not in the lumen of Daughter A. On slice 310 it is a thin dark line beside a long thin bright vessel, about 8 mm forward and toward the patient’s right of the stem. Turn Zoom up, find the stem, and follow the limb that turns toward the patient’s right.',
-      },
-      {
-        appliesTo: 'any',
-        text: 'Your mark is not in the lumen of Daughter B. On slice 309 it is a thin dark line running forward from the stem, slightly toward the patient’s left, about 6 mm from the other limb. Turn Zoom up and follow the stem straight on.',
-      },
-    ],
+    // Chosen at, not marked: there is no mark to give advice on.
+    whenNearer: [null, null],
     moreEvidence:
-      'Go to slice 310 and turn Zoom up. Find the stem, a thin dark line running forward, and follow it to where it forks. Mark the limb that turns toward the patient’s right on 310: Daughter A. Step down one slice to 309 and mark the limb that carries on forward: Daughter B. A line that is bright in the middle is a vessel: an airway stays dark in the middle.',
+      'Go to slice 310 and turn Zoom up. Find the stem, a thin dark line running forward, and follow it to where it forks. The limb that turns toward the patient’s right, on 310, is Daughter A. Step down one slice to 309: the limb that carries on forward is Daughter B. A line that is bright in the middle is a vessel: an airway stays dark in the middle.',
     known: [
       'The division is at about slice 310. Daughter A runs 21 mm forward and toward the patient’s right, rising 1 mm; Daughter B runs 22 mm forward and toward the patient’s left, staying level.',
-      'The two marks are 5.8 mm apart on the screen and half a millimetre apart in height (slices 310 and 309).',
+      'The two centres are 5.8 mm apart on the screen and half a millimetre apart in height (slices 310 and 309).',
       'On slice 310 Daughter A is 7.7 mm from the centre of the stem.',
     ],
     uncertain: [
-      'Lumens are 1.4 to 2.1 mm wide below −900 HU at the response points. The centre of Daughter A reads −934 HU, above the −950 HU threshold, so its mark is judged from the nearest air within the snap distance.',
-      'Lung round this fork has many pixels below −950 HU, so the flood-fill areas (9.5 and 29.9 mm²) overstate the lumens and the 5 mm² rule does not screen this fork out. Whether marking should be asked here is open for the owner.',
+      'Chosen at, not marked, by the owner’s decision on 2026-10-10 (THIN_LUMEN_FORKS in content/nav-lessons.ts): both daughters are lines about 2 mm wide.',
+      'Lumens are 1.4 to 2.1 mm wide below −900 HU at the response points. The centre of Daughter A reads −934 HU, above the −950 HU threshold, so the verdict there works from the nearest air within the snap distance.',
+      'Lung round this fork has many pixels below −950 HU, so the flood-fill areas (9.5 and 29.9 mm²) overstate the lumens and the 5 mm² rule does not screen this fork out.',
       'Neither daughter (edges 243 and 244) has daughters in the model.',
     ],
     naming: {
@@ -1915,12 +1879,10 @@ const PACKETS: JunctionFeedbackPacket[] = [
     checkpointId: 'junction-53',
     parent: 'LB9',
     daughters: ['LB9', 'LB9'],
-    entryLimitation:
-      'On slice 262, where you mark Daughter A, it is not a separate ring: it is the thin dark line that runs from the back, outer corner of the LB9 lumen, toward the P marker and the patient’s left. Turn Zoom up and mark the line just beyond the corner, not the round lumen. Daughter B is marked lower, on slice 252, where it is an oval lumen on its own.',
     divergence:
-      'LB9 divides at about slice 261. Daughter A is a thin side branch that leaves the back, outer wall, runs back and toward the patient’s left almost in the plane, and is marked on slice 262, one slice above the division. Daughter B is the continuation: it carries on straight down and is marked on slice 252.',
+      'LB9 divides at about slice 261. Daughter A is a thin side branch that leaves the back, outer wall, runs back and toward the patient’s left almost in the plane, and is seen on slice 262, one slice above the division. Daughter B is the continuation: it carries on straight down and is seen on slice 252.',
     continuity:
-      'Scrolling down, Daughter B is plain: one oval lumen, 4 to 5 mm across, that keeps nearly the same place from slice 260 down to 245, with a round vessel beside it. Daughter A has to be looked for. On slices 263 to 261 the LB9 lumen has a pointed corner at the back, on the side toward the patient’s left, and a thin dark line runs on from that corner, back and outward, with a thin bright wall along it. That line is Daughter A. On slice 262 it is still one air column with the lumen it leaves.',
+      'Scrolling down, Daughter B is plain: one oval lumen, 4 to 5 mm across, that keeps nearly the same place from slice 260 down to 245, with a round vessel beside it. Daughter A has to be looked for. On slices 263 to 261 the LB9 lumen has a pointed corner at the back, on the side toward the patient’s left, and a thin dark line runs on from that corner, back and outward, with a thin bright wall along it. That line is Daughter A; turn Zoom up to see it. On slice 262 it is still one air column with the lumen it leaves.',
     revisit: [
       {
         from: 264,
@@ -1933,24 +1895,17 @@ const PACKETS: JunctionFeedbackPacket[] = [
         look: 'the oval lumen keeping its place with a round vessel beside it: Daughter B',
       },
     ],
-    whenNearer: [
-      {
-        appliesTo: ['parent'],
-        text: 'Your mark is in the round lumen, which is LB9 before it divides. On slice 262 Daughter A is the thin dark line leaving its back, outer corner, 5 to 6 mm from the centre of the lumen toward the P marker and the patient’s left. Turn Zoom up and mark the line just beyond the corner.',
-      },
-      {
-        appliesTo: 'any',
-        text: 'Your mark is not in the lumen of Daughter B. On slice 252 it is the oval lumen, 4 to 5 mm across, with a round vessel beside it. Step from 261 down to 252 and stay in it; it barely moves.',
-      },
-    ],
+    // Chosen at, not marked: there is no mark to give advice on.
+    whenNearer: [null, null],
     moreEvidence:
-      'Go to slice 263 and find the LB9 lumen, the oval against the large vessel. Step down to 262 and look at its back, outer corner: a thin dark line runs on from it. Turn Zoom up and mark the line just beyond the corner: Daughter A. Then step down from 261 to 252, staying in the oval lumen, and mark it: Daughter B.',
+      'Go to slice 263 and find the LB9 lumen, the oval against the large vessel. Step down to 262 and look at its back, outer corner: a thin dark line runs on from it. Turn Zoom up: that line is Daughter A. Then step down from 261 to 252, staying in the oval lumen: Daughter B.',
     known: [
       'LB9 divides at about slice 261; Daughter A runs 29 mm back and toward the patient’s left, dropping only 2.4 mm; Daughter B drops 9 mm with 4 mm of travel toward the patient’s left.',
       'On slice 262 Daughter A is 5.5 mm from the centre of the LB9 lumen, in the same air column.',
-      'The two marks are 4.8 mm apart on the screen and 5 mm apart in height (slices 262 and 252).',
+      'The two centres are 4.8 mm apart on the screen and 5 mm apart in height (slices 262 and 252).',
     ],
     uncertain: [
+      'Chosen at, not marked, by the owner’s decision on 2026-10-10 (THIN_LUMEN_FORKS in content/nav-lessons.ts): Daughter A is a line about 2 mm wide.',
       'The route to the lesion takes Daughter A (edge 103), which has no daughters in the model. It is 2.1 mm wide below −900 HU on slice 262 and thins to a few pixels of air by slice 258.',
       'Both daughters carry the label LB9 in the source graph; no subsegment letters are assigned and none is given to the learner.',
     ],

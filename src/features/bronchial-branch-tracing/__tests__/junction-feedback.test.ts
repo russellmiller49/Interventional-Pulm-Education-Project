@@ -1,5 +1,5 @@
 import { JUNCTION_FEEDBACK_SCOPE, junctionFeedbackPacket } from '../content/junction-feedback'
-import { NAV_LESSONS, buildTrip, routePlan } from '../content/nav-lessons'
+import { NAV_LESSONS, THIN_LUMEN_FORKS, buildTrip, routePlan } from '../content/nav-lessons'
 import {
   edgeAirway,
   edgeCrossings,
@@ -123,8 +123,50 @@ describe('fork explanations', () => {
     for (const { trace, plan } of plans)
       for (const stop of plan.stations)
         if (stop.steps.includes('identify')) marked.add(trace.checkpoints[stop.checkpointIndex].id)
-    expect(marked.size).toBeGreaterThanOrEqual(30)
+    expect(marked.size).toBe(27)
     expect([...marked].filter((id) => !junctionFeedbackPacket(id))).toEqual([])
+    // Eight explained forks are never marked: the left main bronchus, two small LB6 forks, and
+    // the five forks with a lumen about 2 mm wide.
+    expect(JUNCTION_FEEDBACK_SCOPE.filter((id) => !marked.has(id))).toEqual([
+      'junction-3',
+      'junction-25',
+      'junction-52',
+      'junction-138',
+      'junction-42',
+      'junction-86',
+      'junction-161',
+      'junction-53',
+    ])
+  })
+
+  it('writes for choosing, not marking, at the five forks that are only chosen at', () => {
+    for (const id of THIN_LUMEN_FORKS) {
+      const packet = junctionFeedbackPacket(id)!
+      // No note for before marking, and no advice for a mark: there is no mark.
+      expect([id, packet.entryLimitation]).toEqual([id, undefined])
+      expect([id, packet.whenNearer.every((advice) => advice === null)]).toEqual([id, true])
+      // Nothing a learner is shown, or could be shown, tells them to mark ("A marker" is not it).
+      const text = [
+        packet.divergence,
+        packet.continuity,
+        packet.moreEvidence,
+        ...packet.known,
+        ...packet.revisit.map((r) => r.look),
+        ...packet.naming.demonstration,
+      ].join(' ')
+      expect([id, text.match(/\bmark(s|ed|ing)?\b/i)?.[0] ?? null]).toEqual([id, null])
+      // Each opening is still tied to the slice it is seen on.
+      expect([
+        id,
+        (packet.divergence.match(/\bseen\b[^.;]*?\bon slice \d+/g) ?? []).length > 0,
+      ]).toEqual([id, true])
+    }
+    // Every other explained fork has advice for a mark that lands elsewhere.
+    for (const id of JUNCTION_FEEDBACK_SCOPE.filter((id) => !THIN_LUMEN_FORKS.includes(id)))
+      expect([
+        id,
+        junctionFeedbackPacket(id)!.whenNearer.some((advice) => advice !== null),
+      ]).toEqual([id, true])
   })
 
   it('ties every revisit interval to slices the learner can browse and to the model node', () => {

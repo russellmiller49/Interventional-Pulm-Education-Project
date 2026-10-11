@@ -47,11 +47,11 @@ The source export is unchanged: `geometry/branch-decisions.json` (17 routes, 128
 - **What matches** (`matchOrientation`). A patient axis counts when at least half of it lies across the scope's line of sight. A display matches when every such axis points the same way on both pictures. When the scope looks along the slice, one CT axis runs into the picture and either way round is accepted for it. When the scope looks at an angle that lays both CT axes along one edge of its view, no display matches exactly: the bench sets the closest one and says so, and the match is not asked.
 - **Where a daughter is identified** (`responsePlane`). On the export's own response plane, except the tracheal bifurcation, which is identified on slice 372 where the carina shows (`RESPONSE_PLANE_OVERRIDES`).
 - **What a click is in** (`optionVerdict`). The click's air region is flood-filled to 12 mm; it is in the named airway whose centre that region reaches and is nearest. Four small distal daughters have no air under their centre at the threshold; there the nearest centre within 3 mm decides. A mark the bench places itself goes in the air nearest the daughter's centre (`responseLumen`). Every daughter of a fork has a centreline, on the route or off it, so a mark in the other daughter is named as that airway.
-- **What is asked at a fork** (`defaultSteps`, `routePlan`). A fork whose lumens are under 5 mm² on their slices is chosen at, not marked. On whole routes the trachea and main bronchus are chosen, not marked.
+- **What is asked at a fork** (`defaultSteps`, `routePlan`). A fork whose lumens are under 5 mm² on their slices is chosen at, not marked. So are five forks where an opening is a lumen about 2 mm wide that shows as a thin dark line, listed by name in `THIN_LUMEN_FORKS`. On whole routes the trachea and main bronchus are chosen, not marked.
 
 ## Written fork explanations
 
-`content/junction-feedback.ts` holds one explanation per fork, keyed by the fork's checkpoint id: 35 of the 57 forks. Thirteen were written on October 8, 2026, ten on October 9 and twelve on October 10. Every fork where a learner is asked to mark the openings now has one; the other 22 are forks where the opening is chosen, not marked. `__tests__/junction-feedback.test.ts` fails if a lesson or route ever asks for marks at a fork with no explanation.
+`content/junction-feedback.ts` holds one explanation per fork, keyed by the fork's checkpoint id: 35 of the 57 forks. Thirteen were written on October 8, 2026, ten on October 9 and twelve on October 10. Every fork where a learner is asked to mark the openings has one: 27 forks across the lessons and routes. Eight more explained forks are only chosen at. `__tests__/junction-feedback.test.ts` fails if a lesson or route ever asks for marks at a fork with no explanation.
 
 | Fork                        | Divides into      | Fork                         | Divides into          |
 | --------------------------- | ----------------- | ---------------------------- | --------------------- |
@@ -82,7 +82,7 @@ The twelve added on October 10 are subsegmental forks. At eleven of them the dau
 
 What the learner sees of an explanation, and when:
 
-- **Before marking** (`entryLimitation`). A note on the fork card while the openings are being identified, where a lumen is not a separate ring on its own slice: for example the right upper lobe bronchus on slice 374 is the outer end of one dark channel.
+- **Before marking** (`entryLimitation`). A note on the fork card while the openings are being identified, at a fork that is marked and where a lumen is not a separate ring on its own slice: for example the right upper lobe bronchus on slice 374 is the outer end of one dark channel.
 - **After a mark in the other airway** (`whenNearer`). What tells the two lumens apart on that slice.
 - **Once the openings are named** ("More about this fork on the CT"). Where the fork is and which way each daughter leaves (`divergence`), what stays connected from slice to slice (`continuity`), the slice ranges worth stepping through (`revisit`), the measurements (`known`) and the names (`naming`).
 
@@ -90,7 +90,7 @@ None of it is shown in the closing set, or on a trip that withholds names. `unce
 
 Each statement comes from one of three places: the airway model (fork level, courses, distances), the shipped CT images read at the lumen verdict's air threshold (whether two lumens are one air column or separate on a slice), or the nomenclature record. `__tests__/fork-explanations-evidence.test.ts` recomputes the model and image statements for the 22 explanations written on October 9 and 10 and fails if a quoted slice, distance, width, course or "one air column" claim stops being true. The shapes described (channel, ring, limb, teardrop, slot) were read off the images by the author and are not machine-checked. The explanations have not been reviewed by a second reader.
 
-**Thin lumens.** At five of the October 10 forks one or both openings are about 2 mm wide and show as a thin dark line, not a ring: both openings of `junction-161`, and opening 1 of `junction-42`, `junction-86`, `junction-138` and `junction-53`. Their notes say so and ask for Zoom. The 5 mm² rule does not make these forks choose-only, because lung beside them has pixels below the air threshold and the measured area comes out larger than the lumen.
+**Thin lumens.** At five of the October 10 forks one or both openings are about 2 mm wide and show as a thin dark line, not a ring: both openings of `junction-161`, and opening 1 of `junction-42`, `junction-86`, `junction-138` and `junction-53`. The owner decided on October 10, 2026 that these five are chosen at, not marked. The 5 mm² rule does not catch them, because lung beside them has pixels below the air threshold and the measured area comes out larger than the lumen, so they are listed by name (`THIN_LUMEN_FORKS` in `content/nav-lessons.ts`). Their explanations say where each opening is seen and ask for Zoom; they have no note about marking and no advice for a mark.
 
 ## Run and check
 
@@ -113,8 +113,8 @@ These were decided by the build and are easy to change:
 1. The tracheal bifurcation is identified on slice 372 everywhere (lessons, Practice and the closing set).
 2. An opening that leads away from the lesion is refused at the fork. The scope does not drive into it and come back. Every daughter now has a centreline, so a short look into the other branch could be added if wanted.
 3. The scope's roll follows the three-part rule above. It is a rule for a teaching model, not a recording of how any one operator holds the scope.
-4. Thirty-five of the 57 forks have a written slice-by-slice explanation (see [Written fork explanations](#written-fork-explanations)), which is every fork where openings are marked. The other 22 are chosen at and show their computed levels and directions only.
-5. Five forks ask for marks in lumens about 2 mm wide (see Thin lumens above). They could be made choose-only instead, with a width rule in place of the area rule in `identifiable`.
+4. Thirty-five of the 57 forks have a written slice-by-slice explanation (see [Written fork explanations](#written-fork-explanations)), which covers every fork where openings are marked. The other 22 are chosen at and show their computed levels and directions only.
+5. Which forks count as too thin to mark is a list of five read off the images, not a measured rule. A width measurement could replace the list if more routes are added.
 6. The "looking up, turn and do not flip" teaching in lesson 1 follows from the geometry and the book's right upper lobe display; it has not been checked line by line against Kurimoto and Morita pp. 4–8.
 
 ## Earlier design records

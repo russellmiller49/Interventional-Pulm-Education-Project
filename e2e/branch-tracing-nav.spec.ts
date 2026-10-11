@@ -343,31 +343,32 @@ test.describe('whole routes', () => {
     await expectStage(page, '0:match')
     await nowButton(page, 'Show me').click()
     await expectStage(page, '0:choose')
-    // The last fork of this route divides three ways, and all three branches are RB8.
-    await showUntil(page, /^7:identify:0$/)
-    // The first is marked above the fork, where it is the thin front end of the parent lumen.
-    const note = page.locator('[data-fork-entry-note]')
-    await expect(note).toContainText('This fork has three openings')
-    await expect(note).toContainText('Opening 1 is marked above the fork, on slice 253')
-    await nowButton(page, /^Show/).first().click()
-    await expectStage(page, '7:identify:1')
-    // A mark for opening 2 placed in opening 3's lumen is told it is in opening 3.
-    await nowButton(page, /Go to slice 243/).click()
-    await expect(ct(page)).toHaveAttribute('data-slice', '243')
-    await clickSourcePixel(page, 161.7, 312)
-    await expectStage(page, '7:identify:1')
-    await expect(feedback(page)).toContainText('That lumen is opening 3.')
+    // At the RB8 fork both branches are RB8. A mark for opening 1 placed in opening 2's lumen is
+    // told it is in opening 2, and the fork's own advice says where opening 1 is.
+    await showUntil(page, /^6:identify:0$/)
+    await nowButton(page, /Go to slice 255/).click()
+    await expect(ct(page)).toHaveAttribute('data-slice', '255')
+    await clickSourcePixel(page, 168.7, 314.8)
+    await expectStage(page, '6:identify:0')
+    await expect(feedback(page)).toContainText('That lumen is opening 2.')
     await expect(feedback(page)).toContainText(
-      'which is opening 3. On slice 243 the two lie side by side, 7 mm apart: opening 2 is the one in front',
+      'On slice 255 opening 1 is the flat oval at the back of the pair',
     )
-    await clickSourcePixel(page, 170.2, 305.9)
-    await expectStage(page, '7:identify:2')
-    await showUntil(page, /^7:choose$/)
+    await clickSourcePixel(page, 163, 321.2)
+    await expectStage(page, '6:identify:1')
+    // The last fork divides three ways. One branch there is a channel about 2 mm wide, so the
+    // fork is chosen at, not marked: no marking step, and no note about marking.
+    await showUntil(page, /^7:/)
+    await expectStage(page, '7:choose')
+    await expect(page.locator('[data-fork-entry-note]')).toHaveCount(0)
     const more = page.locator('[data-fork-more]')
     await more.locator('summary').click()
     await expect(more).toContainText('divides in three at about slice 249')
     await expect(more).toContainText('opening 1 stays almost level')
-    expect(await more.innerText()).not.toMatch(/\bDaughter [A-C]\b/)
+    await expect(more).toContainText('turn Zoom up to see it')
+    const explained = await more.innerText()
+    expect(explained).not.toMatch(/\bDaughter [A-C]\b/)
+    expect(explained).not.toMatch(/\bmark(s|ed)?\b/i)
     await more.locator('summary').click()
     await expect(page.locator('[data-choice]')).toHaveCount(3)
     await expect(scope(page).locator('[data-scope-opening]')).toHaveCount(3)

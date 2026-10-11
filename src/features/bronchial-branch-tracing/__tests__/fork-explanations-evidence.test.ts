@@ -3,6 +3,7 @@ import { inflateSync } from 'node:zlib'
 import airPlanes from '../geometry/answer-plane-air.json'
 import type { CtTrace } from '../content/ct-types'
 import { junctionFeedbackPacket } from '../content/junction-feedback'
+import { THIN_LUMEN_FORKS } from '../content/nav-lessons'
 import { forkFacts } from '../engine/fork-facts'
 import {
   FILL_CAP_MM,
@@ -364,13 +365,13 @@ describe('the twelve subsegmental fork explanations', () => {
           .sort()
         expect([id, option, reached]).toEqual([id, option, [...roles].sort()])
       })
-      // A note before marking is written exactly where an opening is not a lumen of its own, or
-      // is too thin to show as a ring.
+      // A note before marking is written exactly where an opening is marked and is not a lumen
+      // of its own. The five thin-lumen forks are chosen at, so they have none.
       const joinedSomewhere = sharedWith[id].some((roles) =>
         roles.some((role) => role === 'parent' || role === 'daughter'),
       )
-      const thin = ['junction-42', 'junction-86', 'junction-161'].includes(id)
-      expect([id, Boolean(packet.entryLimitation)]).toEqual([id, joinedSomewhere || thin])
+      const chosenAt = THIN_LUMEN_FORKS.includes(id)
+      expect([id, Boolean(packet.entryLimitation)]).toEqual([id, joinedSomewhere && !chosenAt])
     }
   })
 
@@ -650,19 +651,22 @@ describe('the twelve subsegmental fork explanations', () => {
       const { trace, index } = station(id)
       const packet = junctionFeedbackPacket(id)!
       const slices = packet.daughters.map((_, option) => responsePlane(trace, index, option)!.slice)
-      // The advice for an opening speaks of that opening's slice.
+      // The advice for an opening speaks of that opening's slice. A fork that is only chosen at
+      // has no advice: there is no mark.
       packet.whenNearer.forEach((advice, option) =>
-        expect([id, option, advice!.text.includes(`On slice ${slices[option]} `)]).toEqual([
+        expect([
           id,
           option,
-          true,
-        ]),
+          THIN_LUMEN_FORKS.includes(id)
+            ? advice === null
+            : advice!.text.includes(`On slice ${slices[option]} `),
+        ]).toEqual([id, option, true]),
       )
-      // In "where each daughter leaves", a clause that says where a lettered daughter is marked
-      // gives that daughter's slice.
+      // In "where each daughter leaves", a clause that says where a lettered daughter is marked,
+      // or seen at a fork that is only chosen at, gives that daughter's slice.
       let tied = 0
       for (const clause of packet.divergence.split(/[.;]\s+/)) {
-        const marked = clause.match(/marked\b[^.;]*?\bon slice (\d+)/)
+        const marked = clause.match(/(?:marked|seen)\b[^.;]*?\bon slice (\d+)/)
         if (!marked) continue
         for (const [, letter] of clause.matchAll(/\bDaughter ([A-C])\b/g)) {
           expect([id, letter, Number(marked[1])]).toEqual([

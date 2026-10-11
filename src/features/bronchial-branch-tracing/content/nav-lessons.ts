@@ -66,18 +66,40 @@ export const CENTRAL_STATIONS = 2
 /** A lumen smaller than this on its plane is not asked for: it cannot be clicked reliably. */
 export const MIN_IDENTIFY_AREA_MM2 = 5
 
-/** True when every opening of a fork has a lumen large enough to be clicked on its plane. */
+/**
+ * Forks where an opening is a lumen about 2 mm wide that shows on the CT as a thin dark line, not
+ * a ring: both branches of the last RB5a fork, and one branch at each of the two RB5a forks
+ * before it, the three-way RB8 fork and the LB9 fork. Read off the images on October 10, 2026;
+ * the owner decided the same day that these are chosen at, not marked.
+ *
+ * The area rule does not catch them. Lung beside these airways has pixels under the air
+ * threshold, so the air region measured round the opening comes out larger than its lumen.
+ */
+export const THIN_LUMEN_FORKS: readonly string[] = [
+  'junction-42',
+  'junction-86',
+  'junction-161',
+  'junction-138',
+  'junction-53',
+]
+
+/**
+ * True when every opening of a fork can be clicked on its plane: each lumen is large enough,
+ * and none is a thin line.
+ */
 export function identifiable(trace: CtTrace, checkpointIndex: number) {
-  const options = trace.checkpoints[checkpointIndex].decision?.options ?? []
+  const checkpoint = trace.checkpoints[checkpointIndex]
+  const options = checkpoint.decision?.options ?? []
   return (
     options.length > 0 &&
+    !THIN_LUMEN_FORKS.includes(checkpoint.id) &&
     options.every((_, i) => optionLumenAreaMm2(trace, checkpointIndex, i) >= MIN_IDENTIFY_AREA_MM2)
   )
 }
 
 /**
  * The steps a fork is asked for when a trip does not say. A fork whose lumens are too small to
- * click is only chosen at: the bench turns the CT there and letters the openings.
+ * click is only chosen at: the bench turns the CT there and numbers the openings.
  */
 export function defaultSteps(trace: CtTrace, checkpointIndex: number): NavStep[] {
   return identifiable(trace, checkpointIndex) ? ['match', 'identify', 'choose'] : ['choose']
@@ -464,7 +486,7 @@ export const NAV_LESSONS: readonly NavLesson[] = [
         arrive: true,
         independent: true,
         intro:
-          'Your turn. The lesion is in the lateral basal segment of the left lower lobe, LS9. The openings are lettered but not named until you have chosen.',
+          'Your turn. The lesion is in the lateral basal segment of the left lower lobe, LS9. The openings are numbered but not named until you have chosen.',
         stations: {
           'junction-1': { steps: ['match', 'choose'] },
           'junction-3': { steps: ['match', 'choose'] },

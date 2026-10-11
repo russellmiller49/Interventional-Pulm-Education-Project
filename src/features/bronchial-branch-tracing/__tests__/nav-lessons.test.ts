@@ -15,6 +15,7 @@ import {
   CENTRAL_STATIONS,
   LESSON_GROUPS,
   MIN_IDENTIFY_AREA_MM2,
+  THIN_LUMEN_FORKS,
   NAV_LESSONS,
   buildTrip,
   defaultSteps,
@@ -334,25 +335,49 @@ describe('whole routes', () => {
     }
   })
 
-  test('a fork is marked only where every lumen is at least the minimum area; otherwise it is only chosen at', () => {
+  test('a fork is marked only where every lumen is at least the minimum area and none is a thin line; otherwise it is only chosen at', () => {
     let marked = 0
     let chosenOnly = 0
+    const thinOnRoutes = new Set<string>()
     for (const trace of CT_TRACES)
       for (const { index } of forksOf(trace.id)) {
+        const id = trace.checkpoints[index].id
         const areas = trace.checkpoints[index].decision!.options.map((_, option) =>
           optionLumenAreaMm2(trace, index, option),
         )
         const large = areas.every((area) => area >= MIN_IDENTIFY_AREA_MM2)
-        expect(identifiable(trace, index)).toBe(large)
+        const thin = THIN_LUMEN_FORKS.includes(id)
+        // The five thin-line forks all clear the area rule: that is why they are listed.
+        if (thin) {
+          thinOnRoutes.add(id)
+          expect([id, large]).toEqual([id, true])
+        }
+        expect([id, identifiable(trace, index)]).toEqual([id, large && !thin])
         expect(defaultSteps(trace, index)).toEqual(
-          large ? ['match', 'identify', 'choose'] : ['choose'],
+          large && !thin ? ['match', 'identify', 'choose'] : ['choose'],
         )
-        if (large) marked++
+        if (large && !thin) marked++
         else chosenOnly++
       }
     expect(marked + chosenOnly).toBe(128)
     expect(marked).toBeGreaterThan(chosenOnly)
     expect(chosenOnly).toBeGreaterThan(0)
+    expect(THIN_LUMEN_FORKS).toEqual([
+      'junction-42',
+      'junction-86',
+      'junction-161',
+      'junction-138',
+      'junction-53',
+    ])
+    expect([...thinOnRoutes].sort()).toEqual([...THIN_LUMEN_FORKS].sort())
+    // No lesson trip asks for marks at one of them either.
+    for (const lesson of NAV_LESSONS)
+      for (const spec of lesson.trips) {
+        const trip = buildTrip(spec)
+        for (const stop of trip.plan.stations)
+          if (THIN_LUMEN_FORKS.includes(trip.trace.checkpoints[stop.checkpointIndex].id))
+            expect([lesson.id, stop.steps]).toEqual([lesson.id, ['choose']])
+      }
     // A checkpoint without a division is never identifiable.
     const trace = CT_TRACES[0]
     expect(identifiable(trace, trace.checkpoints.length - 1)).toBe(false)
