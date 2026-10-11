@@ -8,6 +8,7 @@ import {
 } from '../src/features/bronchoscopy-foundations/content/pathway'
 import { CAPSTONE_CASES } from '../src/features/bronchoscopy-foundations/content/capstone'
 import { imageBankSet } from '../src/features/bronchoscopy-foundations/content/imageBank'
+import { VIGNETTES } from '../src/features/bronchoscopy-foundations/content/vignettes'
 import { capstoneStageItem } from '../src/features/bronchoscopy-foundations/content/stageItems'
 import { BRONCH_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/learnProgress'
 import { BRONCH_SELF_PACED_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/selfPacedProgress'
@@ -674,6 +675,26 @@ test('Practice explains before an answer, lets the learner try again, saves noth
   await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
   expect(await record(page)).toBeNull()
   expect(await earlierRecord(page)).toBeNull()
+})
+
+test('a vignette gives a patient with numbers, one decision, and the register’s value in the reason', async ({
+  page,
+}) => {
+  await page.goto(base + '/practice')
+  const links = page.locator('[data-practice-vignettes] [data-practice-case-link]')
+  await expect(links).toHaveCount(VIGNETTES.length)
+  const vignette = VIGNETTES.find((entry) => entry.id === 'vg-one-more-syringe')!
+  await page.locator(`[data-practice-case-link="${vignette.id}"]`).click()
+  await expect(page.locator(`[data-practice-case="${vignette.id}"]`)).toContainText('weighs 80 kg')
+  const key = vignette.choices.find((choice) => choice.plausibility === 'best')!
+  await page.locator(`[data-prediction-choices] input[value="${key.id}"]`).check()
+  await page.getByRole('button', { name: 'Check my answer' }).click()
+  const verdict = page.locator('[data-answer-verdict]')
+  await expect(verdict).toHaveAttribute('data-revealed', 'true')
+  await expect(verdict).toContainText('570 mg of a 640 mg limit')
+  await expect(verdict).toContainText('At 8.0 mg/kg his limit is 640 mg.')
+  await expect(page.locator('#main-content')).not.toContainText('{{')
+  expect(await record(page)).toBeNull()
 })
 
 test('the image bank asks for a click on a still, upright and rotated, and saves nothing', async ({

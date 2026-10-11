@@ -9,10 +9,11 @@ import { CAPSTONE_CASES } from './capstone'
 import { clinicalVocabularyReason } from './learnerCopy'
 import type { LocalPolicyId } from './localPolicies'
 import type { MediaRef } from './media'
-import type { NumberId } from './numbers'
+import { numberIdsIn, resolveNumbers, type NumberId } from './numbers'
 import { bronchActivityId, BRONCH_SECTION_IDS, type BronchSectionId } from './pathway'
 import { BRONCH_SECTIONS } from './sections'
 import type { AuthoredItem, AuthoredTransferItem } from './types'
+import { VIGNETTES, type Vignette } from './vignettes'
 
 /**
  * The authored items, re-expressed as the shared clinical learning items the stage renders.
@@ -136,6 +137,37 @@ export function bronchSectionItems(sectionId: BronchSectionId): BronchSectionIte
   return items
 }
 
+export const VIGNETTE_ACTIVITY_ID = 'bronchoscopy-foundations:practice:vignettes'
+
+/** A vignette as a question: its numbers resolved, with its paired section's sources. */
+export function vignetteItem(vignette: Vignette): AuthoredItem {
+  const section = BRONCH_SECTIONS.find((entry) => entry.id === vignette.sectionId)
+  if (!section) throw new Error(`Vignette ${vignette.id} pairs to an unknown section.`)
+  const numberIds = numberIdsIn(
+    [vignette.explanation, ...vignette.choices.map((choice) => choice.rationale)].join(' '),
+  )
+  return {
+    id: vignette.id,
+    itemType: 'management-decision',
+    situation: vignette.situation,
+    stem: vignette.stem,
+    choices: vignette.choices.map((choice) => ({
+      ...choice,
+      rationale: resolveNumbers(choice.rationale),
+    })),
+    explanation: resolveNumbers(vignette.explanation),
+    objectiveIds: section.prediction.objectiveIds,
+    claimClass: 'synthesis',
+    sourceRefs: section.prediction.sourceRefs,
+    numberIds,
+  }
+}
+
+/** The vignettes as stage items, in the order of `VIGNETTES`. */
+export const vignetteStageItems: readonly BronchStageItem[] = VIGNETTES.map((vignette) =>
+  stageItem(vignetteItem(vignette), { activityId: VIGNETTE_ACTIVITY_ID, phase: 'predict' }),
+)
+
 export const CAPSTONE_ACTIVITY_ID = 'bronchoscopy-foundations:assess:capstone'
 
 export const capstoneStageItems: readonly BronchStageItem[] = CAPSTONE_CASES.map((entry) =>
@@ -164,6 +196,7 @@ export const BRONCH_ITEM_BY_ID: ReadonlyMap<string, ClinicalLearningItem> = new 
       return [items.prediction, items.transfer, ...items.practice]
     }),
     ...capstoneStageItems,
+    ...vignetteStageItems,
   ].map((entry) => [entry.item.id, entry.item] as const),
 )
 

@@ -1,6 +1,6 @@
 # Bronchoscopy Foundations rewrite: handoff
 
-Written 2026-10-08, last updated 2026-10-11 (after the image bank). Start the next session from this file.
+Written 2026-10-08, last updated 2026-10-11 (after the vignettes). Start the next session from this file.
 
 ## Why this work exists
 
@@ -17,15 +17,17 @@ All fifteen sections are on `main` (`1c225e79`, 2026-10-11): #349 to #375 were m
 2026-10-10 with #351 and #376, and #377 (section 13) and #378 (section 15, with capstone C09)
 the next day. #348 is closed.
 
-Two PRs are open:
+Three PRs are open:
 
 | PR   | Branch                  | State                                                                                                              |
 | ---- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | #380 | `claude/bf-rewrite-hub` | Draft, targets `main`. The hub rewritten, a closing screen, `what-completion-means` retired, the image rule moved. |
 | #382 | `claude/bf-image-bank`  | Draft, stacked on #380. The image bank: 50 click-on-the-picture questions in five sets, on the Practice surface.   |
+| #NEW | `claude/bf-vignettes`   | Draft, stacked on #382. Forty vignettes with numbers in eight topics, on the Practice surface.                     |
 
 The work is in the worktree `…-Worktrees/claude-bf-pre-review-04-20261007`, which is on
-`claude/bf-image-bank`. Merge #380, then #382; branch the next change from `origin/main` after that. The
+`claude/bf-vignettes`. Merge #380, then #382, then #NEW; branch the next change from `origin/main`
+after that. The
 local copies of the merged stack branches are behind origin.
 
 A reader reviewed sections 13 and 15 against `docs/teaching-first-rules.md` before the merge and
@@ -35,13 +37,14 @@ before acting on them.
 ## Start here next session
 
 1. Read this file, then the plan's rules and the brief for the section you are writing.
-2. The fifteen sections, the hub, the closing screen and the image bank are written. Next in
-   the plan's practice and assessment (item 7 under "What is left"): the vignettes with numbers,
-   mixed sets, the eight integrated cases with their labels hidden until after the answer, and
-   the objectives. Self-check mode is still Russell's decision.
+2. The fifteen sections, the hub, the closing screen, the image bank and the vignettes are
+   written. Next in the plan's practice and assessment (item 7 under "What is left"): mixed sets
+   across all practice with the paired section hidden until after the answer, the eight
+   integrated cases with their labels hidden the same way, and the objectives. Self-check mode
+   is still Russell's decision.
 3. Things to know before that change:
-   - With the image bank the course shows an image in 79 of 147 questions, so the one-third
-     rule is met. Without the bank it is 29 of 97.
+   - With the image bank and the vignettes the course shows an image in 79 of 187 questions,
+     so the one-third rule is met. Without the bank it is 29 of 137.
    - First-contract code is now dead and still in the tree: the old fields in `content/types.ts`
      (`recognizeTitle`, `why`, `newConcept`, `incrementSentence`, `controlStrip`,
      `modelBoundary`, `steps`), the `!rewritten` branches in `sectionValidation.ts`,
@@ -464,7 +467,31 @@ sections no longer wait for sessions with the pilot.
      adds no picture. Rights and de-identification are pending on every file.
    - For Russell to confirm: the 25 rationales; the cues, above all the rotated ones; whether
      an upright and a rotated question on one opening count as two; the seven openings left out.
-   - Still open: about 40 vignettes with numbers, mixed sets of ten across all practice, the
+   - The vignettes are done (2026-10-11): `content/vignettes.ts`, forty cases in eight topics
+     of five (antithrombotics and platelets, lidocaine by weight, lavage return and counts,
+     methemoglobinemia, pneumothorax after biopsy, the tube and the ventilator, massive
+     hemoptysis, sedation and its reversal). Each is a practice case (`vg-<slug>`) listed by
+     topic on the Practice landing, after the sections' own cases, and opens on the same case
+     page.
+   - A vignette tests only a number a section already teaches (a test holds this). No lipid or
+     methylene blue dose is asked. The two methemoglobin treatment levels are used; the
+     teaching-gaps change adds them to section 13.
+   - Three lidocaine vignettes and one lavage vignette are marked `sums`: their options and
+     reasons carry amounts added up from the case, as the dose ledger does. `caseCopyErrors`
+     in `authoringRules.ts` holds a standalone case to the copy rules; `vignetteErrors` adds
+     the key-length and test-wise checks. `check-section.ts --all --report` runs both.
+   - A vignette takes its sources and objective ids from its paired section's first question.
+     No page was read for them.
+   - `microCasesForSection` returns a section's own cases only; `vignetteCasesForTopic` gives
+     the vignettes. The case page's previous and next links run through both lists.
+   - The copy gate refuses "wrong" and "correct" in a vignette, the verb included ("correct the
+     value"). The stage-item schema throws at import, so the whole registry fails to load.
+   - For Russell to confirm: all forty keys and reasons, written from general knowledge. Most in
+     need of a look: the stent case (postpone, not hold); the daily-benzodiazepine case (hold
+     flumazenil while he breathes); biopsy of one lung in a sitting; pain as the forceps open;
+     the ARDS case (defer); raising the tidal volume when delivered volume falls; the three
+     hemoptysis airway cases; the culture below the threshold.
+   - Still open: mixed sets of ten across all practice, the
      eight integrated cases with labels hidden until after the answer, and about 25 objectives
      replacing the 108. The four evolving cases exist (sections 3, 13, 14 and 15). Self-check
      mode is plan decision 5, not yet made.

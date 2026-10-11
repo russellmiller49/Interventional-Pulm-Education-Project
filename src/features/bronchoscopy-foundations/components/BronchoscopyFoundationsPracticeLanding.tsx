@@ -4,7 +4,11 @@ import { ArrowRight } from 'lucide-react'
 
 import { Link } from '@/i18n/navigation'
 
-import { bronchMicroCasesInPathwayOrder, microCasesForSection } from '../content/microCases'
+import {
+  bronchMicroCasesInPathwayOrder,
+  microCasesForSection,
+  vignetteCasesForTopic,
+} from '../content/microCases'
 import { BRONCH_SECTION_IDS, bronchSection } from '../content/pathway'
 import { bronchSectionLinkTarget } from '../content/pathwayResolver'
 import { IMAGE_BANK_ROWS, IMAGE_BANK_SET_SIZE } from '../content/imageBank'
@@ -14,6 +18,7 @@ import {
   bronchCaseLinkTarget,
 } from '../content/routes'
 import { capstoneStageItems } from '../content/stageItems'
+import { VIGNETTE_TOPIC_TITLES, VIGNETTES, type VignetteTopic } from '../content/vignettes'
 import { BronchContinueCta } from './hub/BronchPathwayAccordion'
 
 /**
@@ -22,6 +27,8 @@ import { BronchContinueCta } from './hub/BronchPathwayAccordion'
  * Self-paced contract (BF-01): every case opens at any time, in any order, as often as useful. The
  * list marks nothing as decided or complete, because the course keeps no answers.
  */
+const VIGNETTE_TOPICS = Object.keys(VIGNETTE_TOPIC_TITLES) as VignetteTopic[]
+
 export function BronchoscopyFoundationsPracticeLanding() {
   const cases = bronchMicroCasesInPathwayOrder()
   const first = cases[0] ?? null
@@ -131,6 +138,39 @@ export function BronchoscopyFoundationsPracticeLanding() {
           )
         })}
       </ol>
+
+      <section aria-labelledby="practice-vignettes" className="grid gap-4" data-practice-vignettes>
+        <div className="grid gap-1">
+          <h2 id="practice-vignettes" className="text-xl font-bold">
+            Vignettes with numbers
+          </h2>
+          <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+            A patient with an age, vital signs and the laboratory values that matter, and one
+            decision. {VIGNETTES.length} cases in {VIGNETTE_TOPICS.length} topics.
+          </p>
+        </div>
+        <ol className="grid gap-6">
+          {VIGNETTE_TOPICS.map((topic) => (
+            <li key={topic} className="grid gap-2" data-practice-vignette-topic={topic}>
+              <h3 className="text-sm font-bold">{VIGNETTE_TOPIC_TITLES[topic]}</h3>
+              <ul className="grid gap-2">
+                {vignetteCasesForTopic(topic).map((microCase) => (
+                  <li key={microCase.id}>
+                    <Link
+                      className="flex min-h-11 items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 text-sm"
+                      href={bronchCaseLinkTarget(microCase.id)}
+                      data-practice-case-link={microCase.id}
+                    >
+                      <span className="font-semibold">{microCase.presentationTitle}</span>
+                      <ArrowRight aria-hidden="true" className="size-4" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ol>
+      </section>
 
       <p className="text-sm text-muted-foreground">
         The {integratedCount}{' '}
