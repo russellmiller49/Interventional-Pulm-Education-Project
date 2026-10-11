@@ -9,13 +9,14 @@ export const SOURCES = [
   {
     id: 'ers2026',
     title:
-      'ERS/ESGE/ESTS clinical practice guideline: endosonography for diagnosis and staging of lung cancer (2026)',
+      'ERS/ESGE/ESTS clinical practice guidelines on endobronchial and oesophageal endosonography for the diagnosis and staging of lung cancer (2026)',
     url: 'https://publications.ersnet.org/lookup/doi/10.1183/13993003.00097-2026',
     type: 'Guideline',
   },
   {
     id: 'chest2024',
-    title: 'CHEST: Acquisition and Handling of EBUS Transbronchial Needle Samples (2024)',
+    title:
+      'CHEST: Acquisition and Handling of EBUS Transbronchial Needle Samples (2024 online; Chest 2025)',
     url: 'https://www.chestnet.org/guidelines-and-topic-collections/guidelines/interventional-pulmonary/ebus-transbronchial-needle-samples',
     type: 'Guideline',
   },
@@ -42,6 +43,13 @@ export const SOURCES = [
     title: 'ATS: Diagnosis and Detection of Sarcoidosis (2020)',
     url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC7159433/',
     type: 'Guideline',
+  },
+  {
+    id: 'aabip2025',
+    title:
+      'Miller RJ, Chrissian AA, Kheir F, et al. AABIP Evidence-Based Guidelines on Bronchoscopic Diagnosis and Staging of Lung Cancer (2025), J Bronchol Intervent Pulmonol. 32:e1034',
+    url: 'https://doi.org/10.1097/LBR.0000000000001034',
+    type: 'Core EBUS reference · owner-approved scope; full text not independently verified',
   },
   {
     id: 'simulation',

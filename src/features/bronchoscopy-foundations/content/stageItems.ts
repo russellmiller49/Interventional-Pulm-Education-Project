@@ -6,8 +6,10 @@ import {
 import type { AirwayLabel } from '../components/scope/types'
 import type { ClaimClass, SourceRef } from '../data/sources'
 import { CAPSTONE_CASES } from './capstone'
+import { clinicalVocabularyReason } from './learnerCopy'
 import type { LocalPolicyId } from './localPolicies'
 import type { MediaRef } from './media'
+import type { NumberId } from './numbers'
 import { bronchActivityId, BRONCH_SECTION_IDS, type BronchSectionId } from './pathway'
 import { BRONCH_SECTIONS } from './sections'
 import type { AuthoredItem, AuthoredTransferItem } from './types'
@@ -34,6 +36,8 @@ export interface BronchStageItem {
   readonly choiceAirways: Readonly<Record<string, AirwayLabel | null>> | null
   readonly transferVariant?: string
   readonly retrievesFrom?: BronchSectionId
+  /** Register rows the item's copy uses, for the one-line source note under its explanation. */
+  readonly numberIds: readonly NumberId[]
 }
 
 /** A placeholder evidence id for a design-class item the schema still requires a source for. */
@@ -50,9 +54,17 @@ export function toClinicalLearningItem(
 ): ClinicalLearningItem {
   const best = authored.choices.filter((choice) => choice.plausibility === 'best')
   const evidenceIds = [...new Set(authored.sourceRefs.map((ref) => ref.sourceId))]
-  const override = (authored.copyExemptions ?? [])
-    .map((exemption) => `${exemption.term}: ${exemption.reason}`)
-    .join('; ')
+  const clinical = clinicalVocabularyReason(
+    [
+      authored.stem,
+      authored.explanation,
+      ...authored.choices.flatMap((choice) => [choice.label, choice.rationale]),
+    ].join(' '),
+  )
+  const override = [
+    ...(authored.copyExemptions ?? []).map((exemption) => `${exemption.term}: ${exemption.reason}`),
+    ...(clinical ? [clinical] : []),
+  ].join('; ')
   return clinicalLearningItemSchema.parse({
     id: authored.id,
     activityId: conversion.activityId,
@@ -89,6 +101,7 @@ function stageItem(
     claimClass: authored.claimClass,
     objectiveIds: authored.objectiveIds,
     choiceAirways: authored.choiceAirways ?? null,
+    numberIds: authored.numberIds ?? [],
     ...(transfer
       ? { transferVariant: transfer.transferVariant, retrievesFrom: transfer.retrievesFrom }
       : {}),

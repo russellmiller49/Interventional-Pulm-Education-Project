@@ -76,7 +76,16 @@ export function LineDock({
   dispatch,
   enabled,
   only,
-}: DockProps & { readonly only?: 'level' | 'zero' | 'scale' }) {
+  arterialTraceVisible = true,
+}: DockProps & {
+  readonly only?: 'level' | 'zero' | 'scale'
+  /**
+   * Whether the monitor beside this dock is drawing the systemic arterial tracing. The display
+   * scale acts on that tracing and on nothing else, so it is offered only where its effect can be
+   * seen (report L2-13).
+   */
+  readonly arterialTraceVisible?: boolean
+}) {
   const level = state.measurementSystem.transducerLevelCm
   const levelled = Math.abs(level) <= LEVEL_TOLERANCE_CM
   return (
@@ -142,7 +151,20 @@ export function LineDock({
           Zeroing does not move the transducer.
         </p>
       ) : null}
-      {!only || only === 'scale' ? (
+      {!only && !arterialTraceVisible ? (
+        /*
+         * On a task that shows only the catheter's channel the scale control changed nothing a
+         * learner could see, and a control with no visible effect teaches that the control does
+         * nothing. It is withdrawn here, with the reason, rather than wired to a different
+         * channel to give it something to do.
+         */
+        <p className={styles.dockNote} data-scale-unavailable>
+          The arterial display scale is not offered on this task: it changes how the arterial
+          tracing is drawn, and this task&apos;s monitor shows the catheter&apos;s pressure channel
+          only.
+        </p>
+      ) : null}
+      {only === 'scale' || (!only && arterialTraceVisible) ? (
         <div className={styles.dockRow}>
           <label htmlFor={quickControlId('scale')}>
             <span>The display scale</span>

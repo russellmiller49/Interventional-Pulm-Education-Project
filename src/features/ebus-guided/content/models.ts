@@ -134,19 +134,21 @@ export const contactModel: Lesson = {
   observation: {
     ...question(
       'cutaway-observe',
-      'Why did changing gain fail to remove the dark region behind the reflector?',
+      'You inspected the air-gap and reflector states in the echo schematic. Both leave a dark region. Which difference in mechanism does the model show?',
       [
-        'The modeled acoustic path is attenuated behind the reflector',
-        'Amplifying the remaining echoes does not restore the missing information.',
+        'The air gap blocks transmission at the transducer; the reflector attenuates the path only beyond it',
+        'The course distinguishes a complete air gap at the transducer from a shadow behind a strong reflector.',
       ],
-      ['All dark regions represent malignant tissue', 'An artifact does not establish histology.'],
       [
-        'Balloon inflation always removes artifacts',
-        'A balloon can assist coupling but does not remove every artifact.',
+        'Both are corrected by raising gain',
+        'Gain amplifies returning echoes; it cannot restore a missing window or the signal lost behind a reflector.',
+      ],
+      [
+        'The dark region behind the reflector is a low-echo node',
+        'A shadow is an acoustic effect; it does not describe tissue.',
       ],
     ),
     imagePolicy: 'retained-acquisition',
-    namesContactMode: 'shadow',
   },
   transfer: question(
     'cutaway-transfer',
@@ -178,6 +180,7 @@ export const measurementModel: Lesson = {
   recall: 'The same fixed object can produce different sections as the imaging plane moves.',
   concept: 'A section is only one view of the object',
   paragraphs: [
+    'Measurements in this simulator are shown in millimeters for teaching and relative comparison. They reflect the model geometry and should not be interpreted as validated measurements of a real patient or exact lymph-node dimensions.',
     'Explore a sphere, elongated ellipsoid, two adjacent objects and a lobulated union. Their dimensions stay fixed while the section moves. The millimeters in this activity belong to authored geometric phantoms.',
     'Sweep each shape completely before measuring. For the required record, return to the elongated phantom’s central section, freeze it and place opposing short-axis calipers. The two adjacent objects share the same fictional station label; object count does not define station count.',
   ],
@@ -251,7 +254,7 @@ export const measurementModel: Lesson = {
   ],
   sources: ['atlas', 'simulation'],
   boundary:
-    'Analytic geometric phantoms with authored dimensions. The fictional station label teaches documentation and does not make these objects anatomical station boundaries.',
+    'Analytic geometric phantoms with authored dimensions. The fictional station label teaches documentation and does not make these objects anatomical station boundaries. Measurements in this simulator are shown in millimeters for teaching and relative comparison. They reflect the model geometry and should not be interpreted as validated measurements of a real patient or exact lymph-node dimensions.',
 }
 export const routeModel: Lesson = {
   id: 'eus-b-route-model',

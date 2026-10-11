@@ -41,19 +41,24 @@ export function SocratesLearningWorkspace({
   const [ready, setReady] = useState(false)
   const [selectedMode, setMode] = useState<LearningMode | null>(null)
   const [selectedCase, setActive] = useState<string | null>(null)
+  const previewId = preview?.id
+  const previewMode = preview?.mode
   // Author previews follow the current selection; learner navigation stays local.
-  const mode = preview?.mode ?? selectedMode
-  const active = preview?.id ?? selectedCase
+  const mode = previewMode ?? selectedMode
+  const active = previewId ?? selectedCase
   const [module, setModule] = useState('all')
   const [warning, setWarning] = useState('')
   const title = useRef<HTMLHeadingElement>(null)
 
+  // Team refreshes recreate the preview object. Reset only when its case or mode changes.
   useEffect(() => {
     let message = ''
     let restoredProgress: LearningProgress = {}
     try {
-      const raw = localStorage.getItem(progressKey)
-      if (raw && !preview) restoredProgress = progressSchema.parse(JSON.parse(raw))
+      if (previewId === undefined) {
+        const raw = localStorage.getItem(progressKey)
+        if (raw) restoredProgress = progressSchema.parse(JSON.parse(raw))
+      }
     } catch {
       message += ' Saved progress could not be restored.'
     }
@@ -62,7 +67,7 @@ export function SocratesLearningWorkspace({
     setProgress(restoredProgress)
     setWarning(message)
     setReady(true)
-  }, [preview, progressKey])
+  }, [previewId, previewMode, progressKey])
   useEffect(() => {
     if (ready) title.current?.focus()
   }, [mode, active, ready])

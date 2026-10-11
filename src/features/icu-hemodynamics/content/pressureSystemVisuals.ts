@@ -1,11 +1,11 @@
 import {
-  PULMONARY_ARTERY_MEAN_FRACTION,
   PULMONARY_ARTERY_SHAPE,
   pulsatilePressureShape,
-  SYSTEMIC_ARTERIAL_MEAN_FRACTION,
   SYSTEMIC_ARTERIAL_SHAPE,
   MMHG_PER_CM_H2O,
+  type PulsatileShapeOptions,
 } from '../engine/waveformMorphology'
+import { dynamicResponseBeatFraction } from '../engine/troubleshootingWaveforms'
 import {
   applyFastFlushEvent,
   DYNAMIC_RESPONSE_REFERENCE,
@@ -184,47 +184,20 @@ export const FAST_FLUSH_PRESSURE_MMHG = SHARED_FAST_FLUSH_PRESSURE_MMHG
 
 const FAST_FLUSH_SAMPLE_RATE_HZ = 150
 
-function cyclicGaussian(phase: number, center: number, width: number): number {
-  const wrapped = ((phase % 1) + 1) % 1
-  const raw = Math.abs(wrapped - center)
-  const distance = Math.min(raw, 1 - raw)
-  return Math.exp(-0.5 * (distance / width) ** 2)
+function lineShapeOptions(lineType: FastFlushLineType): PulsatileShapeOptions {
+  return lineType === 'pulmonary-artery' ? PULMONARY_ARTERY_SHAPE : SYSTEMIC_ARTERIAL_SHAPE
 }
 
-function lineShape(lineType: FastFlushLineType, cardiacPhase: number): number {
-  return pulsatilePressureShape(
-    cardiacPhase,
-    lineType === 'pulmonary-artery' ? PULMONARY_ARTERY_SHAPE : SYSTEMIC_ARTERIAL_SHAPE,
-  )
-}
-
-function lineMeanFraction(lineType: FastFlushLineType): number {
-  return lineType === 'pulmonary-artery'
-    ? PULMONARY_ARTERY_MEAN_FRACTION
-    : SYSTEMIC_ARTERIAL_MEAN_FRACTION
-}
-
-function eventRinging(
-  lineType: FastFlushLineType,
-  cardiacPhase: number,
-  response: DynamicResponseKind,
-): number {
-  if (response !== 'underdamped') return 0
-  const line = fastFlushLineDefinitions[lineType]
-  const pulsePressure = line.systolicMmHg - line.diastolicMmHg
-  const ringAfter = (trigger: number, duration: number, cycles: number, amplitude: number) => {
-    const elapsed = (cardiacPhase - trigger + 1) % 1
-    if (elapsed > duration) return 0
-    const progress = elapsed / duration
-    return amplitude * Math.exp(-4.5 * progress) * Math.sin(progress * Math.PI * 2 * cycles)
-  }
-  return (
-    pulsePressure * 0.18 * cyclicGaussian(cardiacPhase, 0.085, 0.012) +
-    ringAfter(0.055, 0.17, 2.4, pulsePressure * 0.14) +
-    ringAfter(lineType === 'pulmonary-artery' ? 0.45 : 0.4, 0.19, 2.5, pulsePressure * 0.1)
-  )
-}
-
+/**
+ * The pressure a line displays between flushes, for one response.
+ *
+ * The acceptable line draws its source signal. The overdamped and underdamped lines draw the
+ * troubleshooting atlas' own distortion of that signal (`dynamicResponseBeatFraction`), scaled to
+ * the line's pulse pressure. This function used to carry a private version of each — an 8 % gain
+ * and a small spike for underdamping — whose beats did not show what the panel's own caption says
+ * an underdamped line does to the numbers (report L2-08). There is now one distortion, drawn the
+ * same way in the atlas, in these examples and after a flush.
+ */
 export function fastFlushBaselinePressureMmHg(
   lineType: FastFlushLineType,
   response: DynamicResponseKind,
@@ -232,24 +205,35 @@ export function fastFlushBaselinePressureMmHg(
 ): number {
   const line = fastFlushLineDefinitions[lineType]
   const pulsePressure = line.systolicMmHg - line.diastolicMmHg
-  const mean = line.diastolicMmHg + pulsePressure * lineMeanFraction(lineType)
-  const clean = line.diastolicMmHg + pulsePressure * lineShape(lineType, cardiacPhase)
+  const shape = lineShapeOptions(lineType)
+  const fraction =
+    response === 'acceptable'
+      ? pulsatilePressureShape(cardiacPhase, shape)
+      : dynamicResponseBeatFraction(response, shape, cardiacPhase)
+  return line.diastolicMmHg + pulsePressure * fraction
+}
 
-  if (response === 'overdamped') {
-    // Causal smoothing preserves the fast-rise/slow-runoff arterial family while attenuating its
-    // higher-frequency detail. It intentionally avoids the symmetric sine-wave appearance.
-    const filteredShape =
-      lineShape(lineType, cardiacPhase) * 0.43 +
-      lineShape(lineType, cardiacPhase - 0.035) * 0.29 +
-      lineShape(lineType, cardiacPhase - 0.075) * 0.18 +
-      lineShape(lineType, cardiacPhase - 0.125) * 0.1
-    const filtered = line.diastolicMmHg + pulsePressure * filteredShape
-    return mean + (filtered - mean) * 0.55
+/**
+ * What a line with this response displays for a source of the line's stated pressure.
+ *
+ * Sampled from the drawn beat, never authored: the figure prints these beside the source values so
+ * "reads high" and "reads low" are numbers a learner can check against the trace.
+ */
+export function fastFlushDisplayedPressures(
+  lineType: FastFlushLineType,
+  response: DynamicResponseKind,
+): { readonly systolicMmHg: number; readonly diastolicMmHg: number; readonly meanMmHg: number } {
+  const samples = 720
+  let systolic = Number.NEGATIVE_INFINITY
+  let diastolic = Number.POSITIVE_INFINITY
+  let total = 0
+  for (let index = 0; index < samples; index += 1) {
+    const value = fastFlushBaselinePressureMmHg(lineType, response, index / samples)
+    systolic = Math.max(systolic, value)
+    diastolic = Math.min(diastolic, value)
+    total += value
   }
-  if (response === 'underdamped') {
-    return mean + (clean - mean) * 1.08 + eventRinging(lineType, cardiacPhase, response)
-  }
-  return clean
+  return { systolicMmHg: systolic, diastolicMmHg: diastolic, meanMmHg: total / samples }
 }
 
 export function generateFastFlushWaveform(

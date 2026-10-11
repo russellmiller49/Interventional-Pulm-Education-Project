@@ -198,3 +198,94 @@ export function monitorPressureReadouts(
     },
   }
 }
+
+/* ------------------------------------------------------------------ *
+ * Axes and availability the monitor states, never infers
+ * ------------------------------------------------------------------ */
+
+export interface PressureAxis {
+  readonly minimum: number
+  readonly maximum: number
+}
+
+/** The largest offset the height and zero controls can add to or take from a displayed pressure. */
+const REFERENCE_CONTROL_SPAN_MMHG = { below: 20 * 0.7355, above: 20 * 0.7355 + 5 } as const
+
+/**
+ * One axis for a whole reference comparison.
+ *
+ * The monitor normally fits each channel's axis to the pressure it is showing. In a demonstration
+ * whose point is that a control moves every value by the same amount, that fitting is the problem:
+ * lowering the transducer pushed the systolic value over the 0–40 axis' limit, the axis became
+ * 0–80, and a pure offset was drawn as a waveform half the size (report L2-06). This returns the
+ * axis that holds the demonstration's starting trace at every position of the height and zero
+ * controls, so the axis never has to change and the shift is the only thing that moves.
+ *
+ * It is computed from the samples already on the strip, not from the model's estimate, so it
+ * includes the respiratory swing the trace is actually drawn with.
+ */
+export function referenceComparisonAxis(
+  baseline: Pick<HemodynamicSimulationState, 'waveforms'>,
+  field: PressureWaveformField,
+): PressureAxis | null {
+  const values = baseline.waveforms.map((sample) => sample[field]).filter(Number.isFinite)
+  if (values.length === 0) return null
+  const lowest = Math.min(...values) - REFERENCE_CONTROL_SPAN_MMHG.below
+  const highest = Math.max(...values) + REFERENCE_CONTROL_SPAN_MMHG.above
+  return { minimum: Math.floor(lowest / 10) * 10, maximum: Math.ceil(highest / 10) * 10 }
+}
+
+/**
+ * An axis fitted to the samples it is asked to show, with room above and below.
+ *
+ * Used for the enlarged still copy of a venous tracing. It is fitted to the data rather than chosen
+ * from a list, so a raised right-atrial pressure is enlarged where it is instead of being cut off
+ * by an axis sized for a normal one.
+ */
+export function fittedPressureAxis(values: readonly number[]): PressureAxis | null {
+  const finite = values.filter(Number.isFinite)
+  if (finite.length === 0) return null
+  const lowest = Math.min(...finite)
+  const highest = Math.max(...finite)
+  const span = Math.max(4, highest - lowest)
+  const step = span <= 10 ? 2 : span <= 25 ? 5 : span <= 60 ? 10 : 20
+  const minimum = Math.floor((lowest - span * 0.15) / step) * step
+  const maximum = Math.ceil((highest + span * 0.15) / step) * step
+  return { minimum, maximum }
+}
+
+export interface MixedVenousAvailability {
+  readonly available: boolean
+  /** Why no value is shown. Empty when one is. */
+  readonly reason: string
+}
+
+/**
+ * Whether the distal lumen can yield a mixed-venous sample now, and if not, why.
+ *
+ * The rail said "not available before PA" for every unavailable state, including a tip that had
+ * gone past the artery into an occluding position (report L9-04). No value is ever supplied for an
+ * unavailable state; only the reason differs.
+ */
+export function mixedVenousAvailability(
+  state: Pick<HemodynamicSimulationState, 'catheter'>,
+): MixedVenousAvailability {
+  const { position, targetPosition, balloonInflated } = state.catheter
+  if (targetPosition !== null) {
+    return { available: false, reason: 'not available while the tip is moving' }
+  }
+  if (position === 'wedge') {
+    return {
+      available: false,
+      reason: balloonInflated
+        ? 'no mixed-venous sample during a balloon occlusion'
+        : 'no valid mixed-venous sample · tip in an occluding position',
+    }
+  }
+  if (position === 'pa') {
+    return balloonInflated
+      ? { available: false, reason: 'no mixed-venous sample while the balloon is up' }
+      : { available: true, reason: '' }
+  }
+  return { available: false, reason: 'not available before PA' }
+}

@@ -2094,6 +2094,47 @@ test('final repair · Lesson 7: two reference cycles and a same-task rapid close
   expect(JSON.parse((await storedRaw(page, key))!).value).toEqual(after)
 })
 
+for (const magnification of ['3', '4'])
+  test(`saved magnifier · ${magnification}× and partial work survive reload`, async ({ page }) => {
+    await localPartialWork(page, 'vertical')
+    await page.getByLabel('CT magnification').fill(magnification)
+    const saved = await draft(page, 'vertical')
+    const learner = await shownDisplay(page)
+    expect(learner.magnification).toBe(magnification)
+    expect(Object.values(saved.views)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ magnification: Number(magnification) })]),
+    )
+    await page.reload()
+    await ctReady(page)
+    expect(await shownDisplay(page)).toEqual(learner)
+    expect(await draft(page, 'vertical')).toEqual(saved)
+    await capture(page, `step10-${magnification}x-reloaded`)
+  })
+
+test('saved magnifier · invalid magnification resets only that field after reload', async ({
+  page,
+}) => {
+  await localPartialWork(page, 'vertical')
+  await orientationControl(page, /Flip left–right/)
+  await button(page, 'Show parent airway view').click()
+  const learner = await shownDisplay(page)
+  // Corrupt only this stored preference, leaving the learner's partial work intact.
+  const expected = await page.evaluate(() => {
+    const key = 'branch-tracing.draft.learn.vertical'
+    const envelope = JSON.parse(localStorage.getItem(key)!)
+    const id = Object.keys(envelope.value.views)[0]
+    envelope.value.views[id].magnification = 5
+    localStorage.setItem(key, JSON.stringify(envelope))
+    envelope.value.views[id].magnification = 1
+    return envelope.value
+  })
+  await page.reload()
+  await ctReady(page)
+  expect(await draft(page, 'vertical')).toEqual(expected)
+  expect(await shownDisplay(page)).toEqual({ ...learner, magnification: '1' })
+  await capture(page, 'step10-invalid-magnification-reloaded')
+})
+
 test('final repair · genuine learner display choices outside reference viewing still persist after reload', async ({
   page,
 }) => {

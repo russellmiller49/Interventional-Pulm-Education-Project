@@ -10,6 +10,10 @@
  * revision cannot drift silently from the ids the course uses. Only the fields the course needs are
  * copied: no transcript file names, hashes or line counts, and no source text beyond what the
  * manifest itself states.
+ *
+ * Frozen on 2026-10-08. The rewrite authors sections directly in TypeScript and adds its sources in
+ * `data/sources.ts`, so regenerating would discard nothing but would also add nothing; writing is
+ * refused without `--unfreeze`. `--check` still runs.
  */
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
@@ -25,6 +29,12 @@ const DEFAULT_MANIFEST = path.join(
 
 const args = process.argv.slice(2)
 const check = args.includes('--check')
+if (!check && !args.includes('--unfreeze')) {
+  console.error(
+    'The manifest import is frozen: sections are authored in TypeScript now. Pass --check to compare, or --unfreeze to regenerate on purpose.',
+  )
+  process.exit(2)
+}
 const manifestPath =
   args.find((arg) => !arg.startsWith('--')) ??
   process.env.BRONCH_FOUNDATIONS_MANIFEST ??

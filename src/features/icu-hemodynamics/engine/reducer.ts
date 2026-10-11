@@ -7,6 +7,7 @@ import {
   WEDGE_WINDOW_STRADDLES_CHANGE,
   wedgeCursorReadingAt,
 } from './measurementProvenance'
+import { withDisplaySeam } from './displaySeams'
 import { lineMeasurementSystem } from './measurementLines'
 import { catheterFlushBlocked } from './pressureObservation'
 import {
@@ -163,7 +164,28 @@ export function hasHemodynamicMastery(state: HemodynamicSimulationState): boolea
   return score.total >= 80 && state.criticalErrors.length === 0
 }
 
+/**
+ * The reducer, plus one piece of display bookkeeping: an accepted change to the measurement system
+ * leaves a seam for the monitor to break the trace at (report L2-06). The seam is recorded from the
+ * before/after states, so an action the reducer absorbs or refuses records nothing.
+ */
 export function icuHemodynamicsReducer(
+  state: HemodynamicSimulationState,
+  action: HemodynamicAction,
+): HemodynamicSimulationState {
+  const next = reduceHemodynamicAction(state, action)
+  switch (action.type) {
+    case 'SET_TRANSDUCER_LEVEL':
+    case 'ZERO_TRANSDUCER':
+    case 'SET_DAMPING':
+    case 'SET_ARTIFACT':
+      return withDisplaySeam(state, next)
+    default:
+      return next
+  }
+}
+
+function reduceHemodynamicAction(
   state: HemodynamicSimulationState,
   action: HemodynamicAction,
 ): HemodynamicSimulationState {
