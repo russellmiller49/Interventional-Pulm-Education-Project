@@ -187,7 +187,7 @@ test('clinical preview is traceable to immutable public inputs and omits candida
   graph.edges[0].endNodeId = graph.rootNodeId
   expect(() => previewGraphSchema.parse(graph)).toThrow()
 })
-test('the new pages are anonymous and unlisted without exposing the existing admin anatomy routes', () => {
+test('the new pages are anonymous and unlisted without opening a neighbouring route', () => {
   for (const locale of ['en', 'es', 'zh-CN'])
     for (const suffix of ['', '/learn', '/practice', '/assess']) {
       const path = `/${locale}/learn/anatomy/branch-tracing${suffix}`
@@ -195,7 +195,10 @@ test('the new pages are anonymous and unlisted without exposing the existing adm
       expect(isPublicUnlistedPath(path)).toBe(true)
       expect(isVisibleModulePath(path, { isAdmin: true })).toBe(false)
     }
-  expect(isPublicPath('/airway-anatomy/case-001/case_manifest.json')).toBe(false)
-  expect(isPublicPath('/learn/anatomy/airway')).toBe(false)
+  // The synchronized airway module and its case files became direct-link, unlisted hub modules on
+  // 2026-09-12; `src/lib/site-auth/access.test.ts` owns that policy. They stay out of navigation.
+  expect(isPublicUnlistedPath('/airway-anatomy/case-001/case_manifest.json')).toBe(true)
+  expect(isPublicUnlistedPath('/learn/anatomy/airway')).toBe(true)
+  expect(isVisibleModulePath('/learn/anatomy/airway', { isAdmin: true })).toBe(false)
   expect(isPublicPath('/learn/anatomy/branch-tracing-other')).toBe(false)
 })
