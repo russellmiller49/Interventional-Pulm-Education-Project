@@ -14,7 +14,6 @@ import {
   CircuitPressureIdentity,
   FoundationTeachingBlock,
   GuidedValue,
-  ModelBoundary,
   TextEquivalent,
   VaConfigurationLabel,
   styles,
@@ -231,10 +230,6 @@ export function CircuitFlowPathPanel({
         vocabulary. Other consoles may label or provide these measurements differently. Circuit
         blood flow is a general ECMO quantity.
       </p>
-      <ModelBoundary>
-        The schematic teaches order and location. It is not a scale drawing of tubing, cannulae, or
-        component geometry. These channel names belong to this CARDIOHELP configuration.
-      </ModelBoundary>
     </div>
   )
 }

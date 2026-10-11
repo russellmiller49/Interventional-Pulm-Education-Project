@@ -6,13 +6,13 @@ import type { EcmoSimulationState } from '../../engine/types'
 import { EcmoCircuitWalk } from './EcmoCircuitWalk'
 import { useStageTeachingScope } from '../stage/StageTeachingScope'
 import { EcmoLocalizationCard } from './EcmoLocalizationCard'
+import { EcmoCircuitPressureReference } from './EcmoReferenceValues'
 import {
   ChannelValue,
   CircuitPressureIdentity,
   FoundationTeachingBlock,
   VaConfigurationLabel,
   GuidedValue,
-  ModelBoundary,
   TextEquivalent,
   comparisonPhrase,
   direction,
@@ -86,7 +86,7 @@ export function PumpPressureZonesPanel({
               resistance changes.
             </p>
             <p className="mt-2 text-sm leading-6">
-              This reference is settled and has unrestricted drainage. Its values are authored for
+              This reference is settled and has unrestricted drainage. Its values are set for
               teaching, not clinical targets.
             </p>
           </section>
@@ -168,10 +168,6 @@ export function PumpPressureZonesPanel({
             headingLevel={3}
           />
         </details>
-        <ModelBoundary>
-          Comparison magnitudes and times belong to this educational model. These results are not
-          clinical response predictions.
-        </ModelBoundary>
       </div>
     )
 
@@ -234,10 +230,7 @@ export function PumpPressureZonesPanel({
           currently has.
         </TextEquivalent>
 
-        <ModelBoundary>
-          Comparisons here are to this modeled circuit&rsquo;s own authored reference state, not to
-          a normal range for ECMO. The reference values are teaching anchors for this simulation.
-        </ModelBoundary>
+        <EcmoCircuitPressureReference />
       </section>
 
       <EcmoLocalizationCard mode="scaffold-table" supportMode={state.supportMode} />

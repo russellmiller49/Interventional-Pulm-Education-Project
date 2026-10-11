@@ -1,5 +1,6 @@
 'use client'
 
+import { ECMO_AIR_RESUME } from '../content/teachingNumbers'
 import { resolveBubbleResumption } from '../engine'
 import type { EcmoSimulationState, GuidedControlId, SimulationAction } from '../engine'
 import styles from './cardiohelp-ecmo.module.css'
@@ -97,13 +98,7 @@ export function EcmoCircuitControls({
           guidedHelp={guidedControlId === 'cardiohelp-clamp-return'}
           onToggle={() => dispatch({ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return' })}
         />
-        {/*
-            Resumption after an air event, as one bounded act.
-            Deliberately not the console reset and deliberately not a clamp: this module does not
-            teach where clamp opening, pump restart and console reset fall relative to one another,
-            because that choreography is device- and program-specific. The button says what it
-            stands for, and the helper text says it is a simulation abstraction.
-          */}
+        {/* Resumption after an air event: one press stands for the reset and both clamps. */}
         <button
           type="button"
           id="cardiohelp-resume-support"
@@ -118,10 +113,10 @@ export function EcmoCircuitControls({
             ▶
           </span>
           <span>
-            <strong>Resume support per current IFU and local protocol</strong>
+            <strong>{ECMO_AIR_RESUME.label}</strong>
             <small>
-              A deliberate simplification. It stands in for the device- and program-specific
-              resumption sequence and does not reproduce or teach that sequence.
+              One press here stands for the reset and both clamps. At the bedside the venous side is
+              released first and the arterial side last.
             </small>
           </span>
         </button>

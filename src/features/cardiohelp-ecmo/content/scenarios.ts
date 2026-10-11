@@ -1,3 +1,11 @@
+import {
+  ECMO_AIR_RESUME_SENTENCE,
+  ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES,
+  ECMO_EMERGENCY_DRIVE_SENTENCE,
+  ECMO_LV_DISTENSION_MOVES,
+  ECMO_NUMBERS,
+  ECMO_OXYGENATOR_FAILURE_SENTENCE,
+} from './teachingNumbers'
 import type {
   PredictionControl,
   PredictionDirection,
@@ -210,7 +218,9 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'Confirm the audible indicator and Cardiopulmonary Support startup screen.',
         'Trace drainage to pump to oxygenator to return; verify sensors, gas, power, and backup readiness.',
       ],
-      safetyNotes: ['Reject a failed self-test and follow local replacement/escalation policy.'],
+      safetyNotes: [
+        'A console that fails its self-test is not used. Change to the backup console.',
+      ],
     },
     evidenceIds: [
       'ifu-console-workflow',
@@ -311,10 +321,10 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       ],
       correctWorkflow: [
         'Compare pInt, pArt, Δp trend, flow, gas transfer, and sensor plausibility.',
-        'Inspect the oxygenator/circuit and escalate according to local exchange protocol.',
+        ECMO_OXYGENATOR_FAILURE_SENTENCE,
       ],
       safetyNotes: [
-        'No fixed Δp alarm priority is taught because the supplied IFU is internally inconsistent on that point.',
+        'The manual calls the pressure-drop alarm low priority on page 136 and lists it as medium priority on page 165. Either way it is a prompt to look, not a diagnosis.',
       ],
     },
     evidenceIds: [
@@ -438,7 +448,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'Hold or make only a goal-directed change, then reassess rather than chase a normal PaCO2.',
       ],
       safetyNotes: [
-        'This exercise teaches reasoning, not a universal permissive-hypercapnia target.',
+        `Hypercapnia is corrected over ${ECMO_NUMBERS.value('paco2-correction-time')}, not at once: a rapid fall in PaCO₂ changes cerebral blood flow.`,
       ],
     },
     evidenceIds: ['ecmo-book-ch18', 'bounded-educational-model'],
@@ -515,11 +525,11 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Clamp the return limb, then the drainage limb, near the patient to isolate the circuit.',
         'Correct the source of air and confirm the circuit is bubble free.',
-        'Resume support per the current IFU and your local protocol, then reassess. Where clamp opening, pump restart and console reset fall relative to one another is set by those documents, not by this module.',
+        `${ECMO_AIR_RESUME_SENTENCE} Then reassess the patient.`,
       ],
       safetyNotes: [
         'Premature reset is a critical safety error.',
-        'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s own ECMO air-emergency protocol; this simulation does not teach that choreography and holds no copy of that protocol.',
+        'Call for help and the primed backup circuit as soon as the patient is isolated. If the air cannot be cleared quickly, the circuit is exchanged.',
       ],
     },
     evidenceIds: [
@@ -567,7 +577,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       ],
       correctWorkflow: [
         'Recognize the power-source indicator and restore a verified AC source.',
-        'Confirm circuit flow and patient status. Backup-console and emergency-drive readiness is a bedside obligation this simulator does not represent or credit.',
+        'Confirm circuit flow and patient status, and that the backup console and the emergency drive are at the bedside.',
       ],
       safetyNotes: [
         'This screen exercise teaches recognition and readiness; hands-on emergency-drive practice belongs to bedside training with the device.',
@@ -727,7 +737,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Temporarily reduce RPM while assessing the patient and venous drainage limb.',
         'Evaluate cannula position, kinks, venous volume, intrathoracic causes, and other impediments to filling.',
-        'Correct the cause, then retitrate against perfusion and native-heart endpoints under local protocol.',
+        'Correct the cause, then retitrate flow against MAP, lactate and urine output, and against native ejection.',
       ],
       safetyNotes: ['Do not treat a low displayed flow with reflexive RPM escalation.'],
     },
@@ -802,9 +812,11 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       ],
       correctWorkflow: [
         'Compare pInt, pArt, pressure-drop trend, matched flow/RPM, gas transfer, and sensor plausibility.',
-        'Inspect and escalate according to your local circuit-exchange protocol.',
+        ECMO_OXYGENATOR_FAILURE_SENTENCE,
       ],
-      safetyNotes: ['No fixed pressure-drop threshold or alarm priority is encoded.'],
+      safetyNotes: [
+        'On VA the exchange interrupts the circulation as well as gas exchange: have inotropes, vasopressors and the ventilator ready before the pump stops.',
+      ],
     },
     evidenceIds: [
       'ifu-anomaly-boundary',
@@ -851,10 +863,10 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Verify the pattern with right-arm saturation or arterial blood gas and compare it with post-oxygenator and lower-body data.',
         'Assess native cardiac ejection, lung oxygenation, circuit performance, and the likely mixing region.',
-        'Escalate the support/cannulation strategy to the ECMO team under your local protocol.',
+        ...ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves,
       ],
       safetyNotes: [
-        'This simulator intentionally does not prescribe one universal pump, ventilator, or cannulation correction.',
+        'A femoral arterial sample or a left-hand oximeter can read normal while the brain and the coronaries are hypoxemic. Monitor the right arm.',
       ],
     },
     evidenceIds: ['elso-adult-va-2021', 'elso-neuro-monitoring-2024', 'bounded-educational-model'],
@@ -896,10 +908,10 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Recognize that console flow and MAP do not establish adequate LV ejection.',
         'Assess pulse pressure, aortic-valve opening, LV size/stasis, lung findings, and systemic perfusion.',
-        'Escalate urgently for expert unloading evaluation under your local protocol.',
+        ...ECMO_LV_DISTENSION_MOVES.moves,
       ],
       safetyNotes: [
-        'No unloading device, threshold, or patient-specific algorithm is recommended in this draft module.',
+        'A ventricle that does not eject stagnates: thrombus can form in the ventricle and the aortic root. Do not wait on a flow and a mean pressure that look acceptable.',
       ],
     },
     evidenceIds: ['elso-adult-va-2021', 'bounded-educational-model'],
@@ -1028,11 +1040,11 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Clamp the arterial return limb, then the drainage limb, near the patient to isolate the circulation.',
         'Identify and correct the air source and confirm the return path is clear.',
-        'Resume venoarterial support per the current IFU and your local protocol, then reassess perfusion. Where clamp opening, pump restart and console reset fall relative to one another is set by those documents, not by this module.',
+        `${ECMO_AIR_RESUME_SENTENCE} Then reassess MAP and perfusion.`,
       ],
       safetyNotes: [
         'Premature reset and alarm acknowledgement without correction remain critical errors.',
-        'Isolation is taught explicitly. The clamp, pump, and device-reset choreography for resumption is governed by the current manufacturer IFU and your unit’s own ECMO air-emergency protocol; this simulation does not teach that choreography and holds no copy of that protocol.',
+        'Call for help and the primed backup circuit as soon as the patient is isolated. If the air cannot be cleared quickly, the circuit is exchanged.',
       ],
     },
     evidenceIds: [
@@ -1082,11 +1094,9 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       ],
       correctWorkflow: [
         'Recognize the power source and restore verified AC.',
-        'Confirm flow, pressures, perfusion and right-arm monitoring. Backup-console and emergency-drive readiness is a bedside obligation this simulator does not represent or credit.',
+        'Confirm flow, pressures, perfusion and right-arm monitoring, and that the backup console and the emergency drive are at the bedside.',
       ],
-      safetyNotes: [
-        'Recognition and readiness are taught here; hands-on emergency-drive practice is a bedside obligation this simulator does not represent.',
-      ],
+      safetyNotes: [ECMO_EMERGENCY_DRIVE_SENTENCE],
     },
     evidenceIds: [
       'ifu-console-workflow',
@@ -1169,10 +1179,11 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
       correctWorkflow: [
         'Recognize and verify the upper-body mismatch with independent right-arm data.',
         'Integrate native ejection, lung status, post-oxygenator gas transfer, circuit flow, and perfusion.',
-        'Escalate the support strategy under your local VA protocol; do not use a VV off-sweep trial.',
+        ...ECMO_DIFFERENTIAL_HYPOXEMIA_MOVES.moves,
+        'Do not use a VV off-sweep trial on VA support.',
       ],
       safetyNotes: [
-        'VA liberation, unloading-device selection, and cannulation changes remain outside this simulator.',
+        'Raising VA flow to lift the right-arm saturation loads the recovering ventricle. Use it as a temporary step only.',
       ],
     },
     evidenceIds: ['elso-adult-va-2021', 'elso-neuro-monitoring-2024', 'bounded-educational-model'],
@@ -1314,7 +1325,7 @@ export const predictionGoals = [
   },
   {
     id: 'protect-left-heart',
-    label: 'Recognize and escalate concerning LV-loading cues',
+    label: 'Recognize left-ventricular distension and unload the ventricle',
     supportModes: ['va'],
   },
   {

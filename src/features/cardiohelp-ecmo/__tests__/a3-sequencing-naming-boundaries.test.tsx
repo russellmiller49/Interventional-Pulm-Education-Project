@@ -7,6 +7,7 @@ import { EcmoFoundationTeachingPanel } from '../components/teaching/EcmoFoundati
 import { ecmoDerivedValueGuides } from '../content/ecmoValueGuides'
 import { isEcmoFoundationSectionId } from '../content/foundationLessons'
 import { cardiohelpLearnLessonsBySupportMode } from '../content/learnLessons'
+import { ECMO_NUMBERS } from '../content/teachingNumbers'
 import { CardiohelpConsole } from '../components/CardiohelpConsole'
 import {
   createInitialSimulationState,
@@ -151,7 +152,8 @@ describe('A3.2: CARDIOHELP channel names are named as this manufacturer’s', ()
     )
     expect(container.textContent).toMatch(/oxygenated return blood enters the venous circulation/i)
     expect(vocabulary?.textContent).toMatch(/Circuit blood flow is a general ECMO quantity/i)
-    expect(container.textContent).toMatch(/Ask for them/i)
+    // The deferral that used to close this panel is gone; the numbers are taught instead.
+    expect(container.textContent).not.toMatch(/Ask for them/i)
   })
 })
 
@@ -236,39 +238,46 @@ describe('A3.4: boundaries sit beside the thing they constrain', () => {
     expect(lead?.querySelector('[data-mixture-formula]')).toBeNull()
   })
 
-  it.each([
-    ['sweep-linearity', 'blood-flow-versus-sweep'],
-    ['demand-and-native-lung-fixed', 'blood-flow-versus-sweep'],
-  ] as const)('states the %s boundary on the %s panel', (boundary, sectionId) => {
-    const { container } = render(
-      <EcmoFoundationTeachingPanel
-        sectionId={sectionId}
-        state={settledReference('vv-reference')}
-      />,
-    )
-    const node = container.querySelector(`[data-local-model-boundary="${boundary}"]`)
-    expect(node).not.toBeNull()
-    expect(node?.textContent?.length ?? 0).toBeGreaterThan(60)
-  })
-
-  it('describes real CO₂ removal as diminishing and multiply limited, not as saturation', () => {
+  it('states the sweep-linearity boundary on the blood-flow-versus-sweep panel, once', () => {
     const { container } = render(
       <EcmoFoundationTeachingPanel
         sectionId="blood-flow-versus-sweep"
         state={settledReference('vv-reference')}
       />,
     )
-    const sweep = container.querySelector('[data-local-model-boundary="sweep-linearity"]')
+    // Teaching-first: a model-limit note only where a learner could take a simulated value for a
+    // real one. The straight-line sweep response is that place; the separate note that demand and
+    // the native lung are fixed was removed with the other per-panel boundaries.
+    const boundaries = [...container.querySelectorAll('[data-model-boundary]')].filter((node) =>
+      /straight line with sweep/i.test(node.textContent ?? ''),
+    )
+    expect(boundaries).toHaveLength(1)
+    expect(boundaries[0].textContent?.length ?? 0).toBeGreaterThan(60)
+    expect(container.querySelector('[data-local-model-boundary]')).toBeNull()
+  })
+
+  it('describes real CO₂ removal as diminishing, not as saturation', () => {
+    const { container } = render(
+      <EcmoFoundationTeachingPanel
+        sectionId="blood-flow-versus-sweep"
+        state={settledReference('vv-reference')}
+      />,
+    )
+    const sweep = [...container.querySelectorAll('[data-model-boundary]')].find((node) =>
+      /straight line with sweep/i.test(node.textContent ?? ''),
+    )
     const text = sweep?.textContent ?? ''
-    // The central boundary survives...
-    expect(text).toMatch(/straight line in this simulation, by construction/i)
+    // The central boundary survives, with the bound it stops at...
+    expect(text).toMatch(/straight line with sweep in this simulation/i)
+    expect(text).toMatch(/stops at 20 mmHg/i)
     expect(text).toMatch(/read the direction here, not the slope/i)
-    // ...and the reason real removal differs is stated properly.
+    // ...and the reason real removal differs is still stated.
     expect(text).toMatch(/diminishing returns/i)
-    expect(text).toMatch(/blood flow through the membrane/i)
-    expect(text).toMatch(/membrane performance/i)
-    expect(text).toMatch(/remaining gas-side gradient/i)
     expect(text).not.toMatch(/a real membrane saturates/i)
+    // The sweep numbers a fellow starts from are taught beside it, from the register.
+    const reference = container.querySelector('[data-reference-values]')
+    expect(reference?.textContent).toContain(ECMO_NUMBERS.value('sweep-start'))
+    expect(reference?.textContent).toContain(ECMO_NUMBERS.value('paco2-correction-time'))
   })
 
   it('keeps every boundary phrased as a statement about this simulation', () => {

@@ -89,17 +89,12 @@
       "claimKind": "module-review-status",
       "learnerSurfaces": [
         {
-          "file": "src/features/cardiohelp-ecmo/components/SourcesPanel.tsx",
-          "locator": "Hub, Evidence boundary and review status: status badge and device profile",
-          "excerpt": "{published ? 'PUBLISHED' : 'UNLISTED DRAFT'} · {ECMO_MODULE_REVIEW_LINE}"
-        },
-        {
           "file": "src/features/cardiohelp-ecmo/content/sourceReviewMetadata.ts",
-          "locator": "Module review line",
+          "locator": "Module review line. Retained as a constant; no learner surface renders it since the teaching-first redo",
           "excerpt": "export const ECMO_MODULE_REVIEW_LINE = 'Clinical and device review: none recorded'"
         }
       ],
-      "learnerWording": "UNLISTED DRAFT · Clinical and device review: none recorded. Publication: Unlisted draft. Clinical and device review: None recorded. With the flag set to published: PUBLISHED · Clinical and device review: none recorded, and Publication: Public release.",
+      "learnerWording": "Nothing is shown to learners. Until 2026-10-08 the hub printed: UNLISTED DRAFT · Clinical and device review: none recorded. Publication: Unlisted draft. Clinical and device review: None recorded. With the flag set to published: PUBLISHED · Clinical and device review: none recorded, and Publication: Public release.",
       "previousWording": "UNLISTED REVIEW · REVIEW REQUIRED; Publication: Unlisted draft; clinical and device review pending. With the publication flag set to published, the same panel printed PUBLISHED · REVIEW APPROVED and Reviewed release. SHARED-02 (PR #225) had since replaced those two published-state phrases with PUBLISHED and Public release on main; this batch keeps that vocabulary and removes the remaining dependence of the review line on the flag.",
       "intendedTeachingPoint": "A learner can see that no clinical or device review of this module is recorded, whatever its publication status.",
       "sourceRecordIds": [],
@@ -118,7 +113,7 @@
       "clinicalQuestion": "Owner: confirm that publication status and review status stay separate statements on the hub.",
       "questionDisposition": "No question involved.",
       "hold": "Nothing may be shown as reviewed or approved until a named reviewer, role, date and reviewed version are recorded.",
-      "changeInThisBatch": "Badge and profile rows rewritten; the review line no longer depends on the publication flag.",
+      "changeInThisBatch": "Badge and profile rows rewritten; the review line no longer depends on the publication flag. Teaching-first redo, 2026-10-08 (docs/teaching-first-rules.md): retired from the learner surface. Review status is project metadata and is no longer rendered; the hub badge, the Publication row and the Clinical and device review row were removed from SourcesPanel.tsx. The item is kept for the record and quotes only the constant that survives in sourceReviewMetadata.ts.",
       "contentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
       "reviewerDecision": {
         "decision": "NOT REVIEWED",
@@ -146,10 +141,10 @@
         {
           "file": "src/features/cardiohelp-ecmo/components/SourcesPanel.tsx",
           "locator": "Hub scope paragraph",
-          "excerpt": "whether a later revision exists has not been checked"
+          "excerpt": "Console behavior follows the U.S. IFU, revision {cardiohelpDeviceProfile.ifuRevision}, issued {cardiohelpDeviceProfile.ifuDate}. Its labeled indication is partial cardiopulmonary bypass or temporary surgical circulatory bypass for less than six hours, not prolonged ECMO."
         }
       ],
-      "learnerWording": "Maquet Cardiopulmonary GmbH. CARDIOHELP System Instructions for Use (U.S.). Revision 2.3, issue date 2025-01; for CARDIOHELP-i software release 03.04.10.00 or higher. Date: Issue date 2025-01 (printed on page 2 of the supplied document). Revision: Revision 2.3, for CARDIOHELP-i software release 03.04.10.00 or higher. Hub: This facsimile’s console behavior follows the U.S. IFU, revision 2.3, issued January 2025; whether a later revision exists has not been checked.",
+      "learnerWording": "Maquet Cardiopulmonary GmbH. CARDIOHELP System Instructions for Use (U.S.). Revision 2.3, issue date 2025-01; for CARDIOHELP-i software release 03.04.10.00 or higher. Date: Issue date 2025-01. Revision: Revision 2.3, for CARDIOHELP-i software release 03.04.10.00 or higher. Hub: Console behavior follows the U.S. IFU, revision 2.3, issued January 2025. Its labeled indication is partial cardiopulmonary bypass or temporary surgical circulatory bypass for less than six hours, not prolonged ECMO.",
       "previousWording": "Getinge. CARDIOHELP-i Instructions for Use. Revision 2.3; software 03.04.10.00 or higher. January 2025. Limitation: The current U.S. labeling covers partial cardiopulmonary bypass or temporary surgical circulatory bypass for less than six hours. Hub: The current U.S. IFU governs this facsimile’s console behavior.",
       "intendedTeachingPoint": "The console facsimile follows one identified labeling revision whose indication is short-term surgical bypass, not prolonged ECMO.",
       "sourceRecordIds": ["ifu-us-2025-scope", "ifu-console-workflow"],
@@ -192,7 +187,7 @@
       "clinicalQuestion": "Device educator: is revision 2.3 (issue date 2025-01) the labeling the console facsimile should follow, and is a later U.S. revision in use?",
       "questionDisposition": "No question involved.",
       "hold": "Console-behavior paraphrases stay scoped to revision 2.3, with no claim that it is current.",
-      "changeInThisBatch": "Citations, the scope limitation and the hub sentence corrected; separate date, revision and document-check lines added wherever these records are shown.",
+      "changeInThisBatch": "Citations, the scope limitation and the hub sentence corrected; separate date, revision and document-check lines added wherever these records are shown. Teaching-first redo, 2026-10-08 (docs/teaching-first-rules.md): the hub sentence and the registry limitation no longer say that a later revision has not been checked, and the document-check and date-basis lines are no longer rendered beside a citation. The revision and issue date are still stated; nothing claims the revision is current.",
       "contentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
       "reviewerDecision": {
         "decision": "NOT REVIEWED",
@@ -210,10 +205,10 @@
         {
           "file": "src/features/cardiohelp-ecmo/content/evidence.ts",
           "locator": "ifu-anomaly-boundary limitation",
-          "excerpt": "page 136 calls the pressure-drop alarm low priority, while page 165 lists it among medium-priority messages. Neither value is encoded here pending device review."
+          "excerpt": "page 136 calls the pressure-drop alarm low priority, while page 165 lists it among medium-priority messages. The console’s factory pressure-drop limit and the low-priority description are taught; no bubble size is."
         }
       ],
-      "learnerWording": "The supplied instructions do not give one bubble size or one pressure-drop alarm priority. Page 20 warns that bubbles of 5 mm or less can also stop the pump or trigger backflow prevention, while the technical data on page 199 list a pump stop for bubbles of 5 mm or more; page 136 calls the pressure-drop alarm low priority, while page 165 lists it among medium-priority messages. Neither value is encoded here pending device review.",
+      "learnerWording": "The supplied instructions do not give one bubble size or one pressure-drop alarm priority. Page 20 warns that bubbles of 5 mm or less can also stop the pump or trigger backflow prevention, while the technical data on page 199 list a pump stop for bubbles of 5 mm or more; page 136 calls the pressure-drop alarm low priority, while page 165 lists it among medium-priority messages. The console’s factory pressure-drop limit and the low-priority description are taught; no bubble size is.",
       "previousWording": "The supplied IFU is internally inconsistent on a bubble-size threshold and on pressure-drop alarm priority. Those values are intentionally not encoded pending device review.",
       "intendedTeachingPoint": "The simulator triggers a bubble event by scenario and shows the pressure drop as a trend, because the labeling does not settle either number.",
       "sourceRecordIds": ["ifu-anomaly-boundary"],
@@ -251,12 +246,12 @@
           "note": "Pressure drop above limit is listed on page 165, inside the medium-priority list that begins on page 163; the low-priority list begins on page 166. The message appears nowhere else in pages 150-212."
         }
       ],
-      "modelOutput": "Neither a bubble size nor a pressure-drop alarm priority is encoded. Clinical case copy states that no universal pressure-drop alarm priority or exchange threshold is set.",
+      "modelOutput": "No bubble size and no pressure-drop alarm priority is encoded in the engine. Since 2026-10-08 the copy teaches the factory pressure-drop upper limit (60 mmHg, IFU §14.10.2) from the numbers register and states both page 136 and page 165.",
       "unresolvedDisagreement": "Whether pages 20 and 199 conflict (a warning that smaller bubbles can also trigger versus a detection specification) or are complementary, and which priority the console software actually applies to a pressure-drop alarm.",
       "clinicalQuestion": "Device educator: which bubble size and pressure-drop alarm priority does the revision 2.3 console apply, and should either be taught?",
       "questionDisposition": "No question involved.",
-      "hold": "Neither value is encoded or taught.",
-      "changeInThisBatch": "The limitation now says what each page states, instead of calling the document internally inconsistent. No behavior changed.",
+      "hold": "No bubble size is encoded or taught. The factory pressure-drop limit is taught with both priority statements shown; the engine still sets no alarm priority.",
+      "changeInThisBatch": "The limitation now says what each page states, instead of calling the document internally inconsistent. No behavior changed. Teaching-first redo, 2026-10-08 (docs/teaching-first-rules.md): the limitation no longer ends on a pending-review hold. The pressure-drop limit is taught from the numbers register with both page statements; the bubble size stays untaught.",
       "contentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
       "reviewerDecision": {
         "decision": "NOT REVIEWED",
@@ -491,7 +486,7 @@
         {
           "file": "src/features/cardiohelp-ecmo/components/teaching/BloodFlowVsSweepPanel.tsx",
           "locator": "Blood flow versus sweep, model boundary",
-          "excerpt": "PaCO₂ responds to sweep as a straight line in this simulation, by construction, until it stops at a fixed lower bound of 20 mmHg — about 7.5 L/min of sweep on the reference circuit."
+          "excerpt": "PaCO₂ falls in a straight line with sweep in this simulation and stops at 20 mmHg. At the bedside CO₂ removal shows diminishing returns, so read the direction here, not the slope."
         },
         {
           "file": "src/features/cardiohelp-ecmo/components/teaching/BloodFlowVsSweepPanel.tsx",
@@ -509,7 +504,7 @@
           "excerpt": "until it stops at a fixed lower bound. A doubled sweep on this circuit is already past the sweep that reaches that bound"
         }
       ],
-      "learnerWording": "PaCO₂ responds to sweep as a straight line in this simulation, by construction, until it stops at a fixed lower bound of 20 mmHg — about 7.5 L/min of sweep on the reference circuit. Past that bound more sweep changes nothing here; before it there is no diminishing return, because none is modeled. The bound is a limit of this simulation, not a physiological plateau.",
+      "learnerWording": "PaCO₂ falls in a straight line with sweep in this simulation and stops at 20 mmHg. At the bedside CO₂ removal shows diminishing returns, so read the direction here, not the slope.",
       "previousWording": "Panel: PaCO₂ responds to sweep as a straight line in this simulation, by construction. There is no plateau and no diminishing return, because none is modeled. Foundation block: The model uses a straight-line sweep response with no plateau. Console: … as a straight line by construction, with no plateau and no diminishing return. Story: … as a straight line in this simulation, by construction; real removal shows diminishing returns …",
       "intendedTeachingPoint": "Sweep moves the carbon dioxide axis; the simulation shows the direction, and its bound is a model limit rather than physiology.",
       "sourceRecordIds": ["bounded-educational-model", "ecmo-book-ch18"],
@@ -528,7 +523,7 @@
       "clinicalQuestion": "Faculty: keep the straight-line-then-floor model with this wording, or ask for a bounded engine change in a separate reviewed task?",
       "questionDisposition": "ecmo.foundation.blood-flow-versus-sweep.story.doubled-sweep: keep as reinforcement; stem, choices and key unchanged; the explanation's model boundary rewritten.",
       "hold": "Engine unchanged; only the description of its bound corrected.",
-      "changeInThisBatch": "Four learner surfaces now name the 20 mmHg bound and no longer claim there is no plateau.",
+      "changeInThisBatch": "Four learner surfaces now name the 20 mmHg bound and no longer claim there is no plateau. Teaching-first redo, 2026-10-08 (docs/teaching-first-rules.md): the panel’s three model-boundary notes were merged into one shorter sentence that still names the straight line and the 20 mmHg stop. The other three surfaces are unchanged.",
       "contentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
       "reviewerDecision": {
         "decision": "NOT REVIEWED",
@@ -634,11 +629,6 @@
           "excerpt": "In a case that opens with established recirculation, asking the circuit for more flow than it opened with raises this. On the reference circuit it stays at its baseline at every speed."
         },
         {
-          "file": "src/features/cardiohelp-ecmo/components/teaching/VvSeriesPhysiologyPanel.tsx",
-          "locator": "VV series physiology, mixture model boundary",
-          "excerpt": "The reference circuit has no established recirculation, so its share stays at the baseline whatever the speed."
-        },
-        {
           "file": "src/features/cardiohelp-ecmo/content/ecmoValueGuides.ts",
           "locator": "Recirculation-adjusted flow, model boundary",
           "excerpt": "On the reference circuit the fraction stays at its baseline, so this value rises with flow."
@@ -663,7 +653,7 @@
       "clinicalQuestion": "Faculty: is a speed-driven rise in the recirculating share a fair teaching example for VV recirculation?",
       "questionDisposition": "ecmo.learn.vv-recirculation.prediction: keep unchanged. Its figures (4.8 L/min displayed, about 2.5 L/min on its first circuit, drainage 83 against returned 99) match the drill run.",
       "hold": "Engine unchanged.",
-      "changeInThisBatch": "The card sentence, the mixture model boundary and the value-guide statement now separate the reference circuit from a recirculation case.",
+      "changeInThisBatch": "The card sentence, the mixture model boundary and the value-guide statement now separate the reference circuit from a recirculation case. Teaching-first redo, 2026-10-08 (docs/teaching-first-rules.md): the mixture model-boundary note was removed from VvSeriesPhysiologyPanel.tsx with no successor sentence, so that surface is retired from this item. The card sentence and the value-guide statement still carry the same claim.",
       "contentVersion": "cardiohelp-ecmo ecmo-03 2026-09-15",
       "reviewerDecision": {
         "decision": "NOT REVIEWED",

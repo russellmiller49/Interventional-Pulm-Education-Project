@@ -45,14 +45,7 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
       supportMode="vv"
       clinicalQuestion="Displayed circuit flow is high and every circuit pressure is where it has been all shift, yet the patient is losing ground. Is the number on the screen measuring the support this patient is receiving?"
       boundaries={[
-        // Names what the simulation omits, and nothing about how the modeled quantity moves. The
-        // frame renders these boundaries on every step, so the earlier wording — which said the
-        // governing quantity widens when the circuit is asked for more — stated the mechanism and
-        // the direction of the harmful reflex before the learner had chosen. Both are still said in
-        // full, inside the commitment gate below.
-        'One authored quantity governs this case. Cannula position, cannula design, volume state and native venous return — the things that actually set it at a bedside — are not modeled here at all.',
-        'The systemic venous value the drainage saturation is compared against is a modeled estimate, not a device reading. The direction this simulation moves its teaching coefficient in is an educational statement, not a bedside equation.',
-        'Telling the two possible readings of a drainage-limb saturation apart at a bedside takes cannula and imaging data this console cannot supply. No share threshold, flow target, or cannula position is taught in this simulation.',
+        'The recirculating share is fixed by the case and rises only with pump speed. At the bedside cannula position, volume state and native venous return set it. The systemic venous value shown is a model estimate, not a device reading.',
       ]}
     >
       <SignalRegister
@@ -157,7 +150,7 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
       <AfterCommitment state={state}>
         {/*
           The adjusted flow and the share are held back to here on purpose. Both are derived from
-          the one authored quantity that names the mechanism, and putting either beside the displayed
+          the one case-set quantity that names the mechanism, and putting either beside the displayed
           flow before the learner has chosen would answer the question the drill is asking.
         */}
         <SignalRegister
@@ -173,13 +166,13 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
             ),
             valueSignalRow(
               'Re-drained share',
-              'Authored by this case, and raised by speed above the opening speed',
+              'Set by this case, and raised by speed above the opening speed',
               share.toFixed(3),
               'A property of where the cannulae sit and how hard the circuit is pulling. It is not calculated from the saturations.',
               'authored',
             ),
           ]}
-          summary={`Displayed ${displayedFlow.toFixed(2)} L/min against an adjusted ${effectiveFlow.toFixed(2)} L/min, at an authored re-drained share of ${share.toFixed(3)}.`}
+          summary={`Displayed ${displayedFlow.toFixed(2)} L/min against an adjusted ${effectiveFlow.toFixed(2)} L/min, at a re-drained share of ${share.toFixed(3)}.`}
         />
 
         <Mechanism>
@@ -207,12 +200,12 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
           </p>
           <DisclosedWorking
             summary="Show how this simulation gets from a share to an adjusted flow"
-            caution="Do not carry this to a bedside. It looks like a method for estimating recirculation from two saturations and it is not one: the share here is authored by this case, and the systemic venous value is a model estimate rather than a measurement."
+            caution="Do not carry this to a bedside. It looks like a method for estimating recirculation from two saturations and it is not one: the share here is set by this case, and the systemic venous value is a model estimate rather than a measurement."
           >
             <p>
               Adjusted flow is displayed flow multiplied by one minus the re-drained share, and the
               drainage-limb saturation is the systemic venous estimate moved toward the
-              post-membrane value by that same share. Both directions come from the one authored
+              post-membrane value by that same share. Both directions come from the one case-set
               quantity; neither is derived from the saturations, and neither is a bedside
               calculation.
             </p>
@@ -276,7 +269,7 @@ export function VvRecirculationPanel({ state }: { readonly state: EcmoSimulation
           </h3>
           <TextEquivalent>
             The re-drained share, the adjusted flow it produces, the drainage-limb saturation, and
-            the modeled systemic venous estimate it is compared against — each with its authored
+            the modeled systemic venous estimate it is compared against — each with its
             interpretation and its provenance.
           </TextEquivalent>
           <div className="mt-3 grid gap-3">

@@ -727,10 +727,7 @@ export function EcmoPracticeCaseView({
           <EcmoContextStrip
             line={contextLine}
             details={contextDetails}
-            constraints={[
-              'Use an independent patient review alongside console and circuit data.',
-              'Follow current manufacturer instructions, ELSO guidance, and local policy.',
-            ]}
+            constraints={['Use an independent patient review alongside console and circuit data.']}
             badge="Simulated values"
             onOpenConsole={
               activeStage === 'manage' || activeStage === 'reassess'
@@ -756,8 +753,7 @@ export function EcmoPracticeCaseView({
         }
         footer={
           <p className={styles.footerLine}>
-            Education only · a bounded teaching model, not a clinical device or a treatment protocol
-            · personal history stays local
+            Teaching simulator: every value is simulated · personal history stays local
           </p>
         }
       >

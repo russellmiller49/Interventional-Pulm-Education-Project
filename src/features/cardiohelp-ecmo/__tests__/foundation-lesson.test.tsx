@@ -26,6 +26,7 @@ import { ecmoBloodPathSegmentIds } from '../content/circuitSegments'
 import { ecmoCircuitWalkStopsForSection, ecmoWalkStopSegmentIds } from '../content/circuitWalk'
 import { ecmoLocalizationRowIds, ecmoLocalizationRows } from '../content/localizationCards'
 import { ecmoReferenceProfileForMode } from '../content/referenceProfiles'
+import { ECMO_NUMBERS } from '../content/teachingNumbers'
 import '../content/ecmoValueGuides'
 import { createReferenceSimulationState, ecmoSimulationReducer } from '../engine'
 import type { EcmoSimulationState, SupportMode } from '../engine/types'
@@ -188,7 +189,7 @@ describe('VA foundation teaching panels', () => {
   })
 
   it.each(vaStates.map((entry) => [`${entry.sectionId}/${entry.variantId}`, entry] as const))(
-    '%s renders, carries a text equivalent, and states its model boundary',
+    '%s renders, carries a text equivalent, and keeps any model boundary about the model',
     (_label, entry) => {
       const { container } = render(
         <EcmoFoundationTeachingPanel sectionId={entry.sectionId} state={entry.state} />,
@@ -197,13 +198,16 @@ describe('VA foundation teaching panels', () => {
         container.querySelector(`[data-teaching-panel="${entry.sectionId}"]`),
       ).toBeInTheDocument()
       expect(container.querySelector('[data-text-equivalent]')).toBeInTheDocument()
-      expect(container.querySelector('[data-model-boundary]')).toBeInTheDocument()
       for (const node of container.querySelectorAll('[data-derived-value]')) {
         expect(authoredIds).toContain(node.getAttribute('data-derived-value') ?? '')
       }
-      // A model boundary must say it is describing the simulation, not a bedside claim.
+      // Teaching-first rule 5: a panel is no longer required to carry a boundary note. Where it
+      // does, the note must place itself in the teaching model — the simulation, this page, the
+      // loaded case — rather than read as a claim about a bedside circuit.
       for (const node of container.querySelectorAll('[data-model-boundary]')) {
-        expect(node.textContent ?? '').toMatch(/simulation/i)
+        expect(node.textContent ?? '').toMatch(
+          /simulat|\bhere\b|on this page|loaded case|for each state/i,
+        )
       }
     },
   )
@@ -355,9 +359,9 @@ describe('foundation teaching panels', () => {
         <EcmoFoundationTeachingPanel sectionId={sectionId} state={settled(supportMode)} />,
       )
       expect(container.querySelector(`[data-teaching-panel="${sectionId}"]`)).toBeInTheDocument()
-      // Every figure carries a textual equivalent and names what it simplifies.
+      // Every figure carries a textual equivalent. A per-panel boundary note is no longer required
+      // (teaching-first rule 5: one boundary statement per module, on the hub and the closing screen).
       expect(container.querySelector('[data-text-equivalent]')).toBeInTheDocument()
-      expect(container.querySelector('[data-model-boundary]')).toBeInTheDocument()
       unmount()
     }
   })
@@ -571,16 +575,24 @@ describe('foundation teaching panels', () => {
     expect(container.querySelector('[data-mechanism-preview]')).toBeNull()
 
     // Any interpreted reference must be this circuit's own baseline, the sources' own reported
-    // range, or a declared simulation boundary — never a guideline-style normal.
+    // range, a declared simulation boundary, or — since the teaching-first redo — the console's
+    // own factory limits from the Instructions for Use, read from the numbers register.
     const kinds = [...container.querySelectorAll('[data-reference-kind]')].map((node) =>
       node.getAttribute('data-reference-kind'),
     )
     expect(kinds.length).toBeGreaterThan(0)
     for (const kind of kinds) {
-      expect(['patient-baseline', 'source-reported-range', 'educational-model-boundary']).toContain(
-        kind,
-      )
+      expect([
+        'patient-baseline',
+        'source-reported-range',
+        'educational-model-boundary',
+        'device-specification',
+      ]).toContain(kind)
     }
+    expect(kinds).toContain('device-specification')
+    // The factory limits are on the panel as numbers, each from the register.
+    const pven = container.querySelector('[data-teaching-number="pven-factory-limits"]')
+    expect(pven?.textContent).toContain(ECMO_NUMBERS.value('pven-factory-limits'))
   })
 
   it('pump-and-pressure-zones shows the zones on the circuit and keeps the answers back', () => {

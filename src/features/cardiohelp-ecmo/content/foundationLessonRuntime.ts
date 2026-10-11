@@ -332,7 +332,7 @@ const recirculationPreviewVariant: EcmoFoundationStateVariant = {
   setupActions: advanceSeconds(PREVIEW_SECONDS.recirculationSettled),
   label: 'Established recirculation — teaching preview',
   modelBoundary:
-    'The existing recirculation drill loaded as a preview to read, with nothing recorded and nothing scored. The share the drill opens at is authored by that scenario; asking the circuit for more flow than it opened with raises the share from there, while cannula position and volume state — the things that set recirculation at the bedside — are not modeled at all.',
+    'The existing recirculation drill loaded as a preview to read, with nothing recorded and nothing scored. The share the drill opens at is set by that scenario; asking the circuit for more flow than it opened with raises the share from there, while cannula position and volume state — the things that set recirculation at the bedside — are not modeled at all.',
 }
 
 const gasSourceBeforeVariant: EcmoFoundationStateVariant = {
@@ -344,7 +344,7 @@ const gasSourceBeforeVariant: EcmoFoundationStateVariant = {
   holdsClock: true,
   label: 'The case before the change — teaching preview',
   modelBoundary:
-    'The existing gas-source drill loaded as a preview to read, stopped one modeled second before its authored change occurs and held there. Nothing here is recorded or scored. Start the clock to watch the change happen, or reveal the evolved state to jump past it.',
+    'The existing gas-source drill loaded as a preview to read, stopped one modeled second before its scheduled change occurs and held there. Nothing here is recorded or scored. Start the clock to watch the change happen, or reveal the evolved state to jump past it.',
 }
 
 const gasSourceAfterVariant: EcmoFoundationStateVariant = {
@@ -353,7 +353,7 @@ const gasSourceAfterVariant: EcmoFoundationStateVariant = {
   setupActions: advanceSeconds(PREVIEW_SECONDS.gasSourceAfterChange),
   label: 'The same case, evolved — teaching preview',
   modelBoundary:
-    'The same drill advanced deterministically past its authored change. The rate at which the modeled values move is this simulation’s, not a bedside time course.',
+    'The same drill advanced deterministically past its scheduled change. The rate at which the modeled values move is this simulation’s, not a bedside time course.',
 }
 
 const oxygenatorResistancePreviewVariant: EcmoFoundationStateVariant = {
@@ -466,7 +466,7 @@ const differentialHypoxemiaPreviewVariant: EcmoFoundationStateVariant = {
   setupActions: advanceSeconds(VA_PREVIEW_SECONDS.differentialSettled),
   label: 'Differential oxygenation — teaching preview',
   modelBoundary:
-    'The existing differential-oxygenation drill loaded as a preview to read, with nothing recorded and nothing scored. The upper-body and lower-body saturations are authored by that scenario; this simulation does not compute a watershed position from native ejection.',
+    'The existing differential-oxygenation drill loaded as a preview to read, with nothing recorded and nothing scored. The upper-body and lower-body saturations are set by that scenario; this simulation does not compute a watershed position from native ejection.',
 }
 
 const lvLoadingPreviewVariant: EcmoFoundationStateVariant = {
@@ -475,7 +475,7 @@ const lvLoadingPreviewVariant: EcmoFoundationStateVariant = {
   setupActions: advanceSeconds(VA_PREVIEW_SECONDS.lvLoadingSettled),
   label: 'Left ventricular loading — teaching preview',
   modelBoundary:
-    'The existing loading drill loaded as a preview to read. Pulsatility, aortic-valve opening and pulmonary congestion are authored states in this simulation rather than quantities derived from a ventricular model.',
+    'The existing loading drill loaded as a preview to read. Pulsatility, aortic-valve opening and pulmonary congestion are fixed states in this simulation rather than quantities derived from a ventricular model.',
 }
 
 const vaMixedCirculationVariant: EcmoFoundationStateVariant = {
@@ -505,7 +505,7 @@ const vaGasSourceBeforeVariant: EcmoFoundationStateVariant = {
   holdsClock: true,
   label: 'The gas case before the change — mechanism preview',
   modelBoundary:
-    'The existing VA gas-source drill loaded as a preview to read, stopped one modeled second before its authored change occurs and held there. Nothing here is recorded or scored. Start the clock to watch the change happen, or load the evolved state to jump past it.',
+    'The existing VA gas-source drill loaded as a preview to read, stopped one modeled second before its scheduled change occurs and held there. Nothing here is recorded or scored. Start the clock to watch the change happen, or load the evolved state to jump past it.',
 }
 
 const vaGasSourceAfterVariant: EcmoFoundationStateVariant = {
@@ -514,7 +514,7 @@ const vaGasSourceAfterVariant: EcmoFoundationStateVariant = {
   setupActions: advanceSeconds(VA_PREVIEW_SECONDS.gasSourceAfterChange),
   label: 'The gas case, evolved — mechanism preview',
   modelBoundary:
-    'The same drill advanced deterministically past its authored change. The rate at which the modeled values move is this simulation’s, not a bedside time course.',
+    'The same drill advanced deterministically past its scheduled change. The rate at which the modeled values move is this simulation’s, not a bedside time course.',
 }
 
 /**
@@ -947,7 +947,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         id: 'compare-oxygen-fraction',
         label: 'Run the oxygen-fraction comparison',
         description:
-          'Lower the sweep-gas oxygen fraction from 1.00 to 0.60 with speed and sweep unchanged. This is an authored comparison, not a clinical setting recommendation.',
+          'Lower the sweep-gas oxygen fraction from 1.00 to 0.60 with speed and sweep unchanged. This is a teaching comparison, not a setting to use.',
         kind: 'restore-and-apply',
         variantId: REFERENCE_VARIANT_ID,
         resolve: () => [{ type: 'SET_GAS_FIO2', fio2: 0.6 } as const],
@@ -1313,7 +1313,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         id: 'reveal-evolved-state',
         label: 'Reveal the evolved state',
         description:
-          'Advance the same case deterministically past its authored change and read it again.',
+          'Advance the same case deterministically past its scheduled change and read it again.',
         kind: 'restore-and-apply',
         variantId: gasSourceAfterVariant.id,
         settleSeconds: 0,
@@ -1603,7 +1603,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
      * Only the transfer phase, and only the evolved gas state.
      *
      * That item's stem is a carbon dioxide value rising over minutes with both arterial saturations
-     * falling together, which is this preset after its authored change. The held pre-change preview
+     * falling together, which is this preset after its scheduled change. The held pre-change preview
      * is deliberately not mapped anywhere: it exists to be read *before* the change, and the phase
      * that reads it — `explain` — reaches it through its own bounded action, which re-holds the clock.
      */
@@ -1742,7 +1742,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         id: 'preview-va-gas-source-before-change',
         label: 'Mechanism preview: the gas case before its change',
         description:
-          'Load the existing VA gas-source case one modeled second before its authored change, held there so it can be read first.',
+          'Load the existing VA gas-source case one modeled second before its scheduled change, held there so it can be read first.',
         kind: 'restore-and-apply',
         variantId: vaGasSourceBeforeVariant.id,
         settleSeconds: 0,
@@ -1751,7 +1751,7 @@ export const ecmoFoundationLessonRuntimes: Readonly<
         id: 'reveal-va-gas-source-evolved',
         label: 'Reveal the gas case evolved',
         description:
-          'Advance the same gas case deterministically past its authored change and read it again.',
+          'Advance the same gas case deterministically past its scheduled change and read it again.',
         kind: 'restore-and-apply',
         variantId: vaGasSourceAfterVariant.id,
         settleSeconds: 0,

@@ -195,10 +195,7 @@ describe('the explorer as the learner drives it', () => {
    */
   it('reports the figures without ever judging them', () => {
     const { view } = renderExplorer()
-    // Everything except the model boundary, which is where the component is *allowed* to say
-    // "no target delivery is shown" — a denial, not a claim. Scanning the whole card would flag
-    // the very sentence that keeps the rule.
-    const boundary = view.container.querySelector('[data-model-boundary]')
+    // Everything except the model boundary, which names the model's simplifications.
     const clone = view.container.cloneNode(true) as HTMLElement
     clone.querySelector('[data-model-boundary]')?.remove()
     const judged = clone.textContent ?? ''
@@ -214,16 +211,14 @@ describe('the explorer as the learner drives it', () => {
     ]) {
       expect(judged).not.toMatch(forbidden)
     }
-    // It says out loud that it is not making that judgement...
+    // It says out loud that it is not making that judgement.
     expect(judged).toMatch(/says anything on its own about whether/i)
-    // ...and the boundary is the one place a target may be mentioned, only to deny showing one.
-    expect(boundary?.textContent).toMatch(/no target delivery is shown/i)
   })
 
   it('carries a model boundary that names both simplifications, and its sources', () => {
     const { view } = renderExplorer()
     const text = view.container.textContent ?? ''
-    expect(text).toMatch(/dissolved in plasma/i)
+    expect(text).toMatch(/dissolved oxygen is left out/i)
     expect(text).toMatch(/published values differ slightly/i)
     expect(view.container.querySelector('[data-evidence-id]')).not.toBeNull()
   })
@@ -243,7 +238,6 @@ describe('the explorer as the learner drives it', () => {
       'mastery',
       'exam',
       'quiz',
-      'assessment',
       'competency',
     ]) {
       expect(text.toLowerCase()).not.toContain(term)

@@ -5,16 +5,29 @@ import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import { cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
 import { requireEcmoLearnPrediction } from '../content/learnPredictionItems'
 import { cardiohelpScenarioById } from '../content/scenarios'
+import {
+  ECMO_AIR_FIRST_MOVES,
+  ECMO_AIR_RESUME,
+  ECMO_AIR_RESUME_SENTENCE,
+  ECMO_NUMBERS,
+  ECMO_NUMBER_ONLY_SOURCES,
+} from '../content/teachingNumbers'
+import { cardiohelpEvidence } from '../content/evidence'
 
 /**
- * What the module may and may not say about coming back from an air event.
+ * What the module teaches about coming back from an air event.
  *
- * The canonical teaching is five steps: recognise the event and the device stop, isolate the
- * patient, identify and correct the air source, de-air and verify the circuit, then resume support
- * according to the current manufacturer instructions for use and the unit's own ECMO
- * air-emergency protocol. The fifth is where this contract lives — the module does not teach where
- * clamp opening, pump restart and console reset fall relative to one another, and no learner-facing
- * string may imply that it does.
+ * Until the teaching-first redo (docs/teaching-first-rules.md, 2026-10-08) this file locked a
+ * hedge: the module was not allowed to say where clamp opening, pump restart and console reset fall
+ * relative to one another, and had to defer the whole step to "the current IFU and local protocol".
+ * That is reversed. The CARDIOHELP-i Instructions for Use print the reset and the clamp rules, the
+ * numbers register carries them (`ECMO_AIR_RESUME`, `ECMO_AIR_FIRST_MOVES`), and this contract now
+ * requires the copy to teach them: drainage clamp open, bubble stop reset, return clamp open last.
+ *
+ * What did not change, and is still asserted: isolation is return limb then drainage limb, the
+ * source is corrected and the circuit cleared before anything resumes, the module never claims the
+ * simulator verified a real protocol, and "call for help" is a step in the sequence rather than the
+ * keyed answer on its own.
  *
  * Asserted against the authored content and the rendered source text rather than against a
  * component, because the risk is a sentence surviving in a corner nobody renders in a test.
@@ -65,36 +78,22 @@ const COPY_SOURCES: readonly string[] = [
 ]
 
 /**
- * Phrasings that either teach a resumption order or overclaim what the simulator checked.
+ * Phrasings that overclaim what the simulator checked, or that contradict the taught order.
  *
- * "verified … protocol" is banned in both directions: the protocol is not something this module
- * verified, and completing a bounded action is not evidence a learner followed a real one.
+ * The order itself is taught now, so the old bans on naming one are gone. What stays refused is a
+ * claim that a protocol was verified, a credit for a backup check the simulator does not represent,
+ * and any sentence that puts the reset or the drainage clamp after the return clamp.
  */
 const BANNED: readonly { readonly pattern: RegExp; readonly why: string }[] = [
-  { pattern: /deliberate last step/i, why: 'implies reset is universally last' },
-  { pattern: /one bounded sequence for consistency/i, why: 'implies the module teaches one order' },
-  { pattern: /resume in order/i, why: 'implies the module teaches a resumption order' },
-  { pattern: /ordered resumption/i, why: 'implies the module teaches a resumption order' },
   { pattern: /verified (manufacturer|protocol|resumption)/i, why: 'overclaims what was verified' },
   { pattern: /on the verified/i, why: 'overclaims what was verified' },
-  { pattern: /bring the circuit back and reset/i, why: 'establishes a resumption order' },
-  { pattern: /unclamp in order/i, why: 'establishes a resumption order' },
   {
     pattern: /reset(?:ting)? (?:is|comes|falls) (?:the )?last\b/i,
-    why: 'implies reset is universally last',
+    why: 'contradicts the taught order: the return clamp is last, not the reset',
   },
   {
-    pattern: /open (?:the )?drainage(?: limb)?,? then (?:the )?return/i,
-    why: 'teaches a resumption clamp order',
-  },
-  // B6-003: the phrasings the Practice copy actually used to teach an unclamping order.
-  { pattern: /reopened in order/i, why: 'teaches a resumption clamp order' },
-  { pattern: /resume support in order/i, why: 'implies the module teaches a resumption order' },
-  { pattern: /ordered unclamping/i, why: 'teaches a resumption clamp order' },
-  { pattern: /bounded, ordered sequence/i, why: 'implies the module teaches one order' },
-  {
-    pattern: /re-establish (?:VA )?support in the correct order/i,
-    why: 'implies the module teaches a resumption order',
+    pattern: /open (?:the )?return(?: limb| clamp)?,? then (?:the )?drainage/i,
+    why: 'contradicts the taught order: the drainage clamp opens before the return clamp',
   },
   // B6-015: the simulator has no backup-console or emergency-drive state, so no button, step or
   // finding may claim one was verified.
@@ -102,6 +101,18 @@ const BANNED: readonly { readonly pattern: RegExp; readonly why: string }[] = [
     pattern: /verif(?:y|ied) backup/i,
     why: 'credits a backup check the simulator does not represent',
   },
+]
+
+/**
+ * The hedges the redo removed stay out of everything a learner reads. The two project documents in
+ * `COPY_SOURCES` are not learner-facing and are not held to this.
+ */
+const RETIRED_HEDGES: readonly { readonly pattern: RegExp; readonly why: string }[] = [
+  {
+    pattern: /single simulated action stands in for the device- and program-specific/i,
+    why: 'the retired resumption hedge',
+  },
+  { pattern: /per (?:the )?current IFU and (?:your )?local protocol/i, why: 'defers the order' },
 ]
 
 function sourceOf(relativePath: string): string {
@@ -220,8 +231,8 @@ function bubbleLearnerCopy(): readonly { readonly where: string; readonly text: 
   return copy
 }
 
-describe('the module never claims to teach a resumption order', () => {
-  it.each(COPY_SOURCES)('%s carries no banned resumption phrasing', (relativePath) => {
+describe('the air-event copy neither overclaims nor contradicts the taught order', () => {
+  it.each(COPY_SOURCES)('%s carries no banned phrasing', (relativePath) => {
     const source = sourceOf(relativePath)
     for (const { pattern, why } of BANNED) {
       const match = source.match(pattern)
@@ -231,19 +242,26 @@ describe('the module never claims to teach a resumption order', () => {
     }
   })
 
-  it('says nothing order-teaching in any authored bubble string', () => {
+  it.each(COPY_SOURCES.filter((path) => path.startsWith('src/')))(
+    '%s no longer carries the retired resumption hedge',
+    (relativePath) => {
+      const source = sourceOf(relativePath)
+      for (const { pattern, why } of RETIRED_HEDGES) {
+        const match = source.match(pattern)
+        expect(`${relativePath}: ${match?.[0] ?? 'clean'} (${why})`).toBe(
+          `${relativePath}: clean (${why})`,
+        )
+      }
+    },
+  )
+
+  it('says nothing banned in any authored bubble string', () => {
     for (const { where, text } of bubbleLearnerCopy()) {
-      for (const { pattern, why } of BANNED) {
+      for (const { pattern, why } of [...BANNED, ...RETIRED_HEDGES]) {
         const match = text.match(pattern)
         expect(`${where}: ${match?.[0] ?? 'clean'} (${why})`).toBe(`${where}: clean (${why})`)
       }
     }
-  })
-
-  it('never says reset is universally last', () => {
-    const everything = COPY_SOURCES.map(sourceOf).join('\n')
-    expect(everything).not.toMatch(/reset.{0,40}\b(?:always|universally)\b.{0,20}last/i)
-    expect(everything).not.toMatch(/\blast step\b/i)
   })
 
   it('never claims the simulator verified a real protocol', () => {
@@ -309,45 +327,6 @@ describe('what the module does still teach', () => {
     expect(resume?.prerequisites).toContain(`${prefix}air-deair`)
   })
 
-  it('names the bounded action as an abstraction wherever it is described', () => {
-    const abstraction =
-      /single simulated action stands in for the device- and program-specific\s+resumption sequence; it does not reproduce or teach that sequence/i
-    for (const relativePath of [
-      'src/features/cardiohelp-ecmo/content/learnLessons.ts',
-      'src/features/cardiohelp-ecmo/content/clinicalCases.ts',
-      'src/features/cardiohelp-ecmo/components/teaching/drills/ArterialBubbleStopPanel.tsx',
-      'docs/cardiohelp-ecmo/e5-model-limitations.md',
-    ]) {
-      expect(`${relativePath}: ${abstraction.test(sourceOf(relativePath))}`).toBe(
-        `${relativePath}: true`,
-      )
-    }
-    // The bedside control says the same thing in its own words, beside the button. A language audit
-    // in September 2026 replaced "a bounded simulation abstraction" with "a deliberate
-    // simplification" — same hedge, without the module's internal vocabulary — so this now pins the
-    // substance that follows it rather than the label alone.
-    // The same control now renders outside the optional 3D launch gate.
-    expect(sourceOf('src/features/cardiohelp-ecmo/components/EcmoCircuitControls.tsx')).toMatch(
-      /deliberate simplification\. It stands in for the device- and program-specific/i,
-    )
-  })
-
-  it('uses the canonical IFU wording rather than an invented shorthand', () => {
-    const lesson = cardiohelpLearnLessonByScenarioId.get('arterial-bubble-stop')
-    const resume = lesson?.steps.find((step) =>
-      step.actions.some((action) => action.type === 'RESUME_SUPPORT_AFTER_BUBBLE'),
-    )
-    // ECMO-HONESTY-02 dropped the unsupported "approved" adjective: no local-policy or reviewer
-    // record establishes that any protocol this module points at was reviewed or approved. Both
-    // authorities the step defers to are still named, which is what this assertion exists for.
-    expect(resume?.instruction).toMatch(
-      /current manufacturer instructions for use \(IFU\).{0,60}own ECMO air-emergency protocol/i,
-    )
-    expect(resume?.instruction).not.toMatch(/approved/i)
-    expect(resume?.actionLabel).toMatch(/current IFU and local protocol/i)
-    expect(resume?.actionLabel).not.toMatch(/approved|reviewed/i)
-  })
-
   it('records the resumption in history as a simulation abstraction', () => {
     const reducer = sourceOf('src/features/cardiohelp-ecmo/engine/reducer.ts')
     expect(reducer).toMatch(/Completed the simulation's protocol-governed resumption abstraction/)
@@ -360,5 +339,122 @@ describe('what the module does still teach', () => {
     expect(reducer).toMatch(/the transition is always refused/i)
     expect(reducer).toMatch(/additionally charged while air remains outstanding/i)
     expect(reducer).toMatch(/no further safety penalty/i)
+  })
+})
+
+describe('the resumption is taught from the register', () => {
+  const sourceIds = new Set<string>([
+    ...cardiohelpEvidence.map((source) => source.id),
+    ...ECMO_NUMBER_ONLY_SOURCES.map((source) => source.id),
+  ])
+
+  it('gives the order: source fixed, drainage clamp, reset, return clamp last', () => {
+    const conditions = ECMO_AIR_RESUME.conditions
+    const index = (pattern: RegExp) => conditions.findIndex((line) => pattern.test(line))
+    const cleared = index(/source of the air is fixed.*free of bubbles/i)
+    const drainage = index(/open the drainage clamp/i)
+    const reset = index(/Bubbles, then Reset, then Confirm/i)
+    const returnClamp = index(/open the return clamp last/i)
+    expect(cleared).toBe(0)
+    expect(drainage).toBeGreaterThan(cleared)
+    expect(reset).toBeGreaterThan(drainage)
+    expect(returnClamp).toBeGreaterThan(reset)
+    expect(returnClamp).toBe(conditions.length - 1)
+    // The clamp-release pressure is read from the register, not typed.
+    expect(conditions[returnClamp]).toContain(ECMO_NUMBERS.value('clamp-release-pressure'))
+    expect(ECMO_AIR_RESUME_SENTENCE).toContain(ECMO_NUMBERS.value('clamp-release-pressure'))
+    expect(ECMO_AIR_RESUME_SENTENCE).toMatch(
+      /source is fixed.*open the drainage clamp.*reset the bubble stop.*return clamp last/i,
+    )
+  })
+
+  it('cites registered sources for the resumption and for the first moves', () => {
+    expect(ECMO_AIR_RESUME.sources.length).toBeGreaterThan(0)
+    for (const source of [...ECMO_AIR_RESUME.sources, ECMO_AIR_FIRST_MOVES.source]) {
+      expect({ id: source.sourceId, registered: sourceIds.has(source.sourceId) }).toEqual({
+        id: source.sourceId,
+        registered: true,
+      })
+      expect(source.locator.trim().length).toBeGreaterThan(0)
+    }
+  })
+
+  it.each(BUBBLE_SCENARIOS)('%s teaches the resume step from the register', (scenarioId) => {
+    const lesson = cardiohelpLearnLessonByScenarioId.get(scenarioId)
+    const resume = lesson?.steps.find((step) =>
+      step.actions.some((action) => action.type === 'RESUME_SUPPORT_AFTER_BUBBLE'),
+    )
+    expect(resume?.actionLabel).toBe(ECMO_AIR_RESUME.label)
+    expect(resume?.instruction).toBe(ECMO_AIR_RESUME_SENTENCE)
+    // The deferral this step used to carry is gone, and nothing calls a protocol approved.
+    expect(resume?.instruction).not.toMatch(/local protocol|approved/i)
+    expect(resume?.actionLabel).not.toMatch(/local protocol|approved|reviewed/i)
+    // The debrief workflow ends on the same sentence.
+    const workflow = cardiohelpScenarioById.get(scenarioId)?.debrief.correctWorkflow ?? []
+    expect(workflow.some((line) => line.includes(ECMO_AIR_RESUME_SENTENCE))).toBe(true)
+  })
+
+  it.each(BUBBLE_CASES)('%s offers the resume action under the register label', (caseId) => {
+    const scenario = clinicalPracticeScenarioById.get(caseId)
+    const prefix = caseId.startsWith('va-') ? 'va-' : ''
+    const resume = scenario?.clinicalCase?.interventions.find(
+      (intervention) => intervention.id === `${prefix}air-resume-support`,
+    )
+    expect(resume?.label).toBe(ECMO_AIR_RESUME.label)
+    expect(resume?.description).toBe(ECMO_AIR_RESUME_SENTENCE)
+    expect(
+      scenario?.debrief.correctWorkflow.some((line) => line.includes(ECMO_AIR_RESUME_SENTENCE)),
+    ).toBe(true)
+  })
+
+  it('puts the same label on the bedside control', () => {
+    expect(sourceOf('src/features/cardiohelp-ecmo/components/EcmoCircuitControls.tsx')).toMatch(
+      /\{ECMO_AIR_RESUME\.label\}/,
+    )
+  })
+})
+
+describe('massive air is keyed on the first moves, in order', () => {
+  it('lists a sequence for each mode that starts with the hands, not with a call', () => {
+    for (const moves of [ECMO_AIR_FIRST_MOVES.massiveVa, ECMO_AIR_FIRST_MOVES.massiveVv]) {
+      expect(moves.length).toBeGreaterThanOrEqual(4)
+      const call = moves.findIndex((move) => /call for help/i.test(move))
+      // "Call for help" is in the sequence, and it is not the first move.
+      expect(call).toBeGreaterThan(0)
+      expect(moves.some((move) => /clamp/i.test(move))).toBe(true)
+      expect(moves.some((move) => /aspirate/i.test(move))).toBe(true)
+    }
+    expect(ECMO_AIR_FIRST_MOVES.massiveVa[0]).toMatch(/clamp the circuit and stop the pump/i)
+  })
+
+  it.each(BUBBLE_SCENARIOS)('%s keys its prediction on clamping', (scenarioId) => {
+    const { item } = requireEcmoLearnPrediction(scenarioId)
+    const keyed = item.choices.filter((choice) => item.correctChoiceIds.includes(choice.id))
+    expect(keyed.length).toBeGreaterThan(0)
+    for (const choice of keyed) {
+      expect(choice.label).toMatch(/clamp the (?:arterial )?return limb, then the drainage limb/i)
+    }
+    // "Call for help" is never the answer on its own: no option is only a call.
+    for (const choice of item.choices) {
+      expect(choice.label).not.toMatch(/^\s*(?:call|ask|page|escalate)\b[^.;,]*[.]?\s*$/i)
+    }
+    expect(item.explanation).toMatch(/call for help/i)
+    expect(item.explanation).toMatch(/return clamp open last|open the return clamp last/i)
+  })
+
+  it.each(BUBBLE_CASES)('%s requires the clamps, not only the call', (caseId) => {
+    const scenario = clinicalPracticeScenarioById.get(caseId)
+    const prefix = caseId.startsWith('va-') ? 'va-' : ''
+    const interventions = scenario?.clinicalCase?.interventions ?? []
+    const call = interventions.find((intervention) => /call for help/i.test(intervention.label))
+    // The call is offered, it follows isolation in the authored order, and it also does something.
+    expect(call).toBeDefined()
+    expect(call?.label).toMatch(/;\s*raise patient support/i)
+    const order = interventions.map((intervention) => intervention.id)
+    expect(order.indexOf(`${prefix}air-clamp-return`)).toBeLessThan(order.indexOf(call?.id ?? ''))
+    expect(order.indexOf(`${prefix}air-clamp-drainage`)).toBeLessThan(order.indexOf(call?.id ?? ''))
+    expect(scenario?.clinicalCase?.requiredInterventionIds).toEqual(
+      expect.arrayContaining([`${prefix}air-clamp-return`, `${prefix}air-clamp-drainage`]),
+    )
   })
 })

@@ -296,15 +296,24 @@ describe('what a drill spec may say', () => {
     }
   })
 
-  it('never teaches a resumption order in the air drills', () => {
+  it('teaches the first moves and the resumption order in the air drills', () => {
     for (const id of ['arterial-bubble-stop', 'va-arterial-bubble-stop'] as const) {
       const strip = ecmoDrillSpec(id).controlPanel.sentence
-      // Isolation is taught; where reset, restart and unclamping fall relative to one another is
-      // deferred to the documents that govern it.
-      expect(strip).toMatch(/isolate the patient/i)
-      expect(strip).toMatch(/current IFU/i)
+      // Isolation first, then the call, the source and the air, in that order (teaching-first
+      // rules, "First moves"): the call is in the sequence and is not where it starts.
+      const isolate = strip.search(/isolate the patient/i)
+      const call = strip.search(/call for help and the backup circuit/i)
+      const source = strip.search(/find and close the source/i)
+      const resume = strip.search(/resume only with the circuit free of bubbles/i)
+      expect(isolate).toBeGreaterThanOrEqual(0)
+      expect(call).toBeGreaterThan(isolate)
+      expect(source).toBeGreaterThan(call)
+      expect(resume).toBeGreaterThan(source)
+      // The order the CARDIOHELP manual gives, the same one `ECMO_AIR_RESUME` carries.
+      expect(strip).toMatch(/drainage clamp open, bubble stop reset, return clamp open last/i)
+      // The deferral that used to stand in for the order is gone, and nothing contradicts it.
+      expect(strip).not.toMatch(/belongs to the current IFU|air-emergency protocol/i)
       expect(strip).not.toMatch(/reset(?:ting)? (?:is|comes|falls) (?:the )?last\b/i)
-      expect(strip).not.toMatch(/open (?:the )?drainage(?: limb)?,? then (?:the )?return/i)
     }
   })
 
@@ -409,7 +418,7 @@ describe('the drill-spec validator catches what it claims to', () => {
     const errors = validateEcmoDrillSpecs(
       mutate('preload-drainage-collapse', (definition) => ({
         ...definition,
-        precommitDenyPatterns: [/chatter|juddering/i],
+        precommitDenyPatterns: [/judders|swings/i],
       })),
     ).join('\n')
     expect(errors).toContain("matches the drill's own prediction stem")

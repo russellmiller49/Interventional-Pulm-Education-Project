@@ -61,19 +61,6 @@ export function CardiohelpLearnLanding({ supportMode }: { readonly supportMode: 
         </h2>
         <EcmoStoredPathwayAccordion track={supportMode} id="learn-landing-pathway" />
       </section>
-      <aside
-        role="note"
-        className="flex max-w-3xl gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm leading-6"
-      >
-        <div>
-          <p className="font-semibold">Educational model · draft</p>
-          <p className="text-muted-foreground">
-            Circuit responses are simplified teaching approximations. Where the source set
-            disagrees, both positions are shown rather than reconciled, and neither is presented as
-            a bedside threshold.
-          </p>
-        </div>
-      </aside>
     </div>
   )
 }

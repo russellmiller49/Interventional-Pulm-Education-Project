@@ -15,7 +15,6 @@ import {
   directionWord,
   round,
   styles,
-  VA_CONFIGURATION_BOUNDARY,
   VaConfigurationLabel,
 } from './shared'
 import { UNAVAILABLE_INDICATION } from '../channelReadout'
@@ -495,7 +494,6 @@ export function VaParallelPhysiologyPanel({
   return (
     <FocusedFoundationSections className={styles.panel} panelId="va-parallel-physiology">
       <VaConfigurationLabel />
-      <ModelBoundary>{VA_CONFIGURATION_BOUNDARY}</ModelBoundary>
       <section className={styles.section} aria-labelledby="parallel-path-heading">
         <h3 id="parallel-path-heading" className={styles.heading}>
           The circuit in parallel with the patient
@@ -557,14 +555,6 @@ export function VaParallelPhysiologyPanel({
           {round(patient.femoralArterialSpo2, 1)}, a difference of {gap.toFixed(1)} saturation
           points, and distal limb perfusion is {limbPerfusionWord[patient.distalLimbPerfusion]}.
         </TextEquivalent>
-
-        <ModelBoundary>
-          The watershed is drawn at a fixed place in this diagram. This simulation does not compute
-          where the two streams meet from native ejection and circuit flow — the upper-body and
-          lower-body saturations are authored by the loaded case, and the diagram reads them rather
-          than deriving them. It is a teaching sequence of where blood goes, not a scale drawing of
-          cannula positions or vessel anatomy.
-        </ModelBoundary>
       </section>
 
       <section className={styles.section} aria-labelledby="va-signals-heading">
@@ -591,10 +581,9 @@ export function VaParallelPhysiologyPanel({
         </TextEquivalent>
 
         <ModelBoundary>
-          Pulsatility, aortic-valve opening and pulmonary congestion are authored states in this
-          simulation rather than quantities produced by a ventricular model. They move when the
-          loaded case says they move, and raising or lowering the pump speed here does not move
-          them.
+          Pulsatility, aortic-valve opening, pulmonary congestion and the two arterial saturations
+          are set by the loaded case. Raising or lowering pump speed here does not move them; at the
+          bedside it does.
         </ModelBoundary>
       </section>
 
@@ -740,14 +729,6 @@ export function VaParallelPhysiologyPanel({
           is {limbPerfusionWord[patient.distalLimbPerfusion]} against{' '}
           {limbPerfusionWord[reference.patient.distalLimbPerfusion]}.
         </TextEquivalent>
-
-        <ModelBoundary>
-          The reference column is this simulation&rsquo;s own authored teaching circuit, produced by
-          the same model as every other number here, and not a set of bedside values to reproduce.
-          The words higher, lower and about the same come from authored display deadbands for this
-          simulation and mark no boundary of safety; the raw values either side of each of them are
-          printed beside it.
-        </ModelBoundary>
       </section>
 
       <section className={styles.section} aria-labelledby="va-mechanisms-heading">
@@ -818,12 +799,6 @@ export function VaParallelPhysiologyPanel({
           heart is contributing {patient.nativeCardiacOutputLpm.toFixed(2)} L/min into the same
           aorta, and the two must never be added together and called one.
         </p>
-
-        <ModelBoundary>
-          In this simulation the recirculating share is authored by the loaded case, and for VA that
-          authored value is zero. The panel shows the arithmetic that follows from it; it is not
-          evidence that arterial return can never be re-drained in any real configuration.
-        </ModelBoundary>
       </section>
 
       {/*

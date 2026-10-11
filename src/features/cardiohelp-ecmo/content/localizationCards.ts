@@ -164,7 +164,7 @@ export const ecmoLocalizationRows: readonly EcmoLocalizationRow[] = Object.freez
       {
         evidenceId: MODEL,
         claim:
-          'The drainage capacity, the judder, and the size of every response shown here are authored educational quantities.',
+          'The drainage capacity, the judder, and the size of every response shown here are teaching quantities.',
       },
     ],
     valueGuideKeys: ['pVen', 'circuitBloodFlow'],
@@ -226,7 +226,7 @@ export const ecmoLocalizationRows: readonly EcmoLocalizationRow[] = Object.freez
       },
       {
         evidenceId: MODEL,
-        claim: 'The resistance and its effect on the pressures are authored for this case.',
+        claim: 'The resistance and its effect on the pressures are set for this case.',
       },
     ],
     valueGuideKeys: ['pInt', 'pArt', 'transmembraneDeltaP'],
@@ -252,7 +252,7 @@ export const ecmoLocalizationRows: readonly EcmoLocalizationRow[] = Object.freez
       'Changed blood viscosity or temperature, which does the same',
     ],
     actionClass:
-      'Trend it against this circuit’s own baseline at matched flow, corroborate with what the membrane is returning, and escalate through the pathway your unit uses. A widening trend is a reason to plan, not a reason to act on one gradient.',
+      'Confirm it against this circuit’s own baseline at matched flow, send a post-oxygenator gas, and call for the primed backup: a failing membrane is exchanged. A rising trend with falling gas transfer is the reason, not one gradient.',
     harmfulReflex:
       'Acting on a single gradient — exchanging a component, or driving the circuit harder, on one number.',
     modelBoundary:
@@ -275,8 +275,7 @@ export const ecmoLocalizationRows: readonly EcmoLocalizationRow[] = Object.freez
       },
       {
         evidenceId: MODEL,
-        claim:
-          'The resistance is authored so the pattern can be read; no clot burden is represented.',
+        claim: 'The resistance is set so the pattern can be read; no clot burden is represented.',
       },
     ],
     valueGuideKeys: ['transmembraneDeltaP', 'pInt', 'pArt'],
@@ -304,7 +303,7 @@ export const ecmoLocalizationRows: readonly EcmoLocalizationRow[] = Object.freez
       'Trace the gas path in that order and re-establish delivery you have verified. A setting on a blender is a request, not proof that gas is reaching the membrane.',
     harmfulReflex: 'Raising pump speed because less oxygenated blood is reaching the patient.',
     modelBoundary:
-      'Gas hardware and an inline gas analyser are not represented. How fast the values move in this simulation follows an authored curve rather than bedside kinetics.',
+      'Gas hardware and an inline gas analyser are not represented. How fast the values move in this simulation follows a fixed curve rather than bedside kinetics.',
     vaVariation:
       'The same failure starves the arterial return of gas exchange. Circuit flow that has not changed is not evidence that the blood being returned is oxygenated.',
     sourceSupport: [
@@ -413,7 +412,6 @@ export function ecmoLocalizationRowTextEquivalent(
     `The reflex to avoid: ${row.harmfulReflex}`,
   ]
   if (supportMode === 'va') sentences.push(`On VA: ${row.vaVariation}`)
-  sentences.push(`Model boundary: ${row.modelBoundary}`)
   return sentences.join(' ')
 }
 

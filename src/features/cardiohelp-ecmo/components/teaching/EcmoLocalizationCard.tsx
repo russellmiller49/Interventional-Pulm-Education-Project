@@ -4,7 +4,6 @@ import { deriveEcmoCircuitPresentation } from '../../content/circuitPresentation
 import { resolveEcmoModeText } from '../../content/circuitSegments'
 import {
   ECMO_LOCALIZATION_FOOTER,
-  ECMO_LOCALIZATION_SCAFFOLD_BOUNDARY,
   ecmoLocalizationRow,
   ecmoLocalizationRowTextEquivalent,
   ecmoLocalizationZoneSentence,
@@ -15,7 +14,7 @@ import {
 } from '../../content/localizationCards'
 import type { EcmoSimulationState, SupportMode } from '../../engine/types'
 import { EcmoSourceList } from '../evidence/EcmoSourceList'
-import { ModelBoundary, TextEquivalent, styles } from './shared'
+import { TextEquivalent, styles } from './shared'
 
 /**
  * The localization grammar, rendered at one of two depths.
@@ -160,10 +159,6 @@ export function EcmoLocalizationCard(props: EcmoLocalizationCardProps) {
       </p>
 
       {revealed ? <SourceSupport row={rows[0]} /> : null}
-
-      <ModelBoundary>
-        {revealed ? rows[0].modelBoundary : ECMO_LOCALIZATION_SCAFFOLD_BOUNDARY}
-      </ModelBoundary>
 
       <TextEquivalent>
         {revealed

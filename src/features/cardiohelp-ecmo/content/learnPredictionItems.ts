@@ -5,25 +5,12 @@ import {
 
 import type { PredictionControl, PredictionDirection } from '../engine/types'
 
+import { ECMO_NUMBERS } from './teachingNumbers'
+
 /**
- * The authored prediction a learner answers before acting, one for every Learn lesson.
- *
- * All twenty Learn prediction steps are here: the eighteen drills and the two console-orientation
- * lessons, which had the same defect in a quieter form — they did not print the answer in prose,
- * but they still handed the payload over with no option set to choose from.
- *
- * These replace a generated step that handed over the answer. The old prompt read "The safe goal is
- * X. Use <control> and predict <direction>.", its rationale printed the scenario's whole causal
- * chain above the button, and the single button dispatched the scenario's own expectation as the
- * payload — so the learner was credited for reading rather than for reasoning.
- *
- * Each item is a clinical question with distractors a real learner would consider. Every choice
- * carries the prediction triple that choosing it commits the learner to, so the engine scores what
- * the learner actually decided: the best choice's triple equals the scenario's expectation, and the
- * others are the triples a learner holding that particular wrong model would pick.
- *
- * Authored to the standard set by `foundationLearningItems.ts` and validated at import, so a
- * malformed item or a learner-copy violation is loud and immediate rather than a runtime surprise.
+ * The prediction a learner answers before acting, one for each of the twenty Learn lessons.
+ * Every choice carries the prediction triple that choosing it commits; the keyed choice's triple
+ * equals the scenario's own expectation. Items are validated at import.
  */
 export interface EcmoLearnPredictionCommitment {
   readonly goalId: string
@@ -45,70 +32,52 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'The console tour is over and the circuit has been returned to its pre-use state. The pump is stopped with the speed setpoint back at zero, flow reads zero, and pVen, pInt and pArt show the unavailable indication rather than numbers. The startup diagnostic has not been allowed to run through. The gas source is connected and the separate blender is set to a sweep of 4.0 L/min with sweep-gas oxygen at a fraction of 1.0, the ordered speed is written on the chart, and the tubing runs from the drainage cannula to the pump, through the oxygenator and back to the return cannula. Nothing on this venovenous circuit has been walked or verified by hand. What do you commit to before support is established?',
+      stem: 'A venovenous circuit is primed and back in its pre-use state. The pump is stopped with the speed setpoint at zero, flow reads zero, and pVen, pInt and pArt show dashes instead of numbers. The startup diagnostic has not run. The gas source is connected and the blender is set to a sweep of 4.0 L/min at an oxygen fraction of 1.0. The ordered speed is on the chart. Nobody has traced or checked the circuit by hand. What do you do before you start support?',
       choices: [
         {
           id: 'verify-the-whole-system-first',
           label:
-            'Work the whole pre-use sequence before support is set: let the startup diagnostic run through, walk the circuit by hand from drainage cannula to return cannula, verify gas, power and backup, and pair it with the patient data the console has no way of producing.',
+            'Run the startup diagnostic, trace the circuit by hand from drainage cannula to return cannula, and check gas, power, backup and the patient before you start.',
           plausibility: 'best',
           rationale:
-            'This is the only option that treats the four sources of information the tour just established as four separate things to verify. The console reports on itself and on the sensors it can see; it says nothing about which way round the flow probe was clipped on, which limb a pressure line was tied to, whether the gas is actually flowing, how the cannulas are secured, or what the patient looks like. Doing it now, on a stopped and unpressurised circuit, is also the only moment when finding a problem costs nothing.',
+            'The console checks itself and the sensors it can see. It cannot tell you a flow probe is on backwards, a pressure line is on the other limb, the gas is off at the wall, or how the patient looks.',
         },
         {
           id: 'diagnostic-is-the-verified-state',
           label:
-            'Let the startup diagnostic run through and confirm the startup screen and the audible indicator — a device that reports itself ready has just exercised its own pump, its sensors and its alarms, so that is the verified starting state, and the next step is setting support.',
+            'Run the startup diagnostic and confirm the ready screen and tone; the device has checked its own pump, sensors and alarms, so set support next.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Everything named here is real and does have to happen; a device that will not come up ready must not be used. What makes it a partial commitment is the inference drawn from it. The diagnostic exercises device functions and the sensors the device can interrogate, and it reports on that scope only. It cannot look at flow-probe direction, at which limb carries which pressure line, at an unopened gas cylinder, at a connection that is finger-tight, or at whether a backup console is in the room — and it has no view of the patient at all. Declaring the system verified on the strength of the one component that reports on itself leaves the rest unexamined.',
+            'You do need the diagnostic, but it reports on the device only. It does not see probe direction, which limb a pressure line is on, a closed gas cylinder, a loose connector or the patient.',
         },
         {
           id: 'start-then-inspect-under-flow',
           label:
-            'Nothing on the console is showing a fault, so bring the pump up to the ordered speed now and walk the tubing and sensors once support is running and the numbers are live.',
+            'The console shows no fault, so bring the pump to the ordered speed and trace the tubing and sensors once flow and pressures are live.',
           plausibility: 'unsafe',
           rationale:
-            'A quiet console is not a verified circuit, and the reasoning inverts the sequence that makes the walk safe. Every finding this step exists to catch — a flow probe clipped on backwards, a pressure line on the limb it is not labelled for, a gas source still closed, a connection that has not been tightened — is invisible to the device and becomes far more dangerous to put right once the patient’s blood is moving through the circuit under pressure. Waiting for the numbers to go live also gets the dependency backwards: the numbers only become interpretable once you know which sensor is on which limb.',
+            'A quiet console is not a checked circuit. A reversed flow probe, a swapped pressure line or a loose connector is harder and more dangerous to fix with the patient’s blood moving under pressure.',
         },
         {
           id: 'chase-the-missing-pressures',
           label:
-            'The pressure channels are showing nothing where pVen, pInt and pArt should be, so start with the pressure sensors and their cables — no reading can be trusted until those three report.',
+            'pVen, pInt and pArt are showing no values, so check the three pressure sensors and their cables first; no other reading is reliable until they report.',
           plausibility: 'incorrect-mechanism',
-          /*
-           * S7-3, contained rather than re-keyed.
-           *
-           * The rationale said the blank channels were "refuted by the state the circuit is in",
-           * which reads as a claim about circuits: that a stopped pump is a reason not to check a
-           * transducer. It is not. A pressure transducer reads a static pressure whether or not the
-           * pump is turning, and on a primed circuit there is one to read — so at a real bedside
-           * blank channels are a good reason to look at the transducers and their cables. What
-           * refutes the option here is a property of this simulation and of nothing else: it
-           * declines to produce flow-dependent values for a settled pump-off circuit, which is why
-           * the console shows the unavailable indication. That is said plainly now.
-           *
-           * The key is deliberately unchanged. Whether the sensor-check reflex should be keyed
-           * differently, and what the stopped-pump sensor question should teach once the actual
-           * device display is established, is ECMO-OWNER-01 — a physician and console-specialist
-           * decision this batch is not authorised to make. Until it is made, the option is marked
-           * as one this simulation cannot fairly test.
-           */
           rationale:
-            'Hold on to this reflex: it is a good one. A pressure transducer reads a static pressure whether or not the pump is turning, so on a primed circuit blank channels at the bedside are a real reason to look at the transducers and their cables. What refutes the option here is not a fact about circuits but a limit of this simulation. This model declines to produce the three circuit pressures for a settled pump-off circuit — they are flow-dependent patterns it has nothing to offer for — and the console shows the unavailable indication for that reason alone, not because a device would. Flow is the contrast: with its sensor connected it reads zero, and zero is a real value rather than an absent one. The channels start reporting once the pump is brought up. Held for review: what the stopped-pump sensor question should teach, set against what the physical console actually displays, is an open faculty and device-specialist decision, so read this option as one this simulation is not in a position to judge rather than as a bedside error.',
+            'A primed circuit has real static pressures and checking the transducers is a sound reflex at the bedside, but this simulation shows dashes whenever the pump is stopped, so here the blank channels are not a sensor fault.',
         },
         {
           id: 'gas-path-first',
           label:
-            'Confirm the gas path first — the source and the sweep and sweep-gas oxygen already set on the blender — so membrane gas exchange is ready the instant the pump starts; the tubing can be traced after that, once live flow shows where the blood is actually going.',
+            'Confirm the gas path first, from the source through the blender to the membrane, so gas exchange is ready when the pump starts; trace the tubing afterwards under flow.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'The gas path genuinely does need verifying by hand, and it is one of the things the console will not warn about — a blender showing settings and a source that is not actually delivering look identical from the touchscreen, which is why the number on the blender is not the check. The gap is that this names one limb of the sequence and then treats it as the whole of it. The gas path sits on the same list as flow-probe orientation, the three pressure locations, the cannulas and connections, power and backup readiness, and the independent patient data. Verifying the blender establishes nothing about whether the blood path is right.',
+            'The gas path does need a hand check, because a blender showing a setting looks the same whether or not gas is flowing. But it tells you nothing about the blood path, the flow probe, the pressure lines, power or backup.',
         },
       ],
       correctChoiceIds: ['verify-the-whole-system-first'],
       explanation:
-        'What separates these is the scope each one claims. A device diagnostic is a statement about device functions; a walk from cannula to cannula is a statement about the circuit; the blender is a statement about the gas path; the bedside and the blood gas are statements about the patient. None of the four substitutes for another, and the console can only speak to the first two. The stopped, unpressurised circuit in front of you is the one state in which the other three can be checked without cost, which is why the verification comes before support rather than after it. Model boundary: this is a bounded educational simulation rather than a patient twin. The circuit walk here resolves to a single check rather than to the dozens of individual confirmations a real pre-use list contains, and the absent pressure numbers are this model declining to produce flow-dependent values for a stopped pump rather than a reproduction of what any particular console displays — which is why the sensor-check option is judged against this simulation’s convention rather than against the device, and why what that question should teach is still with a reviewer. Local pre-use documentation, the manufacturer instructions, and the unit’s backup and escalation policy govern the real sequence.',
+        'Four things need checking and none stands in for another: the device (startup diagnostic), the circuit (a hand trace from cannula to cannula), the gas path, and the patient. The console can speak only to the first. Do all four now, with the pump stopped, because every fault is easier and safer to fix before blood is moving.',
       evidenceIds: [
         'ifu-console-workflow',
         'ifu-us-2025-scope',
@@ -152,51 +121,51 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'Ninety minutes into a venovenous run the pump speed has not been altered. Displayed circuit flow has fallen from about 4.6 L/min and now swings between roughly 2.8 and 3.2 L/min every few seconds, the drainage pressure has moved from about -35 to about -80 mmHg over the same period, and the drainage tubing is visibly juddering with each swing. pInt and pArt have drifted down with the flow rather than up, and the gradient across the membrane has narrowed with the flow rather than widened. The patient was suctioned and repositioned a few minutes ago and has been coughing and straining against the ventilator since. Which action do you commit to first?',
+      stem: 'Ninety minutes into a venovenous run, with pump speed unchanged, flow has fallen from about 4.6 L/min and now swings between roughly 2.8 and 3.2 L/min every few seconds. Drainage pressure has moved from about -35 to about -80 mmHg and the drainage tubing judders with each swing. pInt and pArt have drifted down with the flow, and the gradient across the membrane has narrowed. The patient was suctioned and repositioned a few minutes ago and has been coughing and straining against the ventilator since. What do you do first?',
       choices: [
         {
           id: 'unload-then-find-cause',
           label:
-            'Back the pump off now, then use the calmer circuit to work out why venous return has fallen short — cannula, drainage limb, straining, or volume.',
+            'Turn the pump speed down until flow steadies, then find why venous return is short: cannula, a kinked limb, straining, or volume.',
           plausibility: 'best',
           rationale:
-            'Flow that no longer follows the speed while suction on the drainage limb keeps climbing puts the limitation upstream of the pump, in what is being offered to it rather than in what the pump can do. Less demand means less suction, so the intermittent collapse and the juddering settle and there is a steady circuit to reason on. The limitation itself is untouched until its cause is found and put right, which is what makes this a holding measure rather than the end of the sequence.',
+            'Flow has stopped following speed while suction climbs, so the limit is upstream of the pump. Less speed means less suction, the vein stops drawing shut, and you get a steady circuit to work on.',
         },
         {
           id: 'raise-speed-to-defend-flow',
           label:
-            'Bring the speed up until the flow display comes back toward where it was — the pump is the one thing here that can restore flow — and look for the cause once support is back.',
+            'Turn the pump speed up until flow returns toward 4.6 L/min, because the pump is what generates flow, then look for the cause once support is back.',
           plausibility: 'unsafe',
           rationale:
-            'This treats the flow display as the thing to be defended and the pump as the source of the deficit. A centrifugal pump can only produce more flow by pulling harder, and pulling harder on a limb that is already drawing shut intermittently deepens the same collapse. The finding that refutes the reasoning is already on the console: suction is climbing while flow has stopped following the speed.',
+            'A centrifugal pump makes more flow only by pulling harder. Pulling harder on a vein that is already drawing shut deepens the suction, worsens the judder and adds hemolysis.',
         },
         {
           id: 'fluid-first',
           label:
-            'Give a fluid bolus straight away, since a drainage pressure this negative means the patient is under-filled.',
+            'Give a fluid bolus now and leave the speed alone, because a drainage pressure this negative means the patient is short of volume.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Low circulating volume is one real cause of a preload-limited circuit, and volume may well turn out to be part of the answer here. What leaves this incomplete as a first commitment is that it names a cause before looking for one: cannula position, a kinked or compressed drainage limb, and the straining described here all produce this same pattern. The pump goes on asking for more than it is being offered while the fluid runs in, and a bolus given on this assumption loads a patient whose limitation may be entirely mechanical.',
+            'Fluid may be part of the fix, but a malpositioned cannula, a kinked limb and this patient’s coughing and straining all produce the same picture. While the bolus runs, the pump keeps sucking the vein shut.',
         },
         {
           id: 'assess-without-changing-demand',
           label:
-            'Change nothing on the console and go straight to the patient and the drainage limb; the setting should stay where it is until the cause has been named.',
+            'Leave the console settings alone and examine the patient and the drainage limb now; change the speed only once you have found the cause.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Going to the patient is right, and the cause does have to be named before anything is called settled. The gap is what happens during the look: the pump keeps asking for more than the circulation is offering, so the suction that is drawing the vessel or cannula shut is applied throughout, and support goes on swinging while the search proceeds. Unloading the pump and looking for the cause are not alternatives to one another.',
+            'Go to the patient, yes. But while you look, the pump keeps pulling the vein onto the cannula and flow keeps swinging. Turn the speed down first, then look.',
         },
         {
           id: 'exchange-the-oxygenator',
-          label: 'Read this as a failing membrane lung and escalate for an oxygenator exchange.',
+          label:
+            'Treat this as a clotting oxygenator and call for an oxygenator exchange, because flow has fallen at an unchanged pump speed.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This reads any fall in achievable flow as something obstructing the path, and a fouled membrane is a genuine version of that story. It is refuted by where the pressures moved: a membrane that is itself the resistance raises pInt relative to pArt and widens the gradient across it, whereas here the gradient has narrowed with the flow and both post-pump pressures have drifted down. The pressure that changed is on the drainage side of the pump.',
+            'A clotted oxygenator raises pInt and widens the gradient across the membrane. Here pInt and pArt fell and the gradient narrowed. The only pressure that moved against the flow is on the drainage side.',
         },
       ],
       correctChoiceIds: ['unload-then-find-cause'],
-      explanation:
-        'The location of the pressure change localises this. A pump that cannot get what it is asking for shows it on the side it is pulling from: suction climbs, flow stops tracking the speed, and the drainage limb judders as the vessel or cannula intermittently draws shut. Nothing downstream is limiting the circuit here, since the post-pump pressures and the gradient across the membrane fell with the flow instead of rising. Taking demand off the pump is a holding measure that quiets the collapse and makes the circuit steady enough to search on; the search is what finds the cannula, the kink, the strain, or the volume, and until one of those has been put right the limitation is still present. Model boundary: this is a bounded educational simulation rather than a patient twin. The juddering is a flag this model switches on below a drainage pressure it chooses, not a rendering of how a real drainage line kicks, and the numbers come from simplified response curves. The console does carry adjustable pressure limits, but those are device alarm limits rather than a taught cut point: no number for how negative is too negative is offered here, because that value depends on cannula size, patient size, and configuration. At the bedside the same decision also draws on echocardiography, imaging of cannula position, and the volume picture, none of which this lab reproduces.',
+      explanation: `The pump is asking for more blood than the vein can give. Suction climbs, flow stops following speed, and the line judders as the vein draws shut around the cannula. Turn the speed down first to stop the suction, then fix the cause: reposition the patient or cannula, relieve a kink, settle the coughing, or give volume if the patient is dry. The manual advises avoiding negative pressures ${ECMO_NUMBERS.value('negative-pressure-caution')}. Factory pVen limits: ${ECMO_NUMBERS.value('pven-factory-limits')}.`,
       evidenceIds: [
         'ecmo-book-ch9',
         'ecmo-book-ch16',
@@ -241,52 +210,51 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'A venovenous run that has been steady all shift begins to change over about twenty minutes. The set speed has not been touched, and circuit blood flow has fallen from 4.0 to 2.8 L/min. pInt and pArt have each risen by roughly 100 mmHg above where they sat this morning, and the gradient between them has not widened — at the lower flow it is a little narrower than it was. pVen is no more negative than before and the drainage line is not chattering. Neither pressure has reached its alarm limit. The patient has drifted from a saturation of 97 to a saturation of 92 as the flow fell, and the arterial carbon dioxide value has barely moved on an unaltered sweep. Which explanation do you commit to, and what does committing to it oblige you to do next?',
+      stem: 'Over about twenty minutes on a venovenous run, with the set speed untouched, circuit blood flow has fallen from 4.0 to 2.8 L/min. pInt and pArt have each risen by roughly 100 mmHg, and the gradient between them has not widened; at the lower flow it is a little narrower. pVen is no more negative than before and the drainage line is not chattering. Neither pressure has reached its alarm limit. The patient’s saturation has drifted from 97% to 92%, and the arterial carbon dioxide has barely moved on an unaltered sweep. What is going on, and what do you do next?',
       choices: [
         {
           id: 'downstream-of-the-membrane',
           label:
-            'Something downstream of the membrane lung is resisting the return to the patient — walk the return limb from membrane outlet to cannula before any setting is moved.',
+            'Resistance has risen beyond the membrane. Walk the return limb from oxygenator to cannula for a kink or clamp before changing a setting.',
           plausibility: 'best',
           rationale:
-            'An obstruction downstream of the membrane raises the pressure in every segment between it and the pump, so the two post-pump zones rise together while the gradient across the membrane does not widen — that gradient is a resistance multiplied by the flow through it, so at a lower flow it narrows a little even though the membrane itself has not changed. A drainage side that has not become more negative places the limit downstream of the pump rather than upstream of it. What the walk covers is tubing, clamps, connectors, cannula position, and whether the pressure channels are reporting plausibly; naming the segment first is what makes the next action land on the obstruction instead of on the display.',
+            'An obstruction raises the pressure in everything upstream of it, so pInt and pArt rise together and the gradient across the membrane does not widen. pVen has not moved, so drainage is fine.',
         },
         {
           id: 'raise-the-speed',
           label:
-            'Flow is what has been lost — raise the pump speed until the displayed flow comes back to where it sat this morning.',
+            'Flow is what the patient has lost. Raise the pump speed until flow is back at 4.0 L/min and the saturation recovers, then look for the cause.',
           plausibility: 'unsafe',
           rationale:
-            'This treats displayed flow as the thing to be restored rather than as the consequence of a mechanical limit. The circuit is already pushing against something that has not moved: more speed drives pInt and pArt higher against the same obstruction, buys little flow, and adds hemolysis risk while the cause stays unnamed behind a display that looks slightly better. The sources for this drill describe chasing a mechanically limited flow with repeated speed escalation as the reflex to resist.',
+            'The pump is already pushing against a block. More speed drives pInt and pArt higher, buys little flow, and adds hemolysis and the risk of blowing a connection, while the obstruction stays put.',
         },
         {
           id: 'exchange-the-membrane',
           label:
-            'The membrane lung has fouled and is now the resistance — pInt has climbed while flow has fallen at the same speed — so begin the local process for an oxygenator exchange while support continues.',
+            'The oxygenator has clotted: pInt has climbed while flow fell at the same speed. Call the perfusionist and set up for an oxygenator exchange.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This reads any rise in pInt as a verdict on the membrane, but the return path lies downstream of pInt as well, so pInt rises for either reason. What separates them is the pressure after the membrane: a membrane resisting more pulls pInt away from pArt and widens the gradient between them. Here pArt has risen with pInt and the gradient has not widened, which argues against the very component this action would replace.',
+            'A clotted oxygenator pulls pInt away from pArt and widens the gradient. Here pArt rose with pInt and the gradient did not widen, so the oxygenator is not the block.',
         },
         {
           id: 'call-it-drainage',
           label:
-            'The circuit has run out of drainage — bring the speed down and work on the venous side until flow follows the pump again.',
+            'The pump has run short of venous return. Turn the speed down and work on the drainage cannula and volume until flow follows speed again.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This reads a falling flow at an unchanged speed as a starved circuit. A drainage limitation announces itself on the suction side, as a pVen becoming more negative while chasing a flow that will not follow, usually with chatter in the drainage line. pVen is no more negative here and the line is quiet, and nothing upstream of the pump raises the two pressures that sit downstream of it.',
+            'Poor drainage shows as a more negative pVen and a chattering line. pVen is unchanged and the line is quiet. Nothing upstream of the pump can raise the two pressures beyond it.',
         },
         {
           id: 'suspect-the-transducers',
           label:
-            'The pressure channels themselves are suspect — two pressures rising together by the same amount is what a drifted transducer pair looks like — so re-zero the transducers and hold support where it is until the numbers can be relied on.',
+            'Two pressures rising by the same amount suggests transducer drift. Re-zero both transducers and hold the settings until the numbers are reliable.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Sensor plausibility genuinely belongs in this workup, which is why walking the return limb includes it rather than being replaced by it. What makes this insufficient on its own is that flow is measured on a separate channel and has fallen alongside the pressures, and the patient has followed it down. A transducer reading falsely high moves a display; it does not slow a pump or desaturate a patient.',
+            'Checking the sensors is part of walking the limb. But flow is measured separately and has fallen too, and the patient has desaturated. A drifting transducer changes a display; it does not slow a pump.',
         },
       ],
       correctChoiceIds: ['downstream-of-the-membrane'],
-      explanation:
-        'Two post-pump pressures rising together with a gradient that has not widened puts the resistance downstream of both of them, and a drainage pressure that has not become more negative puts it downstream of the pump. That is enough to name a segment and go to it, which is what lets the next action land on the obstruction rather than on a setting. Boundaries worth carrying out of this drill. In this educational model the obstruction is one fixed resistance at a single downstream location, so it neither varies with posture nor eases on its own, while a real return-side problem is often positional, partial, or intermittent. The gradient across the membrane is generated here as a resistance multiplied by the flow through it, so it moves with flow whether or not the membrane has changed; it is read against this circuit’s own earlier value at a similar flow, and no threshold for it is published in this module. Carbon dioxide clearance in this model follows the sweep alone, so it does not move when circuit blood flow falls; in a real circuit a fall of this size would trim it somewhat, and a fouling membrane can go on clearing carbon dioxide well after its oxygen transfer has dropped — so a steady carbon dioxide value is not what separates these two mechanisms here; the pressure pattern is. And pArt names a pressure in the return-side tubing, not the patient’s arterial blood pressure — in venovenous support that limb returns oxygenated blood into the venous circulation, and the patient’s blood pressure still comes from the independent monitor.',
+      explanation: `pInt and pArt rising together with an unchanged gradient put the resistance beyond both sensors, in the return tubing or cannula. Walk the limb, look for a kink, a partly closed clamp or a cannula that has moved, and fix it; do not chase flow with speed. Factory pInt and pArt limits: ${ECMO_NUMBERS.value('pint-part-factory-limits')}. pArt is a circuit pressure in the return tubing, not the patient’s blood pressure.`,
       evidenceIds: [
         'ecmo-book-ch9',
         'ecmo-book-ch17',
@@ -330,52 +298,51 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'A patient on established venovenous support has had no change made to the pump speed since this morning, but displayed circuit flow has drifted from 4.0 to 3.1 L/min across the shift. The pressure between the pump and the membrane lung now reads about 330 mmHg, while the pressure on the return limb after the membrane reads about 190 mmHg, a little lower than this morning rather than higher; the difference between the two has widened from roughly 30 mmHg to roughly 140 mmHg over the same period. The post-membrane saturation reads 88 where it read 99 this morning, the patient’s arterial saturation has drifted from a saturation of 97 to a saturation of 85, the drainage pressure is no more negative than it was, and the sweep setting is unchanged. What do you commit to next, and on what grounds?',
+      stem: 'On established venovenous support, pump speed is unchanged since this morning but circuit flow has drifted from 4.0 to 3.1 L/min. The pressure between the pump and the membrane lung reads about 330 mmHg; the pressure on the return limb after the membrane reads about 190 mmHg, a little lower than this morning. The difference between the two has widened from roughly 30 mmHg to roughly 140 mmHg. Post-membrane saturation is 88% (99% this morning) and the patient’s arterial saturation has drifted from 97% to 85%. Drainage pressure is no more negative and the sweep is unchanged. What do you do next?',
       choices: [
         {
           id: 'localize-across-the-membrane',
           label:
-            'Localize the problem to the segment between those two pressure locations: check the membrane lung and the channels that bracket it, and take what you find to the local exchange protocol.',
+            'Confirm the pressure drop at unchanged flow, check for a kink or sensor fault, send a post-oxygenator gas, and call the perfusionist with the primed backup.',
           plausibility: 'best',
           rationale:
-            'The gradient is what does the localizing. A resistance lying between the two sensors widens the difference between them, and the pressure after the membrane has not moved up with the one before it, which is what separates this from a limb obstructed further downstream. The falling post-membrane saturation is a second and independent line: a membrane fouling its blood path is often exchanging gas less well too, although the two need not move together, which is why both are read rather than either alone. Channel plausibility belongs in the same look, because one mis-sited or faulty pressure sensor reproduces the pressure half of this picture and none of the gas half.',
+            'A resistance between two sensors widens the difference between them, and pArt has not risen, so the block is in the oxygenator and not beyond it. A failing oxygenator is exchanged, so get the backup to the bedside.',
         },
         {
           id: 'raise-speed-to-recover-flow',
           label:
-            'Bring displayed circuit flow back toward 4 L/min by raising the pump speed, and look for a cause once support is restored.',
+            'Raise the pump speed to bring circuit flow back toward 4 L/min and the arterial saturation up with it, then look for the cause once the patient is supported.',
           plausibility: 'unsafe',
           rationale:
-            'This treats flow as a setting to be dialled back in rather than as the result of the loading the pump is working against. The widening gradient refutes it: the resistance lies inside the blood path, so more speed drives more blood across an already-abnormal membrane, raising the pressure before the membrane further and the hemolysis concern with it while the membrane goes on transferring poorly — the post-membrane saturation does not recover because more blood was pushed through it. Driving a mechanically limited flow harder is the reflex this pattern exists to interrupt.',
+            'More speed pushes more blood into a clotting oxygenator. pInt climbs further, hemolysis rises, and the post-oxygenator saturation stays low. In this simulation flow improves with speed and none of that cost is shown; at the bedside it is real.',
         },
         {
           id: 'raise-the-sweep',
           label:
-            'Raise the sweep gas, since both the patient’s saturation and the post-membrane saturation have fallen and gas transfer is the function that has been lost.',
+            'Raise the sweep gas flow, because both the post-membrane and the arterial saturation have fallen and gas transfer is the function that has been lost.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'The model behind this is that any deterioration in oxygenation is answered at the gas control. Sweep principally moves carbon dioxide clearance, and the pressure pattern refutes the reading anyway: a membrane whose gradient has widened several-fold is obstructing blood as well as exchanging poorly, and offering it more gas restores neither.',
+            'Sweep mainly clears carbon dioxide; it adds little oxygen. And a pressure difference that has widened from 30 to 140 mmHg means blood is obstructed in the oxygenator. More gas fixes neither.',
         },
         {
           id: 'clear-the-return-limb',
           label:
-            'Read the high post-pump pressure as an obstruction downstream of the membrane and act on the return limb — free the tubing and reposition the return cannula — since a pump pushing against a block is what raises pInt.',
+            'Treat the high post-pump pressure as an obstruction beyond the membrane: free the return tubing and reposition the return cannula to bring pInt down.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'The mental model is that a high pressure after the pump means something is blocking the way out, without asking which locations moved together. The return-limb pressure refutes it: an obstruction downstream of the membrane lifts both post-pump pressures together and leaves the gradient tracking flow, whereas here only the pressure before the membrane has climbed and the one beyond it has not.',
+            'An obstruction beyond the membrane raises pInt and pArt together. Here only pInt has climbed and pArt has fallen, so the return limb is not the problem.',
         },
         {
           id: 'exchange-immediately',
           label:
-            'Name the membrane as the problem — a gradient that has widened several-fold at an unchanged speed leaves nothing else to look for — and call for an immediate circuit exchange.',
+            'Call for an immediate circuit exchange, because a pressure difference that has widened this far at unchanged speed can only be the oxygenator.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'The mechanism named here is the one the pattern supports, which is what makes moving straight to the remedy tempting. What it skips is the step that keeps a faulty pressure channel, a kink between the two sensors, or a clotted connector from being answered with a circuit exchange. The exchange is itself a high-risk manoeuvre, timed by the local protocol and the team against gas transfer, hemolysis and platelet trends rather than by a single gradient reading.',
+            'You have the right component, and exchange is where this ends. But a kink between the sensors or a faulty pressure line gives the same numbers, and an exchange stops support. Check first, with the backup on its way.',
         },
       ],
       correctChoiceIds: ['localize-across-the-membrane'],
-      explanation:
-        'Three facts from the pressurised side localize this: the location before the membrane has risen, the location beyond it has not, and the difference between them has widened while flow fell at an unaltered speed. A resistance downstream of the membrane raises both post-pump locations together and leaves that difference tracking flow; a resistance in the membrane separates them. The post-membrane saturation is the second and independent line, and it is what distinguishes the membrane itself from tubing kinked between the two sensors. Boundaries worth carrying to the bedside: this module publishes no numeric threshold for the gradient and no alarm priority for it, because the supplied device labeling is internally inconsistent on that point, so the gradient is read as a trend against this circuit’s own earlier behaviour. Hemolysis, fibrin and thrombus burden are named here as concerns but are not represented in the bounded model these numbers come from, so if you go on to drive this circuit faster the lab will show you a flow that improves and none of the cost that makes speed the harmful answer at a bedside. The decision to exchange a membrane belongs to the local protocol and the team.',
+      explanation: `pInt up, pArt not up, and a widening pressure drop at unchanged speed put the resistance in the oxygenator. The usual pressure drop is ${ECMO_NUMBERS.value('pressure-drop-typical')} and the factory upper limit is ${ECMO_NUMBERS.value('pressure-drop-factory-limit')}; the trend at a fixed flow matters more than one value. Confirm the trend, send the gas, call the perfusionist with the primed backup, and exchange the oxygenator.`,
       evidenceIds: [
         'ifu-anomaly-boundary',
         'ecmo-book-ch9',
@@ -421,52 +388,52 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'A patient on venovenous support has been deteriorating over the last hour, and nothing has been changed to explain it: the pump sits at the speed the run opened with, the sweep gas has been at 4.0 L/min all shift, and the blender is delivering pure oxygen to the membrane. The console reports 4.8 L/min of circuit blood flow, and every circuit pressure sits where it has sat all shift. Blood leaving the membrane reads a saturation of 99. The patient’s arterial saturation has drifted down to 92, with a carbon dioxide of 46 and a pH of 7.36, and the drainage-limb saturation the console reports has climbed to 83 — moving toward the patient’s own arterial value rather than sitting well below it. Which reading of this pattern do you commit to, and what does it make the next step?',
+      stem: 'A patient on venovenous support has deteriorated over the last hour with no setting changed: pump speed as at the start of the run, sweep 4.0 L/min, pure oxygen to the membrane. Circuit blood flow is 4.8 L/min and every circuit pressure is where it has been all shift. Blood leaving the membrane reads a saturation of 99%. Arterial saturation has drifted down to 92%, with a carbon dioxide of 46 and a pH of 7.36. The drainage-limb saturation has climbed to 83%. What is happening, and what do you do next?',
       choices: [
         {
           id: 'returned-blood-is-being-redrained',
           label:
-            'The circuit is draining back much of what it just returned, so the displayed litres count the same blood twice — go and read the circuit and the cannulae before changing a setting.',
+            'The circuit is draining blood it has just returned. Check cannula position and tip separation at the bedside and on imaging before changing a setting.',
           plausibility: 'best',
           rationale:
-            'The drainage limb carries systemic venous blood mixed with blood the circuit has just returned. A drainage value of 83 against returned blood of 99 puts a large share of that limb on its second circuit, and the patient drifting down while that value climbs is the divergence that separates re-drainage from the alternatives — a systemic venous saturation of 83 would be a surprising finding in a patient whose arterial saturation is falling. No channel on this console separates blood on its second circuit from blood on its first, so the next information comes from the circuit and the cannulae rather than from another number on the screen.',
+            'Drainage blood at 83% with returned blood at 99% means much of the drainage limb is oxygenated blood on its second trip. A true venous saturation of 83% would not sit with a falling arterial saturation.',
         },
         {
           id: 'ask-for-more-flow',
           label:
-            'The drainage limb looks diluted because the pump is not drawing enough systemic venous blood — ask the circuit for more flow until the saturation comes back.',
+            'The pump is not drawing enough venous blood, so the patient is under-supported. Raise the pump speed until the arterial saturation recovers.',
           plausibility: 'unsafe',
           rationale:
-            'This reads a high drainage value as too little drainage, and it is the reflex this pattern invites. Pulling harder on a circuit that is already re-draining its own return recruits more of that return than it recruits systemic venous blood: the displayed L/min climbs, the flow doing useful work falls, and the drainage saturation rises further. In this simulation, asking for more than the speed the run opened with moves the arterial saturation down rather than up.',
+            'More speed pulls in more of the blood just returned. Displayed flow climbs, the flow doing useful work falls, the drainage saturation rises further and the patient’s saturation drops.',
         },
         {
           id: 'exchange-the-membrane',
           label:
-            'The membrane lung has stopped transferring oxygen, which is why the patient is falling — prepare to exchange the component and leave the speed where it is.',
+            'The membrane lung has stopped transferring enough oxygen, which is why the patient is falling. Leave the speed alone and set up for an oxygenator exchange.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'A membrane losing transfer lowers the saturation of the blood it returns, and the drainage value follows it downward. Here the returned blood reads a saturation of 99 and the pressures on either side of the membrane have not moved, so this commits a definitive intervention against the one component these findings already exonerate.',
+            'A failing oxygenator returns desaturated blood. Here blood leaves the membrane at 99% and the pressures on either side have not moved. The oxygenator is working.',
         },
         {
           id: 'turn-up-the-sweep',
           label:
-            'Gas transfer across the membrane is the limit in a patient who is hypoxemic despite full support — turn the sweep gas up and watch the saturation.',
+            'Gas transfer across the membrane is the limit in a patient who is hypoxemic on full support. Turn the sweep gas up and watch the saturation.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This treats sweep as an oxygenation control. Sweep flow carries carbon dioxide away from the membrane, while the oxygen the blood picks up there is already as complete as it gets — which is what a returned saturation of 99 on pure oxygen reports. In this simulation, taking the sweep to 6.0 L/min leaves the arterial saturation where it is and drives the carbon dioxide from 46 down to about 31 with a pH near 7.5, a change this patient did not need.',
+            'Sweep clears carbon dioxide. Blood already leaves the membrane at 99% on pure oxygen, so more sweep adds no oxygen. It only drives a carbon dioxide of 46 down and the pH up.',
         },
         {
           id: 'localize-without-naming',
           label:
-            'Support is being lost somewhere between drainage and return — go and localize where the circuit is resisting before naming a mechanism.',
+            'Support is being lost somewhere between drainage and return. Walk the circuit and find where it is resisting before naming a mechanism.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Going to look is the right instinct, and this would probably reach the finding eventually. But it treats a resistance problem and re-drainage as indistinguishable when they are not: resistance announces itself in the pressures on either side of the membrane and in a flow that stops following the speed, and neither has happened here. A drainage saturation climbing while the patient drifts down, with the returned blood fully saturated, has already named the mechanism.',
+            'Going to look is right, but a resistance shows in the pressures and in flow that stops following speed, and neither has happened. The saturations have already named the mechanism.',
         },
       ],
       correctChoiceIds: ['returned-blood-is-being-redrained'],
       explanation:
-        'Displayed L/min counts every litre the pump moved, including blood returned and drained again without having gone anywhere. At the share this case carries, roughly half of what the drainage limb holds is blood the circuit has just returned, so of the 4.8 L/min on the screen only about 2.5 L/min is on its first circuit — and that is the quantity the patient follows. The drainage saturation and the patient moving in opposite directions is the whole signature, and it is invisible if only the flow display is watched. Three boundaries of this simulation are worth naming. The re-drained share is authored as a property of this case at and below the speed it opened with and widens when the circuit is asked for more, while cannula position, cannula design, volume state and native venous return — the things that set recirculation at the bedside — are not modeled at all. The systemic venous value that the drainage saturation is read against is a modeled estimate rather than a device reading. And separating re-drainage from a genuinely high systemic venous saturation at the bedside takes cannula and imaging data this console cannot supply, which is the other reason the move here is to go and look. No share threshold, flow target, or cannula position is taught here; the sources describe the reasoning, not the procedure.',
+        'Displayed flow counts every litre the pump moves, including blood that was returned and drained again without reaching the patient. The signature is a drainage saturation that climbs toward the returned value while the arterial saturation falls. Check cannula position and the distance between the drainage and return tips; repositioning is the fix. Raising flow makes it worse.',
       evidenceIds: [
         'ecmo-book-ch17',
         'ecmo-book-ch18',
@@ -510,52 +477,51 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'A patient is in the stabilization phase of venovenous support. The arterial carbon dioxide value is 68 mmHg, the pH is 7.18, the bicarbonate is 25 mmol/L, and the work of breathing is high. Circuit blood flow is steady, the gradient across the membrane has not moved, systemic oxygenation is where it has been since cannulation, and the external gas blender is set at 2.0 L/min and delivering it, with the line to the membrane traced and intact. What do you commit to next, and what in this acid-base picture supports it?',
+      stem: 'A patient is in the stabilization phase of venovenous support. Arterial carbon dioxide is 68 mmHg, pH 7.18, bicarbonate 25 mmol/L, and work of breathing is high. Circuit blood flow is steady, the gradient across the membrane has not moved, and oxygenation is where it has been since cannulation. The gas blender is set at 2.0 L/min and delivering it, with the line to the membrane traced and intact. What do you do next?',
       choices: [
         {
           id: 'act-on-membrane-co2-clearance',
           label:
-            'Read this as an acute, uncompensated acidemia, and raise the sweep in a bounded step, re-checking a blood gas after it.',
+            'This is an acute respiratory acidemia. Raise the sweep gas flow in a measured step and repeat the blood gas.',
           plausibility: 'best',
           rationale:
-            'A bicarbonate of 25 mmol/L beside a pH of 7.18 says the kidney has not yet defended the pH, so this is an acute rise rather than a tolerated chronic one, and the high work of breathing says the patient is still paying for it during a phase whose whole point is to take that work over. Carbon dioxide crosses the membrane readily, and what limits its removal is the partial-pressure difference for carbon dioxide held between blood and gas across that membrane. Moving more gas through the membrane each minute keeps that difference wide, which is what makes it the control with both the mechanism and the room to move.',
+            'A bicarbonate of 25 with a pH of 7.18 means the kidneys have not compensated, so this is acute. Sweep gas flow sets carbon dioxide removal across the membrane.',
         },
         {
           id: 'retrace-gas-source-first',
           label:
-            'Read the retained carbon dioxide as a sweep-gas supply that has been lost, and trace the source and its connections again before changing any setting.',
+            'The sweep gas supply may have been lost. Trace the source, blender and tubing again before changing any setting.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'The model behind this is that a rising carbon dioxide value means the gas path has been interrupted. That instinct is a good one, and it is the right first move when the rise arrives over minutes on an otherwise undisturbed circuit. What refutes it here is that the tracing has already been done and the blender is delivering what it was set to: this is clearance that was never sufficient for the goal, not clearance that disappeared. Repeating an intact inspection leaves an acute acidemia running while it is repeated.',
+            'This is a sound first move when carbon dioxide climbs over minutes on a quiet circuit. Here the line has just been traced and the blender is delivering 2.0 L/min. The supply is intact; the dose is too low.',
         },
         {
           id: 'raise-gas-oxygen-fraction',
           label:
-            'Read the problem as gas that is not rich enough, and raise the oxygen fraction of the sweep gas.',
+            'The sweep gas is not rich enough. Raise the oxygen fraction on the blender so gas exchange improves across the membrane.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This treats the gas side as a single setting — make the gas richer and both gases improve. The oxygen fraction sets what is offered on the oxygen side, while carbon dioxide leaves down its own partial-pressure difference, which is held by how much gas moves through the membrane and carries it away. Oxygenation is also not what has moved here: it is where it has been since cannulation, so the side this setting does act on is not the side that is short.',
+            'Oxygen fraction sets oxygen transfer. Carbon dioxide leaves according to how much gas flows past the membrane, not what the gas contains.',
         },
         {
           id: 'raise-pump-speed',
           label:
-            'Read the retained carbon dioxide as under-dosed support, and raise the pump speed so more blood reaches the membrane each minute.',
+            'The patient is under-supported. Raise the pump speed so more blood crosses the membrane each minute and more carbon dioxide is removed.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'The model behind this is that carbon dioxide clearance follows the dose of blood flow the way oxygen delivery does. Blood flow does carry carbon dioxide to the membrane, but clearance is far more sensitive to the gas side than to the blood side, and in this model blood flow principally acts on the oxygen side. The steady flow and the unmoved pressure gradient across the membrane say the blood path is already doing what it was doing, so asking the pump for more against an intact blood path adds drainage suction and shear without moving the value that is off.',
+            'Blood flow mainly sets oxygen delivery; carbon dioxide removal depends far more on sweep. More speed adds suction and hemolysis without moving the carbon dioxide much.',
         },
         {
           id: 'hold-and-tolerate-hypercapnia',
           label:
-            'Read this as hypercapnia the patient is being allowed to tolerate on support, hold the sweep where it is, and re-check a blood gas in several hours.',
+            'Hypercapnia is tolerated on venovenous support. Leave the sweep where it is and repeat the blood gas in several hours.',
           plausibility: 'unsafe',
           rationale:
-            'This carries a maintenance-phase habit into a stabilization-phase patient: an elevated carbon dioxide value is tolerated when the acid-base picture shows it has been compensated and the patient is comfortable. The bicarbonate of 25 mmol/L refutes that reading — a compensated state carries a bicarbonate well above normal alongside a pH near normal, which the contrasting patient in this station has and this one does not. Holding leaves a pH of 7.18 and a high work of breathing in place while the thing that is short is clearance the circuit can give now.',
+            'Tolerating a high carbon dioxide is reasonable when the pH is near normal and the patient is comfortable. A pH of 7.18 with a bicarbonate of 25 and high work of breathing is neither.',
         },
       ],
       correctChoiceIds: ['act-on-membrane-co2-clearance'],
-      explanation:
-        'Two facts have to be read together. The bicarbonate says how long this has been going on: at 25 mmol/L the kidney has not begun to defend the pH, so a pH of 7.18 is an acute drop rather than the settled state of someone who has lived at a high carbon dioxide value for weeks. The clinical phase says what the goal is: during stabilization the circuit exists to take over work the patient is doing badly, and the high work of breathing shows that work is still being paid for. The contrasting patient in this station — a carbon dioxide value of 58 mmHg with a bicarbonate of 34 mmol/L, a pH of 7.39 and low work of breathing — earns a different answer from the same lever, which is why one number never decides. Model boundary: the response returned here is a single bounded educational relationship between the gas setting and an arterial carbon dioxide value, approached at a fixed rate. It carries no dead space, no membrane ageing and no independent contribution from the patient’s own breathing, so the size and speed of what is shown are properties of that relationship rather than predictions for a patient. At the bedside the step is sized with the pH in mind — a large, fast fall in carbon dioxide swings pH and cerebral blood flow, and that risk is greatest in the chronic retainer — and each step is re-checked on a blood gas. The change is also made on the external gas blender rather than on the console touchscreen.',
+      explanation: `Read the bicarbonate with the pH. At 25 mmol/L the kidneys have not compensated, so a pH of 7.18 is acute. Sweep gas flow is the control for carbon dioxide; you set it on the blender, not the console. Step it up and recheck the gas after each change, bringing the carbon dioxide down over ${ECMO_NUMBERS.value('paco2-correction-time')} because a rapid fall changes cerebral blood flow.`,
       evidenceIds: [
         'ecmo-book-ch16',
         'ecmo-book-ch18',
@@ -599,52 +565,52 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'A patient in the maintenance phase of venovenous support has had no setting altered since the previous evening. The morning blood gas shows an arterial carbon dioxide of 58 mmHg, a bicarbonate of 34 mEq/L and a pH of 7.39. The patient is comfortable with a low work of breathing. Circuit blood flow, the post-pump and return-limb pressures, and the gradient across the membrane are all where they have been for hours. The overnight team has asked what should be done about the carbon dioxide. What do you commit to, and what are you acting to achieve?',
+      stem: 'A patient in the maintenance phase of venovenous support has had no setting changed since the previous evening. The morning blood gas shows an arterial carbon dioxide of 58 mmHg, a bicarbonate of 34 mEq/L and a pH of 7.39. The patient is comfortable with low work of breathing. Circuit blood flow, the post-pump and return-limb pressures, and the gradient across the membrane are where they have been for hours. What do you do about the carbon dioxide?',
       choices: [
         {
           id: 'preserve-the-compensated-state',
           label:
-            'Read the pattern as retention the kidney has already answered, hold the sweep-gas flow where it is, and let the next full review decide whether anything moves.',
+            'The pH is normal because the kidneys have compensated. Leave the sweep where it is and recheck the gas at the next routine review.',
           plausibility: 'best',
           rationale:
-            'What carries information here is not that the carbon dioxide is raised but that the pH is normal while it is raised, which happens only once base has been retained to sit alongside it. Acid-base management serves the pH and the patient, and both are where you would want them, so there is no patient problem that removing more carbon dioxide would solve. Holding is an active decision rather than the absence of one: it keeps the compensated state intact and hands the question to the next full review instead of to a single abnormal number.',
+            'You treat the pH and the patient, not the carbon dioxide. A pH of 7.39 with a bicarbonate of 34 and a comfortable patient needs nothing removed.',
         },
         {
           id: 'normalize-the-carbon-dioxide-now',
           label:
-            'Raise the sweep-gas flow now to bring the carbon dioxide back toward 40 mmHg — a value of 58 is plainly abnormal, and a membrane that can clear it should not be left idling.',
+            'A carbon dioxide of 58 mmHg is abnormal and the membrane can clear it. Raise the sweep gas flow now to bring it back toward 40 mmHg.',
           plausibility: 'unsafe',
           rationale:
-            'The model behind this is that an abnormal carbon dioxide is itself the thing being treated. The normal pH refutes it: base has already been retained alongside this carbon dioxide, so clearing the carbon dioxide quickly leaves that base unopposed and drives the pH up and away from the 7.39 it currently holds, which is exactly what the bounded response in this lab will show. Beyond the acid-base overshoot, a carbon dioxide that falls quickly in a patient who has been living at 58 also constricts the cerebral circulation, which is why rapid normalization on extracorporeal support is approached cautiously rather than reflexively.',
+            'The bicarbonate of 34 stays behind when you strip the carbon dioxide, so the pH swings alkaline. A fast fall in carbon dioxide also constricts cerebral vessels.',
         },
         {
           id: 'inspect-the-membrane-first',
           label:
-            'Read the raised carbon dioxide as a membrane losing gas transfer, and inspect the circuit and the gas path before committing to anything about support, since steady pressures do not exclude it.',
+            'A raised carbon dioxide can mean the oxygenator is losing gas transfer. Inspect the oxygenator and gas path before deciding, because steady pressures do not exclude it.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Inspecting is never unreasonable, and an oxygenator losing carbon-dioxide transfer is a genuine cause of a raised carbon dioxide. Steady pressures do not exclude it either: those channels report blood-side resistance, and a membrane can lose gas transfer with its resistance and its gradient unchanged. What argues against it is the direction of the pH. A membrane losing clearance drives the carbon dioxide up over minutes to hours, far faster than any renal response, so the pH falls with it. A raised carbon dioxide sitting beside a normal pH and a raised bicarbonate is not the shape an acute gas-path problem makes.',
+            'A failing oxygenator raises carbon dioxide over minutes to hours, faster than the kidneys respond, so the pH would be low. A normal pH with a bicarbonate of 34 took days.',
         },
         {
           id: 'raise-pump-speed-for-clearance',
           label:
-            'Raise the pump speed so that more blood reaches the membrane and more carbon dioxide is cleared.',
+            'Carbon dioxide removal depends on blood reaching the membrane. Raise the pump speed so more blood crosses it each minute and more is cleared.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This borrows the control that principally moves oxygen and applies it to carbon dioxide. Carbon-dioxide clearance tracks the gas side far more closely than the blood side, and nothing described here — no oxygenation deficit, no drainage limitation, no re-drainage pattern — argues for more blood flow. The step is not free either: more speed means a more negative drainage pressure and more blood-side trauma, bought for a patient whose pH is already where it should be.',
+            'Pump speed mainly sets oxygen delivery; sweep sets carbon dioxide. More speed costs a more negative drainage pressure and more hemolysis, for a patient whose pH is already normal.',
         },
         {
           id: 'begin-a-separation-trial',
           label:
-            'Take the comfortable, compensated blood gas as evidence that the native lungs are ready, and open a separation trial by taking the sweep gas to zero.',
+            'A comfortable patient with a normal pH has recovering lungs. Start a trial off sweep by turning the sweep gas to zero.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This reads renal compensation as pulmonary recovery. The bicarbonate of 34 is the kidney adapting to a carbon dioxide the membrane is still clearing; it says nothing about how much of that clearance the native lung could take back. Separation in venovenous support is judged deliberately, with circuit blood flow maintained and the patient reviewed in a set order, at a moment chosen for it — not inferred from one comfortable maintenance gas in the middle of a stable run.',
+            'The bicarbonate of 34 is the kidneys adapting to a carbon dioxide the membrane is still clearing. It says nothing about what the native lungs can do.',
         },
       ],
       correctChoiceIds: ['preserve-the-compensated-state'],
       explanation:
-        'The informative finding is not the raised carbon dioxide on its own but the normal pH sitting beside it, which happens only once base has been retained alongside the retained carbon dioxide. The goal is therefore to preserve that compensation: hold sweep — an external gas-blender control, not a CARDIOHELP-i touchscreen control — where it is, and let a fresh look at pH, bicarbonate, the carbon dioxide trend, symptoms, work of breathing and the phase of the run decide whether anything moves. One honest caveat sits inside the numbers: the pH is fully normal rather than a little low, and the bicarbonate is a few mEq above what retention alone would usually be expected to produce, which raises the possibility of a metabolic alkalosis running alongside — from diuresis or chloride loss, for instance. That is a reason to look at the metabolic side, not a reason to strip carbon dioxide out quickly. None of this is a general permission for a raised carbon dioxide: the same patient early in a run, with climbing work of breathing, or with a specific reason to avoid hypercapnia, is reasoned to a different answer by the same steps. Model boundary — this lab moves the carbon dioxide value along a bounded curve set by the sweep flow and by whether gas is reaching the membrane at all, and it holds the bicarbonate fixed, so the pH shown is arithmetic and no renal response can appear in it. Carbon-dioxide production, native ventilation and dead space are not modeled, and blood flow does not move the carbon dioxide here at all, even though at the bedside it contributes something. What the lab shows is a direction, never a bedside prescription.',
+        'A raised carbon dioxide with a normal pH and a high bicarbonate is chronic, compensated retention. Stripping the carbon dioxide quickly would leave the bicarbonate unopposed and the pH alkaline. Leave the sweep alone. A bicarbonate of 34 is a little more than retention alone explains, so look for a metabolic alkalosis from diuresis or chloride loss.',
       evidenceIds: [
         'ecmo-book-ch16',
         'ecmo-book-ch18',
@@ -689,52 +655,52 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'A patient on stable venovenous support deteriorates over a few minutes. The arterial carbon dioxide value climbs steeply from the mid-40s, the pH follows it down, and arterial oxygen saturation drifts from a saturation of 93 to a saturation of 82. Displayed circuit blood flow sits exactly where it has all shift, the pressures on either side of the membrane and the pressure drop across it are unmoved, and no one has touched the pump speed or the sweep setting since the run was steady. What do you act on first, and what would you expect to find if that reading holds?',
+      stem: 'A patient on stable venovenous support deteriorates over a few minutes. Arterial carbon dioxide climbs steeply from the mid-40s, the pH follows it down, and arterial saturation drifts from 93% to 82%. Circuit blood flow sits exactly where it has all shift, the pressures on either side of the membrane and the pressure drop across it are unmoved, and nobody has touched the pump speed or the sweep setting. What do you do first?',
       choices: [
         {
           id: 'follow-the-gas-path',
           label:
-            'Follow the sweep-gas path itself — source, blender and the line into the membrane — and re-establish delivery; expect an undisturbed blood path and a carbon dioxide value that turns as soon as gas is arriving again.',
+            'Trace the sweep gas from the wall outlet or cylinder through the blender to the oxygenator, and reconnect whatever is not delivering.',
           rationale:
-            'Carbon dioxide clearance depends on a gradient the sweep gas maintains at the membrane, so it collapses within a circuit transit or two when nothing arrives on the gas side, and the membrane begins returning blood it has not oxygenated. No other explanation offered here moves carbon dioxide that fast. The blood path stays silent because every pressure channel the console reports sits in that blood path, which is exactly why circuit flow, the pressures either side of the membrane and the pressure drop across it can all look untouched while gas transfer has stopped.',
+            'Carbon dioxide rising over minutes with a falling saturation and an untouched blood path means no gas is reaching the membrane.',
           plausibility: 'best',
         },
         {
           id: 'raise-the-sweep',
           label:
-            'Turn the sweep control up until the carbon dioxide value comes back down; expect it to turn within a few circuit transits, since a higher setting means more gas at the membrane.',
+            'Turn the sweep up on the blender until the carbon dioxide comes back down, because a higher setting puts more gas across the membrane.',
           rationale:
-            'This holds that a climbing carbon dioxide value always means the sweep is set too low. Nobody has altered the sweep since the run was steady, so the setting is not what changed. A setting also states what is being asked for rather than what is arriving at the membrane, so turning it up on a line delivering nothing moves a number on a panel and nothing in the patient — while the carbon dioxide value goes on climbing.',
+            'A setting is what you asked for, not what arrives. Turning it up on a line delivering nothing changes a dial and not the patient.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'raise-the-pump-speed',
           label:
-            'Raise the pump speed to bring the saturation back up, since less oxygenated blood is evidently reaching the patient; expect the saturation to climb with the flow display.',
+            'Raise the pump speed to bring the saturation back up, because less oxygenated blood is reaching the patient than before.',
           rationale:
-            'The model behind this reads a falling saturation as insufficient circuit support. Displayed flow and every circuit pressure are unchanged, so the blood path is delivering exactly what it delivered while gas exchange was steady; more speed only drives more blood through a membrane that is oxygenating none of it, and pulls harder on drainage to do it. The real harm is time — the console looks attended to while the one explanation that is reversible in a minute goes unlooked-for and the acidemia deepens.',
+            'Flow and pressures are unchanged, so the blood path is doing its job. More speed sends more blood through a membrane that is adding no oxygen.',
           plausibility: 'unsafe',
         },
         {
           id: 'work-through-the-circuit',
           label:
-            'Work through the blood path first — pressures, pressure drop, visible clot, cannula position — before anything else; expect one of them to have moved on a closer look, since a change this large has to show somewhere in the blood path.',
+            'Work through the blood path first: pressures, pressure drop, visible clot and cannula position, because a change this large must show there.',
           rationale:
-            'Inspecting the circuit is never unreasonable, and it is where reasoning confined to the blood path leads. But the pressures and the pressure drop across the membrane are given as unmoved, so the blood path has already answered the question put to it. The path the console cannot report on is the one still unexamined, and its interruption is the only thing here that produces this combination in minutes.',
+            'The blood path has already answered: pressures and pressure drop are unmoved. The gas path is the part the console cannot report on and the part nobody has checked.',
           plausibility: 'reasonable-but-incomplete',
         },
         {
           id: 'exchange-the-oxygenator',
           label:
-            'Call for an oxygenator exchange, since a membrane that has stopped exchanging gas has to be replaced; expect the post-membrane saturation to stay low until it is.',
+            'Call for an oxygenator exchange, because a membrane that has stopped exchanging gas has to be replaced before the patient worsens.',
           rationale:
-            'This treats lost gas transfer as synonymous with a membrane that has stopped working. Both leave the membrane returning blood it has not oxygenated, so a falling post-membrane saturation does not separate them; what separates them is that a deteriorating membrane usually declares itself over hours with a rising pressure drop across it, and that pressure drop has not moved while this change took minutes. An exchange also commits the patient to an interruption of support and fresh air-handling risk for the one component these findings argue against.',
+            'A failing oxygenator usually declares itself over hours with a rising pressure drop. This took minutes and the pressure drop has not moved. An oxygenator with no gas supply looks the same at the outlet, and you can exclude that in seconds.',
           plausibility: 'incorrect-mechanism',
         },
       ],
       correctChoiceIds: ['follow-the-gas-path'],
       explanation:
-        'Every explanation on this list survives an unchanged flow display, which is why the display is a poor place to reason from. Two features separate them: how fast the change came on, and where the console has nothing to report. Carbon dioxide crosses the membrane on a gradient the sweep gas maintains, so clearance stops almost at once when the supply is absent, while the pump goes on moving blood through an undisturbed circuit and the membrane returns blood it has not oxygenated. Sweep flow and the oxygen fraction of the sweep gas are settings on a supply; neither delivers anything when the supply itself is not arriving, which is why the connection comes before the setpoint. Model boundary: this simulation carries the modeled patient along bounded educational curves — an arterial saturation settling near 82 and a carbon dioxide value climbing toward 90 within roughly half a modeled minute rather than over the few minutes described here — and the gas panel is a schematic stand-in for a source, a blender and a line. Those speeds and endpoints are teaching shapes, not a bedside prediction for any particular patient.',
+        'The console monitors the blood path, not the gas path. When sweep gas stops arriving, carbon dioxide clearance stops almost at once and the membrane returns blood it has not oxygenated, while flow and every pressure stay normal. So a fast rise in carbon dioxide with falling saturation on a quiet console sends you to the gas line first: wall outlet or cylinder, blender, tubing, oxygenator inlet. Fix the connection before you touch a setting.',
       evidenceIds: [
         'ecmo-book-ch9',
         'ecmo-book-ch18',
@@ -775,52 +741,52 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'You are at the bedside of a venovenous run at 3200 rpm when the arterial bubble channel raises a high-priority alarm and the pump stops on its own. Air is visible in the circuit, both near-patient clamps are still open, the console is holding the bubble intervention latched, and the arterial saturation has begun to drift down from a saturation of 93 now that there is no forward flow through the membrane lung. What has the automatic pump stop actually achieved, and what has to be true before this circuit carries blood to the patient again?',
+      stem: 'On a venovenous run at 3200 rpm the arterial bubble sensor raises a high-priority alarm and the pump stops on its own. Air is visible in the circuit, both near-patient clamps are still open, and the bubble stop stays latched. With no flow through the membrane lung, arterial saturation has begun to drift down from 93%. What has the pump stop achieved, and what do you do now?',
       choices: [
         {
           id: 'isolate-then-eliminate-source',
           label:
-            'Only that forward flow has ceased. The patient is still continuous with both limbs, so they have to be closed off near the patient, and the place where air is entering the circuit has to be found and eliminated.',
+            'It only stopped forward flow. Clamp the return limb, then the drainage limb, near the patient, call for the backup circuit, and find the source.',
           plausibility: 'best',
           rationale:
-            'A centrifugal head is not an occlusive valve. Stopping it removes the forward push and leaves an open column between the circuit air and the patient, which is what the near-patient clamps close. Nothing available at the console can remove air or stop it entering, so the work belongs at the tubing, the connections and any line being handled, while the patient is carried on conventional ventilation and hemodynamic support. Reopening the limbs and releasing the latched intervention both wait on the entry site being eliminated and the circuit being confirmed clear.',
+            'A stopped centrifugal pump is not a valve; air can still reach the patient through open limbs. Clamp, call for help and the backup circuit, support the patient on the ventilator, then close the source and aspirate the air.',
         },
         {
           id: 'reset-to-restore-flow',
           label:
-            'It has bought a pause, and the pause is now costing gas exchange. The saturation is falling with no extracorporeal support, so acknowledge the alarm and reset the bubble intervention to get the pump turning again.',
+            'It bought a pause that is now costing gas exchange. Acknowledge the alarm and reset the bubble stop so the pump restarts and the saturation recovers.',
           plausibility: 'unsafe',
           rationale:
-            'This treats the alarm as the emergency and the stopped pump as the harm. Two findings refute it: air is still in the circuit, and both limbs are still open to the patient, so the first revolutions after a reset would drive that air toward the return cannula. A saturation falling because circuit flow has stopped is answered with conventional ventilation and hemodynamic support while the circuit is isolated and cleared, not by restarting a circuit that still holds air.',
+            'Air is still in the circuit and both limbs are open, so the first turns of the pump push that air toward the patient. Treat the falling saturation with the ventilator while you clamp and clear the circuit.',
         },
         {
           id: 'stopped-pump-already-isolates',
           label:
-            'It has already separated the patient from the circuit. Nothing needs to happen at the clamps, so the air can be dealt with directly and the circuit resumed once it is clear.',
+            'It separated the patient from the circuit. Leave the clamps, remove the air through a circuit port, and restart once the line looks clear.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'The model behind this is that air moves only when the pump moves it. A centrifugal head is not occlusive: with it stopped, both limbs stay hydraulically continuous with the patient, and gravity, cannula and patient position, spontaneous respiratory effort and any handling of the tubing can still move an air column. Both clamps being open is the finding that refutes it, because that open path to the patient is exactly what isolation removes.',
+            'With the pump stopped, gravity, patient position, breathing effort and handling can still move air through open limbs. Only the clamps separate the patient from the circuit.',
         },
         {
           id: 'size-the-air-first',
           label:
-            'The amount of air has to be established first, because how much is in the circuit is what decides how urgent the isolation and the de-airing are.',
+            'It bought time to judge how much air is present. Estimate the volume first, because that decides how urgently to clamp and de-air.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Judging how much air is present is real bedside reasoning and a clinician will do it. What makes it a poor place to start is that it changes nothing about what has to happen: whatever the volume, the limbs are open and the entry site is unaddressed, and estimating while both remain true spends the interval in which isolation is still cheap. This exercise also carries no air-volume cut value, deliberately, so there is no threshold here for an estimate to be weighed against.',
+            'You will judge the amount, but it does not change the first move. Whatever the volume, both limbs are open and air is still getting in. Clamp first, then look.',
         },
         {
           id: 'blame-the-membrane',
           label:
-            'The membrane lung has to come out. Air appearing on the return side identifies it as the source, so arrange an oxygenator exchange.',
+            'It showed the oxygenator is the source, since the air was detected on the return limb beyond it. Arrange an oxygenator exchange.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'A membrane lung genuinely can be a source of circuit air, so the suspicion is not unreasonable — but the detector reports where air was found, not where it entered. Air is drawn in wherever circuit pressure sits below atmospheric, which is the drainage limb, its connections and any line being handled near the patient, and it is then carried forward past the membrane; a return-side detection is where air of almost any origin would announce itself. Committing to an exchange before the entry site is located leaves the actual source in place and adds a fresh set of connections to it.',
+            'The sensor tells you where air was found, not where it entered. Air usually gets in on the negative-pressure side: the drainage limb, its connectors, or a port in use.',
         },
       ],
       correctChoiceIds: ['isolate-then-eliminate-source'],
       explanation:
-        'The device intervention and the isolation are two different acts. Stopping the pump removes the forward push; only the near-patient clamps separate the patient from an air column, and only finding where air is entering keeps it from returning as soon as flow does. Reset is never a response to the alarm or a substitute for source correction and de-airing, and where it falls within resumption is governed by the current IFU and the unit’s own protocol. The patient is carried conventionally throughout. Two boundaries belong with this. The exercise injects an air event with no volume assigned to it and no threshold behind it, because the manufacturer document supplied for this module is internally inconsistent on a bubble-size threshold; it therefore teaches a sequence rather than a rule about how much air matters. And isolation is taught explicitly — return limb then drainage limb — while where clamp opening, pump restart and console reset fall relative to one another during resumption is deliberately not, because that choreography is device- and program-specific. Local protocol governs at the bedside, and this simplified model does not represent the physical work of de-airing a real circuit.',
+        'The bubble stop halts the pump; it does not clamp anything or remove air. Clamp the return limb, then the drainage limb, near the patient. Call for help and the primed backup circuit, support the patient on the ventilator, find and close the source, and aspirate the air; exchange the circuit if it cannot be cleared quickly. Resume only when the source is fixed and the circuit is free of bubbles: drainage clamp open, bubble stop reset on the Interventions screen (which restarts the pump), return clamp open last.',
       evidenceIds: [
         'ifu-console-workflow',
         'ifu-anomaly-boundary',
@@ -864,43 +830,44 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: "During an interfacility transport on venovenous support, the vehicle's supply to the console drops out. The power-source indicator changes over to internal battery on its own, the transport screen shows a battery reserve reading of 24 percent and falling steadily, and the console is showing a low-priority power message rather than an insistent alarm. Circuit blood flow, the circuit pressures and the patient's oxygenation are all unchanged from the readings taken before the supply dropped out, and the receiving unit is still some distance away. What does this moment call for?",
+      stem: 'During an interfacility transport on venovenous support, the vehicle’s supply to the console drops out. The console switches to internal battery on its own, the transport screen shows a battery reserve of 24 percent and falling steadily, and there is a low-priority power message. Circuit blood flow, the circuit pressures and the patient’s oxygenation are unchanged, and the receiving unit is still some distance away. What do you do now?',
       choices: [
         {
           id: 'secure-verified-supply-now',
           label:
-            'Act on the power supply now, while blood flow is uninterrupted: connect a verified alternate source, confirm flow and the patient, and keep the backup console and emergency drive to hand.',
+            'Connect the console to another power source now and confirm it is charging, recheck flow and the patient, and keep the emergency drive within reach.',
           rationale:
-            'The changeover to battery is the one thing that has actually changed, and it buys an interval rather than settling anything. Securing a verified source while the circuit is still running is what keeps support continuous, and naming the backup console and the emergency drive keeps a fallback ready in case the interval runs out before a source is found.',
+            'The battery is a bridge, and 24 percent is charge, not minutes. Get onto a source you have confirmed is live while the pump is still running.',
           plausibility: 'best',
         },
         {
           id: 'watch-until-the-reserve-is-low',
           label:
-            'Keep watching the console and the patient as the transport continues — the changeover was automatic and the reserve reads well above empty — and act on the power situation once the indicator gets low.',
+            'Keep monitoring the console and patient and continue the transport; the switch was automatic and 24 percent is well above empty, so act when the reserve gets low.',
           rationale:
-            'Watching is not misplaced, and nothing in the circuit has moved yet. The model underneath waiting is that the displayed reserve is a clock with a threshold to act at, but it reports remaining charge rather than minutes, and how long that charge lasts depends on the load the console is carrying and on the age of the battery. The reserve is already falling and the power message only becomes more insistent as it falls further, so waiting for the display to escalate spends the very interval the decision depends on.',
+            'Watching is fine, but the reserve gives no fixed time. How long it lasts depends on pump load and battery age, and it is already falling.',
           plausibility: 'reasonable-but-incomplete',
         },
         {
           id: 'lower-speed-to-stretch-the-battery',
-          label: 'Lower the pump speed so that the remaining battery reserve lasts longer.',
+          label:
+            'Lower the pump speed to cut the power draw, so the remaining battery lasts until the transport reaches the receiving unit.',
           rationale:
-            'This treats circuit support as expendable and console run time as the thing worth protecting. It gives away patient support for a power problem that has not touched the circuit — flow, pressures and oxygenation are all stated to be unchanged — and it leaves the missing supply exactly where it was, so the reserve still runs down in the end.',
+            'This trades the patient’s support for run time. Flow, pressures and oxygenation are fine; the problem is the supply, and it is still missing after you turn the pump down.',
           plausibility: 'unsafe',
         },
         {
           id: 'change-to-emergency-drive-now',
           label:
-            'Change over to the emergency drive straight away, on the basis that a console on battery is a console about to stop, and a hand-driven pump is the one supply that cannot be lost.',
+            'Move the pump to the emergency drive and hand-crank now, because a console on battery could stop at any moment during the transport.',
           rationale:
-            'The mental model here reads a battery indicator and an imminent pump stop as the same event. The console is running normally on battery with unchanged flow, and no alternate source has been looked for yet, so this interrupts support in a moving vehicle before the simpler remedy has been tried. At this point the emergency drive belongs in the readiness plan rather than in the hands.',
+            'The console is running normally on battery. Going to the hand crank now means clamping and stopping support in a moving vehicle before you have tried another outlet.',
           plausibility: 'incorrect-mechanism',
         },
       ],
       correctChoiceIds: ['secure-verified-supply-now'],
       explanation:
-        'Losing the external supply during transport changes one thing and leaves the rest alone: where the console is drawing power from. The automatic changeover to battery is a bridge rather than a remedy — it opens an interval whose true length is not on the screen, because run time depends on the load the console is carrying and on the condition of the battery. Everything the circuit displays stays reassuring throughout that interval, and on a real console it stays reassuring right up to the moment the reserve is gone, which is why this decision is taken from the power source rather than from the flow number, and why the fallback is named out loud before it is needed. Model boundary: this drill drains the reserve at a fixed simulated rate whatever the pump is doing, and it does not simulate what an exhausted battery would do to the pump — so the falling reading is not a run-time prediction and must not be read as minutes remaining. The drill exercises recognition and readiness only: naming the backup console and the emergency drive is not the same as being trained to drive a pump by hand, which is learned at the device itself.',
+        'When external power drops, the console switches to battery and everything on the screen stays normal until the battery is empty. So act on the power source, not the flow number: find another supply, confirm the console is charging, recheck flow and the patient, and keep the backup console and emergency drive at hand. If the console stops, go to the emergency drive: both clamps closed, disposable across, venous clamp open, crank clockwise, arterial clamp open once speed is up. The simulated battery drains at a fixed rate; a real one depends on load and battery age.',
       evidenceIds: [
         'ifu-console-workflow',
         'ecmo-book-ch9',
@@ -939,52 +906,52 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'The console tour is over and the circuit has been returned to its pre-use state. It is a peripheral venoarterial circuit: a femoral venous drainage cannula, the same pump and oxygenator hardware you have just toured, and a femoral arterial return cannula. The pump is stopped with the speed setpoint back at zero, flow reads zero, and pVen, pInt and pArt show the unavailable indication rather than numbers. The startup diagnostic has not been allowed to run through and nothing has been walked by hand. The bedside monitor already reports a right-arm saturation of 96 and a femoral arterial saturation of 98.5, a mean arterial pressure of 71 mmHg and a pulse pressure of 18 mmHg, all from the patient’s own circulation with no support running. The console in front of you is the identical unit used for the venovenous circuits on this ward. What do you commit to before support is established?',
+      stem: 'A peripheral venoarterial circuit is primed and in its pre-use state: femoral venous drainage cannula, pump and oxygenator, femoral arterial return cannula. The pump is stopped with the speed setpoint at zero, flow reads zero, and pVen, pInt and pArt show dashes instead of numbers. The startup diagnostic has not run and nothing has been traced by hand. Off support, the bedside monitor shows a right-arm saturation of 96, a femoral arterial saturation of 98.5, a mean arterial pressure of 71 mmHg and a pulse pressure of 18 mmHg. What do you do before you start support?',
       choices: [
         {
           id: 'verify-as-a-va-circuit',
           label:
-            'Work the pre-use sequence as a peripheral venoarterial circuit specifically: diagnostic, a hand-walk from drainage to return confirming which vessel each limb enters, gas, power and backup — and record the monitor’s pre-support baseline: right arm against lower body, the arterial trace, the native heart and the cannulated leg.',
+            'Run the diagnostic, trace each limb by hand to its vessel, check gas, power and backup, and record the baseline right-arm saturation, pulse pressure and leg perfusion.',
           plausibility: 'best',
           rationale:
-            'The hardware is shared with the venovenous circuits but the consequences are not, and both halves of that follow from the same fact: the console cannot tell you which vessel the return limb enters. It reads the same circuit pressure either way. So the hand-walk is what establishes the configuration, and the independent numbers are what make the configuration’s two signature problems readable — mixed circulation in the upper body, and perfusion of the leg the arterial cannula sits in. Both begin the moment the pump does, and a right-arm saturation, a pulse pressure and a limb examination taken afterwards have nothing to be compared against unless the earlier reading was written down.',
+            'The console cannot tell which vessel the return limb enters; only your hand trace can. Once the pump starts, right-arm saturation, pulse pressure and the leg can all change, and without a baseline you have nothing to compare them with.',
         },
         {
           id: 'same-check-then-add-monitoring',
           label:
-            'Run the same startup sequence used on the venovenous circuits — diagnostic, walk from cannula to cannula, gas, power and backup — and read the upper-body and lower-body numbers once the patient is on support and the picture has settled, since values taken before the pump turns describe a circulation that is about to change.',
+            'Run the same startup check as for venovenous: diagnostic, hand trace, gas, power and backup. Record the right-arm and lower-body values once the patient has settled on support.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'The circuit walk is right and it is the larger half of the work; nothing in it is wasted. What is deferred is the half that is specific to peripheral venoarterial support. Retrograde flow up the aorta begins meeting native ejection the instant the pump starts, and where the two meet moves with both. The numbers that make that visible are already on the monitor, but only their pre-support values fix what the later ones should be read against — a right-arm saturation, a pulse pressure and a limb examination taken after support has begun are being compared with nothing. Reading them later is not the same as having read them first.',
+            'The circuit check is right. But a right-arm saturation or pulse pressure read only after the pump starts has no baseline to be compared with.',
         },
         {
           id: 'shared-hardware-start-now',
           label:
-            'This is the same hardware and the same console as a venovenous circuit, it is reporting no fault, and the bedside monitor is already giving numbers — so bring the pump up to the ordered speed and work the rest out under flow.',
+            'Same console and hardware as venovenous, no fault showing, and the monitor is already reading. Bring the pump to the ordered speed and check the rest under flow.',
           plausibility: 'unsafe',
           rationale:
-            'Identical hardware with a different consequence is exactly why this cannot be reasoned from the console. A return limb connected to a vessel it was never meant to enter, or an arterial cannula that is not where it is believed to be, produces no distinguishing reading: pArt is a pressure measured inside the disposable and it rises against a vein or an artery alike, and it is not reporting at all until the pump turns. That the monitor is giving numbers is not the reassurance it appears to be either — a right-arm saturation of 96 means one thing on a patient’s own circulation and something quite different once retrograde flow is meeting native ejection somewhere in the aorta, and only the reading taken first tells you which of the two you are looking at afterwards.',
+            'pArt reads the same whether the return limb is in an artery or a vein, and it reads nothing until the pump turns. A misplaced cannula shows no warning on the console.',
         },
         {
           id: 'part-is-the-arterial-pressure',
           label:
-            'The return limb sits in the femoral artery, so once the pump is up the post-oxygenator pressure the console reports is the more direct measure of the patient’s arterial pressure, measured inside the return limb and closer to the aorta than any peripheral line — read that as the arterial number and treat the bedside trace as the cross-check.',
+            'Once the pump is up, use pArt as the patient’s arterial pressure, since it is measured in the return limb close to the aorta, and cross-check it with the bedside trace.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This is refuted by where the sensor sits rather than by anything clinical. pArt is measured inside the disposable, after the membrane and before the cannula, so what it reports is the pressure the pump is generating against everything downstream of it at once — the remaining tubing, the cannula, and the patient’s circulation together. It rises when the return limb kinks and it rises when the patient’s vascular tone rises, and nothing in the number separates the two. The bedside trace is the one that measures the patient; on peripheral venoarterial support the question worth asking about it is where it is sited, because that decides which circulation it is reporting on.',
+            'pArt is measured inside the circuit, after the oxygenator and before the cannula. It rises with a kinked limb as readily as with the patient’s vascular tone. The patient’s pressure comes from the arterial line.',
         },
         {
           id: 'distal-perfusion-plan-first',
           label:
-            'Limb ischaemia is the complication peripheral venoarterial support is known for, so settle the distal perfusion plan for the cannulated leg before anything else on the circuit is revisited.',
+            'Limb ischemia is the classic complication of femoral venoarterial support. Settle the distal perfusion plan for the cannulated leg before returning to the circuit.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Ischaemia of the cannulated limb is a real and characteristic problem, and having the plan settled before it is needed is good practice rather than an error. It is incomplete as the commitment here because it promotes one item on the list above the item the whole sequence depends on. The circuit still has to be shown to run the way it is believed to run, the pressure lines still have to be on the limbs they are labelled for, and the gas, power and backup still have to be verified by hand. A distal perfusion plan does nothing about a return limb that is not in the vessel it is believed to be in.',
+            'The plan should be ready, but it does nothing about a return limb in a vein instead of the artery, a swapped pressure line or a closed gas supply.',
         },
       ],
       correctChoiceIds: ['verify-as-a-va-circuit'],
       explanation:
-        'The console is the same on both configurations, and that is the whole difficulty: nothing it displays distinguishes a venovenous circuit from a peripheral venoarterial one, because every channel it carries is a circuit measurement — and on a stopped circuit it is not carrying them at all. Which vessel each limb enters is established by hand, before support. What the configuration then produces — retrograde arterial flow meeting native ejection somewhere in the aorta, and a leg whose supply now runs past a cannula — is visible only through data the console does not hold: the right-arm site against a lower-body one, the arterial trace, the native heart, and the leg itself. Those numbers are already on the monitor; reading them before the pump starts is what makes the first minutes of support interpretable rather than reconstructed afterwards. Model boundary: this is a bounded educational simulation rather than a patient twin. It reports right-arm and femoral values directly and resolves the pre-use walk to a single check, where the bedside would involve echocardiography, imaging of cannula position, serial limb examination and a full pre-use list. No target value for pulse pressure, right-arm oxygenation or distal perfusion is taught here; those depend on the patient, the cannulae and the local protocol.',
+        'The console looks identical on venovenous and venoarterial support, so you establish the configuration by hand: which vessel each limb enters. Peripheral venoarterial support then brings two problems the console cannot show: retrograde flow meeting native ejection in the aorta, and a leg perfused past an arterial cannula. Record the right-arm saturation, the pulse pressure and the state of the leg before the pump starts, so the first minutes on support can be read against them.',
       evidenceIds: [
         'ifu-console-workflow',
         'ecmo-book-ch9',
@@ -1028,52 +995,51 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'A peripheral venoarterial run is in its stabilization phase and the pump is turning at 3600 rpm. Circuit blood flow, steady near 4.5 L/min at this speed through the morning, is now swinging between about 2.8 and 3.2 L/min from one moment to the next; the drainage pressure has become progressively more negative and reads about -82 mmHg; and the drainage line is chattering against its holder. Both post-pump pressures have drifted down with the flow rather than climbing, and the gradient across the membrane has narrowed with it; the post-membrane blood gas drawn at handover was fully saturated. The mean arterial pressure is 62 mmHg, and the arterial trace still shows native ejection with a pulse pressure of about 18 mmHg, unchanged since handover. What does this pattern call for as the first move?',
+      stem: 'On peripheral venoarterial support in the stabilization phase, the pump is turning at 3600 rpm. Circuit blood flow, steady near 4.5 L/min through the morning, now swings between about 2.8 and 3.2 L/min. Drainage pressure has become progressively more negative and reads about -82 mmHg, and the drainage line is chattering. Both post-pump pressures have drifted down with the flow and the gradient across the membrane has narrowed; the post-membrane gas at handover was fully saturated. Mean arterial pressure is 62 mmHg, and the arterial trace still shows native ejection with a pulse pressure of about 18 mmHg, unchanged since handover. What do you do first?',
       choices: [
         {
           id: 'ease-pump-demand-then-examine',
           label:
-            'Ease the demand the pump is placing on the drainage limb, then work out what is limiting venous return.',
+            'Turn the pump speed down until flow steadies, then find what is limiting venous return: cannula, tubing, volume or the chest.',
           plausibility: 'best',
           rationale:
-            'A centrifugal pump cannot manufacture venous return; it can only pull harder on what is offered it. Pulling harder on a vein that is already collapsing onto the drainage ports is what produces the swing in flow and the chatter, so relieving the suction is what steadies the circuit. It is a holding move: cannula position and depth, tubing, venous filling and intrathoracic causes still have to be worked through, the limitation removed, and support retitrated against perfusion and native-heart endpoints under local protocol.',
+            'A centrifugal pump cannot create venous return; it can only pull harder. Less speed stops the vein collapsing onto the cannula and steadies flow. Then find the cause, fix it, and bring support back up against perfusion.',
         },
         {
           id: 'raise-speed-to-recover-flow',
           label:
-            'Ask the pump for more speed until the displayed flow climbs back toward where it ran this morning.',
+            'Raise the pump speed until flow climbs back toward 4.5 L/min, because a mean arterial pressure of 62 mmHg needs more circuit support.',
           plausibility: 'unsafe',
           rationale:
-            'This treats the displayed flow as the thing that has gone astray and the pump as the way to retrieve it. The drainage pressure refutes it: already deeply negative, it falls further with every increment of speed, drawing the vein harder onto the drainage ports and repeating the suction events, so effective systemic support falls while the display is chased. Reflexive speed escalation against a low displayed flow is the reflex this drill exists to interrupt.',
+            'Every step up in speed makes the drainage pressure more negative and sucks the vein harder onto the cannula. Flow no longer rises and can fall, so the patient gets no more support, with hemolysis added.',
         },
         {
           id: 'volume-first-for-presumed-hypovolemia',
           label:
-            'Read the drainage pressure as underfilling, give volume straight away, and leave the pump speed where it is.',
+            'Give a fluid bolus now, because a drainage pressure this negative means the patient is underfilled, and leave the pump speed where it is.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Hypovolemia is a genuine cause of this picture and volume may well end up being part of the answer, but the model behind this choice is that a deeply negative drainage pressure names its own cause. It does not: cannula position and depth, a kink, coughing or straining, tamponade and rising intrathoracic pressure all read the same way on this channel. Nothing offered so far separates them, and volume aimed at a cause that is not the one present leaves the suction running meanwhile.',
+            'Hypovolemia is one cause and volume may be part of the answer. A malpositioned or kinked cannula, coughing, tamponade and a tension pneumothorax read the same on the drainage pressure.',
         },
         {
           id: 'localize-downstream-resistance',
           label:
-            'Read the falling flow as resistance beyond the pump, and inspect the membrane and the arterial return path first.',
+            'Treat the falling flow as resistance beyond the pump, and inspect the oxygenator and the arterial return limb before changing the speed.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This applies the afterload pattern to a drainage picture. Resistance downstream of the pump raises the post-pump pressures — both together when the return limb is the problem, with a widening gradient when the membrane is. Here both post-pump pressures have fallen with the flow, the gradient has narrowed rather than widened, and the only pressure moving against the flow sits upstream of the pump.',
+            'Resistance beyond the pump raises the post-pump pressures. Here both have fallen and the gradient has narrowed. The only pressure moving against flow is upstream of the pump.',
         },
         {
           id: 'assess-lv-loading-first',
           label:
-            'Read this as retrograde arterial flow loading the left heart, and assess the left ventricle before touching the pump.',
+            'Treat this as retrograde arterial flow loading the left ventricle, and get an echo of the ventricle before touching the pump.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'Left-heart loading is a genuine hazard of peripheral retrograde support, but it announces itself through pulsatility narrowing toward nothing, an aortic valve that stops opening, and pulmonary congestion — not through a drainage pressure that keeps falling and a line that chatters. The pulse pressure here is unchanged and the trace still shows native ejection, so the finding that would raise the concern is the one that is absent.',
+            'A loaded left ventricle shows a pulse pressure narrowing toward nothing, a closed aortic valve and pulmonary edema. Here the pulse pressure is unchanged at 18 mmHg with native ejection, and the abnormal number is the drainage pressure.',
         },
       ],
       correctChoiceIds: ['ease-pump-demand-then-examine'],
-      explanation:
-        'Flow that will not sit still, a drainage pressure that keeps falling, and a chattering line are one pattern rather than three findings: the vein and the drainage ports are being asked for more blood than they can offer, and each brief occlusion is what the swing and the chatter are made of. Both post-pump pressures falling with the flow, and a membrane gradient that narrowed with it rather than widening, place the limit upstream of the pump rather than downstream of it. Easing demand buys a steadier circuit; it treats nothing, and what support is finally retitrated against is perfusion and the native heart rather than a flow display. No drainage-pressure cut point is published here; about -82 mmHg matters as a trend on this circuit rather than as a threshold. Where this drill simplifies: it offers a single step that removes whatever was limiting drainage, so hypovolemia, a malpositioned or kinked cannula, straining, and rising intrathoracic pressure collapse into one action. At the bedside each is a different problem with a different treatment, and naming which one is present is the work this drill leaves to you. Once drainage is the limit, the modelled flow no longer rises when the pump is asked for more: it falls a little with each step up in speed while the drainage pressure falls much faster, which is what a vein being drawn shut looks like on a display.',
+      explanation: `Swinging flow, a drainage pressure that keeps falling and a chattering line are one problem: the pump is asking the vein for more than it can give. Falling post-pump pressures and a narrowed gradient confirm the limit is upstream of the pump. Turn the speed down to stop the suction, then work through cannula position, a kink, volume, straining, tamponade and tension pneumothorax, and fix what you find. The manual advises avoiding negative pressures ${ECMO_NUMBERS.value('negative-pressure-caution')}. Factory pVen limits: ${ECMO_NUMBERS.value('pven-factory-limits')}.`,
       evidenceIds: [
         'ecmo-book-ch9',
         'ecmo-book-ch17',
@@ -1117,52 +1083,51 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'You are called to a peripheral venoarterial run. The pump speed has not been touched and still reads 3200 rpm. Over the past several minutes circuit blood flow has fallen from about 4.0 to about 2.8 L/min. pInt, measured after the pump and before the membrane lung, has risen from about 242 to about 335 mmHg, and pArt, measured after the membrane on the return limb, has risen from about 211 to about 313 mmHg. The gradient between them now reads about 22 mmHg, where it read about 31 mmHg at the earlier flow, and no pressure alarm limit on this console has been reached. The patient’s own arterial line has not risen with the circuit pressures — it reads a mean pressure near 70 with a pulsatile trace — the right radial saturation is in the mid-90s, a norepinephrine infusion has been unchanged since morning, and the cannulated limb looks as it did earlier. Which next step do you commit to, and on what reasoning?',
+      stem: 'On a peripheral venoarterial run the pump speed is untouched at 3200 rpm. Over the past several minutes circuit blood flow has fallen from about 4.0 to about 2.8 L/min. pInt, measured before the membrane lung, has risen from about 242 to about 335 mmHg, and pArt, measured after the membrane on the return limb, from about 211 to about 313 mmHg. The gradient between them reads about 22 mmHg, down from about 31 mmHg, and no pressure alarm limit has been reached. The patient’s own arterial line reads a mean near 70 with a pulsatile trace, the right radial saturation is in the mid-90s, norepinephrine is unchanged since morning, and the cannulated limb looks as it did earlier. What do you do next?',
       choices: [
         {
           id: 'localize-beyond-membrane',
           label:
-            'Before any setting is moved, work along the blood path beyond the membrane — return tubing, connectors, clamps, cannula position and sensor plausibility.',
+            'Before changing a setting, walk the return limb beyond the oxygenator: tubing, connectors, clamps and cannula position.',
           plausibility: 'best',
           rationale:
-            'A resistance raises the pressure in every zone upstream of it, which is why both post-pump zones climbed together. The gradient is what places it: a gradient is a resistance multiplied by a flow, and this one fell about as much as flow did, which is what an unchanged membrane resistance does. The added resistance therefore sits beyond the membrane, on the return path. That names a zone rather than a cause, and the zone holds tubing, connectors, a partly closed clamp, cannula position, an implausible sensor, and the patient’s own arterial load — which is why the path is walked before a control is moved.',
+            'Both post-pump pressures rose together and the gradient fell in step with flow, so the oxygenator is unchanged and the new resistance is beyond it. That gives you a segment, not a cause.',
         },
         {
           id: 'raise-speed-to-recover-flow',
           label:
-            'Raise the pump speed until circuit blood flow comes back toward 4 L/min, on the reasoning that flow is the output being lost and speed is the control that sets it.',
+            'Raise the pump speed until flow is back toward 4 L/min, because flow is what has been lost and speed is the control that sets it.',
           plausibility: 'unsafe',
           rationale:
-            'This treats the displayed flow as the problem and the speed control as its answer. The pressures refute it: flow fell while both post-pump pressures climbed, which is a pump already turning against a load it cannot overcome. More speed drives more pressure into an obstructed path, buys little flow, leaves the resistance where it is, and adds hemolysis and the risk of circuit or cannula disruption to the situation.',
+            'Flow fell while both post-pump pressures climbed: the pump is already pushing against a block. More speed adds pressure, hemolysis and the risk of a blown connection, and little flow.',
         },
         {
           id: 'call-it-a-membrane-problem',
           label:
-            'Read this as a clotting membrane lung and arrange a circuit exchange, on the reasoning that pInt has climbed while flow has fallen at an unchanged speed.',
+            'Treat this as a clotting oxygenator and arrange an exchange, because pInt has climbed while flow has fallen at an unchanged speed.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'The mental model is that a high post-pump pressure means the membrane. A membrane that had become the resistance separates the two zones: pInt climbs away from pArt and the gradient widens even while flow is falling. Here the gradient fell roughly in step with flow, so the membrane is the one part of the path this pattern argues against. Saturations would not settle it either way — a membrane can be laying down clot before its gas transfer changes — which is why the gradient, read against this circuit’s own earlier value, is the finding that discriminates.',
+            'A clotting oxygenator pulls pInt away from pArt and widens the gradient even as flow falls. Here the gradient narrowed from 31 to 22 mmHg.',
         },
         {
           id: 'treat-circuit-pressure-as-the-patients',
           label:
-            'Take the return-limb reading of 313 as the patient’s arterial pressure, call it dangerous hypertension, and wean the norepinephrine to bring it down.',
+            'Treat the return-limb reading of 313 mmHg as dangerous arterial hypertension, and wean the norepinephrine to bring the pressure down.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This reads a circuit pressure as a patient pressure. pArt sits inside the return tubing and reports what the circuit is pushing against on its way out; the patient’s pressure comes from the independent arterial line, which reads near 70 and did not climb when the circuit pressures did. They are different measurands rather than two readings of one pressure. Weaning vasoactive support to lower a number that was never the patient’s leaves the resistance untouched and removes support this patient may still need.',
+            'pArt is the pressure inside the return tubing. The patient’s pressure is on the arterial line, near 70, and it did not rise. Weaning norepinephrine leaves the obstruction and takes away support the patient needs.',
         },
         {
           id: 'reposition-the-return-cannula',
           label:
-            'Commit now to a malpositioned arterial cannula and have it repositioned, on the reasoning that a rise in both return-side pressures implicates the cannula itself.',
+            'Call it a malpositioned arterial cannula and have it repositioned now, because both pressures beyond the pump have risen together.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'The zone is right and cannula position is a genuine member of the return-side list, which is what makes this the tempting one. It is incomplete because it moves from a zone to a single cause without the walk that separates them: a kinked limb, a partly closed clamp, a connector, a sensor reading implausibly, and the patient’s own arterial load all produce this same console pattern, and moving a cannula that was sitting properly is not a neutral act.',
+            'You have the segment, and the cannula is on the list. So are a kinked limb, a partly closed clamp, a connector and a faulty sensor. Walk the limb before you move a cannula that may be sitting well.',
         },
       ],
       correctChoiceIds: ['localize-beyond-membrane'],
-      explanation:
-        'Two post-pump zones rising together put the added resistance downstream of both, because an obstruction raises the pressure in everything upstream of it. The gradient is what keeps the membrane out of it. A gradient is a resistance multiplied by a flow, so it falls when flow falls, and it is interpretable only against this circuit’s own earlier value at a comparable flow; here it fell about as much as flow did, where a membrane that had become the resistance would have widened it instead. What the reasoning buys is a zone, not a diagnosis: tubing, a connector, a partly closed clamp, cannula position, an implausible sensor and the patient’s own arterial load all sit inside it, and no single console value separates them. The second half of the reading is where pArt is measured. It is a pressure inside the return tubing, reporting what the circuit pushes against on its way out, while the patient’s arterial pressure comes from an independent monitor and reads near 70 here — different measurands, not two readings of one pressure. Model boundary: this simulation carries one authored return-side resistance that clears once its cause is dealt with, its flow and pressure responses are bounded teaching curves, and the patient’s pressure here tracks circuit flow with no vasoactive drug modeled. A real return path can hold more than one contributing cause at once, patient afterload can be part of the picture, and none of these numbers belong at a bedside circuit.',
+      explanation: `An obstruction raises the pressure in everything upstream of it, so pInt and pArt rising together put the resistance beyond both. The gradient across the oxygenator is resistance times flow; it fell as flow fell, so the oxygenator has not changed. Walk the return limb to the cannula and fix what you find. Factory pInt and pArt limits: ${ECMO_NUMBERS.value('pint-part-factory-limits')}. pArt is a circuit pressure; the patient’s blood pressure is on the arterial line.`,
       evidenceIds: [
         'ecmo-book-ch9',
         'ecmo-book-ch17',
@@ -1208,52 +1173,51 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'You take over a patient on peripheral venoarterial support whose speed setting has not been altered since this morning, and neither has the sweep gas. Against the values documented then, pInt — the pressure between the pump outlet and the membrane lung — has risen from about 240 to about 330 mmHg, while pArt on the return limb has moved the other way, from about 210 to about 190. The gradient between them was about 30 mmHg and is now about 140. Circuit blood flow at that same speed has fallen from about 4.0 to about 3.1 L/min. A blood gas drawn from the post-membrane port shows a saturation of 88, where it was a saturation of 99 this morning. Right radial and femoral arterial saturations are where they were, the mean arterial pressure has drifted down about 5 mmHg, and no circuit pressure alarm has annunciated. Which next move does this pattern call for?',
+      stem: 'On peripheral venoarterial support, neither the pump speed nor the sweep gas has been changed since this morning. pInt, between the pump outlet and the membrane lung, has risen from about 240 to about 330 mmHg, while pArt on the return limb has fallen from about 210 to about 190. The gradient between them was about 30 mmHg and is now about 140. Circuit blood flow at the same speed has fallen from about 4.0 to about 3.1 L/min. A post-membrane blood gas shows a saturation of 88%, down from 99% this morning. Right radial and femoral arterial saturations are unchanged, mean arterial pressure has drifted down about 5 mmHg, and no circuit pressure alarm has sounded. What do you do next?',
       choices: [
         {
           id: 'locate-the-resistance-first',
           label:
-            'Establish where the resistance sits before any support setting is changed, reading the two post-pump pressures and the gradient against each other at matched flow and speed, alongside sensor plausibility and gas transfer.',
+            'Confirm the pressure drop at unchanged flow, check the sensors, repeat the post-oxygenator gas, and call the perfusionist with the backup.',
           plausibility: 'best',
           rationale:
-            'A gradient that has widened while the return-limb pressure moved down places the resistance in the membrane itself rather than beyond it, and a post-membrane saturation that has dropped fits the same component behaving the same way. What none of that settles on its own is whether the pressure channels are reporting plausibly, or whether the comparison was made at like flow and speed — a gradient is a resistance multiplied by whatever flow it is read at, so a slower circuit and a fouled membrane pull the number in opposite directions. Localizing the resistance is also what an escalation under your unit’s exchange protocol rests on, which is why it comes before the support setting is touched.',
+            'pInt up, pArt down and a gradient from 30 to 140 mmHg put the resistance in the oxygenator, and a post-oxygenator saturation of 88% says gas transfer is going too. Confirm it is not a sensor or a kink, then exchange.',
         },
         {
           id: 'raise-speed-to-restore-flow',
           label:
-            'Raise the pump speed until the displayed circuit flow returns to this morning’s value, on the reasoning that support has fallen short.',
+            'Raise the pump speed until circuit flow returns to about 4.0 L/min, because the mean arterial pressure is drifting down and support has fallen short.',
           plausibility: 'unsafe',
           rationale:
-            'The model behind this reads a falling flow as a shortfall of pump output. It is instead what the pump is already doing against a resistance, and the widened gradient beside a return-limb pressure that has not risen is the finding that says so. Driving more blood through the component that is the resistance raises pInt further, adds shear across a restricted membrane, and leaves the cause untouched. On peripheral venoarterial support it also raises the pressure the left ventricle has to eject against, so left-heart loading can be deepened while nothing about the membrane has been addressed.',
+            'More speed pushes more blood into the clotting oxygenator: pInt rises, hemolysis rises, and the clot stays. On venoarterial support more flow also raises left ventricular afterload.',
         },
         {
           id: 'act-on-the-return-limb',
           label:
-            'Take this as an obstruction beyond the membrane and act on the return limb — free the tubing, check the connectors, reposition the arterial cannula — since flow has fallen while a post-pump pressure has risen.',
+            'Treat this as an obstruction beyond the oxygenator: free the return tubing, check the connectors and reposition the arterial cannula to restore flow.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This is the neighbouring pattern, and the model behind it is that any post-pump pressure rise sits downstream of the membrane. Resistance there raises pArt and pInt together and leaves the gradient across the membrane tracking flow as it always did. Here pArt has moved down while the gradient has more than quadrupled, and that pair is what separates the two situations. A second problem on the return limb is never excluded by reasoning alone, but nothing in this pattern argues for one, and acting on the limb ahead of locating the resistance treats a site that has not been implicated.',
+            'An obstruction beyond the oxygenator raises pArt and pInt together and leaves the gradient alone. Here pArt has fallen and the gradient has more than quadrupled.',
         },
         {
           id: 'exchange-the-membrane-now',
           label:
-            'Arrange a membrane-lung exchange straight away, on the reasoning that a gradient of this size is by itself enough to declare the membrane spent.',
+            'Arrange an oxygenator exchange immediately, because a gradient of about 140 mmHg is enough by itself to call the oxygenator spent.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'An exchange may well be where this reasoning ends, so the instinct is close. The model behind it is that a gradient has a value above which a membrane is finished. This module encodes no such value: the number is a resistance multiplied by the flow it is read at, it differs between oxygenators, and it depends on the channel reporting properly — and the supplied device labeling is itself internally inconsistent about pressure-drop alarm priority. Reading the gradient at matched flow and speed, beside gas transfer and sensor plausibility, is what turns this into an escalation under your local protocol rather than a single number acted on.',
+            'Exchange is probably where this ends. But the gradient depends on flow and on working sensors, and an exchange stops support on a venoarterial patient. Confirm at matched flow, repeat the gas, and have the backup primed first.',
         },
         {
           id: 'raise-sweep-oxygen-fraction',
           label:
-            'Raise the oxygen fraction of the sweep gas, since the blood leaving the membrane is no longer fully saturated.',
+            'Raise the oxygen fraction of the sweep gas on the blender, because blood leaving the membrane is no longer fully saturated.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'The falling post-membrane saturation is real, and the model behind this choice reads it as too little oxygen being offered to the membrane. The gas path carries no blood-side pressure at all, so nothing done there widens the gradient between pInt and pArt or constrains flow at an unaltered speed. Those two findings are what refute a gas-side explanation: one component has become harder to push blood through and is transferring less oxygen at the same time.',
+            'The gas side carries no blood pressure, so nothing done there explains a gradient of 140 mmHg or falling flow.',
         },
       ],
       correctChoiceIds: ['locate-the-resistance-first'],
-      explanation:
-        'Two post-pump pressures and the gradient between them are what localize a resistance: risen together indicates something beyond the membrane, separated indicates the membrane itself. Here they separated, flow fell at an unaltered speed, and the post-membrane saturation drifted down — one component reporting three ways. None of it tripped a console pressure limit, and no threshold arrives with any of it: this module publishes no gradient value at which a membrane is declared finished, both because the number is a resistance multiplied by whatever flow it happens to be read at and because the supplied device labeling is internally inconsistent on pressure-drop alarm priority. Model boundary: the whole pattern comes from a single fault flag that raises the membrane-resistance coefficient, cuts flow at the set speed, rewrites the return-limb pressure and pins the post-membrane saturation at a fixed value — so it is fully present the moment the drill opens rather than evolving in front of you, and that saturation will not move if the sweep oxygen fraction is changed. The systemic saturations are likewise held steady by the model rather than by anything established about the patient. A real membrane usually declares itself over hours to days alongside findings this model does not produce: clot visible in the fibre bundle, a falling platelet count, hemolysis, a widening carbon dioxide difference across the membrane. And pArt is a circuit pressure on the return limb; it is not the patient’s arterial line or mean arterial pressure.',
+      explanation: `When the two post-pump pressures rise together, look beyond the oxygenator; when they separate, the oxygenator is the resistance. The usual pressure drop is ${ECMO_NUMBERS.value('pressure-drop-typical')} and the factory upper limit is ${ECMO_NUMBERS.value('pressure-drop-factory-limit')}; the trend at a fixed flow matters more than one value. Confirm the trend, send a post-oxygenator gas, call the perfusionist with the primed backup, and exchange the oxygenator. More pump speed is not a treatment. In this simulation the post-oxygenator saturation is fixed and will not change with the sweep oxygen fraction.`,
       evidenceIds: [
         'ifu-anomaly-boundary',
         'ecmo-book-ch9',
@@ -1298,52 +1262,52 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'A patient on peripheral femoral venoarterial support has a right-hand pulse oximeter reading a saturation of 82 on the bedside monitor. A sample drawn from the femoral arterial line reads a saturation of 99, and the blood leaving the membrane reads a saturation of 99. The arterial trace is pulsatile with a pulse pressure of 22 mmHg, echocardiography shows the aortic valve opening, and native output is estimated at 2.8 L/min. Circuit flow, both membrane pressures and the gradient across the membrane are where they have been all shift. A colleague notes that the two saturations of 99 are reassuring and asks whether the right-hand number can be set aside. What does this combination of findings call for next?',
+      stem: 'On peripheral femoral venoarterial support, the right-hand pulse oximeter reads a saturation of 82%. A femoral arterial sample reads 99%, and blood leaving the membrane reads 99%. The arterial trace is pulsatile with a pulse pressure of 22 mmHg, echocardiography shows the aortic valve opening, and native output is estimated at 2.8 L/min. Circuit flow, both membrane pressures and the gradient across the membrane are where they have been all shift. What do you do next?',
       choices: [
         {
           id: 'verify-upper-body-and-read-both-circulations',
           label:
-            'Confirm the upper-body value with a right radial blood gas and read it against native ejection, the native lungs and the circuit data before a circuit setting is changed.',
+            'Confirm the right-arm value with a right radial blood gas, then improve native lung oxygenation on the ventilator before changing circuit flow.',
           plausibility: 'best',
           rationale:
-            'An upper-body saturation and a lower-body one are not two attempts at the same number. Retrograde circuit blood and antegrade native blood meet somewhere along the aorta, and the right hand reports what the brachiocephalic vessels are carrying. A native output near 2.8 L/min with a pulse pressure of 22 mmHg and an opening aortic valve says the native stream is real, so the femoral value describes the circulation nearest the return cannula and the post-membrane value describes the circuit alone; neither settles what the brain and the coronary arteries are receiving. Confirming the upper-body reading and then reading the heart, the native lungs, the circuit and the likely mixing region together is what names the mechanism, and it is the picture the ECMO team needs before the support or cannulation strategy is revised under local protocol.',
+            'The heart is ejecting 2.8 L/min of blood through sick lungs, and that blood supplies the coronaries and the brain. The right arm reads it; the femoral line and the membrane read only circuit blood.',
         },
         {
           id: 'raise-pump-speed',
           label:
-            'Raise pump speed now — a systemic saturation of 82 means the patient is under-supported and needs more circuit flow.',
+            'Raise the pump speed now, because an arterial saturation of 82% means the patient is under-supported and needs more circuit flow.',
           plausibility: 'unsafe',
           rationale:
-            'The model here is that a low saturation means a shortage of circuit flow. Raising retrograde flow does move the meeting place of the two circulations more proximally, toward the aortic root, and can lift the right-hand value for a time, which is what makes the reflex convincing. It also raises what the left ventricle must eject against, and this ventricle is ejecting — a pulse pressure of 22 mmHg with an opening aortic valve — so native ejection can be suppressed and the left heart and lungs loaded, while the poorly oxygenated native stream reaching the upper body is untouched. Acting before the mechanism is named also leaves a rising flow and pressure display to be read as though the upper body had been settled.',
+            'More flow pushes the mixing point toward the aortic root and may lift the right-hand value for a while, but it loads a ventricle that is ejecting. It is a temporary step after the ventilator, not the first move.',
         },
         {
           id: 'recheck-sensors-and-hold',
           label:
-            'The three values cannot all be trustworthy — recheck the oximeter probe and the circuit sensors, and hold the current settings until the readings agree with each other.',
+            'Three values that disagree cannot all be reliable. Recheck the oximeter probe and the circuit sensors, and hold the settings until the readings agree.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Verifying a reading is never unreasonable, and this is the option worth taking seriously. What does not hold is the model underneath it — that a value disagreeing with two others must be defective. Disagreement between an upper-body and a lower-body arterial site is the expected finding when two circulations run in parallel, and the femoral and post-membrane values agree with each other because both sit downstream of the membrane, not because they are the truthful ones. Nothing in the circuit data suggests a sensor problem, so the reading to confirm is the upper-body one, at the patient, and holding the current settings while cerebral and coronary blood may be arriving poorly oxygenated spends time this finding does not allow.',
+            'Confirming the right-hand value is right; do it with a right radial gas. But the readings disagree because they sample two circulations, not because a sensor is off.',
         },
         {
           id: 'raise-sweep-gas-fio2',
           label:
-            'Raise the oxygen fraction of the sweep gas, so that the blood the circuit returns to the patient carries more oxygen to the upper body.',
+            'Raise the oxygen fraction of the sweep gas, so the blood the circuit returns carries more oxygen to the upper body.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This treats the hypoxemia as a membrane-output problem. The blood leaving the membrane already reads a saturation of 99, so a higher sweep-gas oxygen fraction has almost nothing left to add, and the poorly oxygenated blood arriving at the right hand never travelled through the membrane at all — it came from the native lungs by way of the ejecting ventricle.',
+            'Blood already leaves the membrane at 99%. The desaturated blood at the right hand never went through the membrane; it came through the native lungs and out of the left ventricle.',
         },
         {
           id: 'vasopressor-for-upper-body',
           label:
-            'Start or increase a vasopressor to raise mean arterial pressure and drive better oxygen delivery to the head and the coronary arteries.',
+            'Start or increase a vasopressor to raise mean arterial pressure and improve oxygen delivery to the brain and the coronary arteries.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'The model is that poor upper-body oxygenation reflects inadequate perfusion pressure. Pressure is not what is missing here: the upper body is being perfused, by a stream whose oxygen content is low. Raising vascular tone changes neither the oxygen content of that stream nor the native lung that loaded it, while adding to the load that both the ventricle and the pump are already working against.',
+            'The upper body is perfused; the blood reaching it is low in oxygen. A vasopressor does not change oxygen content, and it adds afterload for the ventricle and the pump.',
         },
       ],
       correctChoiceIds: ['verify-upper-body-and-read-both-circulations'],
       explanation:
-        'Two arterial oxygenation readings taken from different parts of one patient are not one number measured twice; in femoral venoarterial support they report two circulations, and the site nearest the return cannula is the least able to say what the brain is receiving. Everything the console shows here is behaving. Everything that discriminates lives at the patient — where the reading was taken, whether the ventricle is ejecting, what the native lungs are doing to the blood it ejects, and where along the aorta the two streams meet. That is why the first step establishes the pattern rather than moving a setting, and why a reassuring femoral or post-membrane value is the most misleading number on this display. Model boundary: this lab reproduces the upper-body oxygenation cue with a bounded educational response curve. It does not model ventilator settings, cannulation options or cerebral oximetry, so the native-lung and configuration answers a real team would weigh here sit outside what can be committed to here. The modeled response stands for verification and escalation through your local protocol, not for a bedside maneuver that resolves differential oxygenation on its own.',
+        'On femoral venoarterial support, oxygenated circuit blood travels up the aorta and meets blood the heart ejects from the native lungs. When the heart recovers before the lungs, the aortic arch gets the desaturated native blood, and only a right-arm reading shows it. Confirm with a right radial gas or saturation. First improve native lung oxygenation with the ventilator. Raising circuit flow moves the mixing point toward the aortic root but loads the recovering left ventricle, so use it as a temporary step. If the right arm stays low, convert to VV when the heart has recovered, or add a venous return limb (V-AV) when both heart and lungs still need support.',
       evidenceIds: [
         'elso-adult-va-2021',
         'elso-neuro-monitoring-2024',
@@ -1388,52 +1352,50 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'A patient in the maintenance phase of peripheral venoarterial support becomes harder to manage. The console shows circuit blood flow steady at about 4.0 L/min at the unchanged set speed. The arterial line reads a mean pressure of 70 mmHg, but the trace under it is nearly flat, with a pulse pressure of about 5 mmHg. Echocardiography reports that the aortic valve is barely seen to open and estimates the native output at 0.8 L/min. The chest is markedly congested and the work of breathing is high. What next step does this combination support, and what are you acting to achieve?',
+      stem: 'A patient in the maintenance phase of peripheral venoarterial support becomes harder to manage. Circuit blood flow is steady at about 4.0 L/min at the unchanged set speed. The arterial line reads a mean pressure of 70 mmHg, but the trace is nearly flat, with a pulse pressure of about 5 mmHg. Echocardiography shows the aortic valve barely opening and estimates native output at 0.8 L/min. The chest is markedly congested and the work of breathing is high. What do you do next?',
       choices: [
         {
           id: 'characterize-lv-loading-and-escalate',
           label:
-            'Treat the steady flow and the mean pressure of 70 mmHg as silent about native ejection, characterize the loading pattern at the patient, and escalate urgently for expert unloading evaluation.',
+            'Confirm on echo that the left ventricle is not ejecting, then turn circuit flow down to the lowest that perfuses and add an inotrope.',
           plausibility: 'best',
-          rationale:
-            'Retrograde arterial return raises what the left ventricle must eject against while drainage lowers what reaches it, so an acceptable displayed flow and an acceptable mean pressure can sit on top of a ventricle that is barely emptying. What establishes that lies elsewhere: a pulse pressure of 5 mmHg, an aortic valve barely seen to open, a native output of 0.8 L/min, left ventricular size and stasis on the images, a markedly congested chest, and the systemic perfusion. Every one of them is found at the patient rather than on the console. Gathering them as one pattern, rather than acting on whichever was noticed first, is what makes the escalation specific enough for the team to act on, and this draft goes no further than escalation.',
+          rationale: `Good flow and a mean of 70 mmHg say nothing about the ventricle. A pulse pressure of 5 mmHg, a valve that barely opens and pulmonary edema mean it cannot eject against the circuit. Lower the afterload, help it eject, take volume off, and vent it if pulsatility stays ${ECMO_NUMBERS.value('lv-vent-pulsatility')}.`,
         },
         {
           id: 'raise-pump-speed',
           label:
-            'Raise pump speed for more circuit flow, since the native heart is contributing almost nothing and this patient plainly needs more circulatory support than it is getting.',
+            'Raise the pump speed for more circuit flow, because the native heart is contributing only 0.8 L/min and the patient needs more circulatory support.',
           plausibility: 'unsafe',
           rationale:
-            'This reads a native output of 0.8 L/min as a reason to substitute more retrograde flow for a ventricle that has nearly stopped working, treating circuit flow as the only circulation that matters. The nearly flat trace and the valve that barely opens refute it: the ventricle is already losing the contest against the arterial pressure the circuit is generating, and more circuit flow raises exactly that pressure. In the sources cited here and in this bounded model, added retrograde flow deepens distension, pulmonary congestion and stasis rather than relieving them.',
+            'The ventricle is already losing against the pressure the circuit generates in the aorta. More flow raises that pressure, so the ventricle distends further, the lungs flood and blood stagnates in the chamber.',
         },
         {
           id: 'compare-arterial-sites',
           label:
-            'Read this as the mixing point having moved, and compare a right-arm with a lower-body arterial saturation to find an upper body being supplied by native blood.',
+            'Treat this as upper-body hypoxemia from native ejection, and compare a right-arm with a lower-body arterial saturation before changing anything.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This borrows the mechanism from the differential-oxygenation pattern, in which two circulations compete and the two arterial sampling sites separate from each other. That pattern needs a ventricle ejecting a substantial competing anterograde stream; here the native output is 0.8 L/min with a pulse pressure of 5 mmHg and a valve barely seen to open, so there is very little second stream to meet the returning blood. A markedly congested chest is not part of the mixing mechanism either, since a mixing point that has moved does not fill the lungs.',
+            'That problem needs a ventricle ejecting a real stream of desaturated blood. This one ejects 0.8 L/min through a valve that barely opens.',
         },
         {
           id: 'hunt-circuit-resistance',
           label:
-            'Look first at the circuit pressures and the gradient across the membrane, since something on the return side must have raised the load the ventricle is working against.',
+            'Check the circuit pressures and the gradient across the oxygenator, because a rise in resistance on the return limb would raise the load on the ventricle.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This places the added load inside the tubing. What the left ventricle ejects against is the arterial pressure in the aorta, which this circuit is generating on purpose. Resistance rising inside the circuit announces itself in the circuit’s own signals instead: flow falls away from the set speed, with the two post-pump pressures rising together and the gradient across the membrane little changed when the obstruction sits beyond the membrane, or with that gradient widening when the oxygenator itself is the site. Flow here is steady at the set speed, so neither pattern is present, and the findings that discriminate sit at the patient.',
+            'The ventricle ejects against aortic pressure, which the circuit generates by design. A resistance inside the circuit would show as falling flow and rising post-pump pressures. Flow is steady at the set speed.',
         },
         {
           id: 'escalate-on-the-trace-alone',
           label:
-            'Call for a definitive unloading intervention now on the flat arterial trace alone, and leave the rest of the picture for the team to work out when they arrive.',
+            'Call for a mechanical vent of the left ventricle now on the flat arterial trace, and let the team work out the rest when they arrive.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'The urgency and the direction of the concern are both right, and holding an escalation back to finish a tidy write-up would be worse. What is thin is the description handed over: a narrow pulse pressure on its own also follows from a damped arterial line, from low native output of any cause, and from obstructive physiology such as tamponade or a tension pneumothorax, and the findings that separate those from loading take one round of looking. This draft also names no unloading device and no threshold, so what transfers to the team is the pattern rather than a chosen intervention.',
+            'The urgency is right and a vent may be needed. But a flat trace alone also fits a damped line, tamponade or a tension pneumothorax. Echo separates them in minutes, and lowering flow and adding an inotrope start before a vent arrives.',
         },
       ],
       correctChoiceIds: ['characterize-lv-loading-and-escalate'],
-      explanation:
-        'Circuit flow and an arterial mean pressure are two reassuring numbers a venoarterial circuit can produce largely on its own, and neither establishes that the left ventricle is emptying. The return raises the load the ventricle ejects against while drainage reduces what fills it, so loading declares itself in pulsatility, in whether the valve opens, in left ventricular size and stasis, in the lungs and in the perfusion, none of which the console reports. Model boundary: this bounded educational model lets pulsatility and aortic-valve opening recover once the escalation is recorded, which is a teaching cue rather than a claim about how a real patient responds, and it stops short of naming any unloading device, threshold or patient-specific algorithm.',
+      explanation: `Retrograde flow raises the pressure the left ventricle ejects against. A ventricle that cannot open the aortic valve fills, distends and backs up into the lungs while circuit flow and mean pressure look fine. Then, in order: titrate circuit flow down to the lowest that perfuses, add or raise an inotrope so the ventricle ejects, take volume off with diuretics or renal replacement, and vent the ventricle (IABP, Impella, septostomy or surgical vent) if pulsatility stays ${ECMO_NUMBERS.value('lv-vent-pulsatility')}.`,
       evidenceIds: [
         'elso-adult-va-2021',
         'ecmo-book-ch9',
@@ -1477,51 +1439,51 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'Early in the stabilization phase of peripheral venoarterial support, a right radial blood gas returns a PaCO2 of 68, a bicarbonate of 25, a pH of 7.18, and a saturation of 93. The mean arterial pressure is 72, the lactate is 1.8, the pulse pressure is 18, the aortic valve is opening, and pulmonary congestion is mild. The patient is breathing 32 times a minute with high work of breathing. Circuit blood flow has been steady, and the gas reaching the membrane is running at 2 L/min. Which first move acts on the derangement this blood gas describes?',
+      stem: 'Early in the stabilization phase of peripheral venoarterial support, a right radial blood gas returns a PaCO2 of 68, a bicarbonate of 25, a pH of 7.18, and a saturation of 93%. The mean arterial pressure is 72, the lactate is 1.8, the pulse pressure is 18, the aortic valve is opening, and pulmonary congestion is mild. The patient is breathing 32 times a minute with high work of breathing. Circuit blood flow is steady, and the gas reaching the membrane is running at 2 L/min. What do you do first?',
       choices: [
         {
           id: 'increase-sweep-gas-flow',
           label:
-            'Increase the external sweep-gas flow through the membrane, leaving pump speed and sweep-gas oxygen fraction where they are.',
+            'Increase the sweep gas flow on the blender, leave pump speed and oxygen fraction alone, and repeat the gas.',
           plausibility: 'best',
           rationale:
-            'Carbon dioxide crosses the membrane readily, so what limits its removal is the gradient the flowing gas holds on the far side of it. A bicarbonate of 25 alongside a PaCO2 of 68 dates this as acute rather than compensated, so there is a named acid-base goal to act on, and the gas-side flow is the one setting in this description that is sitting low.',
+            'A PaCO2 of 68 with a bicarbonate of 25 is acute respiratory acidemia. Sweep gas flow sets carbon dioxide removal, and at 2 L/min it has room to go up.',
         },
         {
           id: 'raise-pump-speed',
           label:
-            'Raise pump speed so that more blood moves through the membrane each minute and carries more carbon dioxide out with it.',
+            'Raise the pump speed so that more blood crosses the membrane each minute and carries more carbon dioxide out with it.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This collapses two separate controls into one. Blood flow is titrated principally against oxygen delivery, and nothing here describes support that is short of flow, with a mean arterial pressure of 72 and a lactate of 1.8. Blood flow does make some real contribution to carbon dioxide removal at the bedside, but the sources cited here place the dominant control on the gas side, and on retrograde arterial support extra pump speed also raises the afterload the native ventricle ejects against.',
+            'Pump speed is titrated to perfusion, and a mean of 72 with a lactate of 1.8 is adequate. It removes little extra carbon dioxide, and on venoarterial support it raises the afterload the left ventricle ejects against.',
         },
         {
           id: 'raise-sweep-gas-oxygen',
-          label: 'Raise the oxygen fraction of the gas being delivered to the membrane.',
+          label:
+            'Raise the oxygen fraction of the sweep gas on the blender to improve gas exchange across the membrane.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This reads the situation as an upper-body oxygenation problem. That is a real hazard of peripheral venoarterial support, but it is not what has moved: the right radial saturation is 93 and the value out of place is the PaCO2. The oxygen fraction sets what is offered on the oxygen side of the membrane and does not change the gradient that carries carbon dioxide away, so the acidemia would be left where it is.',
+            'The right radial saturation is 93%; oxygen is not the problem. Oxygen fraction does not change how much carbon dioxide the sweep carries away, so the pH stays at 7.18.',
         },
         {
           id: 'review-lv-loading-first',
           label:
-            'Hold the current settings and review the left ventricle first — pulsatility, aortic-valve opening, and the lungs — before changing gas exchange.',
+            'Hold the settings and assess the left ventricle first: pulsatility, aortic valve opening and the lungs, before changing gas exchange.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Loading of the left ventricle is a genuine hazard of retrograde arterial support and is worth looking for in a patient working this hard. The findings that define it are absent: the loading pattern is a pulse pressure near 5 with a valve that stops opening and worsening pulmonary congestion, while this patient has a pulse pressure of 18, an opening valve, and mild congestion. Looking does no harm; leaving an acute acidemia untouched while looking is what makes this an incomplete answer.',
+            'Worth a look in a patient working this hard, but a loaded ventricle has a pulse pressure near 5, a closed valve and worsening edema. This patient has a pulse pressure of 18, an opening valve and mild congestion.',
         },
         {
           id: 'escalate-vasopressor',
           label:
-            'Read the pH of 7.18 as inadequate systemic perfusion and escalate vasopressor support before the gas path is examined.',
+            'Treat the pH of 7.18 as inadequate systemic perfusion, and increase vasopressor support before looking at gas exchange.',
           plausibility: 'unsafe',
           rationale:
-            'This is the reflex that treats any low pH as shock. The acid-base data refute it, since the pH is being driven by the carbon dioxide while the bicarbonate sits at 25, and so do the perfusion data, with a mean arterial pressure of 72 and a lactate of 1.8. Vasoconstriction also raises the afterload that retrograde circuit blood is driven against and can worsen loading of the left ventricle, while the patient goes on breathing 32 times a minute against carbon dioxide that nobody has removed.',
+            'The pH is low because of carbon dioxide, not lactate: bicarbonate is 25, lactate 1.8 and mean pressure 72. More vasoconstriction raises afterload on the left ventricle and leaves the patient breathing 32 times a minute.',
         },
       ],
       correctChoiceIds: ['increase-sweep-gas-flow'],
-      explanation:
-        'A PaCO2 of 68 with a bicarbonate of 25 puts the whole pH movement on the carbon dioxide. This is an acute respiratory acidemia, not the compensated maintenance picture in which bicarbonate has climbed and the pH has drifted back toward normal, and the two are handled differently. Carbon dioxide crosses the membrane readily, so its removal is limited by the gradient held on the gas side: the flow of gas through the membrane is the control that moves it, while the oxygen fraction of that same gas and the blood-side dose act principally on oxygen. The circulatory data given, a mean arterial pressure of 72, a lactate of 1.8, a pulse pressure of 18 with an opening aortic valve, and mild pulmonary congestion, describe neither shock nor the loading pattern that would send the reasoning elsewhere. Whatever is changed, the reassessment has to cover PaCO2 and pH, right-arm oxygenation, native lung function, and perfusion, because a venoarterial patient is never described by a blood gas alone. Model boundary: here the carbon dioxide value walks along a straight-line teaching curve toward a target fixed by the gas-side setting alone, the bicarbonate is held constant so the pH follows the carbon dioxide term at once, and a single PaCO2 is carried for the whole patient, so upper-body and lower-body carbon dioxide cannot diverge here the way arterial saturations can during peripheral venoarterial support. At the bedside, removal also varies with membrane surface, blood flow, native ventilation, and carbon dioxide production; the response is neither immediate nor linear; and how quickly an acute acidemia should be brought back is a patient-specific judgement made under local protocol, since an abrupt drop in PaCO2 carries hazards of its own. The numbers here are bounded teaching values, not a bedside prescription.',
+      explanation: `A PaCO2 of 68 with a bicarbonate of 25 puts the whole pH change on carbon dioxide: this is acute respiratory acidemia. Sweep gas flow controls carbon dioxide removal. Increase the sweep on the blender and recheck the gas, bringing the PaCO2 down over ${ECMO_NUMBERS.value('paco2-correction-time')} because a rapid fall changes cerebral blood flow. Draw the gas from the right radial.`,
       evidenceIds: [
         'ecmo-book-ch16',
         'ecmo-book-ch18',
@@ -1562,52 +1524,52 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'Minutes into a peripheral venoarterial run the patient deteriorates. Displayed circuit blood flow, the drainage pressure, both membrane pressures and the gradient across the membrane are all exactly where they have been. Blood leaving the membrane has fallen from a saturation of 99 to a saturation of 72. The right radial saturation has fallen from a saturation of 96 to a saturation of 80, and a femoral sample that read a saturation of 98 earlier now reads a saturation of 78. The arterial carbon dioxide value has climbed quickly from the mid-40s and the pH is drifting down with it. The sweep control still displays the value it was set to. What do you commit to first, and what are you acting to achieve?',
+      stem: 'Minutes into a peripheral venoarterial run the patient deteriorates. Circuit blood flow, the drainage pressure, both membrane pressures and the gradient across the membrane are exactly where they have been. Blood leaving the membrane has fallen from a saturation of 99% to 72%. The right radial saturation has fallen from 96% to 80%, and a femoral sample that read 98% earlier now reads 78%. The arterial carbon dioxide has climbed quickly from the mid-40s and the pH is drifting down with it. The sweep control still displays its set value. What do you do first?',
       choices: [
         {
           id: 're-establish-the-gas-supply-path',
           label:
-            'Go to the gas supply itself — outlet or cylinder, blender, and the tubing to the membrane — and re-establish delivery, aiming to bring membrane gas transfer back.',
+            'Trace the sweep gas line from the wall outlet or cylinder through the blender to the oxygenator, and restore delivery.',
           plausibility: 'best',
           rationale:
-            'Every pressure and flow channel is untouched because the interruption is not in the blood path: the pump goes on moving blood through a membrane that has nothing to exchange with. What has moved is everything that depends on gas transfer — blood leaving the membrane at a saturation of 72, two arterial saturations falling together rather than apart, and a carbon dioxide value climbing over minutes. That combination is the signature of an absent gas supply, and it is also the only item on this list that can be put back within seconds, at a connection rather than at a setting.',
+            'Pressures and flow are untouched because the blood path is fine. Blood leaving the membrane at 72%, both arterial sites falling together and carbon dioxide rising in minutes mean the membrane has no gas.',
         },
         {
           id: 'raise-pump-speed',
           label:
-            'Raise the pump speed until the arterial saturations come back up, aiming to deliver more oxygenated blood to a patient who is plainly under-supported.',
+            'Raise the pump speed until the arterial saturations recover, because the patient needs more oxygenated blood from the circuit.',
           plausibility: 'unsafe',
           rationale:
-            'This holds that a deteriorating patient on support must be receiving too little support. Unchanged flow, unchanged drainage pressure and unchanged membrane pressures already argue against that. Sending more blood through a membrane that is transferring nothing returns more poorly oxygenated blood rather than less, and it drives the mixing point more proximally, toward the aortic root, so more of the body — the upper body included — comes to be supplied by blood the membrane never oxygenated. In peripheral venoarterial support the added return also raises what the left ventricle must eject against, so distension and pulmonary congestion can deepen while the gas supply stays undiscovered.',
+            'The circuit is returning blood at 72%. More flow sends more of that desaturated blood up the aorta toward the coronaries and brain, and raises left ventricular afterload, while the gas line stays unchecked.',
         },
         {
           id: 'turn-the-sweep-up',
           label:
-            'Turn the sweep flow up, since carbon dioxide is the value moving fastest, aiming to restore clearance with the one control that acts on it directly.',
+            'Turn the sweep gas flow up, because carbon dioxide is the value moving fastest and sweep is the control that clears it.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'The mental model here is that a control which is set is a control which is delivering. A setting states what was asked for, not what is arriving at the membrane, and an interruption anywhere between the source and the membrane leaves the dialed value sitting above no delivery at all. Blood leaving the membrane at a saturation of 72 while that control reads what it always read is the finding that refutes it. Carbon dioxide is indeed the value moving fastest, and that speed is a property of losing the gas supply rather than of needing more of it.',
+            'The dial shows what you asked for, not what reaches the membrane. Blood leaving the membrane at 72% with the sweep still reading its set value means gas is not arriving.',
         },
         {
           id: 'exchange-the-oxygenator',
           label:
-            'Arrange an oxygenator exchange, since blood is leaving the membrane at a saturation of 72, aiming to replace the one component that has visibly stopped exchanging gas.',
+            'Call for an oxygenator exchange, because blood leaving the membrane at 72% means the membrane has stopped exchanging gas.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This reads a spent membrane from its output alone. A membrane that is failing usually announces itself over hours, most often with a gradient across it that has been climbing, and this gradient has not moved. A membrane can also lose transfer with an unchanged gradient — condensation and plasma leak do exactly that — so what argues against acting here is not that the membrane is above suspicion but that an intact membrane receiving no gas produces this same output, and the gas path is the one item that can be excluded in seconds. Exchanging first interrupts support to replace a component that may well be working.',
+            'A failing oxygenator usually gives hours of warning and a rising gradient; this took minutes and the gradient is unchanged. A working oxygenator with no gas looks identical at the outlet.',
         },
         {
           id: 'resample-the-two-arterial-sites',
           label:
-            'Draw the upper-body and lower-body arterial samples again first, aiming to confirm a mixing point that has moved before anything on the circuit is touched.',
+            'Repeat the right radial and femoral samples first, to confirm where circuit and native blood are meeting before touching the circuit.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Reading two arterial sites against each other is the right habit in peripheral venoarterial support, and it is what discovers a mixing point that has moved distally. The model behind this choice is that a low upper-body saturation in this configuration is a mixing problem until shown otherwise. Here both sites have fallen together rather than separating, which is what argues against that, so the repeat sample confirms a difference that is not the finding while the membrane still has no gas to work with and the carbon dioxide goes on climbing.',
+            'Comparing two arterial sites is the right habit on venoarterial support, and it finds upper-body hypoxemia when the sites separate. Here both fell together, and the blood leaving the membrane fell too.',
         },
       ],
       correctChoiceIds: ['re-establish-the-gas-supply-path'],
       explanation:
-        'The blood path is instrumented on the console and the gas side is not: sweep and its source sit outside the touchscreen, and no channel reports what is arriving at the membrane, so an interruption there leaves flow, drainage pressure, both membrane pressures and the gradient exactly where they were. Three findings do the discriminating — how quickly the carbon dioxide value moved, blood leaving the membrane at a saturation that no longer resembles the output of a working lung, and two arterial saturations falling together rather than separating, which is what distinguishes this from a mixing point that has moved distally. Ongoing venoarterial blood flow never establishes that the blood being returned is oxygenated, and that is the safety idea this drill exists for. Model boundary: this lab removes the supply cleanly at one instant, names it on the gas panel, and drives the modelled saturations and carbon dioxide toward fixed bounded values. At the bedside nothing is guaranteed to name it for you — a blender may or may not alarm on lost source pressure, a real flowmeter may itself drop toward zero, and the interruption may be partial, intermittent, or silent. The numbers here are bounded teaching values rather than a prediction for any patient, and the order in which the supply path is inspected follows local protocol.',
+        'The console monitors the blood path and has no sensor on the gas side, so when sweep gas stops arriving, flow and every pressure stay normal. What changes is fast: carbon dioxide climbs in minutes, blood leaves the membrane desaturated, and the right radial and femoral saturations fall together. Steady venoarterial flow never proves the returned blood is oxygenated. Trace the gas line by hand, from wall outlet or cylinder to blender to oxygenator, and reconnect it before you touch a setting.',
       evidenceIds: [
         'ecmo-book-ch9',
         'ecmo-book-ch18',
@@ -1654,52 +1616,52 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'Four seconds into a peripheral venoarterial run, a high-priority alarm annunciates: air has been detected on the arterial return limb, past the membrane at the flow and bubble sensor. The bubble intervention has stopped the pump. Displayed blood flow reads zero, the pressure channels have stopped reporting numbers, and the intervention stays latched, so the pump will not restart on its own. Both limbs are unclamped, and with forward flow gone the mean arterial pressure is already falling. The alarm carries no bubble size. Which of these do you commit to next?',
+      stem: 'Four seconds into a peripheral venoarterial run, a high-priority alarm sounds: air detected on the arterial return limb, past the membrane, at the flow and bubble sensor. The bubble stop has halted the pump and stays latched. Blood flow reads zero, the pressure channels show no numbers, both limbs are unclamped, and the mean arterial pressure is already falling. The alarm carries no bubble size. What do you do next?',
       choices: [
         {
           id: 'isolate-then-resolve-source',
           label:
-            'Separate the patient from the circuit at the near-patient clamps, then find where the air entered, resolve it, and confirm the return limb is clear.',
+            'Clamp the return limb, then the drainage limb, near the patient; call for the backup circuit; then find the source and clear the air.',
           plausibility: 'best',
           rationale:
-            'The stop took away forward flow; it did not take away the air. On venoarterial support the return limb is an arterial line into the patient, so that limb is what gets closed first — a stopped centrifugal pump is not a valve, and with both limbs open the patient’s own arterial pressure drives blood retrograde through the circuit. Air more often enters upstream of the pump than at the sensor that alarmed, so the endpoint is a resolved entry and a return limb confirmed clear.',
+            'On venoarterial support the return limb is an arterial line, so air there goes to the brain and coronaries. A stopped pump is not a valve; with both limbs open, arterial pressure drives blood backward through the circuit. Clamp the return limb first, then support the patient while you clear the air.',
         },
         {
           id: 'restart-pump-now',
           label:
-            'Reset the bubble intervention and restart the pump straight away, on the grounds that a patient with no circuit flow cannot wait for a circuit inspection.',
+            'Reset the bubble stop and restart the pump now, because a patient with no circuit flow and a falling pressure cannot wait for a circuit inspection.',
           plausibility: 'unsafe',
           rationale:
-            'This treats the stop as the emergency and the alarm as the obstacle in front of a circulation. What refutes it is that nothing about the air has changed: the pump was stopped because air was detected in a limb that empties into the aorta, and restarting drives whatever remains into the patient. A reset before the source is resolved is a critical safety error in this drill. The lost flow is real — it is why the rest of the sequence is done fast, not why it is skipped.',
+            'The air is still there, in a limb that empties into the aorta. Restarting pumps it into the patient. Lost flow is a reason to work fast, not to skip the clamps.',
         },
         {
           id: 'isolate-and-hand-over',
           label:
-            'Close both clamps to separate the patient from the circuit, support the circulation by conventional means, and leave the circuit itself to the perfusion team.',
+            'Clamp both limbs near the patient, support the circulation with inotropes and vasopressors, and leave the circuit for the perfusionist to clear.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Isolation genuinely is the first move, and calling for help belongs inside it — which is what makes this feel finished. It stops one step short of ending the event: the entry is still open, so support re-established through a limb that was never cleared reproduces the same alarm and the same stop. The full sequence runs on to a resolved entry and a limb confirmed clear, and only then to resuming support per the current IFU and your local protocol.',
+            'Clamping, calling for help and supporting the patient are right. But the entry is still open; find it, close it and clear the air, or the circuit stops again when it restarts.',
         },
         {
           id: 'vasopressor-for-pressure',
           label:
-            'Start a vasopressor for the falling arterial pressure and leave the circuit untouched until the pressure has come back up.',
+            'Start a vasopressor for the falling arterial pressure, and leave the circuit alone until the pressure has come back up.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This reads a mechanical event as a vasoplegic one. The pressure is falling because forward circuit flow stopped, not because vascular tone changed, and a vasoactive infusion does nothing about air in a limb that empties into the aorta while the patient is still joined to it. Vasoactive support may well run alongside the sequence during the interval without flow; as the whole response it treats the consequence and leaves the cause in place.',
+            'Pressure is falling because circuit flow stopped, not because tone changed. Vasopressors and inotropes belong in the sequence, after the clamps. Alone they leave air in an open arterial limb.',
         },
         {
           id: 'exchange-the-oxygenator',
           label:
-            'Prepare an oxygenator exchange as the first move, since air appearing after the membrane means the membrane has developed a leak.',
+            'Set up an oxygenator exchange as the first move, because air appearing after the membrane means the membrane is leaking.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'Detection after the membrane says where the air was found, not where it got in. Entry sits more often on the negative-pressure side of the pump — a loose connector, a stopcock, an access port, a cannula side hole — than across the membrane. An exchange is also a prepared procedure lasting minutes, during which the patient stays joined to an arterial limb holding air. If the membrane does turn out to be the entry, that is established by looking, and the exchange then follows isolation rather than standing in for it.',
+            'The sensor shows where air was found, not where it got in. Entry is usually on the negative-pressure side: a loose connector, a stopcock, an access port. An exchange takes minutes, and it follows the clamps.',
         },
       ],
       correctChoiceIds: ['isolate-then-resolve-source'],
       explanation:
-        'On venoarterial support the return limb is an arterial line into the patient, and that is what separates this alarm from the same alarm on venovenous support: what is being prevented is systemic embolism, cerebral and coronary beds included, rather than a fall in gas transfer. Where air actually lands depends on where circuit return meets native ejection, so the threat is not narrowed to one bed here. The intervention buys that protection by taking the circulation away, which is why the response is quick and ordered rather than deferred: clamp the return limb and then the drainage limb near the patient, resolve the entry, confirm the limb is clear, and only then resume support per the current IFU and your local protocol while reassessing perfusion. Where this model simplifies: one air event is injected with no size attached to it, because the manufacturer’s document is internally inconsistent about a bubble-size threshold and this module declines to encode a number its own source disputes. Resolving the entry is a single action here, whereas at the bedside finding it is the slow part. Isolation is taught explicitly; where clamp opening, pump restart and console reset fall relative to one another during resumption is not, because that choreography is device- and program-specific. The bounded action here stands in for it and does not reproduce or teach it.',
+        'The bubble stop halts the pump; it does not clamp the circuit or remove the air. Clamp the return limb, then the drainage limb, near the patient. Call for help and the primed backup circuit. Support the patient with the ventilator, inotropes and vasopressors. Find and close the source and aspirate the air; exchange the circuit if it cannot be cleared quickly. Resume only when the source is fixed and the circuit is free of bubbles: drainage clamp open, bubble stop reset on the Interventions screen (which restarts the pump), return clamp open last.',
       evidenceIds: [
         'ifu-console-workflow',
         'ifu-anomaly-boundary',
@@ -1710,32 +1672,26 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       reviewStatus: 'draft',
     },
     commitments: {
-      // Exactly the scenario's own expectation for `va-arterial-bubble-stop`.
       'isolate-then-resolve-source': {
         goalId: 'prevent-air-return',
         control: 'correct-cause',
         direction: 'inspect',
       },
-      // "The circulation is the emergency; get support back without a break."
       'restart-pump-now': {
         goalId: 'maintain-continuous-support',
         control: 'initiate-support',
         direction: 'restore',
       },
-      // "Separate the patient and perfuse them by other means until someone else clears the circuit."
       'isolate-and-hand-over': {
         goalId: 'restore-systemic-support',
         control: 'isolate-circuit',
         direction: 'temporary',
       },
-      // Same goal as the choice above, reached with the wrong lever: tone instead of flow.
-      // ('protect-upper-body' is this module's differential-hypoxemia goal and does not fit a pressor-for-MAP model.)
       'vasopressor-for-pressure': {
         goalId: 'restore-systemic-support',
         control: 'vasopressor',
         direction: 'perfusion',
       },
-      // "The membrane failed; replace it." Mislocalizes the entry to the oxygenator.
       'exchange-the-oxygenator': {
         goalId: 'restore-gas-transfer',
         control: 'exchange-oxygenator',
@@ -1750,44 +1706,44 @@ const authored: Readonly<Record<string, EcmoLearnPrediction>> = {
       phase: 'predict',
       itemType: 'management-decision',
       contextRequirement: 'context-independent',
-      stem: 'You are moving a patient on peripheral venoarterial support out of the unit for imaging. Moments into the move the console alarms, the power indicator changes over to battery on its own, and the battery reserve reads 24 percent. Circuit blood flow, both membrane pressures, the gradient across the membrane, the arterial trace and the right radial saturation are all exactly what they were before the move, and the patient looks the same. What does the team’s next action have to accomplish?',
+      stem: 'You are moving a patient on peripheral venoarterial support out of the unit for imaging. Moments into the move the console alarms, the power indicator switches to battery on its own, and the battery reserve reads 24 percent. Circuit blood flow, both membrane pressures, the gradient across the membrane, the arterial trace and the right radial saturation are unchanged, and the patient looks the same. What do you do next?',
       choices: [
         {
           id: 'verified-source-with-backup-alongside',
           label:
-            'Put the console back on a verified power source now, confirm flow, membrane pressures, perfusion and right-arm monitoring in the same action, and keep the backup console and emergency drive within reach of the cart.',
+            'Plug the console into a power source and confirm it is charging, recheck flow, the arterial trace and the right-arm saturation, and keep the emergency drive on the cart.',
           plausibility: 'best',
           rationale:
-            'What has been lost is the supply of power, and the reserve is a countdown that began the moment the changeover happened. A source counts only once it has been confirmed live, since the cart’s own cord, the outlet offered at the far end and the console itself are each candidates for where it was lost. A verified source stops the countdown, confirming the patient establishes that the changeover cost the circulation nothing, and keeping the backup beside the cart covers the one threat a live source does not — losing the console outright. These belong in one action because on a moving cart they compete for the same pair of hands.',
+            'The console lost its supply and the battery is now a countdown. A source counts only once you see the console charging.',
         },
         {
           id: 'slow-the-pump-to-stretch-the-reserve',
           label:
-            'Bring the pump speed down so the reserve lasts until the cart reaches an outlet — a lower draw is the only way the team can stretch run time on a moving cart.',
+            'Turn the pump speed down to reduce the power draw, so the battery lasts until the cart reaches an outlet at the scanner and the console can be plugged in.',
           plausibility: 'unsafe',
           rationale:
-            'The model behind this is that run time is the thing under threat and pump demand is the way to buy it. On venoarterial support the circuit carries a circulatory load and not only gas exchange, and how much of this patient’s systemic circulation rests on it is established nowhere in the situation — so this spends perfusion, the thing the move exists to protect, for an unstated amount of extra run time. Flow, the arterial trace and the right radial saturation are unchanged because support has been uninterrupted, not because it is surplus. The console is still on a draining reserve afterwards, so the threat itself is untouched.',
+            'On venoarterial support the pump is the patient’s circulation. Turning it down trades perfusion for an unknown amount of extra run time, and the console is still on a draining battery.',
         },
         {
           id: 'readiness-then-continue-on-reserve',
           label:
-            'Bring the backup console and emergency drive alongside the cart, then carry on and plug in at the scanner — the changeover was automatic, a reserve of 24 covers a short trip, and readiness beside the cart is what a battery interval is for.',
+            'Bring the backup console and emergency drive alongside the cart, then continue and plug in at the scanner, because the switch was automatic and 24 percent covers a short trip.',
           plausibility: 'reasonable-but-incomplete',
           rationale:
-            'Half of this holds: readiness travelling with the patient is exactly what an automatic changeover should trigger, and a learner who does this has understood that a battery is a bridge. What it leaves undone is the length of the bridge. A reserve of 24 is a reading under an unknown draw rather than a duration, and a move has no guaranteed end time — a held lift or a delayed scanner extends it. Readiness answers the console being lost outright; it does nothing about the reserve emptying.',
+            'Having the backup with you is right. But 24 percent is charge, not minutes, and a held elevator or a delayed scanner stretches the trip.',
         },
         {
           id: 'search-the-circuit-for-the-alarm',
           label:
-            'Look through the circuit and the membrane for the cause of the alarm before touching the power arrangement.',
+            'Check the circuit and the oxygenator for the cause of the alarm before doing anything about the power supply, in case the blood path has changed.',
           plausibility: 'incorrect-mechanism',
           rationale:
-            'This reads a console alarm as a statement about the blood path, which is the habit most circuit drills reward. Here the alarm names the power source, the console changed its own source without being asked, and blood flow, both membrane pressures and the gradient are the one part of the situation that has not moved. Time spent in the blood path is time the reserve is spending on a place where nothing is happening.',
+            'The alarm is about power. Flow, pressures and gradient have not moved, so the blood path is fine. Every minute spent there comes off the battery.',
         },
       ],
       correctChoiceIds: ['verified-source-with-backup-alongside'],
       explanation:
-        'A power indicator changing over by itself is a device doing what it was built to do, not a problem that has been handled. What the changeover announces is that the run now has a clock on it, and each choice here is a position on what that clock means. The unchanged patient signals are the consequence of support having continued, not evidence that it is safe to let it continue on a countdown, and a reserve reading is a quantity under an unknown draw rather than a duration. Readiness and a live source answer two different threats — the console being lost outright, and the reserve emptying — which is why the taught workflow names both instead of choosing between them. Model boundary: this simulation drains the reserve at one fixed rate that does not vary with pump speed, ambient temperature or battery age; it does not model the pump stopping when the reserve is exhausted, and it does not model hand-driven operation of the pump head. Those simplifications are what make the drill repeatable, and they are the reason the run time seen here should never be read as a real console’s endurance. Recognition and readiness are what this drill teaches; handling an emergency drive is learned on the device itself.',
+        'An automatic switch to battery puts the run on a clock. Plug into a source and confirm the console is charging, recheck flow, pressures, the arterial trace and the right-arm saturation, and keep the backup console and emergency drive with the patient. If the console stops, go to the emergency drive: both clamps closed, disposable across, venous clamp open, crank clockwise, arterial clamp open once speed is up. The simulated battery drains at a fixed rate; a real one depends on load and battery age.',
       evidenceIds: [
         'ifu-console-workflow',
         'ecmo-book-ch9',

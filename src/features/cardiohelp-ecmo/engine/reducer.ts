@@ -1246,7 +1246,7 @@ function reduceSimulationAction(
         return appendHistory(
           held,
           'action',
-          'Clamp held: resume support per the current IFU and your local protocol rather than opening the last limb onto a stopped pump',
+          'Clamp held: reset the bubble stop first. The last clamp opens once the pump is running, not onto a stopped pump',
         )
       }
       const canResumeAfterOpening =

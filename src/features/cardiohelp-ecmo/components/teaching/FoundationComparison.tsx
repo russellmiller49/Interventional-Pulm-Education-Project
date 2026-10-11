@@ -121,9 +121,8 @@ export function FoundationComparison({
       </p>
       {actionId === 'load-return-resistance' ? (
         <p>
-          Two settled authored circuits: the reference and the existing return-resistance preview.
-          This is a comparison of loading conditions, not a timed obstruction developing in this
-          patient.
+          Two settled circuits: the reference and the existing return-resistance preview. This is a
+          comparison of loading conditions, not a timed obstruction developing in this patient.
         </p>
       ) : null}
       {signalsFor(actionId, supportMode).some((signal) => signal.key === 'pArt') ? (

@@ -30,7 +30,7 @@ describe('transport battery reading', () => {
     const batteryPercent =
       cardiohelpScenarioById.get(scenarioId)?.initialState?.device?.batteryPercent
     expect(batteryPercent).toBeDefined()
-    const reading = item.stem.match(/battery reserve reading of (\d+(?:\.\d+)?) (\w+)/)
+    const reading = item.stem.match(/battery reserve (?:reading )?of (\d+(?:\.\d+)?) (\w+)/)
     expect(reading).not.toBeNull()
     expect(Number(reading?.[1])).toBe(batteryPercent)
     expect(reading?.[2]).toBe('percent')

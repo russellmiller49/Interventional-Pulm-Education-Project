@@ -8,12 +8,12 @@ import {
 import { ecmoReferenceProfiles } from '../../content/referenceProfiles'
 import { createReferenceSimulationState, ecmoSimulationReducer } from '../../engine'
 import type { EcmoSimulationState } from '../../engine/types'
+import { EcmoAnticoagulationReference, EcmoVaSupportReference } from './EcmoReferenceValues'
 import {
   GuidedValue,
   ModelBoundary,
   TableSentences,
   TextEquivalent,
-  VA_CONFIGURATION_BOUNDARY,
   VaConfigurationLabel,
   direction,
   round,
@@ -94,7 +94,7 @@ function vaReferenceCircuit(): EcmoSimulationState {
 type ReferenceProvenance = 'authored-input' | 'model-derived'
 
 const provenanceLabel: Readonly<Record<ReferenceProvenance, string>> = {
-  'authored-input': 'authored input',
+  'authored-input': 'case input',
   'model-derived': 'produced by the model',
 }
 
@@ -620,9 +620,6 @@ export function VaNormalStatePanel({
     (row) => !selectedGroup || selectedGroup === 'all' || row.group === selectedGroup,
   )
   const flowRow = rows.find((row) => row.id === 'bloodFlow')
-  // Counted off the rendered rows rather than written into the copy, so the boundary below cannot
-  // claim a different number of authored values from the number the table actually marks.
-  const authoredReferenceRows = rows.filter((row) => row.referenceProvenance === 'authored-input')
   const groups: readonly BaselineGroupId[] = [
     'drainage-and-load',
     'membrane-and-return',
@@ -634,7 +631,6 @@ export function VaNormalStatePanel({
   return (
     <FocusedFoundationSections className={styles.panel} panelId="va-normal-state">
       <VaConfigurationLabel />
-      <ModelBoundary>{VA_CONFIGURATION_BOUNDARY}</ModelBoundary>
       {/*
         A short topology statement before the stable state, because this section now comes before
         the one that draws the parallel path in detail. A baseline is unreadable without knowing
@@ -680,9 +676,10 @@ export function VaNormalStatePanel({
           <table className="w-full text-left text-sm" data-baseline-table>
             <caption className="sr-only">
               Each observed signal with its current value, the value in this circuit’s own reference
-              state together with whether that value was authored or produced by the model, and the
-              raw change over the observed window, grouped by where in the circuit or the patient it
-              belongs. The final group holds the signals that exist only under venoarterial support.
+              state together with whether that value was set by the case or produced by the model,
+              and the raw change over the observed window, grouped by where in the circuit or the
+              patient it belongs. The final group holds the signals that exist only under
+              venoarterial support.
             </caption>
             <thead>
               <tr>
@@ -761,26 +758,8 @@ export function VaNormalStatePanel({
           </TextEquivalent>
         </TableSentences>
 
-        <ModelBoundary>
-          The words higher, lower and unchanged come from an authored per-signal display deadband
-          for this simulation, so that a value moving in its last decimal does not read as a change.
-          The deadbands are a display aid only. They are not clinical tolerances, they mark no
-          boundary of safety, and the raw change is printed beside every one of them. Signals the
-          authored record does not carry are given no deadband at all here, so any movement in them
-          reads as movement. The guide below states every authored deadband and where it came from.
-        </ModelBoundary>
-
-        <ModelBoundary>
-          The reference column carries {authoredReferenceRows.length} authored values:{' '}
-          {authoredReferenceRows.map((row) => row.label).join(', ')}. One further authored input —
-          the oxygen consumption this simulation needs in order to close its own oxygen balance —
-          has no row here at all. Everything else in that column — the flow, every pressure, every
-          saturation, the pulse pressure, the valve state, the mean arterial pressure, the limb
-          readings — was produced by the model from those inputs, and is marked as such. None of
-          them is a value to reproduce at a bedside: cannula size and position, patient size,
-          temperature, hemoglobin, the device configuration and local protocol all move every one of
-          them.
-        </ModelBoundary>
+        <EcmoVaSupportReference />
+        <EcmoAnticoagulationReference />
       </section>
 
       <div data-presentation-section="derived-values">
@@ -826,17 +805,8 @@ export function VaNormalStatePanel({
         </p>
 
         <ModelBoundary>
-          In this simulation pulse pressure, aortic valve opening, pulmonary congestion and distal
-          limb perfusion are authored states rather than quantities falling out of a ventricular or
-          vascular model: the simulation moves them toward values it holds for each configuration,
-          so &ldquo;produced by the model&rdquo; here means selected from that authored table, not
-          computed from chamber pressures or vascular resistance. The two arterial saturations
-          behave the same way — they move toward authored values rather than being mixed from two
-          competing flows. This simulation also holds distal limb perfusion fixed across every
-          venoarterial preset, changing it only when a case injects a limb problem, so its reference
-          value shows the state and says nothing about how it would move. Patient SpO₂ under
-          venoarterial support is reported here as the right radial value, which is why those two
-          rows carry the same number.
+          Pulse pressure, aortic-valve opening, pulmonary congestion and distal limb perfusion are
+          set for each state here; they do not move with pump speed as they would at the bedside.
         </ModelBoundary>
       </section>
 
@@ -936,18 +906,6 @@ export function VaNormalStatePanel({
                   '; ',
                 )}. What a baseline review reads from a window like this is whether the relationship among the signals is holding, not whether any single value is familiar.`}
         </TextEquivalent>
-
-        <ModelBoundary>
-          The window here is modeled seconds. A bedside baseline is established and re-read over
-          hours, and the drift a real circuit shows over that time has no counterpart in this
-          simulation. Of the parallel-circulation signals, exactly one is retained: under
-          venoarterial support the saturation kept in this table is the right radial value, which is
-          why the Patient SpO₂ row of the baseline review has an earlier value to compare against
-          while the right radial row, carrying that same number, is shown without one. Pulse
-          pressure, aortic-valve opening, the femoral saturation and the limb readings are not
-          retained at all, so nothing in this table would show a pulse flattening or a sampling-site
-          difference opening up.
-        </ModelBoundary>
       </section>
 
       <section className={styles.section} aria-labelledby="va-beyond-circuit-heading">

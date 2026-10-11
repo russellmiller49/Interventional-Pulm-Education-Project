@@ -355,7 +355,7 @@ describe('EcmoSourceList', () => {
 })
 
 describe('the five citing surfaces', () => {
-  it('groups the hub sources panel by source class and keeps the profile and checklist', () => {
+  it('groups the hub sources panel by source class and keeps the profile', () => {
     const { container } = render(<SourcesPanel publicationStatus="draft" />)
 
     for (const sourceClass of ecmoSourceClasses) {
@@ -371,10 +371,11 @@ describe('the five citing surfaces', () => {
     expect(container.querySelector('article')).toBeNull()
 
     expect(container.querySelector('dl')).not.toBeNull()
-    // ECMO-FELLOW-04 (OV-2): the registry now sits in its own disclosure, ahead of the checklist.
-    const checklist = container.querySelector('details:not([data-source-registry])')
-    expect(checklist?.querySelector('summary')?.textContent).toMatch(/Publication checklist/)
-    expect(checklist?.querySelectorAll('li').length).toBeGreaterThan(0)
+    // ECMO-FELLOW-04 (OV-2): the registry sits in its own disclosure. The publication checklist
+    // that used to follow it was project metadata and is no longer rendered to learners.
+    expect(container.querySelector('details[data-source-registry]')).not.toBeNull()
+    expect(container.querySelector('details:not([data-source-registry])')).toBeNull()
+    expect(container.textContent).not.toMatch(/Publication checklist/)
 
     for (const link of container.querySelectorAll('a[target="_blank"]')) {
       expect(link.getAttribute('rel')).toBe('noopener noreferrer')

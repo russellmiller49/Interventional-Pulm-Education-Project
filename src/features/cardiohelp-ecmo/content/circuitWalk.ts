@@ -434,7 +434,6 @@ export function ecmoWalkStopTextEquivalent(
   }
 
   sentences.push(`Read in: ${zones}.`)
-  sentences.push(`Model boundary: ${resolveEcmoModeText(stop.modelBoundary, supportMode)}`)
 
   return sentences.join(' ')
 }
