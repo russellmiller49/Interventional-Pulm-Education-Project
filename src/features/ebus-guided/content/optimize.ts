@@ -1,7 +1,7 @@
 import type { Lesson } from './types'
 import { question as q } from './authoring'
 const boundary =
-  'These controls select existing recorded ultrasound examples. Example numbers are specific to this teaching library, not recommended processor settings for patients.'
+  'The depth and gain values here belong to this recorded teaching set. Read the direction of the change, not the number.'
 export const optimizeLessons: Lesson[] = [
   {
     id: 'image-depth',
@@ -257,7 +257,6 @@ export const optimizeLessons: Lesson[] = [
       'Absent color is not clearance for puncture.',
     ],
     sources: ['ics2023', 'simulation'],
-    boundary,
   },
   {
     id: 'capture',
@@ -341,6 +340,5 @@ export const optimizeLessons: Lesson[] = [
       'Dimension and station context belong in the record.',
     ],
     sources: ['ics2023', 'simulation'],
-    boundary,
   },
 ]

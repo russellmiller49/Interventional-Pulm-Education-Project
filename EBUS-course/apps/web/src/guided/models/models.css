@@ -62,6 +62,7 @@
   position: relative;
   overflow: hidden;
   border-radius: 6px;
+  background: radial-gradient(circle at 50% 42%, #16303f 0%, #0a1a26 62%, #060f17 100%);
 }
 .model-viewport canvas {
   display: block;
@@ -242,6 +243,10 @@
   min-height: 34px;
   padding: 6px 9px;
   font-size: 12px;
+}
+.model-observer-buttons button[aria-pressed='true'] {
+  background: #1f4a55;
+  border-color: #5fe0e6;
 }
 .model-viewport canvas:focus-visible {
   outline: 3px solid #7ce2c7;

@@ -1,5 +1,8 @@
 import type { Lesson } from './types'
 import { question as q, sequence, matching } from './authoring'
+import { EBUS_NUMBERS } from './teachingNumbers'
+
+const N = EBUS_NUMBERS.value
 export const prepareLessons: Lesson[] = [
   {
     id: 'clinical-question',
@@ -123,8 +126,6 @@ export const prepareLessons: Lesson[] = [
       'Plan tissue handling before the first pass.',
     ],
     sources: ['ers2026', 'chest2024', 'ics2023'],
-    boundary:
-      'The course teaches procedural reasoning. It does not choose a diagnostic pathway for an individual patient.',
   },
   {
     id: 'preparation',
@@ -136,9 +137,9 @@ export const prepareLessons: Lesson[] = [
     recall: 'The clinical question and likely specimen requirements should already be defined.',
     concept: 'Prepare the patient, team, and equipment',
     paragraphs: [
-      'Review cardiopulmonary status, airway access, allergies, bleeding history, antithrombotic therapy, relevant imaging, fasting status, and consent. Antithrombotic interruption and laboratory testing depend on the drug, indication, patient, and local guidance; avoid a universal hold interval.',
-      'Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval.',
-      'Coordinate sedation or anesthesia, oxygenation and ventilation, monitoring, rescue capability, and recovery. The EBUS scope occupies more airway space than a small diagnostic bronchoscope. An airway conduit must accommodate the intended scope without compromising the ventilation plan.',
+      `Review cardiopulmonary status, airway access, allergies, bleeding history, antithrombotic therapy, relevant imaging, fasting status, and consent. Aspirin ${N('aspirin-continue')} (ICS/IAB 2023). For clopidogrel the sources differ: ACCP 2022 says ${N('clopidogrel-accp')} a procedure, BTS 2013 says ${N('clopidogrel-bts')} a biopsy, and ICS/IAB 2023 allows continuing it for EBUS-TBNA when the risk of thrombosis outweighs the risk of bleeding. For an anticoagulant, the hold depends on the drug and the renal function: find out which drug, why it was started and when the last dose was taken.`,
+      `Patients should fast before EBUS. Follow the applicable anesthesia and local procedural policy for the required fasting interval. A common standard is no food for ${N('fasting-solids')} and clear fluids until ${N('fasting-clear-fluids')} before (BTS 2013).`,
+      `Coordinate sedation or anesthesia, oxygenation and ventilation, monitoring, rescue capability, and recovery. A convex EBUS scope is ${N('scope-tip-diameter')} at the tip and ${N('scope-insertion-tube')} along the insertion tube (Olympus BF-UC190F), wider than a diagnostic bronchoscope. A small endotracheal tube will not take it and still leave room to ventilate, so plan a large tube or a laryngeal mask airway.`,
       'Confirm scope and processor function, the compatible needle and balloon if used, specimen supplies, and the receiving laboratory. Agree on the indication, intended stations, safety concerns, and stop conditions during the team pause.',
     ],
     checklist: [
@@ -156,16 +157,16 @@ export const prepareLessons: Lesson[] = [
       'prep-predict',
       'The airway plan is documented, but the patient reports a new anticoagulant with an uncertain last dose. What should happen next?',
       [
-        'Clarify the medication history and procedural plan',
-        'The unresolved medication history may change bleeding risk and timing.',
+        'Find out the drug, its indication and the time of the last dose',
+        'The hold differs by drug and by renal function, and the reason it was started decides how safely it can be held. None of that is known yet.',
       ],
       [
         'Proceed because needle aspiration cannot cause important bleeding',
         'Needle aspiration still carries bleeding risk; the assumption is unsafe.',
       ],
       [
-        'Use a fixed hold interval without identifying the medication',
-        'Different drugs, renal function, and thrombotic indications require different decisions.',
+        'Apply the clopidogrel hold without identifying the medication',
+        'The intervals in this lesson are for clopidogrel. An anticoagulant is held on a different schedule.',
       ],
       true,
     ),
@@ -177,7 +178,7 @@ export const prepareLessons: Lesson[] = [
         'Verify equipment and specimen supplies and perform the team pause',
         'Begin after the agreed readiness checks are satisfied',
       ],
-      'Readiness depends on resolving risks and resources before starting. This is a planning sequence, not an anesthesia protocol.',
+      'Readiness depends on resolving risks and resources before starting.',
     ),
     observation: q(
       'prep-observe',
@@ -199,8 +200,8 @@ export const prepareLessons: Lesson[] = [
       'prep-transfer',
       'A planned airway conduit may be too narrow for the EBUS scope while maintaining ventilation. Which issue needs resolution?',
       [
-        'Scope fit within the ventilation strategy',
-        'Scope fit is part of the airway plan, not merely an equipment convenience.',
+        'Change to a larger tube or a laryngeal mask airway',
+        `The scope is ${N('scope-tip-diameter')} at its tip. It has to pass with room left to ventilate around it, and that is settled before the procedure starts.`,
       ],
       [
         'Whether the image gain can compensate for the narrow conduit',
@@ -213,11 +214,9 @@ export const prepareLessons: Lesson[] = [
     ),
     takeaways: [
       'Unresolved readiness issues require a pause.',
-      'Medication and airway plans are patient-specific.',
+      'Know the antiplatelet intervals, and identify any anticoagulant before you start.',
     ],
-    sources: ['ics2023'],
-    boundary:
-      'Drug holds, fasting intervals, airway devices, and sedative doses must follow current local guidance and the responsible clinical team.',
+    sources: ['ics2023', 'accp2022', 'bts2013', 'olympus-uc190f'],
   },
   {
     id: 'scope-orientation',
@@ -317,7 +316,5 @@ export const prepareLessons: Lesson[] = [
       'Correlate the ultrasound plane with airway landmarks.',
     ],
     sources: ['ics2023', 'simulation'],
-    boundary:
-      'One calibrated anatomy model is used. Scope assists, limited degrees of freedom, and synthetic echoes do not reproduce hands-on navigation. Measurements in this simulator are shown in millimeters for teaching and relative comparison. They reflect the model geometry and should not be interpreted as validated measurements of a real patient or exact lymph-node dimensions.',
   },
 ]

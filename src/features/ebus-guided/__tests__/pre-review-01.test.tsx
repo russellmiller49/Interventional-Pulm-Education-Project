@@ -415,12 +415,17 @@ describe('the skip is available but not the brightest thing on the screen', () =
     expect(advance).toBeEnabled()
   })
 
-  it('gives the acquisition skip the weight while the hold is disabled, and takes it back', () => {
+  it('keeps the hold as the filled button while it is disabled, and the skip a text link', () => {
     const lesson = LESSONS.find((entry) => entry.id === 'contact-cutaway-model')!
     render(<LessonHost lesson={lesson} />)
     fireEvent.click(document.querySelector('[data-now-primary]')!)
-    expect(document.querySelector('[data-now-primary]')).toBeDisabled()
-    expect(document.querySelector('[data-skip-acquisition]')).toHaveAttribute('data-prominent')
+    const hold = document.querySelector('[data-now-primary]')!
+    expect(hold).toBeDisabled()
+    expect(hold).toHaveAttribute('data-prominent')
+    expect(hold.className).toMatch(/button/)
+    const skip = document.querySelector('[data-skip-acquisition]')!
+    expect(skip).not.toHaveAttribute('data-prominent')
+    expect(skip.className).toMatch(/skipLink/)
   })
 })
 

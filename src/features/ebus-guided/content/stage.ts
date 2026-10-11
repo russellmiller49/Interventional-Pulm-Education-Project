@@ -548,7 +548,7 @@ export function activitiesForLesson(lesson: Lesson): LessonActivity[] {
     contentVersion: 1,
     objective: lesson.objective,
     sourceIds: lesson.sources,
-    limitation: lesson.boundary,
+    limitation: lesson.boundary ?? '',
     purpose:
       spec.purpose ??
       (spec.teaching.includes('takeaways') && spec.questions.length

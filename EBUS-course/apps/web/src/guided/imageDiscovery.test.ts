@@ -66,9 +66,9 @@ describe('image names come from the retained pixel label map', () => {
   const retained: LabelImage = { width: 2, height: 2, labelImage: new Uint8Array([0, 3, 25, 99]) }
   it('keeps the retained identity when a later acquisition samples different tissue', () => {
     const next = { ...retained, labelImage: new Uint8Array([0, 25, 3, 99]) }
-    expect(imageLabelAt(retained, labels, 1, 0)).toBe('aorta')
+    expect(imageLabelAt(retained, labels, 1, 0)).toBe('Aorta')
     expect(imageLabelAt(next, labels, 1, 0)).toBe('Station 7 example node')
-    expect(imageLabelAt(retained, labels, 1, 0)).toBe('aorta')
+    expect(imageLabelAt(retained, labels, 1, 0)).toBe('Aorta')
   })
   it('does not name background, missing labels, or out-of-bounds coordinates', () => {
     expect(imageLabelAt(retained, labels, 0, 0)).toBeNull()

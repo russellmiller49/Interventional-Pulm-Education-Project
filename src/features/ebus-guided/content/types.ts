@@ -101,7 +101,8 @@ export interface Lesson {
   refreshers?: { href: string; label: string; course: string }[]
   takeaways: string[]
   sources: string[]
-  boundary: string
+  /** A real limit of this lesson's model that a learner could trip on. Most lessons have none. */
+  boundary?: string
 }
 export interface EbusCase {
   id: string

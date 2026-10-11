@@ -13,8 +13,6 @@ import { legacyRecordPresent, recommendedLesson } from '../engine/selfPacedProgr
 import { EbusModuleFrame } from './ModuleFrame'
 import { useCourseProgress } from './useCourseProgress'
 import { StorageNotice } from './StorageNotice'
-import { GlossaryTerms } from './Glossary'
-import { GLOSSARY } from '../content/glossary'
 import styles from './course.module.css'
 
 /**
@@ -79,10 +77,8 @@ export function CoursePage({
                 and interpret what the result can tell you.
               </p>
               <p className={styles.muted}>
-                For early pulmonary fellows with basic flexible bronchoscopy and chest CT knowledge.
-                About {GUIDED_MINUTES} minutes of guided lessons plus about 25 minutes of integrated
-                cases, in any order and over several sittings; the times are estimates, not measured
-                study times. Selected labs require a desktop or tablet with WebGL 2.
+                For early pulmonary fellows. About {GUIDED_MINUTES} minutes of lessons and 25
+                minutes of cases, in any order. The labs need a desktop or tablet.
               </p>
               <div className={styles.actions}>
                 <Link
@@ -106,35 +102,22 @@ export function CoursePage({
               </p>
             </div>
             {/*
-             * The course map, once (EBUS-PRE-REVIEW-04, OV-1 / OV-2). A five-box "clinical
-             * question → result" schematic stood here beside the seven chapter cards below: two
-             * organizing schemes on one page, and selecting one of its labels lit a number and
-             * located nothing. This is the same chapter registry as the cards, summarized, each
-             * chapter linking to its card. No second registry, no phase-to-lesson mapping.
+             * A picture of what the course is (visual review of 2026-10-07, item 8). A second
+             * list of the chapters stood here, above the chapter cards that list them again.
              */}
-            <nav className={styles.mapSummary} aria-labelledby="ebus-map-summary">
-              <h2 id="ebus-map-summary">The course in {CHAPTERS.length} chapters</h2>
-              <p className={styles.muted}>
-                {LESSONS.length} lessons. Open any chapter; the order is a recommendation, not a
-                requirement.
-              </p>
-              <ol>
-                {CHAPTERS.map((chapter) => (
-                  <li key={chapter.id}>
-                    <a href={'#chapter-' + chapter.id}>{chapter.title}</a>{' '}
-                    <span className={styles.muted}>
-                      · {chapter.lessons.length} lessons ·{' '}
-                      {
-                        chapter.lessons.filter((lesson) =>
-                          progress.reviewedLessonIds.includes(lesson.id),
-                        ).length
-                      }{' '}
-                      reviewed
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            </nav>
+            <figure className={styles.heroFigure}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/ebus-guided/lab-console.jpg"
+                width={1342}
+                height={334}
+                alt="The lab console: the bronchoscopy view, the ultrasound image with a lymph node in the plane, and the 3D airway with the scan plane drawn on it."
+              />
+              <figcaption>
+                In the labs you steer the scope and read three views together: where the scope is,
+                what the plane shows, and where that plane lies in the chest.
+              </figcaption>
+            </figure>
           </div>
         ) : (
           <>
@@ -165,10 +148,6 @@ export function CoursePage({
                 <li key={objective}>{objective}</li>
               ))}
             </ul>
-            <p className={styles.muted}>
-              These objectives describe the knowledge and clinical reasoning taught here (“knows
-              how”). Supervised procedural performance is taught and judged separately.
-            </p>
           </section>
         )}
         {legacy && (
@@ -178,15 +157,10 @@ export function CoursePage({
             opened, finished or saved for later, and the cases you have opened.
           </p>
         )}
-        {/*
-         * What the marks mean (EBUS-PRE-REVIEW-04, NAV-1). "Reviewed" was read as evidence of work
-         * done; it is a navigation mark. The record and its undo are unchanged.
-         */}
         <p className={styles.muted} data-course-marks-legend>
           <strong>What the marks mean.</strong> Opened: you have started the lesson. Reviewed: you
           reached its end, or marked it yourself; it does not record which tasks you completed,
-          skipped or answered, and you can unmark it at the end of the lesson. Saved for later: your
-          own reminder. Lesson times are estimates. None of these marks grades your answers.
+          skipped or answered. Saved for later: your own reminder.
         </p>
         <div className={styles.map}>
           {CHAPTERS.map((chapter, chapterIndex) => {
@@ -197,13 +171,18 @@ export function CoursePage({
                 <h2>
                   {chapterIndex + 1}. {chapter.title}
                 </h2>
+                <p className={styles.muted} data-chapter-progress>
+                  {lessons.filter((l) => progress.reviewedLessonIds.includes(l.id)).length} of{' '}
+                  {lessons.length} reviewed
+                </p>
                 <ol start={LESSONS.indexOf(lessons[0]) + 1}>
                   {lessons.map((l) => (
-                    <li key={l.id}>
+                    <li key={l.id} data-up-next={next?.id === l.id || undefined}>
                       <Link href={lessonHref(l.id)}>{l.title}</Link>{' '}
                       <span className={styles.muted}>
                         · about {l.minutes} min {mark(l.id) ? '· ' + mark(l.id) : ''}
                       </span>
+                      {next?.id === l.id && <span className={styles.upNext}>Up next</span>}
                     </li>
                   ))}
                 </ol>
@@ -212,20 +191,10 @@ export function CoursePage({
           })}
         </div>
         {mode === 'Overview' && (
-          <section className={styles.card}>
-            <GlossaryTerms
-              entries={GLOSSARY}
-              heading="Course glossary"
-              intro="Course definitions and owner-approved terminology expansions, with sources and limits. The same glossary is under Help in every lesson."
-              level={2}
-            />
-          </section>
+          <p className={styles.muted} data-glossary-pointer>
+            The course glossary is under Help in every lesson.
+          </p>
         )}
-        <p className={styles.notice}>
-          Reviewed and opened marks record where you have been in the course, not procedural
-          competence. Continue with supervised simulation and workplace teaching. This development
-          course remains separate from the existing EBUS tools.
-        </p>
       </div>
     </EbusModuleFrame>
   )

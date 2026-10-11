@@ -66,6 +66,7 @@ export function MatchingActivity({
       <div className={styles.checkActions}>
         <button
           type="button"
+          className={styles.button}
           disabled={Object.keys(answers).length < activity.pairs.length || settled}
           onClick={() => {
             setChecked(true)

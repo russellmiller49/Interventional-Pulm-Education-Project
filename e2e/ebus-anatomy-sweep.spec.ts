@@ -324,10 +324,10 @@ test.describe('camera and scrolling', () => {
         .toBeGreaterThan(40)
     }
     await expect(
-      f.locator('.model-viewport .linked-structure-name').filter({ hasText: /esophagus/ }),
+      f.locator('.model-viewport .linked-structure-name').filter({ hasText: /esophagus/i }),
     ).toHaveCount(1)
     await expect(
-      f.locator('.model-viewport .linked-structure-name').filter({ hasText: /aorta/ }),
+      f.locator('.model-viewport .linked-structure-name').filter({ hasText: /aorta/i }),
     ).toHaveCount(1)
     await expect(f.locator('.model-image .model-caption').first()).toContainText(
       'shows viewing direction only',

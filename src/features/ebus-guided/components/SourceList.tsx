@@ -1,13 +1,9 @@
-import { SOURCES, SOURCE_CHECK_DATE } from '../content/sources'
+import { SOURCES } from '../content/sources'
 import styles from './course.module.css'
 export function SourceList({ ids }: { ids: readonly string[] }) {
   return (
     <details className={styles.sources}>
-      <summary>Sources and model limits</summary>
-      <p>
-        Existing source metadata checked {SOURCE_CHECK_DATE}. Additions retain the source-specific
-        limits below. Faculty review is pending.
-      </p>
+      <summary>Sources</summary>
       <ul>
         {SOURCES.filter((s) => ids.includes(s.id)).map((s) => (
           <li key={s.id}>

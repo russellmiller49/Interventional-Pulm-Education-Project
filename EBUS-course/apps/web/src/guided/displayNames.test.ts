@@ -27,12 +27,12 @@ describe('structure names on the retained image use the course spelling', () => 
     return imageLabelAt(image, volume.labels, 0, 0)
   }
   it.each([
-    ['azygous', 'azygos vein'],
-    ['left_atrium', 'left atrium'],
-    ['atrial_appendage_left', 'left atrial appendage'],
-    ['superior_vena_cava', 'superior vena cava'],
-    ['right_ventricle', 'right ventricle'],
-    ['aorta', 'aorta'],
+    ['azygous', 'Azygos vein'],
+    ['left_atrium', 'Left atrium'],
+    ['atrial_appendage_left', 'Left atrial appendage'],
+    ['superior_vena_cava', 'Superior vena cava'],
+    ['right_ventricle', 'Right ventricle'],
+    ['aorta', 'Aorta'],
     ['station_11ri', 'Station 11Ri example node'],
   ])('%s → %s', (key, name) => {
     expect(at(key)).toBe(name)

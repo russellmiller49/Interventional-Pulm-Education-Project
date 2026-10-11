@@ -12,7 +12,7 @@ export const needleModel: Lesson = {
     'The sheath protects the needle during passage through the working channel. A visible shaft segment does not establish the location of its tip.',
   concept: 'The handle and distal needle form one assembly',
   paragraphs: [
-    'Use this generic cutaway to follow movement from the external handle to the distal needle. The sheath and needle move separately along a common outlet axis. The illustration compresses the assembly; it does not specify a commercial device or a recommended extension distance.',
+    'Use this model to follow movement from the handle to the distal needle: switch between the Needle tip and Handle views to see both ends. The sheath and needle move separately along a common outlet axis. The handle and the scope tip are drawn at true size, with the length of the scope between them left out. The model does not specify a commercial device or a recommended extension distance.',
     'The ultrasound schematic shows only the part of the needle intersecting its finite imaging plane. Changing that plane can remove the tip echo while leaving part of the shaft visible. Frozen images and missing contact cannot provide current tip guidance.',
   ],
   checklist: [
@@ -254,7 +254,7 @@ export const measurementModel: Lesson = {
   ],
   sources: ['atlas', 'simulation'],
   boundary:
-    'Analytic geometric phantoms with authored dimensions. The fictional station label teaches documentation and does not make these objects anatomical station boundaries. Measurements in this simulator are shown in millimeters for teaching and relative comparison. They reflect the model geometry and should not be interpreted as validated measurements of a real patient or exact lymph-node dimensions.',
+    'These are geometric phantoms. The station label on them teaches documentation; it does not make them an anatomical station.',
 }
 export const routeModel: Lesson = {
   id: 'eus-b-route-model',

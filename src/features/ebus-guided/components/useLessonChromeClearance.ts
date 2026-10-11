@@ -117,6 +117,8 @@ function topClearance(chrome: HTMLElement | null, anchor: HTMLElement | null): n
 export function useLessonChromeClearance(
   flow: RefObject<HTMLElement | null>,
   chrome: RefObject<HTMLElement | null>,
+  /** Release the lesson chrome so a one-screen console gets the height it would have held. */
+  unpin = false,
 ): void {
   useEffect(() => {
     const flowNode = flow.current
@@ -126,7 +128,7 @@ export function useLessonChromeClearance(
       // Decide what stays pinned first: the clearance below depends on what is still pinned.
       const viewport = window.innerHeight
       const height = chromeNode?.getBoundingClientRect().height ?? 0
-      const fits = viewport <= 0 || height <= viewport * MAX_PINNED_SHARE
+      const fits = !unpin && (viewport <= 0 || height <= viewport * MAX_PINNED_SHARE)
       flowNode?.setAttribute(PINNED_ATTRIBUTE, String(fits))
       const zoom = zoomFactor(root)
       const measured = topClearance(chromeNode, chromeNode ?? flowNode) + FOCUS_RING_GAP
@@ -147,5 +149,5 @@ export function useLessonChromeClearance(
       root.style.removeProperty(TOP_PROPERTY)
       flowNode?.removeAttribute(PINNED_ATTRIBUTE)
     }
-  }, [flow, chrome])
+  }, [flow, chrome, unpin])
 }

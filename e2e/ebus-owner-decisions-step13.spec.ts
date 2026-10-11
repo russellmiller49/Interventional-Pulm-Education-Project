@@ -50,10 +50,8 @@ for (const condition of [
         ).toBeVisible()
       }
       if (id === 'results-reporting') {
-        await page.getByText('Sources and model limits', { exact: true }).click()
-        await expect(
-          page.getByText(/owner-approved scope; full text not independently verified/),
-        ).toBeVisible()
+        await page.getByText('Sources', { exact: true }).click()
+        await expect(page.getByRole('link', { name: /Miller RJ, Chrissian AA/ })).toBeVisible()
       }
     }
     await page.getByRole('button', { name: 'Help', exact: true }).click()
@@ -75,7 +73,6 @@ for (const condition of [
       await page.keyboard.press('Enter')
       await expect(details).toHaveAttribute('open', '')
       await expect(details.getByText(term.definition, { exact: true })).toBeVisible()
-      await expect(details).toContainText('Source and limits:')
       await page.keyboard.press('Enter')
     }
     await dialog.screenshot({ path: test.info().outputPath('approved-glossary.png') })

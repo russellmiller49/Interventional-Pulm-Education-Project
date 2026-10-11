@@ -16,6 +16,7 @@ export function Workbench({
   sessionId,
   onObservation,
   demonstration = false,
+  console: consoleRequested = false,
 }: {
   lab: Lab
   locked: boolean
@@ -23,6 +24,8 @@ export function Workbench({
   sessionId: string
   onObservation: (v: EbusObservation) => void
   demonstration?: boolean
+  /** Fill a fixed-height stage instead of growing with the workbench's content. */
+  console?: boolean
 }) {
   const frame = useRef<HTMLIFrameElement>(null)
   const booted = useRef(false)
@@ -31,6 +34,20 @@ export function Workbench({
     callback.current = onObservation
   }, [onObservation])
   const [height, setHeight] = useState(800)
+  /*
+   * A console stage has a fixed height from CSS on wide screens. On a narrow one the three panes
+   * stack, so the frame goes back to following its content.
+   */
+  const [wide, setWide] = useState(false)
+  const consoleStage = consoleRequested && wide
+  useEffect(() => {
+    const query = window.matchMedia?.('(min-width: 1100px)')
+    if (!query) return
+    const sync = () => setWide(query.matches)
+    sync()
+    query.addEventListener('change', sync)
+    return () => query.removeEventListener('change', sync)
+  }, [])
   const [error, setError] = useState('')
   const [retry, setRetry] = useState(0)
   const [compact, setCompact] = useState(false)
@@ -205,7 +222,8 @@ export function Workbench({
           hidden={compact}
           ref={frame}
           title="EBUS workbench"
-          style={{ height }}
+          data-console={consoleStage || undefined}
+          style={consoleStage ? undefined : { height }}
           src="/socal-ebus-course/app/guided.html?locale=en&publicTraining=1&publicScope=ebus"
           allow="fullscreen"
         />
