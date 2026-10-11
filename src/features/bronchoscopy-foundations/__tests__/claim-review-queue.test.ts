@@ -124,6 +124,8 @@ describe('the BF-01 claim review queue', () => {
       'BF-01-C06',
       'BF-01-C07',
       'BF-01-C08',
+      'BF-01-C09',
+      'BF-01-C10',
     ])
   })
 

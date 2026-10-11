@@ -22,7 +22,6 @@ export const BRONCH_SECTION_IDS = [
   'systematic-survey',
   'describe-findings',
   'washing-and-lavage',
-  'poor-return',
   'protected-accessories',
   'specimen-pathway',
   'deterioration',
@@ -52,7 +51,6 @@ export const BRONCH_SECTION_STAGE: Readonly<Record<BronchSectionId, CriticalCare
     'systematic-survey': 'application',
     'describe-findings': 'mechanism',
     'washing-and-lavage': 'mechanism',
-    'poor-return': 'application',
     'protected-accessories': 'mechanism',
     'specimen-pathway': 'application',
     deterioration: 'application',
@@ -105,7 +103,6 @@ export const BRONCH_PHASES: readonly BronchPhase[] = [
     sectionIds: [
       'describe-findings',
       'washing-and-lavage',
-      'poor-return',
       'protected-accessories',
       'specimen-pathway',
     ],

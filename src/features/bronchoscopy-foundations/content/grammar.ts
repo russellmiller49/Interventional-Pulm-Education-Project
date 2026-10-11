@@ -165,7 +165,7 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
     verdict: 'this-control',
     thisControl: ['insertion', 'deflection'],
     harmfulReflex: null,
-    taughtIn: 'poor-return',
+    taughtIn: 'washing-and-lavage',
     sourceRefs: [
       { sourceId: 'T13', location: { kind: 'time-span', start: '00:11:58', end: '00:15:33' } },
     ],
@@ -178,7 +178,7 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
     verdict: 'this-control',
     thisControl: ['suction'],
     harmfulReflex: 'suction',
-    taughtIn: 'poor-return',
+    taughtIn: 'washing-and-lavage',
     sourceRefs: [
       { sourceId: 'T13', location: { kind: 'time-span', start: '00:11:58', end: '00:15:33' } },
     ],
@@ -197,7 +197,7 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
     verdict: 'no-control-change-the-plan',
     thisControl: [],
     harmfulReflex: null,
-    taughtIn: 'poor-return',
+    taughtIn: 'washing-and-lavage',
     sourceRefs: [
       { sourceId: 'T13', location: { kind: 'time-span', start: '00:11:58', end: '00:15:33' } },
     ],

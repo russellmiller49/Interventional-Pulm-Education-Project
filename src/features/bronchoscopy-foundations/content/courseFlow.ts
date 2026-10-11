@@ -584,45 +584,48 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     close(['common-errors']),
   ],
   'washing-and-lavage': [
-    teach('purposes', 'Distinguish saline procedures by their purpose', [
-      'saline-in-the-airway',
-      'what-to-notice',
-      'four-procedures',
+    hook('A good sample, or a trap of saline'),
+    check('check', 'A trap with the label already on it'),
+    screen(
+      'what-and-where',
+      'Which procedure, and where',
+      'Read the three procedures, then how to choose the segment.',
+      ['three-procedures', 'site-from-ct'],
+    ),
+    screen(
+      'technique',
+      'Running the lavage',
+      'Read the wedge and the numbers. You will use them in the case that follows.',
+      ['wedge-and-aliquots', 'the-return'],
+    ),
+    practice(
+      'Put a BAL in order',
+      'case',
+      'Seven steps of a BAL. Put them in the order you do them.',
+    ),
+    screen('poor-return', 'When little comes back', 'Read the four causes and the fix for each.', [
+      'poor-return-causes',
     ]),
-    teach(
-      'worked-sequence',
-      'Follow a lavage from planning to specimen',
-      ['lavage-worked', 'gentle-seal', 'volumes-recorded'],
-      'sequence',
-    ),
-    practice(
-      'Arrange a supported procedural sequence',
-      'case',
-      'Order the procedural steps using their purposes and safety dependencies. This exercise represents reasoning, not a measured wedge or fluid return.',
-    ),
-    check('check', 'Identify what the procedure samples'),
-    debrief(['therapeutic-aspiration', 'common-errors']),
-    check('transfer', 'Adapt to a different sampling purpose'),
-  ],
-  'poor-return': [
-    teach(
-      'baseline',
-      'Establish the expected return and tolerance',
-      ['little-comes-back', 'where-to-look', 'going-to-plan'],
-      'baseline',
-    ),
+    screen('when-to-stop', 'When to stop', 'Read the rule, then what else ends a lavage.', [
+      'when-to-stop',
+    ]),
     {
-      ...teach('reasoning', 'Work through reduced return', ['two-more-causes', 'patient-first']),
-      grammar: true,
+      ...practice(
+        'Run a BAL and count the return',
+        'case',
+        'Work out what came back from each aliquot before you choose. A move that makes things worse plays out, then you decide again.',
+      ),
+      id: 'run-the-bal',
+      act: 'bal',
     },
-    practice(
-      'Now interpret changing return and patient signals',
-      'case',
-      'Read the current observations before choosing what to do. Consider the suction path, position and patient tolerance; more fluid is not an automatic next action.',
+    screen(
+      'processing',
+      'After the lavage',
+      'Read where the fluid goes, and what comes after it.',
+      ['processing', 'before-biopsy'],
     ),
-    check('check', 'Interpret low return'),
-    debrief(['common-errors', 'protocol']),
-    check('transfer', 'Respond when the patient’s tolerance changes'),
+    check('transfer', 'Secretions in the way'),
+    close(['common-errors']),
   ],
   'protected-accessories': [
     teach(

@@ -530,7 +530,7 @@ describe('the report builder (A08)', () => {
 
 describe('a scenario in frames (A13, A32)', () => {
   it('refuses the unsafe move, keeps the frame, opens the reasoning without moving the case, and advances only on the keyed decision', async () => {
-    const { lesson } = await mountSection('poor-return')
+    const { lesson } = await mountSection('deterioration')
     await reachAct(lesson)
     const act = stepOfKind(lesson, 'scenario')
     if (act.interaction.kind !== 'scenario') return

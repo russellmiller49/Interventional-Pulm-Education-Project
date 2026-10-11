@@ -41,6 +41,8 @@ import { section as rightSide } from '../content/sections/right-side'
 import { section as sedationAndMonitoring } from '../content/sections/sedation-and-monitoring'
 import { section as systematicSurvey } from '../content/sections/systematic-survey'
 import { section as viewLoss } from '../content/sections/view-loss'
+import { section as washingAndLavage } from '../content/sections/washing-and-lavage'
+import { registerFindings } from '../content/reviewRegister'
 import { bronchStageLessons } from '../content/stageLessons'
 import type { BronchSectionDefinition, BronchTeachingBlock } from '../content/types'
 import { REWRITTEN_FIXTURE, REWRITTEN_FIXTURE_FLOW } from '../test-support/rewrittenSectionFixture'
@@ -391,6 +393,7 @@ describe('the rewrite rules', () => {
       'view-loss',
       'systematic-survey',
       'describe-findings',
+      'washing-and-lavage',
       'bleeding-priorities',
     ])
     for (const section of [
@@ -404,6 +407,7 @@ describe('the rewrite rules', () => {
       viewLoss,
       systematicSurvey,
       describeFindings,
+      washingAndLavage,
       bleedingPriorities,
     ]) {
       expect(bronchSectionErrors(section)).toEqual([])
@@ -541,5 +545,20 @@ describe('what the rules add to the shared surfaces', () => {
     )
     expect(document.querySelector('[data-local-policies]')).toBeNull()
     expect(document.body.textContent).not.toMatch(/local policy|not configured/i)
+  })
+})
+
+describe('review register R25: culture thresholds (faculty decision, 2026-10-10)', () => {
+  it('lets a threshold rendered from the numbers register through, and refuses one typed by hand', () => {
+    const rendered = `The diagnostic threshold is ${NUMBER_REGISTER['vap-bal-threshold'].value}.`
+    expect(rendered).toContain('CFU/mL')
+    expect(registerFindings('a block', rendered)).toEqual([])
+    expect(registerFindings('a block', 'Positive at 10^4 CFU/mL.').join(' ')).toContain('R25')
+    // What the row was written for is still refused: renaming a specimen to change its threshold.
+    expect(
+      registerFindings('a block', 'Relabel the lavage as an aspirate if it grows less.').join(' '),
+    ).toContain('R25')
+    // The section that teaches the threshold passes the register as authored.
+    expect(bronchSectionErrors(washingAndLavage)).toEqual([])
   })
 })

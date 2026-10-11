@@ -10,7 +10,6 @@ import { section as fiveControls } from './five-controls'
 import { section as icuPhysiology } from './icu-physiology'
 import { section as larynxAndEntry } from './larynx-and-entry'
 import { section as leftSide } from './left-side'
-import { section as poorReturn } from './poor-return'
 import { section as preUseCheck } from './pre-use-check'
 import { section as protectedAccessories } from './protected-accessories'
 import { section as rightSide } from './right-side'
@@ -40,7 +39,6 @@ const AUTHORED: readonly BronchSectionDefinition[] = [
   systematicSurvey,
   describeFindings,
   washingAndLavage,
-  poorReturn,
   protectedAccessories,
   specimenPathway,
   deterioration,
