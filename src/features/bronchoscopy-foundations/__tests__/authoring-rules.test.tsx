@@ -130,8 +130,8 @@ describe('the numbers register', () => {
 
 describe('clinical vocabulary', () => {
   it('lets the clinical uses through and leaves the shared gate as it was', () => {
-    expect(flaggedLearnerCopyTerms('Spray 1% lidocaine and grade the bleeding.')).toEqual(
-      expect.arrayContaining(['%', 'grade']),
+    expect(flaggedLearnerCopyTerms('Pass the scope and grade the bleeding.')).toEqual(
+      expect.arrayContaining(['pass', 'grade']),
     )
     expect(
       bronchLearnerCopyErrors('copy', 'Spray 1% lidocaine, then run the leak test again.'),
