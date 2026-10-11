@@ -79,6 +79,19 @@ export interface AtrialWaveAmplitudes {
   readonly vWaveMmHg: number
   /** Depth of the y descent below mean pressure (rapid emptying after AV valve opening). */
   readonly yDescentMmHg: number
+  /**
+   * Draws the c and v waves as one systolic wave, with no fall between them.
+   *
+   * The components above are separate bumps at fixed phases. However the x descent's own amplitude
+   * is set, pressure still returns to the baseline in the gap between the c wave and the v wave, and
+   * that gap reads as an x descent. A tracing authored as "a tall systolic c-v wave that obliterates
+   * the x descent" therefore could not be drawn (report L4-04). With this set, pressure rises from
+   * the c wave's peak to the v wave's peak without falling back: the regurgitant wave *replaces* the
+   * x descent, which is what the cited review describes ("a tall systolic c–v wave… typically
+   * obliterates the systolic x descent", Whitener, Konoske and Mark 2014). Only an authored example
+   * sets it; the live model's amplitudes never do, so no simulated patient's tracing changes.
+   */
+  readonly systolicFusion?: boolean
 }
 
 /**
@@ -135,18 +148,61 @@ function atrialComponentMeanMmHg(
  * Right atrial / CVP deviation from mean pressure, in mmHg, at a given cardiac phase.
  * Produces the a-c-v waves and x-y descents in their correct positions relative to the ECG.
  */
-export function rightAtrialDeviationMmHg(
-  phase: number,
-  amplitudes: AtrialWaveAmplitudes = NORMAL_RIGHT_ATRIAL_AMPLITUDES,
-): number {
-  const deviation =
+function rightAtrialComponentsMmHg(phase: number, amplitudes: AtrialWaveAmplitudes): number {
+  return (
     amplitudes.aWaveMmHg * cyclicGaussian(phase, CARDIAC_PHASE.atrialAWave, 0.05) +
     amplitudes.cWaveMmHg * cyclicGaussian(phase, CARDIAC_PHASE.atrialCWave, 0.028) -
     amplitudes.xDescentMmHg * cyclicGaussian(phase, CARDIAC_PHASE.atrialXDescent, 0.062) +
     amplitudes.vWaveMmHg * cyclicGaussian(phase, CARDIAC_PHASE.atrialVWave, 0.058) -
     amplitudes.yDescentMmHg * cyclicGaussian(phase, CARDIAC_PHASE.atrialYDescent, 0.05)
+  )
+}
+
+/**
+ * The components with the c and v waves joined: from the c wave's peak to the v wave's peak the
+ * pressure follows a smooth rise between the two, never the dip the separate components leave.
+ * Outside that span, and wherever the components already sit above the rise, nothing changes, so
+ * the a wave, the v wave's fall and the y descent are the authored ones.
+ */
+function fusedSystolicComponentsMmHg(phase: number, amplitudes: AtrialWaveAmplitudes): number {
+  const wrapped = wrapPhase(phase)
+  const components = rightAtrialComponentsMmHg(wrapped, amplitudes)
+  const from = CARDIAC_PHASE.atrialCWave
+  const until = CARDIAC_PHASE.atrialVWave
+  if (wrapped <= from || wrapped >= until) return components
+  const atC = rightAtrialComponentsMmHg(from, amplitudes)
+  const atV = rightAtrialComponentsMmHg(until, amplitudes)
+  const progress = (wrapped - from) / (until - from)
+  const rise = atC + ((atV - atC) * (1 - Math.cos(Math.PI * progress))) / 2
+  return Math.max(components, rise)
+}
+
+const fusedSystolicMeanCache = new Map<string, number>()
+
+/** The fused trace's own mean over a cycle, so it stays centred on the stated mean pressure. */
+function fusedSystolicMeanMmHg(amplitudes: AtrialWaveAmplitudes): number {
+  const key = `${amplitudes.aWaveMmHg}:${amplitudes.cWaveMmHg}:${amplitudes.xDescentMmHg}:${amplitudes.vWaveMmHg}:${amplitudes.yDescentMmHg}`
+  const cached = fusedSystolicMeanCache.get(key)
+  if (cached !== undefined) return cached
+  const samples = 2048
+  let total = 0
+  for (let index = 0; index < samples; index += 1) {
+    total += fusedSystolicComponentsMmHg((index + 0.5) / samples, amplitudes)
+  }
+  const mean = total / samples
+  fusedSystolicMeanCache.set(key, mean)
+  return mean
+}
+
+export function rightAtrialDeviationMmHg(
+  phase: number,
+  amplitudes: AtrialWaveAmplitudes = NORMAL_RIGHT_ATRIAL_AMPLITUDES,
+): number {
+  if (amplitudes.systolicFusion) {
+    return fusedSystolicComponentsMmHg(phase, amplitudes) - fusedSystolicMeanMmHg(amplitudes)
+  }
   return (
-    deviation -
+    rightAtrialComponentsMmHg(phase, amplitudes) -
     atrialComponentMeanMmHg(amplitudes, {
       a: 0.05,
       c: 0.028,

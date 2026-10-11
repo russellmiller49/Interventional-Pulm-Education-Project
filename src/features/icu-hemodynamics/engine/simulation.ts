@@ -1021,6 +1021,33 @@ function advanceOneStep(state: HemodynamicSimulationState): HemodynamicSimulatio
   }
 }
 
+/**
+ * Redraws the waveform buffer under the state's own measurement system.
+ *
+ * A lesson opening is authored as the case plus a list of settings (level, zero, damping). Applied
+ * through the reducer, those settings change what is generated from then on, but the twelve seconds
+ * already in the buffer were generated before them — so a step that had just been "zeroed" opened
+ * on an unzeroed tracing, and the first sweep showed a step where the two met (the "old trace" in
+ * report L2-06). Nothing happened to this patient before the lesson opened, so there is no earlier
+ * tracing to show: the opening buffer is the one this measurement system draws, at the same sample
+ * times, with the same seed. No measurement, parameter or stored value is touched.
+ */
+export function withOpeningTrace(state: HemodynamicSimulationState): HemodynamicSimulationState {
+  return {
+    ...state,
+    waveforms: state.waveforms.map((sample) =>
+      generateWaveformSample(
+        sample.time,
+        state.measurements,
+        state.parameters,
+        state.measurementSystem,
+        state.seed,
+      ),
+    ),
+    displaySeams: [],
+  }
+}
+
 export function advanceHemodynamicSimulation(
   state: HemodynamicSimulationState,
   elapsedSeconds: number,
