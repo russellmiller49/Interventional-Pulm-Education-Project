@@ -431,9 +431,10 @@ const ROWS = {
     label: 'Quantitative BAL culture: the threshold for suspected VAP',
     value: '10⁴ CFU/mL',
     class: 'guideline',
-    status: 'verified',
+    status: 'signed',
     sources: [VAP('weak recommendation, very low-quality evidence', 'Section II recommendation')],
     ...EXTRACTED('the PMC article text (PMC4981759), sections I and II'),
+    signedBy: 'Russell Miller, 2026-10-11',
     note: VAP_NOTE,
   },
   'vap-brush-threshold': {
@@ -441,9 +442,10 @@ const ROWS = {
     label: 'Quantitative protected-brush culture: the threshold for suspected VAP',
     value: '10³ CFU/mL',
     class: 'guideline',
-    status: 'verified',
+    status: 'signed',
     sources: [VAP('weak recommendation, very low-quality evidence', 'Section II recommendation')],
     ...EXTRACTED('the PMC article text (PMC4981759), sections I and II'),
+    signedBy: 'Russell Miller, 2026-10-11',
     note: VAP_NOTE,
   },
   // 16 · Tube and scope
