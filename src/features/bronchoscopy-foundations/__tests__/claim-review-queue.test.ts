@@ -119,6 +119,7 @@ describe('the BF-01 claim review queue', () => {
     expect(QUEUE.items.filter((item) => item.supersededBy).map((item) => item.id)).toEqual([
       'BF-01-C01',
       'BF-01-C02',
+      'BF-01-C03',
       'BF-01-C04',
       'BF-01-C05',
       'BF-01-C06',

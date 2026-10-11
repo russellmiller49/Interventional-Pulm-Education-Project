@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, within } from '@testing-library/react'
 import { BronchSourceList } from '../components/stage/BronchSourceList'
 import { BronchoscopyFoundationsReference } from '../components/reference/BronchoscopyFoundationsReference'
 import { BRONCH_GRAMMAR, grammarRow, grammarRowControl, type GrammarRow } from '../content/grammar'
-import { BRONCH_SECTION_IDS, bronchSection, type BronchSectionId } from '../content/pathway'
+import { BRONCH_SECTION_IDS, bronchSection } from '../content/pathway'
 import { bronchStageSources } from '../content/stageSources'
 import {
   bronchSourceClass,
@@ -15,13 +15,7 @@ import {
   TRANSCRIPT_SENTENCE,
 } from '../data/sources'
 import { MANIFEST_SOURCES } from '../data/generated/sources.generated'
-import {
-  clickPrimary,
-  currentStepId,
-  installDom,
-  mountSection,
-  settle,
-} from '../test-support/stageHarness'
+import { clickPrimary, installDom, mountSection, settle } from '../test-support/stageHarness'
 
 /**
  * BF-PRE-REVIEW-02, sources and Reading the view (fellow walkthrough A8, A10, SUP-02).
@@ -172,9 +166,13 @@ describe('the section source list (A8, SUP-02)', () => {
     expect(row('U1').querySelector('[data-source-kind]')).toHaveTextContent(
       'Guideline or official guidance',
     )
-    expect(row('T09')).toHaveAttribute('data-source-class', 'transcript')
-    expect(row('T09').querySelector('[data-source-kind]')).toHaveTextContent('Lecture transcript')
-    expect(occurrences(row('T09').textContent ?? '', TRANSCRIPT_SENTENCE)).toBe(1)
+    // The rewritten deterioration section cites no lecture; the specimens section still does.
+    cleanup()
+    render(<BronchSourceList records={bronchStageSources('biopsy-and-specimens').records} />)
+    expect(row('T13')).toHaveAttribute('data-source-class', 'transcript')
+    expect(row('T13').querySelector('[data-source-kind]')).toHaveTextContent('Lecture transcript')
+    expect(occurrences(row('T13').textContent ?? '', TRANSCRIPT_SENTENCE)).toBe(1)
+    expect(row('T13').querySelector('[data-source-locator-note]')).toBeNull()
   })
 
   it('agrees with the Reference about every source in every section', () => {
@@ -222,10 +220,7 @@ describe('the section source list (A8, SUP-02)', () => {
     expect(s1.querySelectorAll('[data-source-locator-note]')).toHaveLength(1)
     expect(s1.querySelector('[data-source-locator-note]')).toHaveTextContent(PDF_PAGE_LOCATOR_NOTE)
     expect(s1.textContent).not.toMatch(/printed page \d|print(?:ed)? p\. ?\d/i)
-    for (const id of ['U1', 'T09'])
-      expect(
-        document.querySelector(`[data-evidence-id="${id}"] [data-source-locator-note]`),
-      ).toBeNull()
+    expect(document.querySelector('[data-evidence-id="U1"] [data-source-locator-note]')).toBeNull()
   })
 
   it('copies and opens the source the control belongs to', async () => {
@@ -279,7 +274,7 @@ describe('focus scrolling reserves the continuation bar as measured (A9)', () =>
         }
       })
     try {
-      const { lesson } = await mountSection('icu-physiology')
+      const { lesson } = await mountSection('ventilated-patient')
       const root = document.documentElement
       // A reading step pins the bar: its measured height plus a small gap, never a fixed 19rem.
       expect(lesson.steps[0].course?.presentation).toBe('illustrated')
@@ -307,12 +302,8 @@ describe('focus scrolling reserves the continuation bar as measured (A9)', () =>
   })
 })
 
-/**
- * The sections the walkthrough found printing Reading the view as loose lines. A rewritten section
- * (the right lung, bleeding) closes on its checklist and no longer prints the table in the lesson;
- * the Reference keeps the whole table.
- */
-const GRAMMAR_SECTIONS: readonly BronchSectionId[] = ['deterioration', 'scope-in-a-tube']
+// No lesson prints Reading the view any more: every rewritten section closes on its checklist.
+// The Reference keeps the whole table, and the tests below hold it there.
 
 function cellTexts(row: Element) {
   const text = (selector: string) =>
@@ -373,41 +364,6 @@ describe('Reading the view is one table in the lessons and the Reference (A10)',
       if (before(row) !== null) expect(grammarRowControl(row)).toBe(before(row))
     expect(grammarRowControl(grammarRow('lens-obscured'))).toBe('Suction')
   })
-
-  it.each(GRAMMAR_SECTIONS)(
-    'the %s lesson shows its rows as a table at every step that shows them',
-    async (sectionId) => {
-      const { lesson } = await mountSection(sectionId)
-      const rows = BRONCH_GRAMMAR.filter((row) =>
-        bronchSection(sectionId).grammarRowIds.includes(row.id),
-      )
-      const grammarSteps = lesson.steps
-        .map((step, index) => ({ step, index }))
-        .filter(({ step }) => step.course?.grammar)
-      expect(grammarSteps.length).toBeGreaterThan(0)
-      let seen = 0
-      for (const [index, step] of lesson.steps.entries()) {
-        expect(currentStepId()).toBe(step.id)
-        if (step.course?.grammar) {
-          const block = document.querySelector('[data-teaching-block="grammar"]')
-          expectGrammarTable(block?.querySelector('table[data-grammar]') ?? null, rows)
-          // Named by the block's own heading, and the trend rule still printed under it.
-          const table = block!.querySelector('table')!
-          expect(document.getElementById(table.getAttribute('aria-labelledby')!)).toHaveTextContent(
-            'Connect the observation to the problem',
-          )
-          expect(block!.querySelector('[data-grammar-trend-rule]')).not.toBeNull()
-          seen += 1
-        }
-        if (index === lesson.steps.length - 1) break
-        const skip = document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-skip]')
-        if (skip) fireEvent.click(skip)
-        else clickPrimary()
-        await settle()
-      }
-      expect(seen).toBe(grammarSteps.length)
-    },
-  )
 
   it('renders the Reference from the same rows and cells, with where each is taught', () => {
     render(<BronchoscopyFoundationsReference />)

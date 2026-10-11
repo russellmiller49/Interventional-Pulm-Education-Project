@@ -8,14 +8,13 @@ import { section as clinicalQuestion } from './clinical-question'
 import { section as describeFindings } from './describe-findings'
 import { section as deterioration } from './deterioration'
 import { section as fiveControls } from './five-controls'
-import { section as icuPhysiology } from './icu-physiology'
 import { section as larynxAndEntry } from './larynx-and-entry'
 import { section as leftSide } from './left-side'
 import { section as preUseCheck } from './pre-use-check'
 import { section as rightSide } from './right-side'
-import { section as scopeInATube } from './scope-in-a-tube'
 import { section as sedationAndMonitoring } from './sedation-and-monitoring'
 import { section as systematicSurvey } from './systematic-survey'
+import { section as ventilatedPatient } from './ventilated-patient'
 import { section as viewLoss } from './view-loss'
 import { section as washingAndLavage } from './washing-and-lavage'
 import { section as whatCompletionMeans } from './what-completion-means'
@@ -41,8 +40,7 @@ const AUTHORED: readonly BronchSectionDefinition[] = [
   biopsyAndSpecimens,
   deterioration,
   bleedingPriorities,
-  scopeInATube,
-  icuPhysiology,
+  ventilatedPatient,
   whatCompletionMeans,
 ]
 

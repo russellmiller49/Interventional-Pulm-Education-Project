@@ -6,7 +6,6 @@ import { section as larynxAndEntry } from '../content/sections/larynx-and-entry'
 import { section as leftSide } from '../content/sections/left-side'
 import { section as protectedAccessories } from '../content/sections/biopsy-and-specimens'
 import { section as rightSide } from '../content/sections/right-side'
-import { section as scopeInATube } from '../content/sections/scope-in-a-tube'
 import { section as systematicSurvey } from '../content/sections/systematic-survey'
 import { section as viewLoss } from '../content/sections/view-loss'
 import type { BronchSectionDefinition, ScopeLabAct } from '../content/types'
@@ -207,23 +206,6 @@ describe('authored scope-lab steps can be completed with the learner’s control
     trusting.send({ type: 'accessory-move', to: 'in-channel' })
     expect(trusting.state.inputs.accessoryPosition).toBe('extended')
     expect(trusting.state.events).toContain('accessory-unsafe')
-  })
-
-  it('scope-in-a-tube: along the tube, beyond it, to the carina; a bent tip meets the tube', () => {
-    const act = actOf(scopeInATube)
-    const p = pilot(act.view)
-    p.advanceUntil(() => p.state.events.includes('reached-carina'))
-    expect(p.goals(act.goals)).toEqual(allMet(act.goals))
-    const observe = act.observe!
-    const o = pilot(observe.view ?? act.view)
-    o.advanceUntil(() => o.state.events.includes('tube-exited'))
-    expect(o.goals(observe.goals)).toEqual(allMet(observe.goals))
-    const bent = pilot(act.view)
-    const depth = bent.state.depthMm
-    bent.send({ type: 'set-deflection', deg: 30 })
-    bent.advance()
-    expect(bent.state.depthMm).toBe(depth)
-    expect(bent.state.events).toContain('wall-contact')
   })
 })
 

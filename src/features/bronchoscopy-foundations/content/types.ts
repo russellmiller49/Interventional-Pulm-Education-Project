@@ -274,6 +274,11 @@ export interface BronchSort {
   readonly origins: readonly BronchSortOrigin[]
   /** At least four; every origin is the answer to at least one row. */
   readonly rows: readonly BronchSortRow[]
+  /**
+   * The rows state sizes written for the exercise (a tube, the gap it leaves), as a case states
+   * its own values. Row statements and rationales may then carry digits.
+   */
+  readonly caseValues?: true
   readonly sourceRefs: readonly SourceRef[]
 }
 

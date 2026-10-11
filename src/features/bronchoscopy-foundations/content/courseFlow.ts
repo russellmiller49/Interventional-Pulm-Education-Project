@@ -721,25 +721,36 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     close(['common-errors']),
   ],
   deterioration: [
-    teach(
-      'baseline',
-      'Establish the patient’s baseline',
-      ['breathing-changes', 'what-can-change', 'inspection-to-plan'],
-      'baseline',
+    hook('The saturation is falling'),
+    check('check', 'Why is he restless?'),
+    screen('opening', 'Open every event the same way', 'Read the three moves that come first.', [
+      'opening-bundle',
+    ]),
+    screen(
+      'breathing',
+      'Low oxygen, and too much sedation',
+      'Learn the two cards. Most events start here.',
+      ['desaturation', 'oversedation'],
     ),
-    teach('priorities', 'Work through a change in breathing', [
-      'response-bundle',
-      'causes-and-escalation',
-      'before-resuming',
+    screen('spasm', 'The larynx and the bronchi', 'Learn the two cards and how they differ.', [
+      'laryngospasm',
+      'bronchospasm',
+    ]),
+    screen('circulation', 'Pressure and pleura', 'Learn the two cards. One of them cannot wait.', [
+      'hypotension',
+      'pneumothorax',
+    ]),
+    screen('topical', 'When the topical drug is the cause', 'Learn the two cards.', [
+      'anesthetic-toxicity',
+      'methemoglobinemia',
     ]),
     practice(
-      'Now respond to the changing patient',
+      'One patient, four decisions',
       'case',
-      'Compare the current observations with the baseline. Pause to interpret them, then choose the next action. Unsafe choices receive immediate feedback.',
+      'Read the monitor, then decide. A move that makes things worse plays out, then you decide again.',
     ),
-    check('check', 'Interpret a change during inspection'),
-    debrief(['common-errors', 'institution-supplies']),
-    check('transfer', 'Apply the priorities in another situation'),
+    check('transfer', 'A different patient, a different event'),
+    close(['common-errors']),
   ],
   'bleeding-priorities': [
     hook('Blood fills the view'),
@@ -767,59 +778,45 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     check('transfer', 'Grade a different bleed'),
     close(['common-errors']),
   ],
-  'scope-in-a-tube': [
-    teach(
-      'geometry',
-      'Separate available area from ventilation',
-      [
-        'one-tube',
-        'what-the-team-can-read',
-        'steady-procedure',
-        'space-worked',
-        'fitting-is-not-ventilating',
-      ],
-      'tube-geometry',
-    ),
-    practice(
-      'Inspect the scope and tube geometry',
-      'skill',
-      'Use the scope and cross-sectional views to inspect available area. The readout describes ideal-circle geometry; it does not select a device or predict ventilation.',
+  'ventilated-patient': [
+    hook('A scope in the breathing tube'),
+    check('check', 'The scope passes'),
+    screen(
+      'margin',
+      'The scope and the tube',
+      'Read the margin a tube has to leave, and the scopes you will be handed.',
+      ['the-margin'],
+      { visual: 'tube-geometry' },
     ),
     {
-      id: 'changed-tube',
-      title: 'Compare a changed tube geometry',
-      kind: 'observe',
-      presentation: 'skill',
-      blocks: [],
-      visual: 'none',
-      instruction:
-        'The authored tube size changes for this comparison. Read the available-area display and complete the observation goals.',
+      ...practice(
+        'Pair the scope with the tube',
+        'case',
+        'Decide whether each pair leaves the margin.',
+      ),
+      id: 'pair-the-scope',
+      act: 'pairs',
     },
-    check('check', 'Interpret the geometry’s clinical limit'),
-    debrief(['plan-before', 'when-ventilation-worsens', 'common-errors']),
-    check('transfer', 'Respond to changed ventilation'),
-  ],
-  'icu-physiology': [
-    teach(
-      'baseline',
-      'Read the ventilator and the patient together',
-      ['inside-the-breath', 'ventilator-signals', 'breath-at-baseline', 'what-ends-the-breath'],
-      'baseline',
-    ),
-    check('check', 'Explain the pressure-control breath'),
-    teach(
-      'procedure-purpose',
-      'Connect the compartment, tool and guidance',
-      ['compartment-and-guidance', 'own-training'],
-      'sort-example',
+    screen('settings', 'Before the scope goes in', 'Read the adapter, then the five settings.', [
+      'swivel-adapter',
+      'settings-before',
+    ]),
+    screen('reading', 'Read the ventilator', 'Read what each pattern means with the scope in.', [
+      'peak-and-plateau',
+    ]),
+    screen(
+      'falling',
+      'When ventilation falls',
+      'Learn the card, then read what suction does to the lung.',
+      ['ventilation-falls', 'suction-and-recruitment'],
     ),
     practice(
-      'Match procedures to their targets',
+      'One bronchoscopy on the ventilator',
       'case',
-      'Match each procedure to the compartment and guidance described. This exercise does not teach the technique of the advanced procedures.',
+      'Read the ventilator, then decide. A move that makes things worse plays out, then you decide again.',
     ),
-    debrief(['fluoroscopy-principles', 'radiation-and-staff', 'common-errors']),
-    check('transfer', 'Interpret changed resistance during a breath'),
+    check('transfer', 'A different mode'),
+    close(['common-errors']),
   ],
   'what-completion-means': [
     teach('evidence', 'Understand what your record can establish', [
