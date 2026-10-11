@@ -174,7 +174,7 @@ describe('the ledger is checked with the course primary action (A12)', () => {
 })
 
 const SCENARIO_SECTIONS: readonly BronchSectionId[] = [
-  'poor-return',
+  'washing-and-lavage',
   'deterioration',
   'bleeding-priorities',
 ]
@@ -198,15 +198,28 @@ describe('the branching cases show a real way on after each decision (A13, SUP-1
         'Decide on this card, open the reasoning for this observation, or continue without completing the case.',
       )
 
-      // The first frame, an unsafe move: refused, the frame stays, nothing is done.
+      // The first frame, an unsafe move: the frame stays and nothing is done. In a case that
+      // evolves the move plays out, in words and on the monitor; otherwise it is refused.
       const first = frames[0]
       const unsafe = first.choices.find((choice) => choice.plausibility === 'unsafe')!
       choose(`[data-scenario-frame="${first.id}"] input[value="${unsafe.id}"]`)
       fireEvent.click(decide())
       const refused = query('[data-scenario-outcome]')!
-      expect(refused).toHaveAttribute('data-scenario-outcome', 'refused')
       expect(refused.querySelector('strong')).toHaveTextContent(OUTCOME_WORDS.unsafe)
-      expect(refused).toHaveTextContent('the case does not move on with it')
+      if (unsafe.consequence) {
+        expect(refused).toHaveAttribute('data-scenario-outcome', 'played-out')
+        expect(refused).toHaveTextContent('Decide again from here.')
+        expect(query('[data-scenario-consequence]')).toHaveTextContent(unsafe.label)
+        expect(query('[data-scenario-consequence]')).toHaveTextContent(unsafe.consequence.situation)
+        const shown = [...document.querySelectorAll('[data-monitor-value]')].map(
+          (node) => node.textContent,
+        )
+        for (const reading of unsafe.consequence.readings)
+          if (reading.value) expect(shown.join(' ')).toContain(reading.value)
+      } else {
+        expect(refused).toHaveAttribute('data-scenario-outcome', 'refused')
+        expect(refused).toHaveTextContent('the case does not move on with it')
+      }
       expect(openFrame()).toBe(first.id)
       expect(query('[data-scenario-feedback]')).toBeNull()
       expect(nowPrimary()).toBeNull()
@@ -275,7 +288,7 @@ describe('the branching cases show a real way on after each decision (A13, SUP-1
 
 describe('the question stays in view while its verdict is read (A15)', () => {
   async function checkWith(plausibility: Plausibility) {
-    const { step } = await openStep('shared-airway', 'prediction')
+    const { step } = await openStep('what-completion-means', 'prediction')
     if (step.interaction.kind !== 'prediction') throw new Error('not a prediction')
     const { stage } = step.interaction
     const choice = stage.item.choices.find((entry) => entry.plausibility === plausibility)!
@@ -337,7 +350,7 @@ describe('the question stays in view while its verdict is read (A15)', () => {
   )
 
   it('shows the explanation before any answer without showing a verdict', async () => {
-    await openStep('shared-airway', 'prediction')
+    await openStep('what-completion-means', 'prediction')
     fireEvent.click(query('[data-show-explanation]')!)
     expect(query('[data-prediction-choices]')).not.toBeNull()
     expect(query('[data-answer-verdict]')).toBeNull()
@@ -347,25 +360,26 @@ describe('the question stays in view while its verdict is read (A15)', () => {
 
 describe('matching feedback names the authored category, row by row (A16, A43)', () => {
   it('a deliberately wrong row says what was chosen and where the course places it', async () => {
-    const { step } = await openStep('shared-airway', 'sort')
+    const { step } = await openStep('what-completion-means', 'sort')
     if (step.interaction.kind !== 'sort') throw new Error('not a sort')
     const { sort } = step.interaction
     const labelOf = (id: string) => sort.origins.find((origin) => origin.id === id)!.label
-    placeSortRows(step, { 'lavage-returned': 'what' })
+    // One row is placed under a category it does not belong to; every other row is placed as keyed.
+    const misplaced = sort.rows[0]
+    const chosen = sort.origins.find((origin) => origin.id !== misplaced.origin)!.id
+    placeSortRows(step, { [misplaced.id]: chosen })
     clickPrimary()
-    const row = query('[data-sort-row="lavage-returned"] [data-sort-verdict]')!
+    const row = query(`[data-sort-row="${misplaced.id}"] [data-sort-verdict]`)!
     expect(row).toHaveAttribute('data-sort-verdict', 'other')
     expect(row.querySelector('strong')).toHaveTextContent('Not correct.')
     expect(row.querySelector('[data-sort-chosen]')).toHaveTextContent(
-      `You chose: ${asSentence(labelOf('what'))}`,
+      `You chose: ${asSentence(labelOf(chosen))}`,
     )
     expect(row.querySelector('[data-sort-authored]')).toHaveTextContent(
-      `Belongs with: ${asSentence(labelOf('result'))}`,
+      `Belongs with: ${asSentence(labelOf(misplaced.origin))}`,
     )
-    expect(row).toHaveTextContent(
-      sort.rows.find((entry) => entry.id === 'lavage-returned')!.rationale,
-    )
-    for (const entry of sort.rows.filter((candidate) => candidate.id !== 'lavage-returned')) {
+    expect(row).toHaveTextContent(misplaced.rationale)
+    for (const entry of sort.rows.filter((candidate) => candidate.id !== misplaced.id)) {
       const verdict = query(`[data-sort-row="${entry.id}"] [data-sort-verdict]`)!
       expect(verdict.querySelector('strong')).toHaveTextContent('Correct.')
       expect(verdict.querySelector('[data-sort-chosen]')).toHaveTextContent(
@@ -380,7 +394,7 @@ describe('matching feedback names the authored category, row by row (A16, A43)',
   })
 
   it('explanation first names every row’s category without a stray full stop', async () => {
-    const { step } = await openStep('shared-airway', 'sort')
+    const { step } = await openStep('what-completion-means', 'sort')
     if (step.interaction.kind !== 'sort') throw new Error('not a sort')
     const { sort } = step.interaction
     fireEvent.click(query('[data-show-explanation]')!)
@@ -436,7 +450,7 @@ describe('matching feedback names the authored category, row by row (A16, A43)',
 
 describe('one verdict vocabulary across the course (A43)', () => {
   it('uses the shared verdict card’s own outcome words, and no grading vocabulary', async () => {
-    const { step } = await openStep('shared-airway', 'prediction')
+    const { step } = await openStep('what-completion-means', 'prediction')
     if (step.interaction.kind !== 'prediction') throw new Error('not a prediction')
     const plausibilities: readonly Plausibility[] = [
       'best',

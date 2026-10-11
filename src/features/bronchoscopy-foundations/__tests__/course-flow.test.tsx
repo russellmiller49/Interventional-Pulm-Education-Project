@@ -6,8 +6,9 @@ import {
   parseBronchSelfPacedRecord,
 } from '../engine/selfPacedProgress'
 import { performFiveControlsLearn } from '../test-support/fiveControlsLearnHarness'
-import { SCOPE_RECIPES } from '../test-support/scopeRecipes'
+import { SCOPE_RECIPES, scopeRecipe } from '../test-support/scopeRecipes'
 import {
+  answerFindRows,
   answerLedger,
   clickPrimary,
   commitById,
@@ -103,6 +104,10 @@ it.each(BRONCH_SECTION_IDS)('walks the content-led %s lesson through real handle
           nameIdentifyRows(step)
           clickPrimary()
           break
+        case 'find':
+          answerFindRows(step)
+          expect(document.querySelector('[data-find-verdict="held"]')).not.toBeNull()
+          break
         case 'sequence':
           orderSequence(step)
           clickPrimary()
@@ -118,7 +123,7 @@ it.each(BRONCH_SECTION_IDS)('walks the content-led %s lesson through real handle
           decideAllFrames(step)
           break
         case 'scope-task':
-          SCOPE_RECIPES[id]!.act(scopePilot())
+          scopeRecipe(id, step.course?.act)(scopePilot())
           expect(goalStates().every((state) => state === 'true')).toBe(true)
           break
         case 'observe':
@@ -142,15 +147,18 @@ it('shows a storage failure without blocking learning', async () => {
   expect(screen.getByRole('alert')).toHaveTextContent('could not be saved')
   expect(nowPrimary()).not.toBeDisabled()
   fireEvent.click(nowPrimary()!)
-  expect(currentStepId()).toContain('readiness')
+  expect(currentStepId()).toContain('pre-use-check-flow-v1-check')
   write.mockRestore()
 })
 
 it('isolates the protected exchange demonstration from the learner attempt and record', async () => {
-  const { lesson } = await mountSection('protected-accessories')
+  const { lesson } = await mountSection('biopsy-and-specimens')
   const practice = lesson.steps.find((step) => step.course?.demonstration)!
+  // Every card on the way can be left: the prediction and the picture questions come first.
   while (currentStepId() !== practice.id) {
-    clickPrimary()
+    const skip = document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-skip]')
+    if (skip) fireEvent.click(skip)
+    else clickPrimary()
     await settle()
   }
   fireEvent.click(screen.getByRole('button', { name: 'Watch the example' }))
@@ -160,7 +168,7 @@ it('isolates the protected exchange demonstration from the learner attempt and r
     'not your own attempt',
   )
   expect(selfPaced()).toMatchObject({
-    visitedSectionIds: ['protected-accessories'],
+    visitedSectionIds: ['biopsy-and-specimens'],
     reviewedSectionIds: [],
     surveySnapshot: null,
   })
@@ -169,7 +177,7 @@ it('isolates the protected exchange demonstration from the learner attempt and r
   expect(document.querySelector('[data-demonstration-caption]')).toBeNull()
   expect(nowPrimary()).toBeDisabled()
   expect(goalStates()).toContain('false')
-  SCOPE_RECIPES['protected-accessories']!.act(scopePilot())
+  SCOPE_RECIPES['biopsy-and-specimens']!.act(scopePilot())
   expect(goalStates().every((state) => state === 'true')).toBe(true)
   expect(selfPaced()?.reviewedSectionIds).toEqual([])
 })

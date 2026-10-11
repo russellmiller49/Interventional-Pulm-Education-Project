@@ -38,12 +38,14 @@ export function NumberSourceNote({
 }) {
   if (!ids || ids.length === 0) return null
   const names = numberSourceNames(ids)
+  const localCheck = numbersNeedLocalCheck(ids)
+  if (names.length === 0 && !localCheck) return null
   return (
     <p className={className} data-number-sources={ids.join(' ')}>
       {names.length > 0
         ? `${names.length === 1 ? 'Source' : 'Sources'}: ${names.join('; ')}.`
         : null}
-      {numbersNeedLocalCheck(ids) ? ' Check your local protocol.' : null}
+      {localCheck ? ' Check your local protocol.' : null}
     </p>
   )
 }

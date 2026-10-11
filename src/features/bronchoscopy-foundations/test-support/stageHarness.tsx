@@ -179,6 +179,21 @@ export function nameIdentifyRows(
   }
 }
 
+/** Answer every image of the open click-on-image set: the opening asked for, or the given one. */
+export function answerFindRows(step: BronchStageStep, answers?: Readonly<Record<string, string>>) {
+  if (step.interaction.kind !== 'find') throw new Error(`${step.id} is not a find`)
+  for (const row of step.interaction.find.rows) {
+    const markerId = answers?.[row.id] ?? row.targetId
+    const outline = document.querySelector<SVGElement>(
+      `[data-find-row="${row.id}"] [data-find-marker="${markerId}"]`,
+    )
+    if (!outline) throw new Error(`No outline ${markerId} on image ${row.id}`)
+    fireEvent.click(outline)
+    const next = document.querySelector<HTMLButtonElement>('[data-find-next]')
+    if (next) fireEvent.click(next)
+  }
+}
+
 function sequencePositions(): string[] {
   return [...document.querySelectorAll('[data-bronch-sequence] [data-sequence-step]')].map(
     (item) => item.getAttribute('data-sequence-step')!,

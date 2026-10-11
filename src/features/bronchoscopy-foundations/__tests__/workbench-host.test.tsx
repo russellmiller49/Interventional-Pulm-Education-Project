@@ -2,13 +2,8 @@ import { cleanup, fireEvent } from '@testing-library/react'
 
 import { BRONCH_SELF_PACED_STORAGE_KEY } from '../engine/selfPacedProgress'
 import { latestScopePaneProps } from '../test-support/ScopeTestDouble'
-import {
-  clickPrimary,
-  currentStepId,
-  installDom,
-  mountSection,
-  settle,
-} from '../test-support/stageHarness'
+import { currentStepId, installDom, mountSection, settle } from '../test-support/stageHarness'
+import { reachCourseStep } from '../test-support/courseHarness'
 
 jest.mock(
   '../components/scope/ScopePane',
@@ -63,12 +58,16 @@ afterEach(() => {
   jest.useRealTimers()
 })
 
-async function reachPractice(section: 'branch-entry' | 'right-side') {
+/** The section's scope practice, reached by doing each earlier step as a learner would. */
+async function reachPractice(section: 'larynx-and-entry' | 'right-side') {
   const { lesson } = await mountSection(section)
-  while (lesson.steps.find((step) => step.id === currentStepId())?.course?.kind !== 'practice') {
-    clickPrimary()
-    await settle()
-  }
+  // "Larynx, trachea and carina" has three scope tasks; the carina task is the one with labels.
+  const practice = lesson.steps.find((step) =>
+    section === 'larynx-and-entry'
+      ? step.course?.id === 'carina'
+      : step.interaction.kind === 'scope-task',
+  )!
+  await reachCourseStep(lesson, practice)
   return lesson
 }
 
@@ -93,11 +92,12 @@ describe('A30 — help is advice, not a move', () => {
     const saved = record()
     fireEvent.click(nowButton('Show me where'))
     await settle()
-    // The step starts in the bronchus intermedius; the first goal needs the tip back in its parent.
+    // The step starts where the bronchus intermedius ends; the first goal needs the tip turned
+    // toward the middle lobe before it can enter it.
     expect(document.querySelector('[data-spotlight="true"]')?.getAttribute('data-control')).toBe(
-      'withdraw',
+      'rotate',
     )
-    expect(document.querySelector('[data-goal-help]')?.textContent).toMatch(/^Withdraw/)
+    expect(document.querySelector('[data-goal-help]')?.textContent).toMatch(/^Rotate/)
     expect(paneState()).toBe(state)
     expect(goalRows()).toEqual(goals)
     expect(record()).toBe(saved)
@@ -135,7 +135,7 @@ describe('A30 — help is advice, not a move', () => {
   })
 
   it('offers no reference names where the step has its own in-view labels', async () => {
-    await reachPractice('branch-entry')
+    await reachPractice('larynx-and-entry')
     expect(latestScopePaneProps()!.view.controls).toContain('branchLabels')
     expect(document.querySelector('button[data-reference-labels]')).toBeNull()
   })
@@ -143,7 +143,7 @@ describe('A30 — help is advice, not a move', () => {
 
 describe('A37 — the current goal sits beside the controls; the full list stays on the card', () => {
   it('shows one current goal in the pane and links to the complete list', async () => {
-    const lesson = await reachPractice('branch-entry')
+    const lesson = await reachPractice('larynx-and-entry')
     const step = lesson.steps.find((candidate) => candidate.id === currentStepId())!
     const goals = step.interaction.kind === 'scope-task' ? step.interaction.goals : []
     expect(goals.length).toBe(5)

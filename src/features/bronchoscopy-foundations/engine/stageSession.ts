@@ -62,6 +62,8 @@ export interface BronchCommitments {
   readonly choices: Readonly<Record<string, string>>
   readonly sorts: Readonly<Record<string, Readonly<Record<string, string>>>>
   readonly identifies: Readonly<Record<string, Readonly<Record<string, string>>>>
+  /** Step id → row id → the first opening clicked on that image. */
+  readonly finds: Readonly<Record<string, Readonly<Record<string, string>>>>
   readonly sequences: Readonly<Record<string, readonly string[]>>
   readonly ledgers: Readonly<Record<string, LedgerCommitment>>
   readonly reports: Readonly<Record<string, ReportCommitment>>
@@ -116,6 +118,13 @@ export type BronchStageAction =
       readonly stepId: string
       readonly answers: Readonly<Record<string, string>>
     }
+  | {
+      readonly type: 'FIND_ANSWER'
+      readonly stepId: string
+      readonly rowId: string
+      readonly markerId: string
+      readonly rowCount: number
+    }
   | { readonly type: 'COMMIT_SEQUENCE'; readonly stepId: string; readonly order: readonly string[] }
   | {
       readonly type: 'LEDGER_ENTRY'
@@ -155,6 +164,7 @@ export function emptyCommitments(): BronchCommitments {
     choices: {},
     sorts: {},
     identifies: {},
+    finds: {},
     sequences: {},
     ledgers: {},
     reports: {},
@@ -231,6 +241,10 @@ export function stepWorkDone(
       return commitments.sorts[step.id] !== undefined
     case 'identify':
       return commitments.identifies[step.id] !== undefined
+    case 'find':
+      return interaction.find.rows.every(
+        (row) => commitments.finds[step.id]?.[row.id] !== undefined,
+      )
     case 'sequence':
       return commitments.sequences[step.id] !== undefined
     case 'ledger':
@@ -261,6 +275,7 @@ const RETRYABLE: ReadonlySet<BronchStageStep['interaction']['kind']> = new Set([
   'prediction',
   'sort',
   'identify',
+  'find',
   'sequence',
 ])
 
@@ -325,6 +340,8 @@ export function bronchStageReducer(lesson: BronchStageLesson) {
               kind === 'identify'
                 ? withoutKey(commitments.identifies, action.stepId)
                 : commitments.identifies,
+            finds:
+              kind === 'find' ? withoutKey(commitments.finds, action.stepId) : commitments.finds,
             sequences:
               kind === 'sequence'
                 ? withoutKey(commitments.sequences, action.stepId)
@@ -355,6 +372,19 @@ export function bronchStageReducer(lesson: BronchStageLesson) {
             },
             action.stepId,
           ),
+        }
+      }
+      case 'FIND_ANSWER': {
+        const answers = commitments.finds[action.stepId] ?? {}
+        if (answers[action.rowId] !== undefined) return session
+        const next = { ...answers, [action.rowId]: action.markerId }
+        const updated = { ...commitments, finds: { ...commitments.finds, [action.stepId]: next } }
+        return {
+          ...session,
+          commitments:
+            Object.keys(next).length >= action.rowCount
+              ? withPerformed(updated, action.stepId)
+              : updated,
         }
       }
       case 'COMMIT_SEQUENCE': {

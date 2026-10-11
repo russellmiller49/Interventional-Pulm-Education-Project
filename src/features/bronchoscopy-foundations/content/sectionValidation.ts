@@ -20,9 +20,11 @@ import {
   readable,
   REWRITE_CAPS,
   rewriteRuleErrors,
+  sectionActs,
   testWiseScore,
 } from './authoringRules'
 import { COURSE_FLOWS } from './courseFlow'
+import { findFrameErrors } from './findFrames'
 import { GRAMMAR_ROW_IDS } from './grammar'
 import { SIMULATOR_LANDMARKS, STEPS_LANDMARKS, TEACHING_LANDMARKS } from './landmarks'
 import {
@@ -35,6 +37,7 @@ import { mediaRefErrors, type MediaRef } from './media'
 import { numberTokenErrors } from './numbers'
 import { REVIEW_ITEM_IDS } from './reviewRegister'
 import { BRONCH_SECTION_IDS, BRONCH_SECTION_STAGE } from './sectionIds'
+import { RETIRED_OBJECTIVE_REASONS } from './sectionMigration'
 import { isSpineStopId } from './spine'
 import type {
   AuthoredCapstoneCase,
@@ -416,8 +419,12 @@ const NUMERIC_CHANNELS: ReadonlySet<MonitorChannel> = new Set([
   'exhaled-volume',
 ])
 
-function actErrors(c: Collector, act: BronchAct, section: BronchSectionDefinition): void {
-  const where = `${section.id} act`
+function actErrors(
+  c: Collector,
+  act: BronchAct,
+  section: BronchSectionDefinition,
+  where = `${section.id} act`,
+): void {
   switch (act.kind) {
     case 'scope-lab':
       viewErrors(c, `${where} view`, act.view, section)
@@ -478,6 +485,24 @@ function actErrors(c: Collector, act: BronchAct, section: BronchSectionDefinitio
         row.choices.forEach((choice) => c.copy(`${at} choice ${choice.id}`, choice.label))
       }
       c.add(sourceErrors(where, identify.sourceRefs, 'synthesis'))
+      return
+    }
+    case 'find': {
+      const { find } = act
+      c.copy(`${where} prompt`, find.prompt)
+      if (find.rows.length < 3) c.add(`${where} has fewer than three images.`)
+      const rowIds = find.rows.map((row) => row.id)
+      if (new Set(rowIds).size !== rowIds.length) c.add(`${where} repeats an image id.`)
+      for (const row of find.rows) {
+        const at = `${where} image ${row.id}`
+        c.add(findFrameErrors(at, row))
+        c.copy(`${at} context`, row.context)
+        c.copy(`${at} prompt`, row.prompt)
+        c.copy(`${at} rationale`, row.rationale, { surface: 'rationale' })
+        if (row.rationale.trim().length < 40)
+          c.add(`${at} rationale is too short to explain anything.`)
+      }
+      c.add(sourceErrors(where, find.sourceRefs, 'synthesis'))
       return
     }
     case 'sequence': {
@@ -554,6 +579,18 @@ function actErrors(c: Collector, act: BronchAct, section: BronchSectionDefinitio
       if (scenario.frames.length < 2) c.add(`${where} has fewer than two frames.`)
       for (const frame of scenario.frames) {
         const at = `${where} frame ${frame.id}`
+        c.copy(`${at} time`, frame.time)
+        for (const choice of frame.choices) {
+          if (!choice.consequence) continue
+          const then = `${at} choice ${choice.id} consequence`
+          c.copy(then, choice.consequence.situation)
+          if (choice.plausibility === 'best')
+            c.add(`${then}: the keyed move leads to the next frame, not to a consequence.`)
+          choice.consequence.readings.forEach((reading) => {
+            c.copy(`${then} ${reading.channel}`, reading.words)
+            c.add(readingErrors(`${then} ${reading.channel}`, reading))
+          })
+        }
         c.copy(`${at} situation`, frame.situation)
         c.copy(`${at} prompt`, frame.prompt)
         frame.readings.forEach((reading) => {
@@ -747,6 +784,15 @@ export function bronchSectionErrors(section: BronchSectionDefinition): readonly 
 
   workspaceErrors(c, section.workspace, section)
   actErrors(c, section.act, section)
+  for (const [key, act] of Object.entries(section.moreActs ?? {})) {
+    actErrors(c, act, section, `${id} act "${key}"`)
+    if (act.kind === 'scope-lab' && act.observe)
+      c.add(`${id} act "${key}" carries an observe task; only the section's own act may.`)
+  }
+  for (const stop of section.tour ?? []) {
+    if (!isAirwayLabel(stop.airway)) c.add(`${id} tour names an unknown airway ${stop.airway}.`)
+    c.copy(`${id} tour ${stop.airway}`, stop.note)
+  }
 
   const steps = section.steps
   if (steps) {
@@ -818,7 +864,11 @@ export function validateAllSections(
   }
   if (sections.length === BRONCH_SECTION_IDS.length) {
     for (const objective of MANIFEST_OBJECTIVES) {
-      if (objective.track === 'core' && !homed.has(objective.id))
+      if (
+        objective.track === 'core' &&
+        !homed.has(objective.id) &&
+        !RETIRED_OBJECTIVE_REASONS[objective.id]
+      )
         errors.push(`Core objective ${objective.id} has no section.`)
     }
   }
@@ -849,13 +899,19 @@ export function rewrittenSetErrors(
   const counts = rewritten.map(imageItemCounts)
   const image = counts.reduce((total, count) => total + count.image, 0)
   const total = counts.reduce((sum, count) => sum + count.total, 0)
-  if (total > 0 && image / total < REWRITE_CAPS.imageItemShare)
+  // The image share is a target for the whole course: the planning and sedation sections carry
+  // few pictures and the anatomy and findings sections carry many. It fails the build once every
+  // section is rewritten; until then `check-section.ts --all --report` prints where it stands.
+  const courseRewritten = rewritten.length === sections.length
+  if (courseRewritten && total > 0 && image / total < REWRITE_CAPS.imageItemShare)
     errors.push(
       `${image} of the rewritten sections' ${total} questions show an image; at least a third.`,
     )
   const bank = rewritten.flatMap((section) => [
     ...sectionItems(section),
-    ...(section.act.kind === 'scenario' ? section.act.scenario.frames : []),
+    ...sectionActs(section).flatMap(({ act }) =>
+      act.kind === 'scenario' ? act.scenario.frames : [],
+    ),
   ])
   const score = testWiseScore(bank)
   if (bank.length >= 8 && score > REWRITE_CAPS.testWiseScore)
