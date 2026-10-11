@@ -128,7 +128,7 @@ function Controls({ state: s, act }: { state: ModelState; act: (a: ModelAction) 
             <option value="4L">4L example</option>
             <option value="7">7 example</option>
             <option value="8">Lower paraesophageal example (8)</option>
-            <option value="9">9 — not modeled</option>
+            <option value="9">9 — not in this model</option>
             <option value="11R">11R — no EUS-B preset</option>
             <option value="4R">4R — no EUS-B preset</option>
           </select>

@@ -17,11 +17,11 @@ import {
  * any recorded image. The 3D viewport's concealed part names are untouched.
  */
 const CONTACT_CAPTIONS: Record<ContactMode, string> = {
-  gap: 'Air gap: the transducer face is separated from the wall by the modelled air gap, so the drawn path ends at the interface and no tissue echoes are drawn beyond it.',
+  gap: 'Air gap: the transducer face is separated from the wall by an air gap, so the drawn path ends at the interface and no tissue echoes are drawn beyond it.',
   direct: 'Direct contact: the transducer face touches the wall and the drawn path continues into tissue.',
   balloon: 'Fluid-balloon contact: the fluid-filled balloon bridges the transducer and the wall, and the drawn path continues into tissue.',
   bubble: 'Balloon with a bubble: a focal air interface sits at the balloon–wall contact (labelled on the image); the dark band begins at that interface, at the top of the field.',
-  shadow: 'Contact with a reflector: a bright modelled focus lies within tissue (labelled on the image); the dark band begins behind that focus, not at the transducer.',
+  shadow: 'Contact with a reflector: a strong reflector lies within tissue (labelled on the image); the dark band begins behind the reflector, not at the transducer.',
 }
 export function ModelImage({
   state: s,
@@ -65,7 +65,7 @@ export function ModelImage({
         <p className="model-caption">
           In the 3D view an arrow runs from the selected orientation locator to the fixed target;
           it shows viewing direction only and does not establish a clear needle path. Station 9 is
-          not modeled; hilar/interlobar regions still require an appropriate examination.
+          not included in this model; hilar/interlobar regions still require an appropriate examination.
         </p>
       </section>
     )
@@ -201,7 +201,7 @@ export function ModelImage({
           Analytic section of the same 3D shape. Tap a frozen image for calipers, or use the numeric
           endpoint controls. Distances are phantom millimetres in the coordinate system
           drawn on the section: horizontal 0 at the midline, vertical measured down from the top of
-          the modelled field. They are not calibrated clinical millimetres and do not transfer to a
+          the field. They are not calibrated clinical millimetres and do not transfer to a
           recorded or patient image.
         </p>
       </section>
@@ -360,7 +360,7 @@ export function ModelImage({
           {s.mode === 'shadow' && (
             <>
               <path d="M2.2 19.6L8 16" stroke="#9ef0e2" strokeWidth=".2" />
-              <text x="8.4" y="15.7">modelled reflector</text>
+              <text x="8.4" y="15.7">strong reflector</text>
               <path d="M-4.5 34L-8.5 34" stroke="#9ef0e2" strokeWidth=".2" />
               <text x="-28.5" y="34.6">dark band begins behind it</text>
             </>
