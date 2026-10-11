@@ -21,10 +21,10 @@ One PR is open:
 
 | PR   | Branch                  | State                                                                                                              |
 | ---- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| #NEW | `claude/bf-rewrite-hub` | Draft, targets `main`. The hub rewritten, a closing screen, `what-completion-means` retired, the image rule moved. |
+| #380 | `claude/bf-rewrite-hub` | Draft, targets `main`. The hub rewritten, a closing screen, `what-completion-means` retired, the image rule moved. |
 
 The work is in the worktree `…-Worktrees/claude-bf-pre-review-04-20261007`, which is on
-`claude/bf-rewrite-hub`. Branch the next change from `origin/main` once #NEW is merged. The
+`claude/bf-rewrite-hub`. Branch the next change from `origin/main` once #380 is merged. The
 local copies of the merged stack branches are behind origin.
 
 A reader reviewed sections 13 and 15 against `docs/teaching-first-rules.md` before the merge and
@@ -98,7 +98,7 @@ npx tsx scripts/bronchoscopy-foundations/check-section.ts <section-id>
 In the plan's order. Russell removed the fellow-session gate on 2026-10-08: the 13 remaining
 sections no longer wait for sessions with the pilot.
 
-1. **Get #NEW reviewed and merged.** Everything before it is on `main`.
+1. **Get #380 reviewed and merged.** Everything before it is on `main`.
 2. **Still open from the pilot, for Russell:**
    - Confirm the bleeding first-move card, especially step 2 (suction).
    - Confirm three orientation statements in the right lung's image questions (carina: membranous
