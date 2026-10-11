@@ -468,7 +468,7 @@ export function modelReducer(state: ModelState, a: ModelAction): ModelState {
     else s.steps = add(s.steps, 'unsupported')
     s.notice = routeSupported(s)
       ? routeComparisonNotice(s)
-      : 'This preset is not modeled. Absence of a supported window is not a negative nodal examination.'
+      : 'This window is not included in the model. A window you could not obtain is not a negative nodal examination.'
   }
   return s
 }

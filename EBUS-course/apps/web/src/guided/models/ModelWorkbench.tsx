@@ -26,27 +26,27 @@ const titles: Record<ModelPackage, string> = {
   routes: 'EBUS and EUS-B route comparison',
 }
 const stepLabels: Record<string, string> = {
-  sheath: 'Sheath adjusted',
-  'live-tip': 'Tip displayed live',
-  'lost-tip-stop': 'Stopped after lost tip',
-  'resistance-stop': 'Stopped for resistance',
-  'protected-removal': 'Protected removal',
-  'gain-gap': 'Gain compared with air gap',
-  direct: 'Direct contact inspected',
-  balloon: 'Balloon contact inspected',
-  bubble: 'Bubble window inspected',
-  shadow: 'Reflector shadow inspected',
-  'sphere-sweep': 'Sphere swept',
-  'ellipsoid-sweep': 'Elongated shape swept',
-  'adjacent-sweep': 'Adjacent shapes swept',
-  'lobulated-sweep': 'Lobulated shape swept',
-  'short-axis-record': 'Short-axis image recorded',
-  '4L-airway': '4L airway view',
-  '4L-esophagus': '4L esophageal view',
-  '7-airway': '7 airway view',
-  '7-esophagus': '7 esophageal view',
-  '8-esophagus': 'Lower esophageal example',
-  unsupported: 'Unsupported window acknowledged',
+  sheath: 'Adjust the sheath',
+  'live-tip': 'Show the needle tip on the live image',
+  'lost-tip-stop': 'Change the imaging plane, then stop and reassess',
+  'resistance-stop': 'Introduce resistance, then stop and reassess',
+  'protected-removal': 'Retract the needle and remove the assembly',
+  'gain-gap': 'With “Air gap” selected, raise gain to 75 or more',
+  direct: 'Select “Direct contact”, then “Inspect acoustic path”',
+  balloon: 'Select “Fluid-balloon contact”, then inspect',
+  bubble: 'Select “Balloon with bubble”, then inspect',
+  shadow: 'Select “Contact with reflector”, then inspect',
+  'sphere-sweep': 'Sweep the sphere through every plane',
+  'ellipsoid-sweep': 'Sweep the elongated shape through every plane',
+  'adjacent-sweep': 'Sweep the two adjacent objects through every plane',
+  'lobulated-sweep': 'Sweep the lobulated shape through every plane',
+  'short-axis-record': 'Record a short-axis image of the elongated shape',
+  '4L-airway': 'Record 4L from the airway',
+  '4L-esophagus': 'Record 4L from the esophagus',
+  '7-airway': 'Record 7 from the airway',
+  '7-esophagus': 'Record 7 from the esophagus',
+  '8-esophagus': 'Record the lower paraesophageal example from the esophagus',
+  unsupported: 'Select a target with no window and record the limitation',
 }
 function Controls({ state: s, act }: { state: ModelState; act: (a: ModelAction) => void }) {
   const button = (label: string, type: string) => (
@@ -128,7 +128,7 @@ function Controls({ state: s, act }: { state: ModelState; act: (a: ModelAction) 
             <option value="4L">4L example</option>
             <option value="7">7 example</option>
             <option value="8">Lower paraesophageal example (8)</option>
-            <option value="9">9 — not modeled</option>
+            <option value="9">9 — not in this model</option>
             <option value="11R">11R — no EUS-B preset</option>
             <option value="4R">4R — no EUS-B preset</option>
           </select>
@@ -362,8 +362,8 @@ export function ModelWorkbench({
           {config.demonstration
             ? 'Worked example'
             : config.locked
-              ? 'Retained model observation'
-              : 'Guided model activity'}
+              ? 'Your image'
+              : 'Model activity'}
         </p>
         <h1>{titles[pkg]}</h1>
       </header>
@@ -387,7 +387,7 @@ export function ModelWorkbench({
           />
           </div>
           <section className="model-controls">
-            <h2>{config.locked ? 'Retained model observation' : 'Model controls'}</h2>
+            <h2>{config.locked ? 'Your image' : 'Controls'}</h2>
             <fieldset disabled={config.locked || !rendered}>
               <legend className="sr-only">{titles[pkg]} controls</legend>
               <Controls state={state} act={act} />
@@ -399,33 +399,21 @@ export function ModelWorkbench({
               </p>
             )}
             {!config.locked && (
-              <details data-model-steps={config.demonstration ? 'demonstration' : 'activity'}>
-                {/*
-                 * In the demonstration this list is a guide to the worked example, not a record
-                 * (EBUS-PRE-REVIEW-04, L5-2): it sat beside "exploration does not complete your
-                 * activity" and read as tracking. The host drops demonstration observations; the
-                 * label now says so. In the learner's own activity it lists the steps the activity asks for.
-                 */}
-                <summary>
-                  {config.demonstration
-                    ? 'Steps in this demonstration · ' +
-                      state.steps.length +
-                      ' of ' +
-                      MODEL_STEPS[pkg].length +
-                      ' explored, not recorded'
-                    : 'Steps this activity asks for · ' +
-                      state.steps.length +
-                      ' of ' +
-                      MODEL_STEPS[pkg].length}
-                </summary>
+              <div
+                className="model-steps"
+                data-model-steps={config.demonstration ? 'demonstration' : 'activity'}
+              >
+                <strong>
+                  Steps: {state.steps.length} of {MODEL_STEPS[pkg].length} done
+                </strong>
                 <ul>
                   {MODEL_STEPS[pkg].map((step) => (
-                    <li key={step}>
+                    <li key={step} data-done={state.steps.includes(step)}>
                       {state.steps.includes(step) ? '✓' : '○'} {stepLabels[step]}
                     </li>
                   ))}
                 </ul>
-              </details>
+              </div>
             )}
             {complete && !config.locked && (
               <p role="status" className="model-feedback">
@@ -434,8 +422,7 @@ export function ModelWorkbench({
             )}
             {config.locked && (
               <p>
-                Controls are locked while you interpret the retained observation. Observer orbit
-                remains available.
+                Controls are locked while you answer. You can still turn the model.
               </p>
             )}
           </section>

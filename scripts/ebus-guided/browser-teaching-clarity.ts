@@ -434,7 +434,7 @@ async function lessonFive(page: Page) {
   record(
     'B8',
     'The learner activity lists the steps it asks for',
-    /^Steps this activity asks for · 0 of 5$/.test(activitySteps ?? ''),
+    /^Steps: 0 of 5 done/.test(activitySteps ?? ''),
     activitySteps,
   )
   await frame.getByLabel('Gain · illustrative').fill('85')

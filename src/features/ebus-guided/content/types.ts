@@ -228,7 +228,7 @@ export function labGoalRequirements(lab: Lab, state: EbusObservation): LabRequir
           state.model.complete &&
           !state.model.annotations &&
           MODEL_STEPS[lab.modelPackage].every((step) => state.model!.steps.includes(step)),
-        text: 'Work through each step of the model activity, with the teaching labels off.',
+        text: 'Finish the steps listed beside the model.',
       })
       break
     case 'scan':

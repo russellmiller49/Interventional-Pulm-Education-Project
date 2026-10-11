@@ -110,6 +110,9 @@ export function ModelViewport({
   const [tooltip, setTooltip] = useState<{ label: string; x: number; y: number } | null>(null)
   const [ready, setReady] = useState(false)
   const [selected, setSelected] = useState('')
+  const selectedRef = useRef(selected)
+  selectedRef.current = selected
+  const markSelected = useRef<(() => void) | null>(null)
   const [structures, setStructures] = useState<{ id: string; label: string }[]>([])
   const resetCamera = useRef<(() => void) | null>(null)
   // Presentation only: observer engagement and whether the route view draws structure labels.
@@ -168,6 +171,27 @@ export function ModelViewport({
         }
       })
       return names
+    }
+    // The structure chosen in the list is outlined in the model, so the list points at something.
+    let outlines: THREE.BoxHelper[] = []
+    const outlineSelected = () => {
+      outlines.forEach((box) => {
+        scene.remove(box)
+        box.geometry.dispose()
+        ;(box.material as THREE.Material).dispose()
+      })
+      outlines = []
+      const chosen = selectedRef.current
+      if (!chosen) return
+      root.traverseVisible((o) => {
+        if (!(o instanceof THREE.Mesh) || !o.userData.label) return
+        if (((o.userData.semanticId as string) || o.name) !== chosen) return
+        const box = new THREE.BoxHelper(o, 0xd9a5ff)
+        ;(box.material as THREE.LineBasicMaterial).depthTest = false
+        box.renderOrder = 20
+        scene.add(box)
+        outlines.push(box)
+      })
     }
     const draw = () => {
       if (disposed) return
@@ -418,10 +442,15 @@ export function ModelViewport({
         }
       })
       setStructures(items)
+      outlineSelected()
       draw()
       live.current.onRendered(modelFrameId(s))
     }
     update.current = updateScene
+    markSelected.current = () => {
+      outlineSelected()
+      draw()
+    }
     load(state.package)
       .then((loaded) => {
         if (disposed) {
@@ -586,6 +615,7 @@ export function ModelViewport({
     return () => {
       disposed = true
       update.current = null
+      markSelected.current = null
       resetCamera.current = null
       observer.disconnect()
       observerControlsDispose()
@@ -600,9 +630,13 @@ export function ModelViewport({
   }, [state.package])
   useEffect(() => {
     setTooltip(null)
+    selectedRef.current = ''
     setSelected('')
     update.current?.()
   }, [state, reveal, showLabels])
+  useEffect(() => {
+    markSelected.current?.()
+  }, [selected])
   useEffect(() => {
     resetCamera.current?.()
   }, [needleView])
@@ -649,9 +683,9 @@ export function ModelViewport({
       </div>
       <div className="model-inspector">
         <label>
-          Discover a structure{' '}
+          Find a structure in the model{' '}
           <select
-            aria-label="Discover a structure"
+            aria-label="Find a structure in the model"
             value={selected}
             onChange={(e) => setSelected(e.target.value)}
           >
@@ -663,31 +697,32 @@ export function ModelViewport({
             ))}
           </select>
         </label>
-        {selected && <p role="status">{structures.find((o) => o.id === selected)?.label}</p>}
+        {selected && (
+          <p role="status">
+            {structures.find((o) => o.id === selected)?.label}: outlined in violet in the model.
+          </p>
+        )}
       </div>
-      <p className="model-caption" data-observer-caption>
-        {OBSERVER_CAPTION} Observer movement does not alter the acquisition.
-        {state.package === 'needle' && !reveal
-          ? ' Distal needle geometry is concealed; use the ultrasound schematic.'
-          : ''}
-        {/*
-         * What this panel can and cannot show across the five contact conditions
-         * (EBUS-PRE-REVIEW-04, L5-4). Measured on the production build at the default view: the
-         * air gap, direct contact and fluid balloon differ; the bubble renders identically to the
-         * balloon and the reflector identically to direct contact. Nothing is added to the scene.
-         */}
-        {state.package === 'contact'
-          ? ' From this view the cutaway shows where the transducer, wall and fluid balloon sit, so it changes between an air gap, direct contact and balloon contact. The bubble and the reflector do not change what it shows; their effect is in the echo schematic.'
-          : ''}
-        {state.package === 'routes'
-          ? ' The arrow runs from the selected orientation locator to the fixed target and shows viewing direction only: blue for the airway approach, teal for the esophageal approach. Labels name the model’s own structures; the example node is named only in the worked example.'
-          : ''}
-      </p>
-      <p className="model-caption" data-observer-engaged={engaged} role="status">
-        {engaged
-          ? 'Wheel and one-finger control are on for the model. Press Escape or click elsewhere to release them.'
-          : 'The page scrolls normally over the model. Click, tap or focus the model to turn on wheel and one-finger control.'}
-      </p>
+      <details className="model-caption">
+        <summary>How to move the model</summary>
+        <p data-observer-caption>{OBSERVER_CAPTION}</p>
+      </details>
+      {state.package === 'needle' && !reveal && (
+        <p className="model-caption">The needle tip is hidden here; find it on the ultrasound schematic.</p>
+      )}
+      {state.package === 'contact' && (
+        <p className="model-caption">
+          The cutaway shows the air gap, direct contact and the balloon. The bubble and the
+          reflector show their effect in the echo schematic.
+        </p>
+      )}
+      {state.package === 'routes' && (
+        <p className="model-caption">
+          The arrow shows the viewing direction to the node: blue from the airway, teal from the
+          esophagus.
+        </p>
+      )}
+      <span hidden data-observer-engaged={engaged} />
     </section>
   )
 }

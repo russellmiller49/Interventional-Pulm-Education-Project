@@ -137,9 +137,7 @@ async function main() {
       expect(acquired.linked!.source!.frameId).toBe(acquired.linked!.frameId)
       expect(acquired.linked!.source!.settings.contactQuality).toBe(acquired.contactQuality)
       if (lesson.id === 'acoustic-contact') {
-        await expect(
-          frame.getByRole('heading', { name: 'Tip and wall: initial / current' }),
-        ).toBeVisible()
+        await expect(frame.getByRole('heading', { name: 'Initial and current' })).toBeVisible()
         const comparisons = await frame
           .locator('.linked-contact-comparison canvas')
           .evaluateAll((canvases) => canvases.map((c) => (c as HTMLCanvasElement).toDataURL()))
@@ -158,9 +156,7 @@ async function main() {
       if (lesson.observation.imagePolicy === 'none') {
         await expect(page.locator('iframe')).toBeHidden()
       } else {
-        await expect(
-          frame.getByRole('heading', { name: 'Retained ultrasound', exact: true }),
-        ).toBeVisible()
+        await expect(frame.getByRole('heading', { name: 'Your image', exact: true })).toBeVisible()
         expect(await pixels()).toBe(beforePixels)
         await expect(frame.getByLabel('Select an unnamed structure')).toHaveCount(0)
         await expect(frame.locator('.linked-physical')).toBeHidden()
@@ -194,9 +190,7 @@ async function main() {
         expect(changed.linked!.source!.sessionId).not.toBe(acquired.linked!.source!.sessionId)
         expect(changed.linked!.source!.geometrySha256).toBe(acquired.linked!.source!.geometrySha256)
         await next()
-        await expect(
-          frame.getByRole('heading', { name: 'Retained ultrasound', exact: true }),
-        ).toBeVisible()
+        await expect(frame.getByRole('heading', { name: 'Your image', exact: true })).toBeVisible()
         await page.screenshot({ path: `${out}/${lesson.id}-changed-window.png` })
       }
       await answer(lesson.transfer)

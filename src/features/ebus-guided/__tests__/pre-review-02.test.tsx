@@ -316,7 +316,8 @@ describe('the acquisition says what is still open', () => {
       (item) => (item as HTMLElement).dataset.requirement,
     )
     expect(listed).toContain('gain-last')
-    expect(listed).toContain('frame-ready')
+    // Image-sync conditions are not steps the learner takes, so they are not listed.
+    expect(listed).not.toContain('frame-ready')
   })
 
   it('does not tell a recorded lab it moved an observer camera', () => {

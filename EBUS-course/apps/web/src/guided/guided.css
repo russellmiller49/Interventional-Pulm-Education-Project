@@ -997,3 +997,69 @@ body,
   background: #1f4a55;
   border-color: #5fe0e6;
 }
+
+/*
+ * Owner feedback of 2026-10-11 (second round).
+ *
+ * The white-light view: the shared canvas carries a 560 px minimum for the open simulator, which
+ * is taller than a console pane, so the pane clipped the circle halfway down. In a pane the canvas
+ * takes the pane's size and the circular field fits inside it.
+ */
+.linked-trio .simulator-bronch-canvas {
+  min-height: 0;
+}
+/*
+ * The contact lesson's ultrasound pane: the initial/current comparison already shows the current
+ * ultrasound image, so the separate live image above it is not drawn and the four views (tip and
+ * wall, ultrasound; initial, current) fill the pane.
+ */
+.linked-pane--scan .simulator-sector-pane:has(.linked-contact-comparison) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.linked-pane--scan
+  .simulator-sector-pane:has(.linked-contact-comparison)
+  > .simulator-continuous-ultrasound,
+.linked-pane--scan .simulator-sector-pane:has(.linked-contact-comparison) > .guided-label {
+  display: none;
+}
+.linked-pane--scan .linked-contact-comparison {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  padding: 4px 10px 8px;
+}
+.linked-pane--scan .linked-contact-legend {
+  margin: 0 0 4px;
+  font-size: 12px;
+}
+.linked-console .linked-pane--scan .linked-contact-comparison > div {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.linked-console .linked-pane--scan .linked-contact-comparison figure {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.linked-console .linked-pane--scan .linked-contact-comparison canvas {
+  flex: 0 1 auto;
+  min-height: 0;
+  margin-top: 4px;
+  object-fit: contain;
+  background: #000;
+}
+.linked-console .linked-pane--scan .linked-contact-comparison canvas:last-child {
+  flex: 1 1 0;
+  height: 0;
+}
+.model-steps ul {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.model-steps li[data-done='true'] {
+  color: #8fd9c4;
+}

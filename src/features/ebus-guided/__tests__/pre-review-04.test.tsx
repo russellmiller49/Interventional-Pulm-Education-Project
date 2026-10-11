@@ -641,7 +641,7 @@ describe('Try it yourself is the learner’s choice and changes nothing that is 
 
 describe('what counts, and the held contact frame (L5-2, L5-1)', () => {
   it('says once, beside the demonstration, what records and what does not', () => {
-    render(<LessonHost lesson={lesson('contact-cutaway-model')} />)
+    render(<LessonHost lesson={lesson('acoustic-contact')} />)
     expect(document.querySelector('[data-evidence-identity="demonstration"]')).toHaveTextContent(
       'Try the controls. Nothing on this screen is scored.',
     )
