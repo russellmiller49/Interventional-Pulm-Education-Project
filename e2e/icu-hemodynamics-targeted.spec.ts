@@ -160,7 +160,7 @@ test('pressure demonstrations, correction, fresh observation and before/after sn
   await primary(page)
   await page
     .locator('[data-prediction-choices]')
-    .getByRole('radio', { name: /off level, not zeroed, and underdamped/ })
+    .getByRole('radio', { name: /off level, not zeroed and underdamped/i })
     .check()
   await primary(page)
   await primary(page)

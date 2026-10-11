@@ -1,6 +1,8 @@
 import { act, cleanup, fireEvent, screen } from '@testing-library/react'
 
+import { pawpRecoveryCommitment } from '../content/pawpCaptureSequence'
 import { hemodynamicsSectionSpec } from '../content/sectionSpecs'
+import { HEMODYNAMICS_NUMBERS } from '../content/teachingNumbers'
 import { ICU_HEMODYNAMICS_LEARN_STORAGE_KEY } from '../engine/learnProgress'
 import {
   ICU_HEMODYNAMICS_SELF_PACED_STORAGE_KEY,
@@ -111,7 +113,7 @@ describe('a section on the stage', () => {
     expect(nowPrimary()?.textContent).toMatch(/Continue without answering/)
     expect(questionAction('check')?.disabled).toBe(true)
     expect(verdictOutcome()).toBeNull()
-    commitChoice(/off level, not zeroed, and underdamped/)
+    commitChoice(/off level, not zeroed and underdamped/i)
     expect(verdictOutcome()).toBe('correct')
     expect(screen.getByText('Correct.')).toBeInTheDocument()
     expect(
@@ -155,7 +157,7 @@ describe('a section on the stage', () => {
     // Transfer: a new patient, transducer low and the line damped.
     expect(currentStepId()).toBe(lesson.steps[p + 4].id)
     expect(document.querySelector('[data-dock]')).toBeNull()
-    commitChoice(/Re-level the transducer and restore/)
+    commitChoice(/Re-level the transducer and repair the overdamped line/)
     expect(verdictOutcome()).toBe('correct')
     clickPrimary()
     expect(currentStepId()).toBe(lesson.steps[p + 5].id)
@@ -253,7 +255,7 @@ describe('a section on the stage', () => {
     fireEvent.click(questionAction('explanation-toggle')!)
     expect(document.querySelector('[data-explanation-reveal]')).not.toBeNull()
     expect(document.querySelector('[data-explanation-best]')?.textContent).toMatch(
-      /off level, not zeroed, and underdamped/,
+      /off level, not zeroed and underdamped/i,
     )
     expect(verdictOutcome()).toBeNull()
     expect(stepRows()[p]).toBe('current')
@@ -266,7 +268,7 @@ describe('a section on the stage', () => {
     fireEvent.click(questionAction('try-again')!)
     expect(verdictOutcome()).toBeNull()
     expect(document.querySelector('[data-prediction-choices] input:checked')).toBeNull()
-    commitChoice(/off level, not zeroed, and underdamped/)
+    commitChoice(/off level, not zeroed and underdamped/i)
     expect(verdictOutcome()).toBe('correct')
     clickPrimary()
     expect(stepRows()[p]).toBe('answered')
@@ -276,7 +278,7 @@ describe('a section on the stage', () => {
     const { lesson } = mountSection('pressure-system')
     const p = lesson.predictionStepIndex
     advanceToPrediction('pressure-system')
-    commitChoice(/off level, not zeroed, and underdamped/)
+    commitChoice(/off level, not zeroed and underdamped/i)
     clickPrimary()
     expect(currentStepId()).toBe(lesson.steps[p + 1].id)
     fireEvent.click(document.querySelector('[data-now-back]')!)
@@ -301,7 +303,7 @@ describe('a section on the stage', () => {
   it('restarts from nothing', () => {
     const { lesson } = mountSection('pressure-system')
     advanceToPrediction('pressure-system')
-    commitChoice(/off level, not zeroed, and underdamped/)
+    commitChoice(/off level, not zeroed and underdamped/i)
     fireEvent.click(document.querySelector('[data-stage-restart]')!)
     expect(currentStepId()).toBe(lesson.steps[0].id)
     expect(verdictOutcome()).toBeNull()
@@ -323,7 +325,7 @@ describe('the orientation section', () => {
   it('checks the question sort row by row in words, opens the worked sort first, and never requires it', () => {
     const { lesson } = mountSection('why-measure')
     clickPrimary()
-    commitChoice(/arterial pressure is low at the measurement site/)
+    commitChoice(/pressure is low at this site; the output and the cause are still unknown/)
     clickPrimary()
     expect(currentStepId()).toBe(lesson.steps[2].id)
     expect(document.querySelector('[data-sort-row]')).toBeNull()
@@ -368,7 +370,7 @@ describe('the orientation section', () => {
     ).toMatch(/^Not correct\./)
     clickPrimary()
     clickPrimary()
-    commitChoice(/Transduced pressures/)
+    commitChoice(/Pressures, a thermodilution curve for cardiac output/)
     expect(nowPrimary()?.textContent).toMatch(/Finish the section/)
     clickPrimary()
     expect(storedRecord()?.reviewedSectionIds).toEqual(['why-measure'])
@@ -468,7 +470,7 @@ describe('the tip section', () => {
   it('confirms a place only when the tracing has settled there', () => {
     const { lesson } = mountSection('catheter-advancement')
     clickPrimary()
-    commitChoice(/Advance, expecting a rapid systolic rise/)
+    commitChoice(/Advance, expecting a right-ventricular tracing/)
     clickPrimary()
     expect(currentStepId()).toBe(lesson.steps[2].id)
     const rv = () =>
@@ -504,7 +506,7 @@ describe('the wedge section', () => {
   it('stores at end expiration, deflates and says the artery is back; the questions stay optional', () => {
     const { lesson } = mountSection('pawp-capture')
     clickPrimary()
-    commitChoice(/Place the cursor at end expiration/)
+    commitChoice(/Read at end expiration, store the value/)
     clickPrimary()
     expect(currentStepId()).toBe(lesson.steps[2].id)
     fireEvent.click(control('inflate'))
@@ -545,7 +547,7 @@ describe('the wedge section', () => {
   it('does not count the simulation releasing the balloon itself as a deflation', () => {
     mountSection('pawp-capture')
     clickPrimary()
-    commitChoice(/Place the cursor at end expiration/)
+    commitChoice(/Read at end expiration, store the value/)
     clickPrimary()
     fireEvent.click(control('inflate'))
     tick(12)
@@ -613,7 +615,7 @@ describe('the capstone', () => {
 
     // Transfer: a systemic arterial line whose shape changed while its mean did not.
     expect(currentStepId()).toBe(lesson.steps[5].id)
-    commitChoice(/Run a fast flush and read how the line settles/)
+    commitChoice(/Run a fast flush first/)
     clickPrimary()
     expect(control('flush').textContent).toMatch(/arterial line/)
     readAndRepairFlush('overdamped')
@@ -646,11 +648,19 @@ describe('what the wedge dock says about a deflated balloon', () => {
   it('never describes deflation as proving the occlusion has ended', () => {
     mountSection('pawp-capture')
     clickPrimary()
-    commitChoice(/Place the cursor at end expiration/)
+    commitChoice(/Read at end expiration, store the value/)
     clickPrimary()
     const dock = document.querySelector('[data-dock="wedge"]')!
     expect(dock.textContent).not.toMatch(/nothing is occluding/i)
-    expect(dock.textContent).toMatch(/does not by itself establish that the occlusion has ended/i)
-    expect(dock.textContent).toMatch(/artery tracing coming back does/i)
+    expect(dock.textContent).not.toMatch(/occlusion has ended/i)
+    // With the balloon down, the dock teaches the next inflation: from a confirmed artery tracing,
+    // slowly, with the register's volume.
+    expect(dock.textContent).toMatch(/Inflate only from a confirmed artery tracing/i)
+    expect(dock.textContent).toContain(HEMODYNAMICS_NUMBERS.value('balloon-volume'))
+    // That the returning tracing, not the balloon, ends the occlusion is taught in the section's
+    // recovery explanation.
+    expect(pawpRecoveryCommitment.explanation).toMatch(
+      /the balloon being down is not the end; the returning pulmonary-artery tracing is/i,
+    )
   })
 })

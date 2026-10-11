@@ -603,7 +603,7 @@ export function thermodilutionSeriesConditionWords(identity: ThermodilutionSerie
     return 'acquisition conditions not recorded for these curves'
   }
   if (identity.origin === 'authored-example') {
-    return 'an authored example series written for this module, not an acquisition of yours'
+    return 'an example series, not one you acquired'
   }
   const episode = identity.episode
   if (!episode) return 'acquisition conditions not recorded'
@@ -626,10 +626,10 @@ export function thermodilutionSeriesIncompatibility(
 ): string | null {
   if (a.key === b.key) return null
   if (a.origin === 'unrecorded' || b.origin === 'unrecorded') {
-    return 'the acquisition conditions of one set of curves were not recorded, so this module cannot say they belong with the others'
+    return 'the acquisition conditions of one set of curves were not recorded, so they cannot be grouped with the others'
   }
   if (a.origin !== b.origin) {
-    return 'one set is authored example evidence and the other is your own acquisition'
+    return 'one set is example data and the other is your own acquisition'
   }
   if (a.sessionId !== b.sessionId || a.caseId !== b.caseId) {
     return 'they come from different runs of the case'

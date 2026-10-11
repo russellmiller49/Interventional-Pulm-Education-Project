@@ -8,6 +8,7 @@ import { freshTeachingState, reduceAll } from '../engine/stageRuntime'
 import type { HemodynamicAction, HemodynamicSimulationState } from '../engine/types'
 import { hemodynamicsLearnerCopyErrors } from './controlPanel'
 import type { HemodynamicsSectionId } from './sectionSpecs'
+import { HEMODYNAMICS_NUMBERS } from './teachingNumbers'
 
 /**
  * Story problems: sixty-second scenarios in which a colleague reaches for the tempting control.
@@ -76,8 +77,7 @@ export const hemodynamicsStoryProblems: readonly HemodynamicsStoryProblem[] = Ob
       choices: [
         {
           id: 'shifts-not-shape',
-          label:
-            'Every displayed pressure moves by the same amount; the ringing and the pulse pressure are unchanged.',
+          label: 'Every pressure shifts by the same amount; the ringing is unchanged.',
           rationale:
             'Zero sets the reference. It moves the whole tracing and touches nothing about how the line follows a quick change.',
           plausibility: 'best',
@@ -132,7 +132,7 @@ export const hemodynamicsStoryProblems: readonly HemodynamicsStoryProblem[] = Ob
         {
           id: 'all-rise-shape-same',
           label:
-            'Every pressure reads higher by the same amount; the tracing stays rounded and the pulse pressure stays narrow.',
+            'Every pressure reads higher by the same amount; the tracing stays rounded and narrow.',
           rationale:
             'A lower transducer adds a hydrostatic column to every reading. It cannot sharpen an upstroke or widen the distance between peak and trough.',
           plausibility: 'best',
@@ -190,8 +190,7 @@ export const hemodynamicsStoryProblems: readonly HemodynamicsStoryProblem[] = Ob
       choices: [
         {
           id: 'reject-and-deflate',
-          label:
-            'Nothing improves. The value is rejected as a poor occlusion, and the balloon should come down.',
+          label: 'The value stays a poor occlusion; deflate the balloon.',
           rationale:
             'A wedge that sits above the artery’s diastolic pressure is not reading the left atrium. More volume does not make it one; it risks the vessel.',
           plausibility: 'best',
@@ -199,8 +198,7 @@ export const hemodynamicsStoryProblems: readonly HemodynamicsStoryProblem[] = Ob
         {
           id: 'more-completes-it',
           label: 'The extra volume completes the occlusion and the value becomes usable.',
-          rationale:
-            'An occlusion that needs more than the labelled volume is in a branch or a lung zone that cannot give a wedge. Adding air is how vessels are injured.',
+          rationale: `An occlusion that needs more than ${HEMODYNAMICS_NUMBERS.value('balloon-volume')} is in a branch or a lung zone that cannot give a wedge. Adding air is how the artery ruptures.`,
           plausibility: 'unsafe',
         },
         {
@@ -213,7 +211,7 @@ export const hemodynamicsStoryProblems: readonly HemodynamicsStoryProblem[] = Ob
       ],
       correctChoiceIds: ['reject-and-deflate'],
       explanation:
-        'The balloon is the control here, and its only safe directions are up briefly and then down. A poor occlusion is rejected, not improved.',
+        'If the tracing will not wedge with the full volume, do not add more. Deflate, reposition, and try again.',
       evidenceIds: ['pac-waveforms-part-1-2021', 'edwards-swan-ganz-ifu-2023'],
       reviewStatus: 'draft',
     }),

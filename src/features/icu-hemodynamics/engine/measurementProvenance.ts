@@ -40,7 +40,7 @@ export const measurementProvenanceLabels: Readonly<Record<MeasurementProvenanceK
     'displayed-observation': 'Shown on the monitor at that moment',
     'learner-acquired': 'Acquired by you in this run',
     'stored-historical': 'Stored earlier, under conditions that have since changed',
-    'authored-example': 'Authored example evidence, not an acquisition of yours',
+    'authored-example': 'Example data, not acquired by you',
     derived: 'Calculated from the inputs listed with it',
   })
 

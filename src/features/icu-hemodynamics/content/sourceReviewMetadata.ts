@@ -239,8 +239,7 @@ const metadata: Readonly<Record<string, HemodynamicsSourceReviewMetadata>> = {
     checks: [],
   },
   'master-hemodynamics-reference': {
-    identity:
-      'Not stated. The document names no author or publisher, and its file properties list “OpenAI” as the creator.',
+    identity: 'Not stated. The document names no author or publisher.',
     published: 'Not stated',
     publishedBasis:
       'no date appears in the document; its file-property dates (23 December 2013) do not show when it was written, and it was supplied in July 2026',

@@ -310,8 +310,7 @@ function MetricResultCard({ evaluation }: { readonly evaluation: DerivedMetricEv
       ) : null}
       {evaluation.thresholdContexts.map((context) => (
         <p key={context.contextId} className={styles.openQuestionCard}>
-          <strong>{context.classificationLabel}.</strong> {context.statement} Applies to:{' '}
-          {context.population} {context.notUniversal}
+          <strong>{context.classificationLabel}.</strong> {context.statement} {context.notUniversal}
         </p>
       ))}
       <details>
@@ -1014,9 +1013,9 @@ export function DerivedEpisodeWorkbench({
     <section className={styles.disagreementLab} aria-labelledby={headingId}>
       <h2 id={headingId}>Measurement episodes</h2>
       <p>
-        Eight authored episodes, each a validity exercise rather than a treatment case. Read the
-        recorded inputs and the cardiac-output acquisition first. Where an episode asks a question,
-        answer it and check, or open the reasoning and the evaluated results directly.
+        Eight measurement episodes. Read the recorded inputs and the cardiac-output acquisition
+        first. Where an episode asks a question, answer it and check, or open the reasoning and the
+        evaluated results directly.
       </p>
       <div className={styles.methodTabs} role="tablist" aria-label="Measurement episodes">
         {derivedWorkbenchEpisodes.map((candidate) => (

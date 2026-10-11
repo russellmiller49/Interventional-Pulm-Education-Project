@@ -19,6 +19,7 @@ import {
   pacPrebriefStopConditions,
   pressureSystemValiditySteps,
 } from '../content'
+import { NORMAL_WAVEFORM_RANGE_CAVEAT } from '../content/normalWaveformReference'
 import { hemodynamicsPathwaySections } from '../content/pathwayResolver'
 import { hemodynamicsSectionIds, type HemodynamicsSectionId } from '../content/sectionSpecs'
 
@@ -191,11 +192,11 @@ describe('H0/H1 module entry', () => {
     expect(screen.getByText(/What finishing a section means/i)).toBeInTheDocument()
   })
 
-  it('describes completion as participation rather than readiness', () => {
+  it('describes completion as a reviewed mark, and says what the bedside adds', () => {
     render(<IcuHemodynamicsOverviewV2 />)
-    expect(screen.getByText(/does not make a claim about clinical readiness/i)).toBeInTheDocument()
+    expect(screen.getByText(/marks it reviewed on this device/i)).toBeInTheDocument()
     expect(
-      screen.getByText(/not instruction in placing a catheter in a patient/i),
+      screen.getByText(/the feel of the catheter is learned at the\s+bedside, under supervision/i),
     ).toBeInTheDocument()
   })
 
@@ -293,14 +294,15 @@ describe('H0/H1 normal waveform reference', () => {
     }
   })
 
-  it('renders the reference with its ranges marked as not being targets', () => {
+  it('renders the reference with its ranges named as normal values', () => {
     render(<NormalWaveformReference />)
 
     expect(
       screen.getByRole('heading', { name: /What each chamber is supposed to look like/i }),
     ).toBeInTheDocument()
     expect(screen.getByText(/When it is not safe to interpret/i)).toBeInTheDocument()
-    expect(screen.getByText(/They are not treatment targets/i)).toBeInTheDocument()
+    expect(NORMAL_WAVEFORM_RANGE_CAVEAT).toMatch(/normal resting adult values/i)
+    expect(screen.getByText(NORMAL_WAVEFORM_RANGE_CAVEAT)).toBeInTheDocument()
   })
 
   it('keeps the normal reference ahead of the first simulated manipulation in the pathway', () => {
@@ -312,9 +314,7 @@ describe('H0/H1 normal waveform reference', () => {
 
 describe('H0/H1 advancement safety prebrief', () => {
   it('separates waveform recognition from procedural ability', () => {
-    expect(pacPrebriefScope.doesNotTeach).toMatch(
-      /Placing or manipulating a pulmonary-artery catheter in a patient/i,
-    )
+    expect(pacPrebriefScope.doesNotTeach).toMatch(/the feel of the catheter/i)
     expect(pacPrebriefScope.doesNotTeach).toMatch(/idealized waveforms are easier to read/i)
     expect(pacPrebriefScope.supervision).toMatch(/under qualified supervision/i)
   })
@@ -334,11 +334,16 @@ describe('H0/H1 advancement safety prebrief', () => {
     )
   })
 
-  it('flags the stop conditions no source in this module supports instead of inventing them', () => {
+  it('teaches resistance as a sourced stop condition, and names what is left for the bedside', () => {
+    // Resistance was a named gap; it is now a stop condition with a first move and its sources.
+    const resistance = pacPrebriefStopConditions.find((condition) => condition.id === 'resistance')
+    expect(resistance?.response).toMatch(/never push against resistance/i)
+    expect(resistance?.sourceIds.length).toBeGreaterThan(0)
+    expect(pacPrebriefNotCoveredHere.join(' ')).not.toMatch(/resistance/i)
+
+    // Knotting is still not taught here, and the notice says who to ask.
     expect(pacPrebriefNotCoveredHere.length).toBeGreaterThan(0)
-    expect(pacPrebriefNotCoveredNotice).toMatch(/no reviewed source for them yet/i)
-    // Resistance and knotting are named as gaps, never asserted as rules.
-    expect(pacPrebriefNotCoveredHere.join(' ')).toMatch(/resistance/i)
     expect(pacPrebriefNotCoveredHere.join(' ')).toMatch(/knotting/i)
+    expect(pacPrebriefNotCoveredNotice).toMatch(/supervising attending/i)
   })
 })

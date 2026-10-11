@@ -39,6 +39,7 @@ import {
   type DerivedThresholdContext,
 } from '../content'
 import { ICU_HEMODYNAMICS_CONTENT_VERSION } from '../content/release'
+import { HEMODYNAMICS_NUMBERS } from '../content/teachingNumbers'
 import {
   DERIVED_SECTION_CHECKS,
   ICU_HEMODYNAMICS_PROGRESS_STORAGE_KEY,
@@ -241,7 +242,6 @@ describe('H5 canonical derived-metric model', () => {
     for (const context of derivedThresholdContexts) {
       expect(context.population.trim().length).toBeGreaterThan(0)
       expect(context.intendedUse.trim().length).toBeGreaterThan(0)
-      expect(context.notUniversal.trim().length).toBeGreaterThan(0)
     }
   })
 
@@ -608,7 +608,7 @@ describe('H5 threshold context', () => {
     return requireDerivedThresholdContext(id)
   }
 
-  it('classifies every boundary and refuses treatment targets outright', () => {
+  it('classifies every boundary, and allows a treatment target only with a cited source', () => {
     expect(context('papi-acute-rv-infarction-cut-point').classification).toBe(
       'phenotype-specific-cutoff',
     )
@@ -621,22 +621,32 @@ describe('H5 threshold context', () => {
     )
     expect(context('ci-educational-alarm-boundaries').classification).toBe('model-parameter')
 
-    const target: DerivedThresholdContext = {
+    // No target is authored. One may be taught when a source gives it; the simulator's own
+    // record is not a source.
+    expect(
+      derivedThresholdContexts.filter(
+        (candidate) => candidate.classification === 'treatment-target',
+      ),
+    ).toEqual([])
+    const unsourcedTarget: DerivedThresholdContext = {
       ...context('cpo-acute-cardiac-cohort-cut-point'),
       id: 'cpo-as-target',
       classification: 'treatment-target',
+      evidenceIds: ['icu-hemodynamics-model-v1'],
     }
     expect(() =>
-      validateDerivedMetrics(derivedMetricRecords, [...derivedThresholdContexts, target]),
-    ).toThrow(/classified as a treatment target/i)
+      validateDerivedMetrics(derivedMetricRecords, [...derivedThresholdContexts, unsourcedTarget]),
+    ).toThrow(/a treatment target must cite a source/i)
   })
 
-  it('keeps the diagnostic definition a definition, not a target', () => {
+  it('keeps the diagnostic definition a definition, with all three of its components', () => {
     const definition = context('pvr-esc-ers-definition-component')
+    expect(definition.classification).toBe('diagnostic-definition')
+    // PVR counts only together with mPAP and PAWP.
     expect(definition.statement).toMatch(
-      /contributes to the pre-capillary definition only together/i,
+      /pre-capillary pulmonary hypertension: PVR above .* WU with mPAP above .* mmHg and PAWP at or below .* mmHg/i,
     )
-    expect(definition.notUniversal).toMatch(/not a treatment target/i)
+    expect(definition.population).toMatch(/2022 ESC\/ERS definition/i)
   })
 
   it('names the population behind every cohort association and phenotype cut point', () => {
@@ -645,8 +655,10 @@ describe('H5 threshold context', () => {
         candidate.classification === 'cohort-risk-association' ||
         candidate.classification === 'phenotype-specific-cutoff'
       ) {
-        expect(candidate.population).toMatch(/cohort|population|adults|patients|simulation/i)
-        expect(candidate.notUniversal.length).toBeGreaterThan(20)
+        expect({
+          id: candidate.id,
+          namesPopulation: candidate.population.trim().length > 10,
+        }).toEqual({ id: candidate.id, namesPopulation: true })
       }
     }
   })
@@ -942,9 +954,7 @@ describe('H5 station surfaces', () => {
     ).toBeInTheDocument()
     fireEvent.click(screen.getByRole('tab', { name: 'PAPi' }))
     expect(screen.getAllByText(/Phenotype-specific cut point/).length).toBeGreaterThan(0)
-    expect(
-      screen.getAllByText(/must not be extrapolated from one phenotype to another/).length,
-    ).toBeGreaterThan(0)
+    expect(screen.getAllByText(/PAPi cutoffs differ by population/).length).toBeGreaterThan(0)
     fireEvent.click(screen.getByRole('tab', { name: 'CPO' }))
     expect(screen.getAllByText(/Cohort risk association/).length).toBeGreaterThan(0)
   })
@@ -1201,7 +1211,7 @@ describe('H5 threshold provenance', () => {
     expect(context.statement).toContain('0.9')
     expect(context.evidenceIds).toContain('papi-rvmi-2012')
     expect(context.evidenceIds).not.toContain('papi-lvad-rvf-2016')
-    expect(context.population).toMatch(/inferior-MI/i)
+    expect(context.population).toMatch(/inferior[- ]MI/i)
   })
 
   it('attributes 1.85 to the LVAD cohort that reported it, not to the acute-MI paper', () => {
@@ -1210,10 +1220,12 @@ describe('H5 threshold provenance', () => {
     expect(context.evidenceIds).toEqual(['papi-lvad-rvf-2016'])
     expect(context.evidenceIds).not.toContain('papi-rvmi-2012')
     // The specific study design, not a vague "advanced heart failure" band.
-    expect(context.statement).toMatch(/receiver-operating-characteristic/i)
-    expect(context.population).toMatch(/132/)
-    expect(context.intendedUse).toMatch(/postoperative right ventricular failure/i)
-    expect(context.notUniversal).toMatch(/not a treatment target/i)
+    expect(context.statement).toMatch(
+      /predicted right ventricular failure after implantation in a 132-patient continuous-flow LVAD cohort/i,
+    )
+    expect(context.population).toMatch(/continuous-flow LVAD recipients/i)
+    expect(context.intendedUse).toMatch(/postoperative RV failure/i)
+    expect(context.classification).not.toBe('treatment-target')
 
     const source = hemodynamicsSourceById.get('papi-lvad-rvf-2016')
     expect(source?.citation).toMatch(/Morine/)
@@ -1231,38 +1243,52 @@ describe('H5 threshold provenance', () => {
     expect(derivedSourceSupportsClaim('papi-lvad-rvf-2016', 'papi-lvad-cut-point')).toBe(true)
   })
 
-  it('states no SVRI interval, because none was verified', () => {
+  it('teaches the SVRI range from the numbers register, with its formula', () => {
     const context = requireDerivedThresholdContext('svri-no-bedside-boundary')
     expect(context.classification).toBe('reference-interval')
-    expect(numbersIn(context.statement)).toEqual([])
-    expect(context.statement).toMatch(/no adult reference interval for SVRI/i)
-    // The verified figures are the four the table actually carries.
+    expect(context.statement).toContain(HEMODYNAMICS_NUMBERS.value('svri-range'))
+    // Every figure in the statement is the register's range or the formula's constant.
+    const registered = numbersIn(HEMODYNAMICS_NUMBERS.value('svri-range'))
+    expect(registered.length).toBe(2)
+    expect(numbersIn(context.statement)).toEqual([...registered, '80'])
+    expect(context.statement).toMatch(/SVRI = 80 × \(MAP − CVP\) ÷ cardiac index/)
+    // The SVR range is not to be read across.
+    expect(context.notUniversal).toMatch(/SVR range does not apply to SVRI/i)
+    // The source table verified earlier does not carry it; the record says where it comes from.
     const verified = derivedClaimVerifications.find(
       (candidate) => candidate.topic === 'adult-reference-intervals',
     )
-    expect(verified?.whatWasVerified).toMatch(/No SVRI interval was verified/i)
+    expect(verified?.whatWasVerified).toMatch(/taught from the numbers register/i)
   })
 
-  it('shows no SVRI number on the rendered card', () => {
+  it('shows the register’s SVRI range on the rendered card, and neither retired figure', () => {
     render(<DerivedHemodynamicsTeachingPanel />)
     fireEvent.click(screen.getByRole('tab', { name: 'SVRI' }))
     expect(screen.queryByText(/1,970/)).not.toBeInTheDocument()
     expect(screen.queryByText(/2,390/)).not.toBeInTheDocument()
-    expect(screen.getAllByText(/no adult reference interval for SVRI/i).length).toBeGreaterThan(0)
+    expect(document.body.textContent).toContain(
+      `Normal SVRI is ${HEMODYNAMICS_NUMBERS.value('svri-range')}`,
+    )
   })
 
-  it('still refuses a treatment-target classification', () => {
+  it('refuses a treatment target that cites only the simulator, and accepts one with a source', () => {
     const context = requireDerivedThresholdContext('papi-advanced-hf-teaching-band')
+    const asTarget = (evidenceIds: readonly string[]) =>
+      derivedThresholdContexts.map((candidate) =>
+        candidate.id === context.id
+          ? ({
+              ...candidate,
+              classification: 'treatment-target',
+              evidenceIds,
+            } as DerivedThresholdContext)
+          : candidate,
+      )
     expect(() =>
-      validateDerivedMetrics(
-        derivedMetricRecords,
-        derivedThresholdContexts.map((candidate) =>
-          candidate.id === context.id
-            ? ({ ...candidate, classification: 'treatment-target' } as DerivedThresholdContext)
-            : candidate,
-        ),
-      ),
-    ).toThrow(/treatment target/i)
+      validateDerivedMetrics(derivedMetricRecords, asTarget(['icu-hemodynamics-model-v1'])),
+    ).toThrow(/treatment target must cite a source/i)
+    expect(() =>
+      validateDerivedMetrics(derivedMetricRecords, asTarget(context.evidenceIds)),
+    ).not.toThrow()
   })
 })
 

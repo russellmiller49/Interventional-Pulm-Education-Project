@@ -49,9 +49,6 @@ export function IntroductoryTeaching({
             perfusion findings and echocardiography supply the clinical context. Neither reading
             alone establishes the cause, predicts benefit from fluid, or determines treatment.
           </p>
-          <p className={styles.dockNote}>
-            These are authored comparison values. They are not treatment targets.
-          </p>
           <p>
             Hypotension alone is not an indication to place a PAC. The monitoring method depends on
             the clinical question and the patient.
@@ -198,9 +195,9 @@ export function IntroductoryTeaching({
         <section className={styles.teachingCard}>
           <h3>Contrasting abnormal atrial patterns</h3>
           <p>
-            Authored right-atrial pressure patterns on a shared axis illustrate altered atrial
-            contraction. Rhythm-specific ECG timing is not modeled in these examples. Interpret the
-            pressure pattern alongside the patient and echocardiography.
+            Right-atrial pressure patterns on a shared axis show altered atrial contraction. The ECG
+            is not drawn for these examples. Read the pressure pattern alongside the patient and the
+            echo.
           </p>
           {['ra-cannon-a-wave', 'ra-atrial-fibrillation'].map((id) => (
             <div key={id}>

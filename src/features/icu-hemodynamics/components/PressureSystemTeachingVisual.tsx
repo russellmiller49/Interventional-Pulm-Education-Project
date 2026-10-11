@@ -271,8 +271,7 @@ export function PressureSystemTeachingVisual({
         {revealed ? <DynamicResponseComparison lineType={lineType} headingLevel="h5" /> : null}
 
         <p className={styles.pressureVisualBoundary} role="note">
-          Qualitative educational rendering—not a calibrated device trace. Confirm bedside technique
-          with current monitor instructions, local policy, and supervised clinical judgment.
+          Drawn by the simulator, not recorded from a device.
         </p>
       </section>
     </div>

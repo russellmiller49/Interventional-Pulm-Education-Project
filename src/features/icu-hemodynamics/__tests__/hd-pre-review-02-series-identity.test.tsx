@@ -278,7 +278,9 @@ describe('A. acquisition-series identity', () => {
       exampleId: 'x',
       injectate: { volumeMl: 10, temperatureC: 5 },
     })
-    expect(thermodilutionSeriesIncompatibility(a, authored)).toMatch(/authored example/)
+    expect(thermodilutionSeriesIncompatibility(a, authored)).toMatch(
+      /one set is example data and the other is your own acquisition/,
+    )
     expect(thermodilutionSeriesIncompatibility(a, UNRECORDED_THERMODILUTION_SERIES)).toMatch(
       /not recorded/,
     )

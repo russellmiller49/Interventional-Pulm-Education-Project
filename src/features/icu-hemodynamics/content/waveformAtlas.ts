@@ -21,6 +21,7 @@ import {
   type PulsatileShapeOptions,
   type VentricularShapeOptions,
 } from '../engine/waveformMorphology'
+import { HEMODYNAMICS_NUMBERS } from './teachingNumbers'
 
 export type WaveformTraceSpec =
   | {
@@ -728,10 +729,9 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
     recognitionCues: [
       'Atrial wave components cannot be made out — the defining feature.',
       'The trace wavers and drifts upward over seconds rather than settling on a stable mean.',
-      'The pressure often sits above the pulmonary artery diastolic pressure. That relationship is a warning to reconcile the two readings; on its own it does not establish over-wedging, and a large v wave can raise a genuine occlusion mean without the end-diastolic value moving with it.',
+      'The pressure often sits above the pulmonary artery diastolic pressure. A large v wave can do the same to a true wedge mean, so look for the waves.',
     ],
-    pitfall:
-      'This is a potentially fatal warning sign. Pulmonary-artery rupture associated with a balloon-tipped catheter has a reported mortality range of roughly 30–70%. Deflate immediately, stop manipulating or flushing the catheter, and reassess/reposition only under appropriate supervision.',
+    pitfall: `Deflate at once and do not flush. ${capitalize(HEMODYNAMICS_NUMBERS.value('overwedge-volume'))}: withdraw until the pulmonary-artery tracing returns. Pulmonary-artery rupture carries a mortality of ${HEMODYNAMICS_NUMBERS.value('pa-rupture-mortality')}.`,
     sourceIds: ['clinical-hemodynamics-waveforms', 'pac-review-2014'],
   },
   {
@@ -769,7 +769,7 @@ export const waveformAtlasEntries: readonly WaveformAtlasEntry[] = [
       'Paired oximetry can help: a valid occlusion sample should approach the simultaneous systemic arterial saturation; persistent mixed-venous admixture supports incomplete occlusion.',
     ],
     pitfall:
-      'This artifact falsely elevates the wedge and can misclassify pulmonary hypertension. Deflate immediately, return to a confirmed PA signal, and reassess catheter position and occlusion under appropriate supervision; do not advance or withdraw solely to chase a number.',
+      'This artifact falsely elevates the wedge and can misclassify pulmonary hypertension. Deflate, return to a confirmed PA signal, and reposition before wedging again. Do not add air beyond the full volume.',
     sourceIds: ['clinical-hemodynamics-waveforms'],
   },
 ]
@@ -792,4 +792,8 @@ export const arterialReferenceTrace: WaveformTraceSpec = {
   systolicMmHg: 120,
   diastolicMmHg: 70,
   shape: SYSTEMIC_ARTERIAL_SHAPE,
+}
+
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }

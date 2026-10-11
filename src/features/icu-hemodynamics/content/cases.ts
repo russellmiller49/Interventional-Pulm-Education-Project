@@ -5,6 +5,7 @@ import type {
 } from '../engine'
 import { SHARED_CRITICAL_CARE_THRESHOLDS } from '@/features/critical-care/content/sharedClinicalThresholds'
 import { HEMODYNAMIC_CLINICAL_THRESHOLDS } from './clinicalThresholds'
+import { HEMODYNAMICS_NUMBERS, type HEMODYNAMICS_SHOCK_PROFILES } from './teachingNumbers'
 
 const mapLowThresholdMmHg = SHARED_CRITICAL_CARE_THRESHOLDS.meanArterialPressure.lowMmHg
 const pulmonaryHypertensionThresholds = HEMODYNAMIC_CLINICAL_THRESHOLDS.pulmonaryHypertension
@@ -63,22 +64,15 @@ function intervention(
   return definition
 }
 
-/*
- * HD-PRE-REVIEW-02 (report P-04). The label promised a "real-time stroke-volume endpoint" and the
- * response told the learner to watch a CO/SV trend, but this monitor has no continuous flow or
- * stroke-volume channel. The model's flow does rise; what the learner can see of it is a
- * thermodilution series acquired while the leg raise lasts. The promise now says that. The modeled
- * effect is unchanged.
- */
+/* This monitor has no continuous flow channel: a leg raise is read from a thermodilution series. */
 const plr = intervention({
   id: 'passive-leg-raise',
   label: 'Passive leg raise (a reversible preload challenge)',
   shortLabel: 'PLR',
   category: 'assessment',
-  description:
-    'Transiently recruit venous blood. What it tests is a change in flow, not a static filling pressure alone.',
+  description: 'Transiently recruits venous blood, to see whether flow rises.',
   response:
-    'A reversible preload challenge begins. This monitor has no continuous cardiac-output or stroke-volume channel: flow during the leg raise is seen only in a thermodilution series acquired while it lasts.',
+    'The leg raise begins. This monitor has no continuous cardiac-output channel: shoot a thermodilution series while it lasts to see the change in flow.',
   onsetSeconds: 5,
   recoverySeconds: 35,
   parameterDeltas: { circulatingVolumeFraction: 0.08 },
@@ -86,12 +80,11 @@ const plr = intervention({
 
 const fluidStep = intervention({
   id: 'fluid-250',
-  label: 'Give one modeled 250 mL crystalloid step',
+  label: 'Give 250 mL of crystalloid',
   shortLabel: 'Fluid +250 mL',
   category: 'preload',
-  description: 'A bounded relative volume step; this is not patient-specific fluid advice.',
-  response:
-    'The modeled volume step equilibrates over 15–30 model seconds — compressed time, not a clinical time course. Reassess flow and congestion.',
+  description: `A fluid bolus. Fluid responsiveness: ${HEMODYNAMICS_NUMBERS.value('fluid-responsiveness')}.`,
+  response: 'The bolus equilibrates over 15–30 seconds here. Reassess flow and congestion.',
   onsetSeconds: 12,
   repeatable: true,
   parameterDeltas: { circulatingVolumeFraction: 0.075, stressedVenousVolumeMl: 180 },
@@ -99,10 +92,10 @@ const fluidStep = intervention({
 
 const norepinephrine = intervention({
   id: 'norepinephrine-up',
-  label: 'Increase norepinephrine one relative tier',
+  label: `Start or raise norepinephrine (usual range ${HEMODYNAMICS_NUMBERS.value('norepinephrine-dose')})`,
   shortLabel: 'Norepinephrine ↑',
   category: 'vascular-tone',
-  description: 'Raises systemic vascular tone in a bounded educational tier without a dose.',
+  description: 'Raises systemic vascular tone, with a little inotropy.',
   response: 'Systemic vascular tone rises over several seconds; MAP response depends on flow.',
   onsetSeconds: 7,
   repeatable: true,
@@ -111,10 +104,10 @@ const norepinephrine = intervention({
 
 const vasopressin = intervention({
   id: 'vasopressin-add',
-  label: 'Add vasopressin as a relative adjunct tier',
+  label: `Add vasopressin (usual range ${HEMODYNAMICS_NUMBERS.value('vasopressin-dose')})`,
   shortLabel: 'Vasopressin +',
   category: 'vascular-tone',
-  description: 'Adds a non-catecholamine vascular-tone effect without a patient-specific dose.',
+  description: 'Adds a non-catecholamine vasopressor.',
   response: 'Vascular tone rises modestly; observe MAP and peripheral perfusion together.',
   onsetSeconds: 9,
   parameterDeltas: { systemicVascularResistanceDynSecCm5: 210 },
@@ -122,12 +115,12 @@ const vasopressin = intervention({
 
 const dobutamine = intervention({
   id: 'dobutamine-up',
-  label: 'Increase dobutamine one relative tier',
+  label: `Start or raise dobutamine (usual range ${HEMODYNAMICS_NUMBERS.value('dobutamine-dose')})`,
   shortLabel: 'Dobutamine ↑',
   category: 'inotropy',
-  description: 'Adds a bounded inotropic/flow effect without specifying a dose.',
+  description: 'Adds inotropy and a little vasodilation.',
   response:
-    'Contractility and forward flow increase over 10–20 seconds; check MAP and ectopy context.',
+    'Contractility and forward flow increase over 10–20 seconds here; check MAP and watch for ectopy.',
   onsetSeconds: 10,
   repeatable: true,
   parameterDeltas: {
@@ -140,11 +133,10 @@ const dobutamine = intervention({
 
 const milrinone = intervention({
   id: 'milrinone-up',
-  label: 'Increase milrinone one relative tier',
+  label: `Start or raise milrinone (usual range ${HEMODYNAMICS_NUMBERS.value('milrinone-dose')})`,
   shortLabel: 'Milrinone ↑',
   category: 'inotropy',
-  description:
-    'Adds relative inotropy and pulmonary/systemic vasodilation without specifying a dose.',
+  description: 'Adds inotropy with pulmonary and systemic vasodilation.',
   response: 'RV/LV contractility rises as vascular resistance falls; monitor systemic pressure.',
   onsetSeconds: 16,
   repeatable: true,
@@ -158,13 +150,11 @@ const milrinone = intervention({
 
 const diuresis = intervention({
   id: 'diuresis-step',
-  label: 'Increase decongestion one relative tier',
+  label: 'Increase diuresis',
   shortLabel: 'Diuresis ↑',
   category: 'decongestion',
-  description:
-    'Reduces modeled filling volume gradually; no patient-specific agent or dose is implied.',
-  response:
-    'Filling pressures fall gradually — within model seconds here, which are compressed and are not a clinical time course. Reassess flow, renal perfusion context, and congestion.',
+  description: 'Lowers filling volume gradually.',
+  response: 'Filling pressures fall gradually. Reassess flow, renal perfusion and congestion.',
   onsetSeconds: 24,
   repeatable: true,
   parameterDeltas: {
@@ -176,7 +166,7 @@ const diuresis = intervention({
 
 const systemicPulmonaryVasodilator = intervention({
   id: 'systemic-pulmonary-vasodilator',
-  label: 'Increase systemic pulmonary vasodilator one relative tier',
+  label: 'Start or raise a systemic pulmonary vasodilator',
   shortLabel: 'Systemic PVD ↑',
   category: 'pulmonary-vascular',
   description: 'Lowers PVR but can also lower systemic vascular tone.',
@@ -190,22 +180,21 @@ const systemicPulmonaryVasodilator = intervention({
 
 const inhaledPulmonaryVasodilator = intervention({
   id: 'inhaled-pulmonary-vasodilator',
-  label: 'Increase inhaled pulmonary vasodilation one relative tier',
+  label: 'Start or raise an inhaled pulmonary vasodilator',
   shortLabel: 'Inhaled PVD ↑',
   category: 'pulmonary-vascular',
-  description: 'Models selective PVR reduction as a bridge while the cause is addressed.',
-  response: 'RV afterload falls over seconds with little modeled systemic vasodilation.',
+  description: 'Lowers PVR selectively, as a bridge while the cause is treated.',
+  response: 'RV afterload falls over seconds with little systemic vasodilation.',
   onsetSeconds: 8,
   parameterDeltas: { pulmonaryVascularResistanceWU: -1.5, arterialOxygenSaturationPercent: 1 },
 })
 
 const decreasePeep = intervention({
   id: 'peep-down',
-  label: 'Decrease PEEP one relative step after respiratory review',
+  label: 'Lower PEEP one step after respiratory review',
   shortLabel: 'PEEP ↓',
   category: 'ventilator',
-  description:
-    'Reduces intrathoracic pressure while preserving the need to reassess oxygenation and recruitment.',
+  description: 'Lowers intrathoracic pressure; reassess oxygenation and recruitment afterwards.',
   response: 'Pleural-pressure transmission and RV impedance fall; reassess oxygenation and flow.',
   onsetSeconds: 6,
   parameterDeltas: { peepCmH2O: -3 },
@@ -216,7 +205,7 @@ const increasePeepUnsafe = intervention({
   label: 'Increase PEEP without a respiratory indication',
   shortLabel: 'PEEP ↑',
   category: 'ventilator',
-  description: 'A deliberately unsafe choice in this hemodynamic context.',
+  description: 'Raises intrathoracic pressure.',
   response: 'Venous return and RV output worsen as intrathoracic pressure rises.',
   onsetSeconds: 5,
   unsafe: true,
@@ -226,24 +215,22 @@ const increasePeepUnsafe = intervention({
 
 const reperfusion = intervention({
   id: 'pe-reperfusion',
-  label: 'Activate the case-specific PE reperfusion pathway',
+  label: 'Reperfuse the pulmonary embolus',
   shortLabel: 'PE reperfusion',
   category: 'definitive',
   description:
-    'Represents an appropriate definitive pathway selected after clinical confirmation; it does not choose a real-patient procedure.',
-  response:
-    'The modeled obstructive load begins to resolve; PAP and RV loading improve with delay.',
+    'The definitive treatment once the embolus is confirmed; lysis, catheter or surgery, depending on the patient.',
+  response: 'The obstruction begins to resolve; PAP and RV loading improve with a delay.',
   onsetSeconds: 20,
   parameterDeltas: { pulmonaryVascularResistanceWU: -3.6, rightVentricularContractility: 0.12 },
 })
 
 const pericardialDrainage = intervention({
   id: 'pericardial-drainage',
-  label: 'Activate the case-specific urgent pericardial drainage pathway',
-  shortLabel: 'Drainage pathway',
+  label: 'Drain the pericardium now',
+  shortLabel: 'Pericardial drainage',
   category: 'definitive',
-  description:
-    'Represents escalation to an urgent supervised drainage pathway, not procedural instruction.',
+  description: 'Echo-guided drainage is the treatment for tamponade; volume is a bridge.',
   response: 'Pericardial constraint falls and biventricular filling/flow begin to recover.',
   onsetSeconds: 8,
   parameterDeltas: { pericardialPressureMmHg: -14, referenceCardiacOutputLMin: 0.5 },
@@ -254,7 +241,7 @@ const correctMeasurement = intervention({
   label: 'Re-level, re-zero, inspect tubing, and repeat the fast-flush check',
   shortLabel: 'Restore signal system',
   category: 'assessment',
-  description: 'Treat the signal before treating the patient when internal consistency fails.',
+  description: 'Fix the signal before treating the patient when the numbers do not fit.',
   response:
     'Hydrostatic offset and dynamic-response artifacts are corrected. Re-read the waveform.',
   onsetSeconds: 1,
@@ -307,7 +294,7 @@ const commonPriorities = [
   { id: 'validate-preload', label: 'Validate dynamic preload responsiveness before more fluid' },
   {
     id: 'restore-map',
-    label: `Restore vascular tone toward an initial MAP near ${mapLowThresholdMmHg} mmHg`,
+    label: `Restore vascular tone to a MAP of about ${mapLowThresholdMmHg} mmHg`,
   },
   {
     id: 'restore-lv-flow-decongest',
@@ -325,7 +312,10 @@ const commonPriorities = [
     id: 'separate-transmural-load',
     label: 'Separate transmitted pressure from congestion, then reassess both',
   },
-  { id: 'relieve-constraint', label: 'Escalate urgently to relieve pericardial constraint' },
+  {
+    id: 'relieve-constraint',
+    label: 'Drain the pericardium now; give volume while you set up',
+  },
   { id: 'validate-signal', label: 'Validate the signal before treating the displayed number' },
 ] as const
 
@@ -347,7 +337,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       'An adult remains tachycardic with cool extremities after acute volume loss. The arterial trace is narrow; filling pressures are low.',
     learningObjectives: [
       'Use a reversible dynamic perturbation before fluid.',
-      'Reassess stroke volume and congestion after each bounded volume step.',
+      'Reassess stroke volume and congestion after each 250 mL bolus.',
     ],
     initialParameters: {
       ...normalCirculationParameters,
@@ -378,7 +368,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       'First prove that transient preload recruitment raises flow; a low RAP or PAWP alone is not the fluid decision.',
     debrief: [
       'Dynamic change in flow is more informative than an isolated filling pressure.',
-      'Repeat 250 mL steps only while benefit exceeds congestion risk.',
+      'Repeat 250 mL boluses only while flow keeps rising and congestion does not.',
     ],
     sourceIds: sharedSources,
     safetyCriticalErrorIds: ['peep-up-unsafe'],
@@ -415,9 +405,9 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     requiredInterventionIds: ['norepinephrine-up'],
     unsafeInterventionIds: ['fluid-250'],
     successCriteria: [mapRecoveryCriterion],
-    guidedPrompt: `The initial modeled MAP target is around ${mapLowThresholdMmHg} mmHg; individualize after serial perfusion review.`,
+    guidedPrompt: `Start with a MAP target of about ${mapLowThresholdMmHg} mmHg, then individualize from serial perfusion review.`,
     debrief: [
-      'Norepinephrine is represented as the first vascular-tone tier.',
+      `Norepinephrine is the first vasopressor (${HEMODYNAMICS_NUMBERS.value('norepinephrine-dose')}); vasopressin (${HEMODYNAMICS_NUMBERS.value('vasopressin-dose')}) is the usual second.`,
       'Fluid is conditional on dynamic responsiveness and repeated evaluation.',
     ],
     sourceIds: [...sharedSources, 'ssc-sepsis-2026'],
@@ -466,11 +456,10 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       },
       { metric: 'pawpMmHg', operator: 'at-most', value: 18, label: 'PAWP ≤ 18 mmHg' },
     ],
-    guidedPrompt:
-      'High filling pressure does not prove adequate forward flow. Treat perfusion and congestion as linked but distinct targets.',
+    guidedPrompt: `High filling pressure does not prove adequate forward flow. Cardiogenic shock: cardiac index ${HEMODYNAMICS_NUMBERS.value('cardiogenic-shock-ci')}.`,
     debrief: [
-      'Echo remains first-line imaging for shock mechanism.',
-      'PAC trends can help follow flow and filling-pressure response when shock persists.',
+      `Inotrope first (dobutamine ${HEMODYNAMICS_NUMBERS.value('dobutamine-dose')}), a vasopressor to hold pressure, then decongest.`,
+      'Echo is first-line imaging for the mechanism; the catheter follows flow and filling pressure as you treat.',
     ],
     sourceIds: sharedSources,
     safetyCriticalErrorIds: [],
@@ -524,8 +513,8 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     guidedPrompt:
       'The RV needs afterload relief and definitive treatment, not indiscriminate volume or higher intrathoracic pressure.',
     debrief: [
-      'Inhaled pulmonary vasodilation is modeled only as a selective bridge.',
-      'Definitive PE treatment is case-specific and outside this simulator’s procedural scope.',
+      'An inhaled pulmonary vasodilator is a bridge.',
+      'Reperfusion is the treatment; volume and higher intrathoracic pressure both make the right ventricle worse.',
     ],
     sourceIds: sharedSources,
     safetyCriticalErrorIds: ['peep-up-unsafe'],
@@ -578,7 +567,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     guidedPrompt: `Pre-capillary physiology is mPAP >${pulmonaryHypertensionThresholds.meanPapMmHg} mmHg, PAWP ≤${pulmonaryHypertensionThresholds.preCapillaryPawpMaxMmHg} mmHg, and PVR >${pulmonaryHypertensionThresholds.elevatedPvrWoodUnits} WU in current guidance.`,
     debrief: [
       `The model uses >${pulmonaryHypertensionThresholds.elevatedPvrWoodUnits} WU, not the historical 3-WU threshold.`,
-      `Treatment evidence is less certain in the ${pulmonaryHypertensionThresholds.elevatedPvrWoodUnits}–3 WU range; classification is not itself a treatment instruction.`,
+      `Treatment evidence is less certain in the ${pulmonaryHypertensionThresholds.elevatedPvrWoodUnits}–3 WU range.`,
     ],
     sourceIds: [...sharedSources, 'esc-ers-ph-2022'],
     safetyCriticalErrorIds: [],
@@ -631,7 +620,7 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     debrief: [
       'A PEEP change can alter both measured pressure and true loading.',
       'Preserve oxygenation/recruitment while testing hemodynamic effects.',
-      'The 18 mmHg modeled decongestion endpoint is a scenario target, not a universal bedside treatment threshold.',
+      'The PAWP of 18 mmHg is this case’s endpoint.',
     ],
     sourceIds: sharedSources,
     safetyCriticalErrorIds: [],
@@ -642,14 +631,11 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     station: 'obstructive-shock',
     title: 'Pressure equalization with a falling pulse pressure',
     shortTitle: 'Cardiac tamponade',
-    // Report P-12: the brief said "hypotension" while the modeled and displayed MAP sit near 73–78
-    // mmHg, above the module's own MAP threshold. The brief now describes what the case shows; the
-    // physiology is unchanged. Whether the case should instead be hypotensive is an owner decision.
     presentation:
       'An adult has tachycardia, a narrow pulse pressure, high and converging diastolic filling pressures, and respiratory variation in flow.',
     learningObjectives: [
       'Recognize pericardial constraint as an obstructive mechanism.',
-      'Prioritize urgent definitive escalation rather than normalizing a single number.',
+      'Treat the cause: drain the effusion, with volume as a bridge.',
     ],
     initialParameters: {
       ...normalCirculationParameters,
@@ -683,10 +669,10 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       mapRecoveryCriterion,
     ],
     guidedPrompt:
-      'This pattern requires urgent clinical confirmation and definitive escalation; a PAC never replaces bedside echo.',
+      'Confirm with bedside echo and drain. Echo and drainage are the treatment; volume is a bridge while you set up.',
     debrief: [
-      'Echocardiography is first-line shock imaging.',
-      'A pressure pattern supports physiology but does not independently diagnose or authorize a procedure.',
+      'Echocardiography confirms tamponade and guides the drain.',
+      'Drainage is the treatment. Volume holds filling while you set up; a vasopressor does not fix it.',
     ],
     sourceIds: sharedSources,
     safetyCriticalErrorIds: ['peep-up-unsafe'],
@@ -697,9 +683,6 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
     station: 'signal-validation',
     title: 'The numbers do not fit the patient',
     shortTitle: 'Artifacts and false wedge',
-    // Report L9-03: the brief promised "erratic thermodilution curves" that this case never shows —
-    // it opens with no curves at all. No curve is fabricated to fit the copy; the brief now says the
-    // earlier disagreement was reported and its curves are not available.
     presentation:
       'The monitor shows internally inconsistent pressures while bedside perfusion appears unchanged. The last cardiac outputs were reported as disagreeing with each other; their curves are not available in this case, so any cardiac output here has to be acquired again.',
     learningObjectives: [
@@ -749,12 +732,26 @@ export const hemodynamicCases: readonly HemodynamicCaseDefinition[] = [
       'Internal inconsistency is a signal-validation problem until proven otherwise. Inspect level, zero, dynamic response, catheter position, and curve technique.',
     debrief: [
       'Hydrostatic error changes all displayed invasive pressures.',
-      'A false wedge and poor thermodilution curve should be rejected, not averaged into certainty.',
+      'Reject a false wedge and a poor thermodilution curve; do not average them in.',
     ],
     sourceIds: [...sharedSources, 'monitor-workflow-supplied'],
     safetyCriticalErrorIds: [],
   },
 ] as const
+
+/** The row of the shock-profile table each Practice case belongs to. HD-08 is a signal problem. */
+export const hemodynamicCaseShockProfile: Readonly<
+  Record<string, (typeof HEMODYNAMICS_SHOCK_PROFILES)[number]['id'] | null>
+> = {
+  'HD-01': 'hypovolemic',
+  'HD-02': 'distributive',
+  'HD-03': 'cardiogenic',
+  'HD-04': 'obstructive',
+  'HD-05': 'cardiogenic',
+  'HD-06': 'cardiogenic',
+  'HD-07': 'obstructive',
+  'HD-08': null,
+}
 
 export const hemodynamicCaseById = new Map(
   hemodynamicCases.map((definition) => [definition.id, definition]),

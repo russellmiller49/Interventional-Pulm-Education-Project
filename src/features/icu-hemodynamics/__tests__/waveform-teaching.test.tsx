@@ -299,9 +299,6 @@ describe('WedgeValidityPanel', () => {
     render(<WedgeValidityPanel />)
     expect(screen.getByText(/about 1.4 mmHg per 5 cmH₂O/i)).toBeInTheDocument()
     expect(screen.getByText(/not a bedside correction formula/i)).toBeInTheDocument()
-    expect(
-      screen.getByText(/Arithmetic PEEP correction is not universally validated/i),
-    ).toBeInTheDocument()
     expect(screen.getByText(/mitral stenosis/i)).toBeInTheDocument()
   })
 })

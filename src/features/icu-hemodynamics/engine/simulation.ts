@@ -965,13 +965,9 @@ function advanceOneStep(state: HemodynamicSimulationState): HemodynamicSimulatio
         forcedSafetyRecovery: true,
       }
       criticalErrors = [...new Set([...criticalErrors, 'wedge-prolonged-inflation'])]
-      // The cutoff itself is unchanged; only how it is described to the learner is. Naming it a
-      // "10-second inflation limit" asserted a clinical rule that no source in this module supplies
-      // and that the advancement prebrief explicitly lists as not covered here. It is a simulator
-      // rail, and the message no longer claims the pulmonary-artery waveform came back either —
-      // that is the learner's observation to make.
+      // The cutoff is the simulator's own; no sourced limit in seconds exists, so none is named.
       responseMessage =
-        'Safety recovery: this simulation ended the occlusion at its own fixed cutoff and recorded a safety event. That cutoff belongs to the simulation, not to any catheter — inflation time and volume come from the manufacturer’s instructions for the catheter in use and your local protocol. Confirm for yourself whether the pulmonary-artery waveform has returned.'
+        'The balloon was left up, and the simulator let it down. Keep each wedge brief: just long enough to read the value at end expiration. Check that the pulmonary-artery waveform has returned.'
     } else if (
       wedgeElapsed >= wedgeCaptureDelaySeconds(parameters.respiratoryRateBpm) &&
       !catheter.wedgeCaptureReady

@@ -156,37 +156,27 @@ export function occlusionReleasedByLearner(state: HemodynamicSimulationState): b
 }
 
 /**
- * What this simulation is currently restricting, said as a simulation notice.
+ * What the catheter's state calls for right now, said as the action to take.
  *
  * The capstone opens with the tip sitting distally on a deflated balloon, which blocks the
- * pulmonary-artery flush; a learner following the step's stated order met that block as a small
- * disabled button and had to open a collapsed panel to find out why (report L9-02, Figure 38). The
- * notice puts the restriction where the restriction bites.
- *
- * It is deliberately not an alarm. The monitor's alarm bar models a device's alarms, and inventing
- * a manufacturer alarm for a catheter position would assert device behaviour no source here
- * supplies. This says what the simulation is doing, in the simulation's own name, and names no
- * withdrawal distance or recovery sequence — the module's source-review queue records an
- * unresolved disagreement about that guidance (HD-03-08) and it stays unresolved.
+ * pulmonary-artery flush; the notice says why, and what to do, where the block bites.
  */
 export function catheterSimulationNotice(state: HemodynamicSimulationState): string | null {
   const catheter = state.catheter
   const falseWedge = state.measurementSystem.artifact === 'false-wedge'
   if (catheter.position === 'wedge' && !catheter.balloonInflated) {
-    return `Simulation safety notice, not a device alarm: the tip is in an occluding distal position with the balloon down.${
-      falseWedge
-        ? ' This channel has kept its pulmonary-artery pulsatility, so its displayed value is not a validated occlusion pressure.'
-        : ''
-    } This simulation blocks a flush on the pulmonary-artery line until the tip is back in the artery.`
+    return falseWedge
+      ? 'The tip sits too far out with the balloon down, and the tracing is part wedge, part pulmonary artery: its displayed value is not an occlusion pressure. Withdraw until a clean pulmonary-artery tracing returns, and do not flush until it does.'
+      : 'The tip is wedged with the balloon down. Withdraw until the pulmonary-artery tracing returns, and do not flush until it does.'
   }
   if (catheter.balloonInflated) {
-    return 'Simulation safety notice, not a device alarm: the balloon is occluding a branch. This simulation blocks a flush on the pulmonary-artery line while it is up.'
+    return 'The balloon is up and occluding a branch. Do not flush the pulmonary-artery line until it is down.'
   }
   if (catheter.floatBalloonInflated) {
-    return 'Simulation safety notice, not a device alarm: the flow-directed balloon is up while the tip floats. This simulation blocks a flush on the pulmonary-artery line while it is.'
+    return 'The balloon is up while the tip floats. Do not flush the pulmonary-artery line until it is down.'
   }
   if (catheter.forcedSafetyRecovery) {
-    return 'Simulation safety notice, not a device alarm: this simulation ended the last occlusion at its own fixed cutoff. That cutoff belongs to the simulation, not to any catheter.'
+    return 'The balloon was left up, and the simulator let it down. Keep each wedge brief: just long enough to read the value at end expiration.'
   }
   return null
 }

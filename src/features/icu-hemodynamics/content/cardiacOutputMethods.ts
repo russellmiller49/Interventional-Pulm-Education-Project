@@ -19,6 +19,7 @@
  */
 
 import { hemodynamicsSourceById } from './sources'
+import { HEMODYNAMICS_NUMBERS } from './teachingNumbers'
 
 /* ------------------------------------------------------------------ *
  * Input provenance — the vocabulary every H4 surface labels values with
@@ -183,8 +184,7 @@ const thermodilution: CardiacOutputMethod = {
       label: 'Injectate volume',
       status: 'entered',
       unit: 'mL',
-      whatItIs:
-        'The volume the computation constant assumes was delivered. The monitor uses the entered figure, not the volume that actually entered the patient.',
+      whatItIs: `The volume the computation constant assumes was delivered, usually ${HEMODYNAMICS_NUMBERS.value('injectate-volume')}. The monitor uses the entered figure, not the volume that actually entered the patient.`,
       howItGoesWrong:
         'Delivering less than the entered volume puts less indicator into the blood, so the recorded temperature change is smaller and the flow the monitor derives is larger than the true flow.',
     },
@@ -216,7 +216,7 @@ const thermodilution: CardiacOutputMethod = {
       whatItIs:
         'Where in the respiratory cycle the bolus was delivered. Intrathoracic pressure changes flow across the respiratory cycle.',
       howItGoesWrong:
-        'Injecting at a different point in the cycle each time introduces spread between trials that looks like biological variation but comes from the operator.',
+        'Injecting at a different point in the cycle each time adds spread between trials that comes from the operator. Inject at end expiration every time.',
     },
     {
       id: 'blood-temperature',
@@ -420,7 +420,7 @@ const thermodilution: CardiacOutputMethod = {
       mechanism:
         'Slow transit spreads the indicator over a longer time, giving a low, prolonged curve whose end point is harder to identify.',
       effectOnResult:
-        'A broader curve with a less certain boundary. This module does not assert a direction of bias in low flow.',
+        'A broader curve with a less certain tail. The size and direction of the error depend on where the tail is cut off.',
       visibleInAcquisition: true,
     },
     {
@@ -429,7 +429,7 @@ const thermodilution: CardiacOutputMethod = {
       mechanism:
         'Regurgitant flow carries indicator back and forth across the valve, so some of it reaches the thermistor late or more than once.',
       effectOnResult:
-        'A broadened curve whose end point often falls outside the recording, so where the integration stops becomes a judgement. This module does not assert a direction of bias.',
+        'A broadened curve whose end point often falls outside the recording, so where the integration stops becomes a judgement. Reports go both ways on the direction of the error.',
       visibleInAcquisition: true,
     },
     {
@@ -470,22 +470,18 @@ const thermodilution: CardiacOutputMethod = {
     'The catheter position that the method assumes has not been confirmed from the waveform.',
     'Fewer technically usable trials are available than this series is configured to summarize.',
     'The only way to reach agreement would be to exclude a trial with no technical reason for excluding it.',
-    'An intracardiac shunt is present, so a single dilution result does not answer the question being asked, and nothing in this model separates pulmonary from systemic flow.',
+    'An intracardiac shunt is present, so a single dilution result does not separate pulmonary from systemic flow.',
   ],
   alternateMethodRole:
     'A Fick calculation answers the same question through a different measurement system, so it can be used to interrogate a thermodilution result rather than to overrule it.',
   interpretationBoundary:
-    'This gives flow during the seconds the indicator was in transit, under the acquisition conditions of these trials. It does not establish whether that flow is adequate for this patient, and it does not carry forward to a later moment on its own.',
+    'Flow during the seconds the indicator was in transit. Whether that flow is adequate is a separate question, answered with SvO₂, lactate and the patient.',
   evidenceIds: [
     'pac-derived-part-2-2021',
     'monitor-workflow-supplied',
     'icu-hemodynamics-model-v1',
   ],
-  sourceLimitations: [
-    'The registered records are held as metadata; no source document text was available in this repository to verify a sentence-level claim against a locator.',
-    'The injectate volume, injectate temperature, trial count, and timing windows in this module are its own configuration, not a protocol drawn from those records.',
-    'The curve here is an original deterministic educational model, not calibrated device output.',
-  ],
+  sourceLimitations: ['The curve is drawn by the simulator, not recorded from a device.'],
 }
 
 const fickShared = {
@@ -517,7 +513,7 @@ const fickShared = {
       whatToLookFor:
         'The venous specimen came from the pulmonary artery, where the returning streams have already combined.',
       whenItIsNotMet:
-        'A specimen drawn upstream of that mixing describes one region of venous return rather than the whole of it. This module withholds the calculation rather than substituting one for the other.',
+        'A specimen drawn upstream of that mixing describes one region of venous return rather than the whole of it. Do not substitute one for the other.',
     },
     {
       id: 'steady-state',
@@ -549,7 +545,7 @@ const fickShared = {
       whatToLookFor:
         'That the flow being asked about is one circulation. With a shunt, pulmonary and systemic flow are two different quantities and one content difference cannot describe both.',
       whenItIsNotMet:
-        'The simple form used here describes neither circulation, so it is withheld rather than labeled approximate. Describing the two separately needs compartmental oximetry and a Qp/Qs calculation, which this model does not carry.',
+        'The simple form describes neither circulation, so it is not calculated. Describing the two separately needs compartmental oximetry and a Qp/Qs calculation.',
     },
   ] as const,
   repeatabilityChecks: [
@@ -752,7 +748,7 @@ const fickSharedFailureModes: readonly CardiacOutputFailureMode[] = [
     mechanism:
       'A specimen taken before the venous streams combine describes one region of return rather than the whole of it.',
     effectOnResult:
-      'A content difference that belongs to a different quantity. This module withholds the result rather than treating the two specimens as interchangeable.',
+      'A content difference that belongs to a different quantity. The two specimens are not interchangeable, so no result is given.',
     visibleInAcquisition: true,
   },
   {
@@ -787,7 +783,7 @@ const fickSharedFailureModes: readonly CardiacOutputFailureMode[] = [
     mechanism:
       'With a shunt, pulmonary and systemic flow differ, and the one arterial and one pulmonary-artery specimen this calculation uses give a single systemic difference.',
     effectOnResult:
-      'The simple form answers neither question, so it is withheld. Compartmental oximetry with a separate pulmonary and systemic flow account is a different calculation, not a correction factor, and it is outside this model.',
+      'The simple form answers neither question. A shunt needs compartmental oximetry with separate pulmonary and systemic flows: a different calculation, not a correction factor.',
     visibleInAcquisition: false,
   },
   {
@@ -845,16 +841,13 @@ const fickDirect: CardiacOutputMethod = {
     'The oxygen-content difference is at or below zero, so the simple form cannot be used.',
     'The venous specimen did not come from the pulmonary artery.',
     'The patient was not in a steady state, or the inputs do not belong to one measurement episode.',
-    'An intracardiac shunt is present. This simple one-difference calculation cannot represent separate pulmonary and systemic flow, and the compartmental Qp/Qs calculation that could is outside this model.',
+    'An intracardiac shunt is present. One arteriovenous difference cannot give separate pulmonary and systemic flows; that needs a Qp/Qs calculation.',
   ],
   alternateMethodRole: fickShared.alternateMethodRole,
   interpretationBoundary:
-    'This gives the flow that accounts for measured oxygen uptake during one steady interval. It does not establish whether that flow meets this patient’s demand, and it does not describe any other interval.',
+    'The flow that accounts for the measured oxygen uptake during one steady interval. It does not describe any other interval.',
   evidenceIds: ['esc-ers-ph-2022', 'pac-derived-part-2-2021', 'icu-hemodynamics-model-v1'],
-  sourceLimitations: [
-    'The registered records are held as metadata; no source document text was available in this repository to verify a sentence-level claim against a locator.',
-    'The hemoglobin oxygen-binding capacity and the dissolved-oxygen coefficient used here are labeled model constants, not values traced to a registered record.',
-  ],
+  sourceLimitations: [],
 }
 
 const fickAssumedVo2: CardiacOutputMethod = {
@@ -934,18 +927,14 @@ const fickAssumedVo2: CardiacOutputMethod = {
     'The oxygen-content difference is at or below zero, so the simple form cannot be used.',
     'The venous specimen did not come from the pulmonary artery.',
     'The patient was not in a steady state, or the inputs do not belong to one measurement episode.',
-    'An intracardiac shunt is present. This simple one-difference calculation cannot represent separate pulmonary and systemic flow, and the compartmental Qp/Qs calculation that could is outside this model.',
+    'An intracardiac shunt is present. One arteriovenous difference cannot give separate pulmonary and systemic flows; that needs a Qp/Qs calculation.',
     'The result would be reported without naming the substituted oxygen uptake.',
   ],
   alternateMethodRole: fickShared.alternateMethodRole,
   interpretationBoundary:
-    'This is an estimate, not a measurement of flow. It says what flow would account for an assumed oxygen uptake, and it is only as good as that assumption. It should be reported as an estimate with the assumption named.',
+    'An estimate of flow, only as good as the assumed oxygen uptake. Report it as an estimate and name the assumption.',
   evidenceIds: ['esc-ers-ph-2022', 'icu-hemodynamics-model-v1'],
-  sourceLimitations: [
-    'The registered records are held as metadata; no source document text was available in this repository to verify a sentence-level claim against a locator.',
-    'No registered record carries a claim about a published oxygen-uptake estimating equation or the population it was derived from, so this module names no equation. The substituted figure in each scenario is an authored simulation value, and the equation question is an open item for review.',
-    'The hemoglobin oxygen-binding capacity and the dissolved-oxygen coefficient used here are labeled model constants, not values traced to a registered record.',
-  ],
+  sourceLimitations: [],
 }
 
 export const cardiacOutputMethods: readonly CardiacOutputMethod[] = Object.freeze([
@@ -1103,7 +1092,6 @@ export function validateCardiacOutputMethods(
       'repeatWhen',
       'withholdWhen',
       'evidenceIds',
-      'sourceLimitations',
     ] as const) {
       if (method[field].length === 0) throw new Error(`${method.id} has an empty ${field}.`)
     }

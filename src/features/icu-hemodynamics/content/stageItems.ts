@@ -66,8 +66,7 @@ const whyMeasure: HemodynamicsSectionItems = {
     choices: [
       {
         id: 'driving-pressure-only',
-        label:
-          'That arterial pressure is low at the measurement site, without establishing cardiac output or cause.',
+        label: 'That pressure is low at this site; the output and the cause are still unknown.',
         rationale:
           'Pressure is force per unit area; flow is volume per unit time. A valid low arterial pressure does not distinguish reduced cardiac output from reduced vascular resistance or establish the cause.',
         plausibility: 'best',
@@ -111,7 +110,7 @@ const whyMeasure: HemodynamicsSectionItems = {
       {
         id: 'measures-pressures-flow-samples',
         label:
-          'Transduced pressures, a temperature–time curve used to derive cardiac output, and a distal blood sample for laboratory analysis.',
+          'Pressures, a thermodilution curve for cardiac output, and a mixed venous blood sample for oximetry.',
         rationale:
           'The transducer measures pressure and the thermistor senses temperature. Thermodilution derives cardiac output from the temperature curve and injection information. A distal sample is analyzed for saturation; oxygen content is calculated using hemoglobin and oxygen measurements.',
         plausibility: 'best',
@@ -239,7 +238,7 @@ const waveformComponents: HemodynamicsSectionItems = {
       {
         id: 'pericardial-constraint',
         label:
-          'Tamponade: fluid under pressure around the heart limits filling throughout diastole, so the early-diastolic y descent is lost.',
+          'Tamponade: pericardial fluid limits filling through all of diastole, so the y descent is lost.',
         rationale:
           'Tamponade compresses the chambers through the whole of diastole. Early rapid filling — the y descent — cannot happen, while systolic emptying still lowers atrial pressure and keeps the x descent.',
         plausibility: 'best',
@@ -373,8 +372,7 @@ const capstone: HemodynamicsSectionItems = {
     choices: [
       {
         id: 'flush-and-repair-first',
-        label:
-          'Run a fast flush and read how the line settles; if it creeps back without a ring, repair the fluid path before any pressure is treated.',
+        label: 'Run a fast flush first; if it creeps back without a ring, repair the fluid path.',
         rationale:
           'A rounded, blunted tracing with a preserved mean is the shape of a damped line. The flush response settles whether the shape is the patient’s or the tubing’s, and the tubing is repaired before the number is believed.',
         plausibility: 'best',

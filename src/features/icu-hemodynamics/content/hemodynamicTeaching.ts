@@ -28,14 +28,14 @@ export const hemodynamicTeachingArtifacts: readonly HemodynamicTeachingArtifact[
         'Orient',
         'Narrow pulse pressure, low filling pressures, cool extremities, and acute volume loss.',
         'The pattern suggests low effective preload, but a static pressure cannot establish responsiveness.',
-        'Probe the model with a reversible preload perturbation before giving fluid.',
+        'Do a passive leg raise before giving fluid.',
       ),
       traceStep(
         'hd01-perturb',
         'Perturb',
         'Flow rises during passive leg raise without a new congestion signal.',
         'The directional change supports preload responsiveness more strongly than the baseline RAP or PAWP.',
-        'Use one bounded volume step, then stop and reassess.',
+        'Give one 250 mL bolus, then stop and reassess.',
       ),
       traceStep(
         'hd01-reassess',
@@ -66,14 +66,14 @@ export const hemodynamicTeachingArtifacts: readonly HemodynamicTeachingArtifact[
         'Commit',
         'Hypotension persists without a strong dynamic flow response.',
         'More volume is unlikely to fix the dominant loss of vascular tone and may add burden.',
-        'Use the modeled vascular-tone tier while watching flow and perfusion.',
+        'Start norepinephrine and watch flow and perfusion.',
       ),
       traceStep(
         'hd02-reassess',
         'Reassess',
         'MAP rises, but the patient-level perfusion picture remains the endpoint.',
         'Pressure recovery is useful only when forward flow and organ-level signs remain coherent.',
-        'Recheck pressure, flow, and the simulated bedside together.',
+        'Recheck pressure, flow and the bedside together.',
       ),
     ],
     conceptIds: [
@@ -97,14 +97,14 @@ export const hemodynamicTeachingArtifacts: readonly HemodynamicTeachingArtifact[
         'Commit',
         'The flow signal is low while PAWP is already elevated.',
         'Additional volume cannot be inferred to improve flow and can worsen pulmonary congestion.',
-        'Use a bounded flow-support tier and begin decongestion.',
+        'Start an inotrope and begin decongestion.',
       ),
       traceStep(
         'hd03-reassess',
         'Reassess',
         'Flow rises while filling pressure trends downward.',
         'The paired response supports the working model better than either number alone.',
-        'Check systemic pressure and simulated perfusion before carrying the model forward.',
+        'Check systemic pressure and perfusion before the next change.',
       ),
     ],
     conceptIds: [
@@ -159,7 +159,7 @@ export const hemodynamicTeachingArtifacts: readonly HemodynamicTeachingArtifact[
         'Commit',
         'Systemic pressure is vulnerable to nonselective vasodilation.',
         'A selective pulmonary effect changes RV load with less modeled systemic vasodilation.',
-        'Use the selective tier before adding bounded inotropic support.',
+        'Start the inhaled pulmonary vasodilator before adding an inotrope.',
       ),
       traceStep(
         'hd05-reassess',
@@ -190,7 +190,7 @@ export const hemodynamicTeachingArtifacts: readonly HemodynamicTeachingArtifact[
         'Commit',
         'Congestion and reduced flow coexist without evidence that more volume will help.',
         'A small respiratory-context adjustment can alter both true loading and the displayed pressure.',
-        'Begin decongestion and try one bounded PEEP reduction after respiratory review.',
+        'Begin decongestion and try one step down in PEEP after respiratory review.',
       ),
       traceStep(
         'hd06-reassess',
@@ -214,21 +214,21 @@ export const hemodynamicTeachingArtifacts: readonly HemodynamicTeachingArtifact[
         'Orient',
         'Diastolic filling pressures converge while pulse pressure and flow fall.',
         'The pattern suggests a shared external constraint rather than isolated ventricular failure.',
-        'Seek urgent clinical confirmation and avoid increasing intrathoracic pressure.',
+        'Get a bedside echo now and avoid raising intrathoracic pressure.',
       ),
       traceStep(
         'hd07-escalate',
         'Commit',
         'The circulation remains constrained despite compensatory vascular tone.',
         'Normalizing a pressure cannot remove the mechanical constraint.',
-        'Activate the modeled definitive escalation pathway.',
+        'Drain the pericardium; give volume while you set up.',
       ),
       traceStep(
         'hd07-reassess',
         'Reassess',
         'Constraint falls and biventricular filling and flow begin to recover.',
-        'The coordinated change supports the mechanism, while real diagnosis still requires bedside imaging.',
-        'Recheck flow, pressure, and simulated bedside perfusion.',
+        'The coordinated change fits tamponade relieved; echo confirms it.',
+        'Recheck flow, pressure and perfusion.',
       ),
     ],
     conceptIds: [
@@ -278,7 +278,7 @@ export const hemodynamicTeachingArtifactByCaseId = new Map(
 const baseFeedbackByActionId: Readonly<Record<string, ScenarioFeedback>> = {
   'passive-leg-raise': {
     whatHappened:
-      'A reversible preload challenge began, and the modeled flow responds before any lasting volume change. This monitor has no continuous flow channel, so that response is visible only if flow is measured while the leg raise lasts.',
+      'The leg raise began. This monitor has no continuous flow channel, so the response shows only in a thermodilution series shot while it lasts.',
     whyItHappened:
       'Passive leg raise transiently recruits venous blood. The directional change in stroke volume or output tests the current circulation rather than relying on one filling pressure.',
     likelyFrame:
@@ -290,9 +290,9 @@ const baseFeedbackByActionId: Readonly<Record<string, ScenarioFeedback>> = {
   },
   'fluid-250': {
     whatHappened:
-      'The modeled volume compartment increased gradually; pressure, flow, and congestion can now move in different directions.',
+      'The bolus went in; pressure, flow and congestion can now move in different directions.',
     whyItHappened:
-      'A volume step increases stressed venous volume, but forward-flow benefit depends on the patient-device state and ventricular response.',
+      'A bolus increases stressed venous volume; whether flow rises depends on where the ventricle sits on its curve.',
     likelyFrame:
       'If you were responding to hypotension or a low filling pressure, that is a familiar cue—but neither establishes that additional volume will improve effective flow.',
     theCue:
@@ -306,32 +306,31 @@ const baseFeedbackByActionId: Readonly<Record<string, ScenarioFeedback>> = {
   },
   'norepinephrine-up': {
     whatHappened:
-      'Systemic vascular tone rose over several model seconds; pressure changed according to both resistance and flow.',
+      'Systemic vascular tone rose over several seconds; pressure changed with both resistance and flow.',
     whyItHappened:
       'Arterial pressure reflects the interaction of effective flow, vascular resistance, and compliance. A vascular-tone change does not guarantee improved perfusion.',
     likelyFrame:
       'If you were treating the low MAP directly, that is a reasonable first signal to notice; the mechanism still determines whether pressure and flow improve together.',
-    theCue:
-      'Compare the diastolic-pressure pattern, cardiac output, and simulated perfusion after the change.',
+    theCue: 'Compare the diastolic pressure, cardiac output and perfusion after the change.',
     conceptIds: ['cc.flow.resistance-and-impedance', 'cc.perfusion.macro-micro-coherence'],
     evidenceIds: ['esicm-shock-2025', 'icu-hemodynamics-model-v1'],
   },
   'vasopressin-add': {
     whatHappened:
-      'A second modeled vascular-tone effect raised resistance without directly repairing a low-flow mechanism.',
+      'A second vasopressor raised resistance; it does nothing for a low-flow mechanism.',
     whyItHappened:
       'The adjunct changes vascular tone; the resulting pressure depends on the circulation still producing effective forward flow.',
     likelyFrame:
-      'If persistent hypotension led you to add another tone-support tier, that is coherent when vasodilation remains dominant.',
+      'If persistent hypotension led you to add a second vasopressor, that fits when vasodilation is the dominant problem.',
     theCue: 'Confirm that flow and bedside perfusion do not deteriorate as pressure rises.',
     conceptIds: ['cc.flow.resistance-and-impedance', 'cc.perfusion.cardiac-output'],
     evidenceIds: ['ssc-sepsis-2026', 'icu-hemodynamics-model-v1'],
   },
   'dobutamine-up': {
     whatHappened:
-      'Modeled ventricular contractility and forward flow rose, with a smaller concurrent change in vascular tone and rate.',
+      'Contractility and forward flow rose, with a smaller fall in vascular tone and a small rise in rate.',
     whyItHappened:
-      'The educational tier adds inotropic effect, so its usefulness depends on pump limitation and the pressure context.',
+      'Dobutamine adds inotropy, so it helps when the pump is the limit and pressure can tolerate some vasodilation.',
     likelyFrame:
       'If you were responding to a low cardiac index, that cue fits—but low flow can also arise from inadequate preload or excessive afterload.',
     theCue:
@@ -340,8 +339,7 @@ const baseFeedbackByActionId: Readonly<Record<string, ScenarioFeedback>> = {
     evidenceIds: ['esicm-shock-2025', 'icu-hemodynamics-model-v1'],
   },
   'milrinone-up': {
-    whatHappened:
-      'Modeled contractility rose while pulmonary and systemic vascular resistance fell.',
+    whatHappened: 'Contractility rose while pulmonary and systemic vascular resistance fell.',
     whyItHappened:
       'The combined inotropic and vasodilating effects can improve RV flow while also making systemic pressure more vulnerable.',
     likelyFrame:
@@ -352,8 +350,7 @@ const baseFeedbackByActionId: Readonly<Record<string, ScenarioFeedback>> = {
     evidenceIds: ['esicm-shock-2025', 'icu-hemodynamics-model-v1'],
   },
   'diuresis-step': {
-    whatHappened:
-      'Modeled filling volume and right- and left-sided filling pressures began to fall gradually.',
+    whatHappened: 'Right- and left-sided filling pressures began to fall gradually.',
     whyItHappened:
       'Decongestion reduces upstream pressure, while forward flow depends on whether the circulation was volume burdened or preload limited.',
     likelyFrame:
@@ -375,9 +372,9 @@ const baseFeedbackByActionId: Readonly<Record<string, ScenarioFeedback>> = {
   },
   'inhaled-pulmonary-vasodilator': {
     whatHappened:
-      'Modeled pulmonary resistance fell with little direct systemic vasodilation, allowing RV flow to respond.',
+      'Pulmonary resistance fell with little systemic vasodilation, and RV flow responded.',
     whyItHappened:
-      'The model treats the inhaled tier as a selective bridge that reduces RV afterload without resolving the underlying cause.',
+      'An inhaled vasodilator is a selective bridge: it lowers RV afterload without treating the cause.',
     likelyFrame:
       'If the pulmonary pressure itself drew your attention, that is reasonable; the useful target is the RV load-flow relationship, not normalization of PAP in isolation.',
     theCue:
@@ -386,8 +383,7 @@ const baseFeedbackByActionId: Readonly<Record<string, ScenarioFeedback>> = {
     evidenceIds: ['esicm-shock-2025', 'icu-hemodynamics-model-v1'],
   },
   'peep-down': {
-    whatHappened:
-      'Pleural-pressure transmission and modeled RV impedance fell after the bounded PEEP change.',
+    whatHappened: 'Pleural-pressure transmission and RV impedance fell after the PEEP change.',
     whyItHappened:
       'Intrathoracic pressure changes transmural loading, venous return, and the pressure reported inside thoracic vessels.',
     likelyFrame:
@@ -398,20 +394,18 @@ const baseFeedbackByActionId: Readonly<Record<string, ScenarioFeedback>> = {
     evidenceIds: ['pac-derived-part-2-2021', 'icu-hemodynamics-model-v1'],
   },
   'peep-up-unsafe': {
-    whatHappened:
-      'The action was stopped before the model applied it. The scenario remains at the pre-action state so you can choose again.',
+    whatHappened: 'The simulator stopped this before applying it, so you can choose again.',
     whyItHappened:
-      'In this phenotype, an unsupported rise in intrathoracic pressure can reduce venous return and worsen RV output when the circulation is already unstable.',
+      'Here a rise in intrathoracic pressure cuts venous return and worsens RV output in a circulation that is already unstable.',
     likelyFrame:
       'If hypoxemia or a low pressure made another ventilator adjustment feel urgent, that is reasonable—but this case provides no respiratory indication for the increase.',
-    theCue:
-      'The combination of fragile flow, RV load, and absent respiratory indication marks this as a hard interrupt.',
+    theCue: 'Fragile flow, a loaded RV and no respiratory indication: more PEEP can only hurt.',
     conceptIds: ['cc.flow.transmural-pressure', 'cc.flow.venous-return', 'cc.flow.rv-lv-coupling'],
     evidenceIds: ['pac-derived-part-2-2021', 'icu-hemodynamics-model-v1'],
   },
   'pe-reperfusion': {
     whatHappened:
-      'The modeled obstructive load began to resolve after a delay; PAP and RV loading then moved toward recovery.',
+      'The obstruction began to resolve after a delay; PAP and RV loading then recovered.',
     whyItHappened:
       'Definitive relief changes the pulmonary vascular load rather than only supporting the failing RV around it.',
     likelyFrame:
@@ -423,11 +417,11 @@ const baseFeedbackByActionId: Readonly<Record<string, ScenarioFeedback>> = {
   },
   'pericardial-drainage': {
     whatHappened:
-      'Modeled pericardial constraint fell and biventricular filling and forward flow began to recover.',
+      'Pericardial pressure fell, and biventricular filling and forward flow began to recover.',
     whyItHappened:
       'Removing the shared external constraint restores the transmural pressure available for both ventricles to fill.',
     likelyFrame:
-      'If pressure support or volume seemed like the fastest response to hypotension, that is understandable; neither removes the shared external constraint.',
+      'If a vasopressor or volume seemed the fastest response, that is understandable; volume is a bridge, and neither removes the effusion.',
     theCue:
       'Coordinated separation of filling pressures with a rising pulse pressure and output supports the mechanism.',
     conceptIds: ['cc.flow.transmural-pressure', 'cc.flow.rv-lv-coupling'],
@@ -435,7 +429,7 @@ const baseFeedbackByActionId: Readonly<Record<string, ScenarioFeedback>> = {
   },
   'correct-measurement-system': {
     whatHappened:
-      'The pressure chain was re-leveled and re-zeroed, and its modeled dynamic response returned to a usable range.',
+      'The line was re-leveled and re-zeroed, and its dynamic response is usable again.',
     whyItHappened:
       'Hydrostatic offset and poor dynamic response distort the displayed pressure independently of the patient.',
     likelyFrame:
