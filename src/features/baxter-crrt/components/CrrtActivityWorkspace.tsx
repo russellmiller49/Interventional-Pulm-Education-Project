@@ -13,6 +13,8 @@ import { ResumeBanner } from '@/features/learning-module/components/ResumeBanner
 import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
 import { Link } from '@/i18n/navigation'
 
+import { selectCrrtCumulativeFluidView } from '../engine/deviceAdapters/prismax'
+
 import { crrtSimulatedAlertLabel } from '../content/alertLabels'
 import { crrtLearnerCitation } from '../sourcePresentation'
 import { baxterCrrtMasteryManifest } from '../content/mastery'
@@ -171,6 +173,7 @@ export function CrrtActivityWorkspace({
   // at case start, are the current setting, or are live model output. Set and actual blood flow
   // stay two separate readings (CRRT-FELLOW-02), and laboratory values stay the supplied
   // case-start values with their "not modeled over time" statement (CRRT-FELLOW-01).
+  const cumulativeFluid = selectCrrtCumulativeFluidView(session.simulation)
   const evidenceItems: readonly CrrtEvidenceItem[] = [
     {
       id: 'patient',
@@ -230,10 +233,13 @@ export function CrrtActivityWorkspace({
     {
       id: 'delivered',
       label: 'Delivered dose · whole-patient balance',
-      value: `${formatClinicalValue(
-        latestTrend?.deliveredDoseMlKgHour,
-        'mL/kg/h',
-      )} · ${formatClinicalValue(latestTrend?.cumulativeWholePatientBalanceMl, 'mL')}`,
+      value: `${formatClinicalValue(latestTrend?.deliveredDoseMlKgHour, 'mL/kg/h')} · ${
+        cumulativeFluid.resolution === 'available'
+          ? formatClinicalValue(latestTrend?.cumulativeWholePatientBalanceMl, 'mL')
+          : cumulativeFluid.resolution === 'unresolved-makeup-attribution'
+            ? 'Withheld — makeup attribution is unresolved for this run.'
+            : `Withheld — ${cumulativeFluid.withheldReason}`
+      }`,
       basis: 'model',
     },
     {
