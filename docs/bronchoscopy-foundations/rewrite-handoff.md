@@ -44,8 +44,6 @@ from `origin/main`. The local copies of the merged stack branches are behind ori
      the questions show an image. The course is at 29 of 99. Retiring the last first-contract
      section turns that gate on, so the image bank (item 7) or a decision on the gate comes
      first.
-   - Capstone C09 still marks raising the pressure alarm limit as unsafe. Section 15 teaches
-     the opposite, by the plan. Rewrite C09 with the practice set, or sooner if Russell says.
 4. Work one section per session. Get a digest of the old section from a subagent instead of
    reading it into context, then write the new file. The notes under each section below say
    what the checks will refuse.
@@ -136,7 +134,7 @@ sections no longer wait for sessions with the pilot.
      goes in, and practice case `mc-alarm-limits` keys it. The Reading-the-view row
      `pressure-up-volume-down` has `taughtIn: 'ventilated-patient'` and its third shortlist line
      now reads "Take the scope out if the volume does not come back". Claim-queue item C03 is
-     superseded. Capstone C09 is repointed and NOT rewritten; it still contradicts the section.
+     superseded. Capstone C09 was rewritten to match on 2026-10-11, at Russell's request: the limit is already raised, the volume falls anyway, and the key is to take the scope out. Its option on raising the limit again is a mechanism error, not unsafe.
    - The tube-navigation task is cut, with its recipe, its walkthrough test and the
      end-to-end case S20. `TubeCrossSection.tsx` and the pane's `tube` mode are still in the
      code and now unused by any section; removing them is a scope-pane change to ask about.

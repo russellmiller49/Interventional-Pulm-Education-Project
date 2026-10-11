@@ -302,7 +302,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
     id: 'C09',
     presentationTitle: 'A bronchoscopy through an endotracheal tube',
     situation:
-      'In a model ICU case, a bronchoscopy is under way through the endotracheal tube of an adult ventilated on a volume-targeted mode. The scope went through the tube without resistance. Since then the peak airway pressure has risen and the exhaled tidal volume has fallen. The oxygen saturation is unchanged.',
+      'A bronchoscopy is under way through the endotracheal tube of an adult on a volume-targeted mode. The scope passed easily. Before you started, the therapist raised the pressure limit, and no breath is being cut short. Since then the peak pressure has kept rising and the exhaled tidal volume has fallen by a third. The oxygen saturation is unchanged on full oxygen.',
     critical: false,
     pairedSectionId: 'ventilated-patient',
     item: {
@@ -312,37 +312,35 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
       choices: [
         {
           id: 'a',
-          label: 'Carry on, and reassess if the saturation starts to fall',
+          label: 'Stay in, and reassess if the saturation starts to fall',
           rationale:
-            'Oxygen saturation reports oxygenation and can lag behind falling ventilation, more so on supplemental oxygen. The exhaled volume has already fallen; waiting for the saturation to confirm it wastes the warning.',
+            'On full oxygen the saturation falls late. The exhaled volume has already told you ventilation is failing; waiting for the saturation wastes that warning.',
           plausibility: 'unsafe',
         },
         {
           id: 'b',
-          label:
-            'Pause while the respiratory therapist raises the high-pressure alarm limit, then continue',
+          label: 'Have the therapist raise the pressure limit again, then go on',
           rationale:
-            'The alarm is reporting the problem. Depending on the ventilator and mode, a higher limit may let more volume through only by accepting higher airway pressure, and either way the cause goes untreated; the therapist’s part is to work the reading through with the team, not to adjust the alarm so the procedure can finish.',
-          plausibility: 'unsafe',
+            'Raising the limit helps when the alarm is ending breaths early. Here it is already raised and no breath is cut short, so the volume is being lost another way.',
+          plausibility: 'incorrect-mechanism',
         },
         {
           id: 'c',
-          label: 'Suction continuously through the scope to clear the tube, then carry on',
+          label: 'Suction through the scope in one long pass to clear the tube',
           rationale:
-            'Suction draws gas as well as secretions and can reduce lung volume. With the scope already impeding ventilation, prolonged suction adds to the problem, and it does not answer a rising pressure with a falling exhaled volume, which needs a pause and a check with the respiratory therapist.',
+            'Suction takes gas as well as secretions. With the volume already down, a long pass empties the lung further.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'd',
-          label:
-            'Pause, and check the scope, tube, circuit and patient with the respiratory therapist',
+          label: 'Take the scope out, let the patient breathe out, and watch the volume',
           rationale:
-            'Rising pressure with a falling exhaled volume means ventilation is being impeded: less gas delivered, gas trapped behind a limited expiration, or a new cause. Pausing, reducing the scope’s obstruction as appropriate, and checking the tube, circuit, secretions and the patient with the supervisor and respiratory therapist finds the cause before ventilation fails.',
+            'The scope is the first cause to remove. If the volume comes back, plan shorter passes. If it does not, check the tube and both sides of the chest.',
           plausibility: 'best',
         },
       ],
       explanation:
-        'Physical fit is not physiological adequacy: the scope inside the tube can greatly increase resistance and limit expiration, and a rising peak pressure with a falling exhaled volume means ventilation is being impeded, whether less gas goes in, less comes out, or a new problem such as secretions, tube displacement or a pneumothorax has appeared. Oxygen saturation reports oxygenation and can lag behind ventilation. The move is to pause, reduce the procedural impediment as appropriate, and address tube, circuit and patient causes with the supervisor and respiratory therapist, rather than raising alarm limits or continuing on the saturation. A geometric area calculation can show why fit is not enough; it cannot predict flow or delivered volume.',
+        'A scope that passes can still crowd the tube. Set the ventilator first: raise the pressure limit with the therapist so the alarm does not end each breath early. If the delivered volume still falls, the limit is not the problem. Take the scope out and let the patient breathe out. A volume that returns means the scope was the cause. One that does not means the tube, a plugged lobe or a pneumothorax.',
       objectiveIds: ['M16-O1', 'M16-O2', 'M04-O3', 'M03-O5'],
       claimClass: 'synthesis',
       sourceRefs: [
