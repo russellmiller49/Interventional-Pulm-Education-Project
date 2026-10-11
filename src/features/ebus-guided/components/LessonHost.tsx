@@ -131,9 +131,21 @@ function LessonSession({
   const labUnmet = runtimeLab
     ? labGoalRequirements(runtimeLab, observation).filter((requirement) => !requirement.met)
     : []
+  /*
+   * While a slider moves, the image is a frame behind for a moment, so the "wait for the image"
+   * conditions go unmet and met again many times a second. Listing them made the to-do row and
+   * the button flash on every step of a drag (owner feedback of 2026-10-11). They are not steps
+   * the learner takes, so they are not listed, and a lab that is only waiting on them is shown as
+   * it will be once the frame arrives. The gate itself still waits: `advance` checks `labDone`.
+   */
+  const labSteps = labUnmet.filter(
+    (r) => !['ready', 'frame-ready', 'linked-frame', 'frame-matches-settings'].includes(r.id),
+  )
+  const labSettling = labUnmet.length > 0 && labSteps.length === 0
+  const labShownDone = labDone || labSettling
   // "Move a control" says nothing once a more specific step is listed; any of those moves one.
   const labOutstanding =
-    labUnmet.length > 1 ? labUnmet.filter((r) => r.id !== 'used-a-control') : labUnmet
+    labSteps.length > 1 ? labSteps.filter((r) => r.id !== 'used-a-control') : labSteps
   const acquireStep = !reviewId && current.interaction === 'acquire'
   const onObservation = useCallback((value: EbusObservation) => {
     setObservation(value)
@@ -266,7 +278,7 @@ function LessonSession({
             : question && !lastQuestion
               ? 'Next check'
               : finishOrNext
-  const primaryDisabled = holdRequested || (acquireStep && !labDone)
+  const primaryDisabled = holdRequested || (acquireStep && !labShownDone)
   /*
    * The filled button is always the task: hold the acquisition, move on once a task is done.
    * When the same control would instead leave a task or a check unanswered, it is a text link,
@@ -292,7 +304,7 @@ function LessonSession({
     ? 'Waiting for the workbench to acknowledge the paused frame.'
     : labOutstanding.length
       ? 'To turn this on: ' + labOutstanding[0].text
-      : 'Move a control to begin.'
+      : 'Loading the simulator…'
   useEffect(() => {
     if (
       !holdRequested ||
@@ -943,7 +955,7 @@ function LessonSession({
                 <div role="status" className={styles.taskStatus} data-acquisition-status>
                   {reviewId ? (
                     <p>An earlier acquisition is not replayed during review.</p>
-                  ) : labDone ? (
+                  ) : labShownDone ? (
                     <p>Ready. Select “Continue with this image”.</p>
                   ) : (
                     <>

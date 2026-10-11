@@ -364,9 +364,7 @@ async function main() {
         .locator('.guided-workbench')
         .screenshot({ path: out + '/' + lesson.id + '-workbench.png' })
       await next()
-      await expect(
-        frame.getByRole('heading', { name: 'Retained ultrasound', exact: true }),
-      ).toBeVisible()
+      await expect(frame.getByRole('heading', { name: 'Your image', exact: true })).toBeVisible()
       await expect(frame.getByLabel('Inspect a structure')).toHaveCount(0)
       await expect(control).toBeDisabled()
       await expect(frame.locator('.linked-image-tooltip, .linked-image-hint')).toHaveCount(0)

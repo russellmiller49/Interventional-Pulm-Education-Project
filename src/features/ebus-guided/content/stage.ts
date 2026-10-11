@@ -257,12 +257,7 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
   ],
   'contact-cutaway-model': [
     {
-      ...brief(
-        'contact-mechanism',
-        'Relate the wall, transducer and air gap',
-        'linked',
-        'demonstration',
-      ),
+      ...brief('contact-mechanism', 'Relate the wall, transducer and air gap', 'briefing'),
       companion: 'acoustic-contact',
     },
     acquire('contact-states', 'Compare the supported contact states', 'linked'),
@@ -297,7 +292,7 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     transfer('Resolve an uncertain vascular structure'),
   ],
   'measurement-phantoms': [
-    brief('measurement-plane', 'Relate the plane to the requested axis', 'linked', 'demonstration'),
+    brief('measurement-plane', 'Relate the plane to the requested axis', 'briefing'),
     acquire('phantom-comparison', 'Sweep and measure the analytic shapes', 'linked'),
     {
       ...held('Explain the dimension in this plane', 'linked'),
@@ -427,12 +422,7 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
   ],
   'eus-b-route-model': [
     {
-      ...brief(
-        'route-orientation',
-        'Compare the approach to the same target',
-        'linked',
-        'demonstration',
-      ),
+      ...brief('route-orientation', 'Compare the approach to the same target', 'briefing'),
       companion: 'eus-b',
     },
     acquire('route-comparison', 'Compare supported and unsupported locators', 'linked'),
@@ -455,12 +445,7 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
   ],
   'needle-assembly-model': [
     {
-      ...brief(
-        'needle-components',
-        'Relate sheath, needle, stylet and outlet',
-        'linked',
-        'demonstration',
-      ),
+      ...brief('needle-components', 'Relate sheath, needle, stylet and outlet', 'briefing'),
       companion: 'needle-safety',
     },
     acquire('needle-states', 'Practice the supported assembly states', 'sampling'),
