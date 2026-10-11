@@ -88,19 +88,11 @@ describe('Step 13: approved wording with bounded source and behavior scope', () 
   })
 
   it('OD-05/06/10 render exact approved scope and preserve recorded-caliper practice', () => {
+    // Owner feedback of 2026-10-11 replaced the OD-05/06 model caveats (the 0° depth-axis note and
+    // the simulator-measurement disclaimer) with one plain orientation paragraph. The image
+    // orientation it teaches is still the approved one: image right is toward the patient’s head.
     expect(lesson('scope-orientation').paragraphs).toContain(
-      'The ultrasound sector lies in a plane that contains the scope’s long axis. In this model, image right is toward the patient’s head; check the orientation convention of the processor you use.',
-    )
-    expect(lesson('scope-orientation').paragraphs).toContain(
-      'In this model, 0° is the preset’s authored depth axis; it is not a universal anatomical direction.',
-    )
-    for (const id of ['scope-orientation', 'ct-map', 'measurement-phantoms']) {
-      expect(lesson(id).paragraphs.join(' ')).toContain(
-        'Measurements in this simulator are shown in millimeters for teaching and relative comparison.',
-      )
-    }
-    expect(lesson('capture').lab!.instruction).toContain(
-      'This practices controls; border placement is not scored as a clinical measurement.',
+      'The green orientation dot at the upper right of the ultrasound image marks the proximal (cephalad) side of the view. Image right is toward the patient’s head, image left is toward the tip of the scope, and the needle enters the image from the side of the dot.',
     )
     // The approved sentence stands; the teaching-first rules of 2026-10-08 add the interval after it.
     expect(lesson('preparation').paragraphs.join(' ')).toContain(

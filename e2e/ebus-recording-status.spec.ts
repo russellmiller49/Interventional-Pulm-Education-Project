@@ -20,7 +20,7 @@ for (const resource of ['Depth4.mp4', 'knobology_lookup.json']) {
     )
     await expect(workbench.locator('[data-recorded-busy]')).toHaveCount(0)
     await expect(
-      page.getByRole('button', { name: 'Hold this acquisition', exact: true }),
+      page.getByRole('button', { name: 'Continue with this image', exact: true }),
     ).toBeDisabled()
     await expect(page.locator('[data-requirement="frame-ready"]')).toBeVisible()
   })

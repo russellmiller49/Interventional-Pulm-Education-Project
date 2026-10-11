@@ -24,31 +24,17 @@ for (const condition of [
         document.documentElement.style.fontSize = `${rootText}%`
       })
     }, condition)
-    for (const id of [
-      'preparation',
-      'scope-orientation',
-      'ct-map',
-      'measurement-phantoms',
-      'results-reporting',
-    ]) {
+    // The simulator-measurement disclaimer and the 0° depth-axis note were removed on owner
+    // feedback (2026-10-11); scope-orientation keeps the approved image orientation.
+    for (const id of ['preparation', 'scope-orientation', 'results-reporting']) {
       await page.goto(`/en/ebus-guided/learn?section=${id}`)
       await expect(page.locator('html')).toHaveClass(new RegExp(condition.theme))
       const copy = lesson(id).paragraphs.find((text) =>
-        /Patients should fast|Measurements in this simulator|recommends against routine/.test(text),
+        /Patients should fast|Image right is toward the patient’s head|recommends against routine/.test(
+          text,
+        ),
       )!
       await expect(page.getByText(copy, { exact: true })).toBeVisible()
-      if (id === 'scope-orientation') {
-        await expect(
-          page.getByText(lesson(id).paragraphs.find((text) => text.includes('image right'))!, {
-            exact: true,
-          }),
-        ).toBeVisible()
-        await expect(
-          page.getByText(lesson(id).paragraphs.find((text) => text.includes('0°'))!, {
-            exact: true,
-          }),
-        ).toBeVisible()
-      }
       if (id === 'results-reporting') {
         await page.getByText('Sources', { exact: true }).click()
         await expect(page.getByRole('link', { name: /Miller RJ, Chrissian AA/ })).toBeVisible()
@@ -99,7 +85,7 @@ test('OD-01 preserves a real held air-gap frame and keeps explanation, retry, ba
     await frame.getByRole('button', { name: 'Inspect acoustic path' }).click()
   }
   await condition.selectOption('gap')
-  await page.getByRole('button', { name: 'Hold this acquisition', exact: true }).click()
+  await page.getByRole('button', { name: 'Continue with this image', exact: true }).click()
   await expect(page.locator('[data-evidence-identity="held"]')).toContainText('air gap')
   await page.locator('[data-now-primary]').click()
   const question = page.locator('[data-question-id="cutaway-observe"]')
@@ -174,15 +160,15 @@ test('unchanged production H.264 gain example still decodes and produces a genui
   await gain.fill('4')
   // Changing gain alone cannot satisfy the existing comparison task.
   await expect(
-    page.getByRole('button', { name: 'Hold this acquisition', exact: true }),
+    page.getByRole('button', { name: 'Continue with this image', exact: true }),
   ).toBeDisabled()
   await frame.getByLabel('Image contrast').fill('4')
   await expect(gain).toBeEnabled()
   await gain.fill('3')
   await expect(
-    page.getByRole('button', { name: 'Hold this acquisition', exact: true }),
+    page.getByRole('button', { name: 'Continue with this image', exact: true }),
   ).toBeEnabled()
-  await page.getByRole('button', { name: 'Hold this acquisition', exact: true }).click()
+  await page.getByRole('button', { name: 'Continue with this image', exact: true }).click()
   await expect(page.locator('[data-evidence-identity="held"]')).toBeVisible()
   await expect(frame.locator('[data-recorded-held]')).toBeVisible()
   await page.screenshot({ path: test.info().outputPath('production-recorded-hold.png') })

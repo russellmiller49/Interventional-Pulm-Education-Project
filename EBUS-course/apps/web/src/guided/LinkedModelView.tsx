@@ -4,7 +4,6 @@ import {
   LANDMARK_HINTS,
   STRUCTURE_FEATURES,
   structureDisplayName,
-  type LinkedSweepEvent,
 } from '../../../../../src/lib/ebus-linked-contract'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import * as THREE from 'three'
@@ -36,7 +35,7 @@ import {
 } from './structureCallouts'
 import { compassDirections, fitSphereDistance } from './observerCamera'
 import { attachObserverControls, OBSERVER_CAPTION } from './observerControls'
-import { describeLinkedSweep, SWEEP_TOLERANCE_NOTE } from './sweepStatus'
+import { describeLinkedSweep } from './sweepStatus'
 import { applyStageLighting, installShell, setShell, STAGE_PALETTE } from './stageLook'
 
 type Mode = 'scope' | 'anatomy' | 'section'
@@ -46,11 +45,6 @@ type Controller = {
   zoom: (factor: number) => void
   reset: () => void
   release: () => void
-}
-/** What the sampler last did, reported by the workbench that owns the sweep state. */
-export interface LinkedSweepReport {
-  event: LinkedSweepEvent | null
-  resetProgress: { samples: number; span: number } | null
 }
 interface Props {
   ultrasound: ReactNode
@@ -73,7 +67,6 @@ interface Props {
   frameReady?: boolean
   /** The model target's name, from the preset the workbench was configured with. */
   targetName?: string
-  sweepReport?: LinkedSweepReport
 }
 const labelFor = (mesh: THREE.Object3D, reveal: boolean) =>
   mesh.userData.role === 'node' && !reveal
@@ -1043,8 +1036,6 @@ export function LinkedModelView(props: Props) {
           targetVisible: !!props.targetVisible,
           frameReady: !!props.frameReady,
           contact: props.contactQuality,
-          lastEvent: props.sweepReport?.event ?? null,
-          lastResetProgress: props.sweepReport?.resetProgress ?? null,
           targetName: props.targetName ?? 'The model target',
         })
       : null
@@ -1102,17 +1093,17 @@ export function LinkedModelView(props: Props) {
           {landmarkIds
             .map((id) => LANDMARK_NAMES[id] + (letterOf(id) ? ` (${letterOf(id)})` : ''))
             .join(' · ')}
-          . Acquire the required ultrasound sweep.
+          . Now sweep the scope rotation through the node.
         </p>
       )}
       {config.demonstration && (
         <div className="linked-demo">
-          <strong>Worked demonstration</strong>
-          <span>Change one command at a time and watch all three views.</span>
+          <strong>Try it</strong>
+          <span>Rotate or flex the scope and watch all three views change together.</span>
           <div className="guided-tabs">
-            <button onClick={() => props.onDemo('roll')}>Demonstrate rotation</button>
-            <button onClick={() => props.onDemo('flexion')}>Demonstrate flexion</button>
-            <button onClick={() => props.onDemo('reset')}>Reset example</button>
+            <button onClick={() => props.onDemo('roll')}>Rotate the scope</button>
+            <button onClick={() => props.onDemo('flexion')}>Flex the tip</button>
+            <button onClick={() => props.onDemo('reset')}>Reset</button>
           </div>
         </div>
       )}
@@ -1222,21 +1213,14 @@ export function LinkedModelView(props: Props) {
         >
           <div role="status">
             <strong>{sweepStatus.heading}</strong>
-            <p data-sweep-in-plane-text>{sweepStatus.inPlane}</p>
+            <p data-sweep-next>{sweepStatus.next}</p>
           </div>
-          <p>{sweepStatus.waiting}</p>
-          {sweepStatus.resetReason && <p data-sweep-reset-reason>{sweepStatus.resetReason}</p>}
           {sweepStatus.progress && (
             <p data-sweep-progress>
-              This pass so far: {sweepStatus.progress.samples} of {sweepStatus.progress.minSamples}{' '}
-              paused frames with the target, {sweepStatus.progress.span}° of{' '}
-              {sweepStatus.progress.minSpanDeg}° rotation.
+              Rotation covered: {Math.min(sweepStatus.progress.span, sweepStatus.progress.minSpanDeg)}° of{' '}
+              {sweepStatus.progress.minSpanDeg}°
             </p>
           )}
-          <details>
-            <summary>How this exercise counts a sweep</summary>
-            <p>{SWEEP_TOLERANCE_NOTE}</p>
-          </details>
         </div>
       )}
       {!concealed && (

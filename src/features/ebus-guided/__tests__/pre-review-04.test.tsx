@@ -293,7 +293,6 @@ const PROVENANCE: Record<string, { sourced: string[]; framing?: string[] }> = {
   },
   'n-category': {
     sourced: [
-      'n classification describes regional tumor involvement in the relevant cancer context, not all adenopathy',
       'a non-lung-cancer adenopathy case does not automatically receive an n category',
       'relative to the primary side',
       'ipsilateral hilar and intrapulmonary nodes, including interlobar nodes, are n1',
@@ -556,7 +555,7 @@ describe('scaffolded tasks say they are guided practice, and nothing is hidden (
     for (const entry of LESSONS)
       for (const activity of activitiesForLesson(entry))
         if (activity.teaching.includes('takeaways') && activity.questions.length) {
-          expect(activity.purpose).toMatch(/^Guided practice: the lesson’s key points stay beside/)
+          expect(activity.purpose).toMatch(/the key points beside this check/)
           expect(activity.support).toBe('guided')
         }
   })
@@ -570,7 +569,7 @@ describe('scaffolded tasks say they are guided practice, and nothing is hidden (
       'Guided practice · new situation',
     )
     expect(document.querySelector('[data-activity-purpose]')).toHaveTextContent(
-      'the lesson’s key points stay beside this check on purpose',
+      'Apply the key points beside this check to a new situation.',
     )
     expect(
       screen.getByRole('heading', { name: 'Carry this into the next examination' }),
@@ -581,7 +580,7 @@ describe('scaffolded tasks say they are guided practice, and nothing is hidden (
     const find = (lessonId: string, id: string) =>
       activitiesForLesson(lesson(lessonId)).find((a) => a.id === lessonId + ':' + id)!
     expect(find('image-depth', 'depth-comparison').purpose).toMatch(
-      /names the teaching example’s settings/,
+      /^Stop on the settings the instruction names/,
     )
     expect(find('station-seven', 'station-decision').purpose).toMatch(
       /The stem names the node’s compartment/,
@@ -644,7 +643,7 @@ describe('what counts, and the held contact frame (L5-2, L5-1)', () => {
   it('says once, beside the demonstration, what records and what does not', () => {
     render(<LessonHost lesson={lesson('contact-cutaway-model')} />)
     expect(document.querySelector('[data-evidence-identity="demonstration"]')).toHaveTextContent(
-      'nothing you do here is recorded. Your own acquisition is the next task, and it counts once you hold it.',
+      'Try the controls. Nothing on this screen is scored.',
     )
   })
 
@@ -657,7 +656,7 @@ describe('what counts, and the held contact frame (L5-2, L5-1)', () => {
       fireEvent.click(screen.getByText('Complete the contact model'))
       next() // hold
       expect(document.querySelector('[data-evidence-identity="held"]')).toHaveTextContent(
-        'Contact condition held: ' + CONTACT_MODE_LABELS[mode] + '.',
+        'Contact condition: ' + CONTACT_MODE_LABELS[mode] + '.',
       )
       next() // past the first check (a described situation)
       const check = document.querySelector('[data-question-id]')!
@@ -818,7 +817,7 @@ describe('repeated practice says what changes, and keeps its own evidence (L12-7
     const activity = activitiesForLesson(lesson(lessonId)).find(
       (entry) => entry.id === lessonId + ':' + id,
     )!
-    expect(activity.purpose).toMatch(/^Repeated on purpose, from a changed scope position/)
+    expect(activity.purpose).toMatch(/^Same node, new scope position\./)
     expect(activity.task).toBe('changed-window')
     expect(lesson(lessonId).transferLab!.linkedVariant).toBe('changed-window')
   })

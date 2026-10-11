@@ -1,5 +1,5 @@
 import { LINKED_TASK_VERSION, linkedSetup, linkedTaskId, emptyLinkedSweep, stepLinkedSweep, type LinkedRenderedFrame } from '../../../../../../src/lib/ebus-linked-contract';
-import { LinkedModelView, type LinkedSweepReport } from '../../guided/LinkedModelView';
+import { LinkedModelView } from '../../guided/LinkedModelView';
 import { opticalRay } from '../../guided/linkedModels';
 import * as THREE from 'three';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -1251,9 +1251,6 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
   const processedRollAction = useRef(0);
   const guidedActions = useRef({ count: 0, last: '', used: [] as EbusControl[] });
   const [guidedView, setGuidedView] = useState<'sector'|'bronch'|'anatomy'>(guided?.config.view ?? 'sector');
-  // Presentation only (EBUS-PRE-REVIEW-03): which branch the sweep sampler took last, so the
-  // workbench can say why a pass reset. It is not sent over the bridge and never affects evidence.
-  const [sweepReport, setSweepReport] = useState<LinkedSweepReport>({ event: null, resetProgress: null });
   const onGuidedFrame = useCallback((frame: typeof guidedFrame) => setGuidedFrame(frame), []);
   const guidedAction = (name: string, apply: () => void) => {
     if (!guided || guided.config.locked || !guided.config.controls.includes(name as EbusControl) || (guided.config.linkedLesson === 'acoustic-contact' && !guidedFrame.baselineFrameId)) return;
@@ -1595,9 +1592,7 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
     if (acquisition.approach !== linkedEvidence.approach || acquisition.count <= processedRollAction.current) return;
     processedRollAction.current = acquisition.count;
     const before = linkedEvidence.sweeps?.[acquisition.approach] ?? emptyLinkedSweep();
-    // The same sampler as before, with its branch named (stepLinkedSweep === sampleLinkedSweep + event).
-    const { sweep, event } = stepLinkedSweep(before, { roll: rollTrimDeg, frameId: guidedFrame.frameId, visible: guidedFrame.targetVisible, contact: sectorContactQuality });
-    if (event !== 'unchanged') setSweepReport({ event, resetProgress: event.startsWith('reset') ? { samples: before.samples, span: before.span } : null });
+    const { sweep } = stepLinkedSweep(before, { roll: rollTrimDeg, frameId: guidedFrame.frameId, visible: guidedFrame.targetVisible, contact: sectorContactQuality });
     setLinkedEvidence(previous => ({ ...previous, sweeps: { ...previous.sweeps, [acquisition.approach]: sweep }, scannedApproaches: sweep.phase === 'complete' ? [...new Set([...previous.scannedApproaches, acquisition.approach])] : previous.scannedApproaches }));
   }, [guided, guidedFrame, guidedPoseKey, sectorContactQuality, linkedEvidence, rollTrimDeg]);
   // Scene geometry for the Bronchoscopy caption (L3-12): distance from the calibrated lens origin
@@ -2127,18 +2122,17 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       const preset = caseData.presets.find(p => p.preset_key === 'station_7_node_a::' + approach);
       if (!preset) return;
       rollAcquisition.current = null;
-      setSweepReport({ event: null, resetProgress: null });
       setSelectedKey(preset.preset_key); setLineIndex(preset.line_index); setSMm(preset.centerline_s_mm); setRollTrimDeg(config.initialRoll); setFlexionDeg(0);
       onLinkedEvidence({ approach });
     };
     return <div className={config.linkedLesson ? 'guided-workbench guided-workbench--console' : 'guided-workbench'}>
       <h2 className={config.linkedLesson ? 'guided-visually-hidden' : undefined}>EBUS workbench</h2>
       {!config.linkedLesson && <p className="guided-label">Simulated anatomy and grayscale ultrasound</p>}
-      {config.linkedLesson && config.linkedVariant === 'changed-window' && <p className="guided-label linked-task-line">Changed-position check: a different start in the same model. Acquire new planes; the earlier sweep does not count.</p>}
+      {config.linkedLesson && config.linkedVariant === 'changed-window' && <p className="guided-label linked-task-line">The scope has moved to a new position in the same airway. Find the landmarks and sweep through the node again from here.</p>}
       {baselinePending && <p role="status">Loading the initial contact comparison before movement controls open.</p>}
       {config.linkedLesson && acoustic.volume && <LinkedModelView ultrasound={sector} controls={<>{scopeControls}{!config.locked && !config.demonstration && <button className="linked-reset" onClick={() => { guided.onObservation(EMPTY_EBUS_OBSERVATION); window.location.reload(); }}>Reset acquisition</button>}</>} bronchoscopy={assets ? <div className="guided-anatomy"><BronchoscopyView assets={assets} balloonInflated={bronchBalloonInflated} camera={caseData.endoscope_camera} caseData={caseData} focusStationKey={null} pose={pose} seeThroughWall={false} structures={NO_BRONCH_STRUCTURES} /></div> : undefined} config={config} pose={pose} volume={acoustic.volume} caseData={caseData} contactQuality={sectorContactQuality} flexion={flexionDeg} evidence={linkedEvidence} onEvidence={onLinkedEvidence} onApproach={chooseApproach}
-        targetVisible={guidedFrame.targetVisible} frameReady={guidedFrame.ready && guidedFrame.poseKey === guidedPoseKey} sweepReport={sweepReport}
-        targetName={(() => { const label = acoustic.volume.metadata.labels.find(l => l.key === selectedPreset?.station_key)?.label; return config.reveal && label ? `The example node (${label})` : 'The example node (yellow in the Anatomy model)'; })()}
+        targetVisible={guidedFrame.targetVisible} frameReady={guidedFrame.ready && guidedFrame.poseKey === guidedPoseKey}
+        targetName={(() => { const label = acoustic.volume.metadata.labels.find(l => l.key === selectedPreset?.station_key)?.label; return config.reveal && label ? `The node (${label})` : 'The node'; })()}
         onDemo={action => {
         if (!config.demonstration) return;
         if (action === 'roll') setRollTrimDeg(v => v === 25 ? 0 : 25);
@@ -2165,7 +2159,7 @@ export function SimulatorWorkbench({ showVirtualBronchoscopy = false, setModuleP
       {!config.linkedLesson && <div hidden={guidedView !== 'sector'}>{sector}</div>}
       </div>
       <div className="guided-scan-controls">
-      <p role="status">{config.locked ? (config.linkedLesson ? 'Acquisition held for observation. This is your last unannotated ultrasound frame.' : 'Controls are paused while you read or answer. They open for the guided activity.') : (config.linkedLesson ? '' : 'Use the controls below. Hold the acquisition in the lesson when your task is ready.')}</p>
+      <p role="status">{config.locked ? (config.linkedLesson ? 'This is the image you continued with.' : 'Controls are paused while you read or answer. They open for the guided activity.') : (config.linkedLesson ? '' : 'Use the controls below, then select “Continue with this image” in the lesson.')}</p>
       {!config.linkedLesson && scopeControls}
       </div>
       </div>

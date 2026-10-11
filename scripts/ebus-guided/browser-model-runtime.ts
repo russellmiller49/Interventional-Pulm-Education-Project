@@ -46,7 +46,7 @@ async function main() {
       }
       await f.getByRole('button', { name: 'Reset activity', exact: true }).click()
       await expect(
-        f.getByText('Required model actions recorded. Hold this acquisition in the lesson.'),
+        f.getByText('All steps done. Select “Continue with this image” in the lesson.'),
       ).toHaveCount(0)
       console.log('RUNTIME PASS', pkg)
       await p.unroute('**/model-harness')

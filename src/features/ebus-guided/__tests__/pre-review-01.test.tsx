@@ -289,7 +289,7 @@ describe('evidence identity', () => {
     // holds. Driven with a real acquisition in the browser; here the wording rule is pinned.
     const lesson = LESSONS.find((entry) => entry.id === 'contact-cutaway-model')!
     const held = activitiesForLesson(lesson).find((activity) => activity.image === 'held')!
-    expect(held.instruction).toContain('This is the image you acquired')
+    expect(held.instruction).toContain('This is the image you continued with')
     expect(lesson.question.imagePolicy).not.toBe('retained-acquisition')
     expect(lesson.observation.imagePolicy).toBe('retained-acquisition')
   })
@@ -299,7 +299,7 @@ describe('evidence identity', () => {
     render(<LessonHost lesson={lesson} />)
     const identity = document.querySelector('[data-evidence-identity]')!
     expect(identity).toHaveAttribute('data-evidence-identity', 'supplied')
-    expect(identity.textContent).toContain('not an acquisition of yours')
+    expect(identity.textContent).toBe('Reference figure.')
   })
 
   it('says a live workbench is holding nothing yet', () => {
@@ -389,7 +389,7 @@ describe('ordering', () => {
     for (const step of order) fireEvent.click(screen.getByRole('button', { name: step.text }))
     fireEvent.click(screen.getByRole('button', { name: 'Check sequence' }))
     expect(screen.getByRole('status').textContent).toContain(
-      'Your step 1 is the first that differs',
+      'Your step 1 is the first that is out of order',
     )
     expect(onComplete).not.toHaveBeenCalled()
   })

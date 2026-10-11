@@ -155,7 +155,7 @@ function Controls({ state: s, act }: { state: ModelState; act: (a: ModelAction) 
     copy.setAttribute('width', '720')
     copy.setAttribute('height', '552')
     const title = document.createElementNS('http://www.w3.org/2000/svg', 'title')
-    title.textContent = `${s.record.label}: ${s.record.value.toFixed(1)} phantom mm. Authored geometric phantom, not a patient image. ${s.record.frameId}`
+    title.textContent = `${s.record.label}: ${s.record.value.toFixed(1)} phantom mm. Geometric phantom, not a patient image. ${s.record.frameId}`
     copy.prepend(title)
     const url = URL.createObjectURL(
       new Blob([new XMLSerializer().serializeToString(copy)], { type: 'image/svg+xml' }),
@@ -360,7 +360,7 @@ export function ModelWorkbench({
       <header>
         <p className="model-kicker">
           {config.demonstration
-            ? 'Worked demonstration · nothing here is recorded'
+            ? 'Worked example'
             : config.locked
               ? 'Retained model observation'
               : 'Guided model activity'}
@@ -429,7 +429,7 @@ export function ModelWorkbench({
             )}
             {complete && !config.locked && (
               <p role="status" className="model-feedback">
-                Required model actions recorded. Hold this acquisition in the lesson.
+                All steps done. Select “Continue with this image” in the lesson.
               </p>
             )}
             {config.locked && (
