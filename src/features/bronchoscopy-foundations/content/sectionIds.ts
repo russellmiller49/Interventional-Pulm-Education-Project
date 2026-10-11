@@ -11,13 +11,10 @@ import type { CriticalCareCurriculumStage } from '@/features/learning-module/act
  * groups sections derives from this array at render.
  */
 export const BRONCH_SECTION_IDS = [
-  'shared-airway',
   'clinical-question',
   'pre-use-check',
   'sedation-and-monitoring',
   'five-controls',
-  'branch-entry',
-  'reference-frames',
   'larynx-and-entry',
   'right-side',
   'left-side',
@@ -25,14 +22,11 @@ export const BRONCH_SECTION_IDS = [
   'systematic-survey',
   'describe-findings',
   'washing-and-lavage',
-  'poor-return',
-  'protected-accessories',
-  'specimen-pathway',
+  'biopsy-and-specimens',
   'deterioration',
   'bleeding-priorities',
   'scope-in-a-tube',
   'icu-physiology',
-  'honest-report',
   'what-completion-means',
 ] as const
 
@@ -45,13 +39,10 @@ export function isBronchSectionId(value: unknown): value is BronchSectionId {
 /** The teaching stage of each section: internal to the pedagogy checks; learners see the phase. */
 export const BRONCH_SECTION_STAGE: Readonly<Record<BronchSectionId, CriticalCareCurriculumStage>> =
   {
-    'shared-airway': 'orientation',
     'clinical-question': 'foundation',
     'pre-use-check': 'foundation',
     'sedation-and-monitoring': 'mechanism',
     'five-controls': 'foundation',
-    'branch-entry': 'mechanism',
-    'reference-frames': 'mechanism',
     'view-loss': 'mechanism',
     'larynx-and-entry': 'application',
     'right-side': 'application',
@@ -59,14 +50,11 @@ export const BRONCH_SECTION_STAGE: Readonly<Record<BronchSectionId, CriticalCare
     'systematic-survey': 'application',
     'describe-findings': 'mechanism',
     'washing-and-lavage': 'mechanism',
-    'poor-return': 'application',
-    'protected-accessories': 'mechanism',
-    'specimen-pathway': 'application',
+    'biopsy-and-specimens': 'application',
     deterioration: 'application',
     'bleeding-priorities': 'application',
     'scope-in-a-tube': 'mechanism',
     'icu-physiology': 'application',
-    'honest-report': 'integration',
     'what-completion-means': 'integration',
   }
 
@@ -90,13 +78,13 @@ export const BRONCH_PHASES: readonly BronchPhase[] = [
     title: 'Prepare',
     description:
       'Decide whether this patient should have a bronchoscopy today, check the scope, and plan topical anesthesia, sedation and monitoring.',
-    sectionIds: ['shared-airway', 'clinical-question', 'pre-use-check', 'sedation-and-monitoring'],
+    sectionIds: ['clinical-question', 'pre-use-check', 'sedation-and-monitoring'],
   },
   {
     id: 'handle',
     title: 'Handle',
     description: 'Drive the scope on the bench, then cross the larynx and reach the carina.',
-    sectionIds: ['five-controls', 'branch-entry', 'reference-frames', 'larynx-and-entry'],
+    sectionIds: ['five-controls', 'larynx-and-entry'],
   },
   {
     id: 'navigate',
@@ -110,13 +98,7 @@ export const BRONCH_PHASES: readonly BronchPhase[] = [
     title: 'Describe and sample',
     description:
       'Describe what you see and report it, then wash, lavage, biopsy and send each specimen to its test.',
-    sectionIds: [
-      'describe-findings',
-      'washing-and-lavage',
-      'poor-return',
-      'protected-accessories',
-      'specimen-pathway',
-    ],
+    sectionIds: ['describe-findings', 'washing-and-lavage', 'biopsy-and-specimens'],
   },
   {
     id: 'respond',
@@ -128,7 +110,6 @@ export const BRONCH_PHASES: readonly BronchPhase[] = [
       'bleeding-priorities',
       'scope-in-a-tube',
       'icu-physiology',
-      'honest-report',
       'what-completion-means',
     ],
   },

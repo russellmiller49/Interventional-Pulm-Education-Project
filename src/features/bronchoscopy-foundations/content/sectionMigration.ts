@@ -68,3 +68,18 @@ export function forwardSectionIds(
     ),
   ]
 }
+
+/**
+ * Core objectives of the first knowledge specification that the rewrite cuts, each with the brief
+ * that cuts it. Every other core objective still needs a section; the plan replaces the whole list
+ * with about twenty-five once the sections are rewritten.
+ */
+export const RETIRED_OBJECTIVE_REASONS: Readonly<Record<string, string>> = {
+  'M01-O5': 'Brief 1 cuts the history of rigid and flexible scopes.',
+  'M14-O5':
+    'Brief 12 routes each specimen to its test. Reinterpreting a culture after the fact is not taught.',
+  'M17-O3':
+    'Recovery and discharge instructions are taught with sedation, in section 3; this section teaches the report.',
+  'M06-O5':
+    'The fifteen sections have no CT-tracing activity. Naming an airway on a rolled view is assessed in the right lung.',
+}
