@@ -408,7 +408,7 @@ async function lessonFive(page: Page) {
   record(
     'B8',
     'Embedded demonstration kicker and step list say not recorded',
-    kicker === 'Worked demonstration · nothing here is recorded' &&
+    kicker === 'Worked example' &&
       /^Steps in this demonstration · \d of 5 explored, not recorded$/.test(steps ?? ''),
     { kicker, steps },
   )
@@ -445,7 +445,7 @@ async function lessonFive(page: Page) {
     await wait(200)
   }
   await mode.selectOption('bubble')
-  const hold = page.getByRole('button', { name: 'Hold this acquisition', exact: true })
+  const hold = page.getByRole('button', { name: 'Continue with this image', exact: true })
   await hold.waitFor({ state: 'visible' })
   for (let i = 0; i < 60 && !(await hold.isEnabled()); i++) await wait(250)
   const frameBefore = await frame.locator('[data-model-frame]').getAttribute('data-model-frame')
@@ -455,7 +455,7 @@ async function lessonFive(page: Page) {
   record(
     'B8',
     'Held evidence names the genuinely held condition',
-    /Contact condition held: balloon with a bubble\./.test(held),
+    /Contact condition: balloon with a bubble\./.test(held),
     held,
   )
   await next(page) // past the described-situation check
@@ -509,7 +509,7 @@ async function lessonTen(page: Page) {
   await frame.getByRole('button', { name: 'Right', exact: true }).click()
   await frame.getByRole('button', { name: 'Right', exact: true }).click()
   await frame.getByRole('button', { name: 'Save image', exact: true }).click()
-  const hold = page.getByRole('button', { name: 'Hold this acquisition', exact: true })
+  const hold = page.getByRole('button', { name: 'Continue with this image', exact: true })
   for (let i = 0; i < 120 && !(await hold.isEnabled()); i++) await wait(250)
   await hold.click()
   await page.waitForSelector('[data-capture-example]', { timeout: 30000 })

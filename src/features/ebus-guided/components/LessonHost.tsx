@@ -66,7 +66,7 @@ const TASK_INTERACTIONS = ['matching', 'sequence', 'record']
  */
 const KIND_LABELS: Record<LessonActivity['kind'], string> = {
   briefing: 'Teaching',
-  demonstration: 'Worked demonstration',
+  demonstration: 'Worked example',
   application: 'Guided task',
   acquisition: 'Your acquisition',
   interpretation: 'Check',
@@ -128,9 +128,12 @@ function LessonSession({
    * conditions the gate applies, so the learner can see which one is open instead of reading one
    * sentence that names a camera this lab does not have. Nothing here changes the gate.
    */
-  const labOutstanding = runtimeLab
+  const labUnmet = runtimeLab
     ? labGoalRequirements(runtimeLab, observation).filter((requirement) => !requirement.met)
     : []
+  // "Move a control" says nothing once a more specific step is listed; any of those moves one.
+  const labOutstanding =
+    labUnmet.length > 1 ? labUnmet.filter((r) => r.id !== 'used-a-control') : labUnmet
   const acquireStep = !reviewId && current.interaction === 'acquire'
   const onObservation = useCallback((value: EbusObservation) => {
     setObservation(value)
@@ -252,7 +255,7 @@ function LessonSession({
     : reviewId
       ? 'Return to current task'
       : acquireStep
-        ? 'Hold this acquisition'
+        ? 'Continue with this image'
         : taskOpen
           ? (nextTitle || current.questions.length ? 'Continue' : 'Finish lesson') +
             (current.interaction === 'record'
@@ -287,7 +290,9 @@ function LessonSession({
   const advanceIsProminent = !advanceIsSkip
   const disabledReason = holdRequested
     ? 'Waiting for the workbench to acknowledge the paused frame.'
-    : 'Finish the acquisition steps above to hold an image.'
+    : labOutstanding.length
+      ? 'To turn this on: ' + labOutstanding[0].text
+      : 'Move a control to begin.'
   useEffect(() => {
     if (
       !holdRequested ||
@@ -340,10 +345,9 @@ function LessonSession({
      * "exploration does not complete your activity" beside a step counter that looked like
      * tracking. The counter now says it records nothing; this says what does.
      */
-    demonstration:
-      'Worked demonstration, not an acquisition of yours: nothing you do here is recorded. Your own acquisition is the next task, and it counts once you hold it. Continuing without one is allowed; the lesson summary then lists that task as “No image held”.',
+    demonstration: 'Try the controls. Nothing on this screen is scored.',
     held:
-      'Your held acquisition, from this session in this workbench.' +
+      'The image you continued with.' +
       /*
        * Which of the five modelled contact conditions is actually held
        * (EBUS-PRE-REVIEW-02, carry-forward of L5-1). The workbench now reports it with the
@@ -351,13 +355,10 @@ function LessonSession({
        * to assume it matches whichever state the next check happens to name. The wording of the
        * checks is untouched; this only stops the evidence claiming more than it is.
        */
-      (heldContactMode
-        ? ' Contact condition held: ' + CONTACT_MODE_LABELS[heldContactMode] + '.'
-        : ''),
-    'held-missing':
-      'No acquisition is held in this session, so there is no image of yours to read here.',
-    live: 'Live workbench. Nothing is held yet; what you see moves with the controls.',
-    supplied: 'Supplied reference, authored for this course. It is not an acquisition of yours.',
+      (heldContactMode ? ' Contact condition: ' + CONTACT_MODE_LABELS[heldContactMode] + '.' : ''),
+    'held-missing': 'You continued without an image, so there is none to read here.',
+    live: 'Live image. It moves with the controls.',
+    supplied: 'Reference figure.',
   }
   /*
    * Whether the check in front of the learner is a reading of the held frame or a described
@@ -430,7 +431,7 @@ function LessonSession({
       case 'read':
         return 'Read'
       case 'acquire':
-        return heldFor[activity.id] ? 'Image acquired and held' : 'No image held'
+        return heldFor[activity.id] ? 'Image acquired' : 'No image'
       case 'questions':
         return checkStatus.charAt(0).toUpperCase() + checkStatus.slice(1)
       default: {
@@ -617,6 +618,13 @@ function LessonSession({
              * suits a reading task starves the one surface the learner is actually working in.
              */
             data-acquiring={current.interaction === 'acquire' && !reviewId ? 'true' : undefined}
+            /*
+             * A briefing with a live example puts the text above and gives the example the full
+             * width, so the three views and their controls sit in one row on one screen (owner
+             * feedback of 2026-10-11). Beside the text the workbench was too narrow for a row
+             * and stacked its views, and the controls scrolled away from the image they change.
+             */
+            data-stacked={showDemo && !finished ? 'true' : undefined}
           >
             <div
               className={styles.taskEvidence}
@@ -640,7 +648,7 @@ function LessonSession({
                 // After a skip there is nothing to show. The pane used to draw a frame titled
                 // "Retained ultrasound" beside a sentence saying no image was held.
                 <div className={styles.emptyEvidence} data-evidence-identity="held-missing">
-                  <strong>No acquisition held</strong>
+                  <strong>No image</strong>
                   <p>You continued without an image, so there is nothing of yours to read here.</p>
                   <button type="button" className={styles.button} onClick={returnToAcquisition}>
                     Go back and acquire one
@@ -667,6 +675,7 @@ function LessonSession({
                   demonstration
                   sessionId={sessionId + '-demonstration'}
                   onObservation={onObservation}
+                  console={lesson.lab.kind === 'simulator' && !!lesson.lab.linkedLesson}
                 />
               ) : current.image === 'reference' && lesson.station ? (
                 <StationFigure key={lesson.station} station={lesson.station} allowSelect />
@@ -813,7 +822,7 @@ function LessonSession({
                     aria-label="The matches"
                     data-task-reference="matching"
                   >
-                    <h3>Authored matches</h3>
+                    <h3>The matches</h3>
                     <dl>
                       {lesson.matching.pairs.map((pair) => (
                         <div key={pair.id} className={styles.sequence}>
@@ -835,7 +844,7 @@ function LessonSession({
                     aria-label="The sequence"
                     data-task-reference="sequence"
                   >
-                    <h3>Authored sequence</h3>
+                    <h3>The sequence</h3>
                     <ol style={{ listStylePosition: 'inside' }}>
                       {lesson.sequence.steps.map((step) => (
                         <li key={step.id}>{step.text}</li>
@@ -935,20 +944,16 @@ function LessonSession({
                   {reviewId ? (
                     <p>An earlier acquisition is not replayed during review.</p>
                   ) : labDone ? (
-                    <p>The acquisition is ready. Hold this image to interpret it.</p>
+                    <p>Ready. Select “Continue with this image”.</p>
                   ) : (
                     <>
                       <p data-acquisition-waiting>
-                        Waiting for your acquisition.{' '}
-                        {runtimeLab?.kind === 'knobology'
-                          ? 'Selecting a recording is not yet an acquisition.'
-                          : 'Loading a preset or moving the observer camera is not an acquisition.'}{' '}
-                        You can also continue without an image; the next check then has nothing to
-                        interpret.
+                        Work through the steps below. You can also continue without an image; the
+                        next check then has nothing to interpret.
                       </p>
                       {labOutstanding.length > 0 && (
                         <>
-                          <p>Still open on this acquisition:</p>
+                          <p>Still to do:</p>
                           <ul className={styles.taskSummary} data-acquisition-outstanding>
                             {labOutstanding.map((requirement) => (
                               <li key={requirement.id} data-requirement={requirement.id}>

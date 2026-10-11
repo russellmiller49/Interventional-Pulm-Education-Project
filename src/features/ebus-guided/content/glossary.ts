@@ -135,7 +135,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     id: 'n-category',
     term: 'N category (N1, N2, N3)',
     definition:
-      'N classification describes regional tumor involvement in the relevant cancer context, not all adenopathy: a non-lung-cancer adenopathy case does not automatically receive an N category. The categories are defined relative to the primary side. The course’s examples: ipsilateral hilar and intrapulmonary nodes, including interlobar nodes, are N1; subcarinal involvement (station 7) is N2 for either primary side; contralateral mediastinal involvement is N3. For a right lung primary, 4L is N3, 7 is N2, and 11R is N1. These are the examples the course teaches, not the complete ninth-edition definitions.',
+      'A non-lung-cancer adenopathy case does not automatically receive an N category. The categories are defined relative to the primary side. The course’s examples: ipsilateral hilar and intrapulmonary nodes, including interlobar nodes, are N1; subcarinal involvement (station 7) is N2 for either primary side; contralateral mediastinal involvement is N3. For a right lung primary, 4L is N3, 7 is N2, and 11R is N1. These are the examples the course teaches, not the complete ninth-edition definitions.',
     sources: [
       'Lesson 1, Define the clinical question: the note on the first task and the rationale of the transfer check',
       'Lesson 17, Systematic staging and TNM ninth edition: second teaching paragraph, worked example and first check',

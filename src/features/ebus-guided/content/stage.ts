@@ -80,8 +80,7 @@ const demo = (id: string, title: string, presentation: Presentation): ActivitySp
   image: 'demonstration',
   kind: 'demonstration',
   interaction: 'read',
-  instruction:
-    'Follow the worked example. You will start a separate acquisition next; this demonstration is an example, not your acquisition.',
+  instruction: 'Follow the worked example, then try the same movements yourself in the next task.',
   teaching: ['worked'],
   questions: [],
 })
@@ -102,7 +101,7 @@ const decide = (
   teaching: [],
   instruction:
     image === 'held'
-      ? 'This is the image you acquired. Interpret it, or open the explanation first.'
+      ? 'This is the image you continued with. Interpret it, or open the explanation first.'
       : 'Use the stated situation to make your decision.',
 })
 const acquire = (
@@ -122,8 +121,8 @@ const acquire = (
   questions: [],
   instruction:
     task === 'changed-window'
-      ? 'Now acquire a fresh window at a changed position in the same model case.'
-      : 'Now try the activity yourself. The assisted start alone does not complete this task.',
+      ? 'The scope has moved. Find the same node again from the new position.'
+      : 'Now try it yourself.',
 })
 const apply = (
   id: string,
@@ -185,15 +184,13 @@ const record = (
  * activity asks and why, from the lab's own instruction and gate; none adds a clinical claim.
  */
 const EXAMPLE_SETTINGS_PURPOSE =
-  'Guided acquisition: the instruction names the teaching example’s settings to stop on. Compare the views on the way there. The numbers belong to this recorded teaching library, not to a patient.'
+  'Stop on the settings the instruction names, and compare the views on the way there.'
 const CHANGED_WINDOW_PURPOSE =
-  'Repeated on purpose, from a changed scope position: the same modeled target and landmarks, a different start. The landmark checks and the sweep are asked again because this is a new acquisition; the check that follows asks whether the station assignment changes.'
+  'Same node, new scope position. Find the landmarks and sweep again; the next check asks whether the station changes.'
 /** Checks shown beside the lesson's key points are guided practice, and say so (L1-10 and others). */
 const KEY_POINTS_PURPOSE: Record<'transfer' | 'review', string> = {
-  transfer:
-    'Guided practice: the lesson’s key points stay beside this check on purpose. Use them to reason through a situation the lesson has not shown you yet.',
-  review:
-    'Guided practice: the lesson’s key points stay beside this check on purpose. Use them with the evidence beside you.',
+  transfer: 'Apply the key points beside this check to a new situation.',
+  review: 'Use the key points beside this check with your image.',
 }
 
 /** Deliberate lesson flows, not a positional seven-stage adapter. Missing coverage is an error. */
@@ -207,10 +204,9 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
     transfer('Consider a different diagnostic request'),
   ],
   'scope-orientation': [
-    brief('distal-scope', 'Identify the transducer', 'linked', 'demonstration', false),
-    demo('plane-demonstration', 'Relate the scope to the ultrasound plane', 'linked'),
+    brief('distal-scope', 'Relate the scope to the ultrasound plane', 'linked', 'demonstration'),
     decide('plane-interpretation', 'Interpret a change in plane', ['question']),
-    acquire('acquire-sweep', 'Acquire a gradual sweep', 'ultrasound'),
+    acquire('acquire-sweep', 'Sweep through the node', 'ultrasound'),
     held(),
     transfer('Review a different apparent size'),
   ],
@@ -540,7 +536,7 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
 
 export function activitiesForLesson(lesson: Lesson): LessonActivity[] {
   const specs = ACTIVITY_FLOWS[lesson.id]
-  if (!specs) throw new Error('EBUS flow has not been authored: ' + lesson.id)
+  if (!specs) throw new Error('EBUS lesson has no activity flow: ' + lesson.id)
   return specs.map((spec, index) => ({
     ...spec,
     id: lesson.id + ':' + spec.id,

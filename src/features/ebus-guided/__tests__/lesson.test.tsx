@@ -207,7 +207,7 @@ it('opens the hint and the explanation before any answer, and the hint reviews t
 })
 it('holds an image only after a real acquisition; skipping holds nothing, and the check on it stays explainable but unanswerable', () => {
   startLab()
-  expect(primary()).toHaveTextContent('Hold this acquisition')
+  expect(primary()).toHaveTextContent('Continue with this image')
   expect(primary()).toBeDisabled()
   fireEvent.click(screen.getByText('Load preset only'))
   expect(primary()).toBeDisabled()
@@ -232,7 +232,7 @@ it('holds an image only after a real acquisition; skipping holds nothing, and th
   next()
   expect(heading('Lesson finished')).toBeInTheDocument()
   const summary = document.querySelector('[data-session-summary]')!
-  expect(summary).toHaveTextContent('Restore the acoustic window: No image held')
+  expect(summary).toHaveTextContent('Restore the acoustic window: No image')
   expect(summary).toHaveTextContent('Compare the acquired images: Check not answered')
   expect(summary).toHaveTextContent('Reassess another window: Check answered')
   expect(readProgress().progress.reviewedLessonIds).toEqual(['acoustic-contact'])
@@ -248,7 +248,7 @@ it('holds a real acquisition, checks the image on it, and neither restart nor re
   expect(screen.getByText('Correct.', { exact: false })).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: 'Course outline' }))
   expect(
-    screen.getByRole('button', { name: /Restore the acoustic window · Image acquired and held/ }),
+    screen.getByRole('button', { name: /Restore the acoustic window · Image acquired/ }),
   ).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: /Close/ }))
   fireEvent.click(screen.getByText('Restart lesson'))
@@ -290,7 +290,7 @@ it('requires a fresh changed-window acquisition before the changed-window check,
   next()
   answer(lesson.observation.choices.find((c) => c.correct)!.text)
   next()
-  expect(primary()).toHaveTextContent('Hold this acquisition')
+  expect(primary()).toHaveTextContent('Continue with this image')
   expect(primary()).toBeDisabled()
   expect(screen.queryByText(lesson.transfer.prompt)).not.toBeInTheDocument()
   fireEvent.click(screen.getByText('Load preset only'))
@@ -337,7 +337,7 @@ it('jumps ahead from the outline; a record task without a current acquisition re
   next()
   const summary = document.querySelector('[data-session-summary]')!
   expect(summary).toHaveTextContent('Record what this window establishes: Task not completed')
-  expect(summary).toHaveTextContent('Acquire both bronchial windows: No image held')
+  expect(summary).toHaveTextContent('Acquire both bronchial windows: No image')
   expect(summary).toHaveTextContent('Separate approach from station: Check not answered')
   fireEvent.click(screen.getByRole('button', { name: 'Unmark as reviewed' }))
   expect(readProgress().progress.reviewedLessonIds).toEqual([])

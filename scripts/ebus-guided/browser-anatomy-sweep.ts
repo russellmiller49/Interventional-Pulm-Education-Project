@@ -539,8 +539,7 @@ async function main() {
           state: el.getAttribute('data-sweep-state'),
           inPlane: el.getAttribute('data-sweep-in-plane'),
           heading: el.querySelector('strong')?.textContent,
-          inPlaneText: el.querySelector('[data-sweep-in-plane-text]')?.textContent ?? null,
-          reset: el.querySelector('[data-sweep-reset-reason]')?.textContent ?? null,
+          next: el.querySelector('[data-sweep-next]')?.textContent ?? null,
           progress: el.querySelector('[data-sweep-progress]')?.textContent ?? null,
           legacyText: el.getAttribute('data-sweep-state') ? null : el.textContent,
         }))
@@ -673,7 +672,7 @@ async function main() {
         await demoRoll.evaluate(setRange, v)
         await page.waitForTimeout(400)
       }
-      await f.getByRole('button', { name: 'Demonstrate rotation' }).click()
+      await f.getByRole('button', { name: 'Rotate the scope' }).click()
       await page.waitForTimeout(800)
     }
     const demoObs = await latest()

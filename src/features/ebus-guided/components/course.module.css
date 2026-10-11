@@ -596,6 +596,24 @@
 .taskComposition:has(> .taskEvidence[hidden]) {
   grid-template-columns: minmax(0, 1fr);
 }
+/* Text above, live example across the full width beneath it (owner feedback of 2026-10-11). */
+.taskComposition[data-stacked] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.taskComposition[data-stacked] .taskContent {
+  order: -1;
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr);
+  column-gap: 24px;
+}
+.taskComposition[data-stacked] .taskContent > a {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+@media (max-width: 900px) {
+  .taskComposition[data-stacked] .taskContent {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .taskContent {
   display: grid;
   gap: 16px;

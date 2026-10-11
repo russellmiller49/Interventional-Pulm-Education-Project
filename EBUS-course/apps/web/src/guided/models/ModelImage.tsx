@@ -53,7 +53,7 @@ export function ModelImage({
         </p>
         <p>
           {routeSupported(s)
-            ? `Viewing the fixed ${s.station === '8' ? 'authored lower paraesophageal example' : `station ${s.station} example`}.`
+            ? `Viewing the fixed ${s.station === '8' ? 'lower paraesophageal example' : `station ${s.station} example`}.`
             : 'No supported orientation preset for this selection.'}
         </p>
         <p>
@@ -183,8 +183,7 @@ export function ModelImage({
                 {placed === null
                   ? 'Place both calipers to compare your own.'
                   : `Your calipers are ${placed.toFixed(1)} phantom mm apart, ${Math.abs(placed - model.axisMm!).toFixed(1)} mm from the model axis.`}{' '}
-                This is a comparison with an authored shape, not a score, a pass mark or a
-                statement about reading a patient image.
+                This compares your calipers with the phantom’s true axis; it is not a score.
               </>
             ) : (
               <>
@@ -200,7 +199,7 @@ export function ModelImage({
         )}
         <p className="model-caption">
           Analytic section of the same 3D shape. Tap a frozen image for calipers, or use the numeric
-          endpoint controls. Distances are authored phantom millimetres in the coordinate system
+          endpoint controls. Distances are phantom millimetres in the coordinate system
           drawn on the section: horizontal 0 at the midline, vertical measured down from the top of
           the modelled field. They are not calibrated clinical millimetres and do not transfer to a
           recorded or patient image.
@@ -232,7 +231,7 @@ export function ModelImage({
         <svg
           viewBox="-30 -2 65 45"
           role="img"
-          aria-label="Authored needle and imaging-plane intersection schematic"
+          aria-label="Needle and imaging-plane schematic"
         >
           <rect x="-30" y="-2" width="65" height="45" fill="#101722" />
           <path d="M-24 8H30" stroke="#879099" strokeWidth="2" {...name('Airway wall')} />
@@ -289,7 +288,7 @@ export function ModelImage({
     brightness = 0.35 + s.gain / 155
   return (
     <section className="model-image">
-      <h2>Authored echo schematic</h2>
+      <h2>Echo schematic</h2>
       <svg
         viewBox="-30 0 60 45"
         role="img"
@@ -381,7 +380,7 @@ export function ModelImage({
         {CONTACT_CAPTIONS[s.mode]}
       </p>
       <p className="model-caption">
-        Qualitative authored echoes. Brightness is illustrative. Gain cannot restore the absent
+        Schematic echoes; brightness is illustrative. Gain cannot restore the absent
         window in the air-gap condition.
       </p>
     </section>

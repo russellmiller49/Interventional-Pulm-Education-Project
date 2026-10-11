@@ -22,8 +22,8 @@ export const FINAL_CASES: EbusCase[] = [
           'Target size does not settle either readiness or the complete staging plan.',
         ],
         [
-          'Whether image contrast can reduce bleeding risk',
-          'Contrast changes the image display, not anticoagulant effect.',
+          'Whether ROSE can be arranged for the procedure',
+          'Worth arranging, but it does not bear on whether it is safe to start; the anticoagulant does.',
         ],
       ),
       q(
@@ -34,12 +34,12 @@ export const FINAL_CASES: EbusCase[] = [
           'One diagnostic sample may not complete the requested nodal staging examination.',
         ],
         [
-          'Whether every enlarged node is now proven malignant',
-          'The other nodes have not acquired a tissue result.',
+          'None for the nodes; only the primary still needs tissue',
+          'One positive node gives a diagnosis, not the nodal stage; the other stations still decide the N category.',
         ],
         [
-          'Whether the primary tumor side can be ignored',
-          'Primary side remains relevant to nodal classification.',
+          'Only whether the sample suffices for biomarker testing',
+          'Biomarker adequacy matters, but the referral also asked for staging, which one node does not complete.',
         ],
       ),
       q(
@@ -50,8 +50,8 @@ export const FINAL_CASES: EbusCase[] = [
           'Early planning preserves material for the tests that will inform care.',
         ],
         [
-          'A final diagnosis based on PET uptake alone',
-          'Imaging helps prioritize questions but does not establish pathology.',
+          'The needle gauge to be used at each station',
+          'Gauge is the operator’s decision; what pathology needs agreed in advance is how material is divided and which studies are requested.',
         ],
         [
           'A single pooled container for all stations',
@@ -76,15 +76,24 @@ export const FINAL_CASES: EbusCase[] = [
           'Restore wall contact',
           'The positional loss of echoes suggests an acoustic-window problem.',
         ],
-        ['Measure the blank sector', 'A measurement does not restore a missing acoustic window.'],
-        ['Classify the target as avascular', 'Absent tissue echoes cannot establish vascularity.'],
+        [
+          'Increase the gain',
+          'Gain amplifies received echoes; with the transducer off the wall there are none to amplify.',
+        ],
+        [
+          'Increase the image depth',
+          'Depth changes the displayed range; it does not restore a lost acoustic window.',
+        ],
       ),
       q(
         'image-field',
         'With contact restored, which setting should be reconsidered for the cropped far margin?',
         ['Image depth', 'The field should include the target and relevant tissue beyond it.'],
-        ['The number of needle passes', 'Pass count does not change the field displayed.'],
-        ['The specimen medium', 'Specimen handling does not change the ultrasound image.'],
+        ['Image gain', 'Gain changes brightness within the field; the far margin lies outside it.'],
+        [
+          'Color Doppler',
+          'Doppler adds flow information inside the displayed field; it does not extend the field.',
+        ],
       ),
       q(
         'image-vessel',
@@ -98,8 +107,8 @@ export const FINAL_CASES: EbusCase[] = [
           'Undetected flow does not prove absence of a vessel.',
         ],
         [
-          'Use the darkest part of the structure as the needle target',
-          'Dark appearance alone does not establish a safe tissue target.',
+          'Proceed with a thinner needle to limit any bleeding',
+          'Needle size does not make an unidentified structure safe to cross.',
         ],
         'both',
       ),
@@ -131,10 +140,7 @@ export const FINAL_CASES: EbusCase[] = [
         'map-left',
         'Which station fits the target between the left lobar bronchi?',
         ['11L', 'This is the left interlobar compartment.'],
-        [
-          '7',
-          'The target is at a left lobar bifurcation, not in the medial subcarinal compartment.',
-        ],
+        ['10L', '10L is hilar, beside the left main bronchus and proximal to the lobar division.'],
         ['4L', 'The stated location is interlobar rather than lower paratracheal.'],
       ),
       q(
@@ -163,10 +169,13 @@ export const FINAL_CASES: EbusCase[] = [
           'An esophageal route can complement airway EBUS for lower mediastinal targets such as station 8.',
         ],
         [
-          'More proximal airway rotation alone as a guaranteed solution',
-          'A different airway angle does not guarantee access to a lower paraesophageal compartment.',
+          'A longer needle throw through the station 7 window',
+          'Station 8 lies along the esophagus below the subcarinal space; reaching through station 7 is not a sampling path for it.',
         ],
-        ['A routine right interlobar pass', 'That samples a different anatomical compartment.'],
+        [
+          'A repeat EBUS with a thinner scope for distal reach',
+          'A lower paraesophageal node is not beside an airway the scope can enter; the limit is anatomy, not scope size.',
+        ],
       ),
       q(
         'access-lateral',
@@ -176,7 +185,10 @@ export const FINAL_CASES: EbusCase[] = [
           '4L solely because it is near the aortic arch',
           'Proximity to the arch alone does not define 4L.',
         ],
-        ['11L', 'The target is subaortic rather than between the left lobar bronchi.'],
+        [
+          '6',
+          'Station 6 is para-aortic, anterior and lateral to the ascending aorta and arch; the subaortic window lateral to the ligamentum is station 5.',
+        ],
       ),
       q(
         'access-report',
@@ -213,18 +225,15 @@ export const FINAL_CASES: EbusCase[] = [
           '11R',
           'This ipsilateral interlobar N1 target is sampled after the higher-category targets.',
         ],
-        [
-          'The primary tumor regardless of the nodal plan',
-          'Sampling a tumor before higher-category nodes can complicate contamination control.',
-        ],
+        ['4R', '4R is ipsilateral N2 for a right primary and follows the N3 target.'],
       ),
       q(
         'distribution-n2',
         'Based on the stated positive 4R and 7 stations, which N2 subdivision fits?',
         ['N2b', 'Two distinct ipsilateral mediastinal/subcarinal stations are involved.'],
         [
-          'N2a because one lung is the primary site',
-          'The subdivision depends on the number of involved N2 stations, not the number of primary lungs.',
+          'N2a because 4R and 7 are both ipsilateral',
+          'N2a is a single involved N2 station; two involved stations make N2b.',
         ],
         [
           'N3 because station 7 is shared by both lungs',
@@ -239,12 +248,12 @@ export const FINAL_CASES: EbusCase[] = [
           'Pooling may establish malignancy while preventing a station-specific distribution from being inferred.',
         ],
         [
-          'All ability to recognize malignant cells',
-          'Malignant cells may still be recognizable; the lost information is their anatomical source.',
+          'The distinction between N2 and N3 disease',
+          'Both stations are N2 for a right primary; what pooling hides is whether one or two stations are involved.',
         ],
         [
-          'Only the record of processor gain',
-          'The principal problem is specimen identity, not the image setting.',
+          'The ability to run biomarkers on the material',
+          'Pooled material can still be tested; what cannot be recovered is which station it came from.',
         ],
       ),
     ],
@@ -283,12 +292,12 @@ export const FINAL_CASES: EbusCase[] = [
           'On-site recognition of malignant cells does not guarantee sufficient material for all requested assays.',
         ],
         [
-          'That no further laboratory processing is needed',
-          'Final processing and any requested studies remain necessary.',
+          'Only the tumor subtype, since adequacy is now established',
+          'ROSE shows that tumor is present, not that there is enough of it for the planned assays.',
         ],
         [
-          'That every other nodal station has the same diagnosis',
-          'ROSE describes the submitted specimen, not all stations.',
+          'Nothing at this station; further passes add only risk',
+          'With biomarkers planned, additional passes for cell block are usually what is still needed.',
         ],
       ),
       q(
@@ -341,10 +350,13 @@ export const FINAL_CASES: EbusCase[] = [
           'Potentially nonrepresentative sampling',
           'No representative target tissue has been demonstrated in that specimen.',
         ],
-        ['The target is benign', 'A nonrepresentative aspirate cannot support that conclusion.'],
         [
-          'The target is necessarily a vascular malformation',
-          'Blood in a specimen does not by itself establish the target diagnosis.',
+          'A negative result for that pass',
+          'A pass without lymphoid or lesional material is nondiagnostic, not negative.',
+        ],
+        [
+          'That the target is a vessel rather than a node',
+          'Bloody aspirates are common from vascular nodes and with suction; blood alone does not reclassify the target.',
         ],
       ),
       q(
@@ -359,8 +371,8 @@ export const FINAL_CASES: EbusCase[] = [
           'The histologic pattern is not unique to sarcoidosis.',
         ],
         [
-          'Assume infection is excluded even when relevant tests are missing',
-          'An unperformed test supplies no evidence excluding infection.',
+          'Only a compatible CT pattern of symmetric hilar adenopathy',
+          'Imaging supports the diagnosis, but mycobacterial and fungal infection still need to be excluded.',
         ],
       ),
     ],
@@ -398,12 +410,12 @@ export const FINAL_CASES: EbusCase[] = [
           'Responsibility for communication and follow-up should be explicit.',
         ],
         [
-          'List only that the procedure was completed',
-          'Completion alone does not communicate findings or pending responsibilities.',
+          'State that results will follow when available',
+          'Without a named owner, pending results can go unreviewed.',
         ],
         [
-          'Remove all limitations once representative samples are obtained',
-          'The actual examination scope and any relevant limitations still belong in the report.',
+          'Attach the saved ultrasound images',
+          'Images document the examination; they do not say who acts on the pathology.',
         ],
       ),
       q(
@@ -457,7 +469,7 @@ export const PRACTICE_CASES: EbusCase[] = [
           'It becomes 10L',
           'The airway approach does not determine the target compartment by itself.',
         ],
-        ['It becomes 4L', 'A left-sided approach does not establish a paratracheal location.'],
+        ['It is recorded as 7L', 'Station 7 has no side; the approach is recorded separately.'],
       ),
     ],
   },
@@ -506,12 +518,12 @@ export const PRACTICE_CASES: EbusCase[] = [
           'This protects the scope and reduces injury risk.',
         ],
         [
-          'The needle is exposed to retain a larger specimen',
-          'Channel removal with an exposed needle is unsafe.',
+          'Suction is released; needle position is checked afterward',
+          'Releasing suction is right, but the needle must be seen retracted and locked before the assembly moves in the channel.',
         ],
         [
-          'The image is saved, regardless of needle position',
-          'Image capture does not establish a protected needle position.',
+          'The sheath is locked, which implies the needle is covered',
+          'A locked sheath does not show where the needle is; check that the needle itself is retracted and its lock engaged.',
         ],
         true,
       ),
@@ -523,12 +535,12 @@ export const PRACTICE_CASES: EbusCase[] = [
           'Use the medium specified for the planned assay.',
         ],
         [
-          'The container already nearest the scope',
-          'Convenience does not establish assay compatibility.',
+          'Formalin, as the default for any tissue specimen',
+          'Flow cytometry needs fresh, unfixed cells.',
         ],
         [
-          'A general assumption that all fixatives are interchangeable',
-          'Different studies have different preservation requirements.',
+          'Alcohol fixative, as used for the cytology smears',
+          'Alcohol fixes the cells; flow cytometry needs them viable.',
         ],
       ),
     ],

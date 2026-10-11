@@ -65,10 +65,13 @@ export const sampleLessons: Lesson[] = [
         'An exposed tip can harm the patient or the equipment',
         'Retraction and securing the assembly follow the current device instructions.',
       ],
-      ['Retraction determines nodal histology', 'It is a safety maneuver, not a diagnostic test.'],
       [
-        'A sheath automatically makes all needle positions safe',
-        'The needle position must actually be checked.',
+        'Retraction keeps the aspirate from being lost in the channel',
+        'The specimen stays in the needle lumen either way; the check is about an exposed tip cutting the channel or the airway.',
+      ],
+      [
+        'Retraction releases the suction before the needle leaves the node',
+        'Suction is released at the syringe before the needle leaves the node; retraction is checked so the tip is covered in the channel.',
       ],
     ),
     transfer: q(
@@ -83,8 +86,8 @@ export const sampleLessons: Lesson[] = [
         'Resistance should prompt reassessment, not escalation of force.',
       ],
       [
-        'Increase ultrasound gain to reduce mechanical resistance',
-        'Gain changes the image, not the needle mechanics.',
+        'Lengthen the needle stop so the stroke carries more momentum',
+        'The stop limits travel to the far side of the node; lengthening it does not help entry and removes that safeguard.',
       ],
       true,
     ),
@@ -127,10 +130,13 @@ export const sampleLessons: Lesson[] = [
         'Adequacy for the requested ancillary assays',
         'An on-site finding does not guarantee final assay adequacy.',
       ],
-      ['Whether the anatomical station changes', 'Pathology does not alter the sampling location.'],
       [
-        'Whether all other stations are now known to be positive',
-        'A finding at one site does not classify unsampled stations.',
+        'Whether the needle was actually within the node',
+        'Malignant cells on site already show that lesional material was reached; what is open is whether there is enough for the assays.',
+      ],
+      [
+        'Whether lymphocytes are present to confirm a nodal sample',
+        'Lymphocytes matter for calling a negative sample representative; with tumor present, the open question is quantity for ancillary testing.',
       ],
     ),
     matching: matching(
@@ -169,12 +175,12 @@ export const sampleLessons: Lesson[] = [
         'EBUS can be performed without ROSE; plan material and follow-up deliberately.',
       ],
       [
-        'Assume any aspirate is adequate because it contains blood',
-        'Blood alone is not evidence of representative target material.',
+        'Postpone until on-site cytology can attend',
+        'ROSE is suggested where available, not required; EBUS-TBNA is performed without it, with a planned number of passes.',
       ],
       [
-        'Treat a normal-looking node as a substitute for cytology',
-        'Morphology does not provide specimen adequacy.',
+        'Take fewer passes, since adequacy cannot be checked',
+        'Without on-site feedback the planned pass count and cell-block material matter more, not less.',
       ],
     ),
     diagram: 'specimens',
@@ -217,12 +223,12 @@ export const sampleLessons: Lesson[] = [
         'Pooling erases which station supplied the finding.',
       ],
       [
-        'Because each station always needs a different needle gauge',
-        'Gauge selection and station labeling are different decisions.',
+        'To give the laboratory more cells per block for biomarkers',
+        'Separating material does not raise cellularity; it is done so a positive result can be assigned to its station.',
       ],
       [
-        'Because separate labels increase the number of malignant cells',
-        'Labels preserve identity, not cellular yield.',
+        'To keep blood from one station from diluting the other',
+        'Dilution is not the concern; a pooled positive cannot be assigned to a station, which is what staging needs.',
       ],
     ),
     matching: matching(
@@ -242,12 +248,12 @@ export const sampleLessons: Lesson[] = [
         'A single default container may not preserve every requested diagnostic option.',
       ],
       [
-        'Different containers alone establish different diagnoses',
-        'The material must still be examined.',
+        'Formalin preserves everything, but separate tubes aid labeling',
+        'Formalin fixes cells and kills organisms, so flow cytometry and culture are lost.',
       ],
       [
-        'The same medium is always interchangeable across laboratories',
-        'Local processing and assay requirements need confirmation.',
+        'Saline keeps the material suitable for any later study',
+        'Unfixed material degrades; cytology and cell block need prompt fixation, so one medium does not serve every study.',
       ],
     ),
     transfer: q(
@@ -262,8 +268,8 @@ export const sampleLessons: Lesson[] = [
         'The diagnosis requires compatible clinical findings and assessment for alternatives.',
       ],
       [
-        'A new container label can recover a culture from already fixed tissue',
-        'Relabeling does not reverse fixation or supply an unperformed test.',
+        'Culture can still be requested on the fixed cell block',
+        'Fixation kills organisms; stains or molecular tests may be possible on fixed material, but culture is not.',
       ],
     ),
     diagram: 'specimens',

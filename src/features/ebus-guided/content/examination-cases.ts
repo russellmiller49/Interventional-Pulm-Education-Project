@@ -13,7 +13,7 @@ export const EXAMINATION_CASE: ExaminationCase = {
   primaryLocation: 'Left lung primary',
   sources: ['ers2026', 'iaslc9', 'chest2024', 'ics2023', 'simulation'],
   context:
-    'Authored teaching case. The imaging request describes two separate 4R nodes and targets at 7, 4L and 11L. This is a written nodal map; no supplied clinical image or model is registered to this case.',
+    'Teaching case. The imaging request describes two separate 4R nodes and targets at 7, 4L and 11L. This is a written nodal map with no accompanying images.',
   limitation:
     'The later examination and specimen findings are supplied fictional history. Your work records the plan and interprets that history; it does not perform a patient examination or generate tissue.',
   stations: [
@@ -223,7 +223,7 @@ export const MODEL_WINDOW_CASE: ExaminationCase = {
   primaryLocation: 'Not applicable to this acquisition task',
   sources: ['atlas', 'simulation'],
   context:
-    'One modeled target viewed from assisted bronchial starts. A changed position remains part of the same anatomy case.',
+    'One subcarinal target viewed from both main bronchi. A changed scope position remains part of the same anatomy.',
   limitation:
     'Model evidence is not a complete station survey, a sample, a negative tissue result or live guidance after reload.',
   stations: [
@@ -242,7 +242,7 @@ export const MODEL_WINDOW_CASE: ExaminationCase = {
   ],
   specimens: [],
   results: [],
-  complications: 'Patient physiology and complications are not modeled.',
+  complications: 'Patient physiology and complications are not part of this exercise.',
   reportOptions: [],
 }
 export const DESCRIPTION_CASE: ExaminationCase = {
