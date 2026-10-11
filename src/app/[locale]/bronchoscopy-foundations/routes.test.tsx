@@ -75,6 +75,11 @@ jest.mock(
     BronchoscopyFoundationsReference: () => <div data-testid="bronch-reference" />,
   }),
 )
+jest.mock('@/features/bronchoscopy-foundations/components/BronchImageBank', () => ({
+  BronchImageBank: ({ set }: { set: number }) => (
+    <div data-testid="bronch-image-bank" data-set={set} />
+  ),
+}))
 jest.mock('@/features/bronchoscopy-foundations/components/BronchoscopyFoundationsClosing', () => ({
   BronchoscopyFoundationsClosing: () => <div data-testid="bronch-closing" />,
 }))
@@ -90,6 +95,9 @@ import BronchoscopyFoundationsClosingPage, {
   generateMetadata as closingMetadata,
 } from './learn/complete/page'
 import BronchoscopyFoundationsLearnPage, { generateMetadata as learnMetadata } from './learn/page'
+import BronchoscopyFoundationsImageBankPage, {
+  generateMetadata as imageBankMetadata,
+} from './practice/images/page'
 import BronchoscopyFoundationsPracticePage, {
   generateMetadata as practiceMetadata,
 } from './practice/page'
@@ -113,6 +121,7 @@ describe('bronchoscopy foundations route family', () => {
       learnMetadata,
       closingMetadata,
       practiceMetadata,
+      imageBankMetadata,
       assessMetadata,
       referenceMetadata,
       atlasMetadata,
@@ -238,6 +247,29 @@ describe('bronchoscopy foundations route family', () => {
       '/bronchoscopy-foundations/reference',
     )
     expect(screen.getByTestId('bronch-frame')).toHaveAttribute('data-locale', 'es')
+  })
+
+  it('opens the image bank at the set the address names, and at the first for anything else', async () => {
+    for (const [query, set] of [
+      [undefined, '1'],
+      [{ set: '3' }, '3'],
+      [{ set: ['2', '4'] }, '2'],
+      [{ set: '99' }, '1'],
+      [{ set: 'x' }, '1'],
+    ] as const) {
+      const view = render(
+        await BronchoscopyFoundationsImageBankPage({
+          params: params('en'),
+          searchParams: query ? Promise.resolve(query as { set?: string | string[] }) : undefined,
+        }),
+      )
+      expect(screen.getByTestId('bronch-image-bank')).toHaveAttribute('data-set', set)
+      expect(screen.getByTestId('bronch-frame')).toHaveAttribute(
+        'data-active',
+        '/bronchoscopy-foundations/practice',
+      )
+      view.unmount()
+    }
   })
 
   it('renders the closing screen inside the frame, under the Learn nav item', async () => {

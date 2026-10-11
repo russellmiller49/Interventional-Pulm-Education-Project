@@ -7,7 +7,12 @@ import { Link } from '@/i18n/navigation'
 import { bronchMicroCasesInPathwayOrder, microCasesForSection } from '../content/microCases'
 import { BRONCH_SECTION_IDS, bronchSection } from '../content/pathway'
 import { bronchSectionLinkTarget } from '../content/pathwayResolver'
-import { BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF, bronchCaseLinkTarget } from '../content/routes'
+import { IMAGE_BANK_ROWS, IMAGE_BANK_SET_SIZE } from '../content/imageBank'
+import {
+  BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF,
+  BRONCHOSCOPY_FOUNDATIONS_IMAGE_BANK_HREF,
+  bronchCaseLinkTarget,
+} from '../content/routes'
 import { capstoneStageItems } from '../content/stageItems'
 import { BronchContinueCta } from './hub/BronchPathwayAccordion'
 
@@ -73,6 +78,30 @@ export function BronchoscopyFoundationsPracticeLanding() {
           </Link>
         </div>
       </div>
+
+      <section
+        aria-labelledby="practice-image-bank"
+        className="grid gap-2"
+        data-practice-image-bank
+      >
+        <h2 id="practice-image-bank" className="text-sm font-bold">
+          Image bank
+        </h2>
+        <Link
+          className="flex min-h-11 items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 text-sm"
+          href={BRONCHOSCOPY_FOUNDATIONS_IMAGE_BANK_HREF}
+          data-practice-image-bank-link
+        >
+          <span>
+            <span className="font-semibold">Find the opening</span>
+            <small className="block text-muted-foreground">
+              {IMAGE_BANK_ROWS.length} views from both lungs, upright and rotated, in sets of{' '}
+              {IMAGE_BANK_SET_SIZE}
+            </small>
+          </span>
+          <ArrowRight aria-hidden="true" className="size-4" />
+        </Link>
+      </section>
 
       <ol className="grid gap-6" data-practice-list>
         {sections.map((sectionId) => {

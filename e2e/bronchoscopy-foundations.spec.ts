@@ -7,6 +7,7 @@ import {
   type BronchSectionId,
 } from '../src/features/bronchoscopy-foundations/content/pathway'
 import { CAPSTONE_CASES } from '../src/features/bronchoscopy-foundations/content/capstone'
+import { imageBankSet } from '../src/features/bronchoscopy-foundations/content/imageBank'
 import { capstoneStageItem } from '../src/features/bronchoscopy-foundations/content/stageItems'
 import { BRONCH_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/learnProgress'
 import { BRONCH_SELF_PACED_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/selfPacedProgress'
@@ -671,6 +672,42 @@ test('Practice explains before an answer, lets the learner try again, saves noth
   await expect(page.locator('[data-answer-verdict]')).toHaveAttribute('data-revealed', 'true')
   await page.locator('[data-answer-again]').click()
   await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+  expect(await record(page)).toBeNull()
+  expect(await earlierRecord(page)).toBeNull()
+})
+
+test('the image bank asks for a click on a still, upright and rotated, and saves nothing', async ({
+  page,
+}) => {
+  await page.goto(base + '/practice')
+  await page.locator('[data-practice-image-bank-link]').click()
+  await expect(page).toHaveURL(/\/practice\/images$/)
+  const rows = imageBankSet(1)!.rows
+  for (const [index, row] of rows.entries()) {
+    await expect(page.locator('[data-find-position]')).toHaveText(
+      `Image ${index + 1} of ${rows.length}`,
+    )
+    await expect(page.locator('[data-bronch-find]')).toContainText(row.context)
+    const turn = page.locator('[data-find-rotation]')
+    if (row.rotation) await expect(turn).toHaveAttribute('data-find-rotation', String(row.rotation))
+    else await expect(turn).toHaveCount(0)
+    // The outline is a button by keyboard as well as by pointer.
+    const outline = page.locator(`[data-find-marker="${row.targetId}"]`)
+    await expect(outline).toHaveAttribute('role', 'button')
+    await outline.focus()
+    await page.keyboard.press('Enter')
+    await expect(page.locator('[data-find-verdict]')).toHaveAttribute('data-find-verdict', 'held')
+    await expect(page.locator('[data-find-verdict]')).toBeFocused()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true,
+    )
+    if (index < rows.length - 1) await page.locator('[data-find-next]').click()
+  }
+  await expect(page.locator('[data-image-bank-finished]')).toBeVisible()
+  await page.locator('[data-image-bank-next]').click()
+  await expect(page).toHaveURL(/\/practice\/images\?set=2$/)
+  await expect(page.locator('[data-image-bank]')).toHaveAttribute('data-image-bank-set', '2')
+  await expect(page.locator('[data-find-verdict]')).toHaveCount(0)
   expect(await record(page)).toBeNull()
   expect(await earlierRecord(page)).toBeNull()
 })

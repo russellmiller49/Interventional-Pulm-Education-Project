@@ -1,6 +1,6 @@
 # Bronchoscopy Foundations rewrite: handoff
 
-Written 2026-10-08, last updated 2026-10-11 (after the hub and the closing screen). Start the next session from this file.
+Written 2026-10-08, last updated 2026-10-11 (after the image bank). Start the next session from this file.
 
 ## Why this work exists
 
@@ -17,14 +17,15 @@ All fifteen sections are on `main` (`1c225e79`, 2026-10-11): #349 to #375 were m
 2026-10-10 with #351 and #376, and #377 (section 13) and #378 (section 15, with capstone C09)
 the next day. #348 is closed.
 
-One PR is open:
+Two PRs are open:
 
 | PR   | Branch                  | State                                                                                                              |
 | ---- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | #380 | `claude/bf-rewrite-hub` | Draft, targets `main`. The hub rewritten, a closing screen, `what-completion-means` retired, the image rule moved. |
+| #NEW | `claude/bf-image-bank`  | Draft, stacked on #380. The image bank: 50 click-on-the-picture questions in five sets, on the Practice surface.   |
 
 The work is in the worktree `…-Worktrees/claude-bf-pre-review-04-20261007`, which is on
-`claude/bf-rewrite-hub`. Branch the next change from `origin/main` once #380 is merged. The
+`claude/bf-image-bank`. Merge #380, then #NEW; branch the next change from `origin/main` after that. The
 local copies of the merged stack branches are behind origin.
 
 A reader reviewed sections 13 and 15 against `docs/teaching-first-rules.md` before the merge and
@@ -34,13 +35,13 @@ before acting on them.
 ## Start here next session
 
 1. Read this file, then the plan's rules and the brief for the section you are writing.
-2. The fifteen sections, the hub and the closing screen are written, and no first-contract
-   section is left. Next: practice and assessment (item 7 under "What is left"), starting with
-   the image bank, since the image rule now blocks publication.
+2. The fifteen sections, the hub, the closing screen and the image bank are written. Next in
+   the plan's practice and assessment (item 7 under "What is left"): the vignettes with numbers,
+   mixed sets, the eight integrated cases with their labels hidden until after the answer, and
+   the objectives. Self-check mode is still Russell's decision.
 3. Things to know before that change:
-   - The course shows an image in 29 of 97 questions. A third is 33 of 97, or five more image
-     questions. `imageShareBlockers` in `content/sectionNumbers.ts` reports it;
-     `publishBlockers` refuses the `published` stage while it stands.
+   - With the image bank the course shows an image in 79 of 147 questions, so the one-third
+     rule is met. Without the bank it is 29 of 97.
    - First-contract code is now dead and still in the tree: the old fields in `content/types.ts`
      (`recognizeTitle`, `why`, `newConcept`, `incrementSentence`, `controlStrip`,
      `modelBoundary`, `steps`), the `!rewritten` branches in `sectionValidation.ts`,
@@ -440,9 +441,33 @@ sections no longer wait for sessions with the pilot.
    - For Russell to confirm: the hub's four paragraphs; the closing screen's wording, above all
      "What this course cannot show" and the four next steps; the shorter notice on every page;
      retiring M18-O1 to O5.
-7. **Practice and assessment:** the image bank, about 40 vignettes with numbers, four evolving
-   cases, mixed sets of ten, the eight integrated cases with labels hidden until after the answer,
-   and about 25 objectives replacing the 108. Self-check mode is plan decision 5, not yet made.
+7. **Practice and assessment.** The image bank is done (2026-10-11); the rest is open.
+   - The image bank is `/bronchoscopy-foundations/practice/images` (`content/imageBank.ts`,
+     `components/BronchImageBank.tsx`), linked from the Practice landing. It has 50 questions:
+     25 openings, each asked once upright and once rotated, in five fixed sets of ten that mix
+     both lungs. An opening's two questions are never in the same set. Nothing is saved.
+   - It reuses the 12 lung frames the two lung sections already show and the course's own
+     click control, not `AirwayIdentifyQuiz`: that component picks from a list of names, has no
+     context line, no rotation and no keyboard path. The plan's 30 quiz stills carry one outline
+     each, so they cannot be clicked on; the survey frames carry them all.
+   - 25 of the 32 outlined openings are asked. The seven left out could only be told apart by
+     an orientation cue no one has stated: RB7, RB8 and RB9 on the intermedius frame, RB8 and
+     RB10 on the right basal frame, LB9 and LB10 on the left lower lobe frame. The larynx frames
+     are left out too: their outlines are named by the side of the picture.
+   - The orientation cues are the lung sections' own, turned with the picture
+     (`cueSentence`). They were read from the survey's outlines and still wait for Russell.
+   - The bank counts toward the image share: `imageShareBlockers` and `publishBlockers` take
+     the number of bank questions, and `check-section.ts --all --report` prints it and runs
+     `imageBankErrors` (the copy rules through `findCopyErrors`, the frames, and the set rules).
+   - `docs/bronchoscopy-foundations/media-register.json` lists only the six right-lung frames;
+     the larynx and left-lung frames were cut later and the register was not rebuilt. The bank
+     adds no picture. Rights and de-identification are pending on every file.
+   - For Russell to confirm: the 25 rationales; the cues, above all the rotated ones; whether
+     an upright and a rotated question on one opening count as two; the seven openings left out.
+   - Still open: about 40 vignettes with numbers, mixed sets of ten across all practice, the
+     eight integrated cases with labels hidden until after the answer, and about 25 objectives
+     replacing the 108. The four evolving cases exist (sections 3, 13, 14 and 15). Self-check
+     mode is plan decision 5, not yet made.
 8. **Abnormal images** for sections 8, 10, 12 and 14. Bleeding has no image questions until these
    exist. Rights and de-identification are still pending on all 100 registered files.
 9. **Re-decide the review-register refusal rows** (R25, R26 and others) row by row with Russell.

@@ -47,10 +47,12 @@ export function sectionNumberIds(section: BronchSectionDefinition): readonly Num
 /** Too few of the course's questions show an image: one line, or none when the share is met. */
 export function imageShareBlockers(
   sections: readonly BronchSectionDefinition[],
+  bankQuestions = 0,
 ): readonly string[] {
   const counts = sections.map(imageItemCounts)
-  const image = counts.reduce((sum, count) => sum + count.image, 0)
-  const total = counts.reduce((sum, count) => sum + count.total, 0)
+  // Every question in the image bank shows an image, so it adds to both sides.
+  const image = counts.reduce((sum, count) => sum + count.image, bankQuestions)
+  const total = counts.reduce((sum, count) => sum + count.total, bankQuestions)
   return total > 0 && image / total < REWRITE_CAPS.imageItemShare
     ? [`${image} of the course's ${total} questions show an image; at least a third.`]
     : []
@@ -65,6 +67,7 @@ export function imageShareBlockers(
 export function publishBlockers(
   stage: 'unlisted-preview' | 'published',
   sections: readonly BronchSectionDefinition[],
+  bankQuestions = 0,
 ): readonly string[] {
   if (stage !== 'published') return []
   return [
@@ -73,6 +76,6 @@ export function publishBlockers(
         (id) => `${section.id} uses "${id}", which faculty has not signed.`,
       ),
     ),
-    ...imageShareBlockers(sections),
+    ...imageShareBlockers(sections, bankQuestions),
   ]
 }

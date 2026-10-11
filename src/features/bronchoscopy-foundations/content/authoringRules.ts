@@ -11,6 +11,7 @@ import type {
   AuthoredChoice,
   AuthoredItem,
   BronchAct,
+  BronchFind,
   BronchSectionDefinition,
   BronchTeachingBlock,
 } from './types'
@@ -638,6 +639,21 @@ function firstMoveErrors(section: BronchSectionDefinition): string[] {
       errors.push(`${where} ends by following someone else's plan; end with a move.`)
   }
   return errors
+}
+
+/**
+ * The copy rules for a set of click-on-the-picture questions that belongs to no section (the
+ * image bank): the same digit, vocabulary, length and sentence rules a section's own set is held to.
+ */
+export function findCopyErrors(where: string, find: BronchFind): readonly string[] {
+  return actSurfaces(where, { kind: 'find', outcomeId: 'image-bank', find }).flatMap((surface) => [
+    ...numberTokenErrors(surface.where, surface.text),
+    ...digitErrors(surface),
+    ...bannedTermErrors(surface),
+    ...capErrors(surface),
+    ...sentenceErrors(surface),
+    ...paragraphErrors(surface),
+  ])
 }
 
 /** Everything a rewritten section gets wrong. Empty for a section that follows the rules. */
