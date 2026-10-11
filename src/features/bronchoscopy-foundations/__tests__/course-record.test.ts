@@ -121,10 +121,10 @@ it('keeps answers and retries in the session only', () => {
   session = reducer(session, { type: 'CONFIRM_THROUGH', index: lesson.predictionStepIndex })
   expect(session.commitments.confirmed).toBe(lesson.predictionStepIndex)
   // A retry is refused for an activity whose feedback loop is built in.
-  const scenario = bronchStageLesson('poor-return').steps.find(
+  const scenario = bronchStageLesson('deterioration').steps.find(
     (step) => step.interaction.kind === 'scenario',
   )!
-  const poorReturn = bronchStageReducer(bronchStageLesson('poor-return'))
+  const poorReturn = bronchStageReducer(bronchStageLesson('deterioration'))
   const before = emptyBronchStageSession()
   expect(poorReturn(before, { type: 'RETRY_STEP', stepId: scenario.id })).toBe(before)
   expect(localStorage.length).toBe(0)

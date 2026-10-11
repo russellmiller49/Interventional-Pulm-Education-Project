@@ -174,7 +174,7 @@ describe('the ledger is checked with the course primary action (A12)', () => {
 })
 
 const SCENARIO_SECTIONS: readonly BronchSectionId[] = [
-  'poor-return',
+  'washing-and-lavage',
   'deterioration',
   'bleeding-priorities',
 ]

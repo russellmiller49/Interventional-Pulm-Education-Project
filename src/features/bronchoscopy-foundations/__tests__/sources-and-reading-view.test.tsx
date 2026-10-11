@@ -312,12 +312,7 @@ describe('focus scrolling reserves the continuation bar as measured (A9)', () =>
  * (the right lung, bleeding) closes on its checklist and no longer prints the table in the lesson;
  * the Reference keeps the whole table.
  */
-const GRAMMAR_SECTIONS: readonly BronchSectionId[] = [
-  'poor-return',
-  'protected-accessories',
-  'deterioration',
-  'scope-in-a-tube',
-]
+const GRAMMAR_SECTIONS: readonly BronchSectionId[] = ['deterioration', 'scope-in-a-tube']
 
 function cellTexts(row: Element) {
   const text = (selector: string) =>

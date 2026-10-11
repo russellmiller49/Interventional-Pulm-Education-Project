@@ -110,7 +110,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D23'],
-  prerequisites: ['protected-accessories', 'deterioration', 'scope-in-a-tube'],
+  prerequisites: ['biopsy-and-specimens', 'deterioration', 'scope-in-a-tube'],
 
   clinicalQuestion:
     'Before a bronchoscopy through the tube of a patient on pressure-control ventilation, what do you need to know about the breaths the ventilator is giving?',

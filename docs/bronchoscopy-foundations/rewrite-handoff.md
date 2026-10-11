@@ -17,6 +17,8 @@ supervisor" answers.
 | ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
 | #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
+| #375 | `claude/bf-rewrite-s12`            | Draft, stacked on #374. Section 12, biopsy, brushing and specimens (new id); two sections retired.                |
+| #374 | `claude/bf-rewrite-s11`            | Draft, stacked on #373. Section 11, washings and BAL, rewritten; `poor-return` retired; R25 lifted.               |
 | #373 | `claude/bf-rewrite-s10`            | Draft, stacked on #371. Section 10, findings and the report, rewritten; `honest-report` retired.                  |
 | #371 | `claude/bf-rewrite-s09`            | Draft, stacked on #369. Section 9, the systematic survey, rewritten; one approved scope-pane change.              |
 | #369 | `claude/bf-rewrite-s08`            | Draft, stacked on #368. Section 8, losing and regaining the view, rewritten.                                      |
@@ -32,29 +34,34 @@ supervisor" answers.
 | #348 | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix is now #351; close #348 once #351 merges.                        |
 
 Nothing is merged. The stack, in merge order: #349 → #350 → #352 → #355 → #358 → #359 → #360 →
-#362 → #364 → #368 → #369 → #371 → #373. #351 is independent. The work is in the worktree
-`…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s10`. Branch the
-next section from that branch (`git switch -c claude/bf-rewrite-s11`) and stack its PR on #373.
+#362 → #364 → #368 → #369 → #371 → #373 → #374 → #375. #351 is independent. The work is in
+the worktree `…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s12`.
+Branch the next section from that branch (`git switch -c claude/bf-rewrite-s13`) and stack its
+PR on #375.
 
 ## Start here next session
 
 1. Read this file, then the plan's rules and the brief for the section you are writing.
-2. Next section: 11, washings and BAL (`washing-and-lavage`, which absorbs `poor-return`).
-   Brief 11: washing, BAL and therapeutic aspiration; choose the site from the CT; the wedge,
-   aliquots, suction pressure and return; what poor return means; processing; why lavage comes
-   before biopsy. Do: run a BAL in which the learner computes the return from the volumes, then
-   troubleshoot a poor return.
+2. Next section: 13, when the patient deteriorates (`deterioration`). Brief 13: one opening
+   bundle (stop, say it out loud, look at the patient), then a first-move card for each event:
+   desaturation, bronchospasm, laryngospasm, oversedation or apnea, hypotension, local
+   anesthetic toxicity, methemoglobinemia, pneumothorax including tension. Do: one patient
+   through four frames, with vitals that change and a wrong choice that plays out.
 3. Things to know before writing it:
-   - It is the first section since section 3 that teaches numbers. Use register rows 13, 14 and
-     15 through `num('id')`; look up the row ids in `content/numbers.ts`. None of them is signed.
-   - Review-register rows R25 and R26 refuse colony counts. Row 15 (quantitative cultures for
-     VAP) is extracted, but a refusal row can still block it: lifting one needs Russell's
-     decision, recorded (see the note on R14 under section 3).
-   - `poor-return` retires in that change, with its flow, its tests and its Reading-the-view
-     rows (`poor-return-leak`, `poor-return-collapse`, `no-return-patent-view`). The end-to-end
-     stacked-table case and the Reading-the-view count use it; move them to a section that
-     still prints the table.
-   - Claim-queue items C09 and C10 quote `poor-return` wording.
+   - Eight first-move cards will not fit 1,000 words at 120 a screen unless each is short.
+     Count before you write; the bleeding card in section 14 is the model.
+   - Numbers: `oxygen-trigger`, the flumazenil and naloxone rows (signed), the methylene blue
+     rows (signed), the lipid rows `last-*` (not signed) and the methemoglobin rows.
+   - Review-register R14 still refuses bicarbonate and lipid-emulsion doses (see the note under
+     section 3). Teaching the lipid dose needs Russell's decision, recorded as for R14 and R25.
+     Ask him before writing, and ask about rescue doses in general (plan decision 4).
+   - `deterioration` is the fixture for several tests moved off retired sections: the scenario
+     refusal, retry, the stacked Reading-the-view table, the sources lists and the
+     course-workspace walk. A rewritten scenario plays a wrong move out instead of refusing
+     it, so the refusal tests need another host or a rewrite. `scope-in-a-tube` is the last
+     section that prints the Reading-the-view table.
+   - Claim-queue item C03 has an `icu-physiology` surface; its quoted wording lives in
+     `scope-in-a-tube`. Neither is touched by section 13.
 4. Work one section per session. Get a digest of the old section from a subagent instead of
    reading it into context, then write the new file. The notes under each section below say
    what the checks will refuse.
@@ -130,10 +137,67 @@ sections no longer wait for sessions with the pilot.
    closing screen (item 6).
 5. **Sections rewritten so far:** the right lung, bleeding, and sections 1 to 5
    (`clinical-question`, `pre-use-check`, `sedation-and-monitoring`, `five-controls`,
-   `larynx-and-entry`), all 2026-10-08, and sections 7 to 10 (`left-side`, `view-loss`,
-   `systematic-survey`, `describe-findings`) on 2026-10-09. Four remain. Section 11
-   (`washing-and-lavage`) is next. The course lists 19 sections.
-   Notes from section 10:
+   `larynx-and-entry`), all 2026-10-08, sections 7 to 10 (`left-side`, `view-loss`,
+   `systematic-survey`, `describe-findings`) on 2026-10-09, and section 11
+   (`washing-and-lavage`) and section 12 (`biopsy-and-specimens`) on 2026-10-10. Two remain: 13
+   and 15. The course lists 17 sections.
+   Notes from section 12:
+   - `protected-accessories` and `specimen-pathway` are retired. M13-O1 to O5 and M14-O1 to O4
+     are homed in section 12; M14-O5 is in `RETIRED_OBJECTIVE_REASONS`. The Reading-the-view row
+     `state-disagrees` has `taughtIn: 'biopsy-and-specimens'`, and capstones C01, C07 and C16 are
+     paired with it.
+   - A new id needed: `BRONCH_SECTION_IDS`, `BRONCH_SECTION_STAGE`, the phase, `sections/index.ts`,
+     `courseFlow.ts`, `lessonVersions.ts` and the key in `scopeRecipes.ts`. Saved progress needed
+     nothing: `sectionMigration.ts` already forwarded both old ids to it.
+   - The find control now takes a picture that is not a survey frame: `PICTURE_FRAMES` in
+     `content/findFrames.ts` (its own `size`, boxes as outlines, a `short` label per outline),
+     and `marks: 'tools'`. `accessory-states` is the render of the simulator's six tool states.
+     An abnormal still can be added the same way once one is cleared.
+   - The matching control shows rows as authored and options in the order of `origins`. Rows
+     written in that order read the answers off. Sections 2, 8, 10 and 12 are reordered and a
+     test in `authoring-rules.test.tsx` refuses three or more rows in step.
+   - A practice chunk with a `demonstration` works in a rewritten flow. The brush exchange keeps
+     its eight captions; the word "model" was taken out of one.
+   - A length cue is measured on the unresolved text, so a key with a number token counts its
+     token's length. Lengthen the distractors.
+   - `opacity` on an SVG path fades its stroke too; use `fillOpacity` for a shaded shape with an
+     outline.
+   - The "Pull it back" case keeps its situation, question, options and key word for word; its
+     rationales and explanation were cut to the caps.
+   - `icu-physiology` still teaches fluoroscopy; it retires with section 15.
+   - It states 10 minutes, not the plan's 8.
+   - For Russell to confirm: sign rows 11, 12 and the brush threshold; forceps types and biopsy
+     technique (written from general knowledge); the protected brush; the radiation points;
+     the container list; the new prediction and the imaging case; retiring M14-O5.
+     Notes from section 11:
+   - `poor-return` is retired. M12-O5 and O6 are homed in section 11. Its three Reading-the-view
+     rows have `taughtIn: 'washing-and-lavage'`; `taughtIn` is typed by section id, so a retired
+     id there is a compile error.
+   - Russell decided on 2026-10-10 to lift review-register R25 for register-rendered culture
+     thresholds. The row now refuses only a threshold typed in the caret form, and still
+     refuses relabelling a specimen. R22 was not changed; its patterns refuse a volume followed
+     within 30 characters by "required", "needed", "the standard" or "adequate", and "at least"
+     or "minimum" before 100, 30, 40 or 50 mL. Word number sentences around those.
+   - The word "relabel" near "washing" or "aspirate" trips R25's other pattern; the prediction
+     says "change the label".
+   - A number token renders as the row's bare value ("under 100 mmHg"), so write the sentence
+     to read with it. The card prints the source line and "Check your local protocol" once.
+   - The return is chosen, not typed: the ledger control is built for strength times volume.
+     A case `situation` may carry digits; option labels and rationales may not, so the options
+     state the return in words or through a token.
+   - In a rewritten scenario every choice that is not the key needs a `consequence` with
+     readings, and oximetry and heart-rate readings need a value, a unit and `provenance`.
+   - A `source` claim needs a course textbook or manual among its sources; a guideline alone
+     is refused.
+   - A section may state at most 12 minutes. Section 11 is at 12 (the plan says 7).
+     `activityMinutes` may be a decimal.
+   - Tests that used `poor-return` now use `deterioration` (scenario refusal, retry, the stacked
+     table) or section 11 (the case that plays out). When `deterioration` is rewritten they move
+     again; `protected-accessories` and `scope-in-a-tube` are the other table sections.
+   - For Russell to confirm: sign rows 13, 14 and 15; the culture-threshold sentence; the three
+     procedures; the four causes of poor return; the case's decisions; whether to drop the
+     ordering activity to shorten the section.
+     Notes from section 10:
    - `honest-report` is retired. M17-O1, O2, O4 and O5 are homed in section 10; M17-O3 (recovery
      instructions) is in `RETIRED_OBJECTIVE_REASONS`.
    - Russell said to hold the image questions back (2026-10-09). The findings are named from six

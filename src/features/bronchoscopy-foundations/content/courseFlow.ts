@@ -24,6 +24,9 @@ export type CourseVisual =
   | 'room-setup'
   | 'survey-video'
   | 'obstruction-types'
+  | 'tool-states'
+  | 'radiation-safety'
+  | 'specimen-containers'
 export interface CourseChunk {
   readonly id: string
   readonly title: string
@@ -584,64 +587,73 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     close(['common-errors']),
   ],
   'washing-and-lavage': [
-    teach('purposes', 'Distinguish saline procedures by their purpose', [
-      'saline-in-the-airway',
-      'what-to-notice',
-      'four-procedures',
+    hook('A good sample, or a trap of saline'),
+    check('check', 'A trap with the label already on it'),
+    screen(
+      'what-and-where',
+      'Which procedure, and where',
+      'Read the three procedures, then how to choose the segment.',
+      ['three-procedures', 'site-from-ct'],
+    ),
+    screen(
+      'technique',
+      'Running the lavage',
+      'Read the wedge and the numbers. You will use them in the case that follows.',
+      ['wedge-and-aliquots', 'the-return'],
+    ),
+    practice(
+      'Put a BAL in order',
+      'case',
+      'Seven steps of a BAL. Put them in the order you do them.',
+    ),
+    screen('poor-return', 'When little comes back', 'Read the four causes and the fix for each.', [
+      'poor-return-causes',
     ]),
-    teach(
-      'worked-sequence',
-      'Follow a lavage from planning to specimen',
-      ['lavage-worked', 'gentle-seal', 'volumes-recorded'],
-      'sequence',
-    ),
-    practice(
-      'Arrange a supported procedural sequence',
-      'case',
-      'Order the procedural steps using their purposes and safety dependencies. This exercise represents reasoning, not a measured wedge or fluid return.',
-    ),
-    check('check', 'Identify what the procedure samples'),
-    debrief(['therapeutic-aspiration', 'common-errors']),
-    check('transfer', 'Adapt to a different sampling purpose'),
-  ],
-  'poor-return': [
-    teach(
-      'baseline',
-      'Establish the expected return and tolerance',
-      ['little-comes-back', 'where-to-look', 'going-to-plan'],
-      'baseline',
-    ),
-    {
-      ...teach('reasoning', 'Work through reduced return', ['two-more-causes', 'patient-first']),
-      grammar: true,
-    },
-    practice(
-      'Now interpret changing return and patient signals',
-      'case',
-      'Read the current observations before choosing what to do. Consider the suction path, position and patient tolerance; more fluid is not an automatic next action.',
-    ),
-    check('check', 'Interpret low return'),
-    debrief(['common-errors', 'protocol']),
-    check('transfer', 'Respond when the patient’s tolerance changes'),
-  ],
-  'protected-accessories': [
-    teach(
-      'instrument-state',
-      'Locate the accessory and its protection',
-      ['one-channel', 'team-signals', 'where-it-sits'],
-      'section',
-    ),
-    teach('exchange', 'Follow a protected exchange', [
-      'brush-exchange-worked',
-      'forceps-short-supported',
-      'en-bloc',
-      'needle-rule',
+    screen('when-to-stop', 'When to stop', 'Read the rule, then what else ends a lavage.', [
+      'when-to-stop',
     ]),
     {
       ...practice(
-        'Now manage the accessory states',
+        'Run a BAL and count the return',
+        'case',
+        'Work out what came back from each aliquot before you choose. A move that makes things worse plays out, then you decide again.',
+      ),
+      id: 'run-the-bal',
+      act: 'bal',
+    },
+    screen(
+      'processing',
+      'After the lavage',
+      'Read where the fluid goes, and what comes after it.',
+      ['processing', 'before-biopsy'],
+    ),
+    check('transfer', 'Secretions in the way'),
+    close(['common-errors']),
+  ],
+  'biopsy-and-specimens': [
+    hook('A tool in the channel, a pot on the trolley'),
+    check('check', 'Two good pieces of a tumor'),
+    screen(
+      'the-tools',
+      'Forceps and brush',
+      'Read how a tool travels, then how to take a biopsy you can see.',
+      ['through-the-channel', 'endobronchial-biopsy'],
+      { visual: 'section' },
+    ),
+    {
+      ...practice(
+        'Name four tool states',
+        'illustrated',
+        'Six tool tips in one picture. Click the one each question asks for.',
+      ),
+      id: 'name-the-states',
+      act: 'states',
+    },
+    {
+      ...practice(
+        'Run a brush exchange',
         'skill',
-        'Watch the protected exchange, then use the instrument state and controls to manage it yourself. Protect the accessory before the next movement and verify its state.',
+        'Watch the exchange once, then run it yourself. Your assistant’s report is not always right. Check the state before the brush moves.',
       ),
       demonstration: [
         {
@@ -669,8 +681,7 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
         },
         {
           command: { type: 'accessory', state: 'brush-sheathed' },
-          caption:
-            'The operator commands the sheath again. This time the model shows the bristles covered.',
+          caption: 'The operator commands the sheath again. This time the bristles are covered.',
         },
         {
           command: { type: 'verify-accessory' },
@@ -684,31 +695,30 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
         },
       ],
     },
-    check('check', 'Interpret the accessory’s position'),
-    debrief(['common-errors']),
-    check('transfer', 'Manage a changed accessory situation'),
-  ],
-  'specimen-pathway': [
-    teach('question-to-lab', 'Connect the clinical question to the specimen', [
-      'a-sample-leaves-the-room',
-      'what-travels',
-      'plan-from-the-question',
-      'container-before-sample',
-    ]),
-    teach(
-      'identity',
-      'Follow identity, site and handling to the laboratory',
-      ['identity-site-handling', 'what-a-result-can-say', 'quality-travels-with-the-result'],
-      'sort-example',
+    screen(
+      'beyond-the-view',
+      'The brush, and biopsy beyond the view',
+      'Read the two brushes, then transbronchial biopsy.',
+      ['brushes', 'transbronchial-biopsy'],
+      { visual: 'tool-states' },
     ),
-    practice(
-      'Build a specimen plan from the available options',
-      'case',
-      'Match each specimen task to the clinical question and the handling it requires. Keep unresolved laboratory policy explicit.',
+    screen('radiation', 'Radiation safety', 'Read the three ways to cut the dose.', ['radiation'], {
+      visual: 'radiation-safety',
+    }),
+    screen(
+      'specimens',
+      'Which specimen goes where',
+      'Read the container for each test.',
+      ['specimen-to-test'],
+      { visual: 'specimen-containers' },
     ),
-    check('check', 'Choose handling for a specimen'),
-    debrief(['common-errors']),
-    check('transfer', 'Interpret what another specimen can establish'),
+    {
+      ...practice('Route five specimens', 'case', 'Send each specimen to the container it needs.'),
+      id: 'route-the-specimens',
+      act: 'route',
+    },
+    check('transfer', 'A word from the assistant'),
+    close(['common-errors']),
   ],
   deterioration: [
     teach(

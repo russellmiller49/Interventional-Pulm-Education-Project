@@ -18,6 +18,10 @@ export const BRONCH_LEARN_VERSIONS: Readonly<Record<string, number>> = {
   'systematic-survey': 2,
   // Re-authored in the rewrite, section 10 (2026-10-09).
   'describe-findings': 2,
+  // Re-authored in the rewrite, section 11 (2026-10-10).
+  'washing-and-lavage': 2,
+  // New in the rewrite, section 12 (2026-10-10). Its record id carries a version from the start.
+  'biopsy-and-specimens': 2,
 }
 
 export function bronchLearnRecordId(sectionId: string): string {
