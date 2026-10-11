@@ -22,14 +22,11 @@ export const BRONCH_SECTION_IDS = [
   'systematic-survey',
   'describe-findings',
   'washing-and-lavage',
-  'poor-return',
-  'protected-accessories',
-  'specimen-pathway',
+  'biopsy-and-specimens',
   'deterioration',
   'bleeding-priorities',
   'scope-in-a-tube',
   'icu-physiology',
-  'honest-report',
   'what-completion-means',
 ] as const
 
@@ -53,14 +50,11 @@ export const BRONCH_SECTION_STAGE: Readonly<Record<BronchSectionId, CriticalCare
     'systematic-survey': 'application',
     'describe-findings': 'mechanism',
     'washing-and-lavage': 'mechanism',
-    'poor-return': 'application',
-    'protected-accessories': 'mechanism',
-    'specimen-pathway': 'application',
+    'biopsy-and-specimens': 'application',
     deterioration: 'application',
     'bleeding-priorities': 'application',
     'scope-in-a-tube': 'mechanism',
     'icu-physiology': 'application',
-    'honest-report': 'integration',
     'what-completion-means': 'integration',
   }
 
@@ -104,13 +98,7 @@ export const BRONCH_PHASES: readonly BronchPhase[] = [
     title: 'Describe and sample',
     description:
       'Describe what you see and report it, then wash, lavage, biopsy and send each specimen to its test.',
-    sectionIds: [
-      'describe-findings',
-      'washing-and-lavage',
-      'poor-return',
-      'protected-accessories',
-      'specimen-pathway',
-    ],
+    sectionIds: ['describe-findings', 'washing-and-lavage', 'biopsy-and-specimens'],
   },
   {
     id: 'respond',
@@ -122,7 +110,6 @@ export const BRONCH_PHASES: readonly BronchPhase[] = [
       'bleeding-priorities',
       'scope-in-a-tube',
       'icu-physiology',
-      'honest-report',
       'what-completion-means',
     ],
   },

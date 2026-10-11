@@ -87,8 +87,16 @@ describe('a finished scope card after the tip has moved on', () => {
 
   async function reachPractice(section: 'view-loss' | 'systematic-survey') {
     const { lesson } = await mountSection(section)
-    while (lesson.steps.find((step) => step.id === currentStepId())?.course?.kind !== 'practice') {
-      clickPrimary()
+    // The section's own scope task: a practice screen that names no further activity. Every card
+    // before it can be left.
+    const reached = () => {
+      const course = lesson.steps.find((step) => step.id === currentStepId())?.course
+      return course?.kind === 'practice' && !course.act
+    }
+    while (!reached()) {
+      const skip = document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-skip]')
+      if (skip) fireEvent.click(skip)
+      else clickPrimary()
       await settle()
     }
     return lesson
@@ -128,8 +136,9 @@ describe('a finished scope card after the tip has moved on', () => {
     for (const pattern of APPROVING) expect(cardText()).not.toMatch(pattern)
     expect(heading()?.getAttribute('data-goal-group')).toBe('history')
     expect(heading()?.textContent).toBe('On the record for this attempt')
-    expect(limit()).toContain('does not judge the bronchoscope image')
-    expect(limit()).toContain('nothing on this card says the view on the screen is usable')
+    // A rewritten section's card carries no note on what it does not judge; it says only where
+    // the tip is, apart from the record.
+    expect(limit()).not.toMatch(/usable|judge/i)
 
     // 5. Where the tip is now stays visible, and separate from the record.
     expect(limit()).toContain(`Where the tip is now: ${pilot.state.location.fullLabel}.`)
@@ -218,14 +227,14 @@ describe('a finished scope card after the tip has moved on', () => {
     // met ledger goal is a record of the attempt — never a reading of what is in view now.
     expect(claims().every((claim) => claim === 'history')).toBe(true)
     expect(heading()?.getAttribute('data-goal-group')).toBe('history')
-    pilot.withdrawTo('BI')
+    pilot.withdrawTo('LMSB')
     await settle()
-    expect(pilot.state.location.label).toBe('BI')
+    expect(pilot.state.location.label).toBe('LMSB')
     expect(goalStates().every((state) => state === 'true')).toBe(true)
     expect(claims().every((claim) => claim === 'history')).toBe(true)
     expect(heading()?.textContent).toBe('On the record for this attempt')
     expect(cardText()).not.toContain('Read from the scope right now')
-    expect(limit()).toContain('Where the tip is now: Bronchus intermedius.')
+    expect(limit()).toContain('Where the tip is now: Left main bronchus.')
   })
 
   it('shows the scripted hold from the clock, and finishes it on the learner’s own actions', async () => {

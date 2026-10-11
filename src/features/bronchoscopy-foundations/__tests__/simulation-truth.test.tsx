@@ -1,7 +1,7 @@
 /** @jest-environment node */
 import { carinaTasks as branchEntry } from '../test-support/carinaTasks'
 import { section as larynxAndEntry } from '../content/sections/larynx-and-entry'
-import { section as protectedAccessories } from '../content/sections/protected-accessories'
+import { section as protectedAccessories } from '../content/sections/biopsy-and-specimens'
 import { section as systematicSurvey } from '../content/sections/systematic-survey'
 import { section as viewLoss } from '../content/sections/view-loss'
 import { COURSE_FLOWS } from '../content/courseFlow'
@@ -46,7 +46,7 @@ const act = (section: typeof branchEntry) => {
 
 describe('the protected exchange demonstration reaches the state it narrates (A1)', () => {
   const view = act(protectedAccessories).view
-  const moves = COURSE_FLOWS['protected-accessories']!.find(
+  const moves = COURSE_FLOWS['biopsy-and-specimens']!.find(
     (chunk) => chunk.demonstration,
   )!.demonstration!
 
@@ -372,7 +372,9 @@ describe('a met goal says what kind of claim it is (A4, A5)', () => {
     // not a reading of the image, and the label may not imply one.
     expect(entry).not.toMatch(/without a clear view/i)
     expect(entry).toMatch(/while the model recorded a lost view/i)
-    expect(labels(act(viewLoss).observe!.goals)).not.toMatch(/usable view/i)
+    const lens = viewLoss.moreActs!.lens
+    if (lens.kind !== 'scope-lab') throw new Error('the lens task is a scope task')
+    expect(labels(lens.goals)).not.toMatch(/usable view/i)
     expect(labels(act(branchEntry).observe!.goals)).not.toMatch(/no change in depth/i)
   })
 
@@ -381,7 +383,7 @@ describe('a met goal says what kind of claim it is (A4, A5)', () => {
       ['larynx-and-entry', branchEntry],
       ['view-loss', viewLoss],
       ['larynx-and-entry', larynxAndEntry],
-      ['protected-accessories', protectedAccessories],
+      ['biopsy-and-specimens', protectedAccessories],
     ] as const) {
       const lab = act(section)
       for (const goals of [lab.goals, lab.observe?.goals ?? []]) {

@@ -1,13 +1,15 @@
-import { reachCourseStep } from '../test-support/courseHarness'
 import { cleanup } from '@testing-library/react'
 
 import { BRONCH_SECTION_IDS, type BronchSectionId } from '../content/pathway'
 import { bronchSection } from '../content/sections'
 import type { AuthoredItem } from '../content/types'
 import { BRONCH_STORAGE_KEY, createEmptyBronchRecord } from '../engine/learnProgress'
+import { inspectionReport } from '../engine/inspectionReport'
 import {
+  availableSurveySnapshot,
   BRONCH_SELF_PACED_STORAGE_KEY,
   parseBronchSelfPacedRecord,
+  readBronchSelfPacedRecord,
 } from '../engine/selfPacedProgress'
 import { installDom, mountSection } from '../test-support/stageHarness'
 
@@ -183,14 +185,15 @@ describe('what finishing this course means (BF-03)', () => {
   it('does not let a survey saved under the earlier record stand in for the learner’s own', async () => {
     const earlier = earlierRecordWithEverything()
     localStorage.setItem(BRONCH_STORAGE_KEY, earlier)
-    const { lesson } = await mountSection('honest-report')
-    const yourRecord = lesson.steps.find((step) => step.course?.learnerRecord)!
-    await reachCourseStep(lesson, yourRecord)
-    expect(
-      document.querySelector('[data-report-field="survey-source"] [data-report-field-evidence]')
-        ?.textContent,
-    ).toMatch(/No completed survey record/)
-    expect(document.querySelector('[data-report-field="survey-RB1"]')).toBeNull()
+    await mountSection('describe-findings')
+    // A report built from the record this course keeps has no survey to draw on.
+    const report = inspectionReport({
+      inspectionSnapshot: availableSurveySnapshot(readBronchSelfPacedRecord()),
+    })
+    expect(report.fields.find((field) => field.id === 'survey-source')!.evidence).toMatch(
+      /No completed survey record/,
+    )
+    expect(report.fields.some((field) => field.id === 'survey-RB1')).toBe(false)
     expect(
       parseBronchSelfPacedRecord(localStorage.getItem(BRONCH_SELF_PACED_STORAGE_KEY))
         ?.surveySnapshot ?? null,

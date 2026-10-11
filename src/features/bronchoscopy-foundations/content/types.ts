@@ -320,7 +320,7 @@ export interface BronchFindRow {
   /** Show the frame turned by this many degrees clockwise, as a rotated scope shows it. */
   readonly rotation?: 90 | 180 | 270
   /** What the outlines are, for the words around the image. Openings unless said otherwise. */
-  readonly marks?: 'openings' | 'structures'
+  readonly marks?: 'openings' | 'structures' | 'tools'
   /** Why, in landmarks and parentage. */
   readonly rationale: string
 }
