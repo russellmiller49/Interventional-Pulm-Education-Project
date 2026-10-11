@@ -75,6 +75,9 @@ jest.mock(
     BronchoscopyFoundationsReference: () => <div data-testid="bronch-reference" />,
   }),
 )
+jest.mock('@/features/bronchoscopy-foundations/components/BronchoscopyFoundationsClosing', () => ({
+  BronchoscopyFoundationsClosing: () => <div data-testid="bronch-closing" />,
+}))
 jest.mock('@/features/bronchoscopy-foundations/components/reference/AirwayStillAtlas', () => ({
   AirwayStillAtlas: () => <div data-testid="bronch-atlas" />,
 }))
@@ -83,6 +86,9 @@ import BronchoscopyFoundationsPage, { generateMetadata as overviewMetadata } fro
 import BronchoscopyFoundationsAssessPage, {
   generateMetadata as assessMetadata,
 } from './assess/page'
+import BronchoscopyFoundationsClosingPage, {
+  generateMetadata as closingMetadata,
+} from './learn/complete/page'
 import BronchoscopyFoundationsLearnPage, { generateMetadata as learnMetadata } from './learn/page'
 import BronchoscopyFoundationsPracticePage, {
   generateMetadata as practiceMetadata,
@@ -105,6 +111,7 @@ describe('bronchoscopy foundations route family', () => {
     for (const generate of [
       overviewMetadata,
       learnMetadata,
+      closingMetadata,
       practiceMetadata,
       assessMetadata,
       referenceMetadata,
@@ -231,5 +238,15 @@ describe('bronchoscopy foundations route family', () => {
       '/bronchoscopy-foundations/reference',
     )
     expect(screen.getByTestId('bronch-frame')).toHaveAttribute('data-locale', 'es')
+  })
+
+  it('renders the closing screen inside the frame, under the Learn nav item', async () => {
+    render(await BronchoscopyFoundationsClosingPage({ params: params('en') }))
+    expect(screen.getByTestId('bronch-closing')).toBeInTheDocument()
+    expect(screen.getByTestId('bronch-frame')).toHaveAttribute(
+      'data-active',
+      '/bronchoscopy-foundations/learn',
+    )
+    expect(screen.getByTestId('bronch-frame')).toHaveAttribute('data-activity', 'false')
   })
 })

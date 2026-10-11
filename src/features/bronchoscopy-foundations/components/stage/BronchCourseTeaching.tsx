@@ -2,8 +2,6 @@
 
 import { useId, useState } from 'react'
 import { TEACHING_TREE, airwayDisplayName, type TeachingTreeNode } from '../../content/airwayTree'
-import { useBronchoscopyFoundationsRecord } from '../useBronchoscopyFoundationsRecord'
-import { BRONCH_SECTION_IDS } from '../../content/sectionIds'
 import { MonitorPanel } from './MonitorPanel'
 import { GRAMMAR_TREND_RULE, BRONCH_GRAMMAR } from '../../content/grammar'
 import { fiveControlsLearnInputs } from '../../content/fiveControlsLearn'
@@ -67,9 +65,6 @@ export function BronchCourseTeaching({
             </section>
           ) : null}
         </div>
-      ) : null}
-      {section.id === 'what-completion-means' && chunk.id === 'evidence' ? (
-        <LearningRecordSummary />
       ) : null}
       {chunk.visual === 'tour' ? (
         <NormalAirwayTour
@@ -712,34 +707,5 @@ function TubeGeometryFigure() {
         space that is left.
       </figcaption>
     </figure>
-  )
-}
-
-/** What this self-paced course keeps on the device (BF-01): marks, never answers or grades. */
-function LearningRecordSummary() {
-  const { record } = useBronchoscopyFoundationsRecord()
-  return (
-    <section className={styles.worked} data-learning-record-summary>
-      <h3>What this course keeps on this device</h3>
-      <ul>
-        <li>
-          {record.visitedSectionIds.length} of {BRONCH_SECTION_IDS.length} sections opened.
-        </li>
-        <li>
-          {record.reviewedSectionIds.length} marked reviewed by you;{' '}
-          {record.reviewLaterSectionIds.length} marked to review later.
-        </li>
-        <li>
-          {record.surveySnapshot
-            ? 'A lower-airway survey you finished, kept for the report exercise.'
-            : 'No finished lower-airway survey.'}
-        </li>
-      </ul>
-      <p>
-        Answers, hints, retries and scope attempts are not saved, and nothing here is a grade.
-        Records kept by an earlier version of this course stay on this device unchanged and are not
-        used. Self-paced online learning does not establish procedural competence.
-      </p>
-    </section>
   )
 }

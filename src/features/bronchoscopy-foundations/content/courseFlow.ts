@@ -45,12 +45,6 @@ export interface CourseChunk {
   readonly tour?: readonly AirwayLabel[]
 }
 
-const teach = (
-  id: string,
-  title: string,
-  blocks: readonly string[],
-  visual: CourseVisual = 'none',
-): CourseChunk => ({ id, title, kind: 'teach', presentation: 'illustrated', blocks, visual })
 const practice = (
   title: string,
   presentation: CoursePresentation,
@@ -71,16 +65,6 @@ const check = (id: 'check' | 'transfer', title = 'Use what you learned'): Course
   presentation: 'case',
   blocks: [],
   visual: 'none',
-})
-const debrief = (blocks: readonly string[]): CourseChunk => ({
-  id: 'review',
-  title: 'Review the reasoning',
-  kind: 'debrief',
-  presentation: 'illustrated',
-  blocks,
-  visual: 'none',
-  anchor: true,
-  grammar: true,
 })
 
 // ── Rewritten sections ───────────────────────────────────────────────────────────────────────────
@@ -817,27 +801,6 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     ),
     check('transfer', 'A different mode'),
     close(['common-errors']),
-  ],
-  'what-completion-means': [
-    teach('evidence', 'Understand what your record can establish', [
-      'records-in-a-file',
-      'this-fellows-file',
-      'four-records',
-      'where-this-course-sits',
-    ]),
-    practice(
-      'Distinguish the kinds of learning evidence',
-      'case',
-      'Match each evidence statement to the claim it can support. Keep online participation, saved answers, physical skill and supervised clinical performance separate.',
-    ),
-    check('check', 'Interpret a learner’s available evidence'),
-    teach('supervised-next', 'Turn feedback into a next practice objective', [
-      'manual-tools',
-      'what-evidence-shows',
-      'next-objective',
-    ]),
-    debrief(['common-errors']),
-    check('transfer', 'Recognize the limits of transfer'),
   ],
 }
 

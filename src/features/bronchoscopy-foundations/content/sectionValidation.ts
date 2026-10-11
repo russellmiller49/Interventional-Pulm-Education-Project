@@ -16,7 +16,6 @@ import { MANIFEST_OBJECTIVES } from '../data/generated/objectives.generated'
 import { MANIFEST_QUESTION_SEEDS } from '../data/generated/questionSeeds.generated'
 import { sourceRefErrors, type ClaimClass, type SourceRef } from '../data/sources'
 import {
-  imageItemCounts,
   readable,
   REWRITE_CAPS,
   rewriteRuleErrors,
@@ -896,17 +895,9 @@ export function rewrittenSetErrors(
   const rewritten = sections.filter((section) => section.authoringContract === 2)
   if (rewritten.length < 2) return []
   const errors: string[] = []
-  const counts = rewritten.map(imageItemCounts)
-  const image = counts.reduce((total, count) => total + count.image, 0)
-  const total = counts.reduce((sum, count) => sum + count.total, 0)
-  // The image share is a target for the whole course: the planning and sedation sections carry
-  // few pictures and the anatomy and findings sections carry many. It fails the build once every
-  // section is rewritten; until then `check-section.ts --all --report` prints where it stands.
-  const courseRewritten = rewritten.length === sections.length
-  if (courseRewritten && total > 0 && image / total < REWRITE_CAPS.imageItemShare)
-    errors.push(
-      `${image} of the rewritten sections' ${total} questions show an image; at least a third.`,
-    )
+  // The image share is a target for the whole course. Faculty decided on 2026-10-11 that it
+  // blocks publication (`publishBlockers`) and does not fail the build; `check-section.ts --all
+  // --report` prints where it stands.
   const bank = rewritten.flatMap((section) => [
     ...sectionItems(section),
     ...sectionActs(section).flatMap(({ act }) =>

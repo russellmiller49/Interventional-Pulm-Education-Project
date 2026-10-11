@@ -1590,7 +1590,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       page,
     }) => {
       await page.setViewportSize(viewport)
-      const { step } = await stepTo(page, 'what-completion-means', 'prediction')
+      const { step } = await stepTo(page, 'ventilated-patient', 'prediction')
       if (step.interaction.kind !== 'prediction') throw new Error('not a prediction')
       const { item } = step.interaction.stage
       const wrong = item.choices.find((choice) => choice.plausibility === 'incorrect-mechanism')!
@@ -1616,7 +1616,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1204, height: 987 })
-    const { step } = await stepTo(page, 'what-completion-means', 'sort')
+    const { step } = await stepTo(page, 'ventilated-patient', 'sort')
     if (step.interaction.kind !== 'sort') throw new Error('not a sort')
     const { sort } = step.interaction
     const label = (id: string) => sort.origins.find((origin) => origin.id === id)!.label

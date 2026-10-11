@@ -27,7 +27,7 @@ import {
   resolveNumbers,
 } from '../content/numbers'
 import { BRONCHOSCOPY_FOUNDATIONS_RELEASE_STAGE } from '../content/release'
-import { publishBlockers, withResolvedNumbers } from '../content/sectionNumbers'
+import { imageShareBlockers, publishBlockers, withResolvedNumbers } from '../content/sectionNumbers'
 import { bronchSectionErrors } from '../content/sectionValidation'
 import { BRONCH_SECTIONS } from '../content/sections'
 import { section as biopsyAndSpecimens } from '../content/sections/biopsy-and-specimens'
@@ -139,10 +139,33 @@ describe('the numbers register', () => {
       ...withBlock({ body: `Biopsy needs at least ${num('platelets-biopsy')}.` }),
     }
     expect(publishBlockers('unlisted-preview', [authored])).toEqual([])
-    expect(publishBlockers('published', [authored])).toEqual([
+    expect(publishBlockers('published', [authored])).toContain(
       'right-side uses "platelets-biopsy", which faculty has not signed.',
-    ])
+    )
     expect(publishBlockers(BRONCHOSCOPY_FOUNDATIONS_RELEASE_STAGE, BRONCH_SECTIONS)).toEqual([])
+  })
+
+  it('blocks publication, not the build, while too few questions show an image (faculty decision, 2026-10-11)', () => {
+    // A question with no picture, three times over: none of the three shows an image.
+    const wordsOnly = [REWRITTEN_FIXTURE, REWRITTEN_FIXTURE].map((section) => ({
+      ...section,
+      act: {
+        kind: 'sort' as const,
+        outcomeId: 'x',
+        sort: { id: 's', prompt: '', origins: [], rows: [], sourceRefs: [] },
+      },
+      moreActs: undefined,
+      prediction: { ...section.prediction, media: undefined, choiceAirways: undefined },
+      transfer: { ...section.transfer, media: undefined, choiceAirways: undefined },
+      practice: [],
+    })) as readonly BronchSectionDefinition[]
+    expect(imageShareBlockers(wordsOnly)).toEqual([
+      "0 of the course's 4 questions show an image; at least a third.",
+    ])
+    expect(publishBlockers('unlisted-preview', wordsOnly)).toEqual([])
+    expect(publishBlockers('published', wordsOnly)).toContain(imageShareBlockers(wordsOnly)[0])
+    // The course itself: reported while it is a preview, and the registry still loads.
+    expect(BRONCH_SECTIONS.every((section) => section.authoringContract === 2)).toBe(true)
   })
 })
 

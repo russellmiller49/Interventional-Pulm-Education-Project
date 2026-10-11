@@ -1,6 +1,6 @@
 # Bronchoscopy Foundations rewrite: handoff
 
-Written 2026-10-08, last updated 2026-10-10 (after section 15, the last section). Start the next session from this file.
+Written 2026-10-08, last updated 2026-10-11 (after the hub and the closing screen). Start the next session from this file.
 
 ## Why this work exists
 
@@ -13,37 +13,41 @@ supervisor" answers.
 
 ## Where things stand
 
-The rewrite through section 12 is on `main` (merged 2026-10-10, `12d2c8ca`): #349, #350, #352,
-#355, #358, #359, #360, #362, #364, #368, #369, #371, #373, #374 and #375, with #351 (the
-3D-retry fix) and #376 (the authoring-rules test). #348 is closed.
+All fifteen sections are on `main` (`1c225e79`, 2026-10-11): #349 to #375 were merged on
+2026-10-10 with #351 and #376, and #377 (section 13) and #378 (section 15, with capstone C09)
+the next day. #348 is closed.
 
-Two PRs are open and not yet reviewed:
+One PR is open:
 
 | PR   | Branch                  | State                                                                                                              |
 | ---- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| #377 | `claude/bf-rewrite-s13` | Draft, targets `main`. Section 13, when the patient deteriorates, rewritten; names only, no rescue doses.          |
-| #378 | `claude/bf-rewrite-s15` | Draft, stacked on #377. Section 15, the ventilated patient (new id); two sections retired; the pressure-limit fix. |
+| #NEW | `claude/bf-rewrite-hub` | Draft, targets `main`. The hub rewritten, a closing screen, `what-completion-means` retired, the image rule moved. |
 
-Merge #377, then #378. The work is in the worktree
-`…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s15`. Until both
-are merged, branch the next change from that branch and stack its PR on #378; afterwards branch
-from `origin/main`. The local copies of the merged stack branches are behind origin.
+The work is in the worktree `…-Worktrees/claude-bf-pre-review-04-20261007`, which is on
+`claude/bf-rewrite-hub`. Branch the next change from `origin/main` once #NEW is merged. The
+local copies of the merged stack branches are behind origin.
+
+A reader reviewed sections 13 and 15 against `docs/teaching-first-rules.md` before the merge and
+found no blocking problem. Its teaching suggestions went to Russell; none is applied. Ask him
+before acting on them.
 
 ## Start here next session
 
 1. Read this file, then the plan's rules and the brief for the section you are writing.
-2. All fifteen sections are written. Next: the hub and the closing screen (item 6 under "What is
-   left"), which retires `what-completion-means`, the last first-contract section.
+2. The fifteen sections, the hub and the closing screen are written, and no first-contract
+   section is left. Next: practice and assessment (item 7 under "What is left"), starting with
+   the image bank, since the image rule now blocks publication.
 3. Things to know before that change:
-   - `what-completion-means` is the fixture for the first-contract sort and prediction tests
-     (`stage-host.test.tsx`, `actions-and-feedback.test.tsx`, `self-paced-summaries.test.tsx`).
-     Move them to the matching activity in `pre-use-check`.
-   - Its objectives M18-O1 to O5 are core. Home them or list them in
-     `RETIRED_OBJECTIVE_REASONS`.
-   - Once every section is rewritten, `sectionValidation.ts` fails the build unless a third of
-     the questions show an image. The course is at 29 of 99. Retiring the last first-contract
-     section turns that gate on, so the image bank (item 7) or a decision on the gate comes
-     first.
+   - The course shows an image in 29 of 97 questions. A third is 33 of 97, or five more image
+     questions. `imageShareBlockers` in `content/sectionNumbers.ts` reports it;
+     `publishBlockers` refuses the `published` stage while it stands.
+   - First-contract code is now dead and still in the tree: the old fields in `content/types.ts`
+     (`recognizeTitle`, `why`, `newConcept`, `incrementSentence`, `controlStrip`,
+     `modelBoundary`, `steps`), the `!rewritten` branches in `sectionValidation.ts`,
+     `BronchStageHost.tsx`, `BronchCourseTeaching.tsx` and `BronchPilotTeaching.tsx`, the
+     first-contract verdict frames, and the report-only branch of `check-section.ts`. Removing
+     it is its own change; `authoringContract: 2` can then go too.
+   - `TubeCrossSection.tsx` and the scope pane's tube mode are unused. Ask before removing them.
 4. Work one section per session. Get a digest of the old section from a subagent instead of
    reading it into context, then write the new file. The notes under each section below say
    what the checks will refuse.
@@ -59,6 +63,8 @@ Owner decisions so far (2026-10-08):
 - The right lung's prediction stays as reworded in `b06c9009`. It was ambiguous before; see the
   lesson under "Traps".
 - The fellow-session gate on the remaining sections is removed.
+- 2026-10-11, hub and closing screen: the one-third image rule blocks publication and no
+  longer fails the build. The printable faculty observation form is left for a later change.
 - 2026-10-10, section 13: rescue drugs are named and no dose is printed, lipid emulsion
   included. Review-register R14 stands. This answers plan decision 4 for section 13.
 - Methylene blue: the expert panel's regimen (signed). Flumazenil and naloxone: the product-label
@@ -92,7 +98,7 @@ npx tsx scripts/bronchoscopy-foundations/check-section.ts <section-id>
 In the plan's order. Russell removed the fellow-session gate on 2026-10-08: the 13 remaining
 sections no longer wait for sessions with the pilot.
 
-1. **Get #377 and #378 reviewed and merged.** Everything before them is on `main`.
+1. **Get #NEW reviewed and merged.** Everything before it is on `main`.
 2. **Still open from the pilot, for Russell:**
    - Confirm the bleeding first-move card, especially step 2 (suction).
    - Confirm three orientation statements in the right lung's image questions (carina: membranous
@@ -125,7 +131,7 @@ sections no longer wait for sessions with the pilot.
    `systematic-survey`, `describe-findings`) on 2026-10-09, and section 11
    (`washing-and-lavage`), section 12 (`biopsy-and-specimens`) and section 13
    (`deterioration`) on 2026-10-10, and section 15 (`ventilated-patient`) the same day. None
-   remains. The course lists 16 sections: the fifteen and `what-completion-means`.
+   remains. The course lists the fifteen sections.
    Notes from section 15:
    - `scope-in-a-tube` and `icu-physiology` are retired. M16-O1, O2, O5 and O6 are homed in
      section 15; M16-O3 (the procedure taxonomy) and M16-O4 (radiation and separate training)
@@ -413,8 +419,27 @@ sections no longer wait for sessions with the pilot.
      `biopsy-and-specimens` and `ventilated-patient`. Apply the content fixes the briefs name
      (foreign-body aspiration is an indication; site choice from the CT; raising pressure limits is
      recommended, not unsafe).
-6. **Rewrite the hub and the closing screen.** The hub still says "authored geometry". It carries
-   the course's one boundary statement.
+6. **The hub and the closing screen: done (2026-10-11).**
+   - The hub's copy is rewritten and carries one statement of what an online course cannot
+     show. "Authored geometry", "model limits" and the paragraph on optional questions are gone.
+   - The closing screen is `/bronchoscopy-foundations/learn/complete`
+     (`BronchoscopyFoundationsClosing.tsx`): what each phase covered, what the course cannot
+     show, four things to do next, and a count of sections opened and reviewed on this device.
+     The last section's end card and the hub's all-reviewed button both lead to it.
+   - `what-completion-means` is retired. M18-O1 to O5 are in `RETIRED_OBJECTIVE_REASONS`. A
+     saved place or a link that names it opens section 15, as the forward map already said.
+   - The module frame's notice on every page lost "authored teaching model", "anatomy profile"
+     and "No dose … is a recommendation", which the taught numbers contradict. It now reads
+     "For education only. Follow your device’s instructions for use and your local protocol."
+   - The helpers `teach` and `debrief` are removed from `courseFlow.ts`; nothing used them.
+   - Tests that used the old section now use `ventilated-patient` (a sort, a prediction with a
+     situation, and the last section). The walk in `stage-host.test.tsx` runs the transfer
+     before the closing checklist, as every rewritten section does.
+   - Still course-talk outside the lessons, not touched: the atlas page's "Authored teaching
+     media, pending review", and the practice landing's empty state.
+   - For Russell to confirm: the hub's four paragraphs; the closing screen's wording, above all
+     "What this course cannot show" and the four next steps; the shorter notice on every page;
+     retiring M18-O1 to O5.
 7. **Practice and assessment:** the image bank, about 40 vignettes with numbers, four evolving
    cases, mixed sets of ten, the eight integrated cases with labels hidden until after the answer,
    and about 25 objectives replacing the 108. Self-check mode is plan decision 5, not yet made.
@@ -444,9 +469,8 @@ npx eslint src/features/bronchoscopy-foundations
 BRONCH_FOUNDATIONS_BASE_URL=http://localhost:3120 npx playwright test -c playwright.bronchoscopy-foundations.config.ts -g "<title>"
 ```
 
-State at handoff (section 13): 40 Jest suites pass; type check and lint are clean; the
-end-to-end cases that touch section 13 pass against the dev server on port 3133 (21 cases). The
-full end-to-end suite has not been run. Nine Jest suites in other features fail in this checkout and were not touched by this work.
+State at handoff (hub and closing screen): 40 Jest suites pass; type check and lint are clean;
+the full end-to-end suite passes against the dev server on port 3133.
 
 ## Traps
 

@@ -26,7 +26,6 @@ export const BRONCH_SECTION_IDS = [
   'deterioration',
   'bleeding-priorities',
   'ventilated-patient',
-  'what-completion-means',
 ] as const
 
 export type BronchSectionId = (typeof BRONCH_SECTION_IDS)[number]
@@ -53,7 +52,6 @@ export const BRONCH_SECTION_STAGE: Readonly<Record<BronchSectionId, CriticalCare
     deterioration: 'application',
     'bleeding-priorities': 'application',
     'ventilated-patient': 'application',
-    'what-completion-means': 'integration',
   }
 
 /**
@@ -103,12 +101,7 @@ export const BRONCH_PHASES: readonly BronchPhase[] = [
     title: 'Respond',
     description:
       'Your first moves when the patient deteriorates or bleeds, and bronchoscopy in a ventilated patient.',
-    sectionIds: [
-      'deterioration',
-      'bleeding-priorities',
-      'ventilated-patient',
-      'what-completion-means',
-    ],
+    sectionIds: ['deterioration', 'bleeding-priorities', 'ventilated-patient'],
   },
 ]
 
