@@ -272,7 +272,8 @@ describe('the authored scope views', () => {
           })
       }
     }
-    expect(views).toBeGreaterThanOrEqual(15)
+    // Twelve since the tube task was cut with section 15 (its three views went with it).
+    expect(views).toBeGreaterThanOrEqual(12)
   })
 })
 

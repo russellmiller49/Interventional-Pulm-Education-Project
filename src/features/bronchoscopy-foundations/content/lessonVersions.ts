@@ -24,6 +24,8 @@ export const BRONCH_LEARN_VERSIONS: Readonly<Record<string, number>> = {
   'biopsy-and-specimens': 2,
   // Re-authored in the rewrite, section 13 (2026-10-10).
   deterioration: 2,
+  // New in the rewrite, section 15 (2026-10-10). Its record id carries a version from the start.
+  'ventilated-patient': 2,
 }
 
 export function bronchLearnRecordId(sectionId: string): string {

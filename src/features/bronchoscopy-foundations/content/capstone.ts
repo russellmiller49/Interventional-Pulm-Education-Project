@@ -304,7 +304,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
     situation:
       'In a model ICU case, a bronchoscopy is under way through the endotracheal tube of an adult ventilated on a volume-targeted mode. The scope went through the tube without resistance. Since then the peak airway pressure has risen and the exhaled tidal volume has fallen. The oxygen saturation is unchanged.',
     critical: false,
-    pairedSectionId: 'scope-in-a-tube',
+    pairedSectionId: 'ventilated-patient',
     item: {
       id: 'C09',
       itemType: 'management-decision',

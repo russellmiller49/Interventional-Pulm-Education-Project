@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, within } from '@testing-library/react'
 import { BronchSourceList } from '../components/stage/BronchSourceList'
 import { BronchoscopyFoundationsReference } from '../components/reference/BronchoscopyFoundationsReference'
 import { BRONCH_GRAMMAR, grammarRow, grammarRowControl, type GrammarRow } from '../content/grammar'
-import { BRONCH_SECTION_IDS, bronchSection, type BronchSectionId } from '../content/pathway'
+import { BRONCH_SECTION_IDS, bronchSection } from '../content/pathway'
 import { bronchStageSources } from '../content/stageSources'
 import {
   bronchSourceClass,
@@ -15,13 +15,7 @@ import {
   TRANSCRIPT_SENTENCE,
 } from '../data/sources'
 import { MANIFEST_SOURCES } from '../data/generated/sources.generated'
-import {
-  clickPrimary,
-  currentStepId,
-  installDom,
-  mountSection,
-  settle,
-} from '../test-support/stageHarness'
+import { clickPrimary, installDom, mountSection, settle } from '../test-support/stageHarness'
 
 /**
  * BF-PRE-REVIEW-02, sources and Reading the view (fellow walkthrough A8, A10, SUP-02).
@@ -280,7 +274,7 @@ describe('focus scrolling reserves the continuation bar as measured (A9)', () =>
         }
       })
     try {
-      const { lesson } = await mountSection('icu-physiology')
+      const { lesson } = await mountSection('ventilated-patient')
       const root = document.documentElement
       // A reading step pins the bar: its measured height plus a small gap, never a fixed 19rem.
       expect(lesson.steps[0].course?.presentation).toBe('illustrated')
@@ -308,12 +302,8 @@ describe('focus scrolling reserves the continuation bar as measured (A9)', () =>
   })
 })
 
-/**
- * The sections the walkthrough found printing Reading the view as loose lines. A rewritten section
- * (the right lung, bleeding, deterioration) closes on its checklist and no longer prints the table
- * in the lesson; the Reference keeps the whole table. `scope-in-a-tube` is the last one that does.
- */
-const GRAMMAR_SECTIONS: readonly BronchSectionId[] = ['scope-in-a-tube']
+// No lesson prints Reading the view any more: every rewritten section closes on its checklist.
+// The Reference keeps the whole table, and the tests below hold it there.
 
 function cellTexts(row: Element) {
   const text = (selector: string) =>
@@ -374,41 +364,6 @@ describe('Reading the view is one table in the lessons and the Reference (A10)',
       if (before(row) !== null) expect(grammarRowControl(row)).toBe(before(row))
     expect(grammarRowControl(grammarRow('lens-obscured'))).toBe('Suction')
   })
-
-  it.each(GRAMMAR_SECTIONS)(
-    'the %s lesson shows its rows as a table at every step that shows them',
-    async (sectionId) => {
-      const { lesson } = await mountSection(sectionId)
-      const rows = BRONCH_GRAMMAR.filter((row) =>
-        bronchSection(sectionId).grammarRowIds.includes(row.id),
-      )
-      const grammarSteps = lesson.steps
-        .map((step, index) => ({ step, index }))
-        .filter(({ step }) => step.course?.grammar)
-      expect(grammarSteps.length).toBeGreaterThan(0)
-      let seen = 0
-      for (const [index, step] of lesson.steps.entries()) {
-        expect(currentStepId()).toBe(step.id)
-        if (step.course?.grammar) {
-          const block = document.querySelector('[data-teaching-block="grammar"]')
-          expectGrammarTable(block?.querySelector('table[data-grammar]') ?? null, rows)
-          // Named by the block's own heading, and the trend rule still printed under it.
-          const table = block!.querySelector('table')!
-          expect(document.getElementById(table.getAttribute('aria-labelledby')!)).toHaveTextContent(
-            'Connect the observation to the problem',
-          )
-          expect(block!.querySelector('[data-grammar-trend-rule]')).not.toBeNull()
-          seen += 1
-        }
-        if (index === lesson.steps.length - 1) break
-        const skip = document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-skip]')
-        if (skip) fireEvent.click(skip)
-        else clickPrimary()
-        await settle()
-      }
-      expect(seen).toBe(grammarSteps.length)
-    },
-  )
 
   it('renders the Reference from the same rows and cells, with where each is taught', () => {
     render(<BronchoscopyFoundationsReference />)

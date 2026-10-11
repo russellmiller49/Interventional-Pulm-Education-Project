@@ -131,12 +131,4 @@ export const SCOPE_RECIPES: Partial<Record<BronchSectionId, ScopeRecipe>> = {
       p.send({ type: 'accessory-move', to: 'in-channel' })
     },
   },
-  'scope-in-a-tube': {
-    act: (p) => {
-      p.advanceUntil(() => p.state.events.includes('reached-carina'))
-    },
-    observe: (p) => {
-      p.advanceUntil(() => p.state.events.includes('tube-exited'))
-    },
-  },
 }

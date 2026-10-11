@@ -21,7 +21,6 @@ import {
   BRONCH_GRAMMAR,
   grammarRowControl,
 } from '../src/features/bronchoscopy-foundations/content/grammar'
-import { bronchSection } from '../src/features/bronchoscopy-foundations/content/pathway'
 import { bronchStageSources } from '../src/features/bronchoscopy-foundations/content/stageSources'
 import {
   SOURCE_BY_ID,
@@ -767,7 +766,12 @@ for (const viewport of [
   )
 }
 
-for (const id of ['pre-use-check', 'deterioration', 'describe-findings'] as const) {
+for (const id of [
+  'pre-use-check',
+  'deterioration',
+  'describe-findings',
+  'ventilated-patient',
+] as const) {
   test('complete course workspace through native responses: ' + id, async ({ page }, info) => {
     const lesson = await openSection(page, id)
     for (const step of lesson.steps) {
@@ -1358,9 +1362,8 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
           ).toBe(true)
       })
 
-  // The rewritten sections (the right lung, bleeding, deterioration) close on their checklist and
-  // do not print the table in the lesson; the Reference keeps all of it.
-  const GRAMMAR_SECTIONS = ['scope-in-a-tube'] as const
+  // No lesson prints the table any more: every rewritten section closes on its checklist. The
+  // Reference keeps all of it.
 
   async function expectGrammarRows(table: Locator, rowIds: readonly string[]) {
     await expect(table.locator('tbody tr[data-grammar-row]')).toHaveCount(rowIds.length)
@@ -1376,36 +1379,8 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
     }
   }
 
-  test('Reading the view is a table at every lesson occurrence and matches the Reference', async ({
-    page,
-  }) => {
-    test.setTimeout(300_000)
+  test('Reading the view is a table in the Reference, with every row', async ({ page }) => {
     await page.setViewportSize({ width: 1204, height: 987 })
-    let occurrences = 0
-    for (const id of GRAMMAR_SECTIONS) {
-      const lesson = await openSection(page, id)
-      const rowIds = bronchSection(id).grammarRowIds
-      for (const [index, step] of lesson.steps.entries()) {
-        if (step.course?.grammar) {
-          const table = page.getByRole('table', { name: 'Connect the observation to the problem' })
-          await expect(table).toBeVisible()
-          await expect(table.locator('thead th')).toHaveText([
-            'You see',
-            'Where it lives',
-            'Shortlist',
-            'Which control, if any',
-          ])
-          await expectGrammarRows(table, rowIds)
-          occurrences += 1
-        }
-        if (index === lesson.steps.length - 1) break
-        if (await skip(page).count()) await skip(page).click()
-        else await primary(page).click()
-        await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[index + 1].id)
-      }
-    }
-    // One section, one place. A rewritten section no longer prints the table in the lesson.
-    expect(occurrences).toBe(1)
     await page.goto(base + '/reference')
     const reference = page.locator('#reading-the-view table[data-grammar]')
     await expect(reference.locator('thead th')).toHaveText([
@@ -1430,12 +1405,12 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       page,
     }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await stepTo(page, 'scope-in-a-tube', 'read', { grammar: true })
+      await page.goto(base + '/reference')
       if (viewport.text === 200)
         await page.evaluate(() => {
           document.documentElement.style.fontSize = '200%'
         })
-      const table = page.getByRole('table', { name: 'Connect the observation to the problem' })
+      const table = page.locator('#reading-the-view table[data-grammar]')
       await table.scrollIntoViewIfNeeded()
       const firstRow = table.locator('tbody tr').first()
       await expect(firstRow.locator('[data-grammar-cell-label]').first()).toBeVisible()
@@ -1444,13 +1419,13 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
         'Where it lives',
         'Shortlist',
         'Which control, if any',
+        'Taught in',
       ])
       expect((await table.locator('thead').boundingBox())?.width ?? 0).toBeLessThanOrEqual(1)
       const fits = await table.evaluate(
         (element) => element.scrollWidth <= element.parentElement!.clientWidth + 1,
       )
       expect(fits).toBe(true)
-      expect(await courseFits(page)).toBe(true)
       if (viewport.text === 100)
         expect(
           await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
@@ -1463,7 +1438,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       const rowHeaders = nodes
         .filter((node) => node.role?.value === 'rowheader')
         .map((node) => node.name?.value ?? '')
-      for (const id of bronchSection('scope-in-a-tube').grammarRowIds)
+      for (const id of BRONCH_GRAMMAR.map((row) => row.id))
         expect(
           rowHeaders.some((name) =>
             name.includes(BRONCH_GRAMMAR.find((row) => row.id === id)!.see),
@@ -2176,38 +2151,6 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
       expect(focus.top).toBeGreaterThanOrEqual(focus.header - 1)
       expect(focus.bottom).toBeLessThanOrEqual(viewport.height + 1)
     })
-
-  test('S20: the scope in the tube is drawn in cross-section, to scale, from the readouts’ numbers', async ({
-    page,
-  }, info) => {
-    await page.setViewportSize({ width: 1204, height: 987 })
-    for (const [stepId, tube, scope, mm2, share] of [
-      ['scope-in-a-tube-flow-v1-application', 8, 6, '22 mm²', '0.44'],
-      ['scope-in-a-tube-flow-v1-changed-tube', 7.5, 6.2, '14 mm²', '0.32'],
-    ] as const) {
-      await goToStep(page, 'scope-in-a-tube', stepId)
-      await ready(page)
-      const figure = page.locator('[data-tube-cross-section]')
-      await figure.scrollIntoViewIfNeeded()
-      const ratio = await figure.evaluate((element) => {
-        const outer = element
-          .querySelector('[data-cross-section-tube-radius]')!
-          .getBoundingClientRect()
-        const inner = element
-          .querySelector('[data-cross-section-scope-radius]')!
-          .getBoundingClientRect()
-        return { ratio: inner.width / outer.width, outer: outer.width }
-      })
-      expect(ratio.ratio).toBeCloseTo(scope / tube, 2)
-      expect(ratio.outer).toBeGreaterThan(120)
-      await expect(page.locator('[data-readout="annularAreaMm2"] dd')).toContainText(mm2)
-      await expect(page.locator('[data-readout="annularAreaFraction"] dd')).toContainText(share)
-      await expect(figure).toContainText(mm2)
-      await expect(figure).toContainText(`${share} of the tube’s lumen`)
-      await expect(figure).toContainText('not a ventilation, airway-fit or device recommendation')
-      await page.screenshot({ path: info.outputPath(`s20-${tube}-${scope}.png`) })
-    }
-  })
 
   /* ------------------------------------------------------------------ *
    * Independent review of this batch: four repairs
