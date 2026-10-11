@@ -1,10 +1,10 @@
 /** @jest-environment node */
-import type { AirwayLabel, ScopeGoal, ScopeViewSpec } from '../components/scope/types'
-import { section as branchEntry } from '../content/sections/branch-entry'
+import type { ScopeGoal, ScopeViewSpec } from '../components/scope/types'
+import { carinaTasks as branchEntry } from '../test-support/carinaTasks'
 import { section as fiveControls } from '../content/sections/five-controls'
 import { section as larynxAndEntry } from '../content/sections/larynx-and-entry'
 import { section as leftSide } from '../content/sections/left-side'
-import { section as protectedAccessories } from '../content/sections/protected-accessories'
+import { section as protectedAccessories } from '../content/sections/biopsy-and-specimens'
 import { section as rightSide } from '../content/sections/right-side'
 import { section as scopeInATube } from '../content/sections/scope-in-a-tube'
 import { section as systematicSurvey } from '../content/sections/systematic-survey'
@@ -13,6 +13,7 @@ import type { BronchSectionDefinition, ScopeLabAct } from '../content/types'
 import { createScopeCase, type ScopeCase } from '../engine/scope/scopeCase'
 import { breathPhaseAt, LARYNX_GLOTTIS_MM } from '../engine/scope/scopeScripts'
 import { ScopePilot } from '../test-support/scopePilot'
+import { SCOPE_RECIPES } from '../test-support/scopeRecipes'
 import {
   ScopeDriver,
   centerlineTubeCollider,
@@ -46,16 +47,21 @@ describe('authored scope-lab steps can be completed with the learner’s control
     bench.send({ type: 'deflect', deg: 45 })
     bench.send({ type: 'rotate', deg: 45 })
     expect(bench.goals(act.goals)).toEqual(allMet(act.goals))
-    const observe = act.observe!
-    const o = pilot(observe.view ?? act.view, null)
-    o.advance()
-    o.withdraw()
+    // Depth and suction are bench activities of their own in the rewritten section.
+    const depth = fiveControls.moreActs!.depth
+    const suction = fiveControls.moreActs!.suction
+    if (depth.kind !== 'scope-lab' || suction.kind !== 'scope-lab') throw new Error('bench tasks')
+    const d = pilot(depth.view, null)
+    d.send({ type: 'advance', mm: 12 })
+    d.send({ type: 'advance', mm: -12 })
+    expect(d.goals(depth.goals)).toEqual(allMet(depth.goals))
+    const o = pilot(suction.view, null)
     o.send({ type: 'suction', on: true })
     o.send({ type: 'suction', on: false })
-    expect(o.goals(observe.goals)).toEqual(allMet(observe.goals))
+    expect(o.goals(suction.goals)).toEqual(allMet(suction.goals))
   })
 
-  it('branch-entry: to the carina, into each main bronchus, and a held view', () => {
+  it('the carina tasks: to the carina, into each main bronchus, and a held view', () => {
     const act = actOf(branchEntry)
     const p = pilot(act.view)
     p.goInto('RMSB')
@@ -70,7 +76,7 @@ describe('authored scope-lab steps can be completed with the learner’s control
     expect(o.goals(observe.goals)).toEqual(allMet(observe.goals))
   })
 
-  it('branch-entry: moving during the hold is drift', () => {
+  it('the carina tasks: moving during the hold is drift', () => {
     const observe = actOf(branchEntry).observe!
     const o = pilot(observe.view ?? actOf(branchEntry).view)
     o.withdraw()
@@ -85,8 +91,9 @@ describe('authored scope-lab steps can be completed with the learner’s control
     expect(p.state.signals.view).toBe('clear')
     p.advanceUntil(() => p.state.events.includes('reached-carina'))
     expect(p.goals(act.goals)).toEqual(allMet(act.goals))
-    const observe = act.observe!
-    const o = pilot(observe.view ?? act.view)
+    const observe = viewLoss.moreActs!.lens
+    if (observe.kind !== 'scope-lab') throw new Error('the lens task is a scope task')
+    const o = pilot(observe.view)
     expect(o.state.signals.view).toBe('contaminated')
     o.send({ type: 'clear-lens' })
     expect(o.goals(observe.goals)).toEqual(allMet(observe.goals))
@@ -152,33 +159,25 @@ describe('authored scope-lab steps can be completed with the learner’s control
     expect(p.goals(act.goals)).toEqual(allMet(act.goals))
   })
 
-  it('systematic-survey: every airway accounted for, the smear cleared, the narrowed one recorded', () => {
+  it('systematic-survey: every segment of both lungs seen and recorded, the narrowed one not reachable', () => {
     const act = actOf(systematicSurvey)
     const p = pilot(act.view)
-    const inspect = (label: AirwayLabel) => {
-      p.goInto(label)
-      if (p.state.signals.view === 'contaminated') p.send({ type: 'clear-lens' })
-      p.goDeep(label)
-      p.send({ type: 'declare', airway: label, status: 'inspected' })
-    }
-    inspect('RLL')
-    inspect('RB6')
-    p.withdrawTo('RLL')
-    inspect('RB7')
-    p.withdrawTo('RLL')
-    inspect('RB8')
-    p.withdrawTo('RLL')
-    inspect('RB9')
-    p.withdrawTo('RLL')
-    p.lookAt('RB10')
-    p.send({ type: 'declare', airway: 'RB10', status: 'not-safely-accessible' })
+    SCOPE_RECIPES['systematic-survey']!.act(p)
     expect(p.state.events).toContain('survey-complete')
-    p.withdrawToEdge(scopeCaseOrigin('RLL'))
-    p.goInto('RB6')
+    expect(p.state.events).not.toContain('entry-refused')
     expect(p.goals(act.goals)).toEqual(allMet(act.goals))
   })
 
-  it('protected-accessories: expose only beyond the tip; retrieve only once the image agrees', () => {
+  it('systematic-survey: the record offers three statuses under this view’s own words', () => {
+    const record = actOf(systematicSurvey).view.ledger?.record
+    expect(record?.offer).toEqual([
+      { status: 'inspected', word: 'Seen' },
+      { status: 'not-observed', word: 'Not seen' },
+      { status: 'not-safely-accessible', word: 'Not reachable' },
+    ])
+  })
+
+  it('biopsy-and-specimens: expose only beyond the tip; retrieve only once the image agrees', () => {
     const act = actOf(protectedAccessories)
     const p = pilot(act.view)
     p.send({ type: 'accessory-move', to: 'in-channel' })
@@ -193,7 +192,7 @@ describe('authored scope-lab steps can be completed with the learner’s control
     expect(p.goals(act.goals)).toEqual(allMet(act.goals))
   })
 
-  it('protected-accessories: an exposed accessory is never moved through the channel (A12)', () => {
+  it('biopsy-and-specimens: an exposed accessory is never moved through the channel (A12)', () => {
     const view = actOf(protectedAccessories).view
     const early = pilot(view)
     early.send({ type: 'accessory-move', to: 'in-channel' })
@@ -227,10 +226,6 @@ describe('authored scope-lab steps can be completed with the learner’s control
     expect(bent.state.events).toContain('wall-contact')
   })
 })
-
-function scopeCaseOrigin(label: AirwayLabel): number {
-  return teachingCase().originEdge.get(label)!
-}
 
 describe('free drive against a lumen', () => {
   const file = readTeachingGraphFile()

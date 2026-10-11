@@ -82,6 +82,8 @@ export interface CopySurface {
   readonly kind: CopyKind
   /** As authored: register tokens are still in it. */
   readonly text: string
+  /** The surface states a case’s own arithmetic (a dose ledger), so its digits are the case’s. */
+  readonly caseValues?: true
 }
 
 /** The copy as the learner reads it; a token with no value yet reads as one word. */
@@ -199,16 +201,20 @@ function actSurfaces(where: string, act: BronchAct): CopySurface[] {
         { where: `${where} rationale`, kind: 'explanation', text: act.sequence.rationale },
       ]
     case 'ledger':
-      return [
-        ...teaching('prompt', act.ledger.prompt),
-        ...teaching('note', act.ledger.boundary),
-        ...act.ledger.rows.flatMap((row) => [
-          ...teaching(`row ${row.id}`, row.label),
-          ...teaching(`row ${row.id} detail`, row.detail),
-        ]),
-        { where: `${where} total`, kind: 'stem', text: act.ledger.totalPrompt },
-        ...choiceSurfaces(`${where} total`, act.ledger.totalChoices),
-      ]
+      // A ledger is one patient's doses: strengths, volumes, the weight and the sums are the
+      // case's own values, like the vital signs of a scenario frame.
+      return (
+        [
+          ...teaching('prompt', act.ledger.prompt),
+          ...teaching('note', act.ledger.boundary),
+          ...act.ledger.rows.flatMap((row) => [
+            ...teaching(`row ${row.id}`, row.label),
+            ...teaching(`row ${row.id} detail`, row.detail),
+          ]),
+          { where: `${where} total`, kind: 'stem', text: act.ledger.totalPrompt },
+          ...choiceSurfaces(`${where} total`, act.ledger.totalChoices),
+        ] satisfies CopySurface[]
+      ).map((surface) => ({ ...surface, caseValues: true as const }))
     case 'report':
       return [
         ...teaching('prompt', act.report.prompt),
@@ -440,7 +446,9 @@ function bannedTermErrors(surface: CopySurface): string[] {
 
 /** Digits are free in a case (the patient's own values); teaching and feedback use the register. */
 function digitErrors(surface: CopySurface): string[] {
-  return surface.kind === 'case' ? [] : [...handTypedDigitErrors(surface.where, surface.text)]
+  return surface.kind === 'case' || surface.caseValues
+    ? []
+    : [...handTypedDigitErrors(surface.where, surface.text)]
 }
 
 function unsafeErrors(

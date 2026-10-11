@@ -37,6 +37,7 @@ import { mediaRefErrors, type MediaRef } from './media'
 import { numberTokenErrors } from './numbers'
 import { REVIEW_ITEM_IDS } from './reviewRegister'
 import { BRONCH_SECTION_IDS, BRONCH_SECTION_STAGE } from './sectionIds'
+import { RETIRED_OBJECTIVE_REASONS } from './sectionMigration'
 import { isSpineStopId } from './spine'
 import type {
   AuthoredCapstoneCase,
@@ -863,7 +864,11 @@ export function validateAllSections(
   }
   if (sections.length === BRONCH_SECTION_IDS.length) {
     for (const objective of MANIFEST_OBJECTIVES) {
-      if (objective.track === 'core' && !homed.has(objective.id))
+      if (
+        objective.track === 'core' &&
+        !homed.has(objective.id) &&
+        !RETIRED_OBJECTIVE_REASONS[objective.id]
+      )
         errors.push(`Core objective ${objective.id} has no section.`)
     }
   }
@@ -894,7 +899,11 @@ export function rewrittenSetErrors(
   const counts = rewritten.map(imageItemCounts)
   const image = counts.reduce((total, count) => total + count.image, 0)
   const total = counts.reduce((sum, count) => sum + count.total, 0)
-  if (total > 0 && image / total < REWRITE_CAPS.imageItemShare)
+  // The image share is a target for the whole course: the planning and sedation sections carry
+  // few pictures and the anatomy and findings sections carry many. It fails the build once every
+  // section is rewritten; until then `check-section.ts --all --report` prints where it stands.
+  const courseRewritten = rewritten.length === sections.length
+  if (courseRewritten && total > 0 && image / total < REWRITE_CAPS.imageItemShare)
     errors.push(
       `${image} of the rewritten sections' ${total} questions show an image; at least a third.`,
     )
