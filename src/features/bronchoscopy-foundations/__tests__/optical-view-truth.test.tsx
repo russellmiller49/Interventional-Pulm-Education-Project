@@ -15,7 +15,7 @@ import type {
   ScopeState,
   ScopeViewSpec,
 } from '../components/scope/types'
-import { section as branchEntry } from '../content/sections/branch-entry'
+import { carinaTasks as branchEntry } from '../test-support/carinaTasks'
 import { scopeLocationCaption } from '../engine/scope/scopeCaption'
 import { createScopeState, reduceScope } from '../engine/scope/scopeReducer'
 import { ScopePilot } from '../test-support/scopePilot'

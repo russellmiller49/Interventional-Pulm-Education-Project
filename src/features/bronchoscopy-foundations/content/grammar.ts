@@ -151,7 +151,7 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
     verdict: 'this-control',
     thisControl: ['rotation'],
     harmfulReflex: 'insertion',
-    taughtIn: 'branch-entry',
+    taughtIn: 'larynx-and-entry',
     sourceRefs: [
       { sourceId: 'T10', location: { kind: 'time-span', start: '00:06:57', end: '00:09:28' } },
       { sourceId: 'T11', location: { kind: 'time-span', start: '00:01:47', end: '00:05:01' } },
@@ -165,7 +165,7 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
     verdict: 'this-control',
     thisControl: ['insertion', 'deflection'],
     harmfulReflex: null,
-    taughtIn: 'poor-return',
+    taughtIn: 'washing-and-lavage',
     sourceRefs: [
       { sourceId: 'T13', location: { kind: 'time-span', start: '00:11:58', end: '00:15:33' } },
     ],
@@ -178,7 +178,7 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
     verdict: 'this-control',
     thisControl: ['suction'],
     harmfulReflex: 'suction',
-    taughtIn: 'poor-return',
+    taughtIn: 'washing-and-lavage',
     sourceRefs: [
       { sourceId: 'T13', location: { kind: 'time-span', start: '00:11:58', end: '00:15:33' } },
     ],
@@ -197,7 +197,7 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
     verdict: 'no-control-change-the-plan',
     thisControl: [],
     harmfulReflex: null,
-    taughtIn: 'poor-return',
+    taughtIn: 'washing-and-lavage',
     sourceRefs: [
       { sourceId: 'T13', location: { kind: 'time-span', start: '00:11:58', end: '00:15:33' } },
     ],
@@ -271,7 +271,7 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
     verdict: 'this-control',
     thisControl: ['accessory'],
     harmfulReflex: 'insertion',
-    taughtIn: 'protected-accessories',
+    taughtIn: 'biopsy-and-specimens',
     sourceRefs: [
       { sourceId: 'T13', location: { kind: 'time-span', start: '00:20:40', end: '00:22:51' } },
     ],

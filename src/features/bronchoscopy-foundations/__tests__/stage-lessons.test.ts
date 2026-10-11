@@ -55,20 +55,44 @@ describe('the stage lessons', () => {
     },
   )
 
-  it('preserves repeated physical-control concepts and isolated demos in the five-controls sequence', () => {
+  it('keeps each bench unit of the five-controls sequence, guided then repeated, inside the rewritten flow', () => {
     const lesson = bronchStageLesson('five-controls')
-    expect(lesson.steps[0].learn?.orientation).toBe(true)
-    expect(
-      lesson.steps
-        .slice(1, lesson.predictionStepIndex)
-        .every((step) => step.interaction.kind === 'scope-task'),
-    ).toBe(true)
-    expect(lesson.steps.filter((step) => step.interaction.kind === 'prediction')).toHaveLength(1)
-    expect(lesson.steps.at(-1)?.learn?.support).toBe('transfer')
-    expect(lesson.steps.at(-1)?.interaction.kind).toBe('scope-task')
+    const units = lesson.steps.filter((step) => step.learn)
+    // The hook opens the section and the checklist closes it; the bench units run between them.
+    expect(lesson.steps[0].course?.anchor).toBe(true)
+    expect(lesson.steps.at(-1)?.interaction.kind).toBe('explain')
+    expect(units.map((step) => step.learn!.id)).toEqual([
+      'check',
+      'instrument',
+      'depth',
+      'depth-repeat',
+      'bend',
+      'bend-repeat',
+      'rotation',
+      'rotation-repeat',
+      'combine',
+      'suction',
+      'suction-repeat',
+      'transfer',
+    ])
+    expect(units.find((step) => step.learn!.id === 'instrument')?.learn?.orientation).toBe(true)
+    for (const step of units) {
+      const { id, support, demonstration, cue } = step.learn!
+      if (support === 'guided') expect([id, !!demonstration, !!cue]).toEqual([id, true, true])
+      if (support === 'repeat') expect([id, !!demonstration, !!cue]).toEqual([id, false, false])
+      if (id !== 'check' && id !== 'instrument') expect(step.interaction.kind).toBe('scope-task')
+      // A unit's identity is its own, so saved places and tests survive a change of order.
+      expect(step.id).toBe(`five-controls-learn-${id}`)
+      expect(step.learn!.paragraphs.length).toBeGreaterThan(0)
+    }
+    // One prediction before the teaching, and one check with a new opening after it.
+    expect(lesson.steps.filter((step) => step.interaction.kind === 'prediction')).toHaveLength(2)
+    expect(lesson.predictionStepIndex).toBeLessThan(lesson.steps.indexOf(units[1]))
+    expect(lesson.transferStepIndex).toBeGreaterThan(
+      lesson.steps.findIndex((step) => step.learn?.id === 'transfer'),
+    )
     expect(lesson.steps.every((step) => step.gate === 'open')).toBe(true)
     for (const step of lesson.steps) {
-      expect(step.learn?.paragraphs.length).toBeGreaterThan(0)
       const view = scopeViewOfStep(step)
       if (view) expect(scopeViewErrors(view)).toEqual([])
     }

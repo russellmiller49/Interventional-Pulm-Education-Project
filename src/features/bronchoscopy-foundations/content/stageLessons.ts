@@ -144,72 +144,93 @@ function actWorkspace(section: BronchSectionDefinition, act: BronchAct): BronchW
   return section.workspace
 }
 
+/** One screen of a section's course flow, as a lesson step. */
+function chunkInput(section: BronchSectionDefinition, chunk: CourseChunk): StepInput {
+  const items = bronchSectionItems(section.id)
+  const isCheck = chunk.kind === 'check' || chunk.kind === 'transfer'
+  const stage = chunk.kind === 'transfer' ? items.transfer : items.prediction
+  const act = section.act
+  const chunkAct = actOfChunk(section, chunk)
+  const observe = act.kind === 'scope-lab' ? act.observe : undefined
+  const view = observe?.view ?? (act.kind === 'scope-lab' ? act.view : null)
+  const interaction: BronchStageInteraction = isCheck
+    ? { kind: 'prediction', stage, round: chunk.kind === 'transfer' ? 1 : 0 }
+    : chunk.learnerRecord
+      ? { kind: 'report', report: inspectionReport({ inspectionSnapshot: null }) }
+      : chunk.kind === 'practice'
+        ? actInteraction(chunkAct)
+        : chunk.kind === 'observe' && view && observe
+          ? {
+              kind: 'observe',
+              view,
+              goals: observe.goals,
+              readouts: observe.readouts ?? view.readouts ?? [],
+            }
+          : { kind: chunk.kind === 'debrief' ? 'explain' : 'read' }
+  const workspace: BronchWorkspace =
+    chunk.kind === 'practice'
+      ? actWorkspace(section, chunkAct)
+      : chunk.kind === 'observe' && view
+        ? { kind: 'scope', view }
+        : isCheck && stage.choiceAirways
+          ? { kind: 'map', lit: [], caption: 'Choose an airway from the map.' }
+          : section.workspace
+  return {
+    id: chunk.id,
+    phase:
+      chunk.kind === 'teach'
+        ? 'recognize'
+        : chunk.kind === 'practice'
+          ? 'act'
+          : chunk.kind === 'check'
+            ? 'predict'
+            : chunk.kind === 'debrief'
+              ? 'explain'
+              : chunk.kind,
+    title: chunk.title,
+    instruction:
+      chunk.instruction ??
+      (isCheck
+        ? 'Choose an answer and check it, or open the explanation first.'
+        : chunk.kind === 'debrief'
+          ? 'Review the reasoning and the limits of this exercise before continuing.'
+          : 'Read the explanation with its example, then continue when you are ready to apply it.'),
+    lookIn: { pane: 'steps', landmark: 'the current lesson activity' },
+    actionLabel: isCheck
+      ? COMMIT
+      : chunk.kind === 'practice'
+        ? ACT_ACTION_LABELS[chunkAct.kind]
+        : CONTINUE,
+    interaction,
+    workspace,
+    course: chunk,
+    activity: activityForChunk(chunk),
+  }
+}
+
+/** The bench unit a screen of "Driving the scope" runs, by the screen's id. */
+const FIVE_CONTROLS_UNIT_OF_CHUNK: Readonly<Record<string, string>> = {
+  'changed-target': 'transfer',
+}
+
 function buildInputs(section: BronchSectionDefinition): readonly StepInput[] {
-  if (section.id === 'five-controls') return fiveControlsLearnInputs()
   const flow = COURSE_FLOWS[section.id]
   if (!flow) throw new Error(`Section ${section.id} has no authored course flow.`)
-  return flow.map((chunk) => {
-    const items = bronchSectionItems(section.id)
-    const isCheck = chunk.kind === 'check' || chunk.kind === 'transfer'
-    const stage = chunk.kind === 'transfer' ? items.transfer : items.prediction
-    const act = section.act
-    const chunkAct = actOfChunk(section, chunk)
-    const observe = act.kind === 'scope-lab' ? act.observe : undefined
-    const view = observe?.view ?? (act.kind === 'scope-lab' ? act.view : null)
-    const interaction: BronchStageInteraction = isCheck
-      ? { kind: 'prediction', stage, round: chunk.kind === 'transfer' ? 1 : 0 }
-      : chunk.learnerRecord
-        ? { kind: 'report', report: inspectionReport({ inspectionSnapshot: null }) }
-        : chunk.kind === 'practice'
-          ? actInteraction(chunkAct)
-          : chunk.kind === 'observe' && view && observe
-            ? {
-                kind: 'observe',
-                view,
-                goals: observe.goals,
-                readouts: observe.readouts ?? view.readouts ?? [],
-              }
-            : { kind: chunk.kind === 'debrief' ? 'explain' : 'read' }
-    const workspace: BronchWorkspace =
-      chunk.kind === 'practice'
-        ? actWorkspace(section, chunkAct)
-        : chunk.kind === 'observe' && view
-          ? { kind: 'scope', view }
-          : isCheck && stage.choiceAirways
-            ? { kind: 'map', lit: [], caption: 'Choose an airway from the map.' }
-            : section.workspace
-    return {
-      id: chunk.id,
-      phase:
-        chunk.kind === 'teach'
-          ? 'recognize'
-          : chunk.kind === 'practice'
-            ? 'act'
-            : chunk.kind === 'check'
-              ? 'predict'
-              : chunk.kind === 'debrief'
-                ? 'explain'
-                : chunk.kind,
-      title: chunk.title,
-      instruction:
-        chunk.instruction ??
-        (isCheck
-          ? 'Choose an answer and check it, or open the explanation first.'
-          : chunk.kind === 'debrief'
-            ? 'Review the reasoning and the limits of this exercise before continuing.'
-            : 'Read the explanation with its example, then continue when you are ready to apply it.'),
-      lookIn: { pane: 'steps', landmark: 'the current lesson activity' },
-      actionLabel: isCheck
-        ? COMMIT
-        : chunk.kind === 'practice'
-          ? ACT_ACTION_LABELS[chunkAct.kind]
-          : CONTINUE,
-      interaction,
-      workspace,
-      course: chunk,
-      activity: activityForChunk(chunk),
-    }
+  if (section.id !== 'five-controls') return flow.map((chunk) => chunkInput(section, chunk))
+  // Driving the scope: the flow gives the order; a bench unit, where a screen has one, supplies
+  // the demonstration, the cue and the step's identity. The flow's own check and close stay.
+  const units = new Map(fiveControlsLearnInputs().map((input) => [input.learn!.id, input] as const))
+  const steps = flow.map((chunk): StepInput => {
+    const unit =
+      chunk.kind === 'transfer' || chunk.kind === 'debrief'
+        ? undefined
+        : units.get(FIVE_CONTROLS_UNIT_OF_CHUNK[chunk.id] ?? chunk.id)
+    if (unit) units.delete(unit.learn!.id)
+    return unit ? { ...unit, course: chunk } : chunkInput(section, chunk)
   })
+  if (units.size > 0)
+    throw new Error(`Driving the scope has bench units no screen runs: ${[...units.keys()]}.`)
+  return steps
 }
 
 function buildSteps(

@@ -102,7 +102,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D15'],
-  prerequisites: ['shared-airway', 'pre-use-check', 'five-controls', 'deterioration'],
+  prerequisites: ['sedation-and-monitoring', 'pre-use-check', 'five-controls', 'deterioration'],
 
   clinicalQuestion:
     'When a bronchoscopy is done through a ventilated patient’s endotracheal tube, what can the sizes of the scope and the tube tell the team?',

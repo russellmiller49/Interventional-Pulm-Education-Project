@@ -7,7 +7,7 @@ import type { ScopeRuntimeState } from '../engine/scope/scopeRuntime'
 import { BRONCH_SELF_PACED_STORAGE_KEY } from '../engine/selfPacedProgress'
 import { latestScopePaneProps } from '../test-support/ScopeTestDouble'
 import { ScopePilot } from '../test-support/scopePilot'
-import { SCOPE_RECIPES } from '../test-support/scopeRecipes'
+import { CARINA_RECIPE } from '../test-support/scopeRecipes'
 import {
   clickPrimary,
   control,
@@ -73,12 +73,15 @@ afterEach(() => {
   jest.useRealTimers()
 })
 
-const PRACTICE = 'branch-entry-flow-v1-application'
+const PRACTICE = 'larynx-and-entry-flow-v1-carina'
 
 async function reachPractice() {
-  const { lesson } = await mountSection('branch-entry')
-  while (lesson.steps.find((step) => step.id === currentStepId())?.course?.kind !== 'practice') {
-    clickPrimary()
+  const { lesson } = await mountSection('larynx-and-entry')
+  // Every card before the carina task can be left without doing it.
+  while (currentStepId() !== PRACTICE) {
+    const skip = document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-skip]')
+    if (skip) fireEvent.click(skip)
+    else clickPrimary()
     await settle()
   }
   expect(currentStepId()).toBe(PRACTICE)
@@ -214,7 +217,7 @@ describe('blocker 1 — help follows the goal the learner is on, without being a
         checked += 1
       },
     })
-    SCOPE_RECIPES['branch-entry']!.act(pilot)
+    CARINA_RECIPE(pilot)
     await settle()
     expect(checked).toBeGreaterThan(20)
     expect(goalRows().every((row) => row.met)).toBe(true)
@@ -278,7 +281,7 @@ describe('blocker 1 — preserved: help is advice and writes nothing', () => {
     }
     await advanceToCarina()
     if (help) await askForHelp('Highlight it again')
-    SCOPE_RECIPES['branch-entry']!.act(new ScopePilot(scopeTransport()))
+    CARINA_RECIPE(new ScopePilot(scopeTransport()))
     await settle()
     const result = {
       state: JSON.stringify(state()),
