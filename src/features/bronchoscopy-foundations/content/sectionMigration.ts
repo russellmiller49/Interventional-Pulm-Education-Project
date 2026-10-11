@@ -1,8 +1,8 @@
 import { isBronchSectionId } from './sectionIds'
 
 /**
- * The fifteen sections the rewrite ends at, in order (rewrite plan, 2026-10-08). Two do not exist
- * yet: `biopsy-and-specimens` and `ventilated-patient` are authored in their batches.
+ * The fifteen sections the rewrite ends at, in order (rewrite plan, 2026-10-08). All fifteen exist
+ * now; `what-completion-means` is the one section still to retire.
  */
 export const REWRITE_SECTION_ORDER = [
   'clinical-question',
@@ -80,6 +80,10 @@ export const RETIRED_OBJECTIVE_REASONS: Readonly<Record<string, string>> = {
     'Brief 12 routes each specimen to its test. Reinterpreting a culture after the fact is not taught.',
   'M17-O3':
     'Recovery and discharge instructions are taught with sedation, in section 3; this section teaches the report.',
+  'M16-O3':
+    'Brief 15 cuts the sort of eight procedures by compartment and guidance. Section 12 teaches the sampling tools a fellow uses first.',
+  'M16-O4':
+    'Brief 15 moves fluoroscopy to section 12, which teaches radiation safety under its own outcome. Separate training for advanced procedures is cut.',
   'M06-O5':
     'The fifteen sections have no CT-tracing activity. Naming an airway on a rolled view is assessed in the right lung.',
 }

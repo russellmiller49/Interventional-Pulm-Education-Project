@@ -1,6 +1,6 @@
 # Bronchoscopy Foundations rewrite: handoff
 
-Written 2026-10-08, last updated 2026-10-10 (after section 13). Start the next session from this file.
+Written 2026-10-08, last updated 2026-10-10 (after section 15, the last section). Start the next session from this file.
 
 ## Why this work exists
 
@@ -13,51 +13,37 @@ supervisor" answers.
 
 ## Where things stand
 
-| PR   | Branch                             | State                                                                                                             |
-| ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
-| #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
-| #377 | `claude/bf-rewrite-s13`            | Draft, stacked on #375. Section 13, when the patient deteriorates, rewritten; names only, no rescue doses.        |
-| #375 | `claude/bf-rewrite-s12`            | Draft, stacked on #374. Section 12, biopsy, brushing and specimens (new id); two sections retired.                |
-| #374 | `claude/bf-rewrite-s11`            | Draft, stacked on #373. Section 11, washings and BAL, rewritten; `poor-return` retired; R25 lifted.               |
-| #373 | `claude/bf-rewrite-s10`            | Draft, stacked on #371. Section 10, findings and the report, rewritten; `honest-report` retired.                  |
-| #371 | `claude/bf-rewrite-s09`            | Draft, stacked on #369. Section 9, the systematic survey, rewritten; one approved scope-pane change.              |
-| #369 | `claude/bf-rewrite-s08`            | Draft, stacked on #368. Section 8, losing and regaining the view, rewritten.                                      |
-| #368 | `claude/bf-rewrite-s07`            | Draft, stacked on #364. Section 7, the left lung, rewritten; `reference-frames` retired.                          |
-| #364 | `claude/bf-rewrite-s05`            | Draft, stacked on #362. Section 5, larynx, trachea and carina, rewritten; `branch-entry` retired.                 |
-| #362 | `claude/bf-rewrite-s04`            | Draft, stacked on #360. Section 4, driving the scope, rewritten.                                                  |
-| #360 | `claude/bf-rewrite-s03`            | Draft, stacked on #359. Section 3, sedation and monitoring, rewritten; `shared-airway` retired.                   |
-| #359 | `claude/bf-rewrite-s02`            | Draft, stacked on #358. Section 2, the scope and the setup, rewritten.                                            |
-| #358 | `claude/bf-rewrite-s01`            | Draft, stacked on #355. Section 1, the procedure and the plan, rewritten.                                         |
-| #355 | `claude/bf-rewrite-structure`      | Draft, stacked on #352. The plan's order, five phases, and the forward map for retired sections.                  |
-| #352 | `claude/bf-rewrite-register`       | Draft, stacked on #350. Register rows 15, 19, 20 and 21 extracted; two sources added (U17, U18). No learner copy. |
-| #351 | `claude/bf-3d-retry`               | Draft, from `main`. The 3D-retry fix lifted out of #348, with its three end-to-end cases.                         |
-| #348 | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix is now #351; close #348 once #351 merges.                        |
+The rewrite through section 12 is on `main` (merged 2026-10-10, `12d2c8ca`): #349, #350, #352,
+#355, #358, #359, #360, #362, #364, #368, #369, #371, #373, #374 and #375, with #351 (the
+3D-retry fix) and #376 (the authoring-rules test). #348 is closed.
 
-Nothing is merged. The stack, in merge order: #349 → #350 → #352 → #355 → #358 → #359 → #360 →
-#362 → #364 → #368 → #369 → #371 → #373 → #374 → #375 → #377. #351 is independent. The work is
-in the worktree `…-Worktrees/claude-bf-pre-review-04-20261007`, which is on
-`claude/bf-rewrite-s13`. Branch the next section from that branch
-(`git switch -c claude/bf-rewrite-s15`) and stack its PR on #377.
+Two PRs are open and not yet reviewed:
+
+| PR   | Branch                  | State                                                                                                              |
+| ---- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| #377 | `claude/bf-rewrite-s13` | Draft, targets `main`. Section 13, when the patient deteriorates, rewritten; names only, no rescue doses.          |
+| #378 | `claude/bf-rewrite-s15` | Draft, stacked on #377. Section 15, the ventilated patient (new id); two sections retired; the pressure-limit fix. |
+
+Merge #377, then #378. The work is in the worktree
+`…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s15`. Until both
+are merged, branch the next change from that branch and stack its PR on #378; afterwards branch
+from `origin/main`. The local copies of the merged stack branches are behind origin.
 
 ## Start here next session
 
 1. Read this file, then the plan's rules and the brief for the section you are writing.
-2. Next section: 15, the ventilated patient (`ventilated-patient`, a new id). It absorbs
-   `scope-in-a-tube` and `icu-physiology`; retire both in that change. It is the last section.
-3. Things to know before writing it:
-   - A new id needs `BRONCH_SECTION_IDS`, `BRONCH_SECTION_STAGE`, the phase, `sections/index.ts`,
-     `courseFlow.ts`, `lessonVersions.ts` and, if it has a scope task, the key in
-     `scopeRecipes.ts`. `sectionMigration.ts` should already forward both old ids; check.
-   - `scope-in-a-tube` is the last section that prints the Reading-the-view table in a lesson.
-     When it retires, the two `GRAMMAR_SECTIONS` lists (the Jest file and the end-to-end spec)
-     and the stacked-table end-to-end cases have no host: keep them on the Reference page or
-     remove them, and say which in the PR.
-   - Claim-queue item C03 has an `icu-physiology` surface and its quoted wording lives in
-     `scope-in-a-tube`. Add `supersededBy` when that wording goes.
-   - `deterioration` is a prerequisite of both retiring sections; `icu-physiology` still teaches
-     fluoroscopy, which section 12 now covers.
-   - The brief's content fix: raising pressure limits is recommended, not unsafe.
+2. All fifteen sections are written. Next: the hub and the closing screen (item 6 under "What is
+   left"), which retires `what-completion-means`, the last first-contract section.
+3. Things to know before that change:
+   - `what-completion-means` is the fixture for the first-contract sort and prediction tests
+     (`stage-host.test.tsx`, `actions-and-feedback.test.tsx`, `self-paced-summaries.test.tsx`).
+     Move them to the matching activity in `pre-use-check`.
+   - Its objectives M18-O1 to O5 are core. Home them or list them in
+     `RETIRED_OBJECTIVE_REASONS`.
+   - Once every section is rewritten, `sectionValidation.ts` fails the build unless a third of
+     the questions show an image. The course is at 29 of 99. Retiring the last first-contract
+     section turns that gate on, so the image bank (item 7) or a decision on the gate comes
+     first.
 4. Work one section per session. Get a digest of the old section from a subagent instead of
    reading it into context, then write the new file. The notes under each section below say
    what the checks will refuse.
@@ -106,7 +92,7 @@ npx tsx scripts/bronchoscopy-foundations/check-section.ts <section-id>
 In the plan's order. Russell removed the fellow-session gate on 2026-10-08: the 13 remaining
 sections no longer wait for sessions with the pilot.
 
-1. **Get #349 and #350 reviewed and merged**, then branch each batch from `origin/main`.
+1. **Get #377 and #378 reviewed and merged.** Everything before them is on `main`.
 2. **Still open from the pilot, for Russell:**
    - Confirm the bleeding first-move card, especially step 2 (suction).
    - Confirm three orientation statements in the right lung's image questions (carina: membranous
@@ -138,8 +124,37 @@ sections no longer wait for sessions with the pilot.
    `larynx-and-entry`), all 2026-10-08, sections 7 to 10 (`left-side`, `view-loss`,
    `systematic-survey`, `describe-findings`) on 2026-10-09, and section 11
    (`washing-and-lavage`), section 12 (`biopsy-and-specimens`) and section 13
-   (`deterioration`) on 2026-10-10. One remains: 15. The course lists 17 sections.
-   Notes from section 13:
+   (`deterioration`) on 2026-10-10, and section 15 (`ventilated-patient`) the same day. None
+   remains. The course lists 16 sections: the fifteen and `what-completion-means`.
+   Notes from section 15:
+   - `scope-in-a-tube` and `icu-physiology` are retired. M16-O1, O2, O5 and O6 are homed in
+     section 15; M16-O3 (the procedure taxonomy) and M16-O4 (radiation and separate training)
+     are in `RETIRED_OBJECTIVE_REASONS`. Section 12 teaches radiation under its own outcome.
+   - The brief's fix is made: the pressure limit is raised with the therapist before the scope
+     goes in, and practice case `mc-alarm-limits` keys it. The Reading-the-view row
+     `pressure-up-volume-down` has `taughtIn: 'ventilated-patient'` and its third shortlist line
+     now reads "Take the scope out if the volume does not come back". Claim-queue item C03 is
+     superseded. Capstone C09 was rewritten to match on 2026-10-11, at Russell's request: the limit is already raised, the volume falls anyway, and the key is to take the scope out. Its option on raising the limit again is a mechanism error, not unsafe.
+   - The tube-navigation task is cut, with its recipe, its walkthrough test and the
+     end-to-end case S20. `TubeCrossSection.tsx` and the pane's `tube` mode are still in the
+     code and now unused by any section; removing them is a scope-pane change to ask about.
+   - A sort may state its own sizes: `BronchSort.caseValues` lets row statements and rationales
+     carry digits, as a ledger does. The pairs activity uses it for tube sizes and margins.
+     Scope diameters still come from row 22.
+   - The case reads the ventilator on the monitor's `peak-pressure` and `exhaled-volume`
+     channels. Plateau pressure and auto-PEEP have no channel; the frame's situation states them.
+   - No lesson prints the Reading-the-view table now. The lesson-table tests are removed; the
+     stacked-table end-to-end cases run on the Reference page, which has a fifth column.
+   - `TubeGeometryFigure` kept its drawing; its caption was course-talk and is rewritten.
+   - The scope views number 12, not 15 (`scope-engine.test.ts`).
+   - It states 11 minutes, not the plan's 7: two activities, timed at 4 by estimate.
+   - For Russell to confirm: the five settings, above all "raise the tidal volume during the
+     procedure" (the register row has no condition), the sentence on mode, and PEEP ("decide
+     whether to lower it": no register row); the swivel-adapter card; peak against plateau and
+     the auto-PEEP line; the first-move card; recruitment afterwards; the case's ventilator
+     values and four keyed decisions; the six pairs; C17's explanation; retiring M16-O3 and
+     M16-O4; sign rows 16, 17 and 22.
+     Notes from section 13:
    - Eight first-move cards sit two to a screen (`breathing`, `spasm`, `circulation`,
      `topical`), each card under 60 words. A block's `body` is required by the type, so a card
      cannot be steps alone. The section is 700 teaching words; the longest screen is 119.

@@ -398,6 +398,7 @@ describe('the rewrite rules', () => {
       'biopsy-and-specimens',
       'deterioration',
       'bleeding-priorities',
+      'ventilated-patient',
     ])
     for (const section of [
       clinicalQuestion,

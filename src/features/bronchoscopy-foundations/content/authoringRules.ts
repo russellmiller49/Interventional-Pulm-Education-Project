@@ -162,10 +162,14 @@ function actSurfaces(where: string, act: BronchAct): CopySurface[] {
           ...teaching(`origin ${origin.id}`, origin.label),
           ...teaching(`origin ${origin.id} definition`, origin.definition),
         ]),
-        ...act.sort.rows.flatMap((row): CopySurface[] => [
-          { where: `${where} row ${row.id}`, kind: 'stem', text: row.statement },
-          { where: `${where} row ${row.id} rationale`, kind: 'rationale', text: row.rationale },
-        ]),
+        ...act.sort.rows
+          .flatMap((row): CopySurface[] => [
+            { where: `${where} row ${row.id}`, kind: 'stem', text: row.statement },
+            { where: `${where} row ${row.id} rationale`, kind: 'rationale', text: row.rationale },
+          ])
+          .map((surface) =>
+            act.sort.caseValues ? { ...surface, caseValues: true as const } : surface,
+          ),
       ]
     case 'identify':
       return [

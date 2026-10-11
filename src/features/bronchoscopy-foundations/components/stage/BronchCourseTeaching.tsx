@@ -708,9 +708,8 @@ function TubeGeometryFigure() {
         </g>
       </svg>
       <figcaption>
-        Schematic, not to scale. The paired views in the following exercise use the existing
-        authored tube geometry. Available area alone does not predict ventilation or select a
-        clinical device.
+        Cross section, not to scale. The scope fills part of the tube and gas moves through the
+        space that is left.
       </figcaption>
     </figure>
   )

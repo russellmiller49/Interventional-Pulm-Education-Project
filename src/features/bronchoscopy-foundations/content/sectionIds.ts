@@ -25,8 +25,7 @@ export const BRONCH_SECTION_IDS = [
   'biopsy-and-specimens',
   'deterioration',
   'bleeding-priorities',
-  'scope-in-a-tube',
-  'icu-physiology',
+  'ventilated-patient',
   'what-completion-means',
 ] as const
 
@@ -53,8 +52,7 @@ export const BRONCH_SECTION_STAGE: Readonly<Record<BronchSectionId, CriticalCare
     'biopsy-and-specimens': 'application',
     deterioration: 'application',
     'bleeding-priorities': 'application',
-    'scope-in-a-tube': 'mechanism',
-    'icu-physiology': 'application',
+    'ventilated-patient': 'application',
     'what-completion-means': 'integration',
   }
 
@@ -108,8 +106,7 @@ export const BRONCH_PHASES: readonly BronchPhase[] = [
     sectionIds: [
       'deterioration',
       'bleeding-priorities',
-      'scope-in-a-tube',
-      'icu-physiology',
+      'ventilated-patient',
       'what-completion-means',
     ],
   },

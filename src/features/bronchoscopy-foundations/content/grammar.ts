@@ -247,12 +247,12 @@ export const BRONCH_GRAMMAR: readonly GrammarRow[] = [
     shortlist: [
       'Pause and restore ventilation',
       'Work it through with the respiratory therapist',
-      'Never raise alarm limits to continue',
+      'Take the scope out if the volume does not come back',
     ],
     verdict: 'no-control-stop-and-communicate',
     thisControl: [],
     harmfulReflex: null,
-    taughtIn: 'scope-in-a-tube',
+    taughtIn: 'ventilated-patient',
     sourceRefs: [
       { sourceId: 'S1', location: { kind: 'pdf-pages', from: 155, to: 158 } },
       { sourceId: 'T15', location: { kind: 'time-span', start: '00:16:23', end: '00:22:00' } },
