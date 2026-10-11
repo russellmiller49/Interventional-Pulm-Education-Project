@@ -61,7 +61,9 @@ function reachAct(id: string) {
  */
 function sessionIdentity(): string {
   const line = document.querySelector('[data-session-identity]')?.textContent ?? ''
-  const seed = document.querySelector('[data-run-details] p')?.textContent?.match(/Seed (\d+)/)?.[1]
+  const seed = document
+    .querySelector('[data-run-details] p')
+    ?.textContent?.match(/Example number (\d+)/)?.[1]
   return seed ? `${line} seed ${seed}` : line
 }
 
@@ -108,7 +110,7 @@ describe('targeted introductions through the actual host', () => {
           `[data-comparison-metric="effectiveSystemicFlowLMin"] [data-device="${device}"]`,
         )?.textContent,
       ).toBe(actual.metrics.effectiveSystemicFlowLMin.toFixed(2))
-      expect(row.textContent).toContain(`Seed ${seed} · captured at 8.00 s`)
+      expect(row.textContent).toContain(`Example number ${seed} · captured at 8.00 s`)
     }
     expect(nowPrimary()).toBeEnabled()
     continueStep()

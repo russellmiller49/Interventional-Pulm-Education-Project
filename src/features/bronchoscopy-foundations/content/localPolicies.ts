@@ -1,10 +1,10 @@
 import { MANIFEST_LOCAL_POLICIES } from '../data/generated/localPolicies.generated'
 
 /**
- * The sixteen local-policy inputs the knowledge specification leaves unconfigured. The value of
- * every one is null: this course explains the concept and never calculates for a patient from a
- * number it was not given (A11, A27). A section names the policies its teaching depends on, and
- * the Teaching panel says, on the block, that the institution's version applies.
+ * The sixteen places where an institution's own policy applies. Each is a slot: when the
+ * institution's wording is configured (`INSTITUTION_POLICIES`), the lesson shows it on the card
+ * that depends on it; when it is not, the lesson shows nothing extra and teaches the guideline
+ * value from the numbers register. The Reference page lists every slot.
  */
 export type LocalPolicyId =
   | 'sedation_policy'
@@ -29,9 +29,12 @@ export interface LocalPolicy {
   readonly title: string
   readonly description: string
   readonly missingBehavior: string
-  /** Always null in this course. */
-  readonly value: null
+  /** The institution's own wording, when configured. */
+  readonly value: string | null
 }
+
+/** The institution's policies, by slot. Empty until the institution sets one. */
+export const INSTITUTION_POLICIES: Partial<Readonly<Record<LocalPolicyId, string>>> = {}
 
 const TITLES: Readonly<Record<LocalPolicyId, string>> = {
   sedation_policy: 'Sedation pathway',
@@ -67,7 +70,7 @@ export const LOCAL_POLICIES: readonly LocalPolicy[] = MANIFEST_LOCAL_POLICIES.ma
     title: TITLES[id],
     description: DESCRIPTIONS[id] ?? policy.description,
     missingBehavior: policy.missingBehavior,
-    value: null,
+    value: INSTITUTION_POLICIES[id] ?? null,
   }
 })
 
@@ -75,5 +78,14 @@ export const LOCAL_POLICY_BY_ID: ReadonlyMap<string, LocalPolicy> = new Map(
   LOCAL_POLICIES.map((policy) => [policy.id, policy] as const),
 )
 
+/** The slots among these that the institution has configured, in the order given. */
+export function configuredLocalPolicies(ids: readonly string[]): readonly LocalPolicy[] {
+  return ids.flatMap((id) => {
+    const policy = LOCAL_POLICY_BY_ID.get(id)
+    return policy && policy.value !== null ? [policy] : []
+  })
+}
+
+/** Said once, on the Reference page, beside the list of slots. */
 export const LOCAL_POLICY_NOT_CONFIGURED =
-  'Not configured. This course explains the concept; your institution’s approved policy and the device’s instructions apply, and nothing here calculates for a patient.'
+  'Not configured. Lessons teach the guideline value; your institution’s approved policy and the device’s instructions apply.'

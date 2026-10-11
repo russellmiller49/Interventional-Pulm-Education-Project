@@ -351,29 +351,28 @@ const PROVENANCE: Record<string, { sourced: string[]; framing?: string[] }> = {
 
 describe('glossary definitions come from the course (NAV-3, L1-4, L15-4)', () => {
   it('holds a provenance record for every entry', () => {
-    expect(Object.keys(PROVENANCE).sort()).toEqual(GLOSSARY.map((entry) => entry.id).sort())
+    expect(Object.keys(PROVENANCE).sort()).toEqual(
+      GLOSSARY.filter((entry) => !entry.sourceContext)
+        .map((entry) => entry.id)
+        .sort(),
+    )
   })
-  it.each(GLOSSARY.map((entry) => [entry.id, entry] as const))(
-    '%s is assembled from the course’s own sentences',
-    (id, entry) => {
-      const { sourced, framing = [] } = PROVENANCE[id]
-      expect(sourced.filter((part) => !corpus.includes(part))).toEqual([])
-      let rest = entry.definition.toLowerCase()
-      for (const part of [...sourced, ...framing]) {
-        expect(rest).toContain(part)
-        rest = rest.replace(part, ' ')
-      }
-      expect(rest.replace(/[\s.,;:]/g, '')).toBe('')
-      expect(entry.sources.length).toBeGreaterThan(0)
-    },
-  )
-
-  it('leaves out terms the course uses without defining, rather than defining them', () => {
-    const terms = GLOSSARY.map((entry) => entry.term.toLowerCase()).join(' ')
-    for (const undefinedTerm of ['chs', 'central hilar', 'ifu', 'tnm ', 'nsclc'])
-      expect(terms).not.toContain(undefinedTerm)
+  it.each(
+    GLOSSARY.filter((entry) => !entry.sourceContext).map((entry) => [entry.id, entry] as const),
+  )('%s is assembled from the course’s own sentences', (id, entry) => {
+    const { sourced, framing = [] } = PROVENANCE[id]
+    expect(sourced.filter((part) => !corpus.includes(part))).toEqual([])
+    let rest = entry.definition.toLowerCase()
+    for (const part of [...sourced, ...framing]) {
+      expect(rest).toContain(part)
+      rest = rest.replace(part, ' ')
+    }
+    expect(rest.replace(/[\s.,;:]/g, '')).toBe('')
+    expect(entry.sources.length).toBeGreaterThan(0)
   })
 
+  // OD-12 supersedes the original course-sentences-only exclusion. The original entries
+  // above retain their exact provenance contract; external expansions are tested in Step 13.
   it('brings the staging terms to lesson 1, before lesson 17 teaches them, with a link forward', () => {
     render(<LessonHost lesson={lesson('clinical-question')} />)
     const terms = document.querySelector('[data-glossary]')!
@@ -642,8 +641,8 @@ describe('what counts, and the held contact frame (L5-2, L5-1)', () => {
     )
   })
 
-  it.each(['bubble', 'gap', 'direct', 'balloon'] as const)(
-    'held %s: the reflector check says it names another condition and the frame is untouched',
+  it.each(['bubble', 'gap', 'direct', 'balloon', 'shadow'] as const)(
+    'held %s: OD-01 compares mechanisms and preserves the learner frame',
     (mode) => {
       workbenchEmitters['Complete the contact model'] = () => contactObservation(mode)
       render(<LessonHost lesson={lesson('contact-cutaway-model')} />)
@@ -657,12 +656,10 @@ describe('what counts, and the held contact frame (L5-2, L5-1)', () => {
       const check = document.querySelector('[data-question-id]')!
       expect(check.getAttribute('data-question-id')).toBe('cutaway-observe')
       expect(check).toHaveTextContent(
-        'Why did changing gain fail to remove the dark region behind the reflector?',
+        'You inspected the air-gap and reflector states in the echo schematic. Both leave a dark region. Which difference in mechanism does the model show?',
       )
       expect(document.querySelector('[data-task-instruction]')).toHaveTextContent(
-        'This check names a different contact condition (contact with a reflector) from the one your held image shows (' +
-          CONTACT_MODE_LABELS[mode] +
-          '). Your held image stays as you acquired it.',
+        'Compare the air-gap and reflector states you inspected in the echo schematic. Your held image stays as you acquired it; this comparison does not depend on which contact condition you held.',
       )
       // The held evidence is still the frame the learner acquired.
       expect(document.querySelector('[data-evidence-identity="held"]')).toHaveTextContent(
@@ -670,18 +667,6 @@ describe('what counts, and the held contact frame (L5-2, L5-1)', () => {
       )
     },
   )
-
-  it('says nothing extra when the held condition is the one the check names', () => {
-    workbenchEmitters['Complete the contact model'] = () => contactObservation('shadow')
-    render(<LessonHost lesson={lesson('contact-cutaway-model')} />)
-    next()
-    fireEvent.click(screen.getByText('Complete the contact model'))
-    next()
-    next()
-    expect(document.querySelector('[data-task-instruction]')).toHaveTextContent(
-      'This is the image you acquired. Interpret it, or open the explanation first.',
-    )
-  })
 })
 
 /* M. Learner language for internal labels (L10-4, L22-5) ------------------------------------ */

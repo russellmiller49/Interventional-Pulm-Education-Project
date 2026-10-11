@@ -3,6 +3,7 @@ import type {
   CirculationParameters,
   HemodynamicMeasurements,
 } from '@/features/hemodynamics-core'
+import type { WaveformDisplaySeam } from './displaySeams'
 
 export type {
   CirculationCompartmentState,
@@ -455,6 +456,11 @@ export interface HemodynamicSimulationState {
   responseMessage: string | null
   score: HemodynamicScoreBreakdown | null
   completed: boolean
+  /**
+   * Where the measurement system changed inside the drawn waveform buffer. Display metadata: the
+   * monitor breaks the trace there instead of joining two instruments' samples into one line.
+   */
+  displaySeams?: readonly WaveformDisplaySeam[]
 }
 
 export type HemodynamicAction =

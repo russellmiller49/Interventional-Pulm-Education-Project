@@ -75,7 +75,7 @@ export function McsTaskReadings({
       {state.device.kind === 'iabp' ? <p>IABP has no separate pump-flow stream.</p> : null}
       <p>
         Patient examination, mentation, urine output, skin findings and lactate trends require
-        bedside assessment; they are not simulated.
+        bedside evaluation; they are not simulated.
       </p>
     </section>
   )

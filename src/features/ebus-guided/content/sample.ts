@@ -12,6 +12,7 @@ export const sampleLessons: Lesson[] = [
     concept: 'Keep the needle controlled and the tip visible',
     paragraphs: [
       'Check the needle–scope compatibility and the current manufacturer instructions. Before insertion or removal through the working channel, visually confirm that the needle is retracted into its sheath and secured as specified for the device.',
+      'Protected needle/assembly preparation may occur according to the device and local workflow. Confirm the intended target, live ultrasound image, and an acceptable vascular path immediately before needle exposure and advancement.',
       'Confirm the target and path on live ultrasound. Advance and sample with the needle tip continuously identified in the imaging plane. If the tip cannot be located, stop movement and regain a reliable view with the supervising operator.',
       'Needle extension limits, sheath adjustment, suction, stylet handling, and sampling motions depend on the device and protocol. Do not improvise a universal maneuver from a schematic. Excessive resistance requires reassessment rather than force.',
     ],
@@ -44,7 +45,7 @@ export const sampleLessons: Lesson[] = [
       'both',
     ),
     sequence: sequence(
-      'Order the broad safety checkpoints around a pass. Device-specific manipulations follow the current IFU.',
+      'Arrange this course’s authored checkpoint example around a pass. Protected preparation follows the device and local workflow; this example does not prescribe a universal order for preparation.',
       [
         'Confirm the labeled target, live image, and acceptable vascular path',
         'Confirm protected needle position and prepare the assembly per the IFU',
@@ -52,7 +53,7 @@ export const sampleLessons: Lesson[] = [
         'Confirm retraction and secure the needle before channel removal',
         'Transfer and label the specimen using the agreed handling plan',
       ],
-      'The checkpoints preserve target identity, live guidance, device protection, and specimen traceability. They are not a substitute for a device-specific checklist.',
+      'Protected needle/assembly preparation may occur according to the device and local workflow. Confirm the intended target, live ultrasound image, and an acceptable vascular path immediately before needle exposure and advancement. The checkpoints preserve target identity, live guidance, device protection, and specimen traceability. They are not a substitute for a device-specific checklist.',
     ),
     observation: q(
       'needle-observe',

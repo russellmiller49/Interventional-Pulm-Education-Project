@@ -230,13 +230,13 @@ export const cardiacOutputAcquisitionParameters: readonly CardiacOutputAcquisiti
     },
     {
       id: 'injection-duration-window',
-      label: 'Injection-duration window this model flags outside of',
+      label: 'Injection-duration window outside which this model raises an alert',
       valueShown: '0.6 to 4 seconds',
       provenance: 'simulation-parameter',
       whyThisClassification:
         'These are the bounds at which this module’s own model raises a technique alert. No registered record’s claim states an injection-duration requirement.',
       learnerFacingQualifier:
-        'The window this simulation flags outside of. The teaching claim is that a prolonged or interrupted bolus broadens the curve, not that a particular number of seconds is required.',
+        'This simulation raises a technique alert for an injection outside this window. The alert is in the technique record: this model does not redraw the curve for a prolonged or interrupted bolus, so the trace keeps a single smooth shape. No particular number of seconds is claimed as a requirement.',
       claimTopic: 'thermodilution-technical-validation',
       evidenceIds: ['icu-hemodynamics-model-v1'],
     },
