@@ -451,11 +451,11 @@ export const section: BronchSectionDefinition = {
         ],
         rows: [
           {
-            id: 'tissue-in-lumen',
+            id: 'fixed-ring',
             statement:
-              'Tissue grows from one wall into the lumen. The wall around it keeps its round shape.',
-            origin: 'endoluminal',
-            rationale: 'The tissue is inside the lumen and the wall is not displaced.',
+              'A pale ring of scar narrows the trachea. It is the same size on the breath in, the breath out and a cough.',
+            origin: 'stenosis',
+            rationale: 'A narrowing that does not change with breathing is fixed.',
           },
           {
             id: 'wall-bulges-in',
@@ -465,18 +465,19 @@ export const section: BronchSectionDefinition = {
             rationale: 'Intact mucosa over a bulge means the cause is outside the wall.',
           },
           {
-            id: 'fixed-ring',
+            id: 'dark-cast',
             statement:
-              'A pale ring of scar narrows the trachea. It is the same size on the breath in, the breath out and a cough.',
-            origin: 'stenosis',
-            rationale: 'A narrowing that does not change with breathing is fixed.',
+              'A dark red, shiny cast fills a segment. It holds its shape and barely moves with suction.',
+            origin: 'clot',
+            rationale:
+              'Dark, shiny and formed is clot. Do not pull at one that is stuck to the wall.',
           },
           {
-            id: 'closes-on-expiration',
+            id: 'tissue-in-lumen',
             statement:
-              'The trachea is wide on the breath in. On the breath out its walls come together.',
-            origin: 'malacia',
-            rationale: 'The caliber changes with breathing, so the wall is soft, not scarred.',
+              'Tissue grows from one wall into the lumen. The wall around it keeps its round shape.',
+            origin: 'endoluminal',
+            rationale: 'The tissue is inside the lumen and the wall is not displaced.',
           },
           {
             id: 'moves-with-suction',
@@ -486,12 +487,11 @@ export const section: BronchSectionDefinition = {
             rationale: 'It moves with suction. Clear it, then describe the wall beneath.',
           },
           {
-            id: 'dark-cast',
+            id: 'closes-on-expiration',
             statement:
-              'A dark red, shiny cast fills a segment. It holds its shape and barely moves with suction.',
-            origin: 'clot',
-            rationale:
-              'Dark, shiny and formed is clot. Do not pull at one that is stuck to the wall.',
+              'The trachea is wide on the breath in. On the breath out its walls come together.',
+            origin: 'malacia',
+            rationale: 'The caliber changes with breathing, so the wall is soft, not scarred.',
           },
         ],
         sourceRefs: FINDINGS,

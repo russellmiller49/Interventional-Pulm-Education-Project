@@ -235,26 +235,26 @@ export const section: BronchSectionDefinition = {
         ],
         rows: [
           {
-            id: 'flat-red-after-advance',
-            statement:
-              'You advance with the tip bent. The whole screen turns an even pink-red. The patient is unchanged.',
-            origin: 'wall',
-            rationale: 'A flat red field straight after an advance is mucosa at touching distance.',
-          },
-          {
-            id: 'hazy-everywhere',
-            statement:
-              'You can make out the lumen, but it is hazy. It stays hazy wherever you point the scope.',
-            origin: 'lens',
-            rationale: 'A film on the lens travels with the scope. Irrigate, suction, then wipe.',
-          },
-          {
             id: 'pale-pool',
             statement:
               'A thick yellow-white pool covers the lower half of the view and shifts as the patient breathes.',
             origin: 'secretions',
             rationale:
               'Material in the airway moves with the breath, not with the scope. Suction it.',
+          },
+          {
+            id: 'sharp-unnamed',
+            statement:
+              'The picture is sharp: a carina and two openings. You cannot say which lobe you are in.',
+            origin: 'lost',
+            rationale: 'Clear and lost. Withdraw to the last airway you could name.',
+          },
+          {
+            id: 'flat-red-after-advance',
+            statement:
+              'You advance with the tip bent. The whole screen turns an even pink-red. The patient is unchanged.',
+            origin: 'wall',
+            rationale: 'A flat red field straight after an advance is mucosa at touching distance.',
           },
           {
             id: 'red-welling',
@@ -265,11 +265,11 @@ export const section: BronchSectionDefinition = {
               'Red that flows from one place is blood. Hold the scope there and work the bleeding card.',
           },
           {
-            id: 'sharp-unnamed',
+            id: 'hazy-everywhere',
             statement:
-              'The picture is sharp: a carina and two openings. You cannot say which lobe you are in.',
-            origin: 'lost',
-            rationale: 'Clear and lost. Withdraw to the last airway you could name.',
+              'You can make out the lumen, but it is hazy. It stays hazy wherever you point the scope.',
+            origin: 'lens',
+            rationale: 'A film on the lens travels with the scope. Irrigate, suction, then wipe.',
           },
         ],
         sourceRefs: VIEW_LOSS,

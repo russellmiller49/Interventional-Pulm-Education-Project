@@ -30,6 +30,7 @@ import { BRONCHOSCOPY_FOUNDATIONS_RELEASE_STAGE } from '../content/release'
 import { publishBlockers, withResolvedNumbers } from '../content/sectionNumbers'
 import { bronchSectionErrors } from '../content/sectionValidation'
 import { BRONCH_SECTIONS } from '../content/sections'
+import { section as biopsyAndSpecimens } from '../content/sections/biopsy-and-specimens'
 import { section as bleedingPriorities } from '../content/sections/bleeding-priorities'
 import { section as clinicalQuestion } from '../content/sections/clinical-question'
 import { section as describeFindings } from '../content/sections/describe-findings'
@@ -394,6 +395,7 @@ describe('the rewrite rules', () => {
       'systematic-survey',
       'describe-findings',
       'washing-and-lavage',
+      'biopsy-and-specimens',
       'bleeding-priorities',
     ])
     for (const section of [
@@ -408,6 +410,7 @@ describe('the rewrite rules', () => {
       systematicSurvey,
       describeFindings,
       washingAndLavage,
+      biopsyAndSpecimens,
       bleedingPriorities,
     ]) {
       expect(bronchSectionErrors(section)).toEqual([])
@@ -560,5 +563,26 @@ describe('review register R25: culture thresholds (faculty decision, 2026-10-10)
     ).toContain('R25')
     // The section that teaches the threshold passes the register as authored.
     expect(bronchSectionErrors(washingAndLavage)).toEqual([])
+  })
+})
+
+describe('matching activities', () => {
+  it('never list their rows in the order of the options, in a rewritten section', () => {
+    // The control shows rows as authored and the options in the order of `origins`. If the two
+    // run in step, the answers read off as first, second, third.
+    for (const section of BRONCH_SECTIONS.filter((entry) => entry.authoringContract === 2)) {
+      const acts = [section.act, ...Object.values(section.moreActs ?? {})]
+      for (const act of acts) {
+        if (act.kind !== 'sort') continue
+        const origins = act.sort.origins.map((origin) => origin.id)
+        const inStep = act.sort.rows.filter((row, index) => row.origin === origins[index]).length
+        expect({ section: section.id, sort: act.sort.id, inStep }).toEqual({
+          section: section.id,
+          sort: act.sort.id,
+          inStep: expect.any(Number),
+        })
+        expect(inStep).toBeLessThan(Math.min(3, act.sort.rows.length))
+      }
+    }
   })
 })
