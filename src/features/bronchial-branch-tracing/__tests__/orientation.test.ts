@@ -5,16 +5,20 @@ import {
   turnCt,
   orientationLabels,
   orientationFor,
+  orientationName,
+  orientationTransform,
   orientedPixel,
   nativePixel,
+  orientPoint,
+  unorientPoint,
+  sameOrientation,
+  validOrientation,
   type CtOrientation,
 } from '../geometry/orientation'
-import { CT_TRACES, sliceZ, traceById } from '../geometry/native-ct'
-import { pairedScope, bookScopeUp } from '../geometry/paired-scope'
+import { CT_TRACES } from '../geometry/native-ct'
+import { scopeUp } from '../geometry/route-stations'
 import { cameraFrame, dot, type Vec3 } from '../geometry/coordinates'
-import { orientPoint } from '../geometry/orientation'
 import routes from '../geometry/paired-routes.json'
-import { ctSessionReducer, emptyCtSession } from '../engine/ct-session'
 
 test('manual rotations and screen reflection preserve patient pixels in all eight orientations', () => {
   const expected = [
@@ -55,31 +59,58 @@ test('manual rotations and screen reflection preserve patient pixels in all eigh
     }
 })
 
-test('paired routes retain unchanged source geometry and report actual plane correspondence', () => {
+test('every display has one name and one transform, and a point comes back through its inverse', () => {
+  const all: CtOrientation[] = [false, true].flatMap((reflected) =>
+    ([0, 1, 2, 3] as const).map((turns) => ({ turns, reflected })),
+  )
+  expect(all.map(orientationName)).toEqual([
+    'Standard axial',
+    '90° clockwise',
+    '180° rotation',
+    '90° counterclockwise',
+    'Left–right reflection',
+    'Left–right reflection + 90° clockwise',
+    'Left–right reflection + 180° rotation',
+    'Left–right reflection + 90° counterclockwise',
+  ])
+  expect(new Set(all.map(orientationTransform)).size).toBe(8)
+  expect(orientationTransform(STANDARD_ORIENTATION)).toBe('rotate(0) scale(1 1)')
+  expect(orientationTransform({ turns: 3, reflected: true })).toBe('rotate(-90) scale(-1 1)')
+  for (const o of all) {
+    expect(validOrientation(o)).toBe(true)
+    const [x, y] = unorientPoint(orientPoint([17, -9], o), o)
+    expect([x, y]).toEqual([17, -9])
+    expect(all.filter((other) => sameOrientation(o, other))).toEqual([o])
+  }
+  expect(validOrientation({ turns: 4 as CtOrientation['turns'], reflected: false })).toBe(false)
+  // Four quarter turns either way, or two flips, return to where they began.
+  let o: CtOrientation = { turns: 1, reflected: true }
+  for (let i = 0; i < 4; i++) o = turnCt(o, 'right')
+  expect(o).toEqual({ turns: 1, reflected: true })
+  // The book's regional displays, by preset.
+  expect(orientationFor('standard')).toEqual(STANDARD_ORIENTATION)
+  expect(orientationName(orientationFor('mirror'))).toBe('Left–right reflection')
+  expect(orientationName(orientationFor('rul'))).toBe('90° counterclockwise')
+  expect(orientationName(orientationFor('upper-division'))).toBe('90° clockwise')
+})
+
+test('paired routes retain unchanged source geometry', () => {
   const bytes = readFileSync('public/fluoroview/cases/patient-new/metadata/airway_graph.json')
   expect(createHash('sha256').update(bytes).digest('hex')).toBe(routes.sourceSha256)
   const source = JSON.parse(bytes.toString())
   for (const e of routes.edges)
     expect(e.points).toEqual(source.edges.find((v: { id: number }) => v.id === e.id).pointsLps)
+  // Every edge a route travels is in the paired set.
+  const paired = new Set(routes.edges.map((e) => e.id))
   for (const trace of CT_TRACES)
-    for (const [i, cp] of trace.checkpoints.entries()) {
-      const pose = pairedScope(trace, cp.slice, i, false)
-      expect(pose.planeGapMm).toBeLessThanOrEqual(0.251)
-      expect(Math.abs(pose.point[2] - sliceZ(cp.slice))).toBeCloseTo(pose.planeGapMm, 8)
-      expect(Math.hypot(...pose.direction)).toBeCloseTo(1, 8)
-      expect(pose.position.every(Number.isFinite)).toBe(true)
-    }
-  const trace = traceById('middle-lobe-caudal')
-  const proximal = pairedScope(trace, 299, 5, false),
-    distal = pairedScope(trace, 299, 6, false)
-  expect(distal.arc).toBeGreaterThan(proximal.arc)
-  expect(pairedScope(trace, 0, 0, false).planeGapMm).toBeGreaterThan(1)
+    for (const id of trace.sourceEdgeIds)
+      expect([trace.id, id, paired.has(id)]).toEqual([trace.id, id, true])
 })
 
-test('the reference scope roll matches the book display axes for cranial and caudal viewing', () => {
+test('the scope roll matches the book display axes for cranial and caudal viewing', () => {
   for (const preset of ['mirror', 'rul', 'upper-division'] as const) {
     const forward: Vec3 = [0, 0, preset === 'mirror' ? -1 : 1]
-    const frame = cameraFrame([0, 0, 0], forward, bookScopeUp(preset, forward), 0)
+    const frame = cameraFrame([0, 0, 0], forward, scopeUp(preset, forward), 0)
     for (const patient of [
       [1, 0, 0],
       [0, 1, 0],
@@ -90,53 +121,5 @@ test('the reference scope roll matches the book display axes for cranial and cau
       expect(projected[1]).toBeCloseTo(ct[1], 8)
     }
   }
-  expect(bookScopeUp('mirror', [0, -1, 0])).toEqual([0, 0, 1])
-})
-
-test('records a chosen display without grading regional convention and starts transfer standard', () => {
-  const prediction = traceById('middle-lobe-caudal'),
-    transfer = traceById('right-upper-apical')
-  const reduce = ctSessionReducer(prediction, transfer)
-  let s = reduce(emptyCtSession(), { type: 'advance' })
-  const mark = {
-    type: 'mark' as const,
-    index: 0,
-    mark: { slice: prediction.checkpoints[0].slice, pixel: null },
-  }
-  expect(reduce(s, mark)).toBe(s)
-  expect(reduce(s, { type: 'check-orientation' }).alignment).toEqual(STANDARD_ORIENTATION)
-  const wrong: CtOrientation = { turns: 1, reflected: false }
-  s = reduce(reduce(s, { type: 'orientation', value: wrong }), { type: 'check-orientation' })
-  expect(s.alignment).toEqual(wrong)
-  s = reduce(reduce(s, { type: 'orientation', value: orientationFor(prediction.preset) }), {
-    type: 'check-orientation',
-  })
-  for (const [i, cp] of prediction.checkpoints.entries()) {
-    s = reduce(s, { type: 'active', index: i })
-    if (cp.decision) s = reduce(s, { type: 'branch', index: i, value: 'unresolved' })
-    s = reduce(s, { type: 'mark', index: i, mark: { slice: cp.slice, pixel: null } })
-    s = reduce(s, { type: 'record-junction' })
-  }
-  s = reduce(s, { type: 'advance' })
-  s = reduce(s, { type: 'course', value: 'uncertain' })
-  s = reduce(s, { type: 'target-relation', value: 'unresolved' })
-  s = reduce(s, { type: 'target-inspected' })
-  s = reduce(s, { type: 'advance' })
-  expect(s.prediction?.orientation.first).toEqual(wrong)
-  expect(s.prediction?.orientation.used).toEqual(orientationFor(prediction.preset))
-  s = reduce(reduce(s, { type: 'advance' }), { type: 'advance' })
-  expect(s.orientation).toEqual(STANDARD_ORIENTATION)
-  expect(s.alignment).toBeNull()
-  expect(s.orientationAttempts).toEqual([])
-  expect(reduce(s, { type: 'advance' })).toBe(s)
-  const completed = { ...s, complete: true }
-  expect(reduce(completed, { type: 'orientation', value: wrong })).toMatchObject({
-    complete: true,
-    orientation: wrong,
-  })
-  expect(reduce(completed, { type: 'active', index: 2 })).toMatchObject({
-    complete: true,
-    active: 2,
-  })
-  expect(reduce(completed, { type: 'advance' })).toBe(completed)
+  expect(scopeUp('mirror', [0, -1, 0])).toEqual([0, 0, 1])
 })

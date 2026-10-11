@@ -3,25 +3,26 @@ import { inflateSync } from 'node:zlib'
 import decisions from '../geometry/branch-decisions.json'
 import routes from '../geometry/paired-routes.json'
 import manifest from '../../../../public/branch-tracing/native-v1/manifest.json'
-import { NATIVE_CT, sliceZ } from '../geometry/native-ct'
-import { LESSONS } from '../content/lessons'
-import { LOCAL_RESPONSE_SLICE, localExercise } from '../content/local-exercises'
-import { junctionFeedbackPacket } from '../content/junction-feedback'
-import { edgeCrossings, planeDistanceMm } from '../engine/junction-feedback'
+import { CT_TRACES, NATIVE_CT, sliceZ, traceById } from '../geometry/native-ct'
+import { JUNCTION_FEEDBACK_SCOPE, junctionFeedbackPacket } from '../content/junction-feedback'
+import { edgeCrossings, planeDistanceMm, responsePlane } from '../engine/junction-feedback'
+import { RESPONSE_PLANE_OVERRIDES } from '../engine/response-planes'
 
 /**
- * BBTF-01. The route export asks for the two main-bronchus marks on slice 387, a plane where this
- * scan shows one shared air column. These tests separate the two possible causes and pin the answer:
+ * BBTF-01. The route export puts the two main-bronchus response points on slice 387, a plane where
+ * this scan shows one shared air column. These tests separate the two possible causes and pin the
+ * answer:
  *
  *  - a technical error (wrong slice index, wrong source, wrong wiring) would be repairable here;
- *  - a limitation of the source anatomy at this response plane is an owner decision, not ours.
+ *  - a limitation of the source anatomy at that plane is an owner decision, not ours.
  *
- * Owner decision, 2026-10-08: the routes keep slice 387; Lesson 3's first example is marked on
- * slice 372, below the carina (LOCAL_RESPONSE_SLICE). The last tests prove the complement: two
- * lumens with soft tissue between them from slice 375 down.
+ * Owner decision, 2026-10-08, extended by the navigation rebuild: the export keeps slice 387, and
+ * the tracheal bifurcation is identified on slice 372, below the carina, on every route
+ * (RESPONSE_PLANE_OVERRIDES). The last tests prove the complement: two lumens with soft tissue
+ * between them from slice 375 down.
  *
  * Everything below measures the shipped native PNGs and the shipped source export. None of it
- * changes a response plane, a branch identity or any model geometry.
+ * changes a branch identity or any model geometry.
  */
 
 const HU_FLOOR = NATIVE_CT.window[0]
@@ -164,12 +165,6 @@ test('native slice indexing is exact: every sampled source point matches its own
   expect(meanError(1)).toBeGreaterThan(20)
 })
 
-const lessonBifurcation = () =>
-  localExercise(
-    LESSONS.flatMap((l) => l.exercises ?? []).find(
-      (spec) => spec.checkpointId === 'junction-1' && spec.kind === 'bifurcation',
-    )!,
-  )
 /** The highest HU on the straight line between two native pixels of one slice. */
 const maxOnSegment = (slice: number, from: readonly number[], to: readonly number[]) => {
   const pixels = slicePixels(slice)
@@ -184,11 +179,11 @@ const maxOnSegment = (slice: number, from: readonly number[], to: readonly numbe
   return peak
 }
 
-test('no soft tissue separates the two main-bronchus locators on the route plane, slice 387, or anywhere near it', () => {
-  // The routes keep the exported plane.
+test('no soft tissue separates the two main-bronchus locators on the exported plane, slice 387, or anywhere near it', () => {
+  // The export keeps its own plane.
   expect([RMSB.slice, LMSB.slice]).toEqual([387, 387])
-  // From the old lesson interval's floor up to the carina's level, the straight line between the
-  // two exported locators stays air density: slice 387 shows one air region, not a bifurcation.
+  // From slice 384 up to the carina's level, the straight line between the two exported locators
+  // stays air density: slice 387 shows one air region, not a bifurcation.
   for (let slice = 384; slice <= 395; slice++)
     expect([slice, maxOnSegment(slice, RMSB.pixel, LMSB.pixel) < SOFT_TISSUE_HU]).toEqual([
       slice,
@@ -209,27 +204,27 @@ test('no soft tissue separates the two main-bronchus locators on the route plane
   expect(sliceZ(parent.slice)).toBeGreaterThan(sliceZ(374))
 })
 
-test('the lesson marks the main bronchi on slice 372, where the carina stands between two lumens', () => {
-  const exercise = lessonBifurcation()
-  const [low, high] = exercise.trace.range
-  // The lesson interval now reaches down past the carina; the answer plane is 372, not 387.
-  expect([low, high]).toEqual([369, 411])
-  expect(LOCAL_RESPONSE_SLICE[exercise.id]).toBe(372)
-  expect(exercise.answerPoints.map((p) => p.slice)).toEqual([372, 372])
-  // Same two centrelines as the route, followed 15 slices farther down.
-  const options = exercise.trace.checkpoints[0].decision!.options
-  expect(options.map((o) => o.sourceEdgeId)).toEqual([RMSB.sourceEdgeId, LMSB.sourceEdgeId])
-  for (const option of options) {
+test('the main bronchi are identified on slice 372, where the carina stands between two lumens', () => {
+  expect(RESPONSE_PLANE_OVERRIDES['junction-1']).toBe(372)
+  const trace = traceById('central-right')
+  const [low, high] = trace.range
+  const planes = [RMSB, LMSB].map((_, option) => responsePlane(trace, 0, option)!)
+  expect(planes.map((p) => p.slice)).toEqual([372, 372])
+  // Same two centrelines as the export, followed 15 slices farther down.
+  expect(trace.checkpoints[0].decision!.options.map((o) => o.sourceEdgeId)).toEqual([
+    RMSB.sourceEdgeId,
+    LMSB.sourceEdgeId,
+  ])
+  ;[RMSB, LMSB].forEach((option, i) => {
     const [crossing] = edgeCrossings(option.sourceEdgeId, 372)
-    expect(planeDistanceMm(crossing, option.pixel)).toBeLessThan(0.5)
-    expect(option.lps[2]).toBeCloseTo(sliceZ(372), 6)
-    // Each answer point is in air: the centre of its own lumen.
-    expect(huAt(slicePixels(372), option.pixel[0], option.pixel[1])).toBeLessThan(-800)
-  }
-  expect(planeDistanceMm(options[0].pixel, options[1].pixel)).toBeCloseTo(30.5, 1)
+    expect(planeDistanceMm(crossing, planes[i].pixel)).toBeLessThan(0.5)
+    // Each response pixel is in air: the centre of its own lumen.
+    expect(huAt(slicePixels(372), planes[i].pixel[0], planes[i].pixel[1])).toBeLessThan(-800)
+  })
+  expect(planeDistanceMm(planes[0].pixel, planes[1].pixel)).toBeCloseTo(30.5, 1)
 
   // Between the two centrelines, slice by slice: air only from the carina's level down to 377,
-  // soft tissue from 375 down to the answer slice. (376 is the transition; the flood-fill test
+  // soft tissue from 375 down to the response plane. (376 is the transition; the flood-fill test
   // in answer-plane-air.test.ts reads it as still joined.)
   const between = (slice: number) =>
     maxOnSegment(
@@ -241,16 +236,19 @@ test('the lesson marks the main bronchi on slice 372, where the carina stands be
     expect([slice, between(slice) < SOFT_TISSUE_HU]).toEqual([slice, true])
   for (let slice = 372; slice <= 375; slice++)
     expect([slice, between(slice) > SOFT_TISSUE_HU]).toEqual([slice, true])
-  // Every slice the lesson talks about can be browsed.
-  for (const slice of [372, 375, 376, 387, 392]) {
-    expect(slice).toBeGreaterThanOrEqual(low)
-    expect(slice).toBeLessThanOrEqual(high)
-  }
+  // Every slice the explanation talks about can be browsed, on every route.
+  for (const route of CT_TRACES)
+    for (const slice of [372, 375, 376, 387, 392]) {
+      expect(slice).toBeGreaterThanOrEqual(route.range[0])
+      expect(slice).toBeLessThanOrEqual(route.range[1])
+    }
+  expect(low).toBeLessThanOrEqual(372)
+  expect(high).toBeGreaterThanOrEqual(392)
 })
 
-test('the lesson is taught on the separated plane, the route is told what slice 387 shows, and neither carries status text', () => {
+test('the bifurcation is explained on the separated plane, and no explanation carries status text', () => {
   const packet = junctionFeedbackPacket('junction-1')!
-  // The lesson no longer asks for marks on a shared air column, so it needs no entry limitation.
+  // The main bronchi are not identified on a shared air column, so there is no entry limitation.
   expect(packet.entryLimitation).toBeUndefined()
   expect(packet.divergence).toMatch(/divides at about slice 392/)
   expect(packet.divergence).toMatch(/stays one air column down to slice 376/)
@@ -259,17 +257,14 @@ test('the lesson is taught on the separated plane, the route is told what slice 
   expect(packet.known.join(' ')).toMatch(
     /8\.6 mm apart on slice 387, 26 mm apart on slice 375 and 30\.5 mm apart on slice 372/,
   )
-  // The routes still answer on 387: the learner is told what that plane shows and where to mark.
-  expect(packet.routeEntryNote).toMatch(
-    /marked on slice 387, 5 mm below the tracheal bifurcation, where they still share one wide air column/,
-  )
-  expect(packet.routeEntryNote).toMatch(/Mark RMSB in the half on the patient's right/)
-  expect(packet.routeEntryNote).toMatch(/Scroll down to slice 375 to see the carina/)
-  // A division that is still marked on a shared air column says so before the task, and says
+  // No route identifies the main bronchi on slice 387 any more, so no packet says that it does.
+  for (const id of JUNCTION_FEEDBACK_SCOPE)
+    expect(junctionFeedbackPacket(id)).not.toHaveProperty('routeEntryNote')
+  // A division that is still identified on a shared air column says so before the task, and says
   // which part to mark.
   const lb6 = junctionFeedbackPacket('junction-6')!
   expect(lb6.entryLimitation).toMatch(/still one dark area with no wall between them/)
   expect(lb6.entryLimitation).toMatch(/Mark the posterior part/)
-  for (const text of [packet.routeEntryNote!, packet.divergence, lb6.entryLimitation!])
+  for (const text of [packet.divergence, lb6.entryLimitation!])
     expect(text).not.toMatch(/authoring|faculty review|pending|unresolved is|valid response/i)
 })

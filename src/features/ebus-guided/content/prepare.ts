@@ -103,8 +103,8 @@ export const prepareLessons: Lesson[] = [
     },
     refreshers: [
       {
-        href: '/learn/anatomy/branch-tracing/learn?lesson=orientation',
-        label: 'Relate CT to the parent airway view (begins with standard axial CT)',
+        href: '/learn/anatomy/branch-tracing/learn?lesson=carina-orientation',
+        label: 'Why the CT looks backwards: match the axial CT to the scope at the carina',
         course: 'Bronchial Branch Tracing',
       },
       {

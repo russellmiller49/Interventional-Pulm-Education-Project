@@ -7,7 +7,7 @@ import donorCase from '../../../../navigation_module/web/public/cases/default/ca
 import { residualHuAt, type CtResidualOverlay } from '@/lib/bronchoscopy-core/ct-overlay'
 import type { Point3 } from '@/lib/bronchoscopy-core/frame'
 import { CT_TRACES, NATIVE_CT, nativeImageUrl, targetForTrace } from '../geometry/native-ct'
-import { SEGMENT_PRACTICE_TRACES } from '../content/practice'
+import { TARGET_IDS, traceForTarget } from '../content/targets'
 
 const sha = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex')
 const gray = (hu: number) => Math.round(Math.max(0, Math.min(1, (hu + 1000) / 1400)) * 255)
@@ -154,11 +154,9 @@ test('complete routes preserve target placement, the c3 source fixtures and all 
     for (let k = trace.range[0]; k <= trace.range[1]; k++)
       expect(readFileSync(`public${nativeImageUrl(k)}`).length).toBeGreaterThan(0)
   }
+  // Practice reaches every lesion: thirteen lesions in ten segments, each by its own route.
+  expect([...TARGET_IDS].sort()).toEqual(manifest.targets.map((t) => t.id).sort())
   expect(
-    new Set(
-      SEGMENT_PRACTICE_TRACES.map(
-        (id) => targetForTrace(CT_TRACES.find((t) => t.id === id)!).segment.code,
-      ),
-    ).size,
+    new Set(TARGET_IDS.map((id) => targetForTrace(traceForTarget(id)).segment.code)).size,
   ).toBe(10)
 })

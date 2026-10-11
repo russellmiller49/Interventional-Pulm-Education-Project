@@ -1,222 +1,182 @@
 import * as THREE from 'three'
-import baseline from './fixtures/parent-camera-baseline.json'
 import { CT_TRACES, traceById } from '../geometry/native-ct'
-import { parentMap } from '../geometry/parent-map'
-import { pairedScope, bookScopeUp } from '../geometry/paired-scope'
 import {
-  orientationFor,
-  STANDARD_ORIENTATION,
-  turnCt,
-  type CtOrientation,
-} from '../geometry/orientation'
-import {
-  axisName,
+  AXIS_IN_PLANE_THRESHOLD,
+  PATIENT_AXES,
   cameraBasis,
-  ctDisplayCaption,
   lookingDirection,
-  parentCameraCaption,
   patientAxesInView,
   projectDirection,
   projectToParentView,
 } from '../geometry/reference-frames'
-import type { Vec3 } from '../geometry/coordinates'
+import { SCOPE_FOV_DEG, stationCamera } from '../geometry/route-stations'
+import { dot, type Vec3 } from '../geometry/coordinates'
 
 /**
- * BBT-PRE-REVIEW-03, section A. Three reference frames stay separate: native CT / patient space,
- * the learner's CT display, and the modelled parent camera. The camera is a function of the route
- * and the regional preset only, and every caption names the declared convention for its region
- * rather than a universal rule.
+ * The scope's frame is patient space (LPS millimetres): a position, a forward vector and a roll.
+ * It is a function of the route only. These tests hold the projection of patient directions and
+ * points into that frame, on synthetic cameras and on the scope waiting at every fork.
  */
-const EVERY_ORIENTATION: CtOrientation[] = []
-for (const reflected of [false, true])
-  for (const turns of [0, 1, 2, 3] as const) EVERY_ORIENTATION.push({ turns, reflected })
-const round = (v: number) => Number(v.toFixed(9))
+const stations = CT_TRACES.flatMap((trace) =>
+  trace.checkpoints.flatMap((checkpoint, index) =>
+    checkpoint.decision ? [{ trace, index, checkpoint, camera: stationCamera(trace, index)! }] : [],
+  ),
+)
 
-test('the parent camera and the schematic projections are byte-for-byte those of the base SHA', () => {
-  const cameras = baseline.cameras as Record<
-    string,
-    {
-      position: number[]
-      direction: number[]
-      up: number[]
-      atJunction: boolean
-      points: {
-        edgeId: number
-        sourceIndex: number
-        number: number
-        point: number[]
-        x: number
-        y: number
-      }[]
-      axes: { label: string; point: number[] }[]
+test('a camera basis is right-handed and orthonormal, and holds the reference direction at the top', () => {
+  // Looking down the trachea with anterior at the top: the ordinary bronchoscopic view.
+  const down = cameraBasis([0, 0, -2], [0, -1, 0])
+  expect(down.forward).toEqual([0, 0, -1])
+  expect(down.up.map((v) => v + 0)).toEqual([0, -1, 0])
+  // The patient's right (−x) is on the viewer's right: the mirror image of a standard axial CT.
+  expect(down.right.map((v) => v + 0)).toEqual([-1, 0, 0])
+  // A reference that is not perpendicular to the view is squared up, not used as given.
+  const tilted = cameraBasis([0, 0.6, -0.8], [0, -1, 0])
+  for (const basis of [down, tilted, ...stations.map((s) => s.camera.basis)]) {
+    for (const axis of [basis.forward, basis.right, basis.up])
+      expect(Math.hypot(...axis)).toBeCloseTo(1, 12)
+    expect(dot(basis.forward, basis.right)).toBeCloseTo(0, 12)
+    expect(dot(basis.forward, basis.up)).toBeCloseTo(0, 12)
+    expect(dot(basis.right, basis.up)).toBeCloseTo(0, 12)
+    // right × up points back at the viewer: screen x to the right, screen y up.
+    const back = new THREE.Vector3(...basis.right).cross(new THREE.Vector3(...basis.up))
+    expect(back.x).toBeCloseTo(-basis.forward[0], 12)
+    expect(back.y).toBeCloseTo(-basis.forward[1], 12)
+    expect(back.z).toBeCloseTo(-basis.forward[2], 12)
+  }
+  expect(dot(tilted.up, [0, -1, 0])).toBeGreaterThan(0.7)
+})
+
+test('patient directions project to [right, down] on the screen', () => {
+  const down = cameraBasis([0, 0, -1], [0, -1, 0])
+  const at = (v: Vec3) => projectDirection(down, v).map((n) => n + 0)
+  expect(at([1, 0, 0])).toEqual([-1, 0]) // patient-left on screen-left
+  expect(at([-1, 0, 0])).toEqual([1, 0])
+  expect(at([0, -1, 0])).toEqual([0, -1]) // anterior at the top
+  expect(at([0, 1, 0])).toEqual([0, 1])
+  expect(at([0, 0, -1])).toEqual([0, 0]) // along the line of sight: no side
+  // Looking toward the head with anterior at the top: a standard axial CT.
+  const up = cameraBasis([0, 0, 1], [0, -1, 0])
+  expect(projectDirection(up, [1, 0, 0]).map((n) => n + 0)).toEqual([1, 0])
+  expect(projectDirection(up, [0, 1, 0]).map((n) => n + 0)).toEqual([0, 1])
+  // Opposite directions always project to opposite points.
+  for (const { camera } of stations)
+    for (const axis of PATIENT_AXES) {
+      const [x, y] = projectDirection(camera.basis, axis.vector)
+      const [ox, oy] = projectDirection(camera.basis, axis.vector.map((v) => -v) as Vec3)
+      expect(ox).toBeCloseTo(-x, 12)
+      expect(oy).toBeCloseTo(-y, 12)
+      expect(Math.hypot(x, y)).toBeLessThanOrEqual(1 + 1e-12)
     }
-  >
-  let compared = 0
-  for (const trace of CT_TRACES)
-    trace.checkpoints.forEach((cp, i) => {
-      if (!cp.decision) return
-      const expected = cameras[`${trace.id}/${cp.id}`]
-      expect(expected).toBeDefined()
-      const pose = pairedScope(trace, cp.slice, i, false)
-      expect(pose.position.map(round)).toEqual(expected.position)
-      expect(pose.direction.map(round)).toEqual(expected.direction)
-      expect(pose.up.map(round)).toEqual(expected.up)
-      expect(pose.atJunction).toBe(expected.atJunction)
-      const map = parentMap(trace, i)!
-      expect(
-        map.points.map((p) => ({
-          edgeId: p.edgeId,
-          sourceIndex: p.sourceIndex,
-          number: p.number,
-          point: p.point.map(round),
-          x: round(p.x),
-          y: round(p.y),
-        })),
-      ).toEqual(expected.points)
-      expect(map.axes.map((a) => ({ label: a.label, point: a.point.map(round) }))).toEqual(
-        expected.axes,
+})
+
+test('an axis along the line of sight is reported as such and never given a screen arrow', () => {
+  expect(AXIS_IN_PLANE_THRESHOLD).toBe(0.3)
+  expect(stations).toHaveLength(128)
+  for (const { camera } of stations) {
+    const { inPlane, alongView } = patientAxesInView(camera.basis)
+    expect(inPlane.length + alongView.length * 2).toBe(6)
+    // Both ends of a drawn axis are drawn, at opposite points.
+    for (const axis of inPlane) {
+      expect(Math.hypot(...axis.point)).toBeGreaterThan(AXIS_IN_PLANE_THRESHOLD)
+      const opposite = inPlane.find(
+        (other) =>
+          Math.abs(other.point[0] + axis.point[0]) < 1e-9 &&
+          Math.abs(other.point[1] + axis.point[1]) < 1e-9,
       )
-      // The added letter is the CT answer order, never the spatial number.
-      for (const p of map.points) expect(p.letter).toBe(String.fromCharCode(65 + p.sourceIndex))
-      compared++
-    })
-  expect(compared).toBe(Object.keys(cameras).length)
-})
-
-test('the parent camera never reads the CT display: every orientation yields the same pose', () => {
-  for (const trace of CT_TRACES)
-    trace.checkpoints.forEach((cp, i) => {
-      const reference = pairedScope(trace, cp.slice, i, false)
-      for (const orientation of EVERY_ORIENTATION) {
-        // The display is a screen-only operation; nothing about the pose can depend on it.
-        void orientation
-        const pose = pairedScope(trace, cp.slice, i, false)
-        expect(pose.position).toEqual(reference.position)
-        expect(pose.direction).toEqual(reference.direction)
-        expect(pose.up).toEqual(reference.up)
-      }
-      expect(bookScopeUp(trace.preset, reference.direction)).toEqual(reference.up)
-    })
-})
-
-test('projected patient directions match the schematic basis and never assign an arrow to an axis along the view', () => {
-  for (const trace of CT_TRACES)
-    trace.checkpoints.forEach((cp, i) => {
-      const map = parentMap(trace, i)
-      if (!map) return
-      const { inPlane, alongView } = patientAxesInView(map.basis)
-      expect(inPlane.length + alongView.length * 2).toBe(6)
-      // Each historical axis (R, A, S) that is drawn appears in the in-plane set with the same point.
-      for (const axis of map.axes) {
-        const match = inPlane.find((a) => a.label === axis.label)!
-        expect(match.point[0]).toBeCloseTo(axis.point[0], 10)
-        expect(match.point[1]).toBeCloseTo(axis.point[1], 10)
-        // Its opposite end projects to the negated point.
-        const opposite = inPlane.find(
-          (a) =>
-            (a.point[0] === -match.point[0] && a.point[1] === -match.point[1]) ||
-            (Math.abs(a.point[0] + match.point[0]) < 1e-9 &&
-              Math.abs(a.point[1] + match.point[1]) < 1e-9),
-        )
-        expect(opposite).toBeDefined()
-      }
-      for (const along of alongView) {
-        // The axis really does run along the line of sight.
-        expect(
-          Math.abs(Math.hypot(...projectDirection(map.basis, along.into.vector))),
-        ).toBeLessThanOrEqual(0.3)
-        expect(
-          along.into.vector.map((v, k) => v * map.basis.forward[k]).reduce((a, b) => a + b, 0),
-        ).toBeGreaterThan(0)
-      }
-    })
-  // The first division: the camera looks caudally, so the S–I axis runs along the view.
-  const map = parentMap(traceById('central-right'), 0)!
-  expect(map.alongView.map((a) => a.pair)).toEqual(['S–I'])
-  expect(map.alongView[0].into.label).toBe('I')
-  expect(map.inPlane.map((a) => a.label).sort()).toEqual(['A', 'L', 'P', 'R'])
-})
-
-test('captions name the region’s declared roll and the looking direction, and never a universal rule', () => {
-  const forbidden = /always|every (view|region|airway)|universal/i
-  let named = 0
-  for (const trace of CT_TRACES)
-    trace.checkpoints.forEach((cp, i) => {
-      const pose = pairedScope(trace, cp.slice, i, false)
-      const caption = parentCameraCaption(pose, cp.decision?.parent.airway.code ?? cp.airway.code)
-      expect(caption).not.toMatch(forbidden)
-      expect(axisName(pose.up)).not.toBeNull()
-      expect(caption).toMatch(
-        /Reference roll for this region: (anterior|posterior|patient left|patient right|superior|inferior) at the top of the view\./,
+      expect(opposite).toBeDefined()
+      expect(axis.point).toEqual(projectDirection(camera.basis, axis.vector))
+    }
+    for (const along of alongView) {
+      // The axis really does run along the line of sight, and `into` is the far end.
+      expect(Math.hypot(...projectDirection(camera.basis, along.into.vector))).toBeLessThanOrEqual(
+        AXIS_IN_PLANE_THRESHOLD,
       )
-      named++
-    })
-  expect(named).toBeGreaterThan(0)
-  // The declared conventions by preset, as the module documents them.
-  expect(axisName(bookScopeUp('mirror', [0, 0, -1]))!.name).toBe('anterior')
-  expect(axisName(bookScopeUp('rul', [0, 0, 1]))!.name).toBe('patient left')
-  expect(axisName(bookScopeUp('upper-division', [0, 0, 1]))!.name).toBe('patient right')
-  expect(axisName(bookScopeUp('mirror', [0, -1, 0]))!.name).toBe('superior')
+      expect(dot(along.into.vector, camera.basis.forward)).toBeGreaterThan(0)
+      expect(dot(along.toward.vector, camera.basis.forward)).toBeLessThan(0)
+      expect(along.pair).toBe(
+        [along.into.label, along.toward.label]
+          .sort((a, b) => 'RLAPSI'.indexOf(a) - 'RLAPSI'.indexOf(b))
+          .join('–'),
+      )
+    }
+  }
+  // The tracheal fork: the scope looks caudally, so the S–I axis runs along the view.
+  const carina = patientAxesInView(stationCamera(traceById('central-right'), 0)!.basis)
+  expect(carina.alongView.map((a) => a.pair)).toEqual(['S–I'])
+  expect(carina.alongView[0].into.label).toBe('I')
+  expect(carina.inPlane.map((a) => a.label).sort()).toEqual(['A', 'L', 'P', 'R'])
+  // A synthetic level look to the patient's right: R–L runs along the view, with R the far end.
+  const level = patientAxesInView(cameraBasis([-1, 0, 0], [0, 0, 1]))
+  expect(level.alongView.map((a) => [a.pair, a.into.label, a.toward.label])).toEqual([
+    ['R–L', 'R', 'L'],
+  ])
+  expect(level.inPlane.map((a) => a.label).sort()).toEqual(['A', 'I', 'P', 'S'])
+})
+
+test('the looking direction is said in patient words, "mainly" when it is oblique', () => {
   expect(lookingDirection([0, 0, -1])).toBe('caudally')
   expect(lookingDirection([0, 0, 1])).toBe('cranially')
   expect(lookingDirection([0.6, 0, -0.8])).toBe('mainly caudally')
   expect(lookingDirection([0, -1, 0])).toBe('anteriorly')
-  const trachea = pairedScope(traceById('central-right'), 387, 0, false)
-  expect(parentCameraCaption(trachea, 'Trachea')).toBe(
-    'Model parent view: looking caudally along Trachea toward its division. Reference roll for this region: anterior at the top of the view.',
-  )
-  for (const orientation of EVERY_ORIENTATION) {
-    const caption = ctDisplayCaption(orientation)
-    expect(caption).toMatch(/^CT display: /)
-    expect(caption).toMatch(/does not move the parent camera/)
-  }
-  expect(ctDisplayCaption(STANDARD_ORIENTATION)).toContain('Standard axial (A up, R screen-left)')
-  expect(ctDisplayCaption(orientationFor('mirror'))).toContain('(A up, L screen-left)')
-  expect(ctDisplayCaption(turnCt(STANDARD_ORIENTATION, 'right'))).toContain('(R up, P screen-left)')
+  expect(lookingDirection([0, 3, 0])).toBe('posteriorly')
+  expect(lookingDirection([-1, 0, 0])).toBe("toward the patient's right")
+  expect(lookingDirection([1, 0.2, 0])).toBe("toward the patient's left")
+  // At the tracheal fork of every route the scope looks down the trachea.
+  for (const trace of CT_TRACES)
+    expect([trace.id, lookingDirection(stationCamera(trace, 0)!.direction)]).toEqual([
+      trace.id,
+      'caudally',
+    ])
 })
 
-test('the perspective projection agrees with the rendered three.js camera and the schematic sign convention', () => {
-  const fov = 80
-  for (const trace of CT_TRACES)
-    trace.checkpoints.forEach((cp, i) => {
-      if (!cp.decision) return
-      const pose = pairedScope(trace, cp.slice, i, false)
-      const camera = new THREE.PerspectiveCamera(fov, 1, 0.1, 2000)
-      const forward = new THREE.Vector3(...pose.direction).normalize()
-      camera.position.set(...pose.position)
-      camera.up.copy(new THREE.Vector3(...pose.up))
-      camera.lookAt(new THREE.Vector3(...pose.position).add(forward))
-      camera.updateMatrixWorld()
-      camera.matrixWorldInverse.copy(camera.matrixWorld).invert()
-      camera.updateProjectionMatrix()
-      const map = parentMap(trace, i)!
-      for (const option of cp.decision.options) {
-        const ours = projectToParentView(pose, option.lps as Vec3, fov)
-        const ndc = new THREE.Vector3(...option.lps).project(camera)
-        expect(ours.x).toBeCloseTo(((ndc.x + 1) / 2) * 100, 6)
-        expect(ours.y).toBeCloseTo(((1 - ndc.y) / 2) * 100, 6)
-        expect(ours.depthMm).toBeGreaterThan(0)
-        // The camera looks at the fork; a daughter's point lies on the same side of centre as its
-        // orthographic schematic direction, so the letters cannot swap between the two views.
-        const schematic = map.points.find((p) => p.edgeId === option.sourceEdgeId)!
-        if (Math.abs(schematic.point[0]) > 0.15)
-          expect(Math.sign(ours.x - 50)).toBe(Math.sign(schematic.point[0]))
-      }
-      // The look-at point itself projects to the centre.
-      const centre = projectToParentView(pose, cp.decision.junctionLps as Vec3, fov)
-      expect(centre.x).toBeCloseTo(50, 6)
-      expect(centre.y).toBeCloseTo(50, 6)
-    })
-  // A point behind the camera is reported as not drawable, not placed on screen.
-  const pose = pairedScope(traceById('central-right'), 387, 0, false)
-  const behind: Vec3 = [
-    pose.position[0] - pose.direction[0] * 20,
-    pose.position[1] - pose.direction[1] * 20,
-    pose.position[2] - pose.direction[2] * 20,
-  ]
-  expect(projectToParentView(pose, behind).inFront).toBe(false)
-  const basis = cameraBasis(pose.direction, pose.up)
-  expect(Math.hypot(...basis.forward)).toBeCloseTo(1, 12)
-  expect(basis.forward.reduce((n, v, k) => n + v * basis.up[k], 0)).toBeCloseTo(0, 12)
-  expect(basis.right.reduce((n, v, k) => n + v * basis.up[k], 0)).toBeCloseTo(0, 12)
+test('the perspective projection agrees with a three.js camera at every fork of every route', () => {
+  for (const { checkpoint, camera: pose } of stations) {
+    const camera = new THREE.PerspectiveCamera(SCOPE_FOV_DEG, 1, 0.1, 2000)
+    const forward = new THREE.Vector3(...pose.direction).normalize()
+    camera.position.set(...pose.position)
+    camera.up.copy(new THREE.Vector3(...pose.up))
+    camera.lookAt(new THREE.Vector3(...pose.position).add(forward))
+    camera.updateMatrixWorld()
+    camera.matrixWorldInverse.copy(camera.matrixWorld).invert()
+    camera.updateProjectionMatrix()
+    for (const option of checkpoint.decision!.options) {
+      const ours = projectToParentView(pose, option.lps as Vec3, SCOPE_FOV_DEG)
+      const ndc = new THREE.Vector3(...option.lps).project(camera)
+      expect(ours.x).toBeCloseTo(((ndc.x + 1) / 2) * 100, 6)
+      expect(ours.y).toBeCloseTo(((1 - ndc.y) / 2) * 100, 6)
+      expect(ours.depthMm).toBeGreaterThan(0)
+      expect(ours.inFront).toBe(ours.x >= 0 && ours.x <= 100 && ours.y >= 0 && ours.y <= 100)
+    }
+    // A point straight ahead projects to the centre, at its own depth.
+    const ahead = pose.position.map((v, axis) => v + pose.direction[axis] * 12) as Vec3
+    const centre = projectToParentView(pose, ahead, SCOPE_FOV_DEG)
+    expect(centre.x).toBeCloseTo(50, 9)
+    expect(centre.y).toBeCloseTo(50, 9)
+    expect(centre.depthMm).toBeCloseTo(12, 9)
+    expect(centre.inFront).toBe(true)
+  }
+})
+
+test('a point beside or behind the camera is reported as not drawable, and the field of view scales the picture', () => {
+  const pose = stationCamera(traceById('central-right'), 0)!
+  const behind = pose.position.map((v, axis) => v - pose.direction[axis] * 20) as Vec3
+  const projected = projectToParentView(pose, behind)
+  expect(projected.inFront).toBe(false)
+  expect(Number.isNaN(projected.x) && Number.isNaN(projected.y)).toBe(true)
+  expect(projected.depthMm).toBeCloseTo(-20, 9)
+  // 45° off axis sits on the rim at a 90° field of view, and inside it at a wider one.
+  const camera = {
+    position: [0, 0, 0] as Vec3,
+    direction: [0, 0, -1] as Vec3,
+    up: [0, -1, 0] as Vec3,
+  }
+  const offAxis: Vec3 = [-10, 0, -10]
+  expect(projectToParentView(camera, offAxis, 90).x).toBeCloseTo(100, 9)
+  expect(projectToParentView(camera, offAxis, 90).y).toBeCloseTo(50, 9)
+  expect(projectToParentView(camera, offAxis, SCOPE_FOV_DEG).x).toBeLessThan(100)
+  // Anterior is up: a point in front of the patient projects above the centre.
+  expect(projectToParentView(camera, [0, -5, -10], 90).y).toBeCloseTo(25, 9)
+  // Outside the square view: in front of the camera, but not drawable.
+  expect(projectToParentView(camera, [-30, 0, -10], 90).inFront).toBe(false)
 })
