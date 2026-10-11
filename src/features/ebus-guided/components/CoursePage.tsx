@@ -216,7 +216,7 @@ export function CoursePage({
             <GlossaryTerms
               entries={GLOSSARY}
               heading="Course glossary"
-              intro="Definitions taken from the course’s own teaching, with the lesson each comes from. Terms the course uses without defining are not listed. The same glossary is under Help in every lesson."
+              intro="Course definitions and owner-approved terminology expansions, with sources and limits. The same glossary is under Help in every lesson."
               level={2}
             />
           </section>
