@@ -579,6 +579,7 @@
         "element": "transfer Q22, item explanation"
       },
       "learnerWording": "Avoiding unnecessary proximal suction protects the specimen; clearing secretions that obstruct the airway and impair breathing protects the patient, and the patient comes first.",
+      "supersededBy": "Rewrite, section 11, 2026-10-10: Washings and BAL was re-authored and `poor-return` retired into it. The check Q22 is rewritten with a new patient. Its explanation keeps the teaching in new words: keeping suction off on the way in protects the specimen, clearing secretions that block the airway protects the patient, and she comes first. The quoted wording no longer appears.",
       "intendedTeachingPoint": "Unnecessary proximal suction before a contamination-sensitive lavage is avoided, but necessary airway clearance comes first. The record then states the sequence, so the result is read with that limitation.",
       "sourceCheck": {
         "checkedOn": "2026-09-14",
@@ -660,6 +661,7 @@
         "element": "practice mc-low-return-after-checks, item explanation"
       },
       "learnerWording": "persistent low return suggests a sampling limitation such as the disease or a dependent segment. The response is to weigh the value and safety of further lavage with the supervisor and record a limited attempt",
+      "supersededBy": "Rewrite, section 11, 2026-10-10: `poor-return` was retired into Washings and BAL. The teaching is now in the block `poor-return-causes` (the lung itself returns little in emphysema or a dependent segment: record a limited sample), the block `when-to-stop` (the ATS abort rule, from the numbers register) and the practice case `mc-low-return-after-checks`, whose key is to finish the planned aliquots and record the return as low. The answer no longer defers to the supervisor. The quoted wording no longer appears.",
       "intendedTeachingPoint": "Once leak, airway collapse and the suction path are excluded, persistent low return is a sampling limitation. It is not a target the patient must be pushed to meet, and the attempt is recorded as limited.",
       "sourceCheck": {
         "checkedOn": "2026-09-14",

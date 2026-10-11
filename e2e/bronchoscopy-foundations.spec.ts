@@ -633,7 +633,7 @@ test('a survey left without completing it saves no survey and claims nothing', a
 test('the report refuses unsupported claims and only opens Continue when every field is supported', async ({
   page,
 }) => {
-  const { lesson } = await reachAct(page, 'honest-report')
+  const { lesson } = await reachAct(page, 'describe-findings')
   const interaction = lesson.steps.find((step) => step.interaction.kind === 'report')!.interaction
   if (interaction.kind !== 'report') throw new Error('Report expected')
   await expect(primary(page)).toHaveCount(0)
@@ -731,7 +731,7 @@ for (const viewport of [
               'right-side',
               'left-side',
               'deterioration',
-              'honest-report',
+              'describe-findings',
             ] as const)
       for (const id of ids) {
         await openSection(page, id)
@@ -767,7 +767,7 @@ for (const viewport of [
   )
 }
 
-for (const id of ['pre-use-check', 'deterioration', 'honest-report'] as const) {
+for (const id of ['pre-use-check', 'deterioration', 'describe-findings'] as const) {
   test('complete course workspace through native responses: ' + id, async ({ page }, info) => {
     const lesson = await openSection(page, id)
     for (const step of lesson.steps) {
@@ -882,7 +882,7 @@ const readout = (page: Page, id: string) => page.locator('[data-readout="' + id 
 test('the worked accessory exchange keeps its false report and still ends protected', async ({
   page,
 }) => {
-  await reachAct(page, 'protected-accessories')
+  await reachAct(page, 'biopsy-and-specimens')
   await ready(page)
   const caption = page.locator('[data-demonstration-caption]')
   const message = page.locator('[data-scope-message]')
@@ -1354,12 +1354,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
 
   // The rewritten sections (the right lung, bleeding) close on their checklist and do not print
   // the table in the lesson; the Reference keeps all of it.
-  const GRAMMAR_SECTIONS = [
-    'poor-return',
-    'protected-accessories',
-    'deterioration',
-    'scope-in-a-tube',
-  ] as const
+  const GRAMMAR_SECTIONS = ['deterioration', 'scope-in-a-tube'] as const
 
   async function expectGrammarRows(table: Locator, rowIds: readonly string[]) {
     await expect(table.locator('tbody tr[data-grammar-row]')).toHaveCount(rowIds.length)
@@ -1403,9 +1398,8 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
         await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[index + 1].id)
       }
     }
-    // Four sections, five places: poor-return shows the rows twice. A rewritten section no longer
-    // prints the table in the lesson.
-    expect(occurrences).toBe(5)
+    // Two sections, one place each. A rewritten section no longer prints the table in the lesson.
+    expect(occurrences).toBe(2)
     await page.goto(base + '/reference')
     const reference = page.locator('#reading-the-view table[data-grammar]')
     await expect(reference.locator('thead th')).toHaveText([
@@ -1430,7 +1424,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       page,
     }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await stepTo(page, 'poor-return', 'read', { grammar: true })
+      await stepTo(page, 'deterioration', 'read', { grammar: true })
       if (viewport.text === 200)
         await page.evaluate(() => {
           document.documentElement.style.fontSize = '200%'
@@ -1463,7 +1457,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       const rowHeaders = nodes
         .filter((node) => node.role?.value === 'rowheader')
         .map((node) => node.name?.value ?? '')
-      for (const id of bronchSection('poor-return').grammarRowIds)
+      for (const id of bronchSection('deterioration').grammarRowIds)
         expect(
           rowHeaders.some((name) =>
             name.includes(BRONCH_GRAMMAR.find((row) => row.id === id)!.see),
@@ -1526,7 +1520,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
     await expect(primary(page)).toBeEnabled()
   })
 
-  for (const id of ['poor-return', 'deterioration', 'bleeding-priorities'] as const)
+  for (const id of ['washing-and-lavage', 'deterioration', 'bleeding-priorities'] as const)
     test(`the ${id} case refuses the unsafe move and shows a visible way to the next observation`, async ({
       page,
     }) => {

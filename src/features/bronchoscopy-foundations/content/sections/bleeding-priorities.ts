@@ -101,7 +101,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D13'],
-  prerequisites: ['view-loss', 'protected-accessories', 'deterioration'],
+  prerequisites: ['view-loss', 'biopsy-and-specimens', 'deterioration'],
 
   clinicalQuestion: 'Blood fills the view after a biopsy. What do you do in the next ten seconds?',
   objective: 'Make the first moves for airway bleeding in order, and grade the bleed afterwards.',
