@@ -13,6 +13,7 @@ export function BronchPilotTeaching({
   readonly hintShown: boolean
 }) {
   const deciding = unit.support === 'check' || unit.support === 'transfer'
+  const rewritten = section.authoringContract === 2
   return (
     <div className={styles.teaching} data-pilot-teaching={unit.id}>
       <section className={styles.teachingCard}>
@@ -34,17 +35,17 @@ export function BronchPilotTeaching({
           </p>
         ) : null}
         <p className={styles.figureCaption}>
-          Sources: {unit.sourceRefs.map(formatSourceRef).join('; ')}. Teaching adaptation; review
-          pending.
+          Sources: {unit.sourceRefs.map(formatSourceRef).join('; ')}.
+          {rewritten ? null : ' Teaching adaptation; review pending.'}
         </p>
       </section>
-      {unit.orientation ? (
+      {unit.orientation && !rewritten ? (
         <p className={styles.boundaryLine}>
           Reloading starts this lesson again at the beginning. Answers are not saved; where you left
           off and the sections you mark stay on this device.
         </p>
       ) : null}
-      {!deciding ? (
+      {!deciding && !rewritten ? (
         <details className={styles.teachingCard}>
           <summary>More on technique and model limits</summary>
           <p>{section.modelBoundary}</p>

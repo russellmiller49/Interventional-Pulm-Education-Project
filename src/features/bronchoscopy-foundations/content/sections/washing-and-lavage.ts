@@ -1,47 +1,100 @@
-import { SIMULATOR_LANDMARKS, STEPS_LANDMARKS, TEACHING_LANDMARKS } from '../landmarks'
-import type { BronchSectionDefinition } from '../types'
+import { num } from '../numbers'
+import type { BronchSectionDefinition, MonitorReading, MonitorTrend } from '../types'
 
 /**
- * M12, first half — suction, bronchial washing and bronchoalveolar lavage. The learner separates
- * the four procedures that put saline into the airway (washing, BAL, therapeutic aspiration and
- * whole-lung lavage), then decides which steps of a planned BAL must come before others, including
- * the reassessment that gates each further aliquot. Poor return and its differential follow in
- * `poor-return`. Knowledge spec §13.1–§13.7 (S1 PDF 90–93, 118–127; T13; T14; T15; U6) and the
- * collection record of §13.9 and §15.4; register items R21, R22, R23, R25 and R42.
+ * Washings and BAL (rewrite, brief 11; absorbs `poor-return`). The fellow learns the three saline
+ * procedures, to choose the lavage site from the CT, the wedge, the aliquots, the suction and the
+ * return with their guideline numbers, what a poor return means, how the fluid is processed and
+ * why lavage comes before biopsy. They put a BAL in order, then run one: three aliquots whose
+ * return they work out, with a poor return to troubleshoot.
+ *
+ * Every number is a register row (ATS 2012 for the lavage, IDSA/ATS 2016 for the culture
+ * threshold). The volumes in the case are the case's own. Sources: the course textbook's chapter
+ * on sampling (S1), the ATS guideline on BAL (U6) and the IDSA/ATS guideline on HAP and VAP (U7).
  */
+const TECHNIQUE = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 119, to: 121 } },
+  { sourceId: 'U6', location: { kind: 'section', label: 'BAL technique and return' } },
+] as const
+const NAMES = [{ sourceId: 'S1', location: { kind: 'pdf-pages', from: 118, to: 120 } }] as const
+const SUCTION = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 90, to: 93 } },
+  { sourceId: 'U6', location: { kind: 'section', label: 'BAL technique and return' } },
+] as const
+const CULTURE = [
+  { sourceId: 'S1', location: { kind: 'pdf-pages', from: 119, to: 121 } },
+  { sourceId: 'U7', location: { kind: 'section', label: 'Section II recommendation' } },
+  { sourceId: 'U6', location: { kind: 'section', label: 'BAL technique and return' } },
+] as const
+
+/** The monitor at one moment of the case. Values are written for this case. */
+function vitals(
+  view: string,
+  spo2: readonly [string, MonitorTrend, string],
+  heartRate: readonly [string, MonitorTrend],
+): readonly MonitorReading[] {
+  return [
+    { channel: 'airway-view', words: view, trend: 'new' },
+    {
+      channel: 'oximetry',
+      words: spo2[2],
+      trend: spo2[1],
+      value: spo2[0],
+      unit: '%',
+      provenance: 'authored',
+    },
+    {
+      channel: 'heart-rate',
+      words: heartRate[1] === 'steady' ? 'Unchanged' : 'Rising',
+      trend: heartRate[1],
+      value: heartRate[0],
+      unit: '/min',
+      provenance: 'authored',
+    },
+  ]
+}
+
 export const section: BronchSectionDefinition = {
   id: 'washing-and-lavage',
-  title: 'Washing, lavage and aspiration',
-  shortTitle: 'Washing and lavage',
-  minutes: 8,
+  authoringContract: 2,
+  title: 'Washings and BAL',
+  shortTitle: 'Washings and BAL',
+  minutes: 12,
+  activityMinutes: 4.5,
   moduleIds: ['M12'],
   objectives: [
     {
       objectiveId: 'M12-O1',
-      subtask:
-        'Commits a name for saline instilled and recovered in the trachea, and, in the transfer, the next move when a therapeutic aspiration stalls, where a lavage’s method does not apply.',
+      subtask: 'Names a saline sample by how it was taken, whatever the label says.',
       evidence: 'committed-explanation',
     },
     {
       objectiveId: 'M12-O2',
-      subtask:
-        'Chooses the lavage segment for a focal consolidation from the imaging rather than a habitual site, in a practice case; places the choice of segment first, and its confirmation before the wedge and any saline, in the BAL sequence.',
+      subtask: 'Chooses the lavage segment from the CT.',
       evidence: 'case-decision',
     },
     {
       objectiveId: 'M12-O3',
-      subtask:
-        'Places the gentle wedge before instillation, and the reassessment of the seal, the airway, the return and the patient before any further aliquot, in the BAL sequence; the hands are shown to faculty.',
-      evidence: 'observed-physical-skill-required',
+      subtask: 'Puts the steps of a BAL in order, from the site to the record.',
+      evidence: 'committed-explanation',
     },
     {
       objectiveId: 'M12-O4',
-      subtask:
-        'Chooses, in a practice case, what a lavage note must add when serial returns change — each return’s character in order, the volumes and how the fractions were handled — and closes the BAL sequence with the record.',
+      subtask: 'Works out the return of a lavage from the volumes in and out, and records it.',
       evidence: 'case-decision',
     },
+    {
+      objectiveId: 'M12-O5',
+      subtask: 'Finds the cause of a poor return: leak, collapse, the circuit or the lung.',
+      evidence: 'case-decision',
+    },
+    {
+      objectiveId: 'M12-O6',
+      subtask: 'Clears secretions that threaten the airway before a planned lavage.',
+      evidence: 'committed-explanation',
+    },
   ],
-  drillIds: ['D11'],
+  drillIds: ['D11', 'D20'],
   prerequisites: [
     'clinical-question',
     'sedation-and-monitoring',
@@ -53,486 +106,724 @@ export const section: BronchSectionDefinition = {
   ],
 
   clinicalQuestion:
-    'When saline goes into the airway and comes back, which procedure was performed, and what should the specimen and the record say?',
-  recognizeTitle: 'Saline instilled and recovered in the trachea',
-  objective:
-    'Tell bronchial washing, bronchoalveolar lavage (BAL), therapeutic aspiration and whole-lung lavage apart, and decide which steps of a planned BAL must come before others.',
-  why: 'Each of these procedures meets a different clinical need, and the laboratory and the treating team read a specimen by the name it carries.',
-  newConcept:
-    'The name follows the method: a BAL is saline instilled and recovered by a specified collection technique through a gentle wedge in a segment chosen for the question, so saline instilled for a specimen and recovered in a central airway, with no wedge, is a washing, whatever the trap says.',
-  incrementSentence:
-    'This section adds one idea to the survey and the description you already make: what was done, not the fluid in the trap or the word on the request, decides what a sample is called.',
+    'You are asked for a BAL. Where do you lavage, how much, and how do you know the sample is good?',
+  objective: 'Choose the site, run the lavage in order, and judge it by what comes back.',
   harmfulReflex:
-    'Giving the next aliquot as soon as the last is recovered, to keep to the planned total, before the seal, the airway, the return and the patient have been reassessed.',
+    'Instilling the next aliquot, or turning the suction up, when the last aliquot did not come back.',
+  harmfulReflexPatterns: [/\binstil/i, /\bsuction up\b/i, /\bmore saline\b/i],
   anchor: {
     analogy:
-      'A cup dipped at the edge of a lake does not sample the water at depth. A BAL has to reach a chosen distal unit and isolate it; saline swirled in a central airway collects what lies in that airway, not the isolated distal airspaces.',
+      'Rinsing a jar to see what was in it: you seal it, pour in a measured amount and pour it back out. If the lid leaks, or nothing comes out, you have learned nothing.',
     precise:
-      'A bronchial washing samples material from the bronchial airway after limited instillation and aspiration, with no wedge. A bronchoalveolar lavage samples the distal airspaces through a wedged bronchus, with a specified collection technique. Therapeutic aspiration clears retained material; whole-lung lavage is a separate therapeutic procedure.',
-    checklistLabel: 'Before naming a saline sample, say',
+      'The worth of a lavage is set by the site you chose, the wedge you made and the volumes you counted in and out.',
+    checklistLabel: 'Running a BAL',
     checklist: [
-      'Where the tip was',
-      'Whether a gentle wedge isolated a chosen segment',
-      'What it was for: a specimen, or clearing the airway',
-      'The volumes actually instilled and recovered',
+      'Site from the CT',
+      'A gentle wedge',
+      'Measured aliquots in, gentle suction out',
+      'Count what comes back',
     ],
   },
+  outcomes: [
+    {
+      id: 'run-a-bal',
+      text: 'Choose the site from the CT and run a BAL in order.',
+    },
+    {
+      id: 'judge-the-return',
+      text: 'Work out the return, find the cause of a poor one, and know when to stop.',
+    },
+  ],
 
   spineStops: ['trachea', 'segmental'],
-  grammarRowIds: [],
-  controlStrip: {
-    verdict: 'no-control-change-the-plan',
-    states: {
-      insertion: 'not-this-one',
-      rotation: 'not-this-one',
-      deflection: 'not-this-one',
-      suction: 'harmful-reflex',
-      accessory: 'not-this-one',
-    },
-    sentence:
-      'No control turns saline recovered in a central airway into a lavage: the method decides the name, and the record says what was done. During a lavage the tempting move sits at suction, recovering one aliquot and going straight on to the next; the next aliquot waits for a reassessment of the seal, the airway, the return and the patient.',
-  },
-  precommitDenyPatterns: [
-    /\bname follows the method\b/i,
-    /\b(is|was) a (bronchial )?washing\b/i,
-    /\bwashing,? (rather than|not) (a )?BAL\b/i,
-  ],
-  modelBoundary:
-    'Nothing in this section models fluid, suction or a wedge. The sequence teaches the order and the reasons; it does not measure wedge quality, instilled or recovered volume, or lavage technique, and no volume on this page is a target for your patient.',
-  physicalSkillNote:
-    'The app cannot see the hands. Settling a gentle wedge, instilling and recovering under control, and adjusting a leaking or over-wedged position are shown under faculty observation; this section teaches the order and the reasons, and measures no wedge, volume or return.',
+  grammarRowIds: ['poor-return-leak', 'poor-return-collapse', 'no-return-patent-view'],
+  precommitDenyPatterns: [/\bno wedge\b/i, /\bsamples the airway\b/i],
   localPolicyIds: ['bal_protocol'],
-  reviewItemIds: ['R21', 'R22', 'R23', 'R25', 'R42'],
+  reviewItemIds: ['R21', 'R22', 'R24', 'R25', 'R42'],
 
   blocks: [
     {
-      id: 'saline-in-the-airway',
-      kind: 'question',
-      role: 'framing',
-      heading: 'Saline in, fluid out',
-      body: 'Several procedures put saline into the airway and recover fluid. They are done for different reasons and are not interchangeable.',
-      claimClass: 'synthesis',
-      sourceRefs: [{ sourceId: 'S1', location: { kind: 'pdf-pages', from: 118, to: 120 } }],
-    },
-    {
-      id: 'what-to-notice',
-      kind: 'signals',
-      role: 'signals',
-      heading: 'What to notice about a saline sample',
-      body: 'Each of these can be known, or asked, before a sample is named.',
-      pointsLabel: 'Information available about a saline sample',
-      points: [
-        'The airway the tip was in when the saline went in',
-        'How the tip sat in that airway',
-        'What the procedure was for: a specimen, or clearing the airway',
-        'What went in, and what came back',
-        'What the request form and the trap label say',
-      ],
-      claimClass: 'source',
-      sourceRefs: [{ sourceId: 'S1', location: { kind: 'pdf-pages', from: 118, to: 120 } }],
-    },
-    {
-      id: 'four-procedures',
-      kind: 'after-commitment',
+      id: 'three-procedures',
+      kind: 'pattern',
       role: 'mechanism',
-      heading: 'Four procedures, four purposes',
-      body: 'A bronchial washing samples material from the bronchial airway after limited instillation and aspiration; it needs no wedge. A bronchoalveolar lavage samples fluid and cells from the distal airspaces reached through a wedged bronchus, using a specified collection technique. The name on the specimen has to match what was performed. The diagnostic-tools lecture separates a genuinely distal sampling strategy from collecting a little fluid in a proximal airway and calling it a BAL.\n\nTherapeutic aspiration is not a way to obtain a clean diagnostic specimen: its purpose is to clear retained secretions or other material from an obstructed airway, with controlled suction and, when useful, limited saline. Whole-lung lavage is a separate therapeutic procedure with very different equipment, volumes, airway management and training. A BAL is not a small whole-lung lavage.',
-      claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 118, to: 120 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 125, to: 126 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 90, to: 93 } },
-        { sourceId: 'T13', location: { kind: 'time-span', start: '00:08:45', end: '00:15:33' } },
-        { sourceId: 'T15', location: { kind: 'time-span', start: '00:34:11', end: '00:36:47' } },
-        { sourceId: 'T14', location: { kind: 'time-span', start: '00:01:24', end: '00:04:55' } },
-      ],
-    },
-    {
-      id: 'lavage-worked',
-      kind: 'after-commitment',
-      role: 'worked-example',
-      heading: 'A lavage note, worked through',
-      body: 'When a biopsy is also planned, a lavage for microbiology or cells is generally collected before it, because blood from the biopsy can contaminate the lavage. That is not a universal ordering rule: when other contamination-sensitive tasks are planned, the supervisor sets the sequence.\n\nWorked through: the note for a lavage of a right middle lobe segment in diffuse disease on CT, chosen for its recovery because the distribution pointed to no other region, and collected under the institution’s approved protocol.',
-      pointsLabel: 'What the note carries',
+      heading: 'Three procedures that use saline',
+      body: 'The name follows the method, not the label on the trap.',
+      pointsLabel: 'What each one is',
       points: [
-        'The segment actually lavaged, named by its bronchus',
-        'Each volume instilled and each volume recovered, as measured',
-        'The gross character of the returns, in the order collected',
-        'Whether the fractions were kept separate, pooled or divided, as the protocol and the laboratory required',
-        'Any suction, biopsy or bleeding before the lavage',
-        'Any event in the patient, and any limitation, such as an early stop',
+        'Washing: saline into a large airway and back, with no wedge. It samples the airway.',
+        'BAL: measured saline through a scope wedged in one segment. It samples the alveoli.',
+        'Therapeutic aspiration: clearing secretions or a plug. The aim is an open airway.',
       ],
       claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 119, to: 121 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 125, to: 126 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 127 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 147, to: 148 } },
-        { sourceId: 'T15', location: { kind: 'time-span', start: '00:32:53', end: '00:39:19' } },
-      ],
-      localPolicyIds: ['bal_protocol'],
-      reviewItemIds: ['R21'],
+      sourceRefs: NAMES,
     },
     {
-      id: 'gentle-seal',
-      kind: 'after-commitment',
+      id: 'site-from-ct',
+      kind: 'pattern',
       role: 'mechanism',
-      heading: 'The wedge is a gentle seal',
-      body: 'An effective wedge limits proximal leak enough to sample the intended distal unit. It is not maximal impaction of the tip, and its depth depends on the airway and the scope’s caliber, not on a distance printed on the shaft.\n\nToo little wedge lets fluid leak back into the proximal airway and gives an inadequate sample. Too much can injure the mucosa, add blood and reduce return, and excessive suction can collapse the airway. The beginner recognizes these patterns and adjusts under supervision, rather than adding saline or suction without a diagnosis of the problem.',
+      heading: 'Choose the site from the CT',
+      body: 'Lavage the segment where the CT shows the disease. In diffuse disease, take the most affected segment you can wedge.\n\nDo not go to the middle lobe or the lingula by habit. They return well, and that is no use if the disease is elsewhere.',
       claimClass: 'source',
-      sourceRefs: [{ sourceId: 'S1', location: { kind: 'pdf-pages', from: 119, to: 120 } }],
+      sourceRefs: TECHNIQUE,
     },
     {
-      id: 'volumes-recorded',
-      kind: 'after-commitment',
-      role: 'policy',
-      heading: 'Volumes: described, then recorded',
-      body: 'The textbook describes bronchial washing volumes of approximately 5–50 mL and common adult BAL totals of approximately 100–300 mL in divided aliquots. These are technique ranges the source describes, not an obligation to deliver a fixed volume to every patient. The lecture favors larger aliquots and a minimum return; the interstitial lung disease guideline describes its own aliquot and recovery targets for distal sampling; the textbook also describes smaller aliquots. None of them is a universal threshold for adequacy.\n\nThe approved protocol, the indication, the patient’s physiology, the intended studies and the actual return decide what is appropriate, and the record carries the volumes actually instilled and recovered. Fractions are discarded, pooled or divided only as the diagnostic protocol directs: laboratory requirements and the question decide handling, and sequential fractions matter when alveolar hemorrhage is in question.',
-      claimClass: 'review-flag',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 118, to: 120 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 125, to: 126 } },
-        { sourceId: 'T13', location: { kind: 'time-span', start: '00:10:19', end: '00:13:47' } },
-        {
-          sourceId: 'U6',
-          location: { kind: 'section', label: 'BAL technique and return qualifications' },
-        },
-      ],
+      id: 'wedge-and-aliquots',
+      kind: 'pattern',
+      role: 'mechanism',
+      heading: 'The wedge, the saline and the suction',
+      body: `Seat the tip gently in the segment until it seals. A wedge is a seal, not an impaction.\n\nInstil ${num('bal-total-volume')} of sterile saline in ${num('bal-aliquots')} aliquots. Suction each one back at ${num('bal-suction-ceiling')}, and lower if the airway collapses.`,
+      media: { kind: 'endoscopic-still', structureId: 'rb4', outline: true },
+      claimClass: 'source',
+      sourceRefs: TECHNIQUE,
       localPolicyIds: ['bal_protocol'],
       reviewItemIds: ['R22'],
     },
     {
-      id: 'therapeutic-aspiration',
-      kind: 'after-commitment',
+      id: 'the-return',
+      kind: 'pattern',
       role: 'mechanism',
-      heading: 'Clearing has its own technique and endpoint',
-      body: 'The therapeutic lecture treats aspiration of retained material as a technique, not a press of the suction valve: choose an adequate working channel, engage the accessible bulk of the material rather than aspirating only its free edge again and again, and combine controlled suction with limited saline and small movements when that helps. Engaging the bulk is for tenacious mucus: it does not mean scraping normal mucosa, forcing flushes, or stripping away an adherent clot that may be holding back bleeding.\n\nSaline is an adjunct with a clinical cost, not an unlimited resource: how much is used, and when to pause, depend on the patient’s tolerance; record what goes in, and do not keep flooding poorly ventilated distal units because suction is not working. A plug that routine measures cannot safely clear may need a different tool and a more experienced operator. Once the obstruction clears, the newly opened lumen and its distal branches are inspected for retained material when it is safe; a patent proximal bronchus does not mean every downstream segment is clear. The endpoint is the clinical objective, not the removal of every visible secretion, and the note records the clinical response, patency, residual limitation and the patient’s tolerance.',
-      pointsLabel: 'A supervised sequence for clearing',
+      heading: 'Count what comes back',
+      body: `Return is the volume recovered as a share of the volume instilled. ${num('bal-return-optimal')} is optimal. ${num('bal-return-minimum')} is the least that is useful.\n\nCount every aliquot, in and out, and say the numbers aloud for the record.`,
+      claimClass: 'source',
+      sourceRefs: TECHNIQUE,
+      reviewItemIds: ['R22'],
+    },
+    {
+      id: 'poor-return-causes',
+      kind: 'pattern',
+      role: 'mechanism',
+      heading: 'When little comes back',
+      body: 'More saline and more suction are the two reflexes. Neither finds the cause. Look first.',
+      pointsLabel: 'The cause, then the fix',
       points: [
-        'Identify the obstructed airway and assess the patient',
-        'Define the visible margin of the material',
-        'Aspirate under control, watching for lumen collapse or mucosa drawn onto the tip',
-        'Reassess whether material is actually moving',
-        'Clear a blocked channel by the approved method',
+        'Leak: saline wells back around the scope. Reseat a gentle wedge. Do not push harder.',
+        'Collapse: the lumen closes when you suction. Ease the suction.',
+        'Circuit: an open lumen and an empty trap. Check the valve, the trap, the tubing and the vacuum.',
+        'The lung: emphysema or a dependent segment returns little. Record a limited sample.',
       ],
-      claimClass: 'transcript-source',
-      sourceRefs: [
-        { sourceId: 'T14', location: { kind: 'time-span', start: '00:01:24', end: '00:04:55' } },
+      claimClass: 'source',
+      sourceRefs: SUCTION,
+      reviewItemIds: ['R24'],
+    },
+    {
+      id: 'when-to-stop',
+      kind: 'pattern',
+      role: 'mechanism',
+      heading: 'When to stop',
+      body: `Stop the lavage if ${num('bal-abort-rule')} comes back. The saline is staying in the lung.\n\nStop too if the patient coughs hard, desaturates or becomes distressed. The planned volume is not a target. Record what went in, what came back and why you stopped.`,
+      claimClass: 'source',
+      sourceRefs: TECHNIQUE,
+      reviewItemIds: ['R22', 'R24'],
+    },
+    {
+      id: 'processing',
+      kind: 'pattern',
+      role: 'mechanism',
+      heading: 'Where the fluid goes',
+      body: `Pool the aliquots and send them promptly: cell count and differential, microbiology and cytology, as the question needs.`,
+      pointsLabel: 'Three numbers for the laboratory',
+      points: [
+        `Cell analysis wants ${num('bal-cell-analysis-volume')} pooled, and ${num('bal-cell-analysis-minimum')} at the very least.`,
+        `Epithelial cells ${num('bal-epithelial-flag')} mean the sample is from the airway, not the alveoli.`,
+        `In suspected ventilator-associated pneumonia, the diagnostic threshold for a quantitative BAL culture is ${num('vap-bal-threshold')}.`,
       ],
-      reviewItemIds: ['R42'],
+      claimClass: 'source',
+      sourceRefs: CULTURE,
+      reviewItemIds: ['R25'],
+    },
+    {
+      id: 'before-biopsy',
+      kind: 'pattern',
+      role: 'mechanism',
+      heading: 'Lavage before biopsy',
+      body: 'Lavage before you biopsy or brush the same lobe. Blood from a biopsy changes the cell count.\n\nOn the way in, keep suction off where you can. If secretions block the airway, clear them: the patient comes before the specimen.',
+      claimClass: 'source',
+      sourceRefs: TECHNIQUE,
+      reviewItemIds: ['R21'],
     },
     {
       id: 'common-errors',
       kind: 'after-commitment',
       role: 'common-errors',
-      heading: 'Common errors and their correction',
-      body: 'Each of these errors lets something other than the method decide what a sample is, or lets a number decide what the patient can tolerate.',
-      pointsLabel: 'The error, then the correction',
+      heading: 'Five errors to expect',
+      body: 'Each one puts the plan ahead of what the airway and the trap are showing.',
+      pointsLabel: 'The error, then the fix',
       points: [
-        'Calling any saline recovered through the channel a BAL: a BAL needs a gentle wedge in a chosen segment and a specified collection technique; a specimen recovered in a central airway with no wedge is a washing.',
-        'Choosing the right middle lobe by habit for a focal abnormality: sample the region the clinical question and the imaging identify, and resolve a request that disagrees before starting.',
-        'Impacting the tip for a tighter wedge: a gentle seal is the aim; impaction can injure mucosa, add blood and reduce return.',
-        'Going straight on to the next aliquot to keep to a planned or remembered total: reassess the seal, the airway, the return and the patient first, and record the volumes actually given and recovered.',
-        'Renaming a specimen after the result to change how it is read: the name is set by what was done, and interpretation stays with the laboratory and the clinical context.',
-        'Treating therapeutic aspiration as pressing suction: engage the material, reassess whether it moves, and count the saline.',
+        'Calling any saline through the channel a BAL. No wedge means a washing.',
+        'Going to the middle lobe by habit. Choose the segment from the CT.',
+        'Pushing the tip in for a tighter wedge. Reseat it gently.',
+        'Turning the suction up for a poor return. Ease it, and watch the lumen open.',
+        'Recording the planned volumes. Record what went in and what came back.',
       ],
-      claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 118, to: 121 } },
-        { sourceId: 'T13', location: { kind: 'time-span', start: '00:08:45', end: '00:15:33' } },
-        { sourceId: 'T14', location: { kind: 'time-span', start: '00:01:24', end: '00:04:55' } },
-        { sourceId: 'T15', location: { kind: 'time-span', start: '00:32:53', end: '00:39:19' } },
-      ],
-      reviewItemIds: ['R22', 'R25'],
+      claimClass: 'source',
+      sourceRefs: SUCTION,
+      reviewItemIds: ['R22', 'R42'],
     },
   ],
 
   workspace: {
     kind: 'map',
-    lit: ['TR'],
-    caption: 'The airway map, with the trachea lit: where the scope tip sits in the first case',
-  },
-
-  steps: {
-    recognize: {
-      instruction:
-        'In the Simulator panel, find the lit airway on the airway map, where the tip sits in the first case; then read “What to notice about a saline sample” in the Teaching panel.',
-      lookIn: {
-        pane: 'simulator',
-        landmark: SIMULATOR_LANDMARKS.map,
-        alsoPane: 'teaching',
-        alsoLandmark: 'What to notice about a saline sample',
-      },
-    },
-    act: {
-      title: 'A planned BAL, in order',
-      instruction:
-        'Put the steps of a planned BAL in the order that holds, on this card, then check the order.',
-      lookIn: { pane: 'steps', landmark: STEPS_LANDMARKS.sequence },
-    },
-    explain: {
-      title: 'What the sample should be called',
-      instruction: `Read ${TEACHING_LANDMARKS.adds} in the Teaching panel, then why the other answers do not fit, on this card.`,
-    },
+    lit: ['RML', 'RB4'],
+    caption: 'The airway map, with the segment lavaged in this section’s case lit.',
   },
 
   act: {
     kind: 'sequence',
+    outcomeId: 'run-a-bal',
     sequence: {
       id: 'planned-lavage',
-      prompt: 'Eight steps of a planned BAL. Put them in the order that holds.',
+      prompt: 'Seven steps of a BAL. Put them in order.',
       steps: [
         {
-          id: 'choose-segment',
-          label: 'Choose the segment from the clinical question and the imaging',
-          detail:
-            'The question and the CT decide the target. For a focal abnormality that is the involved segment, not a habitual site; in diffuse disease the right middle lobe or lingula may give useful recovery, and the distribution still matters.',
+          id: 'choose-site',
+          label: 'Choose the segment from the CT',
+          detail: 'Where the disease is, not where the return is easiest.',
         },
         {
-          id: 'confirm-site',
-          label: 'Confirm the side, lobe and segment, with a sterile collection system connected',
-          detail:
-            'Confirmation comes before the wedge and any saline, because a lavage of an unintended segment answers a different question from the one asked. The sterile trap is ready before instillation so the first return is collected.',
-        },
-        {
-          id: 'gentle-wedge',
-          label: 'Advance gently until the segment is sealed, without impacting the tip',
-          detail:
-            'An effective wedge is a gentle seal that limits proximal leak enough to sample the intended distal unit. Its depth depends on the airway and the scope, not a distance on the shaft; over-wedging can injure mucosa, add blood and reduce return.',
+          id: 'wedge',
+          label: 'Wedge the tip gently in that segment',
+          detail: 'A seal comes before any saline, or the fluid runs back around the scope.',
         },
         {
           id: 'instill',
-          label: 'Instill an aliquot of the approved sterile saline through the working channel',
-          detail:
-            'The saline is sterile, isotonic and non-bacteriostatic, given under the approved protocol. The position is held so the aliquot reaches the sealed unit instead of leaking back.',
+          label: 'Instil one measured aliquot of sterile saline',
+          detail: 'One aliquot at a time, so each can be judged.',
         },
         {
           id: 'recover',
-          label: 'Recover the fluid with controlled suction or the approved aspiration method',
-          detail:
-            'Controlled suction recovers fluid without collapsing the distal airway; excessive suction can collapse it and reduce return. Complete recovery is not expected: the aim is a representative collection from the isolated unit.',
+          label: 'Suction it back gently into the trap',
+          detail: `Keep the suction ${num('bal-suction-ceiling')}, and lower if the lumen closes.`,
         },
         {
-          id: 'reassess',
-          label: 'Reassess the seal, the airway, the return and the patient',
-          detail:
-            'Each aliquot is a decision. A leaking seal, a collapsing airway, poor return or a change in the patient is diagnosed before anything more goes in; adding saline or suction without a diagnosis is the error.',
+          id: 'check-return',
+          label: 'Check what came back, the airway and the patient',
+          detail: 'This check decides whether another aliquot goes in.',
         },
         {
           id: 'next-or-stop',
-          label: 'Instill the next aliquot, or end the lavage',
-          detail:
-            'Another aliquot follows only when the reassessment supports it, and a lavage may end short of its planned total. Giving the next aliquot straight after the last recovery, to keep to the plan, skips the decision.',
+          label: 'Give the next aliquot, or stop',
+          detail: 'The decision follows the check. It does not follow the plan.',
         },
         {
           id: 'record',
-          label:
-            'Record the site, volumes instilled and recovered, fluid character, order, events and limitations',
-          detail:
-            'The record carries what was actually done: the exact segment, the volumes instilled and recovered, the gross character of the returns, the collection sequence, any necessary suction or biopsy before the lavage, whether fractions were pooled, any event in the patient and any limitation. It is written from what happened, not from a planned total.',
+          label: 'Record the site and every volume in and out',
+          detail: 'The laboratory and the next reader need the return, not the intention.',
         },
       ],
       rationale:
-        'The site is chosen and confirmed before the wedge and any saline; the wedge is gentle and held while each aliquot is instilled and recovered; the next aliquot waits for a reassessment of the seal, the airway, the return and the patient, and the lavage may stop short of its plan; and the record states what was actually done.',
-      criticalStepIds: ['confirm-site', 'reassess', 'next-or-stop'],
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 119, to: 121 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 90, to: 93 } },
-        { sourceId: 'T13', location: { kind: 'time-span', start: '00:08:45', end: '00:15:33' } },
-        { sourceId: 'T13', location: { kind: 'time-span', start: '00:09:31', end: '00:10:19' } },
-        { sourceId: 'T15', location: { kind: 'time-span', start: '00:32:53', end: '00:39:19' } },
-      ],
+        'The site is chosen before the wedge, and the wedge is made before the saline. Each aliquot is recovered and checked before the next one is given.',
+      criticalStepIds: ['check-return', 'next-or-stop'],
+      sourceRefs: TECHNIQUE,
+    },
+  },
+
+  moreActs: {
+    bal: {
+      kind: 'scenario',
+      outcomeId: 'judge-the-return',
+      scenario: {
+        id: 'three-aliquots',
+        title: 'Three aliquots and what came back',
+        boundary: 'A teaching case. The volumes and vital signs are written for it.',
+        frames: [
+          {
+            id: 'first-aliquot',
+            time: 'First aliquot',
+            situation:
+              'A 62-year-old man has ground-glass change on CT, worst in the right middle lobe. Under moderate sedation you wedge in RB4. The plan is three aliquots of 50 mL. The first 50 mL goes in, and 14 mL comes back. The lumen stays open.',
+            readings: vitals(
+              'Wedged in RB4, lumen open',
+              ['96', 'steady', 'On 2 L/min nasal oxygen'],
+              ['88', 'steady'],
+            ),
+            prompt: 'How much returned, and what do you do?',
+            choices: [
+              {
+                id: 'a',
+                label: 'Over a quarter came back. Give the second aliquot',
+                rationale: `The return is close to the optimal figure, ${num('bal-return-optimal')}, and well over the least useful, ${num('bal-return-minimum')}. Carry on.`,
+                plausibility: 'best',
+              },
+              {
+                id: 'b',
+                label: 'Under a tenth came back. End the lavage here',
+                rationale:
+                  'Work it out again: the volume back over the volume in is more than a quarter.',
+                plausibility: 'incorrect-mechanism',
+                consequence: {
+                  situation:
+                    'You withdraw with one aliquot done. The laboratory receives a small sample from a lavage that was going well.',
+                  readings: vitals(
+                    'Scope withdrawn',
+                    ['96', 'steady', 'Unchanged'],
+                    ['88', 'steady'],
+                  ),
+                },
+              },
+              {
+                id: 'c',
+                label: 'Turn the suction up to get the rest of it back',
+                rationale:
+                  'You never get it all back. Harder suction closes the airway, and the return falls.',
+                plausibility: 'unsafe',
+                consequence: {
+                  situation:
+                    'The walls beyond the tip are drawn together and nothing more comes. The mucosa is now red where it was sucked in.',
+                  readings: vitals(
+                    'Lumen closed by suction',
+                    ['95', 'steady', 'Unchanged'],
+                    ['92', 'rising'],
+                  ),
+                },
+              },
+              {
+                id: 'd',
+                label: 'Push the tip further in for a tighter seal',
+                rationale:
+                  'The seal is holding. Pushing in impacts the tip, injures the mucosa and adds blood to the sample.',
+                plausibility: 'incorrect-mechanism',
+                consequence: {
+                  situation:
+                    'The tip is now jammed in a smaller airway. A streak of blood appears in the trap.',
+                  readings: vitals(
+                    'Tip impacted, blood-streaked return',
+                    ['95', 'steady', 'Unchanged'],
+                    ['94', 'rising'],
+                  ),
+                },
+              },
+            ],
+          },
+          {
+            id: 'second-aliquot',
+            time: 'Second aliquot',
+            situation:
+              'The second 50 mL goes in. As you suction, the walls beyond the tip come together, and 6 mL reaches the trap. The seal looks good, and no saline wells back.',
+            readings: vitals(
+              'Lumen closes with each pull of suction',
+              ['95', 'steady', 'On 2 L/min nasal oxygen'],
+              ['90', 'steady'],
+            ),
+            prompt: 'What is the cause, and what do you do?',
+            choices: [
+              {
+                id: 'a',
+                label: 'The wedge is leaking. Push the scope further in',
+                rationale:
+                  'A leak shows as saline welling back around the scope. Here the seal holds and the lumen closes.',
+                plausibility: 'incorrect-mechanism',
+                consequence: {
+                  situation:
+                    'The tip impacts. The lumen still closes on suction, and the return is now blood-tinged.',
+                  readings: vitals('Tip impacted', ['95', 'steady', 'Unchanged'], ['96', 'rising']),
+                },
+              },
+              {
+                id: 'b',
+                label: 'The airway is collapsing. Ease the suction and try again',
+                rationale:
+                  'Walls that come together under suction are being sucked shut. Less suction lets the lumen stay open and the fluid drain.',
+                plausibility: 'best',
+              },
+              {
+                id: 'c',
+                label: 'Instil the third aliquot now to wash the rest out',
+                rationale:
+                  'The fluid already in is not coming back. More saline adds to what stays in the lung.',
+                plausibility: 'unsafe',
+                consequence: {
+                  situation:
+                    'A third 50 mL goes in on top of the second. The lumen still closes on suction, and he begins to cough.',
+                  readings: vitals(
+                    'Lumen closing, fluid at the tip',
+                    ['91', 'falling', 'Falling'],
+                    ['104', 'rising'],
+                  ),
+                },
+              },
+              {
+                id: 'd',
+                label: 'The return is under the least useful figure. End the lavage',
+                rationale: `It is over the least useful figure, ${num('bal-return-minimum')}, and the cause is one you can fix.`,
+                plausibility: 'incorrect-mechanism',
+                consequence: {
+                  situation:
+                    'You withdraw. Most of the second aliquot is still in the segment, and the sample is smaller than it needed to be.',
+                  readings: vitals(
+                    'Scope withdrawn',
+                    ['95', 'steady', 'Unchanged'],
+                    ['90', 'steady'],
+                  ),
+                },
+              },
+            ],
+          },
+          {
+            id: 'third-aliquot',
+            time: 'Third aliquot',
+            situation:
+              'With gentler suction the lumen stays open and another 16 mL returns. You give the third 50 mL. Only 1 mL comes back. The lumen is open, the seal holds, and the trap and tubing are working. He is coughing hard.',
+            readings: vitals(
+              'Lumen open, nothing draining',
+              ['90', 'falling', 'Falling, on 2 L/min'],
+              ['108', 'rising'],
+            ),
+            prompt: 'What do you do?',
+            choices: [
+              {
+                id: 'a',
+                label: 'Pause a minute, then instil a fourth aliquot to make up the return',
+                rationale: `${num('bal-abort-rule')} came back from this one, and he is desaturating. Another aliquot adds fluid to a lung that is keeping it.`,
+                plausibility: 'unsafe',
+                consequence: {
+                  situation:
+                    'The fourth aliquot stays in as well. He coughs continuously and his saturation keeps falling.',
+                  readings: vitals(
+                    'Fluid welling at the tip',
+                    ['86', 'falling', 'Falling'],
+                    ['118', 'rising'],
+                  ),
+                },
+              },
+              {
+                id: 'b',
+                label: 'Give more sedation so that he settles, then carry on',
+                rationale:
+                  'The cough and the falling saturation are the reason to end the lavage. Sedation hides them and slows his breathing.',
+                plausibility: 'incorrect-mechanism',
+                consequence: {
+                  situation:
+                    'He stops coughing. His breathing is shallower and his saturation is lower.',
+                  readings: vitals('Lumen open', ['87', 'falling', 'Falling'], ['102', 'steady']),
+                },
+              },
+              {
+                id: 'c',
+                label: 'End the lavage, come off the wedge and give oxygen',
+                rationale: `${num('bal-abort-rule')} returned from this aliquot, and the patient is telling you the same thing. You have a sample already.`,
+                plausibility: 'best',
+              },
+              {
+                id: 'd',
+                label: 'Hold the wedge and keep suctioning until the saline comes',
+                rationale:
+                  'Nothing is draining through an open lumen. Longer suction takes air from the segment, not saline.',
+                plausibility: 'incorrect-mechanism',
+                consequence: {
+                  situation:
+                    'No fluid comes. The segment beyond the tip collapses, and his saturation falls further.',
+                  readings: vitals(
+                    'Segment collapsed',
+                    ['88', 'falling', 'Falling'],
+                    ['112', 'rising'],
+                  ),
+                },
+              },
+            ],
+          },
+          {
+            id: 'the-record',
+            time: 'After the scope is out',
+            situation:
+              'On oxygen he recovers. Three aliquots of 50 mL went in. The trap holds 14 mL, then 6 mL and 16 mL, then 1 mL.',
+            readings: vitals(
+              'Scope withdrawn',
+              ['95', 'rising', 'Recovering on 4 L/min'],
+              ['94', 'steady'],
+            ),
+            prompt: 'What goes on the record?',
+            choices: [
+              {
+                id: 'a',
+                label: 'Three aliquots given, with a good return',
+                rationale:
+                  'It gives no volumes and hides that the lavage was ended. The reader cannot judge the sample.',
+                plausibility: 'incorrect-mechanism',
+                consequence: {
+                  situation:
+                    'The laboratory reports a low cell yield. Nobody reading the note can tell why.',
+                  readings: vitals(
+                    'Scope withdrawn',
+                    ['96', 'steady', 'Recovered'],
+                    ['90', 'steady'],
+                  ),
+                },
+              },
+              {
+                id: 'b',
+                label: 'About half the saline returned; lavage completed as planned',
+                rationale:
+                  'Add the trap volumes and divide by all the saline given. It is about a quarter, and the lavage was ended early.',
+                plausibility: 'incorrect-mechanism',
+                consequence: {
+                  situation:
+                    'The cell count is read as if from a full lavage. The fluid still in his lung is not mentioned at handover.',
+                  readings: vitals(
+                    'Scope withdrawn',
+                    ['96', 'steady', 'Recovered'],
+                    ['90', 'steady'],
+                  ),
+                },
+              },
+              {
+                id: 'c',
+                label: 'RB4; volumes in and out; a quarter returned; ended for cough',
+                rationale: `A quarter is under the optimal ${num('bal-return-optimal')} and well over the least useful. The pooled volume is enough for cell analysis.`,
+                plausibility: 'best',
+              },
+              {
+                id: 'd',
+                label: 'Sample inadequate; discarded',
+                rationale: `The pooled return is more than cell analysis needs, ${num('bal-cell-analysis-volume')}. Send it, with the volumes.`,
+                plausibility: 'incorrect-mechanism',
+                consequence: {
+                  situation:
+                    'A usable sample is thrown away, and the question that prompted the lavage is not answered.',
+                  readings: vitals(
+                    'Scope withdrawn',
+                    ['96', 'steady', 'Recovered'],
+                    ['90', 'steady'],
+                  ),
+                },
+              },
+            ],
+          },
+        ],
+        sourceRefs: [...TECHNIQUE, ...SUCTION],
+      },
     },
   },
 
   prediction: {
     id: 'Q06',
     seedId: 'Q06',
-    itemType: 'mechanism-interpretation',
+    itemType: 'management-decision',
     situation:
-      'At the start of an airway inspection, with the scope in the trachea, the operator instills a small volume of sterile saline through the working channel and suctions it back into a trap. The request form asks for a BAL, and the assistant labels the trap “BAL”.',
-    stem: 'Which procedure was performed?',
+      'A colleague squirts saline into the trachea of an intubated patient and suctions it back into a trap. The trap is labeled “BAL” and the form asks for a cell differential and culture.',
+    stem: 'What do you do before it leaves the room?',
     choices: [
       {
         id: 'a',
-        label: 'A bronchial washing',
+        label: 'Send it as it is labeled',
         rationale:
-          'In the trachea no wedge isolated a distal unit, so the saline collected what lay in the central airway, not a sample of the distal airspaces. That is a washing, whatever the request form or the trap label says.',
-        plausibility: 'best',
-      },
-      {
-        id: 'b',
-        label: 'A whole-lung lavage',
-        rationale:
-          'Whole-lung lavage is a separate therapeutic procedure, with very different equipment, volumes, airway management and training. A small volume instilled in the trachea is not a lavage of a lung, and the term is not a synonym for a washing.',
+          'The laboratory will report a cell differential as if the fluid came from alveoli. It came from the trachea.',
         plausibility: 'incorrect-mechanism',
       },
       {
-        id: 'c',
-        label: 'A bronchoalveolar lavage (BAL)',
+        id: 'b',
+        label: 'Change the label to bronchial washing',
         rationale:
-          'Saline going into and out of the working channel does not make a BAL. A BAL samples the distal airspaces through a wedged bronchus in a chosen segment; neither the request form nor the label on the trap changes what was done.',
+          'It was taken from a large airway without a wedge. The label has to say what the sample is.',
+        plausibility: 'best',
+      },
+      {
+        id: 'c',
+        label: 'Keep the label and add the site, trachea',
+        rationale:
+          'A BAL from the trachea does not exist. Adding the site leaves a false name on the trap.',
         plausibility: 'incorrect-mechanism',
       },
       {
         id: 'd',
-        label: 'A therapeutic aspiration',
+        label: 'Discard it and suction the trachea dry',
         rationale:
-          'Therapeutic aspiration clears retained secretions or other material from an obstructed airway. Nothing was being cleared here: the saline was instilled to collect a specimen.',
+          'A washing is a useful sample for culture and cytology. It only needs its right name.',
         plausibility: 'incorrect-mechanism',
       },
     ],
     explanation:
-      'A bronchoalveolar lavage samples fluid and cells from the distal airspaces through a wedged bronchus, using a specified collection technique. Saline instilled and recovered in the trachea, with no wedge, collects what lies in the central airway, so what was done is a bronchial washing, not a BAL, and the specimen is named that way. The name follows the method, not the fluid in the channel or the word on the request.',
+      'Saline put into a large airway with no wedge samples the airway, not the alveoli. That is a bronchial washing. A BAL is wedged in a segment. The name follows the method.',
     objectiveIds: ['M12-O1'],
+    outcomeIds: ['run-a-bal'],
     claimClass: 'source',
-    sourceRefs: [{ sourceId: 'S1', location: { kind: 'pdf-pages', from: 118, to: 120 } }],
+    sourceRefs: NAMES,
   },
 
   transfer: {
-    id: 'washing-and-lavage-transfer',
+    id: 'Q22',
+    seedId: 'Q22',
     itemType: 'management-decision',
     situation:
-      'After abdominal surgery, a patient on supplemental oxygen has collapse of the left lower lobe, and a bronchoscopy under moderate sedation is to clear it. Thick, tenacious mucus fills the left lower lobe bronchus. Controlled suction with small saline aliquots brought material back at first, but over the last few aliquots nothing more has moved.',
-    stem: 'What is the next move?',
+      'A BAL of the right lower lobe is planned for a woman with pneumonia. As you pass the carina, thick secretions fill the right main bronchus. Her breathing is more labored and her SpO₂ has fallen from 95% to 90%.',
+    stem: 'What do you do?',
     choices: [
       {
         id: 'a',
-        label: 'Check the suction path, then engage the plug’s accessible bulk',
+        label: 'Leave the secretions, to keep the lavage uncontaminated',
         rationale:
-          'Material has stopped moving, so the next move is to find out why before adding anything: a blocked channel, valve, trap, tubing or source, the tip’s position, or suction working only on the free edge of the plug. Engaging its accessible bulk under control, with the patient’s tolerance watched throughout, is the routine measure; a plug it cannot safely clear may need a different tool and a more experienced operator.',
-        plausibility: 'best',
+          'The secretions are obstructing a main bronchus now. A clean specimen is worth less than her airway.',
+        plausibility: 'incorrect-mechanism',
       },
       {
         id: 'b',
-        label: 'Wedge in the lobe and run repeated aliquots until the return runs clear',
+        label: 'Suction the secretions clear, then lavage and record the order',
         rationale:
-          'This applies lavage technique to a clearing problem. Repeated saline floods poorly ventilated distal units when suction is not moving the material, saline has a clinical cost, and a clear return is not the endpoint of clearing an airway.',
-        plausibility: 'unsafe',
+          'The airway comes first. A lavage after suction is still a lavage, and the record says what was done before it.',
+        plausibility: 'best',
       },
       {
         id: 'c',
-        label: 'Keep aspirating at the free edge of the mucus until it gives',
+        label: 'Abandon the lavage as spoiled once you have suctioned',
         rationale:
-          'Aspirating only the free edge of tenacious mucus again and again does not engage the material, and continued suction can collapse the airway or draw mucosa onto the tip. Therapeutic aspiration engages the accessible bulk of the material under control, once the suction path is known to work.',
+          'Suction beforehand does not make every lavage useless. Record it and let the reader weigh the result.',
         plausibility: 'incorrect-mechanism',
       },
       {
         id: 'd',
-        label: 'Change now to a scope with a larger working channel',
+        label: 'Pause, then wedge past the secretions and lavage first',
         rationale:
-          'An adequate working channel matters for tenacious mucus, and a plug that routine measures cannot clear may need a different tool. Routine measures have not been exhausted here: a fault in the suction path, or suction working only on the free edge of the plug, would explain the stall, and each is checked first.',
-        plausibility: 'reasonable-but-incomplete',
+          'She is desaturating from a blocked bronchus. Saline beyond it makes that worse.',
+        plausibility: 'incorrect-mechanism',
       },
     ],
     explanation:
-      'Therapeutic aspiration clears retained material; it is neither a lavage nor simply pressing suction. When material stops moving, check the suction path and the tip’s position, and engage the accessible bulk of the plug rather than adding saline, which has a clinical cost and can flood poorly ventilated distal units. The patient’s tolerance is watched throughout, and a plug that routine measures cannot safely clear may need a different tool and a more experienced operator.',
-    objectiveIds: ['M12-O1'],
-    claimClass: 'transcript-source',
-    sourceRefs: [
-      { sourceId: 'T14', location: { kind: 'time-span', start: '00:01:24', end: '00:04:55' } },
-      { sourceId: 'S1', location: { kind: 'pdf-pages', from: 90, to: 93 } },
-    ],
-    reviewItemIds: ['R42'],
+      'Keeping suction off on the way in protects the specimen. Clearing secretions that block the airway protects the patient, and she comes first. Clear them, then lavage, and record the order.',
+    objectiveIds: ['M12-O6'],
+    outcomeIds: ['run-a-bal'],
+    claimClass: 'source',
+    sourceRefs: SUCTION,
+    reviewItemIds: ['R21'],
     transferVariant:
-      'A therapeutic clearance of a lobar plug instead of a diagnostic sample, in a different airway and patient. The prediction named a procedure from its method; here the purpose, clearing, sets the method, so a lavage’s wedge and repeated aliquots are not the next move.',
+      'Secretions in the way of a planned lavage, where the prediction was a sample already taken and wrongly named.',
   },
 
   practice: [
     {
       id: 'mc-lavage-site-selection',
-      presentationTitle: 'A lavage request and a focal consolidation',
+      presentationTitle: 'Where the CT says to go',
       situation:
-        'An adult receiving chemotherapy has fever and a new consolidation confined to the posterior segment of the right upper lobe on CT. Bronchoscopy with lavage for microbiology is planned; the request reads “BAL for cultures” and names no site.',
+        'A febrile man on chemotherapy has a new consolidation on CT. It lies in the posterior segment of the right upper lobe. The rest of both lungs is clear.',
       item: {
         id: 'mc-lavage-site-selection',
         itemType: 'management-decision',
-        stem: 'Where should the lavage be taken?',
+        stem: 'Where do you lavage?',
         choices: [
           {
             id: 'a',
-            label: 'The posterior segment of the right upper lobe (RB2)',
+            label: 'RB2',
             rationale:
-              'For a focal abnormality, the lavage goes to the region the imaging shows: here RB2, the segment the consolidation is confined to. With no site on the request, the segment comes from the CT and the clinical question, and the side, lobe and segment are confirmed at the scope before the wedge and any saline.',
+              'RB2 is the posterior segment of the right upper lobe: the segment the CT shows.',
             plausibility: 'best',
           },
           {
             id: 'b',
-            label: 'The right middle lobe (RML), where return is usually best',
+            label: 'RB4',
             rationale:
-              'The right middle lobe can give useful recovery in diffuse disease. This consolidation is focal and lies in the upper lobe, so a middle lobe lavage would sample airspaces the imaging does not show to be involved.',
+              'The middle lobe returns well, and the CT shows it is clear. Fluid from there answers nothing.',
             plausibility: 'incorrect-mechanism',
           },
           {
             id: 'c',
-            label: 'The lingula (LB4+5), which also returns well',
-            rationale:
-              'Like the right middle lobe, the lingula can give useful recovery in diffuse disease. It lies in the other lung, away from the consolidation the lavage is meant to sample.',
+            label: 'LB4',
+            rationale: 'The lingula is in the other lung, and that lung is clear on the CT.',
             plausibility: 'incorrect-mechanism',
           },
           {
             id: 'd',
-            label: 'The right upper lobe bronchus, above its segments',
+            label: 'RB6',
             rationale:
-              'This is the involved lobe, but a lavage is taken through a gentle wedge in a segmental or subsegmental airway, which isolates the unit to be sampled. At the lobar bronchus there is no such seal: saline can leak back proximally and give an inadequate sample of the consolidated segment.',
+              'RB6 is the superior segment of the lower lobe. It lies near the lesion on the CT and is a different segment.',
             plausibility: 'incorrect-mechanism',
           },
         ],
+        choiceAirways: { a: 'RB2', b: 'RB4', c: 'LB4', d: 'RB6' },
         explanation:
-          'The lavage site comes from the clinical question and the imaging. For a focal consolidation, sample the segment the CT shows rather than a habitual site; the right middle lobe or lingula may give useful recovery in diffuse disease, but that is no reason to miss a focal target. Confirm the side, lobe and segment before instillation.',
+          'Lavage the segment where the CT shows the disease. An easier wedge or a better return elsewhere samples healthy lung.',
         objectiveIds: ['M12-O2'],
+        outcomeIds: ['run-a-bal'],
         claimClass: 'source',
-        sourceRefs: [{ sourceId: 'S1', location: { kind: 'pdf-pages', from: 119, to: 121 } }],
-        choiceAirways: { a: 'RB2', b: 'RML', c: 'LB4+5', d: 'RUL' },
+        sourceRefs: TECHNIQUE,
       },
     },
     {
-      id: 'mc-lavage-note',
-      presentationTitle: 'Returns that change from one aliquot to the next',
+      id: 'mc-low-return-after-checks',
+      presentationTitle: 'A low return with nothing to fix',
       situation:
-        'A BAL of the lateral segment of the right middle lobe (RB4) is taken for diffuse infiltrates, in divided aliquots with a gentle wedge held throughout and no biopsy beforehand. Each return is bloodier than the one before. The assistant empties every return into one container, and the draft note reads “BAL, right middle lobe, bloody”.',
+        'A man with severe emphysema is having a BAL. The wedge seals, the lumen stays open and the circuit works. A fifth of each aliquot comes back. He is comfortable and his saturation is steady.',
       item: {
-        id: 'mc-lavage-note',
+        id: 'mc-low-return-after-checks',
         itemType: 'management-decision',
-        stem: 'What must the note add?',
+        stem: 'What do you do?',
         choices: [
           {
             id: 'a',
-            label: 'The segment, the volumes, each return’s character in order, the pooling',
-            rationale:
-              'Returns from one wedged segment that grow bloodier aliquot by aliquot mean something only in order. The note gives the exact segment, the volumes instilled and recovered, each return’s character in sequence and that the fractions were pooled, so whoever reads the result can weigh it.',
+            label: 'Finish the planned aliquots and record the return as low',
+            rationale: `A fifth is over the least useful figure, ${num('bal-return-minimum')}. Emphysema returns little, and he is tolerating it.`,
             plausibility: 'best',
           },
           {
             id: 'b',
-            label: 'Bleeding from the wedge, as the cause of the increasingly bloody returns',
-            rationale:
-              'Blood from local instrumentation can confound a lavage, but nothing here shows trauma at the wedge: the seal was gentle and no biopsy came first. The note describes what was seen; it does not assign a cause the procedure did not show.',
+            label: 'End the lavage, as the return is too low to use',
+            rationale: `The abort rule is ${num('bal-abort-rule')}. A fifth is well over that.`,
             plausibility: 'incorrect-mechanism',
           },
           {
             id: 'c',
-            label: 'Alveolar hemorrhage, as the diagnosis that these returns establish',
+            label: 'Instil extra aliquots until the return reaches the optimal figure',
             rationale:
-              'Progressively bloodier returns from one appropriately wedged site support alveolar hemorrhage in the clinical context, but they do not establish it or its cause. The note records the sequence; the diagnosis comes from the clinical and laboratory context.',
+              'His lung will keep most of each one. Extra saline adds retained fluid, not return.',
+            plausibility: 'unsafe',
+          },
+          {
+            id: 'd',
+            label: 'Turn the suction up to recover more of each aliquot',
+            rationale:
+              'In emphysema the airways collapse easily. More suction closes them and the return falls.',
+            plausibility: 'unsafe',
+          },
+        ],
+        explanation: `With the wedge, the lumen and the circuit all checked, a low return is the lung’s. Between ${num('bal-return-minimum')} and the optimal figure the sample is usable. Record the volumes.`,
+        objectiveIds: ['M12-O5', 'M12-O4'],
+        outcomeIds: ['judge-the-return'],
+        claimClass: 'source',
+        sourceRefs: TECHNIQUE,
+        reviewItemIds: ['R24'],
+      },
+    },
+    {
+      id: 'mc-lavage-before-biopsy',
+      presentationTitle: 'Two samples from one lobe',
+      situation:
+        'A woman with diffuse lung disease needs a BAL and transbronchial biopsies. Both are planned in the right lower lobe.',
+      item: {
+        id: 'mc-lavage-before-biopsy',
+        itemType: 'management-decision',
+        stem: 'In which order do you take them?',
+        choices: [
+          {
+            id: 'a',
+            label: 'Biopsies first, while she is most settled',
+            rationale:
+              'Blood from the biopsies then mixes with the lavage and alters its cell count.',
+            plausibility: 'incorrect-mechanism',
+          },
+          {
+            id: 'b',
+            label: 'The lavage first, then the biopsies',
+            rationale: 'The lavage is taken from a lobe that has not bled yet.',
+            plausibility: 'best',
+          },
+          {
+            id: 'c',
+            label: 'Either order, with a saline flush between them',
+            rationale:
+              'A flush after a biopsy does not clear blood from the alveoli the lavage samples.',
             plausibility: 'incorrect-mechanism',
           },
           {
             id: 'd',
-            label: 'Nothing more: the site and the word “bloody” describe the specimen',
+            label: 'Biopsies first, then lavage the other lung',
             rationale:
-              'A single word for pooled returns loses the one feature that matters here, whether the blood increased from the first return to the last. The exact segment, the order of the fractions and their volumes belong in the record.',
+              'The lavage should come from the lobe the CT shows. Moving it to suit the order samples a lobe the CT did not show.',
             plausibility: 'incorrect-mechanism',
           },
         ],
         explanation:
-          'A lavage note records what was done and what came back: the exact segment, the volumes instilled and recovered, the gross character of each return in order, how the fractions were handled, events in the patient and any limitation. Serial returns from one appropriately wedged site that grow progressively bloodier support alveolar hemorrhage in the clinical context, which is why the order matters; the note describes the finding and does not assign its cause.',
-        objectiveIds: ['M12-O4'],
+          'Lavage before you biopsy or brush the same lobe. Blood changes the cell count and the differential.',
+        objectiveIds: ['M12-O3'],
+        outcomeIds: ['run-a-bal'],
         claimClass: 'source',
-        sourceRefs: [
-          { sourceId: 'S1', location: { kind: 'pdf-pages', from: 119, to: 120 } },
-          { sourceId: 'S1', location: { kind: 'pdf-pages', from: 120, to: 127 } },
-        ],
+        sourceRefs: TECHNIQUE,
       },
     },
   ],

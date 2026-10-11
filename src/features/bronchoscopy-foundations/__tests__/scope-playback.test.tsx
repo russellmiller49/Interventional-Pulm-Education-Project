@@ -3,7 +3,7 @@ import { useRef, useState, type ReactNode } from 'react'
 
 import { useScopePlayback } from '../components/scope/useScopePlayback'
 import type { ScopeCommand, ScopeInputMode, ScopePaneProps } from '../components/scope/types'
-import { section as branchEntry } from '../content/sections/branch-entry'
+import { carinaTasks as branchEntry } from '../test-support/carinaTasks'
 import { section as larynxAndEntry } from '../content/sections/larynx-and-entry'
 import { section as viewLoss } from '../content/sections/view-loss'
 import { createScopeState } from '../engine/scope/scopeReducer'

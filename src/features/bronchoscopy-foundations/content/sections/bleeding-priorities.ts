@@ -101,7 +101,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D13'],
-  prerequisites: ['view-loss', 'protected-accessories', 'deterioration'],
+  prerequisites: ['view-loss', 'biopsy-and-specimens', 'deterioration'],
 
   clinicalQuestion: 'Blood fills the view after a biopsy. What do you do in the next ten seconds?',
   objective: 'Make the first moves for airway bleeding in order, and grade the bleed afterwards.',
@@ -134,7 +134,8 @@ export const section: BronchSectionDefinition = {
 
   spineStops: ['segmental', 'main-bronchi'],
   grammarRowIds: ['red-field-wedged-bleeding', 'red-out'],
-  precommitDenyPatterns: [/\bleft lung\b/i, /\bother lung\b/i],
+  // "The left lung" is also a section title in the course map, so the guard keeps the pronoun.
+  precommitDenyPatterns: [/\bher left lung\b/i, /\bother lung\b/i],
   localPolicyIds: ['bleeding_rescue', 'blocker_ifu_and_rescue'],
   reviewItemIds: ['R33', 'R34', 'R37', 'R42'],
 

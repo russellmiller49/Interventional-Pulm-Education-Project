@@ -65,6 +65,7 @@
         "element": "practice C14, item explanation"
       },
       "learnerWording": "the reported administration has no concentration or volume, so it can be entered neither as lidocaine nor as zero. Different local anesthetics cannot be summed as interchangeable milligrams",
+      "supersededBy": "Topical anesthesia, sedation and monitoring was rewritten on 2026-10-08 (rewrite plan, brief 3). The brief keeps one bookkeeping exercise: the ledger `shared-topical-ledger` stays, with new rows and a patient weight. Practice case C14 and the prediction Q19 are removed, the transfer is a different question, and the sentence about summing different local anesthetics is no longer in the course. The quoted wording no longer appears; review the new section instead.",
       "intendedTeachingPoint": "Topical anesthetic exposure is counted across every clinician and every preparation. Milligrams come from each line's own concentration. An administration with no recorded amount stays unknown, not zero. Arithmetic never supplies a permissible further dose: the limit comes from the approved policy.",
       "sourceCheck": {
         "checkedOn": "2026-09-14",
@@ -123,6 +124,7 @@
         "element": "transfer Q17, rationale of the option marked unsafe"
       },
       "learnerWording": "Removing or repositioning an established airway is a separate airway decision for the airway team, not a way to finish an inspection. Withdrawing the bronchoscope is not withdrawing the endotracheal tube; the unseen larynx is documented as a limitation.",
+      "supersededBy": "Larynx, trachea and carina was rewritten on 2026-10-08 (rewrite plan, brief 5). The transfer question Q17 (withdrawing through an endotracheal tube) and the block `entry-and-withdrawal` are removed from this section; bronchoscopy through a tube belongs to the section on the ventilated patient. The quoted wording no longer appears; review that section when it is rewritten.",
       "intendedTeachingPoint": "Withdrawing the bronchoscope is a planned second look; it is not removal of an endotracheal tube. An airway is never changed to complete an inspection, and what was never in view is recorded as not assessed.",
       "sourceCheck": {
         "checkedOn": "2026-09-14",
@@ -340,6 +342,7 @@
         "element": "teaching block suction-is-a-path, body"
       },
       "learnerWording": "Suction being requested is not material moving: a pressed valve or a live vacuum indicator does not prove aspiration. The response is a reasoned check along the path, not more vacuum.",
+      "supersededBy": "The scope and the setup was rewritten on 2026-10-08 (rewrite plan, brief 2). The prediction N02 keeps the same key in new words (trace the suction from the tip back to the wall), only turning the vacuum up is flagged unsafe, and the block `suction-is-a-path` is replaced by `suction-path`. The quoted wording no longer appears; review the new section instead.",
       "intendedTeachingPoint": "Suction runs along a physical path. A pressed valve or a live indicator does not prove flow at the tip. A failed check is traced and corrected, or the equipment replaced, before insertion rather than compensated for with more vacuum.",
       "sourceCheck": {
         "checkedOn": "2026-09-14",
@@ -392,6 +395,7 @@
         "element": "teaching block darkness-not-a-direction, body"
       },
       "learnerWording": "One inspection lecture uses darkness as a cue toward the open lumen and stresses smooth progress through the upper airway.",
+      "supersededBy": "Rewrite, section 8, 2026-10-09: Losing and regaining the view was re-authored and the block `darkness-not-a-direction` is removed, with its report of the lecture (brief 8 cuts the narration of lectures). The teaching point is kept in new words: the practice case `mc-dark-field` and the common-errors card say that darkness is not a direction and that you withdraw to a view you know. The quoted wording no longer appears.",
       "intendedTeachingPoint": "Darkness alone is not a direction. The scope advances gently only along a path identified from visible anatomy, and stops for a lost path, resistance, bleeding or a change in the patient.",
       "sourceCheck": {
         "checkedOn": "2026-09-14",
@@ -438,6 +442,7 @@
         "element": "prediction Q14, item explanation"
       },
       "learnerWording": "Rotation reaches the tip only along the shaft. A hard insertion-hand grip and a bowed shaft absorb the rotation, so the control section turns while the image barely moves",
+      "supersededBy": "The section `branch-entry` was retired on 2026-10-08 (rewrite plan, brief 5); its tasks are in Larynx, trachea and carina. The prediction Q14 is removed. The same teaching, that a clamped grip or a loop takes up rotation, is now in the practice case `mc-handle-turns-view-static` and in Driving the scope, in new words. The quoted wording no longer appears.",
       "intendedTeachingPoint": "Rotation from the control section reaches the tip only through a shaft that runs smoothly. When the image does not follow a turn, the fix is the shaft course and grip, retested with a small isolated turn; forward force does not fix it.",
       "sourceCheck": {
         "checkedOn": "2026-09-14",
@@ -543,7 +548,7 @@
         "date": null,
         "reviewedVersion": null
       },
-      "supersededBy": "Rewrite pilot, 2026-10-08: the bleeding section was re-authored (new prediction, case and check) and this wording no longer exists there. The capstone C06 and view-loss surfaces listed are unchanged and still carry the claim, unreviewed."
+      "supersededBy": "Rewrite pilot, 2026-10-08: the bleeding section was re-authored (new prediction, case and check) and this wording no longer exists there. The capstone C06 surface listed is unchanged and still carries the claim, unreviewed. The view-loss block `scope-holding-a-bleed` was removed when that section was re-authored on 2026-10-09; its first-move card now says that a scope wedged on a bleeding segment stays where it is."
     },
     {
       "id": "BF-01-C09",
@@ -574,6 +579,7 @@
         "element": "transfer Q22, item explanation"
       },
       "learnerWording": "Avoiding unnecessary proximal suction protects the specimen; clearing secretions that obstruct the airway and impair breathing protects the patient, and the patient comes first.",
+      "supersededBy": "Rewrite, section 11, 2026-10-10: Washings and BAL was re-authored and `poor-return` retired into it. The check Q22 is rewritten with a new patient. Its explanation keeps the teaching in new words: keeping suction off on the way in protects the specimen, clearing secretions that block the airway protects the patient, and she comes first. The quoted wording no longer appears.",
       "intendedTeachingPoint": "Unnecessary proximal suction before a contamination-sensitive lavage is avoided, but necessary airway clearance comes first. The record then states the sequence, so the result is read with that limitation.",
       "sourceCheck": {
         "checkedOn": "2026-09-14",
@@ -655,6 +661,7 @@
         "element": "practice mc-low-return-after-checks, item explanation"
       },
       "learnerWording": "persistent low return suggests a sampling limitation such as the disease or a dependent segment. The response is to weigh the value and safety of further lavage with the supervisor and record a limited attempt",
+      "supersededBy": "Rewrite, section 11, 2026-10-10: `poor-return` was retired into Washings and BAL. The teaching is now in the block `poor-return-causes` (the lung itself returns little in emphysema or a dependent segment: record a limited sample), the block `when-to-stop` (the ATS abort rule, from the numbers register) and the practice case `mc-low-return-after-checks`, whose key is to finish the planned aliquots and record the return as low. The answer no longer defers to the supervisor. The quoted wording no longer appears.",
       "intendedTeachingPoint": "Once leak, airway collapse and the suction path are excluded, persistent low return is a sampling limitation. It is not a target the patient must be pushed to meet, and the attempt is recorded as limited.",
       "sourceCheck": {
         "checkedOn": "2026-09-14",

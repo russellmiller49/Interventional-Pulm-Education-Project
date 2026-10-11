@@ -4,9 +4,12 @@ import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { BRONCH_SECTION_IDS, type BronchSectionId } from '../content/pathway'
 import type { BronchStageLesson, BronchStageStep } from '../content/stageLessons'
 import { BRONCH_STORAGE_KEY, createEmptyBronchRecord } from '../engine/learnProgress'
+import { inspectionReport } from '../engine/inspectionReport'
 import {
+  availableSurveySnapshot,
   BRONCH_SELF_PACED_STORAGE_KEY,
   parseBronchSelfPacedRecord,
+  readBronchSelfPacedRecord,
 } from '../engine/selfPacedProgress'
 import { performFiveControlsLearn } from '../test-support/fiveControlsLearnHarness'
 import { SCOPE_RECIPES } from '../test-support/scopeRecipes'
@@ -88,6 +91,15 @@ const SELF_PACED_KEYS = [
   'visitedSectionIds',
 ]
 
+/**
+ * The evidence line of a report built from the survey saved on this device. No section shows that
+ * report since `honest-report` was retired; the saved survey and what it supports are still kept.
+ */
+function savedSurveyEvidence(): string {
+  return inspectionReport({
+    inspectionSnapshot: availableSurveySnapshot(readBronchSelfPacedRecord()),
+  }).fields.find((field) => field.id === 'survey-source')!.evidence
+}
 function storedRecord() {
   return parseBronchSelfPacedRecord(localStorage.getItem(BRONCH_SELF_PACED_STORAGE_KEY))
 }
@@ -158,7 +170,7 @@ async function walkByLeavingEveryStep(lesson: BronchStageLesson) {
  * own reviewed mark — with no answer saved anywhere.
  */
 describe('the opening screen', () => {
-  it.each(['shared-airway', 'right-side', 'bleeding-priorities'] as const)(
+  it.each(['what-completion-means', 'right-side', 'bleeding-priorities'] as const)(
     'opens %s with its clinical question and its memory hook',
     async (sectionId) => {
       const { lesson } = await mountSection(sectionId)
@@ -199,8 +211,8 @@ describe('a question in a rewritten section', () => {
 })
 
 describe('a sort section on the stage', () => {
-  it('walks the first section from the read to the reviewed mark, saving no answer', async () => {
-    const { lesson } = await mountSection('shared-airway')
+  it('walks a matching section from the read to the reviewed mark, saving no answer', async () => {
+    const { lesson } = await mountSection('what-completion-means')
     const steps = lesson.steps
     expect(currentStepId()).toBe(steps[0].id)
     expect(screen.getByRole('heading', { name: steps[0].title })).toBeInTheDocument()
@@ -208,44 +220,55 @@ describe('a sort section on the stage', () => {
     expect(document.querySelector('[data-course-teaching]')).not.toBeNull()
     expect(document.querySelector('[data-step-list]')).toBeNull()
     expect(storedRecord()).toMatchObject({
-      lastSectionId: 'shared-airway',
-      visitedSectionIds: ['shared-airway'],
+      lastSectionId: 'what-completion-means',
+      visitedSectionIds: ['what-completion-means'],
       reviewedSectionIds: [],
     })
 
-    await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
-    expect(currentStepId()).toBe(steps[lesson.predictionStepIndex].id)
-    expect(nowPrimary()?.disabled).toBe(true)
-    expect(skipButton()?.textContent).toBe('Continue without answering')
-    expect(verdictOutcome()).toBeNull()
-    expect(document.querySelector('[data-item-situation]')).not.toBeNull()
-    expect(
-      document.querySelector('[data-stage-sources]')?.getAttribute('data-stage-sources-claims'),
-    ).toBe('true')
-    expect(document.querySelector('[data-course-teaching]')).toBeNull()
-    const predictStep = steps[lesson.predictionStepIndex]
-    commitById(keyedChoiceId(predictStep))
-    expect(verdictOutcome()).toBe('correct')
-    expect(skipButton()).toBeNull()
-    expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
-    expect(Object.keys(storedRecord()!).sort()).toEqual(SELF_PACED_KEYS)
-    clickPrimary()
-    await settle()
+    // The question and the matching activity are met in whichever order this section has them.
+    const answerTheQuestion = async () => {
+      await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
+      expect(currentStepId()).toBe(steps[lesson.predictionStepIndex].id)
+      expect(nowPrimary()?.disabled).toBe(true)
+      expect(skipButton()?.textContent).toBe('Continue without answering')
+      expect(verdictOutcome()).toBeNull()
+      expect(document.querySelector('[data-item-situation]')).not.toBeNull()
+      expect(
+        document.querySelector('[data-stage-sources]')?.getAttribute('data-stage-sources-claims'),
+      ).toBe('true')
+      expect(document.querySelector('[data-course-teaching]')).toBeNull()
+      const predictStep = steps[lesson.predictionStepIndex]
+      commitById(keyedChoiceId(predictStep))
+      expect(verdictOutcome()).toBe('correct')
+      expect(skipButton()).toBeNull()
+      expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
+      expect(Object.keys(storedRecord()!).sort()).toEqual(SELF_PACED_KEYS)
+      clickPrimary()
+      await settle()
+    }
+    const matchTheSet = async () => {
+      const act = stepOfKind(lesson, 'sort')
+      await reachCourseStep(lesson, act)
+      expect(currentStepId()).toBe(act.id)
+      expect(nowPrimary()?.disabled).toBe(true)
+      expect(skipButton()?.textContent).toBe('Continue without checking')
+      placeSortRows(act)
+      expect(nowPrimary()?.disabled).toBe(false)
+      clickPrimary()
+      expect(document.querySelectorAll('[data-sort-verdict="held"]').length).toBe(
+        act.interaction.kind === 'sort' ? act.interaction.sort.rows.length : -1,
+      )
+      expect(nowButton('Try the set again')).toBeDefined()
+      clickPrimary()
+      await settle()
+    }
+    const questionFirst = lesson.predictionStepIndex < steps.indexOf(stepOfKind(lesson, 'sort'))
+    for (const part of questionFirst
+      ? [answerTheQuestion, matchTheSet]
+      : [matchTheSet, answerTheQuestion])
+      await part()
 
-    const act = stepOfKind(lesson, 'sort')
-    expect(currentStepId()).toBe(act.id)
-    expect(nowPrimary()?.disabled).toBe(true)
-    expect(skipButton()?.textContent).toBe('Continue without checking')
-    placeSortRows(act)
-    expect(nowPrimary()?.disabled).toBe(false)
-    clickPrimary()
-    expect(document.querySelectorAll('[data-sort-verdict="held"]').length).toBe(
-      act.interaction.kind === 'sort' ? act.interaction.sort.rows.length : -1,
-    )
-    expect(nowButton('Try the set again')).toBeDefined()
-    clickPrimary()
-    await settle()
-
+    await reachCourseStep(lesson, stepOfKind(lesson, 'explain'))
     expect(currentStepId()).toBe(stepOfKind(lesson, 'explain').id)
     expect(document.querySelector('[data-explain-recap] [data-answer-verdict]')).not.toBeNull()
     expect(document.querySelector('[data-teaching-block="anchor"]')).not.toBeNull()
@@ -255,9 +278,11 @@ describe('a sort section on the stage', () => {
     await settle()
 
     const transfer = steps[lesson.transferStepIndex]
+    await reachCourseStep(lesson, transfer)
     expect(currentStepId()).toBe(transfer.id)
     commitById(otherChoiceId(transfer))
-    expect(verdictOutcome()).toBe('not-correct')
+    // Any answer but the keyed one: the verdict depends on which distractor the section offers.
+    expect(['not-correct', 'unsafe']).toContain(verdictOutcome())
     while (nowPrimary()) {
       clickPrimary()
       await settle()
@@ -269,11 +294,13 @@ describe('a sort section on the stage', () => {
     expect(completion.textContent).toContain(
       'Self-paced online learning does not establish procedural competence.',
     )
+    // After the last section the way on is the integrated cases.
+    const next = BRONCH_SECTION_IDS[BRONCH_SECTION_IDS.indexOf('what-completion-means') + 1]
     expect(completion.querySelector('[data-next-section]')).toHaveAttribute(
       'data-next-section',
-      BRONCH_SECTION_IDS[1],
+      next ?? 'assess',
     )
-    expect(storedRecord()?.reviewedSectionIds).toEqual(['shared-airway'])
+    expect(storedRecord()?.reviewedSectionIds).toEqual(['what-completion-means'])
     expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
 
     fireEvent.click(completion.querySelector('[data-toggle-reviewed]')!)
@@ -285,7 +312,7 @@ describe('a sort section on the stage', () => {
   })
 
   it('lets a learner look back without losing the live step, and restarts with nothing kept', async () => {
-    const { lesson } = await mountSection('shared-airway')
+    const { lesson } = await mountSection('what-completion-means')
     await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
     commitById(keyedChoiceId(lesson.steps[lesson.predictionStepIndex]))
     clickPrimary()
@@ -309,7 +336,7 @@ describe('a sort section on the stage', () => {
   })
 
   it('opens at the first step whatever phase the address names, and restores no answer after a reload', async () => {
-    const { lesson } = await mountSection('shared-airway')
+    const { lesson } = await mountSection('what-completion-means')
     await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
     commitById(otherChoiceId(lesson.steps[lesson.predictionStepIndex]))
     cleanup()
@@ -317,9 +344,9 @@ describe('a sort section on the stage', () => {
     window.history.replaceState(
       null,
       '',
-      '/bronchoscopy-foundations/learn?section=shared-airway&phase=explain',
+      '/bronchoscopy-foundations/learn?section=what-completion-means&phase=explain',
     )
-    await mountSection('shared-airway')
+    await mountSection('what-completion-means')
     expect(currentStepId()).toBe(lesson.steps[0].id)
     await reachCourseStep(lesson, lesson.steps[lesson.predictionStepIndex])
     expect(verdictOutcome()).toBeNull()
@@ -331,7 +358,7 @@ describe('a sort section on the stage', () => {
 /** Self-paced contract (BF-01): explanation first, back to teaching, on without answering. */
 describe('optional questions and activities', () => {
   it('opens a question’s explanation before an answer, returns to the teaching, and moves on without answering', async () => {
-    const { lesson } = await mountSection('shared-airway')
+    const { lesson } = await mountSection('what-completion-means')
     const check = lesson.steps[lesson.predictionStepIndex]
     await reachCourseStep(lesson, check)
     fireEvent.click(screen.getByRole('button', { name: 'Show the explanation' }))
@@ -372,13 +399,8 @@ describe('optional questions and activities', () => {
     })
     cleanup()
 
-    const report = await mountSection('honest-report')
-    const yourRecord = report.lesson.steps.find((step) => step.course?.learnerRecord)!
-    await reachCourseStep(report.lesson, yourRecord)
-    expect(
-      document.querySelector('[data-report-field="survey-source"] [data-report-field-evidence]')
-        ?.textContent,
-    ).toMatch(/No completed survey record/)
+    // What a report built from the saved record would have to say about its own evidence.
+    expect(savedSurveyEvidence()).toMatch(/No completed survey record/)
   })
 
   it('saves the survey only when its goals were met on the learner’s controls, leaving the earlier record untouched', async () => {
@@ -395,13 +417,7 @@ describe('optional questions and activities', () => {
     expect(storedRecord()?.surveySnapshot?.sectionId).toBe('systematic-survey')
     cleanup()
 
-    const report = await mountSection('honest-report')
-    const yourRecord = report.lesson.steps.find((step) => step.course?.learnerRecord)!
-    await reachCourseStep(report.lesson, yourRecord)
-    expect(
-      document.querySelector('[data-report-field="survey-source"] [data-report-field-evidence]')
-        ?.textContent,
-    ).toMatch(/saved inspection record is available/)
+    expect(savedSurveyEvidence()).toMatch(/saved inspection record is available/)
     expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBe(earlier)
   })
 })
@@ -409,10 +425,12 @@ describe('optional questions and activities', () => {
 /** Non-target lessons retain their activity and safety boundaries. */
 describe('a scope section on the stage', () => {
   it('introduces entry with teaching and opens the controls for practice before the check', async () => {
-    const { lesson } = await mountSection('branch-entry')
+    const { lesson } = await mountSection('view-loss')
+    // The section opens on its question and hook: teaching, with no controls yet.
     expect(controlsFieldset()).toBeNull()
-    expect(document.querySelector('[data-normal-airway-tour]')).not.toBeNull()
-    expect(storedRecord()?.visitedSectionIds).toEqual(['branch-entry'])
+    expect(currentStepId()).toBe(lesson.steps[0].id)
+    expect(lesson.steps[0].course?.anchor).toBe(true)
+    expect(storedRecord()?.visitedSectionIds).toEqual(['view-loss'])
     await reachAct(lesson)
     expect(controlsFieldset()).not.toBeDisabled()
     expect(nowPrimary()).toBeDisabled()
@@ -436,7 +454,7 @@ describe('a scope section on the stage', () => {
   )
 
   it('stores nothing about how the scope was driven or which assists were used', async () => {
-    const { lesson } = await mountSection('branch-entry')
+    const { lesson } = await mountSection('view-loss')
     await reachAct(lesson)
     await performAct(lesson)
     await finishSection(lesson)
@@ -484,7 +502,7 @@ describe('the accounting ledger (A10)', () => {
 
 describe('the report builder (A08)', () => {
   it('refuses a statement the evidence does not support, shows what it supports on request, and completes only on supported ones', async () => {
-    const { lesson } = await mountSection('honest-report')
+    const { lesson } = await mountSection('describe-findings')
     await reachAct(lesson)
     const act = stepOfKind(lesson, 'report')
     if (act.interaction.kind !== 'report') return
@@ -512,7 +530,7 @@ describe('the report builder (A08)', () => {
 
 describe('a scenario in frames (A13, A32)', () => {
   it('refuses the unsafe move, keeps the frame, opens the reasoning without moving the case, and advances only on the keyed decision', async () => {
-    const { lesson } = await mountSection('poor-return')
+    const { lesson } = await mountSection('deterioration')
     await reachAct(lesson)
     const act = stepOfKind(lesson, 'scenario')
     if (act.interaction.kind !== 'scenario') return
@@ -542,7 +560,7 @@ describe('a scenario in frames (A13, A32)', () => {
 
 describe('naming views and ordering steps', () => {
   it('names every view, opens the names on request, and can be tried again', async () => {
-    const { lesson } = await mountSection('reference-frames')
+    const { lesson } = await mountSection('pre-use-check')
     await reachAct(lesson)
     const act = stepOfKind(lesson, 'identify')
     if (act.interaction.kind !== 'identify') return

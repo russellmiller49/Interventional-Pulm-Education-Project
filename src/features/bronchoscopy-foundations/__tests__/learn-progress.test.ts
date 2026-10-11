@@ -1,3 +1,4 @@
+import { BRONCH_LEARN_VERSIONS } from '../content/lessonVersions'
 import { BRONCH_SECTION_IDS } from '../content/pathway'
 import {
   bronchSectionItems,
@@ -106,14 +107,25 @@ describe('the earlier module record, read-only', () => {
     expect(isSectionCompleted(unversioned, 'five-controls')).toBe(false)
     expect(
       isSectionCompleted(
-        { ...unversioned, sectionVersions: { 'five-controls': 2 } },
+        {
+          ...unversioned,
+          sectionVersions: { 'five-controls': BRONCH_LEARN_VERSIONS['five-controls'] },
+        },
         'five-controls',
       ),
     ).toBe(true)
+    // A completion recorded against an earlier version of the section no longer counts.
     expect(
       isSectionCompleted(
-        { ...createEmptyBronchRecord(), completedSectionIds: ['pre-use-check'] },
-        'pre-use-check',
+        { ...unversioned, sectionVersions: { 'five-controls': 2 } },
+        'five-controls',
+      ),
+    ).toBe(false)
+    expect(
+      isSectionCompleted(
+        // A section with no content version: the completion stands as recorded.
+        { ...createEmptyBronchRecord(), completedSectionIds: ['a-section-without-a-version'] },
+        'a-section-without-a-version',
       ),
     ).toBe(true)
   })
