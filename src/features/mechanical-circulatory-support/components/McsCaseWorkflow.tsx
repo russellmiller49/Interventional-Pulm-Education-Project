@@ -49,9 +49,8 @@ export function McsCaseWorkflow({
         <h2>Mechanism Studio</h2>
         <McsSourceReviewNotice />
         <p data-studio-identity>
-          An open sandbox on this module’s reference patient. There is no case to solve, no question
-          to answer and no debrief to reach: nothing here is a task, and nothing you do here is
-          recorded or counted.
+          An open sandbox on the reference patient. There is no case to solve and nothing here is
+          recorded.
         </p>
         <p>
           The patient context above is the reference patient the sandbox starts from, shown so a
@@ -258,8 +257,8 @@ export function McsCaseWorkflow({
             <em>Where to look:</em> {scenario.guidedPrompt || scenario.debrief[0]}
           </p>
           <p data-prediction-reasoning-boundary>
-            This compares each option with the state this case is built in. It is draft teaching
-            copy, not a clinical rule, and it is not kept: no answer is counted or stored.
+            Each option is compared with this patient as the case opens. No answer is counted or
+            stored.
           </p>
         </aside>
       ) : null}
@@ -317,10 +316,7 @@ export function McsCaseWorkflow({
            */}
           <header className={styles.debriefHeader}>
             <h3>Worked case explanation</h3>
-            <p>
-              Authored teaching for this case. Viewing it does not perform an action or establish a
-              successful outcome in your run.
-            </p>
+            <p>The worked reasoning for this case. Reading it changes nothing in your run.</p>
           </header>
           <div className={styles.debriefColumns}>
             <div data-debrief-teaching>
@@ -346,9 +342,8 @@ export function McsCaseWorkflow({
                * wrote so its own cases have an end. Two of them are quarantined outright.
                */}
               <p data-condition-contract>
-                Each condition below is a test on this simulation, not a treatment target and not a
-                sign that the support is clinically adequate. Meeting one says the model reached a
-                number this module chose; it does not say a device was correctly operated.
+                These are the simulator&rsquo;s checkpoints for ending the case, not treatment
+                targets.
               </p>
               <ul data-condition-list>
                 {scenario.successCriteria.map((item) => (
@@ -364,15 +359,13 @@ export function McsCaseWorkflow({
                             item.classification.scope ? ` · ${item.classification.scope}` : ''
                           }`
                         : item.classification.kind === 'device-reported-quantity'
-                          ? 'A quantity a console reports, at a value authored for this simulation'
-                          : 'Authored for this simulation'}{' '}
+                          ? 'A value the console reports · simulator checkpoint'
+                          : 'Simulator checkpoint'}{' '}
                       · {item.classification.quantity}
                     </small>
                     {item.classification.held ? (
                       <em data-condition-hold>
-                        Held, and not treated as an outcome: {item.classification.held.reason}.
-                        Whether this run reached it is not shown and is not a result. Open item{' '}
-                        {item.classification.held.openItemId}, still NOT REVIEWED.
+                        Not used as a result: {item.classification.held.reason}.
                       </em>
                     ) : null}
                   </li>

@@ -23,6 +23,7 @@ jest.mock('../components/ImpellaVariantPreview', () =>
 )
 
 import { McsHub } from '../components/McsHub'
+import { MCS_TEACHING_SIMULATOR_STATEMENT } from '../content/modelLimits'
 import {
   MCS_PRODUCT_FLOW_BOUNDARY,
   MCS_RECOMMENDED_FIRST_SECTION_ID,
@@ -76,48 +77,22 @@ beforeEach(() => {
 })
 
 describe('M0/M1 §5 — the module front door', () => {
-  it('keeps review and governance material behind the reviewer layer', async () => {
+  it('states once, in the primary path, that this is a teaching simulator, with no review status', async () => {
     const container = await renderHub()
     const governance = container.querySelector('[data-review-governance]') as HTMLElement
     expect(governance).not.toBeNull()
+    expect(governance.closest('details')).toBeNull()
+    expect(governance.textContent).toContain(MCS_TEACHING_SIMULATOR_STATEMENT)
 
-    const reviewerLayer = governance.querySelector(
-      'details[data-reviewer-layer]',
-    ) as HTMLDetailsElement
-    expect(reviewerLayer).not.toBeNull()
-    // Collapsed by default: a first-year fellow does not open the module into a release checklist.
-    expect(reviewerLayer.open).toBe(false)
-
-    // The gate list and the sign-off prose live inside it.
-    expect(reviewerLayer.querySelectorAll('li').length).toBeGreaterThanOrEqual(10)
-    expect(
-      within(reviewerLayer).getByText(/Publication awaits review by an advanced-heart-failure/i),
-    ).toBeInTheDocument()
-    expect(
-      within(reviewerLayer).getByText(/perfusionist, or clinical-engineer review/i),
-    ).toBeInTheDocument()
-
-    // And nowhere else on the page.
-    const outsideLayer = Array.from(container.querySelectorAll('li')).filter(
-      (node) =>
-        !reviewerLayer.contains(node) && /Pending ·|Complete ·/.test(node.textContent ?? ''),
+    // Review status and the release checklist are project metadata: none of it is on the hub.
+    expect(container.querySelector('details[data-reviewer-layer]')).toBeNull()
+    expect(container.textContent).not.toMatch(
+      /pending (clinical|faculty) review|NOT REVIEWED|Publication awaits review/i,
     )
-    expect(outsideLayer).toEqual([])
-  })
-
-  it('keeps the preview warning in the primary path, outside the reviewer layer', async () => {
-    const container = await renderHub()
-    const governance = container.querySelector('[data-review-governance]') as HTMLElement
-
-    const heading = within(governance).getByText(/Preview · pending clinical review/i)
-    const warning = within(governance).getByText(/bounded teaching approximations/i)
-
-    expect(heading.closest('details')).toBeNull()
-    expect(warning.closest('details')).toBeNull()
-    expect(warning.textContent).toMatch(
-      /Nothing in this module is a source for a device specification/i,
+    const gateItems = Array.from(container.querySelectorAll('li')).filter((node) =>
+      /Pending ·|Complete ·/.test(node.textContent ?? ''),
     )
-    expect(warning.textContent).toMatch(/current manufacturer instructions and local protocol/i)
+    expect(gateItems).toEqual([])
   })
 
   it('states the recommended first section without gating any other', async () => {
@@ -163,19 +138,6 @@ describe('M0/M1 §5 — the module front door', () => {
       screen.getAllByRole('link', { name: /Open the first section on this device/i }),
     ).toHaveLength(3)
   })
-
-  it('states that working through the module does not make anyone ready to run a device', async () => {
-    const container = await renderHub()
-    const boundary = container.querySelector(
-      '[data-mcs-common-model="completion-boundary"]',
-    ) as HTMLElement
-    expect(boundary).not.toBeNull()
-    expect(boundary.textContent).toMatch(/does not establish that you are ready to operate/i)
-    expect(boundary.textContent).toMatch(/device-specific training on the equipment in use/i)
-    expect(boundary.textContent).toMatch(
-      /supervision by the responsible shock or mechanical-support team/i,
-    )
-  })
 })
 
 describe('M0/M1 §3 — every reference flow is descriptive, never a target', () => {
@@ -201,26 +163,28 @@ describe('M0/M1 §3 — every reference flow is descriptive, never a target', ()
     }
   })
 
-  it('renders the five published figures, each naming a different measured quantity', async () => {
+  it('renders the seven published figures, each naming its measured quantity', async () => {
     const container = await renderHub()
     const figures = Array.from(container.querySelectorAll('[data-product-reference]'))
-    expect(figures).toHaveLength(5)
+    expect(figures).toHaveLength(7)
 
     const measurands = figures.map((node) => node.querySelector('[data-measurand]')?.textContent)
     const products = figures.map((node) => node.querySelector('small')?.textContent)
     expect(measurands).toEqual([
+      'Mean flow at each P-level',
       'Maximum mean flow',
       'Peak flow rate at systole',
       'Average flow observed during support',
-      // MCS-03-03: the supplied Impella 5.5 instructions for use (10003049 rL) state 5.5 L/min as a
-      // maximum mean flow — the same measurand as the first Impella CP figure, for a different pump.
+      // The supplied Impella 5.5 instructions for use (10003049 rL) state 5.5 L/min as a maximum
+      // mean flow — the same measurand as the Impella CP figure, for a different pump.
       'Maximum mean flow',
+      'Mean flow at each P-level',
       'Product-framed flow',
     ])
     // No two figures for the same pump claim to be the same quantity.
     const pairs = measurands.map((measurand, index) => `${products[index]} · ${measurand}`)
     expect(new Set(pairs).size).toBe(pairs.length)
-    expect(products[3]).toBe('Impella 5.5 with SmartAssist')
+    expect(products[4]).toBe('Impella 5.5 with SmartAssist')
   })
 
   it('publishes no figure at all for a pathway that reports no device flow', async () => {
@@ -230,7 +194,7 @@ describe('M0/M1 §3 — every reference flow is descriptive, never a target', ()
     ) as HTMLElement
     expect(iabpCard.querySelectorAll('[data-product-reference]')).toHaveLength(0)
     expect(iabpCard.querySelector('[data-not-a-target]')!.textContent).toMatch(
-      /publishes no product flow figure/i,
+      /The console reports no device flow/i,
     )
   })
 })

@@ -300,9 +300,6 @@ describe('the clinical distinctions', () => {
   })
 
   it('never asks the learner to read right-sided support from the pulmonary pulsatility ratio', () => {
-    const rightSided = contract('impella-suction-purge-rv')
-    expect(rightSided.whatThisDoesNotEstablish).toMatch(/pulmonary pulsatility ratio/i)
-    expect(rightSided.whatThisDoesNotEstablish).toMatch(/must not be used on its own/i)
     // No section makes it a success criterion of the action or a satisfied-state predicate.
     for (const section of mcsSectionLearningContracts) {
       expect(section.observationFocus).not.toMatch(/PAPi/)

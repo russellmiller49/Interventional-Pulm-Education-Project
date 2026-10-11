@@ -134,7 +134,7 @@ export const mcsMonitorTargets: Readonly<Record<McsMonitorTargetId, McsSurfaceTa
     'monitor:alarms': monitorTarget(
       'monitor:alarms',
       'Alarm band and its interpretation',
-      'The alarm band names each active modeled alarm with its priority, and the explanation beneath says what state produced it.',
+      'The alarm band names each active alarm with its priority, and the explanation beneath says what produced it.',
     ),
   })
 
@@ -236,7 +236,7 @@ export const mcsSectionPrimarySurfaces: readonly McsSectionPrimarySurface[] = Ob
     primarySurfaceRationale:
       'The simplified model generates flow from speed and loading and derives power and PI afterward. Reading the controller values as one interdependent set requires them on screen together, and the pump does not change position while it is happening.',
     whyThisView:
-      'The monitor leads so the learner can compare speed, estimated flow, power and PI at unchanged speed as modeled loading changes.',
+      'The monitor leads so you can compare speed, displayed flow, power and PI at an unchanged speed as loading changes.',
   },
   {
     sectionId: 'lvad-alarms-emergencies',

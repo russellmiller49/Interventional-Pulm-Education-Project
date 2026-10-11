@@ -1,3 +1,4 @@
+import { defaultMcsPatient } from '../content/scenarios'
 import { advanceMcsSimulation, createInitialMcsState } from './model'
 import { isMcsActionIdPermitted, mcsReducer } from './reducer'
 import type { McsAction, McsDeviceKind, McsSimulationState } from './types'
@@ -101,8 +102,22 @@ export function captureMcsDeviceComparison(
   state: McsSimulationState,
   device: McsDeviceKind,
 ): McsDeviceComparison {
-  const selected = mcsReducer(state, { type: 'SELECT_DEVICE', device })
-  const observed = advanceMcsSimulation(selected, MCS_OBSERVATION_SECONDS)
+  const rebuilt = mcsReducer(state, { type: 'SELECT_DEVICE', device })
+  // The durable pump's own reference patient has a lower resistance. This comparison holds one
+  // patient across all three devices, so it puts the shared resistance back.
+  const selected =
+    rebuilt.patient.systemicVascularResistanceDynSecCm5 ===
+    defaultMcsPatient.systemicVascularResistanceDynSecCm5
+      ? rebuilt
+      : mcsReducer(rebuilt, {
+          type: 'SET_PATIENT_CONTROL',
+          control: 'systemicVascularResistanceDynSecCm5',
+          value: defaultMcsPatient.systemicVascularResistanceDynSecCm5,
+        })
+  const observed = advanceMcsSimulation(
+    selected,
+    Math.max(0, MCS_OBSERVATION_SECONDS - selected.timeSeconds),
+  )
   return {
     referenceId: 'mcs-reference-patient-v1',
     patient: selected.patient,

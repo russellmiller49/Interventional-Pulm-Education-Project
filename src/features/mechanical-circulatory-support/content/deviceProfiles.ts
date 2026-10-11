@@ -7,8 +7,7 @@ export const mcsDeviceProfiles: readonly McsDeviceProfile[] = [
     displayName: 'Intra-aortic balloon pump',
     category: 'Temporary counterpulsation support',
     jurisdiction: 'US',
-    labelingRevision:
-      'Registered US IABP update-center material, not opened for this module; local-IFU reconciliation remains a release gate',
+    labelingRevision: 'US IABP update-center material; check against the console on your unit',
     softwareOrModelRevision:
       'Neutral facsimile informed by Cardiosave B.17 reference material; not console-specific',
     reviewedAt: '2026-07-19',
@@ -74,8 +73,7 @@ export const mcsDeviceProfiles: readonly McsDeviceProfile[] = [
     displayName: 'Impella CP, 5.5, and RP support',
     category: 'Temporary left, right, or biventricular microaxial support',
     jurisdiction: 'US',
-    labelingRevision:
-      'Registered FDA PMA P140003 supplement index, not opened for this module; current local IFU still required',
+    labelingRevision: 'FDA PMA P140003 supplement index; check against the device on your unit',
     softwareOrModelRevision: 'Generic microaxial model; unopened FDA notice records listed below',
     reviewedAt: '2026-07-19',
     mechanism:
@@ -151,19 +149,20 @@ export const mcsDeviceProfiles: readonly McsDeviceProfile[] = [
         id: 'impella-right-position',
         label: 'RP position signal abnormal',
         priority: 'critical',
-        interpretation: 'The modeled IVC-inlet/PA-outlet relationship is abnormal.',
+        interpretation:
+          'The inlet is not in the inferior vena cava or the outlet is not in the pulmonary artery.',
       },
       {
         id: 'impella-right-flow-imbalance',
         label: 'Right-to-left pump imbalance',
         priority: 'warning',
-        interpretation: 'RP delivery exceeds modeled left-heart handling.',
+        interpretation: 'The right pump is delivering more than the left heart is moving on.',
       },
       {
         id: 'impella-left-hemolysis-risk',
         label: 'Left hemolysis-risk pattern',
         priority: 'warning',
-        interpretation: 'Suction or malposition raises modeled blood-trauma risk.',
+        interpretation: 'Suction or malposition raises the risk of hemolysis.',
       },
     ],
     modelLimitations: [
@@ -192,8 +191,7 @@ export const mcsDeviceProfiles: readonly McsDeviceProfile[] = [
     displayName: 'Durable continuous-flow LVAD',
     category: 'Implanted LV-to-aorta support',
     jurisdiction: 'US',
-    labelingRevision:
-      'Registered P160054/S008 IFU anchor, not opened for this module; current PMA supplement/local-IFU reconciliation remains pending',
+    labelingRevision: 'P160054/S008 instructions for use; check against the device on your unit',
     softwareOrModelRevision:
       'Generic continuous-flow model, not a HeartMate 3 simulator; unopened power-system notice records listed below',
     reviewedAt: '2026-07-19',
@@ -230,19 +228,22 @@ export const mcsDeviceProfiles: readonly McsDeviceProfile[] = [
         id: 'lvad-power-disconnected',
         label: 'External power disconnected',
         priority: 'critical',
-        interpretation: 'Pump support is unavailable until an approved power path is restored.',
+        interpretation:
+          'The pump has stopped. Reconnect power at once: a charged battery or the power module.',
       },
       {
         id: 'lvad-controller-fault',
         label: 'Controller fault',
         priority: 'critical',
-        interpretation: 'Use current emergency procedures and contact the LVAD team.',
+        interpretation:
+          'Check the power and driveline connections, change to the backup controller, and call the LVAD team while you do it.',
       },
       {
         id: 'lvad-high-power',
         label: 'High-power pattern',
         priority: 'critical',
-        interpretation: 'Urgent MCS-team evaluation is required.',
+        interpretation:
+          'Suspected pump thrombosis: send LDH and plasma free hemoglobin, check the anticoagulation, get an echo, call the LVAD team and surgeon.',
       },
     ],
     modelLimitations: [

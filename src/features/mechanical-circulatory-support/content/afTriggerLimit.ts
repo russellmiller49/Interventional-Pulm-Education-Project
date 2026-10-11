@@ -26,7 +26,7 @@ import type { McsDeviceState, McsPatientState, McsSimulationState } from '../eng
  */
 export const MCS_AF_TRIGGER_LIMIT = {
   /** Lead of the IABP-02 and CAP-IABP-01 worked explanations. */
-  heldLead: 'Model limit held for faculty review',
+  heldLead: 'Simulator limit',
   /** What the simulation does. */
   modelRating: 'In atrial fibrillation this model rates pressure triggering above ECG triggering.',
   /** What the checked Cardiosave documents say. */
@@ -81,10 +81,10 @@ export const MCS_AF_TRIGGER_CONTAINMENT = {
   /** The open item the hold belongs to. */
   openItemId: 'MCS-03-05',
   /** Lead for the worked comparison that replaced the graded decision. */
-  comparisonLead: 'What this model rates each trigger source, side by side',
+  comparisonLead: 'How the simulator rates each trigger source, side by side',
   /** What the comparison is, and is not. */
   comparisonScope:
-    'The three figures below are this model’s own trigger rating at the settings and simulated time on screen, run on separate copies of this circulation. They are not console readings, and the model represents neither R-wave quality nor a console’s own arrhythmia handling.',
+    'The three figures are the simulator’s own rating of each trigger at the settings on screen. They are not console readings: the simulator has no R-wave quality and no console arrhythmia handling.',
   /** Said wherever the model's alarms happen to be quiet while the limit applies. */
-  notAnAllClear: 'Model limit held · a quiet trigger alarm here is not a correctly operated device',
+  notAnAllClear: 'Simulator limit · a quiet trigger alarm here does not mean the trigger is right',
 } as const

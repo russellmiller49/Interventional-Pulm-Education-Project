@@ -46,14 +46,72 @@ const MAX_TREND_SECONDS = 120
  */
 /** `leftPreloadFactor` below this turns on the modeled left-sided suction state. Authored. */
 export const LEFT_IMPELLA_SUCTION_PRELOAD_THRESHOLD = 0.58
-/** Baseline MAP above which the modeled durable-support afterload alarm is raised. Authored. */
-export const LVAD_HIGH_AFTERLOAD_MAP_MMHG = 100
-/** Flat power added by the suspected-thrombosis flag. Authored; it never enters the flow formula. */
-export const LVAD_SUSPECTED_THROMBOSIS_POWER_W = 2.8
+/**
+ * Displayed mean arterial pressure above which the durable-support afterload alarm is raised.
+ * Continuous-flow LVAD patients are generally kept below 90 mm Hg (Case-Based Device Therapy for
+ * Heart Failure, 2021, pp. 99 and 116–117); see `content/teachingNumbers.ts`.
+ */
+export const LVAD_HIGH_AFTERLOAD_MAP_MMHG = 90
+/**
+ * Power the rotor draws to overcome thrombus drag. It is real electrical power, so the
+ * controller's flow estimate, which is calculated from power and speed, reads falsely high.
+ */
+export const LVAD_SUSPECTED_THROMBOSIS_POWER_W = 3.6
+/** Share of hydraulic flow a thrombus on the rotor leaves the pump able to deliver. */
+export const LVAD_THROMBOSIS_FLOW_FRACTION = 0.5
+/**
+ * Systemic vascular resistance of the durable-support reference patient. Chosen so the reference
+ * state shows a mean arterial pressure inside the 70–80 mm Hg goal instead of a hypertensive one.
+ */
+export const LVAD_REFERENCE_SVR_DYN_SEC_CM5 = 760
+/** Watts per L/min in the power relation; the flow estimate inverts the same relation. */
+const LVAD_POWER_PER_FLOW_W = 0.66
+const LVAD_POWER_AT_REFERENCE_SPEED_W = 2.1
 /** Either durable-support filling term below this raises the modeled inflow-suction state. Authored. */
 export const LVAD_SUCTION_FILLING_THRESHOLD = 0.42
 /** The modeled inflow-suction state needs the pump to be moving at least this much. Authored. */
 export const LVAD_SUCTION_MINIMUM_FLOW_LMIN = 2.5
+
+/**
+ * Mean flow range at each P-level, P-0 to P-9, in L/min.
+ *
+ * Impella CP with SmartAssist: instructions for use 0048-9007 rV, Table 5.3, p. 5.25.
+ * Impella 5.5 with SmartAssist: instructions for use 10003049 rL, Table 5.3, p. 5.26 (mean flow
+ * at a 30–60 mm Hg pressure difference). Read 2026-10-08; see `content/teachingNumbers.ts`.
+ */
+export const IMPELLA_MEAN_FLOW_BY_P_LEVEL_LMIN: Readonly<
+  Record<'cp' | '55', readonly (readonly [number, number])[]>
+> = {
+  cp: [
+    [0, 0],
+    [0, 0.9],
+    [1.1, 2.1],
+    [1.6, 2.3],
+    [2.0, 2.5],
+    [2.3, 2.7],
+    [2.5, 2.9],
+    [2.9, 3.3],
+    [3.1, 3.4],
+    [3.3, 3.7],
+  ],
+  '55': [
+    [0, 0],
+    [0, 0],
+    [0, 1.9],
+    [1.1, 2.7],
+    [1.9, 3.3],
+    [2.8, 3.7],
+    [3.4, 4.1],
+    [3.9, 4.5],
+    [4.3, 4.9],
+    [5.0, 5.5],
+  ],
+}
+/**
+ * The reference patient's loading leaves about 0.89 of the target flow. This gain places that
+ * patient inside each level's printed range; the final flow is still capped at the range ceiling.
+ */
+const IMPELLA_FAVORABLE_LOADING_GAIN = 1.04
 
 export function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value))
@@ -80,7 +138,13 @@ function cycleIndex(timeSeconds: number, heartRateBpm: number): number {
 
 export interface IabpCycleState {
   phase: number
+  /** The balloon inflates in this beat's diastole. */
   assistedBeat: boolean
+  /**
+   * The balloon inflated in the previous beat's diastole, so this beat's ejection is the assisted
+   * systole and the pressure it opens against is the assisted end-diastolic pressure.
+   */
+  previousBeatAssisted: boolean
   inflated: boolean
   inflationStart: number
   deflationEnd: number
@@ -110,6 +174,7 @@ export function deriveIabpCycleState(
   return {
     phase,
     assistedBeat,
+    previousBeatAssisted,
     inflated:
       device.running && ((inflatedThisBeat && beforeDeflation) || stillInflatedFromPreviousBeat),
     inflationStart,
@@ -287,6 +352,8 @@ export interface SupportComputation {
   timingQualityPercent: number | null
   pumpPowerW: number | null
   pulsatilityIndex: number | null
+  /** The durable pump's displayed flow: an estimate calculated from power at the set speed. */
+  estimatedPumpFlowLMin: number | null
   alarms: readonly McsAlarm[]
   diagnostics: McsSupportDiagnostics
 }
@@ -438,6 +505,7 @@ function computeIabpSupport(
     timingQualityPercent: roundTo(timingQuality * 100, 0),
     pumpPowerW: null,
     pulsatilityIndex: null,
+    estimatedPumpFlowLMin: null,
     alarms,
     diagnostics: {
       kind: 'iabp',
@@ -547,10 +615,14 @@ function computeImpellaSupport(
   )
   const leftPositionFactor =
     left.position === 'correct' ? 1 : left.position === 'too-deep' ? 0.48 : 0.36
-  const leftMaximumFlow = left.variant === '55' ? 5.5 : 4.3
-  const leftTargetFlow = leftRunning
-    ? leftMaximumFlow * (clamp(left.performanceLevel, 0, 9) / 9) ** 0.86
-    : 0
+  const leftLevel = Math.round(clamp(left.performanceLevel, 0, 9))
+  const leftLevelRange = IMPELLA_MEAN_FLOW_BY_P_LEVEL_LMIN[left.variant === '55' ? '55' : 'cp'][
+    leftLevel
+  ] ?? [0, 0]
+  // The manual gives a mean-flow range for each P-level; where a patient sits in it depends on
+  // the pressure the pump works against. The level's ceiling is the flow at favorable loading.
+  const leftMaximumFlow = leftLevelRange[1]
+  const leftTargetFlow = leftRunning ? leftMaximumFlow * IMPELLA_FAVORABLE_LOADING_GAIN : 0
   const leftSuction =
     leftRunning &&
     left.performanceLevel >= 5 &&
@@ -749,6 +821,7 @@ function computeImpellaSupport(
     timingQualityPercent: null,
     pumpPowerW: null,
     pulsatilityIndex: null,
+    estimatedPumpFlowLMin: null,
     alarms,
     diagnostics: {
       kind: 'impella',
@@ -808,8 +881,14 @@ function computeLvadSupport(
   const tamponadeFactor = patient.tamponade ? 0.52 : 1
   const fillingLimiter: McsLvadFillingLimiter =
     Math.min(rvDelivery, lvFilling) === rvDelivery ? 'rv-delivery' : 'lv-compartment-filling'
+  const thrombosisFlowFraction =
+    running && device.suspectedPumpThrombosis ? LVAD_THROMBOSIS_FLOW_FRACTION : 1
   const deviceFlow = clamp(
-    targetFlow * Math.min(rvDelivery, lvFilling) * afterloadFactor * tamponadeFactor,
+    targetFlow *
+      Math.min(rvDelivery, lvFilling) *
+      afterloadFactor *
+      tamponadeFactor *
+      thrombosisFlowFraction,
     0,
     7.5,
   )
@@ -824,14 +903,37 @@ function computeLvadSupport(
     running &&
     deviceFlow > LVAD_SUCTION_MINIMUM_FLOW_LMIN &&
     (lvFilling < LVAD_SUCTION_FILLING_THRESHOLD || rvDelivery < LVAD_SUCTION_FILLING_THRESHOLD)
+  // Power is what the controller measures: the work of moving the blood plus, with thrombus on
+  // the rotor, the work of turning against it.
+  const speedPowerW = (device.speedRpm - 4600) / 1700
   const pumpPower = running
-    ? 2.1 +
-      deviceFlow * 0.66 +
-      (device.speedRpm - 4600) / 1700 +
+    ? LVAD_POWER_AT_REFERENCE_SPEED_W +
+      deviceFlow * LVAD_POWER_PER_FLOW_W +
+      speedPowerW +
       (device.suspectedPumpThrombosis ? LVAD_SUSPECTED_THROMBOSIS_POWER_W : 0)
     : 0
+  // Flow is what the controller estimates, from power at the set speed. With no fault the
+  // estimate equals the hydraulic flow. With thrombus the extra power reads as extra flow.
+  const estimatedFlow = running
+    ? clamp(
+        (pumpPower - LVAD_POWER_AT_REFERENCE_SPEED_W - speedPowerW) / LVAD_POWER_PER_FLOW_W,
+        0,
+        10,
+      )
+    : 0
+  // Pulsatility index follows the flow pulse the filled, contracting ventricle pushes through
+  // the pump each beat. It falls when the ventricle is underfilled (hypovolemia, tamponade, right
+  // heart failure), when speed is high, and with thrombus; it rises with afterload and recovery.
+  const fillingForPulse = clamp(Math.min(rvDelivery, lvFilling) * tamponadeFactor, 0.15, 1.18)
+  const flowAtFullFilling = Math.max(0.5, targetFlow * afterloadFactor)
   const pi = running
-    ? clamp((nativeFlow / Math.max(0.5, deviceFlow)) * 3.4 + patient.preloadPercent / 70, 0.7, 8)
+    ? clamp(
+        ((nativeFlow / flowAtFullFilling) * 3.4 + patient.preloadPercent / 70) *
+          fillingForPulse *
+          (device.suspectedPumpThrombosis ? 0.6 : 1),
+        0.7,
+        8,
+      )
     : 0
   const effect: MechanicalSupportEffect = {
     transfers: running
@@ -849,7 +951,7 @@ function computeLvadSupport(
         'lvad-power-disconnected',
         'External power disconnected',
         'critical',
-        'Modeled pump support is unavailable until an approved power path is restored.',
+        'The pump has stopped. Reconnect a power source now: a charged battery or the power module.',
       ),
     )
   if (device.controllerFault)
@@ -858,39 +960,17 @@ function computeLvadSupport(
         'lvad-controller-fault',
         'Controller fault',
         'critical',
-        'Use current emergency procedures and contact the LVAD team.',
+        'Check the driveline connection and power, then change to the backup controller. Call the LVAD team while you do it.',
       ),
     )
-  if (running && deviceFlow < 2.5)
+  // The controller alarms on the flow it displays, which is the estimate.
+  if (running && estimatedFlow < 2.5)
     alarms.push(
       alarm(
         'lvad-low-flow',
         'Low-flow alarm',
         'warning',
-        'Differentiate preload, RV failure, tamponade, afterload, obstruction, and recirculation.',
-      ),
-    )
-  /*
-   * This predicate does not read the mean pressure on the monitor, and it is not the model's
-   * measure of how much the outlet is costing the pump.
-   *
-   * Measured for MCS-PRE-REVIEW-02 at the durable reference state: the monitor reads a mean
-   * arterial pressure of about 103 mm Hg while `baseline.mapMmHg` — this patient's modeled
-   * circulation with no support running — is 67.5. Raising the simulated resistance to 1900
-   * dyn·s·cm⁻⁵ takes the displayed mean to 140 and cuts modeled pump flow from 3.93 to 3.22
-   * L/min, and this alarm still does not raise, because 87.2 is not above 100. What actually
-   * limits the flow above is `pressureGradientFactor`, computed from the conserved arterial and
-   * pulmonary-venous compartments. So the label names the patient property the predicate tests,
-   * the explanation says which number it is not, and it points at the quantity that does carry
-   * the limitation. The threshold and the input are unchanged and are held for OD-02/OD-04 (F27).
-   */
-  if (running && baseline.mapMmHg > LVAD_HIGH_AFTERLOAD_MAP_MMHG)
-    alarms.push(
-      alarm(
-        'lvad-high-afterload',
-        'High modeled unsupported arterial pressure',
-        'warning',
-        `Raised when this patient's modeled circulation without support would run a mean arterial pressure above ${LVAD_HIGH_AFTERLOAD_MAP_MMHG} mm Hg. That is a property of the modeled patient, not the mean pressure on the monitor and not a measure of what the outlet pressure is currently costing the pump — read the modeled afterload limitation beside the flow for that. Authored, with no clinical source; open for review as OD-02.`,
+        'Low flow with low pulsatility: think underfilling, right heart failure or tamponade. Low flow with high pulsatility: think high afterload or an obstructed graft.',
       ),
     )
   if (suction)
@@ -899,14 +979,14 @@ function computeLvadSupport(
         'lvad-suction',
         'Inflow suction pattern',
         'critical',
-        `Inflow is below what the selected speed is asking for. This model raises it when either right-sided delivery or the modeled left-ventricular filling term falls below ${LVAD_SUCTION_FILLING_THRESHOLD}; here ${[
-          rvDelivery < LVAD_SUCTION_FILLING_THRESHOLD ? 'right-sided delivery' : null,
-          lvFilling < LVAD_SUCTION_FILLING_THRESHOLD
-            ? 'the modeled left-ventricular filling term'
-            : null,
+        `The left ventricle is too empty for the set speed, and the inflow cannula is drawing against the wall. Here the cause is ${[
+          rvDelivery < LVAD_SUCTION_FILLING_THRESHOLD ? 'poor right-sided delivery' : null,
+          lvFilling < LVAD_SUCTION_FILLING_THRESHOLD ? 'low left-ventricular filling' : null,
         ]
           .filter(Boolean)
-          .join(' and ')} is. A modeled state, not a controller's own suction detection.`,
+          .join(
+            ' and ',
+          )}. Give volume or treat the right heart; lowering speed relieves it meanwhile.`,
       ),
     )
   if (device.suspectedPumpThrombosis)
@@ -915,7 +995,7 @@ function computeLvadSupport(
         'lvad-high-power',
         'High-power pattern',
         'critical',
-        'High power with suspected thrombosis requires urgent MCS-team evaluation.',
+        'Power is up and the flow estimate has risen with it, while pulsatility and the patient have fallen. That combination is pump thrombosis until proven otherwise: the estimate is calculated from power, so it reads falsely high.',
       ),
     )
   if (patient.aorticInsufficiencySeverity >= 0.5)
@@ -951,6 +1031,7 @@ function computeLvadSupport(
     timingQualityPercent: null,
     pumpPowerW: roundTo(pumpPower, 1),
     pulsatilityIndex: roundTo(pi, 1),
+    estimatedPumpFlowLMin: roundTo(estimatedFlow, 2),
     alarms,
     diagnostics: {
       kind: 'lvad',
@@ -961,9 +1042,11 @@ function computeLvadSupport(
       afterloadFactor,
       pressureGradientFactor,
       baselineMapMmHg: baseline.mapMmHg,
-      highAfterloadPredicateInput: baseline.mapMmHg,
-      highAfterloadPredicateMet: running && baseline.mapMmHg > LVAD_HIGH_AFTERLOAD_MAP_MMHG,
+      // Filled in by `resolveMcsSupport`, which knows the displayed mean arterial pressure.
+      highAfterloadPredicateInput: 0,
+      highAfterloadPredicateMet: false,
       deviceFlow,
+      estimatedFlow,
       pumpPower,
       thrombosisPowerAdditionW: device.suspectedPumpThrombosis
         ? LVAD_SUSPECTED_THROMBOSIS_POWER_W
@@ -1076,6 +1159,54 @@ export function deriveMcsMetrics(
     timingQualityPercent: support.timingQualityPercent,
     pumpPowerW: support.pumpPowerW,
     pulsatilityIndex: support.pulsatilityIndex,
+    estimatedPumpFlowLMin: support.estimatedPumpFlowLMin,
+  }
+}
+
+/**
+ * Support and metrics for one instant, with the alarms that depend on a displayed value.
+ *
+ * The durable pump's afterload alarm reads the mean arterial pressure on the monitor. That value
+ * exists only once the metrics are derived, so the alarm is added here.
+ */
+export function resolveMcsSupport(
+  patient: McsPatientState,
+  device: McsDeviceState,
+  compartments: CirculationCompartmentState,
+  baseline: HemodynamicMeasurements,
+  timeSeconds: number,
+): { support: SupportComputation; metrics: McsDerivedMetrics } {
+  const support = computeMechanicalSupport(patient, device, compartments, baseline, timeSeconds)
+  const metrics = deriveMcsMetrics(patient, compartments, baseline, support)
+  if (device.kind !== 'lvad' || support.diagnostics.kind !== 'lvad') return { support, metrics }
+  const running = device.running && device.powerConnected && !device.controllerFault
+  const met = running && metrics.mapMmHg > LVAD_HIGH_AFTERLOAD_MAP_MMHG
+  const alarms = met
+    ? [
+        ...support.alarms,
+        alarm(
+          'lvad-high-afterload',
+          'High afterload',
+          'warning',
+          `Mean arterial pressure is above ${LVAD_HIGH_AFTERLOAD_MAP_MMHG} mm Hg. A continuous-flow pump is afterload-sensitive: the higher the pressure it pumps against, the lower its flow. Lower the blood pressure; do not raise the speed.`,
+        ),
+      ]
+    : support.alarms
+  return {
+    support: {
+      ...support,
+      alarms,
+      effect: {
+        ...support.effect,
+        alarms: alarms.map(({ id, active, priority }) => ({ id, active, priority })),
+      },
+      diagnostics: {
+        ...support.diagnostics,
+        highAfterloadPredicateInput: metrics.mapMmHg,
+        highAfterloadPredicateMet: met,
+      },
+    },
+    metrics,
   }
 }
 
@@ -1106,6 +1237,58 @@ export function mcsEcgMillivolts(time: number, heartRateBpm: number): number {
 /** The phases, as fractions of a cycle, at which the three ECG deflections peak. */
 export const MCS_ECG_DEFLECTION_PHASES = [0.08, 0.105, 0.3] as const
 
+/** Cycle fraction from the inflation point to the augmented peak. */
+const IABP_AUGMENTATION_PEAK_DELAY = 0.09
+/**
+ * Augmented diastolic peak above the diastolic floor, in pulse pressures, at full timing quality.
+ * The unassisted systolic peak sits about 1.1 pulse pressures above the same floor, so at aligned
+ * timing the augmented peak clears systole, and it falls below systole as timing quality drops.
+ * The Getinge teaching booklet's console example reads augmentation 116 against systole 102.
+ */
+export const IABP_AUGMENTATION_PULSE_PRESSURES = 1.5
+/** Fall in end-diastolic pressure after a well-timed deflation, in pulse pressures. */
+export const IABP_END_DIASTOLIC_REDUCTION_PULSE_PRESSURES = 0.3
+/** Fall in the systolic peak of the beat after a well-timed deflation, as a fraction. */
+export const IABP_ASSISTED_SYSTOLE_REDUCTION = 0.14
+
+interface IabpPressureEffect {
+  /** Augmented peak above the diastolic floor, in pulse pressures. */
+  augmentation: number
+  /** End-diastolic change in pulse pressures: negative lowers it, positive raises it. */
+  endDiastolic: number
+  /** Cycle phase at which the end-diastolic change is centered. */
+  deflationCenter: number
+  /** Fractional change in the next beat's systolic pulse: negative lowers it. */
+  assistedSystole: number
+}
+
+/**
+ * How balloon timing shapes the arterial trace.
+ *
+ * Deflation just before ejection lowers the end-diastolic pressure and the next systolic peak.
+ * Early deflation drops the pressure too soon: it recovers before the valve opens, so neither
+ * reduction is kept. Late deflation leaves the balloon inflated into ejection: end-diastolic
+ * pressure is at or above the unassisted value and the next systole is not reduced. The same
+ * late-deflation harm already raises afterload in `computeIabpSupport`.
+ */
+function iabpPressureEffect(device: IabpDeviceState, timingQuality: number): IabpPressureEffect {
+  const late = clamp(device.deflationOffsetMs / 160, 0, 1)
+  const early = clamp(-device.deflationOffsetMs / 160, 0, 1)
+  const deflationQuality = clamp(1 - Math.abs(device.deflationOffsetMs) / 180, 0, 1)
+  // The trigger term of timing quality, recovered so that an unreliable trigger weakens every
+  // balloon effect and not only the augmentation.
+  const inflationQuality = clamp(1 - Math.abs(device.inflationOffsetMs) / 180, 0, 1)
+  const blended = inflationQuality * 0.48 + deflationQuality * 0.52
+  const triggerQuality = blended > 0 ? clamp(timingQuality / blended, 0, 1) : 0
+  const unloading = triggerQuality * (1 - early) * (1 - 2 * late)
+  return {
+    augmentation: IABP_AUGMENTATION_PULSE_PRESSURES * timingQuality,
+    endDiastolic: -IABP_END_DIASTOLIC_REDUCTION_PULSE_PRESSURES * unloading,
+    deflationCenter: 0.985 - early * 0.12,
+    assistedSystole: -IABP_ASSISTED_SYSTOLE_REDUCTION * Math.max(0, unloading),
+  }
+}
+
 export function generateMcsWaveformSample(
   time: number,
   patient: McsPatientState,
@@ -1116,21 +1299,30 @@ export function generateMcsWaveformSample(
   const assistedBeat = assistedIabpBeat(device, patient, time)
   const p = (center: number, width: number) => gaussian(phase, center, width)
   const ecg = mcsEcgMillivolts(time, patient.heartRateBpm)
-  const systolicPulse = p(0.24, 0.1) + 0.22 * p(0.39, 0.13)
-  let iabpAugmentation = 0
-  if (device.kind === 'iabp' && device.running && assistedBeat) {
-    const inflationPhase = deriveIabpCycleState(time, patient.heartRateBpm, device).inflationStart
-    const deflationPenalty = clamp(device.deflationOffsetMs / 160, 0, 1)
-    iabpAugmentation =
-      metrics.timingQualityPercent !== null
-        ? p(clamp(inflationPhase + 0.12, 0.45, 0.82), 0.1) *
-            (metrics.timingQualityPercent / 100) *
-            22 -
-          p(0.05, 0.05) * deflationPenalty * 12
-        : 0
+  const pulse = metrics.pulsePressureMmHg
+  let systolicScale = 1
+  let iabpPressure = 0
+  if (device.kind === 'iabp' && device.running && metrics.timingQualityPercent !== null) {
+    const cycle = deriveIabpCycleState(time, patient.heartRateBpm, device)
+    const effect = iabpPressureEffect(device, metrics.timingQualityPercent / 100)
+    if (cycle.assistedBeat) {
+      // Inflation: a sharp rise from the inflation point to a peak that clears systole when the
+      // timing is right. It scales with pulse pressure, as the displaced volume acts on the same
+      // aorta that the stroke volume does.
+      iabpPressure +=
+        pulse * effect.augmentation * p(cycle.inflationStart + IABP_AUGMENTATION_PEAK_DELAY, 0.07)
+      // Deflation: the pressure change just before the next ejection, read at end-diastole.
+      iabpPressure += pulse * effect.endDiastolic * p(effect.deflationCenter, 0.045)
+    }
+    if (cycle.previousBeatAssisted) {
+      // The same deflation, seen from the start of the beat that follows it.
+      iabpPressure += pulse * effect.endDiastolic * p(effect.deflationCenter - 1, 0.045)
+      systolicScale = 1 + effect.assistedSystole
+    }
   }
-  const arterialDiastolic = metrics.mapMmHg - metrics.pulsePressureMmHg * 0.38
-  const arterial = arterialDiastolic + metrics.pulsePressureMmHg * systolicPulse + iabpAugmentation
+  const systolicPulse = (p(0.24, 0.1) + 0.22 * p(0.39, 0.13)) * systolicScale
+  const arterialDiastolic = metrics.mapMmHg - pulse * 0.38
+  const arterial = arterialDiastolic + pulse * systolicPulse + iabpPressure
   const lvPressure =
     metrics.lvedpMmHg + Math.max(0, metrics.mapMmHg + 18 - metrics.lvedpMmHg) * p(0.24, 0.11)
   const papMean = (metrics.papSystolicMmHg + 2 * metrics.papDiastolicMmHg) / 3
@@ -1152,6 +1344,72 @@ export function generateMcsWaveformSample(
     lvVolumeMl: roundTo(lvVolume, 2),
     deviceFlowLMin: metrics.deviceFlowLMin,
     assistedBeat,
+  }
+}
+
+export interface IabpLandmarkPressures {
+  /** Systolic peak of a beat that follows an unassisted diastole. Null at 1:1. */
+  unassistedSystolicMmHg: number | null
+  /** Peak of the balloon's diastolic augmentation. */
+  augmentedDiastolicMmHg: number
+  /** Systolic peak of the beat that follows balloon deflation. */
+  assistedSystolicMmHg: number
+  /** Lowest pressure before a beat that follows an unassisted diastole. Null at 1:1. */
+  unassistedEndDiastolicMmHg: number | null
+  /** Lowest pressure before the beat that follows balloon deflation. */
+  assistedEndDiastolicMmHg: number
+}
+
+/**
+ * The five pressures a balloon-pump arterial trace is read by, measured from the same expression
+ * that draws the strip. At 1:1 every beat is assisted, so the two unassisted values are null:
+ * compare them at 1:2, which is how timing is checked at the bedside.
+ */
+export function measureIabpLandmarkPressures(
+  patient: McsPatientState,
+  device: McsDeviceState,
+  metrics: McsDerivedMetrics,
+): IabpLandmarkPressures | null {
+  if (device.kind !== 'iabp' || !device.running || metrics.timingQualityPercent === null) {
+    return null
+  }
+  const cycle = 60 / Math.max(25, patient.heartRateBpm)
+  const ratio = device.assistRatio
+  const pressureAt = (beat: number, phase: number) =>
+    generateMcsWaveformSample((beat + phase) * cycle, patient, device, metrics).arterialMmHg
+  const extreme = (
+    beat: number,
+    from: number,
+    to: number,
+    pick: (a: number, b: number) => number,
+  ) => {
+    let value = pressureAt(beat, from)
+    for (let phase = from; phase <= to; phase += 0.004) value = pick(value, pressureAt(beat, phase))
+    return roundTo(value, 0)
+  }
+  // Beat 0 is inflated in its diastole; beat 1 is ejected against the deflated balloon.
+  const assistedBeat = ratio
+  const followingBeat = ratio + 1
+  // The beat's own systolic peak, read before the balloon inflates in that beat.
+  const systolicEnd = (beat: number) =>
+    Math.min(
+      0.4,
+      deriveIabpCycleState(beat * cycle, patient.heartRateBpm, device).inflationStart - 0.03,
+    )
+  const endDiastolic = (beat: number) =>
+    Math.min(extreme(beat - 1, 0.9, 0.999, Math.min), extreme(beat, 0, 0.07, Math.min))
+  return {
+    unassistedSystolicMmHg:
+      ratio > 1 ? extreme(assistedBeat, 0.1, systolicEnd(assistedBeat), Math.max) : null,
+    augmentedDiastolicMmHg: extreme(
+      assistedBeat,
+      deriveIabpCycleState(assistedBeat * cycle, patient.heartRateBpm, device).inflationStart,
+      0.95,
+      Math.max,
+    ),
+    assistedSystolicMmHg: extreme(followingBeat, 0.1, systolicEnd(followingBeat), Math.max),
+    unassistedEndDiastolicMmHg: ratio > 1 ? endDiastolic(assistedBeat) : null,
+    assistedEndDiastolicMmHg: endDiastolic(followingBeat),
   }
 }
 
@@ -1193,7 +1451,7 @@ function explainState(
   const authorization = device.speedChangeAuthorized
     ? 'authorized simulation enabled'
     : 'speed changes require the authorized-personnel simulation control'
-  return `Continuous LV-to-aorta support is ${metrics.deviceFlowLMin.toFixed(1)} L/min with ${authorization}. Flow remains preload-, RV-, and afterload-dependent.`
+  return `Continuous LV-to-aorta support shows ${(metrics.estimatedPumpFlowLMin ?? metrics.deviceFlowLMin).toFixed(1)} L/min with ${authorization}. Flow depends on filling, the right ventricle and afterload.`
 }
 
 function trendFromMetrics(time: number, metrics: McsDerivedMetrics): McsTrendSample {
@@ -1201,7 +1459,7 @@ function trendFromMetrics(time: number, metrics: McsDerivedMetrics): McsTrendSam
     time,
     mapMmHg: metrics.mapMmHg,
     effectiveFlowLMin: metrics.effectiveSystemicFlowLMin,
-    deviceFlowLMin: metrics.deviceFlowLMin,
+    deviceFlowLMin: metrics.estimatedPumpFlowLMin ?? metrics.deviceFlowLMin,
     leftDeviceFlowLMin: metrics.leftDeviceFlowLMin,
     rightDeviceFlowLMin: metrics.rightDeviceFlowLMin,
     pcwpMmHg: metrics.pcwpMmHg,
@@ -1215,15 +1473,21 @@ export function createInitialMcsState(
   scenario: McsScenarioDefinition | null = null,
   seed = 417,
 ): McsSimulationState {
-  const patient = scenario ? { ...scenario.initialPatient } : { ...defaultMcsPatient }
+  const patient = scenario
+    ? { ...scenario.initialPatient }
+    : deviceKind === 'lvad'
+      ? {
+          ...defaultMcsPatient,
+          systemicVascularResistanceDynSecCm5: LVAD_REFERENCE_SVR_DYN_SEC_CM5,
+        }
+      : { ...defaultMcsPatient }
   const device = scenario
     ? cloneMcsDevice(scenario.initialDevice)
     : createDefaultMcsDevice(deviceKind)
   const parameters = patientToCirculationParameters(patient)
   const baseline = deriveBaselineMeasurements(patient)
   const compartments = createInitialCirculationCompartments(parameters, baseline)
-  const support = computeMechanicalSupport(patient, device, compartments, baseline, 0)
-  const metrics = deriveMcsMetrics(patient, compartments, baseline, support)
+  const { support, metrics } = resolveMcsSupport(patient, device, compartments, baseline, 0)
   const waveforms = [generateMcsWaveformSample(0, patient, device, metrics)]
   return {
     section,
@@ -1293,14 +1557,15 @@ export function advanceMcsSimulation(
       stepSeconds,
       supportBefore.effect,
     )
-    const support = computeMechanicalSupport(
+    const resolved = resolveMcsSupport(
       state.patient,
       state.device,
       compartments,
       baseline,
       timeSeconds,
     )
-    metrics = deriveMcsMetrics(state.patient, compartments, baseline, support)
+    const support = resolved.support
+    metrics = resolved.metrics
     alarms = support.alarms
     supportEffect = support.effect
     supportDiagnostics = support.diagnostics

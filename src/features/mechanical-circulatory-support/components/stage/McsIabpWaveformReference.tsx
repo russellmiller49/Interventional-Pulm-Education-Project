@@ -86,7 +86,7 @@ export function McsIabpWaveformReference({ detailOpen = true }: { detailOpen?: b
         <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           role="img"
-          aria-label="Authored diagram of one unassisted and one assisted arterial beat, with unassisted systole, unassisted end-diastolic pressure, diastolic augmentation, assisted end-diastolic pressure and assisted systole marked on a fixed pressure scale"
+          aria-label="Labeled diagram of one unassisted and one assisted arterial beat, with unassisted systole, unassisted end-diastolic pressure, diastolic augmentation, assisted end-diastolic pressure and assisted systole marked on a fixed pressure scale"
           data-iabp-reference-contour
         >
           {/* the two reference levels the eye is meant to compare against */}
@@ -130,7 +130,8 @@ export function McsIabpWaveformReference({ detailOpen = true }: { detailOpen?: b
           </p>
           <p>
             Dashed lines: unassisted systole ({unassistedSystole.mmHg}) and unassisted end-diastolic
-            pressure ({unassistedEnd.mmHg}). These are drawing coordinates.
+            pressure ({unassistedEnd.mmHg}) on this diagram. Your patient&rsquo;s values are in the
+            readout under the live strip.
           </p>
         </figcaption>
       </figure>

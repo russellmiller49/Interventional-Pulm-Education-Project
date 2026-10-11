@@ -3,7 +3,6 @@ import { MCS_TREND_PRESSURE_AND_DELIVERY, McsPressureFlowTrend } from '../McsPre
 import type { McsTeachingPanelProps } from './panelProps'
 import { mcsComparesAgainstActionBaseline, mcsMechanismDisclosed } from './revealStage'
 import {
-  MCS_OXYGEN_DELIVERY_BOUNDARY,
   activeAlarms,
   beforeAfterReadings,
   flowAccountView,
@@ -14,12 +13,10 @@ import {
 import {
   AlarmBand,
   BeforeAfter,
-  DEADBAND_CAPTION,
-  FigureScope,
+  FigureCaption,
   FlowAccount,
   GuidedValue,
   LiveValue,
-  ModelBoundary,
   PanelSection,
   TextEquivalent,
   TransferState,
@@ -113,7 +110,7 @@ export function IabpEfficacyLimitsPanel({
               {metrics.timingQualityPercent === null ? '' : '%'}
             </p>
             <p className="text-xs leading-5 text-muted-foreground">
-              timing synchrony · directly displayed
+              timing synchrony · a simulator index, not a console value
             </p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
               {timing
@@ -137,20 +134,19 @@ export function IabpEfficacyLimitsPanel({
           </div>
         </div>
         <p className="mt-3 text-xs leading-5" data-two-accounts-note>
-          These are two different questions. The left box asks whether the balloon is doing its job
-          against the cardiac cycle. The right box asks what the patient is receiving. Nothing
-          forces them to agree, and the left box has no way of reporting when they do not.
+          Two different questions. The left box asks whether the balloon is timed to the cardiac
+          cycle. The right box asks what the patient is receiving. Nothing forces them to agree.
         </p>
         <TextEquivalent>
           Timing synchrony reads {reading(metrics.timingQualityPercent, 0)} percent while effective
           systemic delivery reads {reading(metrics.effectiveSystemicFlowLMin, 1)} L/min, with a mean
           arterial pressure of {reading(metrics.mapMmHg, 0)} mm Hg, a pulse pressure of{' '}
-          {reading(metrics.pulsePressureMmHg, 0)} mm Hg and a modeled mixed venous saturation of{' '}
+          {reading(metrics.pulsePressureMmHg, 0)} mm Hg and a mixed venous saturation of{' '}
           {reading(metrics.svo2Percent, 0)} percent.
         </TextEquivalent>
         <p className="mt-2 text-xs leading-5" data-no-augmentation-target>
-          No value of synchrony, augmented pressure, or assist ratio is set as something to reach.
-          This module publishes no augmentation target of any kind.
+          On the trace, good timing is augmentation above unassisted systole with an assisted
+          end-diastolic pressure below the unassisted one. Check it at 1:2.
         </p>
       </PanelSection>
 
@@ -173,22 +169,15 @@ export function IabpEfficacyLimitsPanel({
               {reading(metrics.mapMmHg, 0)} mm Hg and effective systemic delivery now reads{' '}
               {reading(metrics.effectiveSystemicFlowLMin, 1)} L/min.
             </TextEquivalent>
-            <ModelBoundary>
-              Pressure and flow are drawn in two panels because they are different quantities in
-              different units; each panel has its own fixed scale starting at zero, and the two
-              share one simulated-time axis. A few mm Hg of movement therefore looks like a few mm
-              Hg, and a steady flow draws as a flat line inside its panel. The retained trend is
-              short; this figure shows the last {MCS_TREND_PANEL_WINDOW_SECONDS} modeled seconds,
-              not a shift.
-            </ModelBoundary>
           </>
         ) : (
           <WaitingState label="response trend" />
         )}
-        <FigureScope
-          establishes="Whether mean pressure and effective systemic delivery are moving together or apart over the retained trend."
-          doesNotEstablish="Why they are moving apart, and whether either value is adequate for this patient. A separation is a prompt to look upstream, not a diagnosis."
-        />
+        <FigureCaption>
+          Mean pressure and effective systemic delivery over the last{' '}
+          {MCS_TREND_PANEL_WINDOW_SECONDS} seconds, each on its own scale from zero. When they
+          separate, look upstream of the balloon.
+        </FigureCaption>
       </PanelSection>
 
       <PanelSection title="The flow account, unchanged by timing" id="efficacy-flow" reference>
@@ -196,10 +185,9 @@ export function IabpEfficacyLimitsPanel({
         <TextEquivalent>{flowAccountSentence(account, disclosed)}</TextEquivalent>
         {disclosed ? (
           <p className="mt-2 text-xs leading-5" data-no-device-stream>
-            However well this mechanism is timed, it never acquires a stream of its own. Every litre
-            in the effective line is native output, which is why the mechanism has a ceiling set by
-            the ventricle it is timed to — and why an augmented arterial trace is not evidence that
-            cardiac output is sufficient.
+            However well it is timed, the balloon moves no blood of its own. Every litre in the
+            effective line is native output, so the ventricle sets the ceiling, and an augmented
+            arterial trace is not evidence that cardiac output is enough.
           </p>
         ) : null}
       </PanelSection>
@@ -216,7 +204,7 @@ export function IabpEfficacyLimitsPanel({
             unit="%"
             digits={0}
             kind="modeled"
-            note="A downstream balance signal, not a measurement of oxygen delivery and not a value to drive toward."
+            note="Falls when oxygen delivery falls short of consumption."
           />
           <LiveValue
             label="Pulse pressure"
@@ -224,19 +212,16 @@ export function IabpEfficacyLimitsPanel({
             unit="mm Hg"
             digits={0}
             kind="modeled"
-            note="A pressure-level finding. A wider or taller pressure wave is not a larger forward stroke volume."
+            note="A pressure finding. A taller pressure wave is not a larger stroke volume."
           />
         </div>
-        <ModelBoundary>{MCS_OXYGEN_DELIVERY_BOUNDARY}</ModelBoundary>
       </PanelSection>
 
       <PanelSection title="What is not on this screen" id="efficacy-unmodeled">
         <UnmodeledOrganResponse />
         <p className="mt-2 text-xs leading-5">
-          Whether this patient is better is answered at the organ level, and this simulation
-          produces no patient-level outcome at all — no recovery, no survival, no duration of
-          support. The absence of a worsening organ signal here is a property of the model, not
-          reassurance.
+          Whether this patient is better is answered at the organ level: mentation, urine output,
+          skin perfusion and the lactate trend. Go to the bedside for them.
         </p>
       </PanelSection>
 
@@ -248,13 +233,8 @@ export function IabpEfficacyLimitsPanel({
             caption="The device account and the physiologic account, before and now, side by side."
           />
           <TextEquivalent>{beforeAfterSentence(rows)}.</TextEquivalent>
-          <AlarmBand
-            alarms={alarms}
-            disclosed={disclosed}
-            emptyLabel="No modeled alarm is active in this state."
-          />
+          <AlarmBand alarms={alarms} disclosed={disclosed} emptyLabel="No alarm is active." />
           <TextEquivalent>{alarmSentence(alarms)}.</TextEquivalent>
-          <ModelBoundary>{DEADBAND_CAPTION}</ModelBoundary>
         </PanelSection>
       ) : null}
 

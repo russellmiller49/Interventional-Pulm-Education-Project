@@ -458,9 +458,9 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
   {
     sectionId: 'lvad-alarms-emergencies',
     track: 'lvad',
-    newConcept: 'a power signature can carry what the flow display does not',
+    newConcept: 'the displayed flow is an estimate, and pump thrombosis makes it misleading',
     objective:
-      'Tell a power signature that carries information from a flow display that does not, without disconnecting anything to find out.',
+      'Tell suspected pump thrombosis from a loading change by reading power, displayed flow and pulsatility index together, without disconnecting anything to find out.',
     prerequisiteSectionIds: ['lvad-parameters-assessment'],
     stopIds: ['left-ventricle'],
     walksTheLoop: false,
@@ -473,8 +473,8 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       predict: 'Say what the controller will show',
       act: 'Switch on the high-power pattern',
       observe: 'Compare power with the flow display',
-      explain: 'The signal the flow display does not carry',
-      transfer: 'Power rising while the flow display holds',
+      explain: 'A displayed flow that reads falsely high',
+      transfer: 'Power rising, the patient worse',
     },
     stepLocations: {
       recognize: { ...IN_STEPS.choices, ...ALSO_ON_SIMULATOR('the alarm band on the monitor') },
@@ -494,13 +494,14 @@ export const mcsSectionSpecs: readonly McsSectionSpec[] = Object.freeze([
       },
     },
     // The prediction's own stem names the pattern it switches on; what is withheld is what the
-    // pattern does to power and to the flow display.
+    // pattern does to power, to the displayed flow, to the real flow and to pulsatility.
     precommitDenyPatterns: [
       /power (rises|climbs|climbed) (substantially|while|and)/i,
       /raises power/i,
-      /flow[^.]*\b(barely|did not|does not|hardly) move/i,
-      /leaves (the )?delivered flow where it was/i,
-      /flow display (does not|will not) (carry|move)/i,
+      /displayed flow[^.]*\b(rises|rose|climbs)\b/i,
+      /falsely high/i,
+      /real (pump )?flow[^.]*\bfall/i,
+      /pulsatility index[^.]*\b(falls|fell|is down)\b/i,
     ],
   },
   {

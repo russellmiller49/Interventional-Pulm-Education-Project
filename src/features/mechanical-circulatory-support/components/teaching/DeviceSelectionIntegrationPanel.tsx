@@ -30,13 +30,11 @@ import {
   AfterCommitment,
   AlarmBand,
   BeforeAfter,
-  DEADBAND_CAPTION,
-  FigureScope,
+  FigureCaption,
   FlowAccount,
   GuidedValue,
   LiveSetting,
   LiveValue,
-  ModelBoundary,
   PanelSection,
   TextEquivalent,
   TransferState,
@@ -126,39 +124,37 @@ export function DeviceSelectionIntegrationPanel({
 
   const answers: Readonly<Record<string, { readonly answer: string; readonly limit: string }>> = {
     'mcs.model.q1-dominant-problem': {
-      answer: `Filling pressures identify a ${congestion.label.toLowerCase()}. The dominant shock mechanism is not fully determined by these two pressures. Right atrial pressure ${reading(metrics.rapMmHg, 0)} mm Hg against a wedge pressure of ${reading(metrics.pcwpMmHg, 0)} mm Hg.`,
+      answer: `Filling pressures show a ${congestion.label.toLowerCase()}: right atrial pressure ${reading(metrics.rapMmHg, 0)} mm Hg against a wedge pressure of ${reading(metrics.pcwpMmHg, 0)} mm Hg.`,
       limit:
-        'A congestion pattern says where filling pressures are elevated; it does not name the cause of shock. This simulation also models no gas-exchange failure state, so whether oxygenation or carbon dioxide clearance is part of the dominant problem is not established here at all. The fixed arterial saturation this simulation carries is a model constant, not evidence that oxygenation support is unnecessary.',
+        'The pattern says where filling pressures are high, not why the patient is in shock. Ask separately whether oxygenation or carbon dioxide clearance is part of the problem; the simulator has no failing lung.',
     },
     'mcs.model.q2-source-and-destination': {
       answer: pathways.map((pathway) => `${pathway.source} → ${pathway.destination}`).join('; '),
-      limit:
-        'The pathway on screen is the one currently in place. It is not a proposal, and the route a device would be inserted along is not drawn.',
+      limit: 'This is the pathway in place now, not the one to choose.',
     },
     'mcs.model.q3-mechanism-class': {
       answer: pathways.map((pathway) => pathway.relationshipLabel).join('; '),
-      limit:
-        'Timing, direct pumping and an extracorporeal pathway are three different kinds of thing. This module simulates the first two and describes the third.',
+      limit: 'Timing, direct pumping and an extracorporeal circuit are three different mechanisms.',
     },
     'mcs.model.q4-chamber-unloaded': {
       answer: `${pathways.map((pathway) => pathway.chamberUnloaded).join('; ')}. End-diastolic volume ${reading(metrics.lvedvMl, 0)} mL, wedge ${reading(metrics.pcwpMmHg, 0)} mm Hg, aortic valve ${metrics.aorticValveOpening ? 'opening' : 'not opening'}.`,
       limit:
-        'End-diastolic volume here is an educational surrogate rather than a traced volume, so read it as a direction.',
+        'End-diastolic volume here is a simulator surrogate, not an echo measurement. Read its direction.',
     },
     'mcs.model.q5-chamber-or-bed-loaded': {
       answer: `${pathways.map((pathway) => pathway.chamberOrBedLoaded).join('; ')}. Right atrial pressure ${reading(metrics.rapMmHg, 0)} mm Hg.`,
       limit:
-        'A chamber that is being loaded is not always the one alarming. The consequence can appear on the other side of the circulation from the device.',
+        'The loaded chamber is not always the one alarming. The cost can appear on the other side of the circulation from the device.',
     },
     'mcs.model.q6-what-limits-performance': {
-      answer: `Preload ${reading(state.patient.preloadPercent, 0)}% of reference · afterload: systemic vascular resistance ${reading(state.patient.systemicVascularResistanceDynSecCm5, 0)} dyn·s·cm⁻⁵, pulmonary vascular resistance ${reading(state.patient.pulmonaryVascularResistanceWU, 1)} Wood units · rhythm ${state.patient.rhythm} · modeled device position ${pump ? pump.leftPositionWords : 'not applicable on this pathway'} · tamponade: ${state.patient.tamponade ? 'modeled present' : 'modeled not present'} · ventricular interaction: right ventricular contractility ${reading(state.patient.rightVentricularContractility, 2)} against left ${reading(state.patient.leftVentricularContractility, 2)} · gas exchange: not modeled.`,
+      answer: `Preload ${reading(state.patient.preloadPercent, 0)}% of reference · afterload: systemic vascular resistance ${reading(state.patient.systemicVascularResistanceDynSecCm5, 0)} dyn·s·cm⁻⁵, pulmonary vascular resistance ${reading(state.patient.pulmonaryVascularResistanceWU, 1)} Wood units · rhythm ${state.patient.rhythm} · device position ${pump ? pump.leftPositionWords : 'not applicable on this pathway'} · tamponade: ${state.patient.tamponade ? 'present' : 'absent'} · ventricular interaction: right ventricular contractility ${reading(state.patient.rightVentricularContractility, 2)} against left ${reading(state.patient.leftVentricularContractility, 2)} · gas exchange: assess at the bedside.`,
       limit:
-        'Tamponade is the one obstructive state this simulation carries. Inflow obstruction, outflow obstruction, and device-path malposition beyond the modeled position state are not comprehensively modeled here, so none of them has been examined or excluded. Gas exchange is not modeled at all and cannot be ruled in or out from anything on this screen.',
+        'Inflow or outflow obstruction and gas exchange are not on this screen. Look for them with echo and a blood gas.',
     },
     'mcs.model.q7-what-defines-success': {
-      answer: `Not answerable from this simulation. The findings that would define success — ${MCS_UNMODELED_ORGAN_SIGNALS.map((signal) => signal.label.toLowerCase()).join(', ')} — are not modeled here.`,
+      answer: `Organ recovery: ${MCS_UNMODELED_ORGAN_SIGNALS.map((signal) => signal.label.toLowerCase()).join(', ')}.`,
       limit:
-        'Stating what success would look like before a setting is changed is the step this simulation can prompt and cannot perform. It belongs to the bedside and to the responsible team.',
+        'Say what success will look like before you change a setting, then check it at the bedside: mentation, urine output, skin perfusion and the lactate trend.',
     },
   }
 
@@ -174,8 +170,8 @@ export function DeviceSelectionIntegrationPanel({
             kind="modeled"
             note={
               congestion.rapElevated
-                ? `Above the ${congestion.thresholdMmHg} mm Hg the consensus statement describes.`
-                : `Not above the ${congestion.thresholdMmHg} mm Hg the consensus statement describes.`
+                ? `Elevated: above ${congestion.thresholdMmHg} mm Hg (ACC consensus).`
+                : `Not elevated: ${congestion.thresholdMmHg} mm Hg or below (ACC consensus).`
             }
           />
           <LiveValue
@@ -186,8 +182,8 @@ export function DeviceSelectionIntegrationPanel({
             kind="modeled"
             note={
               congestion.pcwpElevated
-                ? `Above the ${congestion.thresholdMmHg} mm Hg the consensus statement describes.`
-                : `Not above the ${congestion.thresholdMmHg} mm Hg the consensus statement describes.`
+                ? `Elevated: above ${congestion.thresholdMmHg} mm Hg (ACC consensus).`
+                : `Not elevated: ${congestion.thresholdMmHg} mm Hg or below (ACC consensus).`
             }
           />
           <LiveSetting
@@ -207,8 +203,7 @@ export function DeviceSelectionIntegrationPanel({
 
         <p className="mt-3 text-sm leading-6" data-congestion-reading>
           RAP is {reading(metrics.rapMmHg, 0)} mm Hg and PCWP is {reading(metrics.pcwpMmHg, 0)} mm
-          Hg. Under the ACC consensus–described filling-pressure framework, this is consistent with
-          a {congestion.label.toLowerCase()}.
+          Hg. By the ACC consensus thresholds this is a {congestion.label.toLowerCase()}.
         </p>
 
         <dl
@@ -239,21 +234,13 @@ export function DeviceSelectionIntegrationPanel({
           </div>
         </dl>
 
-        <p className="mt-3 text-xs leading-5" data-congestion-operationalization>
-          <span className="font-semibold">How this grid was built. </span>
-          {MCS_ACC_CONGESTION_FRAMEWORK.operationalizationNote}
-        </p>
-
-        <p className="mt-3 text-xs leading-5" data-congestion-limit>
-          {MCS_CONGESTION_PATTERN_BOUNDARY.doesNotEstablish}
-        </p>
-        <p className="mt-2 text-xs leading-5" data-congestion-reconcile>
+        <p className="mt-3 text-xs leading-5" data-congestion-reconcile>
           {MCS_CONGESTION_PATTERN_BOUNDARY.reconcileWith}
         </p>
         <p className="mt-2 text-xs leading-5" data-congestion-outside-the-numbers>
-          Local expertise, vascular access and anatomy, contraindications, the expected duration of
-          support, whether gas exchange is part of the problem, and the patient&rsquo;s own goals
-          all sit outside anything two pressures can produce — and none of them is on this screen.
+          Then weigh what two pressures cannot show: vascular access and anatomy, contraindications,
+          the expected duration of support, whether gas exchange is part of the problem, and the
+          patient&rsquo;s goals.
         </p>
 
         <TextEquivalent>
@@ -262,21 +249,10 @@ export function DeviceSelectionIntegrationPanel({
           wedge pressure {reading(metrics.pcwpMmHg, 0)} mm Hg
           {congestion.pcwpElevated ? ' is' : ' is not'}. Under the{' '}
           {congestion.frameworkLabel.toLowerCase()}, that is a {congestion.label.toLowerCase()}.{' '}
-          {congestion.statement} Mean arterial pressure is {reading(metrics.mapMmHg, 0)} mm Hg. This
-          is a congestion pattern, not a diagnosis of the dominant shock mechanism and not a device
-          recommendation.
+          {congestion.statement} Mean arterial pressure is {reading(metrics.mapMmHg, 0)} mm Hg.
         </TextEquivalent>
 
-        <ModelBoundary>
-          {accSource.doNotInfer} The four-cell grid this panel draws is an educational
-          operationalization of that prose; the consensus statement did not publish or validate this
-          software algorithm.
-        </ModelBoundary>
-
-        <FigureScope
-          establishes={MCS_CONGESTION_PATTERN_BOUNDARY.establishes}
-          doesNotEstablish="The cause of shock, isolated ventricular failure, organ perfusion, or which support device this patient should receive. Temporary and durable support remain different decisions in kind, and neither follows from a congestion pattern."
-        />
+        <FigureCaption>{MCS_CONGESTION_PATTERN_BOUNDARY.establishes}</FigureCaption>
       </PanelSection>
 
       <PanelSection
@@ -285,9 +261,8 @@ export function DeviceSelectionIntegrationPanel({
         reference
       >
         <p className="mt-2 text-xs leading-5 text-muted-foreground">
-          Two different sources put cut points on the same two pressures. They are shown side by
-          side and never merged: one is broad expert consensus, the other is one cohort&rsquo;s own
-          operational definition, and there is no honest number between them.
+          Two sources put cut points on the same two pressures: an expert consensus statement and
+          one cohort&rsquo;s own definition. Both are shown.
         </p>
 
         <AfterCommitment summary="The ACC consensus description, and the AMI-CS cohort definition, side by side">
@@ -364,8 +339,8 @@ export function DeviceSelectionIntegrationPanel({
               <li>{ortegaSource.population}</li>
             </ul>
             <p className="mt-2 text-xs leading-5" data-ortega-euvolemic-note>
-              Euvolemic was the study&rsquo;s label for the quadrant below both cohort cutoffs. It
-              does not independently establish total-body euvolemia or adequate perfusion.
+              Euvolemic was the study&rsquo;s label for the quadrant below both cutoffs. It does not
+              mean the patient is euvolemic or well perfused.
             </p>
             <p className="mt-2 text-xs leading-5">
               <span className="font-semibold">Applies when: </span>
@@ -380,17 +355,15 @@ export function DeviceSelectionIntegrationPanel({
             </p>
             <p className="mt-2 text-xs leading-5" data-cohort-comparison>
               Under those cohort cut points, the two pressures on screen would fall in the{' '}
-              {mcsCongestionProfileDefinition(congestion.cohortProfileId).cohortLabel}. The module
-              classifies with the consensus framework rather than this one, because this module
-              addresses cardiogenic shock more broadly than a single-center AMI-CS cohort.
+              {mcsCongestionProfileDefinition(congestion.cohortProfileId).cohortLabel}. The pattern
+              above uses the consensus thresholds, which cover cardiogenic shock of any cause.
             </p>
           </div>
 
           <p className="mt-3 text-xs leading-5" data-no-averaged-threshold>
             The 15 mm Hg the consensus statement describes and the{' '}
             {MCS_ORTEGA_COHORT_CUTOFFS.rapMmHg} and {MCS_ORTEGA_COHORT_CUTOFFS.pcwpMmHg} mm Hg the
-            cohort used are not averaged and no compromise value is created from them. They answer
-            different questions in different populations.
+            cohort used come from different populations. Know which one your unit uses.
           </p>
 
           <TextEquivalent>
@@ -401,11 +374,10 @@ export function DeviceSelectionIntegrationPanel({
             {ortegaSource.citation}, which used {MCS_ORTEGA_COHORT_CUTOFFS.rapMmHg} mm Hg for right
             atrial pressure and {MCS_ORTEGA_COHORT_CUTOFFS.pcwpMmHg} mm Hg for wedge pressure in 295
             AMI-CS patients at one center, reviewed retrospectively and reassessed over 24 hours.
-            The two sets of numbers are shown separately and are never averaged.
           </TextEquivalent>
         </AfterCommitment>
 
-        <AfterCommitment summary="What two filling pressures are not: the complete-profile boundary">
+        <AfterCommitment summary="What a complete invasive profile contains">
           <div
             className="rounded-xl border p-3"
             data-congestion-source={garanSource.id}
@@ -434,17 +406,10 @@ export function DeviceSelectionIntegrationPanel({
           <TextEquivalent>
             A complete invasive profile in that registry meant five measured components:{' '}
             {MCS_COMPLETE_PROFILE_COMPONENTS.join(', ')}. Derived values were recorded but did not
-            count toward completeness. This simulation models the pressures and produces a modeled
-            balance signal rather than a measured pulmonary artery saturation, so the two filling
-            pressures above are a congestion pattern rather than a complete profile.
+            count toward completeness. Two filling pressures are a congestion pattern, not a
+            complete profile.
           </TextEquivalent>
         </AfterCommitment>
-
-        <ModelBoundary>
-          {garanSource.doNotInfer} This module publishes no filling-pressure cut point of its own,
-          and the modeled mixed venous saturation it carries is not a measured pulmonary artery
-          saturation.
-        </ModelBoundary>
       </PanelSection>
 
       <PanelSection
@@ -454,8 +419,7 @@ export function DeviceSelectionIntegrationPanel({
         <div className={styles.scroller}>
           <table className={`${styles.table} min-w-[34rem]`} data-common-model-answers>
             <caption className="text-left text-xs leading-5 text-muted-foreground">
-              Each of the seven questions with what this state can say about it and what it cannot.
-              The last column is not a caveat; on two of these rows it is the whole answer.
+              Each of the seven questions, answered from this patient, with what to check next.
             </caption>
             <thead>
               <tr>
@@ -466,7 +430,7 @@ export function DeviceSelectionIntegrationPanel({
                   From this state
                 </th>
                 <th scope="col" className="pb-1 font-semibold">
-                  What this state cannot say
+                  What to check next
                 </th>
               </tr>
             </thead>
@@ -495,12 +459,6 @@ export function DeviceSelectionIntegrationPanel({
             )
             .join(' ')}
         </TextEquivalent>
-        <ModelBoundary>
-          Two rows are deliberately empty of a value. This simulation models no gas-exchange failure
-          state, and it models no organ-level response, so the question about gas exchange and the
-          question about what would define success are answered by naming what is missing rather
-          than by a number.
-        </ModelBoundary>
       </PanelSection>
 
       <PanelSection title="The flow account behind those answers" id="integration-flow" reference>
@@ -527,12 +485,10 @@ export function DeviceSelectionIntegrationPanel({
           value={metrics.papi}
         />
         <p className="mt-3 text-xs leading-5" data-papi-limitation>
-          <span className="font-semibold">A limit of this model. </span>
-          {MCS_MODEL_BOUNDARY_REFERENCES.rvLimitedPapiMax.statement}{' '}
-          {MCS_MODEL_BOUNDARY_REFERENCES.rvLimitedPapiMax.appliesWhen} The pulmonary pulsatility
-          ratio moves only weakly with right-sided support here, and mostly through right atrial
-          pressure, so it must not be used on its own to judge whether right-sided support is
-          working — and no single number on this panel, this one included, produces a device.
+          <span className="font-semibold">Simulator value. </span>
+          {MCS_MODEL_BOUNDARY_REFERENCES.rvLimitedPapiMax.statement} Here the ratio barely moves
+          with right-sided support, so judge that support from right atrial pressure and left-sided
+          filling.
         </p>
         <div className="mt-3 rounded-xl border border-dashed p-3" data-rap-pcwp-ratio>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -562,17 +518,11 @@ export function DeviceSelectionIntegrationPanel({
           {congestion.rapToPcwpRatio === null
             ? 'not available'
             : congestion.rapToPcwpRatio.toFixed(2)}
-          , a derived arithmetic relationship carried here only as an outcome association. None of
-          the three is a treatment target, none assigns a ventricular phenotype, and none selects a
-          device.
+          . {MCS_RAP_PCWP_RATIO_CONTEXT.association}
         </TextEquivalent>
       </PanelSection>
 
-      <PanelSection
-        title="Bridge, exit, and the decision this is not"
-        id="integration-strategy"
-        reference
-      >
+      <PanelSection title="Bridge and exit" id="integration-strategy" reference>
         <ul className="mt-3 grid gap-2 text-xs leading-5" data-strategy-boundaries>
           <li data-strategy="temporary-versus-durable">
             <span className="font-semibold">
@@ -588,15 +538,15 @@ export function DeviceSelectionIntegrationPanel({
             first hour, and the expected duration is itself a selection criterion.
           </li>
           <li data-strategy="outside-the-numbers">
-            <span className="font-semibold">What no reading on this screen contains. </span>Local
-            expertise and program availability, vascular access and anatomy, contraindications,
-            whether gas exchange is part of the problem, and the patient&rsquo;s goals of care.
+            <span className="font-semibold">What the numbers leave out. </span>Program availability,
+            vascular access and anatomy, contraindications, whether gas exchange is part of the
+            problem, and the patient&rsquo;s goals of care.
           </li>
         </ul>
         <TextEquivalent>
           Temporary and durable support are different decisions in kind. An exit strategy is
-          explicit from the start. Local expertise, access and anatomy, contraindications, gas
-          exchange and the patient&rsquo;s goals sit outside every number on this screen.
+          explicit from the start. Access and anatomy, contraindications, gas exchange and the
+          patient&rsquo;s goals are weighed with the numbers.
         </TextEquivalent>
       </PanelSection>
 
@@ -608,13 +558,12 @@ export function DeviceSelectionIntegrationPanel({
             caption="The filling pressures the phenotype was read from, and what the added support changed."
           />
           <TextEquivalent>{beforeAfterSentence(rows)}.</TextEquivalent>
-          <ModelBoundary>{DEADBAND_CAPTION}</ModelBoundary>
         </PanelSection>
       ) : null}
 
       {reveal === 'transfer' ? (
         <PanelSection title="The transfer patient, read live" id="integration-transfer">
-          <TransferState principle="Read the congestion pattern before naming a device, and keep the two apart. Where filling pressures are elevated is the start of the reasoning; it is not the cause of shock, and no single number on any screen finishes the decision.">
+          <TransferState principle="Read the congestion pattern before naming a device. Where filling pressures are high tells you which side is failing; choose the mechanism that supports that side.">
             <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <LiveValue
                 label="Right atrial pressure"

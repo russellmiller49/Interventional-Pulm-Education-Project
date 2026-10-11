@@ -93,34 +93,32 @@ export function McsIntroTeaching({
             {parameter === 0 ? (
               <>
                 <dt>Speed · {state.device.kind === 'lvad' ? state.device.speedRpm : '—'} rpm</dt>
-                <dd>The prescribed rotation setting. It does not set an invariant flow.</dd>
+                <dd>
+                  The setting you prescribe. Flow at that speed depends on filling and afterload.
+                </dd>
               </>
             ) : null}
             {parameter === 1 ? (
               <>
-                <dt>Estimated pump flow · {state.metrics.deviceFlowLMin.toFixed(2)} L/min</dt>
-                <dd>
-                  In this model, generated from speed and loading. Clinical estimation methods
-                  depend on the device; this is not a flow-probe reading.
-                </dd>
+                <dt>
+                  Displayed pump flow ·{' '}
+                  {(state.metrics.estimatedPumpFlowLMin ?? state.metrics.deviceFlowLMin).toFixed(2)}{' '}
+                  L/min
+                </dt>
+                <dd>The flow the controller displays. It is not a flow-probe reading.</dd>
               </>
             ) : null}
             {parameter === 2 ? (
               <>
                 <dt>Electrical pump power · {state.metrics.pumpPowerW?.toFixed(1)} W</dt>
-                <dd>
-                  Represents pump electrical demand. Here it is derived from modeled flow, speed and
-                  the power-fault term.
-                </dd>
+                <dd>The watts the motor draws to hold the set speed.</dd>
               </>
             ) : null}
             {parameter === 3 ? (
               <>
                 <dt>Pulsatility index · {state.metrics.pulsatilityIndex?.toFixed(1)}</dt>
                 <dd>
-                  A unitless controller parameter related to pulsatility. Here it is an authored
-                  function of native flow, pump flow and preload, not a measured clinical PI or
-                  flow-estimator input.
+                  How much the flow through the pump swings with each heartbeat. It has no unit.
                 </dd>
               </>
             ) : null}
@@ -178,9 +176,6 @@ export function McsIntroTeaching({
           ]}
         />
       ) : null}
-      <p className={styles.footnote} data-draft-status>
-        Draft teaching copy for faculty review · see Limits of this simulation, above.
-      </p>
     </section>
   )
 }

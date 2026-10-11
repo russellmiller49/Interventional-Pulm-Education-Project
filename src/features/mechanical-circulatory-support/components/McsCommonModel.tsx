@@ -40,7 +40,7 @@ function liveLevelValues(state: McsSimulationState | null): Record<string, strin
     'mcs.causal.flow': `Native ${formatFlow(metrics.nativeFlowLMin)} · displayed device ${formatFlow(metrics.deviceFlowLMin)} · effective systemic ${formatFlow(metrics.effectiveSystemicFlowLMin)}`,
     'mcs.causal.oxygen-delivery': `SvO₂ ${metrics.svo2Percent}% · cardiac power ${metrics.cardiacPowerOutputW.toFixed(2)} W`,
     'mcs.causal.organ-response':
-      'Not represented by any single number here. Mentation, urine output, skin perfusion, and lactate answer at this level and this simulation does not model them.',
+      'Mentation, urine output, skin perfusion and lactate answer at this level. Read them at the bedside.',
   }
 }
 
@@ -258,7 +258,7 @@ export function McsCompletionBoundary() {
     <aside
       className={styles.completionBoundary}
       role="note"
-      aria-label="What working through this module does and does not establish"
+      aria-label="About this simulator"
       data-mcs-common-model="completion-boundary"
     >
       <strong>{MCS_COMPLETION_BOUNDARY.headline}</strong>
@@ -305,7 +305,6 @@ export function McsCommonModel({
         <McsFlowAccount state={state} />
       </div>
       <McsFirstUseTerms />
-      <McsCompletionBoundary />
     </section>
   )
 }

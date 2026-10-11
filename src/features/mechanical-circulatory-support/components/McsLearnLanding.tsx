@@ -34,13 +34,6 @@ export function McsLearnLanding() {
         <summary>Open the lesson map</summary>
         <McsStoredPathwayAccordion id="mcs-learn-landing-pathway" />
       </details>
-      <aside role="note" className={styles.releaseReview}>
-        <strong>Educational model · pending clinical review</strong>
-        <p>
-          Device responses are bounded teaching approximations. Device selection, timing, and
-          escalation remain team decisions under current instructions and local protocol.
-        </p>
-      </aside>
     </div>
   )
 }

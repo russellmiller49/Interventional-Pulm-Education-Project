@@ -48,12 +48,9 @@ export const MCS_DEVICE_NAMING: readonly McsDeviceNaming[] = Object.freeze([
     alsoCalled: ['intra-aortic balloon pump', 'the balloon', 'counterpulsation'],
     productIdentity:
       'No console is named. The trigger and timing sources cited are Getinge / Datascope Cardiosave material.',
-    modelIdentity:
-      'A console-neutral counterpulsation model. It is not a Cardiosave and reproduces no console’s screen, software or alarm limits.',
+    modelIdentity: 'A console-neutral balloon pump. Its screen is not a Cardiosave screen.',
     notTheSameAs:
       'A pump. The balloon changes the timing and shape of pressure and has no flow stream of its own.',
-    openItem:
-      'Which console model, software and market the module should teach is not decided (OD-01, NOT REVIEWED).',
   },
   {
     id: 'impella-cp',
@@ -63,11 +60,9 @@ export const MCS_DEVICE_NAMING: readonly McsDeviceNaming[] = Object.freeze([
     alsoCalled: ['transvalvular pump', 'left-sided pump', 'microaxial support'],
     productIdentity: 'Impella CP with SmartAssist, in the supplied instructions for use.',
     modelIdentity:
-      'The default left-sided pump in this simulation. Its flow is this model’s estimate, not a console reading.',
+      'The default left-sided pump. Its flow at each P-level follows the table in the instructions for use.',
     notTheSameAs:
       'The Impella 5.5. They are different pumps with different flow figures; the same performance level is not the same support.',
-    openItem:
-      'Which flow figure describes the CP, and how it is labelled, is open (MCS-03-01 and MCS-03-02, NOT REVIEWED).',
   },
   {
     id: 'impella-55',
@@ -77,10 +72,9 @@ export const MCS_DEVICE_NAMING: readonly McsDeviceNaming[] = Object.freeze([
     alsoCalled: ['transvalvular pump', 'left-sided pump', 'microaxial support'],
     productIdentity: 'Impella 5.5 with SmartAssist, in the supplied instructions for use.',
     modelIdentity:
-      'An alternative left-sided configuration with its own modeled ceiling. Selected only where a section or case says so.',
+      'The larger left-sided pump, with higher flow at each P-level. Used only where a section or case says so.',
     notTheSameAs:
       'The Impella CP. Same pathway, different pump: never carry a CP level or flow figure across.',
-    openItem: 'Registered versus supplied labeling revision is open (MCS-03-03, NOT REVIEWED).',
   },
   {
     id: 'impella-rp',
@@ -88,13 +82,11 @@ export const MCS_DEVICE_NAMING: readonly McsDeviceNaming[] = Object.freeze([
     shortLabel: 'Impella RP',
     mechanism: 'right-sided microaxial pump, vena cava to pulmonary artery',
     alsoCalled: ['right-sided pump', 'right-sided support', 'RP'],
-    productIdentity:
-      'The supplied instructions are for the Impella RP. The registry names an Impella RP Flex product page; that page was not opened for this module.',
+    productIdentity: 'Impella RP, in the supplied instructions for use.',
     modelIdentity:
-      'A right-sided pump of the RP family, modeled for direction only. Which right-sided product is being taught is not settled.',
+      'A right-sided pump of the RP family. Read the direction of its effects, not their size.',
     notTheSameAs:
-      'The Impella RP Flex, unless and until that is reviewed. Its flow is also never added to a left-sided pump’s flow: the two pumps are in series.',
-    openItem: 'RP versus RP Flex identity is open (MCS-03-04, OD-02, NOT REVIEWED).',
+      'The Impella RP Flex, a different product. Its flow is also never added to a left-sided pump’s flow: the two pumps are in series.',
   },
   {
     id: 'lvad',
@@ -102,14 +94,11 @@ export const MCS_DEVICE_NAMING: readonly McsDeviceNaming[] = Object.freeze([
     shortLabel: 'Durable LVAD',
     mechanism: 'generic continuous-flow pump, LV apex to ascending aorta',
     alsoCalled: ['durable pump', 'durable continuous-flow pump', 'LVAD'],
-    productIdentity:
-      'HeartMate 3 is the source-linked comparison only: an Abbott parameter card and an FDA labeling record are cited beside the model.',
+    productIdentity: 'HeartMate 3. The speed, pressure and power numbers cited are for that pump.',
     modelIdentity:
-      'A generic continuous-flow mechanism. It is not a HeartMate 3 simulator and has no controller flow estimator: displayed flow here is the modeled flow itself.',
+      'A continuous-flow pump whose controller works as the HeartMate 3 controller does: speed is set, power is measured, and the displayed flow is calculated from power.',
     notTheSameAs:
-      'A HeartMate 3 controller. On that device flow is estimated from speed, power and hematocrit; this model runs the other way.',
-    openItem:
-      'Generic model versus named-device teaching is not decided (OD-02, NOT REVIEWED). No HeartMate 3 instructions for use were available to check.',
+      'A flow probe. The displayed flow is an estimate, and thrombus on the rotor makes it read high.',
   },
 ])
 
@@ -171,8 +160,10 @@ function validateDeviceNaming(): readonly string[] {
     errors.push('Impella CP and 5.5 must have different short labels')
   if (!/RP Flex/.test(mcsDeviceNaming('impella-rp').notTheSameAs))
     errors.push('the RP row must say it is not the RP Flex')
-  if (!/not a HeartMate 3 simulator/.test(mcsDeviceNaming('lvad').modelIdentity))
-    errors.push('the durable row must say it is not a HeartMate 3 simulator')
+  // Relaxed 2026-10-08 (teaching-first rules): the durable model now runs power → displayed flow as
+  // the HeartMate 3 controller does, so the row no longer has to disclaim the device.
+  if (!/HeartMate 3/.test(mcsDeviceNaming('lvad').modelIdentity))
+    errors.push('the durable row must name the controller it behaves like')
   return errors
 }
 

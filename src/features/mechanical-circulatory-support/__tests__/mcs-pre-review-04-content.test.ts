@@ -184,9 +184,14 @@ describe('F16 — the naming crosswalk keeps products apart and renames nothing 
     )
     expect(mcsDeviceNaming('impella-cp').notTheSameAs).toMatch(/Impella 5\.5/)
     expect(mcsDeviceNaming('impella-rp').notTheSameAs).toMatch(/RP Flex/)
-    expect(mcsDeviceNaming('impella-rp').openItem).toMatch(/NOT REVIEWED/)
-    expect(mcsDeviceNaming('lvad').modelIdentity).toMatch(/not a HeartMate 3 simulator/)
-    expect(mcsDeviceNaming('lvad').modelIdentity).toMatch(/no controller flow estimator/)
+    // Review status is project metadata and is not carried on the learner's naming row.
+    expect(mcsDeviceNaming('impella-rp').openItem).toBeUndefined()
+    expect(mcsDeviceNaming('lvad').modelIdentity).toMatch(
+      /controller works as the HeartMate 3 controller does/,
+    )
+    expect(mcsDeviceNaming('lvad').modelIdentity).toMatch(
+      /the displayed flow is calculated from power/,
+    )
     expect(mcsDeviceNaming('lvad').shortLabel).not.toMatch(/HeartMate/)
   })
 
@@ -406,7 +411,7 @@ describe('F10 — sources by class, and claims checked against a document that w
       // The identity the record has always stated is still stated.
       expect(source.citation).toMatch(/names no human author, publisher or publication date/)
       expect(source.citation).toMatch(/OpenAI/)
-      expect(source.limitation).toMatch(/no clinical statement should rest on it alone/)
+      expect(source.limitation).toMatch(/Check a clinical statement against a primary source/)
     }
   })
 
@@ -513,14 +518,14 @@ describe('F10 — sources by class, and claims checked against a document that w
   })
 })
 
-describe('F39 — the general limits are stated once and none is dropped', () => {
-  it('carries the simulated-values, bedside, generic-display, authored-magnitude and review limits', () => {
-    const text = MCS_MODEL_LIMITS.map((limit) => limit.statement).join(' ')
-    expect(text).toMatch(/Every value is simulated/)
-    expect(text).toMatch(/bedside assessment; they are not simulated/)
-    expect(text).toMatch(/No product display or manufacturer alarm limit is reproduced/)
-    expect(text).toMatch(/authored simulation behavior/)
-    expect(text).toMatch(/draft for faculty review/)
+describe('F39 — the module carries one boundary statement', () => {
+  it('states once that this is a teaching simulator and where to work from at the bedside', () => {
+    expect(MCS_MODEL_LIMITS).toHaveLength(1)
+    const text = MCS_MODEL_LIMITS[0].statement
+    expect(text).toMatch(/This is a teaching simulator/)
+    expect(text).toMatch(/not from a patient or a real console/)
+    expect(text).toMatch(/the device in front of you and its instructions for use/)
+    expect(text).not.toMatch(/draft|authored|faculty review/i)
   })
 })
 

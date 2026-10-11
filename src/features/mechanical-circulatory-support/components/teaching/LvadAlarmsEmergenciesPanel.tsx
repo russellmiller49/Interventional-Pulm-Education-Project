@@ -1,3 +1,4 @@
+import { MCS_NUMBERS } from '../../content/teachingNumbers'
 import type { McsTeachingPanelProps } from './panelProps'
 import { mcsComparesAgainstActionBaseline, mcsMechanismDisclosed } from './revealStage'
 import {
@@ -14,13 +15,11 @@ import {
 import {
   AlarmBand,
   BeforeAfter,
-  DEADBAND_CAPTION,
-  FigureScope,
   FlowAccount,
   LiveSetting,
   LiveValue,
-  ModelBoundary,
   PanelSection,
+  ReferenceValues,
   TextEquivalent,
   TransferState,
   alarmSentence,
@@ -80,7 +79,13 @@ export function LvadAlarmsEmergenciesPanel({
   const rows = beforeAfterReadings(
     [
       { metric: 'pumpPowerW', label: 'Pump power', unit: 'W', kind: 'displayed' },
-      { metric: 'deviceFlowLMin', label: 'Displayed pump flow', unit: 'L/min', kind: 'modeled' },
+      {
+        metric: 'estimatedPumpFlowLMin',
+        label: 'Displayed pump flow',
+        unit: 'L/min',
+        kind: 'displayed',
+      },
+      { metric: 'deviceFlowLMin', label: 'Real pump flow', unit: 'L/min', kind: 'modeled' },
       { metric: 'pulsatilityIndex', label: 'Pulsatility index', unit: '', kind: 'displayed' },
       {
         metric: 'effectiveSystemicFlowLMin',
@@ -109,86 +114,74 @@ export function LvadAlarmsEmergenciesPanel({
 
   const highPower = controller?.highPowerPattern ?? false
 
+  const displayedFlow = metrics.estimatedPumpFlowLMin ?? metrics.deviceFlowLMin
   const domains: readonly Domain[] = [
     {
       id: 'external-power',
-      title: 'External power path',
+      title: 'External power',
       modeledState: controller?.powerConnected === false ? 'present' : 'absent',
-      evidence: controller?.powerConnected
-        ? 'an approved power path is connected in this model'
-        : 'the modeled external power path is not connected',
+      evidence: controller?.powerConnected ? 'power is connected' : 'power is disconnected',
       raises: controller?.powerConnected
-        ? 'Nothing in this domain in this state.'
-        : 'An interrupted power path, which is time-critical and is corrected before anything else is investigated.',
+        ? 'Nothing here.'
+        : 'The pump has lost its power. This comes before everything else.',
       differential:
-        'Battery state, cable seating, the controller connection, and the source the patient is on. Power is preserved rather than interrupted to test a theory.',
+        'Reconnect power at once: a charged battery or the power module. Check the driveline connection. Call the LVAD team while you do it.',
     },
     {
       id: 'controller',
-      title: 'Controller and device state',
+      title: 'Controller',
       modeledState: controller?.controllerFault ? 'present' : 'absent',
       evidence: controller?.controllerFault
-        ? 'a modeled controller fault is present'
-        : 'no modeled controller fault',
+        ? 'a controller fault is present'
+        : 'no controller fault',
       raises: controller?.controllerFault
-        ? 'A device state the controller is reporting about itself.'
-        : 'Nothing in this domain in this state.',
+        ? 'The controller is reporting a fault in itself.'
+        : 'Nothing here.',
       differential:
-        'A controller fault, a device state the controller cannot interpret, or an alarm the controller raises about itself. Controller exchange and device-specific emergency operation are not taught here.',
+        'Check the power and driveline connections. A controller fault means changing to the backup controller. Call the LVAD team while you do it.',
     },
     {
       id: 'preload-rv',
       title: 'Preload and right-sided delivery',
       modeledState: 'reading-only',
-      evidence: `right atrial pressure ${reading(metrics.rapMmHg, 0)} mm Hg · wedge ${reading(metrics.pcwpMmHg, 0)} mm Hg · end-diastolic volume ${reading(metrics.lvedvMl, 0)} mL · modeled RV contractility ${reading(state.patient.rightVentricularContractility, 2)} · pulmonary vascular resistance ${reading(state.patient.pulmonaryVascularResistanceWU, 1)} Wood units · rhythm ${state.patient.rhythm} · tamponade ${state.patient.tamponade ? 'modeled present' : 'modeled not present'} · suction alarm ${hasAlarm(state, 'lvad-suction') ? 'active' : 'not active'}`,
+      evidence: `right atrial pressure ${reading(metrics.rapMmHg, 0)} mm Hg · wedge ${reading(metrics.pcwpMmHg, 0)} mm Hg · end-diastolic volume ${reading(metrics.lvedvMl, 0)} mL · right ventricular contractility index ${reading(state.patient.rightVentricularContractility, 2)} · pulmonary vascular resistance ${reading(state.patient.pulmonaryVascularResistanceWU, 1)} Wood units · rhythm ${state.patient.rhythm} · tamponade ${state.patient.tamponade ? 'present' : 'absent'} · suction alarm ${hasAlarm(state, 'lvad-suction') ? 'active' : 'not active'}`,
       raises:
-        'Whether the pump is being filled. These readings are read together; no single one of them, the right atrial pressure included, establishes right ventricular failure or inadequate filling on its own.',
+        'Whether the pump is being filled. Read these with the pulsatility index: low flow with a low index is an underfilled ventricle.',
       differential:
-        'Hypovolemia, right ventricular failure, tamponade, and arrhythmia — several of which produce the same low displayed flow from opposite loading states.',
+        'Hypovolemia, bleeding, tamponade, right heart failure, arrhythmia. Give volume, look for bleeding, get an echo. Do not raise the speed into an empty ventricle.',
     },
     {
       id: 'afterload',
       title: 'Afterload',
-      /*
-       * The row used to offer the displayed mean pressure as the evidence for this alarm. It is
-       * not: the predicate reads this patient's modeled unsupported mean pressure, which sits
-       * well below the monitor's figure, so the alarm can stay quiet in a state the model is
-       * plainly limiting (F27). The evidence now names the factor that does carry the limitation
-       * and says what the alarm's own input is.
-       */
       modeledState: hasAlarm(state, 'lvad-high-afterload') ? 'present' : 'absent',
       evidence: `mean arterial pressure ${reading(metrics.mapMmHg, 0)} mm Hg · systemic vascular resistance ${reading(state.patient.systemicVascularResistanceDynSecCm5, 0)} dyn·s·cm⁻⁵${
         afterloadCost
-          ? ` · the modeled afterload multiplier reduces flow by ${afterloadCost.costPercent}% from otherwise identical modeled loading (the minimum of unsupported-baseline and compartment-gradient factors, not a measured device quantity) · the alarm's own input is this patient's modeled unsupported mean pressure, ${afterloadCost.alarmInputMmHg.toFixed(0)} mm Hg against a threshold of ${afterloadCost.alarmThresholdMmHg}, not the mean pressure above`
+          ? ` · afterload is costing the pump ${afterloadCost.costPercent}% of its flow at this speed · the alarm is raised above ${afterloadCost.alarmThresholdMmHg} mm Hg`
           : ''
       } · high-afterload alarm ${hasAlarm(state, 'lvad-high-afterload') ? 'active' : 'not active'}`,
       raises:
-        'Whether the pressure the pump ejects against is limiting what crosses it at this speed. Read the cost figure rather than the alarm: the two are computed from different quantities, and a quiet alarm here does not mean the outlet is costing the pump nothing.',
-      differential:
-        'Hypertension reduces flow at a fixed speed. On this pathway a blood-pressure problem is a flow problem.',
+        'Whether blood pressure is limiting flow. Low flow with a high pulsatility index and a high mean pressure is afterload.',
+      differential: `Lower mean arterial pressure toward the goal of ${MCS_NUMBERS.value('lvad-map-goal')} with afterload reduction. Pump flow rises as the pressure falls. Do not raise the speed against it.`,
     },
     {
       id: 'suction',
       title: 'Inflow suction',
       modeledState: hasAlarm(state, 'lvad-suction') ? 'present' : 'absent',
-      evidence: hasAlarm(state, 'lvad-suction')
-        ? 'a modeled inflow suction pattern is present'
-        : 'no modeled suction pattern',
+      evidence: hasAlarm(state, 'lvad-suction') ? 'a suction alarm is active' : 'no suction',
       raises: hasAlarm(state, 'lvad-suction')
-        ? 'Inlet conditions inadequate for the speed set — a loading problem rather than an obstruction.'
-        : 'Nothing in this domain in this state.',
+        ? 'The ventricle is underfilled for the speed set, and the septum or free wall is drawn toward the inlet.'
+        : 'Nothing here.',
       differential:
-        'The ventricle underfilled relative to the speed set, with the septum or free wall drawn toward the inlet. It is a loading problem, not an obstruction.',
+        'A preload problem, not an obstruction. Give volume, look for bleeding and right heart failure, get an echo.',
     },
     {
       id: 'obstruction',
       title: 'Inflow or outflow obstruction, or malposition',
       modeledState: 'reading-only',
-      evidence: 'not represented in this simulation',
-      raises:
-        'Nothing this model can raise. It carries no reading for this domain, so nothing on this screen speaks to it either way.',
+      evidence: 'not in the simulator',
+      raises: 'Nothing on this screen speaks to it.',
       differential:
-        'Inflow cannula malposition and outflow graft obstruction. This simulation models neither the physical narrowing nor its progression, so nothing on this screen can exclude them.',
+        'Inflow cannula malposition, or a kinked or obstructed outflow graft. Both need imaging.',
     },
     {
       id: 'recirculation',
@@ -196,25 +189,27 @@ export function LvadAlarmsEmergenciesPanel({
       modeledState: hasAlarm(state, 'lvad-recirculation') ? 'present' : 'absent',
       evidence:
         metrics.recirculatingFlowLMin > 0
-          ? `${reading(metrics.recirculatingFlowLMin, 1)} L/min returns across the valve and is counted out of the effective line`
-          : 'no modeled regurgitant return',
+          ? `${reading(metrics.recirculatingFlowLMin, 1)} L/min leaks back through the aortic valve and is counted out of effective delivery`
+          : 'no regurgitant return',
       raises:
-        'Whether part of what the pump moves is returning to the chamber it came from, so that a plausible displayed flow sits beside a smaller delivery.',
+        'Whether part of what the pump moves is returning to the ventricle, so the displayed flow overstates delivery.',
       differential:
-        'Blood pumped into the aorta returning to the chamber it came from, so the displayed flow can look adequate while delivery is not.',
+        'Aortic insufficiency. The displayed flow looks adequate while delivery is not. Echo shows it.',
     },
     {
       id: 'high-power',
       title: 'High-power pattern',
       modeledState: highPower ? 'present' : 'absent',
       evidence: highPower
-        ? `a suspected high-power pattern is present: power ${reading(metrics.pumpPowerW, 1)} W with a displayed flow of ${reading(metrics.deviceFlowLMin, 1)} L/min`
-        : 'no high-power pattern in this state',
+        ? `a high-power pattern is present: power ${reading(metrics.pumpPowerW, 1)} W, displayed flow ${reading(displayedFlow, 1)} L/min, pulsatility index ${reading(metrics.pulsatilityIndex, 1)}`
+        : 'no high-power pattern',
       raises: highPower
-        ? 'A power signature that has stopped tracking the flow it is supposed to imply — a reason for urgent specialist evaluation, not a diagnosis.'
-        : 'Nothing in this domain in this state.',
+        ? disclosed
+          ? 'Power is up and the displayed flow is up with it, but the pulsatility index is down and the patient is worse. The displayed flow is falsely high: suspect pump thrombosis.'
+          : 'The high-power alarm is active.'
+        : 'Nothing here.',
       differential:
-        'A power signature that stops tracking the flow it is supposed to imply. It is a reason for urgent specialist evaluation and imaging — not, on its own, a diagnosis.',
+        'Suspected pump thrombosis. Send LDH and plasma free hemoglobin, check the anticoagulation, get an echo, and call the LVAD team and surgeon.',
     },
   ]
 
@@ -244,9 +239,9 @@ export function LvadAlarmsEmergenciesPanel({
           <LiveValue label="Pump power" value={metrics.pumpPowerW} unit="W" kind="displayed" />
           <LiveValue
             label="Displayed pump flow"
-            value={metrics.deviceFlowLMin}
+            value={metrics.estimatedPumpFlowLMin ?? metrics.deviceFlowLMin}
             unit="L/min"
-            kind="modeled"
+            kind="displayed"
           />
           <LiveValue
             label="Pulsatility index"
@@ -255,18 +250,29 @@ export function LvadAlarmsEmergenciesPanel({
             kind="displayed"
           />
         </div>
-        <ModelBoundary>
-          Every alarm here names a state this model has entered and prints what produced it. No
-          product alarm limit is reproduced anywhere in this module; those belong to the current
-          instructions for the specific equipment in use.
-        </ModelBoundary>
+        <ReferenceValues
+          title="HeartMate 3: what these values are held against"
+          ids={[
+            'lvad-map-goal',
+            'lvad-map-ceiling',
+            'lvad-power-elevation',
+            'lvad-pulsatility-index',
+          ]}
+        >
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            Read flow, power and pulsatility index against this patient&rsquo;s own baseline.
+          </p>
+        </ReferenceValues>
       </PanelSection>
 
-      <PanelSection title="The flow account, and what has not moved" id="alarms-flow">
+      <PanelSection title="The flow account" id="alarms-flow">
         <FlowAccount account={account} disclosed={disclosed} />
         <TextEquivalent>{flowAccountSentence(account, disclosed)}</TextEquivalent>
-        <ModelBoundary>{MCS_DURABLE_FLOW_IDENTITY}</ModelBoundary>
-        <ModelBoundary>{MCS_ESTIMATED_FLOW_BOUNDARY}</ModelBoundary>
+        {disclosed ? (
+          <p className="mt-2 text-xs leading-5" data-durable-flow-identity>
+            {MCS_DURABLE_FLOW_IDENTITY} {MCS_ESTIMATED_FLOW_BOUNDARY}
+          </p>
+        ) : null}
       </PanelSection>
 
       <PanelSection
@@ -277,10 +283,8 @@ export function LvadAlarmsEmergenciesPanel({
         <div className={styles.scroller}>
           <table className={`${styles.table} min-w-[36rem]`} data-alarm-localization>
             <caption className="text-left text-xs leading-5 text-muted-foreground">
-              Eight domains, and three columns that do different jobs. Current modeled evidence is
-              read from the live model. What this raises is the question that evidence opens — never
-              a conclusion it proves. What remains in the differential is what a bedside would still
-              have to work through, most of which this simulation does not represent.
+              Eight places an LVAD alarm can come from: what the simulator shows for each now, what
+              that means, and the causes with the first moves.
             </caption>
             <thead>
               <tr>
@@ -288,13 +292,13 @@ export function LvadAlarmsEmergenciesPanel({
                   Domain
                 </th>
                 <th scope="col" className="pb-1 pr-3 font-semibold">
-                  Current modeled evidence
+                  On screen now
                 </th>
                 <th scope="col" className="pb-1 pr-3 font-semibold">
-                  What this raises
+                  What it means
                 </th>
                 <th scope="col" className="pb-1 font-semibold">
-                  What remains in the differential
+                  Causes and first moves
                 </th>
               </tr>
             </thead>
@@ -309,10 +313,10 @@ export function LvadAlarmsEmergenciesPanel({
                     {domain.title}
                     <span className="block text-xs font-normal text-muted-foreground">
                       {domain.modeledState === 'present'
-                        ? 'modeled state present'
+                        ? 'present'
                         : domain.modeledState === 'absent'
-                          ? 'modeled state not present'
-                          : 'readings only — no modeled verdict'}
+                          ? 'not present'
+                          : 'readings only'}
                     </span>
                   </th>
                   <td className="py-1 pr-3 align-top">{domain.evidence}</td>
@@ -329,85 +333,67 @@ export function LvadAlarmsEmergenciesPanel({
               (domain) =>
                 `${domain.title}: ${
                   domain.modeledState === 'present'
-                    ? 'modeled state present'
+                    ? 'present'
                     : domain.modeledState === 'absent'
-                      ? 'modeled state not present'
-                      : 'readings only, no modeled verdict'
-                } — ${domain.evidence}. This raises: ${domain.raises}`,
+                      ? 'not present'
+                      : 'readings only'
+                } — ${domain.evidence}. ${domain.raises} ${domain.differential}`,
             )
             .join(' ')}
         </TextEquivalent>
-        <FigureScope
-          establishes="Which explicit modeled states this simulation has entered, and which readings speak to each domain."
-          doesNotEstablish="A diagnosis. Findings present in a simulation are not a differential worked through at a bedside, and several of these domains are not represented here at all."
-        />
       </PanelSection>
 
       {/*
-        What the pattern does to power and to the flow display is this section's prediction, so the
-        whole account waits for the commitment. Before it, the section says only what the word
-        "suspected" means and where the module stops.
+        What the pattern does to power, the flow display and the pulsatility index is this section's
+        prediction, so the whole account waits for the commitment.
       */}
       {disclosed ? (
         <PanelSection
-          title="What a high-power pattern does here, and does not"
+          title="The high-power pattern: suspected pump thrombosis"
           id="alarms-high-power"
         >
           <p className="mt-3 text-sm leading-6" data-high-power-claim>
             {highPower
-              ? `A suspected high-power pattern is present. Pump power reads ${reading(metrics.pumpPowerW, 1)} W and the displayed flow reads ${reading(metrics.deviceFlowLMin, 1)} L/min, with an effective systemic delivery of ${reading(metrics.effectiveSystemicFlowLMin, 1)} L/min.`
-              : 'No high-power pattern is present in this state.'}{' '}
-            The word this module uses is <em>suspected</em>. A power signature is a pattern, and
-            pump thrombosis is a diagnosis reached from clinical status, power and flow trends,
-            device logs where available, hemolysis evaluation, focused imaging, and evaluation for
-            loading and inflow/outflow causes — never from a power value alone.
+              ? `A high-power pattern is present. Pump power reads ${reading(metrics.pumpPowerW, 1)} W and the displayed flow reads ${reading(displayedFlow, 1)} L/min, but the pump is really moving ${reading(metrics.deviceFlowLMin, 1)} L/min and the pulsatility index is ${reading(metrics.pulsatilityIndex, 1)}.`
+              : 'No high-power pattern is present.'}{' '}
+            The controller measures power and calculates the displayed flow from it. Thrombus on the
+            rotor adds drag: power rises, the displayed flow rises with it, and the real flow, the
+            pulsatility index and the patient fall. Power elevation that suggests thrombosis:{' '}
+            {MCS_NUMBERS.value('lvad-power-elevation')}.
           </p>
           <ul className="mt-3 grid gap-2 text-xs leading-5" data-high-power-boundaries>
             <li data-high-power-boundary="flow-unchanged">
-              <span className="font-semibold">
-                In this model the pattern raises power and leaves the delivered flow where it
-                was.{' '}
-              </span>
-              That separation is the signal. This module does not teach the converse. In this model
-              the modeled pattern leaves delivery unchanged, so nothing on this screen establishes
-              any fall in what the patient is receiving.
+              <span className="font-semibold">The displayed flow is falsely high. </span>It is an
+              estimate from power. Believe the patient, the pulsatility index and the mean arterial
+              pressure.
             </li>
             <li data-high-power-boundary="hemolysis">
-              <span className="font-semibold">Hemolysis is not modeled. </span>No value on this
-              screen rises or falls with red-cell destruction, and its absence here is a limit of
-              the model rather than a statement about the state.
+              <span className="font-semibold">Hemolysis is the laboratory evidence. </span>Send LDH
+              and plasma free hemoglobin. The simulator has no laboratory values.
             </li>
             <li data-high-power-boundary="obstruction">
-              <span className="font-semibold">
-                Physical collapse or progressive obstruction of a flow path is not modeled.{' '}
-              </span>
-              Nothing narrows over time in this simulation, so an unchanging screen is not evidence
-              that a flow path is intact.
+              <span className="font-semibold">An obstructed outflow graft looks different. </span>
+              Flow and power are low and the pulsatility index is high.
             </li>
             <li data-high-power-boundary="escalation">
-              <span className="font-semibold">The boundary of this module. </span>Preserve the power
-              path, examine the patient, and bring the mechanical-support team and imaging to the
-              bedside under the current instructions for the implanted device and local protocol.
-              Controller exchange, driveline repair, and device-specific emergency operation are not
-              taught here.
+              <span className="font-semibold">First moves, in order. </span>Keep power connected.
+              Send LDH and plasma free hemoglobin. Check the anticoagulation. Get an echo. Call the
+              LVAD team and surgeon.
             </li>
           </ul>
           <TextEquivalent>
-            A high-power pattern is {highPower ? 'present' : 'not present'} in this state. In this
-            model it raises the power signature and does not change delivered flow. Hemolysis is not
-            modeled. Physical collapse or progressive obstruction of a flow path is not modeled. The
-            pattern is a reason to preserve power and call the mechanical-support team, not a
-            diagnosis.
+            A high-power pattern is {highPower ? 'present' : 'not present'}. Thrombus raises power,
+            and the displayed flow, calculated from power, rises with it while real flow and the
+            pulsatility index fall. First moves: keep power connected, send LDH and plasma free
+            hemoglobin, check the anticoagulation, get an echo, call the LVAD team and surgeon.
           </TextEquivalent>
         </PanelSection>
       ) : (
         <PanelSection title="What an alarm on this pathway is, and is not" id="alarms-high-power">
           <p className="mt-3 text-sm leading-6" data-high-power-claim="withheld">
-            The word this module uses for any pattern on this controller is <em>suspected</em>. A
-            signature is a pattern; a diagnosis is reached from clinical status, trends, device logs
-            where available, focused imaging, and evaluation for loading and flow-path causes —
-            never from one value alone. What a pattern does to the readings here is what this
-            section asks you to predict.
+            An alarm is a pattern, not a diagnosis. Read it with the patient, the trend and the
+            other controller values. What this pattern does to power, the displayed flow and the
+            pulsatility index is what this section asks you to predict.
           </p>
         </PanelSection>
       )}
@@ -417,16 +403,15 @@ export function LvadAlarmsEmergenciesPanel({
           <BeforeAfter
             rows={rows}
             baselineLabel="On entering the task"
-            caption="How far power moved, and how far the flow it is supposed to imply moved with it."
+            caption="Power, the displayed flow calculated from it, the real flow, and the pulsatility index."
           />
           <TextEquivalent>{beforeAfterSentence(rows)}.</TextEquivalent>
-          <ModelBoundary>{DEADBAND_CAPTION}</ModelBoundary>
         </PanelSection>
       ) : null}
 
       {reveal === 'transfer' ? (
         <PanelSection title="The transfer patient, read live" id="alarms-transfer">
-          <TransferState principle="A power signature that has stopped tracking the flow it is supposed to imply is a reason to preserve the power path, examine the patient, and call the mechanical-support team — in any patient, and before any number has been explained.">
+          <TransferState principle="Power up, displayed flow up, pulsatility index down and a patient who is worse: suspect pump thrombosis. The displayed flow is falsely high. Keep power connected, send LDH and plasma free hemoglobin, check the anticoagulation, get an echo, and call the LVAD team and surgeon.">
             <div className="mt-2 grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
               <LiveSetting
                 label="External power"
@@ -436,7 +421,7 @@ export function LvadAlarmsEmergenciesPanel({
               <LiveValue label="Pump power" value={metrics.pumpPowerW} unit="W" kind="displayed" />
               <LiveValue
                 label="Displayed pump flow"
-                value={metrics.deviceFlowLMin}
+                value={metrics.estimatedPumpFlowLMin ?? metrics.deviceFlowLMin}
                 unit="L/min"
                 kind="modeled"
               />
@@ -452,8 +437,9 @@ export function LvadAlarmsEmergenciesPanel({
               In the transfer patient the external power path is{' '}
               {controller?.powerConnected ? 'connected' : 'not connected'}, pump power reads{' '}
               {reading(metrics.pumpPowerW, 1)} W, the displayed pump flow reads{' '}
-              {reading(metrics.deviceFlowLMin, 1)} L/min, and effective systemic delivery reads{' '}
-              {reading(metrics.effectiveSystemicFlowLMin, 1)} L/min. {alarmSentence(alarms)}.
+              {reading(metrics.estimatedPumpFlowLMin ?? metrics.deviceFlowLMin, 1)} L/min, and
+              effective systemic delivery reads {reading(metrics.effectiveSystemicFlowLMin, 1)}{' '}
+              L/min. {alarmSentence(alarms)}.
             </TextEquivalent>
           </TransferState>
         </PanelSection>

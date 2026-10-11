@@ -1,4 +1,5 @@
 import { MCS_IABP_PRESSURE_SCALE } from '../../content/iabpWaveformReference'
+import { measureIabpLandmarkPressures, type IabpLandmarkPressures } from '../../engine/model'
 import type { McsTeachingPanelProps } from './panelProps'
 import { mcsComparesAgainstActionBaseline, mcsMechanismDisclosed } from './revealStage'
 import {
@@ -13,8 +14,7 @@ import {
 import {
   AlarmBand,
   BeforeAfter,
-  DEADBAND_CAPTION,
-  FigureScope,
+  FigureCaption,
   LiveSetting,
   LiveValue,
   ModelBoundary,
@@ -51,6 +51,60 @@ const landmarkMark: Readonly<Record<McsIabpLandmark['id'], string>> = {
   upstroke: 'U',
 }
 
+/**
+ * The five pressures the trace is read by, measured from the strip's own expression.
+ *
+ * Shown under the strip so the three relationships can be checked as numbers while the timing is
+ * changed. At 1:1 there is no unassisted beat to compare with, and the readout says so.
+ */
+function IabpLandmarkReadout({ landmarks }: { readonly landmarks: IabpLandmarkPressures | null }) {
+  if (!landmarks) return null
+  const value = (mmHg: number | null) => (mmHg === null ? '—' : `${mmHg} mm Hg`)
+  const compared = landmarks.unassistedSystolicMmHg !== null
+  return (
+    <section className="mt-3 min-w-0 rounded-xl border px-3 py-2" data-iabp-landmark-readout>
+      <h4 className="text-xs font-semibold">The five pressures on this trace</h4>
+      <dl className="mt-1 grid gap-1 text-xs leading-5 sm:grid-cols-2">
+        <div>
+          <dt className="inline">Unassisted systole: </dt>
+          <dd className="inline font-semibold" data-landmark="unassisted-systolic">
+            {value(landmarks.unassistedSystolicMmHg)}
+          </dd>
+        </div>
+        <div>
+          <dt className="inline">Diastolic augmentation: </dt>
+          <dd className="inline font-semibold" data-landmark="augmented-diastolic">
+            {value(landmarks.augmentedDiastolicMmHg)}
+          </dd>
+        </div>
+        <div>
+          <dt className="inline">Assisted systole: </dt>
+          <dd className="inline font-semibold" data-landmark="assisted-systolic">
+            {value(landmarks.assistedSystolicMmHg)}
+          </dd>
+        </div>
+        <div>
+          <dt className="inline">Unassisted end-diastolic: </dt>
+          <dd className="inline font-semibold" data-landmark="unassisted-end-diastolic">
+            {value(landmarks.unassistedEndDiastolicMmHg)}
+          </dd>
+        </div>
+        <div>
+          <dt className="inline">Assisted end-diastolic: </dt>
+          <dd className="inline font-semibold" data-landmark="assisted-end-diastolic">
+            {value(landmarks.assistedEndDiastolicMmHg)}
+          </dd>
+        </div>
+      </dl>
+      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+        {compared
+          ? 'Good timing: augmentation above unassisted systole, assisted end-diastolic below unassisted, assisted systole below unassisted.'
+          : 'At 1:1 every beat is assisted. Set the ratio to 1:2 to compare an assisted beat with an unassisted one.'}
+      </p>
+    </section>
+  )
+}
+
 export function IabpTimingTriggeringPanel({
   contract,
   state,
@@ -63,6 +117,7 @@ export function IabpTimingTriggeringPanel({
   // five demonstrations are drawn against the same pressures (F17).
   const strip = timing ? iabpStripView(state, timing, 3, MCS_IABP_PRESSURE_SCALE) : null
   const alarms = activeAlarms(state)
+  const landmarks = measureIabpLandmarkPressures(state.patient, state.device, state.metrics)
   const rows = beforeAfterReadings(
     [
       {
@@ -122,7 +177,7 @@ export function IabpTimingTriggeringPanel({
               viewBox={`0 0 ${STRIP_WIDTH} ${ECG_HEIGHT + ART_HEIGHT + 26}`}
               className="mt-3 h-auto w-full"
               role="img"
-              aria-label="Electrocardiogram above the arterial pressure trace over the last three modeled beats, with the dicrotic notch, inflation, deflation and the next upstroke marked"
+              aria-label="Electrocardiogram above the arterial pressure trace over the last three beats, with the dicrotic notch, inflation, deflation and the next upstroke marked"
               data-iabp-strip
             >
               {strip.beats.map((beat) => (
@@ -179,8 +234,8 @@ export function IabpTimingTriggeringPanel({
             </svg>
             <ul className="mt-2 grid gap-1 text-xs leading-5" data-landmark-key>
               <li>
-                <span className="font-semibold">N — </span>dicrotic notch, the modeled moment of
-                aortic-valve closure and the zero point the inflation setting is measured from.
+                <span className="font-semibold">N — </span>dicrotic notch: aortic-valve closure, and
+                the zero point the inflation setting is measured from.
               </li>
               <li>
                 <span className="font-semibold">I — </span>inflation begins, currently{' '}
@@ -214,18 +269,12 @@ export function IabpTimingTriggeringPanel({
           . Timing synchrony reads {reading(timing.timingQualityPercent, 0)} percent.
         </TextEquivalent>
 
-        <ModelBoundary>
-          This is a modeled arterial trace, not a recording. The dicrotic notch is placed at the
-          fixed cycle fraction this simulation uses as aortic-valve closure rather than detected
-          from the waveform, so the picture shows where the simulation believes the landmarks are.
-          Real counterpulsation is timed against a real trace on a real console, and neither the
-          trace shape nor the landmark detection here reproduces a product display.
-        </ModelBoundary>
+        <IabpLandmarkReadout landmarks={landmarks} />
 
-        <FigureScope
-          establishes="Where inflation and deflation currently sit relative to the modeled notch and the next upstroke, which beats this ratio assists, and which trigger the console is using."
-          doesNotEstablish="Whether this level of support is adequate for the patient. Timing describes how much of the mechanism is available; it says nothing about whether that is enough."
-        />
+        <FigureCaption>
+          Inflation and deflation against the notch and the next upstroke, the beats this ratio
+          assists, and the trigger in use.
+        </FigureCaption>
       </PanelSection>
 
       <PanelSection title="Trigger, ratio, and the synchrony reading" id="timing-settings">
@@ -262,34 +311,26 @@ export function IabpTimingTriggeringPanel({
             unit="%"
             digits={0}
             kind="displayed"
-            note="This simulation's own synchrony figure, produced from the trigger, the rhythm, and the two offsets."
+            note="A simulator index of how well inflation and deflation line up with the beat."
           />
         </div>
 
         <ModelBoundary>
-          The synchrony percentage is a value this simulation computes so that it can behave
-          deterministically. Nothing has validated it at a bedside, no product publishes it, and it
-          is not a number to drive a patient toward — no part of this module asks for a particular
-          value of it.
-        </ModelBoundary>
-
-        {state.patient.rhythm === 'atrial-fibrillation' ? (
-          <ModelBoundary>
+          No console reports a timing synchrony percentage. It is this simulator&rsquo;s index of
+          how well the two events line up. At the bedside you judge timing from the arterial trace
+          at 1:2.
+          {state.patient.rhythm === 'atrial-fibrillation' ? (
             <span data-trigger-source-hold>
+              {' '}
               In atrial fibrillation this model rates pressure triggering above ECG triggering. The
               supplied Cardiosave material recommends ECG triggering for arrhythmias, warns against
               pressure triggering in a sustained irregular rhythm, and says not to keep internal
-              triggering while the heart generates an output. Read the synchrony figure here as this
-              model’s output, not as a guide to choosing a trigger.
+              triggering while the heart generates an output. Do not choose a trigger from the
+              synchrony figure.
             </span>
-          </ModelBoundary>
-        ) : null}
-
-        <AlarmBand
-          alarms={alarms}
-          disclosed={disclosed}
-          emptyLabel="No modeled timing alarm is active."
-        />
+          ) : null}
+        </ModelBoundary>
+        <AlarmBand alarms={alarms} disclosed={disclosed} emptyLabel="No timing alarm is active." />
         <TextEquivalent>{alarmSentence(alarms)}.</TextEquivalent>
       </PanelSection>
 
@@ -299,8 +340,7 @@ export function IabpTimingTriggeringPanel({
             <table className={styles.table} data-timing-consequences>
               <caption className="text-left text-xs leading-5 text-muted-foreground">
                 Each of the four timing errors, where it lands in the beat, and what it does to the
-                ventricle — described qualitatively, because this simulation does not quantify any
-                of them.
+                ventricle and the trace.
               </caption>
               <thead>
                 <tr>
@@ -325,7 +365,7 @@ export function IabpTimingTriggeringPanel({
                   </td>
                   <td className="py-1 align-top">
                     The balloon inflates into an open aortic valve, so the ventricle ejects against
-                    added impedance. The mechanism meant to reduce the load is adding to it.
+                    it. Afterload rises and the augmented peak is lower.
                   </td>
                 </tr>
                 <tr data-timing-error="late-inflation">
@@ -334,8 +374,8 @@ export function IabpTimingTriggeringPanel({
                   </th>
                   <td className="py-1 pr-3 align-top">After the notch, into diastole</td>
                   <td className="py-1 align-top">
-                    Part of the diastolic window has already passed, so less of the augmentation the
-                    mechanism can offer is realised.
+                    Part of diastole has already passed. The augmented peak is lower and coronary
+                    filling gains less.
                   </td>
                 </tr>
                 <tr data-timing-error="early-deflation">
@@ -344,8 +384,8 @@ export function IabpTimingTriggeringPanel({
                   </th>
                   <td className="py-1 pr-3 align-top">Well before the next upstroke</td>
                   <td className="py-1 align-top">
-                    Augmentation ends prematurely, and the reduction in the pressure at the start of
-                    the next ejection is lost with it.
+                    Augmentation ends too soon and aortic pressure recovers before the next beat, so
+                    much of the fall in end-diastolic pressure is lost.
                   </td>
                 </tr>
                 <tr data-timing-error="late-deflation">
@@ -354,24 +394,29 @@ export function IabpTimingTriggeringPanel({
                   </th>
                   <td className="py-1 pr-3 align-top">Into the next upstroke</td>
                   <td className="py-1 align-top">
-                    The next ejection begins against a still-inflated balloon. Of the four, this is
-                    the one the model treats as most harmful.
+                    The ventricle ejects against a still-inflated balloon. Assisted end-diastolic
+                    pressure is no longer below unassisted. This is the dangerous error: fix it
+                    first.
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
           <TextEquivalent>
-            Early inflation lands before the notch and adds impedance to an ejection still in
-            progress. Late inflation lands after the notch and loses part of the diastolic window.
-            Early deflation ends augmentation too soon. Late deflation lands in the next upstroke,
-            so the ventricle opens against an inflated balloon.
+            Early inflation lands before the notch and the ventricle ejects against the balloon.
+            Late inflation lands after the notch and loses part of diastole. Early deflation ends
+            augmentation too soon. Late deflation lands in the next upstroke, so the ventricle
+            ejects against an inflated balloon; fix it first.
           </TextEquivalent>
-          <ModelBoundary>
-            These are directions, not magnitudes. The simulation applies its own penalties to
-            loading and native output; it does not reproduce any product&rsquo;s timing algorithm,
-            and none of these rows is an operating instruction for a specific console.
-          </ModelBoundary>
+          <ol className="mt-3 grid gap-1 text-xs leading-5" data-timing-first-moves>
+            <li>Set the ratio to 1:2, so an assisted beat sits beside an unassisted one.</li>
+            <li>Fix late deflation first: move deflation to just before the next upstroke.</li>
+            <li>Move inflation to the dicrotic notch.</li>
+            <li>
+              Confirm the three relationships on the five-pressure readout, then return to the
+              prescribed ratio.
+            </li>
+          </ol>
         </PanelSection>
       ) : null}
 
@@ -383,7 +428,6 @@ export function IabpTimingTriggeringPanel({
             caption="What synchrony, pressure and flow read when the task began, and what they read now."
           />
           <TextEquivalent>{beforeAfterSentence(rows)}.</TextEquivalent>
-          <ModelBoundary>{DEADBAND_CAPTION}</ModelBoundary>
         </PanelSection>
       ) : null}
 
@@ -405,7 +449,7 @@ export function IabpTimingTriggeringPanel({
             <AlarmBand
               alarms={alarms}
               disclosed={disclosed}
-              emptyLabel="No modeled timing alarm is active."
+              emptyLabel="No timing alarm is active."
             />
             <TextEquivalent>
               In the transfer patient the rhythm is {state.patient.rhythm}, the trigger is{' '}

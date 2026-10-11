@@ -178,10 +178,10 @@ describe('the common cardiovascular model', () => {
     }
   })
 
-  it('states that working through the module does not make anyone ready to run a device', () => {
-    expect(MCS_COMPLETION_BOUNDARY.headline).toMatch(/does not establish/i)
-    expect(`${MCS_COMPLETION_BOUNDARY.headline} ${MCS_COMPLETION_BOUNDARY.statement}`).toMatch(
-      /ready to operate|device-specific training/i,
+  it('states that this is a teaching simulator and that running a device takes hands-on training', () => {
+    expect(MCS_COMPLETION_BOUNDARY.headline).toMatch(/A teaching simulator/i)
+    expect(MCS_COMPLETION_BOUNDARY.statement).toMatch(
+      /hands-on training on the equipment your unit uses/i,
     )
     // The shared learner-copy lint bans the credentialing vocabulary outright, with no override.
     expect(
@@ -397,7 +397,7 @@ describe('standardized support-pathway cards', () => {
     )
   })
 
-  it('places every product flow figure after the reasoning fields and labels it not a target', () => {
+  it('places every product flow figure after the reasoning fields and says what a specification means', () => {
     const withFigures = mcsSupportPathwayCards.filter((card) => card.productReferences.length > 0)
     expect(withFigures.map((card) => card.id)).toEqual([
       'impella-left-transvalvular',
@@ -405,7 +405,9 @@ describe('standardized support-pathway cards', () => {
     ])
     for (const card of withFigures) {
       expect(card.productReferenceBoundary).toBe(MCS_PRODUCT_FLOW_BOUNDARY)
-      expect(card.productReferenceBoundary.toLowerCase()).toMatch(/not a treatment target/)
+      expect(card.productReferenceBoundary).toMatch(
+        /What this patient receives depends on filling, position and afterload/,
+      )
       for (const reference of card.productReferences) {
         expect(reference.measurand.trim()).not.toHaveLength(0)
         expect(reference.condition.trim()).not.toHaveLength(0)
@@ -420,8 +422,9 @@ describe('standardized support-pathway cards', () => {
   it('keeps each Impella CP flow figure attached to its own measurand rather than one number', () => {
     const left = mcsSupportPathwayCardById.get('impella-left-transvalvular')
     const cp = left?.productReferences.filter((reference) => reference.productName.includes('CP'))
-    expect(cp).toHaveLength(3)
+    expect(cp).toHaveLength(4)
     expect(cp?.map((reference) => reference.measurand)).toEqual([
+      'Mean flow at each P-level',
       'Maximum mean flow',
       'Peak flow rate at systole',
       'Average flow observed during support',

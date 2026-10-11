@@ -73,7 +73,7 @@ it('orients to serial right support before presenting a separate map question', 
   for (let i = 0; i < 3; i++)
     fireEvent.click(screen.getByRole('button', { name: 'Next reference' }))
   expect(
-    screen.getByText(/There is no interactive purge-management lesson here/),
+    screen.getByText(/A purge alarm is a problem in that system, not in blood flow/),
   ).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Begin the patient example' }))
   expect(document.querySelector('[data-prerequisite-reference]')).toBeNull()

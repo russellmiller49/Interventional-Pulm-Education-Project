@@ -116,10 +116,10 @@ describe('matched unloading replay over the real engine', () => {
 
   it('retains smaller volumes with flat displayed wedge pressure and persistent suction', () => {
     const [filled, underfilled] = replayMcsUnloadingComparison(6)
-    expect([filled.control.metrics.lvedvMl, filled.changed.metrics.lvedvMl]).toEqual([118, 114])
+    expect([filled.control.metrics.lvedvMl, filled.changed.metrics.lvedvMl]).toEqual([116, 114])
     expect([filled.control.metrics.pcwpMmHg, filled.changed.metrics.pcwpMmHg]).toEqual([18, 18])
     expect([underfilled.control.metrics.lvedvMl, underfilled.changed.metrics.lvedvMl]).toEqual([
-      95, 92,
+      93, 92,
     ])
     expect([underfilled.control.metrics.pcwpMmHg, underfilled.changed.metrics.pcwpMmHg]).toEqual([
       11, 11,
@@ -182,7 +182,7 @@ describe('self-paced unloading example through the actual host', () => {
     compareVisibleOutputs(6)
     expect(screen.queryByRole('radio')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'How to read the comparison' })).toBeVisible()
-    expect(screen.getByText(/Suction remains present at both settings/)).toBeVisible()
+    expect(screen.getByText(/Suction is present at both settings/)).toBeVisible()
     expect(document.querySelector('[data-captured-results]')).toBeNull()
     expect(document.querySelector('[data-full-exploration]')).toBeNull()
     expect(nowPrimary()).toBeEnabled()
@@ -220,9 +220,7 @@ describe('self-paced unloading example through the actual host', () => {
       within(map).getByRole('button', { name: 'Guided example: ventricular unloading' }),
     )
     compareVisibleOutputs(6)
-    expect(document.querySelector('[data-session-identity]')).toHaveTextContent(
-      'Provided model comparison',
-    )
+    expect(document.querySelector('[data-session-identity]')).toHaveTextContent('Worked comparison')
     fireEvent.click(within(map).getByRole('button', { name: 'Move the inlet out of position' }))
     expect(screen.getByRole('combobox', { name: 'Placement state' })).toHaveValue('correct')
     expect(screen.getByRole('button', { name: 'Explore all supported controls' })).toBeEnabled()

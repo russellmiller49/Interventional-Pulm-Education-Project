@@ -36,7 +36,6 @@ import { McsTeachingPanel } from '../components/teaching/McsTeachingPanel'
 import { MCS_REVEAL_STAGES, type McsRevealStage } from '../components/teaching/revealStage'
 import {
   MCS_ESTIMATED_FLOW_BOUNDARY,
-  MCS_OXYGEN_DELIVERY_BOUNDARY,
   congestionProfileView,
 } from '../components/teaching/selectors'
 import {
@@ -198,7 +197,7 @@ describe('the congestion framework is the ACC consensus description, operational
         expect(view.profileId).toBe('neither-elevated')
         expect(view.label).toBe('Neither filling pressure is elevated by this framework')
         expect(view.label.toLowerCase()).not.toContain('euvolemic')
-        expect(view.statement).toMatch(/does not establish true euvolemia/i)
+        expect(view.statement).toMatch(/not the same as euvolemia/i)
       }
     }
   })
@@ -301,7 +300,7 @@ describe('congestion provenance resolves and stays separated', () => {
       expect(text).not.toContain(invented)
     }
     expect(view.container.querySelector('[data-no-averaged-threshold]')?.textContent).toMatch(
-      /are not averaged and no\s+compromise value is created/i,
+      /come from different populations/i,
     )
     view.unmount()
   })
@@ -325,7 +324,7 @@ describe('the integration panel renders a congestion pattern, not a device rule'
     const view = renderPanel('mcs-device-selection-integration', 'orientation', state)
     const reading = view.container.querySelector('[data-congestion-reading]')?.textContent ?? ''
     expect(reading).toMatch(/RAP is 20 mm Hg and PCWP is 10 mm Hg/)
-    expect(reading).toMatch(/ACC consensus–described filling-pressure framework/)
+    expect(reading).toMatch(/By the ACC consensus thresholds/)
     expect(reading).toMatch(/rv-predominant filling-pressure congestion pattern/i)
 
     expect(view.container.querySelector('[data-framework-label]')?.textContent).toBe(
@@ -337,28 +336,19 @@ describe('the integration panel renders a congestion pattern, not a device rule'
     expect(view.container.querySelector('[data-evidence-ids]')?.textContent).toContain(
       'acc-cs-concise-clinical-guidance-2025',
     )
-    expect(
-      view.container.querySelector('[data-congestion-operationalization]')?.textContent,
-    ).toMatch(/educational operationalization/i)
     view.unmount()
   })
 
-  it('says what the pattern does not establish, and what to reconcile it with', () => {
+  it('says what to read the pattern with', () => {
     const view = renderPanel('mcs-device-selection-integration', 'orientation')
-    const limit = view.container.querySelector('[data-congestion-limit]')?.textContent ?? ''
-    expect(limit).toMatch(/does not independently establish the cause of shock/i)
-    expect(limit).toMatch(/prove isolated ventricular failure/i)
-    expect(limit).toMatch(/measure organ perfusion/i)
-    expect(limit).toMatch(/select a support device/i)
-
     const reconcile = view.container.querySelector('[data-congestion-reconcile]')?.textContent ?? ''
     for (const item of [
       'cardiac output',
       'pulmonary artery pressures',
-      'PA saturation',
-      'echocardiography',
-      'gas-exchange',
-      'trajectory',
+      'saturation',
+      'echo',
+      'gas exchange',
+      'trend',
     ]) {
       expect(reconcile).toContain(item)
     }
@@ -370,8 +360,8 @@ describe('the integration panel renders a congestion pattern, not a device rule'
     const row = view.container.querySelector(
       '[data-common-model-question="mcs.model.q1-dominant-problem"] [data-question-answer]',
     )?.textContent
-    expect(row).toMatch(/Filling pressures identify a .*congestion pattern/i)
-    expect(row).toMatch(/dominant shock mechanism is not fully determined by these two pressures/i)
+    expect(row).toMatch(/Filling pressures show a .*congestion pattern/i)
+    expect(row).not.toMatch(/\b(left|right) ventricular failure\b/i)
     view.unmount()
   })
 
@@ -412,7 +402,7 @@ describe('the integration panel renders a congestion pattern, not a device rule'
 
     // The source's own word is preserved and immediately qualified.
     expect(view.container.querySelector('[data-ortega-euvolemic-note]')?.textContent).toMatch(
-      /Euvolemic was the study’s label for the quadrant below both cohort cutoffs\. It does not independently establish total-body euvolemia or adequate perfusion\./,
+      /Euvolemic was the study’s label for the quadrant below both cutoffs\. It does not mean the patient is euvolemic or well perfused\./,
     )
 
     const accText = acc?.textContent ?? ''
@@ -432,9 +422,7 @@ describe('the integration panel renders a congestion pattern, not a device rule'
     expect(components).toContain('Pulmonary artery oxygen saturation')
     const simulation =
       view.container.querySelector('[data-complete-profile-simulation]')?.textContent ?? ''
-    expect(simulation).toMatch(
-      /modeled balance signal rather than a measured pulmonary artery saturation/i,
-    )
+    expect(simulation).toMatch(/simulated value, not a measured pulmonary artery saturation/i)
     expect(simulation).toMatch(/congestion pattern, not a complete profile/i)
     view.unmount()
   })
@@ -462,10 +450,8 @@ describe('the integration panel renders a congestion pattern, not a device rule'
       '[data-common-model-question="mcs.model.q6-what-limits-performance"]',
     )?.textContent
     expect(row).not.toMatch(/no modeled obstruction/i)
-    expect(row).toMatch(/tamponade: modeled (present|not present)/i)
-    expect(row).toMatch(
-      /Inflow obstruction, outflow obstruction, and device-path malposition .*are not comprehensively modeled/i,
-    )
+    expect(row).toMatch(/tamponade: (present|absent)/i)
+    expect(row).toMatch(/Inflow or outflow obstruction and gas exchange are not on this screen/i)
     view.unmount()
   })
 })
@@ -473,24 +459,14 @@ describe('the integration panel renders a congestion pattern, not a device rule'
 // ── Durable-LVAD semantics ───────────────────────────────────────────────────
 
 describe('durable-LVAD controller values are described accurately', () => {
-  it('describes pump power as electrical power under hydraulic and mechanical load', () => {
+  it('describes pump power as the watts needed to hold the set speed, raised by flow or by thrombus', () => {
     const view = renderPanel('lvad-parameters-assessment', 'explanation')
     const text = view.container.textContent ?? ''
-    expect(text).toMatch(
-      /electrical power required to maintain the set speed under the current hydraulic and mechanical load/i,
-    )
-    expect(
-      view.container.querySelector('[data-controller-boundary="power"]')?.textContent ?? '',
-    ).toMatch(/not one-to-one/i)
-    expect(
-      view.container.querySelector('[data-controller-boundary="power"]')?.textContent ?? '',
-    ).toMatch(/mechanical drag/i)
-    expect(
-      view.container.querySelector('[data-controller-boundary="power"]')?.textContent ?? '',
-    ).toMatch(/does not directly measure systemic delivery/i)
-    expect(
-      view.container.querySelector('[data-controller-boundary="power"]')?.textContent ?? '',
-    ).toMatch(/single power value does not diagnose thrombosis/i)
+    expect(text).toMatch(/the watts needed to hold the set speed/i)
+    expect(text).toMatch(/More flow needs more power\. So does thrombus on the rotor/i)
+    // Displayed flow is taught as an estimate from power, next to the flow really crossing the pump.
+    expect(text).toMatch(/The controller calculates it from power at the set speed/i)
+    expect(text).toContain('Flow the pump is really delivering')
 
     // The claims this replaced.
     expect(text).not.toMatch(/work the impeller is doing on the blood/i)
@@ -501,14 +477,9 @@ describe('durable-LVAD controller values are described accurately', () => {
   it('describes pulsatility index as cyclic variation, not a fraction of the cycle', () => {
     const view = renderPanel('lvad-parameters-assessment', 'explanation')
     const text = view.container.textContent ?? ''
-    expect(text).toMatch(/magnitude of cyclic variation in estimated pump flow or power/i)
-    const boundary =
-      view.container.querySelector('[data-controller-boundary="pulsatility-index"]')?.textContent ??
-      ''
-    expect(boundary).toMatch(/same pulsatility index can\s+occur in different clinical states/i)
-    expect(boundary).toMatch(/complete controller\s+trend/i)
-    expect(boundary).toMatch(
-      /hypovolemia,\s+right ventricular failure, recovery, or adequate unloading/i,
+    expect(text).toMatch(/How much the flow through the pump swings with each heartbeat/i)
+    expect(text).toMatch(
+      /an empty ventricle, a fast pump or a failing right heart gives a low one/i,
     )
 
     expect(text).not.toMatch(/how much of the cycle the native ventricle/i)
@@ -525,24 +496,14 @@ describe('durable-LVAD controller values are described accurately', () => {
     }
     view.unmount()
   })
-
-  it('refuses universal targets rather than the existence of device settings', () => {
-    const view = renderPanel('lvad-parameters-assessment', 'explanation')
-    const text = view.container.querySelector('[data-no-published-targets]')?.textContent ?? ''
-    expect(text).toMatch(/publishes no universal speed, power, pulsatility-index, or alarm target/i)
-    expect(text).toMatch(/Specific devices define their own settings/i)
-    view.unmount()
-  })
 })
 
 // ── Boundaries shared across panels ──────────────────────────────────────────
 
-describe('the estimated-flow and oxygen-delivery boundaries say what they mean', () => {
-  it('does not claim to reproduce a real controller', () => {
-    expect(MCS_ESTIMATED_FLOW_BOUNDARY).toMatch(/modeled transfer, rounded for display/i)
-    expect(MCS_ESTIMATED_FLOW_BOUNDARY).toMatch(
-      /does not reproduce each controller’s proprietary calculation or display/i,
-    )
+describe('the estimated-flow and oxygen-delivery statements say what they mean', () => {
+  it('teaches the displayed flow as a calculated number, and does not claim to reproduce a real controller', () => {
+    expect(MCS_ESTIMATED_FLOW_BOUNDARY).toMatch(/No pump measures its own flow with a probe/i)
+    expect(MCS_ESTIMATED_FLOW_BOUNDARY).toMatch(/displayed number is calculated/i)
     expect(MCS_ESTIMATED_FLOW_BOUNDARY).not.toMatch(/exactly as it is on the real controller/i)
     for (const sectionId of [
       'impella-unloading-placement',
@@ -556,22 +517,21 @@ describe('the estimated-flow and oxygen-delivery boundaries say what they mean',
     }
   })
 
-  it('labels the oxygen rung as not directly calculated, and SvO2 as a balance signal', () => {
+  it('shows whole-body oxygen delivery as absent from the simulator, and SvO2 as a balance signal', () => {
     const view = renderPanel('mcs-foundations-signals', 'orientation')
     const text = view.container.textContent ?? ''
-    expect(text).toContain('Oxygen delivery — not directly calculated')
+    expect(text).toContain('3. Oxygen delivery')
+    expect(text).toContain('Whole-body oxygen deliverynot in the simulator')
     expect(text).not.toContain('Oxygen-delivery evidence')
-    expect(text).toMatch(/Modeled delivery–consumption balance signal/i)
+    expect(text).toMatch(/Falls when oxygen delivery falls short of consumption/i)
     expect(text).not.toMatch(/fills three of them/i)
-    expect(text).toMatch(/directly populates pressure and flow/i)
-    expect(MCS_OXYGEN_DELIVERY_BOUNDARY).toMatch(/delivery–consumption balance signal/i)
-    expect(MCS_OXYGEN_DELIVERY_BOUNDARY).toMatch(/not a measurement of delivery/i)
-    expect(MCS_OXYGEN_DELIVERY_BOUNDARY).toMatch(/not a value to drive a patient toward/i)
     // The unmodeled list survives the rewording.
     for (const id of ['mentation', 'urine-output', 'lactate', 'organ-recovery']) {
       expect(view.container.querySelector(`[data-unmodeled-signal="${id}"]`)).not.toBeNull()
     }
-    expect(text).toMatch(/Hemoglobin and arterial oxygen content are not modeled/i)
+    expect(text).toMatch(
+      /Cardiac output × arterial oxygen content\. The simulator has no hemoglobin/i,
+    )
     view.unmount()
   })
 })
@@ -584,15 +544,14 @@ describe('the comparison and differential wording is qualified', () => {
     const vv =
       view.container.querySelector('[data-distinction="vv-ecmo-adds-no-systemic-flow"]')
         ?.textContent ?? ''
-    expect(vv).toMatch(/no direct arterial pump-flow\s+contribution/i)
-    expect(vv).toMatch(/systemic circulatory flow remains native cardiac output/i)
-    expect(vv).toMatch(/may indirectly affect that\s+native output/i)
+    expect(vv).toMatch(/without a direct arterial flow stream/i)
+    expect(vv).toMatch(/systemic flow is still the native cardiac output/i)
+    expect(vv).toMatch(/can raise that output indirectly/i)
 
     const va =
       view.container.querySelector('[data-distinction="va-ecmo-loads-the-lv"]')?.textContent ?? ''
-    expect(va).toMatch(/may increase left ventricular/i)
-    expect(va).toMatch(/peripheral retrograde arterial return/i)
-    expect(va).toMatch(/depends on\s+the configuration/i)
+    expect(va).toMatch(/may load the left ventricle/i)
+    expect(va).toMatch(/raises left ventricular afterload, most with peripheral retrograde return/i)
     expect(va).not.toMatch(/An arterial return raises the pressure the native ventricle must open/i)
     view.unmount()
   })
@@ -607,9 +566,9 @@ describe('the comparison and differential wording is qualified', () => {
     const view = renderPanel('lvad-alarms-emergencies', 'explanation', highRap)
     const row = view.container.querySelector('[data-alarm-domain="preload-rv"]')
     expect(row?.getAttribute('data-domain-modeled-state')).toBe('reading-only')
-    expect(row?.textContent).toMatch(/readings only — no modeled verdict/i)
+    expect(row?.textContent).toMatch(/readings only/i)
     expect(row?.textContent).toMatch(/right atrial pressure 22 mm Hg/)
-    expect(row?.textContent).toMatch(/no single one of them, the right atrial pressure included/i)
+    expect(row?.textContent).toMatch(/Read these with the pulsatility index/i)
     // The explicit modeled states keep their binary reading.
     expect(
       view.container
@@ -619,21 +578,16 @@ describe('the comparison and differential wording is qualified', () => {
     view.unmount()
   })
 
-  it('separates current modeled evidence from what it raises and what remains open', () => {
+  it('separates what is on screen from what it means and the causes with their first moves', () => {
     const view = renderPanel('lvad-alarms-emergencies', 'explanation')
     const headers = Array.from(
       view.container.querySelectorAll('[data-alarm-localization] thead th'),
     ).map((cell) => cell.textContent)
-    expect(headers).toEqual([
-      'Domain',
-      'Current modeled evidence',
-      'What this raises',
-      'What remains in the differential',
-    ])
+    expect(headers).toEqual(['Domain', 'On screen now', 'What it means', 'Causes and first moves'])
     view.unmount()
   })
 
-  it('names the full high-power evaluation, and keeps the unmodeled boundaries', () => {
+  it('teaches the thrombosis pattern, its numbers and the first moves', () => {
     const contract = contractFor('lvad-alarms-emergencies')
     const acted = tick(
       mcsReducer(openedState(contract), {
@@ -646,25 +600,30 @@ describe('the comparison and differential wording is qualified', () => {
     const view = renderPanel('lvad-alarms-emergencies', 'explanation', acted)
     const text = view.container.textContent ?? ''
     for (const item of [
-      'clinical status',
-      'power and flow trends',
-      'device logs',
-      'hemolysis evaluation',
-      'focused imaging',
-      'inflow/outflow causes',
+      'Keep power connected',
+      'Send LDH and plasma free hemoglobin',
+      'Check the anticoagulation',
+      'Get an echo',
+      'Call the LVAD team and surgeon',
     ]) {
       expect(text).toContain(item)
     }
     expect(text).toMatch(/suspected/i)
-    expect(text).toMatch(/raises power and leaves the delivered flow where it was/i)
-    expect(text).toMatch(/does not teach the converse/i)
-    expect(text).not.toMatch(/(?:reduces|lowers) (?:the )?delivered flow/i)
+    // The engine now does what the sentence says: power and the estimate up, real flow and PI down.
+    expect(text).toMatch(
+      /power rises, the displayed flow rises with it, and the real flow, the pulsatility index and the patient fall/i,
+    )
+    expect(acted.metrics.estimatedPumpFlowLMin ?? 0).toBeGreaterThan(
+      acted.metrics.deviceFlowLMin ?? Number.POSITIVE_INFINITY,
+    )
+    expect(text).toMatch(/10 W or more, or more than 2 W above baseline for over 24 hours/)
+    expect(text).not.toMatch(/leaves the delivered flow where it was/i)
     expect(
       view.container.querySelector('[data-high-power-boundary="hemolysis"]')?.textContent,
-    ).toMatch(/not modeled/i)
+    ).toMatch(/LDH and plasma free hemoglobin/i)
     expect(
       view.container.querySelector('[data-high-power-boundary="obstruction"]')?.textContent,
-    ).toMatch(/not modeled/i)
+    ).toMatch(/obstructed outflow graft looks different/i)
     view.unmount()
   })
 
@@ -672,9 +631,9 @@ describe('the comparison and differential wording is qualified', () => {
     const view = renderPanel('impella-suction-purge-rv', 'transfer')
     const principle =
       view.container.querySelector('[data-transferable-principle]')?.textContent ?? ''
-    expect(principle).toMatch(/inlet conditions are inadequate for the requested\s+support/i)
-    expect(principle).toMatch(/underfilling, restricted inflow, or position/i)
-    expect(principle).toMatch(/not that the performance level is too low/i)
+    expect(principle).toMatch(/the inlet is short of blood for the P-level in use/i)
+    expect(principle).toMatch(/underfilling, right heart failure or position/i)
+    expect(principle).toMatch(/Turn the P-level down, find the cause/i)
     expect(principle).not.toMatch(/short of blood, not short of setting/i)
     view.unmount()
   })
@@ -685,7 +644,7 @@ describe('the comparison and differential wording is qualified', () => {
       /different problems with different causes/i,
     )
     expect(view.container.querySelector('[data-serial-not-additive]')?.textContent).toMatch(
-      /never summed here/i,
+      /Adding the two displayed flows counts that blood twice/i,
     )
     view.unmount()
   })

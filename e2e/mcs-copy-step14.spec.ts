@@ -77,8 +77,10 @@ for (const size of [
     await openLesson(page, 'mcs-foundations-signals')
     await expect(page.getByText('Clinical perfusion evaluation', { exact: true })).toBeVisible()
     await page.locator('[data-run-details] summary').click()
-    await expect(page.locator('[data-run-details] p')).toContainText(/Example number \d+/)
-    await expect(page.locator('[data-run-details] p')).toContainText('not a clinical value')
+    await expect(page.locator('[data-run-details] p')).toContainText(
+      'The simulated clock moves only while display playback runs',
+    )
+    await expect(page.locator('[data-run-details]')).not.toContainText(/Example number|seed/i)
     await capture(page, 'clinical-perfusion-and-identity')
     await reach(page, '[data-task-readings]')
     await expect(page.locator('[data-task-readings]')).toContainText(
@@ -118,7 +120,7 @@ for (const size of [
     await page.getByText('Captured configurations and patient identity', { exact: true }).click()
     for (const id of ['iabp', 'impella', 'lvad']) {
       await expect(page.locator(`[data-comparison-device="${id}"] small`)).toContainText(
-        /Example number \d+ · captured at/,
+        /Captured at \d+\.\d\d s/,
       )
       await expect(page.locator(`[data-comparison-device="${id}"] small`)).toContainText(
         'observation 8 s · patient',
@@ -128,8 +130,7 @@ for (const size of [
     await openLesson(page, 'impella-unloading-placement')
     await reach(page, '[data-unloading-comparison]')
     for (const card of await page.locator('[data-unloading-condition]').all()) {
-      await card.getByText('Starting state and model assumptions', { exact: true }).click()
-      await expect(card.getByText(/Example number 417/)).toBeVisible()
+      await card.getByText('Starting state', { exact: true }).click()
       await expect(card.getByText(/eight simulated seconds of observation/)).toBeVisible()
     }
     await capture(page, 'provided-example-identities')

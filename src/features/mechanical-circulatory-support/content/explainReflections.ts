@@ -1,4 +1,5 @@
 import { mcsLessons } from './lessons'
+import { MCS_NUMBERS } from './teachingNumbers'
 
 /**
  * The Explain step's question, with somewhere for it to land (F11).
@@ -32,23 +33,21 @@ export interface McsExplainReflection {
   readonly drawnFrom: string
 }
 
-export const MCS_REFLECTION_REVIEW_STATUS = 'Draft teaching copy · not yet clinically reviewed'
-
 export const MCS_EXPLAIN_REFLECTIONS: readonly McsExplainReflection[] = Object.freeze([
   {
     sectionId: 'mcs-foundations-signals',
     workedResponse: [
       'An organ-level finding: mentation, urine output, skin perfusion and capillary refill, and the lactate trend over time.',
-      'None of them is on this monitor, and this simulation does not model them. The pressure, the three flow lines and the venous saturation each answered a different question; whether the circulation is adequate is answered at the bedside, and over hours rather than seconds.',
+      'None of them is on the monitor. Pressure, the three flow lines and venous saturation each answered a different question; whether the circulation is adequate is answered at the bedside, over hours.',
     ],
-    drawnFrom: 'This section’s organ-response level and its "does not establish" statement.',
+    drawnFrom: 'This section’s organ-response level and its “what to do with it” line.',
   },
   {
     sectionId: 'mcs-foundations-mechanisms',
     workedResponse: [
-      'Effective systemic flow would not have changed. In this model, effective systemic flow is the concurrent native forward flow plus the left-pump flow, less any represented regurgitant recirculation, so an equal rise and fall cancel.',
-      'The pump would carry more of the total while the native forward contribution fell. That arithmetic alone does not establish ventricular size, pulse pressure or unloading; those require their own modeled readings.',
-      'In the comparison you can capture in this section the fall is smaller than the rise, which is why effective flow goes up — by less than the pump number. The arithmetic is printed under the comparison table on the Observe step.',
+      'Effective systemic flow would not have changed. It is native forward flow plus left-pump flow, less any regurgitant return, so an equal rise and fall cancel.',
+      'The pump would carry more of the total while the native ventricle carried less. The ventricle is unloaded; the body receives the same flow.',
+      'In the comparison you capture in this section the fall is smaller than the rise, so effective flow goes up, by less than the pump number. The arithmetic is printed under the comparison table on the Observe step.',
     ],
     drawnFrom: 'This section’s flow-level explanation and the captured three-device comparison.',
   },
@@ -56,67 +55,67 @@ export const MCS_EXPLAIN_REFLECTIONS: readonly McsExplainReflection[] = Object.f
     sectionId: 'iabp-timing-triggering',
     workedResponse: [
       'Correct timing is a precondition, not an outcome. A taller diastolic peak is a finding at the pressure level.',
-      'Next come the things the trace cannot say: how much effective systemic flow actually moved, the filling pressures, which this model represents, plus bedside mentation, urine output, skin perfusion and the lactate trend over the next hours, which it does not represent.',
-      'A balloon can be correctly timed and still not be enough; this section does not establish that it is sufficient for this patient.',
+      'Next, what the trace cannot say: how much effective systemic flow moved, the filling pressures, and at the bedside mentation, urine output, skin perfusion and the lactate trend over the next hours.',
+      'A balloon can be correctly timed and still not be enough. If output is still low, look for what limits it: the ventricle, the filling, the right heart.',
     ],
-    drawnFrom: 'This section’s organ-response level and its "does not establish" statement.',
+    drawnFrom: 'This section’s organ-response level and its “what to do with it” line.',
   },
   {
     sectionId: 'iabp-efficacy-limits',
     workedResponse: [
       'Lead with the limiting problem rather than the device: the balloon is timed correctly and its display has not changed, while effective flow and mean pressure are falling with a rising right atrial pressure and a falling pulmonary pulsatility ratio.',
       'That says the limitation has moved upstream of the left heart, and that more timing adjustment is not the answer.',
-      'Which mechanism should replace or join this one is not established here; that belongs to the responsible team.',
+      'First get an echo and treat the right heart: an inotrope, a pulmonary vasodilator, right-sided support. Then call the shock team with the limiting problem named.',
     ],
-    drawnFrom: 'This section’s explanation, what it establishes, and its transfer patient.',
+    drawnFrom: 'This section’s explanation, what it shows, and its transfer patient.',
   },
   {
     sectionId: 'impella-unloading-placement',
     workedResponse: [
       'In the patient: filling and the pressure at the outlet — wedge pressure, ventricular size and mean arterial pressure.',
-      'In the position: imaging and the placement signal. This section’s placement state is a teaching selector; it does not establish where an inlet actually is.',
-      'In the device: the performance level has not changed, and the displayed flow is an estimate — compare it with native and effective flow rather than reading it alone.',
-      'Raising the level because the displayed flow fell is the misreading this section names.',
+      'In the position: echo and the placement signal.',
+      'In the device: the P-level has not changed, and the displayed flow is an estimate. Compare it with the mean flow expected at that P-level and with native and effective flow.',
+      'Do not raise the P-level because the displayed flow fell. Find the cause first.',
     ],
-    drawnFrom:
-      'This section’s "establishes" and "does not establish" statements and its flow note.',
+    drawnFrom: 'This section’s chain from position to delivery and its flow note.',
   },
   {
     sectionId: 'impella-suction-purge-rv',
     workedResponse: [
       'Whether the left ventricle is filling and the left-sided suction pattern clears; what right atrial pressure does; what the effective systemic line does; and, at the bedside, perfusion over hours.',
       'Not the two pump numbers added together: they describe one stream measured twice.',
-      'And not the pulmonary pulsatility ratio on its own. In this model it barely moves with right-sided support and must not be used alone to judge it.',
+      'Use right atrial pressure and left-sided filling rather than the pulmonary pulsatility ratio, which barely moves in this simulator when right-sided support starts.',
     ],
-    drawnFrom: 'This section’s explanation and its "does not establish" statement.',
+    drawnFrom: 'This section’s explanation and its “what to do with it” line.',
   },
   {
     sectionId: 'lvad-parameters-assessment',
     workedResponse: [
-      'What the pump is ejecting against and what is filling it: mean arterial pressure and systemic resistance, the filling pressures, and echocardiography including aortic-valve opening — together with bedside perfusion.',
-      'The displayed flow is an estimate whose value depends on loading, so it is read beside those, not instead of them. A rising cardiac power is a pressure multiplied by a flow, not proof that perfusion improved.',
-      'What to do about it is not established here: blood-pressure management and any speed change belong to the prescribing team.',
+      'Read it with the pulsatility index and the mean arterial pressure. Low flow with a low index is an underfilled ventricle: give volume, look for bleeding, get an echo. Low flow with a high index and a high mean pressure is afterload.',
+      `If the blood pressure is the cause, lower mean arterial pressure to ${MCS_NUMBERS.value('lvad-map-goal')} with afterload reduction. Flow rises as the pressure falls. Do not raise the speed against it.`,
+      'A rising cardiac power is a pressure multiplied by a flow, not proof that perfusion improved.',
     ],
-    drawnFrom: 'This section’s controller tour, its transfer patient and its limits.',
+    drawnFrom: 'This section’s controller tour and its transfer patient.',
   },
   {
     sectionId: 'lvad-alarms-emergencies',
     workedResponse: [
-      'Preserve the verified power path. Do not disconnect a power source to see whether an alarm clears.',
-      'Examine the patient’s perfusion at the bedside, the power sources and the controller trend; focused imaging is part of what the responsible team reconciles.',
-      'Call the mechanical-support team now rather than waiting for the numbers to move.',
-      'This is not a diagnosis and not a troubleshooting instruction. The unchanged flow display is this generic model’s behaviour: on a HeartMate 3 the displayed flow is calculated from speed, power and hematocrit, and what that controller would show is not reproduced here.',
+      'Keep power connected. Do not disconnect a power source to see whether an alarm clears.',
+      'Send LDH and plasma free hemoglobin, and check the anticoagulation.',
+      'Get an echo.',
+      'Call the LVAD team and surgeon.',
+      'The displayed flow is falsely high: it is calculated from power, and thrombus raises power. Believe the pulsatility index, the mean pressure and the patient.',
     ],
-    drawnFrom: 'This section’s organ-response level, its transfer patient and its model limit.',
+    drawnFrom: 'This section’s explanation and its transfer patient.',
   },
   {
     sectionId: 'mcs-device-selection-integration',
     workedResponse: [
       'A different filling-pressure picture: a right atrial pressure that sits well below the wedge pressure instead of rising to meet it, a pump that is not in suction, and an effective systemic flow that rises by about as much as the displayed pump flow when support is added.',
-      'That would show a larger modeled gain in effective flow; it would not establish adequate bedside perfusion or a calibrated diagnosis from filling pressures.',
-      'Not the pulmonary pulsatility ratio alone: in this model it moves only weakly with right-sided support. And naming the limiting side is not choosing a device — that stays a team decision.',
+      'Then left-sided support would be the right mechanism, and the bedside would confirm it over the next hours.',
+      'Here the right heart is the limit, so the first moves are to turn the P-level down out of suction, get an echo and treat the right ventricle.',
     ],
-    drawnFrom: 'This section’s explanation and its "does not establish" statement.',
+    drawnFrom: 'This section’s explanation and its “what to do with it” line.',
   },
 ])
 
