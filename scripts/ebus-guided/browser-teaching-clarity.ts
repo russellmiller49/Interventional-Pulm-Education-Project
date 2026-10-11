@@ -166,8 +166,8 @@ async function lessonOne(page: Page) {
     'Recall links three open refreshers in new tabs',
     hrefs.length === 3 &&
       hrefs.every((h) => h.target === '_blank') &&
-      hrefs[0].href!.endsWith('/learn/anatomy/branch-tracing/learn?lesson=orientation') &&
-      hrefs[0].text === 'Relate CT to the parent airway view (begins with standard axial CT)',
+      hrefs[0].href!.endsWith('/learn/anatomy/branch-tracing/learn?lesson=carina-orientation') &&
+      hrefs[0].text === 'Why the CT looks backwards: match the axial CT to the scope at the carina',
     hrefs,
   )
   const terms = await page.locator('[data-glossary] summary').allTextContents()
