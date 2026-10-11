@@ -15,6 +15,8 @@ export const locateLessons: Lesson[] = [
     paragraphs: [
       'Read CT in a consistent orientation, then use adjacent planes to establish the craniocaudal level and the relationship to the airway and vessels. An axial slice alone can obscure a station boundary.',
       'The IASLC map names compartments. A node’s station is determined by where it lies, not by its size, PET uptake, or sonographic appearance. Record the station before collecting and labeling a specimen.',
+      'In this model the target stays visible over a wide rotation range because the modeled node is large and close to the airway. Do not read the range as the rotation a real node tolerates.',
+      'Measurements in this simulator are shown in millimeters for teaching and relative comparison. They reflect the model geometry and should not be interpreted as validated measurements of a real patient or exact lymph-node dimensions.',
       'Review the clinical CT reference before the lab. In the linked workbench, Model section samples the same label volume as the simulated ultrasound; it is not CT and is not registered to the separate clinical reference. Use it to relate the main carina to the scope plane.',
     ],
     checklist: [
@@ -96,7 +98,9 @@ export const locateLessons: Lesson[] = [
       'Keep anatomical source and specimen identity linked.',
     ],
     sources: ['atlas', 'iaslc9'],
-    boundary,
+    boundary:
+      boundary +
+      ' Measurements in this simulator are shown in millimeters for teaching and relative comparison. They reflect the model geometry and should not be interpreted as validated measurements of a real patient or exact lymph-node dimensions.',
   },
   {
     id: 'station-seven',

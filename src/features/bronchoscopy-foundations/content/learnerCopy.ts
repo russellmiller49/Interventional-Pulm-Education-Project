@@ -13,7 +13,37 @@ import { registerFindings, type RegisterExemption, type RegisterSurface } from '
  *    specific block with a stated reason — concentration notation is the one expected use.
  * 2. The transcript review register (`registerFindings`): phrases the adopted treatments refuse.
  * 3. Digits, where a caller refuses them: titles and short titles carry no counters or codes.
+ *
+ * The shared gate also refuses a handful of words this course needs in their clinical sense
+ * (`CLINICAL_VOCABULARY`). Those pass here, for every section; the shared gate itself is unchanged.
  */
+
+/**
+ * Words the shared gate reads as examination or software vocabulary and bronchoscopy uses
+ * clinically, each with the use that is meant. The scoring vocabulary proper (score, points, exam,
+ * quiz, mastery, certified) stays refused.
+ */
+export const CLINICAL_VOCABULARY: Readonly<Record<string, string>> = {
+  '%': 'Concentrations, saturations and returns, stated as the guideline states them.',
+  percent: 'Percent obstruction and percent return.',
+  test: 'A laboratory or device test: a leak test, a coagulation test.',
+  grade: 'A bleeding grade, or the grade of a recommendation.',
+  graded: 'Bleeding graded on a scale.',
+  route: 'The nasal and the oral route.',
+  pass: 'Passing the scope or an instrument.',
+  passed: 'An instrument passed through the channel.',
+  fail: 'A device check that can fail.',
+  failed: 'A failed pre-use check.',
+}
+
+/** The reason recorded when an item uses clinical vocabulary the shared schema would flag. */
+export function clinicalVocabularyReason(text: string): string | null {
+  const used = flaggedLearnerCopyTerms(text).filter((term) => term in CLINICAL_VOCABULARY)
+  return used.length > 0
+    ? `Clinical vocabulary: ${used.map((term) => `${term} (${CLINICAL_VOCABULARY[term]})`).join(' ')}`
+    : null
+}
+
 export interface CopyExemption {
   readonly term: string
   readonly reason: string
@@ -35,7 +65,9 @@ export function bronchLearnerCopyErrors(
   const text = value.trim()
   if (text.length === 0) return [`${where} is empty.`]
   const exempt = new Set((options.copyExemptions ?? []).map((exemption) => exemption.term))
-  const flagged = flaggedLearnerCopyTerms(text).filter((term) => !exempt.has(term))
+  const flagged = flaggedLearnerCopyTerms(text).filter(
+    (term) => !exempt.has(term) && !(term in CLINICAL_VOCABULARY),
+  )
   if (flagged.length > 0) {
     errors.push(`${where} uses vocabulary the learner copy gate refuses: ${flagged.join(', ')}.`)
   }

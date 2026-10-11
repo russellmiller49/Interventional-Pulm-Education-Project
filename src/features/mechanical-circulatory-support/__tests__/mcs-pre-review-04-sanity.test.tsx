@@ -16,6 +16,7 @@ jest.mock('../components/ImpellaVariantPreview', () =>
 import { McsStageHost } from '../components/stage/McsStageHost'
 import { McsSourcesPanel } from '../components/McsSourcesPanel'
 import { McsCaseWorkflow } from '../components/McsCaseWorkflow'
+import { McsMonitor } from '../components/McsMonitor'
 import { mcsActionDisplayName, mcsHasActionDisplayName } from '../content/actionDisplayNames'
 import { mcsCasePredictionReasoning } from '../content/casePredictionReasoning'
 import { mcsScenarioById } from '../content/scenarios'
@@ -124,6 +125,32 @@ it('does not call CAP-LVAD-01 power unchanged when constrained filling lowers de
   expect(mcsCasePredictionReasoning('CAP-LVAD-01', 'constrained-filling')).not.toMatch(
     /power (?:is |are )?unchanged|speed and power are unchanged/,
   )
+})
+
+it('renders CAP-LVAD-01 power connection separately from its lower modeled pump watts', () => {
+  const scenario = mcsScenarioById.get('CAP-LVAD-01')!
+  const state = advanceMcsSimulation(createInitialMcsState('assess', 'lvad', scenario, 417), 8)
+  const reference = advanceMcsSimulation(createInitialMcsState('assess', 'lvad', null, 417), 8)
+  const { container } = render(
+    <McsCaseWorkflow
+      state={state}
+      dispatch={jest.fn()}
+      observations={<McsMonitor state={state} />}
+    />,
+  )
+
+  expect(screen.getByText('Patient problem').nextElementSibling).toHaveTextContent(
+    'A continuous-flow LVAD patient develops low flow with rising and converging filling pressures after a bedside procedure; pump speed is unchanged and the power path remains connected.',
+  )
+  expect(state.device).toEqual(reference.device)
+  expect(state.device.kind === 'lvad' && state.device.powerConnected).toBe(true)
+  expect(state.metrics.pumpPowerW).toBeLessThan(reference.metrics.pumpPowerW!)
+  expect(
+    container.querySelector('[data-monitor-target="monitor:power-pulsatility"]'),
+  ).toHaveTextContent('POWER / PI3.7 / 5.2W / estimate')
+  expect(
+    screen.getByRole('radio', { name: 'Pericardial constraint limits biventricular filling' }),
+  ).toBeInTheDocument()
 })
 
 it.each(['future:control', 'toString', 'constructor', '__proto__'])(
