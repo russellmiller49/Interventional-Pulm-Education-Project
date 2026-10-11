@@ -120,6 +120,8 @@ describe('source identity is read from a validated transcript record (A8)', () =
       S3: 'Faculty manual',
       U1: 'Guideline or official guidance',
       U2: 'Guideline or official guidance',
+      U22: 'Textbook',
+      U23: 'Textbook',
     }
     for (const [id, kindLabel] of Object.entries(expected)) {
       const source = SOURCE_BY_ID.get(id)!

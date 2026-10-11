@@ -35,6 +35,11 @@ const SPASM: readonly SourceRef[] = [
 const PNEUMOTHORAX: readonly SourceRef[] = [
   { sourceId: 'S1', location: { kind: 'pdf-pages', from: 141, to: 143 } },
   { sourceId: 'S2', location: { kind: 'pdf-pages', from: 29 } },
+  {
+    sourceId: 'U23',
+    location: { kind: 'section', label: 'Volume I, pneumothorax; volume II, the primary survey' },
+  },
+  { sourceId: 'U22', location: { kind: 'section', label: 'Chapter 53, pneumothorax' } },
 ]
 const TOXICITY: readonly SourceRef[] = [
   { sourceId: 'S1', location: { kind: 'pdf-pages', from: 73, to: 74 } },
@@ -266,14 +271,15 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'first-moves',
       heading: 'First moves: pneumothorax',
-      body: 'Suspect it after a transbronchial biopsy: sharp chest pain, breathlessness and a falling saturation.',
+      body: 'After a transbronchial biopsy: sharp chest pain, breathlessness and a falling saturation.',
       steps: [
         'Stop sampling and take the scope out.',
         'Give high-flow oxygen.',
-        'Stable: confirm with ultrasound or a chest radiograph.',
-        'A low pressure with a fast heart rate is tension. Decompress the chest before any imaging.',
+        'Stable: confirm with ultrasound or radiograph.',
+        'Low pressure, fast pulse: tension. Decompress before imaging.',
+        'Needle or finger, fifth intercostal space in the mid-axillary line, or second in the midclavicular.',
       ],
-      callForHelp: 'at once for tension, and for any chest drain.',
+      callForHelp: 'at once for tension and the drain.',
       claimClass: 'synthesis',
       sourceRefs: PNEUMOTHORAX,
     },
@@ -306,7 +312,7 @@ export const section: BronchSectionDefinition = {
         'Give no more of the topical agent.',
         'Give high-flow oxygen.',
         'Send blood for co-oximetry. It looks chocolate brown.',
-        'Symptoms, or a high level: give methylene blue.',
+        `Methemoglobin ${num('methb-treat-symptomatic')} with symptoms, or ${num('methb-treat-asymptomatic')} without: give methylene blue.`,
       ],
       callForHelp: 'when oxygen does not lift the saturation.',
       claimClass: 'synthesis',

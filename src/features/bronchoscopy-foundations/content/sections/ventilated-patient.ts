@@ -33,6 +33,12 @@ const MODES: readonly SourceRef[] = [
   { sourceId: 'S1', location: { kind: 'pdf-pages', from: 155, to: 158 } },
   { sourceId: 'U8', location: { kind: 'section', label: 'ventilation modes' } },
 ]
+const TRAPPED_GAS: readonly SourceRef[] = [
+  {
+    sourceId: 'U22',
+    location: { kind: 'section', label: 'Chapter 31, intrinsic and external PEEP' },
+  },
+]
 const LECTURE_CASE: readonly SourceRef[] = [
   { sourceId: 'S1', location: { kind: 'pdf-pages', from: 155, to: 158 } },
   { sourceId: 'T15', location: { kind: 'time-span', start: '00:18:49', end: '00:22:00' } },
@@ -202,12 +208,12 @@ export const section: BronchSectionDefinition = {
       pointsLabel: 'What each pattern means',
       points: [
         'Peak up, plateau unchanged: the scope’s resistance. Expected.',
-        'Peak and plateau both up: the lung has changed. Think pneumothorax, a plugged lobe, or a tube in one bronchus.',
+        'Peak and plateau both up: more than the scope. Think trapped gas, pneumothorax, a plugged lobe, or a tube in one bronchus.',
         'Pressure control: the pressure reads the same and the delivered volume falls, with no alarm.',
-        'Auto-PEEP: the breath out does not finish before the next breath in. Gas stacks up and the blood pressure falls.',
+        'Auto-PEEP: the breath out does not finish before the next breath in. Gas stacks up, the plateau rises and the blood pressure falls. A longer breath out, or a moment off the circuit, releases it.',
       ],
       claimClass: 'synthesis',
-      sourceRefs: MODES,
+      sourceRefs: [...MODES, ...TRAPPED_GAS],
       reviewItemIds: ['R29'],
     },
     {
@@ -232,7 +238,7 @@ export const section: BronchSectionDefinition = {
       kind: 'pattern',
       role: 'mechanism',
       heading: 'Suction empties the lung',
-      body: 'Suction takes gas as well as secretions, and the lung collapses a little with each pass. Keep passes short, with a few breaths between.\n\nAfterwards, recruit the lung with the therapist. Then return the oxygen, tidal volume and pressure limit to baseline.',
+      body: 'Suction takes gas as well as secretions, and the lung collapses a little with each pass. Keep passes short, with a few breaths between.\n\nAfterwards, listen to both sides, then recruit with the therapist. Then return the oxygen, tidal volume and pressure limit to baseline.',
       claimClass: 'synthesis',
       sourceRefs: VENTILATOR,
     },
@@ -490,7 +496,7 @@ export const section: BronchSectionDefinition = {
           id: 'afterwards',
           time: '12 minutes in, scope out',
           situation:
-            'He recovered with the scope out, and two short passes cleared the plug. The scope is now out for good. Plateau pressure is 24 cmH₂O, up from 19, and he is still on full oxygen with the raised limit.',
+            'He recovered with the scope out, and two short passes cleared the plug. The scope is now out for good. Plateau pressure is 24 cmH₂O, up from 19, and he is still on full oxygen with the raised limit. Breath sounds are equal on both sides.',
           readings: ventilator(
             ['30', 'steady'],
             ['450', 'steady'],
@@ -503,7 +509,7 @@ export const section: BronchSectionDefinition = {
               id: 'a',
               label: 'Recruit the lung, then return each setting to baseline',
               rationale:
-                'Suction has collapsed lung: the plateau is higher and the saturation lower. Reopen it, then bring the settings back.',
+                'Both sides move air, so the higher plateau is lung that suction collapsed, not a pneumothorax. Reopen it, then bring the settings back.',
               plausibility: 'best',
             },
             {
