@@ -4,7 +4,8 @@ import { useState } from 'react'
 import styles from './bronch-stage.module.css'
 
 /** A labeled prerequisite reference, never an identification test or completion event. */
-export function InstrumentOrientation() {
+/** `plain`: a rewritten section shows the picture with its source and no note about review. */
+export function InstrumentOrientation({ plain = false }: { readonly plain?: boolean } = {}) {
   const [detail, setDetail] = useState(false)
   return (
     <section
@@ -148,8 +149,9 @@ export function InstrumentOrientation() {
         </>
       )}
       <p className={styles.figureCaption}>
-        Existing teaching photograph and authored diagram · clinical/media review pending. Source:
-        S1, PDF 89–97; hand-position qualifications: S3, PDF 80.
+        {plain
+          ? 'Source: S1, PDF 89–97; S3, PDF 80.'
+          : 'Existing teaching photograph and authored diagram · clinical/media review pending. Source: S1, PDF 89–97; hand-position qualifications: S3, PDF 80.'}
       </p>
     </section>
   )

@@ -1,7 +1,7 @@
 /** @jest-environment node */
-import { section as branchEntry } from '../content/sections/branch-entry'
+import { carinaTasks as branchEntry } from '../test-support/carinaTasks'
 import { section as larynxAndEntry } from '../content/sections/larynx-and-entry'
-import { section as protectedAccessories } from '../content/sections/protected-accessories'
+import { section as protectedAccessories } from '../content/sections/biopsy-and-specimens'
 import { section as systematicSurvey } from '../content/sections/systematic-survey'
 import { section as viewLoss } from '../content/sections/view-loss'
 import { COURSE_FLOWS } from '../content/courseFlow'
@@ -46,7 +46,7 @@ const act = (section: typeof branchEntry) => {
 
 describe('the protected exchange demonstration reaches the state it narrates (A1)', () => {
   const view = act(protectedAccessories).view
-  const moves = COURSE_FLOWS['protected-accessories']!.find(
+  const moves = COURSE_FLOWS['biopsy-and-specimens']!.find(
     (chunk) => chunk.demonstration,
   )!.demonstration!
 
@@ -134,24 +134,20 @@ describe('the scripted scene’s clock reaches an authored step; nothing else sc
   const larynxView = act(larynxAndEntry).view
   const plainView = act(viewLoss).view
 
-  function stepWithView(
-    sectionId: 'branch-entry' | 'larynx-and-entry' | 'view-loss',
-    view: ScopeViewSpec,
-  ) {
+  function stepWithView(sectionId: 'larynx-and-entry' | 'view-loss', view: ScopeViewSpec) {
     const lesson = bronchStageLesson(sectionId)
     const step = lesson.steps.find(
       (candidate) =>
         (candidate.interaction.kind === 'observe' || candidate.interaction.kind === 'scope-task') &&
-        candidate.interaction.view === view,
+        // The registry hands out a section with its register numbers resolved, so a view is
+        // matched by what it says, not by which object it is.
+        JSON.stringify(candidate.interaction.view) === JSON.stringify(view),
     )
     if (!step) throw new Error(`${sectionId} has no step for that view`)
     return { lesson, step }
   }
 
-  function session(
-    sectionId: 'branch-entry' | 'larynx-and-entry' | 'view-loss',
-    view: ScopeViewSpec,
-  ) {
+  function session(sectionId: 'larynx-and-entry' | 'view-loss', view: ScopeViewSpec) {
     const { lesson, step } = stepWithView(sectionId, view)
     const reduce = bronchStageReducer(lesson)
     const scopeCase = teachingCase()
@@ -210,7 +206,7 @@ describe('the scripted scene’s clock reaches an authored step; nothing else sc
   })
 
   it('finishes the authored hold once the learner has acknowledged and captured', () => {
-    const run = session('branch-entry', holdView)
+    const run = session('larynx-and-entry', holdView)
     run.send({ type: 'acknowledge' }, 'pointer')
     run.send({ type: 'capture' }, 'pointer')
     let state = run.state
@@ -223,7 +219,7 @@ describe('the scripted scene’s clock reaches an authored step; nothing else sc
   })
 
   it('finishes the hold with the image taken before the acknowledgment too', () => {
-    const run = session('branch-entry', holdView)
+    const run = session('larynx-and-entry', holdView)
     run.send({ type: 'capture' }, 'pointer')
     let state = run.state
     for (let i = 0; i < 40 && !state.events.includes('hold-completed'); i += 1)
@@ -235,7 +231,7 @@ describe('the scripted scene’s clock reaches an authored step; nothing else sc
   })
 
   it('refuses every other scripted command on an authored step', () => {
-    const run = session('branch-entry', holdView)
+    const run = session('larynx-and-entry', holdView)
     const before = run.state
     for (const command of [
       { type: 'advance', mm: 3 },
@@ -271,7 +267,7 @@ describe('the scripted scene’s clock reaches an authored step; nothing else sc
   })
 
   it('shows the hold from the clock its goal reads', () => {
-    const run = session('branch-entry', holdView)
+    const run = session('larynx-and-entry', holdView)
     expect(holdView.readouts).toContain('holdRemaining')
     expect(formatScopeMetric('holdRemaining', run.state)).toContain(`of ${HOLD_SECONDS}`)
     for (let i = 0; i < 4; i += 1) run.send({ type: 'tick', seconds: 1 }, 'scripted')
@@ -376,16 +372,18 @@ describe('a met goal says what kind of claim it is (A4, A5)', () => {
     // not a reading of the image, and the label may not imply one.
     expect(entry).not.toMatch(/without a clear view/i)
     expect(entry).toMatch(/while the model recorded a lost view/i)
-    expect(labels(act(viewLoss).observe!.goals)).not.toMatch(/usable view/i)
+    const lens = viewLoss.moreActs!.lens
+    if (lens.kind !== 'scope-lab') throw new Error('the lens task is a scope task')
+    expect(labels(lens.goals)).not.toMatch(/usable view/i)
     expect(labels(act(branchEntry).observe!.goals)).not.toMatch(/no change in depth/i)
   })
 
   it('keeps every goal reachable and unmet at the start', () => {
     for (const [sectionId, section] of [
-      ['branch-entry', branchEntry],
+      ['larynx-and-entry', branchEntry],
       ['view-loss', viewLoss],
       ['larynx-and-entry', larynxAndEntry],
-      ['protected-accessories', protectedAccessories],
+      ['biopsy-and-specimens', protectedAccessories],
     ] as const) {
       const lab = act(section)
       for (const goals of [lab.goals, lab.observe?.goals ?? []]) {

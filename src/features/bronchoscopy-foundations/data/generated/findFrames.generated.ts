@@ -191,4 +191,306 @@ export const FIND_FRAMES = {
       },
     ],
   },
+  'larynx-inlet': {
+    src: '/bronchoscopy-foundations/find-frames/larynx-inlet.jpg',
+    sourceFrame: 60,
+    markers: [
+      {
+        id: 'vocal-cord-image-left',
+        name: 'True vocal cord, left of the image',
+        points: [
+          626, 690, 632, 663, 626, 637, 616, 530, 626, 505, 662, 458, 685, 442, 685, 408, 701, 385,
+          703, 359, 699, 332, 673, 326, 619, 334, 592, 341, 569, 355, 530, 396, 521, 423, 510, 476,
+          525, 532, 575, 633, 591, 656, 612, 674,
+        ],
+      },
+      {
+        id: 'vocal-cord-image-right',
+        name: 'True vocal cord, right of the image',
+        points: [
+          723, 343, 805, 350, 835, 362, 858, 380, 874, 405, 883, 432, 912, 485, 921, 566, 917, 592,
+          896, 644, 890, 671, 876, 694, 826, 716, 812, 714, 723, 475, 709, 409, 709, 345,
+        ],
+      },
+      {
+        id: 'aryepiglottic-fold-image-left',
+        name: 'Aryepiglottic fold, left of the image',
+        points: [
+          28, 192, 61, 289, 90, 406, 108, 555, 142, 518, 155, 491, 173, 465, 184, 455, 212, 438,
+          245, 428, 272, 414, 298, 405, 273, 392, 243, 358, 193, 321, 148, 280, 134, 241, 113, 201,
+          109, 170, 93, 127,
+        ],
+      },
+      {
+        id: 'aryepiglottic-fold-image-right',
+        name: 'Aryepiglottic fold, right of the image',
+        points: [1345, 234, 1232, 401, 1191, 450, 1253, 466, 1344, 530],
+      },
+      {
+        id: 'corniculate-tubercle-image-left',
+        name: 'Corniculate tubercle, left of the image',
+        points: [
+          529, 983, 553, 999, 572, 1020, 597, 1031, 624, 1034, 651, 1033, 670, 1013, 681, 986, 686,
+          933, 676, 906, 651, 895, 624, 899, 594, 911, 570, 927, 547, 945, 529, 967,
+        ],
+      },
+      {
+        id: 'corniculate-tubercle-image-right',
+        name: 'Corniculate tubercle, right of the image',
+        points: [
+          1018, 963, 1012, 930, 998, 905, 973, 895, 918, 895, 891, 905, 856, 948, 857, 975, 872,
+          998, 891, 1020, 918, 1023, 945, 1016, 993, 987, 1018, 968,
+        ],
+      },
+      {
+        id: 'cuneiform-tubercle-image-left',
+        name: 'Cuneiform tubercle, left of the image',
+        points: [
+          182, 471, 156, 510, 105, 565, 106, 646, 137, 745, 213, 806, 326, 815, 463, 785, 530, 722,
+          557, 683, 532, 575, 467, 470, 403, 423, 304, 408,
+        ],
+      },
+      {
+        id: 'cuneiform-tubercle-image-right',
+        name: 'Cuneiform tubercle, right of the image',
+        points: [
+          1109, 462, 1026, 522, 999, 576, 996, 635, 1023, 675, 1139, 725, 1270, 772, 1333, 722,
+          1347, 692, 1347, 564, 1343, 552, 1267, 495, 1206, 471,
+        ],
+      },
+    ],
+  },
+  'larynx-folds': {
+    src: '/bronchoscopy-foundations/find-frames/larynx-folds.jpg',
+    sourceFrame: 136,
+    markers: [
+      {
+        id: 'vocal-cord-image-left',
+        name: 'True vocal cord, left of the image',
+        points: [
+          570, 793, 575, 766, 560, 638, 568, 612, 602, 566, 621, 553, 624, 521, 641, 499, 643, 471,
+          640, 449, 622, 441, 578, 436, 551, 441, 527, 453, 491, 487, 450, 583, 442, 632, 447, 685,
+          470, 738, 548, 856, 564, 847, 571, 805,
+        ],
+      },
+      {
+        id: 'vocal-cord-image-right',
+        name: 'True vocal cord, right of the image',
+        points: [
+          707, 439, 784, 446, 814, 456, 838, 473, 856, 496, 891, 571, 896, 597, 911, 620, 923, 696,
+          893, 854, 876, 876, 834, 897, 813, 900, 790, 880, 763, 775, 697, 619, 695, 573, 684, 520,
+          679, 457, 695, 442,
+        ],
+      },
+      {
+        id: 'aryepiglottic-fold-image-left',
+        name: 'Aryepiglottic fold, left of the image',
+        points: [
+          -4, 358, 0, 583, -4, 660, 13, 642, 17, 648, 59, 591, 81, 570, 124, 548, 167, 531, 169,
+          519, 174, 517, 43, 404, 30, 379, 7, 315, -1, 285, -8, 332,
+        ],
+      },
+      {
+        id: 'aryepiglottic-fold-image-right',
+        name: 'Aryepiglottic fold, right of the image',
+        points: [1350, 377, 1252, 526, 1211, 574, 1272, 591, 1326, 628, 1351, 648],
+      },
+      {
+        id: 'cuneiform-tubercle-image-left',
+        name: 'Cuneiform tubercle, left of the image',
+        points: [
+          61, 599, 34, 638, -3, 680, -2, 773, 16, 873, 92, 935, 205, 944, 342, 913, 409, 850, 436,
+          811, 411, 703, 346, 598, 282, 551, 183, 537,
+        ],
+      },
+      {
+        id: 'cuneiform-tubercle-image-right',
+        name: 'Cuneiform tubercle, right of the image',
+        points: [
+          1129, 590, 1041, 640, 1014, 693, 1011, 753, 1037, 792, 1144, 857, 1301, 913, 1348, 856,
+          1352, 663, 1350, 658, 1282, 612, 1221, 589,
+        ],
+      },
+    ],
+  },
+  'larynx-cords': {
+    src: '/bronchoscopy-foundations/find-frames/larynx-cords.jpg',
+    sourceFrame: 170,
+    markers: [
+      {
+        id: 'vocal-cord-image-left',
+        name: 'True vocal cord, left of the image',
+        points: [
+          615, 606, 649, 576, 619, 461, 591, 466, 430, 585, 347, 732, 332, 800, 343, 854, 400, 906,
+          421, 973, 463, 1008, 476, 1054, 495, 1063, 544, 1047, 569, 999, 572, 777, 614, 624,
+        ],
+      },
+      {
+        id: 'vocal-cord-image-right',
+        name: 'True vocal cord, right of the image',
+        points: [
+          797, 495, 879, 502, 909, 515, 1042, 637, 1099, 714, 1089, 779, 1103, 804, 1108, 860, 1091,
+          943, 1065, 995, 988, 1079, 913, 1079, 893, 1055, 883, 1006, 866, 970, 832, 933, 773, 821,
+          736, 726, 711, 606, 706, 514, 711, 484, 795, 477,
+        ],
+      },
+      {
+        id: 'cuneiform-tubercle',
+        name: 'Cuneiform tubercle',
+        points: [-5, 852, 171, 1080, 396, 1080, 356, 937, 300, 857, 133, 713, 41, 667, -2, 652],
+      },
+    ],
+  },
+  'left-main-end': {
+    src: '/bronchoscopy-foundations/find-frames/left-main-end.jpg',
+    sourceFrame: 1410,
+    markers: [
+      {
+        id: 'lul',
+        name: 'Left upper lobe bronchus',
+        points: [
+          680, 394, 741, 364, 836, 359, 908, 404, 961, 481, 955, 605, 931, 730, 913, 755, 822, 810,
+          717, 812, 663, 792, 599, 739, 557, 680, 535, 613, 533, 560, 563, 496, 599, 455, 639, 421,
+        ],
+      },
+      {
+        id: 'lll',
+        name: 'Left lower lobe bronchus',
+        points: [
+          394, 805, 455, 803, 496, 820, 538, 853, 552, 879, 548, 876, 584, 920, 606, 1002, 599,
+          1055, 544, 1059, 542, 1065, 419, 1062, 369, 1031, 350, 1007, 306, 923, 296, 877, 301, 851,
+          322, 828, 357, 805, 382, 801,
+        ],
+      },
+    ],
+  },
+  'left-upper-lobe': {
+    src: '/bronchoscopy-foundations/find-frames/left-upper-lobe.jpg',
+    sourceFrame: 1434,
+    markers: [
+      {
+        id: 'lul-upper',
+        name: 'Left upper division',
+        points: [
+          880, 100, 908, 115, 921, 126, 929, 138, 938, 170, 939, 203, 933, 261, 923, 294, 916, 308,
+          907, 319, 880, 342, 850, 356, 793, 373, 745, 381, 679, 382, 653, 360, 634, 359, 629, 356,
+          837, 64, 851, 69, 865, 89,
+        ],
+      },
+      {
+        id: 'lingula',
+        name: 'Lingular bronchus',
+        points: [
+          758, 620, 753, 697, 783, 772, 825, 812, 873, 824, 974, 831, 1028, 816, 1095, 761, 1131,
+          680, 1127, 623, 1112, 561, 1061, 520, 1019, 499, 907, 492, 839, 510, 772, 552, 758, 570,
+          756, 597,
+        ],
+      },
+    ],
+  },
+  'left-upper-division': {
+    src: '/bronchoscopy-foundations/find-frames/left-upper-division.jpg',
+    sourceFrame: 1510,
+    markers: [
+      {
+        id: 'lb1-2',
+        name: 'LB1+2 · Apicoposterior',
+        points: [
+          265, 104, 205, 134, 120, 213, 80, 285, 57, 349, 56, 372, 88, 418, 131, 434, 181, 433, 206,
+          413, 239, 412, 382, 298, 414, 238, 434, 157, 385, 109, 279, 113,
+        ],
+      },
+      {
+        id: 'lb3',
+        name: 'LB3 · Anterior',
+        points: [
+          541, 293, 467, 347, 394, 420, 361, 491, 367, 574, 409, 638, 477, 627, 627, 510, 708, 408,
+          725, 314, 648, 280,
+        ],
+      },
+    ],
+  },
+  lingula: {
+    src: '/bronchoscopy-foundations/find-frames/lingula.jpg',
+    sourceFrame: 1596,
+    markers: [
+      {
+        id: 'lb4',
+        name: 'LB4 · Superior lingula',
+        points: [
+          668, 768, 652, 773, 640, 784, 635, 799, 627, 829, 629, 845, 639, 857, 687, 860, 757, 851,
+          771, 846, 796, 822, 811, 792, 815, 776, 804, 764, 770, 757, 721, 755, 689, 758,
+        ],
+      },
+      {
+        id: 'lb5',
+        name: 'LB5 · Inferior lingula',
+        points: [
+          731, 955, 786, 896, 832, 881, 847, 880, 862, 883, 870, 899, 870, 915, 863, 931, 830, 979,
+          816, 988, 783, 996, 752, 994, 737, 989, 729, 973, 728, 962,
+        ],
+      },
+    ],
+  },
+  'left-lower-lobe': {
+    src: '/bronchoscopy-foundations/find-frames/left-lower-lobe.jpg',
+    sourceFrame: 1710,
+    markers: [
+      {
+        id: 'lb6',
+        name: 'LB6 · Superior',
+        points: [
+          279, 430, 272, 393, 215, 301, 203, 254, 207, 222, 231, 160, 259, 142, 290, 135, 351, 161,
+          400, 210, 461, 436, 466, 493, 452, 539, 436, 550, 403, 555, 318, 521, 281, 482, 281, 432,
+        ],
+      },
+      {
+        id: 'lb9',
+        name: 'LB9 · Lateral basal',
+        points: [
+          582, 527, 564, 502, 534, 446, 531, 432, 533, 414, 540, 399, 553, 391, 594, 392, 646, 401,
+          692, 429, 705, 439, 714, 471, 715, 487, 711, 502, 660, 535, 642, 538, 608, 536,
+        ],
+      },
+      {
+        id: 'lb10',
+        name: 'LB10 · Posterior basal',
+        points: [
+          694, 625, 753, 552, 778, 529, 810, 509, 820, 498, 846, 482, 862, 477, 892, 472, 905, 480,
+          899, 525, 889, 556, 872, 586, 829, 642, 814, 652, 799, 656, 724, 662, 710, 655, 701, 643,
+        ],
+      },
+    ],
+  },
+  'left-basal': {
+    src: '/bronchoscopy-foundations/find-frames/left-basal.jpg',
+    sourceFrame: 1842,
+    markers: [
+      {
+        id: 'lb7-8',
+        name: 'LB7+8 · Anteromedial basal',
+        points: [
+          473, 891, 321, 781, 207, 739, 169, 753, 196, 809, 178, 844, 200, 860, 225, 912, 271, 923,
+          329, 968, 433, 1011, 493, 1022, 520, 1017, 546, 998, 535, 982, 545, 977, 544, 943, 499,
+          906,
+        ],
+      },
+      {
+        id: 'lb9',
+        name: 'LB9 · Lateral basal',
+        points: [
+          415, 604, 450, 604, 521, 623, 537, 629, 583, 666, 597, 682, 606, 699, 608, 734, 605, 753,
+          588, 784, 575, 796, 516, 806, 476, 799, 428, 779, 412, 746, 390, 718, 381, 668, 390, 632,
+        ],
+      },
+      {
+        id: 'lb10',
+        name: 'LB10 · Posterior basal',
+        points: [
+          1051, 695, 1000, 720, 897, 828, 854, 950, 858, 1024, 894, 1063, 966, 1076, 1070, 1075,
+          1097, 1064, 1284, 874, 1285, 686, 1294, 644, 1280, 603, 1203, 623, 1153, 619, 1057, 684,
+        ],
+      },
+    ],
+  },
 } as const

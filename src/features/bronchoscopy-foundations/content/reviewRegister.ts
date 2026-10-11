@@ -155,11 +155,15 @@ export const REGISTER_PATTERNS: readonly RegisterPattern[] = [
     scope: 'instruction',
     say: 'Do not reclassify a specimen to change a culture threshold.',
   },
+  // Colony counts. The quantitative culture thresholds the course teaches are the IDSA/ATS 2016
+  // values in the numbers register (row 15), which faculty decided on 2026-10-10 may be taught;
+  // before that decision this row refused any text with "CFU/mL". A threshold typed by hand, in
+  // the caret form the register never renders, is still refused.
   {
     reviewItemId: 'R25',
-    pattern: /\b10\s*\^?\s*[3-6]\s*(CFU|cfu)\b|\bCFU\s*\/\s*mL\b/i,
+    pattern: /\b10\s*\^\s*[3-6]\s*(CFU|cfu)\b/i,
     scope: 'absolute',
-    say: 'No colony counts are supplied or invented.',
+    say: 'Teach a culture threshold from the numbers register; do not type one by hand.',
   },
   {
     reviewItemId: 'R26',
