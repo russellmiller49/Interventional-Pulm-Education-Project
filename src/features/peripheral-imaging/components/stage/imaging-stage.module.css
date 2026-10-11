@@ -614,3 +614,18 @@
     color: var(--cyan-bright, #71e1e5);
   }
 }
+
+.referenceValues {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+}
+.referenceValues dt {
+  font-weight: 600;
+}
+.referenceValues dd {
+  margin: 0;
+}
+.referenceValues small {
+  color: var(--stage-muted, var(--muted));
+}

@@ -109,7 +109,7 @@ const MICRO_CASE_DEFINITIONS: readonly MicroCaseDefinition[] = [
     sectionId: 'dts-interpretation',
     // QS-5 (OD4-04, OD4-05, 2026-09-22): the learner now finds the absence on a teaching-model
     // figure, so neither the title nor the situation narrates it. Three statements the model
-    // cannot support are gone: the course's authored nodule lies in the posterior LEFT lung (no
+    // cannot support are gone: the course's model nodule lies in the posterior LEFT lung (no
     // lobe is named until the teaching CT is reviewed, OD4-11), it is a smooth part-solid sphere
     // rather than lobulated, and the modeled catheter runs through lung-density CT, not a visible
     // airway, so the planes are described by their depth instead.

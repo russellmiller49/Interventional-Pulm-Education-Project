@@ -43,7 +43,7 @@ export function TimeView({
       {labels && (
         <>
           <Html portal={portal} position={add(LESION_CENTER, [18, 0, 0])}>
-            <span className={styles.objectLabel}>Authored target</span>
+            <span className={styles.objectLabel}>Model target</span>
           </Html>
           <Html portal={portal} position={add(model.currentTip, [0, 18, 0])}>
             <span className={styles.objectLabel}>Moving tool</span>
@@ -107,10 +107,7 @@ export function TimeSamples({
       aria-label="Temporal sampling"
     >
       {!comparison && (
-        <p>
-          Slowed authored time · the DRR stays fixed. Pause holds the moving tool and the sampled
-          image.
-        </p>
+        <p>Slowed time · the DRR stays fixed. Pause holds the moving tool and the sampled image.</p>
       )}
       {/*
         Report 3.8 (fellow walkthrough, PDF p.31/p.32). The strip that carries the idea was the

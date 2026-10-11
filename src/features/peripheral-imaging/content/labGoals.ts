@@ -227,7 +227,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
       {
         type: 'event',
         id: 'touched-sweep',
-        label: 'Change the authored DTS arc and compare its depth uncertainty',
+        label: 'Change the DTS arc and compare its depth uncertainty',
       },
     ],
     watch: ['sweepDeg', 'planeMm'],
@@ -331,7 +331,7 @@ export const IMAGING_LAB_GOALS: Readonly<Partial<Record<ImagingSectionId, Sectio
       {
         type: 'event',
         id: 'touched-area',
-        label: 'Change the fictional area input at fixed kerma',
+        label: 'Change the modeled area input at fixed kerma',
       },
     ],
     observe: [],

@@ -1,6 +1,7 @@
 import { test, expect, type Page, type TestInfo, type Locator } from '@playwright/test'
 
 import { imagingCases } from '../src/features/peripheral-imaging/content/cases'
+import { DOSE_NOTE_TEMPLATE_LINES } from '../src/features/peripheral-imaging/content/doseQuantities'
 import { imagingMicroCasesInPathwayOrder } from '../src/features/peripheral-imaging/content/microCases'
 import { peripheralImagingSectionIds } from '../src/features/peripheral-imaging/content/pathway'
 import { imagingStageLesson } from '../src/features/peripheral-imaging/content/stageLessons'
@@ -510,7 +511,8 @@ test('all nineteen sections render their authored explanation and visual, withou
   for (const id of peripheralImagingSectionIds) {
     await openSection(page, id)
     const lesson = imagingStageLesson(id)
-    await expect(page.locator('[data-teaching-block="boundary"]')).toHaveCount(1)
+    // One statement per module (hub, Help, closing card): no per-step limitations aside.
+    await expect(page.locator('[data-teaching-block="boundary"]')).toHaveCount(0)
     await expect(page.getByRole('tablist', { name: 'Workspace panel views' })).toHaveCount(0)
     await expect(page.locator('[data-teaching-panel]')).toContainText(lesson.spec.objective)
     const initial = lesson.steps[0].activity
@@ -2729,7 +2731,7 @@ test('report CW1: a reused closing question is labelled optional review with a l
   await expect(page.locator('[data-transfer-origin]')).toHaveCount(0)
 })
 
-test('report PR4 and CW5: the eccentric rEBUS case is offered from Section 1 and opens unchanged, and the recap folds the full feedback', async ({
+test('report PR4 and CW5: the eccentric rEBUS case is offered from Section 1 and opens, and the recap folds the full feedback', async ({
   page,
 }, info) => {
   await page.setViewportSize({ width: 1440, height: 900 })
@@ -2833,7 +2835,8 @@ for (const condition of [
     const template = page.locator('[data-dose-note-lines]')
     await template.scrollIntoViewIfNeeded()
     await expect(template).toBeVisible()
-    expect(await template.textContent()).not.toMatch(/\d/)
+    // The blanks stay blank; the one line with figures names the AAPM notification levels.
+    expect(await template.textContent()).toBe(DOSE_NOTE_TEMPLATE_LINES.join('\n'))
     expect(await fitsViewport(page, '[data-dose-note-lines]')).toBe(true)
     await stageFitsViewport(page, condition.root)
     await capture(page, info, `fellow3-s18-${condition.name}.png`)
@@ -2937,7 +2940,7 @@ test('prompt 04: practice case 9 draws its model planes and keeps their provenan
   const figure = '[data-case-figure="practice:dts-interpretation-practice-1:figure"]'
   await figureReady(page, figure)
   await expect(page.locator(`${figure} [data-model-label]`)).toHaveText(
-    'Teaching model: CT-derived images with an authored nodule and a modeled catheter. Not a patient acquisition.',
+    'Teaching model: CT-derived images with a model nodule and a modeled catheter. Not a patient acquisition.',
   )
   await figureCanvasesDrawn(page, figure, false)
   await expect(page.locator(`${figure} canvas`)).toHaveCount(5)
@@ -3122,7 +3125,7 @@ test('PR #279 repair F2: practice case 9’s key rationale is bound to this teac
   expect(text).toContain(
     'In this teaching figure, the projection stands for the current acquisition',
   )
-  expect(text).toContain('in this authored example, the planes were drawn from the planning CT')
+  expect(text).toContain('in this example, the planes were drawn from the planning CT')
   expect(text).toContain('catheter absence alone is not a universal sign of prior-derived content')
   expect(text).not.toMatch(/could not be missed|cannot be absent|absence marks/i)
   await verdict.scrollIntoViewIfNeeded()

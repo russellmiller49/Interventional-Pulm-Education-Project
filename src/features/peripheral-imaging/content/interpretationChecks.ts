@@ -89,7 +89,7 @@ export const INTERPRETATION_CHECKS: Partial<Record<ImagingSectionId, Question>> 
   projection: {
     id: 'projection-interpretation-v2',
     objective: 'optimize',
-    stem: 'In this new authored configuration, inspect the projection. Which conclusion about the actual sampling component is justified?',
+    stem: 'In this new configuration, inspect the projection. Which conclusion about the actual sampling component is justified?',
     choices: [
       {
         id: 'a',
@@ -161,7 +161,7 @@ export const INTERPRETATION_CHECKS: Partial<Record<ImagingSectionId, Question>> 
         id: 'b',
         text: 'Retain B because its smaller irradiated area establishes adequate information.',
         rationale:
-          'A model area percentage cannot establish adequate coverage or patient dose. This field loses context required by the task.',
+          'An area percentage from the model cannot establish adequate coverage or patient dose. This field loses context required by the task.',
       },
       {
         id: 'c',
@@ -236,7 +236,7 @@ export const INTERPRETATION_CHECKS: Partial<Record<ImagingSectionId, Question>> 
   'tool-confirmation': {
     id: 'sampling-interpretation-v2',
     objective: 'verify',
-    stem: 'Trace the intended lesion and green fictional sampling window in the new thin-plane configuration. What conclusion is supported?',
+    stem: 'Trace the intended lesion and green modeled sampling window in the new thin-plane configuration. What conclusion is supported?',
     choices: [
       {
         id: 'a',
@@ -301,7 +301,7 @@ export const INTERPRETATION_CHECKS: Partial<Record<ImagingSectionId, Question>> 
   'dose-reporting': {
     id: 'dose-record-interpretation-v2',
     objective: 'protect',
-    stem: 'The fictional report lists fluoroscopy KAP 4 Gy·cm², CBCT KAP 2 Gy·cm², combined KAP 6 Gy·cm² and cumulative reference air kerma 55 mGy. What should be recorded for the combined KAP?',
+    stem: 'The report lists fluoroscopy KAP 4 Gy·cm², CBCT KAP 2 Gy·cm², combined KAP 6 Gy·cm² and cumulative reference air kerma 55 mGy. What should be recorded for the combined KAP?',
     choices: [
       {
         id: 'a',

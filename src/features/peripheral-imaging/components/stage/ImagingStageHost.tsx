@@ -1091,8 +1091,7 @@ function ImagingStageSession({
           terms and the one general statement about the models, so both reach a learner on any step. */}
       <SectionGlossary sectionId={lesson.sectionId} variant="help" />
       <p data-help-models>
-        <strong>About the models.</strong> {IMAGING_SHARED_BOUNDARY} Each section’s own limits are
-        stated under its figure.
+        <strong>About the models.</strong> {IMAGING_SHARED_BOUNDARY}
       </p>
     </HelpDialog>
   )
@@ -1355,6 +1354,9 @@ function CompletionCard({ lesson }: { readonly lesson: ImagingStageLesson }) {
         You marked this section reviewed on this device. It is a note for finding your place, not a
         mark: answers and skipped steps are not recorded, and every section stays open.
       </p>
+      {lesson.sectionId === 'suite-cases' ? (
+        <p data-closing-statement>{IMAGING_SHARED_BOUNDARY}</p>
+      ) : null}
       {integratedCase ? (
         <p>
           This idea returns in the integrated case{' '}

@@ -38,9 +38,9 @@ export function PeripheralImagingPracticeLanding() {
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Practice</p>
         <h1 className="text-3xl font-bold tracking-tight">Short cases, one decision each</h1>
         <p className="max-w-2xl text-base leading-7 text-muted-foreground">
-          Practice cases are being authored and reviewed. Until they land, each section carries its
-          own interpretation check, and the {imagingCases.length} integrated cases are open on their
-          own page.
+          Practice cases are on the way. Until they land, each section carries its own
+          interpretation check, and the {imagingCases.length} integrated cases are open on their own
+          page.
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <ImagingContinueCta />

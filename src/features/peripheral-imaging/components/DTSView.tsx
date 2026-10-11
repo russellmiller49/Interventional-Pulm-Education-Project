@@ -75,7 +75,7 @@ export function DTSImage({ sweep, plane }: { sweep: number; plane: number }) {
           <span>{plane} mm</span>
         </div>
         <div className={styles.imageFooter}>
-          CT + authored target / tool · background-suppressed shift-and-add
+          CT + model target / tool · background-suppressed shift-and-add
         </div>
         {status !== 'ready' && (
           <div className={styles.imageStatus}>

@@ -75,7 +75,7 @@ describe('case figures are declared, not defaulted (OD4-04)', () => {
     }
   })
 
-  it('leaves every other case without a figure, and the practice 1–3 cartoon exactly as it was', () => {
+  it('leaves every other case without a figure, and the practice 1–3 cartoon with its plain caption', () => {
     render(<ImagingIntegratedCaseActivity caseId="case-1" />)
     expect(figure()).toBeNull()
     cleanup()
@@ -83,7 +83,7 @@ describe('case figures are declared, not defaulted (OD4-04)', () => {
       render(<ImagingCaseActivity caseId={caseId} />)
       expect(figure()).toBeNull()
       expect(document.querySelector('[data-case-image]')).toHaveTextContent(
-        'Draft synthetic teaching illustration, not a device capture or a calibrated scatter model. Use the clinical context supplied with the image; appearance alone does not identify its cause.',
+        'A drawing of the appearance described, not a device capture. Use the clinical context supplied with it; appearance alone does not identify its cause.',
       )
       cleanup()
     }
@@ -100,7 +100,7 @@ describe('practice case 9 shows the planes, and waits to say where they came fro
     )
     expect(node).toHaveAttribute('data-case-figure-evidence', 'depicts-the-question')
     expect(node.querySelector('[data-model-label]')).toHaveTextContent(
-      'Teaching model: CT-derived images with an authored nodule and a modeled catheter. Not a patient acquisition.',
+      'Teaching model: CT-derived images with a model nodule and a modeled catheter. Not a patient acquisition.',
     )
     // The figure sits above the choices, after the situation.
     expect(
