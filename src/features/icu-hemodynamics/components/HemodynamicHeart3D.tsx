@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, useRef, useState } from 'react'
-import { Line, OrbitControls } from '@react-three/drei'
+import { Html, Line, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, type RootState } from '@react-three/fiber'
 import { RotateCcw } from 'lucide-react'
 import * as THREE from 'three'
@@ -21,6 +21,7 @@ import {
 import {
   PAC_POSITION_ANATOMY,
   PAC_ROUTE,
+  PAC_ROUTE_ENDPOINT_INDEX,
   PAC_ROUTE_PROGRESS,
   PHLEBOSTATIC_AXIS_Y,
   TRANSDUCER_LEVEL_WORLD_UNITS_PER_CM,
@@ -210,6 +211,70 @@ function PacBalloonVisual({
   )
 }
 
+/**
+ * The tip, marked.
+ *
+ * The catheter ended in a small grey cylinder that could not be told from the tube behind it, so
+ * "where is the tip" had no answer on the model (report L5-04). A bright point with a soft halo
+ * rides the same follower the balloon does, at the end of the same route. Like the tube it is
+ * drawn over the anatomy; the legend beneath the view says so.
+ */
+function PacTipMarker() {
+  return (
+    <group position={[0, -0.14, 0]}>
+      <mesh renderOrder={36}>
+        <sphereGeometry args={[0.042, 18, 14]} />
+        <meshBasicMaterial color="#fffbe0" depthTest={false} depthWrite={false} />
+      </mesh>
+      <mesh renderOrder={35}>
+        <sphereGeometry args={[0.09, 18, 14]} />
+        <meshBasicMaterial
+          color="#ffd23f"
+          depthTest={false}
+          depthWrite={false}
+          opacity={0.38}
+          transparent
+        />
+      </mesh>
+    </group>
+  )
+}
+
+/** The places the catheter's tip stops, named where the route puts them. */
+const ROUTE_STOP_NAMES = [
+  { position: 'introducer', name: 'Superior vena cava' },
+  { position: 'ra', name: 'Right atrium' },
+  { position: 'rv', name: 'Right ventricle' },
+  { position: 'pa', name: 'Pulmonary artery' },
+] as const
+
+/**
+ * Optional names for the chambers along the catheter's course.
+ *
+ * Each name is anchored to the point of the catheter's own route where the simulation places the
+ * tip for that chamber — the one position in this model that is tied to a chamber by the engine
+ * itself. Nothing is anchored to a shape in the heart model, so no unidentified shape is given a
+ * name it may not have.
+ */
+function RouteStopNames() {
+  return (
+    <>
+      {ROUTE_STOP_NAMES.map((stop) => (
+        <Html
+          key={stop.position}
+          position={PAC_ROUTE[PAC_ROUTE_ENDPOINT_INDEX[stop.position]]}
+          zIndexRange={[4, 0]}
+          style={{ pointerEvents: 'none' }}
+        >
+          <span className={styles.heartStopName} data-heart-stop-name={stop.position}>
+            {stop.name}
+          </span>
+        </Html>
+      ))}
+    </>
+  )
+}
+
 function PacCatheterOverlay({
   state,
   reducedMotion,
@@ -240,10 +305,12 @@ function PacCatheterOverlay({
       <ProgressiveSplineTube
         points={PAC_ROUTE}
         progress={renderedFraction}
-        radius={CARDIAC_RIG.pac.radius}
-        color="#e8bd4d"
+        // The same route, drawn half again as thick and self-lit so it reads as the yellow line the
+        // legend promises rather than a pale thread (report L5-04). The geometry is unchanged.
+        radius={CARDIAC_RIG.pac.radius * 1.5}
+        color="#ffd23f"
         depthTest={false}
-        emissiveIntensity={0.08}
+        emissiveIntensity={0.5}
         radialSegments={12}
         renderOrder={31}
       />
@@ -268,6 +335,7 @@ function PacCatheterOverlay({
             roughness={0.3}
           />
         </mesh>
+        <PacTipMarker />
       </SplineFollower>
       <Transducer
         levelCm={state.measurementSystem.transducerLevelCm}
@@ -284,6 +352,7 @@ export function HemodynamicHeart3D({ state }: { state: HemodynamicSimulationStat
   const reducedMotion = useReducedMotionPreference()
   const [contextLost, setContextLost] = useState(false)
   const [epoch, setEpoch] = useState(0)
+  const [namesShown, setNamesShown] = useState(false)
   const controlsRef = useRef<OrbitControlsImpl>(null)
   const camera = CARDIAC_RIG.cameras.heart
   const confirmedAnatomy = PAC_POSITION_ANATOMY[state.catheter.position]
@@ -341,133 +410,150 @@ export function HemodynamicHeart3D({ state }: { state: HemodynamicSimulationStat
   }
 
   return (
-    <div className={styles.physiologyViewport}>
-      {!webglReady || contextLost ? (
-        <div className={styles.physiologyWebglFallback}>
-          <strong>
-            {contextLost ? 'The 3D context was interrupted.' : 'WebGL is unavailable.'}
-          </strong>
-          <span>
-            The catheter-position text, waveforms, measurements, and controls remain available.
-          </span>
-          {contextLost ? (
+    <div className={styles.heartFigure} data-heart-figure>
+      <div className={styles.physiologyViewport}>
+        {!webglReady || contextLost ? (
+          <div className={styles.physiologyWebglFallback}>
+            <strong>
+              {contextLost ? 'The 3D context was interrupted.' : 'WebGL is unavailable.'}
+            </strong>
+            <span>
+              The catheter-position text, waveforms, measurements, and controls remain available.
+            </span>
+            {contextLost ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setContextLost(false)
+                  setEpoch((value) => value + 1)
+                }}
+              >
+                Reload 3D view
+              </button>
+            ) : null}
+          </div>
+        ) : (
+          <CanvasErrorBoundary
+            fallback={
+              <div className={styles.physiologyWebglFallback}>
+                The explanatory 3D anatomy could not load. Use the synchronized waveform and text
+                description.
+              </div>
+            }
+          >
+            <Canvas
+              key={epoch}
+              dpr={[1, 1.5]}
+              shadows
+              camera={{ position: camera.position, fov: camera.fov, near: 0.1, far: 50 }}
+              gl={{ antialias: true, powerPreference: 'high-performance' }}
+              onCreated={(root) => setupRenderer(root, () => setContextLost(true))}
+            >
+              <ambientLight intensity={1.3} />
+              <directionalLight position={[4, 6, 6]} intensity={2.3} castShadow />
+              <directionalLight position={[-4, 1, 3]} intensity={0.72} color="#8ddbd5" />
+              <pointLight position={[0, -1, 4]} intensity={0.75} color="#ffd9cf" />
+              <Suspense fallback={null}>
+                <CardiacHeartModel
+                  heartRateBpm={state.parameters.heartRateBpm}
+                  paused={state.paused}
+                  reducedMotion={reducedMotion}
+                />
+                <PacCatheterOverlay state={state} reducedMotion={reducedMotion} />
+                {namesShown ? <RouteStopNames /> : null}
+              </Suspense>
+              <OrbitControls
+                ref={controlsRef}
+                enablePan={false}
+                maxDistance={camera.maxDistance}
+                minDistance={camera.minDistance}
+                target={camera.target}
+              />
+            </Canvas>
+          </CanvasErrorBoundary>
+        )}
+        <div className={styles.physiologyOrientation}>
+          <span>Anterior heart + distal PA</span>
+          <span>Patient right is viewer left</span>
+          <div
+            className={styles.physiologyKeyboardControls}
+            role="group"
+            aria-label="Keyboard-accessible 3D view controls"
+          >
             <button
               type="button"
-              onClick={() => {
-                setContextLost(false)
-                setEpoch((value) => value + 1)
-              }}
+              aria-label="Rotate 3D anatomy view left"
+              disabled={!webglReady || contextLost}
+              onClick={() => adjustView({ azimuth: -Math.PI / 10 })}
             >
-              Reload 3D view
+              ←
             </button>
-          ) : null}
-        </div>
-      ) : (
-        <CanvasErrorBoundary
-          fallback={
-            <div className={styles.physiologyWebglFallback}>
-              The explanatory 3D anatomy could not load. Use the synchronized waveform and text
-              description.
-            </div>
-          }
-        >
-          <Canvas
-            key={epoch}
-            dpr={[1, 1.5]}
-            shadows
-            camera={{ position: camera.position, fov: camera.fov, near: 0.1, far: 50 }}
-            gl={{ antialias: true, powerPreference: 'high-performance' }}
-            onCreated={(root) => setupRenderer(root, () => setContextLost(true))}
-          >
-            <ambientLight intensity={1.3} />
-            <directionalLight position={[4, 6, 6]} intensity={2.3} castShadow />
-            <directionalLight position={[-4, 1, 3]} intensity={0.72} color="#8ddbd5" />
-            <pointLight position={[0, -1, 4]} intensity={0.75} color="#ffd9cf" />
-            <Suspense fallback={null}>
-              <CardiacHeartModel
-                heartRateBpm={state.parameters.heartRateBpm}
-                paused={state.paused}
-                reducedMotion={reducedMotion}
-              />
-              <PacCatheterOverlay state={state} reducedMotion={reducedMotion} />
-            </Suspense>
-            <OrbitControls
-              ref={controlsRef}
-              enablePan={false}
-              maxDistance={camera.maxDistance}
-              minDistance={camera.minDistance}
-              target={camera.target}
-            />
-          </Canvas>
-        </CanvasErrorBoundary>
-      )}
-      <div className={styles.physiologyOrientation}>
-        <span>Anterior heart + distal PA</span>
-        <span>Patient right is viewer left</span>
-        <div
-          className={styles.physiologyKeyboardControls}
-          role="group"
-          aria-label="Keyboard-accessible 3D view controls"
-        >
+            <button
+              type="button"
+              aria-label="Rotate 3D anatomy view right"
+              disabled={!webglReady || contextLost}
+              onClick={() => adjustView({ azimuth: Math.PI / 10 })}
+            >
+              →
+            </button>
+            <button
+              type="button"
+              aria-label="Tilt 3D anatomy view up"
+              disabled={!webglReady || contextLost}
+              onClick={() => adjustView({ polar: -Math.PI / 12 })}
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              aria-label="Tilt 3D anatomy view down"
+              disabled={!webglReady || contextLost}
+              onClick={() => adjustView({ polar: Math.PI / 12 })}
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              aria-label="Zoom 3D anatomy view in"
+              disabled={!webglReady || contextLost}
+              onClick={() => adjustView({ distanceScale: 0.85 })}
+            >
+              +
+            </button>
+            <button
+              type="button"
+              aria-label="Zoom 3D anatomy view out"
+              disabled={!webglReady || contextLost}
+              onClick={() => adjustView({ distanceScale: 1.18 })}
+            >
+              −
+            </button>
+          </div>
           <button
             type="button"
-            aria-label="Rotate 3D anatomy view left"
+            aria-label="Reset 3D hemodynamic anatomy view"
             disabled={!webglReady || contextLost}
-            onClick={() => adjustView({ azimuth: -Math.PI / 10 })}
+            onClick={() => controlsRef.current?.reset()}
           >
-            ←
+            <RotateCcw aria-hidden="true" /> Reset view
           </button>
           <button
             type="button"
-            aria-label="Rotate 3D anatomy view right"
+            aria-pressed={namesShown}
+            data-heart-names-toggle
             disabled={!webglReady || contextLost}
-            onClick={() => adjustView({ azimuth: Math.PI / 10 })}
+            onClick={() => setNamesShown((shown) => !shown)}
           >
-            →
-          </button>
-          <button
-            type="button"
-            aria-label="Tilt 3D anatomy view up"
-            disabled={!webglReady || contextLost}
-            onClick={() => adjustView({ polar: -Math.PI / 12 })}
-          >
-            ↑
-          </button>
-          <button
-            type="button"
-            aria-label="Tilt 3D anatomy view down"
-            disabled={!webglReady || contextLost}
-            onClick={() => adjustView({ polar: Math.PI / 12 })}
-          >
-            ↓
-          </button>
-          <button
-            type="button"
-            aria-label="Zoom 3D anatomy view in"
-            disabled={!webglReady || contextLost}
-            onClick={() => adjustView({ distanceScale: 0.85 })}
-          >
-            +
-          </button>
-          <button
-            type="button"
-            aria-label="Zoom 3D anatomy view out"
-            disabled={!webglReady || contextLost}
-            onClick={() => adjustView({ distanceScale: 1.18 })}
-          >
-            −
+            {namesShown ? 'Hide chamber names' : 'Show chamber names'}
           </button>
         </div>
-        <button
-          type="button"
-          aria-label="Reset 3D hemodynamic anatomy view"
-          disabled={!webglReady || contextLost}
-          onClick={() => controlsRef.current?.reset()}
-        >
-          <RotateCcw aria-hidden="true" /> Reset view
-        </button>
       </div>
-      <div className={styles.physiologyAnatomyHud}>
+      {/*
+        The status and the legend, beneath the view rather than over it. As an overlay they had to
+        be set at about nine pixels to leave any of the model visible; here they are ordinary page
+        text that follows the reader's text size and covers nothing.
+      */}
+      <div className={styles.physiologyAnatomyHud} data-heart-status>
         <strong>
           TIP · {confirmedAnatomy.shortLabel}
           {targetAnatomy ? ` → ${targetAnatomy.shortLabel}` : ''}
@@ -482,7 +568,16 @@ export function HemodynamicHeart3D({ state }: { state: HemodynamicSimulationStat
           Balloon · {balloonLabel}
         </span>
         <span>Pressure transducer · {levelLabel}</span>
-        <span>Yellow = PAC course · dashed teal = phlebostatic reference</span>
+        <span data-heart-legend>
+          Yellow = PAC course, with a bright dot at the tip. Both are drawn over the anatomy so they
+          stay visible through the chamber walls — a see-through drawing convention; the catheter
+          has not left the vessel. Dashed teal = phlebostatic reference. Grey line = pressure tubing
+          to the transducer (the box).
+        </span>
+        <span data-heart-names-note>
+          Chamber names, when shown, mark where this simulation places the catheter tip for each
+          chamber. The heart model&apos;s own shapes are not individually labelled.
+        </span>
       </div>
     </div>
   )

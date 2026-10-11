@@ -5,6 +5,8 @@ import { useId, useState } from 'react'
 import { cardiacOutputResultLabels } from '../content/cardiacOutputMethods'
 import { requireCardiacOutputParameter as requireParameter } from '../content/cardiacOutputSourceBoundaries'
 import {
+  INJECTION_TECHNIQUE_CURVE_NOTE,
+  injectionTechniqueNotDrawnInCurve,
   thermodilutionCurveFeatures,
   thermodilutionCurveTextEquivalent,
   thermodilutionExclusionReasonsFor,
@@ -208,6 +210,11 @@ export function ThermodilutionTrialCard({
             <li key={alert}>{alert}</li>
           ))}
         </ul>
+      ) : null}
+      {injectionTechniqueNotDrawnInCurve(trial) ? (
+        <p className={styles.thermoTrialModelNote} data-trial-curve-model-note>
+          {INJECTION_TECHNIQUE_CURVE_NOTE}
+        </p>
       ) : null}
 
       {trial.reviewed ? (

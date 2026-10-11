@@ -1,0 +1,295 @@
+/* The fast-flush figure: a dark plot with every label set as page text around it. */
+.trace {
+  min-width: 0;
+  margin: 0.7rem 0 0;
+  container-type: inline-size;
+  border: 1px solid #2f5556;
+  border-radius: 0.65rem;
+  color: #d9f6f0;
+  background: #092323;
+}
+.trace figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.75rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.65rem 0.65rem 0 0;
+  background: #103332;
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+.trace figcaption span {
+  color: #b9d9d3;
+  font-variant-numeric: tabular-nums;
+}
+.frame {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  padding: 0.35rem 0.75rem 0.4rem 0.35rem;
+}
+.track {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  height: 2.6rem;
+}
+.bracket {
+  position: absolute;
+  bottom: 0.15rem;
+  height: 0.4rem;
+  border: 2px solid #ffd166;
+  border-bottom: 0;
+}
+.offScale,
+.marker {
+  position: absolute;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.2rem;
+  white-space: nowrap;
+}
+/* Slides with the flush it names, so it is over the bracket and never outside the track. */
+.offScale {
+  top: 0;
+  left: var(--flush-x);
+  max-width: 100%;
+  color: #ffd166;
+  transform: translateX(calc(-1 * var(--flush-x)));
+}
+.marker {
+  top: 1.2rem;
+  left: var(--flush-x);
+  padding-inline: 0.3rem;
+  color: #cfe7e2;
+}
+.marker[data-anchor='end'] {
+  transform: translateX(-100%);
+}
+.axis {
+  position: relative;
+  grid-column: 1;
+  grid-row: 2;
+  padding-inline: 0.2rem 0.4rem;
+}
+/* Invisible copies of the widest tick and of the unit: the gutter is as wide as its own text. */
+.sizer {
+  display: block;
+  height: 0;
+  overflow: hidden;
+  font-size: 0.75rem;
+  font-weight: 700;
+  visibility: hidden;
+}
+.unit {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 100%;
+  color: #9fc5be;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.1rem;
+}
+.tick {
+  position: absolute;
+  right: 0.4rem;
+  color: #b9d9d3;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+.tick[data-anchor='top'] {
+  transform: none;
+}
+.tick[data-anchor='bottom'] {
+  transform: translateY(-100%);
+}
+.plot {
+  position: relative;
+  grid-column: 2;
+  grid-row: 2;
+  height: 12rem;
+  min-width: 0;
+  background: #071c1c;
+}
+.trace[data-compact] .plot {
+  height: 8.5rem;
+}
+.plot svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.gridLine {
+  stroke: rgba(137, 199, 188, 0.18);
+  stroke-width: 1;
+}
+.timeLine {
+  stroke: rgba(137, 199, 188, 0.1);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+.eventLine {
+  stroke: rgba(255, 255, 255, 0.34);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+.path {
+  fill: none;
+  stroke: #63e6cf;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.3;
+}
+.trace[data-line-type='pulmonary-artery'] .path {
+  stroke: #ffd166;
+}
+.trace[data-line-type='systemic-arterial'] .path {
+  stroke: #ff7087;
+}
+.time {
+  position: relative;
+  grid-column: 2;
+  grid-row: 3;
+  height: 1.4rem;
+}
+/* Each time mark's label slides with it — starting at the mark on the left edge, ending at it on
+   the right — so the first and last never leave the plot's width. */
+.time span {
+  position: absolute;
+  top: 0.2rem;
+  left: var(--flush-x);
+  color: #b9d9d3;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translateX(calc(-1 * var(--flush-x)));
+}
+.rangeNote {
+  margin: 0;
+  padding: 0.35rem 0.65rem;
+  border-top: 1px solid #2f5556;
+  color: #ffd9a0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+/*
+ * A figure too narrow for its one-line labels — a phone, or enlarged text — sets the flush label as
+ * wrapping text above the plot and names every other time mark, so nothing leaves the card or is
+ * printed over its neighbour. The threshold is in rem, so larger text switches sooner.
+ */
+@container (max-width: 22rem) {
+  .track {
+    height: auto;
+    min-height: 2.6rem;
+    padding-bottom: 1.5rem;
+  }
+  .offScale {
+    position: static;
+    display: block;
+    white-space: normal;
+    transform: none;
+  }
+  /* The release label slides with its line, so it stays inside a narrow track. */
+  .marker {
+    top: auto;
+    bottom: 0.1rem;
+    transform: translateX(calc(-1 * var(--flush-x)));
+  }
+  /* The label above already names the flush; its second, short name would sit on the unit. */
+  .marker[data-anchor='end'] {
+    display: none;
+  }
+  .bracket {
+    bottom: 0;
+    height: 0.25rem;
+  }
+  .time span:nth-child(even) {
+    display: none;
+  }
+}
+
+/* The three-response comparison. */
+.comparison {
+  container-type: inline-size;
+  min-width: 0;
+}
+.comparison > p {
+  margin: 0.4rem 0 0;
+}
+.multiples {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.8rem;
+}
+.multiples article {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  min-width: 0;
+}
+/*
+ * Three columns whose rows line up: each article lends its six rows to the shared grid, so the
+ * whole-test plots sit on one line and the enlarged releases on the next, whatever a panel's
+ * caption or range note adds to its height.
+ */
+@container (min-width: 58rem) {
+  .multiples {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(6, auto);
+    gap: 0.4rem 0.75rem;
+  }
+  .multiples article {
+    grid-row: span 6;
+    grid-template-rows: subgrid;
+    gap: 0;
+  }
+  .multiples article > * {
+    align-self: start;
+  }
+}
+.multiples h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+.multiples .trace {
+  margin-top: 0;
+}
+.multiples dl {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.2rem 0 0;
+}
+.multiples dl > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.6rem;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+.multiples dt {
+  font-weight: 600;
+}
+.multiples dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+.multiples p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.note {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  opacity: 0.9;
+}

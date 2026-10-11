@@ -73,7 +73,9 @@ function snapshot(): Snapshot {
     modelState: JSON.stringify(mockMonitorState),
     // The identity line carries the run and its simulated time; the seed sits in Run details.
     identity: `${document.querySelector('[data-session-identity]')?.textContent ?? ''} ${
-      document.querySelector('[data-run-details] p')?.textContent?.match(/Seed \d+/)?.[0] ?? ''
+      document
+        .querySelector('[data-run-details] p')
+        ?.textContent?.match(/Example number \d+/)?.[0] ?? ''
     }`,
     step: currentStepId(),
     checked: [...document.querySelectorAll<HTMLInputElement>('input[type="radio"]:checked')].map(
@@ -113,7 +115,7 @@ describe('a live Learn section: presentation operations change nothing the model
     expect(taken.checked).toHaveLength(1)
     expect(taken.explanationShown).toBe(true)
     expect(taken.monitorTime).toMatch(/\d+\.\d s/)
-    expect(taken.identity).toMatch(/Seed \d+/)
+    expect(taken.identity).toMatch(/Example number \d+/)
     return taken
   }
 

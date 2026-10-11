@@ -1,9 +1,11 @@
 import type { ArtifactId } from '../content/troubleshootingAtlas'
 import {
+  CARDIAC_PHASE,
   MMHG_PER_CM_H2O,
   PULMONARY_ARTERY_SHAPE,
   pulsatilePressureShape,
   wedgeDeviationMmHg,
+  type PulsatileShapeOptions,
 } from './waveformMorphology'
 
 export const TROUBLESHOOTING_HEART_RATE_BPM = 75
@@ -198,8 +200,14 @@ function overdampedTransform(
   )
 }
 
-function underdampedTransform(
+/**
+ * `closurePhase` is where the semilunar valve closes in the source signal. The pulmonary artery's
+ * is the default, so the atlas' own traces are unchanged; a systemic arterial source closes earlier,
+ * and its second burst of ringing follows its own notch rather than the pulmonary one.
+ */
+function underdampedBeat(
   source: readonly TroubleshootingWaveformSample[],
+  closurePhase: number,
 ): readonly TroubleshootingWaveformSample[] {
   const mean = derivePressureMetrics(source).meanMmHg
   return source.map((sample) => {
@@ -208,8 +216,8 @@ function underdampedTransform(
       5.8 * cyclicGaussian(sample.cardiacPhase, 0.085, 0.013) +
       ringAfter(sample.cardiacPhase, 0.055, 0.18, 2.6, 4.6)
     const closureRinging =
-      -3.8 * cyclicGaussian(sample.cardiacPhase, 0.465, 0.014) +
-      ringAfter(sample.cardiacPhase, 0.45, 0.2, 2.7, -2.8)
+      -3.8 * cyclicGaussian(sample.cardiacPhase, closurePhase + 0.015, 0.014) +
+      ringAfter(sample.cardiacPhase, closurePhase, 0.2, 2.7, -2.8)
     return {
       ...sample,
       pressureMmHg: amplified + systolicOvershoot + closureRinging,
@@ -334,6 +342,12 @@ function zeroLevelTransform(
   return source.map((sample) => ({ ...sample, pressureMmHg: sample.pressureMmHg + offset }))
 }
 
+function underdampedTransform(
+  source: readonly TroubleshootingWaveformSample[],
+): readonly TroubleshootingWaveformSample[] {
+  return underdampedBeat(source, CARDIAC_PHASE.pulmonicDicroticNotch)
+}
+
 export const artifactTransforms = {
   overdamped: overdampedTransform,
   underdamped: underdampedTransform,
@@ -350,6 +364,64 @@ export function getArtifactWaveformTransform(id: string): ArtifactWaveformTransf
     throw new Error(`Unknown PA-catheter troubleshooting artifact: ${id}`)
   }
   return artifactTransforms[id as ArtifactId]
+}
+
+/* ------------------------------------------------------------------ *
+ * One distorted beat, for any pulsatile line
+ * ------------------------------------------------------------------ */
+
+export type DynamicResponseArtifact = 'overdamped' | 'underdamped'
+
+const dynamicResponseBeatCache = new Map<string, readonly number[]>()
+
+/**
+ * The atlas' overdamped or underdamped beat, as a fraction of the source's pulse pressure.
+ *
+ * 0 is the source's diastolic pressure and 1 its systolic pressure, so a value above 1 is an
+ * overshoot the source never reached and a value below 0 an undershoot. The transforms are the ones
+ * the troubleshooting atlas draws — the same functions, applied to a source beat of the requested
+ * shape scaled to the atlas' own 25/10 mmHg — so a figure elsewhere that shows "an underdamped
+ * line" shows this distortion and not a second, milder invention of it. The Learn fast-flush
+ * examples had exactly that: their underdamped beats were amplified 8 % and read 25.7/9.6 against a
+ * 25/10 source, beneath a caption saying systolic reads high and diastolic reads low (report
+ * L2-08); the atlas' transform reads 28.2/6.5 for the same source.
+ */
+export function dynamicResponseBeatFraction(
+  artifact: DynamicResponseArtifact,
+  shape: PulsatileShapeOptions,
+  cardiacPhase: number,
+): number {
+  const key = `${artifact}:${shape.notchPhase}:${shape.peakPhase}:${shape.notchDepth}:${shape.dicroticWaveHeight}:${shape.systolicDecline}:${shape.runoffRate}`
+  let beat = dynamicResponseBeatCache.get(key)
+  if (!beat) {
+    const source: TroubleshootingWaveformSample[] = Array.from(
+      { length: SAMPLES_PER_BEAT },
+      (_, index) => {
+        const phase = index / SAMPLES_PER_BEAT
+        return {
+          timeSeconds: index / TROUBLESHOOTING_SAMPLE_RATE_HZ,
+          beatIndex: 0,
+          cardiacPhase: phase,
+          pressureMmHg:
+            NORMAL_PA_DIASTOLIC_MMHG +
+            NORMAL_PA_PULSE_PRESSURE_MMHG * pulsatilePressureShape(phase, shape),
+        }
+      },
+    )
+    const transformed =
+      artifact === 'overdamped'
+        ? overdampedTransform(source)
+        : underdampedBeat(source, shape.notchPhase)
+    beat = transformed.map(
+      (sample) => (sample.pressureMmHg - NORMAL_PA_DIASTOLIC_MMHG) / NORMAL_PA_PULSE_PRESSURE_MMHG,
+    )
+    dynamicResponseBeatCache.set(key, beat)
+  }
+  const position = (((cardiacPhase % 1) + 1) % 1) * beat.length
+  const lower = Math.floor(position) % beat.length
+  const upper = (lower + 1) % beat.length
+  const blend = position - Math.floor(position)
+  return beat[lower] * (1 - blend) + beat[upper] * blend
 }
 
 export function derivePressureMetrics(

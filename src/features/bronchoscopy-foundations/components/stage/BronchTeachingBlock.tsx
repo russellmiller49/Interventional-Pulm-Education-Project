@@ -1,9 +1,13 @@
-import { LOCAL_POLICY_BY_ID, LOCAL_POLICY_NOT_CONFIGURED } from '../../content/localPolicies'
 import type { BronchTeachingBlock } from '../../content/types'
+import { ConfiguredPolicies, NumberSourceNote } from '../LocalNotes'
 import styles from './bronch-stage.module.css'
 import { MediaFigure } from './MediaFigure'
 
-/** A source-backed block without phase-based disclosure. The course activity owns visibility. */
+/**
+ * A teaching card. The course activity owns when it is shown. A first-move card lists its moves in
+ * order and ends with when to call for help. A card that uses register numbers names their sources
+ * in one line; the institution's own policy appears only when it has been configured.
+ */
 export function BlockCard({
   block,
   listId,
@@ -19,12 +23,26 @@ export function BlockCard({
       data-teaching-block={role}
       data-block-id={block.id}
       data-block-kind={block.kind}
+      data-block-role={block.role}
       data-claim-class={block.claimClass}
     >
       <h3 className={styles.kicker}>{block.heading}</h3>
+      {block.media ? <MediaFigure media={block.media} compact /> : null}
       {block.body.split(/\n\s*\n/).map((paragraph, index) => (
         <p key={index}>{paragraph}</p>
       ))}
+      {block.steps && block.steps.length > 0 ? (
+        <ol className={styles.firstMoves} data-first-moves>
+          {block.steps.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
+      ) : null}
+      {block.callForHelp ? (
+        <p className={styles.callForHelp} data-call-for-help>
+          <strong>Call for help</strong> {block.callForHelp}
+        </p>
+      ) : null}
       {block.points && block.points.length > 0 ? (
         <>
           {block.pointsLabel ? (
@@ -39,14 +57,8 @@ export function BlockCard({
           </ul>
         </>
       ) : null}
-      {block.media ? <MediaFigure media={block.media} compact /> : null}
-      {block.localPolicyIds && block.localPolicyIds.length > 0 ? (
-        <p className={styles.figureCaption} data-block-policies>
-          Depends on local policy:{' '}
-          {block.localPolicyIds.map((id) => LOCAL_POLICY_BY_ID.get(id)?.title ?? id).join(', ')}.{' '}
-          {LOCAL_POLICY_NOT_CONFIGURED}
-        </p>
-      ) : null}
+      <NumberSourceNote ids={block.numberIds} className={styles.figureCaption} />
+      <ConfiguredPolicies ids={block.localPolicyIds} className={styles.figureCaption} />
     </section>
   )
 }

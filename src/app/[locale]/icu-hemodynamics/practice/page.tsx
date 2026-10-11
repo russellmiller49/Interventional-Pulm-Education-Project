@@ -11,7 +11,7 @@ import { icuHemodynamicsNavBase } from '@/features/learning-module/moduleRoutes'
 export const metadata: Metadata = {
   title: 'Practice · ICU Hemodynamics Lab',
   description:
-    'Eight preserved ICU hemodynamics cases with PAC skills, waveforms, thermodilution, and reassessment.',
+    'Eight ICU hemodynamics practice cases with PAC skills, waveforms, thermodilution, and reassessment.',
   robots: { index: false, follow: false, noarchive: true },
 }
 

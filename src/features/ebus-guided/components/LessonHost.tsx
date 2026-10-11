@@ -361,15 +361,8 @@ function LessonSession({
    */
   const checkUsesHeldImage = question?.imagePolicy === 'retained-acquisition'
   const scenarioCheckBesideHeldImage = !!question && evidenceKind === 'held' && !checkUsesHeldImage
-  /*
-   * L5-1, presentation only (EBUS-PRE-REVIEW-04). A check that reads the held frame can name one
-   * modelled contact condition while the learner held another: lesson 5's second check names the
-   * reflector whatever was selected when the frame was held. The frame is not replaced, relabelled
-   * or reconstructed, and the question is not reworded (that alignment is held for owner review).
-   * What is said is only what is true: which condition is held, which one the check names, and
-   * that the named one was inspected in this session — the activity cannot be held until all five
-   * conditions have been inspected (`MODEL_STEPS.contact`, checked by `labGoalMet`).
-   */
+  /* A named condition can differ from a held frame. OD-01 now compares mechanisms without
+   * naming a required held condition; preserve this support for explicitly named questions. */
   const namedContactMode = checkUsesHeldImage ? question?.namesContactMode : undefined
   const heldConditionDiffers =
     evidenceKind === 'held' &&
@@ -391,15 +384,17 @@ function LessonSession({
          */
         evidenceKind === 'held-missing'
         ? 'No image of yours is held for this task. The checks below stay open: go back to the acquisition to hold one, read the explanation, or continue.'
-        : heldConditionDiffers
-          ? 'This check names a different contact condition (' +
-            CONTACT_MODE_LABELS[namedContactMode!] +
-            ') from the one your held image shows (' +
-            CONTACT_MODE_LABELS[heldContactMode!] +
-            '). Your held image stays as you acquired it. You inspected the condition the check names in the workbench before holding, so answer from that inspection.'
-          : scenarioCheckBesideHeldImage
-            ? 'The image you acquired stays beside this check. This one describes a situation in words, so answer it from the description.'
-            : current.instruction
+        : question?.id === 'cutaway-observe'
+          ? 'Compare the air-gap and reflector states you inspected in the echo schematic. Your held image stays as you acquired it; this comparison does not depend on which contact condition you held.'
+          : heldConditionDiffers
+            ? 'This check names a different contact condition (' +
+              CONTACT_MODE_LABELS[namedContactMode!] +
+              ') from the one your held image shows (' +
+              CONTACT_MODE_LABELS[heldContactMode!] +
+              '). Your held image stays as you acquired it. You inspected the condition the check names in the workbench before holding, so answer from that inspection.'
+            : scenarioCheckBesideHeldImage
+              ? 'The image you acquired stays beside this check. This one describes a situation in words, so answer it from the description.'
+              : current.instruction
   const unavailableReason = !question
     ? undefined
     : !missingImage
@@ -741,7 +736,7 @@ function LessonSession({
                   <GlossaryTerms
                     entries={glossaryForLesson(lesson.id)}
                     heading="Terms used in this lesson"
-                    intro="Open a term for the course’s own definition. The full course glossary is under Help."
+                    intro="Open a term for its definition, source and limits. The full course glossary is under Help."
                     currentLessonId={lesson.id}
                   />
                 </div>
@@ -1115,7 +1110,7 @@ function LessonSession({
               <GlossaryTerms
                 entries={GLOSSARY}
                 heading="Course glossary"
-                intro="Definitions taken from the course’s own teaching. Terms the course uses without defining are not listed."
+                intro="Course definitions and owner-approved terminology expansions, with sources and limits."
                 currentLessonId={lesson.id}
               />
             </>
