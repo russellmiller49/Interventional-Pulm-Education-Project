@@ -117,7 +117,7 @@ describe('Baxter CRRT case player', () => {
     expect(screen.getByRole('button', { name: 'Reveal hint 1' })).toBeEnabled()
     expect(
       screen.getByRole('heading', {
-        name: 'Recurrent filter loss across access, filtration, downtime, and policy domains',
+        name: getBaxterCrrtCase('CRRT-16').title,
       }),
     ).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /Reveal guidance/i })).not.toBeInTheDocument()

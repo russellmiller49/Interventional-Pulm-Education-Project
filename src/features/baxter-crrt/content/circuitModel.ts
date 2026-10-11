@@ -24,6 +24,7 @@ import {
   type CrrtClaimCitation,
   type CrrtClaimTopic,
 } from './learnerSourceMap'
+import { CRRT_NUMBERS } from './teachingNumbers'
 
 /* ------------------------------------------------------------------ *
  * Geometry
@@ -607,8 +608,7 @@ export interface CrrtPressureSignalDetail {
   readonly sourceIds: readonly string[]
 }
 
-const ESCALATION_BOUNDARY =
-  'Stay within observation and inspection. Confirm the reading is real, look at the patient and the named part of the circuit, and hand the decision to the responsible clinical team and the local protocol before changing therapy.'
+const N = CRRT_NUMBERS.value
 
 export const crrtPressureSignalDetails: readonly CrrtPressureSignalDetail[] = Object.freeze([
   {
@@ -634,7 +634,7 @@ export const crrtPressureSignalDetails: readonly CrrtPressureSignalDetail[] = Ob
     ],
     whenUnreliable:
       'Immediately after a position change, during coughing or agitation, or when the line is being handled — the transducer is reporting a transient, not a trend.',
-    firstInspectionBoundary: ESCALATION_BOUNDARY,
+    firstInspectionBoundary: `Check the access line for a kink or a clamp, then the patient: position, and whether the catheter has moved. If the lumen is sucking against the vessel wall, lowering the blood flow relieves it while you reposition. Flush the lumen, or swap access and return, as your catheter protocol allows. PrisMax alarms “Access Extremely Negative” ${N('access-low-limit')}.`,
     sourceIds: ['DEV-PM-009', 'SYNTH-LAB-PRESSURE-001'],
   },
   {
@@ -658,7 +658,7 @@ export const crrtPressureSignalDetails: readonly CrrtPressureSignalDetail[] = Ob
     ],
     whenUnreliable:
       'While the pump is stopped or the circuit is being primed, the reading reflects a static column rather than flow.',
-    firstInspectionBoundary: ESCALATION_BOUNDARY,
+    firstInspectionBoundary: `Compare it with the return pressure. If both rise, the resistance is downstream, in the return line or catheter. If the filter pressure rises alone, the filter is clotting: look at the pressure drop and the TMP trend, review the anticoagulation, and plan the set change while the blood can still be returned. PrisMax alarms “High Filter Pressure” ${N('filter-high-limit')}.`,
     sourceIds: ['DEV-PM-009', 'SYNTH-LAB-PRESSURE-001'],
   },
   {
@@ -683,7 +683,7 @@ export const crrtPressureSignalDetails: readonly CrrtPressureSignalDetail[] = Ob
     ],
     whenUnreliable:
       'While the return clamp is closing or the chamber level is being adjusted, the reading is transient.',
-    firstInspectionBoundary: ESCALATION_BOUNDARY,
+    firstInspectionBoundary: `Check the return line for a kink or a clamp, then the catheter position and the return chamber for clot. A high return pressure with a clear line is a catheter problem. PrisMax alarms “Return Extremely Positive” ${N('return-high-limit')}, and “Return Disconnection” when the pressure falls ${N('return-disconnect-limit')}: for that one, look at the connection before anything else.`,
     sourceIds: ['DEV-PM-009', 'SYNTH-LAB-PRESSURE-001'],
   },
   {
@@ -705,7 +705,8 @@ export const crrtPressureSignalDetails: readonly CrrtPressureSignalDetail[] = Ob
     ],
     whenUnreliable:
       'During a bag change, while a scale is open, or before the effluent pump has reached its set rate.',
-    firstInspectionBoundary: ESCALATION_BOUNDARY,
+    firstInspectionBoundary:
+      'Check the effluent line for a kink and the effluent bag: a full or badly hung bag is the common cause. If the line is clear and the effluent pressure keeps falling while the TMP rises, the membrane is fouling.',
     sourceIds: ['DEV-PM-009', 'SYNTH-LAB-PRESSURE-001'],
   },
   {
@@ -728,8 +729,7 @@ export const crrtPressureSignalDetails: readonly CrrtPressureSignalDetail[] = Ob
     ],
     whenUnreliable:
       'Whenever any one of its three inputs is unreliable. A TMP built on a transient effluent reading is itself a transient. Treat TMP as a summary of three numbers you should look at individually.',
-    firstInspectionBoundary:
-      'Read the three underlying pressures before acting on TMP. Then stay within observation and inspection and hand the decision to the responsible clinical team and the local protocol.',
+    firstInspectionBoundary: `Read the three pressures behind it first. A rising TMP means the membrane is fouling, or that you are asking for more filtration than the blood flow supports. Lower the replacement, PBP or fluid-removal rate, or raise the blood flow: both lower the filtration fraction. PrisMax advises a clotting filter when TMP is ${N('clotting-advisory')}, and alarms ${N('tmp-alarm')}.`,
     sourceIds: ['MATH-PM-002'],
   },
   {
@@ -750,8 +750,7 @@ export const crrtPressureSignalDetails: readonly CrrtPressureSignalDetail[] = Ob
     ],
     whenUnreliable:
       'Whenever filter or return pressure is unreliable, and whenever blood flow has just changed — compare like with like before calling a trend.',
-    firstInspectionBoundary:
-      'Read filter and return pressure separately and note the blood flow they were read at. Then stay within observation and inspection and hand the decision to the responsible clinical team and the local protocol.',
+    firstInspectionBoundary: `Read filter and return pressure separately, at the blood flow they were taken at. A rising drop means blood is meeting resistance inside the fibers: the filter is clotting. PrisMax advises a clotting filter at ${N('clotting-advisory')}. Review the anticoagulation and plan the set change while the blood can still be returned.`,
     sourceIds: ['DEV-PM-010'],
   },
 ])
@@ -1150,7 +1149,7 @@ export function crrtCitrateClinicalSupport(topic: CrrtClaimTopic): CrrtCitrateCl
     requiredTopic: topic,
     supportingSourceIds: Object.freeze(sources),
     basis: sources.length
-      ? 'Clinical-publication support; claim passages read September 2026. Faculty review is pending. This is not a device instruction or local protocol.'
+      ? 'From the clinical literature.'
       : 'No registered clinical publication supports this claim; the explanation remains unavailable.',
     readOffNodeIds: Object.freeze([]),
     readOffPathIds: Object.freeze([]),

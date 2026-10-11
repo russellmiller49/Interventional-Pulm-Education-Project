@@ -226,7 +226,7 @@ describe('glossary (F-24)', () => {
     fireEvent.click(trigger)
     const dialog = screen.getByRole('dialog', { name: 'CRRT glossary' })
     expect(within(dialog).getByText('Pre-blood-pump (PBP) fluid')).toBeInTheDocument()
-    expect(within(dialog).getByText(/no clinician has reviewed them yet/)).toBeInTheDocument()
+    expect(dialog).not.toHaveTextContent(/draft glossary|no clinician has reviewed/i)
     fireEvent.keyDown(dialog, { key: 'Escape' })
     await settle()
     expect(screen.queryByRole('dialog', { name: 'CRRT glossary' })).toBeNull()

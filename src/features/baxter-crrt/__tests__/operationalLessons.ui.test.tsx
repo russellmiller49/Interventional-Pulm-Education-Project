@@ -83,7 +83,7 @@ describe('rendered Batch B lessons', () => {
     click('Review feedback and continue')
     expect(screen.getByText('Not recorded in this chart')).toBeVisible()
     expect(screen.queryByText(/Recorded balance:/)).not.toBeInTheDocument()
-    answer(/Report that exact balance is unavailable/)
+    answer(/Report the balance as incomplete/)
     expect(
       screen.getByText(
         /Net-removal change · guided version of Practice case CRRT-10 · event 0 · clock 0h 00m/,
@@ -95,10 +95,10 @@ describe('rendered Batch B lessons', () => {
     observations()
     click('Record 30 minutes')
     observations()
-    answer(/Reassess net removal and all patient inputs/)
+    answer(/Turn net removal down/)
     click('Continue')
     fireEvent.click(
-      screen.getByRole('radio', { name: /Reassess the original indication, native function/ }),
+      screen.getByRole('radio', { name: /Before any trial off, reassess the indication/ }),
     )
     click('Check reasoning')
     expect(readProgress().completedLessonIds).not.toContain('crrt-fluid-liberation')

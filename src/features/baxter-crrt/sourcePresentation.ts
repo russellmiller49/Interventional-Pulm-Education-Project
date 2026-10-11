@@ -84,26 +84,16 @@ function syntheticLocator(pageOrSection: string): string {
   return pageOrSection.replace(/\s*·\s*authored schematic boundary$/, '')
 }
 
-function looksLikeReview(version: string): boolean {
-  return /sme-review|reviewed|review build/i.test(version)
-}
-
 function reviewWords(source: SourceReference): string {
-  if (source.reviewStatus === 'pending' || source.reviewer === null) {
-    return source.sourceType === 'synthetic-calibration'
-      ? 'No clinical review recorded'
-      : 'Clinical and device review of how this module uses it: none recorded yet'
-  }
+  // Review status is project metadata; it is tracked in the packets, not shown to learners.
+  if (source.reviewStatus === 'pending' || source.reviewer === null) return ''
   return `Review recorded: ${source.reviewStatus}${source.reviewer ? ` · ${source.reviewer}` : ''}`
 }
 
 export function crrtLearnerCitation(source: SourceReference): CrrtLearnerCitation {
   const synthetic = source.sourceType === 'synthetic-calibration'
   const version = source.documentVersion ?? null
-  const versionNote =
-    version && looksLikeReview(version)
-      ? `“${version}” names the release stage this content was built for. It does not mean a subject-matter expert has reviewed it.`
-      : null
+  const versionNote: string | null = null
   const title = synthetic ? 'Simulated teaching values' : source.sourceTitle
   const edition = synthetic ? 'Written for this module' : version
   const url = source.pageOrSection.includes('http')

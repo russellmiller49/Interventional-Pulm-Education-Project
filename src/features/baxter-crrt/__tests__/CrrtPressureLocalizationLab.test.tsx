@@ -34,9 +34,11 @@ describe('learner Pressure Localization Lab UI', () => {
     expect(within(lab).getByRole('note', { name: 'Educational boundary' })).toHaveTextContent(
       'Known fault → predict and explain the pressure response',
     )
-    expect(within(lab).getByText(/alarm priority, automatic device response/i)).toBeInTheDocument()
+    expect(within(lab).queryByText(/alarm priority, automatic device response/i)).toBeNull()
     expect(within(lab).getByLabelText('Lab scope')).toHaveTextContent('Scope of this lab')
-    expect(within(lab).getByText(/does not establish a clinical normal/i)).toBeVisible()
+    expect(
+      within(lab).getByText(/pressure relationships are the ones in the PrisMax operator/i),
+    ).toBeVisible()
     expect(lab.querySelector('form')).not.toBeInTheDocument()
     expect(window.localStorage).toHaveLength(0)
   })
@@ -95,7 +97,11 @@ describe('learner Pressure Localization Lab UI', () => {
     expect(
       within(table).getByRole('row', { name: /Access pressure Unchanged Lower/i }),
     ).toHaveTextContent('-15 mmHg → -35 mmHg')
-    expect(screen.getByText(/does not provide a clinical normal, alarm limit/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        /the pressure upstream of a resistance rises and the\s+pressure downstream/i,
+      ),
+    ).toBeInTheDocument()
     expect(window.localStorage).toHaveLength(0)
   })
 

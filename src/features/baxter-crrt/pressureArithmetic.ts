@@ -153,7 +153,7 @@ export function describeCrrtFilterDropArithmetic(
     correction: {
       valueMmHg: c,
       status: 'placement-held-for-device-review',
-      note: `The manual prints the drop as filter − return and says those two readings are corrected for a ${formatCrrtMmHg(c)} mmHg sensor-height bias (manual pp201–202 · PDF pp202–203). This simulation applies the ${formatCrrtMmHg(c)} mmHg to the drop itself; where the correction belongs awaits device review. It is not an alarm limit or a clinical threshold.`,
+      note: `The manual prints the drop as filter − return and says those two readings are corrected for a ${formatCrrtMmHg(c)} mmHg sensor-height bias (manual pp201–202 · PDF pp202–203). This simulation applies the ${formatCrrtMmHg(c)} mmHg to the drop itself.`,
     },
     sourceId: PRISMAX_FILTER_PRESSURE_DROP_SOURCE_ID,
     sourceLabel: `${SOURCE_LABEL} · manual pp201–202 · PDF pp202–203`,

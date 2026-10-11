@@ -69,7 +69,7 @@ describe('the citrate overlay is held to the same rule as the citrate terms', ()
     expect([...kinds].sort()).toEqual(['clinical-publication', 'module-authored-topology'])
   })
 
-  it('ties the two pharmacology statements to read publication claims, without promoting review status', () => {
+  it('ties the two pharmacology statements to read publication claims', () => {
     const sourced = crrtCitrateOverlayStatements.filter(
       (s) => s.claimSupport.kind === 'clinical-publication',
     )
@@ -79,7 +79,7 @@ describe('the citrate overlay is held to the same rule as the citrate terms', ()
     ])
     for (const statement of sourced) {
       expect(statement.claimSupport.supportingSourceIds).toEqual(['CITRATE-SIAARTI-2023-MECHANISM'])
-      expect(statement.claimSupport.basis).toMatch(/review is pending/i)
+      expect(statement.claimSupport.basis).toMatch(/literature/i)
     }
   })
 

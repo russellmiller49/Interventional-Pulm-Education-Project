@@ -98,12 +98,9 @@ export function CrrtRapidDrillReview() {
 
       <div className={styles.boundary} role="note" aria-labelledby={REVIEW_BOUNDARY_ID}>
         <p>
-          <strong id={REVIEW_BOUNDARY_ID}>Educational cause-first practice.</strong> Each drill is a
-          worked safety example. You can choose a first response and check it, or open the worked
-          example straight away. They teach patient review, inspection, verification, reassessment,
-          and escalation. They do not supply local alarm thresholds, correction procedures, restart
-          rules, or blood-disposition instructions. Device instructions, local policy, and clinical
-          judgment remain authoritative.
+          <strong id={REVIEW_BOUNDARY_ID}>Five alarms, one habit.</strong> Patient first, then what
+          the machine did, then the part of the circuit the alarm points at. Choose a first response
+          and check it, or open the worked example straight away.
         </p>
       </div>
 
@@ -207,8 +204,7 @@ export function CrrtRapidDrillReview() {
             </button>
             {state.acknowledged ? (
               <p className={styles.acknowledgement} role="status">
-                Signal acknowledged. Acknowledgement does not resolve the cause or authorize
-                continuation.
+                Alarm silenced. The cause is still there until you fix it.
               </p>
             ) : null}
           </section>
@@ -240,13 +236,13 @@ export function CrrtRapidDrillReview() {
                       <strong>{step.label}</strong>
                       <p>{step.reviewerBoundary}</p>
                       {step.id === 'inspect-corresponding-domain' ? (
-                        <small>Inspection domain: {drill.inspectionDomain}.</small>
+                        <small>Look at: {drill.inspectionDomain}.</small>
                       ) : null}
                       {step.id === 'verify-cause-corrected' ? (
                         <small>{drill.correctionBoundary}</small>
                       ) : null}
                       {step.id === 'reassess-delivery-and-patient' ? (
-                        <small>Reassessment domain: {drill.reassessmentDomain}.</small>
+                        <small>Recheck: {drill.reassessmentDomain}.</small>
                       ) : null}
                     </div>
                     {completed ? (

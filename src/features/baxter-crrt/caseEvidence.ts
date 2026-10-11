@@ -43,10 +43,10 @@ export interface CrrtCaseEvidence {
 export const CRRT_CASE_EVIDENCE_HEADING = 'What this case can show you' as const
 
 export const CRRT_SUPPLIED_EVIDENCE_CAPTION =
-  'Supplied case values, at one time point, from this case’s own synthetic teaching record. They are not measurements from your run and this exercise does not model how they change.' as const
+  'Case values at the start of the case. They stay as they are while the run advances.' as const
 
 export const CRRT_ABSENT_EVIDENCE_CAPTION =
-  'Evidence this case describes or would need, and does not have. Not supplied is not zero and not normal.' as const
+  'A value that is not given is unknown. Do not read it as zero or as normal.' as const
 
 interface FieldDescriptor {
   readonly label: string

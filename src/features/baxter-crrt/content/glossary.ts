@@ -19,6 +19,9 @@
  */
 
 import type { CrrtClaimTopic } from './learnerSourceMap'
+import { CRRT_NUMBERS } from './teachingNumbers'
+
+const N = CRRT_NUMBERS.value
 
 export type CrrtGlossaryGroupId =
   | 'flows-and-fluids'
@@ -321,9 +324,8 @@ export const crrtGlossary: readonly CrrtGlossaryEntry[] = Object.freeze([
     group: 'prescribed-and-delivered',
     term: 'Prescribed dose and delivered dose',
     alsoCalled: ['Effluent dose (mL/kg/h)'],
-    definition:
-      'Prescribed dose is the effluent rate divided by the documented weight. Delivered dose uses the effluent actually produced over an interval, so downtime lowers it even when the settings never change. Both are intensity proxies, not measured solute clearance.',
-    notTheSameAs: ['A clinical target: this module supplies no dose target.'],
+    definition: `Prescribed dose is the effluent rate divided by the documented weight. Delivered dose uses the effluent actually produced over an interval, so downtime lowers it even when the settings never change. The target is a delivered dose of ${N('dose-delivered')}; prescribe ${N('dose-prescribed')} to reach it.`,
+    notTheSameAs: ['Measured solute clearance: both are intensity proxies.'],
     basis: [
       {
         kind: 'device-manual',
@@ -440,7 +442,7 @@ export const crrtGlossary: readonly CrrtGlossaryEntry[] = Object.freeze([
       'A calculated difference: filter pressure minus return pressure. This simulation also applies a −25 mmHg sensor-height correction to the drop.',
     notTheSameAs: ['Filter pressure alone.'],
     openQuestion:
-      'Held for device review: the manual applies the −25 mmHg correction to the filter and return readings, and whether it belongs on the drop itself is not settled (G01-CRRT-02).',
+      'The manual applies the −25 mmHg correction to the filter and return readings. It does not say whether the correction also belongs on the drop itself.',
     basis: [
       {
         kind: 'device-manual',
@@ -480,24 +482,24 @@ export const crrtGlossary: readonly CrrtGlossaryEntry[] = Object.freeze([
     basis: [
       {
         kind: 'module-drawing',
-        detail: 'Each case’s supplied starting values (a synthetic teaching record).',
+        detail: 'Each case’s starting values.',
       },
     ],
   }),
   entry({
     id: 'simulated-alert',
     group: 'model-markers-and-alerts',
-    term: 'Simulated alert',
-    alsoCalled: ['Generic training alert'],
+    term: 'Alarm in this simulator',
+    alsoCalled: ['Simulated alert'],
     definition:
-      'A generic alert this teaching model raises for a modeled fault, such as a simulated access-obstruction alert. Acknowledging it does not correct its cause.',
+      'The alarm this simulator raises for a modeled fault, named as the PrisMax operator’s manual names it, such as “Access Extremely Negative”. Silencing it does not correct its cause.',
     notTheSameAs: [
-      'A PrisMax alarm: the simulated alerts are not mapped to manufacturer alarm names, priorities, colors or automatic pump responses.',
+      'The machine’s full response: on PrisMax a high-priority alarm stops the pumps, and here they keep running so you can watch the pressures.',
     ],
     basis: [
       {
         kind: 'module-drawing',
-        detail: 'This simulation’s generic fault alerts; device alarm mapping awaits review.',
+        detail: 'This simulation’s fault alarms, titled from the PrisMax operator’s manual.',
       },
     ],
   }),
@@ -508,7 +510,7 @@ export function crrtGlossaryEntry(id: string): CrrtGlossaryEntry | undefined {
 }
 
 export const CRRT_GLOSSARY_STATUS =
-  'Draft glossary. Definitions restate this module’s own lessons and circuit drawing, or a registered source record; no clinician has reviewed them yet.' as const
+  'Each definition says where it comes from: a lesson, the circuit drawing, or a cited source.' as const
 
 if (new Set(crrtGlossary.map(({ id }) => id)).size !== crrtGlossary.length) {
   throw new Error('CRRT glossary ids must be unique.')

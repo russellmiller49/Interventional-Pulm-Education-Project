@@ -185,7 +185,7 @@ export const CRRT_INTERRUPTION_CAPTION =
  * local boundary between it and the actual-run sections above it.
  */
 export const CRRT_WORKED_TEACHING_BOUNDARY =
-  'The points below are the authored teaching for this case: what a review would look at and why. They are the same after every run and do not report an action, a reassessment, or a result from this one. What this run recorded is under “What you did in this run” above.' as const
+  'The points below are the worked teaching for this case. They are the same after every run; what you did in this run is listed above.' as const
 
 export const CRRT_MODEL_INDEX_CAPTION =
   'These are bounded model indices, not measurements. They are the signals this exercise actually advances, so they are what separates one path from another at the same elapsed time.' as const
@@ -549,8 +549,8 @@ export function selectCrrtActualRunReview(session: CrrtLearningSessionState): Cr
       ? `Debrief opened · ${appliedActionCount} recorded ${appliedActionCount === 1 ? 'event' : 'events'} in this run`
       : 'Debrief opened · no run performed',
     statusDetail: hasRun
-      ? 'This lists what this session recorded. It is not a judgment that the care was safe, complete, or successful.'
-      : 'You have not performed a case action or advanced simulated time, so there is nothing from this run to review. The explanation below is the authored example.',
+      ? 'This lists what you did in this run.'
+      : 'You have not performed a case action or advanced simulated time, so there is nothing from this run to review. The explanation below is the worked example.',
     actions,
     observations,
     reassessmentLabels,

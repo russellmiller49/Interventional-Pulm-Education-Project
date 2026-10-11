@@ -29,12 +29,13 @@ function start(caseId: CrrtCaseId) {
 }
 
 for (const caseId of ['CRRT-08', 'CRRT-09'] as const) {
-  it(`${caseId}: every no-effect stop/connection choice explicitly records a plan`, () => {
+  it(`${caseId}: every stop/connection choice is recorded and leaves the running simulation unchanged`, () => {
     const definition = getBaxterCrrtCase(caseId)
-    const actions = definition.interventions.filter(({ label }) => /stop|connect/i.test(label))
+    const actions = definition.interventions.filter(({ label }) =>
+      /stop|connect|start|anticoagulant/i.test(label),
+    )
     expect(actions.length).toBeGreaterThan(0)
     for (const action of actions) {
-      expect(action.label).toMatch(/^Plan /)
       expect(action.effects).toEqual([])
       const assessed = crrtLearningSessionReducer(start(caseId), {
         type: 'PERFORM_INTERVENTION',
@@ -52,11 +53,11 @@ for (const caseId of ['CRRT-08', 'CRRT-09'] as const) {
   })
 }
 
-it('CRRT-17 transfer asks about the available observation and missing evidence', () => {
+it('CRRT-17 transfer asks a new citrate question with its own values, not about a linked trend', () => {
   const question = getBaxterCrrtCase('CRRT-17').debrief.transferQuestion
   expect(question).not.toMatch(/the linked trend/)
-  expect(question).toMatch(/single supplied calcium observation/)
-  expect(question).toMatch(/missing trend/)
+  expect(question).toMatch(/ratio of \d/)
+  expect(question).toMatch(/\?$/)
 })
 
 it('CRRT-17 reassessment and hints do not ask learners to read an absent trend', () => {
@@ -66,7 +67,7 @@ it('CRRT-17 reassessment and hints do not ask learners to read an absent trend',
     ...definition.hintLadder.map(({ text }) => text),
   ])
     expect(text).not.toMatch(/Reassess linked trend direction/)
-  expect(definition.reassessmentOptions[0].label).toMatch(/missing/)
+  expect(definition.reassessmentOptions[0].label).toMatch(/total and ionized calcium/)
 })
 
 const act = (interventionId: string): CrrtLearningSessionAction => ({
@@ -140,7 +141,7 @@ it.each(cases)(
     )
     expect(review.reassessmentLabels.length > 0).toBe(performed.reassessment.committed)
     if (!performed.reassessment.committed)
-      expect(actual).toHaveTextContent('Not recorded. The recommended reassessment')
+      expect(actual).toHaveTextContent('Not recorded. The reassessment below is the worked answer')
     const worked = screen.getByRole('region', {
       name: 'Worked teaching for this case · not a record of this run',
     })

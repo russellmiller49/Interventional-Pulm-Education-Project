@@ -87,11 +87,11 @@ describe('CRRT workbench evidence (F-11 / F-12)', () => {
     // Batch-01 containment statement, not the evolving pool.
     expect(panel).toHaveTextContent(/K 6\.9 mmol\/L · HCO₃ 10(?:\.0)? mmol\/L · pH 7\.08/)
     expect(panel).toHaveTextContent('not modeled over time')
-    // Safety constraints and device identity stay one named disclosure away.
-    const more = within(panel)
-      .getByText('Device profile and safety constraints')
-      .closest('details')!
-    expect(within(more).getByRole('list', { name: 'Safety constraints' })).toBeInTheDocument()
+    // Device identity stays one named disclosure away, with no per-surface boundary note in it.
+    const more = within(panel).getByText('Device profile').closest('details')!
+    expect(more).toHaveTextContent(/Device profile: \S/)
+    expect(within(more).queryByRole('list', { name: 'Safety constraints' })).toBeNull()
+    expect(more).not.toHaveTextContent(/invented for teaching/i)
   })
 
   it('keeps blood flow set and blood flow through the circuit as two separate readings', async () => {

@@ -55,10 +55,9 @@ export function CrrtLivePressureStation() {
       </header>
 
       <p className={styles.flowNote}>
-        These are two recorded synthetic snapshots, not a continuously running learner-controlled
-        session: baseline at four hours, then higher blood flow at five hours. Both the setting and
-        elapsed time differ, so filter age and recorded delivery can also differ. This is not an
-        isolated blood-flow effect. Selecting a snapshot does not apply a device prescription.
+        Two snapshots of one circuit: baseline at four hours, then a higher blood flow at five
+        hours. The filter is an hour older in the second, so the difference is blood flow plus an
+        hour of filter age.
       </p>
 
       <CrrtLivePressureDevice

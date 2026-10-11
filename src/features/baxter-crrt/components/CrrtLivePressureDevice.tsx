@@ -200,7 +200,7 @@ export function CrrtLivePressureDevice({
     <section className={styles.livePanel} aria-labelledby={headingId}>
       <header className={styles.liveHeader}>
         <div>
-          <span className={styles.liveEyebrow}>Live educational pressure profile</span>
+          <span className={styles.liveEyebrow}>Live pressure profile</span>
           <h2 id={headingId}>What the model is reporting right now</h2>
         </div>
         <div
@@ -409,12 +409,7 @@ export function CrrtLivePressureDevice({
           A pressure number is partly a function of how fast blood is being pumped. A value that
           moves after a flow change is not by itself evidence of a new obstruction. Start from where
           the reading is taken and read the whole profile together, then look at the patient, the
-          access, and the circuit. This surface supplies no target, no normal range, and no alarm
-          setting.
-        </p>
-        <p>
-          Exactly how a commercial machine displays, groups, or alarms on these values belongs to
-          the manufacturer&apos;s instructions and your local training, not to this model.
+          access, and the circuit.
         </p>
       </footer>
     </section>

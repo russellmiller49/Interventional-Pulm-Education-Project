@@ -466,7 +466,7 @@ describe('staged prescription builder surface', () => {
     const anticoagulation = screen.getByRole('combobox', { name: 'Anticoagulation approach' })
     expect(anticoagulation).toHaveValue('none')
     expect(anticoagulation).toBeDisabled()
-    expect(anticoagulation).toHaveAccessibleDescription(/This setting is fixed in this exercise/)
+    expect(anticoagulation).toHaveAccessibleDescription(/Fixed at none in this exercise/)
     expect(within(anticoagulation).getByRole('option', { name: /Systemic/ })).toBeDisabled()
     expect(within(anticoagulation).getByRole('option', { name: /Regional citrate/ })).toBeDisabled()
   })

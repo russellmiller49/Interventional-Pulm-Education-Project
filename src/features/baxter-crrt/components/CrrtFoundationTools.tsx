@@ -372,10 +372,8 @@ export function CrrtFoundationToolView({
             : 'Select a pressure readout to locate its site or contributing sites.'}
         </p>
         <p>
-          Reference blood flow: 100 mL/min in both synthetic states.{' '}
-          {changed
-            ? 'Only modeled return resistance is increased.'
-            : 'Normal reference; not a clinical normal range.'}
+          Reference blood flow: 100 mL/min in both states.{' '}
+          {changed ? 'Only modeled return resistance is increased.' : 'Unobstructed circuit.'}
         </p>
         <dl className={styles.metrics}>
           {result.signals.map((signal) => (
@@ -418,7 +416,7 @@ export function CrrtFoundationToolView({
     return (
       <>
         <table className={styles.table}>
-          <caption>Synthetic pressure comparison · same blood flow, 100 mL/min</caption>
+          <caption>Pressure comparison · same blood flow, 100 mL/min</caption>
           <thead>
             <tr>
               <th>Reading (mmHg)</th>

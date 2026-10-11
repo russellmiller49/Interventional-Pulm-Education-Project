@@ -83,7 +83,7 @@ describe('the 25 optional application checks (F-06)', () => {
       .map((task) => ({ lessonId, task })),
   )
 
-  it('keeps all 25 items, their options and their accepted answers exactly as authored', () => {
+  it('keeps all 25 items, their options and their accepted answers', () => {
     expect(items).toHaveLength(25)
     const keys = items.map(({ lessonId, task }) => [
       `${lessonId}/${task.id}`,
@@ -91,11 +91,12 @@ describe('the 25 optional application checks (F-06)', () => {
     ])
     expect(Object.fromEntries(keys)).toMatchObject({
       'crrt-indications-modality/goals-case': 'fluid-only,two-goals*,most-mechanisms',
-      'crrt-alarms-troubleshooting/alarm-transfer': 'restored,not-restored*',
-      'crrt-fluid-liberation/missing-chart-data': 'zero-output,reconcile*',
+      'crrt-alarms-troubleshooting/alarm-transfer': 'restored,not-restored*,cause-corrected',
+      'crrt-fluid-liberation/missing-chart-data': 'zero-output,reconcile*,machine-only',
       'crrt-pressure-profile-integration/case-localize':
         'filter-certain,return-resistance*,access-only,outflow-uncertain*',
-      'crrt-pressure-profile-integration/case-plan': 'unsafe-flow,defer*,correct*',
+      // Staying paused to call is a distractor: the first move is to clear the restriction.
+      'crrt-pressure-profile-integration/case-plan': 'unsafe-flow,defer,correct*',
     })
   })
 
@@ -114,7 +115,9 @@ describe('the 25 optional application checks (F-06)', () => {
     // "The paused state" is the run's current state from the previous task; what leaked was the
     // accepted plan itself ("A continued pause for escalation is also supported…").
     expect(plan.instruction).not.toMatch(/continued pause|escalat/i)
-    expect(plan.instruction).toMatch(/More than one plan can be supported/)
+    expect(plan.choices!.filter((choice) => choice.correct).map((choice) => choice.id)).toEqual([
+      'correct',
+    ])
   })
 
   it('frames the check as an optional try and shows the worked explanation before any answer', () => {
@@ -134,13 +137,13 @@ describe('the 25 optional application checks (F-06)', () => {
   it('states the outcome of a wrong answer, names the accepted answer, and allows retry', () => {
     openFirstApplicationCheck()
     expect(screen.getByRole('button', { name: 'Check reasoning' })).toBeDisabled()
-    fireEvent.click(screen.getByRole('radio', { name: /Fluid removal alone/ }))
+    fireEvent.click(screen.getByRole('radio', { name: /One goal, fluid removal/ }))
     click('Check reasoning')
     const status = screen.getByRole('status')
     expect(status).toHaveTextContent('Your choice is not the accepted answer')
-    expect(status).toHaveTextContent('You chose: Fluid removal alone')
+    expect(status).toHaveTextContent('You chose: One goal, fluid removal')
     expect(within(status).getByText('Accepted answer')).toBeInTheDocument()
-    expect(status).toHaveTextContent('Solute/acid-base support and fluid management')
+    expect(status).toHaveTextContent('Two goals, acid-base control and fluid removal')
     expect(within(status).getByText('How every option compares')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Show worked explanation' })).toBeNull()
 
@@ -148,7 +151,7 @@ describe('the 25 optional application checks (F-06)', () => {
     expect(screen.queryByRole('status')).toBeNull()
     expect(screen.queryByRole('radio', { checked: true })).toBeNull()
     expect(screen.getByRole('button', { name: 'Check reasoning' })).toBeDisabled()
-    fireEvent.click(screen.getByRole('radio', { name: /Solute\/acid-base support/ }))
+    fireEvent.click(screen.getByRole('radio', { name: /Two goals, acid-base control/ }))
     click('Check reasoning')
     expect(screen.getByRole('status')).toHaveTextContent('Your choice matches the accepted answer')
     expect(within(screen.getByRole('status')).queryByText('Accepted answer')).toBeNull()
@@ -177,14 +180,17 @@ describe('the 25 optional application checks (F-06)', () => {
     click('Review patient and treatment')
     click('Record the first 30 minutes')
     click('Review observations and continue')
-    fireEvent.click(screen.getByRole('radio', { name: /The return region needs inspection/ }))
+    fireEvent.click(
+      screen.getByRole('radio', { name: /After the filter; something on the return side/ }),
+    )
     click('Check reasoning')
     const status = document.querySelector('[data-crrt-question-feedback]') as HTMLElement
     expect(status).toHaveAttribute('role', 'status')
     expect(status).toHaveTextContent('Your choice is one of the accepted answers')
     const accepted = status.querySelector('[data-crrt-accepted-answers]') as HTMLElement
     expect(within(accepted).getAllByRole('listitem')).toHaveLength(2)
-    expect(accepted).toHaveTextContent('Increased return-side resistance is plausible')
+    expect(accepted).toHaveTextContent('After the filter; something on the return side')
+    expect(accepted).toHaveTextContent('On the return side; line, catheter or position')
   })
 })
 
@@ -197,7 +203,7 @@ describe('rapid drills say what they are (F-07)', () => {
     )
     expect(legend.tagName).toBe('LEGEND')
     expect(legend.textContent).not.toMatch(/cause/i)
-    expect(drill.predictionPrompt).toMatch(/response/)
+    expect(drill.predictionPrompt).toMatch(/What do you do first\?/)
     for (const option of drill.predictionOptions) {
       expect(screen.queryByText(option.description)).not.toBeInTheDocument()
     }
@@ -296,7 +302,7 @@ describe('case action cards describe the action, not its verdict (F-07)', () => 
 
   it('keeps each unsafe card’s own label, which names what is unsafe about it', () => {
     const labels = getBaxterCrrtCase('CRRT-08').interventions.map((i) => i.label)
-    expect(labels).toContain('Plan to connect first and correct the mismatch later')
+    expect(labels).toContain('Connect now and change the bag at the first bag change')
     expect(getBaxterCrrtCase('CRRT-13').interventions.map((i) => i.label)).toContain(
       'Increase BFR through unresolved access resistance',
     )
@@ -326,8 +332,9 @@ describe('case action cards describe the action, not its verdict (F-07)', () => 
     click('Explain this case')
     const worked = screen.getByRole('region', { name: 'Worked example' })
     expect(within(worked).getByText('Actions this case treats as unsafe')).toBeInTheDocument()
-    expect(worked).toHaveTextContent('Plan to connect first and correct the mismatch later')
-    expect(worked).toHaveTextContent('It stays in the list so its consequences can be explored')
+    expect(worked).toHaveTextContent('Connect now and change the bag at the first bag change')
+    // The reason it is unsafe is the case's own explanation, not a note about the list.
+    expect(worked).toHaveTextContent(getBaxterCrrtCase('CRRT-08').unsafeActions[0].explanation)
   })
 
   it('lists the unsafe actions a run did not perform in its debrief', () => {
@@ -342,7 +349,9 @@ describe('case action cards describe the action, not its verdict (F-07)', () => 
     expect(
       within(safety).getByText('Actions this case treats as unsafe that this run did not perform'),
     ).toBeInTheDocument()
-    expect(safety).toHaveTextContent('Escalate removal without assessment or reassessment')
+    expect(safety).toHaveTextContent(
+      'Raise net removal now, before checking blood pressure and vasopressor need',
+    )
   })
 
   it('shows no list note where a worked example retires the unsafe card', () => {
