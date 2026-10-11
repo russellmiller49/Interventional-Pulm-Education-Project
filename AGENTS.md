@@ -43,3 +43,17 @@ Before searching for source assets or following an old authoring path, read
 Local-Data paths. Only the primary checkout carries the legacy symlink mounts; worktrees
 resolve inputs through the helpers or Local-Data config. Raw inputs stay outside Git;
 commit only regenerated runtime outputs. Never print the contents of `secrets/`.
+
+## Learner-facing educational modules
+
+Read `docs/teaching-first-rules.md` before writing, editing or reviewing learner-facing content.
+The modules teach supervised fellows; they are not guidelines or instructions for use. In short:
+
+- Teach the guideline, consensus or device number where one exists, with its source in the
+  module's numbers register. "Check local protocol" may follow a number, never replace it.
+- Key deterioration questions on first moves, not on "escalate".
+- One boundary statement per module. Review status and authoring notes never reach the learner.
+- Fix a wrong model before explaining it in the copy.
+- A review reports what is wrong and what is not taught, with equal weight, and ends with its top
+  three teaching improvements. Paste the reviewer charter from that page into every review or
+  acceptance prompt for a learner-facing module.

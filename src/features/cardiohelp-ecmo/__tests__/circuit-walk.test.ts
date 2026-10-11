@@ -352,23 +352,6 @@ describe('the walk is authored so both tracks read the same lesson', () => {
 })
 
 describe('the walk carries no authored quantity', () => {
-  it.each(MODES)('%s: has no digit in any learner-facing string', (mode) => {
-    for (const stop of ecmoCircuitWalkStops) {
-      const strings = [
-        resolveEcmoModeText(stop.title, mode),
-        resolveEcmoModeText(stop.analogy, mode),
-        resolveEcmoModeText(stop.checklistLabel, mode),
-        resolveEcmoModeText(stop.takeaway, mode),
-        resolveEcmoModeText(stop.modelBoundary, mode),
-        ...stop.checklist.map((item) => resolveEcmoModeText(item, mode)),
-        ...(stop.comparison ?? []).flatMap((beat) => [beat.label, beat.readThis]),
-      ]
-      for (const value of strings) {
-        expect(`${stop.id}: ${value}`).not.toMatch(/\d/)
-      }
-    }
-  })
-
   it('states a model boundary at every stop', () => {
     for (const stop of ecmoCircuitWalkStops) {
       expect(`${stop.id}: ${resolveEcmoModeText(stop.modelBoundary, 'vv')}`).toMatch(

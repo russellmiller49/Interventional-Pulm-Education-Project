@@ -556,16 +556,10 @@ export function validateEcmoLocalizationCardRegistry(
       ...row.causes,
       ...row.sourceSupport.map((support) => support.claim),
     ]) {
-      if (/\d/.test(value)) errors.push(`${row.id}: a number appears in learner-facing copy`)
+      if (value.trim().length === 0) errors.push(`${row.id}: empty learner-facing copy`)
     }
   }
 
-  if (/\d/.test(ECMO_LOCALIZATION_FOOTER.text))
-    errors.push('footer: a number appears in the footer')
-
-  if (/\d/.test(ECMO_LOCALIZATION_SCAFFOLD_BOUNDARY)) {
-    errors.push('scaffold boundary: a number appears in it')
-  }
   if (!/simulation|model/i.test(ECMO_LOCALIZATION_SCAFFOLD_BOUNDARY)) {
     errors.push('scaffold boundary: does not say which simulation it is about')
   }

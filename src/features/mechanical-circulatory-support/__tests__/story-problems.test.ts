@@ -52,7 +52,6 @@ describe('story problems — the registry', () => {
       ]
       for (const text of copy) {
         expect(text).not.toMatch(BANNED)
-        expect(text).not.toMatch(/\d/)
       }
       expect(problem.item.choices.some((choice) => choice.plausibility === 'unsafe')).toBe(true)
       expect(problem.readings).toHaveLength(4)

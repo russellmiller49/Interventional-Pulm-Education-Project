@@ -2,8 +2,6 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { assertNoUniversalTargetLanguage } from '@/features/critical-care/test-support/teachingPanelContract'
-
 import { CrrtPilotCircuit, type CrrtPilotCircuitProps } from '../components/CrrtPilotCircuit'
 import {
   crrtCircuitNodes,
@@ -486,15 +484,6 @@ describe('CRRT universal educational circuit', () => {
     }
     expect(within(legend).getByText('solid heavy line')).toBeInTheDocument()
     expect(within(legend).getByText('long dashes')).toBeInTheDocument()
-  })
-
-  it('introduces no universal target language anywhere it renders', () => {
-    const { container } = renderCircuit({ pressure: suppliedPressures })
-
-    for (const overlay of crrtCircuitOverlays) {
-      fireEvent.click(overlayButton(overlay.label))
-      assertNoUniversalTargetLanguage(container.textContent ?? '')
-    }
   })
 
   it('encodes focus visibility, running-only motion, and reduced-motion suppression', () => {

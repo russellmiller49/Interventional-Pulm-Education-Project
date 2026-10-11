@@ -1,4 +1,3 @@
-import { assertNoUniversalTargetLanguage } from '@/features/critical-care/test-support/teachingPanelContract'
 import { flaggedLearnerCopyTerms } from '@/features/learning-module/activity/clinicalLearningItem'
 
 import { ECMO_CONTROL_PANEL } from '../content/controlPanel'
@@ -289,26 +288,10 @@ describe('the transfer principle carries a principle forward', () => {
 })
 
 describe('what a drill spec may say', () => {
-  it('carries no number in any learner-facing string', () => {
-    for (const id of DRILL_IDS) {
-      for (const value of learnerFacingStrings(ecmoDrillSpec(id))) {
-        expect(`${id}: ${value}`).not.toMatch(/\d/)
-      }
-    }
-  })
-
   it('carries no reviewed learner-copy term', () => {
     for (const id of DRILL_IDS) {
       for (const value of learnerFacingStrings(ecmoDrillSpec(id))) {
         expect(`${id}: ${flaggedLearnerCopyTerms(value).join()}`).toBe(`${id}: `)
-      }
-    }
-  })
-
-  it('phrases nothing as a universal bedside target', () => {
-    for (const id of DRILL_IDS) {
-      for (const value of learnerFacingStrings(ecmoDrillSpec(id))) {
-        assertNoUniversalTargetLanguage(value)
       }
     }
   })

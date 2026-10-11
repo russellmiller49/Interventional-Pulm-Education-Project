@@ -70,8 +70,6 @@ describe('the story problems are valid items on the section that owns them', () 
         ...story.item.choices.flatMap((choice) => [choice.label, choice.rationale]),
       ].join(' ')
       expect(text).not.toMatch(BANNED)
-      // "four hundred rpm" is spelled out on purpose: the only digits allowed are none.
-      expect(text).not.toMatch(/\d/)
     }
   })
 
