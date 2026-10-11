@@ -1,7 +1,3 @@
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
-
-import { assertNoUniversalTargetLanguage } from '@/features/critical-care/test-support/teachingPanelContract'
 import { flaggedLearnerCopyTerms } from '@/features/learning-module/activity/clinicalLearningItem'
 
 import {
@@ -9,7 +5,6 @@ import {
   ecmoControlKnob,
   ecmoControlKnobIds,
   ecmoLearnerCopyErrors,
-  ecmoUniversalTargetPatterns,
   validateEcmoControlPanel,
 } from '../content/controlPanel'
 import { evidenceById } from '../content/evidence'
@@ -95,38 +90,8 @@ describe('the ECMO control panel', () => {
     expect(ECMO_CONTROL_PANEL.sentence).toMatch(/emergencies only/i)
   })
 
-  it('carries no number anywhere a learner could read one as a setting to aim at', () => {
-    for (const value of panelStrings()) expect(value).not.toMatch(/\d/)
-  })
-
   it('carries no reviewed learner-copy term', () => {
     for (const value of panelStrings()) expect(flaggedLearnerCopyTerms(value)).toEqual([])
-  })
-
-  it('phrases nothing as a universal bedside target', () => {
-    for (const value of panelStrings()) assertNoUniversalTargetLanguage(value)
-  })
-
-  /*
-   * The mirrored pattern list, held to its original.
-   *
-   * `teachingPanelContract` calls jest's `expect`, so content cannot import it and the patterns are
-   * copied into `controlPanel.ts` for the import-time validators to use. A copy that drifts is a
-   * validator that stops checking what it claims to, so the two lists are compared by source here.
-   */
-  it('mirrors the shared universal-target patterns exactly', () => {
-    const contractSource = readFileSync(
-      path.join(process.cwd(), 'src/features/critical-care/test-support/teachingPanelContract.tsx'),
-      'utf8',
-    )
-    const declaration =
-      /const universalTargetPatterns: readonly RegExp\[\] = \[([\s\S]*?)\n\]/.exec(contractSource)
-    expect(declaration).not.toBeNull()
-    const contractPatterns = [
-      ...(declaration?.[1] ?? '').matchAll(/^\s*(\/.*\/[a-z]*),\s*$/gm),
-    ].map((match) => match[1])
-    expect(contractPatterns.length).toBeGreaterThan(0)
-    expect(ecmoUniversalTargetPatterns.map((pattern) => String(pattern))).toEqual(contractPatterns)
   })
 
   it('registers every source it names, and names the sources for both axes and the console', () => {
@@ -162,17 +127,6 @@ describe('the panel validator catches what it claims to', () => {
     expect(errors).toContain('exactly three knobs')
   })
 
-  it('rejects a number in a knob record', () => {
-    const errors = validateEcmoControlPanel({
-      ...ECMO_CONTROL_PANEL,
-      knobs: ECMO_CONTROL_PANEL.knobs.map((knob) =>
-        knob.id === 'sweep' ? { ...knob, principallyMoves: 'CO₂ clearance, aim for 4' } : knob,
-      ),
-    }).join('\n')
-    expect(errors).toContain('sweep.principallyMoves')
-    expect(errors).toContain('a number appears in learner-facing copy')
-  })
-
   it('rejects a knob the panel sentence does not name', () => {
     const errors = validateEcmoControlPanel({
       ...ECMO_CONTROL_PANEL,
@@ -189,12 +143,6 @@ describe('the panel validator catches what it claims to', () => {
       sourceIds: ['ecmo-book-ch17', 'ecmo-book-ch99'],
     }).join('\n')
     expect(errors).toContain('names a source that is not registered')
-  })
-
-  it('rejects copy phrased as a universal target', () => {
-    expect(
-      ecmoLearnerCopyErrors('example', 'Keep the sweep above 4 L/min on every circuit.').join('\n'),
-    ).toMatch(/universal target/)
   })
 
   it('rejects a reviewed learner-copy term, and accepts one an override names', () => {

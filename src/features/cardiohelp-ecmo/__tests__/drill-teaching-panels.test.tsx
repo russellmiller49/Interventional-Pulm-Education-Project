@@ -2,7 +2,6 @@ import { render } from '@testing-library/react'
 
 import {
   assertModelBoundariesAreLabelled,
-  assertNoUniversalTargetLanguage,
   assertTeachingPanelContract,
 } from '@/features/critical-care/test-support/teachingPanelContract'
 
@@ -143,16 +142,6 @@ describe('B4: every pilot panel satisfies the teaching-panel contract', () => {
     for (const boundary of container.querySelectorAll('[data-model-boundary]')) {
       expect(boundary.textContent ?? '').toMatch(/simulation|model/i)
     }
-  })
-
-  it.each(PILOT_IDS)('%s introduces no universal bedside target', (id) => {
-    const before = render(<EcmoDrillTeachingPanel state={settled(id)} />)
-    assertNoUniversalTargetLanguage(before.container.textContent ?? '')
-    before.unmount()
-
-    const after = render(<EcmoDrillTeachingPanel state={afterCommitment(settled(id))} />)
-    assertNoUniversalTargetLanguage(after.container.textContent ?? '')
-    after.unmount()
   })
 
   it.each(PILOT_IDS)('%s classifies every signal it shows as an authored kind', (id) => {

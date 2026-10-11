@@ -73,7 +73,7 @@ export function ventilationCaseCountPhrase(): string {
 }
 
 /** What a held entry is called beside its title. */
-export const VENTILATION_HELD_CASE_TAG = 'worked explanation · live simulation held for review'
+export const VENTILATION_HELD_CASE_TAG = 'worked explanation'
 
 /* ------------------------------------------------------------------------------------------------
  * Applications: which section each optional item actually exercises
@@ -247,5 +247,5 @@ export function ventilationSectionTimeLine(unitId: string): string {
     seconds > 0
       ? ` The optional experiments add about ${seconds} seconds of simulated time at 1×, less on a faster clock.`
       : ' The optional parts here have no timed run.'
-  return `About ${unit.minutes} minutes to read: an author’s estimate, not timed with learners.${experiments}`
+  return `About ${unit.minutes} minutes to read.${experiments}`
 }

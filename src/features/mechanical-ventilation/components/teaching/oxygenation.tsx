@@ -12,7 +12,8 @@ import { useState } from 'react'
 import type { TrendSample, VentilationSimulationState } from '../../engine'
 import { peepComparisonSnapshot } from '../../engine/peepComparison'
 import {
-  ModelBoundary,
+  PeepFio2Tables,
+  ReferenceValues,
   TextEquivalent,
   direction,
   directionGlyph,
@@ -39,19 +40,19 @@ const leverCopy: Readonly<
 > = {
   fio2: {
     label: 'Inspired oxygen',
-    buys: 'In this model, increasing FiO₂ raises the oxygenation target without directly changing respiratory mechanics.',
+    buys: 'More inspired oxygen raises PaO₂ without changing respiratory mechanics. It is the fastest lever.',
     costs:
-      'This comparison does not model the longer-term risks of oxygen exposure. Better saturation alone does not establish that the cause of hypoxemia has improved.',
+      'A better saturation does not mean the cause of the hypoxemia has improved, and a high FiO₂ sustained for hours injures the lung. Wean it as soon as PEEP is doing the work.',
     limitedBy:
-      'The authored shunt fraction and oxygenation response. FiO₂ does not change the shunt fraction in this example.',
+      'Shunt. Blood passing unventilated lung does not see the extra oxygen, so the larger the shunt, the less FiO₂ buys.',
   },
   peep: {
     label: 'Baseline pressure',
-    buys: 'The MV-01 case represents recruitment by assigning a lower shunt fraction and higher compliance within a specified PEEP range.',
+    buys: 'PEEP that recruits collapsed lung lowers shunt and improves compliance together.',
     costs:
-      'The higher-PEEP state assigns lower compliance and lower arterial pressure. Read the actual pressure, delivered volume and circulatory response together.',
+      'PEEP beyond what recruits overdistends: compliance falls, and so does arterial pressure as venous return drops. Read pressure, delivered volume and blood pressure together.',
     limitedBy:
-      'These discrete case states do not measure recruitment or identify an individual patient’s best PEEP. Quantitative interpretation remains subject to faculty review.',
+      'Recruitability, which differs between patients. In this simulation the lung steps between recruited and overdistended states; a real lung moves gradually.',
   },
   'mean-pressure': {
     label: 'Mean airway pressure',
@@ -59,7 +60,7 @@ const leverCopy: Readonly<
     costs:
       'Timing changes can alter expiratory time and delivery. They would add another variable to this PEEP comparison.',
     limitedBy:
-      'The current gas-exchange calculation uses FiO₂, PEEP and shunt; it does not independently model an oxygenation benefit from longer inspiration.',
+      'In this simulation a longer inspiration does not improve oxygenation by itself; only FiO₂, PEEP and shunt move it.',
   },
 }
 
@@ -257,12 +258,12 @@ export function VentilationOxygenationTradeoff({
         Model-assigned compliance: {round(reading.modelCompliance)} mL/cmH₂O. This is not static
         compliance acquired from a hold.
       </p>
-      <ModelBoundary>
-        Gas exchange, shunt, and the haemodynamic response come from the bounded educational model.
-        No target saturation, oxygen tension, or pressure limit is stated here — those belong to
-        this module’s source reconciliation, to the evidence for the specific condition, and to
-        local policy.
-      </ModelBoundary>
+      <ReferenceValues
+        title="Oxygenation goals in ARDS"
+        ids={['oxygenation-spo2', 'oxygenation-pao2', 'peep-minimum', 'pplat-limit']}
+      >
+        <PeepFio2Tables />
+      </ReferenceValues>
     </section>
   )
 }

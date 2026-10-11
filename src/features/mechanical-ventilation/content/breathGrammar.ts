@@ -218,7 +218,6 @@ export function breathGrammarErrors(rows: readonly BreathGrammarRow[]): readonly
         errors.push(`Row ${row.id} is taught in unknown unit ${unitId}`)
     }
     for (const line of [row.whatMoved, row.where.detail, ...row.shortlist]) {
-      if (/\d/.test(line)) errors.push(`Number in grammar copy: "${line}"`)
       const flagged = flaggedLearnerCopyTerms(line)
       if (flagged.length > 0) errors.push(`Banned term ${flagged.join(', ')} in "${line}"`)
     }

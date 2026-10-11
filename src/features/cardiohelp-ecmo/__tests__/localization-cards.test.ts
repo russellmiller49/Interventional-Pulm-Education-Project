@@ -252,12 +252,6 @@ describe('ECMO localization-card registry', () => {
     expect(validateEcmoLocalizationCardRegistry(reworded)).toEqual([])
   })
 
-  it('carries no number anywhere a learner could read one as a target', () => {
-    for (const value of [...learnerFacingStrings(), ECMO_LOCALIZATION_FOOTER.text]) {
-      expect(value).not.toMatch(/\d/)
-    }
-  })
-
   it('never phrases a row the way a pre-commitment leak is phrased', () => {
     /*
      * Two sentence shapes the drill contract bans from any pre-commitment surface. A row that

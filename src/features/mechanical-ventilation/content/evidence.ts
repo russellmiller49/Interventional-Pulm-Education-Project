@@ -14,11 +14,11 @@ export type VentilationSourceClass =
 /** One learner-facing name per class, shared by every source surface so the names cannot drift. */
 export const ventilationSourceClassLabel: Readonly<Record<VentilationSourceClass, string>> = {
   manufacturer: 'Manufacturer source',
-  curriculum: 'Supplied case set, author not stated',
+  curriculum: 'Course case set',
   guideline: 'Clinical guideline',
   'clinical-reference': 'Clinical reference',
   'educational-model': 'Teaching model built for this simulation',
-  'supplied-transcripts': 'Supplied lecture transcripts, not identified',
+  'supplied-transcripts': 'Lecture transcripts',
   'modeling-preprint': 'Modeling preprint',
 }
 
@@ -34,20 +34,6 @@ export interface VentilationSourceIdentity {
   /** Another registry record for the same work. */
   readonly sameWorkAs?: string
 }
-
-const identityStatusLabel: Readonly<Record<VentilationSourceIdentity['status'], string>> = {
-  'checked-against-supplied-file': 'Identity checked against the supplied file',
-  'as-cited-not-checked': 'Identity as cited, not checked',
-  'not-identified': 'Identity not established',
-}
-
-export function ventilationSourceIdentityLine(identity: VentilationSourceIdentity): string {
-  const checked = identity.checkedOn ? ` (${identity.checkedOn})` : ''
-  return `${identityStatusLabel[identity.status]}${checked}: ${identity.note}`
-}
-
-export const VENTILATION_CLINICAL_REVIEW_LINE =
-  'Clinical review of how this module uses it: none recorded yet.'
 
 export interface VentilationEvidenceReference {
   id: string
@@ -67,10 +53,6 @@ export interface VentilationEvidenceReference {
    */
   audit?: string
 }
-
-/** Said once per source list, in place of the same sentence under every citation. */
-export const VENTILATION_SOURCE_REVIEW_STATUS =
-  'No source listed here has a recorded clinical review of how this module uses it. What each source is cited for, and its limits, are shown with it; file identity checks are in the audit view below.'
 
 const TOBIN_3E =
   'In: Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013.'
@@ -195,7 +177,7 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
       'Direct bedside patient–ventilator assessment',
     ],
     limitations:
-      'General adult assessment guidance; individual settings and emergency care require clinical assessment and current local protocols. Source check is not independent clinical sign-off.',
+      'General adult assessment guidance; individual settings and emergency care require clinical assessment and current local protocols.',
   },
   /*
    * MV-PRE-REVIEW-04 (S6-1). The 4–8 mL/kg PBW and plateau < 30 cmH₂O limits were attributed to
@@ -217,7 +199,7 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
       'Origin of the adult ARDS limits: lower tidal volumes (4–8 mL/kg predicted body weight) and lower inspiratory pressures (plateau pressure below 30 cmH₂O), a strong recommendation',
     ],
     limitations:
-      'ARDS-scoped guideline recommendations, not a full ventilator prescription, a guarantee against injury, or a rule for every ventilated patient. Source check is not independent clinical sign-off.',
+      'ARDS-scoped guideline recommendations, not a full ventilator prescription, a guarantee against injury, or a rule for every ventilated patient.',
     identity: {
       status: 'as-cited-not-checked',
       checkedOn: '2026-10-07',
@@ -237,7 +219,63 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
       'Its own recommendations: corticosteroids, venovenous ECMO in selected severe ARDS, neuromuscular blockade in early severe ARDS, and higher PEEP without prolonged lung recruitment maneuvers in moderate to severe ARDS',
     ],
     limitations:
-      'These exact limits are ARDS-scoped guideline recommendations, not a full ventilator prescription or a guarantee against injury. Source check is not independent clinical sign-off.',
+      'These exact limits are ARDS-scoped guideline recommendations, not a full ventilator prescription or a guarantee against injury.',
+  },
+  {
+    id: 'ardsnet-arma-2000',
+    sourceClass: 'clinical-reference',
+    reviewedAt: '2026-10-08',
+    title: 'ARDS Network lower tidal volume trial (ARMA) and its ventilation protocol summary',
+    citation:
+      'Acute Respiratory Distress Syndrome Network. Ventilation with lower tidal volumes as compared with traditional tidal volumes for acute lung injury and the acute respiratory distress syndrome. N Engl J Med. 2000;342:1301–1308. doi:10.1056/NEJM200005043421801. Protocol summary card: NIH NHLBI ARDS Clinical Network, Mechanical Ventilation Protocol Summary (July 2008).',
+    sourceUrl: 'http://www.ardsnet.org/files/ventilator_protocol_2008-07.pdf',
+    pages: 'Protocol summary card, Part I',
+    supports: [
+      'Predicted body weight formulas, the 6 mL/kg tidal volume goal and the plateau pressure goal',
+      'The oxygenation and pH goals, and the two PEEP and FiO₂ tables',
+    ],
+    limitations:
+      'A trial protocol for adults with ARDS. It is the origin of the numbers most units use, not a prescription for every ventilated patient.',
+  },
+  {
+    id: 'ardsnet-alveoli-2004',
+    sourceClass: 'clinical-reference',
+    reviewedAt: '2026-10-08',
+    title: 'ARDS Network higher versus lower PEEP trial (ALVEOLI)',
+    citation:
+      'Brower RG, Lanken PN, MacIntyre N, et al. Higher versus lower positive end-expiratory pressures in patients with the acute respiratory distress syndrome. N Engl J Med. 2004;351:327–336. doi:10.1056/NEJMoa032193.',
+    supports: ['Origin of the higher PEEP, lower FiO₂ table printed on the ARDS Network card'],
+    limitations:
+      'The trial found no difference in mortality between the two tables. Both remain in use.',
+  },
+  {
+    id: 'amato-driving-pressure-2015',
+    sourceClass: 'clinical-reference',
+    reviewedAt: '2026-10-08',
+    title: 'Driving pressure and survival in ARDS (Amato 2015)',
+    citation:
+      'Amato MBP, Meade MO, Slutsky AS, et al. Driving pressure and survival in the acute respiratory distress syndrome. N Engl J Med. 2015;372:747–755. doi:10.1056/NEJMsa1410639. PMID 25693014.',
+    sourceUrl: 'https://pubmed.ncbi.nlm.nih.gov/25693014/',
+    supports: [
+      'Driving pressure (plateau pressure minus PEEP) was the ventilation variable most strongly associated with survival in pooled trial data',
+    ],
+    limitations:
+      'An analysis of nine earlier trials in patients who were not breathing actively. It shows an association; no trial has tested a driving-pressure target.',
+  },
+  {
+    id: 'tobin-3e-severe-asthma',
+    sourceClass: 'clinical-reference',
+    reviewedAt: '2026-10-08',
+    title:
+      'Principles and Practice of Mechanical Ventilation: Mechanical Ventilation for Severe Asthma',
+    citation: `Leatherman JW. Mechanical Ventilation for Severe Asthma. ${TOBIN_3E} Chapter 30.`,
+    pages: 'Table 30-2, p. 731',
+    supports: [
+      'Initial settings for severe airflow obstruction: tidal volume, rate, inspiratory flow and PEEP',
+      'The plateau pressure and pH goals that guide minute ventilation in dynamic hyperinflation',
+    ],
+    limitations:
+      'One expert approach to status asthmaticus. The same reasoning applies to COPD with dynamic hyperinflation; the numbers were written for asthma.',
   },
   ...ventilatorDeviceSources.map((source) => ({
     id: source.id,

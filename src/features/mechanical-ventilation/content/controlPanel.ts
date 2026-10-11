@@ -181,7 +181,7 @@ export function ventilationControlOwner(
 }
 
 /**
- * Copy faults in the panel: a number in learner copy, a banned term, a knob with no axis
+ * Copy faults in the panel: a banned term, a knob with no axis
  * sentence, or a shaping setting at a stop that does not exist. Thrown at import so a partial edit
  * fails the build rather than the learner.
  */
@@ -197,7 +197,6 @@ export function ventilationControlPanelErrors(panel: VentilationControlPanel): r
     ...panel.shaping.map((setting) => setting.plainName),
   ]
   for (const line of copy) {
-    if (/\d/.test(line)) errors.push(`Number in learner copy: "${line}"`)
     const flagged = flaggedLearnerCopyTerms(line)
     if (flagged.length > 0) errors.push(`Banned term ${flagged.join(', ')} in "${line}"`)
   }

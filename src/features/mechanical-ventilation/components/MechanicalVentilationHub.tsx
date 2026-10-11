@@ -16,6 +16,7 @@ import {
   ventilationPathwayComposition,
 } from '../content/pathwayResolver'
 import type { VentilatorDeviceId } from '../engine/types'
+import { VENTILATION_NUMBERS } from '../content/teachingNumbers'
 import { MechanicalVentilationModuleFrame } from './MechanicalVentilationModuleFrame'
 import { SourcesPanel } from './SourcesPanel'
 import { VentilationPathwayAccordion } from './VentilationPathwayAccordion'
@@ -94,8 +95,8 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
           </div>
           <p className={styles.composition}>{ventilationCompositionLine()}</p>
           <p className={styles.note}>
-            Reading times are an author’s estimate, not timed with learners; optional experiments
-            take longer and depend on the playback speed you choose.
+            Reading times are estimates. Optional experiments take longer and depend on the playback
+            speed you choose.
           </p>
           <button
             type="button"
@@ -165,9 +166,12 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
               are always available.
             </li>
             <li>
-              <strong>Trend, not threshold</strong>
-              The sections teach direction and pattern against this patient’s own baseline. Numeric
-              bands appear only with a source.
+              <strong>The numbers, with their source</strong>
+              The limits a fellow is expected to know sit beside the live readings:{' '}
+              {VENTILATION_NUMBERS.value('vt-ards-goal')}, plateau{' '}
+              {VENTILATION_NUMBERS.value('pplat-limit')}, driving pressure{' '}
+              {VENTILATION_NUMBERS.value('driving-pressure-limit')}. Each names where it comes from.
+              Your unit may set some of them differently.
             </li>
           </ul>
         </section>
@@ -196,8 +200,7 @@ export function MechanicalVentilationHub({ locale = 'en' }: { readonly locale?: 
             ))}
           </div>
           <p className={styles.note}>
-            The facsimiles paraphrase each vendor’s screen. They are not manufacturer training, and
-            working through them establishes nothing about bedside readiness.
+            The facsimiles paraphrase each vendor’s screen; the physiology is the same on all four.
           </p>
         </section>
 

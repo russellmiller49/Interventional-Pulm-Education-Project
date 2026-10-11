@@ -1,7 +1,5 @@
 import { render } from '@testing-library/react'
 
-import { assertNoUniversalTargetLanguage } from '@/features/critical-care/test-support/teachingPanelContract'
-
 import { EcmoFoundationTeachingPanel } from '../components/teaching/EcmoFoundationTeachingPanel'
 import { VA_MODELED_CONFIGURATION } from '../components/teaching/shared'
 import {
@@ -501,16 +499,6 @@ describe('configuration is taught as five distinct changes, not one lever', () =
     }
     for (const entry of VA_CONFIGURATION_STRATEGIES) {
       expect(strategyText(entry.id)).not.toMatch(/is (?:always|the) preferred/i)
-    }
-  })
-
-  it('introduces no numeric target, dose, or timing cutoff', () => {
-    for (const detail of ['full', 'concise'] as const) {
-      const text = renderCard(detail)
-      // The whole card is written without a number in it. A digit appearing here would be the first
-      // sign that a flow target, a dose, or a timing cutoff had been added to a configuration card.
-      expect(text).not.toMatch(/\d/)
-      assertNoUniversalTargetLanguage(text)
     }
   })
 

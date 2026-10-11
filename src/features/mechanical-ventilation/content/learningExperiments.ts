@@ -1,4 +1,7 @@
+import { VENTILATION_NUMBERS } from './teachingNumbers'
 import type { VentilationAction, VentilatorControlKey } from '../engine/types'
+
+const N = VENTILATION_NUMBERS.value
 
 export type LabMetric =
   | 'peak'
@@ -470,11 +473,10 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
           'Elastic pressure depends on the delivered volume as well as compliance.',
           'A smaller passive volume requires less elastic pressure. Gas exchange still needs separate follow-up.',
         ],
-        task: 'Reduce volume to 420 mL, then perform an inspiratory hold. These values are set for this comparison.',
+        task: 'Reduce volume to 420 mL, which is 6 mL/kg for this patient’s predicted body weight of 70 kg, then perform an inspiratory hold.',
         goals: [c('vtMl', 420), hold],
         watch: ['volume', 'plateau', 'co2'],
-        explanation:
-          'Use predicted body weight for volume context and a valid plateau for pressure context. The guideline reference is available in the physiology panel; this exercise is not a patient-specific prescription.',
+        explanation: `Size the breath by predicted body weight and judge it by a valid plateau. In ARDS the goal is ${N('vt-ards-goal')} with a plateau ${N('pplat-limit')}; a smaller breath lowers the plateau and raises PaCO₂, so recheck the gas.`,
       }),
       effortHold,
     ],
@@ -579,7 +581,7 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
           'Stable circulation is reassuring context; worsening circulation is the concern.',
           'An oxygenation gain can coexist with a circulatory cost. Check the actual response rather than assuming benefit.',
         ],
-        task: 'On your separate patient, change PEEP from 5 to 10 cmH₂O and watch 45 simulated seconds. This is an authored example, not a clinical setting recommendation.',
+        task: 'On your separate patient, change PEEP from 5 to 10 cmH₂O and watch 45 simulated seconds.',
         goals: [c('peepCmH2O', 10)],
         seconds: 45,
         watch: ['spo2', 'map', 'peak', 'volume'],
@@ -783,12 +785,12 @@ export const ventilationLearningExperiments: readonly LearningExperiment[] = [
           'Reassessment connects an intervention with its delayed patient response.',
           'Alarm sound is not a substitute for patient findings.',
         ],
-        task: 'Select the modeled pain intervention. Allow its 120-second delay, then follow the response for 150 simulated seconds. Use 5× time if helpful. No drug or dose is prescribed here.',
+        task: 'Select the modeled pain intervention. Allow its 120-second delay, then follow the response for 150 simulated seconds. Use 5× time if helpful.',
         goals: [action('treat-pain')],
         seconds: 150,
         watch: ['pain', 'dyspnea', 'effort', 'rate'],
         explanation:
-          'This is a simplified comfort response. In clinical care, treatment selection and dosing require current local guidance and supervision.',
+          'Pain drives rate and effort. Treat it before you adjust the ventilator for a fast, effortful patient, then read the ventilator again.',
       }),
     ],
   },

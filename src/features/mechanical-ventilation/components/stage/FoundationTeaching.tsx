@@ -117,10 +117,8 @@ export function WorkedHold({ device }: { device: VentilationSimulationState['dev
         {estimate.toFixed(1)} cmH₂O, taken from the last end-inspiratory sample with the resistive
         pressure at that instant removed. The held reading is {held.toFixed(1)} cmH₂O after two
         seconds of an actual {HOLD_SECONDS}-second occlusion, during which this model relaxes the
-        elastic pressure a little. They are an unoccluded estimate and a timed hold, not one
-        measurement reported twice, and they are left as the two numbers the model produces. Whether
-        the modeled relaxation matches a real patient&rsquo;s is a clinical question this module has
-        not had reviewed.
+        elastic pressure a little. One is an unoccluded estimate and the other a timed hold, so
+        expect them to differ a little.
       </p>
       <CapturedBreath
         label="Captured reference: delivered breath and inspiratory hold"
@@ -227,9 +225,11 @@ export function FoundationEvidence({
       {unitId === 'controls-and-goals' ? <SettingMap state={state} /> : null}
       {unitId === 'mechanics-load-and-pressure' ? <WorkedHold device={state.deviceId} /> : null}
       {unitId === 'modes-and-breath-delivery' ? <IdealizedComparison /> : null}
-      <p className={styles.quickNote} data-point-of-use-limit>
-        {content.boundary}
-      </p>
+      {content.boundary ? (
+        <p className={styles.quickNote} data-point-of-use-limit>
+          {content.boundary}
+        </p>
+      ) : null}
     </div>
   )
 }

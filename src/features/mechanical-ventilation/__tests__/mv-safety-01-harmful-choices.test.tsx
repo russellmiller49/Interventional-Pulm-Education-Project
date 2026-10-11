@@ -113,7 +113,9 @@ const choiceOf = (item: QueueItem) =>
     .choices.find((choice) => choice.id === item.choiceId)!
 const supported = queue.items.filter((item) => item.status === 'supported-feedback-added')
 const held = queue.items.filter((item) => item.status.startsWith('held-'))
-const GRADE_TEXT = /\bscore\b|passed|mastered|first attempt|correct on this attempt|\d+\s?%/i
+// A percentage is grade text unless it is an oxygen concentration ("100% oxygen" is an option label).
+const GRADE_TEXT =
+  /\bscore\b|passed|mastered|first attempt|correct on this attempt|\d+\s?%(?! oxygen)/i
 
 function openItem(questionId: string) {
   const kind = questionId.endsWith(':placement')

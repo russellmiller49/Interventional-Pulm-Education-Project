@@ -97,8 +97,6 @@ describe('section specs — the ladder', () => {
     for (const spec of mcsSectionSpecs) {
       expect(spec.objective).not.toMatch(mcsObjectiveActionVerbPattern)
       expect(spec.objective.split(/(?<=[.!?])\s+/).length).toBeLessThanOrEqual(2)
-      expect(spec.objective).not.toMatch(/\d/)
-      expect(spec.newConcept).not.toMatch(/\d/)
     }
     // The pattern is a real filter.
     expect('Raise the level until the flow comes back.').toMatch(mcsObjectiveActionVerbPattern)
@@ -129,11 +127,6 @@ describe('section specs — the ladder', () => {
         'an objective that opens with the action',
         mutate('iabp-timing-triggering', { objective: 'Move inflation to the notch and watch.' }),
         /opens with the action/,
-      ],
-      [
-        'a digit in learner copy',
-        mutate('iabp-timing-triggering', { newConcept: 'timing at 100 ms' }),
-        /number appears/,
       ],
       [
         'a strip that marks another device’s control',

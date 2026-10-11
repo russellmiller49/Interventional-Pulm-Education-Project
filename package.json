@@ -15,6 +15,7 @@
     "fix": "eslint src stories .storybook eslint.config.mjs next.config.mjs --fix && prettier --write .",
     "lint": "eslint src stories .storybook eslint.config.mjs next.config.mjs",
     "test": "jest --passWithNoTests",
+    "numbers:signoff": "tsx scripts/teaching-numbers-signoff.ts",
     "test:a11y": "jest --runInBand src/features/critical-care/__tests__/accessibility.test.tsx",
     "test:e2e": "playwright test",
     "test:watch": "jest --watch --passWithNoTests",

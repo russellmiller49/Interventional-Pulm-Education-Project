@@ -10,7 +10,6 @@ import { cardiohelpScenarioById } from '../content/scenarios'
 const scenarioId = 'transport-power-loss'
 const item = ecmoLearnPredictions[scenarioId].item
 
-// Match the shared schema's complete learner-facing text, without applying its broad override.
 function learnerCopy(candidate: ClinicalLearningItem): string {
   return [
     candidate.stem,
@@ -19,18 +18,12 @@ function learnerCopy(candidate: ClinicalLearningItem): string {
   ].join(' ')
 }
 
-describe('transport battery-unit editorial exception', () => {
-  it('permits only the single battery percent token across all learner-facing text', () => {
+describe('transport battery reading', () => {
+  it('states the battery charge with its unit and needs no vocabulary exception', () => {
     const copy = learnerCopy(item)
-    expect(flaggedLearnerCopyTerms(copy)).toEqual(['percent'])
-    expect(copy.match(/\bpercent\b/gi)).toHaveLength(1)
-    expect(copy).not.toContain('%')
+    expect(flaggedLearnerCopyTerms(copy)).toEqual([])
+    expect(item.learnerCopyOverrideReason).toBeUndefined()
     expect(clinicalLearningItemSchema.safeParse(item).success).toBe(true)
-    // The shared guard is unchanged; the local regression limits this item's exception instead.
-    expect(
-      clinicalLearningItemSchema.safeParse({ ...item, learnerCopyOverrideReason: undefined })
-        .success,
-    ).toBe(false)
   })
 
   it('keeps the displayed number and unit aligned with this scenario batteryPercent', () => {
@@ -43,26 +36,16 @@ describe('transport battery-unit editorial exception', () => {
     expect(reading?.[2]).toBe('percent')
   })
 
-  it('keeps the VV reason item-local and limits all overrides to the two transport items', () => {
-    expect(item.learnerCopyOverrideReason).toBeTruthy()
-    expect(
-      Object.entries(ecmoLearnPredictions)
-        .filter(
-          ([, prediction]) =>
-            prediction.item.learnerCopyOverrideReason === item.learnerCopyOverrideReason,
-        )
-        .map(([id]) => id),
-    ).toEqual([scenarioId])
+  it('leaves no prediction item carrying a vocabulary override', () => {
     expect(
       Object.entries(ecmoLearnPredictions)
         .filter(([, prediction]) => prediction.item.learnerCopyOverrideReason !== undefined)
-        .map(([id]) => id)
-        .sort(),
-    ).toEqual(['transport-power-loss', 'va-transport-power-loss'])
+        .map(([id]) => id),
+    ).toEqual([])
   })
 
   it.each(['stem', 'explanation', 'choice label', 'choice rationale'] as const)(
-    'detects unrelated grading/software vocabulary in the overridden %s',
+    'still detects scoring and software vocabulary in the %s',
     (surface) => {
       for (const term of ['score', 'competent', 'engine']) {
         const injected = {
@@ -73,11 +56,7 @@ describe('transport battery-unit editorial exception', () => {
         if (surface === 'explanation') injected.explanation += ` ${term}`
         if (surface === 'choice label') injected.choices[0].label += ` ${term}`
         if (surface === 'choice rationale') injected.choices[0].rationale += ` ${term}`
-        // The full-copy assertion above must reject every token other than the battery unit,
-        // even when a reason would make the shared schema skip its vocabulary check.
-        expect(
-          flaggedLearnerCopyTerms(learnerCopy(injected)).filter((flag) => flag !== 'percent'),
-        ).toEqual([term])
+        expect(flaggedLearnerCopyTerms(learnerCopy(injected))).toEqual([term])
       }
     },
   )

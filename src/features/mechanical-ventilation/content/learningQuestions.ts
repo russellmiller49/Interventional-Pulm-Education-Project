@@ -534,21 +534,21 @@ export const ventilationUnitQuestions: readonly VentilationQuestion[] = [
   q(
     'safety-reassessment-and-human-factors',
     'check',
-    'A patient develops an alarm, new hypoxemia, hypotension, and asymmetric breath sounds. Which priority best fits?',
+    'A ventilated patient develops an alarm, new hypoxemia, hypotension, and asymmetric breath sounds. What do you do first?',
     0,
     [
       [
-        'Get help and stabilize while assessing the cause',
-        'Instability requires coordinated bedside support and urgent localization under local protocols.',
+        'Give 100% oxygen, bag by hand, and check the tube and both lungs',
+        'Hand ventilation on 100% oxygen supports the patient and takes the ventilator out of the question in one move. Asymmetric breath sounds then leave two causes to separate at the bedside: a tube that has slipped into the right main bronchus, which you fix by checking the depth and pulling back, and a tension pneumothorax, which you decompress. Call for help as you start.',
       ],
       [
-        'Finish waveform classification before calling for help',
+        'Classify the waveform fully, then go to the bedside',
         'This delays stabilization of a deteriorating patient.',
         true,
-        'New hypoxemia with hypotension can be fatal within minutes if the cause is not found and treated, and asymmetric breath sounds point to causes found at the bedside, such as a pneumothorax or a tube that has moved into the right main bronchus. Classifying the waveform before calling for help delays the support and bedside checks this patient needs now.',
+        'New hypoxemia with hypotension can be fatal within minutes if the cause is not found and treated, and asymmetric breath sounds point to causes found at the bedside, such as a pneumothorax or a tube that has moved into the right main bronchus. Classifying the waveform first delays the support and bedside checks this patient needs now.',
       ],
       [
-        'Acknowledge the alarm and observe for improvement',
+        'Silence the alarm and watch the next few breaths',
         'Acknowledgment does not treat the cause of instability.',
         true,
         'Acknowledging the alarm changes only the warning; the hypoxemia, hypotension and asymmetric breath sounds are still there. Possible causes such as a pneumothorax or a displaced tube have to be found and treated, and in a patient this unstable, minutes spent watching for improvement can be fatal.',
@@ -598,12 +598,12 @@ export const ventilationUnitQuestions: readonly VentilationQuestion[] = [
   q(
     'high-peak-pressure-integration',
     'transfer',
-    'Another patient has high pressure, persistent expiratory flow at the next breath, and worsening hypotension. What is the most appropriate priority?',
+    'Another patient has high pressure, persistent expiratory flow at the next breath, and worsening hypotension. What do you do first?',
     0,
     [
       [
-        'Urgent bedside support and assessment of incomplete emptying',
-        'Flow still leaving at the next breath, rising pressure and falling blood pressure together point to trapped volume affecting the circulation. Getting help and assessing emptying treats the likely cause while the patient is supported.',
+        'Disconnect from the ventilator and let the chest empty',
+        'Flow still leaving at the next breath, with rising pressure and a falling blood pressure, is breath stacking that is obstructing venous return. Disconnecting lets the trapped gas out within seconds, and a blood pressure that recovers confirms the cause. Reconnect at a lower rate with a shorter inspiratory time so each breath has longer to empty.',
       ],
       [
         'A higher mandatory rate to correct gas exchange promptly',
@@ -759,21 +759,21 @@ export const ventilationPlacementQuestions: readonly VentilationQuestion[] = [
   q(
     'safety-reassessment-and-human-factors',
     'placement',
-    'A ventilated patient suddenly becomes hypoxemic and hypotensive during a high-pressure alarm. What is the best initial priority?',
+    'A ventilated patient suddenly becomes hypoxemic and hypotensive during a high-pressure alarm. What do you do first?',
     0,
     [
       [
-        'Bedside assessment and support with urgent help',
-        'Stabilization and cause localization should proceed together under local protocol.',
+        'Give 100% oxygen and ventilate by hand off the ventilator',
+        'Bagging by hand supports the patient and tells you where the problem is. A bag that is hard to squeeze points to the tube or the patient; an easy bag points to the ventilator. Then pass a suction catheter, check the tube position and examine both sides of the chest.',
       ],
       [
-        'Alarm acknowledgment and documentation alone',
+        'Acknowledge the alarm and document the event',
         'These do not support a deteriorating patient.',
         true,
         'Acknowledging the alarm and writing it down do nothing to support the patient or find the cause. A high-pressure alarm with sudden hypoxemia and hypotension can come from an obstructed airway or a pneumothorax, and without bedside support and a search for the cause the patient may die within minutes.',
       ],
       [
-        'Detailed waveform analysis before bedside evaluation',
+        'Analyze the waveforms in detail before going to the bedside',
         'This delays assessment and stabilization.',
         true,
         'In a patient this unstable, securing ventilation comes before diagnosis. Dangerous causes of a high-pressure alarm with hypoxemia and hypotension, such as an obstructed or displaced tube or a pneumothorax, are checked at the bedside by passing a suction catheter, checking the tube and examining the chest; detailed waveform analysis first spends minutes the patient may not have.',
@@ -972,24 +972,24 @@ export const ventilationFinalQuestions: readonly VentilationQuestion[] = [
   q(
     'high-peak-pressure-integration',
     'final',
-    'A new high-pressure alarm occurs with abrupt hypotension and asymmetric breath sounds. Which next priority is most appropriate?',
+    'A new high-pressure alarm occurs with abrupt hypotension and absent breath sounds on one side. What do you do next?',
     1,
     [
       [
-        'Wait for a relaxed plateau before requesting assistance',
+        'Wait for a relaxed plateau before acting',
         'A deteriorating patient cannot wait for a perfect mechanics measurement.',
         true,
-        'A high-pressure alarm with abrupt hypotension and asymmetric breath sounds raises concern for a tension pneumothorax, and a patient this unstable may die within minutes if the cause is not treated. A plateau is worth measuring when possible, but waiting for a relaxed one before asking for help delays the support and treatment that come first.',
+        'A high-pressure alarm with abrupt hypotension and one silent side is a tension pneumothorax until proven otherwise, and a patient this unstable may die within minutes if it is not treated. A plateau is worth measuring when possible, but waiting for a relaxed one delays the decompression that comes first.',
       ],
       [
-        'Coordinate urgent bedside support and cause localization',
-        'The clinical instability and examination demand concurrent stabilization and assessment under local protocol.',
+        'Check the tube depth, then decompress the silent side',
+        'High pressure, abrupt hypotension and one silent side is a tension pneumothorax until proven otherwise. A tube in the right main bronchus also silences one side but rarely drops the blood pressure like this, and the depth at the teeth rules it out in seconds. Decompress without waiting for a film.',
       ],
       [
-        'Silence the alarm while waiting for spontaneous resolution',
+        'Silence the alarm and wait for it to settle',
         'Acknowledgment does not treat the cause of instability.',
         true,
-        'Silencing only mutes the alarm for a short time and treats nothing. High pressure, abrupt hypotension and asymmetric breath sounds together raise concern for a tension pneumothorax, which needs recognition and treatment rather than waiting; left untreated, a patient this unstable may die within minutes.',
+        'Silencing only mutes the alarm for a short time and treats nothing. High pressure, abrupt hypotension and one silent side together mean a tension pneumothorax until proven otherwise, which needs decompression rather than waiting; left untreated, a patient this unstable may die within minutes.',
       ],
     ],
   ),

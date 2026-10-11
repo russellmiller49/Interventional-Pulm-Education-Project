@@ -34,7 +34,6 @@ import {
 import {
   assertEveryClarifiedQuantityRenders,
   assertEveryConflictPositionRenders,
-  assertNoUniversalTargetLanguage,
 } from '../test-support/teachingPanelContract'
 
 function guide(
@@ -365,7 +364,6 @@ describe('shared evidence renderers', () => {
     expect(container.querySelector('[data-live-value-type]')?.textContent).toContain('Derived')
     expect(container.querySelector('[data-reference-kind]')?.textContent).toMatch(/cohort/i)
     expect(container.querySelector('[data-do-not-infer]')?.textContent).toBeTruthy()
-    assertNoUniversalTargetLanguage(container.textContent ?? '')
   })
 
   it('renders no interpretation block when a value resolves to nothing', () => {

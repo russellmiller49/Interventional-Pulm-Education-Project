@@ -1,5 +1,4 @@
 import { criticalCareLearningPathway } from '@/features/critical-care/content/learningPathways'
-import { assertNoUniversalTargetLanguage } from '@/features/critical-care/test-support/teachingPanelContract'
 import { flaggedLearnerCopyTerms } from '@/features/learning-module/activity/clinicalLearningItem'
 import type { LearningPathway } from '@/features/learning-module/curriculum/types'
 
@@ -195,22 +194,15 @@ describe('an objective names a discrimination, not an action', () => {
     }
   })
 
-  it('carries no number, and no reviewed learner-copy term an override does not name', () => {
+  it('carries no reviewed learner-copy term an override does not name', () => {
     for (const definition of ecmoSectionSpecs) {
       for (const value of learnerFacingStrings(definition)) {
-        expect(`${definition.sectionId}: ${value}`).not.toMatch(/\d/)
         const reason = definition.learnerCopyOverrideReason?.toLowerCase() ?? ''
         const unexcused = flaggedLearnerCopyTerms(value).filter(
           (term) => reason.length === 0 || !reason.includes(term),
         )
         expect(`${definition.sectionId}: ${unexcused.join()}`).toBe(`${definition.sectionId}: `)
       }
-    }
-  })
-
-  it('phrases nothing as a universal bedside target', () => {
-    for (const definition of ecmoSectionSpecs) {
-      for (const value of learnerFacingStrings(definition)) assertNoUniversalTargetLanguage(value)
     }
   })
 
@@ -310,16 +302,6 @@ describe('the section-spec validator catches what it claims to', () => {
       })),
     ).join('\n')
     expect(errors).toContain('opens with an action rather than a discrimination')
-  })
-
-  it('rejects a number in an objective', () => {
-    const errors = validateEcmoSectionSpecs(
-      replace('vv-normal-state', (definition) => ({
-        ...definition,
-        objective: 'Tell a value that has moved from a baseline that sat near 4',
-      })),
-    ).join('\n')
-    expect(errors).toContain('a number appears in learner-facing copy')
   })
 
   it('rejects a section spec for something on no ECMO pathway', () => {

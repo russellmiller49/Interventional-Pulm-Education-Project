@@ -4,7 +4,7 @@ import { useState, type Dispatch } from 'react'
 import type { VentilationAction, VentilationSimulationState } from '../../engine'
 import { CapturedBreath } from '../stage/CapturedBreath'
 import { IdealizedComparison } from './IdealizedComparison'
-import { ModelBoundary, styles } from './shared'
+import { styles } from './shared'
 
 const traceCopy = {
   Pressure:
@@ -106,12 +106,11 @@ export function VentilationWaveformAnatomy({
         <summary>Conventional VC and PC: optional idealized reference</summary>
         <IdealizedComparison />
       </details>
-      <ModelBoundary>
-        These captured traces come from the simulated patient. The optional idealized comparison has
-        separate, fixed, authored inputs and does not operate the live patient. Passive expiration
-        depends on mechanics, prior delivery, PEEP and the time available; its flow need not be
-        identical in different modes.
-      </ModelBoundary>
+      <p className={styles.panelNote}>
+        The idealized comparison uses fixed inputs and does not change the live patient. Passive
+        expiratory flow depends on mechanics, the breath just delivered, PEEP and the time
+        available, so it need not look the same in different modes.
+      </p>
     </section>
   )
 }

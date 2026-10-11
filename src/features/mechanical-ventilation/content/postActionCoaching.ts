@@ -78,7 +78,6 @@ import {
   WAVEFORM_WINDOW_SECONDS,
 } from '../engine/physics'
 import { latestResultedRepeat } from '../engine/arterialGas'
-import { faultOxygenationBoundary } from './caseModelNotes'
 import { patientReportAvailability } from './patientReport'
 import { plateauAcquisition } from './plateauAcquisition'
 import { plateauReadingValidity, plateauWithheldNote } from './plateauValidity'
@@ -650,9 +649,9 @@ const interventionCoachingProfiles: Readonly<
      * card must not tell the learner to expect a modeled response to fade (MV-PRE-REVIEW-02).
      */
     reassess:
-      'Watch blood pressure, oxygenation, and chest movement together, and secure the space with definitive drainage: at the bedside the improvement cannot be relied on to hold on its own, although in this simulation it does not fade.',
+      'Watch blood pressure, oxygenation, and chest movement together, and secure the space with definitive drainage: at the bedside the improvement cannot be relied on to hold on its own.',
     notDemonstratedWhenMoved:
-      'An emergency decompression is a rescue. It does not establish definitive treatment: at the bedside its relief can be lost until drainage is in place. This simulation does not model that loss, so an improvement that holds here is not evidence that drainage is unnecessary.',
+      'An emergency decompression is a rescue. It does not establish definitive treatment: at the bedside its relief can be lost until drainage is in place. An improvement that holds in this simulation is not a reason to skip drainage.',
     notDemonstratedWhenHeld:
       'A blood pressure that did not move is evidence against obstruction being the dominant limit on it. It does not exclude a pneumothorax this did not reach, and it does not exclude a second cause holding the pressure down alongside it.',
   },
@@ -1057,9 +1056,8 @@ export interface PostActionCoaching {
   readonly reassess: string
   /**
    * What this simulation does not model about the response just read, derived from the readings on
-   * this card — or `null` where the action's response is represented. See
-   * `faultOxygenationBoundary`: on MV-13 and MV-14 the model has no link from the fault to
-   * oxygenation, so the card says what did and did not move and why SpO₂ is not a verdict on it.
+   * this card — or `null` where the action's response is represented. Currently always `null`:
+   * MV-13 and MV-14 now link oxygenation to the treated lesion (`buildEffectivePatient`).
    */
   readonly modelBoundary: string | null
   readonly stabilizationRequired: boolean
@@ -1443,7 +1441,7 @@ export function ventilationPostActionCoaching(
     ),
     notDemonstrated: notDemonstrated(profile, readings, response, baseline, state),
     reassess: profile.reassess,
-    modelBoundary: faultOxygenationBoundary(state.caseId, baseline.effectId, readings),
+    modelBoundary: null,
     stabilizationRequired: stabilization.required,
     stabilization: stabilization.text,
     observedFromSeconds: baseline.actionSeconds,
