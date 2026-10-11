@@ -721,25 +721,36 @@ export const COURSE_FLOWS: Partial<Readonly<Record<BronchSectionId, readonly Cou
     close(['common-errors']),
   ],
   deterioration: [
-    teach(
-      'baseline',
-      'Establish the patient’s baseline',
-      ['breathing-changes', 'what-can-change', 'inspection-to-plan'],
-      'baseline',
+    hook('The saturation is falling'),
+    check('check', 'Why is he restless?'),
+    screen('opening', 'Open every event the same way', 'Read the three moves that come first.', [
+      'opening-bundle',
+    ]),
+    screen(
+      'breathing',
+      'Low oxygen, and too much sedation',
+      'Learn the two cards. Most events start here.',
+      ['desaturation', 'oversedation'],
     ),
-    teach('priorities', 'Work through a change in breathing', [
-      'response-bundle',
-      'causes-and-escalation',
-      'before-resuming',
+    screen('spasm', 'The larynx and the bronchi', 'Learn the two cards and how they differ.', [
+      'laryngospasm',
+      'bronchospasm',
+    ]),
+    screen('circulation', 'Pressure and pleura', 'Learn the two cards. One of them cannot wait.', [
+      'hypotension',
+      'pneumothorax',
+    ]),
+    screen('topical', 'When the topical drug is the cause', 'Learn the two cards.', [
+      'anesthetic-toxicity',
+      'methemoglobinemia',
     ]),
     practice(
-      'Now respond to the changing patient',
+      'One patient, four decisions',
       'case',
-      'Compare the current observations with the baseline. Pause to interpret them, then choose the next action. Unsafe choices receive immediate feedback.',
+      'Read the monitor, then decide. A move that makes things worse plays out, then you decide again.',
     ),
-    check('check', 'Interpret a change during inspection'),
-    debrief(['common-errors', 'institution-supplies']),
-    check('transfer', 'Apply the priorities in another situation'),
+    check('transfer', 'A different patient, a different event'),
+    close(['common-errors']),
   ],
   'bleeding-priorities': [
     hook('Blood fills the view'),

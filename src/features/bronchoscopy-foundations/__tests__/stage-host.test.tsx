@@ -529,7 +529,7 @@ describe('the report builder (A08)', () => {
 })
 
 describe('a scenario in frames (A13, A32)', () => {
-  it('refuses the unsafe move, keeps the frame, opens the reasoning without moving the case, and advances only on the keyed decision', async () => {
+  it('plays the unsafe move out, keeps the frame, opens the reasoning without moving the case, and advances only on the keyed decision', async () => {
     const { lesson } = await mountSection('deterioration')
     await reachAct(lesson)
     const act = stepOfKind(lesson, 'scenario')
@@ -538,7 +538,9 @@ describe('a scenario in frames (A13, A32)', () => {
     const hasUnsafe = firstFrame.choices.some((choice) => choice.plausibility === 'unsafe')
     if (hasUnsafe) {
       decideFrame(act, 'unsafe')
-      expect(document.querySelector('[data-scenario-outcome="refused"]')).not.toBeNull()
+      // A rewritten case plays the move out on the monitor; the frame still stays.
+      expect(document.querySelector('[data-scenario-outcome="played-out"]')).not.toBeNull()
+      expect(document.querySelector('[data-scenario-consequence]')).not.toBeNull()
       expect(nowPrimary()).toBeNull()
     }
     fireEvent.click(screen.getByRole('button', { name: 'Show the reasoning' }))

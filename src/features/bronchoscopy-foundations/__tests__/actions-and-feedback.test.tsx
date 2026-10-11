@@ -4,10 +4,11 @@ import { AnswerVerdict } from '@/features/learning-module/components/AnswerVerdi
 import { flaggedGradingCopyTerms } from '@/features/learning-module/activity/clinicalLearningItem'
 
 import { ledgerRowMg } from '../components/stage/BronchLedgerControl'
+import { BronchScenarioControl } from '../components/stage/BronchScenarioControl'
 import { asSentence, OUTCOME_WORDS } from '../components/stage/verdictWords'
 import type { BronchSectionId } from '../content/pathway'
 import type { BronchStageStep } from '../content/stageLessons'
-import type { Plausibility } from '../content/types'
+import type { BronchScenario, Plausibility } from '../content/types'
 import {
   clickPrimary,
   commitById,
@@ -271,7 +272,7 @@ describe('the branching cases show a real way on after each decision (A13, SUP-1
     },
   )
 
-  it('an other-than-keyed move says how it compares and leaves the frame to decide again', async () => {
+  it('a wrong move in a case that evolves plays out and leaves the frame to decide again', async () => {
     const { step } = await openStep('deterioration', 'scenario')
     if (step.interaction.kind !== 'scenario') throw new Error('not a scenario')
     const first = step.interaction.scenario.frames[0]
@@ -279,11 +280,65 @@ describe('the branching cases show a real way on after each decision (A13, SUP-1
     choose(`[data-scenario-frame="${first.id}"] input[value="${other.id}"]`)
     fireEvent.click(query('[data-scenario-decide]')!)
     const outcome = query('[data-scenario-outcome]')!
-    expect(outcome).toHaveAttribute('data-scenario-outcome', 'other')
+    expect(outcome).toHaveAttribute('data-scenario-outcome', 'played-out')
     expect(outcome.querySelector('strong')).toHaveTextContent(OUTCOME_WORDS['incorrect-mechanism'])
-    expect(outcome).toHaveTextContent('Not the move to make first.')
+    expect(outcome).toHaveTextContent('Decide again from here.')
+    expect(query('[data-scenario-consequence]')).toHaveTextContent(other.consequence!.situation)
     expect(query('[data-scenario-frame]')).toHaveAttribute('data-scenario-frame', first.id)
   })
+
+  // No section's case refuses a move any more: every rewritten case plays a wrong move out. The
+  // control still refuses a move that carries no consequence, so that path is held here directly.
+  it.each([
+    ['b', 'refused', 'That move is refused here, and the case does not move on with it.'],
+    ['c', 'other', 'Not the move to make first.'],
+  ] as const)(
+    'a move with no consequence (%s) is %s and the frame stays',
+    (choiceId, outcomeName, sentence) => {
+      const scenario: BronchScenario = {
+        id: 'no-consequence',
+        title: 'A case that does not play out',
+        frames: ['first', 'second'].map((id) => ({
+          id,
+          situation: `The ${id} observation.`,
+          readings: [{ channel: 'airway-view', words: 'Clear', trend: 'steady' }],
+          prompt: 'What is the next move?',
+          choices: [
+            { id: 'a', label: 'The keyed move', rationale: 'It fits.', plausibility: 'best' },
+            { id: 'b', label: 'The harmful move', rationale: 'It harms.', plausibility: 'unsafe' },
+            {
+              id: 'c',
+              label: 'Another move',
+              rationale: 'It misreads the cause.',
+              plausibility: 'incorrect-mechanism',
+            },
+          ],
+        })),
+        sourceRefs: [],
+      }
+      const onChoice = jest.fn()
+      render(
+        <BronchScenarioControl
+          scenario={scenario}
+          commitment={{
+            frameIndex: 0,
+            firstChoices: { first: choiceId },
+            lastChoices: { first: choiceId },
+            done: false,
+          }}
+          onChoice={onChoice}
+          integrated
+        />,
+      )
+      const outcome = query('[data-scenario-outcome]')!
+      expect(outcome).toHaveAttribute('data-scenario-outcome', outcomeName)
+      expect(outcome).toHaveTextContent(sentence)
+      expect(outcome).toHaveTextContent('Decide again if you like.')
+      expect(query('[data-scenario-consequence]')).toBeNull()
+      expect(query('[data-scenario-frame]')).toHaveAttribute('data-scenario-frame', 'first')
+      expect(query('[data-scenario-feedback]')).toBeNull()
+    },
+  )
 })
 
 describe('the question stays in view while its verdict is read (A15)', () => {

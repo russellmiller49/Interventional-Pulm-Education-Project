@@ -65,6 +65,8 @@ export const REGISTER_PATTERNS: readonly RegisterPattern[] = [
     scope: 'absolute',
     say: 'Recognize toxicity, stop exposure, get help, use the approved LAST checklist.',
   },
+  // Faculty decided on 2026-10-10, for section 13, to keep this row: the first-move card names
+  // lipid emulsion and leaves its dose to the checklist. The register's `last-*` rows stay unused.
   {
     reviewItemId: 'R14',
     pattern: /\blipid emulsion\b.{0,40}\d/i,

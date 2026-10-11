@@ -172,9 +172,13 @@ describe('the section source list (A8, SUP-02)', () => {
     expect(row('U1').querySelector('[data-source-kind]')).toHaveTextContent(
       'Guideline or official guidance',
     )
-    expect(row('T09')).toHaveAttribute('data-source-class', 'transcript')
-    expect(row('T09').querySelector('[data-source-kind]')).toHaveTextContent('Lecture transcript')
-    expect(occurrences(row('T09').textContent ?? '', TRANSCRIPT_SENTENCE)).toBe(1)
+    // The rewritten deterioration section cites no lecture; the specimens section still does.
+    cleanup()
+    render(<BronchSourceList records={bronchStageSources('biopsy-and-specimens').records} />)
+    expect(row('T13')).toHaveAttribute('data-source-class', 'transcript')
+    expect(row('T13').querySelector('[data-source-kind]')).toHaveTextContent('Lecture transcript')
+    expect(occurrences(row('T13').textContent ?? '', TRANSCRIPT_SENTENCE)).toBe(1)
+    expect(row('T13').querySelector('[data-source-locator-note]')).toBeNull()
   })
 
   it('agrees with the Reference about every source in every section', () => {
@@ -222,10 +226,7 @@ describe('the section source list (A8, SUP-02)', () => {
     expect(s1.querySelectorAll('[data-source-locator-note]')).toHaveLength(1)
     expect(s1.querySelector('[data-source-locator-note]')).toHaveTextContent(PDF_PAGE_LOCATOR_NOTE)
     expect(s1.textContent).not.toMatch(/printed page \d|print(?:ed)? p\. ?\d/i)
-    for (const id of ['U1', 'T09'])
-      expect(
-        document.querySelector(`[data-evidence-id="${id}"] [data-source-locator-note]`),
-      ).toBeNull()
+    expect(document.querySelector('[data-evidence-id="U1"] [data-source-locator-note]')).toBeNull()
   })
 
   it('copies and opens the source the control belongs to', async () => {
@@ -309,10 +310,10 @@ describe('focus scrolling reserves the continuation bar as measured (A9)', () =>
 
 /**
  * The sections the walkthrough found printing Reading the view as loose lines. A rewritten section
- * (the right lung, bleeding) closes on its checklist and no longer prints the table in the lesson;
- * the Reference keeps the whole table.
+ * (the right lung, bleeding, deterioration) closes on its checklist and no longer prints the table
+ * in the lesson; the Reference keeps the whole table. `scope-in-a-tube` is the last one that does.
  */
-const GRAMMAR_SECTIONS: readonly BronchSectionId[] = ['deterioration', 'scope-in-a-tube']
+const GRAMMAR_SECTIONS: readonly BronchSectionId[] = ['scope-in-a-tube']
 
 function cellTexts(row: Element) {
   const text = (selector: string) =>

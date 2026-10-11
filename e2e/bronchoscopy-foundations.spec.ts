@@ -807,14 +807,20 @@ for (const id of ['pre-use-check', 'deterioration', 'describe-findings'] as cons
         for (const frame of task.scenario.frames) {
           if (await page.locator('[data-scenario-continue]').count())
             await page.locator('[data-scenario-continue]').click()
-          await expect(page.locator('[data-case-baseline]')).toBeVisible()
+          // A rewritten case carries no baseline line; its monitor shows the frame's own values.
+          if (lesson.section.authoringContract !== 2)
+            await expect(page.locator('[data-case-baseline]')).toBeVisible()
           const unsafe = frame.choices.find((choice) => choice.plausibility === 'unsafe')
           if (unsafe) {
             await page
               .locator('[data-scenario-frame="' + frame.id + '"] input[value="' + unsafe.id + '"]')
               .check()
             await page.locator('[data-scenario-decide]').click()
-            await expect(page.locator('[data-scenario-outcome="refused"]')).toBeVisible()
+            await expect(
+              page.locator(
+                `[data-scenario-outcome="${unsafe.consequence ? 'played-out' : 'refused'}"]`,
+              ),
+            ).toBeVisible()
           }
           await page
             .locator(
@@ -1276,7 +1282,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
       `${s2.byline}. ${s2.title} (${s2.year}).`,
     )
-    const open = page.getByRole('link', { name: /Open source U1/ })
+    const open = page.getByRole('link', { name: /Open source U1 / })
     await expect(open).toHaveAttribute('href', SOURCE_BY_ID.get('U1')!.url!)
     await expect(open).toHaveAttribute('target', '_blank')
   })
@@ -1352,9 +1358,9 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
           ).toBe(true)
       })
 
-  // The rewritten sections (the right lung, bleeding) close on their checklist and do not print
-  // the table in the lesson; the Reference keeps all of it.
-  const GRAMMAR_SECTIONS = ['deterioration', 'scope-in-a-tube'] as const
+  // The rewritten sections (the right lung, bleeding, deterioration) close on their checklist and
+  // do not print the table in the lesson; the Reference keeps all of it.
+  const GRAMMAR_SECTIONS = ['scope-in-a-tube'] as const
 
   async function expectGrammarRows(table: Locator, rowIds: readonly string[]) {
     await expect(table.locator('tbody tr[data-grammar-row]')).toHaveCount(rowIds.length)
@@ -1398,8 +1404,8 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
         await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[index + 1].id)
       }
     }
-    // Two sections, one place each. A rewritten section no longer prints the table in the lesson.
-    expect(occurrences).toBe(2)
+    // One section, one place. A rewritten section no longer prints the table in the lesson.
+    expect(occurrences).toBe(1)
     await page.goto(base + '/reference')
     const reference = page.locator('#reading-the-view table[data-grammar]')
     await expect(reference.locator('thead th')).toHaveText([
@@ -1424,7 +1430,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       page,
     }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await stepTo(page, 'deterioration', 'read', { grammar: true })
+      await stepTo(page, 'scope-in-a-tube', 'read', { grammar: true })
       if (viewport.text === 200)
         await page.evaluate(() => {
           document.documentElement.style.fontSize = '200%'
@@ -1457,7 +1463,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       const rowHeaders = nodes
         .filter((node) => node.role?.value === 'rowheader')
         .map((node) => node.name?.value ?? '')
-      for (const id of bronchSection('deterioration').grammarRowIds)
+      for (const id of bronchSection('scope-in-a-tube').grammarRowIds)
         expect(
           rowHeaders.some((name) =>
             name.includes(BRONCH_GRAMMAR.find((row) => row.id === id)!.see),

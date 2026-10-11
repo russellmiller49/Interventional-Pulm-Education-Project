@@ -124,9 +124,9 @@ it('keeps answers and retries in the session only', () => {
   const scenario = bronchStageLesson('deterioration').steps.find(
     (step) => step.interaction.kind === 'scenario',
   )!
-  const poorReturn = bronchStageReducer(bronchStageLesson('deterioration'))
+  const caseReducer = bronchStageReducer(bronchStageLesson('deterioration'))
   const before = emptyBronchStageSession()
-  expect(poorReturn(before, { type: 'RETRY_STEP', stepId: scenario.id })).toBe(before)
+  expect(caseReducer(before, { type: 'RETRY_STEP', stepId: scenario.id })).toBe(before)
   expect(localStorage.length).toBe(0)
 })
 

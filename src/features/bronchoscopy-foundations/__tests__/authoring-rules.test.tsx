@@ -396,6 +396,7 @@ describe('the rewrite rules', () => {
       'describe-findings',
       'washing-and-lavage',
       'biopsy-and-specimens',
+      'deterioration',
       'bleeding-priorities',
     ])
     for (const section of [
