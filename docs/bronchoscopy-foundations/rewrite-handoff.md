@@ -13,32 +13,21 @@ supervisor" answers.
 
 ## Where things stand
 
-| PR   | Branch                             | State                                                                                                             |
-| ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| #349 | `claude/bf-rewrite-rules`          | Draft. The new rules; no content change.                                                                          |
-| #350 | `claude/bf-rewrite-pilot`          | Draft, stacked on #349. The right lung and bleeding, rewritten.                                                   |
-| #378 | `claude/bf-rewrite-s15`            | Draft, stacked on #377. Section 15, the ventilated patient (new id); two sections retired; pressure-limit fix.    |
-| #377 | `claude/bf-rewrite-s13`            | Draft, stacked on #375. Section 13, when the patient deteriorates, rewritten; names only, no rescue doses.        |
-| #375 | `claude/bf-rewrite-s12`            | Draft, stacked on #374. Section 12, biopsy, brushing and specimens (new id); two sections retired.                |
-| #374 | `claude/bf-rewrite-s11`            | Draft, stacked on #373. Section 11, washings and BAL, rewritten; `poor-return` retired; R25 lifted.               |
-| #373 | `claude/bf-rewrite-s10`            | Draft, stacked on #371. Section 10, findings and the report, rewritten; `honest-report` retired.                  |
-| #371 | `claude/bf-rewrite-s09`            | Draft, stacked on #369. Section 9, the systematic survey, rewritten; one approved scope-pane change.              |
-| #369 | `claude/bf-rewrite-s08`            | Draft, stacked on #368. Section 8, losing and regaining the view, rewritten.                                      |
-| #368 | `claude/bf-rewrite-s07`            | Draft, stacked on #364. Section 7, the left lung, rewritten; `reference-frames` retired.                          |
-| #364 | `claude/bf-rewrite-s05`            | Draft, stacked on #362. Section 5, larynx, trachea and carina, rewritten; `branch-entry` retired.                 |
-| #362 | `claude/bf-rewrite-s04`            | Draft, stacked on #360. Section 4, driving the scope, rewritten.                                                  |
-| #360 | `claude/bf-rewrite-s03`            | Draft, stacked on #359. Section 3, sedation and monitoring, rewritten; `shared-airway` retired.                   |
-| #359 | `claude/bf-rewrite-s02`            | Draft, stacked on #358. Section 2, the scope and the setup, rewritten.                                            |
-| #358 | `claude/bf-rewrite-s01`            | Draft, stacked on #355. Section 1, the procedure and the plan, rewritten.                                         |
-| #355 | `claude/bf-rewrite-structure`      | Draft, stacked on #352. The plan's order, five phases, and the forward map for retired sections.                  |
-| #352 | `claude/bf-rewrite-register`       | Draft, stacked on #350. Register rows 15, 19, 20 and 21 extracted; two sources added (U17, U18). No learner copy. |
-| #351 | `claude/bf-3d-retry`               | Draft, from `main`. The 3D-retry fix lifted out of #348, with its three end-to-end cases.                         |
-| #348 | `claude/bf-pre-review-04-20261007` | Draft, superseded in direction. Its 3D-retry fix is now #351; close #348 once #351 merges.                        |
+The rewrite through section 12 is on `main` (merged 2026-10-10, `12d2c8ca`): #349, #350, #352,
+#355, #358, #359, #360, #362, #364, #368, #369, #371, #373, #374 and #375, with #351 (the
+3D-retry fix) and #376 (the authoring-rules test). #348 is closed.
 
-Nothing is merged. The stack, in merge order: #349 → #350 → #352 → #355 → #358 → #359 → #360 →
-#362 → #364 → #368 → #369 → #371 → #373 → #374 → #375 → #377 → #378. #351 is independent. The
-work is in the worktree `…-Worktrees/claude-bf-pre-review-04-20261007`, which is on
-`claude/bf-rewrite-s15`. Branch the next change from that branch and stack its PR on #378.
+Two PRs are open and not yet reviewed:
+
+| PR   | Branch                  | State                                                                                                              |
+| ---- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| #377 | `claude/bf-rewrite-s13` | Draft, targets `main`. Section 13, when the patient deteriorates, rewritten; names only, no rescue doses.          |
+| #378 | `claude/bf-rewrite-s15` | Draft, stacked on #377. Section 15, the ventilated patient (new id); two sections retired; the pressure-limit fix. |
+
+Merge #377, then #378. The work is in the worktree
+`…-Worktrees/claude-bf-pre-review-04-20261007`, which is on `claude/bf-rewrite-s15`. Until both
+are merged, branch the next change from that branch and stack its PR on #378; afterwards branch
+from `origin/main`. The local copies of the merged stack branches are behind origin.
 
 ## Start here next session
 
@@ -105,7 +94,7 @@ npx tsx scripts/bronchoscopy-foundations/check-section.ts <section-id>
 In the plan's order. Russell removed the fellow-session gate on 2026-10-08: the 13 remaining
 sections no longer wait for sessions with the pilot.
 
-1. **Get #349 and #350 reviewed and merged**, then branch each batch from `origin/main`.
+1. **Get #377 and #378 reviewed and merged.** Everything before them is on `main`.
 2. **Still open from the pilot, for Russell:**
    - Confirm the bleeding first-move card, especially step 2 (suction).
    - Confirm three orientation statements in the right lung's image questions (carina: membranous
