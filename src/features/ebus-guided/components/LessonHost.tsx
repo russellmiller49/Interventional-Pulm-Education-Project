@@ -594,6 +594,15 @@ function LessonSession({
           className={styles.taskSurface}
           data-now-card
           data-console={consoleStage || undefined}
+          /*
+           * Every other acquisition (model and recorded-clip labs) keeps its reading layout but
+           * carries Back, the skip link and the primary button in the heading row, so the button
+           * is not below a workbench taller than the screen (owner request of 2026-10-11).
+           */
+          data-top-advance={
+            (!consoleStage && !finished && !reviewId && current.interaction === 'acquire') ||
+            undefined
+          }
           aria-labelledby="ebus-task-title"
         >
           <div className={styles.taskHeading}>
