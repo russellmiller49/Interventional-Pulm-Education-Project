@@ -22,7 +22,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
     situation:
       'In a teaching case, a 52-year-old woman has a focal opacity in the left lower lobe on CT, and the supervising physician has chosen a directed bronchoalveolar lavage. At the time-out, the label on the collection trap reads right middle lobe. She is stable and has not received sedation.',
     critical: true,
-    pairedSectionId: 'specimen-pathway',
+    pairedSectionId: 'biopsy-and-specimens',
     item: {
       id: 'C01',
       itemType: 'management-decision',
@@ -246,7 +246,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
     situation:
       'In a teaching case, a 61-year-old woman has had a planned, supervised endobronchial biopsy of an airway lesion. Beforehand, the team agreed to send tissue for histology and for microbiology. As the pots are labeled at the end, the assistant notices that every piece went into formalin; no culture container was in the room. The scope is out and she is recovering.',
     critical: false,
-    pairedSectionId: 'specimen-pathway',
+    pairedSectionId: 'biopsy-and-specimens',
     item: {
       id: 'C07',
       itemType: 'management-decision',
@@ -359,7 +359,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
     situation:
       'A simulated procedure report, generated from a template, states that the vocal folds and all segmental bronchi are normal. The bronchoscopy was performed through an endotracheal tube, and the scope could not be advanced through a tight lesion at one lobar origin without force, so nothing beyond it was examined. The report is waiting for the bronchoscopist’s signature.',
     critical: true,
-    pairedSectionId: 'honest-report',
+    pairedSectionId: 'describe-findings',
     item: {
       id: 'C10',
       itemType: 'management-decision',
@@ -413,7 +413,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
     situation:
       'A teaching exercise built from a recorded ICU lecture describes one sample. Central secretions were suctioned first; then 40 mL was instilled at the selected site, 15 mL was recovered, and the sample was sent as a lavage. The lecture goes on to discuss culture results and a susceptibility table on a slide that is not available. The exercise asks which antibiotic the results support.',
     critical: false,
-    pairedSectionId: 'specimen-pathway',
+    pairedSectionId: 'biopsy-and-specimens',
     item: {
       id: 'C16',
       itemType: 'mechanism-interpretation',

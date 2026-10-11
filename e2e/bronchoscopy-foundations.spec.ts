@@ -61,10 +61,27 @@ async function openSection(page: Page, id: BronchSectionId) {
   await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[0].id)
   return lesson
 }
+/** To a named step, leaving every card on the way: each can be left without doing it. */
+async function walkToStep(page: Page, id: BronchSectionId, stepId: string) {
+  const lesson = await openSection(page, id)
+  for (let guard = 0; guard <= lesson.steps.length; guard += 1) {
+    const current = (await stage(page).getAttribute('data-stage'))!
+    if (current === stepId) return { lesson }
+    if (await skip(page).count()) await skip(page).click()
+    else await primary(page).click()
+    await expect(stage(page)).not.toHaveAttribute('data-stage', current)
+  }
+  throw new Error(`step ${stepId} not reached`)
+}
 async function reachAct(page: Page, id: BronchSectionId) {
   const lesson = await openSection(page, id)
   for (const step of lesson.steps) {
-    if (step.course?.kind === 'practice') break
+    // The section's own activity. A further activity before it (`CourseChunk.act`) is left.
+    if (step.course?.kind === 'practice' && !step.course.act) break
+    if (step.course?.kind === 'practice') {
+      await skip(page).click()
+      continue
+    }
     if (step.interaction.kind === 'prediction') {
       await page
         .locator(
@@ -150,9 +167,7 @@ for (const viewport of [
     page,
   }, testInfo) => {
     await page.setViewportSize(viewport)
-    await openSection(page, 'larynx-and-entry')
-    await primary(page).click()
-    await primary(page).click()
+    await walkToStep(page, 'larynx-and-entry', 'larynx-and-entry-flow-v1-application')
     await ready(page)
     // The learner reaches the real controls without a control-identification answer.
     await expect(page.locator('[data-prediction-choices]')).toHaveCount(0)
@@ -230,10 +245,10 @@ test('one entry, explanation before an answer, Back review and a reload that res
 }) => {
   await expect(page.locator('[data-bronch-continue]')).toHaveAttribute(
     'href',
-    /section=shared-airway/,
+    /section=clinical-question/,
   )
   await page.locator('[data-bronch-continue]').click()
-  const lesson = bronchStageLesson('shared-airway')
+  const lesson = bronchStageLesson('clinical-question')
   const check = lesson.steps[lesson.predictionStepIndex]
   if (check.interaction.kind !== 'prediction') throw new Error('Check expected')
   await expect(page.locator('[data-course-teaching]')).toBeVisible()
@@ -257,7 +272,10 @@ test('one entry, explanation before an answer, Back review and a reload that res
     'not-correct',
   )
   const saved = await record(page)
-  expect(saved).toMatchObject({ visitedSectionIds: ['shared-airway'], reviewedSectionIds: [] })
+  expect(saved).toMatchObject({
+    visitedSectionIds: ['clinical-question'],
+    reviewedSectionIds: [],
+  })
   expect(Object.keys(saved).sort()).toEqual([
     'lastSectionId',
     'reviewLaterSectionIds',
@@ -354,25 +372,30 @@ for (const viewport of [
       page.on('pageerror', (error) => errors.push(error.message))
       const lesson = await openSection(page, 'five-controls')
 
-      await expect(page.getByRole('heading', { name: 'What each hand does' })).toBeVisible()
-      await expect(page.locator('[data-prediction-choices]')).toHaveCount(0)
-      await page.screenshot({ path: info.outputPath('01-before-answer-teaching.png') })
-
-      await expect(page.locator('[data-instrument-orientation]')).toBeVisible()
-      await page.getByRole('button', { name: 'Steering and suction', exact: true }).click()
-      await page.screenshot({ path: info.outputPath('02-instrument.png') })
-      await pilotContinue(page)
-      for (const step of lesson.steps.slice(1)) {
+      // The section opens on its hook and its prediction; the bench units follow in the flow's order.
+      await expect(page.locator('[data-teaching-block="hook"]')).toBeVisible()
+      for (const step of lesson.steps) {
         await expect(stage(page)).toHaveAttribute('data-stage', step.id)
+        if (step.learn?.id === 'instrument') {
+          await expect(page.getByRole('heading', { name: 'What each hand does' })).toBeVisible()
+          await expect(page.locator('[data-prediction-choices]')).toHaveCount(0)
+          await expect(page.locator('[data-extended-technique]')).toHaveCount(0)
+          await page.screenshot({ path: info.outputPath('01-before-answer-teaching.png') })
+          await expect(page.locator('[data-instrument-orientation]')).toBeVisible()
+          await page.getByRole('button', { name: 'Steering and suction', exact: true }).click()
+          await page.screenshot({ path: info.outputPath('02-instrument.png') })
+        }
         if (step.interaction.kind === 'prediction') {
           const item = step.interaction.stage.item
-          // Current teaching has no example-specific answer; key/rationales are not rendered.
-          const teachingText = await page.locator('[data-pilot-teaching]').textContent()
-          for (const denied of lesson.section.precommitDenyPatterns)
-            expect(teachingText).not.toMatch(denied)
+          // The teaching beside an open question carries no phrase that gives its answer away.
+          const teachingText = (await page.locator('[data-stage]').textContent()) ?? ''
+          if (step.interaction.round === 0)
+            for (const denied of lesson.section.precommitDenyPatterns)
+              expect(teachingText).not.toMatch(denied)
           await expect(skip(page)).toHaveText('Continue without answering')
           const wrong = item.choices.find(
-            (choice) => !item.correctChoiceIds.includes(choice.id),
+            (choice) =>
+              !item.correctChoiceIds.includes(choice.id) && choice.plausibility !== 'unsafe',
           )!.id
           await page.locator('[data-prediction-choices] input[value="' + wrong + '"]').check()
           await primary(page).click()
@@ -509,7 +532,7 @@ for (const viewport of [
       expect(await earlierRecord(page)).toBeNull()
       await expect(page.locator('[data-section-completion] [data-next-section]')).toHaveAttribute(
         'data-next-section',
-        'branch-entry',
+        'larynx-and-entry',
       )
       await page.reload()
       await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[0].id)
@@ -530,7 +553,14 @@ test('the pilot retains working controls and a text equivalent when WebGL is una
     })
   })
   await openSection(page, 'five-controls')
-  await pilotContinue(page)
+  // Past the hook, the prediction and the two reading screens, to the first bench task.
+  for (let guard = 0; guard < 8; guard += 1) {
+    const current = await stage(page).getAttribute('data-stage')
+    if (current === 'five-controls-learn-depth') break
+    if (await skip(page).count()) await skip(page).click()
+    else await pilotContinue(page)
+    await expect(stage(page)).not.toHaveAttribute('data-stage', current!)
+  }
   await pilotAction(page, 'Try with guidance')
   await page.getByRole('button', { name: 'Use the schematic view', exact: true }).click()
   const schematic = page.getByRole('img', { name: /^Schematic scope view/ })
@@ -550,13 +580,24 @@ test('the survey distinguishes entering from inspecting and refuses an unseen-ai
   await reachAct(page, 'systematic-survey')
   await ready(page)
   const rows = page.locator('[data-inspection-ledger] [data-ledger-row]')
-  await expect(rows).toHaveCount(6)
-  await expect(page.locator('[data-ledger-row="RLL"]')).not.toHaveAttribute(
-    'data-ledger-status',
-    'inspected',
-  )
-  const rll = page.locator('[data-ledger-row="RLL"] select')
-  expect(await rll.locator('option[value="inspected"]').isDisabled()).toBe(true)
+  // Every segment of both lungs has a line.
+  await expect(rows).toHaveCount(18)
+  // The record offers three statuses, under the section's own words, and nothing is declared.
+  const first = page.locator('[data-ledger-row="RB1"] select')
+  expect(await first.locator('option').allTextContents()).toEqual([
+    'Record…',
+    'Seen',
+    'Not seen',
+    'Not reachable',
+  ])
+  await expect(page.locator('[data-inspection-ledger] thead th')).toHaveText([
+    'Airway',
+    'Status',
+    'Record',
+  ])
+  await expect(page.locator('[data-ledger-row="RB1"] td').first()).toHaveText('To do')
+  // Seen needs the scope inside the segment; not reachable needs its opening in view.
+  expect(await first.locator('option[value="inspected"]').isDisabled()).toBe(true)
   const rb10 = page.locator('[data-ledger-row="RB10"] select')
   expect(await rb10.locator('option[value="not-safely-accessible"]').isDisabled()).toBe(true)
   await rb10.selectOption('not-observed')
@@ -565,11 +606,13 @@ test('the survey distinguishes entering from inspecting and refuses an unseen-ai
     'data-ledger-status',
     'not-observed',
   )
+  await expect(page.locator('[data-ledger-row="RB10"] td').first()).toHaveText('Not seen')
   await expect(primary(page)).toBeDisabled()
   await expect(skip(page)).toHaveText('Continue without completing')
-  await expect(page.locator('[data-scope-scene]')).toContainText(
-    'Entering an airway is not inspecting it',
-  )
+  const scene = page.locator('[data-scope-scene]')
+  await expect(scene).toContainText('Seen needs a clear view from inside the segment.')
+  await expect(scene).not.toContainText('Declare')
+  await expect(scene).not.toContainText('only a declaration records an inspection')
 })
 
 test('a survey left without completing it saves no survey and claims nothing', async ({ page }) => {
@@ -590,7 +633,7 @@ test('a survey left without completing it saves no survey and claims nothing', a
 test('the report refuses unsupported claims and only opens Continue when every field is supported', async ({
   page,
 }) => {
-  const { lesson } = await reachAct(page, 'honest-report')
+  const { lesson } = await reachAct(page, 'describe-findings')
   const interaction = lesson.steps.find((step) => step.interaction.kind === 'report')!.interaction
   if (interaction.kind !== 'report') throw new Error('Report expected')
   await expect(primary(page)).toHaveCount(0)
@@ -686,8 +729,9 @@ for (const viewport of [
               'pre-use-check',
               'five-controls',
               'right-side',
+              'left-side',
               'deterioration',
-              'honest-report',
+              'describe-findings',
             ] as const)
       for (const id of ids) {
         await openSection(page, id)
@@ -723,7 +767,7 @@ for (const viewport of [
   )
 }
 
-for (const id of ['pre-use-check', 'deterioration', 'honest-report'] as const) {
+for (const id of ['pre-use-check', 'deterioration', 'describe-findings'] as const) {
   test('complete course workspace through native responses: ' + id, async ({ page }, info) => {
     const lesson = await openSection(page, id)
     for (const step of lesson.steps) {
@@ -794,7 +838,7 @@ for (const id of ['pre-use-check', 'deterioration', 'honest-report'] as const) {
     await page.goto(base)
     await expect(page.locator('[data-bronch-continue]')).toHaveAttribute(
       'data-next-section',
-      'shared-airway',
+      'clinical-question',
     )
   })
 }
@@ -802,8 +846,8 @@ for (const id of ['pre-use-check', 'deterioration', 'honest-report'] as const) {
 test('missing teaching media is explicitly identified', async ({ page }) => {
   await page.route('**/airway-quiz/quiz-frames.json', (route) => route.abort())
   await page.route('**/*quiz*frames*.json', (route) => route.abort())
-  // The left lung still opens on its tour; the rewritten right lung opens on its hook.
-  await openSection(page, 'left-side')
+  // A rewritten section opens on its hook; the left lung's stills are on its third screen.
+  await walkToStep(page, 'left-side', 'left-side-flow-v1-main-and-upper')
   await expect(page.locator('[data-media-state="failed"]').first()).toBeVisible()
   expect((await record(page)).reviewedSectionIds).toEqual([])
 })
@@ -838,7 +882,7 @@ const readout = (page: Page, id: string) => page.locator('[data-readout="' + id 
 test('the worked accessory exchange keeps its false report and still ends protected', async ({
   page,
 }) => {
-  await reachAct(page, 'protected-accessories')
+  await reachAct(page, 'biopsy-and-specimens')
   await ready(page)
   const caption = page.locator('[data-demonstration-caption]')
   const message = page.locator('[data-scope-message]')
@@ -890,7 +934,7 @@ test.describe('the scripted scene runs on its own clock', () => {
     page,
   }) => {
     test.setTimeout(240_000)
-    await reachAct(page, 'larynx-and-entry')
+    await walkToStep(page, 'larynx-and-entry', 'larynx-and-entry-flow-v1-application')
     await ready(page)
     expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(
       false,
@@ -912,7 +956,7 @@ test.describe('the scripted scene runs on its own clock', () => {
   test('the carina hold runs down on its own and finishes on the learner’s actions', async ({
     page,
   }) => {
-    const lesson = await openSection(page, 'branch-entry')
+    const lesson = await openSection(page, 'larynx-and-entry')
     for (const step of lesson.steps) {
       if (step.course?.id === 'hold-view') break
       const leave = skip(page)
@@ -947,7 +991,7 @@ test('closed folds still refuse the advance, and the manual step is the reduced-
   // The module config holds motion reduced; the scene then exposes Step one second, and the
   // authored breath moves only when the learner moves it. That makes this check exact.
   test.setTimeout(240_000)
-  await reachAct(page, 'larynx-and-entry')
+  await walkToStep(page, 'larynx-and-entry', 'larynx-and-entry-flow-v1-application')
   await ready(page)
   expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(
     true,
@@ -1006,7 +1050,9 @@ for (const viewport of [
       const limit = page.locator('[data-goal-now]')
       await expect(status).toHaveText('Recorded: every step this card asks for.')
       await expect(heading).toHaveText('On the record for this attempt')
-      await expect(limit).toContainText('does not judge the bronchoscope image')
+      // A rewritten section's card says where the tip is and nothing about what it does not judge.
+      await expect(limit).toContainText('Where the tip is now')
+      await expect(limit).not.toContainText('usable')
       // Keep going past the target, the way the walkthrough did.
       for (let i = 0; i < 12; i++) await control(page, 'advance').press('Enter')
       // The events happened, so the ticks stay; the headline still reports only the record.
@@ -1023,9 +1069,8 @@ for (const viewport of [
       await expect(page.locator('[data-scope-goals-group]')).toHaveText(
         'On the record for this attempt',
       )
-      await expect(page.locator('[data-scope-goals-limit]')).toContainText(
-        'does not judge the bronchoscope image',
-      )
+      await expect(page.locator('[data-scope-goals-limit]')).toContainText('Where the tip is now')
+      await expect(page.locator('[data-scope-goals-limit]')).not.toContainText('usable')
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
       ).toBe(true)
@@ -1074,8 +1119,8 @@ test('a completed inspection record stays a record after the scope leaves those 
   await ready(page)
   // Every goal on this card reads the attempt: the sequences it walked and the record it wrote.
   const rows = page.locator('[data-step-goals] li')
-  await expect(rows).toHaveCount(5)
-  expect(await page.locator('[data-step-goals] li[data-goal-claim="history"]').count()).toBe(5)
+  await expect(rows).toHaveCount(3)
+  expect(await page.locator('[data-step-goals] li[data-goal-claim="history"]').count()).toBe(3)
   await expect(page.locator('[data-goal-group]')).toHaveAttribute('data-goal-group', 'history')
   await expect(page.locator('[data-now-card]')).not.toContainText('Read from the scope right now')
   await expect(page.locator('[data-goal-now]')).toContainText('Where the tip is now:')
@@ -1198,7 +1243,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
   }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write'])
     await page.setViewportSize({ width: 1204, height: 987 })
-    for (const sectionId of ['shared-airway', 'sedation-and-monitoring', 'view-loss'] as const) {
+    for (const sectionId of ['deterioration', 'sedation-and-monitoring', 'view-loss'] as const) {
       await openSection(page, sectionId)
       const summary = page.locator('[data-stage-sources] summary')
       await summary.scrollIntoViewIfNeeded()
@@ -1215,9 +1260,9 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       }
     }
     // Textbook, manuals and guidelines, by id, on the real route.
-    await openSection(page, 'shared-airway')
+    await openSection(page, 'deterioration')
     await page.locator('[data-stage-sources] summary').click()
-    for (const id of ['S1', 'S2', 'S3', 'U1'])
+    for (const id of ['S1', 'S2', 'U1', 'U4'])
       await expect(page.locator(`[data-stage-sources] [data-evidence-id="${id}"]`)).toHaveAttribute(
         'data-source-class',
         'reference',
@@ -1249,7 +1294,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       }, info) => {
         await page.setViewportSize(viewport)
         // The longest list the course has, so first and last are far apart.
-        const longest = [...(['shared-airway', 'bleeding-priorities', 'view-loss'] as const)].sort(
+        const longest = [...(['deterioration', 'bleeding-priorities', 'view-loss'] as const)].sort(
           (a, b) => bronchStageSources(b).records.length - bronchStageSources(a).records.length,
         )[0]
         await openSection(page, longest)
@@ -1309,17 +1354,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
 
   // The rewritten sections (the right lung, bleeding) close on their checklist and do not print
   // the table in the lesson; the Reference keeps all of it.
-  const GRAMMAR_SECTIONS = [
-    'branch-entry',
-    'view-loss',
-    'larynx-and-entry',
-    'left-side',
-    'systematic-survey',
-    'poor-return',
-    'protected-accessories',
-    'deterioration',
-    'scope-in-a-tube',
-  ] as const
+  const GRAMMAR_SECTIONS = ['deterioration', 'scope-in-a-tube'] as const
 
   async function expectGrammarRows(table: Locator, rowIds: readonly string[]) {
     await expect(table.locator('tbody tr[data-grammar-row]')).toHaveCount(rowIds.length)
@@ -1363,9 +1398,8 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
         await expect(stage(page)).toHaveAttribute('data-stage', lesson.steps[index + 1].id)
       }
     }
-    // Nine sections, eleven places: view-loss and poor-return show the rows twice. The two
-    // rewritten sections no longer print the table in the lesson.
-    expect(occurrences).toBe(11)
+    // Two sections, one place each. A rewritten section no longer prints the table in the lesson.
+    expect(occurrences).toBe(2)
     await page.goto(base + '/reference')
     const reference = page.locator('#reading-the-view table[data-grammar]')
     await expect(reference.locator('thead th')).toHaveText([
@@ -1390,7 +1424,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       page,
     }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await stepTo(page, 'view-loss', 'read', { grammar: true })
+      await stepTo(page, 'deterioration', 'read', { grammar: true })
       if (viewport.text === 200)
         await page.evaluate(() => {
           document.documentElement.style.fontSize = '200%'
@@ -1423,7 +1457,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       const rowHeaders = nodes
         .filter((node) => node.role?.value === 'rowheader')
         .map((node) => node.name?.value ?? '')
-      for (const id of bronchSection('view-loss').grammarRowIds)
+      for (const id of bronchSection('deterioration').grammarRowIds)
         expect(
           rowHeaders.some((name) =>
             name.includes(BRONCH_GRAMMAR.find((row) => row.id === id)!.see),
@@ -1486,7 +1520,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
     await expect(primary(page)).toBeEnabled()
   })
 
-  for (const id of ['poor-return', 'deterioration', 'bleeding-priorities'] as const)
+  for (const id of ['washing-and-lavage', 'deterioration', 'bleeding-priorities'] as const)
     test(`the ${id} case refuses the unsafe move and shows a visible way to the next observation`, async ({
       page,
     }) => {
@@ -1571,11 +1605,11 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
     { width: 1204, height: 987 },
     { width: 390, height: 844 },
   ])
-    test(`the S1 question stays in view after a wrong answer at ${viewport.width}px, and can be tried again`, async ({
+    test(`a question stays in view after a wrong answer at ${viewport.width}px, and can be tried again`, async ({
       page,
     }) => {
       await page.setViewportSize(viewport)
-      const { step } = await stepTo(page, 'shared-airway', 'prediction')
+      const { step } = await stepTo(page, 'what-completion-means', 'prediction')
       if (step.interaction.kind !== 'prediction') throw new Error('not a prediction')
       const { item } = step.interaction.stage
       const wrong = item.choices.find((choice) => choice.plausibility === 'incorrect-mechanism')!
@@ -1597,29 +1631,32 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       await expect(page.locator('[data-question-context]')).toHaveCount(0)
     })
 
-  test('the S1 matching set names the authored category, explanation first and after a wrong match', async ({
+  test('a matching set names the authored category, explanation first and after a wrong match', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1204, height: 987 })
-    const { step } = await stepTo(page, 'shared-airway', 'sort')
+    const { step } = await stepTo(page, 'what-completion-means', 'sort')
     if (step.interaction.kind !== 'sort') throw new Error('not a sort')
     const { sort } = step.interaction
     const label = (id: string) => sort.origins.find((origin) => origin.id === id)!.label
     await page.getByRole('button', { name: 'Show the worked matches' }).click()
+    // One row is placed under a category it does not belong to; the rest are placed as keyed.
+    const misplaced = sort.rows[0]
+    const chosen = sort.origins.find((origin) => origin.id !== misplaced.origin)!.id
     await expect(
-      page.locator('[data-sort-row="lavage-returned"] [data-sort-explanation]'),
-    ).toContainText(`Belongs with: ${label('result')}`)
+      page.locator(`[data-sort-row="${misplaced.id}"] [data-sort-explanation]`),
+    ).toContainText(`Belongs with: ${label(misplaced.origin)}`)
     await expect(page.locator('[data-bronch-sort]')).not.toContainText('?.')
     await page.getByRole('button', { name: 'Hide the explanation' }).click()
     for (const row of sort.rows)
       await page
         .locator(`[data-sort-row="${row.id}"] select`)
-        .selectOption(row.id === 'lavage-returned' ? 'what' : row.origin)
+        .selectOption(row.id === misplaced.id ? chosen : row.origin)
     await primary(page).click()
-    const verdict = page.locator('[data-sort-row="lavage-returned"] [data-sort-verdict]')
+    const verdict = page.locator(`[data-sort-row="${misplaced.id}"] [data-sort-verdict]`)
     await expect(verdict).toContainText('Not correct.')
-    await expect(verdict).toContainText(`You chose: ${label('what')}`)
-    await expect(verdict).toContainText(`Belongs with: ${label('result')}`)
+    await expect(verdict).toContainText(`You chose: ${label(chosen)}`)
+    await expect(verdict).toContainText(`Belongs with: ${label(misplaced.origin)}`)
     await expect(page.locator('[data-bronch-sort]')).not.toContainText('Did not hold')
     expect(await page.locator('[data-bronch-sort]').textContent()).not.toMatch(
       /\b\d+\s*(?:of|out of|\/)\s*\d+\b/,
@@ -1741,7 +1778,8 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
     page,
   }, info) => {
     await page.setViewportSize({ width: 1204, height: 987 })
-    await openSection(page, 'larynx-and-entry')
+    // The screen on getting to the cords shows the section's unmarked larynx still.
+    await goToStep(page, 'larynx-and-entry', 'larynx-and-entry-flow-v1-crossing')
     await expect(page.locator('[data-workspace-caption]')).not.toContainText('annotated')
     const larynx = page.locator('[data-media-workspace] figure').first()
     await larynx.scrollIntoViewIfNeeded()
@@ -1841,7 +1879,7 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
   }, info) => {
     test.setTimeout(240_000)
     await page.setViewportSize({ width: 1204, height: 987 })
-    await goToStep(page, 'branch-entry', 'branch-entry-flow-v1-application')
+    await goToStep(page, 'larynx-and-entry', 'larynx-and-entry-flow-v1-carina')
     await ready(page)
     // Held keys are discoverable, and W advances once the view is selected.
     await expect(page.locator('[data-keyboard-help]')).toContainText('Hold a movement key')
@@ -2064,7 +2102,7 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
       page,
     }, info) => {
       await page.setViewportSize(viewport)
-      await goToStep(page, 'branch-entry', 'branch-entry-flow-v1-application')
+      await goToStep(page, 'larynx-and-entry', 'larynx-and-entry-flow-v1-carina')
       if (text === 200)
         await page.evaluate(() => {
           document.documentElement.style.fontSize = '200%'
@@ -2133,42 +2171,6 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
       expect(focus.bottom).toBeLessThanOrEqual(viewport.height + 1)
     })
 
-  test('S7: the CT and the still are compared side by side at laptop sizes, each for what it is', async ({
-    page,
-  }, info) => {
-    for (const viewport of [
-      { width: 1204, height: 987 },
-      { width: 1024, height: 768 },
-      { width: 390, height: 844 },
-    ]) {
-      await page.setViewportSize(viewport)
-      await goToStep(page, 'reference-frames', 'reference-frames-flow-v1-ct-display')
-      const figures = page.locator('[data-media-workspace] figure')
-      await expect(figures).toHaveCount(2)
-      await expect(figures.nth(1).locator('img')).toBeVisible()
-      await figures.first().scrollIntoViewIfNeeded()
-      const [ct, still] = await figures.evaluateAll((elements) =>
-        elements.map((figure) => {
-          const r = figure.querySelector('img')!.getBoundingClientRect()
-          return { top: r.top, bottom: r.bottom, left: r.left, width: r.width }
-        }),
-      )
-      if (viewport.width >= 1024) {
-        expect(Math.abs(ct.top - still.top)).toBeLessThan(2)
-        expect(Math.max(ct.bottom, still.bottom) - Math.min(ct.top, still.top)).toBeLessThan(
-          viewport.height - 100,
-        )
-        expect(still.left).toBeGreaterThan(ct.left + ct.width)
-      } else expect(still.top).toBeGreaterThan(ct.bottom)
-      await expect(page.locator('[data-media-frame]')).toHaveCount(2)
-      await expect(page.locator('[data-media-comparison]')).toContainText('not a registered pair')
-      await expect(page.locator('[data-media-comparison]')).toContainText(
-        'this panel shows one axial slice',
-      )
-      await page.screenshot({ path: info.outputPath(`s7-${viewport.width}.png`) })
-    }
-  })
-
   test('S20: the scope in the tube is drawn in cross-section, to scale, from the readouts’ numbers', async ({
     page,
   }, info) => {
@@ -2210,8 +2212,8 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
   }, info) => {
     test.setTimeout(240_000)
     await page.setViewportSize({ width: 1204, height: 987 })
-    const practice = 'branch-entry-flow-v1-application'
-    await goToStep(page, 'branch-entry', practice)
+    const practice = 'larynx-and-entry-flow-v1-carina'
+    await goToStep(page, 'larynx-and-entry', practice)
     await ready(page)
     const now = page.locator('[data-now-card]')
     const help = page.locator('[data-goal-help]')
@@ -2623,125 +2625,4 @@ test.describe('BF-PRE-REVIEW-03: readable images and coherent scope workspaces',
     const savedAfter = await record(page)
     expect({ ...savedAfter, updatedAt: null }).toEqual({ ...savedBefore, updatedAt: null })
   })
-
-  /** The image inside a figure's card frame and inside its open enlarged view, as painted. */
-  async function imageBox(image: Locator) {
-    return image.evaluate((element) => {
-      const img = element as HTMLImageElement
-      const box = img.getBoundingClientRect()
-      return {
-        width: box.width,
-        height: box.height,
-        left: box.left,
-        right: box.right,
-        top: box.top,
-        bottom: box.bottom,
-        src: img.currentSrc,
-        natural: img.naturalWidth / img.naturalHeight,
-      }
-    })
-  }
-  for (const viewport of [
-    { width: 1204, height: 987 },
-    { width: 1024, height: 768 },
-    { width: 390, height: 844 },
-  ])
-    test(`review repair 4: S7 Enlarge shows each image at the size the screen allows at ${viewport.width}×${viewport.height}`, async ({
-      page,
-    }, info) => {
-      await page.setViewportSize(viewport)
-      await goToStep(page, 'reference-frames', 'reference-frames-flow-v1-ct-display')
-      const figures = page.locator('[data-media-workspace] figure')
-      await expect(figures).toHaveCount(2)
-      const desktop = viewport.width >= 1024
-      const measured: Record<string, unknown> = { viewport }
-      for (const [index, name] of [
-        [0, 'ct'],
-        [1, 'still'],
-      ] as const) {
-        const figure = figures.nth(index)
-        const cardImage = figure.locator('[data-media-frame-size="card"] img')
-        await expect(cardImage).toBeVisible()
-        await cardImage.scrollIntoViewIfNeeded()
-        const card = await imageBox(cardImage)
-        const enlarge = figure.getByRole('button', { name: `Enlarge image ${index + 1} of 2` })
-        await enlarge.click()
-        const dialog = page.locator('dialog[data-media-dialog][open]')
-        await expect(dialog).toBeVisible()
-        await expect(
-          dialog.getByRole('heading', { name: `Image ${index + 1} of 2, enlarged` }),
-        ).toBeVisible()
-        await expect(dialog.locator('[data-media-dialog-close]')).toBeFocused()
-        const largeImage = dialog.locator('[data-media-frame-size="enlarged"] img')
-        await expect(largeImage).toBeVisible()
-        const large = await imageBox(largeImage)
-        const frame = await dialog.evaluate((element) => {
-          const box = element.getBoundingClientRect()
-          return {
-            left: box.left,
-            right: box.right,
-            top: box.top,
-            bottom: box.bottom,
-            scrollHeight: element.scrollHeight,
-            clientHeight: element.clientHeight,
-            scrollWidth: element.scrollWidth,
-            clientWidth: element.clientWidth,
-          }
-        })
-        measured[name] = {
-          card: { width: card.width, height: card.height },
-          dialog: { width: large.width, height: large.height },
-          ratio: large.width / card.width,
-        }
-        writeFileSync(info.outputPath('s7-sizes.json'), JSON.stringify(measured, null, 1))
-
-        // The same file at its own proportions, not a stretched or substituted one.
-        expect(large.src).toBe(card.src)
-        expect(large.width / large.height).toBeCloseTo(large.natural, 2)
-        expect(card.width / card.height).toBeCloseTo(card.natural, 2)
-        if (desktop) {
-          // Materially larger: the reviewed build showed it at exactly the card's size.
-          expect(large.width).toBeGreaterThan(card.width * 1.3)
-          expect(large.height).toBeGreaterThan(card.height * 1.3)
-        } else {
-          // A phone's card already spans the column, so the enlarged view cannot be larger than
-          // it: the dialog is the screen less its own border and padding. It stays close to it.
-          expect(large.width).toBeGreaterThan(card.width * 0.9)
-          expect(large.width).toBeGreaterThan(viewport.width * 0.85)
-        }
-        // It uses the screen without spilling off it or needing the dialog scrolled.
-        expect(frame.left).toBeGreaterThanOrEqual(0)
-        expect(frame.right).toBeLessThanOrEqual(viewport.width)
-        expect(frame.top).toBeGreaterThanOrEqual(0)
-        expect(frame.bottom).toBeLessThanOrEqual(viewport.height)
-        expect(frame.scrollWidth).toBeLessThanOrEqual(frame.clientWidth + 1)
-        expect(large.left).toBeGreaterThanOrEqual(frame.left)
-        expect(large.right).toBeLessThanOrEqual(frame.right)
-        if (desktop) {
-          expect(frame.scrollHeight).toBeLessThanOrEqual(frame.clientHeight + 1)
-          expect(large.bottom).toBeLessThanOrEqual(frame.bottom)
-        }
-        await page.screenshot({
-          path: info.outputPath(`repair4-s7-${name}-enlarged-${viewport.width}.png`),
-        })
-
-        // Close returns the focus to this figure's own Enlarge button; so does Escape.
-        await dialog.locator('[data-media-dialog-close]').click()
-        await expect(page.locator('dialog[data-media-dialog][open]')).toHaveCount(0)
-        await expect(enlarge).toBeFocused()
-        await page.keyboard.press('Enter')
-        await expect(page.locator('dialog[data-media-dialog][open]')).toBeVisible()
-        await page.keyboard.press('Escape')
-        await expect(page.locator('dialog[data-media-dialog][open]')).toHaveCount(0)
-        await expect(enlarge).toBeFocused()
-        // The card is as it was: the comparison row is not made larger to fake the enlargement.
-        const after = await imageBox(cardImage)
-        expect(after.width).toBeCloseTo(card.width, 0)
-      }
-      // The side-by-side comparison and its wording are untouched.
-      await expect(page.locator('[data-media-comparison]')).toContainText('not a registered pair')
-      expect(
-        await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
-      ).toBeLessThanOrEqual(0)
-    })
 })

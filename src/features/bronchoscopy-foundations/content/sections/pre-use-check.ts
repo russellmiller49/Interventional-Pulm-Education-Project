@@ -83,7 +83,7 @@ export const section: BronchSectionDefinition = {
     },
   ],
   drillIds: ['D01', 'D15'],
-  prerequisites: ['shared-airway'],
+  prerequisites: ['clinical-question'],
 
   clinicalQuestion: 'Is this scope ready, and is the room ready for it?',
   objective:
@@ -472,29 +472,16 @@ export const section: BronchSectionDefinition = {
         ],
         rows: [
           {
-            id: 'frozen-frame',
-            statement: 'The picture is sharp, but it does not change when you move the tip.',
-            origin: 'image',
-            rationale: 'A frozen frame. Unfreeze the processor and check the picture moves.',
-          },
-          {
-            id: 'tip-stays-bent',
-            statement: 'You release the lever and the tip stays curled.',
-            origin: 'angulation',
-            rationale: 'The bending section is damaged. Replace the scope.',
-          },
-          {
-            id: 'saline-does-not-move',
-            statement:
-              'The gauge reads normally. Saline in a cup does not move when you press the valve.',
-            origin: 'suction',
-            rationale: 'The gauge reads the wall. Trace the path from the tip.',
-          },
-          {
             id: 'forceps-stop',
             statement: 'The forceps stop halfway down and will not advance.',
             origin: 'channel',
             rationale: 'The channel is blocked or too narrow for this tool. Do not force it.',
+          },
+          {
+            id: 'frozen-frame',
+            statement: 'The picture is sharp, but it does not change when you move the tip.',
+            origin: 'image',
+            rationale: 'A frozen frame. Unfreeze the processor and check the picture moves.',
           },
           {
             id: 'bubbles',
@@ -508,6 +495,19 @@ export const section: BronchSectionDefinition = {
             statement: 'White gauze looks yellow on the screen.',
             origin: 'image',
             rationale: 'The white balance is off. Repeat it before you judge mucosal color.',
+          },
+          {
+            id: 'tip-stays-bent',
+            statement: 'You release the lever and the tip stays curled.',
+            origin: 'angulation',
+            rationale: 'The bending section is damaged. Replace the scope.',
+          },
+          {
+            id: 'saline-does-not-move',
+            statement:
+              'The gauge reads normally. Saline in a cup does not move when you press the valve.',
+            origin: 'suction',
+            rationale: 'The gauge reads the wall. Trace the path from the tip.',
           },
         ],
         sourceRefs: [...READY, ...SUCTION_PATH],

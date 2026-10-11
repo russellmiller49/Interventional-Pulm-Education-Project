@@ -64,7 +64,7 @@ it('keeps entry, inspection declarations and absent examination evidence separat
  * past any step, and moving never records that the step was done.
  */
 it('moves past any step without doing it, and never turns a skip, a confirm or Finish into activity evidence', () => {
-  for (const id of ['five-controls', 'systematic-survey', 'honest-report'] as const) {
+  for (const id of ['five-controls', 'systematic-survey', 'describe-findings'] as const) {
     const lesson = bronchStageLesson(id)
     const reducer = bronchStageReducer(lesson)
     let session = emptyBronchStageSession()
@@ -98,7 +98,7 @@ it('moves past any step without doing it, and never turns a skip, a confirm or F
 })
 
 it('keeps answers and retries in the session only', () => {
-  const lesson = bronchStageLesson('shared-airway')
+  const lesson = bronchStageLesson('what-completion-means')
   const reducer = bronchStageReducer(lesson)
   let session = emptyBronchStageSession()
   for (let index = 0; index < lesson.predictionStepIndex; index++)
@@ -121,10 +121,10 @@ it('keeps answers and retries in the session only', () => {
   session = reducer(session, { type: 'CONFIRM_THROUGH', index: lesson.predictionStepIndex })
   expect(session.commitments.confirmed).toBe(lesson.predictionStepIndex)
   // A retry is refused for an activity whose feedback loop is built in.
-  const scenario = bronchStageLesson('poor-return').steps.find(
+  const scenario = bronchStageLesson('deterioration').steps.find(
     (step) => step.interaction.kind === 'scenario',
   )!
-  const poorReturn = bronchStageReducer(bronchStageLesson('poor-return'))
+  const poorReturn = bronchStageReducer(bronchStageLesson('deterioration'))
   const before = emptyBronchStageSession()
   expect(poorReturn(before, { type: 'RETRY_STEP', stepId: scenario.id })).toBe(before)
   expect(localStorage.length).toBe(0)

@@ -2,7 +2,7 @@ import { fireEvent, screen } from '@testing-library/react'
 import { availableSurveySnapshot, readBronchSelfPacedRecord } from '../engine/selfPacedProgress'
 import { inspectionReport } from '../engine/inspectionReport'
 import type { BronchStageLesson, BronchStageStep } from '../content/stageLessons'
-import { SCOPE_RECIPES } from './scopeRecipes'
+import { SCOPE_RECIPES, scopeRecipe } from './scopeRecipes'
 import { performPilotStep } from './fiveControlsLearnHarness'
 import {
   answerFindRows,
@@ -70,7 +70,7 @@ export async function completeCourseStep(lesson: BronchStageLesson, authored: Br
       decideAllFrames(step)
       break
     case 'scope-task':
-      SCOPE_RECIPES[lesson.sectionId]!.act(scopePilot())
+      scopeRecipe(lesson.sectionId, step.course?.act)(scopePilot())
       break
     case 'observe':
       SCOPE_RECIPES[lesson.sectionId]!.observe!(scopePilot())

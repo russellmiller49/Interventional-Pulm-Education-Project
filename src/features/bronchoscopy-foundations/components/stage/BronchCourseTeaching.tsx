@@ -15,6 +15,7 @@ import { BlockCard } from './BronchTeachingBlock'
 import { BronchPilotTeaching } from './BronchPilotTeaching'
 import { InstrumentOrientation } from './InstrumentOrientation'
 import { MediaFigure } from './MediaFigure'
+import { SurveyVideo } from './SurveyVideo'
 import styles from './course-flow.module.css'
 
 /**
@@ -56,7 +57,7 @@ export function BronchCourseTeaching({
       ) : null}
       {chunk.visual === 'instrument' ? (
         <div className={styles.illustratedPair}>
-          <InstrumentOrientation />
+          <InstrumentOrientation plain={rewritten} />
           {section.id === 'pre-use-check' && !rewritten ? (
             <section>
               <h3>What each hand does</h3>
@@ -70,7 +71,6 @@ export function BronchCourseTeaching({
       {section.id === 'what-completion-means' && chunk.id === 'evidence' ? (
         <LearningRecordSummary />
       ) : null}
-      {chunk.visual === 'shared-airway' ? <SharedAirwayFigure /> : null}
       {chunk.visual === 'tour' ? (
         <NormalAirwayTour
           sectionId={section.id}
@@ -84,6 +84,11 @@ export function BronchCourseTeaching({
       {chunk.visual === 'tube-geometry' ? <TubeGeometryFigure /> : null}
       {chunk.visual === 'two-diameters' ? <TwoDiametersFigure /> : null}
       {chunk.visual === 'room-setup' ? <RoomSetupFigure /> : null}
+      {chunk.visual === 'survey-video' ? <SurveyVideo /> : null}
+      {chunk.visual === 'obstruction-types' ? <ObstructionTypesFigure /> : null}
+      {chunk.visual === 'tool-states' ? <ToolStatesFigure /> : null}
+      {chunk.visual === 'radiation-safety' ? <RadiationSafetyFigure /> : null}
+      {chunk.visual === 'specimen-containers' ? <SpecimenContainersFigure /> : null}
       {chunk.visual === 'worked-decision' ? (
         <section className={styles.worked} data-worked-example>
           <h3>A worked situation</h3>
@@ -91,12 +96,15 @@ export function BronchCourseTeaching({
         </section>
       ) : null}
       {step.learn && blocks.length ? (
-        <details className={styles.worked} data-extended-technique>
-          <summary>Technique reference for this concept</summary>
-          {blocks.map((block, index) => (
-            <BlockCard key={block.id} block={block} listId={`${id}-${index}`} role="mechanism" />
-          ))}
-        </details>
+        // A rewritten section's bench unit shows its block as the unit's own text, in view.
+        rewritten ? null : (
+          <details className={styles.worked} data-extended-technique>
+            <summary>Technique reference for this concept</summary>
+            {blocks.map((block, index) => (
+              <BlockCard key={block.id} block={block} listId={`${id}-${index}`} role="mechanism" />
+            ))}
+          </details>
+        )
       ) : (
         blocks.map((block, index) => (
           <BlockCard
@@ -203,49 +211,6 @@ function SectionHook({ section }: { readonly section: BronchStageLesson['section
   )
 }
 
-/** A schematic of the existing shared-airway teaching, not a patient or a physiology engine. */
-function SharedAirwayFigure() {
-  return (
-    <figure className={styles.sharedAirway}>
-      <svg
-        viewBox="0 0 720 220"
-        role="img"
-        aria-labelledby="shared-airway-title shared-airway-desc"
-      >
-        <title id="shared-airway-title">
-          The patient and the bronchoscopy team share one airway
-        </title>
-        <desc id="shared-airway-desc">
-          The operator sees the airway image. The monitoring team follows the patient’s breathing
-          and responsiveness. Both inform the next action.
-        </desc>
-        <path d="M110 108 H300 M420 108 H610" stroke="currentColor" strokeWidth="3" />
-        <circle cx="360" cy="70" r="32" fill="none" stroke="currentColor" strokeWidth="3" />
-        <path
-          d="M295 155 Q295 110 360 110 Q425 110 425 155 M360 108 V160 M360 138 L333 165 M360 138 L387 165"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-        />
-        <g fill="currentColor" textAnchor="middle" fontSize="18">
-          <text x="112" y="78">
-            Airway image
-          </text>
-          <text x="606" y="78">
-            Patient monitoring
-          </text>
-          <text x="360" y="205">
-            One shared airway · a communicated plan
-          </text>
-        </g>
-      </svg>
-      <figcaption>
-        Teaching schematic. Seeing a clear airway and assessing the patient are different tasks.
-      </figcaption>
-    </figure>
-  )
-}
-
 /** The tour's groups: the airways before the segments, then each lobe's segments. */
 export function tourGroups(
   nodes: readonly TeachingTreeNode[],
@@ -311,11 +276,9 @@ export function NormalAirwayTour({
         (entry) =>
           entry.lessonId &&
           isStillStructureId(entry.lessonId) &&
-          (['branch-entry', 'view-loss'].includes(sectionId)
+          (['larynx-and-entry', 'view-loss'].includes(sectionId)
             ? ['TR', 'RMSB', 'LMSB'].includes(entry.label ?? '')
-            : sectionId === 'reference-frames'
-              ? ['TR', 'RMSB', 'BI'].includes(entry.label ?? '')
-              : entry.side === side),
+            : entry.side === side),
       )
   const node = nodes.find((entry) => entry.id === selectedId) ?? nodes[0]
   if (!node || !isStillStructureId(node.lessonId)) return null
@@ -450,6 +413,207 @@ function TwoDiametersFigure() {
         </g>
       </svg>
       <figcaption>The tip of the scope, seen end on. Not to scale.</figcaption>
+    </figure>
+  )
+}
+
+/** Three airways in cross-section: tissue inside the lumen, the wall pushed in, and both. */
+function ObstructionTypesFigure() {
+  const airways = [
+    { x: 110, name: 'Endoluminal', note: 'Tissue inside the lumen' },
+    { x: 340, name: 'Extrinsic', note: 'The wall pushed in' },
+    { x: 570, name: 'Mixed', note: 'Both' },
+  ]
+  return (
+    <figure className={styles.sharedAirway} data-obstruction-types>
+      <svg
+        viewBox="0 0 710 250"
+        role="img"
+        aria-label="Three airways in cross-section. Endoluminal: tissue grows from the wall into the lumen and the wall keeps its shape. Extrinsic: a mass outside pushes the wall in and the lining over it is intact. Mixed: a mass outside pushes the wall in and tissue also grows into the lumen."
+      >
+        {/* Endoluminal: a round wall, with tissue growing in from one side. */}
+        <circle cx="110" cy="100" r="78" fill="none" stroke="currentColor" strokeWidth="4" />
+        <path d="M179 64 C128 70 122 130 179 136 Z" fill="currentColor" opacity="0.45" />
+        {/* Extrinsic: the wall itself is bowed in by a mass outside it. */}
+        <path
+          d="M397 47 A78 78 0 1 0 397 153 C358 132 358 68 397 47 Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+        <circle cx="428" cy="100" r="46" fill="currentColor" opacity="0.18" />
+        <circle cx="428" cy="100" r="46" fill="none" stroke="currentColor" strokeDasharray="6 5" />
+        {/* Mixed: the wall bowed in, and tissue through it into the lumen. */}
+        <path
+          d="M627 47 A78 78 0 1 0 627 153 C588 132 588 68 627 47 Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+        <circle cx="654" cy="100" r="42" fill="currentColor" opacity="0.18" />
+        <circle cx="654" cy="100" r="42" fill="none" stroke="currentColor" strokeDasharray="6 5" />
+        <path d="M600 76 C562 82 562 118 600 124 Z" fill="currentColor" opacity="0.45" />
+        <g fill="currentColor" fontSize="18" textAnchor="middle">
+          {airways.map((airway) => (
+            <text key={airway.name} x={airway.x} y="212">
+              {airway.name}
+            </text>
+          ))}
+        </g>
+        <g fill="currentColor" fontSize="15" opacity="0.8" textAnchor="middle">
+          {airways.map((airway) => (
+            <text key={airway.name} x={airway.x} y="236">
+              {airway.note}
+            </text>
+          ))}
+        </g>
+      </svg>
+      <figcaption>
+        Three airways, seen end on. Solid shading is tissue in the lumen. The dashed circle is a
+        mass outside the wall. Not to scale.
+      </figcaption>
+    </figure>
+  )
+}
+
+/** The six tool states the simulator draws, in one picture, named. */
+function ToolStatesFigure() {
+  return (
+    <figure className={styles.sharedAirway} data-tool-states>
+      {/* eslint-disable-next-line @next/next/no-img-element -- a static teaching file under public/ */}
+      <img
+        src="/bronchoscopy-foundations/anatomy/review/accessories.png"
+        width={1200}
+        height={700}
+        alt="Six tool tips in two rows. Top row, safe to move through the channel: forceps with the cups closed, a brush inside its sheath, a needle inside its sheath. Bottom row, only beyond the tip: forceps with the cups open, a brush with its bristles out, a needle out of its sheath."
+        style={{ width: '100%', height: 'auto', borderRadius: '0.5rem' }}
+      />
+      <figcaption>
+        Left to right: forceps, brush, needle. Top row: closed or sheathed, the only state that
+        moves through the channel. Bottom row: open or exposed, beyond the tip only.
+      </figcaption>
+    </figure>
+  )
+}
+
+/** Time, distance and shielding, as three small pictures. */
+function RadiationSafetyFigure() {
+  return (
+    <figure className={styles.sharedAirway} data-radiation-safety>
+      <svg
+        viewBox="0 0 660 210"
+        role="img"
+        aria-label="Three ways to cut radiation dose. Time: a clock, for short bursts of screening. Distance: a figure standing back from the X-ray source, where the dose is lower. Shielding: a lead apron between the source and the body."
+      >
+        {/* Time: a clock face with a short sector marked. */}
+        <circle cx="110" cy="85" r="58" fill="none" stroke="currentColor" strokeWidth="4" />
+        <path d="M110 85 L110 27 A58 58 0 0 1 151 44 Z" fill="currentColor" opacity="0.45" />
+        <path d="M110 85 V45 M110 85 H140" stroke="currentColor" strokeWidth="3" />
+        {/* Distance: a source, rays spreading, a figure far from it. */}
+        <rect x="245" y="72" width="26" height="26" fill="currentColor" opacity="0.45" />
+        <path
+          d="M271 85 L405 40 M271 85 L405 85 M271 85 L405 130"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeDasharray="6 5"
+        />
+        <circle cx="405" cy="52" r="10" fill="none" stroke="currentColor" strokeWidth="3" />
+        <path
+          d="M405 62 V110 M405 110 L393 140 M405 110 L417 140 M390 78 H420"
+          stroke="currentColor"
+          strokeWidth="3"
+          fill="none"
+        />
+        {/* Shielding: an apron. */}
+        <path
+          d="M520 30 H580 L596 60 V140 H504 V60 Z"
+          fill="currentColor"
+          fillOpacity="0.18"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+        <path d="M536 30 Q550 58 564 30" fill="none" stroke="currentColor" strokeWidth="3" />
+        <g fill="currentColor" fontSize="18" textAnchor="middle">
+          <text x="110" y="178">
+            Time
+          </text>
+          <text x="330" y="178">
+            Distance
+          </text>
+          <text x="550" y="178">
+            Shielding
+          </text>
+        </g>
+        <g fill="currentColor" fontSize="15" opacity="0.8" textAnchor="middle">
+          <text x="110" y="200">
+            Short bursts
+          </text>
+          <text x="330" y="200">
+            Step back
+          </text>
+          <text x="550" y="200">
+            Apron and collar
+          </text>
+        </g>
+      </svg>
+      <figcaption>Three ways to cut the dose to you and to the patient. Not to scale.</figcaption>
+    </figure>
+  )
+}
+
+/** Five containers, each named with the test it serves. */
+function SpecimenContainersFigure() {
+  const pots = [
+    { x: 66, name: 'Formalin', test: 'Histology' },
+    { x: 198, name: 'Sterile saline', test: 'Culture' },
+    { x: 330, name: 'Slides or fluid', test: 'Cytology' },
+    { x: 462, name: 'Cell block', test: 'Stains, molecular' },
+    { x: 594, name: 'ROSE', test: 'Read in the room' },
+  ]
+  return (
+    <figure className={styles.sharedAirway} data-specimen-containers>
+      <svg
+        viewBox="0 0 660 190"
+        role="img"
+        aria-label="Five containers and the test each serves. Formalin for histology. Sterile saline for culture. Slides or cytology fluid for cytology. A cell block for stains and molecular tests. A smear for rapid on-site evaluation, read in the room."
+      >
+        {pots.map((pot) => (
+          <g key={pot.name}>
+            <rect
+              x={pot.x - 34}
+              y="28"
+              width="68"
+              height="14"
+              rx="4"
+              fill="currentColor"
+              opacity="0.45"
+            />
+            <path
+              d={`M${pot.x - 28} 42 V112 Q${pot.x - 28} 122 ${pot.x - 18} 122 H${pot.x + 18} Q${pot.x + 28} 122 ${pot.x + 28} 112 V42`}
+              fill="currentColor"
+              fillOpacity="0.12"
+              stroke="currentColor"
+              strokeWidth="3"
+            />
+            <text x={pot.x} y="150" fill="currentColor" fontSize="16" textAnchor="middle">
+              {pot.name}
+            </text>
+            <text
+              x={pot.x}
+              y="172"
+              fill="currentColor"
+              fontSize="14"
+              opacity="0.8"
+              textAnchor="middle"
+            >
+              {pot.test}
+            </text>
+          </g>
+        ))}
+      </svg>
+      <figcaption>
+        The test decides the container. Have each one labeled before you sample.
+      </figcaption>
     </figure>
   )
 }

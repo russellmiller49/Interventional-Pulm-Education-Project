@@ -33,6 +33,7 @@ import { goalHelp, pendingRequirement } from '../engine/scope/goalHelp'
 import { annularArea, formatScopeMetric, tubeGeometry } from '../engine/scope/scopeMetrics'
 import { OPTICAL_ASPECT } from '../engine/scope/scopeOstia'
 import { ScopeDriver, teachingCase } from '../test-support/teachingCase'
+import { COMPARISON_WORKSPACE } from '../test-support/comparisonWorkspace'
 
 /**
  * BF-PRE-REVIEW-03 — readable images and coherent scope workspaces (fellow walkthrough A18, A20,
@@ -281,7 +282,8 @@ describe('A28, SUP-13 — captions and titles say what is actually there', () =>
       (step) => step.activity === 'independent-check' && step.id.endsWith('-check'),
     )!
     expect(check.title).not.toMatch(/identify the structures/i)
-    expect(check.title).toBe('Decide when to cross the glottis')
+    // The rewritten section's first question is the pink view at the arytenoids.
+    expect(check.title).toBe('A pink view at the back of the inlet')
   })
 
   it('says, when a still is enlarged, that the corner rectangle is part of the recorded frame', async () => {
@@ -342,7 +344,7 @@ describe('A29 — the airway tour follows the tree and lets a group be compared'
   })
 
   it('does not give the trachea a parent', async () => {
-    const { container } = render(<NormalAirwayTour sectionId="branch-entry" />)
+    const { container } = render(<NormalAirwayTour sectionId="larynx-and-entry" />)
     await flush()
     expect(container.textContent).not.toContain('Parent: Trachea.')
     expect(container.textContent).toContain('Parent: none; the tree starts at the trachea.')
@@ -457,7 +459,7 @@ describe('A21, A22, SUP-08 — the bench says where the tip points at every angl
 })
 
 const walkView: ScopeViewSpec = {
-  sectionId: 'branch-entry',
+  sectionId: 'larynx-and-entry',
   mode: 'guided-walk',
   profile: 'adult-teaching-combined-left-basal-v1',
   start: { kind: 'airway', label: 'TR', at: 'distal' },
@@ -712,16 +714,14 @@ describe('A33 — the scope in the tube, one calculation for numbers and circles
   })
 })
 
-describe('A25 — the S7 CT and still are compared side by side, for what they are', () => {
+describe('A25 — a CT and a still are compared side by side, for what they are', () => {
   it('lays the two out as a comparison, each with its frame, and states what is not shown', async () => {
-    const section = BRONCH_SECTIONS.find((s) => s.id === 'reference-frames')!
-    if (section.workspace.kind !== 'media') throw new Error('media workspace expected')
     const { container } = render(
       <MediaWorkspace
-        media={section.workspace.media}
-        caption={section.workspace.caption}
-        mediaNotes={section.workspace.mediaNotes}
-        comparisonNote={section.workspace.comparisonNote}
+        media={COMPARISON_WORKSPACE.media}
+        caption={COMPARISON_WORKSPACE.caption}
+        mediaNotes={COMPARISON_WORKSPACE.mediaNotes}
+        comparisonNote={COMPARISON_WORKSPACE.comparisonNote}
       />,
     )
     await flush()
@@ -729,11 +729,10 @@ describe('A25 — the S7 CT and still are compared side by side, for what they a
     const notes = [...container.querySelectorAll('[data-media-frame]')].map((p) => p.textContent)
     expect(notes).toHaveLength(2)
     expect(notes[0]).toContain('as if viewed from the patient’s feet')
-    expect(notes[1]).toContain('orientation and camera roll were not recorded')
+    expect(notes[1]).toContain('camera roll was not recorded')
     const comparison = container.querySelector('[data-media-comparison]')!.textContent!
-    expect(comparison).toContain('not a registered pair')
-    expect(comparison).toContain('this panel shows one axial slice')
-    // Only the section's own two files: no other case's CT and no added levels.
+    expect(comparison).toContain('not one patient’s matched study')
+    // Only the pair's own two files: no other case's CT and no added levels.
     expect(
       [...container.querySelectorAll('figure')].map((f) => f.getAttribute('data-media-id')),
     ).toEqual(['rmb', 'rmb'])

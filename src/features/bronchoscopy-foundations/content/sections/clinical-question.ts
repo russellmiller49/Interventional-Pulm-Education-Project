@@ -93,7 +93,7 @@ export const section: BronchSectionDefinition = {
   shortTitle: 'Procedure and plan',
   minutes: 9,
   activityMinutes: 3,
-  moduleIds: ['M02'],
+  moduleIds: ['M02', 'M01'],
   objectives: [
     {
       objectiveId: 'M02-O1',
@@ -121,9 +121,14 @@ export const section: BronchSectionDefinition = {
       subtask: 'Names the reason a bronchoscopy is indicated, beyond the request for it.',
       evidence: 'committed-explanation',
     },
+    {
+      objectiveId: 'M01-O1',
+      subtask: 'States the question a bronchoscopy is meant to answer before agreeing to do it.',
+      evidence: 'committed-explanation',
+    },
   ],
   drillIds: [],
-  prerequisites: ['shared-airway'],
+  prerequisites: [],
 
   clinicalQuestion: 'Should this patient have a bronchoscopy today, and what has to be true first?',
   objective:
