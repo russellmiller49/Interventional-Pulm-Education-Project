@@ -165,7 +165,7 @@ test('the complete pilot keeps feedback in the session, allows retry and ends wi
   expect(selfPaced().reviewedSectionIds).toEqual(['five-controls'])
   expect(document.querySelector('[data-next-section]')).toHaveAttribute(
     'data-next-section',
-    'branch-entry',
+    BRONCH_SECTION_IDS[BRONCH_SECTION_IDS.indexOf('five-controls') + 1],
   )
   expect(localStorage.getItem(BRONCH_STORAGE_KEY)).toBeNull()
   cleanup()

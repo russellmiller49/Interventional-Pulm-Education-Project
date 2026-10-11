@@ -303,6 +303,23 @@ export const DECLARABLE_STATUSES: readonly DeclarableStatus[] = [
  * heuristics from the tip's position and view; `identified` and `inspected` are the learner's
  * declarations. Entering an airway never sets `inspected` (A07/A30).
  */
+/**
+ * A view's own wording for the inspection record. With it, the record's menu offers only the
+ * statuses listed, under the words given, and a row shows one of those words or `open`. Without
+ * it the record offers every declarable status under the pane's own words. The rules for when a
+ * status may be recorded are the ledger's and do not change.
+ */
+export interface LedgerRecordWords {
+  /** The statuses the menu offers, in order, each with the word shown for it. */
+  readonly offer: readonly { readonly status: DeclarableStatus; readonly word: string }[]
+  /** Shown for an airway nothing has been recorded for yet. */
+  readonly open: string
+  /** Added to a row recorded as inspected from too far back to count. */
+  readonly withoutView: string
+  /** One line under the table. */
+  readonly note?: string
+}
+
 export interface AirwayInspectionRecord {
   readonly label: AirwayLabel
   readonly identified: boolean
@@ -432,8 +449,11 @@ export interface ScopeViewSpec {
   readonly assists: Readonly<Partial<Record<ScopeAssist, boolean>>>
   readonly defaults?: Partial<ScopeInputs>
   readonly readouts?: readonly ScopeMetricId[]
-  /** Which airways the ledger lists on this step. */
-  readonly ledger?: { readonly expected: readonly AirwayLabel[] | 'segmental' | 'profile' }
+  /** Which airways the ledger lists on this step, and, optionally, the record's own words. */
+  readonly ledger?: {
+    readonly expected: readonly AirwayLabel[] | 'segmental' | 'profile'
+    readonly record?: LedgerRecordWords
+  }
   readonly script?: ScopeScriptId
   /**
    * Where a scripted lens or view event begins: the first entry into this airway. Omitted, the

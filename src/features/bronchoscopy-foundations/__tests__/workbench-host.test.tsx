@@ -59,9 +59,14 @@ afterEach(() => {
 })
 
 /** The section's scope practice, reached by doing each earlier step as a learner would. */
-async function reachPractice(section: 'branch-entry' | 'right-side') {
+async function reachPractice(section: 'larynx-and-entry' | 'right-side') {
   const { lesson } = await mountSection(section)
-  const practice = lesson.steps.find((step) => step.interaction.kind === 'scope-task')!
+  // "Larynx, trachea and carina" has three scope tasks; the carina task is the one with labels.
+  const practice = lesson.steps.find((step) =>
+    section === 'larynx-and-entry'
+      ? step.course?.id === 'carina'
+      : step.interaction.kind === 'scope-task',
+  )!
   await reachCourseStep(lesson, practice)
   return lesson
 }
@@ -130,7 +135,7 @@ describe('A30 — help is advice, not a move', () => {
   })
 
   it('offers no reference names where the step has its own in-view labels', async () => {
-    await reachPractice('branch-entry')
+    await reachPractice('larynx-and-entry')
     expect(latestScopePaneProps()!.view.controls).toContain('branchLabels')
     expect(document.querySelector('button[data-reference-labels]')).toBeNull()
   })
@@ -138,7 +143,7 @@ describe('A30 — help is advice, not a move', () => {
 
 describe('A37 — the current goal sits beside the controls; the full list stays on the card', () => {
   it('shows one current goal in the pane and links to the complete list', async () => {
-    const lesson = await reachPractice('branch-entry')
+    const lesson = await reachPractice('larynx-and-entry')
     const step = lesson.steps.find((candidate) => candidate.id === currentStepId())!
     const goals = step.interaction.kind === 'scope-task' ? step.interaction.goals : []
     expect(goals.length).toBe(5)
