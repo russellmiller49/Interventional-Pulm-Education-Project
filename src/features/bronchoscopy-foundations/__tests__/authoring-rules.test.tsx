@@ -30,13 +30,20 @@ import { BRONCHOSCOPY_FOUNDATIONS_RELEASE_STAGE } from '../content/release'
 import { publishBlockers, withResolvedNumbers } from '../content/sectionNumbers'
 import { bronchSectionErrors } from '../content/sectionValidation'
 import { BRONCH_SECTIONS } from '../content/sections'
+import { section as biopsyAndSpecimens } from '../content/sections/biopsy-and-specimens'
 import { section as bleedingPriorities } from '../content/sections/bleeding-priorities'
 import { section as clinicalQuestion } from '../content/sections/clinical-question'
+import { section as describeFindings } from '../content/sections/describe-findings'
 import { section as fiveControls } from '../content/sections/five-controls'
 import { section as larynxAndEntry } from '../content/sections/larynx-and-entry'
+import { section as leftSide } from '../content/sections/left-side'
 import { section as preUseCheck } from '../content/sections/pre-use-check'
 import { section as rightSide } from '../content/sections/right-side'
 import { section as sedationAndMonitoring } from '../content/sections/sedation-and-monitoring'
+import { section as systematicSurvey } from '../content/sections/systematic-survey'
+import { section as viewLoss } from '../content/sections/view-loss'
+import { section as washingAndLavage } from '../content/sections/washing-and-lavage'
+import { registerFindings } from '../content/reviewRegister'
 import { bronchStageLessons } from '../content/stageLessons'
 import type { BronchSectionDefinition, BronchTeachingBlock } from '../content/types'
 import { REWRITTEN_FIXTURE, REWRITTEN_FIXTURE_FLOW } from '../test-support/rewrittenSectionFixture'
@@ -383,6 +390,12 @@ describe('the rewrite rules', () => {
       'five-controls',
       'larynx-and-entry',
       'right-side',
+      'left-side',
+      'view-loss',
+      'systematic-survey',
+      'describe-findings',
+      'washing-and-lavage',
+      'biopsy-and-specimens',
       'bleeding-priorities',
     ])
     for (const section of [
@@ -392,6 +405,12 @@ describe('the rewrite rules', () => {
       fiveControls,
       larynxAndEntry,
       rightSide,
+      leftSide,
+      viewLoss,
+      systematicSurvey,
+      describeFindings,
+      washingAndLavage,
+      biopsyAndSpecimens,
       bleedingPriorities,
     ]) {
       expect(bronchSectionErrors(section)).toEqual([])
@@ -529,5 +548,41 @@ describe('what the rules add to the shared surfaces', () => {
     )
     expect(document.querySelector('[data-local-policies]')).toBeNull()
     expect(document.body.textContent).not.toMatch(/local policy|not configured/i)
+  })
+})
+
+describe('review register R25: culture thresholds (faculty decision, 2026-10-10)', () => {
+  it('lets a threshold rendered from the numbers register through, and refuses one typed by hand', () => {
+    const rendered = `The diagnostic threshold is ${NUMBER_REGISTER['vap-bal-threshold'].value}.`
+    expect(rendered).toContain('CFU/mL')
+    expect(registerFindings('a block', rendered)).toEqual([])
+    expect(registerFindings('a block', 'Positive at 10^4 CFU/mL.').join(' ')).toContain('R25')
+    // What the row was written for is still refused: renaming a specimen to change its threshold.
+    expect(
+      registerFindings('a block', 'Relabel the lavage as an aspirate if it grows less.').join(' '),
+    ).toContain('R25')
+    // The section that teaches the threshold passes the register as authored.
+    expect(bronchSectionErrors(washingAndLavage)).toEqual([])
+  })
+})
+
+describe('matching activities', () => {
+  it('never list their rows in the order of the options, in a rewritten section', () => {
+    // The control shows rows as authored and the options in the order of `origins`. If the two
+    // run in step, the answers read off as first, second, third.
+    for (const section of BRONCH_SECTIONS.filter((entry) => entry.authoringContract === 2)) {
+      const acts = [section.act, ...Object.values(section.moreActs ?? {})]
+      for (const act of acts) {
+        if (act.kind !== 'sort') continue
+        const origins = act.sort.origins.map((origin) => origin.id)
+        const inStep = act.sort.rows.filter((row, index) => row.origin === origins[index]).length
+        expect({ section: section.id, sort: act.sort.id, inStep }).toEqual({
+          section: section.id,
+          sort: act.sort.id,
+          inStep: expect.any(Number),
+        })
+        expect(inStep).toBeLessThan(Math.min(3, act.sort.rows.length))
+      }
+    }
   })
 })
