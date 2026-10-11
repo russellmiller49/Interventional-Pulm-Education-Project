@@ -152,10 +152,13 @@ it('shows a storage failure without blocking learning', async () => {
 })
 
 it('isolates the protected exchange demonstration from the learner attempt and record', async () => {
-  const { lesson } = await mountSection('protected-accessories')
+  const { lesson } = await mountSection('biopsy-and-specimens')
   const practice = lesson.steps.find((step) => step.course?.demonstration)!
+  // Every card on the way can be left: the prediction and the picture questions come first.
   while (currentStepId() !== practice.id) {
-    clickPrimary()
+    const skip = document.querySelector<HTMLButtonElement>('[data-now-card] [data-now-skip]')
+    if (skip) fireEvent.click(skip)
+    else clickPrimary()
     await settle()
   }
   fireEvent.click(screen.getByRole('button', { name: 'Watch the example' }))
@@ -165,7 +168,7 @@ it('isolates the protected exchange demonstration from the learner attempt and r
     'not your own attempt',
   )
   expect(selfPaced()).toMatchObject({
-    visitedSectionIds: ['protected-accessories'],
+    visitedSectionIds: ['biopsy-and-specimens'],
     reviewedSectionIds: [],
     surveySnapshot: null,
   })
@@ -174,7 +177,7 @@ it('isolates the protected exchange demonstration from the learner attempt and r
   expect(document.querySelector('[data-demonstration-caption]')).toBeNull()
   expect(nowPrimary()).toBeDisabled()
   expect(goalStates()).toContain('false')
-  SCOPE_RECIPES['protected-accessories']!.act(scopePilot())
+  SCOPE_RECIPES['biopsy-and-specimens']!.act(scopePilot())
   expect(goalStates().every((state) => state === 'true')).toBe(true)
   expect(selfPaced()?.reviewedSectionIds).toEqual([])
 })

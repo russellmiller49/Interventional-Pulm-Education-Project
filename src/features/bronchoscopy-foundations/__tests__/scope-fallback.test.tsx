@@ -206,6 +206,51 @@ describe('ScopeFallback', () => {
     expect(select.value).toBe('')
   })
 
+  it('offers only a view’s own statuses, under its own words, when the view names them', () => {
+    const view: ScopeViewSpec = {
+      ...walkView,
+      ledger: {
+        expected: ['RMSB', 'LMSB'],
+        record: {
+          offer: [
+            { status: 'inspected', word: 'Seen' },
+            { status: 'not-observed', word: 'Not seen' },
+            { status: 'not-safely-accessible', word: 'Not reachable' },
+          ],
+          open: 'Not recorded',
+          withoutView: 'go further in before it counts as seen',
+          note: 'Seen needs a clear view from inside the segment.',
+        },
+      },
+    }
+    const driver = new ScopeDriver(view)
+    const props = paneProps(driver.state, view)
+    const { container, rerender } = render(<ScopeFallback {...props} />)
+    const select = document.getElementById(scopeControlId('declare-RMSB')) as HTMLSelectElement
+    expect([...select.options].map((option) => [option.value, option.textContent])).toEqual([
+      ['', 'Record…'],
+      ['inspected', 'Seen'],
+      ['not-observed', 'Not seen'],
+      ['not-safely-accessible', 'Not reachable'],
+    ])
+    expect(select.getAttribute('aria-label')).toBe('Record RMSB')
+    const text = () => container.querySelector('[data-inspection-ledger]')!.textContent!
+    expect(text()).toContain('Record')
+    expect(text()).not.toMatch(/Declare|Identified|Inspected|Opening in view|Entered/)
+    expect(text()).toContain('Not recorded')
+    expect(container.textContent).toContain('Seen needs a clear view from inside the segment.')
+    expect(container.textContent).not.toContain('only a declaration records an inspection')
+    // The ledger's own rule still decides what may be recorded: nothing has been entered yet.
+    expect(select.querySelector('option[value="inspected"]')).toBeDisabled()
+
+    // A recorded status shows the view's word for it; the row's status attribute is unchanged.
+    driver.send({ type: 'declare', airway: 'LMSB', status: 'not-observed' })
+    rerender(<ScopeFallback {...paneProps(driver.state, view)} />)
+    const row = container.querySelector('[data-ledger-row="LMSB"]')!
+    expect(row.getAttribute('data-ledger-status')).toBe('not-observed')
+    expect(row.querySelector('td')!.textContent).toBe('Not seen')
+  })
+
   it('enables identification once the opening has been in a clear view', () => {
     const driver = new ScopeDriver(walkView)
     let guard = 0
