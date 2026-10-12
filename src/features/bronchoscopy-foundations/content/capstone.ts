@@ -1,131 +1,124 @@
+import type { SourceRef } from '../data/sources'
+import { num } from './numbers'
 import type { AuthoredCapstoneCase } from './types'
 
 /**
- * The capstone: the eight core integrated cases of the knowledge specification (§22: C01, C04,
- * C05, C06, C07, C09, C10, C16), each adapted into one decision. They are decided once, in one
- * sitting, and debriefed at the end; a critical case whose decision does not hold is a safety error
- * that the standard cannot absorb (§21.3). An option that is a case's named critical error, or the
- * same act as one, is `unsafe`, so the stage stops on it mid-sitting.
+ * The eight integrated cases (knowledge specification §22: C01, C04, C05, C06, C07, C09, C10, C16),
+ * rewritten for the rewrite plan. Each puts the fellow in one situation that draws on more than
+ * one section and asks for one move. Nothing is scored or saved.
  *
- * Each situation carries the signals in the room and nothing of the case's four-box answer; each
- * title names the situation, never the decision. A clinical number in a case comes from the numbers
- * register (`num()` in `numbers.ts`), never typed by hand; these eight were written before the
- * register and carry none yet. C16's two volumes are the lecture's own collection facts (§15.4),
- * and its answer is that the laboratory data are missing (R25, R26). C06 changes the team member and C07 the phase of the
- * procedure, so neither repeats its paired section's prediction. The keyed choice sits at a
- * different authored position from case to case; the host still rotates display order.
+ * They follow the rules the sections follow: second person, a patient with numbers in the
+ * situation, a key that is a clinical act, and wrong choices that are real errors. A choice is
+ * `unsafe` only when it is the harmful reflex its paired section names. A number in a reason or an
+ * explanation comes from the register through `num()`; `capstoneRuleErrors` holds all of this.
+ *
+ * A case's section and its "safety-critical decision" label are shown after the answer, never
+ * before. The keyed choice sits at a different place from case to case, and the page reorders the
+ * choices again.
  */
+const S1 = (from: number, to?: number): SourceRef => ({
+  sourceId: 'S1',
+  location: { kind: 'pdf-pages', from, ...(to ? { to } : {}) },
+})
+const S2 = (from: number, to?: number): SourceRef => ({
+  sourceId: 'S2',
+  location: { kind: 'pdf-pages', from, ...(to ? { to } : {}) },
+})
+
 export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
   {
     id: 'C01',
-    presentationTitle: 'A directed lavage for a focal opacity',
+    presentationTitle: 'A lavage for a focal opacity',
     situation:
-      'In a teaching case, a 52-year-old woman has a focal opacity in the left lower lobe on CT, and the supervising physician has chosen a directed bronchoalveolar lavage. At the time-out, the label on the collection trap reads right middle lobe. She is stable and has not received sedation.',
+      'A 52-year-old woman has a left lower lobe opacity on CT. You are about to lavage. The trap is labelled “right middle lobe”, the usual site, and your scope is sitting in the middle lobe bronchus. SpO₂ is 95% on 2 L/min.',
     critical: true,
-    pairedSectionId: 'biopsy-and-specimens',
+    pairedSectionId: 'washing-and-lavage',
     item: {
       id: 'C01',
       itemType: 'management-decision',
-      stem: 'What is the next move?',
+      stem: 'What do you do?',
       choices: [
         {
           id: 'a',
-          label:
-            'Start in the left lower lobe, as the CT shows, and amend the label after sampling',
+          label: 'Lavage the middle lobe, where the return is best',
           rationale:
-            'The CT probably reflects the plan, but starting leaves the discrepancy unresolved: no one has checked why the label disagrees with the imaging, or what else it might reflect. Discrepancies are resolved at the time-out, before sampling, not repaired on the label afterwards.',
-          plausibility: 'unsafe',
+            'The middle lobe returns well, which suits diffuse disease. For a focal opacity it samples lung that is not involved.',
+          plausibility: 'incorrect-mechanism',
         },
         {
           id: 'b',
-          label:
-            'Lavage the right middle lobe as labeled, since return from that lobe is usually better',
+          label: 'Lavage the left lower lobe and leave the label as it is',
           rationale:
-            'The right middle lobe or the lingula may give useful return when disease is diffuse. For a focal opacity the sample has to come from the region of the abnormality, and lavaging the labeled lobe once the mismatch is known is a procedure on the unintended side; a label does not move the disease.',
-          plausibility: 'unsafe',
+            'The sample would come from the right lobe under another lobe’s name. The laboratory reports it against the lobe on the label.',
+          plausibility: 'incorrect-mechanism',
         },
         {
           id: 'c',
-          label: 'Hold the start until the team settles the side against the CT and the plan',
+          label: 'Move to the left lower lobe, wedge there, and have the trap relabelled',
           rationale:
-            'The CT and the label name different lungs. The site is chosen from the imaging and the plan, not from the label, but the time-out also confirms the patient, the procedure and the images, so the team settles the mismatch together rather than leaving it to whoever noticed it. Settling it now, before sedation or the scope, costs minutes; a lavage from the unintended side cannot be taken back.',
+            'A lavage samples the segment you wedge in. The disease is in the left lower lobe, so the saline goes there and the label says so.',
           plausibility: 'best',
         },
         {
           id: 'd',
-          label:
-            'Hold the start, ask the supervisor which side is meant, and reprint the label to match',
+          label: 'Start in the middle lobe, then use what saline is left on the left',
           rationale:
-            'Holding the start is right, and the supervisor can say what was intended, but the time-out is a spoken team check against the imaging: the side and segment are confirmed against the CT aloud, the assistant handling the specimen and the clinician monitoring her acknowledge them, and the label changes only once they agree.',
-          plausibility: 'reasonable-but-incomplete',
+            'Saline in an uninvolved lobe costs her oxygen and leaves too little for the lobe that matters.',
+          plausibility: 'incorrect-mechanism',
         },
       ],
-      explanation:
-        'A lavage answers the clinical question only if it comes from the intended region and carries the site actually sampled. When the CT and the label disagree, the procedure waits while the team settles the side against the imaging and the plan, aloud and together, and the label is changed to match what they agree on. A well-returned lavage from the unintended lobe is a technical success that answers nothing.',
+      explanation: `Choose the site from the CT, not by habit. Wedge in the involved segment, give ${num('bal-total-volume')} in ${num('bal-aliquots')} aliquots, and label the trap with the lobe you sampled.`,
       objectiveIds: ['M02-O4', 'M12-O2', 'M14-O2'],
       claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 55, to: 59 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 119, to: 121 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 155, to: 163 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 118, to: 131 } },
-      ],
+      sourceRefs: [S2(55, 59), S1(119, 121), S2(155, 163), S1(118, 131)],
     },
   },
   {
     id: 'C04',
-    presentationTitle: 'A requested look at a patient with stridor',
+    presentationTitle: 'A quick look at a patient with stridor',
     situation:
-      'In a teaching case, a 45-year-old woman has progressive stridor, and her imaging shows marked narrowing of the proximal trachea. A fellow early in bronchoscopy training is asked to take a quick look with the flexible bronchoscope in the standard procedure room.',
+      'A 45-year-old woman has stridor at rest that has worsened over 2 weeks. CT shows the trachea narrowed to 5 mm below the cords. SpO₂ is 93% on air, respiratory rate 26. You are asked for a quick look in the suite under moderate sedation.',
     critical: true,
     pairedSectionId: 'clinical-question',
     item: {
       id: 'C04',
       itemType: 'management-decision',
-      stem: 'How should the fellow respond to the request?',
+      stem: 'What do you do?',
       choices: [
         {
           id: 'a',
-          label:
-            'With the supervisor present, take a brief look using the smallest scope available',
+          label: 'Go ahead as requested, with the thin scope and light sedation',
           rationale:
-            'A supervisor at the bedside does not make a standard room ready for a critical airway. In a critically narrowed trachea even a small scope can take up much of the lumen that remains, topical anesthetic can blunt protective responses and sedation can reduce effort and airway patency, and the rescue this airway could need has not been planned.',
+            'Even a thin scope fills most of a lumen this narrow, and sedation takes away the effort that is keeping it open.',
           plausibility: 'unsafe',
         },
         {
           id: 'b',
-          label:
-            'Decline the quick look, and ask for senior interventional and anesthesia input first',
+          label: 'Move her to theatre, with anesthesia and a rigid bronchoscope ready',
           rationale:
-            'Progressive stridor with marked tracheal narrowing makes this a critical airway, not a routine inspection. Senior interventional and anesthesia clinicians decide the location, the team, the rescue options and whether the examination should happen at all, before anyone instruments the airway.',
+            'A scope and sedation can close a critically narrowed trachea. Plan the airway first, in a room that can secure it.',
           plausibility: 'best',
         },
         {
           id: 'c',
-          label: 'Decline, and put the look on the next routine list in the same room',
+          label: 'Book her onto the routine list for next week',
           rationale:
-            'Declining the quick look is right, but a routine slot in the same room leaves a patient with progressive stridor without a plan, and that room may still lack the rescue this airway could need. Senior interventional and anesthesia clinicians decide the timing, the setting and the team.',
+            'Stridor at rest is an airway that can close today. She cannot be left for a routine list.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'd',
-          label:
-            'Go ahead as asked, since an inspection on its own carries less risk than a biopsy would',
+          label: 'Look in the suite with her awake, on topical lidocaine alone',
           rationale:
-            'In an ordinary airway, inspection does carry less bleeding and pneumothorax risk than biopsy. Here the hazard is the airway itself: calling the procedure diagnostic says nothing about how much lumen remains, and going ahead as asked treats a critical airway as a routine novice inspection, in a room that may not hold the rescue this patient could need.',
-          plausibility: 'unsafe',
+            'Leaving out the sedation helps. The scope can still obstruct her, and the suite cannot rescue the airway if it does.',
+          plausibility: 'incorrect-mechanism',
         },
       ],
       explanation:
-        'Progressive stridor with marked proximal tracheal narrowing turns a quick look into a critical-airway procedure. A diagnostic scope can take up much of the lumen that remains, topical anesthetic can blunt protective responses and sedation can reduce ventilation and airway patency, and the standard room may not hold the rescue options. The fellow declines the request as framed and escalates, so that senior interventional and anesthesia clinicians decide whether, where and how the airway is examined, and the change of plan is documented.',
+        'Stridor at rest means little lumen is left. Decide where, and with whom, before you decide how to look: theatre, anesthesia, and rigid bronchoscopy to hand. The inspection is the smallest part of the plan.',
       objectiveIds: ['M01-O4', 'M02-O2', 'M01-O2'],
       claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 111 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 115 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 154, to: 158 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 71, to: 83 } },
-      ],
+      sourceRefs: [S1(111), S1(115), S1(154, 158), S1(71, 83)],
       reviewItemIds: ['R41'],
     },
   },
@@ -133,53 +126,49 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
     id: 'C05',
     presentationTitle: 'Midway through a lavage under sedation',
     situation:
-      'In a teaching case, a 59-year-old man is having a bronchoalveolar lavage during a bronchoscopy under sedation. Partway through, he becomes less responsive and his respiratory effort falls. His oxygen saturation, steady until now, begins to fall. Part of the planned lavage volume has not yet been instilled.',
+      'You are doing a lavage on a 59-year-old man under midazolam and fentanyl. Two of four aliquots are in. He no longer answers his name and breathes 7 times a minute. SpO₂ has fallen from 96% to 88% on 2 L/min.',
     critical: true,
     pairedSectionId: 'deterioration',
     item: {
       id: 'C05',
       itemType: 'management-decision',
-      stem: 'What should happen now?',
+      stem: 'What do you do?',
       choices: [
         {
           id: 'a',
-          label:
-            'Announce the change, then instill the remaining aliquots to reach the planned volume',
+          label: 'Take the scope out, open his airway and ventilate by bag and mask',
           rationale:
-            'The planned volume is a collection intention, not a patient-care objective. Adding fluid to the lungs of a patient who is not breathing enough can worsen gas exchange for a specimen that can instead be limited and documented.',
-          plausibility: 'unsafe',
+            'He is oversedated and barely breathing. The lavage ends here: remove the scope, breathe for him, then reverse the drugs.',
+          plausibility: 'best',
         },
         {
           id: 'b',
-          label:
-            'Announce the change, raise the oxygen, and continue the lavage as the saturation recovers',
+          label: 'Finish the last two aliquots quickly, then reassess him',
           rationale:
-            'Lavage can lower the saturation for a time, but that does not explain reduced responsiveness and effort; those point to hypoventilation. Extra oxygen supports oxygenation without treating hypoventilation and can hold the saturation up while ventilation keeps falling, so continuing the lavage on a recovering saturation leaves the deterioration unassessed.',
+            'More saline and more time take oxygen from a man who has almost stopped breathing.',
           plausibility: 'unsafe',
         },
         {
           id: 'c',
-          label:
-            'Announce the change, stop instilling, and keep suction running to recover the fluid first',
+          label: 'Give no more saline, and keep suctioning to recover the fluid',
           rationale:
-            'Stopping instillation is right, but continuous suction removes gas as well as fluid and can reduce lung volume and worsen gas exchange. Reduced responsiveness and effort call for the airway and breathing to be assessed and supported first, with instillation and unnecessary suction both paused.',
+            'Suction takes gas from his lungs along with the fluid. What is left behind matters far less than his breathing.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'd',
-          label: 'Announce the change, pause the lavage, and have the team support his breathing',
+          label: 'Turn the oxygen up and watch the saturation',
           rationale:
-            'Reduced responsiveness and effort, with a saturation that has started to drop, point to hypoventilation; recent sedation, the airway and the lavage are all candidates. Pausing instillation and unneeded suction, saying so aloud and bringing in the supervisor and the monitoring clinician lets the qualified team support airway patency, oxygenation and ventilation.',
-          plausibility: 'best',
+            'Oxygen without breaths lifts the number for a while and leaves the carbon dioxide climbing.',
+          plausibility: 'incorrect-mechanism',
         },
       ],
-      explanation:
-        'Reduced responsiveness and effort point to falling ventilation; the saturation can be a late sign of it, especially on supplemental oxygen. The response is to pause instillation and unnecessary suction, announce the deterioration, and let the qualified team support the airway, oxygenation and ventilation, repositioning or removing the scope when that is helpful and safe. Neither reaching the planned volume nor further sedation is the answer; the lavage resumes, if at all, only after the patient is reassessed and a new decision is made, and the actual volumes and the event are documented.',
+      explanation: `Act at ${num('oxygen-trigger')}. Stop, say it, and look at him: he is not breathing enough. Scope out, airway open, bag and mask, then naloxone and flumazenil.`,
       objectiveIds: ['M15-O1', 'M04-O3', 'M12-O6', 'M15-O4'],
       claimClass: 'synthesis',
       sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 77, to: 79 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 154, to: 158 } },
+        S1(77, 79),
+        S1(154, 158),
         { sourceId: 'U1', location: { kind: 'section', label: 'monitoring recommendations' } },
       ],
       reviewItemIds: ['R22'],
@@ -189,120 +178,101 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
     id: 'C06',
     presentationTitle: 'A red view after a transbronchial biopsy',
     situation:
-      'In a simulation, a fellow is assisting a co-fellow who is operating under supervision. A transbronchial biopsy has just been taken from a segment of the right lower lobe with the scope tip wedged in its opening. Fresh blood wells up in that segment ahead of the lens until the whole image is red; breathing and oximetry are unchanged from the start. The co-fellow says the lens must be against the wall and starts to pull back for a wider view.',
+      'After the third transbronchial biopsy in the right lower lobe of a 66-year-old man, the view turns red. Your tip is still wedged in the segment. SpO₂ is 95% on 2 L/min, heart rate 96. The nurse says, “Come back so we can see.”',
     critical: true,
     pairedSectionId: 'bleeding-priorities',
     item: {
       id: 'C06',
       itemType: 'management-decision',
-      stem: 'What should the fellow say?',
+      stem: 'What do you do?',
       choices: [
         {
           id: 'a',
-          label: 'Ask the co-fellow to keep the wedge, stop sampling and call for help',
+          label: 'Keep the wedge and suction hard until the view clears',
           rationale:
-            'Blood filling the segment the tip is wedged in, just after a biopsy, with breathing and oximetry unchanged, is most likely a bleed the wedge is containing, not a lens on the wall. Keeping the wedge, stopping sampling and calling for help may limit spill into the airways that are still clear while the supervisor directs isolation, suction and positioning.',
-          plausibility: 'best',
+            'Hard suction strips the clot and restarts the bleeding. A red view behind a wedge is expected.',
+          plausibility: 'incorrect-mechanism',
         },
         {
           id: 'b',
-          label: 'Agree, and have suction ready for when the tip reaches the lobar bronchus',
-          rationale:
-            'Pulling back is how a red field from wall contact is recovered. Here the red is blood from the segment the tip is sealing, and withdrawing may release it into airways that are still clear, trading a contained bleed for a spreading one.',
+          label: 'Pull the scope back to the carina to see how much there is',
+          rationale: 'Pulling back lets the blood run into airways that were clear.',
           plausibility: 'unsafe',
         },
         {
           id: 'c',
-          label:
-            'Suggest continuous suction through the wedged scope, so the view clears before anyone moves',
+          label: 'Keep the wedge and act only if the saturation falls',
           rationale:
-            'Clearing the picture is not the aim while the wedge holds a fresh bleed: continuous suction through it can disrupt the clot that is forming and work against the tamponade. How and when to suction belongs to the supervisor’s plan.',
-          plausibility: 'unsafe',
+            'The saturation falls late. Position and help are arranged while he is still stable.',
+          plausibility: 'incorrect-mechanism',
         },
         {
           id: 'd',
-          label: 'Say nothing for now, and speak up if oximetry starts to fall',
+          label: 'Keep the wedge, suction gently, and turn him right side down',
           rationale:
-            'Unchanged oximetry is why the wedge is worth keeping, not a reason to wait. Staying silent lets the tip leave the wedge; the operator needs to hear that the red is blood before it moves, and help is called as soon as a bleed is recognized.',
-          plausibility: 'unsafe',
+            'The wedge keeps the blood in one segment while a clot forms. Right side down protects the left lung if any escapes.',
+          plausibility: 'best',
         },
       ],
-      explanation:
-        'The red here is blood from the segment just biopsied, and with breathing and oximetry unchanged the wedged tip is likely helping to hold it there, so the scope is containing the bleed, not merely looking. Pulling back to recover the view, the usual response to a red field from wall contact, can release blood into clear airways, and continuous suction or stripping clot can disrupt the clot that is forming, so the assistant says so before the tip moves. With further sampling stopped and help called, oxygenation, ventilation and protection of the unaffected airways come first, and the supervisor directs isolation, suction, positioning and escalation. If blood flooded the central airways and ventilation fell, restoring the airway could take priority instead.',
+      explanation: `Stay in, suction what escapes, then cold saline, bleeding side down, oxygen, and help early. Grade it afterwards: grade 2 is ${num('nashville-grade-2')}.`,
       objectiveIds: ['M15-O2', 'M15-O5'],
       claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 138, to: 143 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 27, to: 30 } },
-        { sourceId: 'S3', location: { kind: 'pdf-pages', from: 56 } },
-        { sourceId: 'T09', location: { kind: 'time-span', start: '00:25:10', end: '00:33:41' } },
-      ],
+      sourceRefs: [S1(138, 143), S2(27, 30)],
       reviewItemIds: ['R34'],
     },
   },
   {
     id: 'C07',
-    presentationTitle: 'Labeling the pots after an endobronchial biopsy',
+    presentationTitle: 'One pot for two studies',
     situation:
-      'In a teaching case, a 61-year-old woman has had a planned, supervised endobronchial biopsy of an airway lesion. Beforehand, the team agreed to send tissue for histology and for microbiology. As the pots are labeled at the end, the assistant notices that every piece went into formalin; no culture container was in the room. The scope is out and she is recovering.',
+      'A 61-year-old woman has an endobronchial mass and night sweats. The request asks for histology and mycobacterial culture. One formalin pot is ready. Platelets are 180,000/µL. You have taken 2 biopsies, both into the formalin, and nothing is bleeding.',
     critical: false,
     pairedSectionId: 'biopsy-and-specimens',
     item: {
       id: 'C07',
       itemType: 'management-decision',
-      stem: 'What is the next move?',
+      stem: 'What do you do next?',
       choices: [
         {
           id: 'a',
-          label:
-            'Send the pots for histology alone, and leave the culture off the record since none was sent',
+          label: 'Send the two pieces for histology and for culture',
           rationale:
-            'Leaving the culture off the record hides a handling error and lets the microbiology question go unanswered without anyone deciding that it can. The error is disclosed and documented, and the need for a further sample is decided with the team.',
-          plausibility: 'unsafe',
+            'Fixed tissue cannot be cultured. The laboratory can report histology from that pot and nothing else.',
+          plausibility: 'incorrect-mechanism',
         },
         {
           id: 'b',
-          label:
-            'Tell the supervisor, record the error, and plan whether culture needs another sample',
+          label: 'Get a sterile saline pot, then take more biopsies for both studies',
           rationale:
-            'Fixation cannot be undone, so the planned culture can no longer come from this tissue. Telling the supervisor, recording that all the material went into formalin, and deciding with the team whether the microbiology question needs another sample keeps the error visible and the question owned.',
+            'Formalin ends any culture, so tissue for culture goes into saline. Two bites are too few for histology in any case.',
           plausibility: 'best',
         },
         {
           id: 'c',
-          label:
-            'Tell the supervisor, and ask the laboratory to culture the fixed pieces so no repeat is needed',
+          label: 'Take three more into the formalin, and send washings for culture',
           rationale:
-            'Telling the supervisor is right, but a request cannot undo fixation. Tissue in formalin is unsuitable for culture however it is handled afterwards, so the request records a study that could never be done; whether the question needs another sample is decided with the team.',
-          plausibility: 'incorrect-mechanism',
+            'Washings can be cultured, and that helps. The request was for tissue, and a saline pot takes a minute to fetch.',
+          plausibility: 'reasonable-but-incomplete',
         },
         {
           id: 'd',
-          label:
-            'Send the pots for both studies, since pieces this large should serve histology and culture',
+          label: 'Leave it at two biopsies to keep the bleeding risk down',
           rationale:
-            'Size does not change what formalin does. A large, well-formed piece in fixative is still unsuitable for culture, and sending it as though it could serve implies a study that was never possible; how impressive a specimen looks is not proof that it can answer every question.',
-          plausibility: 'unsafe',
+            'Her count is normal and nothing is bleeding. Two bites often miss the diagnosis.',
+          plausibility: 'incorrect-mechanism',
         },
       ],
-      explanation:
-        'Formalin fixes tissue for routine histology; culture, and studies that need viable cells, need material that has not been fixed. Once all the material is in formalin no later request can recover a culture, so the error is irreversible even though the biopsy itself went well. What remains is to disclose and document it and to decide with the team whether the microbiology question needs another sample; the prevention belonged before the first sample.',
+      explanation: `Set out every container before the first bite. A visible tumor needs ${num('endobronchial-biopsy-minimum')} biopsies. Culture needs tissue in sterile saline, never formalin.`,
       objectiveIds: ['M14-O3', 'M14-O1', 'M17-O2'],
       claimClass: 'source',
-      sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 118 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 120, to: 121 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 130, to: 131 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 149, to: 150 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 155, to: 163 } },
-      ],
+      sourceRefs: [S1(118), S1(120, 121), S1(130, 131), S1(149, 150), S2(155, 163)],
     },
   },
   {
     id: 'C09',
     presentationTitle: 'A bronchoscopy through an endotracheal tube',
     situation:
-      'A bronchoscopy is under way through the endotracheal tube of an adult on a volume-targeted mode. The scope passed easily. Before you started, the therapist raised the pressure limit, and no breath is being cut short. Since then the peak pressure has kept rising and the exhaled tidal volume has fallen by a third. The oxygen saturation is unchanged on full oxygen.',
+      'You are clearing secretions through the endotracheal tube of a man on volume control. The pressure limit was raised before you started, and no breath is cut short. Peak pressure keeps rising and the exhaled volume has fallen from 450 to 300 mL. SpO₂ is 97% on full oxygen.',
     critical: false,
     pairedSectionId: 'ventilated-patient',
     item: {
@@ -314,14 +284,14 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
           id: 'a',
           label: 'Stay in, and reassess if the saturation starts to fall',
           rationale:
-            'On full oxygen the saturation falls late. The exhaled volume has already told you ventilation is failing; waiting for the saturation wastes that warning.',
+            'On full oxygen the saturation falls late. The exhaled volume has already told you ventilation is failing.',
           plausibility: 'unsafe',
         },
         {
           id: 'b',
           label: 'Have the therapist raise the pressure limit again, then go on',
           rationale:
-            'Raising the limit helps when the alarm is ending breaths early. Here it is already raised and no breath is cut short, so the volume is being lost another way.',
+            'Raising the limit helps when the alarm ends breaths early. Here no breath is cut short, so the volume is being lost another way.',
           plausibility: 'incorrect-mechanism',
         },
         {
@@ -335,18 +305,18 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
           id: 'd',
           label: 'Take the scope out, let the patient breathe out, and watch the volume',
           rationale:
-            'The scope is the first cause to remove. If the volume comes back, plan shorter passes. If it does not, check the tube and both sides of the chest.',
+            'The scope is the first cause to remove. If the volume comes back, plan shorter passes. If not, check the tube and both sides of the chest.',
           plausibility: 'best',
         },
       ],
       explanation:
-        'A scope that passes can still crowd the tube. Set the ventilator first: raise the pressure limit with the therapist so the alarm does not end each breath early. If the delivered volume still falls, the limit is not the problem. Take the scope out and let the patient breathe out. A volume that returns means the scope was the cause. One that does not means the tube, a plugged lobe or a pneumothorax.',
+        'Set the ventilator first: raise the pressure limit so no breath ends early. If the delivered volume still falls, the limit is not the problem. Take the scope out and let him breathe out. A volume that does not return means the tube, a plugged lobe or a pneumothorax.',
       objectiveIds: ['M16-O1', 'M16-O2', 'M04-O3', 'M03-O5'],
       claimClass: 'synthesis',
       sourceRefs: [
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 155, to: 158 } },
+        S1(155, 158),
         { sourceId: 'T15', location: { kind: 'time-span', start: '00:16:23', end: '00:22:00' } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 77, to: 79 } },
+        S1(77, 79),
       ],
       reviewItemIds: ['R31'],
     },
@@ -355,107 +325,96 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
     id: 'C10',
     presentationTitle: 'A template report awaiting signature',
     situation:
-      'A simulated procedure report, generated from a template, states that the vocal folds and all segmental bronchi are normal. The bronchoscopy was performed through an endotracheal tube, and the scope could not be advanced through a tight lesion at one lobar origin without force, so nothing beyond it was examined. The report is waiting for the bronchoscopist’s signature.',
+      'You inspected a 68-year-old man through an endotracheal tube. A tumor narrowed the right lower lobe bronchus beyond RB6 and the scope would not pass. You took 5 biopsies; bleeding stopped after 2 minutes of suction and cold saline. The template reads “all segments normal”.',
     critical: true,
     pairedSectionId: 'describe-findings',
     item: {
       id: 'C10',
       itemType: 'management-decision',
-      stem: 'What should the bronchoscopist do with this report?',
+      stem: 'What do you write?',
       choices: [
         {
           id: 'a',
-          label: 'Sign it as generated, since the airways that could be seen looked normal',
+          label: 'The tumor and the biopsies, with the survey lines deleted',
           rationale:
-            'Signing claims a complete normal survey that was never performed. Normal describes an airway that was seen and examined; the vocal folds and the airways beyond the lesion were neither.',
-          plausibility: 'unsafe',
+            'That drops the false lines and loses what the next reader needs: which airways were not examined, and the bleed.',
+          plausibility: 'reasonable-but-incomplete',
         },
         {
           id: 'b',
-          label:
-            'Record the vocal folds and the airways beyond the lesion as abnormal, since they were unseen',
+          label: 'RB7 to RB10 as abnormal, as the tumor blocks the way to them',
           rationale:
-            'Unseen is not abnormal. Calling these areas abnormal invents a finding in the other direction; the honest entry is the limitation and why it occurred.',
+            'Unseen is not abnormal. Write what you saw: the narrowing, and that you could not pass it.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'c',
-          label:
-            'Mark each unseen area not assessed, not safely accessible or not examined, with the reason',
+          label: 'The template as it stands, with the tumor and biopsies added',
           rationale:
-            'The endotracheal tube lay across the vocal folds, so they were not assessed; the lobar origin with the tight lesion was seen but could not be entered without force, so it was not safely accessible, and the airways beyond it were not examined for that reason. Recording each limitation with its reason, alongside the lesion and the airways actually examined, tells the next clinician what is and is not known.',
-          plausibility: 'best',
+            'That signs for segments beyond a tumor you never passed, and for a larynx the tube hid from you.',
+          plausibility: 'incorrect-mechanism',
         },
         {
           id: 'd',
-          label: 'Delete the survey lines and describe only the lesion and the samples taken',
+          label: 'RB7 to RB10 not reachable, larynx not seen, and the bleed graded',
           rationale:
-            'Removing the unsupported normals is right, but leaving out the extent loses what was examined and found normal, and why the rest was not. The next clinician cannot tell an omission from an airway that was never reached.',
-          plausibility: 'reasonable-but-incomplete',
+            'A report says what was seen, what could not be, and what happened. The template claims a survey you did not do.',
+          plausibility: 'best',
         },
       ],
-      explanation:
-        'A report may call an airway normal only if it was seen and examined. Through an endotracheal tube the vocal folds were not assessed; the narrowed lobar origin was not safely accessible, and the airways beyond it were not examined; each is a limitation with a reason, neither normal nor abnormal. The signed report describes the lesion and the airways actually examined, records each limitation and why, and names the pending question and who will follow up the results.',
+      explanation: `Each airway is seen, not seen or not reachable, and the report says which. A bleed is graded by what stopped it. Grade 2 is ${num('nashville-grade-2')}.`,
       objectiveIds: ['M17-O2', 'M10-O2', 'M10-O4'],
       claimClass: 'synthesis',
-      sourceRefs: [
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 161, to: 163 } },
-        { sourceId: 'S1', location: { kind: 'pdf-pages', from: 61, to: 70 } },
-        { sourceId: 'S2', location: { kind: 'pdf-pages', from: 103, to: 107 } },
-      ],
+      sourceRefs: [S2(161, 163), S1(61, 70), S2(103, 107)],
     },
   },
   {
     id: 'C16',
-    presentationTitle: 'A culture question from a recorded ICU lecture',
+    presentationTitle: 'A culture from a quick sample',
     situation:
-      'A teaching exercise built from a recorded ICU lecture describes one sample. Central secretions were suctioned first; then 40 mL was instilled at the selected site, 15 mL was recovered, and the sample was sent as a lavage. The lecture goes on to discuss culture results and a susceptibility table on a slide that is not available. The exercise asks which antibiotic the results support.',
+      'A ventilated 70-year-old man has a new infiltrate. A colleague suctioned the central airways, instilled 40 mL without wedging, recovered 15 mL and sent it as a lavage. You are shown the culture: Klebsiella at 10³ CFU/mL.',
     critical: false,
-    pairedSectionId: 'biopsy-and-specimens',
+    pairedSectionId: 'washing-and-lavage',
     item: {
       id: 'C16',
       itemType: 'mechanism-interpretation',
-      stem: 'What answer does the record support?',
+      stem: 'How do you use the result?',
       choices: [
         {
           id: 'a',
-          label:
-            'None: the culture data are missing, and the sample may not represent a true lavage',
+          label: 'Treat it as a washing, and repeat a wedged lavage if it matters',
           rationale:
-            'The record holds collection facts and nothing else: no organism, no quantitative culture result and no susceptibility table. With no data, no antibiotic answer can be verified, and the collection details already limit how any later result could be read.',
+            'With no wedge and this little saline, the sample is airway washings. The lavage threshold does not apply to it.',
           plausibility: 'best',
         },
         {
           id: 'b',
-          label:
-            'The antibiotic the lecturer most likely meant, inferred from organisms common in the ICU',
+          label: 'Read it against the lavage threshold, as below it',
           rationale:
-            'Inferring the intended answer turns a missing table into an invented one, and a confident key built on a guess teaches false certainty. An antibiotic decision also depends on clinical suspicion, prior antibiotics, severity and other sources of infection, none of which are given.',
-          plausibility: 'unsafe',
+            'The threshold belongs to a wedged lavage. This count comes from a different kind of sample.',
+          plausibility: 'incorrect-mechanism',
         },
         {
           id: 'c',
-          label:
-            'None as a lavage; record it as an aspirate so a later culture is read against that cutoff',
+          label: 'Start antibiotics for Klebsiella, as any growth counts',
           rationale:
-            'A sample does not acquire a validated aspirate cutoff because it fell short of a lavage criterion. Reclassifying it changes the rule applied to the result, not the quality of the sample; the collection is recorded as it happened and interpreted with the laboratory and the clinical team.',
+            'Ventilated airways are colonized. Growth alone does not separate colonization from pneumonia.',
           plausibility: 'incorrect-mechanism',
         },
         {
           id: 'd',
-          label:
-            'None yet: ask the laboratory for the missing culture report and susceptibility table',
+          label: 'Call it a tracheal aspirate afterwards and use that cutoff',
           rationale:
-            'Asking for the missing report is right, but it leaves out what the record already shows. Central suction beforehand does not by itself spoil a lavage, yet with the small volume instilled the sample may not represent the distal airspaces, and that limit travels with any result the laboratory sends.',
-          plausibility: 'reasonable-but-incomplete',
+            'A new name after the fact does not make it that sample either. Describe how it was taken.',
+          plausibility: 'incorrect-mechanism',
         },
       ],
-      explanation:
-        'The record holds only collection facts: central suction first, then 40 mL instilled and 15 mL recovered, sent as a lavage. The culture results and the susceptibility table are on a slide that was not provided, so no antibiotic answer can be verified, and none should be generated. What the case still teaches is that collection is part of the result: document how the sample was actually taken, obtain the full laboratory report and clinical context, and read any result with its limits rather than reclassifying the sample to fit a different cutoff.',
-      objectiveIds: ['M14-O5', 'M02-O1', 'M18-O5'],
-      claimClass: 'transcript-source',
+      explanation: `A lavage is wedged and uses ${num('bal-total-volume')}. The threshold of ${num('vap-bal-threshold')} applies to that sample only. Name a specimen by how it was taken.`,
+      objectiveIds: ['M12-O5', 'M12-O6', 'M02-O1'],
+      claimClass: 'synthesis',
       sourceRefs: [
-        { sourceId: 'T15', location: { kind: 'time-span', start: '00:32:53', end: '00:39:19' } },
+        S1(119, 121),
+        S2(55, 59),
         {
           sourceId: 'U7',
           location: {
@@ -464,7 +423,7 @@ export const CAPSTONE_CASES: readonly AuthoredCapstoneCase[] = [
           },
         },
       ],
-      reviewItemIds: ['R21', 'R22', 'R25', 'R26'],
+      reviewItemIds: ['R21', 'R22', 'R25'],
     },
   },
 ]

@@ -170,8 +170,23 @@ export const vignetteStageItems: readonly BronchStageItem[] = VIGNETTES.map((vig
 
 export const CAPSTONE_ACTIVITY_ID = 'bronchoscopy-foundations:assess:capstone'
 
+/** An integrated case's question with its register numbers resolved, as a vignette's are. */
+function capstoneItem(item: AuthoredItem): AuthoredItem {
+  return {
+    ...item,
+    choices: item.choices.map((choice) => ({
+      ...choice,
+      rationale: resolveNumbers(choice.rationale),
+    })),
+    explanation: resolveNumbers(item.explanation),
+    numberIds: numberIdsIn(
+      [item.explanation, ...item.choices.map((choice) => choice.rationale)].join(' '),
+    ),
+  }
+}
+
 export const capstoneStageItems: readonly BronchStageItem[] = CAPSTONE_CASES.map((entry) =>
-  stageItem(entry.item, { activityId: CAPSTONE_ACTIVITY_ID, phase: 'predict' }),
+  stageItem(capstoneItem(entry.item), { activityId: CAPSTONE_ACTIVITY_ID, phase: 'predict' }),
 )
 
 const CAPSTONE_STAGE_BY_CASE_ID: ReadonlyMap<string, BronchStageItem> = new Map(

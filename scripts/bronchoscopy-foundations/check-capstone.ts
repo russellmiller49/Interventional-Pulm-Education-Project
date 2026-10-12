@@ -2,6 +2,7 @@
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 
+import { capstoneRuleErrors } from '../../src/features/bronchoscopy-foundations/content/capstoneRules'
 import { capstoneErrors } from '../../src/features/bronchoscopy-foundations/content/sectionValidation'
 import type { AuthoredCapstoneCase } from '../../src/features/bronchoscopy-foundations/content/types'
 
@@ -19,7 +20,7 @@ async function main(): Promise<number> {
     console.log('✗ capstone: the file does not export CAPSTONE_CASES')
     return 1
   }
-  const errors = capstoneErrors(loaded.CAPSTONE_CASES)
+  const errors = [...capstoneErrors(loaded.CAPSTONE_CASES), ...capstoneRuleErrors()]
   if (errors.length === 0) {
     console.log('✓ capstone')
     return 0

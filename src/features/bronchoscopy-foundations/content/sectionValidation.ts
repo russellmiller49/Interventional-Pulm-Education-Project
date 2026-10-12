@@ -950,23 +950,5 @@ export function capstoneErrors(cases: readonly AuthoredCapstoneCase[]): readonly
       c.add(`${where} item carries its own situation; the case's situation is shown instead.`)
     itemErrors(c, `${where} item`, entry.item, capstoneHost(entry.pairedSectionId), false)
   }
-  const c16 = cases.find((entry) => entry.id === 'C16')
-  if (c16) {
-    const text = [
-      c16.situation,
-      c16.item.stem,
-      c16.item.explanation,
-      ...c16.item.choices.flatMap((choice) => [choice.label, choice.rationale]),
-    ].join(' ')
-    if (
-      /\b\d+\s*(cfu|colony|colonies)\b|10\s*\^|susceptib\w*\s+(to|values?)\s+\w+cillin|mg\/kg/i.test(
-        text,
-      )
-    ) {
-      c.add(
-        'capstone C16 carries a colony count, a susceptibility value or a dose; its answer is that the data are missing.',
-      )
-    }
-  }
   return c.errors
 }

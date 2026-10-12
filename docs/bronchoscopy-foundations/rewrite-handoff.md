@@ -1,6 +1,6 @@
 # Bronchoscopy Foundations rewrite: handoff
 
-Written 2026-10-08, last updated 2026-10-12 (after the mixed sets). Start the next session from this file.
+Written 2026-10-08, last updated 2026-10-12 (after the integrated cases). Start the next session from this file.
 
 ## Why this work exists
 
@@ -17,18 +17,19 @@ All fifteen sections are on `main` (`1c225e79`, 2026-10-11): #349 to #375 were m
 2026-10-10 with #351 and #376, and #377 (section 13) and #378 (section 15, with capstone C09)
 the next day. #348 is closed.
 
-Four PRs are open:
+Five PRs are open:
 
-| PR   | Branch                  | State                                                                                                              |
-| ---- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| #380 | `claude/bf-rewrite-hub` | Draft, targets `main`. The hub rewritten, a closing screen, `what-completion-means` retired, the image rule moved. |
-| #382 | `claude/bf-image-bank`  | Draft, stacked on #380. The image bank: 50 click-on-the-picture questions in five sets, on the Practice surface.   |
-| #385 | `claude/bf-vignettes`   | Draft, stacked on #382. Forty vignettes with numbers in eight topics, on the Practice surface.                     |
-| #388 | `claude/bf-mixed-sets`  | Draft, stacked on #385. Practice in mixed sets of ten; the paired section and the safety label shown afterwards.   |
+| PR   | Branch                       | State                                                                                                              |
+| ---- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| #380 | `claude/bf-rewrite-hub`      | Draft, targets `main`. The hub rewritten, a closing screen, `what-completion-means` retired, the image rule moved. |
+| #382 | `claude/bf-image-bank`       | Draft, stacked on #380. The image bank: 50 click-on-the-picture questions in five sets, on the Practice surface.   |
+| #385 | `claude/bf-vignettes`        | Draft, stacked on #382. Forty vignettes with numbers in eight topics, on the Practice surface.                     |
+| #388 | `claude/bf-mixed-sets`       | Draft, stacked on #385. Practice in mixed sets of ten; the paired section and the safety label shown afterwards.   |
+| #NEW | `claude/bf-integrated-cases` | Draft, stacked on #388. The eight integrated cases rewritten and held to the rewrite rules.                        |
 
 The work is in the worktree `…-Worktrees/claude-bf-pre-review-04-20261007`, which is on
-`claude/bf-mixed-sets`. Merge #380, #382, #385, then #388; branch the next change from
-`origin/main` after that. The
+`claude/bf-integrated-cases`. Merge #380, #382, #385, #388, then #NEW; branch the next change
+from `origin/main` after that. The
 local copies of the merged stack branches are behind origin.
 
 A reader reviewed sections 13 and 15 against `docs/teaching-first-rules.md` before the merge and
@@ -38,10 +39,10 @@ before acting on them.
 ## Start here next session
 
 1. Read this file, then the plan's rules and the brief for the section you are writing.
-2. The fifteen sections, the hub, the closing screen, the image bank, the vignettes and the
-   mixed sets are written. Left in the plan's practice and assessment (item 7 under "What is
-   left"): rewriting the eight integrated cases, cleaning the older practice items, and
-   replacing the 108 objectives with about 25. Self-check mode is still Russell's decision.
+2. The fifteen sections, the hub, the closing screen, the image bank, the vignettes, the mixed
+   sets and the integrated cases are written. Left in the plan's practice and assessment (item
+   7 under "What is left"): cleaning the older practice items, and replacing the 108 objectives
+   with about 25. Self-check mode is still Russell's decision.
 3. Things to know before that change:
    - With the image bank and the vignettes the course shows an image in 79 of 187 questions,
      so the one-third rule is met. Without the bank it is 29 of 137.
@@ -503,11 +504,33 @@ sections no longer wait for sessions with the pilot.
    - A practice case names its section only after an answer or with the explanation open. An
      integrated case shows its section and its "safety-critical decision" label the same way.
      This reverses an earlier choice to name the section first; the plan asks for it.
-   - Still open: the eight integrated cases are not rewritten (only C09 is); the plan's clean-up
-     of the older practice items (its findings F-01 to F-09, the grading mismatches, the three
-     stems that give the key away) is not done; and about 25 objectives replacing the 108. The
-     four evolving cases exist (sections 3, 13, 14 and 15). Self-check mode is plan decision 5,
-     not yet made.
+   - The integrated cases are done (2026-10-12): all eight in `content/capstone.ts` are
+     rewritten in the second person with a patient and numbers, and a key that is a move.
+     `capstoneRuleErrors` (`content/capstoneRules.ts`) holds them to the copy rules through
+     `caseCopyErrors`, to `unsafe` only on the paired section's reflex, to the key-length rule
+     and to the test-wise cap. A Jest test now runs it and `capstoneErrors`, which only the
+     script ran before.
+   - Their register numbers resolve through `capstoneItem` in `stageItems.ts`. Before this a
+     `num()` token in a case would have printed raw.
+   - C01 and C16 now pair with `washing-and-lavage`. C16 is a real case (an unwedged sample
+     sent as a lavage) and no longer "a question from a lecture"; its guard against a colony
+     count is removed and its two retired objectives are replaced by M12-O5 and M12-O6.
+   - What each asks now: C01 the lavage site from the CT; C04 the airway plan before a scope
+     in stridor; C05 scope out and ventilate; C06 keep the wedge, suction gently, right side
+     down; C07 a saline pot and more biopsies; C09 scope out when the volume falls; C10 what
+     the report says; C16 a washing is not a lavage.
+   - The ids, their order and the five `critical` flags are unchanged. Four cases carry one
+     `unsafe` choice each (C04, C05, C06, C09), each the paired section's reflex. The plan's
+     mismatch "C05c" and finding F-08 (C06's wait-to-speak option) are resolved by the rewrite.
+   - The review register refuses "90 seconds" (R06) anywhere, a bleed's duration included.
+   - For Russell to confirm: all eight keys and reasons, written from general knowledge. Most
+     in need of a look: C04 (theatre, anesthesia and rigid bronchoscopy before any scope); C16
+     (an unwedged 40 mL sample read as a washing); C10's report line; the new pairings.
+   - Still open: the plan's clean-up of the older practice items (findings F-01 to F-07 and
+     F-09 are in sections since rewritten, so check which still apply; the mismatches C08d
+     and `mc-handle-turns-view-static`; the three stems that give the key away); and about 25
+     objectives replacing the 108. The four evolving cases exist (sections 3, 13, 14 and 15).
+     Self-check mode is plan decision 5, not yet made.
 8. **Abnormal images** for sections 8, 10, 12 and 14. Bleeding has no image questions until these
    exist. Rights and de-identification are still pending on all 100 registered files.
 9. **Re-decide the review-register refusal rows** (R25, R26 and others) row by row with Russell.

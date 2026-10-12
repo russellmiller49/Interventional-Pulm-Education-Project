@@ -16,6 +16,7 @@ import { bronchSectionLinkTarget } from '../content/pathwayResolver'
 import { capstoneStageItem } from '../content/stageItems'
 import type { AuthoredCapstoneCase } from '../content/types'
 import styles from './bronchoscopy-foundations-module.module.css'
+import { REWRITTEN_VERDICT_FRAMES } from './stage/verdictWords'
 import { BronchExplanation } from './stage/BronchExplanation'
 
 /**
@@ -80,6 +81,7 @@ function IntegratedCase({
             outcome="stated"
             timing="immediate-after-commit"
             theme="dark"
+            frames={REWRITTEN_VERDICT_FRAMES}
             explanationHeading="The takeaway"
           />
           <div>
