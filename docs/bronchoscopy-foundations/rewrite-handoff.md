@@ -24,10 +24,10 @@ Four PRs are open:
 | #380 | `claude/bf-rewrite-hub` | Draft, targets `main`. The hub rewritten, a closing screen, `what-completion-means` retired, the image rule moved. |
 | #382 | `claude/bf-image-bank`  | Draft, stacked on #380. The image bank: 50 click-on-the-picture questions in five sets, on the Practice surface.   |
 | #385 | `claude/bf-vignettes`   | Draft, stacked on #382. Forty vignettes with numbers in eight topics, on the Practice surface.                     |
-| #NEW | `claude/bf-mixed-sets`  | Draft, stacked on #385. Practice in mixed sets of ten; the paired section and the safety label shown afterwards.   |
+| #388 | `claude/bf-mixed-sets`  | Draft, stacked on #385. Practice in mixed sets of ten; the paired section and the safety label shown afterwards.   |
 
 The work is in the worktree `…-Worktrees/claude-bf-pre-review-04-20261007`, which is on
-`claude/bf-mixed-sets`. Merge #380, #382, #385, then #NEW; branch the next change from
+`claude/bf-mixed-sets`. Merge #380, #382, #385, then #388; branch the next change from
 `origin/main` after that. The
 local copies of the merged stack branches are behind origin.
 
