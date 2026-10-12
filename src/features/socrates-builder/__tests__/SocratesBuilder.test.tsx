@@ -31,7 +31,11 @@ jest.mock('@/features/socrates-demo/components/ComparisonSlideViewer', () => {
           descriptorUrl: string
           initialImageRect: { x: number; y: number; width: number; height: number }
         }
-        interactionMode: 'navigate' | 'draw-rectangle'
+        interactionMode: 'navigate' | 'draw-rectangle' | 'move-rectangle'
+        onResizeAnnotation: (
+          id: string,
+          bounds: { x: number; y: number; width: number; height: number },
+        ) => void
         onDrawRectangle: (rect: { x: number; y: number; width: number; height: number }) => void
         onViewportChange: (snapshot: {
           zoomRatio: number
@@ -66,6 +70,19 @@ jest.mock('@/features/socrates-demo/components/ComparisonSlideViewer', () => {
           <output data-testid="builder-descriptor-url">{props.slide.descriptorUrl}</output>
           <button
             type="button"
+            onClick={() =>
+              props.onResizeAnnotation(props.annotations[0].id, {
+                x: 220,
+                y: 1800,
+                width: 800,
+                height: 950,
+              })
+            }
+          >
+            Mock resize rectangle
+          </button>
+          <button
+            type="button"
             onClick={() => props.onDrawRectangle({ x: 1700, y: 1800, width: 200, height: 240 })}
           >
             Mock draw rectangle
@@ -96,6 +113,8 @@ jest.mock('../descriptor', () => ({
 
 import { createStarterSocratesDocument } from '../content/starter-document'
 import { SocratesBuilder } from '../components/SocratesBuilder'
+import { readWebOverlayWorkspace, saveWebOverlayWorkspace } from '../web-overlay-storage'
+import { polygonBounds } from '@/features/socrates-demo/engine/geometry'
 
 const localAccess = { canPersist: false, canPublish: false, userEmail: null }
 
@@ -199,7 +218,7 @@ describe('SOCRATES companion builder', () => {
     render(<SocratesBuilder access={localAccess} initialDocuments={[]} />)
     const x = Number((screen.getByLabelText('X') as HTMLInputElement).value)
     const canvas = screen.getByRole('group', { name: /^Annotation canvas/ })
-    await user.click(screen.getByRole('button', { name: 'Move/select regions' }))
+    await user.click(screen.getByRole('button', { name: 'Move/resize regions' }))
     expect(screen.getByTestId('builder-interaction-mode')).toHaveTextContent('move-rectangle')
     canvas.focus()
     fireEvent.keyDown(canvas, { key: 'ArrowRight' })
@@ -228,6 +247,36 @@ describe('SOCRATES companion builder', () => {
     await user.click(screen.getByRole('button', { name: 'Reveal at current zoom' }))
     expect(screen.getByLabelText('Enter zoom')).toHaveValue(2.1)
     expect(screen.getByLabelText('Exit zoom')).toHaveValue(1.9)
+  })
+
+  it('resizes without coordinate entry, persists the box, and undoes or redoes the whole gesture', async () => {
+    const user = userEvent.setup()
+    render(
+      <SocratesBuilder
+        access={localAccess}
+        initialDocuments={[]}
+        mode="local"
+        initialActiveDocument={createStarterSocratesDocument()}
+        onLocalWorkspaceChange={saveWebOverlayWorkspace}
+      />,
+    )
+    const width = Number((screen.getByLabelText('WIDTH') as HTMLInputElement).value)
+    await user.click(screen.getByRole('button', { name: 'Move/resize regions' }))
+    await user.click(screen.getByRole('button', { name: 'Mock resize rectangle' }))
+    expect(screen.getByLabelText('WIDTH')).toHaveValue(800)
+    expect(screen.getByLabelText('HEIGHT')).toHaveValue(950)
+    await user.click(screen.getByRole('button', { name: 'Undo annotation change' }))
+    expect(screen.getByLabelText('WIDTH')).toHaveValue(width)
+    await user.click(screen.getByRole('button', { name: 'Redo annotation change' }))
+    expect(screen.getByLabelText('WIDTH')).toHaveValue(800)
+    expect(
+      polygonBounds(readWebOverlayWorkspace().workspace.activeDocument.annotations[0].polygon),
+    ).toEqual({
+      x: 220,
+      y: 1800,
+      width: 800,
+      height: 950,
+    })
   })
 
   it('starts a newly registered descriptor at its full-image bounds', async () => {

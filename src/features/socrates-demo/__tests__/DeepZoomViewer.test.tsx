@@ -100,6 +100,7 @@ function renderViewer(overrides?: {
   onStatusChange?: (status: DeepZoomViewerStatus) => void
   interactionMode?: 'navigate' | 'draw-rectangle' | 'move-rectangle'
   onMoveAnnotation?: (id: string, delta: ImagePoint) => void
+  onResizeAnnotation?: (id: string, bounds: ImageRect) => void
   onDrawRectangle?: (rect: { x: number; y: number; width: number; height: number }) => void
 }) {
   const ref = createRef<DeepZoomViewerHandle>()
@@ -121,6 +122,7 @@ function renderViewer(overrides?: {
       interactionMode={overrides?.interactionMode}
       onDrawRectangle={overrides?.onDrawRectangle}
       onMoveAnnotation={overrides?.onMoveAnnotation}
+      onResizeAnnotation={overrides?.onResizeAnnotation}
     />,
   )
 
@@ -280,5 +282,62 @@ describe('DeepZoomViewer lifecycle and recovery', () => {
     fireEvent.pointerUp(canvas, { clientX: 50, clientY: 50 })
     expect(onMoveAnnotation).toHaveBeenCalledTimes(1)
     expect(mockSetMouseNavEnabled).toHaveBeenLastCalledWith(false)
+  })
+
+  it('resizes with fixed screen-size handles, commits once on release, and cancels without an edit', async () => {
+    const onResizeAnnotation = jest.fn()
+    const onMoveAnnotation = jest.fn()
+    renderViewer({ interactionMode: 'move-rectangle', onResizeAnnotation, onMoveAnnotation })
+    await waitFor(() => expect(mockOpenSeadragon).toHaveBeenCalledTimes(1))
+    act(() => mockHandlers.open({}))
+    expect(screen.getAllByRole('button', { name: /^Resize Zone 1:/ })).toHaveLength(8)
+    const canvas = screen.getByLabelText(
+      'Interactive pathology slide. Drag to pan, scroll or pinch to zoom.',
+    ).firstElementChild as HTMLElement
+    const start = { clientX: 920, clientY: 2700, pointerId: 1, button: 0 }
+    fireEvent.pointerDown(
+      screen.getByRole('button', { name: 'Resize Zone 1: bottom right' }),
+      start,
+    )
+    fireEvent.pointerMove(canvas, { ...start, clientX: 1020, clientY: 2750 })
+    expect(onResizeAnnotation).not.toHaveBeenCalled()
+    fireEvent.pointerUp(canvas, { ...start, clientX: 1020, clientY: 2750 })
+    expect(onResizeAnnotation).toHaveBeenCalledTimes(1)
+    expect(onResizeAnnotation).toHaveBeenCalledWith('zone-1', {
+      x: 220,
+      y: 1800,
+      width: 800,
+      height: 950,
+    })
+    expect(onMoveAnnotation).not.toHaveBeenCalled()
+    fireEvent.pointerDown(
+      screen.getByRole('button', { name: 'Resize Zone 1: bottom right' }),
+      start,
+    )
+    fireEvent.pointerCancel(canvas, start)
+    fireEvent.pointerUp(canvas, { ...start, clientX: 1500 })
+    expect(onResizeAnnotation).toHaveBeenCalledTimes(1)
+  })
+
+  it('supports precise keyboard resizing', async () => {
+    const onResizeAnnotation = jest.fn()
+    renderViewer({ interactionMode: 'move-rectangle', onResizeAnnotation })
+    await waitFor(() => expect(mockOpenSeadragon).toHaveBeenCalledTimes(1))
+    act(() => mockHandlers.open({}))
+    const handle = screen.getByRole('button', { name: 'Resize Zone 1: right' })
+    fireEvent.keyDown(handle, { key: 'ArrowRight', shiftKey: true })
+    expect(onResizeAnnotation).toHaveBeenCalledWith('zone-1', {
+      x: 220,
+      y: 1800,
+      width: 701,
+      height: 900,
+    })
+  })
+
+  it('does not expose editing handles in learner navigation', async () => {
+    renderViewer({ onResizeAnnotation: jest.fn() })
+    await waitFor(() => expect(mockOpenSeadragon).toHaveBeenCalledTimes(1))
+    act(() => mockHandlers.open({}))
+    expect(screen.queryByRole('button', { name: /^Resize/ })).not.toBeInTheDocument()
   })
 })
