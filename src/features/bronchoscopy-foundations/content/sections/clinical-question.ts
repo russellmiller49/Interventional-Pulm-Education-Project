@@ -587,7 +587,7 @@ export const section: BronchSectionDefinition = {
         choices: [
           {
             id: 'a',
-            label: 'Stop, and resolve it with the patient and the images before any sedative',
+            label: 'Settle the side with the patient and the images before anything else',
             rationale:
               'A mismatch stops the time-out. The patient is awake and can still tell you what they agreed to.',
             plausibility: 'best',

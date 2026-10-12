@@ -520,13 +520,13 @@ export const section: BronchSectionDefinition = {
   practice: [
     {
       id: 'mc-role-swap',
-      presentationTitle: 'Taking the assistant’s place at a brushing station',
+      presentationTitle: 'Assisting at a brushing',
       situation:
-        'At a simulation station the trainees swap roles, and you now hold the brush handle for a colleague. The sheath is beyond the scope tip and the bristles are exposed against the target when the operator, watching the bronchoscope image, says: “Pull it back.”',
+        'You are assisting at a brushing and hold the brush handle. The sheath is beyond the scope tip and the bristles are out against the target. The operator, watching the screen, says: “Pull it back.”',
       item: {
         id: 'mc-role-swap',
         itemType: 'management-decision',
-        stem: 'As the assistant, what do you do?',
+        stem: 'What do you do?',
         choices: [
           {
             id: 'a',
