@@ -82,7 +82,8 @@ const finish = (
   {
     id: 'interpretation',
     task: 'check',
-    title: 'Interpret a changed example',
+    // A check with no image is a written scenario, and its title says so.
+    title: visual === 'case' ? 'Interpret a clinical scenario' : 'Interpret a changed example',
     presentation,
     visual,
     content: [],
@@ -215,7 +216,9 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     ),
     work('Inspect a mismatch with the planning target', 'comparison'),
     compare('Capture new localization evidence', 'comparison'),
-    ...finish('comparison'),
+    // The check describes a new dependent opacity, which the section's image cannot show: it is a
+    // written scenario (owner follow-up, 2026-10-12).
+    ...finish('record', 'case'),
   ],
   projection: [
     read(
@@ -571,7 +574,8 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     ),
     work('Capture a contour, then change the anatomy', 'comparison'),
     compare('Review current evidence without the old annotation', 'comparison'),
-    ...finish('comparison'),
+    // The check describes doubled edges from motion during a spin: a written scenario.
+    ...finish('record', 'case'),
   ],
   'staff-protection': [
     read(
@@ -594,7 +598,9 @@ const ACTIVITIES: Readonly<Record<ImagingSectionId, readonly ActivityInput[]>> =
     ),
     work('Compare exposure at different distances', 'acquisition'),
     compare('Inspect a changed projection with a barrier', 'acquisition'),
-    ...finish('acquisition'),
+    // The check is about a hand in the primary beam, which the scatter scene does not show: a
+    // written scenario.
+    ...finish('record', 'case'),
   ],
   'dose-reporting': [
     read(

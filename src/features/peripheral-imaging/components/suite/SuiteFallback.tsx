@@ -20,7 +20,7 @@ import { SUITE_DOM, type ImagingSuitePaneProps } from './types'
  * a mode ready, `ImagingSuitePane` stops routing that mode here.
  */
 export function SuiteFallback(props: ImagingSuitePaneProps) {
-  const { view, lab, onLabChange, lockedReason, pausedReason, goals, onRepresentationReady } = props
+  const { view, lab, onLabChange, pausedReason, goals, onRepresentationReady } = props
   const controlsEnabled = false
   useEffect(() => {
     onRepresentationReady?.(false)
@@ -45,9 +45,9 @@ export function SuiteFallback(props: ImagingSuitePaneProps) {
       </p>
       <ChainCaptionStrip lit={view.litStop} caption={props.chainCaption} />
       {props.chainAnswer ? <ChainAnswerFieldset answer={props.chainAnswer} /> : null}
-      {!controlsEnabled && (lockedReason ?? pausedReason) ? (
+      {!controlsEnabled && pausedReason ? (
         <p className={styles.reason} role="status">
-          {lockedReason ?? pausedReason}
+          {pausedReason}
         </p>
       ) : null}
       {view.lab && !props.independent ? (

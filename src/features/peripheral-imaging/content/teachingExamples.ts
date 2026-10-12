@@ -369,17 +369,9 @@ const SECTION_FIXED_EXAMPLE: Readonly<Partial<Record<ImagingSectionId, LabValues
   // than how it is displayed, so the example carries the section's own worked geometry with the
   // full acquired field and no display operation applied.
   'good-image': { orbit: 0, tilt: 0, depth: 22, field: 100, crop: false, cropWidth: 70, zoom: 1 },
-  // The planning target and the initial current target agree: the section's authored starting
-  // state, before any modeled displacement ('Planning / initial current state').
-  'current-anatomy': { shift: 0, previous: 0, overlay: false, showCurrent: true },
   // The stem's situation is the section's own first demonstration, 'Two scouts · one centered':
   // centered on one view, offset in depth on the orthogonal one.
   'cbct-acquisition': { offsetX: 0, offsetDepth: 25 },
-  // The same authored starting state as current-anatomy; this section's stem is about motion during
-  // a spin, which the registration model does not simulate, so the image stays at its baseline.
-  'changing-anatomy': { shift: 0, previous: 0, overlay: false, showCurrent: true },
-  // The section's authored starting geometry: staff at the baseline distance, no barrier in place.
-  'staff-protection': { distance: 1.3, orbit: 0, shield: false },
 }
 
 /**
@@ -404,49 +396,9 @@ export function fixedExampleIdentity(id: ImagingSectionId, round: 0 | 1): string
 }
 
 /**
- * How a fixed example's image stands in relation to the question printed beside it.
- *
- * `depicts-the-question` — the learner can read the answer's evidence off this image: the tool and
- * the nodule really are superimposed on it, the lateral scout really does show the offset.
- *
- * `illustrative-model` — the image is the section's authored equipment model, and the question is a
- * written clinical scenario the model does not represent. A new dependent opacity, duplicated edges
- * from motion during a spin and a clinician holding an accessory in the primary beam are all
- * outside what the registration and scatter models simulate (see each section's `modelBoundary`).
- * The image is still a fixed, authored, stable picture of the equipment; it is simply not evidence
- * of the situation described, and the module must not say that it is.
+ * A fixed example always depicts its question: the learner can read the answer's evidence off the
+ * image. A check whose scenario the section's image cannot show — a new dependent opacity, doubled
+ * edges from motion during a spin, a hand in the primary beam — is authored as a written scenario
+ * with no image (`finish('record', 'case')` in `learningActivities.ts`), not as an unrelated image
+ * with a disclaimer (owner follow-up, 2026-10-12).
  */
-export type FixedExampleEvidence = 'depicts-the-question' | 'illustrative-model'
-
-/**
- * Declared per question, by the identity of the exact check and round — never per section and never
- * as a blanket rule, so a section's other activities and its transfer round keep their own framing.
- *
- * These three are the checks PI-FELLOW-01 recorded as claiming a connection their image does not
- * support. Each entry names the stem and the model that does not represent it. Removing an entry
- * restores the image-based framing, so this list is the whole of the claim.
- */
-const ILLUSTRATIVE_ONLY_EXAMPLES: ReadonlySet<string> = new Set([
-  // "a new dependent opacity now obscures a previously distinct peripheral lesion" — the
-  // registration model translates the CT rigidly and simulates no ventilation or recruitment.
-  'current-anatomy:example:0',
-  // "the catheter and the nodule margin each appear twice" (QS-4's text form, OD4-02/OD4-05,
-  // 2026-09-22; before it, "duplicated tool and lesion edges from motion during the spin") — the
-  // same rigid-translation model simulates no motion artifact, and authentic motion media are
-  // deferred (OD4-06), so the declaration stands for the new check too.
-  'changing-anatomy:example:0',
-  // "a clinician proposes holding an accessory in the primary beam while wearing a lead glove" —
-  // the scatter scene shows distance, tube side and a barrier, and no such action.
-  'staff-protection:example:0',
-])
-
-export function fixedExampleEvidence(id: ImagingSectionId, round: 0 | 1): FixedExampleEvidence {
-  return ILLUSTRATIVE_ONLY_EXAMPLES.has(fixedExampleIdentity(id, round))
-    ? 'illustrative-model'
-    : 'depicts-the-question'
-}
-
-/** The declared identities, for the tests that hold this list to exactly what it claims. */
-export function illustrativeOnlyExampleIdentities(): readonly string[] {
-  return [...ILLUSTRATIVE_ONLY_EXAMPLES]
-}
