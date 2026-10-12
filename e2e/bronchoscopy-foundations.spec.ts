@@ -8,6 +8,7 @@ import {
 } from '../src/features/bronchoscopy-foundations/content/pathway'
 import { CAPSTONE_CASES } from '../src/features/bronchoscopy-foundations/content/capstone'
 import { imageBankSet } from '../src/features/bronchoscopy-foundations/content/imageBank'
+import { PRACTICE_SETS } from '../src/features/bronchoscopy-foundations/content/practiceSets'
 import { VIGNETTES } from '../src/features/bronchoscopy-foundations/content/vignettes'
 import { capstoneStageItem } from '../src/features/bronchoscopy-foundations/content/stageItems'
 import { BRONCH_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/learnProgress'
@@ -665,12 +666,15 @@ test('Practice explains before an answer, lets the learner try again, saves noth
   await page.goto(base + '/practice')
   await page.locator('[data-next-case]').click()
   await expect(page.locator('[data-prediction-choices]')).toBeVisible()
-  await expect(page.locator('a[href*="learn?section="]')).not.toHaveCount(0)
+  // The section a case draws on is named with the explanation or the answer, not before.
+  await expect(page.locator('[data-case-pairing]')).toHaveCount(0)
   await page.getByRole('button', { name: 'Show the explanation' }).click()
   await expect(page.locator('[data-explanation-reveal]')).toBeVisible()
+  await expect(page.locator('[data-case-pairing] a[href*="learn?section="]')).toHaveCount(1)
   await page.locator('[data-prediction-choices] input').first().check()
   await page.getByRole('button', { name: 'Check my answer' }).click()
   await expect(page.locator('[data-answer-verdict]')).toHaveAttribute('data-revealed', 'true')
+  await expect(page.locator('[data-case-pairing] a[href*="learn?section="]')).toHaveCount(1)
   await page.locator('[data-answer-again]').click()
   await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
   expect(await record(page)).toBeNull()
@@ -684,6 +688,7 @@ test('a vignette gives a patient with numbers, one decision, and the register’
   const links = page.locator('[data-practice-vignettes] [data-practice-case-link]')
   await expect(links).toHaveCount(VIGNETTES.length)
   const vignette = VIGNETTES.find((entry) => entry.id === 'vg-one-more-syringe')!
+  await page.locator('[data-practice-browse] summary').click()
   await page.locator(`[data-practice-case-link="${vignette.id}"]`).click()
   await expect(page.locator(`[data-practice-case="${vignette.id}"]`)).toContainText('weighs 80 kg')
   const key = vignette.choices.find((choice) => choice.plausibility === 'best')!
@@ -694,6 +699,37 @@ test('a vignette gives a patient with numbers, one decision, and the register’
   await expect(verdict).toContainText('570 mg of a 640 mg limit')
   await expect(verdict).toContainText('At 8.0 mg/kg his limit is 640 mg.')
   await expect(page.locator('#main-content')).not.toContainText('{{')
+  expect(await record(page)).toBeNull()
+})
+
+test('a mixed set runs ten cases from many sections, names each section afterwards, and leads to the next set', async ({
+  page,
+}) => {
+  await page.goto(base + '/practice')
+  await expect(page.locator('[data-practice-set-link]')).toHaveCount(PRACTICE_SETS.length)
+  await expect(page.locator('[data-practice-browse]')).not.toHaveAttribute('open', '')
+  await page.locator('[data-practice-continue]').click()
+  const cases = PRACTICE_SETS[0]
+  for (const [index, entry] of cases.entries()) {
+    const card = page.locator(`[data-practice-case="${entry.id}"]`)
+    await expect(card).toContainText(
+      `set 1 of ${PRACTICE_SETS.length} · case ${index + 1} of ${cases.length}`,
+    )
+    await expect(page.locator('[data-case-pairing]')).toHaveCount(0)
+    await page
+      .locator(`[data-prediction-choices] input[value="${entry.stage.item.correctChoiceIds[0]}"]`)
+      .check()
+    await page.getByRole('button', { name: 'Check my answer' }).click()
+    await expect(page.locator('[data-case-pairing]')).toHaveCount(1)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true,
+    )
+    if (index < cases.length - 1) await page.locator('[data-next-case]').click()
+  }
+  await page.locator('[data-next-set]').click()
+  await expect(page.locator(`[data-practice-case="${PRACTICE_SETS[1][0].id}"]`)).toContainText(
+    `set 2 of ${PRACTICE_SETS.length} · case 1 of`,
+  )
   expect(await record(page)).toBeNull()
 })
 

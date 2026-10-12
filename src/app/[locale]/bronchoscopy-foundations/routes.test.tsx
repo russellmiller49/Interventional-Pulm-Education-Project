@@ -59,8 +59,8 @@ jest.mock(
   }),
 )
 jest.mock('@/features/bronchoscopy-foundations/components/BronchCaseActivity', () => ({
-  BronchCaseActivity: ({ caseId }: { caseId: string }) => (
-    <div data-testid="bronch-practice-case" data-id={caseId} />
+  BronchCaseActivity: ({ caseId, set }: { caseId: string; set?: number }) => (
+    <div data-testid="bronch-practice-case" data-id={caseId} data-set={set ?? ''} />
   ),
 }))
 jest.mock(
@@ -211,6 +211,32 @@ describe('bronchoscopy foundations route family', () => {
     )
     expect(screen.getByTestId('bronch-practice-landing')).toBeInTheDocument()
     expect(screen.queryByTestId('bronch-practice-case')).not.toBeInTheDocument()
+  })
+
+  it('keeps a case in the mixed set the address names, and ignores a set the case is not in', async () => {
+    const { PRACTICE_SETS } = jest.requireActual<
+      typeof import('@/features/bronchoscopy-foundations/content/practiceSets')
+    >('@/features/bronchoscopy-foundations/content/practiceSets')
+    const inFirst = PRACTICE_SETS[0][3]
+    for (const [set, shown] of [
+      ['1', '1'],
+      [['1', '2'], '1'],
+      ['2', ''],
+      ['x', ''],
+      [undefined, ''],
+    ] as const) {
+      const view = render(
+        await BronchoscopyFoundationsPracticePage({
+          params: params('en'),
+          searchParams: Promise.resolve({
+            case: inFirst.id,
+            ...(set === undefined ? {} : { set: set as string | string[] }),
+          }),
+        }),
+      )
+      expect(screen.getByTestId('bronch-practice-case')).toHaveAttribute('data-set', shown)
+      view.unmount()
+    }
   })
 
   it('renders Practice and Assess landings inside the frame with their nav hrefs', async () => {

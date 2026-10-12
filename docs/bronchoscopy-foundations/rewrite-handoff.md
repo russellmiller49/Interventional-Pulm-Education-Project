@@ -1,6 +1,6 @@
 # Bronchoscopy Foundations rewrite: handoff
 
-Written 2026-10-08, last updated 2026-10-11 (after the vignettes). Start the next session from this file.
+Written 2026-10-08, last updated 2026-10-12 (after the mixed sets). Start the next session from this file.
 
 ## Why this work exists
 
@@ -17,17 +17,18 @@ All fifteen sections are on `main` (`1c225e79`, 2026-10-11): #349 to #375 were m
 2026-10-10 with #351 and #376, and #377 (section 13) and #378 (section 15, with capstone C09)
 the next day. #348 is closed.
 
-Three PRs are open:
+Four PRs are open:
 
 | PR   | Branch                  | State                                                                                                              |
 | ---- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | #380 | `claude/bf-rewrite-hub` | Draft, targets `main`. The hub rewritten, a closing screen, `what-completion-means` retired, the image rule moved. |
 | #382 | `claude/bf-image-bank`  | Draft, stacked on #380. The image bank: 50 click-on-the-picture questions in five sets, on the Practice surface.   |
 | #385 | `claude/bf-vignettes`   | Draft, stacked on #382. Forty vignettes with numbers in eight topics, on the Practice surface.                     |
+| #NEW | `claude/bf-mixed-sets`  | Draft, stacked on #385. Practice in mixed sets of ten; the paired section and the safety label shown afterwards.   |
 
 The work is in the worktree `…-Worktrees/claude-bf-pre-review-04-20261007`, which is on
-`claude/bf-vignettes`. Merge #380, then #382, then #385; branch the next change from `origin/main`
-after that. The
+`claude/bf-mixed-sets`. Merge #380, #382, #385, then #NEW; branch the next change from
+`origin/main` after that. The
 local copies of the merged stack branches are behind origin.
 
 A reader reviewed sections 13 and 15 against `docs/teaching-first-rules.md` before the merge and
@@ -37,11 +38,10 @@ before acting on them.
 ## Start here next session
 
 1. Read this file, then the plan's rules and the brief for the section you are writing.
-2. The fifteen sections, the hub, the closing screen, the image bank and the vignettes are
-   written. Next in the plan's practice and assessment (item 7 under "What is left"): mixed sets
-   across all practice with the paired section hidden until after the answer, the eight
-   integrated cases with their labels hidden the same way, and the objectives. Self-check mode
-   is still Russell's decision.
+2. The fifteen sections, the hub, the closing screen, the image bank, the vignettes and the
+   mixed sets are written. Left in the plan's practice and assessment (item 7 under "What is
+   left"): rewriting the eight integrated cases, cleaning the older practice items, and
+   replacing the 108 objectives with about 25. Self-check mode is still Russell's decision.
 3. Things to know before that change:
    - With the image bank and the vignettes the course shows an image in 79 of 187 questions,
      so the one-third rule is met. Without the bank it is 29 of 137.
@@ -491,10 +491,23 @@ sections no longer wait for sessions with the pilot.
      flumazenil while he breathes); biopsy of one lung in a sitting; pain as the forceps open;
      the ARDS case (defer); raising the tidal volume when delivered volume falls; the three
      hemoptysis airway cases; the culture below the threshold.
-   - Still open: mixed sets of ten across all practice, the
-     eight integrated cases with labels hidden until after the answer, and about 25 objectives
-     replacing the 108. The four evolving cases exist (sections 3, 13, 14 and 15). Self-check
-     mode is plan decision 5, not yet made.
+   - Mixed sets are done (2026-10-12): `content/practiceSets.ts` deals all 79 practice cases
+     into eight fixed sets of ten (the last holds nine). The sections' own cases are dealt one
+     from each section in turn, the vignettes one from each topic in turn, and the two streams
+     alternate, so a set is half vignettes and never puts two cases from one section or topic
+     side by side. The sets are fixed because nothing is saved.
+   - A case opened from a set carries `?set=N`; its way on stays in the set and its last case
+     offers the next set. A set the case is not in is ignored.
+   - The Practice landing leads with the sets. The by-section and by-topic lists are behind a
+     closed disclosure, "Browse every case by section and topic".
+   - A practice case names its section only after an answer or with the explanation open. An
+     integrated case shows its section and its "safety-critical decision" label the same way.
+     This reverses an earlier choice to name the section first; the plan asks for it.
+   - Still open: the eight integrated cases are not rewritten (only C09 is); the plan's clean-up
+     of the older practice items (its findings F-01 to F-09, the grading mismatches, the three
+     stems that give the key away) is not done; and about 25 objectives replacing the 108. The
+     four evolving cases exist (sections 3, 13, 14 and 15). Self-check mode is plan decision 5,
+     not yet made.
 8. **Abnormal images** for sections 8, 10, 12 and 14. Bleeding has no image questions until these
    exist. Rights and de-identification are still pending on all 100 registered files.
 9. **Re-decide the review-register refusal rows** (R25, R26 and others) row by row with Russell.

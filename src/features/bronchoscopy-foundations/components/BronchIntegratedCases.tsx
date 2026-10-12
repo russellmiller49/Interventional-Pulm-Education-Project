@@ -64,11 +64,12 @@ function IntegratedCase({
       id={`case-${entry.id}`}
       className={styles.teachingCard}
       data-integrated-case={entry.id}
-      data-safety-critical={entry.critical || undefined}
+      data-safety-critical={(entry.critical && Boolean(checked || explanationOpen)) || undefined}
     >
       <p className={styles.kicker}>
         Case {position} of {total} · {entry.presentationTitle}
-        {entry.critical ? ' · safety-critical decision' : ''}
+        {/* The label would say which answers to avoid, so it is shown with the feedback. */}
+        {entry.critical && (checked || explanationOpen) ? ' · safety-critical decision' : ''}
       </p>
       <p data-case-situation>{entry.situation}</p>
       {checked ? (
@@ -158,13 +159,15 @@ function IntegratedCase({
           </ul>
         </div>
       ) : null}
-      <p className="text-sm" data-case-pairing>
-        Review this concept:{' '}
-        <Link className="font-semibold text-primary" href={bronchSectionLinkTarget(section.id)}>
-          {section.title}
-        </Link>
-        .
-      </p>
+      {checked || explanationOpen ? (
+        <p className="text-sm" data-case-pairing>
+          Review this concept:{' '}
+          <Link className="font-semibold text-primary" href={bronchSectionLinkTarget(section.id)}>
+            {section.title}
+          </Link>
+          .
+        </p>
+      ) : null}
     </li>
   )
 }

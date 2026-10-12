@@ -70,12 +70,23 @@ describe('the integrated cases', () => {
     const { container } = render(<BronchoscopyFoundationsAssessLanding />)
     expect(document.querySelectorAll('[data-integrated-case]')).toHaveLength(8)
     expect(document.querySelectorAll('[data-prediction-choices]')).toHaveLength(8)
+    // Before an answer no case names its section or says it is safety-critical (rewrite plan).
+    expect(document.querySelector('[data-case-pairing]')).toBeNull()
+    expect(document.querySelector('[data-safety-critical]')).toBeNull()
+    expect(document.body.textContent).not.toMatch(/safety-critical/i)
+    expect(CAPSTONE_CASES.some((entry) => entry.critical)).toBe(true)
     for (const entry of CAPSTONE_CASES) {
+      fireEvent.click(caseElement(entry.id).querySelector('[data-show-explanation]')!)
       expect(caseElement(entry.id).querySelector('[data-case-pairing] a')).toHaveAttribute(
         'href',
         `/bronchoscopy-foundations/learn?section=${entry.pairedSectionId}`,
       )
+      expect(caseElement(entry.id).textContent?.includes('safety-critical decision')).toBe(
+        Boolean(entry.critical),
+      )
+      fireEvent.click(caseElement(entry.id).querySelector('[data-show-explanation]')!)
     }
+    expect(document.querySelector('[data-case-pairing]')).toBeNull()
     expect(document.querySelector('[data-answer-verdict]')).toBeNull()
     expect(document.body.textContent).not.toMatch(EXAM_WORDS)
     expect(await axe(container)).toHaveNoViolations()
