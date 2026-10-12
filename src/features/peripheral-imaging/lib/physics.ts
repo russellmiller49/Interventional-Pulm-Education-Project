@@ -99,10 +99,10 @@ export function windowRelationship(tip: Point3) {
     full,
     tipInside,
     label: full
-      ? 'Sampling window fully within the modeled lesion'
+      ? 'Sampling window fully within the lesion'
       : intersects
-        ? 'Sampling window partly intersects the modeled lesion'
-        : 'Sampling window outside the modeled lesion',
+        ? 'Sampling window partly intersects the lesion'
+        : 'Sampling window outside the lesion',
   }
 }
 /** Simple shift-and-add displacement at a selected plane, not vendor reconstruction. */

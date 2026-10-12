@@ -114,10 +114,13 @@ describe('report CW3 — terms are defined where a learner lands, and reachable 
     // A term taught in full elsewhere links that section.
     const cbct = glossary.querySelector('[data-glossary-term="cbct"] [data-glossary-taught-in]')!
     expect(cbct.getAttribute('href')).toBe(sectionHref('cbct-acquisition'))
-    // Every definition says where its words come from.
+    // A definition names its source where it has one. How the course computes a quantity is a
+    // note for the authors and is not shown.
     for (const entry of glossary.querySelectorAll('[data-glossary-term]')) {
-      expect(entry.querySelector('small')?.textContent?.trim().length).toBeGreaterThan(5)
+      const small = entry.querySelector('small')
+      if (small) expect(small.textContent?.trim().length).toBeGreaterThan(5)
     }
+    expect(glossary.textContent).not.toMatch(/model computes it/)
   })
 
   it('Help keeps its navigation role first and adds the terms and the one statement about the models', () => {
@@ -372,7 +375,8 @@ describe('reports 4.1 and 5.1 — the reconstruction comparison leads with the a
     const full = comparison.querySelector<HTMLDetailsElement>('[data-reconstruction-full]')!
     expect(full.open).toBe(false)
     expect(full.querySelector('[data-reconstruction="cone-beam"]')).not.toBeNull()
-    expect(full.textContent).toMatch(/Model boundary/)
+    expect(full.textContent).toMatch(/In this course\./)
+    expect(full.textContent).not.toMatch(/Model boundary/)
     expect(
       comparison
         .querySelector('[data-reconstruction-elsewhere="cone-beam"] a')
@@ -525,8 +529,8 @@ describe('reports 2.11, 3.9, 7.1, 7.3 and 3.6 — the suite panels explain their
   it('the target-ray readout says what the strip is and names no organ', () => {
     render(<SignalReadout profile={null} />)
     const meaning = document.querySelector('[data-ray-meaning]')?.textContent ?? ''
-    expect(meaning).toMatch(/One X-ray path from the tube through the target/)
-    expect(meaning).toMatch(/does not name the organ/)
+    expect(meaning).toMatch(/One X-ray path from the tube through the lesion/)
+    expect(meaning).toMatch(/shows density, not which organ it is/)
     expect(meaning).not.toMatch(/heart|mediastinum/)
   })
 })
@@ -587,7 +591,7 @@ describe('owner items closed on 2026-10-08 — taught as ordinary teaching, with
     render(<SectionGlossary sectionId={sectionId} variant="teaching" />)
     const entry = document.querySelector(`[data-glossary-term="${term}"]`)!
     expect(entry.getAttribute('data-glossary-status')).toBe('existing')
-    expect(entry.querySelector('small')?.textContent).toMatch(/^Written for this course from \S/)
+    expect(entry.querySelector('small')?.textContent).toMatch(/^Based on \S/)
     expect(entry.textContent).not.toMatch(/draft|awaiting|review/i)
   })
 })

@@ -91,7 +91,7 @@ export function Readout({ label, children }: { label: string; children: ReactNod
 export function LabNote({ children }: { children: ReactNode }) {
   return (
     <p className={styles.labNote}>
-      <strong>Model boundary.</strong> {children}
+      <strong>Note.</strong> {children}
     </p>
   )
 }

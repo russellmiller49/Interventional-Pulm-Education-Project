@@ -41,9 +41,7 @@ export function SuiteTestDouble(props: ImagingSuitePaneProps) {
     >
       <ChainCaptionStrip lit={view.litStop} caption={props.chainCaption} />
       {props.chainAnswer ? <ChainAnswerFieldset answer={props.chainAnswer} /> : null}
-      {!controlsEnabled && (props.lockedReason ?? props.pausedReason) ? (
-        <p role="status">{props.lockedReason ?? props.pausedReason}</p>
-      ) : null}
+      {!controlsEnabled && props.pausedReason ? <p role="status">{props.pausedReason}</p> : null}
       {/* What the pane was handed, for a test to read where the pane shows no control for it. */}
       <output hidden data-suite-values={JSON.stringify(lab.values)} />
       {/* As the real dock: a control the step has not handed over is left out, not disabled. */}
@@ -162,7 +160,6 @@ export function SuiteTestDouble(props: ImagingSuitePaneProps) {
           ))}
         </ul>
       ) : null}
-      <p {...{ [SUITE_DOM.boundary]: '' }}>{view.boundary}</p>
       {props.children}
     </div>
   )

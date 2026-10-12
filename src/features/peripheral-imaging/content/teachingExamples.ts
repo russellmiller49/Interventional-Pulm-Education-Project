@@ -15,7 +15,7 @@ export interface TeachingDemonstration {
 const projection: readonly TeachingExample[] = [
   {
     title: 'Baseline · frontal overlap',
-    look: 'The modeled tool and lesion are stationary, separated by 30 mm along the initial X-ray path. Their projections overlap: depth is collapsed onto the detector.',
+    look: 'The tool and the lesion are stationary and 30 mm apart along the X-ray path. Their projections overlap: depth is collapsed onto the detector.',
     values: { orbit: 0, tilt: 0, depth: 30 },
   },
   {
@@ -43,7 +43,7 @@ const field: readonly TeachingExample[] = [
   },
   {
     title: 'Crop the baseline stored frame',
-    look: 'The full-field acquisition is retained. The dashed display border hides its periphery; it does not undo exposure. Compare the acquisition metadata.',
+    look: 'The full field was still acquired. The dashed border only hides its periphery on the display; it does not undo the exposure. The caption under the image still reads field 100%.',
     values: { field: 100, crop: true, cropWidth: 70, zoom: 1 },
   },
   {
@@ -70,29 +70,29 @@ const time: readonly TeachingExample[] = [
   },
   {
     title: 'Combined example',
-    look: 'Halved rate and doubled width preserve model tube loading at fixed 20 mA, but both blur and inter-frame travel increase. This is not a patient-dose calculation.',
+    look: 'Halving the rate and doubling the width leaves the tube load unchanged at a fixed 20 mA, while both the blur and the travel between frames increase. Tube load is not patient dose.',
     values: { rate: 3.75, width: 10, speed: 20 },
   },
   {
     title: 'Static localization',
-    look: 'With the modeled tool stationary, the motion terms vanish. Select temporal settings for the task and use stored images to deliberate; the lowest setting is not automatically adequate during movement.',
+    look: 'With the tool stationary, the motion terms vanish. Select temporal settings for the task and use stored images to deliberate; the lowest setting is not automatically adequate during movement.',
     values: { rate: 3.75, width: 5, speed: 0 },
   },
 ]
 const registration: readonly TeachingExample[] = [
   {
     title: 'Planning / initial current state',
-    look: 'The planning target and initial current target agree in this example. This is a teaching state, not proof of registration in a patient.',
+    look: 'The planning target and the lesion on current imaging agree here: there is no divergence yet.',
     values: { shift: 0, previous: 0, overlay: false, showCurrent: true },
   },
   {
     title: 'Stored contour · acquisition A',
-    look: 'The teal contour was saved from acquisition A at zero displacement. Turning it on does not acquire a new image.',
+    look: 'The teal contour was saved from acquisition A, before any displacement. Turning it on does not acquire a new image.',
     values: { shift: 0, previous: 0, overlay: true, showCurrent: true },
   },
   {
     title: 'Subsequent change · contour on',
-    look: 'A rigid 20 mm displacement moves the current anatomy while the stored contour remains at acquisition A. This illustrates mismatch; it models neither atelectasis nor recruitment.',
+    look: 'The anatomy has moved 20 mm since acquisition A, and the stored contour has not moved with it. The contour now marks where the lesion was.',
     values: { shift: 20, previous: 0, overlay: true, showCurrent: true },
   },
   {
@@ -102,7 +102,7 @@ const registration: readonly TeachingExample[] = [
   },
   {
     title: 'Reassessment · acquisition B',
-    look: 'Only a new modeled capture updates the contour to the changed state. Coordinate physiology with anesthesia and reassess localization when needed; no ventilation maneuver is simulated.',
+    look: 'Only a new acquisition brings the contour to the current anatomy. Coordinate physiology with anesthesia and reassess localization when needed.',
     values: { shift: 20, previous: 20, overlay: true, showCurrent: true },
   },
 ]
@@ -114,7 +114,7 @@ const acquisition: readonly TeachingExample[] = [
   },
   {
     title: 'Both scouts centered',
-    look: 'Both offsets are corrected in the model. Coverage, equipment clearance, instrument/anesthesia state and protection remain learner-declared checks; there is no collision detection.',
+    look: 'Both offsets are corrected. Coverage, equipment clearance, the instrument and anesthesia state, and radiation protection are still checked with the team before the spin.',
     values: { offsetX: 0, offsetDepth: 0 },
   },
   {
@@ -126,7 +126,7 @@ const acquisition: readonly TeachingExample[] = [
 const sampling: readonly TeachingExample[] = [
   {
     title: 'Trace the actual sampling component',
-    look: 'Follow the amber intended lesion and green modeled side window across linked thin axial, coronal and sagittal planes. The white tip is a different part of the tool.',
+    look: 'Follow the amber lesion and the green side-cutting window across the linked thin axial, coronal and sagittal planes. The white tip is a different part of the tool.',
     values: {
       tipX: 10,
       tipY: 0,
@@ -140,7 +140,7 @@ const sampling: readonly TeachingExample[] = [
   },
   {
     title: 'Tip and window differ',
-    look: 'The tip reaches the lesion but the sampling window extends behind it. Trace the green component, not just the white tip. These dimensions do not describe a real device.',
+    look: 'The tip reaches the lesion but the sampling window extends behind it. Trace the green window, not just the white tip.',
     values: {
       tipX: -5,
       tipY: 0,
@@ -168,7 +168,7 @@ const sampling: readonly TeachingExample[] = [
   },
   {
     title: 'Same tool · thin planes',
-    look: 'The window is displaced from the lesion. A model intersection describes geometry only; it is not a safe sampling decision or a guarantee of diagnostic tissue.',
+    look: 'The window is displaced from the lesion: the thin planes show what the thick slab concealed.',
     values: {
       tipX: 10,
       tipY: 15,
@@ -208,12 +208,12 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
         examples: [
           {
             title: 'CT superimposition · baseline',
-            look: 'Use the matched conceptual examples to distinguish noise and contrast loss. Here, inspect which CT structures project across the target ray; photon statistics and scatter are not calculated.',
+            look: 'Noise and scatter were compared on the earlier steps. Here, look at which structures project across the X-ray path through the lesion.',
             values: { orbit: 0, tilt: 0, depth: 0 },
           },
           {
             title: 'CT superimposition · changed view',
-            look: 'Only the beam angle changes. Compare anatomical silhouettes and the CT density bands along the target ray. The model does not score whether the heart clears the lesion.',
+            look: 'Only the C-arm angle changes. Compare the anatomical silhouettes and the density bands along the X-ray path through the lesion.',
             values: { orbit: -35, tilt: 0, depth: 0 },
           },
         ],
@@ -238,7 +238,7 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
           },
           {
             title: 'Change the view, retain context',
-            look: 'The changed view reveals a mismatch. Collimate around the target while keeping the modeled excursion and landmarks. This field tracks the target center automatically; manual patient recentering is not modeled.',
+            look: 'The changed view reveals a mismatch. Collimate around the target while keeping the planned tool path and the landmarks in the field. The field stays centered on the target.',
             values: { orbit: 35, tilt: 0, depth: 22, field: 80, crop: false, zoom: 1 },
           },
           {
@@ -255,17 +255,17 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
         examples: [
           {
             title: 'Acquisition arc',
-            look: 'Play or Step through the limited-angle acquisition, then inspect the reconstructed plane. The labeled reconstruction illustration explains the difference from a broad CT orbit.',
+            look: 'Play or Step through the limited-angle acquisition, then inspect the reconstructed plane. The reconstruction figure explains how this differs from a wide CT rotation.',
             values: { sweep: 30, plane: 0 },
           },
           {
-            title: 'Scroll through the modeled tool',
-            look: 'This demonstration uses a tool at −18 mm in the parallel teaching model. Its focus changes with the selected plane; out-of-plane structures blur.',
+            title: 'Scroll through the tool',
+            look: 'The tool lies at −18 mm. It is sharp when the plane passes through it and blurs as the plane moves away, as does every other out-of-plane structure.',
             values: { sweep: 30, plane: -18 },
           },
           {
-            title: 'Scroll through the modeled lesion',
-            look: 'The demonstration lesion is centered at zero. Limited-angle depth uncertainty remains. Finer voxel spacing is not evidence of finer measured resolution.',
+            title: 'Scroll through the lesion',
+            look: 'The lesion is centered at 0 mm. With a limited arc its depth remains uncertain: finer voxel spacing is not finer measured resolution.',
             values: { sweep: 30, plane: 0 },
           },
         ],
@@ -276,12 +276,12 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
         examples: [
           {
             title: 'Patient, source and exposure path',
-            look: 'The patient is the scatter source. In lateral projections, positions on the detector side often receive less than the beam-entrance (tube) side, but a CBCT spin changes directions throughout. Rings illustrate an idealized point-source distance relationship, not calibrated staff dose or a safe-distance boundary.',
+            look: 'The patient is the scatter source. In lateral projections, positions on the detector side often receive less than the beam-entrance (tube) side, but a CBCT spin changes directions throughout. The rings show the inverse-square fall-off with distance from the patient; they are not measured staff doses or a safe-distance line.',
             values: { distance: 1.3, orbit: 0, shield: false },
           },
           {
             title: 'Distance and barrier',
-            look: 'Compare the exposure path after moving farther away and adding the barrier. Barrier placement, access and equipment-specific protection still require local review.',
+            look: 'Compare the exposure path after moving farther away and adding the barrier.',
             values: { distance: 2, orbit: 0, shield: true },
           },
         ],
@@ -292,12 +292,12 @@ export function teachingDemonstration(id: ImagingSectionId): TeachingDemonstrati
         examples: [
           {
             title: 'Worked KAP arithmetic',
-            look: 'The modeled uniform field has 10 mGy air kerma over 100 cm²: 1 Gy·cm² KAP. This is not peak skin dose or effective dose.',
+            look: 'A uniform field of 10 mGy air kerma over 100 cm² gives a KAP of 1 Gy·cm². KAP is not peak skin dose or effective dose.',
             values: { kerma: 10, area: 100 },
           },
           {
             title: 'Same kerma · different area',
-            look: 'Doubling the modeled field area doubles the arithmetic product at fixed kerma. Real automatic exposure response and patient dose are not represented.',
+            look: 'Doubling the field area at the same air kerma doubles the KAP. On a real system, automatic exposure control may change the air kerma when the field changes.',
             values: { kerma: 10, area: 200 },
           },
         ],
@@ -369,17 +369,9 @@ const SECTION_FIXED_EXAMPLE: Readonly<Partial<Record<ImagingSectionId, LabValues
   // than how it is displayed, so the example carries the section's own worked geometry with the
   // full acquired field and no display operation applied.
   'good-image': { orbit: 0, tilt: 0, depth: 22, field: 100, crop: false, cropWidth: 70, zoom: 1 },
-  // The planning target and the initial current target agree: the section's authored starting
-  // state, before any modeled displacement ('Planning / initial current state').
-  'current-anatomy': { shift: 0, previous: 0, overlay: false, showCurrent: true },
   // The stem's situation is the section's own first demonstration, 'Two scouts · one centered':
   // centered on one view, offset in depth on the orthogonal one.
   'cbct-acquisition': { offsetX: 0, offsetDepth: 25 },
-  // The same authored starting state as current-anatomy; this section's stem is about motion during
-  // a spin, which the registration model does not simulate, so the image stays at its baseline.
-  'changing-anatomy': { shift: 0, previous: 0, overlay: false, showCurrent: true },
-  // The section's authored starting geometry: staff at the baseline distance, no barrier in place.
-  'staff-protection': { distance: 1.3, orbit: 0, shield: false },
 }
 
 /**
@@ -404,49 +396,9 @@ export function fixedExampleIdentity(id: ImagingSectionId, round: 0 | 1): string
 }
 
 /**
- * How a fixed example's image stands in relation to the question printed beside it.
- *
- * `depicts-the-question` — the learner can read the answer's evidence off this image: the tool and
- * the nodule really are superimposed on it, the lateral scout really does show the offset.
- *
- * `illustrative-model` — the image is the section's authored equipment model, and the question is a
- * written clinical scenario the model does not represent. A new dependent opacity, duplicated edges
- * from motion during a spin and a clinician holding an accessory in the primary beam are all
- * outside what the registration and scatter models simulate (see each section's `modelBoundary`).
- * The image is still a fixed, authored, stable picture of the equipment; it is simply not evidence
- * of the situation described, and the module must not say that it is.
+ * A fixed example always depicts its question: the learner can read the answer's evidence off the
+ * image. A check whose scenario the section's image cannot show — a new dependent opacity, doubled
+ * edges from motion during a spin, a hand in the primary beam — is authored as a written scenario
+ * with no image (`finish('record', 'case')` in `learningActivities.ts`), not as an unrelated image
+ * with a disclaimer (owner follow-up, 2026-10-12).
  */
-export type FixedExampleEvidence = 'depicts-the-question' | 'illustrative-model'
-
-/**
- * Declared per question, by the identity of the exact check and round — never per section and never
- * as a blanket rule, so a section's other activities and its transfer round keep their own framing.
- *
- * These three are the checks PI-FELLOW-01 recorded as claiming a connection their image does not
- * support. Each entry names the stem and the model that does not represent it. Removing an entry
- * restores the image-based framing, so this list is the whole of the claim.
- */
-const ILLUSTRATIVE_ONLY_EXAMPLES: ReadonlySet<string> = new Set([
-  // "a new dependent opacity now obscures a previously distinct peripheral lesion" — the
-  // registration model translates the CT rigidly and simulates no ventilation or recruitment.
-  'current-anatomy:example:0',
-  // "the catheter and the nodule margin each appear twice" (QS-4's text form, OD4-02/OD4-05,
-  // 2026-09-22; before it, "duplicated tool and lesion edges from motion during the spin") — the
-  // same rigid-translation model simulates no motion artifact, and authentic motion media are
-  // deferred (OD4-06), so the declaration stands for the new check too.
-  'changing-anatomy:example:0',
-  // "a clinician proposes holding an accessory in the primary beam while wearing a lead glove" —
-  // the scatter scene shows distance, tube side and a barrier, and no such action.
-  'staff-protection:example:0',
-])
-
-export function fixedExampleEvidence(id: ImagingSectionId, round: 0 | 1): FixedExampleEvidence {
-  return ILLUSTRATIVE_ONLY_EXAMPLES.has(fixedExampleIdentity(id, round))
-    ? 'illustrative-model'
-    : 'depicts-the-question'
-}
-
-/** The declared identities, for the tests that hold this list to exactly what it claims. */
-export function illustrativeOnlyExampleIdentities(): readonly string[] {
-  return [...ILLUSTRATIVE_ONLY_EXAMPLES]
-}

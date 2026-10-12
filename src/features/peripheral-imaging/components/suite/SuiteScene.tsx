@@ -77,7 +77,7 @@ const CAMERA_PURPOSE: Record<'suite' | 'beam' | 'anterior' | 'side' | 'head' | '
     'Anterior: looking down on the patient from the front. At 0° the detector is nearest you and covers the chest; the tube is beneath the table. Rotate the C-arm and the detector moves off the chest.',
   side: 'Side: from beside the table. The tube is below, the detector above, and the depth between the tool and the target, which a frontal image collapses, is visible.',
   head: 'Head: from the head of the table, to see how far the C-arm has rotated around the patient.',
-  target: 'Target: close on the model target and the tool tip.',
+  target: 'Target: close on the target lesion and the tool tip.',
 }
 
 class SceneBoundary extends Component<
@@ -433,9 +433,9 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
             {view.stopSentence}
           </p>
         )}
-        {!props.controlsEnabled && (props.lockedReason ?? props.pausedReason) && (
+        {!props.controlsEnabled && props.pausedReason && (
           <p role="status" className={styles.reason}>
-            {props.lockedReason ?? props.pausedReason}
+            {props.pausedReason}
           </p>
         )}
         <div
@@ -452,9 +452,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
             {!props.independent && (
               <>
                 <div className={styles.sceneHeader}>
-                  <span>
-                    {isRoom ? 'The imaging suite at rest' : 'CT-derived anatomy · image formation'}
-                  </span>
+                  <span>{isRoom ? 'The imaging suite at rest' : 'C-arm, table and patient'}</span>
                 </div>
                 <div className={styles.viewport} ref={viewport} data-suite-viewport>
                   {contextLost ? (
@@ -475,8 +473,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                       role="img"
                       aria-label={
                         isRoom
-                          ? 'Imaging suite at rest with a gantry, table, CT-derived thorax and monitor boom'
-                          : 'CT-derived thorax with a source, cone and detector, with a model target and tool'
+                          ? 'Imaging suite at rest with a C-arm, table, patient and monitor boom'
+                          : 'The patient’s thorax between the X-ray tube and the detector, with the beam, the target lesion and the tool'
                       }
                       className={styles.canvasHost}
                     >
@@ -771,7 +769,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
           </div>
           {drrMode && (
             <section className={styles.monitorPanel} hidden={view.monitor === 'hidden'}>
-              <div className={styles.sceneHeader}>CT-derived projection</div>
+              <div className={styles.sceneHeader}>Projection</div>
               <Monitor
                 key={attemptEpoch}
                 viewMemory={props.viewMemory}
@@ -846,7 +844,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
                     ? 'Waiting for the first completed pulse.'
                     : `Frame ${timeModel.sampleIndex + 1} · held between pulses. Amber: pulse travel; white: sampled tool.`
                   : isRegistration
-                    ? 'Amber: current target · teal: stored contour · white: model tool'
+                    ? 'Amber: current target · teal: stored contour · white: tool'
                     : fieldVisible
                       ? 'Amber contour: target lesion · white mark: tool tip · numbered crosses: landmarks 1 and 2 · dashed teal line: planned tool path'
                       : 'Amber contour: target lesion · white mark: tool tip'}
@@ -855,7 +853,7 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
           )}
           {dts.active && (
             <section className={styles.monitorPanel} hidden={view.monitor === 'hidden'}>
-              <div className={styles.sceneHeader}>Limited-angle teaching plane</div>
+              <div className={styles.sceneHeader}>Reconstructed plane</div>
               <TomosynthesisMonitor
                 model={dts}
                 planeDepth={inputs.planeDepth}
@@ -918,8 +916,8 @@ export default function SuiteScene(props: ImagingSuitePaneProps) {
         {isRoom ? <LabGoals goals={props.goals} /> : !dockNearImage ? controlDock : null}
         {!representationReady && !isRoom && (
           <p role="status">
-            The required image is loading or unavailable. Image-based work is paused; use the
-            teaching explanation and retry the view.
+            The image has not loaded. The steps that use it are paused; reload the page if it does
+            not appear.
           </p>
         )}
         {!props.presentation && (

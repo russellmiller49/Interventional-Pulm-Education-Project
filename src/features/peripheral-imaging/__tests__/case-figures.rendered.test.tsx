@@ -68,10 +68,10 @@ describe('case figures are declared, not defaulted (OD4-04)', () => {
       ['capstone:case-5-v2:figure', 'depicts-the-question', 'teaching-model'],
       ['practice:staff-protection-practice-1:figure', 'depicts-the-question', 'schematic'],
     ])
+    // Teaching-first rules (2026-10-08): a figure's caption says what it shows, in plain words.
     for (const declaration of declarations) {
-      expect(declaration.label).toMatch(/Not a /)
-      if (declaration.medium === 'teaching-model')
-        expect(declaration.label).toMatch(/^Teaching model:.*Not a patient acquisition/)
+      expect(declaration.label.trim().length).toBeGreaterThan(30)
+      expect(declaration.label).not.toMatch(/teaching model|model(ed|led)?\b|schematic|CT-derived/i)
     }
   })
 
@@ -103,7 +103,7 @@ describe('practice case 9 shows the planes, and waits to say where they came fro
     )
     expect(node).toHaveAttribute('data-case-figure-evidence', 'depicts-the-question')
     expect(node.querySelector('[data-model-label]')).toHaveTextContent(
-      'Teaching model: CT-derived images with a model nodule and a modeled catheter. Not a patient acquisition.',
+      'One projection with the catheter in place, three reconstructed planes, and the planning CT through the same lesion.',
     )
     // The figure sits above the choices, after the situation.
     expect(
@@ -162,14 +162,15 @@ describe('integrated case 5 reads the sampling window off linked planes (QS-8)',
     const node = figure()!
     expect(node).toHaveAttribute('data-case-figure', 'capstone:case-5-v2:figure')
     expect(node).toHaveAttribute('data-case-figure-evidence', 'depicts-the-question')
-    expect(node.querySelector('[data-model-label]')).toHaveTextContent(/^Teaching model:/)
-    expect(node.querySelector('[data-model-label]')).toHaveTextContent(/Not a patient acquisition/)
+    expect(node.querySelector('[data-model-label]')).toHaveTextContent(
+      'Linked thin axial, coronal and sagittal planes through the lesion and the needle.',
+    )
     expect(node.querySelectorAll('[data-sampling-case-planes] svg[role="img"]')).toHaveLength(3)
     expect(node.textContent).toMatch(/Axial · -1 mm/)
     expect(node.textContent).toMatch(/Coronal · 2 mm/)
     expect(node.textContent).toMatch(/Sagittal · 7 mm/)
     expect(node.querySelector('[data-sampling-legend]')).toHaveTextContent(
-      /modeled lesion.*side-cutting window.*ending at the tip/,
+      /the lesion.*side-cutting window.*ending at the tip/,
     )
     expect(readouts()).toBeNull()
     expect(node.textContent).not.toMatch(/partly intersects|beyond its surface|tip inside/i)
@@ -181,14 +182,14 @@ describe('integrated case 5 reads the sampling window off linked planes (QS-8)',
     render(<ImagingIntegratedCaseActivity caseId="case-5-v2" />)
     showExplanation()
     expect(document.querySelector('[data-readout="window"]')).toHaveTextContent(
-      'Sampling window partly intersects the modeled lesion',
+      'Sampling window partly intersects the lesion',
     )
     expect(document.querySelector('[data-readout="tip"]')).toHaveTextContent(
-      'Outside the modeled lesion, about 10 mm beyond its surface',
+      'Outside the lesion, about 10 mm beyond its surface',
     )
     expect(readouts()).toHaveTextContent(/does not establish diagnostic tissue/)
     expect(document.querySelector('[data-explanation-reveal]')).toHaveTextContent(
-      /the window partly inside the modeled lesion and the tip beyond it/,
+      /the window partly inside the lesion and the tip beyond it/,
     )
     showExplanation()
     choose('c')

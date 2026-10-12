@@ -194,13 +194,13 @@ export function RegistrationPanels({ augmented }: { augmented: boolean }) {
     <section className={styles.signalProfile}>
       <p>
         Amber: current target · teal: stored target contour. The anatomical displacement moves the
-        current CT and target together. Capturing a new teaching contour updates the stored target
+        current anatomy and the lesion together. Capturing a new contour updates the stored target
         position.
       </p>
       {!augmented && (
         <p>
-          Gray: original registered airway map. The schematic catheter sensor remains on that map as
-          the coloured current anatomy moves; the field-generator board is drawn below the table.
+          Gray: the airway map as registered. The catheter sensor stays on that map as the colored
+          current anatomy moves; the field generator is under the table.
         </p>
       )}
     </section>

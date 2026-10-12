@@ -210,8 +210,7 @@ export interface ImagingSuitePaneProps {
   readonly onLabChange: (patch: LabValues) => void
   readonly onLabReset: () => void
   readonly controlsEnabled: boolean
-  /** Printed on the scene when the controls are locked (deciding) or paused (looking back). */
-  readonly lockedReason?: string
+  /** Printed on the scene when the controls are put away because the learner is looking back. */
   readonly pausedReason?: string
   readonly goals: readonly { readonly goal: LabGoal; readonly met: boolean }[]
   /** `chainCaption(view.litStop)`, printed verbatim. */

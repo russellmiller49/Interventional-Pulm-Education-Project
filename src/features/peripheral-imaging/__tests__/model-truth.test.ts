@@ -418,10 +418,10 @@ describe('QS-5 · practice case 9 shows what its situation says', () => {
 })
 
 describe('QS-8 · integrated case 5 is drawn at a geometry the model reads as the answer', () => {
-  it('the window partly intersects the modeled lesion and the tip lies beyond it', () => {
+  it('the window partly intersects the lesion and the tip lies beyond it', () => {
     const readouts = samplingCaseReadouts()
     expect(readouts).toMatchObject({ intersects: true, full: false, tipInside: false })
-    expect(readouts.label).toBe('Sampling window partly intersects the modeled lesion')
+    expect(readouts.label).toBe('Sampling window partly intersects the lesion')
     expect(readouts.tipFromSurfaceMm).toBeGreaterThan(0)
     expect(windowRelationship(SAMPLING_CASE_FIGURE.tip)).toMatchObject({ tipInside: false })
     // The tip is beyond the lesion along the needle's own direction (+x), not merely off to a side.

@@ -30,7 +30,6 @@ import {
 import { imagingSectionSpec, type ImagingSectionSpec } from './sectionSpecs'
 import { imagingSort, type ImagingSort } from './sorts'
 import { imagingSectionItems } from './stageItems'
-import { fixedExampleEvidence } from './teachingExamples'
 import { transferOrigin, transferReviewInstruction, transferReviewTitle } from './transferOrigins'
 import { suiteViewForStep } from './suiteViews'
 
@@ -134,17 +133,18 @@ function prediction(
  * What a check asks the learner to read, decided by what that check actually puts on screen.
  *
  * Transfer rounds carry no visual at all and keep their own wording. A check with no visual reads
- * its scenario. A check whose image is declared `illustrative-model` for this exact section and
- * round says so and sends the learner to the written scenario; every other check keeps the
- * image-based instruction, because its image is the evidence.
+ * its scenario, a check beside a dose record reads the record, and every other check keeps the
+ * image-based instruction, because its image is the evidence. A check whose question the section's
+ * image cannot show is authored as a written scenario (`finish('record', 'case')`), never as an
+ * unrelated image with a disclaimer.
  */
 function checkInstruction(activity: ImagingLearningActivity): string {
   if (activity.task === 'transfer')
     return 'Use the stated evidence in this different situation. Select an answer, then review the feedback.'
   if (activity.visual === 'case')
     return 'Read the scenario. Choose what the evidence supports and what remains uncertain.'
-  if (fixedExampleEvidence(activity.sectionId, 0) === 'illustrative-model')
-    return 'Answer from the written scenario below. The image beside it is this section’s teaching model of the equipment, not a picture of the situation described.'
+  if (activity.visual === 'dose')
+    return 'Read the procedure record. Choose what it supports and what remains uncertain.'
   return 'Inspect the image and acquisition context. Choose what the evidence supports and what remains uncertain.'
 }
 

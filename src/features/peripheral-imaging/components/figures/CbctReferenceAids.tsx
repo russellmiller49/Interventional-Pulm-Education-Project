@@ -79,7 +79,7 @@ export function TeamReadinessAid() {
   const roles = [...new Set(TEAM_READINESS_ROWS.map((row) => row.role))]
   return (
     <section className={`${styles.figure} ${styles.readiness}`} data-team-readiness>
-      <p className={styles.kicker}>Before a CBCT spin, confirm · teaching aid</p>
+      <p className={styles.kicker}>Before a CBCT spin, confirm</p>
       <p className={styles.modelLabel} data-readiness-status>
         {TEAM_READINESS_STATUS}
       </p>

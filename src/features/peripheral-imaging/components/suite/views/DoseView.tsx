@@ -74,9 +74,9 @@ export function DosePanels({
       <p className={styles.leadRule} data-dose-rule>
         <strong>Same product on both planes.</strong> KAP is air kerma multiplied by beam area. As
         the beam spreads, the area grows and the air kerma falls by the same factor, so the product
-        is the same at the two free-air planes in this model: {shared.toFixed(2)} Gy·cm² at both
-        planes here. Reference air kerma is a point index at one reference position; neither
-        quantity is peak skin dose or effective dose.
+        is the same at the two planes in air: {shared.toFixed(2)} Gy·cm² at both. Reference air
+        kerma is a point index at one reference position; neither quantity is peak skin dose or
+        effective dose.
       </p>
       <div className={styles.mprGrid}>
         {model.planes.map((plane) => (
@@ -106,17 +106,17 @@ export function DosePanels({
         </ul>
         <p>
           Violet: reference marker, placed 150 mm toward the source from isocentre. Equipment
-          conventions determine the actual reference position. Pink: first non-air point on the
-          central ray through the quantized CT envelope.
+          conventions determine the actual reference position. Pink: where the central ray first
+          meets the patient.
         </p>
         <p>
           {model.skinEntry
-            ? 'The skin-entry marker locates a surface; it has no skin-dose value.'
+            ? 'The pink marker shows where the beam enters the skin. It carries no skin-dose value.'
             : failed
-              ? 'CT envelope unavailable; the two free-air planes remain available.'
+              ? 'The skin-entry marker is unavailable; the two planes are still shown.'
               : profile
-                ? 'The central ray has no non-air intersection in this CT envelope.'
-                : 'Preparing the CT envelope marker…'}
+                ? 'The central ray does not meet the patient at this setting.'
+                : 'Preparing the skin-entry marker…'}
         </p>
       </details>
     </section>

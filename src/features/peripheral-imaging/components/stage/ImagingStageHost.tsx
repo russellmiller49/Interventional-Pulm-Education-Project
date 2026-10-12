@@ -39,11 +39,7 @@ import {
 } from '../../content/stageLessons'
 import { imagingStageSources } from '../../content/stageSources'
 import { imagingTaskLead } from '../../content/taskLeads'
-import {
-  fixedExampleEvidence,
-  fixedExampleIdentity,
-  fixedExampleValues,
-} from '../../content/teachingExamples'
+import { fixedExampleIdentity, fixedExampleValues } from '../../content/teachingExamples'
 import { labGoalMet, type LabGoal } from '../../engine/labGoalEvaluation'
 import {
   formatReadout,
@@ -483,7 +479,7 @@ function ImagingStageSession({
   const continueAction = {
     label:
       lesson.steps[activeIndex + 1]?.activity.task === 'check'
-        ? 'Interpret a changed example'
+        ? lesson.steps[activeIndex + 1].activity.title
         : lesson.steps[activeIndex + 1]?.activity.task === 'observe'
           ? 'Compare the images'
           : 'Continue',
@@ -541,7 +537,7 @@ function ImagingStageSession({
             onActivate: () => continuePast(activeIndex),
             disabled: waitingForImage,
             disabledReason:
-              'The demonstration image must load. Teaching text remains available; retry the view, or continue without the image.',
+              'The image is still loading. Wait for it, or continue without the image.',
           },
           ...(waitingForImage ? { skip: skipStep('Continue without the image') } : {}),
         }
@@ -931,19 +927,9 @@ function ImagingStageSession({
     ['sampling', 'dts', 'dts-prior'].includes(suiteView.mode)
   const controlsEnabled =
     (!checkPending || browsingIndependent) && !beforePrediction && !lookingBack
-  const exampleEvidence =
-    interaction.kind === 'prediction'
-      ? fixedExampleEvidence(lesson.sectionId, interaction.round)
-      : undefined
-  // A pending check's image is held. What the banner may claim about it depends on this exact
-  // question and round: three checks put a written clinical scenario beside the section's teaching
-  // model, which does not represent it, and must not say the two match.
-  // An example that depicts its question needs no banner now that it shows no controls to explain
-  // (owner feedback, 2026-10-11). The three illustrative ones still say what their image is.
-  const lockedReason =
-    checkPending && exampleEvidence === 'illustrative-model'
-      ? 'This image stays fixed while you read it. It is this section’s teaching model of the equipment, not a picture of the situation in the question — answer from the written scenario.'
-      : undefined
+  // A pending check's image is held, and it depicts the question, so it needs no banner: it shows
+  // no controls to explain (owner feedback, 2026-10-11). A check whose scenario the section's image
+  // cannot show is a written scenario with no image.
   const pausedReason =
     !checkPending && !beforePrediction && lookingBack
       ? 'You are looking back at an earlier step, so its controls are put away. Return to the current step to use them.'
@@ -986,11 +972,7 @@ function ImagingStageSession({
         onRepresentationReady={onRepresentationReady}
       />
     ) : activity.visual === 'case' ? null : (
-      <div
-        className={styles.demonstration}
-        data-authored-example={exampleIdentity}
-        data-example-evidence={exampleEvidence}
-      >
+      <div className={styles.demonstration} data-authored-example={exampleIdentity}>
         {panelQuestion ? (
           <IndependentImagePanels
             sectionId={lesson.sectionId}
@@ -1035,7 +1017,6 @@ function ImagingStageSession({
               }
             }}
             controlsEnabled={controlsEnabled}
-            lockedReason={lockedReason}
             pausedReason={pausedReason}
             goals={[]}
             chainCaption={suiteView.stopSentence}
@@ -1090,10 +1071,10 @@ function ImagingStageSession({
       ) : null}
       {/* Reports CW3 and CW2: Help keeps its navigation role — its text and its action come first,
           so the keyboard order Close → Show me where is unchanged — and then adds the section's
-          terms and the one general statement about the models, so both reach a learner on any step. */}
+          terms and the one general statement about the course, so both reach a learner on any step. */}
       <SectionGlossary sectionId={lesson.sectionId} variant="help" />
       <p data-help-models>
-        <strong>About the models.</strong> {IMAGING_SHARED_BOUNDARY}
+        <strong>About this course.</strong> {IMAGING_SHARED_BOUNDARY}
       </p>
     </HelpDialog>
   )

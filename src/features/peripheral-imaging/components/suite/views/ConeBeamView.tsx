@@ -404,12 +404,10 @@ export function ConeBeamPanels({
       {/* Report 5.3: a plain-language legend that keeps its limits. The tolerance is this exercise's,
           not a device's, and the shell is drawn for orientation and is no clearance check. */}
       <p data-scout-legend>
-        {inputs.variant === 'mobile' ? 'Mobile cart' : 'Fixed support'}. Teal cylinder: the volume
-        this modeled spin would reconstruct, its field of view; a lesion outside it is not imaged.
-        Small box: how close to centre the lesion has to be for this exercise to count it as
-        centred, a teaching tolerance and not a device specification. Blue shell: the space the
-        modeled C-arm sweeps through, drawn for orientation only; it is not a collision or clearance
-        check.
+        {inputs.variant === 'mobile' ? 'Mobile C-arm' : 'Fixed C-arm'}. Teal cylinder: the volume
+        the spin reconstructs, its field of view; a lesion outside it is not imaged. Small box: the
+        lesion is centered when it lies inside it. Blue shell: the space the C-arm sweeps through
+        during the spin.
       </p>
       {/* Offered only where the spin can be run: not on a fixed example, not while looking back. */}
       {enabled && (
@@ -446,8 +444,8 @@ export function ConeBeamPanels({
       {a.complete && (
         <>
           <p>
-            Original CT standing in for a reconstructed volume. These slices were not reconstructed
-            from the orbit.
+            The volume after the spin, in three planes. A real CBCT volume is noisier and lower in
+            contrast than this.
           </p>
           <div className={styles.mprGrid}>
             {(['Axial', 'Coronal', 'Sagittal'] as const).map((plane) => (

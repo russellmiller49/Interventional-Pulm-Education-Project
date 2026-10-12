@@ -9,10 +9,6 @@ import {
 } from '../content/routes'
 import { imagingSectionSpec } from '../content/sectionSpecs'
 import { imagingStageLesson } from '../content/stageLessons'
-import {
-  fixedExampleEvidence,
-  illustrativeOnlyExampleIdentities,
-} from '../content/teachingExamples'
 import { transferOrigin } from '../content/transferOrigins'
 import { LESSONS } from '../data/lessons'
 
@@ -37,12 +33,10 @@ describe('report 1.2 — a prompt names the evidence the screen actually carries
           // No visual at all: a written scenario, and it says so.
           expect(step.instruction).not.toMatch(/inspect the image/i)
           expect(step.instruction).toMatch(/read the scenario|stated evidence/i)
-        } else if (fixedExampleEvidence(sectionId, round) === 'illustrative-model') {
-          // A visual the question cannot be read off: it is named as a teaching model, and the
-          // learner is sent to the written scenario.
+        } else if (step.activity.visual === 'dose') {
+          // A procedure record, not an image.
           expect(step.instruction).not.toMatch(/inspect the image/i)
-          expect(step.instruction).toMatch(/answer from the written scenario/i)
-          expect(step.instruction).toMatch(/teaching model/i)
+          expect(step.instruction).toMatch(/^Read the procedure record\./)
         } else {
           // A visual that is the evidence keeps its image-based instruction.
           expect(step.instruction).toMatch(/inspect the image|stated evidence/i)
@@ -51,34 +45,36 @@ describe('report 1.2 — a prompt names the evidence the screen actually carries
     }
   })
 
-  it('exactly three checks are declared illustrative, and nothing else is relabelled', () => {
-    // The declaration is per question and round. Holding the list here means a fourth check cannot
-    // quietly lose its image-based framing, and the transfer rounds cannot be caught by it.
-    expect(illustrativeOnlyExampleIdentities()).toEqual([
-      'current-anatomy:example:0',
-      'changing-anatomy:example:0',
-      'staff-protection:example:0',
-    ])
-    for (const sectionId of peripheralImagingSectionIds)
-      expect(fixedExampleEvidence(sectionId, 1)).toBe('depicts-the-question')
-    // The two checks whose image really is the evidence keep it.
-    expect(fixedExampleEvidence('chain-walk', 0)).toBe('depicts-the-question')
-    expect(fixedExampleEvidence('cbct-acquisition', 0)).toBe('depicts-the-question')
+  it('no check sends the learner away from its own image', () => {
+    // Owner follow-up, 2026-10-12: a check shows the image it asks about or is a written scenario.
+    // No instruction disclaims an image, so none may be shown that the question cannot be read off.
+    for (const sectionId of peripheralImagingSectionIds) {
+      const lesson = imagingStageLesson(sectionId)
+      for (const step of lesson.steps)
+        expect(step.instruction).not.toMatch(/not the situation|section’s example|teaching model/i)
+    }
   })
 
-  it('the six text-only checks read as scenarios', () => {
+  it('the nine text-only checks read as scenarios', () => {
     const textOnly = peripheralImagingSectionIds.filter((sectionId) => {
       const lesson = imagingStageLesson(sectionId)
       return lesson.steps[lesson.predictionStepIndex].activity.visual === 'case'
     })
     expect(textOnly).toEqual([
       'imaging-questions',
+      // Owner follow-up, 2026-10-12: a new dependent opacity is not something this section's
+      // registration image can show.
+      'current-anatomy',
       // PR #279 sanity review (F3, CHK-S10): Section 10's conceptual check lost the single
       // reconstructed plane beside it, which could not show the elongation its stem describes.
       'dts-acquisition',
       'dts-interpretation',
       'fixed-suite',
       'mobile-suite',
+      // Doubled edges from motion during a spin, and a hand in the primary beam: neither is on
+      // the section's image.
+      'changing-anatomy',
+      'staff-protection',
       'suite-cases',
     ])
     for (const sectionId of textOnly) {
