@@ -185,21 +185,20 @@ export const contactModel: Lesson = {
 }
 export const measurementModel: Lesson = {
   id: 'measurement-phantoms',
-  title: 'Sweep and measure geometric phantoms',
+  title: 'Sweep before you measure',
   topic: 'Optimize',
   minutes: 12,
-  objective:
-    'Sweep through fixed shapes and record a central short-axis measurement using visible borders.',
+  objective: 'Sweep through a fixed shape and measure its short axis on the central section.',
   recall: 'The same fixed object can produce different sections as the imaging plane moves.',
   concept: 'A section is only one view of the object',
   paragraphs: [
-    'Explore a sphere, elongated ellipsoid, two adjacent objects and a lobulated union. Their dimensions stay fixed while the section moves.',
-    'Sweep each shape completely before measuring. For the required record, return to the elongated phantom’s central section, freeze it and place opposing short-axis calipers. The two adjacent objects share the same station label; object count does not define station count.',
+    'A node is a three-dimensional object and the ultrasound image is one slice through it. Move the slice off-center and the same node looks smaller, although nothing about the node has changed.',
+    'So sweep through a node before you measure it. Find the section where it is widest, freeze that section, and measure the short axis there, from border to border.',
   ],
   checklist: [
-    'Sweep from before the near border to beyond the far border.',
-    'Compare central and off-center sections.',
-    'Freeze, select the requested axis, place border calipers and label the phantom image.',
+    'Sweep from one edge of the node to the other.',
+    'Freeze the central, widest section.',
+    'Place the calipers on opposite borders, across the short axis.',
   ],
   worked: {
     context:
@@ -230,7 +229,7 @@ export const measurementModel: Lesson = {
     presetKey: 'measurement',
     controls: [],
     instruction:
-      'Sweep every shape through all plane positions. Return to Elongated, set plane offset to zero and freeze. Select the short axis and place two calipers on opposite visible borders. Label the image “Phantom station 7” and record it. Use “Not adequately visualized” when borders cannot be measured.',
+      'Move “Plane offset” from one end to the other and watch the section of the elongated shape grow and shrink. Then go to the central section, freeze it, click the top and bottom borders to place calipers, and record the measurement.',
   },
   observation: {
     ...question(
@@ -270,8 +269,7 @@ export const measurementModel: Lesson = {
     'Separated calipers can still be on the wrong borders or axis.',
   ],
   sources: ['atlas', 'simulation'],
-  boundary:
-    'These are geometric phantoms. The station label on them teaches documentation; it does not make them an anatomical station.',
+  boundary: 'These are geometric shapes, not nodes: the numbers are the shape’s own millimeters.',
 }
 export const routeModel: Lesson = {
   id: 'eus-b-route-model',

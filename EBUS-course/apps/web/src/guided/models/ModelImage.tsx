@@ -198,11 +198,8 @@ export function ModelImage({
           </p>
         )}
         <p className="model-caption">
-          Analytic section of the same 3D shape. Tap a frozen image for calipers, or use the numeric
-          endpoint controls. Distances are phantom millimetres in the coordinate system
-          drawn on the section: horizontal 0 at the midline, vertical measured down from the top of
-          the field. They are not calibrated clinical millimetres and do not transfer to a
-          recorded or patient image.
+          A slice through the 3D shape at the current plane offset. Freeze it, then click its
+          borders to place calipers.
         </p>
       </section>
     )

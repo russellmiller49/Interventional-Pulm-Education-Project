@@ -430,15 +430,8 @@ describe('the model reference comes from the current plane', () => {
     expect(phantomPlaneReference(recommended).axisMm).toBeCloseTo(16, 10)
   })
 
-  it('does not relax what the activity accepts', () => {
-    // The sweep steps still need every plane of every shape, as before this batch.
-    expect(MODEL_STEPS.measurement).toEqual([
-      'sphere-sweep',
-      'ellipsoid-sweep',
-      'adjacent-sweep',
-      'lobulated-sweep',
-      'short-axis-record',
-    ])
+  it('asks for one sweep and one measurement', () => {
+    expect(MODEL_STEPS.measurement).toEqual(['ellipsoid-sweep', 'short-axis-record'])
     const partial = measurementAt('ellipsoid', 0, 'short')
     expect(partial.steps).not.toContain('ellipsoid-sweep')
   })

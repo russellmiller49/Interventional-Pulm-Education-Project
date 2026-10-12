@@ -36,11 +36,8 @@ const stepLabels: Record<string, string> = {
   balloon: 'Select “Fluid-balloon contact”, then inspect',
   bubble: 'Select “Balloon with bubble”, then inspect',
   shadow: 'Select “Contact with reflector”, then inspect',
-  'sphere-sweep': 'Sweep the sphere through every plane',
-  'ellipsoid-sweep': 'Sweep the elongated shape through every plane',
-  'adjacent-sweep': 'Sweep the two adjacent objects through every plane',
-  'lobulated-sweep': 'Sweep the lobulated shape through every plane',
-  'short-axis-record': 'Record a short-axis image of the elongated shape',
+  'ellipsoid-sweep': 'Move “Plane offset” from one end to the other and watch the section change',
+  'short-axis-record': 'At the central section: freeze, click the top and bottom borders, then “Record measurement”',
   '4L-airway': 'Record 4L from the airway',
   '4L-esophagus': 'Record 4L from the esophagus',
   '7-airway': 'Record 7 from the airway',
@@ -147,25 +144,6 @@ function Controls({ state: s, act }: { state: ModelState; act: (a: ModelAction) 
         {button('Record comparison / limitation', 'inspect')}
       </>
     )
-  const download = () => {
-    const svg = document.querySelector<SVGSVGElement>('.phantom-section')
-    if (!svg || !s.record) return
-    const copy = svg.cloneNode(true) as SVGSVGElement
-    copy.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-    copy.setAttribute('width', '720')
-    copy.setAttribute('height', '552')
-    const title = document.createElementNS('http://www.w3.org/2000/svg', 'title')
-    title.textContent = `${s.record.label}: ${s.record.value.toFixed(1)} phantom mm. Geometric phantom, not a patient image. ${s.record.frameId}`
-    copy.prepend(title)
-    const url = URL.createObjectURL(
-      new Blob([new XMLSerializer().serializeToString(copy)], { type: 'image/svg+xml' }),
-    )
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'ebus-phantom-station-7-short-axis.svg'
-    link.click()
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
-  }
   const p = s.calipers[s.endpoint] ?? [0, 22]
   return (
     <>
@@ -176,27 +154,14 @@ function Controls({ state: s, act }: { state: ModelState; act: (a: ModelAction) 
           value={s.shape}
           onChange={(e) => act({ type: 'shape', value: e.target.value })}
         >
-          <option value="sphere">Sphere</option>
-          <option value="ellipsoid">Elongated</option>
-          <option value="adjacent">Two adjacent objects</option>
-          <option value="lobulated">Lobulated</option>
+          <option value="ellipsoid">Elongated (the one you measure)</option>
+          <option value="sphere">Sphere (optional)</option>
+          <option value="adjacent">Two adjacent objects (optional)</option>
+          <option value="lobulated">Lobulated (optional)</option>
         </select>
       </label>
-      <button
-        onClick={() => {
-          act({ type: 'shape', value: PHANTOM_RECOMMENDED_COMPARISON.shape })
-          act({ type: 'offset', value: PHANTOM_RECOMMENDED_COMPARISON.offset })
-        }}
-      >
-        Go to the recommended comparison
-      </button>
-      <p className="model-caption">
-        The recorded image this activity asks for is the central plane of the elongated phantom.
-        Start there, then sweep the other shapes and planes to see how the section changes; both
-        remain available and the activity still records every plane you visit.
-      </p>
       <label>
-        Plane offset · {s.offset} phantom mm
+        Plane offset · {s.offset} mm
         <input
           aria-label="Plane offset"
           type="range"
@@ -210,96 +175,66 @@ function Controls({ state: s, act }: { state: ModelState; act: (a: ModelAction) 
       </label>
       <div className="model-buttons">
         <button
-          disabled={s.frozen || s.offset <= -12}
-          onClick={() => act({ type: 'offset', value: s.offset - 2 })}
+          disabled={s.frozen || s.offset === PHANTOM_RECOMMENDED_COMPARISON.offset}
+          onClick={() => act({ type: 'offset', value: PHANTOM_RECOMMENDED_COMPARISON.offset })}
         >
-          Previous plane
-        </button>
-        <button
-          disabled={s.frozen || s.offset >= 12}
-          onClick={() => act({ type: 'offset', value: s.offset + 2 })}
-        >
-          Next plane
+          Go to the central section
         </button>
         {button(s.frozen ? 'Unfreeze section' : 'Freeze section', 'freeze')}
       </div>
-      <p>Sweep positions visited: {s.bins[s.shape].length} of 13. The object remains fixed.</p>
-      <label>
-        Measurement axis{' '}
-        <select
-          aria-label="Measurement axis"
-          value={s.axis}
-          onChange={(e) => act({ type: 'axis', value: e.target.value })}
-        >
-          <option value="short">Short axis</option>
-          <option value="long">Long axis</option>
-        </select>
-      </label>
-      <label>
-        Active caliper{' '}
-        <select
-          aria-label="Active caliper"
-          value={s.endpoint}
-          onChange={(e) => act({ type: 'endpoint', value: Number(e.target.value) })}
-        >
-          <option value={0}>Caliper 1</option>
-          <option value={1}>Caliper 2</option>
-        </select>
-      </label>
-      <div className="model-calipers">
+      <p className="model-caption">
+        {s.frozen
+          ? 'Click the top border of the shape on the image, then the bottom border.'
+          : 'Freeze the section to place calipers.'}
+      </p>
+      <div className="model-buttons">{button('Record measurement', 'record')}</div>
+      {s.record && <p className="model-record">Short axis: {s.record.value.toFixed(1)} mm.</p>}
+      <details>
+        <summary>Place calipers with numbers instead</summary>
         <label>
-          Horizontal position · phantom mm, 0 at the midline
-          <input
-            type="number"
-            min="-30"
-            max="30"
-            step=".5"
-            value={p[0]}
-            disabled={!s.frozen}
-            onChange={(e) => {
-              act({ type: 'caliper', value: [Number(e.target.value), p[1]] })
-              act({ type: 'endpoint', value: s.endpoint })
-            }}
-          />
+          Active caliper{' '}
+          <select
+            aria-label="Active caliper"
+            value={s.endpoint}
+            onChange={(e) => act({ type: 'endpoint', value: Number(e.target.value) })}
+          >
+            <option value={0}>Caliper 1</option>
+            <option value={1}>Caliper 2</option>
+          </select>
         </label>
-        <label>
-          Vertical position · phantom mm from the top of the field
-          <input
-            type="number"
-            min="0"
-            max="46"
-            step=".5"
-            value={p[1]}
-            disabled={!s.frozen}
-            onChange={(e) => {
-              act({ type: 'caliper', value: [p[0], Number(e.target.value)] })
-              act({ type: 'endpoint', value: s.endpoint })
-            }}
-          />
-        </label>
-      </div>
-      <label>
-        Image label{' '}
-        <select
-          aria-label="Image label"
-          value={s.station}
-          onChange={(e) => act({ type: 'station', value: e.target.value })}
-        >
-          <option value="">Choose label</option>
-          <option>Phantom station 7</option>
-          <option>Unlabeled image</option>
-        </select>
-      </label>
-      <div className="model-buttons">
-        {button('Record phantom image', 'record')}
-        {button('Not adequately visualized', 'inadequate')}
-      </div>
-      {s.record && <button onClick={download}>Download phantom image</button>}
-      {s.record && (
-        <p className="model-record">
-          {s.record.label}: {s.record.value.toFixed(1)} phantom mm.
-        </p>
-      )}
+        <div className="model-calipers">
+          <label>
+            Horizontal position · mm, 0 at the midline
+            <input
+              type="number"
+              min="-30"
+              max="30"
+              step=".5"
+              value={p[0]}
+              disabled={!s.frozen}
+              onChange={(e) => {
+                act({ type: 'caliper', value: [Number(e.target.value), p[1]] })
+                act({ type: 'endpoint', value: s.endpoint })
+              }}
+            />
+          </label>
+          <label>
+            Vertical position · mm from the top of the field
+            <input
+              type="number"
+              min="0"
+              max="46"
+              step=".5"
+              value={p[1]}
+              disabled={!s.frozen}
+              onChange={(e) => {
+                act({ type: 'caliper', value: [p[0], Number(e.target.value)] })
+                act({ type: 'endpoint', value: s.endpoint })
+              }}
+            />
+          </label>
+        </div>
+      </details>
     </>
   )
 }

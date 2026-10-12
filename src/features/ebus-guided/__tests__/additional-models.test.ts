@@ -120,25 +120,21 @@ it('rejects separated, wrong-axis, off-center and unfrozen calipers, and records
   ])
     expect(measurePhantom({ ...s, ...patch } as MeasurementState).valid).toBe(false)
   s = modelReducer(s, { type: 'record' }) as MeasurementState
-  expect(s.record).toMatchObject({ value: 16, label: expect.stringContaining('Phantom station 7') })
+  expect(s.record).toMatchObject({ value: 16, label: expect.stringContaining('short axis') })
+  // A measurement without the sweep is not the whole activity.
   expect(modelComplete(s)).toBe(false)
-  for (const shape of ['sphere', 'ellipsoid', 'adjacent', 'lobulated']) {
-    s = modelReducer(s, { type: 'shape', value: shape }) as MeasurementState
-    // Merely jumping to both endpoints does not demonstrate an intervening sweep.
-    s = modelReducer(s, { type: 'offset', value: 12 }) as MeasurementState
-    expect(s.steps.includes(shape + '-sweep')).toBe(false)
-    for (let offset = -12; offset <= 12; offset += 2)
-      s = modelReducer(s, { type: 'offset', value: offset }) as MeasurementState
-    expect(s.steps).toContain(shape + '-sweep')
-  }
+  s = modelReducer(s, { type: 'shape', value: 'ellipsoid' }) as MeasurementState
+  s = modelReducer(s, { type: 'offset', value: 0 }) as MeasurementState
+  expect(s.steps).not.toContain('ellipsoid-sweep')
+  // Carrying the plane from one end to the other is the sweep; the other shapes are optional.
+  s = modelReducer(s, { type: 'offset', value: 12 }) as MeasurementState
+  expect(s.steps).toContain('ellipsoid-sweep')
   s = apply(
     s,
-    { type: 'shape', value: 'ellipsoid' },
     { type: 'offset', value: 0 },
     { type: 'freeze' },
     { type: 'caliper', value: [0, 14] },
     { type: 'caliper', value: [0, 30] },
-    { type: 'station', value: 'Phantom station 7' },
     { type: 'record' },
   ) as MeasurementState
   expect(modelComplete(s)).toBe(true)

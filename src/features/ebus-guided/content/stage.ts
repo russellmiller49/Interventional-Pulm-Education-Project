@@ -293,7 +293,7 @@ export const ACTIVITY_FLOWS: Record<string, ActivitySpec[]> = {
   ],
   'measurement-phantoms': [
     brief('measurement-plane', 'Relate the plane to the requested axis', 'briefing'),
-    acquire('phantom-comparison', 'Sweep and measure the analytic shapes', 'linked'),
+    acquire('phantom-comparison', 'Sweep and measure the elongated shape', 'linked'),
     {
       ...held('Explain the dimension in this plane', 'linked'),
       questions: ['question', 'observation'],
