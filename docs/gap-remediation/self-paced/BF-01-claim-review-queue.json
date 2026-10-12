@@ -549,7 +549,7 @@
         "date": null,
         "reviewedVersion": null
       },
-      "supersededBy": "Rewrite pilot, 2026-10-08: the bleeding section was re-authored (new prediction, case and check) and this wording no longer exists there. The capstone C06 surface listed is unchanged and still carries the claim, unreviewed. The view-loss block `scope-holding-a-bleed` was removed when that section was re-authored on 2026-10-09; its first-move card now says that a scope wedged on a bleeding segment stays where it is."
+      "supersededBy": "Rewrite pilot, 2026-10-08: the bleeding section was re-authored (new prediction, case and check) and this wording no longer exists there. The integrated case C06 was rewritten on 2026-10-12 to the same first moves as the section's card: keep the wedge, suction gently, bleeding side down. The view-loss block `scope-holding-a-bleed` was removed when that section was re-authored on 2026-10-09; its first-move card now says that a scope wedged on a bleeding segment stays where it is."
     },
     {
       "id": "BF-01-C09",

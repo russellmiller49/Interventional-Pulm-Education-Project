@@ -343,7 +343,7 @@ describe('the branching cases show a real way on after each decision (A13, SUP-1
 
 describe('the question stays in view while its verdict is read (A15)', () => {
   async function checkWith(plausibility: Plausibility) {
-    const { step } = await openStep('what-completion-means', 'prediction')
+    const { step } = await openStep('ventilated-patient', 'prediction')
     if (step.interaction.kind !== 'prediction') throw new Error('not a prediction')
     const { stage } = step.interaction
     const choice = stage.item.choices.find((entry) => entry.plausibility === plausibility)!
@@ -405,7 +405,7 @@ describe('the question stays in view while its verdict is read (A15)', () => {
   )
 
   it('shows the explanation before any answer without showing a verdict', async () => {
-    await openStep('what-completion-means', 'prediction')
+    await openStep('ventilated-patient', 'prediction')
     fireEvent.click(query('[data-show-explanation]')!)
     expect(query('[data-prediction-choices]')).not.toBeNull()
     expect(query('[data-answer-verdict]')).toBeNull()
@@ -415,7 +415,7 @@ describe('the question stays in view while its verdict is read (A15)', () => {
 
 describe('matching feedback names the authored category, row by row (A16, A43)', () => {
   it('a deliberately wrong row says what was chosen and where the course places it', async () => {
-    const { step } = await openStep('what-completion-means', 'sort')
+    const { step } = await openStep('ventilated-patient', 'sort')
     if (step.interaction.kind !== 'sort') throw new Error('not a sort')
     const { sort } = step.interaction
     const labelOf = (id: string) => sort.origins.find((origin) => origin.id === id)!.label
@@ -449,7 +449,7 @@ describe('matching feedback names the authored category, row by row (A16, A43)',
   })
 
   it('explanation first names every row’s category without a stray full stop', async () => {
-    const { step } = await openStep('what-completion-means', 'sort')
+    const { step } = await openStep('ventilated-patient', 'sort')
     if (step.interaction.kind !== 'sort') throw new Error('not a sort')
     const { sort } = step.interaction
     fireEvent.click(query('[data-show-explanation]')!)
@@ -505,7 +505,7 @@ describe('matching feedback names the authored category, row by row (A16, A43)',
 
 describe('one verdict vocabulary across the course (A43)', () => {
   it('uses the shared verdict card’s own outcome words, and no grading vocabulary', async () => {
-    const { step } = await openStep('what-completion-means', 'prediction')
+    const { step } = await openStep('ventilated-patient', 'prediction')
     if (step.interaction.kind !== 'prediction') throw new Error('not a prediction')
     const plausibilities: readonly Plausibility[] = [
       'best',

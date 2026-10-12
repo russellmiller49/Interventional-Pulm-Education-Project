@@ -38,6 +38,7 @@ import {
 import { bronchSectionLinkTarget } from '../../content/pathwayResolver'
 import {
   BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF,
+  BRONCHOSCOPY_FOUNDATIONS_CLOSING_HREF,
   BRONCHOSCOPY_FOUNDATIONS_LEARN_HREF,
   BRONCHOSCOPY_FOUNDATIONS_NAV_BASE,
   bronchCaseLinkTarget,
@@ -1827,10 +1828,10 @@ function CompletionCard({
         ) : (
           <Link
             className={shellStyles.nowPrimary}
-            href={BRONCHOSCOPY_FOUNDATIONS_ASSESS_HREF}
-            data-next-section="assess"
+            href={BRONCHOSCOPY_FOUNDATIONS_CLOSING_HREF}
+            data-next-section="closing"
           >
-            Try the integrated cases
+            Finish: what comes next
           </Link>
         )}
         <Link className={shellStyles.nowSecondary} href={BRONCHOSCOPY_FOUNDATIONS_NAV_BASE}>

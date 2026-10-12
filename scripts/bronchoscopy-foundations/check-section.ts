@@ -29,6 +29,10 @@ import {
   type SectionMeasure,
 } from '../../src/features/bronchoscopy-foundations/content/authoringRules'
 import { COURSE_FLOWS } from '../../src/features/bronchoscopy-foundations/content/courseFlow'
+import { IMAGE_BANK_ROWS } from '../../src/features/bronchoscopy-foundations/content/imageBank'
+import { imageBankErrors } from '../../src/features/bronchoscopy-foundations/content/imageBankRules'
+import { vignetteErrors } from '../../src/features/bronchoscopy-foundations/content/vignetteRules'
+import { VIGNETTES } from '../../src/features/bronchoscopy-foundations/content/vignettes'
 import {
   NUMBER_REGISTER,
   unsignedNumberIds,
@@ -134,8 +138,15 @@ async function main(): Promise<number> {
     const total = (pick: (measure: SectionMeasure) => number) =>
       measures.reduce((sum, measure) => sum + pick(measure), 0)
     const counts = loaded.map(imageItemCounts)
-    const image = counts.reduce((sum, count) => sum + count.image, 0)
-    const questions = counts.reduce((sum, count) => sum + count.total, 0)
+    // The image bank belongs to the whole course; each of its questions shows an image.
+    const bankQuestions = args.includes('--all') ? IMAGE_BANK_ROWS.length : 0
+    // The vignettes belong to the whole course too, and show no image.
+    const vignetteQuestions = args.includes('--all') ? VIGNETTES.length : 0
+    const image = counts.reduce((sum, count) => sum + count.image, bankQuestions)
+    const questions = counts.reduce(
+      (sum, count) => sum + count.total,
+      bankQuestions + vignetteQuestions,
+    )
     const bank = loaded.flatMap((section) => [
       ...sectionItems(section),
       ...(section.act.kind === 'scenario' ? section.act.scenario.frames : []),
@@ -153,6 +164,22 @@ async function main(): Promise<number> {
     console.log(
       `Questions that show an image: ${image} of ${questions} (target at least ${Math.round(REWRITE_CAPS.imageItemShare * 100)} in 100)`,
     )
+    if (bankQuestions > 0) {
+      const bankErrors = imageBankErrors()
+      console.log(
+        `Image bank: ${bankQuestions} questions, counted above${bankErrors.length ? `; ${bankErrors.length} problems` : ''}`,
+      )
+      for (const error of bankErrors) console.log(`  - ${error}`)
+      if (bankErrors.length > 0) failed = true
+    }
+    if (vignetteQuestions > 0) {
+      const problems = vignetteErrors()
+      console.log(
+        `Vignettes: ${vignetteQuestions} questions, counted above${problems.length ? `; ${problems.length} problems` : ''}`,
+      )
+      for (const error of problems) console.log(`  - ${error}`)
+      if (problems.length > 0) failed = true
+    }
     console.log(
       `Test-wise score: ${(testWiseScore(bank) * 100).toFixed(0)} in 100 over ${bank.length} questions (target at most ${REWRITE_CAPS.testWiseScore * 100})`,
     )

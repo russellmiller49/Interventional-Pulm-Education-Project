@@ -7,6 +7,9 @@ import {
   type BronchSectionId,
 } from '../src/features/bronchoscopy-foundations/content/pathway'
 import { CAPSTONE_CASES } from '../src/features/bronchoscopy-foundations/content/capstone'
+import { imageBankSet } from '../src/features/bronchoscopy-foundations/content/imageBank'
+import { PRACTICE_SETS } from '../src/features/bronchoscopy-foundations/content/practiceSets'
+import { VIGNETTES } from '../src/features/bronchoscopy-foundations/content/vignettes'
 import { capstoneStageItem } from '../src/features/bronchoscopy-foundations/content/stageItems'
 import { BRONCH_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/learnProgress'
 import { BRONCH_SELF_PACED_STORAGE_KEY } from '../src/features/bronchoscopy-foundations/engine/selfPacedProgress'
@@ -663,14 +666,105 @@ test('Practice explains before an answer, lets the learner try again, saves noth
   await page.goto(base + '/practice')
   await page.locator('[data-next-case]').click()
   await expect(page.locator('[data-prediction-choices]')).toBeVisible()
-  await expect(page.locator('a[href*="learn?section="]')).not.toHaveCount(0)
+  // The section a case draws on is named with the explanation or the answer, not before.
+  await expect(page.locator('[data-case-pairing]')).toHaveCount(0)
   await page.getByRole('button', { name: 'Show the explanation' }).click()
   await expect(page.locator('[data-explanation-reveal]')).toBeVisible()
+  await expect(page.locator('[data-case-pairing] a[href*="learn?section="]')).toHaveCount(1)
   await page.locator('[data-prediction-choices] input').first().check()
   await page.getByRole('button', { name: 'Check my answer' }).click()
   await expect(page.locator('[data-answer-verdict]')).toHaveAttribute('data-revealed', 'true')
+  await expect(page.locator('[data-case-pairing] a[href*="learn?section="]')).toHaveCount(1)
   await page.locator('[data-answer-again]').click()
   await expect(page.locator('[data-answer-verdict]')).toHaveCount(0)
+  expect(await record(page)).toBeNull()
+  expect(await earlierRecord(page)).toBeNull()
+})
+
+test('a vignette gives a patient with numbers, one decision, and the register’s value in the reason', async ({
+  page,
+}) => {
+  await page.goto(base + '/practice')
+  const links = page.locator('[data-practice-vignettes] [data-practice-case-link]')
+  await expect(links).toHaveCount(VIGNETTES.length)
+  const vignette = VIGNETTES.find((entry) => entry.id === 'vg-one-more-syringe')!
+  await page.locator('[data-practice-browse] summary').click()
+  await page.locator(`[data-practice-case-link="${vignette.id}"]`).click()
+  await expect(page.locator(`[data-practice-case="${vignette.id}"]`)).toContainText('weighs 80 kg')
+  const key = vignette.choices.find((choice) => choice.plausibility === 'best')!
+  await page.locator(`[data-prediction-choices] input[value="${key.id}"]`).check()
+  await page.getByRole('button', { name: 'Check my answer' }).click()
+  const verdict = page.locator('[data-answer-verdict]')
+  await expect(verdict).toHaveAttribute('data-revealed', 'true')
+  await expect(verdict).toContainText('570 mg of a 640 mg limit')
+  await expect(verdict).toContainText('At 8.0 mg/kg his limit is 640 mg.')
+  await expect(page.locator('#main-content')).not.toContainText('{{')
+  expect(await record(page)).toBeNull()
+})
+
+test('a mixed set runs ten cases from many sections, names each section afterwards, and leads to the next set', async ({
+  page,
+}) => {
+  await page.goto(base + '/practice')
+  await expect(page.locator('[data-practice-set-link]')).toHaveCount(PRACTICE_SETS.length)
+  await expect(page.locator('[data-practice-browse]')).not.toHaveAttribute('open', '')
+  await page.locator('[data-practice-continue]').click()
+  const cases = PRACTICE_SETS[0]
+  for (const [index, entry] of cases.entries()) {
+    const card = page.locator(`[data-practice-case="${entry.id}"]`)
+    await expect(card).toContainText(
+      `set 1 of ${PRACTICE_SETS.length} · case ${index + 1} of ${cases.length}`,
+    )
+    await expect(page.locator('[data-case-pairing]')).toHaveCount(0)
+    await page
+      .locator(`[data-prediction-choices] input[value="${entry.stage.item.correctChoiceIds[0]}"]`)
+      .check()
+    await page.getByRole('button', { name: 'Check my answer' }).click()
+    await expect(page.locator('[data-case-pairing]')).toHaveCount(1)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true,
+    )
+    if (index < cases.length - 1) await page.locator('[data-next-case]').click()
+  }
+  await page.locator('[data-next-set]').click()
+  await expect(page.locator(`[data-practice-case="${PRACTICE_SETS[1][0].id}"]`)).toContainText(
+    `set 2 of ${PRACTICE_SETS.length} · case 1 of`,
+  )
+  expect(await record(page)).toBeNull()
+})
+
+test('the image bank asks for a click on a still, upright and rotated, and saves nothing', async ({
+  page,
+}) => {
+  await page.goto(base + '/practice')
+  await page.locator('[data-practice-image-bank-link]').click()
+  await expect(page).toHaveURL(/\/practice\/images$/)
+  const rows = imageBankSet(1)!.rows
+  for (const [index, row] of rows.entries()) {
+    await expect(page.locator('[data-find-position]')).toHaveText(
+      `Image ${index + 1} of ${rows.length}`,
+    )
+    await expect(page.locator('[data-bronch-find]')).toContainText(row.context)
+    const turn = page.locator('[data-find-rotation]')
+    if (row.rotation) await expect(turn).toHaveAttribute('data-find-rotation', String(row.rotation))
+    else await expect(turn).toHaveCount(0)
+    // The outline is a button by keyboard as well as by pointer.
+    const outline = page.locator(`[data-find-marker="${row.targetId}"]`)
+    await expect(outline).toHaveAttribute('role', 'button')
+    await outline.focus()
+    await page.keyboard.press('Enter')
+    await expect(page.locator('[data-find-verdict]')).toHaveAttribute('data-find-verdict', 'held')
+    await expect(page.locator('[data-find-verdict]')).toBeFocused()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true,
+    )
+    if (index < rows.length - 1) await page.locator('[data-find-next]').click()
+  }
+  await expect(page.locator('[data-image-bank-finished]')).toBeVisible()
+  await page.locator('[data-image-bank-next]').click()
+  await expect(page).toHaveURL(/\/practice\/images\?set=2$/)
+  await expect(page.locator('[data-image-bank]')).toHaveAttribute('data-image-bank-set', '2')
+  await expect(page.locator('[data-find-verdict]')).toHaveCount(0)
   expect(await record(page)).toBeNull()
   expect(await earlierRecord(page)).toBeNull()
 })
@@ -1590,7 +1684,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
       page,
     }) => {
       await page.setViewportSize(viewport)
-      const { step } = await stepTo(page, 'what-completion-means', 'prediction')
+      const { step } = await stepTo(page, 'ventilated-patient', 'prediction')
       if (step.interaction.kind !== 'prediction') throw new Error('not a prediction')
       const { item } = step.interaction.stage
       const wrong = item.choices.find((choice) => choice.plausibility === 'incorrect-mechanism')!
@@ -1616,7 +1710,7 @@ test.describe('BF-PRE-REVIEW-02: sources, tables and the way on', () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1204, height: 987 })
-    const { step } = await stepTo(page, 'what-completion-means', 'sort')
+    const { step } = await stepTo(page, 'ventilated-patient', 'sort')
     if (step.interaction.kind !== 'sort') throw new Error('not a sort')
     const { sort } = step.interaction
     const label = (id: string) => sort.origins.find((origin) => origin.id === id)!.label

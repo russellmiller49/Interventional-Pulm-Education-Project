@@ -4,10 +4,12 @@ import {
   microCaseAttemptKey,
   microCasesForSection,
   validateBronchMicroCases,
+  vignetteCasesForTopic,
 } from '../content/microCases'
 import { BRONCH_SECTION_IDS } from '../content/pathway'
 import { BRONCH_SECTION_STAGE } from '../content/sectionIds'
 import { bronchItem, capstoneStageItems } from '../content/stageItems'
+import { VIGNETTE_TOPIC_TITLES, VIGNETTES, type VignetteTopic } from '../content/vignettes'
 
 /** The sections the plan pairs a practice case to: every mechanism and application section. */
 const PAIRED_STAGES = new Set(['mechanism', 'application'])
@@ -27,10 +29,20 @@ describe('the practice case registry', () => {
     for (const microCase of cases) {
       expect(BRONCH_SECTION_IDS).toContain(microCase.sectionId)
     }
-    const positions = cases.map((microCase) => BRONCH_SECTION_IDS.indexOf(microCase.sectionId))
+    // The sections' own cases come first, in the order the course teaches them.
+    const own = cases.filter((microCase) => microCase.vignetteTopic === undefined)
+    const positions = own.map((microCase) => BRONCH_SECTION_IDS.indexOf(microCase.sectionId))
     expect(positions).toEqual([...positions].sort((a, b) => a - b))
     const bySection = BRONCH_SECTION_IDS.flatMap((id) => microCasesForSection(id))
-    expect(bySection.map((entry) => entry.id)).toEqual(cases.map((entry) => entry.id))
+    expect(bySection.map((entry) => entry.id)).toEqual(own.map((entry) => entry.id))
+    // The vignettes follow them, topic by topic, as written.
+    const vignettes = cases.filter((microCase) => microCase.vignetteTopic !== undefined)
+    expect(cases.slice(own.length)).toEqual(vignettes)
+    expect(vignettes.map((entry) => entry.id)).toEqual(VIGNETTES.map((entry) => entry.id))
+    const byTopic = (Object.keys(VIGNETTE_TOPIC_TITLES) as VignetteTopic[]).flatMap((topic) =>
+      vignetteCasesForTopic(topic),
+    )
+    expect(byTopic).toEqual(vignettes)
   })
 
   it('pairs at least one case to every mechanism and application section', () => {

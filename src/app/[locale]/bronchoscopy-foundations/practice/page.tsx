@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
 import { BronchCaseActivity } from '@/features/bronchoscopy-foundations/components/BronchCaseActivity'
+import { practiceSet } from '@/features/bronchoscopy-foundations/content/practiceSets'
 import { BronchoscopyFoundationsModuleFrame } from '@/features/bronchoscopy-foundations/components/BronchoscopyFoundationsModuleFrame'
 import { BronchoscopyFoundationsPracticeLanding } from '@/features/bronchoscopy-foundations/components/BronchoscopyFoundationsPracticeLanding'
 import { bronchMicroCaseById } from '@/features/bronchoscopy-foundations/content/microCases'
@@ -21,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 interface PageProps {
   params: Promise<{ locale: string }>
-  searchParams?: Promise<{ case?: string | string[] }>
+  searchParams?: Promise<{ case?: string | string[]; set?: string | string[] }>
 }
 
 export default async function BronchoscopyFoundationsPracticePage({
@@ -29,8 +30,15 @@ export default async function BronchoscopyFoundationsPracticePage({
   searchParams,
 }: PageProps) {
   const { locale } = await params
-  const requested = (await searchParams)?.case
+  const query = await searchParams
+  const requested = query?.case
   const caseId = Array.isArray(requested) ? requested[0] : requested
+  // A case opened from a mixed set keeps its place in that set; any other value is ignored.
+  const named = Number(Array.isArray(query?.set) ? query.set[0] : query?.set)
+  const set =
+    caseId && Number.isInteger(named) && practiceSet(named)?.some((entry) => entry.id === caseId)
+      ? named
+      : undefined
   setRequestLocale(locale)
 
   if (caseId && bronchMicroCaseById.has(caseId)) {
@@ -40,7 +48,7 @@ export default async function BronchoscopyFoundationsPracticePage({
         activeHref={BRONCHOSCOPY_FOUNDATIONS_PRACTICE_HREF}
       >
         <div className="mx-auto grid w-full max-w-3xl grid-cols-[minmax(0,1fr)] gap-6 px-4 py-10 sm:px-6 lg:px-8">
-          <BronchCaseActivity key={caseId} caseId={caseId} />
+          <BronchCaseActivity key={caseId} caseId={caseId} set={set} />
         </div>
       </BronchoscopyFoundationsModuleFrame>
     )

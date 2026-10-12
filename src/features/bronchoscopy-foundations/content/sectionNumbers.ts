@@ -1,3 +1,4 @@
+import { imageItemCounts, REWRITE_CAPS } from './authoringRules'
 import { numberIdsIn, resolveNumbers, unsignedNumberIds, type NumberId } from './numbers'
 import type { BronchSectionDefinition } from './types'
 
@@ -43,19 +44,41 @@ export function sectionNumberIds(section: BronchSectionDefinition): readonly Num
   return idsIn(section)
 }
 
+/** Too few of the course's questions show an image: one line, or none when the share is met. */
+export function imageShareBlockers(
+  sections: readonly BronchSectionDefinition[],
+  bankQuestions = 0,
+  wordQuestions = 0,
+): readonly string[] {
+  const counts = sections.map(imageItemCounts)
+  // Every question in the image bank shows an image, so it adds to both sides. The vignettes
+  // show none, so they add to the total alone.
+  const image = counts.reduce((sum, count) => sum + count.image, bankQuestions)
+  const total = counts.reduce((sum, count) => sum + count.total, bankQuestions + wordQuestions)
+  return total > 0 && image / total < REWRITE_CAPS.imageItemShare
+    ? [`${image} of the course's ${total} questions show an image; at least a third.`]
+    : []
+}
+
 /**
  * What stands between the course and publication: every register row a section uses that faculty
- * has not signed. Nothing while the module is an unlisted preview; the release-boundary test holds
- * the published stage to an empty list.
+ * has not signed, and the share of questions that show an image (faculty decision, 2026-10-11: it
+ * blocks publication and does not fail the build). Nothing while the module is an unlisted
+ * preview; the release-boundary test holds the published stage to an empty list.
  */
 export function publishBlockers(
   stage: 'unlisted-preview' | 'published',
   sections: readonly BronchSectionDefinition[],
+  bankQuestions = 0,
+  wordQuestions = 0,
 ): readonly string[] {
   if (stage !== 'published') return []
-  return sections.flatMap((section) =>
-    unsignedNumberIds(sectionNumberIds(section)).map(
-      (id) => `${section.id} uses "${id}", which faculty has not signed.`,
+  return [
+    ...sections.flatMap((section) =>
+      unsignedNumberIds(sectionNumberIds(section)).map(
+        (id) => `${section.id} uses "${id}", which faculty has not signed.`,
+      ),
     ),
-  )
+    ...imageShareBlockers(sections, bankQuestions, wordQuestions),
+  ]
 }

@@ -12,6 +12,7 @@ import { Link } from '@/i18n/navigation'
 import { configuredLocalPolicies } from '../content/localPolicies'
 import { bronchMicroCaseById, bronchMicroCasesInPathwayOrder } from '../content/microCases'
 import { bronchSection } from '../content/pathway'
+import { PRACTICE_SETS, practiceSet } from '../content/practiceSets'
 import { bronchSectionLinkTarget } from '../content/pathwayResolver'
 import { BRONCHOSCOPY_FOUNDATIONS_PRACTICE_HREF, bronchCaseLinkTarget } from '../content/routes'
 import { REWRITTEN_VERDICT_FRAMES } from './stage/verdictWords'
@@ -27,7 +28,14 @@ import { BronchExplanation } from './stage/BronchExplanation'
  * explanation, because the course holds no institution's numbers and never calculates for a
  * patient.
  */
-export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
+export function BronchCaseActivity({
+  caseId,
+  set,
+}: {
+  readonly caseId: string
+  /** The mixed set this case is being worked in, counting from 1. */
+  readonly set?: number
+}) {
   const microCase = bronchMicroCaseById.get(caseId)
   const [selected, setSelected] = useState<string | null>(null)
   const [committed, setCommitted] = useState<string | null>(null)
@@ -42,8 +50,12 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
   }
 
   const item = microCase.stage.item
-  const order = bronchMicroCasesInPathwayOrder()
+  // In a mixed set the way on stays inside the set; otherwise it follows the whole list.
+  const setCases = set ? practiceSet(set) : null
+  const inSet = setCases?.some((entry) => entry.id === microCase.id) ? set : undefined
+  const order = inSet ? setCases! : bronchMicroCasesInPathwayOrder()
   const position = order.findIndex((entry) => entry.id === microCase.id)
+  const nextSet = inSet && inSet < PRACTICE_SETS.length ? inSet + 1 : null
   const previous = position > 0 ? order[position - 1] : null
   const next = position >= 0 && position < order.length - 1 ? order[position + 1] : null
   const section = bronchSection(microCase.sectionId)
@@ -53,7 +65,9 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
     <article className="grid gap-5" data-practice-case={microCase.id}>
       <div className="grid gap-1">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-          Practice · case {position + 1} of {order.length}
+          {inSet
+            ? `Practice · set ${inSet} of ${PRACTICE_SETS.length} · case ${position + 1} of ${order.length}`
+            : `Practice · case ${position + 1} of ${order.length}`}
         </p>
         <h1 className="text-2xl font-bold tracking-tight">{microCase.presentationTitle}</h1>
       </div>
@@ -89,10 +103,18 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
             {next ? (
               <Link
                 className={shellStyles.nowPrimary}
-                href={bronchCaseLinkTarget(next.id)}
+                href={bronchCaseLinkTarget(next.id, inSet)}
                 data-next-case={next.id}
               >
                 Next case <ArrowRight aria-hidden="true" />
+              </Link>
+            ) : nextSet ? (
+              <Link
+                className={shellStyles.nowPrimary}
+                href={bronchCaseLinkTarget(practiceSet(nextSet)![0].id, nextSet)}
+                data-next-set={nextSet}
+              >
+                Set {nextSet} of {PRACTICE_SETS.length} <ArrowRight aria-hidden="true" />
               </Link>
             ) : (
               <Link
@@ -169,22 +191,25 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
         </section>
       ) : null}
 
-      <p className="text-sm text-muted-foreground" data-case-pairing>
-        This case uses the idea from{' '}
-        <Link
-          className="font-semibold text-primary"
-          href={bronchSectionLinkTarget(microCase.sectionId)}
-        >
-          {section.title}
-        </Link>
-        . Review it whenever it helps.
-      </p>
+      {/* The section a case draws on would give its answer away, so it is named afterwards. */}
+      {committed || explanationOpen ? (
+        <p className="text-sm text-muted-foreground" data-case-pairing>
+          This case uses the idea from{' '}
+          <Link
+            className="font-semibold text-primary"
+            href={bronchSectionLinkTarget(microCase.sectionId)}
+          >
+            {section.title}
+          </Link>
+          . Review it whenever it helps.
+        </p>
+      ) : null}
 
       <nav className="flex flex-wrap items-center gap-4 text-sm" aria-label="Practice cases">
         {previous ? (
           <Link
             className="inline-flex items-center gap-1 font-semibold text-primary"
-            href={bronchCaseLinkTarget(previous.id)}
+            href={bronchCaseLinkTarget(previous.id, inSet)}
           >
             <ArrowLeft aria-hidden="true" /> {previous.presentationTitle}
           </Link>
@@ -195,7 +220,7 @@ export function BronchCaseActivity({ caseId }: { readonly caseId: string }) {
         {next ? (
           <Link
             className="inline-flex items-center gap-1 font-semibold text-primary"
-            href={bronchCaseLinkTarget(next.id)}
+            href={bronchCaseLinkTarget(next.id, inSet)}
             data-nav-next-case={next.id}
           >
             {next.presentationTitle} <ArrowRight aria-hidden="true" />

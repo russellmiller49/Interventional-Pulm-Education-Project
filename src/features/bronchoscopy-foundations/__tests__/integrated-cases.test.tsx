@@ -1,3 +1,5 @@
+import { capstoneRuleErrors } from '../content/capstoneRules'
+import { capstoneErrors } from '../content/sectionValidation'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { axe } from 'jest-axe'
@@ -66,16 +68,64 @@ describe('the integrated cases', () => {
     expect(() => capstoneStageItem('no-such-case')).toThrow()
   })
 
+  it('holds every case to the rewrite rules: a patient with numbers, a move for a key, no cue to it', () => {
+    expect(capstoneErrors(CAPSTONE_CASES)).toEqual([])
+    expect(capstoneRuleErrors()).toEqual([])
+    for (const entry of CAPSTONE_CASES) {
+      expect(entry.situation).toMatch(/\byou(r)?\b/i)
+      const text = [
+        entry.situation,
+        entry.item.stem,
+        entry.item.explanation,
+        ...entry.item.choices.flatMap((choice) => [choice.label, choice.rationale]),
+      ].join(' ')
+      // None hands the decision to someone else, and none talks about the course.
+      expect([
+        entry.id,
+        text.match(/supervis\w*|attending|teaching case|simulat\w*|lecture/i)?.[0],
+      ]).toEqual([entry.id, undefined])
+    }
+  })
+
+  it('takes its numbers from the register, resolved before the learner sees them', () => {
+    const used = new Set<string>()
+    for (const entry of CAPSTONE_CASES) {
+      const stage = capstoneStageItem(entry.id)
+      for (const id of stage.numberIds) used.add(id)
+      expect(JSON.stringify(stage.item)).not.toMatch(/\{\{num:/)
+    }
+    expect([...used].sort()).toEqual([
+      'bal-aliquots',
+      'bal-total-volume',
+      'endobronchial-biopsy-minimum',
+      'nashville-grade-2',
+      'oxygen-trigger',
+      'vap-bal-threshold',
+    ])
+    expect(capstoneStageItem('C07').item.explanation).toContain('needs at least 5 biopsies')
+  })
+
   it('opens every case on a fresh device, with no lock, standard or once-only wording', async () => {
     const { container } = render(<BronchoscopyFoundationsAssessLanding />)
     expect(document.querySelectorAll('[data-integrated-case]')).toHaveLength(8)
     expect(document.querySelectorAll('[data-prediction-choices]')).toHaveLength(8)
+    // Before an answer no case names its section or says it is safety-critical (rewrite plan).
+    expect(document.querySelector('[data-case-pairing]')).toBeNull()
+    expect(document.querySelector('[data-safety-critical]')).toBeNull()
+    expect(document.body.textContent).not.toMatch(/safety-critical/i)
+    expect(CAPSTONE_CASES.some((entry) => entry.critical)).toBe(true)
     for (const entry of CAPSTONE_CASES) {
+      fireEvent.click(caseElement(entry.id).querySelector('[data-show-explanation]')!)
       expect(caseElement(entry.id).querySelector('[data-case-pairing] a')).toHaveAttribute(
         'href',
         `/bronchoscopy-foundations/learn?section=${entry.pairedSectionId}`,
       )
+      expect(caseElement(entry.id).textContent?.includes('safety-critical decision')).toBe(
+        Boolean(entry.critical),
+      )
+      fireEvent.click(caseElement(entry.id).querySelector('[data-show-explanation]')!)
     }
+    expect(document.querySelector('[data-case-pairing]')).toBeNull()
     expect(document.querySelector('[data-answer-verdict]')).toBeNull()
     expect(document.body.textContent).not.toMatch(EXAM_WORDS)
     expect(await axe(container)).toHaveNoViolations()
