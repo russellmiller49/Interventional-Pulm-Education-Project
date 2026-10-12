@@ -1030,7 +1030,11 @@ export function LinkedModelView(props: Props) {
       </div>
     )
   const sweepStatus =
-    identifying && config.linkedLesson !== 'acoustic-contact' && !config.locked
+    identifying &&
+    config.linkedLesson !== 'acoustic-contact' &&
+    // The CT-map lesson asks for the model section, not a sweep; its task line says so.
+    config.linkedLesson !== 'ct-map' &&
+    !config.locked
       ? describeLinkedSweep({
           sweep,
           targetVisible: !!props.targetVisible,
@@ -1093,7 +1097,23 @@ export function LinkedModelView(props: Props) {
           {landmarkIds
             .map((id) => LANDMARK_NAMES[id] + (letterOf(id) ? ` (${letterOf(id)})` : ''))
             .join(' · ')}
-          . Now sweep the scope rotation through the node.
+          .{' '}
+          {/* The line names the step the lesson is actually waiting for (owner feedback of
+              2026-10-12): this lesson asks for the model section, not a sweep. */}
+          {config.linkedLesson !== 'ct-map' ? (
+            'Now sweep the scope rotation through the node.'
+          ) : !evidence.modelSectionViewed ? (
+            <>
+              Next: open the model section to see this level as a slice.{' '}
+              <button data-open-model-section onClick={() => setMode('section')}>
+                Open Model section
+              </button>
+            </>
+          ) : props.targetVisible ? (
+            'Model section opened. The node is in the ultrasound image: select “Continue with this image”.'
+          ) : (
+            'Model section opened. Now rotate the scope until the node is in the ultrasound image.'
+          )}
         </p>
       )}
       {config.demonstration && (
