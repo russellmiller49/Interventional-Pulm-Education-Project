@@ -13,28 +13,25 @@ supervisor" answers.
 
 ## Where things stand
 
-All fifteen sections are on `main` (`1c225e79`, 2026-10-11): #349 to #375 were merged on
-2026-10-10 with #351 and #376, and #377 (section 13) and #378 (section 15, with capstone C09)
-the next day. #348 is closed.
+All fifteen sections are on `main`: #349 to #375 were merged on 2026-10-10 with #351 and #376,
+#377 (section 13) and #378 (section 15, with capstone C09) the next day, and #381 (four
+teaching gaps in sections 13 and 15, from the review of those two) after that. #348 is closed.
 
-Five PRs are open:
+One PR is open, and it holds everything since:
 
-| PR   | Branch                       | State                                                                                                              |
-| ---- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| #380 | `claude/bf-rewrite-hub`      | Draft, targets `main`. The hub rewritten, a closing screen, `what-completion-means` retired, the image rule moved. |
-| #382 | `claude/bf-image-bank`       | Draft, stacked on #380. The image bank: 50 click-on-the-picture questions in five sets, on the Practice surface.   |
-| #385 | `claude/bf-vignettes`        | Draft, stacked on #382. Forty vignettes with numbers in eight topics, on the Practice surface.                     |
-| #388 | `claude/bf-mixed-sets`       | Draft, stacked on #385. Practice in mixed sets of ten; the paired section and the safety label shown afterwards.   |
-| #389 | `claude/bf-integrated-cases` | Draft, stacked on #388. The eight integrated cases rewritten and held to the rewrite rules.                        |
+| PR   | Branch                       | State                                                                                                     |
+| ---- | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
+| #NEW | `claude/bf-practice-and-hub` | Ready, targets `main`. The hub, the closing screen, the image bank, the vignettes, mixed sets, the cases. |
 
-The work is in the worktree `…-Worktrees/claude-bf-pre-review-04-20261007`, which is on
-`claude/bf-integrated-cases`. Merge #380, #382, #385, #388, then #389; branch the next change
-from `origin/main` after that. The
-local copies of the merged stack branches are behind origin.
+It replaces five stacked drafts, which carry the same commits one step at a time: #380 (hub and
+closing screen), #382 (image bank), #385 (vignettes), #388 (mixed sets) and #389 (integrated
+cases). Close them when #NEW merges. `main` was merged into the combined branch on 2026-10-12
+with no conflict.
 
-A reader reviewed sections 13 and 15 against `docs/teaching-first-rules.md` before the merge and
-found no blocking problem. Its teaching suggestions went to Russell; none is applied. Ask him
-before acting on them.
+The session's worktree `…-Worktrees/claude-bf-pre-review-04-20261007` is on
+`claude/bf-integrated-cases`, the last of the stacked branches. Its unstaged
+`.claude/launch.json` blocks a merge of `main` there, so the combined branch was made in a
+temporary checkout. Branch the next change from `origin/main` once #NEW is merged.
 
 ## Start here next session
 
@@ -103,7 +100,7 @@ npx tsx scripts/bronchoscopy-foundations/check-section.ts <section-id>
 In the plan's order. Russell removed the fellow-session gate on 2026-10-08: the 13 remaining
 sections no longer wait for sessions with the pilot.
 
-1. **Get #380 reviewed and merged.** Everything before it is on `main`.
+1. **Get #NEW reviewed and merged.** Everything before it is on `main`.
 2. **Still open from the pilot, for Russell:**
    - Confirm the bleeding first-move card, especially step 2 (suction).
    - Confirm three orientation statements in the right lung's image questions (carina: membranous
