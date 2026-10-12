@@ -53,7 +53,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: 85,
       instruction:
-        'Find the main carina and the superior vena cava on the 3D anatomy model. Then open Model section to see the same level as a slice, and rotate the scope until the node is in the ultrasound image.',
+        'Find the subcarinal node and the pulmonary artery on the ultrasound image: rotate until each is in view and click it. Then open Model section to see the same level as a slice, and finish with the node in the image.',
     },
     observation: {
       ...q(
@@ -147,7 +147,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: 85,
       instruction:
-        'Find the main carina and each main bronchus on the 3D anatomy model. Then, from each main bronchus in turn, move the Scope rotation slider through at least 20° and watch the same subcarinal node cross the image. Finish with the node in the image.',
+        'Find the subcarinal node, the pulmonary artery and the esophagus on the ultrasound image: rotate until each is in view and click it. Then, from each main bronchus in turn, move the Scope rotation slider through at least 20° and watch the same node cross the image. Finish with the node in the image.',
     },
     observation: {
       ...q(
@@ -196,7 +196,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: -75,
       instruction:
-        'The scope is now at a different position in the left main bronchus. Find the carina and both main bronchi again, sweep the rotation through at least 20°, and finish with the node in the image.',
+        'The scope is now at a different position in the left main bronchus. Find the node, the pulmonary artery and the esophagus again on the ultrasound, sweep the rotation through at least 20°, and finish with the node in the image.',
     },
     diagram: 'stations',
     station: '7',
@@ -257,7 +257,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: 85,
       instruction:
-        'Find the azygos vein, superior vena cava and left brachiocephalic vein on the 3D anatomy model. Then move the Scope rotation slider through at least 20° and finish with the paratracheal node in the image.',
+        'Find the superior vena cava, the azygos vein and the right lower paratracheal node on the ultrasound image: rotate until each is in view and click it. Sweep the rotation through at least 20° and finish with the node in the image.',
     },
     observation: {
       ...q(
@@ -306,7 +306,7 @@ export const locateLessons: Lesson[] = [
       controls: ['roll'],
       initialRoll: -75,
       instruction:
-        'The scope now starts higher or lower in the same airway. Find the three vein landmarks again, sweep the rotation through at least 20°, and finish with the node in the image.',
+        'The scope now starts higher or lower in the same airway. Find the superior vena cava, the azygos vein and the node again on the ultrasound, sweep the rotation through at least 20°, and finish with the node in the image.',
     },
     diagram: 'stations',
     station: '4R',

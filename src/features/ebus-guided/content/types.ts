@@ -186,7 +186,7 @@ export function labGoalRequirements(lab: Lab, state: EbusObservation): LabRequir
       met: LINKED_LANDMARKS[lab.linkedLesson].every((id) =>
         linked?.identifiedStructures?.includes(id),
       ),
-      text: 'Identify the structure the task bar asks for on the 3D model.',
+      text: 'Find and click the structure the task bar names on the ultrasound image.',
     })
     if (lab.linkedLesson === 'ct-map')
       list.push({
